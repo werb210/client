@@ -2,7 +2,7 @@ import twilio from 'twilio';
 import crypto from 'crypto';
 import { db } from './db';
 import { twoFactorCodes, users } from '@shared/schema';
-import { eq, and, gt } from 'drizzle-orm';
+import { eq, and, gt, lt } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 const client = twilio(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_TOKEN!);
@@ -128,7 +128,7 @@ export class TwilioService {
         .where(
           and(
             eq(twoFactorCodes.verified, false),
-            gt(oneHourAgo, twoFactorCodes.expiresAt)
+            lt(twoFactorCodes.expiresAt, oneHourAgo)
           )
         );
     } catch (error) {

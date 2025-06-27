@@ -5,6 +5,8 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertApplicationSchema, updateApplicationSchema, insertDocumentSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import { TwilioService } from "./twilioService";
+import { z } from "zod";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -30,6 +32,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Validation schemas for 2FA
+  const sendCodeSchema = z.object({
+    phone: z.string().regex(/^\+1\d{10}$/, "Phone number must be in format +1XXXXXXXXXX")
+  });
+
+  const verifyCodeSchema = z.object({
+    phone: z.string().regex(/^\+1\d{10}$/, "Phone number must be in format +1XXXXXXXXXX"),
+    code: z.string().length(6, "Code must be 6 digits")
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
@@ -39,6 +51,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // 2FA routes
+  app.post('/api/2fa/send', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validation = sendCodeSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid phone number format", 
+          errors: validation.error.errors 
+        });
+      }
+
+      const { phone } = validation.data;
+      const result = await TwilioService.sendVerificationCode(userId, phone);
+      
+      if (result.success) {
+        res.json({ message: "Verification code sent successfully" });
+      } else {
+        res.status(400).json({ message: result.error });
+      }
+    } catch (error) {
+      console.error("Error sending 2FA code:", error);
+      res.status(500).json({ message: "Failed to send verification code" });
+    }
+  });
+
+  app.post('/api/2fa/verify', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validation = verifyCodeSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid input", 
+          errors: validation.error.errors 
+        });
+      }
+
+      const { phone, code } = validation.data;
+      const result = await TwilioService.verifyCode(userId, phone, code);
+      
+      if (result.success) {
+        // Mark session as 2FA complete
+        (req.session as any).twoFactorComplete = true;
+        res.json({ message: "2FA verification successful" });
+      } else {
+        res.status(400).json({ message: result.error });
+      }
+    } catch (error) {
+      console.error("Error verifying 2FA code:", error);
+      res.status(500).json({ message: "Failed to verify code" });
+    }
+  });
+
+  app.get('/api/2fa/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const twoFactorComplete = (req.session as any).twoFactorComplete || false;
+      
+      res.json({
+        is2FAEnabled: user?.is2FAEnabled || false,
+        phoneNumber: user?.phoneNumber,
+        twoFactorComplete
+      });
+    } catch (error) {
+      console.error("Error checking 2FA status:", error);
+      res.status(500).json({ message: "Failed to check 2FA status" });
     }
   });
 

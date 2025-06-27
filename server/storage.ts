@@ -140,6 +140,14 @@ export class DatabaseStorage implements IStorage {
       .from(lenderProducts)
       .where(eq(lenderProducts.type, type) && eq(lenderProducts.active, true));
   }
+
+  async updateUserPhone(userId: string, phoneNumber: string): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ phoneNumber, is2FAEnabled: true })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
 }
 
 export const storage = new DatabaseStorage();
