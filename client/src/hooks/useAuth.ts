@@ -18,12 +18,19 @@ export function useAuth() {
     retry: false,
   });
 
+  // Determine if user needs to register (missing essential info)
+  const needsRegistration = !!user && (!(user as any).firstName || !(user as any).lastName || !(user as any).phoneNumber);
+  
+  // Determine if user needs 2FA (has registered but not completed 2FA)
+  const needs2FA = !!user && !needsRegistration && (!twoFactorStatus?.twoFactorComplete);
+
   return {
     user,
     twoFactorStatus,
     isLoading: isLoading || is2FALoading,
     isAuthenticated: !!user,
+    needsRegistration,
+    needs2FA,
     is2FAComplete: twoFactorStatus?.twoFactorComplete || false,
-    needs2FA: !!user && (!twoFactorStatus?.twoFactorComplete),
   };
 }

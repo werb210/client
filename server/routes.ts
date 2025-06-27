@@ -32,7 +32,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Validation schemas for 2FA
+  // Validation schemas
+  const registrationSchema = z.object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    email: z.string().email("Valid email is required"),
+    phoneNumber: z.string().regex(/^\+1\d{10}$/, "Phone number must be in format +1XXXXXXXXXX")
+  });
+
   const sendCodeSchema = z.object({
     phone: z.string().regex(/^\+1\d{10}$/, "Phone number must be in format +1XXXXXXXXXX")
   });
@@ -51,6 +58,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Registration route for new users to provide their information
+  app.post('/api/auth/register', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validation = registrationSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid registration data", 
+          errors: validation.error.errors 
+        });
+      }
+
+      const { firstName, lastName, email, phoneNumber } = validation.data;
+      
+      // Update user with registration information
+      const updatedUser = await storage.upsertUser({
+        id: userId,
+        email,
+        firstName,
+        lastName,
+        phoneNumber,
+        is2FAEnabled: false // Will be enabled after phone verification
+      });
+
+      // Automatically send 2FA code to the registered phone number
+      const result = await TwilioService.sendVerificationCode(userId, phoneNumber);
+      
+      if (result.success) {
+        res.json({ 
+          message: "Registration successful. Verification code sent to your phone.",
+          user: updatedUser 
+        });
+      } else {
+        // Registration succeeded but SMS failed - still allow user to proceed
+        res.json({ 
+          message: "Registration successful. Please try requesting a verification code manually.",
+          user: updatedUser,
+          smsError: result.error
+        });
+      }
+    } catch (error) {
+      console.error("Error during registration:", error);
+      res.status(500).json({ message: "Failed to complete registration" });
     }
   });
 

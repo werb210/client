@@ -37,12 +37,16 @@ export default function TwoFactorAuth() {
         return;
       }
       
-      if (twoFactorStatus.is2FAEnabled && twoFactorStatus.phoneNumber) {
-        // User has 2FA enabled, show verification step
+      if (twoFactorStatus.phoneNumber) {
+        // User has phone number from registration, show verification step
         setPhoneNumber(twoFactorStatus.phoneNumber);
         setStep('verify');
+        // Automatically send code when coming from registration
+        if (!verificationCode) {
+          sendCodeMutation.mutate(twoFactorStatus.phoneNumber);
+        }
       } else {
-        // User needs to set up phone number
+        // User needs to set up phone number (shouldn't happen with new flow)
         setStep('phone');
       }
     }

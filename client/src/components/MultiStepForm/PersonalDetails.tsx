@@ -22,13 +22,14 @@ interface PersonalDetailsProps {
 
 export function PersonalDetails({ onNext, onBack }: PersonalDetailsProps) {
   const { state, dispatch } = useApplication();
+  const { user } = useAuth();
   
   const form = useForm<PersonalDetailsData>({
     resolver: zodResolver(personalDetailsSchema),
     defaultValues: {
-      name: state.formData.personalDetails?.name || '',
-      email: state.formData.personalDetails?.email || '',
-      phone: state.formData.personalDetails?.phone || '',
+      name: state.formData.personalDetails?.name || `${(user as any)?.firstName || ''} ${(user as any)?.lastName || ''}`.trim(),
+      email: state.formData.personalDetails?.email || (user as any)?.email || '',
+      phone: state.formData.personalDetails?.phone || (user as any)?.phoneNumber || '',
     },
   });
 
