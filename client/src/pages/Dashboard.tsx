@@ -7,13 +7,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { isUnauthorizedError } from '@/lib/authUtils';
 import { Application } from '@shared/schema';
-import { useRouter } from 'wouter';
-import { Plus, TrendingUp, HelpCircle, FileText, Calendar } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { Plus, TrendingUp, HelpCircle, FileText, Calendar, Building } from 'lucide-react';
 
 export default function Dashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
-  const [, setLocation] = useRouter();
+  const [, setLocation] = useLocation();
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -33,19 +33,6 @@ export default function Dashboard() {
   const { data: applications, isLoading: applicationsLoading } = useQuery<Application[]>({
     queryKey: ['/api/applications'],
     enabled: isAuthenticated,
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-    },
   });
 
   const handleStartNewApplication = () => {
@@ -101,12 +88,12 @@ export default function Dashboard() {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
                 <img 
-                  src={user?.profileImageUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&w=40&h=40&fit=crop&crop=face'} 
+                  src={(user as any)?.profileImageUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&w=40&h=40&fit=crop&crop=face'} 
                   alt="User profile" 
                   className="w-8 h-8 rounded-full object-cover" 
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  {user?.firstName} {user?.lastName}
+                  {(user as any)?.firstName} {(user as any)?.lastName}
                 </span>
               </div>
               <Button variant="ghost" size="sm" onClick={handleLogout}>
@@ -124,7 +111,7 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.firstName || 'User'}!
+            Welcome back, {(user as any)?.firstName || 'User'}!
           </h2>
           <p className="text-gray-600">
             Manage your financial applications and track your progress.
