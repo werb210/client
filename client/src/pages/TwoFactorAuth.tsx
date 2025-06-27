@@ -60,10 +60,7 @@ export default function TwoFactorAuth() {
 
   const sendCodeMutation = useMutation({
     mutationFn: async (phone: string) => {
-      await apiRequest('/api/2fa/send', {
-        method: 'POST',
-        body: JSON.stringify({ phone }),
-      });
+      return await apiRequest('/api/2fa/send', 'POST', { phone });
     },
     onSuccess: () => {
       toast({
@@ -84,10 +81,7 @@ export default function TwoFactorAuth() {
 
   const verifyCodeMutation = useMutation({
     mutationFn: async ({ phone, code }: { phone: string; code: string }) => {
-      await apiRequest('/api/2fa/verify', {
-        method: 'POST',
-        body: JSON.stringify({ phone, code }),
-      });
+      return await apiRequest('/api/2fa/verify', 'POST', { phone, code });
     },
     onSuccess: () => {
       toast({
