@@ -195,7 +195,7 @@ export default function Dashboard() {
               </div>
             ) : applications && applications.length > 0 ? (
               <div className="space-y-4">
-                {applications.map((app) => (
+                {applications.map((app: Application) => (
                   <div key={app.id} className="flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0">
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
