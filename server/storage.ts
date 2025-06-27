@@ -20,6 +20,7 @@ export interface IStorage {
   // (IMPORTANT) these user operations are mandatory for Replit Auth.
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserPhone(userId: string, phoneNumber: string): Promise<User | undefined>;
   
   // Application operations
   getApplicationsByUserId(userId: string): Promise<Application[]>;

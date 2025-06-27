@@ -1,0 +1,91 @@
+Please implement **Twilio-based SMS 2-Factor Authentication (2FA)** in the `/apps/client-app` React application as part of the login process.
+
+---
+
+### 🔐 Goal:
+- After client logs in via Replit OAuth, they must enter a **6-digit SMS code** sent to their phone.
+- The user must complete the 2FA step before accessing the client dashboard or any protected route.
+- Code must expire after 5 minutes and be stored securely.
+- The phone number is linked to the user during registration or first login.
+
+---
+
+### 📦 Dependencies:
+Install these packages (if not already included):
+- `axios` – for HTTP requests
+- `zod` – for validation
+- Use existing Tailwind + Shadcn for UI
+
+---
+
+### 🏗️ Feature Implementation
+
+1. **Backend API endpoints** (already live or stub them temporarily):
+   - `POST /api/2fa/send`  
+     Payload: `{ phone: string }`  
+     Sends a Twilio SMS with a 6-digit code.
+   
+   - `POST /api/2fa/verify`  
+     Payload: `{ phone: string, code: string }`  
+     Verifies the 2FA code and issues session access.
+     
+   These endpoints must:
+   - Be tenant-aware
+   - Rate-limit attempts
+   - Expire codes after 5 minutes
+   - Store hashed codes securely in DB
+
+2. **Frontend 2FA Flow (New Route)**:
+   - Create a page `/2fa` (e.g., `routes/2fa.tsx`)
+   - If user is logged in but not 2FA-verified, redirect them to `/2fa`
+   - Show a form:
+     ```
+     Verify your phone number:
+     - Enter the 6-digit code sent to +1-XXX-XXX-1234
+     [_____] [Verify]
+     [Resend Code]
+     ```
+   - On "Verify", call `/api/2fa/verify`
+   - On "Resend", call `/api/2fa/send`
+
+3. **AuthContext Changes**:
+   - Add `is2FAComplete` to auth state
+   - After OAuth login, check if 2FA is required
+   - Block access to protected routes unless `is2FAComplete === true`
+   - Redirect to `/2fa` if not complete
+
+4. **Protect Routes**:
+   - In your route guard or `PrivateRoute` wrapper, enforce:
+     ```tsx
+     if (!auth.isLoggedIn) redirect("/login");
+     else if (!auth.is2FAComplete) redirect("/2fa");
+     ```
+
+5. **UX Considerations**:
+   - Show loading and error states
+   - Mask phone number in UI
+   - Allow resend only once every 60 seconds
+   - Show "Back to login" link
+
+---
+
+### 🧪 Testing
+
+- Test valid login → 2FA code required → valid code → access granted
+- Test expired/invalid code → show error
+- Test rate limit on code resend
+- Test that users can't bypass 2FA by going directly to `/dashboard`
+
+---
+
+### 📱 Twilio Setup Notes
+
+Twilio is already integrated in the backend (trial number: `+1 775-314-6801`)
+
+- Use Twilio's `messages.create()` with the template:
+  `"Your Boreal verification code is: 123456"`
+- Replit secrets for TWILIO_ACCOUNT_SID, AUTH_TOKEN, FROM_NUMBER must be preconfigured
+
+---
+
+Once implemented, notify me so I can test the full flow with Replit OAuth + Twilio 2FA.
