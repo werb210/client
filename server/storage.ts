@@ -99,7 +99,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(applications)
       .where(eq(applications.id, id) && eq(applications.userId, userId));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Document operations
@@ -122,7 +122,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(documents)
       .where(eq(documents.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Lender product operations

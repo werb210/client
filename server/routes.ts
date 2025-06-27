@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -80,8 +81,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const application = await storage.createApplication(validatedData);
       res.status(201).json(application);
-    } catch (error) {
-      if (error.name === 'ZodError') {
+    } catch (error: any) {
+      if (error?.name === 'ZodError') {
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
       }
@@ -103,8 +104,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(application);
-    } catch (error) {
-      if (error.name === 'ZodError') {
+    } catch (error: any) {
+      if (error?.name === 'ZodError') {
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
       }
@@ -167,8 +168,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const document = await storage.createDocument(validatedData);
       
       res.status(201).json(document);
-    } catch (error) {
-      if (error.name === 'ZodError') {
+    } catch (error: any) {
+      if (error?.name === 'ZodError') {
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.message });
       }
