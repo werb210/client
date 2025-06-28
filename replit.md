@@ -146,8 +146,13 @@ Changelog:
     * Fixed authentication guard to include all testing routes as public
     * Implemented complete registration → OTP verification → authentication flow
     * Added backend connectivity diagnostics for troubleshooting CORS issues
-    * Registration flow properly redirects: /register → /verify-otp → /step1-financial-profile
+    * Registration flow properly redirects: /register → /verify-otp → /application
     * All API calls use cookie-based sessions with proper CORS configuration
+    * Implemented unified apiFetch function using import.meta.env.VITE_API_BASE_URL
+    * Created production-ready .env.production with correct API endpoints
+    * Simplified authentication flow with direct API calls instead of AuthAPI wrapper
+    * All registration and OTP verification uses apiFetch with proper error handling
+    * Authentication guard supports both testing routes and protected application routes
 ```
 
 ## User Preferences

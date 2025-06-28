@@ -38,9 +38,9 @@ export default function VerifyOtp() {
   const onSubmit = async (data: OtpFormData) => {
     setIsLoading(true);
     try {
-      const response = await AuthAPI.verifyOtp({ 
-        email: email || '', 
-        code: data.otp 
+      const response = await apiFetch('/auth/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email: email || '', code: data.otp }),
       });
       
       if (!response.ok) {
@@ -62,7 +62,7 @@ export default function VerifyOtp() {
         description: result.message || 'Phone number verified successfully!',
       });
       
-      setLocation('/step1-financial-profile');
+      setLocation('/application');
     } catch (error) {
       toast({
         title: 'Verification Error',
@@ -86,7 +86,10 @@ export default function VerifyOtp() {
 
     setIsResending(true);
     try {
-      const response = await AuthAPI.resendOtp({ email });
+      const response = await apiFetch('/auth/resend-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Failed to resend OTP' }));
