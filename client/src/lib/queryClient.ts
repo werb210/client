@@ -49,19 +49,32 @@ export const getQueryFn: (options: {
       
       throw new Error(`No API function mapped for endpoint: ${endpoint}`);
     } catch (error) {
-      if (error instanceof api.ApiError && error.status === 401 && unauthorizedBehavior === "returnNull") {
-        return null;
-      }
-      
-      // Handle staff backend unavailable gracefully
-      if (error instanceof api.ApiError && error.status >= 500) {
-        console.warn('Staff backend temporarily unavailable, returning null for graceful degradation');
-        return null;
-      }
-      
-      // Handle network errors (fetch failures)
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        console.warn('Network error occurred, staff backend may be unavailable');
+      // Safely handle all error types to prevent runtime issues
+      try {
+        if (error instanceof api.ApiError && error.status === 401 && unauthorizedBehavior === "returnNull") {
+          return null;
+        }
+        
+        // Handle staff backend unavailable gracefully
+        if (error instanceof api.ApiError && error.status >= 500) {
+          console.warn('Staff backend temporarily unavailable, returning null for graceful degradation');
+          return null;
+        }
+        
+        // Handle network errors (fetch failures)
+        if (error instanceof TypeError && error.message && error.message.includes('fetch')) {
+          console.warn('Network error occurred, staff backend may be unavailable');
+          return null;
+        }
+        
+        // Handle any other errors safely
+        if (error instanceof Error) {
+          console.warn('API request failed:', error.message);
+          return null;
+        }
+        
+      } catch (handlingError) {
+        console.warn('Error in error handling:', handlingError);
         return null;
       }
       
@@ -76,16 +89,7 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,
-      retry: (failureCount, error) => {
-        // Don't retry on 401 errors or network errors
-        if (error instanceof api.ApiError && (error.status === 401 || error.status >= 500)) {
-          return false;
-        }
-        if (error instanceof TypeError && error.message.includes('fetch')) {
-          return false;
-        }
-        return failureCount < 1; // Only retry once
-      },
+      retry: false, // Disable retries to prevent infinite loops
     },
     mutations: {
       retry: false,

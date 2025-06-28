@@ -49,7 +49,7 @@ app.use((req, res, next) => {
   app.use('/api', (req, res) => {
     res.status(503).json({ 
       message: 'This client app is configured to use staff backend API. Please ensure staff backend is running.',
-      redirectTo: 'https://staff.borealfinance.app/api' + req.path
+      redirectTo: 'https://staffportal.replit.app/api' + req.path
     });
   });
 
