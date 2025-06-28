@@ -13,6 +13,7 @@ import TwoFactorAuth from "@/pages/TwoFactorAuth";
 import Registration from "@/pages/Registration";
 import { ComprehensiveTestingChecklist } from "@/components/ComprehensiveTestingChecklist";
 import TestConnection from "@/pages/TestConnection";
+import SimpleTest from "@/pages/SimpleTest";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
@@ -39,6 +40,7 @@ function Router() {
           <Route path="/application" component={ApplicationForm} />
           <Route path="/testing" component={ComprehensiveTestingChecklist} />
           <Route path="/test-connection" component={TestConnection} />
+          <Route path="/simple-test" component={SimpleTest} />
           <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
           <Route path="/step2-recommendations" component={Step2Recommendations} />
           <Route path="/step3-business-details" component={Step3BusinessDetails} />
