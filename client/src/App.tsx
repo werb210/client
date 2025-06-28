@@ -23,6 +23,7 @@ import AuthFlowTest from "@/pages/AuthFlowTest";
 import VerificationReport from "@/pages/VerificationReport";
 import DebugChecklist from "@/pages/DebugChecklist";
 import SimpleConnectionTest from "@/pages/SimpleConnectionTest";
+import TestStaffBackend from "@/pages/TestStaffBackend";
 import Login from "@/pages/Login";
 import PhoneLogin from "@/pages/PhoneLogin";
 import Register from "@/pages/Register";
@@ -55,6 +56,7 @@ function Router() {
         <Route path="/simple-register-test" component={SimpleRegisterTest} />
         <Route path="/backend-test" component={BackendConnectivity} />
         <Route path="/auth-flow-test" component={AuthFlowTest} />
+        <Route path="/test-staff-backend" component={TestStaffBackend} />
         
         {/* Redirect root to login for unauthenticated users */}
         <Route path="/" component={Login} />
