@@ -96,12 +96,17 @@ The application follows a client-staff separation architecture:
 ```
 Changelog:
 - June 27, 2025: Initial setup
-- June 28, 2025: Migrated to client-staff architecture
+- June 28, 2025: Completed client-staff architecture migration
   - Removed all local database logic (Drizzle, schema, storage)
   - Created centralized API layer (/lib/api.ts) for staff backend communication
   - Updated routing to staff backend at https://staff.borealfinance.app/api
   - Simplified authentication flow for frontend-only operation
   - Added architectural documentation in /docs/ARCHITECTURE.md
+  - Implemented real file uploads using FormData to staff backend
+  - Added SignNow redirect flow integration (no iframe)
+  - Created comprehensive testing checklist (/testing route)
+  - Configured offline storage to sync with staff backend when online
+  - Added proper error handling for 401 redirects to login
 ```
 
 ## User Preferences

@@ -10,6 +10,7 @@ import Dashboard from "@/pages/Dashboard";
 import ApplicationForm from "@/pages/ApplicationForm";
 import TwoFactorAuth from "@/pages/TwoFactorAuth";
 import Registration from "@/pages/Registration";
+import { TestingChecklist } from "@/components/TestingChecklist";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,6 +25,7 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/application" component={ApplicationForm} />
+          <Route path="/testing" component={TestingChecklist} />
         </>
       )}
       <Route component={NotFound} />
