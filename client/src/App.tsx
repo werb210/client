@@ -19,6 +19,7 @@ import CorsTest from "@/pages/CorsTest";
 import DebugTest from "@/pages/DebugTest";
 import SimpleRegisterTest from "@/pages/SimpleRegisterTest";
 import BackendConnectivity from "@/pages/BackendConnectivity";
+import AuthFlowTest from "@/pages/AuthFlowTest";
 import VerificationReport from "@/pages/VerificationReport";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -48,6 +49,7 @@ function Router() {
         <Route path="/cors-test" component={CorsTest} />
         <Route path="/simple-register-test" component={SimpleRegisterTest} />
         <Route path="/backend-test" component={BackendConnectivity} />
+        <Route path="/auth-flow-test" component={AuthFlowTest} />
         
         {/* Public landing page */}
         <Route path="/" component={Landing} />

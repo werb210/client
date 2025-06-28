@@ -20,7 +20,15 @@ export function AuthGuard({ children }: AuthGuardProps) {
       '/register', 
       '/verify-otp',
       '/request-reset',
-      '/reset-password'
+      '/reset-password',
+      '/debug-test',
+      '/cors-test',
+      '/simple-register-test',
+      '/backend-test',
+      '/auth-flow-test',
+      '/testing',
+      '/test-connection',
+      '/simple-test'
     ];
 
     const isPublicRoute = publicRoutes.some(route => 

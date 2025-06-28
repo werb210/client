@@ -138,6 +138,16 @@ Changelog:
   - Generated complete technical report (TECHNICAL_REPORT.md) documenting CORS configuration requirements
   - Application ready for deployment pending staff backend CORS allowlist configuration
   - All 7 application steps completed with proper API integration and error handling
+  - June 28, 2025: Completed SMS OTP authentication integration with staff backend
+    * Fixed environment variables: VITE_API_BASE_URL=https://staffportal.replit.app/api
+    * Updated SIGNNOW_REDIRECT_URL to https://clientportal.replit.app/step6-signature
+    * Enhanced AuthAPI with proper credentials: 'include' and mode: 'cors'
+    * Created comprehensive testing suite: /auth-flow-test, /backend-test, /cors-test
+    * Fixed authentication guard to include all testing routes as public
+    * Implemented complete registration → OTP verification → authentication flow
+    * Added backend connectivity diagnostics for troubleshooting CORS issues
+    * Registration flow properly redirects: /register → /verify-otp → /step1-financial-profile
+    * All API calls use cookie-based sessions with proper CORS configuration
 ```
 
 ## User Preferences
