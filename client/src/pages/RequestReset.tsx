@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { staffApi } from '@/lib/staffApi';
 
 
 const resetRequestSchema = z.object({
@@ -33,19 +34,12 @@ export default function RequestReset() {
   const onSubmit = async (data: ResetRequestFormData) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'}/auth/request-reset`, {
-        method: 'POST',
-        credentials: 'include',
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
+      const result = await staffApi.requestPasswordReset(data.email);
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Reset request failed' }));
+      if (!result.success) {
         toast({
           title: 'Request Failed',
-          description: errorData.message || 'Unable to process reset request',
+          description: result.error || result.message || 'Unable to process reset request',
           variant: 'destructive',
         });
         return;
@@ -57,6 +51,7 @@ export default function RequestReset() {
         description: 'Please check your email for password reset instructions.',
       });
     } catch (error) {
+      console.error('Password reset request error:', error);
       toast({
         title: 'Request Error',
         description: 'Unable to connect to server. Please try again.',
