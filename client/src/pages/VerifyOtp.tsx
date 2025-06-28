@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { AuthAPI } from '@/lib/authApi';
 
 const otpSchema = z.object({
   otp: z.string().length(6, 'OTP must be 6 digits'),
@@ -37,12 +38,9 @@ export default function VerifyOtp() {
   const onSubmit = async (data: OtpFormData) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'}/auth/verify-otp`, {
-        method: 'POST',
-        credentials: 'include',
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp: data.otp })
+      const response = await AuthAPI.verifyOtp({ 
+        email: email || '', 
+        code: data.otp 
       });
       
       if (!response.ok) {
@@ -55,12 +53,13 @@ export default function VerifyOtp() {
         return;
       }
 
+      const result = await response.json();
       sessionStorage.removeItem('otpEmail');
       await refreshUser();
       
       toast({
         title: 'Verification Successful',
-        description: 'Phone number verified successfully!',
+        description: result.message || 'Phone number verified successfully!',
       });
       
       setLocation('/step1-financial-profile');
@@ -76,14 +75,18 @@ export default function VerifyOtp() {
   };
 
   const handleResendOtp = async () => {
+    if (!email) {
+      toast({
+        title: 'Error',
+        description: 'Email not found. Please try logging in again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsResending(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'}/auth/resend-otp`, {
-        method: 'POST',
-        credentials: 'include',
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const response = await AuthAPI.resendOtp({ email });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Failed to resend OTP' }));

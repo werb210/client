@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async () => {
     try {
-      const response = await AuthAPI.me();
+      const response = await AuthAPI.getCurrentUser();
       
       if (response.ok) {
         const userData = await response.json();
@@ -64,10 +64,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const result = await response.json();
       
-      if (result.otpRequired) {
+      // Staff backend always sends OTP for login
+      if (result.message === "OTP sent") {
         return { success: true, otpRequired: true };
       } else {
-        // Login successful without OTP
+        // Direct authentication (fallback)
         await fetchUser(); // Refresh user data
         return { success: true, otpRequired: false };
       }

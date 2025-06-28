@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { AuthAPI } from '@/lib/authApi';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -41,13 +42,7 @@ export default function Register() {
     setIsLoading(true);
     try {
       const { confirmPassword, ...registrationData } = data;
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'}/auth/register`, {
-        method: 'POST',
-        credentials: 'include',
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(registrationData)
-      });
+      const response = await AuthAPI.register(registrationData);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Registration failed' }));
@@ -64,11 +59,12 @@ export default function Register() {
       // Save email to localStorage for future auth redirects
       localStorage.setItem('user-email', data.email);
 
-      if (result.otpRequired) {
+      // Staff backend always sends OTP for registration
+      if (result.message === "OTP sent") {
         sessionStorage.setItem('otpEmail', data.email);
         toast({
           title: 'Account Created',
-          description: 'Please verify your phone number to continue.',
+          description: 'SMS verification code sent to your phone.',
         });
         setLocation('/verify-otp');
       } else {
