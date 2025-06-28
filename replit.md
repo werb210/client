@@ -131,6 +131,9 @@ Changelog:
   - Implemented brand-consistent typography, component styling, and color variables
   - Created hero section with gradient background matching brand guidelines
   - Applied responsive branding across Landing page, Dashboard, and all form components
+  - Updated production configuration to connect to deployed staff backend at https://staffportal.replit.app/api
+  - Enhanced error handling for network connectivity and staff backend unavailability
+  - Configured graceful degradation for offline/unreachable backend scenarios
 ```
 
 ## User Preferences
