@@ -49,6 +49,7 @@ export async function apiRequest<T>(
   
   const config: RequestInit = {
     credentials: 'include', // Include session cookies
+    mode: 'cors', // Enable CORS
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,

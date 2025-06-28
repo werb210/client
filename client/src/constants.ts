@@ -1,5 +1,5 @@
 // API Configuration Constants
-export const API_BASE_URL = "https://staffportal.replit.app/api";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://staffportal.replit.app/api";
 
 // Application Configuration
 export const APP_CONFIG = {
