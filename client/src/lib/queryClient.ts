@@ -52,6 +52,19 @@ export const getQueryFn: (options: {
       if (error instanceof api.ApiError && error.status === 401 && unauthorizedBehavior === "returnNull") {
         return null;
       }
+      
+      // Handle staff backend unavailable gracefully
+      if (error instanceof api.ApiError && error.status >= 500) {
+        console.warn('Staff backend temporarily unavailable, returning null for graceful degradation');
+        return null;
+      }
+      
+      // Handle network errors (fetch failures)
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.warn('Network error occurred, staff backend may be unavailable');
+        return null;
+      }
+      
       throw error;
     }
   };
@@ -63,7 +76,16 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,
-      retry: false,
+      retry: (failureCount, error) => {
+        // Don't retry on 401 errors or network errors
+        if (error instanceof api.ApiError && (error.status === 401 || error.status >= 500)) {
+          return false;
+        }
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+          return false;
+        }
+        return failureCount < 1; // Only retry once
+      },
     },
     mutations: {
       retry: false,

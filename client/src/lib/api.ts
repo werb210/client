@@ -59,6 +59,12 @@ export async function apiRequest<T>(
       throw new ApiError('Unauthorized - redirecting to login', 401, response);
     }
     
+    // Handle staff backend unavailable
+    if (!response.ok && response.status >= 500) {
+      console.warn('Staff backend temporarily unavailable:', response.status);
+      throw new ApiError(`Staff backend error: ${response.statusText}`, response.status, response);
+    }
+    
     if (!response.ok) {
       const errorText = await response.text();
       throw new ApiError(
