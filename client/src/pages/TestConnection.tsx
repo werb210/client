@@ -3,15 +3,34 @@ import { testStaffBackendConnection } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+interface TestResult {
+  connected: boolean;
+  error?: string;
+  apiTest?: string;
+}
+
 export default function TestConnection() {
-  const [result, setResult] = useState<{ connected: boolean; error?: string } | null>(null);
+  const [result, setResult] = useState<TestResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const testConnection = async () => {
     setIsLoading(true);
     try {
-      const connectionResult = await testStaffBackendConnection();
-      setResult(connectionResult);
+      // First test the /health endpoint directly
+      const healthResult = await testStaffBackendConnection();
+      
+      // Also test a basic API endpoint
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api';
+      const basicResponse = await fetch(`${apiUrl}/auth/user`, {
+        method: 'GET',
+        credentials: 'include',
+      }).catch(err => ({ ok: false, status: 0, statusText: err.message }));
+      
+      setResult({
+        connected: healthResult.connected,
+        error: healthResult.error,
+        apiTest: basicResponse.ok ? 'API endpoint accessible' : `API test failed: ${basicResponse.statusText}`
+      } as TestResult);
     } catch (error) {
       setResult({
         connected: false,
@@ -62,6 +81,11 @@ export default function TestConnection() {
                 {result.error && (
                   <p className="text-red-700 mt-2 text-sm">
                     Error: {result.error}
+                  </p>
+                )}
+                {result.apiTest && (
+                  <p className="text-blue-700 mt-2 text-sm">
+                    API Test: {result.apiTest}
                   </p>
                 )}
               </div>
