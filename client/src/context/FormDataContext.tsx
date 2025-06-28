@@ -31,10 +31,31 @@ export interface FinancialInfoData {
   totalLiabilities: string;
 }
 
+export interface DocumentUploadData {
+  categories: Array<{
+    id: string;
+    name: string;
+    documents: Array<{
+      id: string;
+      categoryId: string;
+      name: string;
+      size: number;
+      status: 'uploading' | 'completed' | 'error';
+      progress: number;
+      url?: string;
+      error?: string;
+    }>;
+    uploadLater: boolean;
+  }>;
+  completedAt?: string;
+  savedAt?: string;
+}
+
 export interface FormDataState {
   step1FinancialProfile: FinancialProfileData;
   step3BusinessDetails?: BusinessDetailsData;
   step4FinancialInfo?: FinancialInfoData;
+  step5DocumentUpload?: DocumentUploadData;
   currentStep: number;
   isComplete: boolean;
 }
@@ -43,6 +64,7 @@ type FormDataAction =
   | { type: 'UPDATE_STEP1'; payload: Partial<FinancialProfileData> }
   | { type: 'UPDATE_STEP3'; payload: Partial<BusinessDetailsData> }
   | { type: 'UPDATE_STEP4'; payload: Partial<FinancialInfoData> }
+  | { type: 'UPDATE_STEP5'; payload: Partial<DocumentUploadData> }
   | { type: 'SET_CURRENT_STEP'; payload: number }
   | { type: 'MARK_COMPLETE' }
   | { type: 'LOAD_FROM_STORAGE'; payload: FormDataState };
@@ -86,6 +108,14 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
           ...state.step4FinancialInfo,
           ...action.payload,
         } as FinancialInfoData,
+      };
+    case 'UPDATE_STEP5':
+      return {
+        ...state,
+        step5DocumentUpload: {
+          ...state.step5DocumentUpload,
+          ...action.payload,
+        } as DocumentUploadData,
       };
     case 'SET_CURRENT_STEP':
       return {

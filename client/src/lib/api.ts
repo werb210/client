@@ -91,6 +91,8 @@ export interface DocumentRequirement {
   description: string;
   required: boolean;
   category: string;
+  acceptedFormats: string[];
+  maxSizeMB: number;
 }
 
 export interface Application {
