@@ -40,6 +40,7 @@ import StaffBackendStatus from "@/pages/StaffBackendStatus";
 import SimpleBackendTest from "@/pages/SimpleBackendTest";
 import BackendFallback from "@/pages/BackendFallback";
 import ConnectivitySummary from "@/pages/ConnectivitySummary";
+import VerificationChecklist from "@/pages/VerificationChecklist";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
@@ -77,6 +78,7 @@ function Router() {
         <Route path="/simple-backend-test" component={SimpleBackendTest} />
         <Route path="/backend-fallback" component={BackendFallback} />
         <Route path="/connectivity-summary" component={ConnectivitySummary} />
+        <Route path="/verification-checklist" component={VerificationChecklist} />
         
         {/* Redirect root to login for unauthenticated users */}
         <Route path="/" component={Login} />
