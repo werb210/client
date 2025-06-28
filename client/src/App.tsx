@@ -37,6 +37,8 @@ import ApiTest from "@/pages/ApiTest";
 import UserDatabase from "@/pages/UserDatabase";
 import QuickUserCheck from "@/pages/QuickUserCheck";
 import StaffBackendStatus from "@/pages/StaffBackendStatus";
+import SimpleBackendTest from "@/pages/SimpleBackendTest";
+import BackendFallback from "@/pages/BackendFallback";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
@@ -71,6 +73,8 @@ function Router() {
         <Route path="/user-database" component={UserDatabase} />
         <Route path="/quick-user-check" component={QuickUserCheck} />
         <Route path="/staff-backend-status" component={StaffBackendStatus} />
+        <Route path="/simple-backend-test" component={SimpleBackendTest} />
+        <Route path="/backend-fallback" component={BackendFallback} />
         
         {/* Redirect root to login for unauthenticated users */}
         <Route path="/" component={Login} />
