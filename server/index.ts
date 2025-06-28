@@ -1,5 +1,4 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
@@ -37,7 +36,22 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  // Simple auth routes for client-only mode
+  app.get('/api/login', (req, res) => {
+    res.redirect('/api/auth/login');
+  });
+
+  app.get('/api/logout', (req, res) => {
+    res.redirect('/api/auth/logout');
+  });
+
+  // Placeholder API routes that will redirect to staff backend
+  app.use('/api', (req, res) => {
+    res.status(503).json({ 
+      message: 'This client app is configured to use staff backend API. Please ensure staff backend is running.',
+      redirectTo: 'https://staff.borealfinance.app/api' + req.path
+    });
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -46,6 +60,10 @@ app.use((req, res, next) => {
     res.status(status).json({ message });
     throw err;
   });
+
+  // Create HTTP server
+  const { createServer } = await import("http");
+  const server = createServer(app);
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
@@ -65,6 +83,6 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`Client app serving on port ${port} - API calls will route to staff backend`);
   });
 })();

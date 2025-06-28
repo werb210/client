@@ -1,5 +1,7 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import * as api from "./api";
 
+// Legacy functions for backward compatibility
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -12,15 +14,8 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
-
-  await throwIfResNotOk(res);
-  return res;
+  // Redirect to staff backend API functions
+  throw new Error(`Direct apiRequest deprecated. Use specific API functions from ./api.ts for ${url}`);
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -29,16 +24,36 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-    });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    const endpoint = queryKey[0] as string;
+    
+    try {
+      // Route different endpoints to appropriate API functions
+      if (endpoint === '/api/auth/user') {
+        return await api.getUserProfile() as T;
+      } else if (endpoint === '/api/2fa/status') {
+        return await api.get2FAStatus() as T;
+      } else if (endpoint === '/api/applications') {
+        return await api.getUserApplications() as T;
+      } else if (endpoint.startsWith('/api/applications/')) {
+        const applicationId = endpoint.split('/').pop();
+        return await api.getApplication(applicationId!) as T;
+      } else if (endpoint.startsWith('/api/documents/requirements')) {
+        const params = new URLSearchParams(endpoint.split('?')[1] || '');
+        const category = params.get('category');
+        return await api.fetchRequiredDocuments(category || '') as T;
+      } else if (endpoint.startsWith('/api/lenders/requirements')) {
+        const params = new URLSearchParams(endpoint.split('?')[1] || '');
+        const category = params.get('category');
+        return await api.getLenderProducts(category || undefined) as T;
+      }
+      
+      throw new Error(`No API function mapped for endpoint: ${endpoint}`);
+    } catch (error) {
+      if (error instanceof api.ApiError && error.status === 401 && unauthorizedBehavior === "returnNull") {
+        return null;
+      }
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export const queryClient = new QueryClient({
