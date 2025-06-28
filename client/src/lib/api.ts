@@ -1,5 +1,16 @@
+// Production configuration
+const PRODUCTION_CONFIG = {
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://staff.borealfinance.app/api',
+  SIGNNOW_REDIRECT_URL: import.meta.env.VITE_SIGNNOW_REDIRECT_URL || window.location.origin + '/step6-signature',
+  MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
+  MIN_FILE_SIZE: 5 * 1024, // 5KB
+  REQUEST_TIMEOUT: 30000, // 30 seconds
+  RETRY_ATTEMPTS: 3,
+  IS_PRODUCTION: import.meta.env.PROD,
+};
+
 // Centralized API communication layer for staff backend integration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://staff.borealfinance.app/api';
+const API_BASE_URL = PRODUCTION_CONFIG.API_BASE_URL;
 
 // Error class for API-related errors
 export class ApiError extends Error {
