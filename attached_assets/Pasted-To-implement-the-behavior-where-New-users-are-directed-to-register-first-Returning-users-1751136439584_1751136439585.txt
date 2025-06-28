@@ -1,0 +1,82 @@
+To implement the behavior where:
+
+* **New users are directed to register first**
+* **Returning users always go to the Sign In page**
+
+Here's exactly what to tell Replit in the **Client application chat**:
+
+---
+
+````txt
+#############################################
+# CLIENT AUTH FLOW: Register-First Behavior #
+#############################################
+
+🔐 GOAL
+Ensure that users who haven't registered **must register first**, and after that, they always use the **Sign In** screen.
+
+──────────────────────────────────────────────
+1️⃣ On first click of any “Get Started” or “Sign In”:
+
+• Check if user has registered before (email in localStorage)
+• If not → redirect to `/register`
+• If yes  → redirect to `/login`
+
+──────────────────────────────────────────────
+2️⃣ Hook: `useInitialAuthRedirect()`
+
+• Create a reusable hook that does:
+
+```ts
+const email = localStorage.getItem("user-email");
+if (!email) navigate("/register");
+else navigate("/login");
+````
+
+──────────────────────────────────────────────
+3️⃣ Update CTA Buttons
+
+In all CTA buttons (navbar, hero, cards):
+
+• onClick → `useInitialAuthRedirect()`
+• Example:
+
+```tsx
+<Button onClick={handleAuthRedirect}>Start Your Application</Button>
+```
+
+──────────────────────────────────────────────
+4️⃣ On Register Success
+
+• After successful registration:
+
+* Save `localStorage.setItem("user-email", email)`
+* Redirect to `/verify-otp` as normal
+
+──────────────────────────────────────────────
+5️⃣ Optional Fallback
+
+If localStorage fails (user clears cache):
+→ redirect to `/register` again (safe default)
+
+──────────────────────────────────────────────
+✅ Summary
+
+• New users always go to `/register`
+• Returning users go to `/login`
+• Behavior controlled client-side using `localStorage`
+
+\#############################################
+
+```
+
+---
+
+🧠 **Why this works well**
+
+- It keeps the current flow and security system you built
+- Avoids backend checks (no extra API hit needed)
+- Ensures a smooth UX — register once, then login forever
+
+Just paste the instruction block above into the **Client Replit project**, and the AI will take care of wiring it up correctly.
+```

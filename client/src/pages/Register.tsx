@@ -61,6 +61,9 @@ export default function Register() {
 
       const result = await response.json();
       
+      // Save email to localStorage for future auth redirects
+      localStorage.setItem('user-email', data.email);
+
       if (result.otpRequired) {
         sessionStorage.setItem('otpEmail', data.email);
         toast({

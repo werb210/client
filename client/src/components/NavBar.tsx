@@ -1,7 +1,10 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { useInitialAuthRedirect } from '@/hooks/useInitialAuthRedirect';
 
 export function NavBar() {
+  const { handleAuthRedirect } = useInitialAuthRedirect();
+
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-sm border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -17,16 +20,19 @@ export function NavBar() {
 
           {/* Navigation Links */}
           <div className="flex items-center space-x-4">
-            <Link href="/login">
-              <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button className="bg-teal-600 hover:bg-teal-700 text-white">
-                Get Started
-              </Button>
-            </Link>
+            <Button 
+              variant="ghost" 
+              className="text-gray-600 hover:text-gray-900"
+              onClick={handleAuthRedirect}
+            >
+              Sign In
+            </Button>
+            <Button 
+              className="bg-teal-600 hover:bg-teal-700 text-white"
+              onClick={handleAuthRedirect}
+            >
+              Get Started
+            </Button>
           </div>
         </div>
       </div>

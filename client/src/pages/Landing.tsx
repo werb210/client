@@ -1,12 +1,15 @@
-import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { NavBar } from '@/components/NavBar';
 import { CheckCircle, TrendingUp, Shield } from 'lucide-react';
+import { useInitialAuthRedirect } from '@/hooks/useInitialAuthRedirect';
 
 export default function Landing() {
+  const { handleAuthRedirect } = useInitialAuthRedirect();
+
   return (
     <div className="min-h-screen bg-white">
+      <NavBar />
       
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-teal-50 to-orange-50 py-20">
@@ -19,11 +22,13 @@ export default function Landing() {
               Connecting Canadian and US businesses with tailored funding solutions. 
               Streamlined applications, competitive rates, and expert support.
             </p>
-            <Link href="/login">
-              <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-lg rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500">
-                Start Your Application
-              </Button>
-            </Link>
+            <Button 
+              size="lg" 
+              className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-lg rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+              onClick={handleAuthRedirect}
+            >
+              Start Your Application
+            </Button>
           </div>
         </div>
       </section>
@@ -139,11 +144,13 @@ export default function Landing() {
           </div>
 
           <div className="text-center mt-12">
-            <Link href="/login">
-              <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-lg rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500">
-                Get Started Today
-              </Button>
-            </Link>
+            <Button 
+              size="lg" 
+              className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-lg rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+              onClick={handleAuthRedirect}
+            >
+              Get Started Today
+            </Button>
           </div>
         </div>
       </section>
@@ -156,11 +163,13 @@ export default function Landing() {
             <p className="text-gray-400 mb-6">
               Professional business financing solutions for the modern economy.
             </p>
-            <Link href="/login">
-              <Button variant="outline" className="border-teal-500 text-teal-400 hover:bg-teal-500 hover:text-white">
-                Start Your Application
-              </Button>
-            </Link>
+            <Button 
+              variant="outline" 
+              className="border-teal-500 text-teal-400 hover:bg-teal-500 hover:text-white"
+              onClick={handleAuthRedirect}
+            >
+              Start Your Application
+            </Button>
           </div>
         </div>
       </footer>

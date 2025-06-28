@@ -47,6 +47,9 @@ export default function Login() {
         return;
       }
 
+      // Save email to localStorage for future auth redirects
+      localStorage.setItem('user-email', data.email);
+
       if (result.otpRequired) {
         // Store email for OTP verification
         sessionStorage.setItem('otpEmail', data.email);
