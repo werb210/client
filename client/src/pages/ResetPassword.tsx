@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { staffApi } from '@/lib/staffApi';
+import { fallbackApi } from '@/lib/fallbackApi';
 
 
 const resetPasswordSchema = z.object({
@@ -50,12 +50,12 @@ export default function ResetPassword() {
 
     setIsLoading(true);
     try {
-      const result = await staffApi.resetPassword(token, data.newPassword);
+      const result = await fallbackApi.resetPassword(token, data.newPassword);
       
       if (!result.success) {
         toast({
           title: 'Reset Failed',
-          description: result.error || result.message || 'Unable to reset password',
+          description: result.error || 'Unable to reset password',
           variant: 'destructive',
         });
         return;

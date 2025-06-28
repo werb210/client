@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { staffApi } from '@/lib/staffApi';
+import { fallbackApi } from '@/lib/fallbackApi';
 import { useToast } from '@/hooks/use-toast';
 
 interface User {
@@ -38,12 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async () => {
     try {
-      const result = await staffApi.getCurrentUser();
+      const result = await fallbackApi.getCurrentUser();
       
       if (result.success && result.data) {
         setUser(result.data);
       } else {
         setUser(null);
+        if (result.fallback) {
+          console.log('Staff backend unreachable, user logged out locally');
+        }
       }
     } catch (error) {
       console.error('Fetch user error:', error);
@@ -55,15 +58,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<{ success: boolean; otpRequired?: boolean }> => {
     try {
-      const result = await staffApi.login(email, password);
+      const result = await fallbackApi.login(email, password);
       
       if (!result.success) {
-        console.error('Login failed:', result.error || result.message);
+        console.error('Login failed:', result.error);
         return { success: false };
       }
 
       // Staff backend always sends OTP for login
-      if (result.message === "OTP sent" || result.data?.otpRequired) {
+      if (result.data?.message === "OTP sent" || result.data?.otpRequired) {
         return { success: true, otpRequired: true };
       } else {
         // Direct authentication (fallback)
@@ -78,7 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async (): Promise<void> => {
     try {
-      await staffApi.logout();
+      const result = await fallbackApi.logout();
+      if (result.fallback) {
+        console.log('Logged out locally (staff backend unreachable)');
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

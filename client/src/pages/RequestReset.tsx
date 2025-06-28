@@ -34,12 +34,12 @@ export default function RequestReset() {
   const onSubmit = async (data: ResetRequestFormData) => {
     setIsLoading(true);
     try {
-      const result = await staffApi.requestPasswordReset(data.email);
+      const result = await fallbackApi.requestPasswordReset(data.email);
       
       if (!result.success) {
         toast({
           title: 'Request Failed',
-          description: result.error || result.message || 'Unable to process reset request',
+          description: result.error || 'Unable to process reset request',
           variant: 'destructive',
         });
         return;
