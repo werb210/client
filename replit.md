@@ -109,3 +109,7 @@ Changelog:
 ```
 Preferred communication style: Simple, everyday language.
 ```
+
+## Architecture Compliance
+
+All development must comply with the architecture and security standards defined in /docs/ARCHITECTURE.md.
