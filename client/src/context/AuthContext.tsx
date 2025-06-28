@@ -81,10 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async (): Promise<void> => {
     try {
-      const result = await fallbackApi.logout();
-      if (result.fallback) {
-        console.log('Logged out locally (staff backend unreachable)');
-      }
+      await AuthAPI.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
