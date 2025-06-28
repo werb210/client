@@ -87,7 +87,7 @@ export default function DebugChecklist() {
         message: 'Testing SMS OTP request with test phone...'
       });
 
-      const result = await AuthAPI.resendOtp({ phone: '+15878881837' });
+      const result = await AuthAPI.resendOtp({ email: 'test@example.com' });
       
       addResult({
         step: 'SMS OTP Request',
