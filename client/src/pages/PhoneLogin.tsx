@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,8 +19,21 @@ type PhoneLoginFormData = z.infer<typeof phoneLoginSchema>;
 
 export default function PhoneLogin() {
   const [isLoading, setIsLoading] = useState(false);
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
+
+  // Check for password reset success parameter
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reset') === 'success') {
+      toast({
+        title: 'Password Reset Complete',
+        description: 'Your password has been successfully updated. You can now log in with your new password.',
+      });
+      // Clean the URL
+      window.history.replaceState({}, '', '/login');
+    }
+  }, [toast]);
 
   const {
     register,

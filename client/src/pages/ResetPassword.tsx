@@ -38,9 +38,14 @@ export default function ResetPassword() {
   });
 
   const token = params?.token;
+  
+  // Dev-only bypass for faster testing
+  const devBypassToken = import.meta.env.DEV ? 'dev-bypass-token' : null;
 
   const onSubmit = async (data: ResetPasswordFormData) => {
-    if (!token) {
+    const resetToken = token || devBypassToken;
+    
+    if (!resetToken) {
       toast({
         title: 'Invalid Reset Link',
         description: 'The password reset link is invalid or expired.',
@@ -53,7 +58,7 @@ export default function ResetPassword() {
     setError('');
     
     try {
-      const res = await AuthAPI.resetPassword(token, data.newPassword);
+      const res = await AuthAPI.resetPassword(resetToken, data.newPassword);
       
       if (res.ok) {
         setIsSuccess(true);

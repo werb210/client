@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { fallbackApi } from '@/lib/fallbackApi';
+import { AuthAPI } from '@/lib/authApi';
 import { useToast } from '@/hooks/use-toast';
 
 interface User {
@@ -38,15 +38,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async () => {
     try {
-      const result = await fallbackApi.getCurrentUser();
+      const response = await AuthAPI.getCurrentUser();
       
-      if (result.success && result.data) {
-        setUser(result.data);
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
       } else {
         setUser(null);
-        if (result.fallback) {
-          console.log('Staff backend unreachable, user logged out locally');
-        }
       }
     } catch (error) {
       console.error('Fetch user error:', error);
@@ -58,15 +56,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<{ success: boolean; otpRequired?: boolean }> => {
     try {
-      const result = await fallbackApi.login(email, password);
+      const response = await AuthAPI.login({ email, password });
       
-      if (!result.success) {
-        console.error('Login failed:', result.error);
+      if (!response.ok) {
+        console.error('Login failed:', response.status);
         return { success: false };
       }
 
+      const result = await response.json();
+      
       // Staff backend always sends OTP for login
-      if (result.data?.message === "OTP sent" || result.data?.otpRequired) {
+      if (result.message === "OTP sent" || result.otpRequired) {
         return { success: true, otpRequired: true };
       } else {
         // Direct authentication (fallback)
