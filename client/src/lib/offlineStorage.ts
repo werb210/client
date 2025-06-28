@@ -179,6 +179,40 @@ class OfflineStorage {
       transaction.onerror = () => reject(transaction.error);
     });
   }
+
+  async syncWithStaffBackend(): Promise<void> {
+    await this.init();
+    
+    // Get pending documents for upload to staff backend
+    const pendingDocuments = await this.getPendingDocuments();
+    
+    for (const doc of pendingDocuments) {
+      try {
+        // Upload to staff backend using actual file
+        const api = await import('./api');
+        const result = await api.uploadDocument(doc.file, 'general', doc.applicationId.toString());
+        
+        // Mark as uploaded in local storage
+        await this.markDocumentUploaded(doc.id);
+        
+        console.log(`Document ${doc.id} synced to staff backend:`, result);
+      } catch (error) {
+        console.error(`Failed to sync document ${doc.id}:`, error);
+        // Keep in queue for retry
+      }
+    }
+  }
+
+  async syncApplicationData(applicationData: any): Promise<void> {
+    try {
+      const api = await import('./api');
+      await api.submitApplication(applicationData);
+      console.log('Application data synced to staff backend');
+    } catch (error) {
+      console.error('Failed to sync application data:', error);
+      throw error;
+    }
+  }
 }
 
 export const offlineStorage = new OfflineStorage();

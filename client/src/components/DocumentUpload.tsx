@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, File, X, Check, AlertCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import * as api from '@/lib/api';
+import { isUnauthorizedError } from '@/lib/authUtils';
 
 interface DocumentUploadProps {
   applicationId: number;
@@ -30,16 +31,14 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
 
   const uploadMutation = useMutation({
     mutationFn: async ({ file, fileId }: { file: File; fileId: string }) => {
-      const formData = new FormData();
-      formData.append('file', file);
-
       // Update progress
       setUploadingFiles(prev => 
         prev.map(f => f.id === fileId ? { ...f, progress: 50 } : f)
       );
 
-      const response = await apiRequest('POST', `/api/applications/${applicationId}/documents`, formData);
-      return await response.json();
+      // Upload actual file using FormData to staff backend
+      const result = await api.uploadDocument(file, 'general', applicationId.toString());
+      return { ...result, fileId };
     },
     onSuccess: (data, { fileId }) => {
       setUploadingFiles(prev => 
@@ -66,6 +65,18 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
           error: error.message 
         } : f)
       );
+      
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
       
       toast({
         title: "Upload failed",
