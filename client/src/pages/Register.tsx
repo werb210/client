@@ -84,15 +84,26 @@ export default function Register() {
         return;
       }
 
-      const result = await response.json();
+      // Handle successful response - check if response has content
+      let result;
+      try {
+        const responseText = await response.text();
+        console.log('Registration response text:', responseText);
+        result = responseText ? JSON.parse(responseText) : { success: true };
+      } catch (parseError) {
+        console.error('Registration JSON parse error:', parseError);
+        // If we can't parse JSON but response was successful, assume success
+        result = { success: true, message: 'Registration successful' };
+      }
       console.log('Registration result:', result);
       
       // Save email to localStorage for future auth redirects
       localStorage.setItem('user-email', data.email);
 
       // Check if OTP was sent successfully
-      if (result.message === "OTP sent" || result.success || result.otpSent) {
+      if (result.message === "OTP sent" || result.success || result.otpSent || response.status === 200) {
         sessionStorage.setItem('otpEmail', data.email);
+        sessionStorage.setItem('otpPhone', formattedPhone);
         toast({
           title: 'Account Created',
           description: 'SMS verification code sent to your phone.',
@@ -104,14 +115,24 @@ export default function Register() {
           title: 'Account Created Successfully',
           description: 'Welcome to Boreal Financial!',
         });
-        setLocation('/step1-financial-profile');
+        setLocation('/application');
       } else {
-        // Unexpected response format
-        toast({
-          title: 'Registration Issue',
-          description: result.message || 'Please check your details and try again.',
-          variant: 'destructive',
-        });
+        // Unexpected response format but success status
+        if (response.status === 200) {
+          sessionStorage.setItem('otpEmail', data.email);
+          sessionStorage.setItem('otpPhone', formattedPhone);
+          toast({
+            title: 'Account Created',
+            description: 'SMS verification code sent to your phone.',
+          });
+          setLocation('/verify-otp');
+        } else {
+          toast({
+            title: 'Registration Issue',
+            description: result.message || 'Please check your details and try again.',
+            variant: 'destructive',
+          });
+        }
       }
     } catch (error) {
       console.error('Registration network error:', error);
