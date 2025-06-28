@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { AuthAPI } from '@/lib/authApi';
+import { Auth } from '@/lib/auth';
 
 
 const resetPasswordSchema = z.object({
@@ -37,15 +37,15 @@ export default function ResetPassword() {
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  const token = params?.token;
+  let token = params?.token;
   
-  // Dev-only bypass for faster testing
-  const devBypassToken = import.meta.env.DEV ? 'dev-bypass-token' : null;
+  // Dev-mode shortcut - auto-generate token during local dev to skip email
+  if (import.meta.env.DEV && !token) {
+    token = 'dev-bypass-token-' + Date.now();
+  }
 
   const onSubmit = async (data: ResetPasswordFormData) => {
-    const resetToken = token || devBypassToken;
-    
-    if (!resetToken) {
+    if (!token) {
       toast({
         title: 'Invalid Reset Link',
         description: 'The password reset link is invalid or expired.',
@@ -58,7 +58,8 @@ export default function ResetPassword() {
     setError('');
     
     try {
-      const res = await AuthAPI.resetPassword(resetToken, data.newPassword);
+      const res = await Auth.resetPassword(token, data.newPassword);
+      const responseData = await res.json();
       
       if (res.ok) {
         setIsSuccess(true);
@@ -68,14 +69,13 @@ export default function ResetPassword() {
         });
         // Navigate to login with success parameter
         setTimeout(() => {
-          setLocation('/login?reset=success');
+          setLocation('/login?reset=1');
         }, 2000);
       } else {
-        const errorText = await res.text();
-        setError(errorText);
+        setError(responseData.error);
         toast({
           title: 'Reset Failed',
-          description: errorText || 'Unable to reset password',
+          description: responseData.error || 'Unable to reset password',
           variant: 'destructive',
         });
       }

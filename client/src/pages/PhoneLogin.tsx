@@ -25,7 +25,7 @@ export default function PhoneLogin() {
   // Check for password reset success parameter
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('reset') === 'success') {
+    if (urlParams.get('reset') === '1') {
       toast({
         title: 'Password Reset Complete',
         description: 'Your password has been successfully updated. You can now log in with your new password.',

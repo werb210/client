@@ -41,20 +41,13 @@ export class ApiError extends Error {
 }
 
 // Generic API request function with error handling and auth
-export async function apiFetch(
-  path: string,
-  options: RequestInit = {}
-) {
-  return fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
-    credentials: 'include',   // 🔑 sends/receives cookies
-    mode: 'cors',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-    ...options,
+export const apiFetch = (path: string, opts: RequestInit = {}) =>
+  fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
+    credentials: "include",
+    mode: "cors",
+    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+    ...opts,
   });
-}
 
 export async function apiRequest<T>(
   endpoint: string,
