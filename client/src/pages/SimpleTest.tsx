@@ -11,7 +11,38 @@ export default function SimpleTest() {
     setIsLoading(true);
     const testResults: any[] = [];
 
-    // Test 1: Health endpoint
+    // Test 1: CORS Preflight (OPTIONS)
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/user`, {
+        method: 'OPTIONS',
+        mode: 'cors',
+        headers: {
+          'Access-Control-Request-Method': 'GET',
+          'Access-Control-Request-Headers': 'Content-Type'
+        }
+      });
+      testResults.push({
+        test: 'CORS Preflight (OPTIONS)',
+        url: `${API_BASE_URL}/auth/user`,
+        status: response.status,
+        ok: response.ok,
+        result: response.ok || response.status === 204 ? 'PASS' : 'FAIL',
+        headers: {
+          'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+          'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials'),
+          'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods')
+        }
+      });
+    } catch (error) {
+      testResults.push({
+        test: 'CORS Preflight (OPTIONS)',
+        url: `${API_BASE_URL}/auth/user`,
+        result: 'FAIL',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+
+    // Test 2: Health endpoint
     try {
       const response = await fetch(`${API_BASE_URL}/health`, {
         method: 'GET',
@@ -24,18 +55,23 @@ export default function SimpleTest() {
         status: response.status,
         ok: response.ok,
         result: response.ok ? 'PASS' : 'FAIL',
-        body: response.ok ? await response.text() : `Error: ${response.statusText}`
+        body: response.ok ? await response.text() : `Error: ${response.statusText}`,
+        headers: {
+          'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+          'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials')
+        }
       });
     } catch (error) {
       testResults.push({
         test: 'Health Endpoint',
         url: `${API_BASE_URL}/health`,
         result: 'FAIL',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
+        diagnosis: error instanceof Error && error.message === 'Failed to fetch' ? 'Backend not running or CORS blocked' : 'Network error'
       });
     }
 
-    // Test 2: Auth endpoint
+    // Test 3: Auth endpoint
     try {
       const response = await fetch(`${API_BASE_URL}/auth/user`, {
         method: 'GET',
@@ -48,14 +84,19 @@ export default function SimpleTest() {
         status: response.status,
         ok: response.ok,
         result: response.status === 401 ? 'PASS (401 expected)' : response.ok ? 'PASS' : 'FAIL',
-        body: response.status === 401 ? 'Unauthorized (expected)' : response.ok ? await response.text() : `Error: ${response.statusText}`
+        body: response.status === 401 ? 'Unauthorized (expected)' : response.ok ? await response.text() : `Error: ${response.statusText}`,
+        headers: {
+          'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+          'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials')
+        }
       });
     } catch (error) {
       testResults.push({
         test: 'Auth Endpoint',
         url: `${API_BASE_URL}/auth/user`,
         result: 'FAIL',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
+        diagnosis: error instanceof Error && error.message === 'Failed to fetch' ? 'Backend not running or CORS blocked' : 'Network error'
       });
     }
 
@@ -75,9 +116,11 @@ export default function SimpleTest() {
             <CardTitle>API Configuration</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-600">
-              API Base URL: <code className="bg-gray-100 px-2 py-1 rounded">{API_BASE_URL}</code>
-            </p>
+            <div className="space-y-2 text-sm text-gray-600">
+              <p>API Base URL: <code className="bg-gray-100 px-2 py-1 rounded">{API_BASE_URL}</code></p>
+              <p>Client Origin: <code className="bg-gray-100 px-2 py-1 rounded">{window.location.origin}</code></p>
+              <p>Environment: <code className="bg-gray-100 px-2 py-1 rounded">{import.meta.env.MODE}</code></p>
+            </div>
             <Button onClick={runTests} disabled={isLoading} className="mt-4">
               {isLoading ? 'Running Tests...' : 'Run Connectivity Tests'}
             </Button>
@@ -105,9 +148,20 @@ export default function SimpleTest() {
                   {result.error && (
                     <p className="text-sm text-red-600 mt-1">Error: {result.error}</p>
                   )}
+                  {result.diagnosis && (
+                    <p className="text-sm text-blue-600 mt-1">Diagnosis: {result.diagnosis}</p>
+                  )}
+                  {result.headers && (
+                    <div className="mt-2">
+                      <p className="text-sm font-medium">CORS Headers:</p>
+                      <pre className="text-xs bg-gray-100 p-2 rounded mt-1 overflow-auto">
+                        {JSON.stringify(result.headers, null, 2)}
+                      </pre>
+                    </div>
+                  )}
                   {result.body && (
                     <div className="mt-2">
-                      <p className="text-sm font-medium">Response:</p>
+                      <p className="text-sm font-medium">Response Body:</p>
                       <pre className="text-xs bg-gray-100 p-2 rounded mt-1 overflow-auto">
                         {result.body}
                       </pre>
