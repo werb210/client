@@ -50,22 +50,12 @@ export default function ResetPassword() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'}/auth/reset-password`, {
-        method: 'POST',
-        credentials: 'include',
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          newPassword: data.newPassword,
-        })
-      });
+      const result = await staffApi.resetPassword(token, data.newPassword);
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Password reset failed' }));
+      if (!result.success) {
         toast({
           title: 'Reset Failed',
-          description: errorData.message || 'Unable to reset password',
+          description: result.error || result.message || 'Unable to reset password',
           variant: 'destructive',
         });
         return;
@@ -77,6 +67,7 @@ export default function ResetPassword() {
         description: 'Your password has been updated successfully.',
       });
     } catch (error) {
+      console.error('Password reset error:', error);
       toast({
         title: 'Reset Error',
         description: 'Unable to connect to server. Please try again.',

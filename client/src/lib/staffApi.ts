@@ -109,6 +109,18 @@ class StaffApiClient {
     });
   }
 
+  // Get current authenticated user
+  async getCurrentUser(): Promise<ApiResponse> {
+    return this.request('/auth/user');
+  }
+
+  // Logout user
+  async logout(): Promise<ApiResponse> {
+    return this.request('/auth/logout', {
+      method: 'POST'
+    });
+  }
+
   // Request password reset
   async requestPasswordReset(email: string): Promise<ApiResponse> {
     return this.request('/auth/request-reset', {

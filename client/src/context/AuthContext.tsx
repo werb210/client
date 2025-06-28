@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { AuthAPI } from '@/lib/authApi';
+import { staffApi } from '@/lib/staffApi';
 import { useToast } from '@/hooks/use-toast';
 
 interface User {
@@ -38,15 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async () => {
     try {
-      const response = await AuthAPI.getCurrentUser();
+      const result = await staffApi.getCurrentUser();
       
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
+      if (result.success && result.data) {
+        setUser(result.data);
       } else {
         setUser(null);
       }
     } catch (error) {
+      console.error('Fetch user error:', error);
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -55,16 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<{ success: boolean; otpRequired?: boolean }> => {
     try {
-      const response = await AuthAPI.login({ email, password });
+      const result = await staffApi.login(email, password);
       
-      if (!response.ok) {
+      if (!result.success) {
+        console.error('Login failed:', result.error || result.message);
         return { success: false };
       }
 
-      const result = await response.json();
-      
       // Staff backend always sends OTP for login
-      if (result.message === "OTP sent") {
+      if (result.message === "OTP sent" || result.data?.otpRequired) {
         return { success: true, otpRequired: true };
       } else {
         // Direct authentication (fallback)
@@ -79,13 +78,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async (): Promise<void> => {
     try {
-      await AuthAPI.logout();
+      await staffApi.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
       // Clear any stored session data
       sessionStorage.removeItem('otpEmail');
+      sessionStorage.removeItem('otpPhone');
       
       toast({
         title: 'Signed Out',
