@@ -22,6 +22,7 @@ import BackendConnectivity from "@/pages/BackendConnectivity";
 import AuthFlowTest from "@/pages/AuthFlowTest";
 import VerificationReport from "@/pages/VerificationReport";
 import Login from "@/pages/Login";
+import PhoneLogin from "@/pages/PhoneLogin";
 import Register from "@/pages/Register";
 import VerifyOtp from "@/pages/VerifyOtp";
 import RequestReset from "@/pages/RequestReset";
@@ -40,7 +41,7 @@ function Router() {
     <AuthGuard>
       <Switch>
         {/* Authentication routes (public) */}
-        <Route path="/login" component={Login} />
+        <Route path="/login" component={PhoneLogin} />
         <Route path="/register" component={Register} />
         <Route path="/verify-otp" component={VerifyOtp} />
         <Route path="/request-reset" component={RequestReset} />

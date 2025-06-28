@@ -12,8 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 
 const loginSchema = z.object({
-  phone: z.string().regex(/^\+1[0-9]{10}$/, 'Phone must be +1 followed by 10 digits'),
-  email: z.string().email('Invalid email address').optional(),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -53,14 +53,18 @@ export default function Login() {
       if (result.otpRequired) {
         // Store email for OTP verification
         sessionStorage.setItem('otpEmail', data.email);
+        toast({
+          title: 'OTP Sent',
+          description: 'Check your phone for verification code',
+        });
         setLocation('/verify-otp');
       } else {
-        // Login successful, redirect to application
+        // Login successful, redirect to dashboard
         toast({
           title: 'Login Successful',
           description: 'Welcome back!',
         });
-        setLocation('/step1-financial-profile');
+        setLocation('/dashboard');
       }
     } catch (error) {
       toast({
