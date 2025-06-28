@@ -22,6 +22,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
       '/request-reset',
       '/reset-password',
       '/debug-test',
+      '/debug-checklist',
+      '/simple-connection-test',
       '/cors-test',
       '/simple-register-test',
       '/backend-test',
