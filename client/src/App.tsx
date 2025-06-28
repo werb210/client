@@ -16,6 +16,7 @@ import { ComprehensiveTestingChecklist } from "@/components/ComprehensiveTesting
 import TestConnection from "@/pages/TestConnection";
 import SimpleTest from "@/pages/SimpleTest";
 import CorsTest from "@/pages/CorsTest";
+import DebugTest from "@/pages/DebugTest";
 import VerificationReport from "@/pages/VerificationReport";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -52,6 +53,7 @@ function Router() {
         <Route path="/test-connection" component={TestConnection} />
         <Route path="/simple-test" component={SimpleTest} />
         <Route path="/cors-test" component={CorsTest} />
+        <Route path="/debug-test" component={DebugTest} />
         <Route path="/verification" component={VerificationReport} />
         <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
         <Route path="/step2-recommendations" component={Step2Recommendations} />

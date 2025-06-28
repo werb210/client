@@ -42,25 +42,30 @@ export default function Register() {
     setIsLoading(true);
     try {
       const { confirmPassword, ...registrationData } = data;
+      console.log('Registration attempt:', { email: registrationData.email, phone: registrationData.phone });
+      
       const response = await AuthAPI.register(registrationData);
+      console.log('Registration response:', response.status, response.statusText);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Registration failed' }));
+        console.error('Registration error:', errorData);
         toast({
           title: 'Registration Failed',
-          description: errorData.message || 'Unable to create account',
+          description: errorData.message || `Server error: ${response.status}`,
           variant: 'destructive',
         });
         return;
       }
 
       const result = await response.json();
+      console.log('Registration result:', result);
       
       // Save email to localStorage for future auth redirects
       localStorage.setItem('user-email', data.email);
 
       // Staff backend always sends OTP for registration
-      if (result.message === "OTP sent") {
+      if (result.message === "OTP sent" || result.success) {
         sessionStorage.setItem('otpEmail', data.email);
         toast({
           title: 'Account Created',
@@ -75,9 +80,10 @@ export default function Register() {
         setLocation('/step1-financial-profile');
       }
     } catch (error) {
+      console.error('Registration network error:', error);
       toast({
         title: 'Registration Error',
-        description: 'Unable to connect to server. Please try again.',
+        description: 'Unable to connect to server. Please check your connection.',
         variant: 'destructive',
       });
     } finally {
