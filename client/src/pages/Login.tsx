@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { AuthAPI } from '@/lib/authApi';
+
+import { useAuth } from '@/context/AuthContext';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -30,23 +31,22 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
+  const { login } = useAuth();
+
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      const response = await AuthAPI.login(data);
+      const result = await login(data.email, data.password);
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Login failed' }));
+      if (!result.success) {
         toast({
           title: 'Login Failed',
-          description: errorData.message || 'Invalid email or password',
+          description: 'Invalid email or password',
           variant: 'destructive',
         });
         return;
       }
 
-      const result = await response.json();
-      
       if (result.otpRequired) {
         // Store email for OTP verification
         sessionStorage.setItem('otpEmail', data.email);

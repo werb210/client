@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { AuthAPI } from '@/lib/authApi';
+import { useAuth } from '@/context/AuthContext';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -35,11 +35,19 @@ export default function Register() {
     resolver: zodResolver(registerSchema),
   });
 
+  const { login } = useAuth();
+
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
       const { confirmPassword, ...registrationData } = data;
-      const response = await AuthAPI.register(registrationData);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'}/auth/register`, {
+        method: 'POST',
+        credentials: 'include',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(registrationData)
+      });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Registration failed' }));
@@ -54,7 +62,6 @@ export default function Register() {
       const result = await response.json();
       
       if (result.otpRequired) {
-        // Store email for OTP verification
         sessionStorage.setItem('otpEmail', data.email);
         toast({
           title: 'Account Created',
@@ -62,7 +69,6 @@ export default function Register() {
         });
         setLocation('/verify-otp');
       } else {
-        // Registration successful, redirect to application
         toast({
           title: 'Account Created Successfully',
           description: 'Welcome to Boreal Financial!',

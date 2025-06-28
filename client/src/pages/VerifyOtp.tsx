@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { AuthAPI } from '@/lib/authApi';
+import { useAuth } from '@/context/AuthContext';
 
 const otpSchema = z.object({
   otp: z.string().length(6, 'OTP must be 6 digits'),
