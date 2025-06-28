@@ -42,6 +42,8 @@ function Router() {
         <Route path="/verify-otp" component={VerifyOtp} />
         <Route path="/request-reset" component={RequestReset} />
         <Route path="/reset-password/:token" component={ResetPassword} />
+        <Route path="/debug-test" component={DebugTest} />
+        <Route path="/cors-test" component={CorsTest} />
         
         {/* Public landing page */}
         <Route path="/" component={Landing} />
@@ -52,8 +54,6 @@ function Router() {
         <Route path="/testing" component={ComprehensiveTestingChecklist} />
         <Route path="/test-connection" component={TestConnection} />
         <Route path="/simple-test" component={SimpleTest} />
-        <Route path="/cors-test" component={CorsTest} />
-        <Route path="/debug-test" component={DebugTest} />
         <Route path="/verification" component={VerificationReport} />
         <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
         <Route path="/step2-recommendations" component={Step2Recommendations} />

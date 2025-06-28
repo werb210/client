@@ -19,7 +19,7 @@ export default function DebugTest() {
     try {
       addResult(`Testing connection to: ${API_BASE_URL}`);
       
-      // Test 1: Basic connectivity
+      // Test 1: Basic connectivity to staff backend
       try {
         const response = await fetch(`${API_BASE_URL}/health`, {
           method: 'GET',
@@ -27,8 +27,24 @@ export default function DebugTest() {
           credentials: 'include'
         });
         addResult(`Health check: ${response.status} ${response.statusText}`);
+        if (response.ok) {
+          const data = await response.text();
+          addResult(`Health response: ${data}`);
+        }
       } catch (error) {
         addResult(`Health check failed: ${error}`);
+      }
+
+      // Test 1.5: Test root API endpoint
+      try {
+        const response = await fetch(`${API_BASE_URL}/`, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include'
+        });
+        addResult(`Root API: ${response.status} ${response.statusText}`);
+      } catch (error) {
+        addResult(`Root API failed: ${error}`);
       }
 
       // Test 2: CORS preflight for auth/register
@@ -70,11 +86,23 @@ export default function DebugTest() {
         
         addResult(`Attempting registration with: ${JSON.stringify(testData)}`);
         
-        const response = await AuthAPI.register(testData);
+        // Direct fetch to bypass AuthAPI wrapper
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+          method: 'POST',
+          mode: 'cors',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Origin': window.location.origin
+          },
+          body: JSON.stringify(testData)
+        });
+        
         addResult(`Registration response: ${response.status} ${response.statusText}`);
         
         const responseText = await response.text();
         addResult(`Response body: ${responseText}`);
+        addResult(`Response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
         
       } catch (error) {
         addResult(`Registration failed: ${error}`);
