@@ -9,6 +9,7 @@ import { isUnauthorizedError } from '@/lib/authUtils';
 import { Application } from '@/lib/api';
 import { useLocation } from 'wouter';
 import { Plus, TrendingUp, HelpCircle, FileText, Calendar, Building } from 'lucide-react';
+import borealLogo from '@assets/Boreal Financial Logo 2_1751090147857.png';
 
 export default function Dashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -79,13 +80,11 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-cbf-teal rounded-lg flex items-center justify-center">
-                <Building className="text-white text-sm w-4 h-4" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold text-cbf-primary">Boreal</h1>
-                <p className="text-xs text-cbf-secondary -mt-1">Financial</p>
-              </div>
+              <img 
+                src={borealLogo} 
+                alt="Boreal Financial" 
+                className="h-8 w-auto object-contain"
+              />
             </div>
             
             <div className="flex items-center space-x-4">

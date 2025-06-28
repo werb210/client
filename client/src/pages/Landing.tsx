@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Building2, ArrowRight, CheckCircle, Clock, Shield } from 'lucide-react';
+import borealLogo from '@assets/Boreal Financial Logo 2_1751090147857.png';
 
 export default function Landing() {
   return (
@@ -9,13 +10,11 @@ export default function Landing() {
       <header className="bg-white border-b border-gray-100 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-cbf-teal rounded-lg flex items-center justify-center">
-              <Building2 className="text-white w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-cbf-primary">Boreal</h1>
-              <p className="text-sm text-cbf-secondary">Financial</p>
-            </div>
+            <img 
+              src={borealLogo} 
+              alt="Boreal Financial" 
+              className="h-12 w-auto object-contain"
+            />
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-cbf-secondary">Business Financing</span>
