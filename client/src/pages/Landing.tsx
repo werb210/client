@@ -13,8 +13,8 @@ export default function Landing() {
               <Building2 className="text-white w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-cbf-primary">Canadian</h1>
-              <p className="text-sm text-cbf-secondary">Business Financing</p>
+              <h1 className="text-xl font-semibold text-cbf-primary">Boreal</h1>
+              <p className="text-sm text-cbf-secondary">Financial</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">

@@ -24,7 +24,7 @@
   --ring: hsl(195, 53%, 65%);
   --radius: 0.75rem;
   
-  /* Canadian Business Financing Brand Colors */
+  /* Boreal Financial Brand Colors */
   --cbf-teal: hsl(195, 53%, 65%);        /* #7FB3D3 - Primary teal */
   --cbf-teal-dark: hsl(195, 53%, 55%);   /* Darker teal for hover */
   --cbf-teal-light: hsl(195, 53%, 95%);  /* Light teal background */
@@ -38,7 +38,7 @@
   --cbf-gray-100: hsl(214, 32%, 91%);    /* Border gray */
 }
 
-/* Custom Tailwind utility classes for Canadian Business Financing brand */
+/* Custom Tailwind utility classes for Boreal Financial brand */
 @layer utilities {
   .bg-cbf-teal { background-color: var(--cbf-teal); }
   .bg-cbf-teal-light { background-color: var(--cbf-teal-light); }
@@ -51,7 +51,7 @@
   .hover\:bg-cbf-orange-dark:hover { background-color: var(--cbf-orange-dark); }
 }
 
-/* Typography to match Canadian Business Financing */
+/* Typography to match Boreal Financial */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
   color: var(--cbf-text-primary);

@@ -83,8 +83,8 @@ export default function Dashboard() {
                 <Building className="text-white text-sm w-4 h-4" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-cbf-primary">Canadian</h1>
-                <p className="text-xs text-cbf-secondary -mt-1">Business Financing</p>
+                <h1 className="text-lg font-semibold text-cbf-primary">Boreal</h1>
+                <p className="text-xs text-cbf-secondary -mt-1">Financial</p>
               </div>
             </div>
             
