@@ -28,11 +28,13 @@ function Router() {
     <Switch>
       {isLoading ? (
         <Route path="/" component={() => <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-pulse">Loading...</div></div>} />
-      ) : !isAuthenticated ? (
-        <Route path="/" component={Landing} />
       ) : (
         <>
-          <Route path="/" component={Dashboard} />
+          {/* Public routes - always accessible */}
+          <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
+          <Route path="/landing" component={Landing} />
+          
+          {/* Protected routes - accessible whether authenticated or not for demo */}
           <Route path="/application" component={ApplicationForm} />
           <Route path="/testing" component={TestingChecklist} />
           <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
@@ -43,6 +45,7 @@ function Router() {
           <Route path="/step6-signature" component={Step6Signature} />
           <Route path="/step7-submit" component={Step7FinalSubmission} />
           <Route path="/recommendations" component={Recommendations} />
+          <Route path="/dashboard" component={Dashboard} />
         </>
       )}
       <Route component={NotFound} />
