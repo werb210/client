@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { isUnauthorizedError } from '@/lib/authUtils';
-import { Application } from '@shared/schema';
+import { Application } from '@/lib/api';
 import { useLocation } from 'wouter';
 import { Plus, TrendingUp, HelpCircle, FileText, Calendar, Building } from 'lucide-react';
 

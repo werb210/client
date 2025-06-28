@@ -14,6 +14,7 @@ import Registration from "@/pages/Registration";
 import { TestingChecklist } from "@/components/TestingChecklist";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
+import Recommendations from "@/pages/Recommendations";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -31,6 +32,7 @@ function Router() {
           <Route path="/testing" component={TestingChecklist} />
           <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
           <Route path="/step2-recommendations" component={Step2Recommendations} />
+          <Route path="/recommendations" component={Recommendations} />
         </>
       )}
       <Route component={NotFound} />

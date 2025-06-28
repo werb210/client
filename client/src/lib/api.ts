@@ -14,7 +14,7 @@ export class ApiError extends Error {
 }
 
 // Generic API request function with error handling and auth
-async function apiRequest<T>(
+export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {

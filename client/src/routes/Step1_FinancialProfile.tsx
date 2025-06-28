@@ -100,8 +100,8 @@ export default function Step1FinancialProfile() {
       description: "Your financial profile has been saved. Proceeding to recommendations.",
     });
 
-    // Navigate to Step 2
-    setLocation('/step2-recommendations');
+    // Navigate to recommendations
+    setLocation('/recommendations');
   };
 
   const handleSaveProgress = () => {
