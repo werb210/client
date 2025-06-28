@@ -111,7 +111,12 @@ Changelog:
     * Step 1: Financial Profile with business basics
     * Step 2: AI-powered recommendations with match scores
     * Step 3: Business details with incorporation date and address validation
+    * Step 4: Financial information with currency formatting and net worth calculation
+    * Step 5: Document upload with drag-and-drop, category-based requirements, and progress tracking
+    * Step 6: SignNow e-signature integration with redirect flow and status polling
   - Added date picker components and Zod validation for business registration data
+  - Implemented comprehensive document upload system with file validation and real-time status
+  - Created SignNow redirect integration calling POST /api/sign/:applicationId for secure e-signature workflow
 ```
 
 ## User Preferences
