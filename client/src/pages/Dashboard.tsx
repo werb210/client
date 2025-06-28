@@ -36,7 +36,7 @@ export default function Dashboard() {
   });
 
   const handleStartNewApplication = () => {
-    setLocation('/application');
+    setLocation('/step1-financial-profile');
   };
 
   const handleLogout = () => {
