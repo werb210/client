@@ -39,7 +39,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
       '/user-database',
       '/quick-user-check',
       '/staff-backend-status',
-      '/simple-backend-test'
+      '/simple-backend-test',
+      '/backend-fallback',
+      '/connectivity-summary'
     ];
 
     const isPublicRoute = publicRoutes.some(route => 
