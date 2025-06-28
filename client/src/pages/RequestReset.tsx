@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { fallbackApi } from '@/lib/fallbackApi';
+import { AuthAPI } from '@/lib/authApi';
 
 
 const resetRequestSchema = z.object({
@@ -20,6 +20,7 @@ type ResetRequestFormData = z.infer<typeof resetRequestSchema>;
 export default function RequestReset() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState('');
   const { toast } = useToast();
 
   const {
@@ -33,25 +34,29 @@ export default function RequestReset() {
 
   const onSubmit = async (data: ResetRequestFormData) => {
     setIsLoading(true);
+    setError('');
+    
     try {
-      const result = await fallbackApi.requestPasswordReset(data.email);
+      const res = await AuthAPI.requestReset(data.email);
       
-      if (!result.success) {
+      if (res.ok) {
+        setIsSubmitted(true);
+        toast({
+          title: 'Reset Link Sent',
+          description: 'Please check your email for password reset instructions.',
+        });
+      } else {
+        const errorText = await res.text();
+        setError(errorText);
         toast({
           title: 'Request Failed',
-          description: result.error || 'Unable to process reset request',
+          description: errorText || 'Unable to process reset request',
           variant: 'destructive',
         });
-        return;
       }
-
-      setIsSubmitted(true);
-      toast({
-        title: 'Reset Link Sent',
-        description: 'Please check your email for password reset instructions.',
-      });
     } catch (error) {
       console.error('Password reset request error:', error);
+      setError('Unable to connect to server. Please try again.');
       toast({
         title: 'Request Error',
         description: 'Unable to connect to server. Please try again.',

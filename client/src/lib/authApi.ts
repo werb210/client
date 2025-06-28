@@ -23,7 +23,15 @@ export const AuthAPI = {
   // Logout
   logout: () => apiFetch('/auth/logout', { method: 'GET' }),
   
-  // Password reset (future implementation)
-  requestReset: (body: any) => apiFetch('/auth/request-reset', { method: 'POST', body: JSON.stringify(body) }),
-  resetPassword: (body: any) => apiFetch('/auth/reset-password', { method: 'POST', body: JSON.stringify(body) }),
+  // Password reset
+  requestReset: (email: string) =>
+    apiFetch('/auth/request-reset', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (t: string, pw: string) =>
+    apiFetch('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token: t, password: pw }),
+    }),
 };

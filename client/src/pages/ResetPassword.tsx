@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { fallbackApi } from '@/lib/fallbackApi';
+import { AuthAPI } from '@/lib/authApi';
 
 
 const resetPasswordSchema = z.object({
@@ -24,6 +24,7 @@ type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 export default function ResetPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState('');
   const [location, setLocation] = useLocation();
   const [match, params] = useRoute('/reset-password/:token');
   const { toast } = useToast();
@@ -49,25 +50,33 @@ export default function ResetPassword() {
     }
 
     setIsLoading(true);
+    setError('');
+    
     try {
-      const result = await fallbackApi.resetPassword(token, data.newPassword);
+      const res = await AuthAPI.resetPassword(token, data.newPassword);
       
-      if (!result.success) {
+      if (res.ok) {
+        setIsSuccess(true);
+        toast({
+          title: 'Password Reset Successful',
+          description: 'Your password has been updated successfully.',
+        });
+        // Navigate to login with success parameter
+        setTimeout(() => {
+          setLocation('/login?reset=success');
+        }, 2000);
+      } else {
+        const errorText = await res.text();
+        setError(errorText);
         toast({
           title: 'Reset Failed',
-          description: result.error || 'Unable to reset password',
+          description: errorText || 'Unable to reset password',
           variant: 'destructive',
         });
-        return;
       }
-
-      setIsSuccess(true);
-      toast({
-        title: 'Password Reset Successful',
-        description: 'Your password has been updated successfully.',
-      });
     } catch (error) {
       console.error('Password reset error:', error);
+      setError('Unable to connect to server. Please try again.');
       toast({
         title: 'Reset Error',
         description: 'Unable to connect to server. Please try again.',
