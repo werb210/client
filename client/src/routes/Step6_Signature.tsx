@@ -100,15 +100,12 @@ export default function Step6Signature() {
   };
 
   const handleCompleteApplication = () => {
-    // Mark application as complete
-    dispatch({ type: 'MARK_COMPLETE' });
-    
-    // Navigate to success page or dashboard
-    setLocation('/dashboard');
+    // Navigate to final submission step
+    setLocation('/step7-submit');
     
     toast({
-      title: "Application Submitted",
-      description: "Your financial application has been successfully submitted and signed.",
+      title: "Signature Complete",
+      description: "Proceeding to final application review and submission.",
       variant: "default",
     });
   };
