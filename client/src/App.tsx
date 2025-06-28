@@ -21,6 +21,7 @@ import SimpleRegisterTest from "@/pages/SimpleRegisterTest";
 import BackendConnectivity from "@/pages/BackendConnectivity";
 import AuthFlowTest from "@/pages/AuthFlowTest";
 import VerificationReport from "@/pages/VerificationReport";
+import DebugChecklist from "@/pages/DebugChecklist";
 import Login from "@/pages/Login";
 import PhoneLogin from "@/pages/PhoneLogin";
 import Register from "@/pages/Register";
@@ -47,6 +48,7 @@ function Router() {
         <Route path="/request-reset" component={RequestReset} />
         <Route path="/reset-password/:token" component={ResetPassword} />
         <Route path="/debug-test" component={DebugTest} />
+        <Route path="/debug-checklist" component={DebugChecklist} />
         <Route path="/cors-test" component={CorsTest} />
         <Route path="/simple-register-test" component={SimpleRegisterTest} />
         <Route path="/backend-test" component={BackendConnectivity} />
