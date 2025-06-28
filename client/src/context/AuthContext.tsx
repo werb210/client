@@ -29,7 +29,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Fetch user on app boot
   useEffect(() => {
-    fetchUser();
+    fetchUser().catch(() => {
+      // Silently handle auth check failures
+      setUser(null);
+      setIsLoading(false);
+    });
   }, []);
 
   const fetchUser = async () => {
@@ -39,15 +43,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
-      } else if (response.status === 401) {
-        // User not authenticated, this is expected
-        setUser(null);
       } else {
-        console.error('Failed to fetch user:', response.status);
         setUser(null);
       }
     } catch (error) {
-      console.error('Auth check error:', error);
       setUser(null);
     } finally {
       setIsLoading(false);

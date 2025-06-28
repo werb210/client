@@ -64,20 +64,28 @@ export default function Register() {
       // Save email to localStorage for future auth redirects
       localStorage.setItem('user-email', data.email);
 
-      // Staff backend always sends OTP for registration
-      if (result.message === "OTP sent" || result.success) {
+      // Check if OTP was sent successfully
+      if (result.message === "OTP sent" || result.success || result.otpSent) {
         sessionStorage.setItem('otpEmail', data.email);
         toast({
           title: 'Account Created',
           description: 'SMS verification code sent to your phone.',
         });
         setLocation('/verify-otp');
-      } else {
+      } else if (result.message === "User registered successfully") {
+        // Direct registration without OTP
         toast({
           title: 'Account Created Successfully',
           description: 'Welcome to Boreal Financial!',
         });
         setLocation('/step1-financial-profile');
+      } else {
+        // Unexpected response format
+        toast({
+          title: 'Registration Issue',
+          description: result.message || 'Please check your details and try again.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Registration network error:', error);
@@ -168,9 +176,9 @@ export default function Register() {
               </Link>
             </p>
             <p className="text-sm text-gray-500">
-              Having connection issues?{' '}
-              <Link href="/debug-test" className="text-orange-600 hover:underline">
-                Run Debug Tests
+              Need help?{' '}
+              <Link href="/cors-test" className="text-orange-600 hover:underline">
+                Connection Test
               </Link>
             </p>
           </div>
