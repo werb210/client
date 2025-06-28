@@ -77,7 +77,18 @@ class StaffApiClient {
         message: data.message
       };
     } catch (error) {
-      console.error('Staff API request failed:', error);
+      console.error('Staff API request failed:', {
+        url,
+        endpoint,
+        error: error instanceof Error ? error.message : error,
+        options: {
+          method: options.method || 'GET',
+          credentials: 'include',
+          mode: 'cors'
+        },
+        timestamp: new Date().toISOString()
+      });
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Network error'
