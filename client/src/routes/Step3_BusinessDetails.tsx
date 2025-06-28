@@ -132,7 +132,7 @@ export default function Step3BusinessDetails() {
     });
 
     // Navigate to Step 4
-    setLocation('/step4-additional-details');
+    setLocation('/step4-financial-info');
   };
 
   const handleSaveProgress = () => {

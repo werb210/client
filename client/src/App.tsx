@@ -15,6 +15,7 @@ import { TestingChecklist } from "@/components/TestingChecklist";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
+import Step4FinancialInfo from "@/routes/Step4_FinancialInfo";
 import Recommendations from "@/pages/Recommendations";
 
 function Router() {
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
           <Route path="/step2-recommendations" component={Step2Recommendations} />
           <Route path="/step3-business-details" component={Step3BusinessDetails} />
+          <Route path="/step4-financial-info" component={Step4FinancialInfo} />
           <Route path="/recommendations" component={Recommendations} />
         </>
       )}

@@ -23,9 +23,18 @@ export interface BusinessDetailsData {
   taxId: string;
 }
 
+export interface FinancialInfoData {
+  annualRevenue: string;
+  monthlyExpenses: string;
+  numberOfEmployees: string;
+  totalAssets: string;
+  totalLiabilities: string;
+}
+
 export interface FormDataState {
   step1FinancialProfile: FinancialProfileData;
   step3BusinessDetails?: BusinessDetailsData;
+  step4FinancialInfo?: FinancialInfoData;
   currentStep: number;
   isComplete: boolean;
 }
@@ -33,6 +42,7 @@ export interface FormDataState {
 type FormDataAction =
   | { type: 'UPDATE_STEP1'; payload: Partial<FinancialProfileData> }
   | { type: 'UPDATE_STEP3'; payload: Partial<BusinessDetailsData> }
+  | { type: 'UPDATE_STEP4'; payload: Partial<FinancialInfoData> }
   | { type: 'SET_CURRENT_STEP'; payload: number }
   | { type: 'MARK_COMPLETE' }
   | { type: 'LOAD_FROM_STORAGE'; payload: FormDataState };
@@ -68,6 +78,14 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
           ...state.step3BusinessDetails,
           ...action.payload,
         } as BusinessDetailsData,
+      };
+    case 'UPDATE_STEP4':
+      return {
+        ...state,
+        step4FinancialInfo: {
+          ...state.step4FinancialInfo,
+          ...action.payload,
+        } as FinancialInfoData,
       };
     case 'SET_CURRENT_STEP':
       return {
