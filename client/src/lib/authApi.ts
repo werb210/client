@@ -1,16 +1,4 @@
-import { API_BASE_URL } from '@/constants';
-
-export async function apiFetch(path: string, options: RequestInit = {}) {
-  return fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    credentials: 'include',
-    mode: 'cors',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    }
-  });
-}
+import { apiFetch } from '@/lib/api';
 
 export const AuthAPI = {
   // Login - triggers SMS OTP

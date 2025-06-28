@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { AuthAPI } from '@/lib/authApi';
+import { apiFetch } from '@/lib/api';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -44,7 +44,10 @@ export default function Register() {
       const { confirmPassword, ...registrationData } = data;
       console.log('Registration attempt:', { email: registrationData.email, phone: registrationData.phone });
       
-      const response = await AuthAPI.register(registrationData);
+      const response = await apiFetch('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(registrationData),
+      });
       console.log('Registration response:', response.status, response.statusText);
       
       if (!response.ok) {

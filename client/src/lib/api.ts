@@ -41,59 +41,54 @@ export class ApiError extends Error {
 }
 
 // Generic API request function with error handling and auth
+export async function apiFetch(
+  path: string,
+  options: RequestInit = {}
+) {
+  return fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
+    credentials: 'include',   // 🔑 sends/receives cookies
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+    ...options,
+  });
+}
+
 export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const response = await apiFetch(endpoint, options);
   
-  const config: RequestInit = {
-    credentials: 'include', // Include session cookies
-    mode: 'cors', // Enable CORS
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  };
-
-  try {
-    const response = await fetch(url, config);
-    
-    // Handle authentication errors
-    if (response.status === 401) {
-      // Redirect to login while preserving current form data
-      window.location.href = '/api/login';
-      throw new ApiError('Unauthorized - redirecting to login', 401, response);
-    }
-    
-    // Handle staff backend unavailable
-    if (!response.ok && response.status >= 500) {
-      console.warn('Staff backend temporarily unavailable:', response.status);
-      throw new ApiError(`Staff backend error: ${response.statusText}`, response.status, response);
-    }
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new ApiError(
-        `API Error: ${response.status} - ${errorText}`,
-        response.status,
-        response
-      );
-    }
-    
-    // Handle empty responses
-    if (response.status === 204) {
-      return null as T;
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`, 0);
+  // Handle authentication errors
+  if (response.status === 401) {
+    window.location.href = '/login';
+    throw new ApiError('Unauthorized - redirecting to login', 401, response);
   }
+  
+  // Handle staff backend unavailable
+  if (!response.ok && response.status >= 500) {
+    console.warn('Staff backend temporarily unavailable:', response.status);
+    throw new ApiError(`Staff backend error: ${response.statusText}`, response.status, response);
+  }
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new ApiError(
+      `API Error: ${response.status} - ${errorText}`,
+      response.status,
+      response
+    );
+  }
+  
+  // Handle empty responses
+  if (response.status === 204) {
+    return null as T;
+  }
+  
+  return await response.json();
 }
 
 // Application-related API functions

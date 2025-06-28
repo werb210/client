@@ -1,0 +1,91 @@
+CLIENT APPLICATION
+(React + Vite at https://clientportal.replit.app)
+
+1 · .env and .env.production
+env
+Copy
+Edit
+VITE_API_BASE_URL=https://staffportal.replit.app/api
+VITE_SIGNNOW_REDIRECT_URL=https://clientportal.replit.app/step6-signature
+NODE_ENV=production
+2 · src/lib/api.ts
+ts
+Copy
+Edit
+export async function apiFetch(
+  path: string,
+  options: RequestInit = {}
+) {
+  return fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
+    credentials: 'include',   // 🔑 sends/receives cookies
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+    ...options,
+  });
+}
+3 · Registration flow (src/pages/Register.tsx)
+ts
+Copy
+Edit
+const onSubmit = async (data: FormValues) => {
+  const res = await apiFetch('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+
+  if (res.ok) navigate('/verify-otp');
+  else        setError(await res.text());
+};
+4 · OTP page (src/pages/VerifyOtp.tsx)
+ts
+Copy
+Edit
+const verify = async () => {
+  const res = await apiFetch('/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, code }),
+  });
+  if (res.ok) navigate('/application');   // start 7-step form
+  else        setError('Invalid code');
+};
+5 · Remove leftover debug redirect
+Search & delete any line:
+
+ts
+Copy
+Edit
+navigate('/debug-test');
+6 · Auth Guard (src/components/AuthGuard.tsx)
+tsx
+Copy
+Edit
+if (loading) return null;
+if (!user)   return <Navigate to="/login" replace />;
+
+return children;
+7 · Test locally & deploy
+bash
+Copy
+Edit
+npm install
+npm run build
+npx replit deploy   # or use the Deploy UI
+8 · Browser validation checklist
+Hard-refresh https://clientportal.replit.app
+
+Register with phone +158 788 81837
+
+Receive OTP → enter → redirected to /application
+
+Reload → still logged in (cookie present)
+
+Network tab shows cookies on each /api/* call.
+
+🎯 Next Steps
+If any cURL or browser step fails, note which one and adjust CORS or env accordingly.
+
+After both sides pass, run the full end-to-end tests (form completion, document upload, SignNow).
+
