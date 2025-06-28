@@ -1,4 +1,4 @@
-// Production configuration
+// Production configuration for deployment
 const PRODUCTION_CONFIG = {
   API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://staff.borealfinance.app/api',
   SIGNNOW_REDIRECT_URL: import.meta.env.VITE_SIGNNOW_REDIRECT_URL || window.location.origin + '/step6-signature',
@@ -7,7 +7,16 @@ const PRODUCTION_CONFIG = {
   REQUEST_TIMEOUT: 30000, // 30 seconds
   RETRY_ATTEMPTS: 3,
   IS_PRODUCTION: import.meta.env.PROD,
+  SECURE_COOKIES: import.meta.env.PROD, // Enable secure cookies in production
+  SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutes
 };
+
+// Disable debug logs in production
+if (PRODUCTION_CONFIG.IS_PRODUCTION) {
+  console.log = () => {};
+  console.warn = () => {};
+  console.info = () => {};
+}
 
 // Centralized API communication layer for staff backend integration
 const API_BASE_URL = PRODUCTION_CONFIG.API_BASE_URL;
