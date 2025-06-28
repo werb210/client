@@ -17,6 +17,7 @@ import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
 import Step4FinancialInfo from "@/routes/Step4_FinancialInfo";
 import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
+import Step6Signature from "@/routes/Step6_Signature";
 import Recommendations from "@/pages/Recommendations";
 
 function Router() {
@@ -38,6 +39,7 @@ function Router() {
           <Route path="/step3-business-details" component={Step3BusinessDetails} />
           <Route path="/step4-financial-info" component={Step4FinancialInfo} />
           <Route path="/step5-documents" component={Step5DocumentUpload} />
+          <Route path="/step6-signature" component={Step6Signature} />
           <Route path="/recommendations" component={Recommendations} />
         </>
       )}

@@ -149,10 +149,18 @@ export async function getApplication(applicationId: string): Promise<Application
 
 // Generate SignNow URL for e-signature
 export async function getSignNowUrl(applicationId: string): Promise<{ url: string }> {
-  return apiRequest<{ url: string }>('/signnow/createInvite', {
+  return apiRequest<{ url: string }>(`/sign/${applicationId}`, {
     method: 'POST',
-    body: JSON.stringify({ applicationId }),
   });
+}
+
+// Check signature status
+export async function checkSignatureStatus(applicationId: string): Promise<{
+  signed: boolean;
+  signedAt?: string;
+  documentUrl?: string;
+}> {
+  return apiRequest(`/signatures/status/${applicationId}`);
 }
 
 // Fetch lender product requirements

@@ -257,8 +257,8 @@ export default function Step5DocumentUpload() {
       description: "Document upload step completed. Proceeding to review.",
     });
 
-    // Navigate to final review/submission step
-    setLocation('/step6-review');
+    // Navigate to Step 6 signature
+    setLocation('/step6-signature');
   };
 
   const handleSaveProgress = () => {
