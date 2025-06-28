@@ -32,6 +32,7 @@ import Register from "@/pages/Register";
 import VerifyOtp from "@/pages/VerifyOtp";
 import RequestReset from "@/pages/RequestReset";
 import ResetPassword from "@/pages/ResetPassword";
+import PasswordResetDiagnostic from "@/pages/PasswordResetDiagnostic";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
@@ -61,6 +62,7 @@ function Router() {
         <Route path="/test-staff-backend" component={TestStaffBackend} />
         <Route path="/network-diagnostic" component={NetworkDiagnostic} />
         <Route path="/connection-test" component={ConnectionTest} />
+        <Route path="/password-reset-diagnostic" component={PasswordResetDiagnostic} />
         
         {/* Redirect root to login for unauthenticated users */}
         <Route path="/" component={Login} />

@@ -37,20 +37,28 @@ export default function RequestReset() {
     setError('');
     
     try {
+      console.log('Sending password reset request for:', data.email);
       const res = await AuthAPI.requestReset(data.email);
       
+      console.log('Password reset response status:', res.status);
+      console.log('Password reset response headers:', Object.fromEntries(res.headers.entries()));
+      
       if (res.ok) {
+        const responseData = await res.text();
+        console.log('Password reset success response:', responseData);
+        
         setIsSubmitted(true);
         toast({
-          title: 'Reset Link Sent',
-          description: 'Please check your email for password reset instructions.',
+          title: 'Reset Email Sent',
+          description: `We've sent a password reset link to ${data.email}. Please check your email and follow the instructions to reset your password.`,
         });
       } else {
         const errorText = await res.text();
+        console.error('Password reset failed:', res.status, errorText);
         setError(errorText);
         toast({
           title: 'Request Failed',
-          description: errorText || 'Unable to process reset request',
+          description: `${res.status}: ${errorText}` || 'Unable to process reset request',
           variant: 'destructive',
         });
       }
