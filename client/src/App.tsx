@@ -4,7 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { FormDataProvider } from "@/context/FormDataContext";
-import { useAuth } from "@/hooks/useAuth";
+import { AuthProvider } from "@/context/AuthContext";
+import { AuthGuard } from "@/components/AuthGuard";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
@@ -16,6 +17,11 @@ import TestConnection from "@/pages/TestConnection";
 import SimpleTest from "@/pages/SimpleTest";
 import CorsTest from "@/pages/CorsTest";
 import VerificationReport from "@/pages/VerificationReport";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import VerifyOtp from "@/pages/VerifyOtp";
+import RequestReset from "@/pages/RequestReset";
+import ResetPassword from "@/pages/ResetPassword";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
@@ -26,38 +32,39 @@ import Step7FinalSubmission from "@/routes/Step7_FinalSubmission";
 import Recommendations from "@/pages/Recommendations";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
   return (
-    <Switch>
-      {isLoading ? (
-        <Route path="/" component={() => <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-pulse">Loading...</div></div>} />
-      ) : (
-        <>
-          {/* Public routes - always accessible */}
-          <Route path="/" component={isAuthenticated ? Dashboard : Landing} />
-          <Route path="/landing" component={Landing} />
-          
-          {/* Protected routes - accessible whether authenticated or not for demo */}
-          <Route path="/application" component={ApplicationForm} />
-          <Route path="/testing" component={ComprehensiveTestingChecklist} />
-          <Route path="/test-connection" component={TestConnection} />
-          <Route path="/simple-test" component={SimpleTest} />
-          <Route path="/cors-test" component={CorsTest} />
-          <Route path="/verification" component={VerificationReport} />
-          <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
-          <Route path="/step2-recommendations" component={Step2Recommendations} />
-          <Route path="/step3-business-details" component={Step3BusinessDetails} />
-          <Route path="/step4-financial-info" component={Step4FinancialInfo} />
-          <Route path="/step5-documents" component={Step5DocumentUpload} />
-          <Route path="/step6-signature" component={Step6Signature} />
-          <Route path="/step7-submit" component={Step7FinalSubmission} />
-          <Route path="/recommendations" component={Recommendations} />
-          <Route path="/dashboard" component={Dashboard} />
-        </>
-      )}
-      <Route component={NotFound} />
-    </Switch>
+    <AuthGuard>
+      <Switch>
+        {/* Authentication routes (public) */}
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        <Route path="/verify-otp" component={VerifyOtp} />
+        <Route path="/request-reset" component={RequestReset} />
+        <Route path="/reset-password/:token" component={ResetPassword} />
+        
+        {/* Protected application routes */}
+        <Route path="/" component={Dashboard} />
+        <Route path="/landing" component={Landing} />
+        <Route path="/application" component={ApplicationForm} />
+        <Route path="/testing" component={ComprehensiveTestingChecklist} />
+        <Route path="/test-connection" component={TestConnection} />
+        <Route path="/simple-test" component={SimpleTest} />
+        <Route path="/cors-test" component={CorsTest} />
+        <Route path="/verification" component={VerificationReport} />
+        <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
+        <Route path="/step2-recommendations" component={Step2Recommendations} />
+        <Route path="/step3-business-details" component={Step3BusinessDetails} />
+        <Route path="/step4-financial-info" component={Step4FinancialInfo} />
+        <Route path="/step5-documents" component={Step5DocumentUpload} />
+        <Route path="/step6-signature" component={Step6Signature} />
+        <Route path="/step7-submit" component={Step7FinalSubmission} />
+        <Route path="/recommendations" component={Recommendations} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/2fa" component={TwoFactorAuth} />
+        <Route path="/registration" component={Registration} />
+        <Route component={NotFound} />
+      </Switch>
+    </AuthGuard>
   );
 }
 

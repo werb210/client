@@ -1,0 +1,140 @@
+Below is a **single, copy-and-paste set of instructions you can give Replit AI** that:
+
+* Adds a secure **e-mail + password + SMS-OTP** login system to the **Client Application**
+* Uses the **existing staff-side `/api/auth/*` endpoints** (Option A)
+* Includes **registration**, **login**, **OTP verify**, **password-reset**, routing guards, and all fetch helpers
+* Leaves the Staff code unchanged (it already supports those endpoints)
+
+> **Send this whole block to Replit in the Client project.**
+> Replit AI will scaffold the pages, hooks, routes, and build-ready code exactly as written.
+
+---
+
+````txt
+#############################################
+#  BOREAL FINANCIAL – CLIENT AUTH UP-GRADE  #
+#############################################
+
+╭────────────────────────────────────────────╮
+│  🔸  OBJECTIVE                            │
+╰────────────────────────────────────────────╯
+Implement email + password login with SMS-OTP
+(for 2-factor) and a full password-reset flow.
+After authentication the user lands on Step 1
+of the 7-step funding application.
+
+Staff backend base-URL:
+    https://staffportal.replit.app/api
+
+All requests must use  credentials:"include"  and
+mode:"cors".
+
+──────────────────────────────────────────────
+🔹  TASK LIST  (execute in order, stop after each
+    task and report “done / waiting”)
+──────────────────────────────────────────────
+1️⃣  Pages & Routing
+    ▸ Create these pages under  src/pages/ :
+        • Login.tsx
+        • Register.tsx
+        • VerifyOtp.tsx
+        • RequestReset.tsx
+        • ResetPassword.tsx
+    ▸ Update router ( src/routes.tsx or Wouter hook )
+      – Public routes   : /login  /register  /verify-otp
+                          /request-reset  /reset-password/:token
+      – Protected routes: /* everything else
+    ▸ Add <AuthGuard> wrapper that redirects 401→/login.
+
+2️⃣  API Helper  ( src/lib/authApi.ts )
+    ```ts
+    import { API_BASE_URL } from './constants';
+
+    export async function apiFetch(path:string, options:RequestInit={}) {
+      return fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        credentials: 'include',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(options.headers || {})
+        }
+      });
+    }
+    export const AuthAPI = {
+      login:  (body) => apiFetch('/auth/login',   {method:'POST',body:JSON.stringify(body)}),
+      register:(body) => apiFetch('/auth/register',{method:'POST',body:JSON.stringify(body)}),
+      verifyOtp:(body)=> apiFetch('/auth/verify-otp',{method:'POST',body:JSON.stringify(body)}),
+      me:      ()     => apiFetch('/auth/user',{method:'GET'}),
+      logout:  ()     => apiFetch('/auth/logout',{method:'GET'}),
+      requestReset:(body)=> apiFetch('/auth/request-reset',{method:'POST',body:JSON.stringify(body)}),
+      resetPassword:(body)=>apiFetch('/auth/reset-password',{method:'POST',body:JSON.stringify(body)}),
+    };
+    ```
+
+3️⃣  Login Page ( src/pages/Login.tsx )
+    • email + password   (react-hook-form + Zod)
+    • POST AuthAPI.login → if `{ otpRequired:true }`
+                           route → /verify-otp
+    • On success w/out OTP ⇒ route → /step1
+
+4️⃣  Register Page ( src/pages/Register.tsx )
+    • email, password, confirm, phone
+    • POST AuthAPI.register
+    • then same flow as login (otpRequired)
+
+5️⃣  Verify OTP Page ( src/pages/VerifyOtp.tsx )
+    • 6-digit code input
+    • POST AuthAPI.verifyOtp
+    • On 200 ⇒ route  /step1
+    • On error ⇒ toast + allow resend (call /auth/resend-otp)
+
+6️⃣  Forgot-Password Flow
+    a) RequestReset.tsx – email input → POST /auth/request-reset
+       show “Check your e-mail”.
+    b) ResetPassword.tsx – routed as
+       /reset-password/:token  (token from e-mail link)
+       fields: newPassword, confirm → POST /auth/reset-password
+
+7️⃣  Auth Context  ( src/context/AuthContext.tsx )
+    • Holds  user  (id,email,role)  or null
+    • On app boot, call  AuthAPI.me()
+    • Provide  login, logout helpers
+
+8️⃣  Protect All Application Routes
+    • Wrap <AppRouter> in <AuthGuard>
+    • <AuthGuard> waits for AuthContext state;
+      if null → <Navigate to="/login" />
+
+9️⃣  ENV
+    • Ensure  .env  and  .env.production :
+      VITE_API_BASE_URL=https://staffportal.replit.app/api
+
+🔸  SECURITY NOTES
+    • Always  credentials:'include'
+    • Staff backend already sets cookie with  SameSite=None; Secure
+    • All fetches expect JSON; if res.status===401  → logout+redirect
+
+🔸  TESTS
+    • Update /test-connection page:
+        – test /auth/user (should return 401 when not logged in)
+        – run login, then /auth/user returns profile
+        – run full 7-step flow after login: should succeed
+    • Use Twilio test numbers to verify OTP.
+
+🔸  REPORT
+    After each numbered task, output:
+       { task: X, status: "done" }
+    Then wait for my next instruction.
+#############################################
+````
+
+Hand this block to Replit AI inside the **Client** project.
+Replit will:
+
+1. Scaffold all pages/components.
+2. Wire up routing + context.
+3. Use the staff backend for login, OTP verify, reset.
+4. Stop after each task awaiting your confirmation.
+
+Once Replit finishes tasks **1–9** you’ll have a fully operational, secure login / registration / 2FA system gating the entire 7-step funding application.
