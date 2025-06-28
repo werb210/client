@@ -27,6 +27,8 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [phone, setPhone] = useState('');
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -42,13 +44,26 @@ export default function Register() {
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
+    setError('');
+    
     try {
       const { confirmPassword, ...registrationData } = data;
-      console.log('Registration attempt:', { email: registrationData.email, phone: registrationData.phone });
       
+      // Format phone number to E164
+      const formattedPhone = toE164(phone);
+      if (!formattedPhone) {
+        setError('Invalid phone number format');
+        setIsLoading(false);
+        return;
+      }
+
       const response = await apiFetch('/auth/register', {
         method: 'POST',
-        body: JSON.stringify(registrationData),
+        body: JSON.stringify({
+          email: registrationData.email,
+          password: registrationData.password,
+          phone: formattedPhone
+        }),
       });
       console.log('Registration response:', response.status, response.statusText);
       
@@ -130,15 +145,26 @@ export default function Register() {
 
             <div>
               <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+1 (555) 123-4567"
-                {...register('phone')}
-                className={errors.phone ? 'border-red-500' : ''}
-              />
+              <InputMask
+                mask="(999) 999-9999"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              >
+                {(inputProps: any) => (
+                  <Input
+                    {...inputProps}
+                    id="phone"
+                    type="tel"
+                    placeholder="(587) 888-1837"
+                    className={errors.phone ? 'border-red-500' : ''}
+                  />
+                )}
+              </InputMask>
               {errors.phone && (
                 <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
+              )}
+              {error && (
+                <p className="text-sm text-red-600 mt-1">{error}</p>
               )}
             </div>
 
