@@ -6,6 +6,8 @@ export interface FinancialProfileData {
   industry: string;
   businessAge: string;
   useOfFunds: string;
+  selectedCategory?: string;
+  selectedCategoryName?: string;
 }
 
 export interface FormDataState {
@@ -27,6 +29,8 @@ const initialState: FormDataState = {
     industry: '',
     businessAge: '',
     useOfFunds: '',
+    selectedCategory: '',
+    selectedCategoryName: '',
   },
   currentStep: 1,
   isComplete: false,
