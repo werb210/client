@@ -103,7 +103,7 @@ export default function Recommendations() {
     }
 
     dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
-    setLocation('/step3-application-details');
+    setLocation('/step3-business-details');
   };
 
   const handleBack = () => {
