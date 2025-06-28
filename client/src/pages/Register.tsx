@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useLocation } from 'wouter';
@@ -28,16 +28,22 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [phone, setPhone] = useState('');
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+      phone: '',
+    },
   });
 
   const { login } = useAuth();
@@ -50,7 +56,7 @@ export default function Register() {
       const { confirmPassword, ...registrationData } = data;
       
       // Format phone number to E164
-      const formattedPhone = toE164(phone);
+      const formattedPhone = toE164(data.phone);
       if (!formattedPhone) {
         setError('Invalid phone number format');
         setIsLoading(false);
@@ -145,21 +151,27 @@ export default function Register() {
 
             <div>
               <Label htmlFor="phone">Phone Number</Label>
-              <InputMask
-                mask="(999) 999-9999"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              >
-                {(inputProps: any) => (
-                  <Input
-                    {...inputProps}
-                    id="phone"
-                    type="tel"
-                    placeholder="(587) 888-1837"
-                    className={errors.phone ? 'border-red-500' : ''}
-                  />
+              <Controller
+                name="phone"
+                control={control}
+                render={({ field }) => (
+                  <InputMask
+                    mask="(999) 999-9999"
+                    value={field.value}
+                    onChange={field.onChange}
+                  >
+                    {(inputProps: any) => (
+                      <Input
+                        {...inputProps}
+                        id="phone"
+                        type="tel"
+                        placeholder="(587) 888-1837"
+                        className={errors.phone ? 'border-red-500' : ''}
+                      />
+                    )}
+                  </InputMask>
                 )}
-              </InputMask>
+              />
               {errors.phone && (
                 <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
               )}
