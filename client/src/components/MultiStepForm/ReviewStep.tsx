@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useApplication } from '@/context/ApplicationContext';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import * as api from '@/lib/api';
+import { isUnauthorizedError } from '@/lib/authUtils';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 
 interface ReviewStepProps {
@@ -22,54 +23,69 @@ export function ReviewStep({ onBack, onComplete, applicationId }: ReviewStepProp
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      if (!applicationId) {
-        // Create new application
-        const applicationData = {
-          status: 'submitted',
-          currentStep: 7,
-          businessLegalName: state.formData.businessInfo?.legalName,
-          industry: state.formData.businessInfo?.industry,
-          headquarters: state.formData.businessInfo?.headquarters,
-          annualRevenue: state.formData.businessInfo?.revenue,
-          useOfFunds: state.formData.businessInfo?.useOfFunds,
-          requestedAmount: state.formData.businessInfo?.loanAmount,
-          selectedProduct: state.formData.selectedProduct,
-          applicantName: state.formData.personalDetails?.name,
-          applicantEmail: state.formData.personalDetails?.email,
-          applicantPhone: state.formData.personalDetails?.phone,
-          termsAccepted: state.formData.signature?.termsAccepted,
-          signatureCompleted: state.formData.signature?.signed,
-          formData: state.formData,
-        };
-        
-        const response = await apiRequest('POST', '/api/applications', applicationData);
-        return await response.json();
-      } else {
-        // Update existing application
-        const response = await apiRequest('PATCH', `/api/applications/${applicationId}`, {
-          status: 'submitted',
-          currentStep: 7,
-          termsAccepted: state.formData.signature?.termsAccepted,
-          signatureCompleted: state.formData.signature?.signed,
-          formData: state.formData,
-        });
-        return await response.json();
-      }
+      // Prepare application data for staff backend submission
+      const applicationData: api.ApplicationPayload = {
+        businessInfo: {
+          legalName: state.formData.businessInfo?.legalName || '',
+          industry: state.formData.businessInfo?.industry || '',
+          headquarters: state.formData.businessInfo?.headquarters || '',
+          revenue: state.formData.businessInfo?.revenue || '',
+          useOfFunds: state.formData.businessInfo?.useOfFunds || '',
+          loanAmount: state.formData.businessInfo?.loanAmount || 0,
+        },
+        personalDetails: {
+          name: state.formData.personalDetails?.name || '',
+          email: state.formData.personalDetails?.email || '',
+          phone: state.formData.personalDetails?.phone || '',
+        },
+        productQuestions: state.formData.productQuestions || {},
+        selectedProduct: state.formData.selectedProduct || '',
+        signature: {
+          termsAccepted: state.formData.signature?.termsAccepted || false,
+          signed: state.formData.signature?.signed || false,
+        },
+      };
+
+      // Submit application to staff backend
+      const result = await api.submitApplication(applicationData);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
+      // Application submitted successfully
       queryClient.invalidateQueries({ queryKey: ['/api/applications'] });
       
       toast({
-        title: "Application Submitted Successfully!",
-        description: "Your financial application has been submitted for review. You will receive updates via email.",
+        title: "Application Submitted",
+        description: "Your application has been submitted successfully.",
       });
-      
-      onComplete();
+
+      // Generate SignNow URL for signature
+      try {
+        const signResponse = await api.getSignNowUrl(data.applicationId);
+        
+        // Redirect to SignNow for signature (no iframe - redirect flow)
+        window.location.href = signResponse.url;
+      } catch (error) {
+        // Continue to completion even if SignNow fails
+        onComplete();
+      }
     },
     onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      
       toast({
         title: "Submission Failed",
-        description: error.message || "There was an error submitting your application. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to submit application",
         variant: "destructive",
       });
     },
@@ -77,191 +93,174 @@ export function ReviewStep({ onBack, onComplete, applicationId }: ReviewStepProp
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    await submitMutation.mutateAsync();
+    submitMutation.mutate();
     setIsSubmitting(false);
   };
 
-  const getCompletionStatus = () => {
-    const checks = [
-      { name: 'Business Information', completed: !!state.formData.businessInfo?.legalName },
-      { name: 'Lender Product Selected', completed: !!state.formData.selectedProduct },
-      { name: 'Product Questions', completed: !!state.formData.productQuestions },
-      { name: 'Personal Details', completed: !!state.formData.personalDetails?.name },
-      { name: 'Documents Uploaded', completed: true }, // Assume documents are uploaded if we reached this step
-      { name: 'Terms Accepted', completed: !!state.formData.signature?.termsAccepted },
-      { name: 'Document Signed', completed: !!state.formData.signature?.signed },
-    ];
-
-    return checks;
-  };
-
-  const completionChecks = getCompletionStatus();
-  const allCompleted = completionChecks.every(check => check.completed);
+  // Summary sections for review
+  const businessInfo = state.formData.businessInfo;
+  const personalDetails = state.formData.personalDetails;
+  const selectedProduct = state.formData.selectedProduct;
+  const documents = state.formData.documents || [];
+  const signature = state.formData.signature;
 
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Review Your Application</h2>
+        <p className="text-gray-600">Please review all information before submitting.</p>
+      </div>
+
+      {/* Business Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Application Review</CardTitle>
-          <p className="text-sm text-gray-600">
-            Please review your application details before final submission.
-          </p>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            Business Information
+          </CardTitle>
         </CardHeader>
-        
-        <CardContent className="space-y-6">
-          {/* Application Summary */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Business Information</h4>
-                <div className="space-y-1 text-sm">
-                  <div>
-                    <span className="text-gray-500">Business Name:</span>
-                    <span className="ml-2">{state.formData.businessInfo?.legalName || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Industry:</span>
-                    <span className="ml-2">{state.formData.businessInfo?.industry || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Location:</span>
-                    <span className="ml-2">{state.formData.businessInfo?.headquarters || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Annual Revenue:</span>
-                    <span className="ml-2">{state.formData.businessInfo?.revenue || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Funding Request</h4>
-                <div className="space-y-1 text-sm">
-                  <div>
-                    <span className="text-gray-500">Requested Amount:</span>
-                    <span className="ml-2 font-medium">
-                      ${state.formData.businessInfo?.loanAmount?.toLocaleString() || 'N/A'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Selected Product:</span>
-                    <span className="ml-2">
-                      {state.formData.selectedProduct?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'N/A'}
-                    </span>
-                  </div>
-                </div>
-              </div>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <span className="font-medium">Legal Name:</span>
+              <p className="text-gray-600">{businessInfo?.legalName || 'Not provided'}</p>
             </div>
-
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Contact Information</h4>
-                <div className="space-y-1 text-sm">
-                  <div>
-                    <span className="text-gray-500">Name:</span>
-                    <span className="ml-2">{state.formData.personalDetails?.name || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Email:</span>
-                    <span className="ml-2">{state.formData.personalDetails?.email || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Phone:</span>
-                    <span className="ml-2">{state.formData.personalDetails?.phone || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Use of Funds</h4>
-                <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
-                  {state.formData.businessInfo?.useOfFunds || 'N/A'}
-                </div>
-              </div>
+            <div>
+              <span className="font-medium">Industry:</span>
+              <p className="text-gray-600">{businessInfo?.industry || 'Not provided'}</p>
+            </div>
+            <div>
+              <span className="font-medium">Headquarters:</span>
+              <p className="text-gray-600">{businessInfo?.headquarters || 'Not provided'}</p>
+            </div>
+            <div>
+              <span className="font-medium">Annual Revenue:</span>
+              <p className="text-gray-600">{businessInfo?.revenue || 'Not provided'}</p>
+            </div>
+            <div>
+              <span className="font-medium">Loan Amount:</span>
+              <p className="text-gray-600">${businessInfo?.loanAmount?.toLocaleString() || '0'}</p>
+            </div>
+            <div>
+              <span className="font-medium">Use of Funds:</span>
+              <p className="text-gray-600">{businessInfo?.useOfFunds || 'Not provided'}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Completion Checklist */}
+      {/* Personal Details */}
       <Card>
         <CardHeader>
-          <CardTitle>Completion Checklist</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            Personal Details
+          </CardTitle>
         </CardHeader>
-        
-        <CardContent>
-          <div className="space-y-3">
-            {completionChecks.map((check, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                <span className="text-sm text-gray-700">{check.name}</span>
-                <div className="flex items-center space-x-2">
-                  {check.completed ? (
-                    <>
-                      <CheckCircle className="w-4 h-4 text-green-500" />
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">Complete</Badge>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="w-4 h-4 text-orange-500" />
-                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">Incomplete</Badge>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <span className="font-medium">Name:</span>
+              <p className="text-gray-600">{personalDetails?.name || 'Not provided'}</p>
+            </div>
+            <div>
+              <span className="font-medium">Email:</span>
+              <p className="text-gray-600">{personalDetails?.email || 'Not provided'}</p>
+            </div>
+            <div>
+              <span className="font-medium">Phone:</span>
+              <p className="text-gray-600">{personalDetails?.phone || 'Not provided'}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Final Submission */}
+      {/* Selected Product */}
       <Card>
         <CardHeader>
-          <CardTitle>Ready to Submit</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            Selected Product
+          </CardTitle>
         </CardHeader>
-        
         <CardContent>
-          {allCompleted ? (
-            <div className="text-center py-6">
-              <div className="w-16 h-16 bg-green-100 rounded-lg mx-auto flex items-center justify-center mb-4">
-                <CheckCircle className="w-8 h-8 text-green-500" />
-              </div>
-              <h4 className="font-medium text-gray-900 mb-2">Application Complete</h4>
-              <p className="text-gray-600 mb-6">
-                Your application is ready for submission. Once submitted, you will receive a confirmation 
-                email and regular updates on your application status.
-              </p>
-              
-              <div className="flex items-center justify-center space-x-4">
-                <Button variant="outline" onClick={onBack}>
-                  Back to Review
-                </Button>
-                
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
-                </Button>
-              </div>
+          <Badge variant="outline" className="text-lg px-3 py-1">
+            {selectedProduct || 'No product selected'}
+          </Badge>
+        </CardContent>
+      </Card>
+
+      {/* Documents */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {documents.length > 0 ? (
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-yellow-600" />
+            )}
+            Documents ({documents.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {documents.length > 0 ? (
+            <div className="space-y-2">
+              {documents.map((doc, index) => (
+                <div key={index} className="flex items-center justify-between p-2 border rounded">
+                  <span className="font-medium">{doc.name}</span>
+                  <Badge variant={doc.uploaded ? "default" : "secondary"}>
+                    {doc.uploaded ? "Uploaded" : "Pending"}
+                  </Badge>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="text-center py-6">
-              <div className="w-16 h-16 bg-orange-100 rounded-lg mx-auto flex items-center justify-center mb-4">
-                <AlertCircle className="w-8 h-8 text-orange-500" />
-              </div>
-              <h4 className="font-medium text-gray-900 mb-2">Application Incomplete</h4>
-              <p className="text-gray-600 mb-6">
-                Please complete all required sections before submitting your application.
-              </p>
-              
-              <Button variant="outline" onClick={onBack}>
-                Back to Complete Application
-              </Button>
-            </div>
+            <p className="text-gray-600">No documents uploaded</p>
           )}
         </CardContent>
       </Card>
+
+      {/* Signature Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {signature?.termsAccepted ? (
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-yellow-600" />
+            )}
+            Terms and Signature
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant={signature?.termsAccepted ? "default" : "secondary"}>
+                {signature?.termsAccepted ? "Terms Accepted" : "Terms Not Accepted"}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant={signature?.signed ? "default" : "secondary"}>
+                {signature?.signed ? "Signed" : "Signature Pending"}
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Buttons */}
+      <div className="flex justify-between pt-6">
+        <Button variant="outline" onClick={onBack}>
+          Back
+        </Button>
+        <Button 
+          onClick={handleSubmit}
+          disabled={isSubmitting || submitMutation.isPending}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {isSubmitting || submitMutation.isPending ? "Submitting..." : "Submit Application"}
+        </Button>
+      </div>
     </div>
   );
 }
