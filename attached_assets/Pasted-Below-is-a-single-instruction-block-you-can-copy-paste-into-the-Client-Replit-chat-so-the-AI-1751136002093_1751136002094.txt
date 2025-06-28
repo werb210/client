@@ -1,0 +1,85 @@
+Below is a **single instruction block** you can copy-paste into the **Client** Replit chat so the AI:
+
+1. Replicates the marketing page you showed in the screenshot
+2. Uses Tailwind + shadcn/ui (same stack)
+3. Makes every CTA (“Start Your Application”, “Get Started”, “Sign In”) route to the new **/login** page you just asked the staff side to support
+4. Keeps the protected 7-step flow exactly as-is once the user is authenticated.
+
+---
+
+```txt
+#############################################
+#  CLIENT TASK – Public Marketing Landing   #
+#############################################
+
+🔸 GOAL
+Create a public, unauthenticated marketing page that looks
+like the screenshot (headline, CTA card grid, sticky navbar)
+and route ALL CTAs to /login (email+password+OTP flow).
+
+──────────────────────────────────────────────
+1️⃣  File:  src/pages/Landing.tsx
+
+• Full-width hero:
+  - Title:  “Professional Business Financing Solutions”
+  - Subtitle: “Connecting Canadian and US businesses …”
+  - CTA button:  `Start Your Application → /login`
+
+• Card grid (3 cards) using shadcn <Card>:
+  ─ “Streamlined Application”
+  ─ “Competitive Rates”
+  ─ “Secure & Compliant”
+  Each card uses Tailwind utility classes.
+  
+• “Why Choose Boreal Financial?” section (two-column list)
+
+──────────────────────────────────────────────
+2️⃣  File:  src/components/NavBar.tsx
+
+• Logo left:  “Boreal Financial”
+• Right:
+    ─ “Sign In”  → /login
+    ─ “Get Started”  (primary button) → /login
+• Add sticky top shadow.
+
+──────────────────────────────────────────────
+3️⃣  Routing
+
+• In  src/routes.tsx  (or wouter switch):
+  - Route “/”  →  <Landing />
+  - Keep “/login”, “/register”, “/verify-otp”, etc.
+  - AuthGuard should **NOT** protect “/”  (public)
+
+──────────────────────────────────────────────
+4️⃣  CTA Links
+
+Replace all onClick / href:
+  - “Start Your Application”  →  /login
+  - “Sign In” nav link        →  /login
+  - “Get Started” nav button  →  /login
+
+──────────────────────────────────────────────
+5️⃣  Responsive & Accessibility
+
+• Use Tailwind breakpoints (md:, lg:)
+• Buttons:  rounded-md, focus:outline-focus-ring
+• Images/icons:  use Heroicons (if needed)
+
+──────────────────────────────────────────────
+6️⃣  Report format
+
+After finishing components and routes:
+  { task: "landing-page", status: "done" }
+
+#############################################
+```
+
+---
+
+### What will happen
+
+* Replit AI will create `Landing.tsx`, `NavBar.tsx`, update routes, and set `/` to this new page.
+* All CTAs route to `/login`, so the user immediately enters the secure email + password + OTP flow you’ve just enabled on the staff side.
+* Once authenticated, the existing protected 7-step flow works exactly as before.
+
+Copy the block above into the **Client** project chat, let Replit run it, and you’ll have the duplicate landing page with the correct links.

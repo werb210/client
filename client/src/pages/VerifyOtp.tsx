@@ -32,10 +32,18 @@ export default function VerifyOtp() {
 
   const email = sessionStorage.getItem('otpEmail');
 
+  const { refreshUser } = useAuth();
+
   const onSubmit = async (data: OtpFormData) => {
     setIsLoading(true);
     try {
-      const response = await AuthAPI.verifyOtp({ otp: data.otp });
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'}/auth/verify-otp`, {
+        method: 'POST',
+        credentials: 'include',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: data.otp })
+      });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'OTP verification failed' }));
@@ -47,8 +55,8 @@ export default function VerifyOtp() {
         return;
       }
 
-      // Clear stored email
       sessionStorage.removeItem('otpEmail');
+      await refreshUser();
       
       toast({
         title: 'Verification Successful',
@@ -70,7 +78,12 @@ export default function VerifyOtp() {
   const handleResendOtp = async () => {
     setIsResending(true);
     try {
-      const response = await AuthAPI.resendOtp();
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'}/auth/resend-otp`, {
+        method: 'POST',
+        credentials: 'include',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' }
+      });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Failed to resend OTP' }));

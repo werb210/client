@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { AuthAPI } from '@/lib/authApi';
+
 
 const resetPasswordSchema = z.object({
   newPassword: z.string().min(8, 'Password must be at least 8 characters'),
@@ -49,9 +49,15 @@ export default function ResetPassword() {
 
     setIsLoading(true);
     try {
-      const response = await AuthAPI.resetPassword({
-        token,
-        newPassword: data.newPassword,
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'}/auth/reset-password`, {
+        method: 'POST',
+        credentials: 'include',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          newPassword: data.newPassword,
+        })
       });
       
       if (!response.ok) {

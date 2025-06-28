@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { AuthAPI } from '@/lib/authApi';
+
 
 const resetRequestSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -33,7 +33,13 @@ export default function RequestReset() {
   const onSubmit = async (data: ResetRequestFormData) => {
     setIsLoading(true);
     try {
-      const response = await AuthAPI.requestReset(data);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'}/auth/request-reset`, {
+        method: 'POST',
+        credentials: 'include',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Reset request failed' }));
