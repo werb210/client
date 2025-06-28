@@ -79,10 +79,13 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-cbf-teal rounded-lg flex items-center justify-center">
                 <Building className="text-white text-sm w-4 h-4" />
               </div>
-              <h1 className="text-xl font-semibold text-gray-900">Financial Portal</h1>
+              <div>
+                <h1 className="text-lg font-semibold text-cbf-primary">Canadian</h1>
+                <p className="text-xs text-cbf-secondary -mt-1">Business Financing</p>
+              </div>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -92,11 +95,11 @@ export default function Dashboard() {
                   alt="User profile" 
                   className="w-8 h-8 rounded-full object-cover" 
                 />
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-cbf-primary">
                   {(user as any)?.firstName} {(user as any)?.lastName}
                 </span>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <Button variant="ghost" size="sm" onClick={handleLogout} className="text-cbf-secondary hover:text-cbf-primary">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
                 </svg>
@@ -202,18 +205,18 @@ export default function Dashboard() {
                         <FileText className="text-blue-500 w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-900">
-                          {app.businessLegalName || 'Business Loan Application'}
+                        <h4 className="font-medium text-cbf-primary">
+                          {app.businessName || 'Business Loan Application'}
                         </h4>
-                        <div className="flex items-center space-x-2 text-sm text-gray-500">
+                        <div className="flex items-center space-x-2 text-sm text-cbf-secondary">
                           <Calendar className="w-3 h-3" />
                           <span>
                             {app.createdAt ? new Date(app.createdAt).toLocaleDateString() : 'Unknown date'}
                           </span>
-                          {app.requestedAmount && (
+                          {app.loanAmount && (
                             <>
                               <span>•</span>
-                              <span>${app.requestedAmount.toLocaleString()}</span>
+                              <span>${app.loanAmount.toLocaleString()}</span>
                             </>
                           )}
                         </div>
