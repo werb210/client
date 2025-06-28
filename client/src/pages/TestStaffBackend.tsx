@@ -65,7 +65,7 @@ export default function TestStaffBackend() {
           test: test.name,
           status: 'ERROR',
           ok: false,
-          error: error.message,
+          error: (error as Error).message,
           success: false
         }]);
       }

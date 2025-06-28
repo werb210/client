@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { apiFetch } from '@/lib/api';
+import { staffApi } from '@/lib/staffApi';
 import { toE164 } from '@/lib/toE164';
 
 const registerSchema = z.object({
@@ -63,45 +63,29 @@ export default function Register() {
         return;
       }
 
-      const response = await apiFetch('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: registrationData.email,
-          password: registrationData.password,
-          phone: formattedPhone
-        }),
-      });
-      console.log('Registration response:', response.status, response.statusText);
+      const result = await staffApi.register(
+        registrationData.email,
+        registrationData.password,
+        formattedPhone
+      );
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Registration failed' }));
-        console.error('Registration error:', errorData);
+      console.log('Registration result:', result);
+      
+      if (!result.success) {
+        console.error('Registration error:', result.error);
         toast({
           title: 'Registration Failed',
-          description: errorData.message || `Server error: ${response.status}`,
+          description: result.error || 'Registration failed',
           variant: 'destructive',
         });
         return;
       }
-
-      // Handle successful response - check if response has content
-      let result;
-      try {
-        const responseText = await response.text();
-        console.log('Registration response text:', responseText);
-        result = responseText ? JSON.parse(responseText) : { success: true };
-      } catch (parseError) {
-        console.error('Registration JSON parse error:', parseError);
-        // If we can't parse JSON but response was successful, assume success
-        result = { success: true, message: 'Registration successful' };
-      }
-      console.log('Registration result:', result);
       
       // Save email to localStorage for future auth redirects
       localStorage.setItem('user-email', data.email);
 
       // Check if OTP was sent successfully
-      if (result.message === "OTP sent" || result.success || result.otpSent || response.status === 200) {
+      if (result.success) {
         sessionStorage.setItem('otpEmail', data.email);
         sessionStorage.setItem('otpPhone', formattedPhone);
         toast({
@@ -109,30 +93,12 @@ export default function Register() {
           description: 'SMS verification code sent to your phone.',
         });
         setLocation('/verify-otp');
-      } else if (result.message === "User registered successfully") {
-        // Direct registration without OTP
-        toast({
-          title: 'Account Created Successfully',
-          description: 'Welcome to Boreal Financial!',
-        });
-        setLocation('/application');
       } else {
-        // Unexpected response format but success status
-        if (response.status === 200) {
-          sessionStorage.setItem('otpEmail', data.email);
-          sessionStorage.setItem('otpPhone', formattedPhone);
-          toast({
-            title: 'Account Created',
-            description: 'SMS verification code sent to your phone.',
-          });
-          setLocation('/verify-otp');
-        } else {
-          toast({
-            title: 'Registration Issue',
-            description: result.message || 'Please check your details and try again.',
-            variant: 'destructive',
-          });
-        }
+        toast({
+          title: 'Registration Issue',
+          description: result.message || 'Please check your details and try again.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Registration network error:', error);
