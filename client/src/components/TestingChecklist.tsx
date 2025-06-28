@@ -14,6 +14,8 @@ interface TestItem {
   description: string;
   completed: boolean;
   error?: string;
+  result?: string;
+  lastTested?: string;
 }
 
 export function TestingChecklist() {

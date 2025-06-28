@@ -11,7 +11,7 @@ import Dashboard from "@/pages/Dashboard";
 import ApplicationForm from "@/pages/ApplicationForm";
 import TwoFactorAuth from "@/pages/TwoFactorAuth";
 import Registration from "@/pages/Registration";
-import { TestingChecklist } from "@/components/TestingChecklist";
+import { ComprehensiveTestingChecklist } from "@/components/ComprehensiveTestingChecklist";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
@@ -36,7 +36,7 @@ function Router() {
           
           {/* Protected routes - accessible whether authenticated or not for demo */}
           <Route path="/application" component={ApplicationForm} />
-          <Route path="/testing" component={TestingChecklist} />
+          <Route path="/testing" component={ComprehensiveTestingChecklist} />
           <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
           <Route path="/step2-recommendations" component={Step2Recommendations} />
           <Route path="/step3-business-details" component={Step3BusinessDetails} />
