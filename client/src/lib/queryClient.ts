@@ -19,38 +19,38 @@ export async function apiRequest(
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
+export const getQueryFn: (options: {
   on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  <T>({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }): Promise<T> => {
+}) => QueryFunction<any> =
+  ({ on401: unauthorizedBehavior }: { on401: UnauthorizedBehavior }) =>
+  async ({ queryKey }) => {
     const endpoint = queryKey[0] as string;
     
     try {
       // Route different endpoints to appropriate API functions
       if (endpoint === '/api/auth/user') {
-        return await api.getUserProfile() as T;
+        return await api.getUserProfile();
       } else if (endpoint === '/api/2fa/status') {
-        return await api.get2FAStatus() as T;
+        return await api.get2FAStatus();
       } else if (endpoint === '/api/applications') {
-        return await api.getUserApplications() as T;
+        return await api.getUserApplications();
       } else if (endpoint.startsWith('/api/applications/')) {
         const applicationId = endpoint.split('/').pop();
-        return await api.getApplication(applicationId!) as T;
+        return await api.getApplication(applicationId!);
       } else if (endpoint.startsWith('/api/documents/requirements')) {
         const params = new URLSearchParams(endpoint.split('?')[1] || '');
         const category = params.get('category');
-        return await api.fetchRequiredDocuments(category || '') as T;
+        return await api.fetchRequiredDocuments(category || '');
       } else if (endpoint.startsWith('/api/lenders/requirements')) {
         const params = new URLSearchParams(endpoint.split('?')[1] || '');
         const category = params.get('category');
-        return await api.getLenderProducts(category || undefined) as T;
+        return await api.getLenderProducts(category || undefined);
       }
       
       throw new Error(`No API function mapped for endpoint: ${endpoint}`);
     } catch (error) {
       if (error instanceof api.ApiError && error.status === 401 && unauthorizedBehavior === "returnNull") {
-        return null as T;
+        return null;
       }
       throw error;
     }

@@ -2,16 +2,16 @@
 
 ## Overview
 
-This is a full-stack financial application portal that allows clients to submit lending applications through a multi-step form interface. The system uses a modern tech stack with React + TypeScript frontend, Express.js backend, and PostgreSQL database with Drizzle ORM.
+This is a client-side financial application portal that allows end users to submit lending applications through a multi-step form interface. The system is architected as a frontend-only application that communicates with a separate staff backend via secure API calls.
 
 ## System Architecture
 
-The application follows a monorepo structure with clear separation between client, server, and shared components:
+The application follows a client-staff separation architecture:
 
-- **Client**: React 18 + Vite + TypeScript frontend application
-- **Server**: Express.js backend with session-based authentication
-- **Shared**: Common database schema and types
-- **Database**: PostgreSQL with Drizzle ORM for type-safe database operations
+- **Client**: Frontend-only React 18 + Vite + TypeScript application (this repository)
+- **Staff Backend**: Separate application managing shared database and business logic
+- **API Communication**: Centralized via `/lib/api.ts` to staff backend at `https://staff.borealfinance.app/api`
+- **No Local Database**: All data operations route through staff backend API
 
 ### Technology Stack
 
@@ -33,27 +33,21 @@ The application follows a monorepo structure with clear separation between clien
 - **Form validation**: React Hook Form with Zod schemas
 - **File uploads**: Drag-and-drop document upload with progress tracking
 
-### Backend Architecture
-- **RESTful API**: Express.js with typed route handlers
-- **Session management**: PostgreSQL-backed sessions with connect-pg-simple
-- **File handling**: Multer for multipart form uploads with validation
-- **Error handling**: Centralized error middleware with proper HTTP status codes
-- **Authentication middleware**: Replit OAuth integration with user context
-
-### Database Schema
-- **Users table**: Required for Replit Auth integration
-- **Applications table**: Core application data with JSON fields for flexible form data
-- **Documents table**: File metadata and upload tracking
-- **Lender products table**: Product recommendations and configurations
-- **Sessions table**: Session storage (required for Replit Auth)
+### Client Architecture
+- **Frontend-only**: No backend database or business logic
+- **API Communication**: Centralized through `/lib/api.ts` for all staff backend calls
+- **Authentication**: Session-based OAuth routing through staff backend
+- **File handling**: Direct upload to staff backend with progress tracking
+- **Error handling**: API error management with 401 redirect handling
+- **Offline support**: IndexedDB for temporary form data and upload queue
 
 ## Data Flow
 
-1. **Authentication**: Users authenticate via Replit OAuth, creating/updating user records
-2. **Application Creation**: Multi-step form process with auto-save functionality
-3. **Document Upload**: File uploads with metadata stored in database
-4. **Form Submission**: Complete application data saved and status updated
-5. **Offline Sync**: Local data synchronized when connection restored
+1. **Authentication**: Users authenticate via staff backend OAuth integration
+2. **Application Creation**: Multi-step form process with API calls to staff backend
+3. **Document Upload**: Direct file uploads to staff backend with progress tracking
+4. **Form Submission**: Complete application data submitted via API to staff backend
+5. **Offline Sync**: Local IndexedDB data synchronized with staff backend when online
 
 ### State Management
 - **Server state**: TanStack Query for API data caching and synchronization
@@ -101,7 +95,13 @@ The application follows a monorepo structure with clear separation between clien
 
 ```
 Changelog:
-- June 27, 2025. Initial setup
+- June 27, 2025: Initial setup
+- June 28, 2025: Migrated to client-staff architecture
+  - Removed all local database logic (Drizzle, schema, storage)
+  - Created centralized API layer (/lib/api.ts) for staff backend communication
+  - Updated routing to staff backend at https://staff.borealfinance.app/api
+  - Simplified authentication flow for frontend-only operation
+  - Added architectural documentation in /docs/ARCHITECTURE.md
 ```
 
 ## User Preferences
