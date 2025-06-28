@@ -1,6 +1,6 @@
 // Production configuration for deployment
 const PRODUCTION_CONFIG = {
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://staff.borealfinance.app/api',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api',
   SIGNNOW_REDIRECT_URL: import.meta.env.VITE_SIGNNOW_REDIRECT_URL || window.location.origin + '/step6-signature',
   MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
   MIN_FILE_SIZE: 5 * 1024, // 5KB
@@ -20,6 +20,27 @@ if (PRODUCTION_CONFIG.IS_PRODUCTION) {
 
 // Centralized API communication layer for staff backend integration
 const API_BASE_URL = PRODUCTION_CONFIG.API_BASE_URL;
+
+// Test function to verify staff backend connectivity
+export async function testStaffBackendConnection(): Promise<{ connected: boolean; error?: string }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/health`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    
+    if (response.ok) {
+      return { connected: true };
+    } else {
+      return { connected: false, error: `HTTP ${response.status}: ${response.statusText}` };
+    }
+  } catch (error) {
+    return { 
+      connected: false, 
+      error: error instanceof Error ? error.message : 'Unknown network error' 
+    };
+  }
+}
 
 // Error class for API-related errors
 export class ApiError extends Error {
