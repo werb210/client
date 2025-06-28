@@ -1,177 +1,169 @@
+import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Building2, ArrowRight, CheckCircle, Clock, Shield } from 'lucide-react';
-import borealLogo from '@assets/Boreal Financial Logo 2_1751090147857.png';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { NavBar } from '@/components/NavBar';
+import { CheckCircle, TrendingUp, Shield } from 'lucide-react';
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <img 
-              src={borealLogo} 
-              alt="Boreal Financial" 
-              className="h-12 w-auto object-contain"
-            />
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-cbf-secondary">Business Financing</span>
-            <Button 
-              onClick={() => window.location.href = '/api/login'}
-              className="bg-cbf-orange hover:bg-cbf-orange-dark text-white px-6 py-2 rounded-lg font-medium"
-            >
-              Apply Now
-            </Button>
-          </div>
-        </div>
-      </header>
-
+      
       {/* Hero Section */}
-      <section className="hero-gradient text-white py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
-                Financing For Big
-                <br />
-                Moments Like Now
-              </h1>
-              <p className="text-xl mb-8 text-blue-100">
-                Get the funding your business needs to grow, expand, and seize opportunities with our fast and secure application process.
-              </p>
-              <Button 
-                onClick={() => window.location.href = '/api/login'}
-                className="bg-white text-black hover:bg-gray-50 px-8 py-4 text-lg font-semibold rounded-lg inline-flex items-center space-x-2"
-              >
-                <span>Start Your Application</span>
-                <ArrowRight className="w-5 h-5" />
+      <section className="bg-gradient-to-br from-teal-50 to-orange-50 py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+              Professional Business Financing Solutions
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              Connecting Canadian and US businesses with tailored funding solutions. 
+              Streamlined applications, competitive rates, and expert support.
+            </p>
+            <Link href="/login">
+              <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-lg rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500">
+                Start Your Application
               </Button>
-            </div>
-            <div className="hidden lg:block">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                      <CheckCircle className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">98% Approval Rate</h3>
-                      <p className="text-blue-100">Fast decisions within 24 hours</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                      <Clock className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Quick Process</h3>
-                      <p className="text-blue-100">Complete application in minutes</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                      <Shield className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">100% Secure</h3>
-                      <p className="text-blue-100">Bank-level security & encryption</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-6 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8">
-            <Card className="p-8 bg-cbf-teal text-white border-0">
-              <div className="mb-6">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
-                  <Building2 className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold mb-4">Apply Online</h2>
-                <p className="text-blue-100 mb-6">
-                  Fill out our secure application within 24 hours and we'll get you a decision on payment and funding details.
-                </p>
-                <Button 
-                  onClick={() => window.location.href = '/api/login'}
-                  className="bg-white text-cbf-teal hover:bg-gray-50 font-semibold px-6 py-3 rounded-lg"
-                >
-                  Start Application
-                </Button>
-              </div>
-            </Card>
-
-            <Card className="p-8 bg-cbf-orange text-white border-0">
-              <div className="mb-6">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold mb-4">Get Funding</h2>
-                <p className="text-orange-100 mb-6">
-                  98% of applications are approved. Businesses see up to 120% increase in sales. We have 100% transparency.
-                </p>
-                <Button 
-                  onClick={() => window.location.href = '/api/login'}
-                  className="bg-white text-cbf-orange hover:bg-gray-50 font-semibold px-6 py-3 rounded-lg"
-                >
-                  Learn More
-                </Button>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Get Up To Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-cbf-primary mb-16">Get up to $30 Million</h2>
+      {/* Features Grid */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-cbf-teal-light rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="w-10 h-10 text-cbf-teal" />
-              </div>
-              <h3 className="text-xl font-semibold text-cbf-primary mb-2">98% of applications are approved</h3>
-            </div>
-            <div className="text-center">
-              <div className="w-20 h-20 bg-cbf-orange-light rounded-full flex items-center justify-center mx-auto mb-6">
-                <ArrowRight className="w-10 h-10 text-cbf-orange" />
-              </div>
-              <h3 className="text-xl font-semibold text-cbf-primary mb-2">Up to 120% increase in sales</h3>
-            </div>
-            <div className="text-center">
-              <div className="w-20 h-20 bg-cbf-teal-light rounded-full flex items-center justify-center mx-auto mb-6">
-                <Shield className="w-10 h-10 text-cbf-teal" />
-              </div>
-              <h3 className="text-xl font-semibold text-cbf-primary mb-2">100% Transparency</h3>
-            </div>
+            <Card className="text-center">
+              <CardHeader>
+                <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-6 h-6 text-teal-600" />
+                </div>
+                <CardTitle className="text-xl">Streamlined Application</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Complete your funding application in minutes with our intuitive multi-step process. 
+                  Upload documents, e-sign agreements, and track progress in real-time.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center">
+              <CardHeader>
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp className="w-6 h-6 text-orange-600" />
+                </div>
+                <CardTitle className="text-xl">Competitive Rates</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Access competitive financing rates tailored to your business needs and credit profile. 
+                  Multiple lender network ensures optimal terms for your situation.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center">
+              <CardHeader>
+                <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <Shield className="w-6 h-6 text-teal-600" />
+                </div>
+                <CardTitle className="text-xl">Secure & Compliant</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">
+                  Bank-level security with full regulatory compliance for your peace of mind. 
+                  Your sensitive financial data is protected with industry-leading encryption.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-cbf-teal text-white py-16 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to Get Started?</h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Join thousands of Canadian businesses that have secured funding through our platform.
-          </p>
-          <Button 
-            onClick={() => window.location.href = '/api/login'}
-            className="bg-cbf-orange hover:bg-cbf-orange-dark text-white px-8 py-4 text-lg font-semibold rounded-lg inline-flex items-center space-x-2"
-          >
-            <span>Apply for Funding Now</span>
-            <ArrowRight className="w-5 h-5" />
-          </Button>
+      {/* Why Choose Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Why Choose Boreal Financial?
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              We understand the unique challenges facing modern businesses and provide solutions that work.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">For Your Business</h3>
+              <ul className="space-y-4">
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-teal-600 mt-1 mr-3 flex-shrink-0" />
+                  <span className="text-gray-700">Fast approval process - decisions in 24-48 hours</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-teal-600 mt-1 mr-3 flex-shrink-0" />
+                  <span className="text-gray-700">Flexible terms designed for your cash flow</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-teal-600 mt-1 mr-3 flex-shrink-0" />
+                  <span className="text-gray-700">No hidden fees or prepayment penalties</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-teal-600 mt-1 mr-3 flex-shrink-0" />
+                  <span className="text-gray-700">Dedicated relationship manager for ongoing support</span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">Our Commitment</h3>
+              <ul className="space-y-4">
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-teal-600 mt-1 mr-3 flex-shrink-0" />
+                  <span className="text-gray-700">Transparent pricing with clear terms and conditions</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-teal-600 mt-1 mr-3 flex-shrink-0" />
+                  <span className="text-gray-700">Expert guidance throughout the application process</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-teal-600 mt-1 mr-3 flex-shrink-0" />
+                  <span className="text-gray-700">Industry-leading security and data protection</span>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-teal-600 mt-1 mr-3 flex-shrink-0" />
+                  <span className="text-gray-700">Ongoing relationship beyond just the initial funding</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <Link href="/login">
+              <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-lg rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500">
+                Get Started Today
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-teal-400 mb-4">Boreal Financial</h3>
+            <p className="text-gray-400 mb-6">
+              Professional business financing solutions for the modern economy.
+            </p>
+            <Link href="/login">
+              <Button variant="outline" className="border-teal-500 text-teal-400 hover:bg-teal-500 hover:text-white">
+                Start Your Application
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

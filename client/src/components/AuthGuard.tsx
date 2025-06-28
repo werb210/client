@@ -15,6 +15,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (isLoading) return;
 
     const publicRoutes = [
+      '/',
       '/login',
       '/register', 
       '/verify-otp',

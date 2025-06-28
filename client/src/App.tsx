@@ -42,9 +42,11 @@ function Router() {
         <Route path="/request-reset" component={RequestReset} />
         <Route path="/reset-password/:token" component={ResetPassword} />
         
+        {/* Public landing page */}
+        <Route path="/" component={Landing} />
+        
         {/* Protected application routes */}
-        <Route path="/" component={Dashboard} />
-        <Route path="/landing" component={Landing} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/application" component={ApplicationForm} />
         <Route path="/testing" component={ComprehensiveTestingChecklist} />
         <Route path="/test-connection" component={TestConnection} />
