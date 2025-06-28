@@ -12,7 +12,7 @@ import TwoFactorAuth from "@/pages/TwoFactorAuth";
 import Registration from "@/pages/Registration";
 
 function Router() {
-  const { isAuthenticated, isLoading, needsRegistration, needs2FA, is2FAComplete } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
@@ -20,22 +20,10 @@ function Router() {
         <Route path="/" component={() => <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-pulse">Loading...</div></div>} />
       ) : !isAuthenticated ? (
         <Route path="/" component={Landing} />
-      ) : needsRegistration ? (
-        <>
-          <Route path="/register" component={Registration} />
-          <Route component={() => { window.location.href = '/register'; return null; }} />
-        </>
-      ) : needs2FA && !is2FAComplete ? (
-        <>
-          <Route path="/2fa" component={TwoFactorAuth} />
-          <Route component={() => { window.location.href = '/2fa'; return null; }} />
-        </>
       ) : (
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/application" component={ApplicationForm} />
-          <Route path="/register" component={Registration} />
-          <Route path="/2fa" component={TwoFactorAuth} />
         </>
       )}
       <Route component={NotFound} />

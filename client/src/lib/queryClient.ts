@@ -22,8 +22,8 @@ type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
+  <T>({ on401: unauthorizedBehavior }) =>
+  async ({ queryKey }): Promise<T> => {
     const endpoint = queryKey[0] as string;
     
     try {
@@ -50,7 +50,7 @@ export const getQueryFn: <T>(options: {
       throw new Error(`No API function mapped for endpoint: ${endpoint}`);
     } catch (error) {
       if (error instanceof api.ApiError && error.status === 401 && unauthorizedBehavior === "returnNull") {
-        return null;
+        return null as T;
       }
       throw error;
     }

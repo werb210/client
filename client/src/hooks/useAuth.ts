@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import * as api from "@/lib/api";
 
 interface TwoFactorStatus {
   is2FAEnabled: boolean;
@@ -7,6 +8,7 @@ interface TwoFactorStatus {
 }
 
 export function useAuth() {
+  // Note: These queries will now route through staff backend API
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
@@ -18,12 +20,11 @@ export function useAuth() {
     retry: false,
   });
 
-  // Determine if user needs to register (missing essential info)
-  const needsRegistration = !!user && (!(user as any).firstName || !(user as any).lastName || !(user as any).phoneNumber);
+  // For client app, assume user data comes from staff backend
+  // Client app will redirect to staff login if needed
+  const needsRegistration = false; // Staff backend handles registration
+  const needs2FA = false; // Staff backend handles 2FA
   
-  // Determine if user needs 2FA (has registered but not completed 2FA)
-  const needs2FA = !!user && !needsRegistration && (!twoFactorStatus?.twoFactorComplete);
-
   return {
     user,
     twoFactorStatus,
@@ -31,6 +32,6 @@ export function useAuth() {
     isAuthenticated: !!user,
     needsRegistration,
     needs2FA,
-    is2FAComplete: twoFactorStatus?.twoFactorComplete || false,
+    is2FAComplete: true, // Assume complete if user exists in client
   };
 }
