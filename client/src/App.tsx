@@ -35,6 +35,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import PasswordResetDiagnostic from "@/pages/PasswordResetDiagnostic";
 import ApiTest from "@/pages/ApiTest";
 import UserDatabase from "@/pages/UserDatabase";
+import QuickUserCheck from "@/pages/QuickUserCheck";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
@@ -67,6 +68,7 @@ function Router() {
         <Route path="/password-reset-diagnostic" component={PasswordResetDiagnostic} />
         <Route path="/api-test" component={ApiTest} />
         <Route path="/user-database" component={UserDatabase} />
+        <Route path="/quick-user-check" component={QuickUserCheck} />
         
         {/* Redirect root to login for unauthenticated users */}
         <Route path="/" component={Login} />
