@@ -1,25 +1,11 @@
-// Production configuration for deployment
-const PRODUCTION_CONFIG = {
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api',
-  SIGNNOW_REDIRECT_URL: import.meta.env.VITE_SIGNNOW_REDIRECT_URL || window.location.origin + '/step6-signature',
-  MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
-  MIN_FILE_SIZE: 5 * 1024, // 5KB
-  REQUEST_TIMEOUT: 30000, // 30 seconds
-  RETRY_ATTEMPTS: 3,
-  IS_PRODUCTION: import.meta.env.PROD,
-  SECURE_COOKIES: import.meta.env.PROD, // Enable secure cookies in production
-  SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutes
-};
+import { API_BASE_URL, APP_CONFIG } from '@/constants';
 
 // Disable debug logs in production
-if (PRODUCTION_CONFIG.IS_PRODUCTION) {
+if (APP_CONFIG.IS_PRODUCTION) {
   console.log = () => {};
   console.warn = () => {};
   console.info = () => {};
 }
-
-// Centralized API communication layer for staff backend integration
-const API_BASE_URL = PRODUCTION_CONFIG.API_BASE_URL;
 
 // Test function to verify staff backend connectivity
 export async function testStaffBackendConnection(): Promise<{ connected: boolean; error?: string }> {

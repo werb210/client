@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { testStaffBackendConnection } from '@/lib/api';
+import { API_BASE_URL } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -16,25 +17,83 @@ export default function TestConnection() {
   const testConnection = async () => {
     setIsLoading(true);
     try {
-      // First test the /health endpoint directly
-      const healthResult = await testStaffBackendConnection();
-      
-      // Also test a basic API endpoint
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api';
-      const basicResponse = await fetch(`${apiUrl}/auth/user`, {
-        method: 'GET',
-        credentials: 'include',
-      }).catch(err => ({ ok: false, status: 0, statusText: err.message }));
-      
+      const tests = {
+        health: null as any,
+        cors: null as any,
+        auth: null as any
+      };
+
+      // Test 1: Health endpoint
+      try {
+        const healthResponse = await fetch(`${API_BASE_URL}/health`, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+        });
+        tests.health = {
+          success: healthResponse.ok,
+          status: healthResponse.status,
+          message: healthResponse.ok ? 'Health endpoint accessible' : `HTTP ${healthResponse.status}`
+        };
+      } catch (error) {
+        tests.health = {
+          success: false,
+          message: error instanceof Error ? error.message : 'Health test failed'
+        };
+      }
+
+      // Test 2: CORS preflight test
+      try {
+        const corsResponse = await fetch(`${API_BASE_URL}/auth/user`, {
+          method: 'OPTIONS',
+          mode: 'cors',
+          headers: {
+            'Access-Control-Request-Method': 'GET',
+            'Access-Control-Request-Headers': 'Content-Type'
+          }
+        });
+        tests.cors = {
+          success: corsResponse.ok || corsResponse.status === 204,
+          status: corsResponse.status,
+          message: 'CORS preflight response received'
+        };
+      } catch (error) {
+        tests.cors = {
+          success: false,
+          message: 'CORS preflight failed - likely CORS misconfiguration'
+        };
+      }
+
+      // Test 3: Auth endpoint
+      try {
+        const authResponse = await fetch(`${API_BASE_URL}/auth/user`, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'include',
+        });
+        tests.auth = {
+          success: authResponse.status !== 0,
+          status: authResponse.status,
+          message: authResponse.status === 401 ? 'Auth endpoint reachable (401 expected)' : 
+                   authResponse.ok ? 'Auth endpoint accessible' : `HTTP ${authResponse.status}`
+        };
+      } catch (error) {
+        tests.auth = {
+          success: false,
+          message: error instanceof Error ? error.message : 'Auth test failed'
+        };
+      }
+
       setResult({
-        connected: healthResult.connected,
-        error: healthResult.error,
-        apiTest: basicResponse.ok ? 'API endpoint accessible' : `API test failed: ${basicResponse.statusText}`
+        connected: tests.health.success || tests.auth.success,
+        error: !tests.health.success && !tests.auth.success ? 'All connectivity tests failed' : undefined,
+        apiTest: JSON.stringify(tests, null, 2)
       } as TestResult);
+      
     } catch (error) {
       setResult({
         connected: false,
-        error: error instanceof Error ? error.message : 'Test failed'
+        error: error instanceof Error ? error.message : 'Connection test failed'
       });
     } finally {
       setIsLoading(false);
@@ -55,7 +114,7 @@ export default function TestConnection() {
           <CardContent className="space-y-4">
             <div className="text-sm text-gray-600">
               Current API Base URL: <code className="bg-gray-100 px-2 py-1 rounded">
-                {import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'}
+                {API_BASE_URL}
               </code>
             </div>
             
@@ -84,9 +143,12 @@ export default function TestConnection() {
                   </p>
                 )}
                 {result.apiTest && (
-                  <p className="text-blue-700 mt-2 text-sm">
-                    API Test: {result.apiTest}
-                  </p>
+                  <div className="mt-4">
+                    <h4 className="font-medium text-gray-800 mb-2">Detailed Test Results:</h4>
+                    <pre className="bg-gray-100 p-3 rounded text-xs overflow-auto max-h-48">
+                      {result.apiTest}
+                    </pre>
+                  </div>
                 )}
               </div>
             )}
