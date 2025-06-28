@@ -41,9 +41,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
       return;
     }
 
-    // If user is authenticated and trying to access auth pages, redirect to app
-    if (isAuthenticated && isPublicRoute) {
-      setLocation('/step1-financial-profile');
+    // If user is authenticated and on root or auth pages, redirect to dashboard
+    if (isAuthenticated && (location === '/' || location === '/login' || location === '/register')) {
+      setLocation('/dashboard');
       return;
     }
   }, [isAuthenticated, isLoading, location, setLocation]);

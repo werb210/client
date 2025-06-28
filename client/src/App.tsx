@@ -51,8 +51,8 @@ function Router() {
         <Route path="/backend-test" component={BackendConnectivity} />
         <Route path="/auth-flow-test" component={AuthFlowTest} />
         
-        {/* Public landing page */}
-        <Route path="/" component={Landing} />
+        {/* Redirect root to login for unauthenticated users */}
+        <Route path="/" component={Login} />
         
         {/* Protected application routes */}
         <Route path="/dashboard" component={Dashboard} />

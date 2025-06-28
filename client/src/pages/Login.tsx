@@ -12,8 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  phone: z.string().regex(/^\+1[0-9]{10}$/, 'Phone must be +1 followed by 10 digits'),
+  email: z.string().email('Invalid email address').optional(),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
