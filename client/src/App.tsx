@@ -17,6 +17,8 @@ import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import NotFound from "@/pages/NotFound";
 import ServerTest from "@/pages/ServerTest";
+import SignComplete from "@/pages/SignComplete";
+import UploadDocuments from "@/pages/UploadDocuments";
 
 // Application flow steps
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
@@ -47,6 +49,7 @@ function Router() {
       <Route path="/verify-otp" component={VerifyOtp} />
       <Route path="/request-reset" component={RequestReset} />
       <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/sign-complete" component={SignComplete} />
       <Route path="/landing" component={Landing} />
       
       {/* Protected application routes */}
@@ -59,6 +62,7 @@ function Router() {
         <Route path="/step4-financial-info" component={Step4FinancialInfo} />
         <Route path="/step5-document-upload" component={Step5DocumentUpload} />
         <Route path="/step6-signature" component={Step6Signature} />
+        <Route path="/upload-documents" component={UploadDocuments} />
         {/* Step7 integrated into Step6 completion flow */}
       </AuthGuard>
       

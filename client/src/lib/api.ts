@@ -240,3 +240,20 @@ export async function get2FAStatus(): Promise<{
     twoFactorComplete: boolean;
   }>('/auth/2fa/status');
 }
+
+// Applications API for Draft-Before-Sign Flow
+export const Applications = {
+  /* Create draft and get signUrl */
+  createDraft: (formData: Record<string, any>) =>
+    apiFetch('/applications/draft', {
+      method: 'POST',
+      body: JSON.stringify({ formData }),
+    }),
+
+  /* Complete application after docs */
+  complete: (id: string, payload: any) =>
+    apiFetch(`/applications/${id}/complete`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+};
