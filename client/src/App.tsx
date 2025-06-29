@@ -60,8 +60,8 @@ function Router() {
         {/* Step7 integrated into Step6 completion flow */}
       </AuthGuard>
       
-      {/* Default route */}
-      <Route path="/" component={Login} />
+      {/* Default route - Landing page for unauthenticated users */}
+      <Route path="/" component={Landing} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -36,20 +36,23 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Simple auth routes for client-only mode
-  app.get('/api/login', (req, res) => {
-    res.redirect('/api/auth/login');
+  // Remove problematic auth redirects that may cause 403 errors
+
+  // Health check endpoint for monitoring
+  app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'ok',
+      message: 'Client app serving - API calls route to staff backend',
+      timestamp: new Date().toISOString()
+    });
   });
 
-  app.get('/api/logout', (req, res) => {
-    res.redirect('/api/auth/logout');
-  });
-
-  // Placeholder API routes that will redirect to staff backend
+  // All other API routes inform about staff backend configuration
   app.use('/api', (req, res) => {
-    res.status(503).json({ 
-      message: 'This client app is configured to use staff backend API. Please ensure staff backend is running.',
-      redirectTo: 'https://staffportal.replit.app/api' + req.path
+    res.status(501).json({ 
+      message: 'This client app routes API calls to staff backend.',
+      staffBackend: 'https://staffportal.replit.app/api',
+      endpoint: req.path
     });
   });
 

@@ -27,13 +27,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Fetch user on app boot
+  // Skip initial user fetch - only authenticate when user attempts login
   useEffect(() => {
-    fetchUser().catch(() => {
-      // Silently handle auth check failures
-      setUser(null);
-      setIsLoading(false);
-    });
+    setIsLoading(false);
   }, []);
 
   const fetchUser = async () => {
