@@ -13,16 +13,16 @@ import { ArrowRight } from 'lucide-react';
 import { markApplicationStarted } from '@/lib/visitFlags';
 
 const financialProfileSchema = z.object({
-  fundingAmount: z.string().min(1, 'Please enter the funding amount'),
-  useOfFunds: z.string().min(1, 'Please select how you plan to use the funds'),
-  businessLocation: z.string().min(1, 'Please select where your business is headquartered'),
-  industry: z.string().min(1, 'Please select your industry'),
-  lookingFor: z.string().min(1, 'Please select what you are looking for'),
-  salesHistory: z.string().min(1, 'Please select your sales history duration'),
-  lastYearRevenue: z.string().min(1, 'Please select your last 12 months revenue'),
-  monthlyRevenue: z.string().min(1, 'Please select your average monthly revenue'),
-  accountReceivable: z.string().min(1, 'Please select your account receivable balance'),
-  fixedAssets: z.string().min(1, 'Please select your fixed assets value'),
+  fundingAmount: z.string().optional(),
+  useOfFunds: z.string().optional(),
+  businessLocation: z.string().optional(),
+  industry: z.string().optional(),
+  lookingFor: z.string().optional(),
+  salesHistory: z.string().optional(),
+  lastYearRevenue: z.string().optional(),
+  monthlyRevenue: z.string().optional(),
+  accountReceivable: z.string().optional(),
+  fixedAssets: z.string().optional(),
 });
 
 type FinancialProfileFormData = z.infer<typeof financialProfileSchema>;

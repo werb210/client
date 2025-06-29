@@ -13,36 +13,11 @@ import { Applications } from '@/lib/api';
 import { useState } from 'react';
 
 const financialInfoSchema = z.object({
-  annualRevenue: z.string()
-    .min(1, 'Annual revenue is required')
-    .refine((val) => {
-      const num = parseFloat(val.replace(/[^0-9.-]+/g, ''));
-      return !isNaN(num) && num >= 0;
-    }, 'Please enter a valid revenue amount'),
-  monthlyExpenses: z.string()
-    .min(1, 'Monthly expenses are required')
-    .refine((val) => {
-      const num = parseFloat(val.replace(/[^0-9.-]+/g, ''));
-      return !isNaN(num) && num >= 0;
-    }, 'Please enter a valid expense amount'),
-  numberOfEmployees: z.string()
-    .min(1, 'Number of employees is required')
-    .refine((val) => {
-      const num = parseInt(val);
-      return !isNaN(num) && num >= 0;
-    }, 'Please enter a valid number of employees'),
-  totalAssets: z.string()
-    .min(1, 'Total assets amount is required')
-    .refine((val) => {
-      const num = parseFloat(val.replace(/[^0-9.-]+/g, ''));
-      return !isNaN(num) && num >= 0;
-    }, 'Please enter a valid assets amount'),
-  totalLiabilities: z.string()
-    .min(1, 'Total liabilities amount is required')
-    .refine((val) => {
-      const num = parseFloat(val.replace(/[^0-9.-]+/g, ''));
-      return !isNaN(num) && num >= 0;
-    }, 'Please enter a valid liabilities amount'),
+  annualRevenue: z.string().optional(),
+  monthlyExpenses: z.string().optional(),
+  numberOfEmployees: z.string().optional(),
+  totalAssets: z.string().optional(),
+  totalLiabilities: z.string().optional(),
 });
 
 type FinancialInfoFormData = z.infer<typeof financialInfoSchema>;

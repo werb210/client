@@ -16,21 +16,16 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 const businessDetailsSchema = z.object({
-  businessStructure: z.string().min(1, 'Please select your business structure'),
-  incorporationDate: z.date({
-    required_error: "Please select your incorporation date",
-  }),
+  businessStructure: z.string().optional(),
+  incorporationDate: z.date().optional(),
   businessAddress: z.object({
-    street: z.string().min(1, 'Street address is required'),
-    city: z.string().min(1, 'City is required'),
-    province: z.string().min(1, 'Province/State is required'),
-    postalCode: z.string().min(1, 'Postal/ZIP code is required'),
-    country: z.string().min(1, 'Country is required'),
-  }),
-  taxId: z.string().min(1, 'Business number/EIN is required').regex(
-    /^[\d\-\s]+$/,
-    'Please enter a valid business number or EIN (numbers, spaces, and dashes only)'
-  ),
+    street: z.string().optional(),
+    city: z.string().optional(),
+    province: z.string().optional(),
+    postalCode: z.string().optional(),
+    country: z.string().optional(),
+  }).optional(),
+  taxId: z.string().optional(),
 });
 
 type BusinessDetailsFormData = z.infer<typeof businessDetailsSchema>;

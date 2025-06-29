@@ -1,16 +1,16 @@
 import { createContext, useContext, useReducer, ReactNode } from 'react';
 
 export interface FinancialProfileData {
-  fundingAmount: string;
-  useOfFunds: string;
-  businessLocation: string;
-  industry: string;
-  lookingFor: string;
-  salesHistory: string;
-  lastYearRevenue: string;
-  monthlyRevenue: string;
-  accountReceivable: string;
-  fixedAssets: string;
+  fundingAmount?: string;
+  useOfFunds?: string;
+  businessLocation?: string;
+  industry?: string;
+  lookingFor?: string;
+  salesHistory?: string;
+  lastYearRevenue?: string;
+  monthlyRevenue?: string;
+  accountReceivable?: string;
+  fixedAssets?: string;
 }
 
 export interface BusinessDetailsData {
