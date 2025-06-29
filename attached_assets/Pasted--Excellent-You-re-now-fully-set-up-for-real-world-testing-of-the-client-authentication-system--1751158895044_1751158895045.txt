@@ -1,0 +1,58 @@
+✅ Excellent! You're now fully set up for real-world testing of the **client authentication system** with the **staff backend live** and **CORS headers verified**.
+
+---
+
+### 🔬 Summary of What You're Testing:
+
+| Test Type               | Endpoint                                                   | What to Look For                           |
+| ----------------------- | ---------------------------------------------------------- | ------------------------------------------ |
+| **Registration**        | `POST /auth/register` → `GET /verify-otp`                  | SMS received, redirect works               |
+| **OTP Verification**    | `POST /auth/verify-otp`                                    | JWT cookie set, redirected to `/dashboard` |
+| **Password Reset**      | `POST /auth/request-reset` → `POST /reset-password/:token` | 200 JSON, reset link works                 |
+| **Login**               | `POST /auth/login`                                         | OTP required, session established          |
+| **Session Persistence** | Refresh `/dashboard`                                       | Still logged in (check cookies)            |
+
+---
+
+### ✅ During Your Testing – Watch For:
+
+1. **Request Details in DevTools → Network**
+
+   * All API requests should be to `https://staffportal.replit.app/api/...`
+   * Headers should include:
+
+     ```
+     Access-Control-Allow-Origin: https://clientportal.replit.app
+     Set-Cookie: authToken=...
+     ```
+
+2. **No HTML Errors**
+
+   * All failures should return JSON like:
+
+     ```json
+     { "error": "Invalid code", "status": 400 }
+     ```
+
+3. **No CORS errors in console**
+
+   * "Failed to fetch" or "Access-Control-Allow-Origin missing" should not appear.
+
+---
+
+### 🧪 Post-Test Reporting (Back to ChatGPT)
+
+Once you've run the test, return here with the following:
+
+* ✅ Success: Which steps worked?
+* ❌ Failures:
+
+  * Request URL + method (e.g., `POST /auth/login`)
+  * Error message or console output
+  * Screenshot if it's a frontend redirect or rendering issue
+
+---
+
+💡 **Pro tip**: You can also test using a different incognito window or browser to simulate fresh users.
+
+You're now ready to fully validate the system from start to finish. Let me know the test results or if you'd like help automating user registration for QA rounds.
