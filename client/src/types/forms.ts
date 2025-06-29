@@ -76,6 +76,11 @@ export const ApplicationSchema = z.object({
     message: 'You must consent to document maintenance',
   }),
 
+  // Product selection fields (Step 2)
+  selectedProductId: z.string().optional(),
+  selectedProductType: z.string().optional(),
+  matchScore: z.number().optional(),
+
   // Hidden/signature fields (populated server-side)
   signNowSignatureCompleted: z.boolean().optional(),
   signatureData: z.any().optional(),
@@ -134,6 +139,12 @@ export const step4Schema = ApplicationSchema.pick({
   partnerOwnership: true,
   partnerTitle: true,
   partnerSSN: true,
+});
+
+export const step2Schema = ApplicationSchema.pick({
+  selectedProductId: true,
+  selectedProductType: true,
+  matchScore: true,
 });
 
 export const step6Schema = ApplicationSchema.pick({
