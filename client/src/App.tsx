@@ -23,6 +23,7 @@ import UploadDocuments from "@/pages/UploadDocuments";
 import SimpleTest from "@/pages/SimpleTest";
 import TestApp from "@/pages/TestApp";
 import SMSDiagnostic from "@/pages/SMSDiagnostic";
+import TestLenderAPI from "@/pages/TestLenderAPI";
 import { ComprehensiveApplication } from "@/pages/ComprehensiveApplication";
 
 // Application flow steps
@@ -58,6 +59,7 @@ function Router() {
       <Route path="/sign-complete" component={SignComplete} />
       <Route path="/landing" component={Landing} />
       <Route path="/sms-diagnostic" component={SMSDiagnostic} />
+      <Route path="/test-lender-api" component={TestLenderAPI} />
       
       {/* Protected application routes */}
       <AuthGuard>
