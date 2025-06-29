@@ -68,14 +68,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const result = await response.json();
       
-      // Staff backend always sends OTP for login
-      if (result.message === "OTP sent" || result.otpRequired) {
-        return { success: true, otpRequired: true };
-      } else {
-        // Direct authentication (fallback)
-        await fetchUser(); // Refresh user data
-        return { success: true, otpRequired: false };
-      }
+      // ARCHIVED: OTP verification step
+      // if (result.message === "OTP sent" || result.otpRequired) {
+      //   return { success: true, otpRequired: true };
+      // } else {
+      
+      // Direct authentication - refresh user data and proceed
+      await fetchUser();
+      return { success: true, otpRequired: false };
+      
+      // }
     } catch (error) {
       // Handle unexpected errors
       console.error('Login error:', error);

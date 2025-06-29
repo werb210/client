@@ -46,7 +46,8 @@ function Router() {
       {/* Authentication routes */}
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={Register} />
-      <Route path="/verify-otp" component={VerifyOtp} />
+      {/* ARCHIVED: OTP verification route - disabled for simplified auth */}
+      {/* <Route path="/verify-otp" component={VerifyOtp} /> */}
       <Route path="/request-reset" component={RequestReset} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/sign-complete" component={SignComplete} />

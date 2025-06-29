@@ -18,7 +18,8 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
+  // ARCHIVED: Phone number requirement removed for simplified auth
+  // phone: z.string().min(10, 'Phone number must be at least 10 digits'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -43,7 +44,8 @@ export default function Register() {
       email: '',
       password: '',
       confirmPassword: '',
-      phone: '',
+      // ARCHIVED: Phone field removed for simplified auth
+      // phone: '',
     },
   });
 
@@ -56,18 +58,18 @@ export default function Register() {
     try {
       const { confirmPassword, ...registrationData } = data;
       
-      // Format phone number to E164
-      const formattedPhone = toE164(data.phone);
-      if (!formattedPhone) {
-        setError('Invalid phone number format');
-        setIsLoading(false);
-        return;
-      }
+      // ARCHIVED: Phone number validation and formatting
+      // const formattedPhone = toE164(data.phone);
+      // if (!formattedPhone) {
+      //   setError('Invalid phone number format');
+      //   setIsLoading(false);
+      //   return;
+      // }
 
       const result = await staffApi.register(
         registrationData.email,
         registrationData.password,
-        formattedPhone
+        '' // ARCHIVED: Phone parameter now empty string
       );
       
       console.log('Registration result:', result);
@@ -85,17 +87,26 @@ export default function Register() {
       // Save email to localStorage for future auth redirects
       localStorage.setItem('user-email', data.email);
 
-      // Check if OTP was sent successfully
+      // ARCHIVED: OTP verification step
+      // if (result.success) {
+      //   markFirstVisit();
+      //   sessionStorage.setItem('otpEmail', data.email);
+      //   sessionStorage.setItem('otpPhone', formattedPhone);
+      //   toast({
+      //     title: 'Account Created',
+      //     description: 'SMS verification code sent to your phone.',
+      //   });
+      //   setLocation('/verify-otp');
+      // } else {
+      
       if (result.success) {
         // Mark that this user has completed their first visit
         markFirstVisit();
-        sessionStorage.setItem('otpEmail', data.email);
-        sessionStorage.setItem('otpPhone', formattedPhone);
         toast({
           title: 'Account Created',
-          description: 'SMS verification code sent to your phone.',
+          description: 'Registration successful! You can now sign in.',
         });
-        setLocation('/verify-otp');
+        setLocation('/login');
       } else {
         toast({
           title: 'Registration Issue',
@@ -103,6 +114,8 @@ export default function Register() {
           variant: 'destructive',
         });
       }
+      
+      // }
     } catch (error) {
       console.error('Registration network error:', error);
       toast({

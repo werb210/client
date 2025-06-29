@@ -25,21 +25,23 @@ export default function LoginPage() {
     try {
       const result = await login(formData.email, formData.password);
       if (result.success) {
-        if (result.otpRequired) {
-          // Store email for OTP verification
-          sessionStorage.setItem('otpEmail', formData.email);
-          toast({
-            title: "OTP Sent",
-            description: "Please check your phone for the verification code.",
-          });
-          setLocation('/verify-otp');
-        } else {
-          toast({
-            title: "Login Successful",
-            description: "Welcome back!",
-          });
-          setLocation('/portal');
-        }
+        // ARCHIVED: OTP verification step
+        // if (result.otpRequired) {
+        //   sessionStorage.setItem('otpEmail', formData.email);
+        //   toast({
+        //     title: "OTP Sent",
+        //     description: "Please check your phone for the verification code.",
+        //   });
+        //   setLocation('/verify-otp');
+        // } else {
+        
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!",
+        });
+        setLocation('/portal');
+        
+        // }
       } else {
         toast({
           title: "Authentication System",
