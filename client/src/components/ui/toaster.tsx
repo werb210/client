@@ -13,17 +13,13 @@ export function Toaster() {
 
   return (
     <ToastProvider>
-      {toasts.map(function ({ id, title, description, action, ...props }) {
-        // Ensure props are valid and safe for Toast component
-        const validProps = {
-          variant: props.variant || 'default',
-          ...(props.duration && { duration: props.duration }),
-          ...(props.open !== undefined && { open: props.open }),
-          ...(props.onOpenChange && { onOpenChange: props.onOpenChange }),
-        };
+      {toasts.map(function (toast) {
+        if (!toast || !toast.id) return null;
+        
+        const { id, title, description, action, variant } = toast;
         
         return (
-          <Toast key={id} {...validProps}>
+          <Toast key={id} variant={variant || 'default'}>
             <div className="grid gap-1">
               {title && <ToastTitle>{String(title)}</ToastTitle>}
               {description && (
