@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { setupVite, serveStatic, log } from "./vite";
+import lendersRouter from "./routes/lenders";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -75,6 +76,9 @@ app.use((req, res, next) => {
       timestamp: new Date().toISOString()
     });
   });
+
+  // Mount lender routes
+  app.use('/api/lenders', lendersRouter);
 
   // System status page for authentication troubleshooting
   app.get('/system-status', (req, res) => {

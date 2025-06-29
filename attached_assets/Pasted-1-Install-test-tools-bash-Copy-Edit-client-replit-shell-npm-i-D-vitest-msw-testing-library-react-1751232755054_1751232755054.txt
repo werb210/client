@@ -1,0 +1,90 @@
+1 Install test tools
+bash
+Copy
+Edit
+# client/replit shell
+npm i -D vitest msw @testing-library/react
+2 Mock server with MSW in tests/setup.ts
+ts
+Copy
+Edit
+import { setupServer } from "msw/node";
+import { rest } from "msw";
+
+export const mockProducts = [
+  { id: "prod-1", product_name: "Line of Credit" },
+  { id: "prod-2", product_name: "Equipment Loan" }
+];
+
+export const server = setupServer(
+  rest.get("https://staffportal.replit.app/api/public/lenders",
+    (_, res, ctx) => res(ctx.status(200), ctx.json(mockProducts)))
+);
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+3 Unit-test sync util tests/syncLenderProducts.spec.ts
+ts
+Copy
+Edit
+import { describe, it, expect, vi } from "vitest";
+import "../src/tests/setup";                        // MSW bootstrap
+import { syncLenderProducts, getCachedLenderProducts }
+        from "../src/lib/syncLenderProducts";
+
+describe("Lender DB sync", () => {
+  it("caches products on first run", async () => {
+    // clear localStorage
+    localStorage.clear();
+
+    await syncLenderProducts();
+    const cached = getCachedLenderProducts();
+
+    expect(cached.length).toBe(2);
+    expect(cached[0].product_name).toBe("Line of Credit");
+  });
+
+  it("skips fetch if cache younger than 12h", async () => {
+    // set fake timestamp (now - 1h)
+    localStorage.setItem("lenderDB_fetched_at",
+      (Date.now() - 60 * 60 * 1000).toString());
+
+    // spy on fetch
+    const fetchSpy = vi.spyOn(global, "fetch");
+    await syncLenderProducts();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+4 Add script
+jsonc
+Copy
+Edit
+// client/package.json
+"scripts": {
+  "test:sync": "vitest run tests/syncLenderProducts.spec.ts"
+}
+Run:
+
+bash
+Copy
+Edit
+npm run test:sync
+🛠 How to integrate in Replit
+App	File / change	Action for Replit
+staff	tests/lenderApi.spec.ts	Create file, commit, run npm run test:lenders
+staff	package.json script	Add "test:lenders": "vitest run tests/lenderApi.spec.ts"
+client	src/lib/syncLenderProducts.ts	Ensure util is present (from previous guidance)
+client	tests/setup.ts + tests/syncLenderProducts.spec.ts	Create files
+client	package.json script	Add "test:sync": "vitest run tests/syncLenderProducts.spec.ts"
+
+❓ What does this give you?
+Staff test – guarantees the public lender feed is alive & well-formed.
+
+Client tests – prove the cache populates, persists, and throttles to a 12 h window, so offline users still get products.
+
+MSW – lets you test without hitting the live staff API.
+
+Run both suites in Replit’s “Shell ➜ Run” or wire them into CI.
+
+Let me know if you’d like a Cypress browser e2e on top of this!
