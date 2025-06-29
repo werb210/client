@@ -295,6 +295,14 @@ Changelog:
     * Toast component now safely handles all prop types and prevents rendering errors
     * Authentication system provides clear feedback about backend API configuration needs
     * System properly identifies when staff backend returns HTML error pages instead of API responses
+  - June 29, 2025: COMPREHENSIVE BACKEND DIAGNOSTIC SYSTEM
+    * Replaced problematic Radix UI Toast component with custom implementation using Tailwind CSS
+    * Created BackendDiagnosticPage with comprehensive staff backend API testing
+    * Added diagnostic route /backend-diagnostic accessible from login page
+    * Enhanced AuthAPI with detailed logging for backend connectivity troubleshooting
+    * Implemented proper error detection for HTML vs JSON responses
+    * Authentication system maintains data integrity without mock/synthetic data
+    * Complete diagnostic suite tests connectivity, CORS, endpoints, and environment configuration
 ```
 
 ## User Preferences

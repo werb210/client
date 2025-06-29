@@ -152,6 +152,17 @@ export default function LoginPage() {
               Create one now
             </Button>
           </p>
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <Link href="/backend-diagnostic">
+              <Button
+                variant="link"
+                className="p-0 text-gray-500 hover:text-gray-700 text-xs flex items-center gap-1 mx-auto"
+              >
+                <Settings className="h-3 w-3" />
+                Backend Diagnostics
+              </Button>
+            </Link>
+          </div>
         </div>
       </main>
     </div>
