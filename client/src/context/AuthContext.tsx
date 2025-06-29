@@ -54,14 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await AuthAPI.login({ email, password });
       
-      if (response.status === 503) {
-        // CORS/connectivity issue detected
-        try {
-          const result = await response.json();
-          console.warn('Staff backend connectivity issue:', result.error);
-        } catch (e) {
-          console.warn('Staff backend unavailable - response parsing failed');
-        }
+      if (response.status === 503 || response.status === 502) {
+        // Backend connectivity or configuration issue
+        console.warn('Staff backend unavailable - authentication requires backend connection');
         return { success: false };
       }
       
@@ -70,20 +65,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false };
       }
 
-      const result = await response.json();
-      
-      // ARCHIVED: OTP verification step
-      // if (result.message === "OTP sent" || result.otpRequired) {
-      //   return { success: true, otpRequired: true };
-      // } else {
-      
-      // Direct authentication - refresh user data and proceed
-      await fetchUser();
-      return { success: true, otpRequired: false };
-      
-      // }
+      // Safely parse JSON response from staff backend
+      let result;
+      try {
+        result = await response.json();
+        await fetchUser();
+        return { success: true, otpRequired: false };
+      } catch (jsonError) {
+        console.error('Invalid JSON response from staff backend - HTML received instead');
+        return { success: false };
+      }
     } catch (error) {
-      // Handle network and API errors properly
       if (error instanceof Error) {
         console.error('Login error:', error.message);
       } else {

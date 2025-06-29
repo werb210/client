@@ -287,6 +287,14 @@ Changelog:
     * Archived SMS utility functions in toE164.ts for future reference
     * Registration now redirects to login page with success message
     * Login proceeds directly to portal without OTP verification requirement
+  - June 29, 2025: AUTHENTICATION ERROR RESOLUTION AND HTML RESPONSE HANDLING
+    * Fixed JSON parsing errors caused by staff backend returning HTML instead of JSON
+    * Enhanced AuthAPI with content-type checking to detect HTML responses
+    * Updated authentication context to handle 502 Bad Gateway responses
+    * Improved error messages to indicate HTML vs JSON response issues
+    * Toast component now safely handles all prop types and prevents rendering errors
+    * Authentication system provides clear feedback about backend API configuration needs
+    * System properly identifies when staff backend returns HTML error pages instead of API responses
 ```
 
 ## User Preferences

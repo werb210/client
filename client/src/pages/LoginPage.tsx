@@ -44,8 +44,8 @@ export default function LoginPage() {
         // }
       } else {
         toast({
-          title: "Authentication System",
-          description: "Staff backend authentication required. Please ensure CORS is configured for full testing.",
+          title: "Authentication Required",
+          description: "Staff backend connection needed. The API is returning HTML instead of JSON responses.",
           variant: "destructive"
         });
       }

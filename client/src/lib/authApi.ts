@@ -2,10 +2,25 @@ import { apiFetch } from '@/lib/api';
 
 // Enhanced AuthAPI with proper error handling
 export const AuthAPI = {
-  // Login - connects to staff backend
+  // Login - connects to staff backend with HTML response handling
   login: async (body: { email: string; password: string }) => {
     try {
-      return await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) });
+      const response = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) });
+      
+      // Check if response is HTML instead of JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        console.warn('Received HTML response instead of JSON - staff backend configuration issue');
+        return new Response(
+          JSON.stringify({ 
+            error: 'Staff backend returning HTML - configuration required', 
+            success: false
+          }), 
+          { status: 502, statusText: 'Bad Gateway' }
+        );
+      }
+      
+      return response;
     } catch (error) {
       // Handle CORS/network errors by returning proper error response
       console.warn('Authentication API unavailable - CORS issue detected');
