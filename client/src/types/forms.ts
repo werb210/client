@@ -32,6 +32,12 @@ export const ApplicationSchema = z.object({
   accountsReceivableBalance: z.number().nonnegative(),
   fixedAssetsValue: z.number().nonnegative(),
 
+  // Stage 2 - Product Selection
+  selectedProductId: z.string().optional(),
+  selectedProductName: z.string().optional(),
+  selectedLenderName: z.string().optional(),
+  matchScore: z.number().optional(),
+
   // Stage 3 – Business Details
   operatingName: z.string(),
   legalName: z.string(),
@@ -76,10 +82,11 @@ export const ApplicationSchema = z.object({
     message: 'You must consent to document maintenance',
   }),
 
-  // Product selection fields (Step 2)
-  selectedProductId: z.string().optional(),
-  selectedProductType: z.string().optional(),
-  matchScore: z.number().optional(),
+  // Product selection fields (Step 2) - removing duplicates
+  // selectedProductId: already defined above
+  // selectedProductName: already defined above  
+  // selectedLenderName: already defined above
+  // matchScore: already defined above
 
   // Hidden/signature fields (populated server-side)
   signNowSignatureCompleted: z.boolean().optional(),

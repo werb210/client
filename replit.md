@@ -217,6 +217,15 @@ Changelog:
     * Landing page features professional design with service cards and competitive advantages
     * All CTA buttons ("Get Started", "Start Your Application") use smart routing logic
     * Manual "Sign In" option always routes to login page for explicit user preference
+  - June 29, 2025: NORMALIZED LENDER PRODUCTS API INTEGRATION
+    * Updated LenderProduct interface to normalized database schema with snake_case fields
+    * Implemented filtering logic: geography match, product_type mapping, amount range, revenue requirements
+    * Created intelligent product matching algorithm with scoring (base 60 + amount 30 + industry 10)
+    * Updated usePublicLenders hook with 12-hour caching and proper error handling
+    * Enhanced Step2ProductSelection with top 3 recommendations display and video_url support
+    * Fixed all type inconsistencies across TestLenderAPI and LenderProductsList components
+    * Product type mapping: capital→working_capital/line_of_credit/term_loan, equipment→equipment_financing
+    * Complete integration ready for staff backend with populated lender products database
 ```
 
 ## User Preferences

@@ -19,9 +19,21 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
   const handleProductSelect = (product: LenderProduct) => {
     updateFormData({
       selectedProductId: product.id,
-      selectedProductDetails: product
+      selectedProductName: product.product_name,
+      selectedLenderName: product.lender_name,
+      matchScore: scoredProducts.find(p => p.id === product.id)?.score
     });
     onNext();
+  };
+
+  // Map form "lookingFor" values to product types
+  const mapLookingForToProductTypes = (lookingFor: string): string[] => {
+    const mapping = {
+      'capital': ['working_capital', 'line_of_credit', 'term_loan', 'invoice_factoring'],
+      'equipment': ['equipment_financing'],
+      'both': ['working_capital', 'line_of_credit', 'term_loan', 'equipment_financing', 'invoice_factoring', 'purchase_order_financing']
+    };
+    return mapping[lookingFor as keyof typeof mapping] || [];
   };
 
   // Filter and score products based on Step 1 data
@@ -36,6 +48,7 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
     const averageMonthlyRevenue = Number(state.formData.averageMonthlyRevenue) || 0;
     const annualRevenue = averageMonthlyRevenue * 12;
     const industry = state.formData.industry;
+    const allowedProductTypes = mapLookingForToProductTypes(lookingFor);
 
     return products
       .map(product => {
@@ -47,7 +60,7 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
         }
 
         // Product type filter - must match to be included  
-        if (product.product_type !== lookingFor) {
+        if (!allowedProductTypes.includes(product.product_type)) {
           return null;
         }
 

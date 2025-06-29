@@ -1,10 +1,33 @@
 import { usePublicLenders } from '@/hooks/usePublicLenders';
+import { LenderProduct } from '@/types/lenderProducts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Database, CheckCircle } from 'lucide-react';
+import { AlertCircle, Database, CheckCircle, Play } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function TestLenderAPI() {
   const { data: products, isLoading, error } = usePublicLenders();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const getProductTypeLabel = (type: string) => {
+    const labels = {
+      'equipment_financing': 'Equipment Financing',
+      'invoice_factoring': 'Invoice Factoring', 
+      'line_of_credit': 'Line of Credit',
+      'working_capital': 'Working Capital',
+      'term_loan': 'Term Loan',
+      'purchase_order_financing': 'Purchase Order Financing'
+    };
+    return labels[type as keyof typeof labels] || type;
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -28,124 +51,140 @@ export default function TestLenderAPI() {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center gap-2 text-blue-600">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span>Connecting to lender products API...</span>
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span>Connecting to API...</span>
             </div>
           ) : error ? (
             <div className="flex items-center gap-2 text-red-600">
               <AlertCircle className="w-4 h-4" />
-              <span>Connection failed: {error.message}</span>
+              <span>Connection Failed: {error.message}</span>
             </div>
           ) : (
             <div className="flex items-center gap-2 text-green-600">
               <CheckCircle className="w-4 h-4" />
-              <span>Successfully connected - Found {products?.length || 0} products</span>
+              <span>Connected Successfully - {products?.length || 0} products loaded</span>
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* Products List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Available Lender Products</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 3 }, (_, i) => (
-                <div key={i} className="border rounded p-4">
-                  <Skeleton className="h-6 w-1/3 mb-2" />
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-2/3" />
-                </div>
-              ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-8">
-              <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-red-700 mb-2">
-                Cannot access lender products database
-              </h3>
-              <p className="text-red-600 mb-4">
-                Error: {error.message}
-              </p>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-left">
-                <h4 className="font-semibold text-red-800 mb-2">Possible causes:</h4>
-                <ul className="text-sm text-red-700 space-y-1">
-                  <li>• Staff backend CORS headers not configured for client domain</li>
-                  <li>• API endpoint not available or requires authentication</li>
-                  <li>• Network connectivity issues</li>
-                  <li>• Staff backend server not running</li>
-                </ul>
-              </div>
-            </div>
-          ) : products && products.length > 0 ? (
-            <div className="space-y-4">
-              {products.map((product, index) => (
-                <div key={product.id || index} className="border rounded p-4">
-                  <h3 className="font-semibold text-lg mb-2">{product.productType}</h3>
-                  {product.lenderName && (
-                    <p className="text-gray-600 mb-2">Lender: {product.lenderName}</p>
-                  )}
-                  <p className="text-gray-700 mb-3">{product.description}</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Min Amount:</span>
-                      <p>${product.minAmount?.toLocaleString() || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Max Amount:</span>
-                      <p>${product.maxAmount?.toLocaleString() || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Interest Rate:</span>
-                      <p>{product.interestRate}%</p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Processing Time:</span>
-                      <p>{product.processingTime || 'N/A'}</p>
+      {isLoading ? (
+        <div className="grid gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-20 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : error ? (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-red-800 mb-2">API Error</h3>
+            <p className="text-red-700 mb-4">{error.message}</p>
+            <p className="text-sm text-red-600">
+              This could indicate CORS issues, network problems, or the API being unavailable.
+            </p>
+          </CardContent>
+        </Card>
+      ) : products && products.length > 0 ? (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Available Lender Products ({products.length})
+          </h2>
+          
+          {products.map((product: LenderProduct) => (
+            <Card key={product.id} className="border-2 hover:border-teal-200 transition-colors">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl text-slate-900">{product.product_name}</CardTitle>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-slate-600">{product.lender_name}</span>
                     </div>
                   </div>
-                  {product.qualifications && product.qualifications.length > 0 && (
-                    <div className="mt-3">
-                      <span className="font-medium text-sm">Qualifications:</span>
+                  <Badge variant="outline" className="shrink-0">
+                    {getProductTypeLabel(product.product_type)}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-slate-700">Funding Range:</span>
+                    <div className="text-slate-600">
+                      {formatCurrency(product.min_amount)} - {formatCurrency(product.max_amount)}
+                    </div>
+                  </div>
+                  {product.min_revenue && (
+                    <div>
+                      <span className="font-medium text-slate-700">Min. Annual Revenue:</span>
+                      <div className="text-slate-600">{formatCurrency(product.min_revenue)}</div>
+                    </div>
+                  )}
+                  {product.geography && product.geography.length > 0 && (
+                    <div>
+                      <span className="font-medium text-slate-700">Geography:</span>
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {product.qualifications.map((qual, i) => (
-                          <span key={i} className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs">
-                            {qual}
-                          </span>
+                        {product.geography.map((geo, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {geo}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {product.industries && product.industries.length > 0 && (
+                    <div>
+                      <span className="font-medium text-slate-700">Industries:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {product.industries.map((industry, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {industry}
+                          </Badge>
                         ))}
                       </div>
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Database className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                No products available
-              </h3>
-              <p className="text-gray-600">
-                The lender products database appears to be empty or not configured.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
-      {/* Raw API Response */}
-      {products && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Raw API Response</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded text-xs overflow-auto">
-              {JSON.stringify(products, null, 2)}
-            </pre>
+                {product.description && (
+                  <div>
+                    <p className="text-slate-700 text-sm leading-relaxed">{product.description}</p>
+                  </div>
+                )}
+
+                {product.video_url && (
+                  <div className="pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => window.open(product.video_url, '_blank')}
+                      className="flex-shrink-0"
+                    >
+                      <Play className="w-4 h-4 mr-2" />
+                      Watch Explainer Video
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Card className="border-slate-200">
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">No Products Available</h3>
+            <p className="text-slate-600">
+              The API connected successfully but no lender products were found in the database.
+            </p>
           </CardContent>
         </Card>
       )}
