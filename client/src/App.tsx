@@ -21,6 +21,7 @@ import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
 import SimpleTest from "@/pages/SimpleTest";
 import TestApp from "@/pages/TestApp";
+import SMSDiagnostic from "@/pages/SMSDiagnostic";
 
 // Application flow steps
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
@@ -54,6 +55,7 @@ function Router() {
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/sign-complete" component={SignComplete} />
       <Route path="/landing" component={Landing} />
+      <Route path="/sms-diagnostic" component={SMSDiagnostic} />
       
       {/* Protected application routes */}
       <AuthGuard>

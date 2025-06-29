@@ -352,6 +352,7 @@ app.use((req, res, next) => {
         
         <div style="margin: 30px 0;">
             <a href="/test" class="btn">Authentication Test</a>
+            <a href="/sms-diagnostic" class="btn">SMS Diagnostic</a>
             <a href="/api/health" class="btn">Health Check</a>
         </div>
         
