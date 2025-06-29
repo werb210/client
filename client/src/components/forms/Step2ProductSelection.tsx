@@ -1,247 +1,141 @@
-import { useState } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { type ApplicationForm } from '@/types/forms';
-import { usePublicLenders, type LenderProduct } from '@/hooks/usePublicLenders';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, DollarSign, Clock, Building2, CheckCircle, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-const productSelectionSchema = z.object({
-  selectedProductId: z.string().min(1, 'Please select a product'),
-  selectedProductType: z.string().optional(),
-  matchScore: z.number().optional(),
-});
+import { CheckCircle, Play, Loader2, AlertCircle } from 'lucide-react';
+import { usePublicLenders } from '@/hooks/usePublicLenders';
+import { LenderProduct } from '@/types/lenderProducts';
+import { useComprehensiveForm } from '@/context/ComprehensiveFormContext';
 
 interface Step2Props {
-  defaultValues?: Partial<ApplicationForm>;
-  onSubmit: (data: Partial<ApplicationForm>) => void;
   onNext: () => void;
   onPrevious: () => void;
 }
 
-interface ProductCardProps {
-  product: LenderProduct;
-  isSelected: boolean;
-  onSelect: (productId: string) => void;
-  matchScore?: number;
-  userProfile: {
-    fundingAmount: number;
-    industry: string;
-    headquarters: string;
-  };
-}
-
-function ProductCard({ product, isSelected, onSelect, matchScore, userProfile }: ProductCardProps) {
-  const isInRange = userProfile.fundingAmount >= product.minAmount && userProfile.fundingAmount <= product.maxAmount;
-  const displayMatchScore = matchScore || calculateMatchScore(product, userProfile);
-
-  return (
-    <Card 
-      className={cn(
-        "cursor-pointer transition-all duration-200 hover:shadow-md",
-        isSelected 
-          ? "ring-2 ring-teal-600 border-teal-200 bg-teal-50 dark:bg-teal-900/20" 
-          : "hover:border-gray-300"
-      )}
-      onClick={() => onSelect(product.id)}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg flex items-center gap-2">
-              {product.productType}
-              {displayMatchScore >= 85 && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Recommended
-                </Badge>
-              )}
-            </CardTitle>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-              {product.lenderName}
-            </p>
-          </div>
-          <div className="text-right">
-            <div className={cn(
-              "text-sm font-medium px-2 py-1 rounded",
-              displayMatchScore >= 85 ? "bg-green-100 text-green-800" :
-              displayMatchScore >= 70 ? "bg-yellow-100 text-yellow-800" :
-              "bg-gray-100 text-gray-800"
-            )}>
-              {displayMatchScore}% match
-            </div>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            {product.description}
-          </p>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Amount Range</p>
-                <p className={cn(
-                  "text-sm font-medium",
-                  isInRange ? "text-green-600" : "text-gray-700"
-                )}>
-                  ${product.minAmount.toLocaleString()} - ${product.maxAmount.toLocaleString()}
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Interest Rate</p>
-                <p className="text-sm font-medium">{product.interestRate}%</p>
-              </div>
-            </div>
-          </div>
-
-          {product.processingTime && (
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-600">
-                Processing time: {product.processingTime}
-              </span>
-            </div>
-          )}
-
-          {product.qualifications && product.qualifications.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {product.qualifications.slice(0, 3).map((qual, index) => (
-                <Badge key={index} variant="outline" className="text-xs">
-                  {qual}
-                </Badge>
-              ))}
-              {product.qualifications.length > 3 && (
-                <Badge variant="outline" className="text-xs">
-                  +{product.qualifications.length - 3} more
-                </Badge>
-              )}
-            </div>
-          )}
-
-          {isSelected && (
-            <div className="flex items-center gap-2 text-teal-600 text-sm font-medium">
-              <CheckCircle className="w-4 h-4" />
-              Selected for your application
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function calculateMatchScore(product: LenderProduct, userProfile: { fundingAmount: number; industry: string; headquarters: string }): number {
-  let score = 60; // Base score
-
-  // Amount range matching (30 points)
-  if (userProfile.fundingAmount >= product.minAmount && userProfile.fundingAmount <= product.maxAmount) {
-    score += 30;
-  } else if (userProfile.fundingAmount < product.minAmount) {
-    score += Math.max(0, 15 - ((product.minAmount - userProfile.fundingAmount) / product.minAmount * 15));
-  }
-
-  // Industry matching (10 points)
-  if (product.industry && product.industry.toLowerCase().includes(userProfile.industry.toLowerCase())) {
-    score += 10;
-  }
-
-  // Country/region matching (5 points)
-  if (product.country && product.country === userProfile.headquarters) {
-    score += 5;
-  }
-
-  return Math.min(100, Math.round(score));
-}
-
-export function Step2ProductSelection({ defaultValues, onSubmit, onNext, onPrevious }: Step2Props) {
-  const [selectedProductId, setSelectedProductId] = useState<string>('');
+export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
+  const { state, updateFormData } = useComprehensiveForm();
   const { data: products, isLoading, error } = usePublicLenders();
   
-  const form = useForm({
-    resolver: zodResolver(productSelectionSchema),
-    defaultValues: {
-      selectedProductId: defaultValues?.selectedProductId || '',
-      selectedProductType: defaultValues?.selectedProductType || '',
-      matchScore: defaultValues?.matchScore || 0,
-    },
-  });
-
-  const userProfile = {
-    fundingAmount: defaultValues?.fundingAmount || 0,
-    industry: defaultValues?.industry || '',
-    headquarters: defaultValues?.headquarters || 'US',
+  const handleProductSelect = (product: LenderProduct) => {
+    updateFormData({
+      selectedProductId: product.id,
+      selectedProductDetails: product
+    });
+    onNext();
   };
 
-  const handleProductSelect = (productId: string) => {
-    setSelectedProductId(productId);
-    form.setValue('selectedProductId', productId);
-    
-    const selectedProduct = products?.find(p => p.id === productId);
-    if (selectedProduct) {
-      const matchScore = calculateMatchScore(selectedProduct, userProfile);
-      form.setValue('selectedProductType', selectedProduct.productType);
-      form.setValue('matchScore', matchScore);
+  // Filter and score products based on Step 1 data
+  const getFilteredAndScoredProducts = (): Array<LenderProduct & { score: number }> => {
+    if (!products || !state.formData.headquarters || !state.formData.lookingFor || !state.formData.fundingAmount) {
+      return [];
     }
+
+    const headquarters = state.formData.headquarters;
+    const lookingFor = state.formData.lookingFor;
+    const fundingAmount = Number(state.formData.fundingAmount);
+    const averageMonthlyRevenue = Number(state.formData.averageMonthlyRevenue) || 0;
+    const annualRevenue = averageMonthlyRevenue * 12;
+    const industry = state.formData.industry;
+
+    return products
+      .map(product => {
+        let score = 0;
+
+        // Geography filter - must match to be included
+        if (!product.geography.includes(headquarters)) {
+          return null;
+        }
+
+        // Product type filter - must match to be included  
+        if (product.product_type !== lookingFor) {
+          return null;
+        }
+
+        // Amount fit - must be within range to be included
+        if (fundingAmount < product.min_amount || fundingAmount > product.max_amount) {
+          return null;
+        }
+
+        // Revenue requirement check - must meet minimum if specified
+        if (product.min_revenue && annualRevenue < product.min_revenue) {
+          return null;
+        }
+
+        // Base score for matching all requirements
+        score = 60;
+
+        // Amount range bonus (closer to middle of range = higher score)
+        const amountRange = product.max_amount - product.min_amount;
+        const amountPosition = (fundingAmount - product.min_amount) / amountRange;
+        const amountScore = 30 * (1 - Math.abs(amountPosition - 0.5) * 2); // Higher score for middle of range
+        score += amountScore;
+
+        // Industry match bonus
+        if (industry && product.industries?.includes(industry)) {
+          score += 10;
+        }
+
+        return { ...product, score: Math.round(score) };
+      })
+      .filter((product): product is LenderProduct & { score: number } => product !== null)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3); // Top 3 matches
   };
 
-  const handleSubmit = () => {
-    const values = form.getValues();
-    const selectedProduct = products?.find(p => p.id === values.selectedProductId);
-    
-    if (selectedProduct) {
-      const formData = {
-        selectedProductId: values.selectedProductId,
-        selectedProductType: selectedProduct.productType,
-        matchScore: calculateMatchScore(selectedProduct, userProfile),
-      };
-      onSubmit(formData);
-      onNext();
-    }
+  const scoredProducts = getFilteredAndScoredProducts();
+
+  const getProductTypeLabel = (type: string) => {
+    const labels = {
+      'equipment_financing': 'Equipment Financing',
+      'invoice_factoring': 'Invoice Factoring', 
+      'line_of_credit': 'Line of Credit',
+      'working_capital': 'Working Capital',
+      'term_loan': 'Term Loan',
+      'purchase_order_financing': 'Purchase Order Financing'
+    };
+    return labels[type as keyof typeof labels] || type;
   };
 
-  const sortedProducts = products?.sort((a, b) => {
-    const scoreA = calculateMatchScore(a, userProfile);
-    const scoreB = calculateMatchScore(b, userProfile);
-    return scoreB - scoreA;
-  });
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Finding Your Perfect Match</h2>
+          <p className="text-slate-600">Analyzing lending products based on your business profile...</p>
+        </div>
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+          <span className="ml-2 text-slate-600">Loading recommendations...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <Card className="border-red-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3 text-red-700">
-              <AlertCircle className="w-5 h-5" />
-              <div>
-                <h3 className="font-semibold">Unable to load lender products</h3>
-                <p className="text-sm text-red-600 mt-1">
-                  {error.message || 'Please check your connection and try again.'}
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-between mt-6">
-              <Button variant="outline" onClick={onPrevious}>
-                Previous
-              </Button>
-              <Button onClick={() => window.location.reload()}>
-                Retry
-              </Button>
-            </div>
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Product Recommendations</h2>
+          <p className="text-slate-600">We're having trouble loading product recommendations right now.</p>
+        </div>
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 text-orange-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-orange-800 mb-2">Service Temporarily Unavailable</h3>
+            <p className="text-orange-700 mb-4">
+              Unable to fetch lending products. Please continue with your application and we'll match you with suitable lenders manually.
+            </p>
+            <Button onClick={onNext} className="bg-teal-600 hover:bg-teal-700">
+              Continue Application
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -249,112 +143,114 @@ export function Step2ProductSelection({ defaultValues, onSubmit, onNext, onPrevi
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Product Recommendations</h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2">
-          Based on your business profile, here are the best funding options for you
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Recommended Financing Solutions</h2>
+        <p className="text-slate-600">
+          Based on your business profile, here are the top matches from our lending partners
         </p>
       </div>
 
-      {/* User Profile Summary */}
-      <Card className="bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 border-teal-200">
-        <CardContent className="pt-6">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Your Profile</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className="text-gray-600 dark:text-gray-300">Funding Amount:</span>
-              <span className="font-medium ml-2">${userProfile.fundingAmount.toLocaleString()}</span>
-            </div>
-            <div>
-              <span className="text-gray-600 dark:text-gray-300">Industry:</span>
-              <span className="font-medium ml-2">{userProfile.industry}</span>
-            </div>
-            <div>
-              <span className="text-gray-600 dark:text-gray-300">Location:</span>
-              <span className="font-medium ml-2">{userProfile.headquarters}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <FormField
-            control={form.control}
-            name="selectedProductId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-lg font-semibold">Available Funding Products</FormLabel>
-                <FormControl>
-                  <RadioGroup value={field.value} onValueChange={handleProductSelect}>
-                    <div className="grid gap-4">
-                      {isLoading ? (
-                        Array.from({ length: 3 }, (_, i) => (
-                          <Card key={i}>
-                            <CardContent className="pt-6">
-                              <div className="space-y-3">
-                                <Skeleton className="h-6 w-1/3" />
-                                <Skeleton className="h-4 w-full" />
-                                <div className="grid grid-cols-2 gap-4">
-                                  <Skeleton className="h-4 w-full" />
-                                  <Skeleton className="h-4 w-full" />
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))
-                      ) : sortedProducts && sortedProducts.length > 0 ? (
-                        sortedProducts.map((product) => (
-                          <div key={product.id} className="flex items-start gap-3">
-                            <RadioGroupItem 
-                              value={product.id} 
-                              id={product.id}
-                              className="mt-4" 
-                            />
-                            <div className="flex-1">
-                              <ProductCard
-                                product={product}
-                                isSelected={selectedProductId === product.id}
-                                onSelect={handleProductSelect}
-                                userProfile={userProfile}
-                              />
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <Card>
-                          <CardContent className="pt-6 text-center">
-                            <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                            <p className="text-gray-600 dark:text-gray-300">
-                              No products are currently available. Please try again later.
-                            </p>
-                          </CardContent>
-                        </Card>
-                      )}
+      {scoredProducts.length === 0 ? (
+        <Card className="border-slate-200">
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">No Direct Matches Found</h3>
+            <p className="text-slate-600 mb-4">
+              We don't have products that exactly match your criteria, but our team can help find alternative solutions.
+            </p>
+            <Button onClick={onNext} className="bg-teal-600 hover:bg-teal-700">
+              Continue Application
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {scoredProducts.map((product) => (
+            <Card key={product.id} className="border-2 hover:border-teal-200 transition-colors">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl text-slate-900">{product.product_name}</CardTitle>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-slate-600">{product.lender_name}</span>
+                      <Badge variant="secondary" className="bg-teal-100 text-teal-800">
+                        {Math.round((product.score / 100) * 100)}% Match
+                      </Badge>
                     </div>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  </div>
+                  <Badge variant="outline" className="shrink-0">
+                    {getProductTypeLabel(product.product_type)}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-slate-700">Funding Range:</span>
+                    <div className="text-slate-600">
+                      {formatCurrency(product.min_amount)} - {formatCurrency(product.max_amount)}
+                    </div>
+                  </div>
+                  {product.min_revenue && (
+                    <div>
+                      <span className="font-medium text-slate-700">Min. Annual Revenue:</span>
+                      <div className="text-slate-600">{formatCurrency(product.min_revenue)}</div>
+                    </div>
+                  )}
+                  {product.industries && product.industries.length > 0 && (
+                    <div className="md:col-span-2">
+                      <span className="font-medium text-slate-700">Industries Served:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {product.industries.map((industry, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {industry}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-          <div className="flex justify-between mt-8">
-            <Button type="button" variant="outline" onClick={onPrevious}>
-              Previous
+                {product.description && (
+                  <div>
+                    <p className="text-slate-700 text-sm leading-relaxed">{product.description}</p>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <Button
+                    onClick={() => handleProductSelect(product)}
+                    className="bg-teal-600 hover:bg-teal-700 flex-1"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Select This Product
+                  </Button>
+                  {product.video_url && (
+                    <Button
+                      variant="outline"
+                      onClick={() => window.open(product.video_url, '_blank')}
+                      className="flex-shrink-0"
+                    >
+                      <Play className="w-4 h-4 mr-2" />
+                      Watch Explainer
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <Button variant="outline" onClick={onPrevious} className="flex-1">
+              Previous Step
             </Button>
-            <Button 
-              type="submit" 
-              size="lg" 
-              className="bg-teal-600 hover:bg-teal-700"
-              disabled={!selectedProductId}
-            >
-              Continue with Selected Product
+            <Button onClick={onNext} variant="outline" className="flex-1">
+              Skip Product Selection
             </Button>
           </div>
-        </form>
-      </FormProvider>
+        </div>
+      )}
     </div>
   );
 }
