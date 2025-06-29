@@ -59,6 +59,7 @@ function Router() {
         <Route path="/portal" component={PortalPage} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/application" component={Step1FinancialProfile} />
+        <Route path="/application/step-1" component={Step1FinancialProfile} />
         <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
         <Route path="/step2-recommendations" component={Step2Recommendations} />
         <Route path="/step3-business-details" component={Step3BusinessDetails} />
