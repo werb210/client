@@ -257,15 +257,7 @@ app.use((req, res, next) => {
     `);
   });
 
-  // Validate static asset serving for production builds
-  if (app.get("env") === "production") {
-    app.use(
-      "/",
-      express.static(join(__dirname, "../dist"), {
-        index: "index.html",
-      })
-    );
-  }
+
 
   // All other API routes inform about staff backend configuration
   app.use('/api', (req, res) => {
@@ -382,7 +374,19 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // In production, serve static files from the dist directory
+    const { default: fs } = await import("fs");
+    const distPath = join(__dirname, "..");
+    
+    if (fs.existsSync(join(distPath, "index.html"))) {
+      app.use(express.static(distPath));
+      app.get("*", (req, res) => {
+        res.sendFile(join(distPath, "index.html"));
+      });
+    } else {
+      // If no built client files, serve the development fallback
+      console.log("No built client files found, serving development fallback");
+    }
   }
 
   // Add emergency fallback route for 403 issues
@@ -431,12 +435,7 @@ app.use((req, res, next) => {
     `);
   });
 
-  // Add catch-all route for SPA routing in production
-  if (app.get("env") === "production") {
-    app.get("*", (req, res) => {
-      res.sendFile(join(__dirname, "../dist/index.html"));
-    });
-  }
+
 
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
