@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { Settings } from "lucide-react";
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
@@ -44,8 +45,8 @@ export default function LoginPage() {
         // }
       } else {
         toast({
-          title: "Authentication Required",
-          description: "Staff backend connection needed. The API is returning HTML instead of JSON responses.",
+          title: "Backend Configuration Issue",
+          description: "The staff backend is returning HTML pages instead of JSON API responses. Please check the authentication endpoint configuration.",
           variant: "destructive"
         });
       }

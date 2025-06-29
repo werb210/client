@@ -21,6 +21,7 @@ import NotFound from "@/pages/NotFound";
 import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
 import { ComprehensiveApplication } from "@/pages/ComprehensiveApplication";
+import { BackendDiagnosticPage } from "@/pages/BackendDiagnosticPage";
 
 // Application flow steps
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
@@ -51,6 +52,7 @@ function Router() {
       <Route path="/request-reset" component={RequestReset} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/sign-complete" component={SignComplete} />
+      <Route path="/backend-diagnostic" component={BackendDiagnosticPage} />
       
       {/* Protected application routes */}
       <AuthGuard>

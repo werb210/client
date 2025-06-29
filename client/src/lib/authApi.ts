@@ -2,18 +2,27 @@ import { apiFetch } from '@/lib/api';
 
 // Enhanced AuthAPI with proper error handling
 export const AuthAPI = {
-  // Login - connects to staff backend with HTML response handling
+  // Login - enhanced diagnostics for staff backend
   login: async (body: { email: string; password: string }) => {
     try {
+      console.log('Attempting login to:', `${import.meta.env.VITE_API_BASE_URL}/auth/login`);
+      
       const response = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) });
+      
+      // Log response details for debugging
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
       
       // Check if response is HTML instead of JSON
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('text/html')) {
-        console.warn('Received HTML response instead of JSON - staff backend configuration issue');
+        const htmlContent = await response.text();
+        console.warn('HTML Response received:', htmlContent.substring(0, 200));
+        
         return new Response(
           JSON.stringify({ 
-            error: 'Staff backend returning HTML - configuration required', 
+            error: 'Staff backend endpoint returning HTML page instead of JSON API response',
+            details: 'Check if /auth/login endpoint exists and is configured for JSON responses',
             success: false
           }), 
           { status: 502, statusText: 'Bad Gateway' }
@@ -22,12 +31,11 @@ export const AuthAPI = {
       
       return response;
     } catch (error) {
-      // Handle CORS/network errors by returning proper error response
-      console.warn('Authentication API unavailable - CORS issue detected');
+      console.error('Authentication request failed:', error);
       return new Response(
         JSON.stringify({ 
-          error: 'Staff backend connection required for authentication', 
-          cors: true,
+          error: 'Unable to connect to staff backend authentication service',
+          details: 'Network error or CORS configuration issue',
           success: false
         }), 
         { status: 503, statusText: 'Service Unavailable' }
