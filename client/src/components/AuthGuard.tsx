@@ -42,7 +42,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
       '/simple-backend-test',
       '/backend-fallback',
       '/connectivity-summary',
-      '/verification-checklist'
+      '/verification-checklist',
+      '/automated-verification'
     ];
 
     const isPublicRoute = publicRoutes.some(route => 

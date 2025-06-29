@@ -41,6 +41,7 @@ import SimpleBackendTest from "@/pages/SimpleBackendTest";
 import BackendFallback from "@/pages/BackendFallback";
 import ConnectivitySummary from "@/pages/ConnectivitySummary";
 import VerificationChecklist from "@/pages/VerificationChecklist";
+import AutomatedVerification from "@/pages/AutomatedVerification";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
@@ -79,6 +80,7 @@ function Router() {
         <Route path="/backend-fallback" component={BackendFallback} />
         <Route path="/connectivity-summary" component={ConnectivitySummary} />
         <Route path="/verification-checklist" component={VerificationChecklist} />
+        <Route path="/automated-verification" component={AutomatedVerification} />
         
         {/* Redirect root to login for unauthenticated users */}
         <Route path="/" component={Login} />
