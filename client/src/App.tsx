@@ -24,6 +24,7 @@ import SimpleTest from "@/pages/SimpleTest";
 import TestApp from "@/pages/TestApp";
 import SMSDiagnostic from "@/pages/SMSDiagnostic";
 import TestLenderAPI from "@/pages/TestLenderAPI";
+import LenderProductsListing from "@/pages/LenderProductsListing";
 import { ComprehensiveApplication } from "@/pages/ComprehensiveApplication";
 
 // Application flow steps
@@ -60,6 +61,7 @@ function Router() {
       <Route path="/landing" component={Landing} />
       <Route path="/sms-diagnostic" component={SMSDiagnostic} />
       <Route path="/test-lender-api" component={TestLenderAPI} />
+      <Route path="/lender-products" component={LenderProductsListing} />
       
       {/* Protected application routes */}
       <AuthGuard>
