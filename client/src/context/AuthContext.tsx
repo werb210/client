@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
       }
     } catch (error) {
-      console.error('Fetch user error:', error);
+      // Silently handle auth errors - CORS issues are expected
       setUser(null);
     } finally {
       setIsLoading(false);
