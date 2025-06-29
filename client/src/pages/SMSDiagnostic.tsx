@@ -17,7 +17,7 @@ interface TestResult {
 }
 
 export default function SMSDiagnostic() {
-  const [phoneNumber, setPhoneNumber] = useState('+15878881837'); // Production number
+  const [phoneNumber, setPhoneNumber] = useState('+15878881837'); // Development number
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -210,7 +210,7 @@ export default function SMSDiagnostic() {
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-medium mb-2">Twilio Test Numbers:</h4>
               <div className="space-y-1 text-sm">
-                <div>• Production: +1 587 888 1837 (Your number)</div>
+                <div>• Development: +1 587 888 1837 (Your development number)</div>
                 <div>• Success Test: +15005550006 (Always succeeds)</div>
                 <div>• Failure Test: +15005550001 (Always fails)</div>
               </div>
