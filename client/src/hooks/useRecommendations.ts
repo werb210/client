@@ -64,8 +64,8 @@ export function useRecommendations(formStep1Data: Step1FormData) {
 
   /** 2 — filter + score */
   const fundingAmount = parseFloat(formStep1Data.fundingAmount?.replace(/[^0-9.-]+/g, '') || '0');
-  const revenueLastYear = getRevenueValue(formStep1Data.lastYearRevenue);
-  const headquarters = formStep1Data.businessLocation === "united-states" ? "US" : "CA";
+  const revenueLastYear = getRevenueValue(formStep1Data.lastYearRevenue || '');
+  const headquarters = formStep1Data.businessLocation === "united-states" ? "US" as const : "CA" as const;
 
   const matches = products
     .filter(p => {
@@ -82,10 +82,10 @@ export function useRecommendations(formStep1Data: Step1FormData) {
       if (p.min_revenue && revenueLastYear < p.min_revenue) return false;
       
       // Industry check (if specified)
-      if (p.industries?.length && !p.industries.includes(formStep1Data.industry)) return false;
+      if (p.industries?.length && formStep1Data.industry && !p.industries.includes(formStep1Data.industry)) return false;
       
       // Product type check
-      if (formStep1Data.lookingFor !== "both") {
+      if (formStep1Data.lookingFor && formStep1Data.lookingFor !== "both") {
         const mappedType = mapLookingFor(formStep1Data.lookingFor);
         if (mappedType !== p.product_type) return false;
       }
@@ -119,7 +119,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
 function calculateScore(
   product: LenderProduct, 
   formData: Step1FormData, 
-  headquarters: string,
+  headquarters: "US" | "CA",
   fundingAmount: number,
   revenueLastYear: number
 ): number {
@@ -136,7 +136,7 @@ function calculateScore(
   }
 
   // Industry match (25 points)
-  if (product.industries?.includes(formData.industry)) {
+  if (formData.industry && product.industries?.includes(formData.industry)) {
     score += 25;
   }
 

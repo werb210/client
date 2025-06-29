@@ -14,7 +14,21 @@ export default function Step2Recommendations() {
 
   // Get user's Step 1 data for matching
   const step1Data = state.step1FinancialProfile;
-  const { categories, isLoading, error } = useRecommendations(step1Data || {});
+  
+  // Convert form data to match useRecommendations interface
+  const recommendationData = step1Data ? {
+    businessLocation: step1Data.businessLocation as "united-states" | "canada" | undefined,
+    industry: step1Data.industry,
+    lookingFor: step1Data.lookingFor as "capital" | "equipment" | "both" | undefined,
+    fundingAmount: step1Data.fundingAmount,
+    useOfFunds: step1Data.useOfFunds,
+    lastYearRevenue: step1Data.lastYearRevenue,
+    averageMonthlyRevenue: step1Data.monthlyRevenue, // Use monthlyRevenue field
+    accountsReceivable: step1Data.accountReceivable, // Use accountReceivable field
+    equipmentValue: step1Data.fixedAssets, // Use fixedAssets field
+  } : {};
+  
+  const { categories, isLoading, error } = useRecommendations(recommendationData);
 
   const totalProducts = Object.values(categories).reduce((t, c) => t + c.count, 0);
 
@@ -27,7 +41,6 @@ export default function Step2Recommendations() {
     dispatch({
       type: 'UPDATE_STEP1',
       payload: {
-        ...step1Data,
         selectedCategory: categoryKey
       }
     });

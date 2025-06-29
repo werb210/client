@@ -11,6 +11,10 @@ export interface FinancialProfileData {
   monthlyRevenue?: string;
   accountReceivable?: string;
   fixedAssets?: string;
+  selectedCategory?: string;
+  averageMonthlyRevenue?: string;
+  accountsReceivable?: string;
+  equipmentValue?: string;
 }
 
 export interface BusinessDetailsData {
