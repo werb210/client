@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { getCachedLenderProducts, syncLenderProducts, getCacheMetadata } from '@/lib/syncLenderProducts';
 
 interface LenderProduct {
   id: string;
@@ -22,27 +23,25 @@ export function usePublicLenders() {
   return useQuery({
     queryKey: ["publicLenders"],
     queryFn: async () => {
-      const res = await fetch(
-        "https://staffportal.replit.app/api/public/lenders",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      // Get cached data immediately (offline-safe)
+      const cachedProducts = await getCachedLenderProducts();
       
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: "Network error" }));
-        throw new Error(errorData.error || `HTTP ${res.status}: Failed to fetch lender products`);
+      // Check cache freshness and sync in background if stale
+      const metadata = await getCacheMetadata();
+      if (metadata?.isStale) {
+        // Background sync without blocking the query
+        syncLenderProducts().catch(error => {
+          console.error('Background sync failed:', error);
+        });
       }
       
-      const data: LenderProductsResponse = await res.json();
-      return data.products;
+      return cachedProducts;
     },
     staleTime: 12 * 60 * 60 * 1000, // 12 hours for caching
     retry: 2,
+    // Return cached data immediately, even if stale
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 }
 
