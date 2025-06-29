@@ -183,10 +183,13 @@ export default function SideBySideApplication() {
         </div>
 
         {/* Side-by-side Steps */}
-        <div className="grid gap-6" style={{ 
-          gridTemplateColumns: `repeat(${visibleSteps}, 1fr)`,
-          minHeight: '600px'
-        }}>
+        <div 
+          className="grid gap-4 lg:gap-6" 
+          style={{ 
+            gridTemplateColumns: `repeat(${visibleSteps}, 1fr)`,
+            minHeight: '600px'
+          }}
+        >
           {visibleStepsList.map((step) => {
             const StepComponent = step.component;
             const status = getStepStatus(step.id);

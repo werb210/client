@@ -156,6 +156,23 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation('/side-by-side-application')}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Building className="text-purple-600 text-xl w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Side-by-Side Application</h3>
+                  <p className="text-sm text-gray-500">View all steps simultaneously</p>
+                </div>
+              </div>
+              <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                Start Side-by-Side
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center space-x-3 mb-4">
