@@ -1,0 +1,235 @@
+1 | Route and scaffolding
+File	Purpose
+src/pages/Application/Step2Recommendations.tsx	React page that renders the UI you attached and houses the matching logic
+src/components/recommendations/RecommendationCard.tsx	Small, reusable card component (category row)
+src/hooks/useRecommendations.ts	Encapsulates data-fetch + matching algorithm
+src/routes.tsx (update)	Add route <Route path="/application/step2" element={<Step2Recommendations/>} />
+src/lib/api/lenders.ts	Helper to GET https://staffportal.replit.app/api/public/lenders (uses existing apiFetch)
+
+Navigation rule
+• After Step 1 submits successfully, navigate("/application/step2").
+• “Select a Product to Continue” button sets selectedCategory ➜ navigate("/application/step3").
+
+2 | Matching-logic hook (useRecommendations.ts)
+ts
+Copy
+Edit
+import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
+import { apiFetch } from "../lib/api";
+
+export const LenderProduct = z.object({
+  id: z.string().uuid(),
+  product_type: z.enum([
+    "equipment_financing",
+    "invoice_factoring",
+    "line_of_credit",
+    "working_capital",
+    "term_loan",
+    "purchase_order_financing",
+  ]),
+  geography: z.array(z.enum(["US", "CA"])),
+  min_amount: z.number(),
+  max_amount: z.number(),
+  min_revenue: z.number().nullable(),
+  industries: z.array(z.string()).nullable(),
+  is_active: z.boolean(),
+});
+export type LenderProduct = z.infer<typeof LenderProduct>;
+
+export function useRecommendations(formStep1Data: Step1FormData) {
+  /** 1 ─ pull products twice a day (12 h) */
+  const { data: products = [] } = useQuery<LenderProduct[]>({
+    queryKey: ["lenders"],
+    queryFn: () => apiFetch("/public/lenders").then(r => r.json()),
+    staleTime: 1000 * 60 * 60 * 12,
+  });
+
+  /** 2 ─ filter + score */
+  const matches = products
+    .filter(p =>
+      p.is_active &&
+      p.geography.includes(formStep1Data.headquarters) &&
+      formStep1Data.fundingAmount >= p.min_amount &&
+      formStep1Data.fundingAmount <= p.max_amount &&
+      (!p.min_revenue || formStep1Data.revenueLastYear >= p.min_revenue) &&
+      (!p.industries?.length || p.industries.includes(formStep1Data.industry)) &&
+      (formStep1Data.lookingFor === "both" ||
+        mapLookingFor(formStep1Data.lookingFor) === p.product_type)
+    )
+    .map(p => ({
+      product: p,
+      score:
+        25 + // geography match
+        25 + // funding range
+        (p.industries?.includes(formStep1Data.industry) ? 25 : 0) +
+        (!p.min_revenue || formStep1Data.revenueLastYear >= p.min_revenue
+          ? 25
+          : 0),
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  /** 3 ─ aggregate to category rows */
+  const categories = matches.reduce<Record<string, { score: number; count: number }>>(
+    (acc, m) => {
+      const key = m.product.product_type;
+      acc[key] ??= { score: m.score, count: 0 };
+      acc[key].count += 1;
+      if (m.score > acc[key].score) acc[key].score = m.score; // keep best score
+      return acc;
+    },
+    {}
+  );
+
+  return { products: matches, categories };
+}
+
+function mapLookingFor(v: "capital" | "equipment" | "both") {
+  if (v === "capital") return "working_capital";
+  if (v === "equipment") return "equipment_financing";
+  return "line_of_credit"; // neutral default for 'both'
+}
+3 | UI files
+a) RecommendationCard.tsx
+tsx
+Copy
+Edit
+import { CategoryIcon } from "./icons";      // you already have lucide-react icons
+interface Props {
+  title: string;
+  percentage: number;
+  count: number;
+  score: number;               // 0-100
+  selected: boolean;
+  onSelect: () => void;
+}
+export const RecommendationCard = ({
+  title,
+  percentage,
+  count,
+  score,
+  selected,
+  onSelect,
+}: Props) => (
+  <button
+    onClick={onSelect}
+    className={`w-full text-left border rounded-lg p-4 mb-4 hover:border-blue-500
+      ${selected ? "ring-2 ring-blue-500/60" : "border-gray-200"}`}
+  >
+    <div className="flex justify-between items-start">
+      <div>
+        <h4 className="font-semibold mb-1">{title}</h4>
+        <p className="text-sm text-gray-500">
+          {count} products available ({percentage}%)
+        </p>
+      </div>
+      <span
+        className={`text-xs px-2 py-1 rounded-full ${
+          score >= 90
+            ? "bg-green-100 text-green-700"
+            : score >= 80
+            ? "bg-yellow-100 text-yellow-700"
+            : "bg-gray-100 text-gray-700"
+        }`}
+      >
+        {score}% Match
+      </span>
+    </div>
+  </button>
+);
+b) Step2Recommendations.tsx
+tsx
+Copy
+Edit
+import { useFormContext } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useRecommendations } from "../../hooks/useRecommendations";
+import { RecommendationCard } from "../../components/recommendations/RecommendationCard";
+
+export default function Step2Recommendations() {
+  const { getValues, setValue } = useFormContext<FullApplication>();
+  const formData = getValues("step1");               // assumes RHF wizard
+  const { categories } = useRecommendations(formData);
+  const navigate = useNavigate();
+  const [selected, setSelected] = useState<string | null>(null);
+
+  const totalProducts = Object.values(categories).reduce((t, c) => t + c.count, 0);
+
+  return (
+    <section className="max-w-4xl mx-auto px-4 py-8">
+      {/* header + progress */}
+      {/* --- snip: replicate layout from screenshot with your StepProgress component --- */}
+
+      {/* profile summary */}
+      {/* ... */}
+
+      {/* category list */}
+      <div className="space-y-4 mt-6">
+        {Object.entries(categories).map(([key, data]) => (
+          <RecommendationCard
+            key={key}
+            title={toTitleCase(key.replaceAll("_", " "))}
+            percentage={Math.round((data.count / totalProducts) * 100)}
+            count={data.count}
+            score={data.score}
+            selected={selected === key}
+            onSelect={() => setSelected(key)}
+          />
+        ))}
+      </div>
+
+      <div className="flex justify-between mt-8">
+        <button className="btn-secondary" onClick={() => navigate(-1)}>
+          Back
+        </button>
+        <button
+          className="btn-primary"
+          disabled={!selected}
+          onClick={() => {
+            setValue("selectedCategory", selected);
+            navigate("/application/step3");
+          }}
+        >
+          Select a Product to Continue
+        </button>
+      </div>
+    </section>
+  );
+}
+Styling notes
+
+Use the same Tailwind config + shadcn/ui button classes you already use (btn-primary, btn-secondary).
+
+The “Your Profile Summary” and coloured alert boxes come straight from the screenshot — simply replicate with Tailwind utilities (bg-blue-50, bg-green-50, bg-yellow-50 etc.).
+
+4 | Types + Zod
+Add to src/types/Application.ts:
+
+ts
+Copy
+Edit
+export interface Step1FormData {
+  headquarters: "US" | "CA";
+  headquartersState?: string;
+  industry: string;
+  lookingFor: "capital" | "equipment" | "both";
+  fundingAmount: number;
+  fundsPurpose: string;
+  salesHistory: string;
+  revenueLastYear: number;
+  averageMonthlyRevenue: number;
+  accountsReceivableBalance: number;
+  fixedAssetsValue: number;
+}
+
+export interface FullApplication {
+  step1: Step1FormData;
+  // step2 will only store:
+  selectedCategory?: string;
+  // ...step3 etc.
+}
+Update Zod schema accordingly (already in your wizard flow).
+
+5 | Dev bypass
+Keep the “skip auth in dev” toggle you already added so testers can load Step 1 & Step 2 without SMS.
