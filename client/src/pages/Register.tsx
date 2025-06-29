@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useLocation } from 'wouter';
-import InputMask from 'react-input-mask';
+// ARCHIVED: SMS-related imports for simplified auth
+// import { Controller } from 'react-hook-form';
+// import InputMask from 'react-input-mask';
+// import { toE164 } from '@/lib/toE164';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +14,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { staffApi } from '@/lib/staffApi';
-import { toE164 } from '@/lib/toE164';
 import { markFirstVisit } from '@/lib/firstVisit';
 
 const registerSchema = z.object({
@@ -36,7 +38,6 @@ export default function Register() {
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -152,7 +153,8 @@ export default function Register() {
               )}
             </div>
 
-            <div>
+            {/* ARCHIVED: Phone number field removed for simplified auth */}
+            {/* <div>
               <Label htmlFor="phone">Phone Number</Label>
               <Controller
                 name="phone"
@@ -178,10 +180,11 @@ export default function Register() {
               {errors.phone && (
                 <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
               )}
-              {error && (
-                <p className="text-sm text-red-600 mt-1">{error}</p>
-              )}
-            </div>
+            </div> */}
+            
+            {error && (
+              <p className="text-sm text-red-600 mt-1">{error}</p>
+            )}
 
             <div>
               <Label htmlFor="password">Password</Label>

@@ -278,6 +278,15 @@ Changelog:
     * Added proper error handling for all authentication methods (login, register, verifyOtp, logout)
     * Toast components now safely handle undefined props and invalid content types
     * Authentication system provides consistent user feedback about backend connectivity status
+  - June 29, 2025: SIMPLIFIED EMAIL/PASSWORD AUTHENTICATION SYSTEM
+    * Removed OTP verification step from login and registration flows
+    * Archived SMS logic and phone number requirements with "ARCHIVED:" tags
+    * Disabled /verify-otp route and commented out OTP verification components
+    * Updated registration form to email/password only (removed phone field)
+    * Simplified authentication flow: register → login → portal (no OTP step)
+    * Archived SMS utility functions in toE164.ts for future reference
+    * Registration now redirects to login page with success message
+    * Login proceeds directly to portal without OTP verification requirement
 ```
 
 ## User Preferences
