@@ -1,5 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import { setupVite, serveStatic, log } from "./vite";
+
+// ES module path resolution
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
@@ -253,10 +259,9 @@ app.use((req, res, next) => {
 
   // Validate static asset serving for production builds
   if (app.get("env") === "production") {
-    const path = await import("path");
     app.use(
       "/",
-      express.static(path.join(__dirname, "../dist"), {
+      express.static(join(__dirname, "../dist"), {
         index: "index.html",
       })
     );
@@ -428,9 +433,8 @@ app.use((req, res, next) => {
 
   // Add catch-all route for SPA routing in production
   if (app.get("env") === "production") {
-    const path = await import("path");
     app.get("*", (req, res) => {
-      res.sendFile(path.join(__dirname, "../dist/index.html"));
+      res.sendFile(join(__dirname, "../dist/index.html"));
     });
   }
 
