@@ -6,14 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+// Removed problematic Toast system
 import { Settings } from "lucide-react";
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
   const { login } = useAuth();
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: ""
@@ -36,27 +36,16 @@ export default function LoginPage() {
         //   setLocation('/verify-otp');
         // } else {
         
-        toast({
-          title: "Login Successful",
-          description: "Welcome back!",
-        });
+        setErrorMessage("");
         setLocation('/portal');
         
         // }
       } else {
-        toast({
-          title: "Backend Configuration Issue",
-          description: "The staff backend is returning HTML pages instead of JSON API responses. Please check the authentication endpoint configuration.",
-          variant: "destructive"
-        });
+        setErrorMessage("Backend configuration issue: The staff backend is returning HTML pages instead of JSON API responses. Please check the authentication endpoint configuration.");
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast({
-        title: "Connection Error", 
-        description: "Unable to reach authentication server. Please try again later.",
-        variant: "destructive"
-      });
+      setErrorMessage("Connection error: Unable to reach authentication server. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -119,6 +108,11 @@ export default function LoginPage() {
                       required
                     />
                   </div>
+                  {errorMessage && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                      <p className="text-sm text-red-800">{errorMessage}</p>
+                    </div>
+                  )}
                   <Button
                     type="submit"
                     className="w-full"
