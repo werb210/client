@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { AuthGuard } from "@/components/AuthGuard";
 import { FormDataProvider } from "@/context/FormDataContext";
 import { ApplicationProvider } from "@/context/ApplicationContext";
+import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
 
 // Essential pages only
 import Login from "@/pages/Login";
