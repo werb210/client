@@ -70,6 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true, otpRequired: false };
       }
     } catch (error) {
+      // Handle network/CORS errors gracefully
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error('Network error during login - CORS issue likely:', error.message);
+        return { success: false };
+      }
       console.error('Login error:', error);
       return { success: false };
     }

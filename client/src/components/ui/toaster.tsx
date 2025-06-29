@@ -14,8 +14,13 @@ export function Toaster() {
   return (
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {
+        // Filter out undefined props to prevent Toast component errors
+        const safeProps = Object.fromEntries(
+          Object.entries(props).filter(([_, value]) => value !== undefined)
+        );
+        
         return (
-          <Toast key={id} {...props}>
+          <Toast key={id} {...safeProps}>
             <div className="grid gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && (
