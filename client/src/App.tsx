@@ -23,6 +23,7 @@ import UploadDocuments from "@/pages/UploadDocuments";
 import SimpleTest from "@/pages/SimpleTest";
 import TestApp from "@/pages/TestApp";
 import SMSDiagnostic from "@/pages/SMSDiagnostic";
+import { ComprehensiveApplication } from "@/pages/ComprehensiveApplication";
 
 // Application flow steps
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
@@ -69,6 +70,8 @@ function Router() {
         <Route path="/step5-document-upload" component={Step5DocumentUpload} />
         <Route path="/step6-signature" component={Step6Signature} />
         <Route path="/upload-documents" component={UploadDocuments} />
+        {/* Comprehensive 42-field application system */}
+        <Route path="/comprehensive-application" component={ComprehensiveApplication} />
         {/* Step7 integrated into Step6 completion flow */}
       </AuthGuard>
       
@@ -86,10 +89,12 @@ function App() {
       <AuthProvider>
         <FormDataProvider>
           <ApplicationProvider>
-            <div className="min-h-screen bg-background">
-              <Router />
-              <Toaster />
-            </div>
+            <ComprehensiveFormProvider>
+              <div className="min-h-screen bg-background">
+                <Router />
+                <Toaster />
+              </div>
+            </ComprehensiveFormProvider>
           </ApplicationProvider>
         </FormDataProvider>
       </AuthProvider>

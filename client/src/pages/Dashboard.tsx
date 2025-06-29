@@ -129,12 +129,29 @@ export default function Dashboard() {
                   <Plus className="text-blue-500 text-xl w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">New Application</h3>
-                  <p className="text-sm text-gray-500">Start a new funding request</p>
+                  <h3 className="font-semibold text-gray-900">Quick Application</h3>
+                  <p className="text-sm text-gray-500">Original 7-step application</p>
                 </div>
               </div>
               <Button className="w-full bg-blue-500 hover:bg-blue-600">
-                Get Started
+                Quick Start
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation('/comprehensive-application')}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
+                  <FileText className="text-teal-600 text-xl w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Comprehensive Application</h3>
+                  <p className="text-sm text-gray-500">Detailed 42-field application form</p>
+                </div>
+              </div>
+              <Button className="w-full bg-teal-600 hover:bg-teal-700">
+                Start Comprehensive
               </Button>
             </CardContent>
           </Card>
