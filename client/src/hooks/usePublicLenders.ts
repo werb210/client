@@ -46,4 +46,4 @@ export function usePublicLenders() {
   });
 }
 
-export { LenderProduct, LenderProductsResponse } from "@/types/lenderProducts";
+export type { LenderProduct, LenderProductsResponse };
