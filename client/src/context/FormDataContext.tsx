@@ -1,13 +1,16 @@
 import { createContext, useContext, useReducer, ReactNode } from 'react';
 
 export interface FinancialProfileData {
-  businessLocation: string;
-  monthlyRevenue: string;
-  industry: string;
-  businessAge: string;
+  fundingAmount: string;
   useOfFunds: string;
-  selectedCategory?: string;
-  selectedCategoryName?: string;
+  businessLocation: string;
+  industry: string;
+  lookingFor: string;
+  salesHistory: string;
+  lastYearRevenue: string;
+  monthlyRevenue: string;
+  accountReceivable: string;
+  fixedAssets: string;
 }
 
 export interface BusinessDetailsData {
@@ -73,13 +76,16 @@ type FormDataAction =
 
 const initialState: FormDataState = {
   step1FinancialProfile: {
-    businessLocation: '',
-    monthlyRevenue: '',
-    industry: '',
-    businessAge: '',
+    fundingAmount: '',
     useOfFunds: '',
-    selectedCategory: '',
-    selectedCategoryName: '',
+    businessLocation: '',
+    industry: '',
+    lookingFor: '',
+    salesHistory: '',
+    lastYearRevenue: '',
+    monthlyRevenue: '',
+    accountReceivable: '',
+    fixedAssets: '',
   },
   currentStep: 1,
   isComplete: false,
