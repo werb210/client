@@ -1,59 +1,43 @@
-import { useState, useEffect } from 'react';
-import { getCacheMetadata } from '@/lib/syncLenderProducts';
+import { useLocalLenderStats } from '@/hooks/useLocalLenders';
 import { Badge } from '@/components/ui/badge';
-import { Wifi, WifiOff, Clock, Database } from 'lucide-react';
+import { Server, CheckCircle, AlertCircle, Database } from 'lucide-react';
 
 export function CacheStatus() {
-  const [metadata, setMetadata] = useState<{
-    lastFetched: number | null;
-    totalProducts: number;
-    isStale: boolean;
-  } | null>(null);
+  const { data: stats, isLoading, error } = useLocalLenderStats();
 
-  useEffect(() => {
-    const checkCacheStatus = async () => {
-      const data = await getCacheMetadata();
-      setMetadata(data);
-    };
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <Database className="h-3 w-3 animate-pulse" />
+        <span>Loading database stats...</span>
+      </div>
+    );
+  }
 
-    checkCacheStatus();
-    
-    // Check every 30 seconds
-    const interval = setInterval(checkCacheStatus, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!metadata) return null;
-
-  const formatLastFetched = (timestamp: number | null) => {
-    if (!timestamp) return 'Never';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffHours < 1) return 'Just now';
-    if (diffHours === 1) return '1 hour ago';
-    return `${diffHours} hours ago`;
-  };
+  if (error) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-red-500">
+        <AlertCircle className="h-3 w-3" />
+        <span>Database connection failed</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-      <Database className="h-3 w-3" />
-      <span>{metadata.totalProducts} products cached</span>
+      <Server className="h-3 w-3 text-green-600" />
+      <span>{stats?.activeProducts || 0} products from database</span>
       
-      {metadata.isStale ? (
-        <Badge variant="outline" className="flex items-center gap-1 h-5">
-          <Clock className="h-2 w-2" />
-          Syncing...
-        </Badge>
-      ) : (
-        <Badge variant="outline" className="flex items-center gap-1 h-5 bg-green-50 border-green-200 text-green-700">
-          <Wifi className="h-2 w-2" />
-          Fresh
-        </Badge>
+      <Badge variant="outline" className="flex items-center gap-1 h-5 bg-green-50 border-green-200 text-green-700">
+        <CheckCircle className="h-2 w-2" />
+        Live
+      </Badge>
+      
+      {stats?.productsByType && (
+        <span className="text-gray-400">
+          {Object.keys(stats.productsByType).length} types
+        </span>
       )}
-      
-      <span>Last: {formatLastFetched(metadata.lastFetched)}</span>
     </div>
   );
 }
