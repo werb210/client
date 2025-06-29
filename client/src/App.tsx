@@ -22,6 +22,7 @@ import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
 import { ComprehensiveApplication } from "@/pages/ComprehensiveApplication";
 import { BackendDiagnosticPage } from "@/pages/BackendDiagnosticPage";
+import SideBySideApplication from "@/pages/SideBySideApplication";
 
 // Application flow steps
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
@@ -69,6 +70,8 @@ function Router() {
         <Route path="/upload-documents" component={UploadDocuments} />
         {/* Comprehensive 42-field application system */}
         <Route path="/comprehensive-application" component={ComprehensiveApplication} />
+        {/* Side-by-side application layout */}
+        <Route path="/side-by-side-application" component={SideBySideApplication} />
         {/* Step7 integrated into Step6 completion flow */}
       </AuthGuard>
       
