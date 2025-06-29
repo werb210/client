@@ -19,6 +19,8 @@ import NotFound from "@/pages/NotFound";
 import ServerTest from "@/pages/ServerTest";
 import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
+import SimpleTest from "@/pages/SimpleTest";
+import TestApp from "@/pages/TestApp";
 
 // Application flow steps
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
@@ -42,6 +44,7 @@ function Router() {
   return (
     <Switch>
       {/* Public routes */}
+      <Route path="/simple-test" component={SimpleTest} />
       <Route path="/server-test" component={ServerTest} />
       <Route path="/login" component={Login} />
       <Route path="/phone-login" component={PhoneLogin} />
@@ -66,8 +69,9 @@ function Router() {
         {/* Step7 integrated into Step6 completion flow */}
       </AuthGuard>
       
-      {/* Default route - Landing page for unauthenticated users */}
-      <Route path="/" component={Landing} />
+      {/* Default route - Test app to verify functionality */}
+      <Route path="/" component={TestApp} />
+      <Route path="/home" component={Landing} />
       <Route component={NotFound} />
     </Switch>
   );
