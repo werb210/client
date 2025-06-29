@@ -60,6 +60,7 @@
     "framer-motion": "^11.13.1",
     "idb": "^8.0.3",
     "input-otp": "^1.4.2",
+    "jsdom": "^26.1.0",
     "libphonenumber-js": "^1.12.9",
     "lucide-react": "^0.453.0",
     "memoizee": "^0.4.17",
