@@ -242,6 +242,12 @@ Changelog:
     * Configured VerifyOtp component with complete login success routing based on user history
     * Landing page configured as primary entry point at .replit.dev root domain
     * System supports complete user journey: Landing → Registration/Login → Smart Routing → Portal/Application
+  - June 29, 2025: LANDING PAGE ROUTING REFINEMENT
+    * Updated landing page to use isFirstVisit() function for cleaner routing logic
+    * Refined CTA button behavior: first-time visitors → register, returning users → login
+    * Added isFirstVisit() function to visitFlags.ts for consistent first-visit detection
+    * Landing page now properly serves at .replit.dev root with intelligent user routing
+    * All buttons use wouter navigation with proper first-visit detection logic
 ```
 
 ## User Preferences
