@@ -16,6 +16,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import NotFound from "@/pages/NotFound";
+import ServerTest from "@/pages/ServerTest";
 
 // Application flow steps
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
@@ -39,6 +40,7 @@ function Router() {
   return (
     <Switch>
       {/* Public routes */}
+      <Route path="/server-test" component={ServerTest} />
       <Route path="/login" component={Login} />
       <Route path="/phone-login" component={PhoneLogin} />
       <Route path="/register" component={Register} />
