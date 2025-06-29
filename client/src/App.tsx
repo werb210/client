@@ -15,6 +15,7 @@ import VerifyOtp from "@/pages/VerifyOtp";
 import RequestReset from "@/pages/RequestReset";
 import ResetPassword from "@/pages/ResetPassword";
 import Landing from "@/pages/Landing";
+import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import NotFound from "@/pages/NotFound";
 import ServerTest from "@/pages/ServerTest";
@@ -79,8 +80,8 @@ function Router() {
         {/* Step7 integrated into Step6 completion flow */}
       </AuthGuard>
       
-      {/* Default route - Test app to verify functionality */}
-      <Route path="/" component={TestApp} />
+      {/* Default route - Landing page with smart routing */}
+      <Route path="/" component={LandingPage} />
       <Route path="/home" component={Landing} />
       <Route component={NotFound} />
     </Switch>
