@@ -8,6 +8,7 @@ import { ApplicationProvider } from "@/context/ApplicationContext";
 import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
 
 // Core application pages
+import LoginPage from "@/pages/LoginPage";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import VerifyOtp from "@/pages/VerifyOtp";
@@ -42,7 +43,7 @@ function Router() {
   return (
     <Switch>
       {/* Authentication routes */}
-      <Route path="/login" component={Login} />
+      <Route path="/login" component={LoginPage} />
       <Route path="/register" component={Register} />
       <Route path="/verify-otp" component={VerifyOtp} />
       <Route path="/request-reset" component={RequestReset} />

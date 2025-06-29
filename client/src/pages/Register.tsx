@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { staffApi } from '@/lib/staffApi';
 import { toE164 } from '@/lib/toE164';
+import { markFirstVisit } from '@/lib/firstVisit';
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -86,6 +87,8 @@ export default function Register() {
 
       // Check if OTP was sent successfully
       if (result.success) {
+        // Mark that this user has completed their first visit
+        markFirstVisit();
         sessionStorage.setItem('otpEmail', data.email);
         sessionStorage.setItem('otpPhone', formattedPhone);
         toast({

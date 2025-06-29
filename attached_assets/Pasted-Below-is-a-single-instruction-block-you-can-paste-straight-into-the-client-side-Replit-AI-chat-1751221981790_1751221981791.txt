@@ -1,0 +1,132 @@
+Below is a **single instruction block** you can paste straight into the **client-side Replit AI chat**.
+It converts the uploaded **“Boreal Financial – login.html”** file into a React page, wires it to `/login`, and makes **all CTA buttons on the landing page** route to **`/register` on a first-ever visit** and **`/login` on every subsequent visit**.
+
+---
+
+## 🟧 CLIENT-APP – IMPLEMENT LOGIN PAGE & FIRST-VISIT LOGIC
+
+### 1  Create `src/pages/LoginPage.tsx`
+
+1. Strip `<html>, <head>, <body>` from the uploaded HTML.
+2. Run it through an HTML➜JSX converter (class → className, self-close tags).
+3. Wrap in a React component:
+
+```tsx
+import React from "react";
+import { useNavigate } from "react-router-dom";
+
+export default function LoginPage() {
+  const navigate = useNavigate();
+
+  return (
+    <>
+      {/* ---- converted HTML START ---- */}
+      {/* Replace every `<form>` submit with onSubmit handler */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          /* TODO: call Auth.login(), then navigate("/dashboard") */
+        }}
+      >
+        {/* …inputs keep Tailwind / shadcn classes … */}
+      </form>
+
+      {/* Convert the tab “Register” button to: */}
+      <button onClick={() => navigate("/register")}>Register</button>
+      {/* ---- converted HTML END ---- */}
+    </>
+  );
+}
+```
+
+> *Tip:* Leave Lucky Orange & custom fonts out; Tailwind + shadcn already loaded.
+
+---
+
+### 2  Add **first-visit → register** logic
+
+Create `src/lib/firstVisit.ts`:
+
+```ts
+const KEY = "bf:firstVisitDone";
+
+export function isFirstVisit() {
+  return !localStorage.getItem(KEY);
+}
+
+export function markFirstVisit() {
+  localStorage.setItem(KEY, "true");
+}
+```
+
+Update `src/pages/LandingPage.tsx` CTA buttons:
+
+```tsx
+import { isFirstVisit } from "@/lib/firstVisit";
+import { useNavigate } from "react-router-dom";
+
+const navigate = useNavigate();
+
+<Button
+  onClick={() =>
+    navigate(isFirstVisit() ? "/register" : "/login")
+  }
+>
+  Get Started
+</Button>
+```
+
+When the user **successfully completes registration** (e.g., in `/register` page’s success handler), call `markFirstVisit()`.
+
+---
+
+### 3  Wire routes
+
+`src/App.tsx`
+
+```tsx
+import LoginPage from "@/pages/LoginPage";
+import RegisterPage from "@/pages/RegisterPage";
+import LandingPage from "@/pages/LandingPage";
+
+<Routes>
+  <Route path="/" element={<LandingPage />} />
+  <Route path="/login" element={<LoginPage />} />
+  <Route path="/register" element={<RegisterPage />} />
+  {/* keep /application/* wizard, dashboard, etc. */}
+</Routes>
+```
+
+---
+
+### 4  Clean `src/main.tsx`
+
+Ensure only:
+
+```tsx
+ReactDOM.createRoot(document.getElementById("root")!).render(<App />);
+```
+
+(no debug/TestPage mounts).
+
+---
+
+### 5  Smoke-test checklist
+
+| Action                                          | Expected                            |
+| ----------------------------------------------- | ----------------------------------- |
+| Fresh incognito visit → Click **Get Started**   | Routes to `/register`               |
+| Complete registration (call `markFirstVisit()`) | Sets flag                           |
+| Refresh homepage → Click **Get Started**        | Routes to `/login`                  |
+| Direct visit `/login`                           | New LoginPage renders (tabs intact) |
+| Login success                                   | Navigate `/dashboard`               |
+
+---
+
+### 6  **Replit command (copy-paste)**
+
+> **“Create `src/pages/LoginPage.tsx` from the uploaded login HTML (converted to JSX), add `src/lib/firstVisit.ts`, update LandingPage CTA buttons to route `/register` on first visit and `/login` afterwards, wire routes in App.tsx, and ensure main.tsx mounts only `<App />`. Then run dev server.”**
+
+---
+
+No staff-side changes are required for this task.
