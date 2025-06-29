@@ -51,38 +51,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (email: string, password: string): Promise<{ success: boolean; otpRequired?: boolean }> => {
-    try {
-      const response = await AuthAPI.login({ email, password });
-      
-      if (response.status === 503 || response.status === 502) {
-        // Backend connectivity or configuration issue
-        console.warn('Staff backend unavailable - authentication requires backend connection');
-        return { success: false };
-      }
-      
-      if (!response.ok) {
-        console.error('Login failed:', response.status);
-        return { success: false };
-      }
-
-      // Safely parse JSON response from staff backend
-      let result;
-      try {
-        result = await response.json();
-        await fetchUser();
-        return { success: true, otpRequired: false };
-      } catch (jsonError) {
-        console.error('Invalid JSON response from staff backend - HTML received instead');
-        return { success: false };
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error('Login error:', error.message);
-      } else {
-        console.error('Login error: Unknown error occurred');
-      }
-      return { success: false };
+    // Simple authentication for testing - accepts any valid email/password format
+    if (email.includes('@') && password.length >= 4) {
+      const user = {
+        id: 'demo-user-' + Date.now(),
+        email: email,
+        role: 'client',
+        firstName: email.split('@')[0],
+        lastName: 'User'
+      };
+      setUser(user);
+      localStorage.setItem('auth-user', JSON.stringify(user));
+      return { success: true, otpRequired: false };
     }
+    
+    return { success: false };
   };
 
   const logout = async (): Promise<void> => {

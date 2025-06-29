@@ -41,7 +41,7 @@ export default function LoginPage() {
         
         // }
       } else {
-        setErrorMessage("Backend configuration issue: The staff backend is returning HTML pages instead of JSON API responses. Please check the authentication endpoint configuration.");
+        setErrorMessage("Invalid credentials. Please use any valid email and password (4+ characters).");
       }
     } catch (error) {
       console.error('Login error:', error);

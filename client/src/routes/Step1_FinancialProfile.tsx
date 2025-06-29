@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
-import { useToast } from '@/hooks/use-toast';
+// Removed problematic useToast import
 import { Save, ArrowRight } from 'lucide-react';
 import { markApplicationStarted } from '@/lib/visitFlags';
 
@@ -76,7 +76,7 @@ const businessAges = [
 export default function Step1FinancialProfile() {
   const { state, dispatch, saveToStorage } = useFormData();
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  // Removed useToast to fix loading issues
 
   useEffect(() => {
     markApplicationStarted(); // ensures flag even if user hits step-1 directly
@@ -101,13 +101,8 @@ export default function Step1FinancialProfile() {
     // Save to storage
     saveToStorage();
     
-    toast({
-      title: "Progress Saved",
-      description: "Your financial profile has been saved. Proceeding to recommendations.",
-    });
-
     // Navigate to recommendations
-    setLocation('/recommendations');
+    setLocation('/step2-recommendations');
   };
 
   const handleSaveProgress = () => {
@@ -119,10 +114,7 @@ export default function Step1FinancialProfile() {
     // Save to storage
     saveToStorage();
     
-    toast({
-      title: "Progress Saved",
-      description: "Your current progress has been saved to local storage.",
-    });
+    // Progress saved to local storage
   };
 
   return (
