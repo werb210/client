@@ -7,25 +7,17 @@ import { FormDataProvider } from "@/context/FormDataContext";
 import { ApplicationProvider } from "@/context/ApplicationContext";
 import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
 
-// Essential pages only
+// Core application pages
 import Login from "@/pages/Login";
-import PhoneLogin from "@/pages/PhoneLogin";
 import Register from "@/pages/Register";
 import VerifyOtp from "@/pages/VerifyOtp";
 import RequestReset from "@/pages/RequestReset";
 import ResetPassword from "@/pages/ResetPassword";
-import Landing from "@/pages/Landing";
 import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import NotFound from "@/pages/NotFound";
-import ServerTest from "@/pages/ServerTest";
 import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
-import SimpleTest from "@/pages/SimpleTest";
-import TestApp from "@/pages/TestApp";
-import SMSDiagnostic from "@/pages/SMSDiagnostic";
-import TestLenderAPI from "@/pages/TestLenderAPI";
-import LenderProductsListing from "@/pages/LenderProductsListing";
 import { ComprehensiveApplication } from "@/pages/ComprehensiveApplication";
 
 // Application flow steps
@@ -49,20 +41,13 @@ const queryClient = new QueryClient({
 function Router() {
   return (
     <Switch>
-      {/* Public routes */}
-      <Route path="/simple-test" component={SimpleTest} />
-      <Route path="/server-test" component={ServerTest} />
+      {/* Authentication routes */}
       <Route path="/login" component={Login} />
-      <Route path="/phone-login" component={PhoneLogin} />
       <Route path="/register" component={Register} />
       <Route path="/verify-otp" component={VerifyOtp} />
       <Route path="/request-reset" component={RequestReset} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/sign-complete" component={SignComplete} />
-      <Route path="/landing" component={Landing} />
-      <Route path="/sms-diagnostic" component={SMSDiagnostic} />
-      <Route path="/test-lender-api" component={TestLenderAPI} />
-      <Route path="/lender-products" component={LenderProductsListing} />
       
       {/* Protected application routes */}
       <AuthGuard>
@@ -82,7 +67,6 @@ function Router() {
       
       {/* Default route - Landing page with smart routing */}
       <Route path="/" component={LandingPage} />
-      <Route path="/home" component={Landing} />
       <Route component={NotFound} />
     </Switch>
   );

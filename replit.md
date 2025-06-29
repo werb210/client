@@ -226,6 +226,13 @@ Changelog:
     * Fixed all type inconsistencies across TestLenderAPI and LenderProductsList components
     * Product type mapping: capital→working_capital/line_of_credit/term_loan, equipment→equipment_financing
     * Complete integration ready for staff backend with populated lender products database
+  - June 29, 2025: PRODUCTION ENTRY POINT CLEANUP
+    * Removed all test routes from main application router (simple-test, server-test, sms-diagnostic, etc.)
+    * Cleaned main.tsx entry point to mount App component directly without test bypasses
+    * Updated AuthGuard to only include production routes in public access list
+    * Removed development auth bypass to enforce proper authentication flow
+    * Landing page now serves as primary entry point with intelligent routing to registration/login
+    * Application ready for production deployment with clean, professional user experience
 ```
 
 ## User Preferences

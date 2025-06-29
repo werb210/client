@@ -10,11 +10,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const [location, setLocation] = useLocation();
 
-  // Bypass auth during development to focus on UX testing
-  if (import.meta.env.DEV) {
-    return <>{children}</>;
-  }
-
   // Handle redirects in useEffect to avoid updating during render
   useEffect(() => {
     if (isLoading) return;
@@ -26,29 +21,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
       '/verify-otp',
       '/request-reset',
       '/reset-password',
-      '/debug-test',
-      '/debug-checklist',
-      '/simple-connection-test',
-      '/cors-test',
-      '/simple-register-test',
-      '/backend-test',
-      '/auth-flow-test',
-      '/testing',
-      '/test-connection',
-      '/simple-test',
-      '/test-staff-backend',
-      '/network-diagnostic',
-      '/connection-test',
-      '/password-reset-diagnostic',
-      '/api-test',
-      '/user-database',
-      '/quick-user-check',
-      '/staff-backend-status',
-      '/simple-backend-test',
-      '/backend-fallback',
-      '/connectivity-summary',
-      '/verification-checklist',
-      '/automated-verification'
+      '/sign-complete'
     ];
 
     const isPublicRoute = publicRoutes.some(route => 
