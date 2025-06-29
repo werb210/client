@@ -54,6 +54,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await AuthAPI.login({ email, password });
       
+      if (response.status === 503) {
+        // CORS/connectivity issue detected
+        const result = await response.json();
+        console.warn('Staff backend connectivity issue:', result.error);
+        return { success: false };
+      }
+      
       if (!response.ok) {
         console.error('Login failed:', response.status);
         return { success: false };
@@ -70,11 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: true, otpRequired: false };
       }
     } catch (error) {
-      // Handle network/CORS errors gracefully
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        console.error('Network error during login - CORS issue likely:', error.message);
-        return { success: false };
-      }
+      // Handle unexpected errors
       console.error('Login error:', error);
       return { success: false };
     }
