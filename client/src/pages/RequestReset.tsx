@@ -12,7 +12,7 @@ import { Auth } from '@/lib/auth';
 
 
 const resetRequestSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
 });
 
 type ResetRequestFormData = z.infer<typeof resetRequestSchema>;
@@ -37,14 +37,14 @@ export default function RequestReset() {
     setError('');
     
     try {
-      const res = await Auth.requestReset(data.email);
+      const res = await Auth.requestReset(data.phone);
       const responseData = await res.json();
       
       if (res.ok) {
         setIsSubmitted(true);
         toast({
-          title: 'Reset Email Sent',
-          description: responseData.message || `We've sent a password reset link to ${data.email}. Please check your email and follow the instructions to reset your password.`,
+          title: 'Reset SMS Sent',
+          description: responseData.message || `We've sent a password reset link to ${data.phone}. Check your SMS for the reset link.`,
         });
       } else {
         setError(responseData.error);
@@ -75,18 +75,17 @@ export default function RequestReset() {
             <div className="mb-4">
               <h1 className="text-2xl font-bold text-teal-700">Boreal Financial</h1>
             </div>
-            <CardTitle className="text-xl">Check Your Email</CardTitle>
+            <CardTitle className="text-xl">Check Your SMS</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <p className="text-gray-600">
               We've sent password reset instructions to:
             </p>
             <p className="font-medium text-gray-900">
-              {getValues('email')}
+              {getValues('phone')}
             </p>
             <p className="text-sm text-gray-500">
-              Please check your email and follow the link to reset your password.
-              The link will expire in 1 hour.
+              Check your SMS for the reset link. The link will expire in 1 hour.
             </p>
             <div className="pt-4">
               <Link href="/login">
@@ -110,21 +109,22 @@ export default function RequestReset() {
           </div>
           <CardTitle className="text-xl">Reset Password</CardTitle>
           <p className="text-sm text-gray-600 mt-2">
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your phone number and we'll send you a link to reset your password.
           </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="phone">Phone Number</Label>
               <Input
-                id="email"
-                type="email"
-                {...register('email')}
-                className={errors.email ? 'border-red-500' : ''}
+                id="phone"
+                type="tel"
+                placeholder="+1 (555) 123-4567"
+                {...register('phone')}
+                className={errors.phone ? 'border-red-500' : ''}
               />
-              {errors.email && (
-                <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
+              {errors.phone && (
+                <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
               )}
             </div>
 
