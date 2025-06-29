@@ -1,6 +1,18 @@
 import React from 'react';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
-import { LenderProduct } from '@/types/lenderProducts';
+interface LenderProduct {
+  id: string;
+  product_name: string;
+  lender_name: string;
+  product_type: string;
+  geography: string[];
+  min_amount: number;
+  max_amount: number;
+  min_revenue?: number;
+  industries?: string[];
+  video_url?: string;
+  description?: string;
+}
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

@@ -4,7 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Play, Loader2, AlertCircle } from 'lucide-react';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
-import { LenderProduct } from '@/types/lenderProducts';
+interface LenderProduct {
+  id: string;
+  product_name: string;
+  lender_name: string;
+  product_type: string;
+  geography: string[];
+  min_amount: number;
+  max_amount: number;
+  min_revenue?: number;
+  industries?: string[];
+  video_url?: string;
+  description?: string;
+}
 import { useComprehensiveForm } from '@/context/ComprehensiveFormContext';
 
 interface Step2Props {

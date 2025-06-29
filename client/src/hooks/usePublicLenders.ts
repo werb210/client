@@ -1,5 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
-import { LenderProduct, LenderProductsResponse } from "@/types/lenderProducts";
+
+interface LenderProduct {
+  id: string;
+  product_name: string;
+  lender_name: string;
+  product_type: string;
+  geography: string[];
+  min_amount: number;
+  max_amount: number;
+  min_revenue?: number;
+  industries?: string[];
+  video_url?: string;
+  description?: string;
+}
+
+interface LenderProductsResponse {
+  products: LenderProduct[];
+}
 
 export function usePublicLenders() {
   return useQuery({
