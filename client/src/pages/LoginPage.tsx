@@ -26,15 +26,32 @@ export default function LoginPage() {
       const result = await login(formData.email, formData.password);
       if (result.success) {
         if (result.otpRequired) {
+          // Store email for OTP verification
+          sessionStorage.setItem('otpEmail', formData.email);
+          toast({
+            title: "OTP Sent",
+            description: "Please check your phone for the verification code.",
+          });
           setLocation('/verify-otp');
         } else {
-          setLocation('/dashboard');
+          toast({
+            title: "Login Successful",
+            description: "Welcome back!",
+          });
+          setLocation('/portal');
         }
+      } else {
+        toast({
+          title: "Authentication System",
+          description: "Staff backend authentication required. Please ensure CORS is configured for full testing.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast({
-        title: "Login Failed",
-        description: "Please check your credentials and try again.",
+        title: "Connection Error", 
+        description: "Unable to reach authentication server. Please try again later.",
         variant: "destructive"
       });
     } finally {

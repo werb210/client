@@ -106,8 +106,8 @@ export default function Register() {
     } catch (error) {
       console.error('Registration network error:', error);
       toast({
-        title: 'Registration Error',
-        description: 'Unable to connect to server. Please check your connection.',
+        title: 'Authentication System',
+        description: 'Staff backend connection required. Please ensure CORS is configured for registration.',
         variant: 'destructive',
       });
     } finally {

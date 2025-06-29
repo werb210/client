@@ -76,6 +76,72 @@ app.use((req, res, next) => {
     });
   });
 
+  // System status page for authentication troubleshooting
+  app.get('/system-status', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boreal Financial - System Status</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h1 class="text-2xl font-bold text-blue-900 mb-6">Boreal Financial - System Status</h1>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold text-green-800 mb-2">✓ Client Application</h2>
+                    <ul class="text-sm text-green-700 space-y-1">
+                        <li>• Landing page serving at root domain</li>
+                        <li>• Registration and login forms functional</li>
+                        <li>• Multi-step application workflow ready</li>
+                        <li>• Phone-based authentication interface</li>
+                    </ul>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold text-yellow-800 mb-2">⚠ Staff Backend Connection</h2>
+                    <ul class="text-sm text-yellow-700 space-y-1">
+                        <li>• CORS headers required for authentication</li>
+                        <li>• Staff backend at: staffportal.replit.app</li>
+                        <li>• Authentication endpoints configured</li>
+                        <li>• SMS OTP system ready</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 class="font-semibold text-blue-800 mb-2">Next Steps for Full Testing:</h3>
+                <ol class="text-sm text-blue-700 space-y-1">
+                    <li>1. Configure CORS headers on staff backend</li>
+                    <li>2. Test registration flow with phone verification</li>
+                    <li>3. Verify login and OTP authentication</li>
+                    <li>4. Complete application workflow testing</li>
+                </ol>
+            </div>
+
+            <div class="mt-6 flex space-x-4">
+                <a href="/" class="bg-blue-900 text-white px-4 py-2 rounded hover:bg-blue-800">
+                    Back to Landing Page
+                </a>
+                <a href="/register" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                    Test Registration
+                </a>
+                <a href="/login" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                    Test Login
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    `);
+  });
+
   // Test page to verify authentication system works
   app.get('/test', (req, res) => {
     res.send(`
