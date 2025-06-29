@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -11,6 +12,7 @@ import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { Save, ArrowRight } from 'lucide-react';
+import { markApplicationStarted } from '@/lib/visitFlags';
 
 const financialProfileSchema = z.object({
   businessLocation: z.string().min(1, 'Please select your business location'),

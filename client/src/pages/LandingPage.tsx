@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, ShieldCheck, DollarSign, FileText } from "lucide-react";
-import { isFirstVisit } from "@/lib/firstVisit";
+import { shouldGoToApplication } from "@/lib/visitFlags";
 
 export default function LandingPage() {
   const [, setLocation] = useLocation();
@@ -13,11 +13,13 @@ export default function LandingPage() {
   };
 
   const handleGetStarted = () => {
-    setLocation(isFirstVisit() ? '/register' : '/login');
+    const target = shouldGoToApplication() ? '/register' : '/portal';
+    setLocation(target);
   };
 
   const handleStartApplication = () => {
-    setLocation(isFirstVisit() ? '/register' : '/application/step-1');
+    const target = shouldGoToApplication() ? '/register' : '/portal';
+    setLocation(target);
   };
 
   return (

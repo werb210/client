@@ -16,6 +16,7 @@ import RequestReset from "@/pages/RequestReset";
 import ResetPassword from "@/pages/ResetPassword";
 import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
+import PortalPage from "@/pages/PortalPage";
 import NotFound from "@/pages/NotFound";
 import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
@@ -52,6 +53,7 @@ function Router() {
       
       {/* Protected application routes */}
       <AuthGuard>
+        <Route path="/portal" component={PortalPage} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/application" component={Step1FinancialProfile} />
         <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
