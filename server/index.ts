@@ -58,6 +58,17 @@ app.use((req, res, next) => {
     });
   });
 
+  // Validate static asset serving for production builds
+  if (app.get("env") === "production") {
+    const path = await import("path");
+    app.use(
+      "/",
+      express.static(path.join(__dirname, "../dist"), {
+        index: "index.html",
+      })
+    );
+  }
+
   // All other API routes inform about staff backend configuration
   app.use('/api', (req, res) => {
     res.status(501).json({ 
@@ -86,6 +97,14 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     serveStatic(app);
+  }
+
+  // Add catch-all route for SPA routing in production
+  if (app.get("env") === "production") {
+    const path = await import("path");
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(__dirname, "../dist/index.html"));
+    });
   }
 
   // ALWAYS serve the app on port 5000

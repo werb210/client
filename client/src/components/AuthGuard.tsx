@@ -10,6 +10,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const [location, setLocation] = useLocation();
 
+  // Bypass auth during development to focus on UX testing
+  if (import.meta.env.DEV) {
+    return <>{children}</>;
+  }
+
   // Handle redirects in useEffect to avoid updating during render
   useEffect(() => {
     if (isLoading) return;
