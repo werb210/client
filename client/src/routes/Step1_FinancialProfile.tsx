@@ -78,6 +78,10 @@ export default function Step1FinancialProfile() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
+  useEffect(() => {
+    markApplicationStarted(); // ensures flag even if user hits step-1 directly
+  }, []);
+
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(financialProfileSchema),
     defaultValues: {

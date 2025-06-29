@@ -10,6 +10,11 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
+import { 
+  shouldGoToApplication, 
+  markApplicationStarted, 
+  shouldShowPortalAfterLogin 
+} from '@/lib/visitFlags';
 
 const otpSchema = z.object({
   otp: z.string().length(6, 'OTP must be 6 digits'),
@@ -62,7 +67,16 @@ export default function VerifyOtp() {
         description: result.message || 'Phone number verified successfully!',
       });
       
-      setLocation('/application');
+      // Implement login success routing based on visit flags
+      if (shouldGoToApplication()) {
+        setLocation('/application/step-1');
+        markApplicationStarted(); // first-ever login → kickoff wizard
+      } else if (shouldShowPortalAfterLogin()) {
+        setLocation('/portal'); // later logins
+      } else {
+        // fallback if they somehow skipped portal flag
+        setLocation('/portal');
+      }
     } catch (error) {
       toast({
         title: 'Verification Error',
