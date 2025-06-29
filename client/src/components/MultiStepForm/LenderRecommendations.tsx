@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useApplication } from '@/context/ApplicationContext';
-import { LenderProduct } from '@shared/schema';
+import { LenderProduct } from '@/types/lenderProducts';
 import { CreditCard, TrendingUp, FileText, Play } from 'lucide-react';
 
 interface LenderRecommendationsProps {
