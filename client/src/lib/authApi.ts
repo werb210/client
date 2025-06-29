@@ -2,17 +2,18 @@ import { apiFetch } from '@/lib/api';
 
 // Enhanced AuthAPI with proper error handling
 export const AuthAPI = {
-  // Login - triggers SMS OTP with CORS error handling
+  // Login - connects to staff backend
   login: async (body: { email: string; password: string }) => {
     try {
       return await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) });
     } catch (error) {
-      // Handle CORS/network errors by returning a mock response structure
+      // Handle CORS/network errors by returning proper error response
       console.warn('Authentication API unavailable - CORS issue detected');
       return new Response(
         JSON.stringify({ 
-          error: 'Staff backend connection required', 
-          cors: true 
+          error: 'Staff backend connection required for authentication', 
+          cors: true,
+          success: false
         }), 
         { status: 503, statusText: 'Service Unavailable' }
       );

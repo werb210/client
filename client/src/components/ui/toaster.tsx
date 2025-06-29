@@ -14,17 +14,20 @@ export function Toaster() {
   return (
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {
-        // Filter out undefined props to prevent Toast component errors
-        const safeProps = Object.fromEntries(
-          Object.entries(props).filter(([_, value]) => value !== undefined)
-        );
+        // Ensure props are valid and safe for Toast component
+        const validProps = {
+          variant: props.variant || 'default',
+          ...(props.duration && { duration: props.duration }),
+          ...(props.open !== undefined && { open: props.open }),
+          ...(props.onOpenChange && { onOpenChange: props.onOpenChange }),
+        };
         
         return (
-          <Toast key={id} {...safeProps}>
+          <Toast key={id} {...validProps}>
             <div className="grid gap-1">
-              {title && typeof title === 'string' && <ToastTitle>{title}</ToastTitle>}
-              {description && typeof description === 'string' && (
-                <ToastDescription>{description}</ToastDescription>
+              {title && <ToastTitle>{String(title)}</ToastTitle>}
+              {description && (
+                <ToastDescription>{String(description)}</ToastDescription>
               )}
             </div>
             {action}

@@ -56,8 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (response.status === 503) {
         // CORS/connectivity issue detected
-        const result = await response.json();
-        console.warn('Staff backend connectivity issue:', result.error);
+        try {
+          const result = await response.json();
+          console.warn('Staff backend connectivity issue:', result.error);
+        } catch (e) {
+          console.warn('Staff backend unavailable - response parsing failed');
+        }
         return { success: false };
       }
       
@@ -79,8 +83,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // }
     } catch (error) {
-      // Handle unexpected errors
-      console.error('Login error:', error);
+      // Handle network and API errors properly
+      if (error instanceof Error) {
+        console.error('Login error:', error.message);
+      } else {
+        console.error('Login error: Unknown error occurred');
+      }
       return { success: false };
     }
   };

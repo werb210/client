@@ -40,14 +40,26 @@ export class ApiError extends Error {
   }
 }
 
-// Generic API request function with error handling and auth
-export const apiFetch = (path: string, opts: RequestInit = {}) =>
-  fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
-    credentials: "include",
-    mode: "cors",
-    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
-    ...opts,
-  });
+// Generic API request function with enhanced error handling
+export const apiFetch = async (path: string, opts: RequestInit = {}): Promise<Response> => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
+      credentials: "include",
+      mode: "cors",
+      headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+      ...opts,
+    });
+    return response;
+  } catch (error) {
+    // Handle network/CORS errors that cause empty error objects
+    console.warn('Network request failed:', error);
+    throw new ApiError(
+      'Network connection failed - staff backend unreachable',
+      0,
+      undefined
+    );
+  }
+};
 
 export async function apiRequest<T>(
   endpoint: string,
