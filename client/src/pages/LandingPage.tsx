@@ -7,36 +7,16 @@ import { CheckCircle, ShieldCheck, DollarSign, FileText } from "lucide-react";
 export default function LandingPage() {
   const [, setLocation] = useLocation();
 
-  // Check if user has visited before (has any stored application data or auth tokens)
-  const isReturningUser = () => {
-    // Check for any stored application data
-    const hasStoredApplicationData = localStorage.getItem('comprehensive-application-data') || 
-                                   localStorage.getItem('formData') ||
-                                   localStorage.getItem('applicationData');
-    
-    // Check for any auth-related storage
-    const hasAuthData = localStorage.getItem('auth-token') ||
-                       localStorage.getItem('user-session') ||
-                       sessionStorage.getItem('auth-token');
-    
-    // Check for any cookies that might indicate previous visits
-    const hasCookies = document.cookie.includes('session') || 
-                      document.cookie.includes('auth') ||
-                      document.cookie.includes('visited');
-
-    return hasStoredApplicationData || hasAuthData || hasCookies;
+  const handleSignIn = () => {
+    setLocation('/login');
   };
 
   const handleGetStarted = () => {
-    if (isReturningUser()) {
-      setLocation('/login');
-    } else {
-      setLocation('/register');
-    }
+    setLocation('/register');
   };
 
-  const handleSignIn = () => {
-    setLocation('/login');
+  const handleStartApplication = () => {
+    setLocation('/application/step-1');
   };
 
   return (
@@ -56,7 +36,7 @@ export default function LandingPage() {
         <p className="text-lg text-gray-700 mb-6">
           Connecting Canadian and US businesses with tailored financing solutions. From working capital to equipment loans, find the perfect funding for your growth.
         </p>
-        <Button size="lg" className="mb-12" onClick={handleGetStarted}>
+        <Button size="lg" className="mb-12" onClick={handleStartApplication}>
           Start Your Application
         </Button>
 
@@ -96,7 +76,7 @@ export default function LandingPage() {
           <h4 className="text-xl font-semibold mb-6 text-center text-blue-800">
             Why Choose Boreal Financial?
           </h4>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-700">
+          <div className="grid md:grid-cols-3 gap-4 text-sm text-gray-700">
             <div className="flex items-start gap-2">
               <CheckCircle className="text-green-600 w-5 h-5 mt-0.5" />
               Fast Approval Process
