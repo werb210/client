@@ -16,3 +16,8 @@ export function shouldShowPortalAfterLogin() {
 export function markPortalDefault() {
   localStorage.setItem(KEY_PORTAL_DEFAULT, "true");
 }
+
+// Additional function for landing page routing
+export function isFirstVisit() {
+  return !localStorage.getItem(KEY_APPLY_STARTED);
+}
