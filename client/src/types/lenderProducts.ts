@@ -21,5 +21,3 @@ export interface LenderProduct {
 export interface LenderProductsResponse {
   products: LenderProduct[];
 }
-
-export type { LenderProduct as LenderProductType };
