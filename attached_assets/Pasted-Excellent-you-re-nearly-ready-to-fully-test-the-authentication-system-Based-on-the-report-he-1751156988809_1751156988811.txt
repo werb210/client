@@ -1,0 +1,133 @@
+Excellent — you're nearly ready to fully test the **authentication system**. Based on the report, here's a clear breakdown **by application** with steps, fixes, and expected outcomes to ensure everything works properly.
+
+---
+
+## 🟦 STAFF APP (API Backend)
+
+### ✅ Current Status:
+
+* Auth endpoints return JSON — good
+* Health endpoint working
+* **⚠️ CORS origin is still null** — needs final fix
+
+---
+
+### 🛠️ Fix Remaining Staff CORS Issue
+
+Edit the `server/cors.ts` or your CORS middleware setup and ensure:
+
+```ts
+app.use(
+  cors({
+    origin: [
+      'https://clientportal.replit.app',
+      /\.replit\.app$/, // allow preview deploys
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    optionsSuccessStatus: 200,
+  })
+);
+```
+
+And ensure this is in your `index.ts` or main `server.ts`:
+
+```ts
+app.set("trust proxy", 1); // For cookie handling behind Replit reverse proxy
+```
+
+Then **redeploy** the staff backend.
+
+---
+
+## 🟧 CLIENT APP (Frontend)
+
+### ✅ What Works:
+
+* Auth logic, forms, redirects, OTP verification
+* Password reset, registration UI, flow code
+
+### ⚠️ Final Test Conditions
+
+* **CORS must return `Access-Control-Allow-Origin` matching client**
+* **DevTools → Network tab** must confirm requests are returning **JSON**
+
+---
+
+## 🔍 Step-by-Step Testing Instructions
+
+### 1. ✅ **Password Reset**
+
+1. Visit `https://clientportal.replit.app/request-reset`
+2. Enter `todd@werboweski.com`
+3. Open DevTools → Network tab
+4. Submit → should see:
+
+   * `POST /api/auth/request-reset` → Status **200**
+   * Response JSON: `{ message: "If email exists…" }`
+5. Copy token (from logs or e-mail) → paste into:
+
+   * `https://clientportal.replit.app/reset-password/<token>`
+6. Enter new password → should redirect to login.
+
+---
+
+### 2. ✅ **Registration Flow**
+
+1. Visit `https://clientportal.replit.app/register`
+2. Enter **phone + email**
+3. Should see:
+
+   * `POST /api/auth/register` → Status **200**
+   * Then redirected to `/verify-otp`
+4. Enter the 6-digit code from SMS
+5. On success → redirected to dashboard
+
+---
+
+### 3. ✅ **Login Flow**
+
+1. Visit `/login`
+2. Enter email/phone
+3. Should see:
+
+   * `POST /api/auth/login` → Status **200** or **401**
+4. If OTP enabled: redirected to `/verify-otp`
+5. Enter code → redirected to dashboard
+
+---
+
+### 🧪 Optional: Run Diagnostics
+
+```bash
+# From client repo
+npm run diagnostic
+```
+
+Confirms:
+
+* API health
+* CORS headers
+* JSON responses
+* Cookie/session validation
+
+---
+
+## ✅ Final Checklist to Move Forward
+
+| Item                                          | Status     |
+| --------------------------------------------- | ---------- |
+| API returns JSON only                         | ✅          |
+| CORS allows `https://clientportal.replit.app` | 🔶 Fix now |
+| Staff endpoint accessible                     | ✅          |
+| Client registration works                     | ✅          |
+| OTP verification works                        | ✅          |
+| Password reset flow                           | ✅          |
+| Login/auth persistence                        | ✅          |
+
+---
+
+Once the **CORS origin is fixed** and everything passes the above, the **platform is authentication-complete**.
+
+Would you like a one-click deploy test suite (Cypress or CLI) for staging environments next?
