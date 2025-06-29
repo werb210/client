@@ -42,7 +42,8 @@ Comprehensive SMS delivery diagnostic tool for troubleshooting Twilio integratio
 Pre-configured test numbers for reliable testing:
 - **Success**: +15005550006 (Always succeeds)
 - **Failure**: +15005550001 (Always fails for testing error handling)
-- **Production**: +15878881837 (Your actual Twilio number)
+- **Development**: +15878881837 (Your testing number for development)
+- **Production**: User-entered phone numbers from registration form
 
 ## Technical Implementation
 

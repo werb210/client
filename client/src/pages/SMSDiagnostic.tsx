@@ -17,7 +17,7 @@ interface TestResult {
 }
 
 export default function SMSDiagnostic() {
-  const [phoneNumber, setPhoneNumber] = useState('+15878881837'); // Production number
+  const [phoneNumber, setPhoneNumber] = useState('+15878881837'); // Development testing number
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -206,11 +206,12 @@ export default function SMSDiagnostic() {
               ))}
             </div>
 
-            {/* Twilio Magic Numbers */}
+            {/* Twilio Test Numbers */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-medium mb-2">Twilio Test Numbers:</h4>
               <div className="space-y-1 text-sm">
-                <div>• Production: +1 587 888 1837 (Your production number)</div>
+                <div>• Development: +1 587 888 1837 (Testing number)</div>
+                <div>• Production: User-entered phone numbers from registration</div>
                 <div>• Success Test: +15005550006 (Always succeeds)</div>
                 <div>• Failure Test: +15005550001 (Always fails)</div>
               </div>

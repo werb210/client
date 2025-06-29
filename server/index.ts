@@ -104,8 +104,9 @@ app.use((req, res, next) => {
         </div>
 
         <div class="phone-info">
-            <strong>Twilio Test Number:</strong><br>
-            • Production: +1 587 888 1837 (SMS will work)<br>
+            <strong>Twilio Configuration:</strong><br>
+            • Development: +1 587 888 1837 (Testing number)<br>
+            • Production: User-entered phone numbers from registration<br>
             • Magic Numbers: +15005550006 (success), +15005550001 (failure)
         </div>
 
