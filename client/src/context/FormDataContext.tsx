@@ -58,6 +58,7 @@ export interface FormDataState {
   step5DocumentUpload?: DocumentUploadData;
   currentStep: number;
   isComplete: boolean;
+  applicationId?: string;
 }
 
 type FormDataAction =
@@ -66,6 +67,7 @@ type FormDataAction =
   | { type: 'UPDATE_STEP4'; payload: Partial<FinancialInfoData> }
   | { type: 'UPDATE_STEP5'; payload: Partial<DocumentUploadData> }
   | { type: 'SET_CURRENT_STEP'; payload: number }
+  | { type: 'SET_APPLICATION_ID'; payload: string }
   | { type: 'MARK_COMPLETE' }
   | { type: 'LOAD_FROM_STORAGE'; payload: FormDataState };
 
@@ -121,6 +123,11 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
       return {
         ...state,
         currentStep: action.payload,
+      };
+    case 'SET_APPLICATION_ID':
+      return {
+        ...state,
+        applicationId: action.payload,
       };
     case 'MARK_COMPLETE':
       return {

@@ -176,6 +176,11 @@ Changelog:
     * Generated complete technical handoff report (CHATGPT_TECHNICAL_REPORT.md)
     * All authentication flows tested and documented: registration, phone reset, OTP verification
     * Client application production-ready, pending only staff backend CORS configuration
+    * DRAFT-BEFORE-SIGN FLOW: Implemented complete SignNow integration workflow
+    * Added Applications API (createDraft, complete) and Step4 "Review & Sign" functionality
+    * Created SignComplete page and UploadDocuments page with draft application ID handling
+    * Enhanced FormData context with application ID storage and routing integration
+    * Full workflow ready: Steps 1-4 → SignNow → Upload Docs → Staff Pipeline completion
 ```
 
 ## User Preferences

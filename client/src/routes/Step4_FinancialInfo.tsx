@@ -9,6 +9,8 @@ import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowRight, ArrowLeft, Save, DollarSign } from 'lucide-react';
+import { Applications } from '@/lib/api';
+import { useState } from 'react';
 
 const financialInfoSchema = z.object({
   annualRevenue: z.string()
@@ -49,6 +51,7 @@ export default function Step4FinancialInfo() {
   const { state, dispatch, saveToStorage } = useFormData();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [isCreatingDraft, setIsCreatingDraft] = useState(false);
 
   // Get currency symbol based on country from previous step
   const getCurrencySymbol = () => {
@@ -100,7 +103,46 @@ export default function Step4FinancialInfo() {
     });
 
     // Navigate to Step 5 (documents or final step)
-    setLocation('/step5-documents');
+    setLocation('/step5-document-upload');
+  };
+
+  const handleContinueToSign = async () => {
+    const currentData = form.getValues();
+    
+    // Update context with current form data
+    dispatch({ type: 'UPDATE_STEP4', payload: currentData });
+    saveToStorage();
+
+    setIsCreatingDraft(true);
+    
+    try {
+      // Gather all form data from all steps
+      const allFormValues = {
+        step1FinancialProfile: state.step1FinancialProfile,
+        step3BusinessDetails: state.step3BusinessDetails,
+        step4FinancialInfo: currentData,
+        submittedAt: new Date().toISOString()
+      };
+
+      const draftRes = await Applications.createDraft(allFormValues);
+      const { applicationId, signUrl } = await draftRes.json();
+
+      // Store draft ID in context for later steps
+      dispatch({ 
+        type: 'SET_APPLICATION_ID', 
+        payload: applicationId 
+      });
+
+      // Redirect user to SignNow
+      window.location.href = signUrl;
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Unable to start signature. Please try again.",
+        variant: "destructive",
+      });
+      setIsCreatingDraft(false);
+    }
   };
 
   const handleSaveProgress = () => {
@@ -322,9 +364,19 @@ export default function Step4FinancialInfo() {
                   </Button>
                   <Button
                     type="submit"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    variant="outline"
+                    className="flex-1"
                   >
                     Next Step
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleContinueToSign}
+                    disabled={isCreatingDraft}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isCreatingDraft ? 'Creating Draft...' : 'Review & Sign'}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
