@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useComprehensiveForm } from '@/context/ComprehensiveFormContext';
 import { Step1BusinessBasics } from '@/components/forms/Step1BusinessBasics';
+import { Step2ProductSelection } from '@/components/forms/Step2ProductSelection';
 import { Step3BusinessDetails } from '@/components/forms/Step3BusinessDetails';
 import { Step4ApplicantDetails } from '@/components/forms/Step4ApplicantDetails';
 import { Step6Consents } from '@/components/forms/Step6Consents';
@@ -143,34 +144,12 @@ export function ComprehensiveApplication() {
         );
       case 2:
         return (
-          <div className="max-w-4xl mx-auto p-6 text-center">
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-2xl font-bold mb-4">Product Recommendations</h2>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Based on your business profile, our AI will recommend the best funding products.
-                  This step will be implemented to analyze your Stage 1 data.
-                </p>
-                <div className="flex justify-between">
-                  <button
-                    onClick={handlePrevious}
-                    className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => {
-                      markStepComplete(2);
-                      handleNext();
-                    }}
-                    className="px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Step2ProductSelection
+            defaultValues={state.formData}
+            onSubmit={handleStepSubmit}
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
         );
       case 3:
         return (
