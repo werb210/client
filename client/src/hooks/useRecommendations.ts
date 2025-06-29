@@ -38,28 +38,26 @@ export interface Step1FormData {
 }
 
 export function useRecommendations(formStep1Data: Step1FormData) {
-  /** 1 — pull products twice a day (12 h) */
+  /** 1 — pull products from local database */
   const { data: products = [], isLoading, error } = useQuery<LenderProduct[]>({
-    queryKey: ["lenders"],
+    queryKey: ["local-lenders"],
     queryFn: async () => {
-      const res = await fetch("https://staffportal.replit.app/api/public/lenders", {
+      const res = await fetch("/api/local/lenders", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
       });
       
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({ error: "Network error" }));
-        throw new Error(errorData.error || `HTTP ${res.status}: Failed to fetch lender products`);
+        throw new Error(`Failed to fetch lender products: ${res.status}`);
       }
       
       const data = await res.json();
       return data.products || [];
     },
-    staleTime: 1000 * 60 * 60 * 12,
-    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes for local data
+    retry: 1,
   });
 
   /** 2 — filter + score */

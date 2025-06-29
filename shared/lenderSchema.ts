@@ -45,11 +45,23 @@ export interface LenderProductsResponse {
 }
 
 export interface LenderProductFilters {
-  geography?: string[];
-  product_type?: string;
+  type?: string;
   min_amount?: number;
   max_amount?: number;
+  active?: boolean;
+}
+
+// Normalized interface for frontend compatibility
+export interface NormalizedLenderProduct {
+  id: string;
+  product_name: string;
+  lender_name: string;
+  product_type: string;
+  geography: string[];
+  min_amount: number;
+  max_amount: number;
+  min_revenue?: number;
   industries?: string[];
-  lender_name?: string;
-  is_active?: boolean;
+  video_url?: string;
+  description?: string;
 }
