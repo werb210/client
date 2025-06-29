@@ -92,9 +92,9 @@ app.use((req, res, next) => {
         </div>
 
         <div class="phone-info">
-            <strong>Twilio Test Numbers:</strong><br>
-            • Success: +15005550006 (SMS will work)<br>
-            • Failure: +15005550001 (SMS will fail)
+            <strong>Twilio Test Number:</strong><br>
+            • Production: +1 587 888 1837 (SMS will work)<br>
+            • Magic Numbers: +15005550006 (success), +15005550001 (failure)
         </div>
 
         <h2>Authentication System Tests</h2>
@@ -163,7 +163,7 @@ app.use((req, res, next) => {
             const testData = {
                 email: 'test' + Date.now() + '@example.com',
                 password: 'SecurePass123!',
-                phone: '+15005550006' // Twilio magic number for success
+                phone: '+15878881837' // Production Twilio number
             };
             
             const response = await apiRequest('/auth/register', {
@@ -184,7 +184,7 @@ app.use((req, res, next) => {
             
             const response = await apiRequest('/auth/request-reset', {
                 method: 'POST',
-                body: JSON.stringify({ phone: '+15005550006' })
+                body: JSON.stringify({ phone: '+15878881837' })
             });
             
             if (response.success) {

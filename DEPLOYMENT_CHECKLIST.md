@@ -160,8 +160,8 @@ app.use(cors({
 ## Twilio Test Numbers
 
 For SMS functionality testing:
-- **Success**: `+15005550006` (SMS delivery works)
-- **Failure**: `+15005550001` (SMS delivery fails)
+- **Production**: `+1 587 888 1837` (SMS delivery works)
+- **Magic Numbers**: `+15005550006` (success), `+15005550001` (failure)
 
 ## Deployment Readiness
 
