@@ -5,6 +5,7 @@ import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useRecommendations } from '@/hooks/useRecommendations';
 import { RecommendationCard } from '@/components/recommendations/RecommendationCard';
+import { CacheStatus } from '@/components/CacheStatus';
 import { ArrowRight, ArrowLeft, AlertCircle, Loader2, User, MapPin, DollarSign, Building } from 'lucide-react';
 
 export default function Step2Recommendations() {

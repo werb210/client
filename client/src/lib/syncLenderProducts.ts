@@ -15,44 +15,13 @@ const CACHE_KEYS = {
 
 const TWELVE_HOURS = 12 * 60 * 60 * 1000;
 
-async function getDB(): Promise<IDBPDatabase<LenderProductsDB>> {
-  if (dbInstance) return dbInstance;
-
-  dbInstance = await openDB<LenderProductsDB>('LenderProductsDB', 1, {
-    upgrade(db) {
-      // Create lender products store
-      const lenderStore = db.createObjectStore('lenderProducts', {
-        keyPath: 'id',
-      });
-      
-      // Create indexes for efficient querying
-      lenderStore.createIndex('geography', 'geography', { multiEntry: true });
-      lenderStore.createIndex('product_type', 'product_type');
-      lenderStore.createIndex('min_amount', 'min_amount');
-      lenderStore.createIndex('max_amount', 'max_amount');
-      lenderStore.createIndex('industries', 'industries', { multiEntry: true });
-      lenderStore.createIndex('lender_name', 'lender_name');
-
-      // Create metadata store
-      db.createObjectStore('metadata', {
-        keyPath: 'key',
-      });
-    },
-  });
-
-  return dbInstance;
-}
-
 export async function syncLenderProducts(): Promise<boolean> {
   try {
-    const db = await getDB();
-    
     // Check if we need to fetch new data
-    const metadata = await db.get('metadata', 'sync_info');
+    const lastFetched = localStorage.getItem(CACHE_KEYS.LAST_FETCHED);
     const now = Date.now();
-    const twelveHours = 12 * 60 * 60 * 1000;
     
-    if (metadata && (now - metadata.lastFetched) < twelveHours) {
+    if (lastFetched && (now - Number(lastFetched)) < TWELVE_HOURS) {
       console.log('Lender products cache is still fresh, skipping sync');
       return true;
     }
@@ -65,6 +34,7 @@ export async function syncLenderProducts(): Promise<boolean> {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       // Add timeout handling
       signal: AbortSignal.timeout(10000), // 10 second timeout
     });
@@ -73,89 +43,56 @@ export async function syncLenderProducts(): Promise<boolean> {
       throw new Error(`Failed to fetch lender products: ${response.status} ${response.statusText}`);
     }
 
-    const lenders: LenderProduct[] = await response.json();
+    const data = await response.json();
+    const lenders: LenderProduct[] = data.products || data;
     
     if (!Array.isArray(lenders) || lenders.length === 0) {
       console.warn('Received empty or invalid lender products data');
       return false;
     }
 
-    // Clear existing data and save new data
-    const tx = db.transaction(['lenderProducts', 'metadata'], 'readwrite');
-    
-    // Clear old products
-    await tx.objectStore('lenderProducts').clear();
-    
-    // Save new products
-    const lenderStore = tx.objectStore('lenderProducts');
-    for (const lender of lenders) {
-      await lenderStore.add(lender);
-    }
-    
-    // Update metadata
-    await tx.objectStore('metadata').put({
-      key: 'sync_info',
+    // Store in localStorage
+    localStorage.setItem(CACHE_KEYS.PRODUCTS, JSON.stringify(lenders));
+    localStorage.setItem(CACHE_KEYS.LAST_FETCHED, now.toString());
+    localStorage.setItem(CACHE_KEYS.METADATA, JSON.stringify({
       lastFetched: now,
       version: '1.0',
       totalProducts: lenders.length,
-    });
+    }));
     
-    await tx.done;
-    
-    console.log(`Successfully synced ${lenders.length} lender products to IndexedDB`);
+    console.log(`Successfully synced ${lenders.length} lender products to cache`);
     return true;
     
   } catch (error) {
     console.error('Failed to sync lender products:', error);
-    
-    // Fallback to localStorage if IndexedDB fails
-    try {
-      const fallbackData = localStorage.getItem('lender_products_fallback');
-      if (!fallbackData) {
-        // If no fallback data exists, try to fetch and store in localStorage
-        const response = await fetch(`${API_BASE_URL}/public/lenders`);
-        if (response.ok) {
-          const lenders = await response.json();
-          localStorage.setItem('lender_products_fallback', JSON.stringify(lenders));
-          localStorage.setItem('lender_products_fallback_fetched', Date.now().toString());
-          console.log('Stored lender products in localStorage fallback');
-          return true;
-        }
-      }
-    } catch (fallbackError) {
-      console.error('Fallback to localStorage also failed:', fallbackError);
-    }
-    
     return false;
   }
 }
 
 export async function getCachedLenderProducts(): Promise<LenderProduct[]> {
   try {
-    const db = await getDB();
-    const products = await db.getAll('lenderProducts');
+    // Get cached data from localStorage
+    const cachedData = localStorage.getItem(CACHE_KEYS.PRODUCTS);
     
-    if (products.length > 0) {
-      return products;
+    if (cachedData) {
+      const products = JSON.parse(cachedData);
+      if (Array.isArray(products) && products.length > 0) {
+        return products;
+      }
     }
     
-    // If IndexedDB is empty, try to sync first
+    // If no cached data, try to sync first
     const syncSuccess = await syncLenderProducts();
     if (syncSuccess) {
-      return await db.getAll('lenderProducts');
+      const newCachedData = localStorage.getItem(CACHE_KEYS.PRODUCTS);
+      return newCachedData ? JSON.parse(newCachedData) : [];
     }
     
-    // Fallback to localStorage
-    console.log('Falling back to localStorage for lender products');
-    const fallbackData = localStorage.getItem('lender_products_fallback');
-    return fallbackData ? JSON.parse(fallbackData) : [];
+    return [];
     
   } catch (error) {
     console.error('Failed to get cached lender products:', error);
-    
-    // Final fallback to localStorage
-    const fallbackData = localStorage.getItem('lender_products_fallback');
-    return fallbackData ? JSON.parse(fallbackData) : [];
+    return [];
   }
 }
 
@@ -168,36 +105,35 @@ export async function getCachedLenderProductsByFilter(filters: {
   lender_name?: string;
 }): Promise<LenderProduct[]> {
   try {
-    const db = await getDB();
-    let products = await db.getAll('lenderProducts');
+    let products = await getCachedLenderProducts();
     
     // Apply filters
     if (filters.geography?.length) {
-      products = products.filter(p => 
-        p.geography.some(geo => filters.geography!.includes(geo))
+      products = products.filter((p: LenderProduct) => 
+        p.geography.some((geo: string) => filters.geography!.includes(geo))
       );
     }
     
     if (filters.product_type) {
-      products = products.filter(p => p.product_type === filters.product_type);
+      products = products.filter((p: LenderProduct) => p.product_type === filters.product_type);
     }
     
     if (filters.min_amount !== undefined) {
-      products = products.filter(p => p.max_amount >= filters.min_amount!);
+      products = products.filter((p: LenderProduct) => p.max_amount >= filters.min_amount!);
     }
     
     if (filters.max_amount !== undefined) {
-      products = products.filter(p => p.min_amount <= filters.max_amount!);
+      products = products.filter((p: LenderProduct) => p.min_amount <= filters.max_amount!);
     }
     
     if (filters.industries?.length) {
-      products = products.filter(p => 
-        p.industries?.some(industry => filters.industries!.includes(industry))
+      products = products.filter((p: LenderProduct) => 
+        p.industries?.some((industry: string) => filters.industries!.includes(industry))
       );
     }
     
     if (filters.lender_name) {
-      products = products.filter(p => 
+      products = products.filter((p: LenderProduct) => 
         p.lender_name.toLowerCase().includes(filters.lender_name!.toLowerCase())
       );
     }
@@ -206,26 +142,7 @@ export async function getCachedLenderProductsByFilter(filters: {
     
   } catch (error) {
     console.error('Failed to get filtered lender products:', error);
-    
-    // Fallback to unfiltered cached products
-    const allProducts = await getCachedLenderProducts();
-    
-    // Apply basic filtering on fallback data
-    return allProducts.filter(product => {
-      if (filters.geography?.length && !product.geography.some(geo => filters.geography!.includes(geo))) {
-        return false;
-      }
-      if (filters.product_type && product.product_type !== filters.product_type) {
-        return false;
-      }
-      if (filters.min_amount !== undefined && product.max_amount < filters.min_amount) {
-        return false;
-      }
-      if (filters.max_amount !== undefined && product.min_amount > filters.max_amount) {
-        return false;
-      }
-      return true;
-    });
+    return [];
   }
 }
 
@@ -235,25 +152,34 @@ export async function getCacheMetadata(): Promise<{
   isStale: boolean;
 } | null> {
   try {
-    const db = await getDB();
-    const metadata = await db.get('metadata', 'sync_info');
-    const productCount = await db.count('lenderProducts');
+    const lastFetched = localStorage.getItem(CACHE_KEYS.LAST_FETCHED);
+    const metadataStr = localStorage.getItem(CACHE_KEYS.METADATA);
+    const productsStr = localStorage.getItem(CACHE_KEYS.PRODUCTS);
     
-    if (!metadata) {
+    let totalProducts = 0;
+    if (productsStr) {
+      try {
+        const products = JSON.parse(productsStr);
+        totalProducts = Array.isArray(products) ? products.length : 0;
+      } catch {
+        totalProducts = 0;
+      }
+    }
+    
+    if (!lastFetched) {
       return {
         lastFetched: null,
-        totalProducts: productCount,
+        totalProducts,
         isStale: true,
       };
     }
     
     const now = Date.now();
-    const twelveHours = 12 * 60 * 60 * 1000;
-    const isStale = (now - metadata.lastFetched) > twelveHours;
+    const isStale = (now - Number(lastFetched)) > TWELVE_HOURS;
     
     return {
-      lastFetched: metadata.lastFetched,
-      totalProducts: productCount,
+      lastFetched: Number(lastFetched),
+      totalProducts,
       isStale,
     };
     
