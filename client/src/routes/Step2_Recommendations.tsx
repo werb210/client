@@ -112,7 +112,10 @@ export default function Step2Recommendations() {
             Based on your profile, here are financing categories that match your needs
           </p>
           <div className="mt-4">
-            <div className="text-sm text-gray-500">Step 2 of 7</div>
+            <div className="flex items-center justify-center gap-4 mb-2">
+              <div className="text-sm text-gray-500">Step 2 of 7</div>
+              <CacheStatus />
+            </div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
               <div className="bg-teal-600 h-2 rounded-full" style={{ width: '28.6%' }}></div>
             </div>
