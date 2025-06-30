@@ -146,7 +146,7 @@ export default function PageComparison() {
                 <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <h3 className="font-semibold text-green-900 mb-2">Approved Pages ({approvedPages.size})</h3>
                   <div className="text-sm text-green-800">
-                    {Array.from(approvedPages).map(page => (
+                    {[...approvedPages].map(page => (
                       <div key={page} className="truncate">✓ {page}</div>
                     ))}
                   </div>
@@ -244,7 +244,7 @@ export default function PageComparison() {
                     <button 
                       className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
                       onClick={() => {
-                        const approved = Array.from(approvedPages).join('\n- ');
+                        const approved = [...approvedPages].join('\n- ');
                         alert(`Ready to modernize these approved pages:\n\n- ${approved}\n\nI'll now apply V2 Boreal Financial styling!`);
                       }}
                     >
