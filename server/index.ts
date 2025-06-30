@@ -6,6 +6,7 @@ import lendersRouter from "./routes/lenders";
 import localLendersRouter from "./routes/localLenders";
 import { recommendationsRouter } from "./routes/recommendations";
 import { documentsRouter } from "./routes/documents";
+import loanProductsRouter from "./routes/loanProducts";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -83,6 +84,7 @@ app.use((req, res, next) => {
   // Mount lender routes
   app.use('/api/lenders', lendersRouter);
   app.use('/api/local/lenders', localLendersRouter);
+  app.use('/api/loan-products', loanProductsRouter);
   app.use(recommendationsRouter);
   app.use('/api/documents', documentsRouter);
 
