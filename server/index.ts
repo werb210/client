@@ -361,8 +361,8 @@ app.use((req, res, next) => {
   const { createServer } = await import("http");
   const server = createServer(app);
 
-  // Serve landing page directly to bypass 403 issues
-  app.get('/', (req, res) => {
+  // Remove static HTML route - let Vite dev server handle React app routing
+  /* app.get('/', (req, res) => {
     res.send(`
 <!DOCTYPE html>
 <html lang="en">
@@ -483,7 +483,7 @@ app.use((req, res, next) => {
 </body>
 </html>
     `);
-  });
+  }); */
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
