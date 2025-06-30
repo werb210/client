@@ -100,56 +100,60 @@ export function NewLandingPage() {
             </p>
           </div>
           
-          <div className="grid-modern-3 gap-modern-2xl">
-            <div className="card-modern hover-modern-lift">
-              <div className="p-modern-xl">
-                <Clock className="h-12 w-12 text-brand-blue-600 mb-4" />
-                <h3 className="heading-modern-h4 mb-2">Fast Approval</h3>
-                <p className="body-modern-small text-modern-secondary mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <Clock className="h-12 w-12 text-blue-600 mb-4" />
+                <CardTitle>Fast Approval</CardTitle>
+                <CardDescription>
                   Get pre-approved in minutes with our intelligent matching system
-                </p>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <ul className="space-y-2">
                   <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
-                    <span className="body-modern-small">5-minute application</span>
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    <span className="text-sm">5-minute application</span>
                   </li>
                   <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
-                    <span className="body-modern-small">Same-day pre-approval</span>
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    <span className="text-sm">Same-day pre-approval</span>
                   </li>
                   <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
-                    <span className="body-modern-small">Digital signature process</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="card-modern hover-modern-lift">
-              <div className="p-modern-xl">
-                <TrendingUp className="h-12 w-12 text-brand-blue-600 mb-4" />
-                <h3 className="heading-modern-h4 mb-2">Smart Matching</h3>
-                <p className="body-modern-small text-modern-secondary mb-4">
-                  Our AI matches you with the best lenders for your industry and needs
-                </p>
-                <ul className="space-y-2">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
-                    <span className="body-modern-small">42+ lender products</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
-                    <span className="body-modern-small">Industry-specific rates</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
-                    <span className="body-modern-small">Real-time recommendations</span>
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    <span className="text-sm">Digital signature process</span>
                   </li>
                 </ul>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <TrendingUp className="h-12 w-12 text-blue-600 mb-4" />
+                <CardTitle>Smart Matching</CardTitle>
+                <CardDescription>
+                  Our AI matches you with the best lenders for your industry and needs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    <span className="text-sm">42+ lender products</span>
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    <span className="text-sm">Industry-specific rates</span>
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    <span className="text-sm">Real-time recommendations</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Shield className="h-12 w-12 text-blue-600 mb-4" />
                 <CardTitle>Secure & Compliant</CardTitle>
