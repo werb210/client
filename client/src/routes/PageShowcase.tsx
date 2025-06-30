@@ -71,6 +71,20 @@ export default function PageShowcase() {
             <p>• Implement professional gradient backgrounds</p>
             <p>• Add consistent form styling and button designs</p>
           </div>
+          
+          <div className="mt-4 flex gap-3">
+            <Link href="/_compare">
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                🔄 Compare Page Versions Side-by-Side
+              </button>
+            </Link>
+            <button 
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium"
+              onClick={() => alert('Navigate to individual pages above to see their current state')}
+            >
+              📋 View Individual Pages
+            </button>
+          </div>
         </div>
       </div>
     </div>

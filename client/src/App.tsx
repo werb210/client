@@ -39,6 +39,7 @@ import Step6Signature from "@/routes/Step6_Signature";
 
 // PageShowcase for systematic V2 modernization
 import PageShowcase from "@/routes/PageShowcase";
+import PageComparison from "@/routes/PageComparison";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -96,6 +97,7 @@ function Router() {
 
       {/* PageShowcase for systematic V2 modernization */}
       <Route path="/_showcase" component={PageShowcase} />
+      <Route path="/_compare" component={PageComparison} />
 
       <Route component={NotFound} />
     </Switch>
