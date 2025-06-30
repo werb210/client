@@ -28,6 +28,7 @@ import SideBySideApplication from "@/pages/SideBySideApplication";
 import { DocumentValidationDemo } from "@/pages/DocumentValidationDemo";
 import FaqPage from "@/pages/FaqPage";
 import TroubleshootingPage from "@/pages/TroubleshootingPage";
+import ProductAdminPage from "@/pages/ProductAdminPage";
 
 // Application flow steps
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
@@ -77,6 +78,8 @@ function Router() {
         <Route path="/comprehensive-application" component={ComprehensiveApplication} />
         {/* Side-by-side application layout */}
         <Route path="/side-by-side-application" component={SideBySideApplication} />
+        {/* Administrative pages - require admin/lender roles */}
+        <Route path="/product-admin" component={ProductAdminPage} />
         {/* Step7 integrated into Step6 completion flow */}
       </AuthGuard>
 
