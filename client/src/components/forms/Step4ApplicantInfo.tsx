@@ -69,7 +69,7 @@ export function Step4ApplicantInfo({ onNext, onPrevious }: Step4Props) {
   });
 
   // Regional configuration
-  const isCanadian = state.formData.headquarters === 'canada';
+  const isCanadian = state.formData.headquarters === 'CA';
   const regionalLabels = {
     stateProvince: isCanadian ? "Province" : "State",
     postalCode: isCanadian ? "Postal Code" : "ZIP Code",
