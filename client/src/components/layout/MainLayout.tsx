@@ -13,15 +13,15 @@ export default function MainLayout({
   showFooter = true 
 }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-surface text-onSurface font-sans">
+    <div className="min-h-screen bg-background text-foreground font-sans">
       {showHeader && (
-        <header className="py-4 px-6 border-b border-gray-200 bg-white shadow-sm">
+        <header className="py-4 px-6 border-b border-border bg-card shadow-sm">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <BorealLogo size="default" variant="full" />
             <nav className="hidden md:flex space-x-6">
-              <a href="/portal" className="text-onSurface hover:text-primary transition">Dashboard</a>
-              <a href="/application" className="text-onSurface hover:text-primary transition">Apply</a>
-              <a href="/faq" className="text-onSurface hover:text-primary transition">Support</a>
+              <a href="/portal" className="text-foreground hover:text-primary transition-colors">Dashboard</a>
+              <a href="/application" className="text-foreground hover:text-primary transition-colors">Apply</a>
+              <a href="/faq" className="text-foreground hover:text-primary transition-colors">Support</a>
             </nav>
           </div>
         </header>
@@ -32,7 +32,7 @@ export default function MainLayout({
       </main>
       
       {showFooter && (
-        <footer className="text-sm text-gray-400 mt-8 text-center py-6 border-t border-gray-200">
+        <footer className="text-sm text-muted-foreground mt-8 text-center py-6 border-t border-border">
           <div className="max-w-7xl mx-auto">
             © 2025 Boreal Financial. All rights reserved.
           </div>

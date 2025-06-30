@@ -37,45 +37,59 @@ export default {
         'full': 'var(--radius-full)',
       },
       colors: {
-        // Modern Boreal Financial Brand Tokens
-        primary: '#0F766E',       // Boreal Teal
-        accent: '#F97316',        // Boreal Orange
-        surface: '#F8FAFC',       // Light background
-        onSurface: '#1E293B',     // Dark text
-        // Legacy support
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        // Core CSS Variables (from the new design system)
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         card: {
-          DEFAULT: "var(--card)",
-          foreground: "var(--card-foreground)",
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
         popover: {
-          DEFAULT: "var(--popover)",
-          foreground: "var(--popover-foreground)",
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
         },
         primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--primary-foreground)",
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "var(--secondary)",
-          foreground: "var(--secondary-foreground)",
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
         muted: {
-          DEFAULT: "var(--muted)",
-          foreground: "var(--muted-foreground)",
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "var(--accent)",
-          foreground: "var(--accent-foreground)",
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
         destructive: {
-          DEFAULT: "var(--destructive)",
-          foreground: "var(--destructive-foreground)",
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
-        border: "var(--border)",
-        input: "var(--input)",
-        ring: "var(--ring)",
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        
+        // Boreal Financial custom colors
+        'cbf-navy': "hsl(var(--cbf-navy))",
+        'cbf-navy-light': "hsl(var(--cbf-navy-light))",
+        'cbf-navy-dark': "hsl(var(--cbf-navy-dark))",
+        'cbf-orange': "hsl(var(--cbf-orange))",
+        'cbf-orange-light': "hsl(var(--cbf-orange-light))",
+        'cbf-gray': "hsl(var(--cbf-gray))",
+        'cbf-gray-light': "hsl(var(--cbf-gray-light))",
+        
+        // Status colors
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
         // Modern Brand Colors
         brand: {
           blue: {
