@@ -156,14 +156,31 @@ export default function Step1FinancialProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-modern-primary">
-      <div className="container-modern p-modern-2xl">
-        <Card className="card-modern">
-          <CardHeader className="gradient-modern-hero p-modern-xl text-center">
-            <CardTitle className="heading-modern-h1 text-white">Step 1: Financial Profile</CardTitle>
-            <p className="body-modern-large text-brand-blue-100">Tell us about your funding needs and business basics</p>
-          </CardHeader>
-          <CardContent className="p-modern-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
+            <ArrowRight className="h-8 w-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Step 1: Financial Profile
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Tell us about your funding needs and business basics to get personalized financing recommendations
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <div className="h-2 w-8 bg-blue-600 rounded-full"></div>
+            <div className="h-2 w-8 bg-gray-300 rounded-full"></div>
+            <div className="h-2 w-8 bg-gray-300 rounded-full"></div>
+            <div className="h-2 w-8 bg-gray-300 rounded-full"></div>
+            <div className="h-2 w-8 bg-gray-300 rounded-full"></div>
+            <div className="h-2 w-8 bg-gray-300 rounded-full"></div>
+          </div>
+        </div>
+
+        {/* Main Form */}
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-modern-xl">
                 

@@ -13,14 +13,22 @@ import NewPortalPage from "./NewPortalPage";
 import Login from "./Login";
 import Register from "./Register";
 
-// Step routes - these will be created or migrated later
-// import Step1 from "./Step1_FinancialProfile";
-// import Step2 from "./Step2_Recommendations";
-// import Step3 from "./Step3_BusinessDetails";
-// import Step4 from "./Step4_ApplicantInfo";
-// import Step5 from "./Step5_DocumentUpload";
-// import Step6 from "./Step6_Signature";
-// import Step7 from "./Step7_FinalSubmission";
+// Import existing V1 components to modernize with V2 styling
+import Dashboard from "../pages/Dashboard";
+import FaqPage from "../pages/FaqPage";
+import TroubleshootingPage from "../pages/TroubleshootingPage";
+import ProductAdminPage from "../pages/ProductAdminPage";
+import NotFound from "../pages/NotFound";
+import { ComprehensiveApplication } from "../pages/ComprehensiveApplication";
+import { DocumentValidationDemo } from "../pages/DocumentValidationDemo";
+
+// Import existing V1 application steps to modernize with V2 styling
+import Step1FinancialProfile from "../routes/Step1_FinancialProfile";
+import Step2Recommendations from "../routes/Step2_Recommendations";
+import Step3BusinessDetails from "../routes/Step3_BusinessDetails";
+import Step4FinancialInfo from "../routes/Step4_FinancialInfo";
+import Step5DocumentUpload from "../routes/Step5_DocumentUpload";
+import Step6Signature from "../routes/Step6_Signature";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,16 +53,31 @@ export default function App() {
                     <Route index element={<ProfessionalLandingPage />} />
                     <Route path="login" element={<Login />} />
                     <Route path="register" element={<Register />} />
+                    <Route path="faq" element={<FaqPage />} />
+                    <Route path="troubleshooting" element={<TroubleshootingPage />} />
 
                     {/* authenticated portal & application flow ---------------------- */}
                     <Route path="portal" element={<NewPortalPage />} />
-                    {/* <Route path="application/1" element={<Step1 />} />
-                    <Route path="application/2" element={<Step2 />} />
-                    <Route path="application/3" element={<Step3 />} />
-                    <Route path="application/4" element={<Step4 />} />
-                    <Route path="application/5" element={<Step5 />} />
-                    <Route path="application/6" element={<Step6 />} />
-                    <Route path="application/7" element={<Step7 />} /> */}
+                    <Route path="dashboard" element={<Dashboard />} />
+                    
+                    {/* V1 Application Steps - with V2 modernization */}
+                    <Route path="application" element={<Step1FinancialProfile />} />
+                    <Route path="step1-financial-profile" element={<Step1FinancialProfile />} />
+                    <Route path="step2-recommendations" element={<Step2Recommendations />} />
+                    <Route path="step3-business-details" element={<Step3BusinessDetails />} />
+                    <Route path="step4-financial-info" element={<Step4FinancialInfo />} />
+                    <Route path="step5-document-upload" element={<Step5DocumentUpload />} />
+                    <Route path="step6-signature" element={<Step6Signature />} />
+                    
+                    {/* Additional Application Types */}
+                    <Route path="comprehensive-application" element={<ComprehensiveApplication />} />
+                    <Route path="document-validation" element={<DocumentValidationDemo />} />
+                    
+                    {/* Administrative Pages */}
+                    <Route path="product-admin" element={<ProductAdminPage />} />
+                    
+                    {/* 404 Not Found */}
+                    <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>
                 <Toaster />
