@@ -4,7 +4,7 @@ import { BorealLogo } from '../components/BorealLogo';
 import { Button } from '../components/ui/button';
 import { useAuth } from '../context/AuthContext';
 
-export function MainLayout() {
+export default function MainLayout() {
   const { user, logout, isAuthenticated } = useAuth();
 
   return (

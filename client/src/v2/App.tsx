@@ -7,9 +7,9 @@ import { FormDataProvider } from "../context/FormDataContext";
 import { ApplicationProvider } from "../context/ApplicationContext";
 import { ComprehensiveFormProvider } from "../context/ComprehensiveFormContext";
 
-import { MainLayout } from "./MainLayout";
-import { ProfessionalLandingPage } from "./ProfessionalLandingPage";
-import { NewPortalPage } from "./NewPortalPage";
+import MainLayout from "./MainLayout";
+import ProfessionalLandingPage from "./ProfessionalLandingPage";
+import NewPortalPage from "./NewPortalPage";
 import Login from "./Login";
 import Register from "./Register";
 

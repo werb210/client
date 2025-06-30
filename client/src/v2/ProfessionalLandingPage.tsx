@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'wouter';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -17,14 +17,14 @@ import {
 } from 'lucide-react';
 import { isFirstVisit } from '../lib/visitFlags';
 
-export function NewLandingPage() {
-  const [, setLocation] = useLocation();
+export default function ProfessionalLandingPage() {
+  const navigate = useNavigate();
 
   const handleGetStarted = () => {
     if (isFirstVisit()) {
-      setLocation('/register');
+      navigate('/register');
     } else {
-      setLocation('/login');
+      navigate('/login');
     }
   };
 

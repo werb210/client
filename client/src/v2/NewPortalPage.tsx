@@ -19,7 +19,7 @@ import {
   LogOut
 } from 'lucide-react';
 
-export function NewPortalPage() {
+export default function NewPortalPage() {
   const { user, logout } = useAuth();
 
   // Get user's display name
