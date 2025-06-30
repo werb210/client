@@ -14,6 +14,7 @@ import VerifyOtp from "@/pages/VerifyOtp";
 import RequestReset from "@/pages/RequestReset";
 import ResetPassword from "@/pages/ResetPassword";
 import ProfessionalLandingPage from "@/pages/ProfessionalLandingPage";
+import { NewLandingPage } from "@/pages/NewLandingPage";
 import Dashboard from "@/pages/Dashboard";
 import { NewPortalPage } from "@/pages/NewPortalPage";
 import NotFound from "@/pages/NotFound";
@@ -87,8 +88,8 @@ function Router() {
       <Route path="/faq" component={FaqPage} />
       <Route path="/troubleshooting" component={TroubleshootingPage} />
       
-      {/* Default route - Professional landing page with smart routing */}
-      <Route path="/" component={ProfessionalLandingPage} />
+      {/* Default route - New landing page with V1 design */}
+      <Route path="/" component={NewLandingPage} />
       <Route component={NotFound} />
     </Switch>
   );
