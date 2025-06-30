@@ -152,12 +152,12 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
         )}
 
         {/* Product Selection Instructions */}
-        <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-          <div className="flex items-start space-x-3">
+        <div className="bg-amber-50 p-modern-lg rounded-modern-lg border border-amber-200 card-modern">
+          <div className="flex items-start space-x-modern-sm">
             <Target className="w-5 h-5 text-amber-600 mt-0.5" />
             <div>
-              <h4 className="text-sm font-semibold text-amber-800">Select Your Preferred Loan Product</h4>
-              <p className="text-sm text-amber-700">
+              <h4 className="body-modern font-semibold text-amber-800">Select Your Preferred Loan Product</h4>
+              <p className="body-modern-small text-amber-700">
                 Please click on the lender product below that best matches your business needs.
                 Each option shows availability, terms, and match percentage.
               </p>
@@ -166,7 +166,7 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
         </div>
 
         {/* Dynamic Product Categories */}
-        <div className="space-y-4">
+        <div className="space-y-modern-lg">
           {productCategories.length > 0 ? (
             productCategories.map((category, index) => (
               <ProductCategoryCard 
@@ -178,16 +178,16 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
               />
             ))
           ) : (
-            <div className="text-center p-8">
-              <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="text-center p-modern-2xl card-modern">
+              <AlertCircle className="h-12 w-12 text-warning-500 mx-auto mb-modern-lg" />
+              <h3 className="heading-modern-h4 text-modern-primary mb-modern-sm">
                 No Matching Product Categories Found
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="body-modern text-modern-secondary mb-modern-lg">
                 We couldn't find any loan product categories that match your current criteria. 
                 Try adjusting your funding amount or business location in the previous step.
               </p>
-              <Button variant="outline" onClick={onPrevious}>
+              <Button variant="outline" onClick={onPrevious} className="btn-modern btn-modern-outline">
                 Go Back and Adjust Criteria
               </Button>
             </div>

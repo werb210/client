@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
+import MainLayout from '@/components/layout/MainLayout';
 import { 
   CheckCircle, 
   FileText, 
@@ -258,42 +259,43 @@ export default function Step7FinalSubmission() {
           </div>
         </div>
       </div>
-    );
+    </MainLayout>
+  );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
+    <MainLayout>
+      <div className="container-modern">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="text-center mb-modern-2xl">
+          <h1 className="heading-modern-display text-modern-primary mb-modern-sm">
             Step 7: Final Review & Submission
           </h1>
-          <p className="text-gray-600">
+          <p className="body-modern-large text-modern-secondary">
             Review your complete application before final submission
           </p>
-          <div className="mt-4">
-            <div className="text-sm text-gray-500">Step 7 of 7</div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div className="bg-green-600 h-2 rounded-full w-full"></div>
+          <div className="mt-modern-lg">
+            <div className="body-modern-small text-modern-muted">Step 7 of 7</div>
+            <div className="w-full bg-neutral-200 rounded-full h-2 mt-modern-sm">
+              <div className="bg-success-600 h-2 rounded-full w-full"></div>
             </div>
           </div>
         </div>
 
         {/* Completion Status */}
-        <Card className="mb-8">
+        <Card className="mb-modern-2xl card-modern">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
+            <CardTitle className="heading-modern-h3 flex items-center gap-modern-sm">
+              <CheckCircle className="h-5 w-5 text-success-500" />
               Application Completion Status
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-lg font-semibold">
+            <div className="flex items-center justify-between mb-modern-lg">
+              <span className="heading-modern-h4">
                 {completionStatus.completed} of {completionStatus.total} sections completed
               </span>
-              <Badge variant={completionStatus.percentage === 100 ? "default" : "secondary"}>
+              <Badge variant={completionStatus.percentage === 100 ? "default" : "secondary"} className="badge-modern">
                 {completionStatus.percentage}% Complete
               </Badge>
             </div>
