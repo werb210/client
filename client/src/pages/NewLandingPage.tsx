@@ -37,21 +37,24 @@ export function NewLandingPage() {
   };
 
   return (
-    <div className="min-h-screen gradient-modern-hero">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
       {/* Header */}
-      <header className="bg-modern-elevated shadow-modern-sm border-modern-light border-b">
-        <div className="container-modern">
-          <div className="flex justify-between items-center p-modern-xl">
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
             <BorealLogo size="default" />
-            <div className="flex items-center gap-modern-lg">
+            <div className="flex items-center gap-4">
               <Link href="/login">
-                <button className="btn-modern btn-modern-secondary">
+                <button className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md transition-colors">
                   Sign In
                 </button>
               </Link>
-              <button className="btn-modern btn-modern-primary" onClick={handleStartApplication}>
+              <button 
+                onClick={handleStartApplication}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition-colors inline-flex items-center gap-2"
+              >
                 Apply Now
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -59,29 +62,29 @@ export function NewLandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="p-modern-4xl">
-        <div className="container-modern text-center">
-          <div className="badge-modern badge-modern-primary mb-4">
+      <section className="py-20 px-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full inline-block mb-6">
             Trusted by 1000+ Canadian Businesses
           </div>
-          <h1 className="heading-modern-display mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold text-blue-900 mb-6">
             Business Loans
-            <span className="text-modern-gradient"> Made Simple</span>
+            <span className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent"> Made Simple</span>
           </h1>
-          <p className="body-modern-large text-modern-secondary mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
             Get fast approval for business loans from $10K to $10M. 
             Our intelligent platform connects you with the right lenders 
             based on your specific business needs.
           </p>
-          <div className="flex flex-col sm:flex-row gap-modern-lg justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
-              className="btn-modern btn-modern-primary p-modern-lg text-lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors inline-flex items-center justify-center gap-2"
               onClick={handleStartApplication}
             >
               Start Application
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="h-5 w-5" />
             </button>
-            <button className="btn-modern btn-modern-secondary p-modern-lg text-lg">
+            <button className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-lg text-lg font-medium transition-colors">
               Learn More
             </button>
           </div>
@@ -89,10 +92,10 @@ export function NewLandingPage() {
       </section>
 
       {/* Key Features */}
-      <section className="p-modern-4xl bg-modern-elevated">
-        <div className="container-modern">
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="heading-modern-h2 text-modern-primary mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-4">
               Why Choose Boreal Financial?
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">

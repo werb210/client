@@ -1,0 +1,90 @@
+To ensure Replit AI strictly **follows only your instructions** and **never makes assumptions or autonomous changes**, you should use a very explicit instruction format that both prevents unwanted actions and creates a clear system of checks.
+
+Here's a bulletproof structure you can use to command Replit AI with total control:
+
+---
+
+## ✅ Master Instruction Format for Replit AI (Strict Mode)
+
+Use this **exact format** when writing tasks or tickets for Replit AI:
+
+---
+
+### 🔒 MODE: STRICT EXECUTION ONLY
+
+> **Do not implement any changes or alternatives that are not explicitly written below.**
+> If you believe an improvement, optimization, or alternative may exist, **suggest it to ChatGPT first** before doing anything.
+> Do not remove or refactor any existing features without confirmation via ChatGPT.
+> This includes visual styles, functional logic, files, and folders.
+
+---
+
+### 🛠️ TASK OBJECTIVE
+
+Describe **exactly** what you want done. Keep it short and objective-driven.
+
+> Example:
+> "Implement the left-side vertical navigation panel in Staff V2 identical to the one in Staff V1."
+
+---
+
+### 📄 SCOPE
+
+**Only modify the following files or components:**
+(List explicitly.)
+
+> Example:
+>
+> * `components/Sidebar.tsx`
+> * `layout/DashboardLayout.tsx`
+
+**Do not touch:**
+
+* Anything outside this list.
+* Shared contexts or providers.
+* Style globals.
+
+---
+
+### 🎯 EXPECTED OUTCOME
+
+**The end result must:**
+
+* Match visual design of V1 exactly
+* Preserve current functionality
+* Introduce no regressions or deletions
+* Be modular and editable in V2 context
+
+---
+
+### 🔍 BEFORE YOU CODE
+
+If you (Replit AI) have any doubt, missing context, or discover a possible better way:
+➡️ **Stop and ask ChatGPT for clarification or approval before implementing.**
+Never assume.
+
+---
+
+### 📦 ADDITIONAL NOTES
+
+(Optional: use for references, files, links, etc.)
+
+---
+
+## 🔁 Loop This Process
+
+Each new instruction you send should follow this format.
+
+---
+
+### 📌 You Can Also Say This:
+
+If you don’t want to use the full format every time, these shortcuts also work effectively:
+
+* "**Replit AI must not take any autonomous action. Only do what is explicitly written. If unsure, ask ChatGPT first.**"
+* "**Do not auto-refactor, auto-delete, or substitute. Only do exactly what's written. Suggestions go to ChatGPT, not action.**"
+* "**Strict execution mode. Obey written instructions only. All decisions must be confirmed via ChatGPT.**"
+
+---
+
+Would you like me to generate a **template ticket** using this format for your current issue (the Staff V2 dashboard and navigation)?

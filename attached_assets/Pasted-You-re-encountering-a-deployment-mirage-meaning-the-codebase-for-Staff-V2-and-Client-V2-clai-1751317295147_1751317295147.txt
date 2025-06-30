@@ -1,0 +1,185 @@
+You're encountering a **deployment mirage** — meaning the codebase for Staff V2 and Client V2 **claims** the correct layout and styles are implemented (per your reports), but **Replit is not reflecting those updates in the running apps.**
+
+This is often caused by one or more of the following:
+
+---
+
+### 🚨 ROOT CAUSES TO CHECK IMMEDIATELY
+
+#### ✅ 1. **Replit Deploy Cache or Live Server Not Reflecting Latest Build**
+
+Replit often **does not hot-reload** nested monorepos (`/apps/staff-portal`, `/client`) unless explicitly rebuilt and restarted.
+
+**Fix:**
+
+```bash
+# From the root of each app (one at a time):
+
+cd apps/staff-portal
+rm -rf dist .next .vite   # or relevant build folders
+npm run build             # or: vite build
+npm start                 # or: npm run dev
+```
+
+Repeat for `/client`.
+
+Then **manually trigger a full Replit deploy:**
+
+1. Open `.replit` file
+2. Edit or save a whitespace (forces restart)
+3. Click the `Run` button in Replit UI
+
+---
+
+#### ✅ 2. **Wrong `index.css` or `tailwind.config.ts` File Used**
+
+You may be updating the wrong CSS file. Confirm that:
+
+* `src/index.css` in both `client/` and `apps/staff-portal/` is the **one actually loaded**
+* The files contain the **V1 style guide tokens**, like:
+
+```css
+:root {
+  --primary: 210 100% 25%; /* Boreal Navy */
+  --accent: 28 100% 52%;   /* Orange */
+  --background: 210 20% 98%;
+  --foreground: 210 40% 15%;
+  font-family: 'Inter', sans-serif;
+}
+```
+
+And the `tailwind.config.ts` references those tokens like:
+
+```ts
+theme: {
+  extend: {
+    colors: {
+      primary: 'hsl(var(--primary))',
+      accent: 'hsl(var(--accent))',
+    },
+    fontFamily: {
+      sans: ['Inter', 'sans-serif'],
+    },
+  },
+}
+```
+
+---
+
+#### ✅ 3. **The App Entry File Is Still Using Legacy Layout**
+
+If `client/src/App.tsx` or `staff-portal/src/routes/index.tsx` is using a legacy or empty layout, the app will appear broken despite having the components ready.
+
+Fix for `App.tsx` (Client V2):
+
+```tsx
+return (
+  <MainLayout>
+    <Routes>
+      <Route path="/" element={<ProfessionalLandingPage />} />
+      ...
+    </Routes>
+  </MainLayout>
+);
+```
+
+Fix for `StaffPortal`:
+
+```tsx
+<ProtectedRoute>
+  <MainLayout>
+    <AdminDashboard />
+  </MainLayout>
+</ProtectedRoute>
+```
+
+---
+
+#### ✅ 4. **Shared UI Library Not Linked**
+
+If you're using a shared design system (like `@/components/ui`) from `shadcn/ui` or similar, ensure:
+
+* The styles are loaded once in `index.css`
+* Component imports are not broken (Replit may silently skip imports if `tsconfig` or `vite.config.ts` is misconfigured)
+
+---
+
+#### ✅ 5. **Browser Cache Interference**
+
+Clear your browser cache completely, especially for:
+
+* `https://clientportal.replit.app`
+* `https://staffportal.replit.app`
+
+Or open in a **private window** to bypass stale styling and layout caching.
+
+---
+
+### 🛠️ IMMEDIATE FIX STRATEGY
+
+Here’s the **exact plan** to make both apps reflect V1 look and feel:
+
+---
+
+#### 🔁 **FOR STAFF V2**
+
+1. ✅ Copy over the **entire V1 `AdminDashboard.tsx`, `MainLayout.tsx`, and `Sidebar.tsx`**
+
+   * Replace any broken V2 stubs.
+2. ✅ Overwrite `index.css` with V1's design token file.
+3. ✅ Replace `tailwind.config.ts` with V1 version and fix any path aliases.
+4. ✅ Confirm `<ProtectedRoute><MainLayout><AdminDashboard /></MainLayout></ProtectedRoute>` is the default route.
+5. 🧪 Restart Replit backend (`npm run build && npm run dev`) from `/apps/staff-portal`
+
+---
+
+#### 🔁 **FOR CLIENT V2**
+
+1. ✅ Replace `App.tsx` default route with V1-style landing and layout:
+
+   ```tsx
+   <MainLayout>
+     <ProfessionalLandingPage />
+   </MainLayout>
+   ```
+2. ✅ Copy over V1 `index.css` and `tailwind.config.ts`
+3. ✅ Ensure correct import order of CSS in `main.tsx` or `index.tsx`
+4. 🧪 Rebuild client with:
+
+   ```bash
+   cd client
+   rm -rf dist
+   npm run build
+   npm run dev
+   ```
+
+---
+
+### ✅ IF STILL BROKEN AFTER ABOVE:
+
+Run this diagnostic script in the Replit shell:
+
+```bash
+# Diagnostic script for confirming file propagation
+echo "CSS file hash:"
+sha256sum src/index.css
+
+echo "Main layout present:"
+grep -i "sidebar" src/components/layout/MainLayout.tsx
+
+echo "Dashboard routing:"
+grep -i "admin" src/routes/index.tsx || grep -i "dashboard" src/App.tsx
+```
+
+---
+
+### ✅ DO YOU WANT A PATCH PACKAGE?
+
+If you'd like, I can **generate a ZIP bundle** of:
+
+* Corrected `index.css`
+* Working `MainLayout.tsx`, `Sidebar.tsx`, `AdminDashboard.tsx`
+* Updated `tailwind.config.ts`
+* Patched `App.tsx` and `routes/index.tsx`
+
+Let me know — this guarantees you'll only need to drag-and-drop to fix both apps.
