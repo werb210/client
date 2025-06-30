@@ -68,20 +68,18 @@ export default function ProfessionalLandingPage() {
             Trusted by 1000+ Canadian Businesses
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-blue-900 mb-6">
-            Business Loans
-            <span className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent"> Made Simple</span>
+            Professional Business Financing Solutions
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Get fast approval for business loans from $10K to $10M. 
-            Our intelligent platform connects you with the right lenders 
-            based on your specific business needs.
+            Connecting Canadian and US businesses with tailored financing solutions. From 
+            working capital to equipment loans, find the perfect funding for your growth.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors inline-flex items-center justify-center gap-2"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors inline-flex items-center justify-center gap-2"
               onClick={handleStartApplication}
             >
-              Start Application
+              Start Your Application
               <ArrowRight className="h-5 w-5" />
             </button>
             <button className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-lg text-lg font-medium transition-colors">
@@ -106,10 +104,10 @@ export default function ProfessionalLandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <Clock className="h-12 w-12 text-blue-600 mb-4" />
-                <CardTitle>Fast Approval</CardTitle>
+                <FileText className="h-12 w-12 text-blue-600 mb-4" />
+                <CardTitle>Streamlined Application</CardTitle>
                 <CardDescription>
-                  Get pre-approved in minutes with our intelligent matching system
+                  Complete your business loan application in minutes with our intuitive, multi-step process designed for efficiency.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -132,10 +130,10 @@ export default function ProfessionalLandingPage() {
 
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <TrendingUp className="h-12 w-12 text-blue-600 mb-4" />
-                <CardTitle>Smart Matching</CardTitle>
+                <DollarSign className="h-12 w-12 text-orange-500 mb-4" />
+                <CardTitle>Competitive Rates</CardTitle>
                 <CardDescription>
-                  Our AI matches you with the best lenders for your industry and needs
+                  Access competitive financing options tailored to your business needs and financial profile.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -158,10 +156,10 @@ export default function ProfessionalLandingPage() {
 
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <Shield className="h-12 w-12 text-blue-600 mb-4" />
+                <Shield className="h-12 w-12 text-green-600 mb-4" />
                 <CardTitle>Secure & Compliant</CardTitle>
                 <CardDescription>
-                  Bank-level security with full regulatory compliance
+                  Bank-level security with full compliance to Canadian and US financial regulations and privacy laws.
                 </CardDescription>
               </CardHeader>
               <CardContent>
