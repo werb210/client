@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowRight, ArrowLeft, Save, DollarSign } from 'lucide-react';
 import { Applications } from '@/lib/api';
 import { useState } from 'react';
+import MainLayout from '@/components/layout/MainLayout';
 
 const financialInfoSchema = z.object({
   annualRevenue: z.string().optional(),

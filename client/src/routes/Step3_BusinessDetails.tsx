@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowRight, ArrowLeft, Save, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import MainLayout from '@/components/layout/MainLayout';
 
 const businessDetailsSchema = z.object({
   businessStructure: z.string().optional(),
@@ -156,28 +157,29 @@ export default function Step3BusinessDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Business Details</h1>
-          <p className="text-gray-600 mt-2">
-            Please provide your business registration and address information
-          </p>
-          <div className="mt-4">
-            <div className="text-sm text-gray-500">Step 3 of 4</div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div className="bg-blue-600 h-2 rounded-full w-3/4"></div>
+    <MainLayout>
+      <div className="bg-background min-h-screen">
+        <div className="container-modern mx-auto px-4 py-8">
+          <div className="text-center mb-8">
+            <h1 className="heading-modern-h1 text-primary">Business Details</h1>
+            <p className="body-modern text-foreground/80 mt-2">
+              Please provide your business registration and address information
+            </p>
+            <div className="mt-6">
+              <div className="body-modern-small text-foreground/60">Step 3 of 4</div>
+              <div className="w-full bg-muted rounded-full h-2 mt-2">
+                <div className="bg-primary h-2 rounded-full w-3/4 transition-all duration-300"></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Business Registration Information</CardTitle>
+        <Card className="card-modern">
+          <CardHeader className="p-modern-xl">
+            <CardTitle className="heading-modern-h3 text-primary">Business Registration Information</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-modern-xl">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-modern-lg">
                 {/* Business Structure */}
                 <FormField
                   control={form.control}
@@ -402,7 +404,8 @@ export default function Step3BusinessDetails() {
             </Form>
           </CardContent>
         </Card>
+        </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }

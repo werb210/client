@@ -1,0 +1,194 @@
+Thank you — I’ve reviewed your **Client V2 Technical Implementation Report**. Despite the global CSS system and layout upgrades being properly implemented, you reported that many **core pages and components still look like the old system**, particularly Steps 3–7, form components, document upload, and older auth flows. This suggests:
+
+---
+
+### 🔧 Root Cause:
+
+**Legacy layout structure and unrefactored local component styles** are still being used across major routes and forms — **even though the global design system is in place.**
+
+---
+
+## ✅ Action Plan: Force Full Style Guide Application Across All Affected Client V2 Pages
+
+Below is a **detailed technical instruction Replit (or your developer team) must follow** to complete the UI modernization for Client V2.
+
+---
+
+## 🧩 INSTRUCTION FOR CLIENT V2 – REPLIT TASK BREAKDOWN
+
+### 🔹 Step 1: Wrap All Pages with `MainLayout`
+
+All listed `pages/*.tsx` and `routes/*.tsx` must:
+
+* **Import and use `MainLayout.tsx`** as the wrapper
+* Remove any direct `<nav>` or `<footer>` inside the page — these are now in `MainLayout`
+
+**Example (`pages/Step3BusinessDetails.tsx`)**:
+
+```tsx
+import MainLayout from '@/components/layout/MainLayout'
+
+export default function Step3BusinessDetails() {
+  return (
+    <MainLayout>
+      {/* Page content here */}
+    </MainLayout>
+  )
+}
+```
+
+---
+
+### 🔹 Step 2: Replace Hardcoded Styles With Tailwind Tokens
+
+Search all affected files for **inline or outdated classNames** like:
+
+```tsx
+className="p-4 bg-white rounded shadow"
+```
+
+Replace with new design system tokens:
+
+```tsx
+className="bg-background text-foreground rounded-2xl shadow-md p-6"
+```
+
+Also ensure:
+
+* Buttons use `.btn-primary`, `.btn-outline`, or `.btn-accent` from the Tailwind config
+* Inputs use standardized `.input`, `.input-lg`, `.input-bordered` patterns
+
+If not already done, extend `tailwind.config.ts`:
+
+```ts
+theme: {
+  colors: {
+    primary: 'hsl(var(--primary))',
+    accent: 'hsl(var(--accent))',
+    background: 'hsl(var(--background))',
+    foreground: 'hsl(var(--foreground))',
+  }
+}
+```
+
+---
+
+### 🔹 Step 3: Import the Design Tokens in Every Component (Optional Helper)
+
+For future maintainability, create a utility helper:
+
+```tsx
+// client/src/lib/useDesignTokens.ts
+export const tokens = {
+  primary: 'bg-[hsl(var(--primary))]',
+  text: 'text-[hsl(var(--foreground))]',
+  surface: 'bg-[hsl(var(--background))]',
+  card: 'rounded-2xl shadow-md p-6',
+}
+```
+
+Then in any component:
+
+```tsx
+<div className={`${tokens.card} ${tokens.surface}`}>
+  ...
+</div>
+```
+
+---
+
+### 🔹 Step 4: Update Typography & Spacing
+
+Ensure each component:
+
+* Uses `<h1>`, `<h2>`, etc. with new sizing
+
+  * `text-2xl font-bold text-primary` → `h1`
+  * `text-lg text-muted` → `h2`
+* Replaces `mt-4 mb-6` etc. with consistent `gap-y-*` and `space-y-*` classes
+
+Also confirm the **font family is Inter** in all relevant headings.
+
+---
+
+### 🔹 Step 5: Migrate Button and Input Components to Design System
+
+Ensure all form steps, buttons, and fields use new standardized classes:
+
+**Before:**
+
+```tsx
+<input className="border p-2 rounded" />
+<button className="bg-blue-500 text-white px-4 py-2 rounded" />
+```
+
+**After:**
+
+```tsx
+<input className="input input-bordered input-lg w-full" />
+<button className="btn btn-primary">Continue</button>
+```
+
+---
+
+### 🔹 Step 6: Animation & Responsiveness
+
+For components like upload zones or steps:
+
+* Add `transition`, `hover:scale-105`, `duration-300` to make components feel polished
+* Use `md:grid-cols-2` or `lg:grid-cols-3` for form layout spacing
+
+---
+
+### 🔹 Step 7: Checklist of Pages to Convert
+
+Here are the **critical targets** from your report:
+
+#### ✅ Must Modernize Now
+
+* [ ] `pages/Login.tsx`
+* [ ] `pages/Register.tsx`
+* [ ] `pages/Dashboard.tsx`
+* [ ] `pages/Step3BusinessDetails.tsx`
+* [ ] `routes/Step3_BusinessDetails.tsx`
+* [ ] `routes/Step4_FinancialInfo.tsx`
+* [ ] `routes/Step5_DocumentUpload.tsx`
+* [ ] `routes/Step6_Signature.tsx`
+* [ ] `routes/Step7_FinalSubmission.tsx`
+* [ ] `components/forms/*`
+* [ ] `components/MultiStepForm/*`
+
+#### 🔄 Optional Cleanups (2nd pass)
+
+* [ ] `pages/DocumentValidationDemo.tsx`
+* [ ] `components/DocumentUpload.tsx`
+* [ ] `components/ApplicationStatusMonitor.tsx`
+* [ ] `components/RecommendationEngine.tsx`
+
+---
+
+## 🚨 FINAL ENFORCEMENT OPTIONS
+
+If Replit is **not applying style changes even after updates**, enforce the following:
+
+### 🧼 Hard Wipe:
+
+```sh
+rm -rf node_modules
+rm -rf .vite
+rm -rf dist
+npm install
+npm run build
+npm run dev
+```
+
+### ✅ Use DevTools:
+
+In browser:
+
+* **Disable Cache** in dev tools (Network tab)
+* Right click → “Empty Cache and Hard Reload”
+
+---
+
+Would you like me to auto-generate a **checklist file** or `TODO.md` that Replit can commit to track remaining files to refactor?
