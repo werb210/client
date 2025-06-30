@@ -79,7 +79,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen gradient-modern-hero flex items-center justify-center p-4">
+    <MainLayout>
+      <div className="min-h-screen bg-modern-primary flex items-center justify-center p-modern-lg">
       <Card className="w-full max-w-md card-modern">
         <CardHeader className="text-center p-modern-xl">
           <div className="mb-modern-lg">

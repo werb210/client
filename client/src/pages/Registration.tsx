@@ -78,7 +78,8 @@ export default function Registration() {
   };
 
   return (
-    <div className="min-h-screen bg-modern-primary flex items-center justify-center p-4">
+    <MainLayout>
+      <div className="min-h-screen bg-modern-primary flex items-center justify-center p-modern-lg">
       <Card className="w-full max-w-md card-modern">
         <CardHeader className="text-center p-modern-xl">
           <div className="mx-auto w-12 h-12 bg-brand-blue-100 rounded-modern-full flex items-center justify-center mb-modern-lg">
@@ -188,5 +189,6 @@ export default function Registration() {
         </CardContent>
       </Card>
     </div>
+    </MainLayout>
   );
 }

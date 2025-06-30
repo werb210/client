@@ -235,5 +235,6 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
         )}
       </CardContent>
     </Card>
+    </MainLayout>
   );
 }

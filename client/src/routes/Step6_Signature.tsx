@@ -16,6 +16,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { getSignNowUrl, checkSignatureStatus } from '@/lib/api';
+import MainLayout from '@/components/layout/MainLayout';
 
 interface SignatureStatus {
   signed: boolean;

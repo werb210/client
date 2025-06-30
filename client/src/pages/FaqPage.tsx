@@ -134,6 +134,7 @@ export default function FaqPage() {
           </div>
         </div>
       </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }
