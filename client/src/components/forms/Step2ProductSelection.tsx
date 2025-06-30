@@ -7,7 +7,6 @@ import { useProductCategories } from '@/hooks/useProductCategories';
 import { ProductCategoryCard } from '@/components/ProductCategoryCard';
 import { generateIndustryInsights } from '@/lib/industryInsights';
 import { RecommendationFormData } from '@/lib/recommendation';
-import MainLayout from '@/components/layout/MainLayout';
 
 interface Step2Props {
   onNext: () => void;
@@ -59,89 +58,85 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-modern-2xl">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-blue-600" />
-        <span className="ml-modern-sm body-modern text-modern-secondary">Loading product recommendations...</span>
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span className="ml-2 text-gray-600">Loading product recommendations...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center p-modern-2xl">
-        <AlertCircle className="h-8 w-8 text-error-500" />
-        <span className="ml-modern-sm body-modern text-error-600">Failed to load product categories</span>
+      <div className="flex items-center justify-center p-8">
+        <AlertCircle className="h-8 w-8 text-red-500" />
+        <span className="ml-2 text-red-600">Failed to load product categories</span>
       </div>
     );
   }
 
   return (
-    <MainLayout>
-      <Card className="card-modern">
-        <CardHeader className="p-modern-xl">
-          <CardTitle className="heading-modern-h2">Industry Insights & Recommendations</CardTitle>
-          <CardDescription className="body-modern-large text-modern-secondary">
-            Based on your business profile, here are the best loan products for you
-          </CardDescription>
-        </CardHeader>
-      <CardContent className="p-modern-xl space-y-modern-xl">
+    <Card>
+      <CardHeader>
+        <CardTitle>Industry Insights & Recommendations</CardTitle>
+        <CardDescription>
+          Based on your business profile, here are the best loan products for you
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
         {/* Profile Summary Section */}
-        <div className="bg-brand-blue-50 p-modern-lg rounded-modern-lg">
-          <h3 className="heading-modern-h4 text-brand-blue-900 mb-modern-sm">Your Profile Summary</h3>
-          <div className="grid grid-cols-2 gap-modern-lg body-modern-small">
-            <div>Headquarters: <span className="font-medium text-modern-primary">{formData.headquarters}</span></div>
-            <div>Funding Amount: <span className="font-medium text-modern-primary">{formatCurrency(formData.fundingAmount)}</span></div>
-            <div>Industry: <span className="font-medium text-modern-primary">{state.formData.industry || 'Not specified'}</span></div>
-            <div>Purpose: <span className="font-medium text-modern-primary">{formData.fundsPurpose || 'Not specified'}</span></div>
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h3 className="font-semibold text-blue-900 mb-2">Your Profile Summary</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>Headquarters: <span className="font-medium">{formData.headquarters}</span></div>
+            <div>Funding Amount: <span className="font-medium">{formatCurrency(formData.fundingAmount)}</span></div>
+            <div>Industry: <span className="font-medium">{state.formData.industry || 'Not specified'}</span></div>
+            <div>Purpose: <span className="font-medium">{formData.fundsPurpose || 'Not specified'}</span></div>
           </div>
         </div>
 
         {/* Geographic Filter Indicator */}
-        <div className="bg-success-50 p-modern-md rounded-modern-lg border border-success-200">
-          <div className="flex items-center">
-            <Target className="h-5 w-5 text-success-600 mr-modern-sm" />
-            <span className="body-modern-small text-success-700">
-              Showing products available in {formData.headquarters}
-            </span>
-          </div>
+        <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+          <p className="text-sm text-green-700">
+            <strong>Country Filter Active:</strong> Showing loan products available in {formData.headquarters}
+          </p>
         </div>
 
         {/* Industry Insights Section */}
         {industryInsights && (
-          <div className="bg-purple-50 p-modern-lg rounded-modern-lg border border-purple-200 card-modern">
-            <h3 className="heading-modern-h4 text-purple-900 mb-modern-sm flex items-center">
-              <Lightbulb className="w-5 h-5 mr-modern-sm" />
+          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <h3 className="font-semibold text-purple-900 mb-3 flex items-center">
+              <Lightbulb className="w-5 h-5 mr-2" />
               {industryInsights.title}
             </h3>
-            <div className="grid md:grid-cols-3 gap-modern-lg body-modern-small">
+            <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div>
-                <h4 className="body-modern font-medium text-purple-800 mb-modern-sm flex items-center">
-                  <TrendingUp className="w-4 h-4 mr-modern-xs" />
+                <h4 className="font-medium text-purple-800 mb-2 flex items-center">
+                  <TrendingUp className="w-4 h-4 mr-1" />
                   Trends
                 </h4>
-                <ul className="space-y-modern-xs">
+                <ul className="space-y-1">
                   {industryInsights.trends.map((trend, index) => (
                     <li key={index} className="text-purple-700">• {trend}</li>
                   ))}
                 </ul>
               </div>
               <div>
-                <h4 className="body-modern font-medium text-purple-800 mb-modern-sm flex items-center">
-                  <Target className="w-4 h-4 mr-modern-xs" />
+                <h4 className="font-medium text-purple-800 mb-2 flex items-center">
+                  <Target className="w-4 h-4 mr-1" />
                   Recommendations
                 </h4>
-                <ul className="space-y-modern-xs">
+                <ul className="space-y-1">
                   {industryInsights.recommendations.map((rec, index) => (
                     <li key={index} className="text-purple-700">• {rec}</li>
                   ))}
                 </ul>
               </div>
               <div>
-                <h4 className="body-modern font-medium text-purple-800 mb-modern-sm flex items-center">
-                  <Shield className="w-4 h-4 mr-modern-xs" />
+                <h4 className="font-medium text-purple-800 mb-2 flex items-center">
+                  <Shield className="w-4 h-4 mr-1" />
                   Risk Factors
                 </h4>
-                <ul className="space-y-modern-xs">
+                <ul className="space-y-1">
                   {industryInsights.riskFactors.map((risk, index) => (
                     <li key={index} className="text-purple-700">• {risk}</li>
                   ))}
@@ -152,12 +147,12 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
         )}
 
         {/* Product Selection Instructions */}
-        <div className="bg-amber-50 p-modern-lg rounded-modern-lg border border-amber-200 card-modern">
-          <div className="flex items-start space-x-modern-sm">
+        <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+          <div className="flex items-start space-x-3">
             <Target className="w-5 h-5 text-amber-600 mt-0.5" />
             <div>
-              <h4 className="body-modern font-semibold text-amber-800">Select Your Preferred Loan Product</h4>
-              <p className="body-modern-small text-amber-700">
+              <h4 className="text-sm font-semibold text-amber-800">Select Your Preferred Loan Product</h4>
+              <p className="text-sm text-amber-700">
                 Please click on the lender product below that best matches your business needs.
                 Each option shows availability, terms, and match percentage.
               </p>
@@ -166,7 +161,7 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
         </div>
 
         {/* Dynamic Product Categories */}
-        <div className="space-y-modern-lg">
+        <div className="space-y-4">
           {productCategories.length > 0 ? (
             productCategories.map((category, index) => (
               <ProductCategoryCard 
@@ -178,16 +173,16 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
               />
             ))
           ) : (
-            <div className="text-center p-modern-2xl card-modern">
-              <AlertCircle className="h-12 w-12 text-warning-500 mx-auto mb-modern-lg" />
-              <h3 className="heading-modern-h4 text-modern-primary mb-modern-sm">
+            <div className="text-center p-8">
+              <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 No Matching Product Categories Found
               </h3>
-              <p className="body-modern text-modern-secondary mb-modern-lg">
+              <p className="text-gray-600 mb-4">
                 We couldn't find any loan product categories that match your current criteria. 
                 Try adjusting your funding amount or business location in the previous step.
               </p>
-              <Button variant="outline" onClick={onPrevious} className="btn-modern btn-modern-outline">
+              <Button variant="outline" onClick={onPrevious}>
                 Go Back and Adjust Criteria
               </Button>
             </div>
@@ -238,6 +233,5 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
         )}
       </CardContent>
     </Card>
-    </MainLayout>
   );
 }

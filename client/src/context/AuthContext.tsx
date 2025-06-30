@@ -27,18 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Check for stored user session on app load
+  // Skip initial user fetch - only authenticate when user attempts login
   useEffect(() => {
-    const storedUser = localStorage.getItem('auth-user');
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('auth-user');
-      }
-    }
     setIsLoading(false);
   }, []);
 
@@ -85,8 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
-      // Clear all stored session data
-      localStorage.removeItem('auth-user');
+      // Clear any stored session data
       sessionStorage.removeItem('otpEmail');
       sessionStorage.removeItem('otpPhone');
       

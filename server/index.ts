@@ -4,11 +4,6 @@ import { dirname, join } from "path";
 import { setupVite, serveStatic, log } from "./vite";
 import lendersRouter from "./routes/lenders";
 import localLendersRouter from "./routes/localLenders";
-import { recommendationsRouter } from "./routes/recommendations";
-import { documentsRouter } from "./routes/documents";
-import loanProductsRouter from "./routes/loanProducts";
-import adminRouter from "./routes/admin";
-import { retryService } from "./jobs/retryService";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -86,10 +81,6 @@ app.use((req, res, next) => {
   // Mount lender routes
   app.use('/api/lenders', lendersRouter);
   app.use('/api/local/lenders', localLendersRouter);
-  app.use('/api/loan-products', loanProductsRouter);
-  app.use(recommendationsRouter);
-  app.use('/api/documents', documentsRouter);
-  app.use('/api/admin', adminRouter);
 
   // System status page for authentication troubleshooting
   app.get('/system-status', (req, res) => {
@@ -361,8 +352,8 @@ app.use((req, res, next) => {
   const { createServer } = await import("http");
   const server = createServer(app);
 
-  // Remove static HTML route - let Vite dev server handle React app routing
-  /* app.get('/', (req, res) => {
+  // Serve landing page directly to bypass 403 issues
+  app.get('/', (req, res) => {
     res.send(`
 <!DOCTYPE html>
 <html lang="en">
@@ -483,7 +474,7 @@ app.use((req, res, next) => {
 </body>
 </html>
     `);
-  }); */
+  });
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
@@ -564,10 +555,5 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`Client app serving on port ${port} - API calls will route to staff backend`);
-    
-    // Initialize retry service for V1 migration
-    retryService.start().catch(error => {
-      console.error('Failed to start retry service:', error);
-    });
   });
 })();

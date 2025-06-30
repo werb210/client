@@ -21,7 +21,6 @@ import {
   AlertCircle 
 } from 'lucide-react';
 import { uploadDocument, fetchRequiredDocuments, type DocumentRequirement } from '@/lib/api';
-import MainLayout from '@/components/layout/MainLayout';
 
 // Remove local interface - using the one from api.ts
 
@@ -283,49 +282,49 @@ export default function Step5DocumentUpload() {
 
   if (requirementsLoading) {
     return (
-      <MainLayout>
-        <div className="container-modern p-modern-xl">
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4">
           <div className="text-center">
-            <div className="animate-modern-fade-in">Loading document requirements...</div>
+            <div className="animate-pulse">Loading document requirements...</div>
           </div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="container-modern gradient-modern-subtle p-modern-xl">
-        <div className="text-center mb-modern-2xl">
-          <h1 className="heading-modern-h1 text-primary">Document Upload</h1>
-          <p className="body-modern text-muted-foreground mt-modern-md">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Document Upload</h1>
+          <p className="text-gray-600 mt-2">
             Upload required documents for your loan application
           </p>
-          <div className="mt-modern-lg">
-            <div className="body-modern-small text-muted-foreground">Step 5 of 6</div>
-            <div className="w-full bg-muted rounded-full h-2 mt-modern-sm">
-              <div className="bg-primary h-2 rounded-full w-5/6 transition-all duration-300"></div>
+          <div className="mt-4">
+            <div className="text-sm text-gray-500">Step 5 of 6</div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <div className="bg-blue-600 h-2 rounded-full w-5/6"></div>
             </div>
           </div>
         </div>
 
-        <div className="grid-modern-1 gap-modern-xl">
+        <div className="space-y-6">
           {documentCategories.map((category) => {
             const requirement = requirements?.find(req => req.category === category.id);
             const dropzone = createDropzone(category.id);
             
             return (
-              <Card key={category.id} className="card-modern">
-                <CardHeader className="p-modern-xl">
+              <Card key={category.id}>
+                <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="heading-modern-h3 flex items-center gap-modern-sm">
+                    <CardTitle className="flex items-center gap-2">
                       {category.name}
                       {requirement?.required && (
-                        <Badge variant="destructive" className="badge-modern text-xs">Required</Badge>
+                        <Badge variant="destructive" className="text-xs">Required</Badge>
                       )}
                     </CardTitle>
                     
-                    <div className="flex items-center gap-modern-sm">
+                    <div className="flex items-center gap-2">
                       <Checkbox
                         id={`upload-later-${category.id}`}
                         checked={category.uploadLater}
@@ -333,7 +332,7 @@ export default function Step5DocumentUpload() {
                       />
                       <label 
                         htmlFor={`upload-later-${category.id}`}
-                        className="body-modern-small text-muted-foreground cursor-pointer"
+                        className="text-sm text-gray-600 cursor-pointer"
                       >
                         Upload Later
                       </label>
@@ -341,7 +340,7 @@ export default function Step5DocumentUpload() {
                   </div>
                   
                   {requirement?.description && (
-                    <p className="body-modern-small text-muted-foreground">{requirement.description}</p>
+                    <p className="text-sm text-gray-600">{requirement.description}</p>
                   )}
                 </CardHeader>
                 
@@ -468,6 +467,6 @@ export default function Step5DocumentUpload() {
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </div>
   );
 }

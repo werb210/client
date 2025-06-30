@@ -11,7 +11,6 @@ import { UserPlus, User, Mail, Smartphone } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import MainLayout from '@/components/layout/MainLayout';
 
 const registrationSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -78,80 +77,79 @@ export default function Registration() {
   };
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-modern-primary flex items-center justify-center p-modern-lg">
-      <Card className="w-full max-w-md card-modern">
-        <CardHeader className="text-center p-modern-xl">
-          <div className="mx-auto w-12 h-12 bg-brand-blue-100 rounded-modern-full flex items-center justify-center mb-modern-lg">
-            <UserPlus className="w-6 h-6 text-brand-blue-600" />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <UserPlus className="w-6 h-6 text-blue-600" />
           </div>
-          <CardTitle className="heading-modern-h2">Create Your Account</CardTitle>
-          <CardDescription className="body-modern-small text-modern-secondary">
+          <CardTitle className="text-2xl font-bold">Create Your Account</CardTitle>
+          <CardDescription>
             Register to access the financial application portal
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-modern-xl">
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-modern-lg">
-            <div className="grid grid-cols-2 gap-modern-lg">
-              <div className="space-y-modern-sm">
-                <Label htmlFor="firstName" className="body-modern-small font-medium">First Name</Label>
+        <CardContent>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="firstName"
                     placeholder="John"
-                    className="form-modern-input pl-10"
+                    className="pl-10"
                     {...form.register('firstName')}
                   />
                 </div>
                 {form.formState.errors.firstName && (
-                  <p className="body-modern-small text-error-600">{form.formState.errors.firstName.message}</p>
+                  <p className="text-sm text-red-600">{form.formState.errors.firstName.message}</p>
                 )}
               </div>
               
-              <div className="space-y-modern-sm">
-                <Label htmlFor="lastName" className="body-modern-small font-medium">Last Name</Label>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="lastName"
                     placeholder="Doe"
-                    className="form-modern-input pl-10"
+                    className="pl-10"
                     {...form.register('lastName')}
                   />
                 </div>
                 {form.formState.errors.lastName && (
-                  <p className="body-modern-small text-error-600">{form.formState.errors.lastName.message}</p>
+                  <p className="text-sm text-red-600">{form.formState.errors.lastName.message}</p>
                 )}
               </div>
             </div>
 
-            <div className="space-y-modern-sm">
-              <Label htmlFor="email" className="body-modern-small font-medium">Email Address</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="john.doe@example.com"
-                  className="form-modern-input pl-10"
+                  className="pl-10"
                   {...form.register('email')}
                 />
               </div>
               {form.formState.errors.email && (
-                <p className="body-modern-small text-error-600">{form.formState.errors.email.message}</p>
+                <p className="text-sm text-red-600">{form.formState.errors.email.message}</p>
               )}
             </div>
 
-            <div className="space-y-modern-sm">
-              <Label htmlFor="phoneNumber" className="body-modern-small font-medium">Mobile Phone</Label>
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Mobile Phone</Label>
               <div className="relative">
-                <Smartphone className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
+                <Smartphone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="phoneNumber"
                   type="tel"
                   placeholder="+1 (555) 123-4567"
-                  className="form-modern-input pl-10"
+                  className="pl-10"
                   {...form.register('phoneNumber', {
                     onChange: (e) => {
                       const formatted = formatPhoneNumber(e.target.value);
@@ -161,27 +159,27 @@ export default function Registration() {
                 />
               </div>
               {form.formState.errors.phoneNumber && (
-                <p className="body-modern-small text-error-600">{form.formState.errors.phoneNumber.message}</p>
+                <p className="text-sm text-red-600">{form.formState.errors.phoneNumber.message}</p>
               )}
-              <p className="body-modern-small text-modern-tertiary">
+              <p className="text-sm text-gray-500">
                 We'll send SMS verification codes to this number
               </p>
             </div>
 
             <Button 
               type="submit" 
-              className="w-full btn-modern btn-modern-primary" 
+              className="w-full" 
               disabled={registerMutation.isPending}
             >
               {registerMutation.isPending ? 'Creating Account...' : 'Create Account & Verify Phone'}
             </Button>
           </form>
 
-          <div className="text-center mt-modern-lg">
+          <div className="text-center mt-4">
             <Button
               variant="ghost"
               onClick={() => window.location.href = '/api/logout'}
-              className="body-modern-small text-modern-tertiary hover:text-modern-secondary"
+              className="text-sm text-gray-500"
             >
               Back to Login
             </Button>
@@ -189,6 +187,5 @@ export default function Registration() {
         </CardContent>
       </Card>
     </div>
-    </MainLayout>
   );
 }

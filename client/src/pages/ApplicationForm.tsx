@@ -161,8 +161,8 @@ function ApplicationFormContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-modern-primary flex items-center justify-center">
-        <div className="animate-modern-fade-in body-modern text-modern-secondary">Loading...</div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-pulse text-gray-500">Loading...</div>
       </div>
     );
   }
@@ -172,21 +172,21 @@ function ApplicationFormContent() {
   }
 
   return (
-    <div className="min-h-screen bg-modern-primary">
+    <div className="min-h-screen bg-slate-50">
       {/* Navigation Header */}
-      <nav className="bg-modern-elevated border-b border-modern-light sticky top-0 z-50 shadow-modern-sm">
-        <div className="container-modern">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-modern-lg">
-              <div className="w-8 h-8 bg-brand-blue-600 rounded-modern-lg flex items-center justify-center">
-                <svg className="text-text-inverse text-sm w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <svg className="text-white text-sm w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
-              <h1 className="heading-modern-h4 text-modern-primary">Financial Portal</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Financial Portal</h1>
             </div>
             
-            <div className="flex items-center gap-modern-lg">
+            <div className="flex items-center space-x-4">
               <Button variant="ghost" size="sm" onClick={() => window.location.href = '/api/logout'}>
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
@@ -197,18 +197,18 @@ function ApplicationFormContent() {
         </div>
       </nav>
 
-      <div className="container-modern py-modern-2xl">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Progress Header */}
-        <Card className="mb-modern-xl card-modern">
-          <CardHeader className="p-modern-xl">
-            <div className="flex items-center justify-between mb-modern-lg">
-              <h2 className="heading-modern-h2 text-modern-primary">Financial Application</h2>
+        <Card className="mb-6">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">Financial Application</h2>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={handleSaveDraft}
                 disabled={autoSaveMutation.isPending}
-                className="btn-modern btn-modern-secondary text-brand-blue-600 hover:text-brand-blue-700"
+                className="text-blue-500 hover:text-blue-600"
               >
                 <Save className="w-4 h-4 mr-1" />
                 {autoSaveMutation.isPending ? 'Saving...' : 'Save Draft'}

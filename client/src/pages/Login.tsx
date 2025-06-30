@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import MainLayout from '@/components/layout/MainLayout';
 
 import { useAuth } from '@/context/AuthContext';
 
@@ -60,12 +59,12 @@ export default function Login() {
         });
         setLocation('/verify-otp');
       } else {
-        // Login successful, redirect to portal (NewPortalPage)
+        // Login successful, redirect to dashboard
         toast({
           title: 'Login Successful',
           description: 'Welcome back!',
         });
-        setLocation('/portal');
+        setLocation('/dashboard');
       }
     } catch (error) {
       toast({
@@ -79,86 +78,60 @@ export default function Login() {
   };
 
   return (
-    <MainLayout>
-      <div className="min-h-screen bg-modern-primary flex items-center justify-center p-modern-lg">
-        <Card className="w-full max-w-md card-modern">
-        <CardHeader className="text-center p-modern-xl">
-          <CardTitle className="heading-modern-h2">Welcome Back</CardTitle>
-          <p className="body-modern text-modern-secondary mt-modern-sm">
-            Sign in to your account to continue
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-orange-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold text-teal-700">Boreal Financial</h1>
+          </div>
+          <CardTitle className="text-xl">Sign In</CardTitle>
         </CardHeader>
-        <CardContent className="p-modern-xl">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-modern-lg">
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <Label htmlFor="email" className="body-modern-small font-medium">Email Address</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                {...register('email')}
                 id="email"
                 type="email"
-                placeholder="Enter your email"
-                className="form-modern mt-modern-sm"
+                {...register('email')}
+                className={errors.email ? 'border-red-500' : ''}
               />
               {errors.email && (
-                <p className="text-error-500 body-modern-small mt-modern-xs">{errors.email.message}</p>
+                <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
               )}
             </div>
-            
+
             <div>
-              <Label htmlFor="password" className="body-modern-small font-medium">Password</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
-                {...register('password')}
                 id="password"
                 type="password"
-                placeholder="Enter your password"
-                className="form-modern mt-modern-sm"
+                {...register('password')}
+                className={errors.password ? 'border-red-500' : ''}
               />
               {errors.password && (
-                <p className="text-error-500 body-modern-small mt-modern-xs">{errors.password.message}</p>
+                <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
               )}
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full btn-modern" 
-              disabled={isLoading}
-            >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
-          
-          <div className="mt-modern-lg text-center space-y-modern-lg">
-            <Link 
-              href="/request-reset" 
-              className="body-modern-small text-brand-blue-600 hover:text-brand-blue-700"
-            >
+
+          <div className="mt-6 text-center space-y-2">
+            <Link href="/request-reset" className="text-sm text-teal-600 hover:underline">
               Forgot your password?
             </Link>
-            
-            <div className="border-t border-modern-border pt-modern-lg">
-              <p className="body-modern-small text-modern-secondary">
-                Don't have an account?{' '}
-                <Link 
-                  href="/register" 
-                  className="text-brand-blue-600 hover:text-brand-blue-700 font-medium"
-                >
-                  Sign up
-                </Link>
-              </p>
-            </div>
-            
-            <div className="border-t border-modern-border pt-modern-lg">
-              <Link 
-                href="/backend-diagnostic" 
-                className="body-modern-small text-modern-muted hover:text-modern-secondary"
-              >
-                Backend Diagnostic
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link href="/register" className="text-teal-600 hover:underline">
+                Sign up
               </Link>
-            </div>
+            </p>
           </div>
         </CardContent>
-        </Card>
-      </div>
-    </MainLayout>
+      </Card>
+    </div>
   );
 }

@@ -16,7 +16,6 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { getSignNowUrl, checkSignatureStatus } from '@/lib/api';
-import MainLayout from '@/components/layout/MainLayout';
 
 interface SignatureStatus {
   signed: boolean;
@@ -127,23 +126,23 @@ export default function Step6Signature() {
   const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
 
   return (
-    <MainLayout>
-      <div className="container-modern">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+      <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-modern-2xl">
-          <h1 className="heading-modern-display text-modern-primary mb-modern-sm">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Step 6: Electronic Signature
           </h1>
-          <p className="body-modern-large text-modern-secondary">
+          <p className="text-gray-600">
             Complete your application with a secure electronic signature
           </p>
         </div>
 
         {/* Progress Indicator */}
-        <Card className="mb-modern-2xl card-modern">
+        <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="heading-modern-h3 flex items-center gap-modern-sm">
-              <CheckCircle className="h-5 w-5 text-success-500" />
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
               Application Progress
             </CardTitle>
           </CardHeader>
@@ -342,6 +341,6 @@ export default function Step6Signature() {
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </div>
   );
 }

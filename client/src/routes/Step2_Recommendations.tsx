@@ -67,11 +67,11 @@ export default function Step2Recommendations() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-modern-primary">
-        <div className="container-modern p-modern-2xl">
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4">
           <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-brand-blue-600" />
-            <p className="mt-modern-lg body-modern text-modern-secondary">Loading personalized recommendations...</p>
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-teal-600" />
+            <p className="mt-4 text-gray-600">Loading personalized recommendations...</p>
           </div>
         </div>
       </div>
@@ -80,21 +80,21 @@ export default function Step2Recommendations() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-modern-primary">
-        <div className="container-modern p-modern-2xl">
-          <Card className="card-modern border-error-200">
-            <CardContent className="p-modern-2xl text-center">
-              <AlertCircle className="h-12 w-12 text-error-400 mx-auto mb-modern-lg" />
-              <h3 className="heading-modern-h3 text-error-800 mb-modern-sm">Connection Error</h3>
-              <p className="body-modern text-error-600 mb-modern-lg">Unable to load lender products from the database.</p>
-              <div className="flex gap-modern-lg justify-center">
-                <button onClick={handleBack} className="btn-modern btn-modern-outline">
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-4xl mx-auto px-4">
+          <Card className="border-red-200">
+            <CardContent className="p-8 text-center">
+              <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-red-800 mb-2">Connection Error</h3>
+              <p className="text-red-600 mb-4">Unable to load lender products from the database.</p>
+              <div className="space-x-4">
+                <Button onClick={handleBack} variant="outline">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to Step 1
-                </button>
-                <button onClick={() => window.location.reload()} className="btn-modern btn-modern-primary">
+                </Button>
+                <Button onClick={() => window.location.reload()}>
                   Retry Loading
-                </button>
+                </Button>
               </div>
             </CardContent>
           </Card>

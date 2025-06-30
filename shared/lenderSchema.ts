@@ -19,43 +19,6 @@ export const lenderProducts = pgTable('lender_products', {
   active: boolean('active').default(true),
 });
 
-// Retry Queue Table for V1 migration
-export const retryQueue = pgTable('retry_queue', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  endpoint: text('endpoint').notNull(),
-  payload: jsonb('payload'),
-  try_count: integer('try_count').default(0),
-  max_retries: integer('max_retries').default(5),
-  next_retry_at: timestamp('next_retry_at').defaultNow(),
-  last_error: text('last_error'),
-  created_at: timestamp('created_at').defaultNow(),
-});
-
-// Transmission Logs Table for V1 migration  
-export const transmissionLogs = pgTable('transmission_logs', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  route: text('route'),
-  status: integer('status'),
-  payload: jsonb('payload'),
-  response_body: text('response_body'),
-  error_message: text('error_message'),
-  duration_ms: integer('duration_ms'),
-  created_at: timestamp('created_at').defaultNow(),
-});
-
-// Audit Logs Table for V1 migration
-export const auditLogs = pgTable('audit_logs', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  user_id: uuid('user_id'),
-  action: text('action'),
-  resource_type: text('resource_type'),
-  resource_id: text('resource_id'),
-  meta: jsonb('meta'),
-  ip_address: text('ip_address'),
-  user_agent: text('user_agent'),
-  created_at: timestamp('created_at').defaultNow(),
-});
-
 // Zod schemas for validation
 export const insertLenderProductSchema = createInsertSchema(lenderProducts, {
   min_amount: z.coerce.number().positive().optional(),

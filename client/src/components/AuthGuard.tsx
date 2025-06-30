@@ -34,9 +34,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
       return;
     }
 
-    // If user is authenticated and on auth pages, redirect to portal
+    // If user is authenticated and on auth pages, redirect to dashboard
     if (isAuthenticated && (location === '/login' || location === '/register')) {
-      setLocation('/portal');
+      setLocation('/dashboard');
       return;
     }
   }, [isAuthenticated, isLoading, location, setLocation]);

@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowRight, ArrowLeft, Save, DollarSign } from 'lucide-react';
 import { Applications } from '@/lib/api';
 import { useState } from 'react';
-import MainLayout from '@/components/layout/MainLayout';
 
 const financialInfoSchema = z.object({
   annualRevenue: z.string().optional(),
@@ -156,21 +155,20 @@ export default function Step4FinancialInfo() {
   };
 
   return (
-    <MainLayout>
-      <div className="bg-background min-h-screen">
-        <div className="container-modern mx-auto px-4 py-8">
-          <div className="text-center mb-8">
-            <h1 className="heading-modern-h1 text-primary">Financial Information</h1>
-            <p className="body-modern text-foreground/80 mt-2">
-              Please provide your business financial details for loan assessment
-            </p>
-            <div className="mt-6">
-              <div className="body-modern-small text-foreground/60">Step 4 of 5</div>
-              <div className="w-full bg-muted rounded-full h-2 mt-2">
-                <div className="bg-primary h-2 rounded-full w-4/5 transition-all duration-300"></div>
-              </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Financial Information</h1>
+          <p className="text-gray-600 mt-2">
+            Please provide your business financial details for loan assessment
+          </p>
+          <div className="mt-4">
+            <div className="text-sm text-gray-500">Step 4 of 5</div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <div className="bg-blue-600 h-2 rounded-full w-4/5"></div>
             </div>
           </div>
+        </div>
 
         <Card>
           <CardHeader>
@@ -361,8 +359,7 @@ export default function Step4FinancialInfo() {
             </Form>
           </CardContent>
         </Card>
-        </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }

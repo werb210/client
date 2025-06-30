@@ -156,33 +156,16 @@ export default function Step1FinancialProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
-            <ArrowRight className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Step 1: Financial Profile
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Tell us about your funding needs and business basics to get personalized financing recommendations
-          </p>
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <div className="h-2 w-8 bg-blue-600 rounded-full"></div>
-            <div className="h-2 w-8 bg-gray-300 rounded-full"></div>
-            <div className="h-2 w-8 bg-gray-300 rounded-full"></div>
-            <div className="h-2 w-8 bg-gray-300 rounded-full"></div>
-            <div className="h-2 w-8 bg-gray-300 rounded-full"></div>
-            <div className="h-2 w-8 bg-gray-300 rounded-full"></div>
-          </div>
-        </div>
-
-        {/* Main Form */}
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-2xl mx-auto px-4">
+        <Card className="shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-teal-600 to-teal-700 text-white">
+            <CardTitle className="text-2xl font-bold">Step 1: Financial Profile</CardTitle>
+            <p className="text-teal-100">Tell us about your funding needs and business basics</p>
+          </CardHeader>
+          <CardContent className="p-8">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 
                 {/* 1. Funding Amount */}
                 <FormField
@@ -190,15 +173,15 @@ export default function Step1FinancialProfile() {
                   name="fundingAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="body-modern font-semibold text-modern-primary">How much funding are you looking for?</FormLabel>
+                      <FormLabel className="text-base font-semibold">How much funding are you looking for?</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter amount (e.g., $100,000)"
                           {...field}
-                          className="form-modern-input h-12"
+                          className="h-12"
                         />
                       </FormControl>
-                      <FormMessage className="body-modern-small text-error-600" />
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -448,8 +431,9 @@ export default function Step1FinancialProfile() {
                 </div>
               </form>
             </Form>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
+    </div>
   );
 }

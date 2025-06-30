@@ -7,7 +7,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
-import MainLayout from '@/components/layout/MainLayout';
 import { 
   CheckCircle, 
   FileText, 
@@ -221,25 +220,25 @@ export default function Step7FinalSubmission() {
 
   if (submitMutation.isSuccess) {
     return (
-      <MainLayout>
-        <div className="container-modern">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center">
-            <div className="mb-modern-2xl">
-              <CheckCircle className="h-16 w-16 text-success-500 mx-auto mb-modern-lg" />
-              <h1 className="heading-modern-display text-modern-primary mb-modern-sm">
+            <div className="mb-8">
+              <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Application Submitted Successfully!
               </h1>
-              <p className="body-modern-large text-modern-secondary">
+              <p className="text-gray-600">
                 Your application is now under review. You'll receive updates via email.
               </p>
             </div>
             
-            <Card className="max-w-md mx-auto card-modern">
-              <CardContent className="pt-modern-lg">
-                <div className="text-center space-y-modern-lg">
+            <Card className="max-w-md mx-auto">
+              <CardContent className="pt-6">
+                <div className="text-center space-y-4">
                   <div>
-                    <h3 className="heading-modern-h3 mb-modern-sm">What's next?</h3>
-                    <ul className="body-modern-small text-modern-muted space-y-modern-sm mt-modern-sm text-left">
+                    <h3 className="font-semibold text-lg">What's next?</h3>
+                    <ul className="text-sm text-gray-600 space-y-2 mt-2">
                       <li>• Review process typically takes 2-3 business days</li>
                       <li>• You'll receive email updates on your application status</li>
                       <li>• A loan officer may contact you for additional information</li>
@@ -249,7 +248,7 @@ export default function Step7FinalSubmission() {
                   
                   <Button 
                     onClick={() => setLocation('/dashboard')}
-                    className="w-full btn-modern"
+                    className="w-full"
                   >
                     Return to Dashboard
                   </Button>
@@ -258,43 +257,43 @@ export default function Step7FinalSubmission() {
             </Card>
           </div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="container-modern">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+      <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-modern-2xl">
-          <h1 className="heading-modern-display text-modern-primary mb-modern-sm">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Step 7: Final Review & Submission
           </h1>
-          <p className="body-modern-large text-modern-secondary">
+          <p className="text-gray-600">
             Review your complete application before final submission
           </p>
-          <div className="mt-modern-lg">
-            <div className="body-modern-small text-modern-muted">Step 7 of 7</div>
-            <div className="w-full bg-neutral-200 rounded-full h-2 mt-modern-sm">
-              <div className="bg-success-600 h-2 rounded-full w-full"></div>
+          <div className="mt-4">
+            <div className="text-sm text-gray-500">Step 7 of 7</div>
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+              <div className="bg-green-600 h-2 rounded-full w-full"></div>
             </div>
           </div>
         </div>
 
         {/* Completion Status */}
-        <Card className="mb-modern-2xl card-modern">
+        <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="heading-modern-h3 flex items-center gap-modern-sm">
-              <CheckCircle className="h-5 w-5 text-success-500" />
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
               Application Completion Status
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between mb-modern-lg">
-              <span className="heading-modern-h4">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-lg font-semibold">
                 {completionStatus.completed} of {completionStatus.total} sections completed
               </span>
-              <Badge variant={completionStatus.percentage === 100 ? "default" : "secondary"} className="badge-modern">
+              <Badge variant={completionStatus.percentage === 100 ? "default" : "secondary"}>
                 {completionStatus.percentage}% Complete
               </Badge>
             </div>
@@ -557,6 +556,6 @@ export default function Step7FinalSubmission() {
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    </div>
   );
 }
