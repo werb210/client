@@ -1,0 +1,91 @@
+# 🎯 TODO: Apply New Boreal Financial Style Guide (Client V2)
+
+This checklist tracks all components and pages that must be updated to use the new CSS design system and professional layout (`MainLayout.tsx`). Ensure all elements use updated Tailwind tokens, HSL variables, proper typography, animations, and layout structure.
+
+---
+
+## 🔹 Core Application Pages
+- [ ] `pages/Login.tsx`
+- [ ] `pages/Register.tsx`
+- [ ] `pages/Registration.tsx`
+- [ ] `pages/Dashboard.tsx`
+- [ ] `pages/PortalPage.tsx`
+- [ [ ] `pages/LandingPage.tsx`
+- [ ] `pages/ApplicationForm.tsx`
+
+---
+
+## 🔹 Application Step Pages
+- [ ] `pages/Step3BusinessDetails.tsx`
+- [ ] `pages/Step4ApplicantInfo.tsx`
+- [ ] `pages/Step5DocumentUpload.tsx`
+
+---
+
+## 🔹 Application Routes (Critical)
+- [ ] `routes/Step3_BusinessDetails.tsx`
+- [ ] `routes/Step4_FinancialInfo.tsx`
+- [ ] `routes/Step5_DocumentUpload.tsx`
+- [ ] `routes/Step6_Signature.tsx`
+- [ ] `routes/Step7_FinalSubmission.tsx`
+
+---
+
+## 🔹 Authentication & User Management
+- [ ] `pages/VerifyOtp.tsx`
+- [ ] `pages/RequestReset.tsx`
+- [ ] `pages/ResetPassword.tsx`
+- [ ] `pages/TwoFactorAuth.tsx`
+
+---
+
+## 🔹 Administrative Pages
+- [ ] `pages/FaqPage.tsx`
+- [ ] `pages/TroubleshootingPage.tsx`
+- [ ] `pages/ProductAdminPage.tsx`
+
+---
+
+## 🔹 Document & Upload Components
+- [ ] `pages/DocumentValidationDemo.tsx`
+- [ ] `pages/UploadDocuments.tsx`
+- [ ] `components/DocumentUpload.tsx`
+- [ ] `components/EnhancedDocumentUpload.tsx`
+
+---
+
+## 🔹 Form Components
+- [ ] `components/forms/Step2ProductSelection.tsx`
+- [ ] `components/forms/Step3BusinessDetails.tsx`
+- [ ] `components/forms/Step4ApplicantDetails.tsx`
+- [ ] `components/forms/Step5DocumentUpload.tsx`
+- [ ] `components/forms/Step6Consents.tsx`
+
+---
+
+## 🔹 Multi-Step Form Components
+- [ ] `components/MultiStepForm/BusinessDetails.tsx`
+- [ ] `components/MultiStepForm/ProductQuestions.tsx`
+- [ ] `components/MultiStepForm/DocumentStep.tsx`
+- [ ] `components/MultiStepForm/SignatureStep.tsx`
+- [ ] `components/MultiStepForm/PersonalDetails.tsx`
+- [ ] `components/MultiStepForm/ReviewStep.tsx`
+- [ ] `components/MultiStepForm/LenderRecommendations.tsx`
+
+---
+
+## 🔹 Other Key Components
+- [ ] `components/TestingChecklist.tsx`
+- [ ] `components/ApplicationStatusMonitor.tsx`
+- [ ] `components/NavBar.tsx`
+- [ ] `components/RecommendationEngine.tsx`
+- [ ] `components/recommendations/RecommendationCard.tsx`
+
+---
+
+## 🔹 Diagnostic/Testing Pages
+- [ ] All test/demo/diagnostic pages (use consistent layout + tokens)
+
+---
+
+✅ Once all items are checked off, the UI will reflect the full Boreal Financial brand experience.

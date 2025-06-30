@@ -11,6 +11,7 @@ import { UserPlus, User, Mail, Smartphone } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import MainLayout from '@/components/layout/MainLayout';
 
 const registrationSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
