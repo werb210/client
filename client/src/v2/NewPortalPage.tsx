@@ -81,7 +81,7 @@ export default function NewPortalPage() {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="bg-white shadow-sm hover:shadow-lg transition-shadow cursor-pointer border border-gray-200">
-            <Link href="/application">
+            <Link to="/application">
               <CardHeader className="text-center p-6">
                 <Plus className="h-12 w-12 text-blue-600 mx-auto mb-4" />
                 <CardTitle className="text-xl font-semibold text-gray-900">New Application</CardTitle>
@@ -208,7 +208,7 @@ export default function NewPortalPage() {
                 <p className="text-gray-600 mb-6">
                   Start your first business loan application to see it here.
                 </p>
-                <Link href="/application">
+                <Link to="/application">
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
                     Start New Application

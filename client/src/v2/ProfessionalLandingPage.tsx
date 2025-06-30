@@ -30,9 +30,9 @@ export default function ProfessionalLandingPage() {
 
   const handleStartApplication = () => {
     if (isFirstVisit()) {
-      setLocation('/register');
+      navigate('/register');
     } else {
-      setLocation('/login');
+      navigate('/login');
     }
   };
 
@@ -44,7 +44,7 @@ export default function ProfessionalLandingPage() {
           <div className="flex justify-between items-center py-6">
             <BorealLogo size="default" />
             <div className="flex items-center gap-4">
-              <Link href="/login">
+              <Link to="/login">
                 <button className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md transition-colors">
                   Sign In
                 </button>
