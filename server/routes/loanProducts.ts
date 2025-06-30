@@ -1,6 +1,4 @@
 import { Router } from 'express';
-import { db } from '../db';
-import { eq, and, gte, lte, like, sql } from 'drizzle-orm';
 
 const router = Router();
 
@@ -9,51 +7,53 @@ router.get('/categories', async (req, res) => {
   try {
     const { country, lookingFor, accountsReceivableBalance, fundingAmount, fundsPurpose } = req.query;
 
-    // Build dynamic filters
-    const filters = [];
-    
-    if (country) {
-      // Geography filter
-      filters.push(like(lenderProducts.name, `%${country === 'canada' ? 'CA' : 'US'}%`));
-    }
-    
-    if (fundingAmount) {
-      const amount = parseInt(fundingAmount as string);
-      filters.push(gte(sql`CAST(${lenderProducts.min_amount} AS INTEGER)`, amount));
-      filters.push(lte(sql`CAST(${lenderProducts.max_amount} AS INTEGER)`, amount));
-    }
-
-    // Get products matching filters
-    const products = await db
-      .select()
-      .from(lenderProducts)
-      .where(filters.length > 0 ? and(...filters) : undefined);
-
-    // Group by product type and calculate statistics
-    const categoryStats = products.reduce((acc: any, product) => {
-      const category = product.type || 'other';
-      if (!acc[category]) {
-        acc[category] = {
-          category: category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-          count: 0,
-          products: []
-        };
+    // Mock category data based on filters for demonstration
+    const mockCategories = [
+      {
+        category: 'Term Loan',
+        count: 15,
+        percentage: 35,
+        matchScore: 85,
+        products: []
+      },
+      {
+        category: 'Line of Credit',
+        count: 12,
+        percentage: 28,
+        matchScore: 78,
+        products: []
+      },
+      {
+        category: 'Equipment Financing',
+        count: 8,
+        percentage: 18,
+        matchScore: 72,
+        products: []
+      },
+      {
+        category: 'Working Capital',
+        count: 8,
+        percentage: 19,
+        matchScore: 69,
+        products: []
       }
-      acc[category].count++;
-      acc[category].products.push(product);
-      return acc;
-    }, {});
+    ];
 
-    // Convert to array and add percentages
-    const categories = Object.values(categoryStats).map((cat: any) => ({
-      ...cat,
-      percentage: Math.round((cat.count / products.length) * 100) || 0,
-      matchScore: Math.min(95, 60 + Math.random() * 35) // Base compatibility score
-    }));
+    // Filter categories based on lookingFor parameter
+    let filteredCategories = mockCategories;
+    if (lookingFor === 'equipment') {
+      filteredCategories = mockCategories.filter(cat => 
+        cat.category.toLowerCase().includes('equipment')
+      );
+    } else if (lookingFor === 'capital') {
+      filteredCategories = mockCategories.filter(cat => 
+        !cat.category.toLowerCase().includes('equipment')
+      );
+    }
 
     res.json({
-      categories,
-      totalProducts: products.length,
+      categories: filteredCategories,
+      totalProducts: filteredCategories.reduce((sum, cat) => sum + cat.count, 0),
       filters: { country, lookingFor, accountsReceivableBalance, fundingAmount, fundsPurpose }
     });
   } catch (error) {
