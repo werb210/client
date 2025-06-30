@@ -1,0 +1,259 @@
+Below is a **copy-/-paste migration package** you can drop into the **Client-V2** Replit workspace.
+It replicates the same “v2-only” guard-rails you asked for on Staff-V2, but is tuned to the client repo’s file-names, routes and design-tokens.
+
+> **Put EVERYTHING that follows (the eight sections) in `TODO.md` or the Replit “Instructions” pane.**
+> The on-platform agent can then execute each step in order.
+
+---
+
+## 📋 0. One-paragraph summary
+
+*Move every modern, style-guide page into `src/v2/`, make `@/*` resolve exclusively there, block imports from `src/pages` / `src/routes`, and add a `vet:legacy` pre-build script that fails whenever Tailwind’s old grays/blues or non-Inter fonts are still referenced.
+When the script passes, run `npm run build`; otherwise print a TODO list of pages that still need migration.*
+
+---
+
+## 1 Create the isolated **v2** folder
+
+```
+📂 client
+└─📂 src
+   ├─📂 v2                     <-- NEW canonical location
+   │   ├─ MainLayout.tsx
+   │   ├─ ProfessionalLandingPage.tsx
+   │   ├─ NewPortalPage.tsx
+   │   ├─ Login.tsx
+   │   ├─ Register.tsx
+   │   ├─ Step1_FinancialProfile.tsx
+   │   ├─ Step2_Recommendations.tsx
+   │   ├─ Step3_BusinessDetails.tsx
+   │   ├─ Step4_ApplicantInfo.tsx
+   │   ├─ Step5_DocumentUpload.tsx
+   │   ├─ Step6_Signature.tsx
+   │   ├─ Step7_FinalSubmission.tsx
+   │   └─ any other approved pages…
+   │
+   ├─📂 pages     <-- KEEP but treat as legacy
+   ├─📂 routes    <-- KEEP but treat as legacy
+   └─ index.css   <-- already holds Boreal design tokens
+```
+
+Copy only **migrated / style-guide compliant** pages into `src/v2`.
+Leave legacy versions in place so the vetting script can flag them.
+
+---
+
+## 2 Path alias → “@/\* means v2 only”
+
+`tsconfig.json`
+
+```jsonc
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["v2/*"]             // first alias wins
+    }
+  }
+}
+```
+
+All new code should import pages/components like:
+
+```ts
+import Landing from "@/ProfessionalLandingPage";
+```
+
+---
+
+## 3 Rewrite the router to use *only* v2 pages
+
+`src/App.tsx`
+
+```tsx
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import MainLayout               from "@/MainLayout";
+import Landing                  from "@/ProfessionalLandingPage";
+import Portal                   from "@/NewPortalPage";
+import Login                    from "@/Login";
+import Register                 from "@/Register";
+
+// step routes
+import Step1                    from "@/Step1_FinancialProfile";
+import Step2                    from "@/Step2_Recommendations";
+import Step3                    from "@/Step3_BusinessDetails";
+import Step4                    from "@/Step4_ApplicantInfo";
+import Step5                    from "@/Step5_DocumentUpload";
+import Step6                    from "@/Step6_Signature";
+import Step7                    from "@/Step7_FinalSubmission";
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route element={<MainLayout />}>
+          {/* public pages -------------------------------------------------- */}
+          <Route index           element={<Landing  />} />
+          <Route path="login"    element={<Login    />} />
+          <Route path="register" element={<Register />} />
+
+          {/* authenticated portal & application flow ---------------------- */}
+          <Route path="portal"            element={<Portal />} />
+          <Route path="application/1"     element={<Step1  />} />
+          <Route path="application/2"     element={<Step2  />} />
+          <Route path="application/3"     element={<Step3  />} />
+          <Route path="application/4"     element={<Step4  />} />
+          <Route path="application/5"     element={<Step5  />} />
+          <Route path="application/6"     element={<Step6  />} />
+          <Route path="application/7"     element={<Step7  />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+
+**Do not** reference anything under `src/pages` or `src/routes`.
+
+---
+
+## 4 ESLint rule to block legacy imports
+
+`eslint-plugin-no-legacy-pages.js`
+
+```js
+module.exports = {
+  rules: {
+    "no-legacy-pages": {
+      create(context) {
+        const LEGACY = /src[\\/](pages|routes)[\\/]/;
+        return {
+          ImportDeclaration(node) {
+            if (LEGACY.test(node.source.value)) {
+              context.report({
+                node,
+                message:
+                  "Legacy page import detected – move this file under src/v2 first."
+              });
+            }
+          }
+        };
+      }
+    }
+  }
+};
+```
+
+`eslintrc.cjs`
+
+```js
+module.exports = {
+  extends: ["react-app", "plugin:prettier/recommended"],
+  plugins: ["no-legacy-pages"],
+  rules:   { "no-legacy-pages/no-legacy-pages": "error" }
+};
+```
+
+---
+
+## 5 Pre-build vetting script
+
+`scripts/vetLegacy.ts`
+
+```ts
+import fg from "fast-glob";
+import fs from "node:fs/promises";
+
+const OLD_COLORS =
+  /(text-|bg-)(gray|blue|indigo|green|red|yellow)-(100|200|300|400|500|600|700)/;
+const NEW_TOKEN  = /--primary|--accent|Inter/;
+
+const legacyFiles = await fg(["src/{pages,routes}/**/*.tsx"]);
+
+const offenders: string[] = [];
+
+for (const file of legacyFiles) {
+  const code = await fs.readFile(file, "utf8");
+  if (OLD_COLORS.test(code) || !NEW_TOKEN.test(code)) offenders.push(file);
+}
+
+if (offenders.length) {
+  console.log("### 🚧 Pages still missing the Boreal style guide\n");
+  offenders.forEach(f => console.log(`- [ ] ${f}`));
+  process.exit(1);      // block the build
+} else {
+  console.log("✅ All legacy pages migrated or compliant.");
+}
+```
+
+`package.json`
+
+```json
+{
+  "scripts": {
+    "vet:legacy": "tsx scripts/vetLegacy.ts",
+    "prebuild":   "npm run vet:legacy",
+    "build":      "vite build"
+  }
+}
+```
+
+---
+
+## 6 Archive or rename legacy folders
+
+```bash
+git mv src/pages  src/_legacy_pages
+git mv src/routes src/_legacy_routes
+```
+
+That removes them from normal import paths while keeping history intact.
+
+---
+
+## 7 Force a clean rebuild
+
+```bash
+rm -rf node_modules .vite dist
+npm ci
+npm run build          # fails if vet script finds unchecked pages
+npm run dev
+```
+
+Verify:
+
+1. **ProfessionalLandingPage** is the default `/` route.
+2. Navigation takes you through `portal` → application Step 1–7 with Boreal colours and Inter font.
+3. ESLint shows **zero** `no-legacy-pages` errors.
+
+---
+
+## 8 What the Replit agent must **report back**
+
+* `npm run vet:legacy` ▶️ **PASS** or **FAIL** (with list)
+* Build success + URL to preview
+* Screenshot of `/portal` showing brand colours and typography
+
+---
+
+### Need sample boiler-plate?
+
+If Replit complains about missing code, ask me for starter files:
+
+* `MainLayout.tsx` (header + footer)
+* `Sidebar.tsx` (mobile-friendly)
+* Minimal **Step** page shell using the new design tokens
+
+I can generate them instantly.
+
+---
+
+**Paste this migration guide into Replit now.**
+It will:
+
+* lock Client-V2 into the new design system
+* fail any build that smuggles in legacy styling
+* list every page still waiting for a facelift
+
+After that you’ll have a single, clean code-path – and no more “mystery dashboards.”
