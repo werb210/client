@@ -77,49 +77,49 @@ export default function Registration() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <UserPlus className="w-6 h-6 text-blue-600" />
+    <div className="min-h-screen bg-modern-primary flex items-center justify-center p-4">
+      <Card className="w-full max-w-md card-modern">
+        <CardHeader className="text-center p-modern-xl">
+          <div className="mx-auto w-12 h-12 bg-brand-blue-100 rounded-modern-full flex items-center justify-center mb-modern-lg">
+            <UserPlus className="w-6 h-6 text-brand-blue-600" />
           </div>
-          <CardTitle className="text-2xl font-bold">Create Your Account</CardTitle>
-          <CardDescription>
+          <CardTitle className="heading-modern-h2">Create Your Account</CardTitle>
+          <CardDescription className="body-modern-small text-modern-secondary">
             Register to access the financial application portal
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+        <CardContent className="p-modern-xl">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-modern-lg">
+            <div className="grid grid-cols-2 gap-modern-lg">
+              <div className="space-y-modern-sm">
+                <Label htmlFor="firstName" className="body-modern-small font-medium">First Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                   <Input
                     id="firstName"
                     placeholder="John"
-                    className="pl-10"
+                    className="form-modern-input pl-10"
                     {...form.register('firstName')}
                   />
                 </div>
                 {form.formState.errors.firstName && (
-                  <p className="text-sm text-red-600">{form.formState.errors.firstName.message}</p>
+                  <p className="body-modern-small text-error-600">{form.formState.errors.firstName.message}</p>
                 )}
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+              <div className="space-y-modern-sm">
+                <Label htmlFor="lastName" className="body-modern-small font-medium">Last Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                   <Input
                     id="lastName"
                     placeholder="Doe"
-                    className="pl-10"
+                    className="form-modern-input pl-10"
                     {...form.register('lastName')}
                   />
                 </div>
                 {form.formState.errors.lastName && (
-                  <p className="text-sm text-red-600">{form.formState.errors.lastName.message}</p>
+                  <p className="body-modern-small text-error-600">{form.formState.errors.lastName.message}</p>
                 )}
               </div>
             </div>
