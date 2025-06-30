@@ -60,12 +60,12 @@ export default function Login() {
         });
         setLocation('/verify-otp');
       } else {
-        // Login successful, redirect to dashboard
+        // Login successful, redirect to portal (NewPortalPage)
         toast({
           title: 'Login Successful',
           description: 'Welcome back!',
         });
-        setLocation('/dashboard');
+        setLocation('/portal');
       }
     } catch (error) {
       toast({
