@@ -26,6 +26,8 @@ import { ComprehensiveApplication } from "@/pages/ComprehensiveApplication";
 import { BackendDiagnosticPage } from "@/pages/BackendDiagnosticPage";
 import SideBySideApplication from "@/pages/SideBySideApplication";
 import { DocumentValidationDemo } from "@/pages/DocumentValidationDemo";
+import FaqPage from "@/pages/FaqPage";
+import TroubleshootingPage from "@/pages/TroubleshootingPage";
 
 // Application flow steps
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
@@ -80,6 +82,10 @@ function Router() {
 
       {/* Public demo pages */}
       <Route path="/document-validation" component={DocumentValidationDemo} />
+      
+      {/* Support pages */}
+      <Route path="/faq" component={FaqPage} />
+      <Route path="/troubleshooting" component={TroubleshootingPage} />
       
       {/* Default route - Professional landing page with smart routing */}
       <Route path="/" component={NewLandingPage} />

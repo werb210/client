@@ -1,0 +1,157 @@
+import React, { useState } from 'react';
+import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
+import { faqContent, faqCategories } from '@/content/faq';
+import { BorealLogo } from '@/components/BorealLogo';
+
+export default function FaqPage() {
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  const toggleExpanded = (key: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(key)) {
+      newExpanded.delete(key);
+    } else {
+      newExpanded.add(key);
+    }
+    setExpandedItems(newExpanded);
+  };
+
+  const filteredContent = selectedCategory === 'all' 
+    ? faqContent 
+    : faqContent.filter(section => section.category === selectedCategory);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <BorealLogo size="default" />
+            <nav className="flex space-x-6">
+              <a href="/" className="text-gray-600 hover:text-blue-600 transition-colors">
+                Home
+              </a>
+              <a href="/portal" className="text-gray-600 hover:text-blue-600 transition-colors">
+                Portal
+              </a>
+              <a href="/troubleshooting" className="text-gray-600 hover:text-blue-600 transition-colors">
+                Troubleshooting
+              </a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h1>
+          <p className="text-lg text-gray-600">
+            Find answers to common questions about Boreal Financial's services, application process, and platform features.
+          </p>
+        </div>
+
+        {/* Category Filter */}
+        <div className="mb-8">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedCategory('all')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedCategory === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              All Categories
+            </button>
+            {faqCategories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  selectedCategory === category
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* FAQ Content */}
+        <div className="space-y-8">
+          {filteredContent.map((section) => (
+            <div key={section.category} className="bg-white rounded-lg shadow-sm border">
+              <div className="p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                  <span className="w-3 h-3 bg-blue-600 rounded-full mr-3"></span>
+                  {section.category}
+                </h2>
+                
+                <div className="space-y-4">
+                  {section.questions.map((item, index) => {
+                    const key = `${section.category}-${index}`;
+                    const isExpanded = expandedItems.has(key);
+                    
+                    return (
+                      <div key={key} className="border border-gray-200 rounded-lg">
+                        <button
+                          onClick={() => toggleExpanded(key)}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center justify-between"
+                        >
+                          <span className="font-medium text-gray-900 pr-4">
+                            {item.question}
+                          </span>
+                          {isExpanded ? (
+                            <ChevronUpIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          ) : (
+                            <ChevronDownIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          )}
+                        </button>
+                        
+                        {isExpanded && (
+                          <div className="px-4 pb-4 border-t border-gray-100">
+                            <div className="pt-3 text-gray-600 leading-relaxed whitespace-pre-line">
+                              {item.answer}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Contact Section */}
+        <div className="mt-12 bg-blue-50 rounded-lg p-6 border border-blue-200">
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">
+            Still have questions?
+          </h3>
+          <p className="text-blue-700 mb-4">
+            If you can't find the answer you're looking for, our support team is here to help.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <a
+              href="/troubleshooting"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              View Troubleshooting Guide
+            </a>
+            <a
+              href="mailto:support@borealfinance.app"
+              className="inline-flex items-center px-4 py-2 bg-white text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              Contact Support
+            </a>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

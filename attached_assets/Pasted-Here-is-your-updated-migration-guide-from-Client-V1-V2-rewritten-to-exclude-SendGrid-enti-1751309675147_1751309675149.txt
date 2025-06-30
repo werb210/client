@@ -1,0 +1,254 @@
+Here is your updated **migration guide from Client V1 → V2**, rewritten to **exclude SendGrid** entirely.
+
+---
+
+# 🧭 Client V1 → V2 Migration Guide
+
+**Objective:** Install the following critical features from Client V1 into Client V2:
+
+* `/faq`, `/troubleshooting` pages
+* `/product-admin` admin panel
+* Retry queue + defer logic
+* Transmission & audit logs
+* External API health checks
+* Retry logic tests
+* SMS OTP (archived → active)
+
+---
+
+## ✅ 0. Prep (Meta)
+
+| Step | Action                                | Commit                                 |
+| ---- | ------------------------------------- | -------------------------------------- |
+| 0.1  | Create branch `migration/v1-features` | `chore: start v1 feature migration`    |
+| 0.2  | Add `docs/MIGRATION_V1_TO_V2.md`      | `docs: migration instructions V1 → V2` |
+
+---
+
+## 📄 1. Port FAQ & Troubleshooting Pages
+
+**No backend work required** — just UI content.
+
+### File structure
+
+```
+client/
+└─ src/
+   ├─ pages/
+   │  ├─ FaqPage.tsx
+   │  └─ TroubleshootingPage.tsx
+   └─ content/
+      ├─ faq.mdx
+      └─ troubleshooting.mdx
+```
+
+### Example FaqPage.tsx
+
+```tsx
+import faq from "../../content/faq.mdx";
+export default function FaqPage() {
+  return (
+    <main className="prose mx-auto p-6">
+      <h1>Frequently Asked Questions</h1>
+      <article>{faq}</article>
+    </main>
+  );
+}
+```
+
+### Add Routes
+
+```tsx
+<Route path="/faq" element={<FaqPage />} />
+<Route path="/troubleshooting" element={<TroubleshootingPage />} />
+```
+
+**Commit:**
+
+```bash
+feat(client): port /faq and /troubleshooting pages from V1
+```
+
+---
+
+## 🛠 2. Lender Product Admin Page `/product-admin`
+
+A secure front-end editor for lender products.
+
+### Steps
+
+| Step | Task                                                 |
+| ---- | ---------------------------------------------------- |
+| 2.1  | Create `src/pages/ProductAdmin.tsx` — copy from V1   |
+| 2.2  | Use `useQuery`/`useMutation` for API calls           |
+| 2.3  | Require roles: `lender`, `admin` via `AuthGuard`     |
+| 2.4  | Render table + edit forms using TanStack Table       |
+| 2.5  | Add route `/product-admin`                           |
+| 2.6  | Backend uses existing `/api/admin/lenders` endpoints |
+
+**Commit:**
+
+```bash
+feat(client): add secured /product-admin panel
+```
+
+---
+
+## ♻️ 3. Retry Queue System + API Fallback
+
+### 3.1 Add retry\_queue table
+
+```ts
+CREATE TABLE retry_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  endpoint TEXT NOT NULL,
+  payload JSONB,
+  try_count INT DEFAULT 0,
+  max_retries INT DEFAULT 5,
+  next_retry_at TIMESTAMP DEFAULT NOW(),
+  last_error TEXT
+);
+```
+
+### 3.2 Copy `retryService.ts` from V1 → `server/jobs/retryService.ts`
+
+Add `startRetryService()` in `server/index.ts`
+
+### 3.3 API Defer Logic
+
+```ts
+export async function withReceiverHealth(fn, fallback) {
+  const healthy = await checkReceivingApi(); // from V1
+  return healthy ? fn() : fallback();
+}
+```
+
+Usage:
+
+```ts
+await withReceiverHealth(
+  () => postToReceiver(payload),
+  () => queueRetry('/receiver', payload)
+);
+```
+
+**Commit:**
+
+```bash
+feat(server): port retry queue and API fallback logic
+```
+
+---
+
+## 🧾 4. Transmission + Audit Logs
+
+### 4.1 Add Tables
+
+```sql
+CREATE TABLE transmission_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  route TEXT,
+  status INT,
+  payload JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE audit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID,
+  action TEXT,
+  meta JSONB,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### 4.2 Add Middleware
+
+* `server/middleware/transmissionLogger.ts`
+* `server/middleware/auditLogger.ts`
+
+Hook into `server/index.ts` before routes.
+
+**Commit:**
+
+```bash
+feat(server): add audit + transmission logging
+```
+
+---
+
+## 🧠 5. Reactivate SMS OTP Flow
+
+### Steps
+
+1. Un-archive `VerifyOtp.tsx` and restore route.
+2. Add resend cooldown logic (15s).
+3. Hook `/api/auth/verify-otp` to existing auth cookie flow.
+4. Add retry & error handling UI.
+
+**Commit:**
+
+```bash
+feat(auth): reactivate SMS OTP flow in V2
+```
+
+---
+
+## ⚕️ 6. External API Health Check Job
+
+Copy V1 `externalApiHealthCheck.ts` → `server/jobs/healthCheck.ts`
+
+Add scheduler to `server/index.ts`:
+
+```ts
+import { startHealthCheck } from './jobs/healthCheck';
+startHealthCheck();  // every 10 min
+```
+
+**Commit:**
+
+```bash
+feat(server): add external API health check from V1
+```
+
+---
+
+## 🧪 7. Retry Logic Tests
+
+* Copy `tests/retryLogic.test.ts` from V1
+* Update imports and match V2 structure
+* Add mock queue payload and retry logic
+
+**Commit:**
+
+```bash
+test: restore retry queue unit tests from V1
+```
+
+---
+
+## 📘 8. Finalize & Document
+
+* Update `README.md` → Add section: *“Ported V1 Reliability Features”*
+* Push branch, open PR titled:
+  `Migrate critical client-side infra from V1`
+
+---
+
+## ✅ Summary Checklist
+
+| Feature                   | Status |
+| ------------------------- | ------ |
+| FAQ Page                  | ✅      |
+| Troubleshooting Page      | ✅      |
+| Product Admin Page        | ✅      |
+| Retry Queue               | ✅      |
+| API Fallback / Defer      | ✅      |
+| Transmission Logger       | ✅      |
+| Audit Logs                | ✅      |
+| External API Health Check | ✅      |
+| SMS OTP Flow              | ✅      |
+| Retry Logic Tests         | ✅      |
+
+---
+
+Let me know if you’d like this exported to a `docs/MIGRATION.md` or split per PR deliverable.
