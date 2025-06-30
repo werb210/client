@@ -8,16 +8,13 @@ import { ApplicationProvider } from "@/context/ApplicationContext";
 import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
 
 // Core application pages
-import LoginPage from "@/pages/LoginPage";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import VerifyOtp from "@/pages/VerifyOtp";
 import RequestReset from "@/pages/RequestReset";
 import ResetPassword from "@/pages/ResetPassword";
-import { LandingPage } from "@/pages/LandingPage";
 import { NewLandingPage } from "@/pages/NewLandingPage";
 import Dashboard from "@/pages/Dashboard";
-import { PortalPage } from "@/pages/PortalPage";
 import { NewPortalPage } from "@/pages/NewPortalPage";
 import NotFound from "@/pages/NotFound";
 import SignComplete from "@/pages/SignComplete";
@@ -52,7 +49,7 @@ function Router() {
   return (
     <Switch>
       {/* Authentication routes */}
-      <Route path="/login" component={LoginPage} />
+      <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       {/* ARCHIVED: OTP verification route - disabled for simplified auth */}
       {/* <Route path="/verify-otp" component={VerifyOtp} /> */}
