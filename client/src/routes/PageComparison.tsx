@@ -4,7 +4,7 @@ import { Link } from "wouter";
 interface PageVariant {
   name: string;
   route: string;
-  status: 'current' | 'v2' | 'legacy' | 'new';
+  status: string;
   description?: string;
 }
 
@@ -19,74 +19,63 @@ const pageGroups: PageGroup[] = [
     category: "Landing Pages",
     description: "Main entry points for users",
     variants: [
-      { name: "Landing Page (Professional)", route: "/", status: 'new', description: "Main landing page with Boreal branding" },
+      { name: "Landing Page (Professional)", route: "/", status: "new", description: "Main landing page with Boreal branding" },
     ]
   },
   {
     category: "Dashboards & Portals", 
     description: "User portal and dashboard interfaces",
     variants: [
-      { name: "Dashboard (Legacy)", route: "/dashboard", status: 'legacy', description: "Original dashboard layout" },
-      { name: "Portal Page (Modern)", route: "/portal", status: 'v2', description: "Modern portal with V2 styling" },
+      { name: "Dashboard (Legacy)", route: "/dashboard", status: "legacy", description: "Original dashboard layout" },
+      { name: "Portal Page (Modern)", route: "/portal", status: "v2", description: "Modern portal with V2 styling" },
     ]
   },
   {
     category: "Application Steps",
     description: "Multi-step application form components",
     variants: [
-      { name: "Step 1 - Financial Profile", route: "/step1", status: 'current', description: "Business basics form" },
-      { name: "Step 2 - Business Details", route: "/step2", status: 'current', description: "Detailed business information" },
-      { name: "Step 3 - Financial Information", route: "/step3", status: 'current', description: "Financial details and revenue" },
-      { name: "Step 4 - Document Upload", route: "/step4", status: 'current', description: "Document submission" },
-      { name: "Step 5 - Summary & Review", route: "/step5", status: 'current', description: "Application review" },
+      { name: "Step 1 - Financial Profile", route: "/step1", status: "current", description: "Business basics form" },
+      { name: "Step 2 - Business Details", route: "/step2", status: "current", description: "Detailed business information" },
+      { name: "Step 3 - Financial Information", route: "/step3", status: "current", description: "Financial details and revenue" },
+      { name: "Step 4 - Document Upload", route: "/step4", status: "current", description: "Document submission" },
+      { name: "Step 5 - Summary & Review", route: "/step5", status: "current", description: "Application review" },
     ]
   },
   {
     category: "Authentication",
     description: "Login and registration pages",
     variants: [
-      { name: "Login Page", route: "/login", status: 'current', description: "User authentication" },
-      { name: "Register Page", route: "/register", status: 'current', description: "New user registration" },
+      { name: "Login Page", route: "/login", status: "current", description: "User authentication" },
+      { name: "Register Page", route: "/register", status: "current", description: "New user registration" },
     ]
   },
   {
     category: "Support & Admin",
     description: "Help, admin, and management interfaces",
     variants: [
-      { name: "FAQ Page", route: "/faq", status: 'current', description: "Frequently asked questions" },
-      { name: "Troubleshooting", route: "/troubleshooting", status: 'current', description: "Help and support" },
-      { name: "Product Admin", route: "/admin", status: 'current', description: "Administrative interface" },
-    ]
-  },
-  {
-    category: "Error Pages",
-    description: "Error and fallback pages",
-    variants: [
-      { name: "404 Not Found", route: "/404", status: 'current', description: "Page not found error" },
+      { name: "FAQ Page", route: "/faq", status: "current", description: "Frequently asked questions" },
+      { name: "Troubleshooting", route: "/troubleshooting", status: "current", description: "Help and support" },
+      { name: "Product Admin", route: "/admin", status: "current", description: "Administrative interface" },
     ]
   }
 ];
 
 export default function PageComparison() {
   const [selectedGroup, setSelectedGroup] = useState<PageGroup | null>(null);
-  const [selectedVariants, setSelectedVariants] = useState<PageVariant[]>([]);
-  const [approvedPages, setApprovedPages] = useState<Set<string>>(new Set());
+  const [approvedPages, setApprovedPages] = useState<string[]>([]);
 
   const handleSelectGroup = (group: PageGroup) => {
     setSelectedGroup(group);
-    setSelectedVariants(group.variants);
   };
 
   const handleApprove = (variantName: string) => {
-    setApprovedPages(prev => new Set([...prev, variantName]));
+    if (!approvedPages.includes(variantName)) {
+      setApprovedPages([...approvedPages, variantName]);
+    }
   };
 
   const handleReject = (variantName: string) => {
-    setApprovedPages(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(variantName);
-      return newSet;
-    });
+    setApprovedPages(approvedPages.filter(name => name !== variantName));
   };
 
   const getStatusColor = (status: string) => {
@@ -142,11 +131,11 @@ export default function PageComparison() {
               </div>
 
               {/* Approved Pages Summary */}
-              {approvedPages.size > 0 && (
+              {approvedPages.length > 0 && (
                 <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h3 className="font-semibold text-green-900 mb-2">Approved Pages ({approvedPages.size})</h3>
+                  <h3 className="font-semibold text-green-900 mb-2">Approved Pages ({approvedPages.length})</h3>
                   <div className="text-sm text-green-800">
-                    {[...approvedPages].map(page => (
+                    {approvedPages.map(page => (
                       <div key={page} className="truncate">✓ {page}</div>
                     ))}
                   </div>
@@ -170,7 +159,7 @@ export default function PageComparison() {
                   <p className="text-gray-600 mb-4">{selectedGroup.description}</p>
                   
                   <div className="grid gap-4">
-                    {selectedVariants.map((variant) => (
+                    {selectedGroup.variants.map((variant) => (
                       <div key={variant.name} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
@@ -183,12 +172,12 @@ export default function PageComparison() {
                             <button
                               onClick={() => handleApprove(variant.name)}
                               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                                approvedPages.has(variant.name)
+                                approvedPages.includes(variant.name)
                                   ? 'bg-green-600 text-white'
                                   : 'bg-green-100 text-green-700 hover:bg-green-200'
                               }`}
                             >
-                              {approvedPages.has(variant.name) ? '✓ Approved' : 'Approve'}
+                              {approvedPages.includes(variant.name) ? '✓ Approved' : 'Approve'}
                             </button>
                             <button
                               onClick={() => handleReject(variant.name)}
@@ -234,21 +223,21 @@ export default function PageComparison() {
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
                   <h3 className="text-lg font-bold text-orange-900 mb-3">Next Steps</h3>
                   <div className="text-orange-800 space-y-2">
-                    <p>• Review each variant by clicking "View Full Page"</p>
+                    <p>• Review each variant by clicking "View Page"</p>
                     <p>• Click "Approve" for the version you want to keep</p>
                     <p>• I'll apply V2 Boreal Financial styling to approved pages</p>
                     <p>• Rejected variants will be archived or removed</p>
                   </div>
                   
-                  {approvedPages.size > 0 && (
+                  {approvedPages.length > 0 && (
                     <button 
                       className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
                       onClick={() => {
-                        const approved = [...approvedPages].join('\n- ');
+                        const approved = approvedPages.join('\n- ');
                         alert(`Ready to modernize these approved pages:\n\n- ${approved}\n\nI'll now apply V2 Boreal Financial styling!`);
                       }}
                     >
-                      Apply V2 Styling to {approvedPages.size} Approved Page{approvedPages.size !== 1 ? 's' : ''}
+                      Apply V2 Styling to {approvedPages.length} Approved Page{approvedPages.length !== 1 ? 's' : ''}
                     </button>
                   )}
                 </div>
