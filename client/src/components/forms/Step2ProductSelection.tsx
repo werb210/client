@@ -98,47 +98,50 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
 
         {/* Geographic Filter Indicator */}
         <div className="bg-success-50 p-modern-md rounded-modern-lg border border-success-200">
-          <p className="body-modern-small text-success-700">
-            <strong>Country Filter Active:</strong> Showing loan products available in {formData.headquarters}
-          </p>
+          <div className="flex items-center">
+            <Target className="h-5 w-5 text-success-600 mr-modern-sm" />
+            <span className="body-modern-small text-success-700">
+              Showing products available in {formData.headquarters}
+            </span>
+          </div>
         </div>
 
         {/* Industry Insights Section */}
         {industryInsights && (
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-            <h3 className="font-semibold text-purple-900 mb-3 flex items-center">
-              <Lightbulb className="w-5 h-5 mr-2" />
+          <div className="bg-purple-50 p-modern-lg rounded-modern-lg border border-purple-200 card-modern">
+            <h3 className="heading-modern-h4 text-purple-900 mb-modern-sm flex items-center">
+              <Lightbulb className="w-5 h-5 mr-modern-sm" />
               {industryInsights.title}
             </h3>
-            <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="grid md:grid-cols-3 gap-modern-lg body-modern-small">
               <div>
-                <h4 className="font-medium text-purple-800 mb-2 flex items-center">
-                  <TrendingUp className="w-4 h-4 mr-1" />
+                <h4 className="body-modern font-medium text-purple-800 mb-modern-sm flex items-center">
+                  <TrendingUp className="w-4 h-4 mr-modern-xs" />
                   Trends
                 </h4>
-                <ul className="space-y-1">
+                <ul className="space-y-modern-xs">
                   {industryInsights.trends.map((trend, index) => (
                     <li key={index} className="text-purple-700">• {trend}</li>
                   ))}
                 </ul>
               </div>
               <div>
-                <h4 className="font-medium text-purple-800 mb-2 flex items-center">
-                  <Target className="w-4 h-4 mr-1" />
+                <h4 className="body-modern font-medium text-purple-800 mb-modern-sm flex items-center">
+                  <Target className="w-4 h-4 mr-modern-xs" />
                   Recommendations
                 </h4>
-                <ul className="space-y-1">
+                <ul className="space-y-modern-xs">
                   {industryInsights.recommendations.map((rec, index) => (
                     <li key={index} className="text-purple-700">• {rec}</li>
                   ))}
                 </ul>
               </div>
               <div>
-                <h4 className="font-medium text-purple-800 mb-2 flex items-center">
-                  <Shield className="w-4 h-4 mr-1" />
+                <h4 className="body-modern font-medium text-purple-800 mb-modern-sm flex items-center">
+                  <Shield className="w-4 h-4 mr-modern-xs" />
                   Risk Factors
                 </h4>
-                <ul className="space-y-1">
+                <ul className="space-y-modern-xs">
                   {industryInsights.riskFactors.map((risk, index) => (
                     <li key={index} className="text-purple-700">• {risk}</li>
                   ))}
