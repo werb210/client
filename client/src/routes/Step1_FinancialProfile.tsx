@@ -181,8 +181,8 @@ export default function Step1FinancialProfile() {
 
         {/* Main Form */}
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-modern-xl">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 
                 {/* 1. Funding Amount */}
                 <FormField
@@ -448,9 +448,8 @@ export default function Step1FinancialProfile() {
                 </div>
               </form>
             </Form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-    </div>
   );
 }

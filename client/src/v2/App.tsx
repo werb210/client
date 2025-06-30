@@ -30,6 +30,9 @@ import Step4FinancialInfo from "../routes/Step4_FinancialInfo";
 import Step5DocumentUpload from "../routes/Step5_DocumentUpload";
 import Step6Signature from "../routes/Step6_Signature";
 
+// PageShowcase for systematic V2 modernization
+import PageShowcase from "../routes/PageShowcase";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -75,6 +78,25 @@ export default function App() {
                     
                     {/* Administrative Pages */}
                     <Route path="product-admin" element={<ProductAdminPage />} />
+                    
+                    {/* PageShowcase for systematic V2 modernization */}
+                    <Route path="_showcase" element={<PageShowcase />} />
+                    <Route path="_show/landing" element={<ProfessionalLandingPage />} />
+                    <Route path="_show/portal" element={<NewPortalPage />} />
+                    <Route path="_show/step1" element={<Step1FinancialProfile />} />
+                    <Route path="_show/step2" element={<Step2Recommendations />} />
+                    <Route path="_show/step3" element={<Step3BusinessDetails />} />
+                    <Route path="_show/step4" element={<Step4FinancialInfo />} />
+                    <Route path="_show/step5" element={<Step5DocumentUpload />} />
+                    <Route path="_show/step6" element={<Step6Signature />} />
+                    <Route path="_show/login" element={<Login />} />
+                    <Route path="_show/register" element={<Register />} />
+                    <Route path="_show/faq" element={<FaqPage />} />
+                    <Route path="_show/troubleshooting" element={<TroubleshootingPage />} />
+                    <Route path="_show/product-admin" element={<ProductAdminPage />} />
+                    <Route path="_show/comprehensive" element={<ComprehensiveApplication />} />
+                    <Route path="_show/document-validation" element={<DocumentValidationDemo />} />
+                    <Route path="_show/not-found" element={<NotFound />} />
                     
                     {/* 404 Not Found */}
                     <Route path="*" element={<NotFound />} />
