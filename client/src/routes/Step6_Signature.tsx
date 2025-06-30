@@ -127,23 +127,23 @@ export default function Step6Signature() {
   const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
+    <MainLayout>
+      <div className="container-modern">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="text-center mb-modern-2xl">
+          <h1 className="heading-modern-display text-modern-primary mb-modern-sm">
             Step 6: Electronic Signature
           </h1>
-          <p className="text-gray-600">
+          <p className="body-modern-large text-modern-secondary">
             Complete your application with a secure electronic signature
           </p>
         </div>
 
         {/* Progress Indicator */}
-        <Card className="mb-8">
+        <Card className="mb-modern-2xl card-modern">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
+            <CardTitle className="heading-modern-h3 flex items-center gap-modern-sm">
+              <CheckCircle className="h-5 w-5 text-success-500" />
               Application Progress
             </CardTitle>
           </CardHeader>
@@ -342,6 +342,6 @@ export default function Step6Signature() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </MainLayout>
   );
 }
