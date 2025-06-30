@@ -78,54 +78,54 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-orange-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mb-4">
-            <h1 className="text-2xl font-bold text-teal-700">Boreal Financial</h1>
+    <div className="min-h-screen gradient-modern-hero flex items-center justify-center p-4">
+      <Card className="w-full max-w-md card-modern">
+        <CardHeader className="text-center p-modern-xl">
+          <div className="mb-modern-lg">
+            <h1 className="heading-modern-h2 text-brand-blue-700">Boreal Financial</h1>
           </div>
-          <CardTitle className="text-xl">Sign In</CardTitle>
+          <CardTitle className="heading-modern-h3">Sign In</CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
+        <CardContent className="p-modern-xl">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-modern-lg">
+            <div className="space-y-modern-sm">
+              <Label htmlFor="email" className="body-modern-small font-medium">Email</Label>
               <Input
                 id="email"
                 type="email"
                 {...register('email')}
-                className={errors.email ? 'border-red-500' : ''}
+                className={`form-modern-input ${errors.email ? 'border-error-500' : ''}`}
               />
               {errors.email && (
-                <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
+                <p className="body-modern-small text-error-600 mt-1">{errors.email.message}</p>
               )}
             </div>
 
-            <div>
-              <Label htmlFor="password">Password</Label>
+            <div className="space-y-modern-sm">
+              <Label htmlFor="password" className="body-modern-small font-medium">Password</Label>
               <Input
                 id="password"
                 type="password"
                 {...register('password')}
-                className={errors.password ? 'border-red-500' : ''}
+                className={`form-modern-input ${errors.password ? 'border-error-500' : ''}`}
               />
               {errors.password && (
-                <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
+                <p className="body-modern-small text-error-600 mt-1">{errors.password.message}</p>
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full btn-modern btn-modern-primary" disabled={isLoading}>
               {isLoading ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
 
-          <div className="mt-6 text-center space-y-2">
-            <Link href="/request-reset" className="text-sm text-teal-600 hover:underline">
+          <div className="mt-modern-xl text-center space-y-modern-sm">
+            <Link href="/request-reset" className="body-modern-small text-brand-blue-600 hover:text-brand-blue-700">
               Forgot your password?
             </Link>
-            <p className="text-sm text-gray-600">
+            <p className="body-modern-small text-modern-secondary">
               Don't have an account?{' '}
-              <Link href="/register" className="text-teal-600 hover:underline">
+              <Link href="/register" className="text-brand-blue-600 hover:text-brand-blue-700">
                 Sign up
               </Link>
             </p>

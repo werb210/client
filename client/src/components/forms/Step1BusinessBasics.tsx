@@ -27,25 +27,25 @@ export function Step1BusinessBasics({ defaultValues, onSubmit, onNext }: Step1Pr
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <div className="container-modern py-modern-2xl space-y-modern-2xl">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Business Basics</h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2">
+        <h1 className="heading-modern-h1 text-modern-primary">Business Basics</h1>
+        <p className="body-modern-large text-modern-secondary mt-modern-sm">
           Tell us about your business and funding needs
         </p>
       </div>
 
       <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-modern-2xl">
           {/* Business Location */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-teal-600" />
+          <Card className="card-modern">
+            <CardHeader className="p-modern-xl">
+              <CardTitle className="heading-modern-h3 flex items-center gap-modern-md">
+                <Building2 className="h-5 w-5 text-brand-blue-600" />
                 Business Location
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-modern-xl space-y-modern-lg">
               <FormField
                 control={form.control}
                 name="headquarters"
@@ -99,23 +99,23 @@ export function Step1BusinessBasics({ defaultValues, onSubmit, onNext }: Step1Pr
           </Card>
 
           {/* Funding Requirements */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-teal-600" />
+          <Card className="card-modern">
+            <CardHeader className="p-modern-xl">
+              <CardTitle className="heading-modern-h3 flex items-center gap-modern-md">
+                <DollarSign className="h-5 w-5 text-brand-blue-600" />
                 Funding Requirements
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-modern-xl space-y-modern-lg">
               <FormField
                 control={form.control}
                 name="lookingFor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>What are you looking for?</FormLabel>
+                    <FormLabel className="body-modern-small font-medium text-modern-primary">What are you looking for?</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="form-modern-input">
                           <SelectValue placeholder="Select funding type" />
                         </SelectTrigger>
                       </FormControl>
@@ -125,7 +125,7 @@ export function Step1BusinessBasics({ defaultValues, onSubmit, onNext }: Step1Pr
                         <SelectItem value="both">Both Capital & Equipment</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
+                    <FormMessage className="body-modern-small text-error-600" />
                   </FormItem>
                 )}
               />
@@ -135,7 +135,7 @@ export function Step1BusinessBasics({ defaultValues, onSubmit, onNext }: Step1Pr
                 name="fundingAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Funding Amount Needed</FormLabel>
+                    <FormLabel className="body-modern-small font-medium text-modern-primary">Funding Amount Needed</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -143,9 +143,10 @@ export function Step1BusinessBasics({ defaultValues, onSubmit, onNext }: Step1Pr
                         {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
                         placeholder="e.g., 100000"
+                        className="form-modern-input"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="body-modern-small text-error-600" />
                   </FormItem>
                 )}
               />

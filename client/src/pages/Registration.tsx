@@ -124,32 +124,32 @@ export default function Registration() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+            <div className="space-y-modern-sm">
+              <Label htmlFor="email" className="body-modern-small font-medium">Email Address</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="john.doe@example.com"
-                  className="pl-10"
+                  className="form-modern-input pl-10"
                   {...form.register('email')}
                 />
               </div>
               {form.formState.errors.email && (
-                <p className="text-sm text-red-600">{form.formState.errors.email.message}</p>
+                <p className="body-modern-small text-error-600">{form.formState.errors.email.message}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Mobile Phone</Label>
+            <div className="space-y-modern-sm">
+              <Label htmlFor="phoneNumber" className="body-modern-small font-medium">Mobile Phone</Label>
               <div className="relative">
-                <Smartphone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Smartphone className="absolute left-3 top-3 h-4 w-4 text-neutral-400" />
                 <Input
                   id="phoneNumber"
                   type="tel"
                   placeholder="+1 (555) 123-4567"
-                  className="pl-10"
+                  className="form-modern-input pl-10"
                   {...form.register('phoneNumber', {
                     onChange: (e) => {
                       const formatted = formatPhoneNumber(e.target.value);
@@ -159,27 +159,27 @@ export default function Registration() {
                 />
               </div>
               {form.formState.errors.phoneNumber && (
-                <p className="text-sm text-red-600">{form.formState.errors.phoneNumber.message}</p>
+                <p className="body-modern-small text-error-600">{form.formState.errors.phoneNumber.message}</p>
               )}
-              <p className="text-sm text-gray-500">
+              <p className="body-modern-small text-modern-tertiary">
                 We'll send SMS verification codes to this number
               </p>
             </div>
 
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full btn-modern btn-modern-primary" 
               disabled={registerMutation.isPending}
             >
               {registerMutation.isPending ? 'Creating Account...' : 'Create Account & Verify Phone'}
             </Button>
           </form>
 
-          <div className="text-center mt-4">
+          <div className="text-center mt-modern-lg">
             <Button
               variant="ghost"
               onClick={() => window.location.href = '/api/logout'}
-              className="text-sm text-gray-500"
+              className="body-modern-small text-modern-tertiary hover:text-modern-secondary"
             >
               Back to Login
             </Button>
