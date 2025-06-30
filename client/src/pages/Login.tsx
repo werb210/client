@@ -81,59 +81,84 @@ export default function Login() {
   return (
     <MainLayout>
       <div className="min-h-screen bg-modern-primary flex items-center justify-center p-modern-lg">
-      <Card className="w-full max-w-md card-modern">
+        <Card className="w-full max-w-md card-modern">
         <CardHeader className="text-center p-modern-xl">
-          <div className="mb-modern-lg">
-            <h1 className="heading-modern-h2 text-brand-blue-700">Boreal Financial</h1>
-          </div>
-          <CardTitle className="heading-modern-h3">Sign In</CardTitle>
+          <CardTitle className="heading-modern-h2">Welcome Back</CardTitle>
+          <p className="body-modern text-modern-secondary mt-modern-sm">
+            Sign in to your account to continue
+          </p>
         </CardHeader>
         <CardContent className="p-modern-xl">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-modern-lg">
-            <div className="space-y-modern-sm">
-              <Label htmlFor="email" className="body-modern-small font-medium">Email</Label>
+            <div>
+              <Label htmlFor="email" className="body-modern-small font-medium">Email Address</Label>
               <Input
+                {...register('email')}
                 id="email"
                 type="email"
-                {...register('email')}
-                className={`form-modern-input ${errors.email ? 'border-error-500' : ''}`}
+                placeholder="Enter your email"
+                className="form-modern mt-modern-sm"
               />
               {errors.email && (
-                <p className="body-modern-small text-error-600 mt-1">{errors.email.message}</p>
+                <p className="text-error-500 body-modern-small mt-modern-xs">{errors.email.message}</p>
               )}
             </div>
-
-            <div className="space-y-modern-sm">
+            
+            <div>
               <Label htmlFor="password" className="body-modern-small font-medium">Password</Label>
               <Input
+                {...register('password')}
                 id="password"
                 type="password"
-                {...register('password')}
-                className={`form-modern-input ${errors.password ? 'border-error-500' : ''}`}
+                placeholder="Enter your password"
+                className="form-modern mt-modern-sm"
               />
               {errors.password && (
-                <p className="body-modern-small text-error-600 mt-1">{errors.password.message}</p>
+                <p className="text-error-500 body-modern-small mt-modern-xs">{errors.password.message}</p>
               )}
             </div>
-
-            <Button type="submit" className="w-full btn-modern btn-modern-primary" disabled={isLoading}>
-              {isLoading ? 'Signing In...' : 'Sign In'}
+            
+            <Button 
+              type="submit" 
+              className="w-full btn-modern" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-
-          <div className="mt-modern-xl text-center space-y-modern-sm">
-            <Link href="/request-reset" className="body-modern-small text-brand-blue-600 hover:text-brand-blue-700">
+          
+          <div className="mt-modern-lg text-center space-y-modern-lg">
+            <Link 
+              href="/request-reset" 
+              className="body-modern-small text-brand-blue-600 hover:text-brand-blue-700"
+            >
               Forgot your password?
             </Link>
-            <p className="body-modern-small text-modern-secondary">
-              Don't have an account?{' '}
-              <Link href="/register" className="text-brand-blue-600 hover:text-brand-blue-700">
-                Sign up
+            
+            <div className="border-t border-modern-border pt-modern-lg">
+              <p className="body-modern-small text-modern-secondary">
+                Don't have an account?{' '}
+                <Link 
+                  href="/register" 
+                  className="text-brand-blue-600 hover:text-brand-blue-700 font-medium"
+                >
+                  Sign up
+                </Link>
+              </p>
+            </div>
+            
+            <div className="border-t border-modern-border pt-modern-lg">
+              <Link 
+                href="/backend-diagnostic" 
+                className="body-modern-small text-modern-muted hover:text-modern-secondary"
+              >
+                Backend Diagnostic
               </Link>
-            </p>
+            </div>
           </div>
         </CardContent>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </MainLayout>
   );
 }

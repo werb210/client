@@ -70,77 +70,75 @@ export default function RequestReset() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-orange-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mb-4">
-              <h1 className="text-2xl font-bold text-teal-700">Boreal Financial</h1>
-            </div>
-            <CardTitle className="text-xl">Check Your SMS</CardTitle>
+      <MainLayout>
+        <div className="min-h-screen bg-modern-primary flex items-center justify-center p-modern-lg">
+          <Card className="w-full max-w-md card-modern">
+            <CardHeader className="text-center p-modern-xl">
+              <CardTitle className="heading-modern-h2">Check Your SMS</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center space-y-modern-lg p-modern-xl">
+              <p className="body-modern text-modern-secondary">
+                We've sent password reset instructions to:
+              </p>
+              <p className="body-modern-large font-medium text-modern-foreground">
+                {getValues('phone')}
+              </p>
+              <p className="body-modern-small text-modern-muted">
+                Check your SMS for the reset link. The link will expire in 1 hour.
+              </p>
+              <div className="pt-modern-lg">
+                <Link href="/login">
+                  <Button variant="outline" className="w-full btn-modern">
+                    Back to Sign In
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <div className="min-h-screen bg-modern-primary flex items-center justify-center p-modern-lg">
+        <Card className="w-full max-w-md card-modern">
+          <CardHeader className="text-center p-modern-xl">
+            <CardTitle className="heading-modern-h2">Reset Password</CardTitle>
+            <p className="body-modern text-modern-secondary mt-modern-sm">
+              Enter your phone number and we'll send you a link to reset your password.
+            </p>
           </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-gray-600">
-              We've sent password reset instructions to:
-            </p>
-            <p className="font-medium text-gray-900">
-              {getValues('phone')}
-            </p>
-            <p className="text-sm text-gray-500">
-              Check your SMS for the reset link. The link will expire in 1 hour.
-            </p>
-            <div className="pt-4">
-              <Link href="/login">
-                <Button variant="outline" className="w-full">
-                  Back to Sign In
-                </Button>
+          <CardContent className="p-modern-xl">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-modern-lg">
+              <div>
+                <Label htmlFor="phone" className="body-modern-small font-medium">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+1 (555) 123-4567"
+                  {...register('phone')}
+                  className={`form-modern mt-modern-sm ${errors.phone ? 'border-error-500' : ''}`}
+                />
+                {errors.phone && (
+                  <p className="body-modern-small text-error-600 mt-modern-xs">{errors.phone.message}</p>
+                )}
+              </div>
+
+              <Button type="submit" className="w-full btn-modern" disabled={isLoading}>
+                {isLoading ? 'Sending...' : 'Send Reset Link'}
+              </Button>
+            </form>
+
+            <div className="mt-modern-lg text-center">
+              <Link href="/login" className="body-modern-small text-brand-blue-600 hover:text-brand-blue-700">
+                Back to Sign In
               </Link>
             </div>
           </CardContent>
         </Card>
       </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-orange-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mb-4">
-            <h1 className="text-2xl font-bold text-teal-700">Boreal Financial</h1>
-          </div>
-          <CardTitle className="text-xl">Reset Password</CardTitle>
-          <p className="text-sm text-gray-600 mt-2">
-            Enter your phone number and we'll send you a link to reset your password.
-          </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+1 (555) 123-4567"
-                {...register('phone')}
-                className={errors.phone ? 'border-red-500' : ''}
-              />
-              {errors.phone && (
-                <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>
-              )}
-            </div>
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Sending...' : 'Send Reset Link'}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <Link href="/login" className="text-sm text-teal-600 hover:underline">
-              Back to Sign In
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    </MainLayout>
   );
 }
