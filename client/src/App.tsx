@@ -90,9 +90,7 @@ function Router() {
       {/* Support pages */}
       <Route path="/faq" component={FaqPage} />
       <Route path="/troubleshooting" component={TroubleshootingPage} />
-      
-      {/* Default route - New landing page with V1 design */}
-      <Route path="/" component={NewLandingPage} />
+
       <Route component={NotFound} />
     </Switch>
   );
