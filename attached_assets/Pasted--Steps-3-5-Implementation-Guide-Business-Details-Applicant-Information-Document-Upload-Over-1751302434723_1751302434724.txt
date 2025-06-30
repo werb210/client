@@ -1,0 +1,516 @@
+# Steps 3-5 Implementation Guide: Business Details, Applicant Information & Document Upload
+
+## Overview
+
+This guide provides complete instructions for implementing Steps 3-5 of the Boreal Financial business loan application platform. These stages collect comprehensive business information, applicant details, and required documents with intelligent validation.
+
+## Step 3: Business Details Collection
+
+### Purpose
+Collects comprehensive business information including legal details, location, structure, and financial estimates.
+
+### Required Fields (10 Required + 2 Optional)
+
+#### Required Fields:
+1. **Business Operating Name** - Text input
+2. **Business Legal Name** - Text input  
+3. **Business Address** - Text input
+4. **Business City** - Text input
+5. **Business State/Province** - Dropdown (region-aware)
+6. **Business Postal Code** - Formatted input (region-aware)
+7. **Business Phone** - Formatted input (XXX) XXX-XXXX
+8. **Employee Count** - Dropdown selection
+9. **Business Start Date** - Year/Month selector
+10. **Business Structure** - Dropdown selection
+11. **This Year's Estimated Revenue** - Currency formatted input
+
+#### Optional Fields:
+- **Business Website** - Text input (marked as optional)
+- **Business Country** - Text input (marked as optional)
+
+### Implementation Details
+
+#### Regional Formatting System
+```typescript
+// Dynamic labels based on headquarters selection
+const isCanadian = form.watch("headquarters") === "canada";
+const regionalLabels = {
+  stateProvince: isCanadian ? "Province" : "State",
+  postalCode: isCanadian ? "Postal Code" : "ZIP Code",
+  postalCodePlaceholder: isCanadian ? "A1A 1A1" : "12345-6789"
+};
+
+// State/Province options
+const stateProvinceOptions = isCanadian ? [
+  { value: "AB", label: "Alberta" },
+  { value: "BC", label: "British Columbia" },
+  { value: "MB", label: "Manitoba" },
+  { value: "NB", label: "New Brunswick" },
+  { value: "NL", label: "Newfoundland and Labrador" },
+  { value: "NS", label: "Nova Scotia" },
+  { value: "NT", label: "Northwest Territories" },
+  { value: "NU", label: "Nunavut" },
+  { value: "ON", label: "Ontario" },
+  { value: "PE", label: "Prince Edward Island" },
+  { value: "QC", label: "Quebec" },
+  { value: "SK", label: "Saskatchewan" },
+  { value: "YT", label: "Yukon" }
+] : [
+  { value: "AL", label: "Alabama" },
+  { value: "AK", label: "Alaska" },
+  // ... all 50 US states + DC
+];
+```
+
+#### Business Structure Options
+```typescript
+<SelectContent>
+  <SelectItem value="llc">LLC</SelectItem>
+  <SelectItem value="corporation">Corporation</SelectItem>
+  <SelectItem value="partnership">Partnership</SelectItem>
+  <SelectItem value="sole_proprietorship">Sole Proprietorship</SelectItem>
+  <SelectItem value="other">Other</SelectItem>
+</SelectContent>
+```
+
+#### Employee Count Options
+```typescript
+<SelectContent>
+  <SelectItem value="1_to_5">1-5 employees</SelectItem>
+  <SelectItem value="6_to_10">6-10 employees</SelectItem>
+  <SelectItem value="11_to_25">11-25 employees</SelectItem>
+  <SelectItem value="26_to_50">26-50 employees</SelectItem>
+  <SelectItem value="51_to_100">51-100 employees</SelectItem>
+  <SelectItem value="over_100">Over 100 employees</SelectItem>
+</SelectContent>
+```
+
+#### Business Start Date Component
+Dual dropdown system for year and month selection:
+```typescript
+<div className="grid grid-cols-2 gap-3">
+  <div>
+    <FormLabel className="text-sm text-gray-600">Year</FormLabel>
+    <Select onValueChange={(year) => {
+      const currentMonth = field.value ? new Date(field.value).getMonth() + 1 : 1;
+      const newDate = new Date(parseInt(year), currentMonth - 1, 1);
+      field.onChange(newDate.toISOString());
+    }}>
+      <SelectContent>
+        {Array.from({ length: new Date().getFullYear() - 1950 + 1 }, (_, i) => {
+          const year = new Date().getFullYear() - i;
+          return (
+            <SelectItem key={year} value={year.toString()}>
+              {year}
+            </SelectItem>
+          );
+        })}
+      </SelectContent>
+    </Select>
+  </div>
+  // Similar structure for month
+</div>
+```
+
+#### Currency Formatting for Revenue
+```typescript
+<Input 
+  placeholder="Enter estimated revenue (e.g., 750,000)" 
+  {...field}
+  onChange={(e) => {
+    const value = e.target.value.replace(/[^\d]/g, '');
+    const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    field.onChange(formatted);
+  }}
+/>
+```
+
+### Validation Requirements
+- Step 3 requires completion of all 10 required fields
+- Continue button disabled until all required fields have values
+- Validation function: `canContinue(2)` checks required field completion
+
+---
+
+## Step 4: Applicant Information Collection
+
+### Purpose
+Collects detailed applicant personal information with conditional partner information display.
+
+### Field Categories
+
+#### Primary Applicant Information (7 Fields)
+1. **Applicant Name** - Text input
+2. **Applicant Email** - Email input
+3. **Title in Business** - Dropdown selection
+4. **Percentage Ownership** - Text input (triggers partner fields if < 100%)
+5. **Mobile Phone** - Formatted input
+6. **Date of Birth** - Calendar picker
+7. **SIN/SSN** - Formatted input (region-aware)
+
+#### Applicant Address (Optional Section - 4 Fields)
+1. **Street Address** - Text input
+2. **City** - Text input
+3. **State/Province** - Dropdown (region-aware)
+4. **Postal Code** - Formatted input (region-aware)
+
+#### Partner Information (Conditional - 6 Fields)
+Shows when ownership percentage < 100%:
+1. **Partner Name** - Text input
+2. **Partner Email** - Email input
+3. **Partner Phone** - Formatted input
+4. **Partner Ownership %** - Number input
+5. **Partner Title** - Dropdown selection
+6. **Partner SIN/SSN** - Formatted input (region-aware)
+
+### Implementation Details
+
+#### Title Options (Both Applicant and Partner)
+```typescript
+const titleOptions = [
+  { value: "owner_operator", label: "Owner/Operator" },
+  { value: "president", label: "President" },
+  { value: "partner_shareholder", label: "Partner/Shareholder" },
+  { value: "executive", label: "Executive" },
+  { value: "financial_officer", label: "Financial Officer" }
+];
+```
+
+#### Conditional Partner Information Display
+```typescript
+{(() => {
+  const ownership = form.watch("percentageOwnership");
+  return ownership && parseInt(ownership || "0") < 100;
+})() && (
+  <div className="border-t pt-4 mt-6">
+    <h4 className="text-sm font-medium text-gray-700 mb-4">
+      Partner Information (Additional Owner)
+    </h4>
+    {/* Partner fields here */}
+  </div>
+)}
+```
+
+#### Date of Birth Calendar Picker
+```typescript
+<Popover>
+  <PopoverTrigger asChild>
+    <FormControl>
+      <Button
+        variant="outline"
+        className={`w-full pl-3 text-left font-normal ${
+          !field.value && "text-muted-foreground"
+        }`}
+      >
+        {field.value ? (
+          format(new Date(field.value), "PPP")
+        ) : (
+          <span>Pick a date</span>
+        )}
+        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+      </Button>
+    </FormControl>
+  </PopoverTrigger>
+  <PopoverContent className="w-auto p-0" align="start">
+    <Calendar
+      mode="single"
+      selected={field.value ? new Date(field.value) : undefined}
+      onSelect={(date) => field.onChange(date?.toISOString())}
+      disabled={(date) =>
+        date > new Date() || date < new Date("1900-01-01")
+      }
+      initialFocus
+    />
+  </PopoverContent>
+</Popover>
+```
+
+#### Regional SIN/SSN Formatting
+```typescript
+const regionalLabels = {
+  sin: isCanadian ? "SIN" : "SSN"
+};
+
+// Formatting function
+const formatSSN = (value: string) => {
+  const cleaned = value.replace(/\D/g, '');
+  if (isCanadian) {
+    // Format as XXX XXX XXX
+    return cleaned.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
+  } else {
+    // Format as XXX-XX-XXXX
+    return cleaned.replace(/(\d{3})(\d{2})(\d{4})/, '$1-$2-$3');
+  }
+};
+```
+
+### Validation Requirements
+- All fields are optional but recommended
+- No validation prevents continuing to Step 5
+- Partner fields only required if ownership < 100%
+
+---
+
+## Step 5: Dynamic Document Upload System
+
+### Purpose
+Intelligent document requirements based on user's loan product selection with real-time validation.
+
+### Core Features
+
+#### 1. Dynamic Document Requirements
+- Queries lender database for authentic document requirements
+- Matches user's Step 2 product selection exactly
+- Displays specific documents needed for selected loan type
+
+#### 2. Real-Time Upload Tracking
+- Tracks completion status for each document type
+- Requires minimum quantity per document category
+- Enables Continue button only when all requirements met
+
+#### 3. Document Categories Based on Selection
+```typescript
+const getDocumentCategory = () => {
+  // Use selectedProduct if it contains specific product type information
+  if (selectedProduct && selectedProduct.toLowerCase().includes('line of credit')) {
+    return 'line_of_credit';
+  }
+  
+  // Primary logic based on form data
+  if (formData.lookingFor === 'equipment') {
+    return 'equipment_financing';
+  } else if (formData.lookingFor === 'capital') {
+    return 'term_loan';
+  } else if (formData.lookingFor === 'both') {
+    return 'line_of_credit';
+  } else {
+    return 'term_loan';
+  }
+};
+```
+
+### Document Requirement API Integration
+
+#### Categories API Call
+```typescript
+const { data: categories } = useQuery({
+  queryKey: ['/api/loan-products/categories', 
+    formData.headquarters, 
+    formData.lookingFor, 
+    formData.accountsReceivableBalance, 
+    formData.fundingAmount],
+  queryFn: async () => {
+    const params = new URLSearchParams();
+    if (formData.headquarters) params.append('country', formData.headquarters);
+    if (formData.lookingFor) params.append('lookingFor', formData.lookingFor);
+    if (formData.accountsReceivableBalance) params.append('accountsReceivableBalance', formData.accountsReceivableBalance);
+    if (formData.fundingAmount) params.append('fundingAmount', formData.fundingAmount);
+    if (formData.fundsPurpose) params.append('fundsPurpose', formData.fundsPurpose);
+    
+    const response = await fetch(`/api/loan-products/categories?${params.toString()}`);
+    return response.json();
+  }
+});
+```
+
+#### Required Documents API Call
+```typescript
+const { data: requiredDocs } = useQuery({
+  queryKey: ['/api/loan-products/required-documents', 
+    documentCategory, 
+    formData.fundingAmount, 
+    formData.headquarters],
+  queryFn: async () => {
+    const params = new URLSearchParams();
+    if (formData.fundingAmount) params.append('fundingAmount', formData.fundingAmount);
+    if (formData.headquarters) params.append('country', formData.headquarters);
+    if (formData.lookingFor) params.append('lookingFor', formData.lookingFor);
+    if (formData.accountsReceivableBalance) params.append('accountsReceivableBalance', formData.accountsReceivableBalance);
+    
+    const response = await fetch(`/api/loan-products/required-documents/${documentCategory}?${params.toString()}`);
+    return response.json();
+  }
+});
+```
+
+### Document Upload Interface
+
+#### Individual Document Card
+```typescript
+{documentRequirements.map((doc, index) => {
+  const documentFiles = uploadedFiles.filter(f => 
+    f.documentType?.toLowerCase().includes(doc.name.toLowerCase().replace(/\s+/g, '_')) ||
+    f.name.toLowerCase().includes(doc.name.toLowerCase().split(' ')[0])
+  );
+  const isComplete = documentFiles.length >= doc.quantity;
+  
+  return (
+    <div key={index} className={`bg-white rounded-lg border-2 transition-all duration-200 ${
+      isComplete 
+        ? 'border-green-200 bg-green-50' 
+        : 'border-gray-200 hover:border-blue-200'
+    }`}>
+      {/* Document upload interface */}
+    </div>
+  );
+})}
+```
+
+#### File Upload Handling
+```typescript
+<input
+  type="file"
+  multiple
+  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+  onChange={(e) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files).map(file => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        file,
+        status: "completed" as const,
+        documentType: doc.name.toLowerCase().replace(/\s+/g, '_')
+      }));
+      onFilesUploaded([...uploadedFiles, ...newFiles]);
+    }
+  }}
+/>
+```
+
+### Completion Tracking System
+
+#### Real-Time Validation
+```typescript
+useEffect(() => {
+  if (documentRequirements.length > 0 && onRequirementsChange) {
+    const allComplete = documentRequirements.every((doc) => {
+      const documentFiles = uploadedFiles.filter(f => 
+        f.documentType?.toLowerCase().includes(doc.name.toLowerCase().replace(/\s+/g, '_')) ||
+        f.name.toLowerCase().includes(doc.name.toLowerCase().split(' ')[0])
+      );
+      return documentFiles.length >= doc.quantity;
+    });
+    onRequirementsChange(allComplete, documentRequirements.length);
+  }
+}, [uploadedFiles, documentRequirements, onRequirementsChange]);
+```
+
+#### Conditional Continue Button
+```typescript
+<Button 
+  type="button" 
+  onClick={() => setCurrentStep(5)}
+  disabled={!allRequiredDocsComplete && totalRequiredDocs > 0}
+  className={`${
+    !allRequiredDocsComplete && totalRequiredDocs > 0 
+      ? 'opacity-50 cursor-not-allowed' 
+      : ''
+  }`}
+>
+  {!allRequiredDocsComplete && totalRequiredDocs > 0 ? (
+    <>
+      <AlertCircle className="mr-2 h-4 w-4" />
+      Complete Required Documents
+    </>
+  ) : (
+    <>
+      Continue
+      <ArrowRight className="ml-2 h-4 w-4" />
+    </>
+  )}
+</Button>
+```
+
+### Document Bypass Option
+
+#### Skip Documents Warning
+```typescript
+<div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+  <div className="flex items-start space-x-3">
+    <div className="flex-shrink-0">
+      <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+      </svg>
+    </div>
+    <div className="flex-1">
+      <p className="text-sm text-yellow-800 mb-3">
+        If you do not have all the documents available right now click here to move on but be aware this will result in delays. We will send you a link to upload after you finalize your application.
+      </p>
+      <Button
+        type="button"
+        variant="outline"
+        className="border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+        onClick={() => setCurrentStep(5)}
+      >
+        Skip Documents for Now
+      </Button>
+    </div>
+  </div>
+</div>
+```
+
+## Backend API Endpoints Required
+
+### 1. Loan Product Categories
+- **Endpoint**: `/api/loan-products/categories`
+- **Parameters**: country, lookingFor, accountsReceivableBalance, fundingAmount, fundsPurpose
+- **Returns**: Array of available product categories with counts and percentages
+
+### 2. Required Documents
+- **Endpoint**: `/api/loan-products/required-documents/{category}`
+- **Parameters**: fundingAmount, country, lookingFor, accountsReceivableBalance
+- **Returns**: Array of required documents with names, descriptions, and quantities
+
+### 3. Document Upload Processing
+- **File Validation**: Size limits, type restrictions, authenticity checks
+- **Storage**: Local filesystem with external API transmission
+- **Metadata**: Document categorization and completion tracking
+
+## Formatting Utilities Required
+
+### Phone Number Formatting
+```typescript
+const formatPhoneNumber = (value: string) => {
+  const cleaned = value.replace(/\D/g, '');
+  const formatted = cleaned.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+  return formatted;
+};
+```
+
+### Postal Code Formatting
+```typescript
+const formatPostalCode = (value: string) => {
+  if (isCanadian) {
+    const cleaned = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    return cleaned.replace(/([A-Z]\d[A-Z])(\d[A-Z]\d)/, '$1 $2');
+  } else {
+    const cleaned = value.replace(/\D/g, '');
+    return cleaned.replace(/(\d{5})(\d{4})/, '$1-$2');
+  }
+};
+```
+
+## Integration Points
+
+### Form Data Structure
+All steps contribute to a unified form data object with the following sections:
+- **Business Details**: Operating/legal names, address, structure, revenue
+- **Applicant Information**: Personal details, ownership, contact info
+- **Partner Information**: Conditional partner details
+- **Document Uploads**: File references and metadata
+
+### State Management
+- Use React Hook Form for form state
+- Maintain uploaded files in component state
+- Track completion status for conditional navigation
+- Preserve data across step navigation
+
+### Error Handling
+- API error states with user-friendly messages
+- Loading states during data fetching
+- Validation feedback for required fields
+- File upload error handling
+
+This implementation guide provides the complete foundation for building Steps 3-5 of the Boreal Financial application with authentic data integration and production-ready user experience.
