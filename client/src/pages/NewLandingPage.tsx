@@ -42,10 +42,7 @@ export function NewLandingPage() {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-3">
-              <Building2 className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">Boreal Financial</span>
-            </div>
+            <BorealLogo size="default" />
             <div className="flex items-center space-x-4">
               <Link href="/login">
                 <Button variant="outline" size="sm">

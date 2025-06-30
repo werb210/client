@@ -5,6 +5,7 @@ import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { BorealLogo } from '@/components/BorealLogo';
 import { 
   Building2, 
   FileText, 
@@ -48,10 +49,7 @@ export function NewPortalPage() {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-3">
-              <Building2 className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">Boreal Financial</span>
-            </div>
+            <BorealLogo size="default" />
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <User className="h-4 w-4 text-gray-500" />
