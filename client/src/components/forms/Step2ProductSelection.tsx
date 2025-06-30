@@ -58,45 +58,45 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-gray-600">Loading product recommendations...</span>
+      <div className="flex items-center justify-center p-modern-2xl">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-blue-600" />
+        <span className="ml-modern-sm body-modern text-modern-secondary">Loading product recommendations...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <AlertCircle className="h-8 w-8 text-red-500" />
-        <span className="ml-2 text-red-600">Failed to load product categories</span>
+      <div className="flex items-center justify-center p-modern-2xl">
+        <AlertCircle className="h-8 w-8 text-error-500" />
+        <span className="ml-modern-sm body-modern text-error-600">Failed to load product categories</span>
       </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Industry Insights & Recommendations</CardTitle>
-        <CardDescription>
+    <Card className="card-modern">
+      <CardHeader className="p-modern-xl">
+        <CardTitle className="heading-modern-h2">Industry Insights & Recommendations</CardTitle>
+        <CardDescription className="body-modern-large text-modern-secondary">
           Based on your business profile, here are the best loan products for you
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="p-modern-xl space-y-modern-xl">
         {/* Profile Summary Section */}
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h3 className="font-semibold text-blue-900 mb-2">Your Profile Summary</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>Headquarters: <span className="font-medium">{formData.headquarters}</span></div>
-            <div>Funding Amount: <span className="font-medium">{formatCurrency(formData.fundingAmount)}</span></div>
-            <div>Industry: <span className="font-medium">{state.formData.industry || 'Not specified'}</span></div>
-            <div>Purpose: <span className="font-medium">{formData.fundsPurpose || 'Not specified'}</span></div>
+        <div className="bg-brand-blue-50 p-modern-lg rounded-modern-lg">
+          <h3 className="heading-modern-h4 text-brand-blue-900 mb-modern-sm">Your Profile Summary</h3>
+          <div className="grid grid-cols-2 gap-modern-lg body-modern-small">
+            <div>Headquarters: <span className="font-medium text-modern-primary">{formData.headquarters}</span></div>
+            <div>Funding Amount: <span className="font-medium text-modern-primary">{formatCurrency(formData.fundingAmount)}</span></div>
+            <div>Industry: <span className="font-medium text-modern-primary">{state.formData.industry || 'Not specified'}</span></div>
+            <div>Purpose: <span className="font-medium text-modern-primary">{formData.fundsPurpose || 'Not specified'}</span></div>
           </div>
         </div>
 
         {/* Geographic Filter Indicator */}
-        <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-          <p className="text-sm text-green-700">
+        <div className="bg-success-50 p-modern-md rounded-modern-lg border border-success-200">
+          <p className="body-modern-small text-success-700">
             <strong>Country Filter Active:</strong> Showing loan products available in {formData.headquarters}
           </p>
         </div>
