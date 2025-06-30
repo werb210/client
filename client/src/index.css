@@ -5,6 +5,23 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  @apply font-sans bg-surface text-onSurface;
+}
+
+/* Legacy component upgrades */
+.legacy-card {
+  @apply bg-white p-6 rounded-2xl shadow-md;
+}
+
+.legacy-button-primary {
+  @apply bg-primary text-white px-6 py-2 rounded-xl hover:bg-teal-800 transition;
+}
+
+.legacy-input {
+  @apply border border-gray-300 rounded-xl px-4 py-2 w-full focus:ring-primary focus:border-primary;
+}
+
 :root {
   /* Background Colors */
   --background: 0 0% 100%;              /* Pure white */

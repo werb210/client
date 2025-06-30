@@ -37,6 +37,11 @@ export default {
         'full': 'var(--radius-full)',
       },
       colors: {
+        // Modern Boreal Financial Brand Tokens
+        primary: '#0F766E',       // Boreal Teal
+        accent: '#F97316',        // Boreal Orange
+        surface: '#F8FAFC',       // Light background
+        onSurface: '#1E293B',     // Dark text
         // Legacy support
         background: "var(--background)",
         foreground: "var(--foreground)",

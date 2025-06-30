@@ -1,0 +1,241 @@
+To **fully migrate the V2 Client UX to match the modern style guide used in V1**, here is your complete and detailed **implementation guide**. This guide is broken down into **what Replit should do** across 5 precise categories, with **specific file paths and rules** for applying your new layout, fonts, colors, spacing, and structure.
+
+---
+
+# ✅ Migration Instructions: Enforce Modern Style Guide in V2 Client
+
+---
+
+## 🟨 1. GLOBAL STYLE SETUP
+
+### 🔹 What to do:
+
+* **Ensure the style guide is globally applied** via `tailwind.config.ts` and `index.css`
+
+### 🔹 Replit Instructions:
+
+1. **Tailwind Theme Tokens**
+   Update `tailwind.config.ts` in the root of the V2 client with your branding tokens:
+
+   ```ts
+   theme: {
+     extend: {
+       colors: {
+         primary: '#0F766E',       // Boreal Teal
+         accent: '#F97316',        // Boreal Orange
+         surface: '#F8FAFC',
+         onSurface: '#1E293B',
+       },
+       fontFamily: {
+         sans: ['Inter', 'sans-serif'],
+       },
+       borderRadius: {
+         xl: '1rem',
+         '2xl': '1.5rem',
+       },
+     }
+   }
+   ```
+
+2. **Global CSS Import**
+   Ensure `client/src/index.css` includes:
+
+   ```css
+   @tailwind base;
+   @tailwind components;
+   @tailwind utilities;
+
+   body {
+     @apply font-sans bg-surface text-onSurface;
+   }
+   ```
+
+3. **Layout Wrapper**
+   Create `components/layout/MainLayout.tsx`:
+
+   ```tsx
+   export default function MainLayout({ children }) {
+     return (
+       <div className="min-h-screen bg-surface text-onSurface font-sans">
+         <header className="py-4 px-6 border-b border-gray-200 bg-white shadow-sm">...</header>
+         <main className="p-4 md:p-8">{children}</main>
+         <footer className="text-sm text-gray-400 mt-8 text-center">© Boreal Financial</footer>
+       </div>
+     );
+   }
+   ```
+
+---
+
+## 🟨 2. CORE PAGES MIGRATION
+
+### 🔹 Pages to update with new layout & styles:
+
+#### ❗ Critical UX First:
+
+Update the following pages to use `MainLayout` and **Tailwind utility classes** for:
+
+* full-width responsive cards
+* updated buttons (`btn-primary`, `btn-outline`)
+* `text-gray-800` → `text-onSurface`
+* `bg-white` → `bg-surface`
+* `rounded-lg` → `rounded-2xl`
+* `shadow` → `shadow-md`
+
+### 🔹 Pages:
+
+```
+pages/Login.tsx
+pages/Register.tsx
+pages/Registration.tsx
+pages/Dashboard.tsx
+pages/PortalPage.tsx
+pages/LandingPage.tsx
+pages/ApplicationForm.tsx
+pages/FaqPage.tsx
+pages/TroubleshootingPage.tsx
+pages/ProductAdminPage.tsx
+```
+
+#### 💡 Replace legacy cards and centered divs with:
+
+```tsx
+<div className="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-md space-y-6">
+```
+
+#### 💡 Update all buttons with:
+
+```tsx
+<button className="bg-primary text-white px-4 py-2 rounded-xl hover:bg-teal-800">
+```
+
+---
+
+## 🟨 3. APPLICATION FLOW MIGRATION
+
+### 🔹 Pages & Routes to fix:
+
+```
+routes/Step3_BusinessDetails.tsx
+routes/Step4_FinancialInfo.tsx
+routes/Step5_DocumentUpload.tsx
+routes/Step6_Signature.tsx
+routes/Step7_FinalSubmission.tsx
+```
+
+And related form pages:
+
+```
+pages/Step3BusinessDetails.tsx
+pages/Step4ApplicantInfo.tsx
+pages/Step5DocumentUpload.tsx
+```
+
+### 🔹 Instructions:
+
+* Wrap all route content in `<MainLayout>`
+* Use consistent card containers:
+
+  ```tsx
+  <div className="bg-white shadow-md p-6 rounded-2xl max-w-4xl mx-auto">
+  ```
+* All form inputs must use modern utility classes:
+
+  ```tsx
+  <input className="border border-gray-300 rounded-xl px-4 py-2 w-full focus:ring-primary focus:border-primary" />
+  ```
+* Ensure spacing is consistent with `space-y-4`, `mt-6`, and `p-6`
+
+---
+
+## 🟨 4. FORM + DOCUMENT COMPONENTS
+
+### 🔹 Files:
+
+```
+components/forms/Step*.tsx
+components/DocumentUpload.tsx
+components/EnhancedDocumentUpload.tsx
+components/recommendations/RecommendationCard.tsx
+components/RecommendationEngine.tsx
+components/ApplicationStatusMonitor.tsx
+components/NavBar.tsx
+components/MultiStepForm/*.tsx
+```
+
+### 🔹 Instructions:
+
+1. Replace all `<div className="card">` or hardcoded styles with:
+
+   ```tsx
+   <div className="bg-white p-6 rounded-2xl shadow-md">
+   ```
+
+2. Convert all input groups to consistent grid layout:
+
+   ```tsx
+   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   ```
+
+3. For every form field:
+
+   * use `rounded-xl` not `rounded-md`
+   * use `focus:ring-primary` for input focus
+   * update spacing to `py-2 px-4`
+
+4. Button updates:
+
+   ```tsx
+   <button className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-teal-700 transition">
+   ```
+
+---
+
+## 🟨 5. AUTHENTICATION & SECURITY PAGES
+
+### 🔹 Files:
+
+```
+pages/VerifyOtp.tsx
+pages/RequestReset.tsx
+pages/ResetPassword.tsx
+pages/TwoFactorAuth.tsx
+```
+
+### 🔹 Instructions:
+
+* Replace legacy card layout with:
+
+  ```tsx
+  <div className="max-w-md mx-auto mt-12 bg-white p-6 rounded-2xl shadow">
+  ```
+* Replace legacy form labels and inputs with Tailwind 3 conventions.
+* Ensure password inputs have visibility toggle buttons (`eye` icon).
+
+---
+
+## ✅ Final Validation Before Deployment
+
+### 🔎 What Replit must do before releasing:
+
+1. Visual check of every updated page on:
+
+   * Desktop ≥ 1280px
+   * Tablet \~768px
+   * Mobile ≤ 375px
+
+2. Confirm all pages use:
+
+   * New font (`Inter`)
+   * Proper padding/margin (`px-4`, `py-6`, `space-y-6`)
+   * Proper border radius (`rounded-2xl`)
+   * Primary and accent colors only from Tailwind config
+
+3. If any page still contains:
+
+   * `border-gray-400`, `text-black`, `font-serif`, or inline styles — ❌ **BLOCK DEPLOYMENT**
+   * Report to the user with the filename
+
+---
+
+Would you like a one-click Tailwind configuration file and layout component for immediate application?
