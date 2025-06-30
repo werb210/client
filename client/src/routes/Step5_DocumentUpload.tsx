@@ -468,6 +468,6 @@ export default function Step5DocumentUpload() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </MainLayout>
   );
 }

@@ -7,6 +7,7 @@ import { useProductCategories } from '@/hooks/useProductCategories';
 import { ProductCategoryCard } from '@/components/ProductCategoryCard';
 import { generateIndustryInsights } from '@/lib/industryInsights';
 import { RecommendationFormData } from '@/lib/recommendation';
+import MainLayout from '@/components/layout/MainLayout';
 
 interface Step2Props {
   onNext: () => void;
@@ -75,13 +76,14 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
   }
 
   return (
-    <Card className="card-modern">
-      <CardHeader className="p-modern-xl">
-        <CardTitle className="heading-modern-h2">Industry Insights & Recommendations</CardTitle>
-        <CardDescription className="body-modern-large text-modern-secondary">
-          Based on your business profile, here are the best loan products for you
-        </CardDescription>
-      </CardHeader>
+    <MainLayout>
+      <Card className="card-modern">
+        <CardHeader className="p-modern-xl">
+          <CardTitle className="heading-modern-h2">Industry Insights & Recommendations</CardTitle>
+          <CardDescription className="body-modern-large text-modern-secondary">
+            Based on your business profile, here are the best loan products for you
+          </CardDescription>
+        </CardHeader>
       <CardContent className="p-modern-xl space-y-modern-xl">
         {/* Profile Summary Section */}
         <div className="bg-brand-blue-50 p-modern-lg rounded-modern-lg">

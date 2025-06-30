@@ -69,15 +69,15 @@ export function RecommendationEngine({ formData }: RecommendationEngineProps) {
 
   if (error) {
     return (
-      <Card className="mt-6 border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="flex items-center text-red-700">
-            <AlertCircle className="mr-2 h-5 w-5" />
+      <Card className="mt-modern-lg card-modern border-error-200 bg-error-50">
+        <CardHeader className="p-modern-lg">
+          <CardTitle className="heading-modern-h4 flex items-center text-error-700">
+            <AlertCircle className="mr-modern-sm h-5 w-5" />
             Insights Unavailable
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-red-600">Unable to load market insights. Using local database for recommendations.</p>
+        <CardContent className="p-modern-lg">
+          <p className="body-modern text-error-600">Unable to load market insights. Using local database for recommendations.</p>
         </CardContent>
       </Card>
     );

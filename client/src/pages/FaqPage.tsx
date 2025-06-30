@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { faqContent, faqCategories } from '@/content/faq';
 import { BorealLogo } from '@/components/BorealLogo';
+import MainLayout from '@/components/layout/MainLayout';
 
 export default function FaqPage() {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -22,35 +23,16 @@ export default function FaqPage() {
     : faqContent.filter(section => section.category === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <BorealLogo size="default" />
-            <nav className="flex space-x-6">
-              <a href="/" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Home
-              </a>
-              <a href="/portal" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Portal
-              </a>
-              <a href="/troubleshooting" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Troubleshooting
-              </a>
-            </nav>
+    <MainLayout>
+      <div className="min-h-screen bg-modern-primary">
+        {/* Main Content */}
+        <main className="container-modern py-modern-2xl">
+          <div className="mb-modern-2xl">
+            <h1 className="heading-modern-display">Frequently Asked Questions</h1>
+            <p className="body-modern-large text-modern-secondary mt-modern-lg">
+              Find answers to common questions about Boreal Financial's services, application process, and platform features.
+            </p>
           </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h1>
-          <p className="text-lg text-gray-600">
-            Find answers to common questions about Boreal Financial's services, application process, and platform features.
-          </p>
-        </div>
 
         {/* Category Filter */}
         <div className="mb-8">
