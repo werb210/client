@@ -47,7 +47,7 @@ export default function App() {
                     <Route path="register" element={<Register />} />
 
                     {/* authenticated portal & application flow ---------------------- */}
-                    <Route path="portal" element={<div style={{padding: "40px", background: "#f0f9ff", minHeight: "100vh"}}><h1 style={{color: "#003D7A", fontSize: "2rem", marginBottom: "20px"}}>✅ V2 Dashboard Working!</h1><p style={{color: "#666", fontSize: "1.2rem"}}>This is the V2 NewPortalPage component loading successfully.</p><p style={{color: "#666", marginTop: "10px"}}>Navigation: React Router DOM ✓</p><p style={{color: "#666"}}>Entry Point: V2 App.tsx ✓</p><p style={{color: "#666"}}>Import Resolution: V2 Components ✓</p></div>} />
+                    <Route path="portal" element={<NewPortalPage />} />
                     {/* <Route path="application/1" element={<Step1 />} />
                     <Route path="application/2" element={<Step2 />} />
                     <Route path="application/3" element={<Step3 />} />
