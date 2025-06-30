@@ -37,67 +37,62 @@ export function NewLandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen gradient-modern-hero">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+      <header className="bg-modern-elevated shadow-modern-sm border-modern-light border-b">
+        <div className="container-modern">
+          <div className="flex justify-between items-center p-modern-xl">
             <BorealLogo size="default" />
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-modern-lg">
               <Link href="/login">
-                <Button variant="outline" size="sm">
+                <button className="btn-modern btn-modern-secondary">
                   Sign In
-                </Button>
+                </button>
               </Link>
-              <Button size="sm" onClick={handleStartApplication}>
+              <button className="btn-modern btn-modern-primary" onClick={handleStartApplication}>
                 Apply Now
                 <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              </button>
             </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <Badge className="mb-4 bg-blue-100 text-blue-800 hover:bg-blue-100">
+      <section className="p-modern-4xl">
+        <div className="container-modern text-center">
+          <div className="badge-modern badge-modern-primary mb-4">
             Trusted by 1000+ Canadian Businesses
-          </Badge>
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+          </div>
+          <h1 className="heading-modern-display mb-6">
             Business Loans
-            <span className="text-blue-600"> Made Simple</span>
+            <span className="text-modern-gradient"> Made Simple</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          <p className="body-modern-large text-modern-secondary mb-8 max-w-3xl mx-auto">
             Get fast approval for business loans from $10K to $10M. 
             Our intelligent platform connects you with the right lenders 
             based on your specific business needs.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              className="text-lg px-8 py-6"
+          <div className="flex flex-col sm:flex-row gap-modern-lg justify-center">
+            <button 
+              className="btn-modern btn-modern-primary p-modern-lg text-lg"
               onClick={handleStartApplication}
             >
               Start Application
               <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="text-lg px-8 py-6"
-            >
+            </button>
+            <button className="btn-modern btn-modern-secondary p-modern-lg text-lg">
               Learn More
-            </Button>
+            </button>
           </div>
         </div>
       </section>
 
       {/* Key Features */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
+      <section className="p-modern-4xl bg-modern-elevated">
+        <div className="container-modern">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="heading-modern-h2 text-modern-primary mb-4">
               Why Choose Boreal Financial?
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -105,54 +100,50 @@ export function NewLandingPage() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card>
-              <CardHeader>
-                <Clock className="h-12 w-12 text-blue-600 mb-4" />
-                <CardTitle>Fast Approval</CardTitle>
-                <CardDescription>
+          <div className="grid-modern-3 gap-modern-2xl">
+            <div className="card-modern hover-modern-lift">
+              <div className="p-modern-xl">
+                <Clock className="h-12 w-12 text-brand-blue-600 mb-4" />
+                <h3 className="heading-modern-h4 mb-2">Fast Approval</h3>
+                <p className="body-modern-small text-modern-secondary mb-4">
                   Get pre-approved in minutes with our intelligent matching system
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+                </p>
                 <ul className="space-y-2">
                   <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    <span className="text-sm">5-minute application</span>
+                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
+                    <span className="body-modern-small">5-minute application</span>
                   </li>
                   <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    <span className="text-sm">Same-day pre-approval</span>
+                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
+                    <span className="body-modern-small">Same-day pre-approval</span>
                   </li>
                   <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    <span className="text-sm">Digital signature process</span>
+                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
+                    <span className="body-modern-small">Digital signature process</span>
                   </li>
                 </ul>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            <Card>
-              <CardHeader>
-                <TrendingUp className="h-12 w-12 text-blue-600 mb-4" />
-                <CardTitle>Smart Matching</CardTitle>
-                <CardDescription>
+            <div className="card-modern hover-modern-lift">
+              <div className="p-modern-xl">
+                <TrendingUp className="h-12 w-12 text-brand-blue-600 mb-4" />
+                <h3 className="heading-modern-h4 mb-2">Smart Matching</h3>
+                <p className="body-modern-small text-modern-secondary mb-4">
                   Our AI matches you with the best lenders for your industry and needs
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+                </p>
                 <ul className="space-y-2">
                   <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    <span className="text-sm">42+ lender products</span>
+                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
+                    <span className="body-modern-small">42+ lender products</span>
                   </li>
                   <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    <span className="text-sm">Industry-specific rates</span>
+                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
+                    <span className="body-modern-small">Industry-specific rates</span>
                   </li>
                   <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    <span className="text-sm">Real-time recommendations</span>
+                    <CheckCircle className="h-4 w-4 text-success-600 mr-2" />
+                    <span className="body-modern-small">Real-time recommendations</span>
                   </li>
                 </ul>
               </CardContent>

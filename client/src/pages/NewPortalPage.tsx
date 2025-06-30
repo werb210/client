@@ -44,10 +44,10 @@ export function NewPortalPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-modern-primary">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-modern-elevated shadow-modern-sm border-modern-light border-b">
+        <div className="container-modern">
           <div className="flex justify-between items-center py-6">
             <BorealLogo size="default" />
             <div className="flex items-center space-x-4">

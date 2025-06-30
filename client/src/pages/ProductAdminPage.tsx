@@ -242,23 +242,23 @@ export default function ProductAdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-modern-primary">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <header className="bg-modern-elevated shadow-modern-sm border-modern-light border-b">
+        <div className="container-modern p-modern-xl">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-modern-lg">
               <BorealLogo size="default" />
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">Product Administration</h1>
-                <p className="text-sm text-gray-600">Manage lender products and configurations</p>
+                <h1 className="heading-modern-h3 text-modern-primary">Product Administration</h1>
+                <p className="body-modern-small text-modern-secondary">Manage lender products and configurations</p>
               </div>
             </div>
-            <nav className="flex space-x-6">
-              <a href="/portal" className="text-gray-600 hover:text-blue-600 transition-colors">
+            <nav className="flex gap-modern-lg">
+              <a href="/portal" className="body-modern text-modern-secondary hover:text-brand-blue-600 transition-all duration-fast">
                 Portal
               </a>
-              <a href="/" className="text-gray-600 hover:text-blue-600 transition-colors">
+              <a href="/" className="body-modern text-modern-secondary hover:text-brand-blue-600 transition-all duration-fast">
                 Home
               </a>
             </nav>
@@ -267,23 +267,23 @@ export default function ProductAdminPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="container-modern p-modern-2xl">
         {/* Actions Bar */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-modern-xl">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Lender Products</h2>
-            <p className="text-gray-600 mt-1">{products.length} products configured</p>
+            <h2 className="heading-modern-h2 text-modern-primary">Lender Products</h2>
+            <p className="body-modern text-modern-secondary mt-1">{products.length} products configured</p>
           </div>
-          <Button
+          <button
             onClick={() => {
               setIsCreating(true);
               resetForm();
             }}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="btn-modern btn-modern-primary"
           >
             <PlusIcon className="w-4 h-4 mr-2" />
             Add Product
-          </Button>
+          </button>
         </div>
 
         {/* Create/Edit Form */}

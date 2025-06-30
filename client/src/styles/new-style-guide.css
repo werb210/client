@@ -299,6 +299,13 @@
     color: var(--text-primary);
   }
 
+  .heading-modern-h4 {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-semibold);
+    line-height: var(--leading-snug);
+    color: var(--text-primary);
+  }
+
   .body-modern-large {
     font-size: var(--font-size-lg);
     font-weight: var(--font-normal);
@@ -455,6 +462,64 @@
   .shadow-modern-md { box-shadow: var(--shadow-md); }
   .shadow-modern-lg { box-shadow: var(--shadow-lg); }
   .shadow-modern-xl { box-shadow: var(--shadow-xl); }
+
+  /* Container & Layout System */
+  .container-modern {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: var(--space-lg);
+    padding-right: var(--space-lg);
+  }
+
+  @media (min-width: 768px) {
+    .container-modern {
+      padding-left: var(--space-xl);
+      padding-right: var(--space-xl);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container-modern {
+      padding-left: var(--space-2xl);
+      padding-right: var(--space-2xl);
+    }
+  }
+
+  /* Grid System */
+  .grid-modern-1 { display: grid; grid-template-columns: 1fr; }
+  .grid-modern-2 { 
+    display: grid; 
+    grid-template-columns: 1fr;
+  }
+  .grid-modern-3 { 
+    display: grid; 
+    grid-template-columns: 1fr;
+  }
+  .grid-modern-4 { 
+    display: grid; 
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 768px) {
+    .grid-modern-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-modern-3 { grid-template-columns: repeat(2, 1fr); }
+    .grid-modern-4 { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (min-width: 1024px) {
+    .grid-modern-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-modern-4 { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  /* Gap System */
+  .gap-modern-xs { gap: var(--space-xs); }
+  .gap-modern-sm { gap: var(--space-sm); }
+  .gap-modern-md { gap: var(--space-md); }
+  .gap-modern-lg { gap: var(--space-lg); }
+  .gap-modern-xl { gap: var(--space-xl); }
+  .gap-modern-2xl { gap: var(--space-2xl); }
+  .gap-modern-3xl { gap: var(--space-3xl); }
+  .gap-modern-4xl { gap: var(--space-4xl); }
 }
 
 /* ==========================================================================
