@@ -89,7 +89,16 @@ function Router() {
       <Route path="/troubleshooting" component={TroubleshootingPage} />
       
       {/* Default route - New landing page with V1 design */}
-      <Route path="/" component={NewLandingPage} />
+      <Route path="/" component={() => (
+        <div className="p-8">
+          <h1 className="text-2xl font-bold text-blue-900">Boreal Financial</h1>
+          <p className="mt-4">Testing React app is working...</p>
+          <div className="mt-4">
+            <a href="/register" className="bg-blue-600 text-white px-4 py-2 rounded">Register</a>
+            <a href="/login" className="ml-4 bg-gray-600 text-white px-4 py-2 rounded">Login</a>
+          </div>
+        </div>
+      )} />
       <Route component={NotFound} />
     </Switch>
   );
