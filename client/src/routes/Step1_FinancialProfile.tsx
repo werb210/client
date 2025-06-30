@@ -156,16 +156,16 @@ export default function Step1FinancialProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        <Card className="shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-teal-600 to-teal-700 text-white">
-            <CardTitle className="text-2xl font-bold">Step 1: Financial Profile</CardTitle>
-            <p className="text-teal-100">Tell us about your funding needs and business basics</p>
+    <div className="min-h-screen bg-modern-primary">
+      <div className="container-modern p-modern-2xl">
+        <Card className="card-modern">
+          <CardHeader className="gradient-modern-hero p-modern-xl text-center">
+            <CardTitle className="heading-modern-h1 text-white">Step 1: Financial Profile</CardTitle>
+            <p className="body-modern-large text-brand-blue-100">Tell us about your funding needs and business basics</p>
           </CardHeader>
-          <CardContent className="p-8">
+          <CardContent className="p-modern-2xl">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-modern-xl">
                 
                 {/* 1. Funding Amount */}
                 <FormField
@@ -173,15 +173,15 @@ export default function Step1FinancialProfile() {
                   name="fundingAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base font-semibold">How much funding are you looking for?</FormLabel>
+                      <FormLabel className="body-modern font-semibold text-modern-primary">How much funding are you looking for?</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter amount (e.g., $100,000)"
                           {...field}
-                          className="h-12"
+                          className="form-modern-input h-12"
                         />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="body-modern-small text-error-600" />
                     </FormItem>
                   )}
                 />

@@ -48,66 +48,65 @@ export function NewPortalPage() {
       {/* Header */}
       <header className="bg-modern-elevated shadow-modern-sm border-modern-light border-b">
         <div className="container-modern">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex justify-between items-center p-modern-xl">
             <BorealLogo size="default" />
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-4 w-4 text-gray-500" />
-                <span className="text-sm text-gray-700">Welcome, {getUserDisplayName()}</span>
+            <div className="flex items-center gap-modern-lg">
+              <div className="flex items-center gap-modern-sm">
+                <User className="h-4 w-4 text-modern-secondary" />
+                <span className="body-modern-small text-modern-secondary">Welcome, {getUserDisplayName()}</span>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
+              <button 
+                className="btn-modern btn-modern-outline"
                 onClick={logout}
               >
-                <LogOut className="h-4 w-4 mr-2" />
+                <LogOut className="h-4 w-4 mr-modern-xs" />
                 Sign Out
-              </Button>
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container-modern p-modern-2xl">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="mb-modern-2xl">
+          <h1 className="heading-modern-h1 mb-modern-sm">
             Welcome back, {getUserDisplayName()}!
           </h1>
-          <p className="text-gray-600">
+          <p className="body-modern-large text-modern-secondary">
             Manage your business loan applications and track your funding progress.
           </p>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+        <div className="grid-modern-3 gap-modern-xl mb-modern-2xl">
+          <Card className="card-modern hover-modern-lift cursor-pointer">
             <Link href="/application">
-              <CardHeader className="text-center">
-                <Plus className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                <CardTitle>New Application</CardTitle>
-                <CardDescription>
+              <CardHeader className="text-center p-modern-xl">
+                <Plus className="h-12 w-12 text-brand-blue-600 mx-auto mb-modern-lg" />
+                <CardTitle className="heading-modern-h3">New Application</CardTitle>
+                <CardDescription className="body-modern text-modern-secondary">
                   Start a new business loan application
                 </CardDescription>
               </CardHeader>
             </Link>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader className="text-center">
-              <FileText className="h-12 w-12 text-green-600 mx-auto mb-4" />
-              <CardTitle>Upload Documents</CardTitle>
-              <CardDescription>
+          <Card className="card-modern hover-modern-lift">
+            <CardHeader className="text-center p-modern-xl">
+              <FileText className="h-12 w-12 text-success-600 mx-auto mb-modern-lg" />
+              <CardTitle className="heading-modern-h3">Upload Documents</CardTitle>
+              <CardDescription className="body-modern text-modern-secondary">
                 Add documents to existing applications
               </CardDescription>
             </CardHeader>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader className="text-center">
-              <Eye className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-              <CardTitle>Track Progress</CardTitle>
-              <CardDescription>
+          <Card className="card-modern hover-modern-lift">
+            <CardHeader className="text-center p-modern-xl">
+              <Eye className="h-12 w-12 text-brand-purple-600 mx-auto mb-modern-lg" />
+              <CardTitle className="heading-modern-h3">Track Progress</CardTitle>
+              <CardDescription className="body-modern text-modern-secondary">
                 Monitor your application status
               </CardDescription>
             </CardHeader>
@@ -115,37 +114,37 @@ export function NewPortalPage() {
         </div>
 
         {/* Applications Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <FileText className="h-5 w-5 mr-2" />
+        <Card className="card-modern">
+          <CardHeader className="p-modern-xl">
+            <CardTitle className="heading-modern-h2 flex items-center">
+              <FileText className="h-5 w-5 mr-modern-sm" />
               Your Applications
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="body-modern-large text-modern-secondary">
               Track the status of your business loan applications
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-modern-xl">
             {isLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading applications...</p>
+              <div className="text-center p-modern-2xl">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue-600 mx-auto mb-modern-lg"></div>
+                <p className="body-modern text-modern-secondary">Loading applications...</p>
               </div>
             ) : applications?.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-modern-lg">
                 {applications.map((app: any, index: number) => (
-                  <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div key={index} className="border border-modern-light rounded-modern-lg p-modern-lg hover:bg-modern-elevated transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="font-semibold text-gray-900">
+                        <div className="flex items-center gap-modern-md mb-modern-sm">
+                          <h3 className="heading-modern-h4 text-modern-primary">
                             Application #{app.id || `APP-${index + 1}`}
                           </h3>
-                          <Badge variant={
-                            app.status === 'completed' ? 'default' :
-                            app.status === 'pending' ? 'secondary' :
-                            app.status === 'approved' ? 'default' :
-                            'outline'
+                          <Badge className={
+                            app.status === 'completed' ? 'badge-modern badge-modern-success' :
+                            app.status === 'pending' ? 'badge-modern badge-modern-warning' :
+                            app.status === 'approved' ? 'badge-modern badge-modern-success' :
+                            'badge-modern badge-modern-neutral'
                           }>
                             {app.status === 'completed' ? (
                               <>
@@ -165,35 +164,35 @@ export function NewPortalPage() {
                             )}
                           </Badge>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                        <div className="grid-modern-4 gap-modern-lg body-modern-small text-modern-secondary">
                           <div>
-                            <span className="font-medium">Amount:</span>
+                            <span className="font-medium text-modern-primary">Amount:</span>
                             <div>${app.fundingAmount || 'Not specified'}</div>
                           </div>
                           <div>
-                            <span className="font-medium">Purpose:</span>
+                            <span className="font-medium text-modern-primary">Purpose:</span>
                             <div className="capitalize">{app.fundsPurpose || 'Not specified'}</div>
                           </div>
                           <div>
-                            <span className="font-medium">Business:</span>
+                            <span className="font-medium text-modern-primary">Business:</span>
                             <div>{app.businessName || 'Not specified'}</div>
                           </div>
                           <div>
-                            <span className="font-medium">Submitted:</span>
+                            <span className="font-medium text-modern-primary">Submitted:</span>
                             <div>{app.createdAt ? new Date(app.createdAt).toLocaleDateString() : 'Draft'}</div>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2 ml-4">
-                        <Button variant="outline" size="sm">
+                      <div className="flex items-center gap-modern-sm ml-modern-lg">
+                        <button className="btn-modern btn-modern-outline btn-modern-sm">
                           <Eye className="h-4 w-4 mr-1" />
                           View
-                        </Button>
+                        </button>
                         {app.status === 'completed' && (
-                          <Button variant="outline" size="sm">
+                          <button className="btn-modern btn-modern-outline btn-modern-sm">
                             <Download className="h-4 w-4 mr-1" />
                             Download
-                          </Button>
+                          </button>
                         )}
                       </div>
                     </div>
