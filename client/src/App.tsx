@@ -13,7 +13,7 @@ import Register from "@/pages/Register";
 import VerifyOtp from "@/pages/VerifyOtp";
 import RequestReset from "@/pages/RequestReset";
 import ResetPassword from "@/pages/ResetPassword";
-import { NewLandingPage } from "@/pages/NewLandingPage";
+import ProfessionalLandingPage from "@/pages/ProfessionalLandingPage";
 import Dashboard from "@/pages/Dashboard";
 import { NewPortalPage } from "@/pages/NewPortalPage";
 import NotFound from "@/pages/NotFound";
@@ -88,7 +88,7 @@ function Router() {
       <Route path="/troubleshooting" component={TroubleshootingPage} />
       
       {/* Default route - Professional landing page with smart routing */}
-      <Route path="/" component={NewLandingPage} />
+      <Route path="/" component={ProfessionalLandingPage} />
       <Route component={NotFound} />
     </Switch>
   );
