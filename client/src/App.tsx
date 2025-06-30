@@ -37,6 +37,9 @@ import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
 import Step6Signature from "@/routes/Step6_Signature";
 // Step7Submit removed - handle completion in Step6
 
+// PageShowcase for systematic V2 modernization
+import PageShowcase from "@/routes/PageShowcase";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -90,6 +93,9 @@ function Router() {
       {/* Support pages */}
       <Route path="/faq" component={FaqPage} />
       <Route path="/troubleshooting" component={TroubleshootingPage} />
+
+      {/* PageShowcase for systematic V2 modernization */}
+      <Route path="/_showcase" component={PageShowcase} />
 
       <Route component={NotFound} />
     </Switch>
