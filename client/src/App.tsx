@@ -15,8 +15,10 @@ import VerifyOtp from "@/pages/VerifyOtp";
 import RequestReset from "@/pages/RequestReset";
 import ResetPassword from "@/pages/ResetPassword";
 import { LandingPage } from "@/pages/LandingPage";
+import { NewLandingPage } from "@/pages/NewLandingPage";
 import Dashboard from "@/pages/Dashboard";
 import { PortalPage } from "@/pages/PortalPage";
+import { NewPortalPage } from "@/pages/NewPortalPage";
 import NotFound from "@/pages/NotFound";
 import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
@@ -58,7 +60,7 @@ function Router() {
       
       {/* Protected application routes */}
       <AuthGuard>
-        <Route path="/portal" component={PortalPage} />
+        <Route path="/portal" component={NewPortalPage} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/application" component={Step1FinancialProfile} />
         <Route path="/application/step-1" component={Step1FinancialProfile} />
@@ -79,8 +81,8 @@ function Router() {
       {/* Public demo pages */}
       <Route path="/document-validation" component={DocumentValidationDemo} />
       
-      {/* Default route - Landing page with smart routing */}
-      <Route path="/" component={LandingPage} />
+      {/* Default route - Professional landing page with smart routing */}
+      <Route path="/" component={NewLandingPage} />
       <Route component={NotFound} />
     </Switch>
   );
