@@ -23,6 +23,7 @@ import UploadDocuments from "@/pages/UploadDocuments";
 import { ComprehensiveApplication } from "@/pages/ComprehensiveApplication";
 import { BackendDiagnosticPage } from "@/pages/BackendDiagnosticPage";
 import SideBySideApplication from "@/pages/SideBySideApplication";
+import { DocumentValidationDemo } from "@/pages/DocumentValidationDemo";
 
 // Application flow steps
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
@@ -74,6 +75,9 @@ function Router() {
         <Route path="/side-by-side-application" component={SideBySideApplication} />
         {/* Step7 integrated into Step6 completion flow */}
       </AuthGuard>
+
+      {/* Public demo pages */}
+      <Route path="/document-validation" component={DocumentValidationDemo} />
       
       {/* Default route - Landing page with smart routing */}
       <Route path="/" component={LandingPage} />

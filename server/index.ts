@@ -84,6 +84,7 @@ app.use((req, res, next) => {
   app.use('/api/lenders', lendersRouter);
   app.use('/api/local/lenders', localLendersRouter);
   app.use(recommendationsRouter);
+  app.use('/api/documents', documentsRouter);
 
   // System status page for authentication troubleshooting
   app.get('/system-status', (req, res) => {
