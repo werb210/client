@@ -4,7 +4,8 @@ import { useComprehensiveForm } from '@/context/ComprehensiveFormContext';
 import { Step1BusinessBasics } from '@/components/forms/Step1BusinessBasics';
 import { Step2ProductSelection } from '@/components/forms/Step2ProductSelection';
 import { Step3BusinessDetails } from '@/components/forms/Step3BusinessDetails';
-import { Step4ApplicantDetails } from '@/components/forms/Step4ApplicantDetails';
+import { Step4ApplicantInfo } from '@/components/forms/Step4ApplicantInfo';
+import { Step5DocumentUpload } from '@/components/forms/Step5DocumentUpload';
 import { Step6Consents } from '@/components/forms/Step6Consents';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -145,6 +146,34 @@ export function ComprehensiveApplication() {
       case 2:
         return (
           <Step2ProductSelection
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
+        );
+      case 3:
+        return (
+          <Step3BusinessDetails
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
+        );
+      case 4:
+        return (
+          <Step4ApplicantInfo
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
+        );
+      case 5:
+        return (
+          <Step5DocumentUpload
+            onNext={handleNext}
+            onPrevious={handlePrevious}
+          />
+        );
+      case 6:
+        return (
+          <Step6Consents
             defaultValues={state.formData}
             onSubmit={handleStepSubmit}
             onNext={handleNext}

@@ -39,40 +39,51 @@ export const ApplicationSchema = z.object({
   matchScore: z.number().optional(),
 
   // Stage 3 – Business Details
-  operatingName: z.string(),
-  legalName: z.string(),
-  businessStreetAddress: z.string(),
-  businessCity: z.string(),
-  businessState: z.string(),
-  businessPostalCode: postalSchema,
+  businessOperatingName: z.string().optional(),
+  businessLegalName: z.string().optional(),
+  businessAddress: z.string().optional(),
+  businessCity: z.string().optional(),
+  businessStateProvince: z.string().optional(),
+  businessPostalCode: z.string().optional(),
+  businessPhone: z.string().optional(),
+  employeeCount: z.string().optional(),
+  businessStartDate: z.string().optional(),
+  businessStructure: z.string().optional(),
+  estimatedRevenue: z.string().optional(),
+  businessWebsite: z.string().optional(),
   businessCountry: z.string().optional(),
-  businessPhone: phoneSchema,
-  employeeCount: z.number().int().positive(),
-  businessWebsite: z.string().url().optional(),
-  businessStartDate: z.coerce.date(),
-  businessStructure: z.string(),
-  estimatedYearlyRevenue: z.number().optional(),
 
-  // Stage 4 – Applicant
+  // Stage 4 – Applicant Information
   applicantName: z.string().optional(),
-  applicantEmail: z.string().email().optional(),
-  applicantBirthdate: z.coerce.date().optional(),
-  applicantSSN: z.string().optional(),
-  percentageOwnership: z.number().optional(),
-  mobilePhone: phoneSchema.optional(),
-  applicantStreetAddress: z.string().optional(),
-  applicantCity: z.string().optional(),
-  applicantState: z.string().optional(),
-  applicantPostalCode: postalSchema.optional(),
+  applicantEmail: z.string().optional(),
   titleInBusiness: z.string().optional(),
+  percentageOwnership: z.string().optional(),
+  mobilePhone: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  sinSsn: z.string().optional(),
+  streetAddress: z.string().optional(),
+  city: z.string().optional(),
+  stateProvince: z.string().optional(),
+  postalCode: z.string().optional(),
 
-  // Partner (optional)
+  // Partner Information (conditional)
   partnerName: z.string().optional(),
-  partnerEmail: z.string().email().optional(),
-  partnerPhone: phoneSchema.optional(),
-  partnerOwnership: z.number().optional(),
+  partnerEmail: z.string().optional(),
+  partnerPhone: z.string().optional(),
+  partnerOwnership: z.string().optional(),
   partnerTitle: z.string().optional(),
-  partnerSSN: z.string().optional(),
+  partnerSinSsn: z.string().optional(),
+
+  // Stage 5 – Document Upload
+  uploadedDocuments: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    size: z.number(),
+    type: z.string(),
+    documentType: z.string(),
+    status: z.string(),
+  })).optional(),
+  documentsSkipped: z.boolean().optional(),
 
   // Stage 6 – Consents
   communicationConsent: z.boolean().refine((v) => v, {
