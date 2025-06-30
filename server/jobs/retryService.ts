@@ -50,24 +50,32 @@ export class RetryService {
 
   private async processRetryQueue() {
     try {
-      // Find items ready for retry
-      const items = await db
-        .select()
-        .from(retryQueue)
-        .where(
-          and(
-            lte(retryQueue.next_retry_at, new Date()),
-            lte(retryQueue.try_count, retryQueue.max_retries)
+      // Check if retry_queue table exists before querying
+      try {
+        const items = await db
+          .select()
+          .from(retryQueue)
+          .where(
+            and(
+              lte(retryQueue.next_retry_at, new Date()),
+              lte(retryQueue.try_count, retryQueue.max_retries)
+            )
           )
-        )
-        .limit(10);
+          .limit(10);
 
-      if (items.length === 0) return;
+        if (items.length === 0) return;
 
-      console.log(`[RetryService] Processing ${items.length} retry items`);
+        console.log(`[RetryService] Processing ${items.length} retry items`);
 
-      for (const item of items) {
-        await this.processRetryItem(item);
+        for (const item of items) {
+          await this.processRetryItem(item);
+        }
+      } catch (tableError: any) {
+        // Table doesn't exist yet, skip processing silently
+        if (tableError.code === '42P01') {
+          return;
+        }
+        throw tableError;
       }
     } catch (error) {
       console.error('[RetryService] Error in processRetryQueue:', error);

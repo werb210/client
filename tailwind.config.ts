@@ -5,12 +5,39 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'sans-serif'],
+      },
+      fontSize: {
+        'xs': ['0.75rem', { lineHeight: '1rem' }],
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+        'base': ['1rem', { lineHeight: '1.5rem' }],
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+        '5xl': ['3rem', { lineHeight: '1' }],
+      },
+      fontWeight: {
+        light: '300',
+        normal: '400',
+        medium: '500',
+        semibold: '600',
+        bold: '700',
+        extrabold: '800',
+        black: '900',
+      },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        'sm': 'var(--radius-sm)',
+        'md': 'var(--radius-md)',
+        'lg': 'var(--radius-lg)',
+        'xl': 'var(--radius-xl)',
+        '2xl': 'var(--radius-2xl)',
+        'full': 'var(--radius-full)',
       },
       colors: {
+        // Legacy support
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {
@@ -44,6 +71,68 @@ export default {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
+        // Modern Brand Colors
+        brand: {
+          blue: {
+            50: 'hsl(var(--brand-blue-50))',
+            100: 'hsl(var(--brand-blue-100))',
+            200: 'hsl(var(--brand-blue-200))',
+            300: 'hsl(var(--brand-blue-300))',
+            400: 'hsl(var(--brand-blue-400))',
+            500: 'hsl(var(--brand-blue-500))',
+            600: 'hsl(var(--brand-blue-600))',
+            700: 'hsl(var(--brand-blue-700))',
+            800: 'hsl(var(--brand-blue-800))',
+            900: 'hsl(var(--brand-blue-900))',
+          },
+          orange: {
+            50: 'hsl(var(--brand-orange-50))',
+            100: 'hsl(var(--brand-orange-100))',
+            200: 'hsl(var(--brand-orange-200))',
+            300: 'hsl(var(--brand-orange-300))',
+            400: 'hsl(var(--brand-orange-400))',
+            500: 'hsl(var(--brand-orange-500))',
+            600: 'hsl(var(--brand-orange-600))',
+          },
+        },
+        neutral: {
+          50: 'hsl(var(--neutral-50))',
+          100: 'hsl(var(--neutral-100))',
+          200: 'hsl(var(--neutral-200))',
+          300: 'hsl(var(--neutral-300))',
+          400: 'hsl(var(--neutral-400))',
+          500: 'hsl(var(--neutral-500))',
+          600: 'hsl(var(--neutral-600))',
+          700: 'hsl(var(--neutral-700))',
+          800: 'hsl(var(--neutral-800))',
+          900: 'hsl(var(--neutral-900))',
+        },
+        success: {
+          50: 'hsl(var(--success-50))',
+          100: 'hsl(var(--success-100))',
+          500: 'hsl(var(--success-500))',
+          600: 'hsl(var(--success-600))',
+          700: 'hsl(var(--success-700))',
+        },
+        warning: {
+          50: 'hsl(var(--warning-50))',
+          100: 'hsl(var(--warning-100))',
+          500: 'hsl(var(--warning-500))',
+          600: 'hsl(var(--warning-600))',
+        },
+        error: {
+          50: 'hsl(var(--error-50))',
+          100: 'hsl(var(--error-100))',
+          500: 'hsl(var(--error-500))',
+          600: 'hsl(var(--error-600))',
+        },
+        interactive: {
+          primary: 'var(--interactive-primary)',
+          'primary-hover': 'var(--interactive-primary-hover)',
+          'primary-active': 'var(--interactive-primary-active)',
+          secondary: 'var(--interactive-secondary)',
+          'secondary-hover': 'var(--interactive-secondary-hover)',
+        },
         chart: {
           "1": "var(--chart-1)",
           "2": "var(--chart-2)",
@@ -61,6 +150,31 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
+      },
+      spacing: {
+        'xs': 'var(--space-xs)',
+        'sm': 'var(--space-sm)',
+        'md': 'var(--space-md)',
+        'lg': 'var(--space-lg)',
+        'xl': 'var(--space-xl)',
+        '2xl': 'var(--space-2xl)',
+        '3xl': 'var(--space-3xl)',
+        '4xl': 'var(--space-4xl)',
+      },
+      boxShadow: {
+        'sm': 'var(--shadow-sm)',
+        'md': 'var(--shadow-md)',
+        'lg': 'var(--shadow-lg)',
+        'xl': 'var(--shadow-xl)',
+      },
+      transitionDuration: {
+        'fast': 'var(--duration-fast)',
+        'normal': 'var(--duration-normal)',
+        'slow': 'var(--duration-slow)',
+      },
+      transitionTimingFunction: {
+        'ease-in-out': 'var(--ease-in-out)',
+        'ease-out': 'var(--ease-out)',
       },
       keyframes: {
         "accordion-down": {
