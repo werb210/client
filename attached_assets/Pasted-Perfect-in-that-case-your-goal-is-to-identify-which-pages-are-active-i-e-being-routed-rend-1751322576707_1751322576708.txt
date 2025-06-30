@@ -1,0 +1,54 @@
+Perfect — in that case, your goal is to **identify which pages are active** (i.e., being routed/rendered) **without deleting anything yet**, so you can safely compare **V2 (Boreal-styled)** pages against legacy ones.
+
+Here's how to instruct Replit **without deleting any files**, while giving you the ability to compare and decide:
+
+---
+
+## ✅ Instructions for Replit (Staff and Client V2 – Safe Route Audit Mode)
+
+You can copy-paste this exact message to your Replit developers:
+
+---
+
+### 📌 **Route Audit & Page Inventory (DO NOT DELETE ANYTHING YET)**
+
+> I want to compare all legacy pages to the newly implemented Boreal-styled V2 pages. Please do the following for both **Client V2** and **Staff V2**:
+
+### ✅ 1. **Route Mapping Report**
+
+* Provide a full list of current route definitions (`App.tsx`, `Router.tsx`, or wherever routes are registered).
+* For each route, show:
+
+  * **Path** (e.g. `/dashboard`)
+  * **Component loaded** (e.g. `pages/Dashboard.tsx`)
+  * ✅ If it’s a V2 page or ❌ if it’s still a legacy page
+  * File location (e.g. `src/pages/...` or `src/v2/...`)
+
+Example format:
+
+```
+/dashboard → ❌ src/pages/Dashboard.tsx
+/admin → ✅ src/v2/AdminDashboard.tsx
+/login → ❌ src/pages/Login.tsx
+```
+
+### ✅ 2. **Import Location Check**
+
+* Search for all imports in your route file or layout files that **use legacy components** (`pages/`, `routes/`, etc.)
+* Mark these for me so I can decide whether to switch them over.
+
+### ✅ 3. **Component Usage Warning System**
+
+* Add **ESLint warnings** or a simple dev script that logs to console if any component from `src/pages/` or `src/routes/` is rendered.
+* DO NOT block the build — I just want a list of what’s still being used.
+
+### ✅ 4. **DO NOT REMOVE ANY FILES YET**
+
+* Do not delete or archive any routes.
+* Do not change existing imports until I explicitly confirm which V2 pages should be made primary.
+
+---
+
+Once they give you this report, you'll be able to do a side-by-side comparison and **approve each V2 page one by one**, replacing routes safely.
+
+Would you like me to prepare a checklist for reviewing those pages once Replit responds?
