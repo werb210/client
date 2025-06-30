@@ -5,6 +5,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import lendersRouter from "./routes/lenders";
 import localLendersRouter from "./routes/localLenders";
 import { recommendationsRouter } from "./routes/recommendations";
+import { documentsRouter } from "./routes/documents";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);

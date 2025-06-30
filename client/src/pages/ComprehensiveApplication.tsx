@@ -180,56 +180,6 @@ export function ComprehensiveApplication() {
             onPrevious={handlePrevious}
           />
         );
-      case 3:
-        return (
-          <Step3BusinessDetails
-            defaultValues={state.formData}
-            onSubmit={handleStepSubmit}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-          />
-        );
-      case 4:
-        return (
-          <Step4ApplicantDetails
-            defaultValues={state.formData}
-            onSubmit={handleStepSubmit}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-          />
-        );
-      case 5:
-        return (
-          <div className="max-w-4xl mx-auto p-6 text-center">
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-2xl font-bold mb-4">Document Upload</h2>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Upload required business documents for verification.
-                  This will integrate with the existing document upload system.
-                </p>
-                <div className="flex justify-between">
-                  <button
-                    onClick={handlePrevious}
-                    className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => {
-                      markStepComplete(5);
-                      handleNext();
-                    }}
-                    className="px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
-                  >
-                    Continue
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
-      case 6:
         return (
           <Step6Consents
             defaultValues={state.formData}
