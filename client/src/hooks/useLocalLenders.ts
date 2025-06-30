@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-interface LenderProduct {
+export interface LenderProduct {
   id: string;
   product_name: string;
   lender_name: string;

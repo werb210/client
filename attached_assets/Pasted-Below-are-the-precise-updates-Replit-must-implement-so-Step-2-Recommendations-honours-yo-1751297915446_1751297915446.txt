@@ -1,0 +1,156 @@
+Below are the **precise updates Replit must implement** so **Step 2 (“Recommendations”)** honours your new business rules.
+
+---
+
+## 🔑 Updated Recommendation Logic
+
+> For each lender product **P** in the cached array:
+>
+> 1. **Country match** – `P.geography` contains the user’s answer to **“Where is your business headquartered?”**
+> 2. **Amount range** – `P.min_amount ≤ requestedFunding ≤ P.max_amount`
+> 3. **Product-type rules**
+>
+>    * **User answer:** “capital”  → **allow** every product *except* `equipment_financing`
+>    * **User answer:** “equipment” → **allow only** `equipment_financing`
+>    * **User answer:** “both”      → **allow all** product types
+> 4. **AR balance rule** –
+>    *If user’s **Current Account Receivable balance** > 0* → **also include** `invoice_factoring` products (even if they failed the type rule above).
+> 5. **Inventory purpose rule** –
+>    *If “How do you plan on using the funds?” = “inventory”* → **also include** `purchase_order_financing` products (even if type rule filtered them out).
+
+*The final recommendation list is the unique union of all products that pass these rules.*
+
+---
+
+## 📂 Files to update in the **CLIENT** repo
+
+| File                                      | What to change                                                                    |
+| ----------------------------------------- | --------------------------------------------------------------------------------- |
+| `src/lib/useLenderProducts.ts`            | **No change** (still supplies full array)                                         |
+| `src/pages/Application/Step2.tsx`         | Replace the `filtered` computation with new `filterProducts()` helper (see below) |
+| `src/types/index.ts` (if you store enums) | Ensure `product_type` union includes the six types you listed                     |
+
+### ✏️ New filtering helper
+
+Add inside **Step2.tsx** (or extract to `lib/recommendation.ts`):
+
+```ts
+import { LenderProduct } from "@/lib/useLenderProducts";
+import { ApplicationForm } from "@/types/form";   // your RHF/Zod model
+
+export function filterProducts(products: LenderProduct[], form: ApplicationForm) {
+  const {
+    headquarters,
+    fundingAmount,
+    lookingFor,
+    accountsReceivableBalance,
+    fundsPurpose,
+  } = form;
+
+  const matchesCore = products.filter(p =>
+    p.geography.includes(headquarters) &&
+    fundingAmount >= p.min_amount && fundingAmount <= p.max_amount &&
+    (
+      lookingFor === "both" ||
+      (lookingFor === "capital"   && p.product_type !== "equipment_financing") ||
+      (lookingFor === "equipment" && p.product_type === "equipment_financing")
+    )
+  );
+
+  /** Extra inclusions based on AR or inventory purpose */
+  const extras = products.filter(p =>
+    (
+      accountsReceivableBalance > 0 && p.product_type === "invoice_factoring"
+    ) ||
+    (
+      fundsPurpose === "inventory" && p.product_type === "purchase_order_financing"
+    )
+  );
+
+  // Merge & dedupe by id
+  const byId = new Map<string, LenderProduct>();
+  [...matchesCore, ...extras].forEach(p => byId.set(p.id, p));
+  return Array.from(byId.values());
+}
+```
+
+### Use it in `Step2.tsx`
+
+```tsx
+const form = getValues();                       // RHF helper
+const recommended = filterProducts(data, form);
+```
+
+*Render `recommended` just like before.*
+
+---
+
+## ✅ Zod Schema touch-up
+
+If `accountsReceivableBalance` was optional, mark it **required** (can be `0`).
+
+```ts
+accountsReceivableBalance: z.number().min(0, "Enter AR balance (0 if none)"),
+```
+
+This guarantees the filter can calculate the AR rule.
+
+---
+
+## 🧪 Quick unit test (Vitest)
+
+`tests/recommendation.spec.ts`
+
+```ts
+import { describe, it, expect } from "vitest";
+import { filterProducts } from "@/lib/recommendation";
+
+const sample: LenderProduct[] = [
+  { id:"1", product_type:"term_loan", geography:["US"], min_amount:0, max_amount:50000, required_documents:[] },
+  { id:"2", product_type:"equipment_financing", geography:["US"], min_amount:0, max_amount:50000, required_documents:[] },
+  { id:"3", product_type:"invoice_factoring", geography:["US"], min_amount:0, max_amount:50000, required_documents:[] }
+];
+
+it("includes factoring when AR > 0", () => {
+  const form = {
+    headquarters:"US",
+    fundingAmount:30000,
+    lookingFor:"capital",
+    accountsReceivableBalance:10000,
+    fundsPurpose:"working_capital"
+  } as any;
+  const out = filterProducts(sample, form);
+  expect(out.map(p=>p.id)).toEqual(["1","3"]); // term loan + factoring
+});
+```
+
+---
+
+## 🟦 STAFF SIDE – no changes required
+
+*Clients still hit* `GET /api/public/lenders`; staff continue to maintain the DB.
+
+---
+
+## 🚀 Replit Work Order (tell the AI):
+
+```
+CLIENT TASKS
+1. Add /lib/recommendation.ts (helper above).
+2. Modify Step2.tsx to:
+   • use useFormContext().getValues() to obtain Step1 answers
+   • call filterProducts(products, form)
+   • render recommended list as existing cards.
+3. Ensure Zod schema marks accountsReceivableBalance required (>=0).
+4. Add tests/recommendation.spec.ts and script "test:recommend" in package.json.
+5. Run tests: npm run test:recommend ; expect pass.
+6. Verify manual flow: 
+   • Select HQ, funding amount, etc.
+   • Step2 shows correct category cards.
+   • Clicking a card sets selectedProductId and Continue works.
+7. Remove earlier debugging pages.
+```
+
+---
+
+Let me know if you need the **Step 5 auto-doc** logic adjusted now that required docs are a flat array!
