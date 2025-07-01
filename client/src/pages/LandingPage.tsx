@@ -5,11 +5,17 @@ export default function LandingPage() {
   const [, setLocation] = useLocation();
 
   const handleGetStarted = () => {
+    console.log('LandingPage: handleGetStarted clicked - navigating to /apply/step-1');
+    console.log('Current location before navigation:', window.location.pathname);
     setLocation("/apply/step-1");
+    console.log('setLocation called with: /apply/step-1');
   };
 
   const handleApplyNow = () => {
+    console.log('LandingPage: handleApplyNow clicked - navigating to /apply/step-1');
+    console.log('Current location before navigation:', window.location.pathname);
     setLocation("/apply/step-1");
+    console.log('setLocation called with: /apply/step-1');
   };
 
   return (
