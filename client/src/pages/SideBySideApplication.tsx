@@ -22,35 +22,54 @@ const steps = [
   { id: 6, title: 'Signature', component: Step6Signature },
 ];
 
+// Specific view for Steps 1, 3, and 4 side by side
+const focusedSteps = [
+  { id: 1, title: 'Financial Profile', component: Step1FinancialProfile },
+  { id: 3, title: 'Business Details', component: Step3BusinessDetails },
+  { id: 4, title: 'Financial Info', component: Step4FinancialInfo },
+];
+
 export default function SideBySideApplication() {
   const { state } = useFormData();
+  const [viewMode, setViewMode] = useState<'focused' | 'full'>('focused'); // Start with focused view
   const [visibleSteps, setVisibleSteps] = useState(3); // Show 3 steps at a time
   const [startIndex, setStartIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   // Responsive design - adjust visible steps based on screen size
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
-      if (width >= 1200) {
-        setVisibleSteps(3);
-        setViewMode('desktop');
-      } else if (width >= 768) {
-        setVisibleSteps(2);
-        setViewMode('tablet');
+      if (viewMode === 'focused') {
+        // Always show 3 steps (1, 3, 4) in focused mode if space allows
+        if (width >= 1200) {
+          setVisibleSteps(3);
+        } else if (width >= 768) {
+          setVisibleSteps(2);
+        } else {
+          setVisibleSteps(1);
+        }
       } else {
-        setVisibleSteps(1);
-        setViewMode('mobile');
+        // Full mode - show as many as fit
+        if (width >= 1200) {
+          setVisibleSteps(3);
+        } else if (width >= 768) {
+          setVisibleSteps(2);
+        } else {
+          setVisibleSteps(1);
+        }
       }
     };
 
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [viewMode]);
 
+  // Choose which steps to show based on view mode
+  const currentSteps = viewMode === 'focused' ? focusedSteps : steps;
+  
   const canScrollLeft = startIndex > 0;
-  const canScrollRight = startIndex + visibleSteps < steps.length;
+  const canScrollRight = startIndex + visibleSteps < currentSteps.length;
 
   const scrollLeft = () => {
     if (canScrollLeft) {
@@ -98,7 +117,7 @@ export default function SideBySideApplication() {
     }
   };
 
-  const visibleStepsList = steps.slice(startIndex, startIndex + visibleSteps);
+  const visibleStepsList = currentSteps.slice(startIndex, startIndex + visibleSteps);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-900">
@@ -109,7 +128,10 @@ export default function SideBySideApplication() {
             Boreal Financial Application
           </h1>
           <p className="text-gray-600 dark:text-gray-300">
-            Complete your application step by step - all steps visible side by side
+            {viewMode === 'focused' ? 
+              'Core Application Steps - Financial Profile, Business Details & Financial Info' :
+              'Complete your application step by step - all steps visible side by side'
+            }
           </p>
         </div>
 
@@ -140,45 +162,36 @@ export default function SideBySideApplication() {
           {/* View Mode Toggle */}
           <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
             <Button
-              variant={viewMode === 'desktop' ? 'default' : 'ghost'}
+              variant={viewMode === 'focused' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => {
-                setVisibleSteps(3);
-                setViewMode('desktop');
+                setViewMode('focused');
+                setStartIndex(0); // Reset to start when switching modes
               }}
               className="flex items-center gap-1 h-8"
             >
               <Monitor className="h-3 w-3" />
-              <span className="hidden sm:inline">Desktop</span>
+              <span className="hidden sm:inline">Steps 1, 3, 4</span>
             </Button>
             <Button
-              variant={viewMode === 'tablet' ? 'default' : 'ghost'}
+              variant={viewMode === 'full' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => {
-                setVisibleSteps(2);
-                setViewMode('tablet');
+                setViewMode('full');
+                setStartIndex(0); // Reset to start when switching modes
               }}
               className="flex items-center gap-1 h-8"
             >
               <Tablet className="h-3 w-3" />
-              <span className="hidden sm:inline">Tablet</span>
-            </Button>
-            <Button
-              variant={viewMode === 'mobile' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => {
-                setVisibleSteps(1);
-                setViewMode('mobile');
-              }}
-              className="flex items-center gap-1 h-8"
-            >
-              <Smartphone className="h-3 w-3" />
-              <span className="hidden sm:inline">Mobile</span>
+              <span className="hidden sm:inline">All Steps</span>
             </Button>
           </div>
           
           <div className="text-sm text-gray-600 dark:text-gray-300">
-            Showing steps {startIndex + 1}-{Math.min(startIndex + visibleSteps, steps.length)} of {steps.length}
+            {viewMode === 'focused' ? 
+              `Showing Steps 1, 3, 4 (${Math.min(visibleSteps, focusedSteps.length)} visible)` :
+              `Showing steps ${startIndex + 1}-${Math.min(startIndex + visibleSteps, steps.length)} of ${steps.length}`
+            }
           </div>
         </div>
 
@@ -225,7 +238,7 @@ export default function SideBySideApplication() {
         {/* Progress Summary */}
         <div className="mt-8 text-center">
           <div className="flex justify-center gap-2 mb-4">
-            {steps.map((step) => {
+            {currentSteps.map((step) => {
               const status = getStepStatus(step.id);
               return (
                 <div
@@ -240,7 +253,10 @@ export default function SideBySideApplication() {
             })}
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            {steps.filter((_, i) => getStepStatus(i + 1) === 'completed').length} of {steps.length} steps completed
+            {viewMode === 'focused' ? 
+              `Steps 1, 3, 4: ${currentSteps.filter(step => getStepStatus(step.id) === 'completed').length} of ${currentSteps.length} completed` :
+              `${steps.filter((_, i) => getStepStatus(i + 1) === 'completed').length} of ${steps.length} steps completed`
+            }
           </p>
         </div>
       </div>
