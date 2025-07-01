@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronLeft, ChevronRight, Monitor, Tablet, Smartphone } from 'lucide-react';
 
 // Import all step components
-import Step1FinancialProfile from '@/routes/Step1_FinancialProfile';
+import Step1FinancialProfile from '@/routes/Step1_FinancialProfile_Complete';
 import Step2Recommendations from '@/routes/Step2_Recommendations';
 import Step3BusinessDetails from '@/routes/Step3_BusinessDetails';
 import Step4FinancialInfo from '@/routes/Step4_FinancialInfo';
