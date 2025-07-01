@@ -1,0 +1,135 @@
+Great question — and yes, what you just experienced (adding a second UI without replacing the active one) is a very common issue when syncing design systems or migrating styles in Replit monorepos or multi-app projects. Here's a **best-practice guide** to ensure you safely and **completely** migrate the UI (layout, style, and pages) from one Replit application to another.
+
+---
+
+## ✅ Best Practices: Making One Replit App Look and Feel Like Another
+
+> **Goal:** Make App B (e.g., V2) **use the UI, layout, and styles of** App A (e.g., V1), without risking duplicate components or invisible page issues.
+
+---
+
+### 1. 🔍 **Create a Full Style System Inventory First**
+
+Before copying anything:
+
+* Identify:
+
+  * Layout components (e.g., `MainLayout.tsx`, `Sidebar.tsx`, `Header.tsx`)
+  * Theme configuration (`tailwind.config.ts`, custom CSS tokens, fonts)
+  * Global wrappers (e.g., `App.tsx`, `Providers.tsx`, theme providers)
+
+**Ask Replit to export a list of:**
+
+```tsx
+// Layout-related:
+- MainLayout
+- AppShell
+- Sidebar
+- TopBar
+- Footer
+
+// Theme-related:
+- tailwind.config.ts
+- index.css / globals.css
+- fonts.ts (if custom fonts used)
+```
+
+---
+
+### 2. ✅ **Isolate the Source-of-Truth Design System**
+
+Pick **one** app (e.g. Staff V1) as the **"Design Authority"**.
+
+* Move its layout components into a shared folder like `/design-system` or `/v2-layout`
+* Mark it clearly as the **only layout system to be used going forward**.
+
+This helps you avoid situations like:
+
+* Two dashboards
+* Two navigation bars
+* Two theme configs
+
+> ✅ Tip: Add a comment in each legacy layout file:
+> `// DEPRECATED - DO NOT USE IN V2. Use /design-system/MainLayout.tsx instead.`
+
+---
+
+### 3. 🧹 **Cleanly Replace the App Shell**
+
+Ensure Replit does this *in order*:
+
+1. ✅ Replace `App.tsx` or the root `Layout.tsx` to use the new layout
+2. ✅ Remove or archive the legacy layout imports
+3. ✅ Ensure every route is nested in the new layout
+4. ✅ Rebuild and verify **only the new layout is visible**
+
+---
+
+### 4. 🧪 **Force a Route Map Diff Check**
+
+Ask Replit to list all current routes in both apps, like:
+
+```
+/ → uses MainDashboard.tsx
+/dashboard → uses src/v2/AdminDashboard.tsx ✅
+/login → still uses src/pages/Login.tsx ❌
+```
+
+You can use this to confirm which pages are still using legacy layouts.
+
+---
+
+### 5. ✅ **Implement an ESLint Rule or Dev Warning**
+
+This avoids regressions:
+
+* Add a dev script or ESLint warning for any file that imports from:
+
+  * `src/pages/`
+  * `src/routes/`
+  * or uses a component named `Dashboard.tsx` outside of `/v2/`
+
+---
+
+### 6. 🔄 **Migration Scripts Instead of Manual Copy-Paste**
+
+If you’re working in a monorepo:
+
+* Use a CLI or script to **copy layout files and rename conflicting ones**, e.g.:
+
+```bash
+cp -R staff-v1/src/layouts client-v2/src/v2/layouts
+mv src/pages/Dashboard.tsx src/pages/LegacyDashboard.tsx
+```
+
+This prevents file collision and lets you review duplicates explicitly.
+
+---
+
+### 7. 📦 **Use a Shared Design System Package (Optional)**
+
+If both apps live in the same monorepo:
+
+* Consider moving `MainLayout`, `Sidebar`, `NavBar`, etc. into `packages/design-system/` and consume it via:
+
+```tsx
+import { MainLayout } from '@boreal/design-system';
+```
+
+---
+
+## 🔚 Summary: TL;DR
+
+| Step | Action                                              |
+| ---- | --------------------------------------------------- |
+| ✅ 1  | Inventory layouts and style configs                 |
+| ✅ 2  | Choose one layout system as source-of-truth         |
+| ✅ 3  | Replace `App.tsx` or global layout wrapper cleanly  |
+| ✅ 4  | Audit routes to see what’s using old vs new layouts |
+| ✅ 5  | Add warnings for legacy layout usage                |
+| ✅ 6  | Use CLI/script for structured migration             |
+| ✅ 7  | Optionally create shared design system package      |
+
+---
+
+Would you like me to generate a sample ESLint rule or dev warning logger for detecting legacy layout usage?

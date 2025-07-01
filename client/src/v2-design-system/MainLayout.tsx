@@ -1,0 +1,76 @@
+import { Switch, Route } from "wouter";
+import { AuthGuard } from "@/components/AuthGuard";
+
+// V1 Route Components (Source of Truth)
+import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
+import Step2Recommendations from "@/routes/Step2_Recommendations";
+import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
+import Step4FinancialInfo from "@/routes/Step4_FinancialInfo";
+import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
+import Step6Signature from "@/routes/Step6_Signature";
+
+// Core Pages
+import LoginPage from "@/pages/LoginPage";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import VerifyOtp from "@/pages/VerifyOtp";
+import RequestReset from "@/pages/RequestReset";
+import ResetPassword from "@/pages/ResetPassword";
+import LandingPage from "@/pages/LandingPage";
+import Dashboard from "@/pages/Dashboard";
+import PortalPage from "@/pages/PortalPage";
+import NotFound from "@/pages/NotFound";
+import SignComplete from "@/pages/SignComplete";
+import UploadDocuments from "@/pages/UploadDocuments";
+import { BackendDiagnosticPage } from "@/pages/BackendDiagnosticPage";
+import SideBySideApplication from "@/pages/SideBySideApplication";
+
+/**
+ * V2 Design System - Main Layout Router
+ * 
+ * This is the official routing structure extracted from V1 SideBySideApplication
+ * and optimized for V2. Uses V1 route components as source of truth.
+ */
+export function MainLayout() {
+  return (
+    <Switch>
+      {/* Public Authentication Routes */}
+      <Route path="/login-page" component={LoginPage} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/verify-otp" component={VerifyOtp} />
+      <Route path="/request-reset" component={RequestReset} />
+      <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/backend-diagnostic" component={BackendDiagnosticPage} />
+
+      {/* Protected Application Routes */}
+      <AuthGuard>
+        {/* Primary Application Flow - V1 Routes (Source of Truth) */}
+        <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
+        <Route path="/step2-recommendations" component={Step2Recommendations} />
+        <Route path="/step3-business-details" component={Step3BusinessDetails} />
+        <Route path="/step4-financial-info" component={Step4FinancialInfo} />
+        <Route path="/step5-document-upload" component={Step5DocumentUpload} />
+        <Route path="/step6-signature" component={Step6Signature} />
+        
+        {/* Dashboard and Portal */}
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/portal" component={PortalPage} />
+        
+        {/* Document Management */}
+        <Route path="/sign-complete" component={SignComplete} />
+        <Route path="/upload-documents/:applicationId?" component={UploadDocuments} />
+        
+        {/* Application Layouts */}
+        <Route path="/side-by-side-application" component={SideBySideApplication} />
+        
+        {/* DEPRECATED: Legacy V2 comprehensive application - DO NOT USE */}
+        {/* <Route path="/comprehensive-application" component={ComprehensiveApplication} /> */}
+      </AuthGuard>
+      
+      {/* Default Route - Landing Page */}
+      <Route path="/" component={LandingPage} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
