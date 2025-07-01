@@ -1,259 +1,270 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { API_BASE_URL } from '@/constants';
+import { Loader2, RefreshCw, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 interface CorsTestResult {
   test: string;
-  url: string;
-  method: string;
-  origin: string;
-  status?: number;
-  ok?: boolean;
-  result: 'PASS' | 'FAIL';
-  headers?: Record<string, string | null>;
-  error?: string;
-  timing?: number;
+  status: 'pending' | 'success' | 'error' | 'warning';
+  message: string;
+  details?: any;
 }
 
 export default function CorsTest() {
   const [results, setResults] = useState<CorsTestResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+
+  const updateResult = (testId: string, update: Partial<CorsTestResult>) => {
+    setResults(prev => prev.map(result => 
+      result.test === testId ? { ...result, ...update } : result
+    ));
+  };
 
   const runCorsTests = async () => {
-    setIsLoading(true);
-    const testResults: CorsTestResult[] = [];
-    const clientOrigin = window.location.origin;
+    setIsRunning(true);
+    
+    const tests: CorsTestResult[] = [
+      {
+        test: 'simple-fetch',
+        status: 'pending',
+        message: 'Testing simple fetch to staff API'
+      },
+      {
+        test: 'preflight-check',
+        status: 'pending', 
+        message: 'Testing CORS preflight behavior'
+      },
+      {
+        test: 'response-headers',
+        status: 'pending',
+        message: 'Checking CORS response headers'
+      },
+      {
+        test: 'network-connectivity',
+        status: 'pending',
+        message: 'Testing basic network connectivity'
+      }
+    ];
 
-    // Test 1: OPTIONS preflight for auth/user
+    setResults(tests);
+
+    // Test 1: Simple fetch
     try {
-      const start = Date.now();
-      const response = await fetch(`${API_BASE_URL}/auth/user`, {
-        method: 'OPTIONS',
+      console.log('=== CORS Test 1: Simple Fetch ===');
+      const response = await fetch('https://staffportal.replit.app/api/public/lenders', {
+        method: 'GET',
         mode: 'cors',
+        credentials: 'omit'
+      });
+
+      updateResult('simple-fetch', {
+        status: 'success',
+        message: `HTTP ${response.status} - ${response.statusText}`,
+        details: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries())
+        }
+      });
+    } catch (error) {
+      console.error('Simple fetch failed:', error);
+      updateResult('simple-fetch', {
+        status: 'error',
+        message: `Failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: error
+      });
+    }
+
+    // Test 2: Check for CORS preflight
+    try {
+      console.log('=== CORS Test 2: Preflight Check ===');
+      const response = await fetch('https://staffportal.replit.app/api/public/lenders', {
+        method: 'OPTIONS',
         headers: {
-          'Origin': clientOrigin,
+          'Origin': window.location.origin,
           'Access-Control-Request-Method': 'GET',
           'Access-Control-Request-Headers': 'Content-Type'
         }
       });
-      const timing = Date.now() - start;
 
-      testResults.push({
-        test: 'CORS Preflight (/auth/user)',
-        url: `${API_BASE_URL}/auth/user`,
-        method: 'OPTIONS',
-        origin: clientOrigin,
-        status: response.status,
-        ok: response.ok,
-        result: (response.ok || response.status === 204) ? 'PASS' : 'FAIL',
-        timing,
-        headers: {
-          'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
-          'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials'),
-          'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
-          'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers')
-        }
+      const corsHeaders = {
+        'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
+        'access-control-allow-methods': response.headers.get('access-control-allow-methods'),
+        'access-control-allow-headers': response.headers.get('access-control-allow-headers'),
+      };
+
+      updateResult('preflight-check', {
+        status: corsHeaders['access-control-allow-origin'] ? 'success' : 'warning',
+        message: corsHeaders['access-control-allow-origin'] 
+          ? `CORS headers present - Origin: ${corsHeaders['access-control-allow-origin']}`
+          : 'No CORS headers found in preflight response',
+        details: corsHeaders
       });
     } catch (error) {
-      testResults.push({
-        test: 'CORS Preflight (/auth/user)',
-        url: `${API_BASE_URL}/auth/user`,
-        method: 'OPTIONS',
-        origin: clientOrigin,
-        result: 'FAIL',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      console.error('Preflight check failed:', error);
+      updateResult('preflight-check', {
+        status: 'error',
+        message: `Preflight failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: error
       });
     }
 
-    // Test 2: Actual GET request to auth/user
+    // Test 3: Response Headers Analysis
     try {
-      const start = Date.now();
-      const response = await fetch(`${API_BASE_URL}/auth/user`, {
-        method: 'GET',
-        mode: 'cors',
-        credentials: 'include'
+      console.log('=== CORS Test 3: Response Headers ===');
+      const response = await fetch('https://staffportal.replit.app/api/public/lenders', {
+        method: 'HEAD', // Just get headers
+        mode: 'no-cors' // Bypass CORS to see what server returns
       });
-      const timing = Date.now() - start;
 
-      testResults.push({
-        test: 'GET /auth/user (with credentials)',
-        url: `${API_BASE_URL}/auth/user`,
-        method: 'GET',
-        origin: clientOrigin,
-        status: response.status,
-        ok: response.ok,
-        result: (response.ok || response.status === 401) ? 'PASS' : 'FAIL',
-        timing,
-        headers: {
-          'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
-          'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials')
+      updateResult('response-headers', {
+        status: 'success',
+        message: 'Server responded to HEAD request',
+        details: {
+          status: response.status,
+          type: response.type,
+          headers: Object.fromEntries(response.headers.entries())
         }
       });
     } catch (error) {
-      testResults.push({
-        test: 'GET /auth/user (with credentials)',
-        url: `${API_BASE_URL}/auth/user`,
-        method: 'GET',
-        origin: clientOrigin,
-        result: 'FAIL',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      console.error('Response headers test failed:', error);
+      updateResult('response-headers', {
+        status: 'error',
+        message: `Header check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: error
       });
     }
 
-    // Test 3: Health endpoint
+    // Test 4: Network Connectivity (using no-cors to bypass CORS completely)
     try {
-      const start = Date.now();
-      const response = await fetch(`${API_BASE_URL}/health`, {
+      console.log('=== CORS Test 4: Network Connectivity ===');
+      const response = await fetch('https://staffportal.replit.app', {
         method: 'GET',
-        mode: 'cors',
-        credentials: 'include'
+        mode: 'no-cors'
       });
-      const timing = Date.now() - start;
 
-      testResults.push({
-        test: 'GET /health',
-        url: `${API_BASE_URL}/health`,
-        method: 'GET',
-        origin: clientOrigin,
-        status: response.status,
-        ok: response.ok,
-        result: response.ok ? 'PASS' : 'FAIL',
-        timing,
-        headers: {
-          'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
-          'Access-Control-Allow-Credentials': response.headers.get('Access-Control-Allow-Credentials')
+      updateResult('network-connectivity', {
+        status: 'success',
+        message: 'Staff app domain is reachable',
+        details: {
+          type: response.type,
+          status: response.status
         }
       });
     } catch (error) {
-      testResults.push({
-        test: 'GET /health',
-        url: `${API_BASE_URL}/health`,
-        method: 'GET',
-        origin: clientOrigin,
-        result: 'FAIL',
-        error: error instanceof Error ? error.message : 'Unknown error'
+      console.error('Network connectivity test failed:', error);
+      updateResult('network-connectivity', {
+        status: 'error',
+        message: `Network unreachable: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: error
       });
     }
 
-    setResults(testResults);
-    setIsLoading(false);
+    setIsRunning(false);
   };
 
-  const getStatusColor = (result: string) => {
-    switch (result) {
-      case 'PASS': return 'bg-green-100 text-green-800';
-      case 'FAIL': return 'bg-red-100 text-red-800';
+  useEffect(() => {
+    runCorsTests();
+  }, []);
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'success': return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case 'error': return <XCircle className="h-5 w-5 text-red-600" />;
+      case 'warning': return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
+      case 'pending': return <Loader2 className="h-5 w-5 animate-spin text-blue-600" />;
+      default: return <div className="h-5 w-5 bg-gray-300 rounded-full" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'success': return 'bg-green-100 text-green-800';
+      case 'error': return 'bg-red-100 text-red-800';
+      case 'warning': return 'bg-yellow-100 text-yellow-800';
+      case 'pending': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">CORS Diagnostic Test</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          CORS Diagnostic Test
+        </h1>
         <p className="text-gray-600">
-          Testing CORS configuration between client and staff backend
+          Testing cross-origin resource sharing between client and staff applications
         </p>
       </div>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Test Configuration</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Test Progress</CardTitle>
+            <Button onClick={runCorsTests} disabled={isRunning} size="sm">
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRunning ? 'animate-spin' : ''}`} />
+              Run Tests
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <p><strong>Client Origin:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{window.location.origin}</code></p>
-              <p><strong>API Base URL:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{API_BASE_URL}</code></p>
-            </div>
-            <div>
-              <p><strong>Environment:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{import.meta.env.MODE}</code></p>
-              <p><strong>Protocol:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{window.location.protocol}</code></p>
-            </div>
+          <div className="space-y-4">
+            {results.map((result) => (
+              <div key={result.test} className="flex items-start gap-3 p-4 border rounded-lg">
+                <div className="mt-0.5">
+                  {getStatusIcon(result.status)}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-medium capitalize">
+                      {result.test.replace('-', ' ')}
+                    </h3>
+                    <Badge variant="outline" className={getStatusColor(result.status)}>
+                      {result.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">{result.message}</p>
+                  
+                  {result.details && (
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-gray-500 hover:text-gray-700">
+                        View Details
+                      </summary>
+                      <pre className="mt-2 p-2 bg-gray-50 rounded overflow-auto">
+                        {JSON.stringify(result.details, null, 2)}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-          <Button onClick={runCorsTests} disabled={isLoading} className="mt-4">
-            {isLoading ? 'Running CORS Tests...' : 'Run CORS Tests'}
-          </Button>
         </CardContent>
       </Card>
 
-      {results.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold text-gray-900">Test Results</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick CORS Fix Guide</CardTitle>
+        </CardHeader>
+        <CardContent className="prose prose-sm max-w-none">
+          <p><strong>If tests show CORS errors:</strong></p>
+          <ol className="list-decimal list-inside space-y-2">
+            <li>Staff app needs CORS middleware with client domain allowlist</li>
+            <li>Add <code>Access-Control-Allow-Origin</code> header for your client domain</li>
+            <li>Ensure <code>/api/public/lenders</code> endpoint exists and returns JSON</li>
+            <li>Verify staff app is deployed and responding to requests</li>
+          </ol>
           
-          {results.map((result, index) => (
-            <Card key={index}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{result.test}</CardTitle>
-                  <Badge className={getStatusColor(result.result)}>
-                    {result.result}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <p><strong>URL:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{result.url}</code></p>
-                  <p><strong>Method:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{result.method}</code></p>
-                  <p><strong>Origin:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{result.origin}</code></p>
-                  
-                  {result.status && (
-                    <p><strong>Status:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{result.status}</code></p>
-                  )}
-                  
-                  {result.timing && (
-                    <p><strong>Response Time:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{result.timing}ms</code></p>
-                  )}
-                  
-                  {result.error && (
-                    <p className="text-red-600"><strong>Error:</strong> {result.error}</p>
-                  )}
-                  
-                  {result.headers && (
-                    <div className="mt-3">
-                      <p className="font-medium mb-2">CORS Response Headers:</p>
-                      <pre className="bg-gray-100 p-3 rounded text-xs overflow-auto">
-                        {JSON.stringify(result.headers, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>CORS Troubleshooting Guide</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm space-y-3">
-                <div>
-                  <p className="font-medium text-green-700">✅ Expected for PASS:</p>
-                  <ul className="list-disc list-inside ml-4 space-y-1">
-                    <li>OPTIONS request returns 200 or 204</li>
-                    <li>Access-Control-Allow-Origin matches client origin exactly</li>
-                    <li>Access-Control-Allow-Credentials: true</li>
-                    <li>GET requests work with credentials: 'include'</li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <p className="font-medium text-red-700">❌ Common FAIL causes:</p>
-                  <ul className="list-disc list-inside ml-4 space-y-1">
-                    <li>Backend not running or unreachable</li>
-                    <li>Origin not in CORS allowlist</li>
-                    <li>Missing Access-Control-Allow-Credentials header</li>
-                    <li>CORS middleware misconfigured</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+          <p className="mt-4"><strong>If network tests fail:</strong></p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Staff app may be sleeping (wake it by visiting the URL)</li>
+            <li>Deployment may have failed</li>
+            <li>DNS or SSL certificate issues</li>
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -30,45 +30,38 @@ export interface LenderProduct {
 const STAFF_API_BASE = import.meta.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app';
 
 export async function fetchLenderProducts(): Promise<LenderProduct[]> {
-  // Try multiple staff app endpoints for 43+ products
-  const staffEndpoints = [
-    `${STAFF_API_BASE}/api/public/lenders`,
-    `${STAFF_API_BASE}/api/lenders`,
-    `${STAFF_API_BASE}/api/public/lender-products`,
-    `${STAFF_API_BASE}/api/lender-products`
-  ];
-
-  // Try staff app endpoints first
-  for (const url of staffEndpoints) {
-    try {
-      console.log(`Attempting staff API: ${url}`);
-      const res = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        mode: 'cors',
-        credentials: 'omit' // Don't send credentials for public API
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        const products = Array.isArray(data) ? data : data.products || [];
-        console.log(`Staff API success: ${products.length} products from ${url}`);
-        
-        // If we got products from staff app, normalize and return them
-        if (products.length > 0) {
-          return normalizeProducts(products);
-        }
-      }
-    } catch (error) {
-      console.warn(`Staff API endpoint ${url} failed:`, error);
+  // Single canonical endpoint for 43+ products
+  const staffUrl = `${STAFF_API_BASE}/api/public/lenders`;
+  
+  try {
+    console.log(`Attempting staff API: ${staffUrl}`);
+    const res = await fetch(staffUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Staff API ${res.status}: ${res.statusText}`);
     }
+    
+    const data = await res.json();
+    const products = Array.isArray(data) ? data : data.products || [];
+    console.log(`Staff API success: ${products.length} products`);
+    
+    if (products.length > 0) {
+      return normalizeProducts(products);
+    }
+  } catch (error) {
+    console.warn(`Staff API endpoint ${staffUrl} failed:`, error);
   }
 
-  // Fallback to local API if staff app is unavailable
-  console.log('Staff API unavailable, using local API fallback');
+  // Fallback to local authentic data if staff app is unavailable
+  console.log('Staff API unavailable, using local authentic data fallback');
   try {
     const res = await fetch('/api/local/lenders', {
       method: 'GET',
@@ -83,7 +76,7 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
     
     const data = await res.json();
     const products = Array.isArray(data) ? data : data.products || [];
-    console.log(`Local API fallback: ${products.length} products`);
+    console.log(`Local API fallback: ${products.length} authentic products`);
     
     return normalizeProducts(products);
   } catch (error) {

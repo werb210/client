@@ -22,51 +22,52 @@ export default function StaffApiTest() {
     setError(null);
     setData(null);
 
-    const endpoints = [
-      'https://staffportal.replit.app/api/public/lenders',
-      'https://staffportal.replit.app/api/lenders',
-      'https://staffportal.replit.app/api/public/lender-products',
-      'https://staffportal.replit.app/api/lender-products'
-    ];
+    // Single canonical endpoint
+    const url = 'https://staffportal.replit.app/api/public/lenders';
 
-    for (const url of endpoints) {
-      try {
-        console.log(`Testing endpoint: ${url}`);
+    try {
+      console.log(`Testing canonical endpoint: ${url}`);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+        credentials: 'omit'
+      });
+
+      console.log(`Status: ${response.status} ${response.statusText}`);
+      console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Staff API Success:', result);
         
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          mode: 'cors'
+        setData({
+          ...result,
+          endpoint: url,
+          status: response.status,
+          statusText: response.statusText
         });
-
-        console.log(`${url} - Status:`, response.status);
-        console.log(`${url} - Headers:`, Object.fromEntries(response.headers.entries()));
-
-        if (response.ok) {
-          const result = await response.json();
-          console.log(`${url} - Success:`, result);
-          
-          setData({
-            ...result,
-            endpoint: url
-          });
-          setLastTested(new Date());
-          setLoading(false);
-          return; // Success, exit early
-        } else {
-          console.log(`${url} - Failed with status ${response.status}`);
-        }
-      } catch (err) {
-        console.error(`${url} - Error:`, err);
+        setLastTested(new Date());
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+    } catch (err) {
+      console.error('Staff API Error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      
+      // Check if it's a CORS error
+      if (errorMessage.includes('CORS') || errorMessage.includes('Network')) {
+        setError(`CORS or Network Error: ${errorMessage}. Staff app may need CORS configuration for client domain.`);
+      } else {
+        setError(`Connection failed: ${errorMessage}`);
+      }
+    } finally {
+      setLoading(false);
     }
-
-    // If we get here, all endpoints failed
-    setError('All staff API endpoints failed. Staff app may be down or endpoints have changed.');
-    setLoading(false);
   };
 
   useEffect(() => {
