@@ -7,7 +7,7 @@ export default function SimpleDashboard() {
   const [, setLocation] = useLocation();
 
   const handleStartApplication = () => {
-    setLocation('/side-by-side-application');
+    setLocation('/apply/step-1');
   };
 
   return (

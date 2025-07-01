@@ -21,7 +21,7 @@ export function NavBar() {
           <div className="flex items-center space-x-4">
             <Button 
               className="bg-teal-600 hover:bg-teal-700 text-white"
-              onClick={() => setLocation('/simple-application')}
+              onClick={() => setLocation('/apply/step-1')}
             >
               Start Application
             </Button>
