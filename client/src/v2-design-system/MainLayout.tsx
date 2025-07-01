@@ -1,11 +1,11 @@
 import { Switch, Route } from "wouter";
 
 // V1 Route Components (Source of Truth)
-import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Simple";
+import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
 import Step4FinancialInfo from "@/routes/Step4_FinancialInfo";
-import FormComparison from "@/pages/FormComparison";
+
 import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
 import Step6Signature from "@/routes/Step6_Signature";
 
@@ -39,7 +39,7 @@ export function MainLayout() {
       <Route path="/lenders-by-category" component={LendersByCategory} />
       <Route path="/staff-api-test" component={StaffApiTest} />
       <Route path="/cors-test" component={CorsTest} />
-      <Route path="/form-comparison" component={FormComparison} />
+
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
