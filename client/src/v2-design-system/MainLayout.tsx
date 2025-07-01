@@ -10,8 +10,7 @@ import Step6Signature from "@/routes/Step6_Signature";
 
 // Core Pages (Authentication removed)
 import LandingPage from "@/pages/LandingPage";
-import Dashboard from "@/pages/Dashboard";
-import PortalPage from "@/pages/PortalPage";
+import SimpleDashboard from "@/pages/SimpleDashboard";
 import NotFound from "@/pages/NotFound";
 import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
@@ -39,9 +38,8 @@ export function MainLayout() {
       <Route path="/step5-document-upload" component={Step5DocumentUpload} />
       <Route path="/step6-signature" component={Step6Signature} />
       
-      {/* Dashboard and Portal */}
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/portal" component={PortalPage} />
+      {/* Dashboard */}
+      <Route path="/dashboard" component={SimpleDashboard} />
       
       {/* Document Management */}
       <Route path="/sign-complete" component={SignComplete} />

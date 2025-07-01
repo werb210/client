@@ -1,47 +1,14 @@
-import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { isUnauthorizedError } from '@/lib/authUtils';
-import { Application } from '@/lib/api';
-import { useLocation } from 'wouter';
 import { Plus, TrendingUp, HelpCircle, FileText, Calendar, Building } from 'lucide-react';
 import borealLogo from '@assets/Boreal Financial Logo 2_1751090147857.png';
 
 export default function Dashboard() {
-  const { user, isLoading, isAuthenticated } = useAuth();
-  const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  // Redirect to home if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
-
-  const { data: applications, isLoading: applicationsLoading } = useQuery<Application[]>({
-    queryKey: ['/api/applications'],
-    enabled: isAuthenticated,
-  });
-
   const handleStartNewApplication = () => {
-    setLocation('/step1-financial-profile');
-  };
-
-  const handleLogout = () => {
-    window.location.href = '/api/logout';
+    setLocation('/side-by-side-application');
   };
 
   const getStatusBadge = (status: string) => {
