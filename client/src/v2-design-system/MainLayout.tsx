@@ -24,6 +24,7 @@ import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
 import { BackendDiagnosticPage } from "@/pages/BackendDiagnosticPage";
 import SideBySideApplication from "@/pages/SideBySideApplication";
+import SimpleApplication from "@/pages/SimpleApplication";
 
 /**
  * V2 Design System - Main Layout Router
@@ -53,7 +54,8 @@ export function MainLayout() {
       <Route path="/sign-complete" component={SignComplete} />
       <Route path="/upload-documents/:applicationId?" component={UploadDocuments} />
       
-      {/* V1 Application Layouts (Source of Truth) */}
+      {/* Application Entry Points */}
+      <Route path="/simple-application" component={SimpleApplication} />
       <Route path="/application" component={SideBySideApplication} />
       <Route path="/side-by-side-application" component={SideBySideApplication} />
       
