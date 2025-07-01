@@ -6,17 +6,15 @@ export default function LandingPage() {
   const [, setLocation] = useLocation();
 
   const handleGetStarted = () => {
-    const target = isFirstVisit() ? "/register" : "/login";
-    setLocation(target);
+    setLocation("/application");
   };
 
   const handleLogin = () => {
-    setLocation("/login");
+    setLocation("/application");
   };
 
   const handleApplyNow = () => {
-    const target = isFirstVisit() ? "/register" : "/login";
-    setLocation(target);
+    setLocation("/application");
   };
 
   return (
@@ -31,15 +29,7 @@ export default function LandingPage() {
                   onClick={handleGetStarted}
                   className="hover:underline bg-transparent border-none text-white cursor-pointer"
                 >
-                  Get Started
-                </button>
-              </li>
-              <li>
-                <button 
-                  onClick={handleLogin}
-                  className="hover:underline bg-transparent border-none text-white cursor-pointer"
-                >
-                  Login
+                  Start Application
                 </button>
               </li>
             </ul>
@@ -57,7 +47,7 @@ export default function LandingPage() {
             onClick={handleApplyNow}
             className="bg-blue-900 text-white px-6 py-3 rounded-md hover:bg-blue-800 border-none cursor-pointer"
           >
-            Apply Now
+            Start Application
           </button>
         </section>
 
