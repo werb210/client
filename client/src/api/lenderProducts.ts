@@ -26,21 +26,12 @@ export interface LenderProduct {
   updatedAt: string;
 }
 
-// Environment-based API URL configuration
-const getApiBaseUrl = () => {
-  // In development, use local endpoints
-  if (import.meta.env.DEV) {
-    return '';
-  }
-  // In production, use staff app public API
-  return import.meta.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app';
-};
-
-const API_BASE = getApiBaseUrl();
+// Always use staff app API for full 43+ product dataset
+const STAFF_API_BASE = import.meta.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app';
 
 export async function fetchLenderProducts(): Promise<LenderProduct[]> {
-  // Use staff app public API in production, local fallback in development
-  const url = API_BASE ? `${API_BASE}/api/public/lenders` : '/api/local/lenders';
+  // Always use staff app public API for complete authentic dataset (43+ products)
+  const url = `${STAFF_API_BASE}/api/public/lenders`;
   
   const res = await fetch(url, {
     method: 'GET',
@@ -79,7 +70,7 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
 }
 
 export async function fetchLenderStats() {
-  const url = API_BASE ? `${API_BASE}/api/public/lenders/stats` : '/api/local/lenders/stats';
+  const url = `${STAFF_API_BASE}/api/public/lenders/stats`;
   
   const res = await fetch(url, {
     method: 'GET',
@@ -96,7 +87,7 @@ export async function fetchLenderStats() {
 }
 
 export async function fetchLenderProduct(id: string): Promise<LenderProduct> {
-  const url = API_BASE ? `${API_BASE}/api/public/lenders/${id}` : `/api/local/lenders/${id}`;
+  const url = `${STAFF_API_BASE}/api/public/lenders/${id}`;
   
   const res = await fetch(url, {
     method: 'GET',
