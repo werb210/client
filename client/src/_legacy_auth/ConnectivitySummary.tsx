@@ -80,33 +80,9 @@ export default function ConnectivitySummary() {
         // Registration endpoint may not exist
       }
 
-      // Test login endpoint
-      try {
-        const loginResponse = await fetch(`${baseUrl}/auth/login`, {
-          method: 'POST',
-          mode: 'cors',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'test@example.com', password: 'test' })
-        });
-        login = loginResponse.status !== 0;
-      } catch (error) {
-        // Login endpoint may not exist
-      }
-
-      // Test password reset endpoint
-      try {
-        const resetResponse = await fetch(`${baseUrl}/auth/request-reset`, {
-          method: 'POST',
-          mode: 'cors',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'test@example.com' })
-        });
-        passwordReset = resetResponse.status !== 0;
-      } catch (error) {
-        // Reset endpoint may not exist
-      }
+      // Authentication endpoints removed - application uses direct access model
+      login = false;
+      passwordReset = false;
     }
 
     // Determine message and solution
