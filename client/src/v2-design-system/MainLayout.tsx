@@ -61,7 +61,7 @@ export function MainLayout() {
         <Route path="/sign-complete" component={SignComplete} />
         <Route path="/upload-documents/:applicationId?" component={UploadDocuments} />
         
-        {/* Application Layouts */}
+        {/* V1 Application Layouts (Source of Truth) */}
         <Route path="/side-by-side-application" component={SideBySideApplication} />
         
         {/* DEPRECATED: Legacy V2 comprehensive application - DO NOT USE */}
