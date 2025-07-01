@@ -1,4 +1,4 @@
-interface LenderProduct {
+export interface LenderProduct {
   // Core Identification
   id: string;
   tenantId: string;
@@ -58,7 +58,6 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
   
   // Normalize data format between local API (snake_case) and staff API (camelCase)
   return products.map((product: any) => {
-    console.log('Transforming product:', product); // Debug log
     return {
       id: String(product.id),
       tenantId: product.tenantId || 'default',
