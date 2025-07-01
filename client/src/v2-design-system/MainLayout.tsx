@@ -32,11 +32,17 @@ export function MainLayout() {
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
+      <Route path="/apply/step-1" component={Step1FinancialProfile} />
       <Route path="/step2-recommendations" component={Step2Recommendations} />
+      <Route path="/apply/step-2" component={Step2Recommendations} />
       <Route path="/step3-business-details" component={Step3BusinessDetails} />
+      <Route path="/apply/step-3" component={Step3BusinessDetails} />
       <Route path="/step4-financial-info" component={Step4FinancialInfo} />
+      <Route path="/apply/step-4" component={Step4FinancialInfo} />
       <Route path="/step5-document-upload" component={Step5DocumentUpload} />
+      <Route path="/apply/step-5" component={Step5DocumentUpload} />
       <Route path="/step6-signature" component={Step6Signature} />
+      <Route path="/apply/step-6" component={Step6Signature} />
       
       {/* Dashboard */}
       <Route path="/dashboard" component={SimpleDashboard} />

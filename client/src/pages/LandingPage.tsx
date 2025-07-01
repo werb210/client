@@ -5,11 +5,11 @@ export default function LandingPage() {
   const [, setLocation] = useLocation();
 
   const handleGetStarted = () => {
-    setLocation("/simple-application");
+    setLocation("/apply/step-1");
   };
 
   const handleApplyNow = () => {
-    setLocation("/simple-application");
+    setLocation("/apply/step-1");
   };
 
   return (
