@@ -1,0 +1,48 @@
+{
+  "extends": ["../.eslintrc.json"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["*/v2-legacy-archive/*"],
+            "message": "❌ DEPRECATED: Do not import from v2-legacy-archive. Use v2-design-system components instead. See V2_MIGRATION_REPORT.md for migration guidance."
+          },
+          {
+            "group": ["*/pages/ComprehensiveApplication*"],
+            "message": "❌ DEPRECATED: ComprehensiveApplication is replaced by SideBySideApplication. Use V1-based components from v2-design-system."
+          },
+          {
+            "group": ["*/components/forms/Step3BusinessDetails*"],
+            "message": "❌ DEPRECATED: Use routes/Step3_BusinessDetails.tsx instead of individual form components."
+          },
+          {
+            "group": ["*/components/forms/Step4ApplicantInfo*"],
+            "message": "❌ DEPRECATED: Use routes/Step4_FinancialInfo.tsx instead of individual form components."
+          },
+          {
+            "group": ["*/components/forms/Step5DocumentUpload*"],
+            "message": "❌ DEPRECATED: Use routes/Step5_DocumentUpload.tsx instead of individual form components."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "ImportDeclaration[source.value*='ComprehensiveApplication']",
+        "message": "❌ DEPRECATED: ComprehensiveApplication has been replaced by V1-based SideBySideApplication layout."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**/v2-legacy-archive/**/*"],
+      "rules": {
+        "no-restricted-imports": "off",
+        "no-restricted-syntax": "off"
+      }
+    }
+  ]
+}
