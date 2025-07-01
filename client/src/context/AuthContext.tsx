@@ -51,7 +51,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (email: string, password: string): Promise<{ success: boolean; otpRequired?: boolean }> => {
-    // Simple authentication for testing - accepts any valid email/password format
+    try {
+      // Try to authenticate with staff backend first
+      const response = await AuthAPI.login({ email, password });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          const user = {
+            id: data.user?.id || 'user-' + Date.now(),
+            email: email,
+            role: data.user?.role || 'client',
+            firstName: data.user?.firstName || email.split('@')[0],
+            lastName: data.user?.lastName || 'User'
+          };
+          setUser(user);
+          localStorage.setItem('auth-user', JSON.stringify(user));
+          return { success: true, otpRequired: data.otpRequired || false };
+        }
+      }
+    } catch (error) {
+      console.log('Staff backend authentication failed, using demo mode');
+    }
+    
+    // Fallback to demo authentication for development/testing
     if (email.includes('@') && password.length >= 4) {
       const user = {
         id: 'demo-user-' + Date.now(),
@@ -62,6 +85,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       setUser(user);
       localStorage.setItem('auth-user', JSON.stringify(user));
+      
+      toast({
+        title: 'Demo Mode',
+        description: 'Using demo authentication while staff backend is configured',
+        variant: 'default',
+      });
+      
       return { success: true, otpRequired: false };
     }
     

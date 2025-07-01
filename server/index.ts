@@ -333,11 +333,22 @@ app.use((req, res, next) => {
 
   // All other API routes inform about staff backend configuration
   app.use('/api', (req, res) => {
-    res.status(501).json({ 
-      message: 'This client app routes API calls to staff backend.',
-      staffBackend: 'https://staffportal.replit.app/api',
-      endpoint: req.path
-    });
+    // For authentication endpoints, provide a more helpful response
+    if (req.path.includes('/auth/') || req.path.includes('/login')) {
+      res.status(503).json({ 
+        error: 'Authentication service configuration required',
+        message: 'This client app is configured to route authentication to staff backend',
+        staffBackend: 'https://staffportal.replit.app/api',
+        endpoint: req.path,
+        suggestion: 'Using demo authentication mode until staff backend is properly configured'
+      });
+    } else {
+      res.status(501).json({ 
+        message: 'This client app routes API calls to staff backend.',
+        staffBackend: 'https://staffportal.replit.app/api',
+        endpoint: req.path
+      });
+    }
   });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

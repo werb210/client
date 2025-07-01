@@ -1,0 +1,130 @@
+Here is your **Staff V2 Finalization Checklist**, crafted to match the Client V2 migration standard. This ensures the **Staff V2 application** exclusively uses the new design system, routes, and UI structure migrated from V1, and avoids any legacy conflicts.
+
+---
+
+# ✅ **Staff V2 Finalization Checklist**
+
+**Goal:** Fully consolidate Staff V2 under the unified Boreal Financial V1 design system and ensure only the correct pages and layouts are used going forward.
+
+---
+
+## 🧱 1. **Routing Confirmation (App Entrypoint Audit)**
+
+### ✅ Instruction:
+
+In `src/App.tsx` (or wherever routes are defined), ensure that the application points to `src/v2/AdminDashboard.tsx` (or appropriate role-based dashboards), **not any of the following**:
+
+* `src/routes/Dashboard.tsx` ❌
+* `src/pages/Dashboard.tsx` ❌
+* Any component in `src/_legacy_routes` or `src/_legacy_pages` ❌
+
+### ✅ Correct Example:
+
+```tsx
+<Route path="/dashboard" element={<AdminDashboard />} />
+```
+
+> 🔒 Add comments to clarify that this route is authoritative.
+
+---
+
+## 📁 2. **Page Selection Policy**
+
+### ✅ Instruction to Replit:
+
+> “If multiple pages exist for the same purpose (e.g., Dashboard.tsx vs AdminDashboard.tsx), **only the V1-migrated `src/v2/` version is to be used.** Do not modify, reference, or reintroduce any component from `src/routes/`, `src/pages/`, or archived folders unless explicitly approved.”
+
+---
+
+## 🔍 3. **ESLint + Deprecation Guards**
+
+* ✅ ESLint rules should already exist to prevent importing from:
+
+  * `src/routes/`
+  * `src/pages/`
+  * `src/_legacy_*`
+
+### Confirm:
+
+```ts
+// .eslintrc.js
+"no-restricted-imports": [
+  "error",
+  {
+    "paths": [
+      { "name": "@/routes", "message": "Use /v2 routes only" },
+      { "name": "@/pages", "message": "Use /v2 components only" }
+    ]
+  }
+]
+```
+
+> 🧪 Run `npm run lint` or `yarn lint` to verify the block is active.
+
+---
+
+## 🧼 4. **Legacy Component Inventory Report**
+
+Replit should run a **component reference audit** and return any **live file** still importing from:
+
+* `src/routes/`
+* `src/pages/`
+* `src/components/DashboardLayout.tsx` (if deprecated)
+* Tailwind classes like `bg-gray-*`, `text-blue-*`, etc. instead of the new tokens
+
+> 📝 Ask: “Give me a list of all active files that still use old layout components or old Tailwind color classes.”
+
+---
+
+## 🧭 5. **UI Layout Confirmation**
+
+Ensure the layout follows the **Staff V1 structure**, which includes:
+
+| Layer                 | Component                                    |
+| --------------------- | -------------------------------------------- |
+| App Shell             | `AppShell.tsx`                               |
+| Main Layout Wrapper   | `MainLayout.tsx`                             |
+| Sidebar Navigation    | `Sidebar.tsx` with 15+ dynamic links         |
+| Dashboard             | `AdminDashboard.tsx` or `StaffDashboard.tsx` |
+| Application Drawer    | `ApplicationDetail.tsx`                      |
+| Tabs / Cards / Drawer | Role-based view and drag-n-drop stages       |
+
+> Ask Replit to confirm each of these is used and not a custom variant from `routes/`.
+
+---
+
+## 🗃 6. **Route-Level Role Enforcement**
+
+Every route under `/dashboard`, `/applications`, `/contacts`, etc. must be wrapped with:
+
+```tsx
+<RequireRole roles={['admin', 'staff']} />
+```
+
+> ❗ Confirm role-based dashboards (e.g., `/lender-dashboard`, `/referrer-dashboard`) also load from `src/v2`.
+
+---
+
+## 🎨 7. **Design System Verification**
+
+Ask Replit to confirm the following:
+
+* ✅ All pages are using design tokens from `src/v2-design-system` or Tailwind tokens defined in `tailwind.config.js`
+* ✅ No use of deprecated `bg-blue-*`, `bg-gray-*`, or font classes
+* ✅ V1 sidebar nav is visible on every page with consistent branding
+
+---
+
+## 🔁 8. **Fallback Policy**
+
+> “If a matching `v2` page exists for a route, use it. If no `v2` version exists yet, **keep using the existing page but report back to me** in a list titled `Pages Pending V2 Migration`.”
+
+---
+
+## 📤 Final Instruction for Replit
+
+> “Staff V2 must only use pages and layouts located in `src/v2/`, styled according to the V1 design system. All routing must be consolidated under the `MainLayout` and `Sidebar` components from `v2`. No legacy pages from `routes/` or `pages/` should be used unless no V2 version exists — and those exceptions must be reported. ESLint should block accidental re-import of legacy components. Please confirm completion and return a list of any pages or components that still need migration.”
+
+---
+
+Would you like me to also prepare a **TODO.md task file** for Staff V2 based on this checklist?
