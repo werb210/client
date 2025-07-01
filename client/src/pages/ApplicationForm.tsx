@@ -16,31 +16,18 @@ import { ReviewStep } from '@/components/MultiStepForm/ReviewStep';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { apiRequest } from '@/lib/queryClient';
-import { Application } from '@shared/schema';
+
 import { ArrowLeft, Save } from 'lucide-react';
 
 function ApplicationFormContent() {
   const { state, dispatch, saveProgress } = useApplication();
-  const { isAuthenticated, isLoading } = useAuth();
+
   const { toast } = useToast();
   const [, setLocation] = useRouter();
   const queryClient = useQueryClient();
   const [applicationId, setApplicationId] = useState<number | undefined>();
 
-  // Redirect to home if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
+
 
   // Auto-save mutation
   const autoSaveMutation = useMutation({
@@ -77,15 +64,13 @@ function ApplicationFormContent() {
       queryClient.invalidateQueries({ queryKey: ['/api/applications'] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
+      // Handle network errors gracefully
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: "Connection Error", 
+          description: "Please check your internet connection and try again.",
           variant: "destructive",
         });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
         return;
       }
       console.error('Auto-save failed:', error);
@@ -159,17 +144,7 @@ function ApplicationFormContent() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-pulse text-gray-500">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null; // Will redirect in useEffect
-  }
+  // Component is ready to render
 
   return (
     <div className="min-h-screen bg-slate-50">
