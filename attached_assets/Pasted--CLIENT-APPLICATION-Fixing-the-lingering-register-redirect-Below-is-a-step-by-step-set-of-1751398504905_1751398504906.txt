@@ -1,0 +1,124 @@
+### CLIENT APPLICATION — Fixing the lingering “/register” redirect
+
+Below is a **step-by-step set of commands/instructions you can paste into Replit**.
+Follow **every step exactly** and Replit will stop trying to send users to `/register`; every **Apply**-type button will open **Step 1** of your application wizard instead.
+
+---
+
+## 1  Locate and delete any auth-gate logic
+
+1. **Open Replit’s global search** (`⇧⌘F` or click the 🔍 icon).
+   Search for each of these strings **one at a time**:
+
+   ```
+   /register
+   /login
+   RequireAuth
+   PrivateRoute
+   isAuthenticated
+   mustLogin
+   ```
+
+2. For every match:
+
+   * If it is inside a **route guard component** (e.g. `RequireAuth.tsx` or `ProtectedRoute.tsx`) **delete the file** and its import lines.
+   * If it is a conditional redirect such as
+
+     ```tsx
+     if (!isLoggedIn) return <Navigate to="/register" replace />
+     ```
+
+     **remove the entire conditional block**, keeping only the component’s normal render.
+
+3. **Commit your changes** (or at least run the project) after deleting these guards.
+   *Result:* React Router will no longer attempt to funnel unknown users to `/register`.
+
+---
+
+## 2  Hard-wire every “Apply” button to `/apply/step-1`
+
+1. **Open** the component(s) that render your landing/marketing pages—typically something like `LandingPage.tsx`, `Home.tsx`, or `HeroSection.tsx`.
+
+2. Replace **every** Apply / Start / Get Started button with this exact pattern:
+
+   ```tsx
+   import { useNavigate } from "react-router-dom";
+
+   const LandingPage = () => {
+     const navigate = useNavigate();
+
+     return (
+       <button
+         type="button"
+         onClick={() => navigate("/apply/step-1")}
+         className="btn-primary" // or your existing class names
+       >
+         Apply Now
+       </button>
+     );
+   };
+   ```
+
+   * If you are using `<Link>` or `<a>` components, change them to:
+
+     ```tsx
+     <Link to="/apply/step-1" className="btn-primary">Apply Now</Link>
+     ```
+   * **Search again** for the words `Apply Now`, `Apply`, `Get Started`, etc., and repeat the above replacement so every call-to-action behaves identically.
+
+---
+
+## 3  Verify the Step 1 route exists and is exposed
+
+In your central router (commonly `App.tsx` or `routes.tsx`):
+
+```tsx
+import StepOneForm from "@/pages/Application/StepOneForm";
+
+<BrowserRouter>
+  <Routes>
+    {/* public landing */}
+    <Route path="/" element={<LandingPage />} />
+
+    {/* application wizard */}
+    <Route path="/apply/step-1" element={<StepOneForm />} />
+
+    {/* other wizard steps */}
+    {/* <Route path="/apply/step-2" element={<StepTwoForm />} /> */}
+  </Routes>
+</BrowserRouter>
+```
+
+*Make sure there is **no** wrapper such as `<RequireAuth>` around these routes.*
+
+---
+
+## 4  Run a clean test
+
+1. **Stop** the Replit dev server if it’s running and start it again (clears any HMR artefacts).
+2. **Open a private/incognito window** to your Replit preview URL to avoid stale cookies/local-storage.
+3. Click **every** Apply-type button:
+
+   * **Expected:** The URL becomes `/apply/step-1`, and the Step 1 form renders instantly.
+   * **Not acceptable:** Any navigation to `/register`, `/login`, blank page, or console error.
+
+---
+
+## 5  (If the redirect still happens) Sanity-check global side-effects
+
+Occasionally a global `useEffect` buried in `App.tsx` or a context provider forces a redirect. Search for:
+
+```tsx
+navigate("/register")
+window.location.replace("/register")
+```
+
+Remove them exactly as you removed the guard components.
+
+---
+
+### You are done 🎉
+
+After completing the five sections above, **all landing-page “Apply” buttons will take the user directly to Step 1** with no sign-in, register, or login detours.
+
+If anything is unclear or you’d like sample code for the `StepOneForm` itself (validation, state hand-off to Step 2, etc.), just let me know!
