@@ -40,8 +40,8 @@ export function MainLayout() {
       <Route path="/cors-test" component={CorsTest} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
-      <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
-      <Route path="/apply/step-1" component={Step1FinancialProfile} />
+      <Route path="/step1-financial-profile" component={Step1FinancialProfileSimple} />
+      <Route path="/apply/step-1" component={Step1FinancialProfileSimple} />
       <Route path="/step2-recommendations" component={Step2Recommendations} />
       <Route path="/apply/step-2" component={Step2Recommendations} />
       <Route path="/step3-business-details" component={Step3BusinessDetails} />

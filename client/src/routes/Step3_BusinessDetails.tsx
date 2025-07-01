@@ -202,11 +202,11 @@ export default function Step3BusinessDetails() {
                         </Select>
                         <FormMessage />
                       </FormItem>
-                  )}
-                />
+                    )}
+                  />
 
-                {/* Incorporation Date */}
-                <FormField
+                  {/* Incorporation Date */}
+                  <FormField
                   control={form.control}
                   name="incorporationDate"
                   render={({ field }) => (
@@ -247,6 +247,7 @@ export default function Step3BusinessDetails() {
                     </FormItem>
                   )}
                 />
+                </div>
 
                 {/* Country */}
                 <FormField
