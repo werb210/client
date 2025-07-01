@@ -61,7 +61,7 @@ export default function SimpleDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation('/side-by-side-application')}>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation('/apply/step-1')}>
             <CardContent className="p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -92,7 +92,7 @@ export default function SimpleDashboard() {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => setLocation('/simple-application')}
+                onClick={() => setLocation('/apply/step-1')}
               >
                 Learn More
               </Button>

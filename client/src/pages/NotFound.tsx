@@ -19,7 +19,7 @@ export default function NotFound() {
                 Go to Home
               </Button>
             </Link>
-            <Link href="/simple-application">
+            <Link href="/apply/step-1">
               <Button variant="outline" className="w-full">
                 Start Application
               </Button>
