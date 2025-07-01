@@ -30,23 +30,68 @@ export interface LenderProduct {
 const STAFF_API_BASE = import.meta.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app';
 
 export async function fetchLenderProducts(): Promise<LenderProduct[]> {
-  // Always use staff app public API for complete authentic dataset (43+ products)
-  const url = `${STAFF_API_BASE}/api/public/lenders`;
-  
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-  
-  if (!res.ok) {
-    throw new Error(`Failed to fetch lender products: ${res.status} ${res.statusText}`);
+  // Try multiple staff app endpoints for 43+ products
+  const staffEndpoints = [
+    `${STAFF_API_BASE}/api/public/lenders`,
+    `${STAFF_API_BASE}/api/lenders`,
+    `${STAFF_API_BASE}/api/public/lender-products`,
+    `${STAFF_API_BASE}/api/lender-products`
+  ];
+
+  // Try staff app endpoints first
+  for (const url of staffEndpoints) {
+    try {
+      console.log(`Attempting staff API: ${url}`);
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        mode: 'cors',
+        credentials: 'omit' // Don't send credentials for public API
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        const products = Array.isArray(data) ? data : data.products || [];
+        console.log(`Staff API success: ${products.length} products from ${url}`);
+        
+        // If we got products from staff app, normalize and return them
+        if (products.length > 0) {
+          return normalizeProducts(products);
+        }
+      }
+    } catch (error) {
+      console.warn(`Staff API endpoint ${url} failed:`, error);
+    }
   }
-  
-  const data = await res.json();
-  const products = Array.isArray(data) ? data : data.products || [];
-  
+
+  // Fallback to local API if staff app is unavailable
+  console.log('Staff API unavailable, using local API fallback');
+  try {
+    const res = await fetch('/api/local/lenders', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Local API failed: ${res.status} ${res.statusText}`);
+    }
+    
+    const data = await res.json();
+    const products = Array.isArray(data) ? data : data.products || [];
+    console.log(`Local API fallback: ${products.length} products`);
+    
+    return normalizeProducts(products);
+  } catch (error) {
+    throw new Error(`Both staff and local APIs failed: ${error}`);
+  }
+}
+
+function normalizeProducts(products: any[]): LenderProduct[] {
   // Normalize data format between local API (snake_case) and staff API (camelCase)
   return products.map((product: any) => {
     return {

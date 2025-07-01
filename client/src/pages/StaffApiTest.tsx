@@ -22,35 +22,51 @@ export default function StaffApiTest() {
     setError(null);
     setData(null);
 
-    try {
-      const response = await fetch('https://staffportal.replit.app/api/public/lenders', {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors'
-      });
+    const endpoints = [
+      'https://staffportal.replit.app/api/public/lenders',
+      'https://staffportal.replit.app/api/lenders',
+      'https://staffportal.replit.app/api/public/lender-products',
+      'https://staffportal.replit.app/api/lender-products'
+    ];
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+    for (const url of endpoints) {
+      try {
+        console.log(`Testing endpoint: ${url}`);
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          mode: 'cors'
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        console.log(`${url} - Status:`, response.status);
+        console.log(`${url} - Headers:`, Object.fromEntries(response.headers.entries()));
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`${url} - Success:`, result);
+          
+          setData({
+            ...result,
+            endpoint: url
+          });
+          setLastTested(new Date());
+          setLoading(false);
+          return; // Success, exit early
+        } else {
+          console.log(`${url} - Failed with status ${response.status}`);
+        }
+      } catch (err) {
+        console.error(`${url} - Error:`, err);
       }
-
-      const result = await response.json();
-      console.log('Staff API Response:', result);
-      
-      setData(result);
-      setLastTested(new Date());
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      console.error('Staff API Error:', err);
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
     }
+
+    // If we get here, all endpoints failed
+    setError('All staff API endpoints failed. Staff app may be down or endpoints have changed.');
+    setLoading(false);
   };
 
   useEffect(() => {
