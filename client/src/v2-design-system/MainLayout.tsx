@@ -17,6 +17,7 @@ import UploadDocuments from "@/pages/UploadDocuments";
 import { BackendDiagnosticPage } from "@/_legacy_auth/BackendDiagnosticPage";
 import SideBySideApplication from "@/pages/SideBySideApplication";
 import SimpleApplication from "@/pages/SimpleApplication";
+import LenderTest from "@/pages/LenderTest";
 
 
 /**
@@ -30,6 +31,7 @@ export function MainLayout() {
     <Switch>
       {/* Diagnostic Routes */}
       <Route path="/backend-diagnostic" component={BackendDiagnosticPage} />
+      <Route path="/lender-test" component={LenderTest} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
