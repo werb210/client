@@ -28,9 +28,9 @@ export default function LandingPage() {
               <li>
                 <button 
                   onClick={handleGetStarted}
-                  className="hover:underline bg-transparent border-none text-white cursor-pointer"
+                  className="bg-yellow-500 text-black px-4 py-2 rounded font-bold hover:bg-yellow-400"
                 >
-                  Start Application
+                  🚀 HEADER BUTTON FIXED 🚀
                 </button>
               </li>
             </ul>
@@ -46,9 +46,9 @@ export default function LandingPage() {
           </p>
           <button 
             onClick={handleApplyNow}
-            className="bg-blue-900 text-white px-6 py-3 rounded-md hover:bg-blue-800 border-none cursor-pointer"
+            className="bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 border-none cursor-pointer text-lg font-bold"
           >
-            Start Application
+            🔥 FIXED APPLY BUTTON - TEST ME 🔥
           </button>
         </section>
 
@@ -104,9 +104,9 @@ export default function LandingPage() {
             </p>
             <button 
               onClick={handleApplyNow}
-              className="bg-blue-900 text-white px-8 py-4 rounded-md hover:bg-blue-800 text-lg border-none cursor-pointer"
+              className="bg-green-600 text-white px-8 py-4 rounded-md hover:bg-green-700 text-lg border-none cursor-pointer font-bold"
             >
-              Start Your Application
+              💚 BOTTOM BUTTON FIXED 💚
             </button>
           </div>
         </section>
