@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'wouter';
-import { useAuth } from '@/hooks/useAuth';
+
 import { useToast } from '@/hooks/use-toast';
-import { isUnauthorizedError } from '@/lib/authUtils';
+
 import { ApplicationProvider, useApplication } from '@/context/ApplicationContext';
 import { ProgressIndicator } from '@/components/ProgressIndicator';
 import { BusinessDetails } from '@/components/MultiStepForm/BusinessDetails';

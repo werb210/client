@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, File, X, Check, AlertCircle } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as api from '@/lib/api';
-import { isUnauthorizedError } from '@/lib/authUtils';
+
 
 interface DocumentUploadProps {
   applicationId: number;
@@ -66,15 +66,13 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
         } : f)
       );
       
-      if (isUnauthorizedError(error)) {
+      // Handle network and server errors gracefully
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: "Connection Error",
+          description: "Please check your internet connection and try again.",
           variant: "destructive",
         });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
         return;
       }
       

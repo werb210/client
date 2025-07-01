@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useApplication } from '@/context/ApplicationContext';
 import { useToast } from '@/hooks/use-toast';
 import * as api from '@/lib/api';
-import { isUnauthorizedError } from '@/lib/authUtils';
+
 import { CheckCircle, AlertCircle } from 'lucide-react';
 
 interface ReviewStepProps {
@@ -71,15 +71,13 @@ export function ReviewStep({ onBack, onComplete, applicationId }: ReviewStepProp
       }
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
+      // Handle network errors gracefully
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: "Connection Error",
+          description: "Please check your internet connection and try again.",
           variant: "destructive",
         });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
         return;
       }
       

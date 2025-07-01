@@ -1,0 +1,68 @@
+src/components/MultiStepForm/ReviewStep.tsx:9:import { isUnauthorizedError } from '@/lib/authUtils';
+src/components/MultiStepForm/ReviewStep.tsx:74:      if (isUnauthorizedError(error)) {
+src/components/MultiStepForm/ReviewStep.tsx:81:          window.location.href = "/api/login";
+src/components/DocumentUpload.tsx:11:import { isUnauthorizedError } from '@/lib/authUtils';
+src/components/DocumentUpload.tsx:69:      if (isUnauthorizedError(error)) {
+src/components/DocumentUpload.tsx:76:          window.location.href = "/api/login";
+src/components/TestingChecklist.tsx:337:          <p>• Authentication errors should redirect to /api/login</p>
+src/lib/api.ts:72:    window.location.href = '/login';
+src/lib/authUtils.ts:6:export function isUnauthorizedError(error: Error): boolean {
+src/pages/DebugTest.tsx:4:import { AuthAPI } from '@/lib/authApi';
+src/pages/AuthFlowTest.tsx:7:import { AuthAPI } from '@/lib/authApi';
+src/pages/DebugChecklist.tsx:5:import { AuthAPI } from '@/lib/authApi';
+src/pages/PasswordResetDiagnostic.tsx:7:import { AuthAPI } from '@/lib/authApi';
+src/pages/QuickUserCheck.tsx:7:import { Auth } from '@/lib/auth';
+src/pages/QuickUserCheck.tsx:51:          const response = await apiFetch('/auth/login', {
+src/pages/BackendFallback.tsx:106:      const response = await fetch('https://staffportal.replit.app/api/auth/login', {
+src/pages/ConnectivitySummary.tsx:85:        const loginResponse = await fetch(`${baseUrl}/auth/login`, {
+src/pages/VerificationChecklist.tsx:7:import { Auth } from '@/lib/auth';
+src/pages/VerificationChecklist.tsx:46:      title: 'Login works through /auth/login',
+src/pages/VerificationChecklist.tsx:217:      const response = await apiFetch('/auth/login', {
+src/pages/AutomatedVerification.tsx:6:import { Auth } from '@/lib/auth';
+src/pages/AutomatedVerification.tsx:203:      const response = await apiFetch('/auth/login', {
+src/pages/SMSDiagnostic.tsx:128:      const response = await apiFetch('/auth/verify-otp', {
+src/pages/BackendDiagnosticPage.tsx:47:      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
+src/pages/BackendDiagnosticPage.tsx:79:      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
+src/pages/BackendDiagnosticPage.tsx:240:                <li>If HTML responses: Ensure /auth/login endpoint returns JSON, not HTML pages</li>
+src/pages/ApplicationForm.tsx:6:import { isUnauthorizedError } from '@/lib/authUtils';
+src/pages/ApplicationForm.tsx:39:        window.location.href = "/api/login";
+src/pages/ApplicationForm.tsx:80:      if (isUnauthorizedError(error)) {
+src/pages/ApplicationForm.tsx:87:          window.location.href = "/api/login";
+src/App.old.tsx:59:        <Route path="/login" component={PhoneLogin} />
+src/App.old.tsx:61:        <Route path="/verify-otp" component={VerifyOtp} />
+src/_legacy_auth/Login.tsx:60:        setLocation('/verify-otp');
+src/_legacy_auth/Register.tsx:100:      //   setLocation('/verify-otp');
+src/_legacy_auth/Register.tsx:110:        setLocation('/login');
+src/_legacy_auth/Register.tsx:223:              <Link href="/login" className="text-teal-600 hover:underline">
+src/_legacy_auth/LoginPage.tsx:36:        //   setLocation('/verify-otp');
+src/_legacy_auth/VerifyOtp.tsx:46:      const response = await apiFetch('/auth/verify-otp', {
+src/_legacy_auth/RequestReset.tsx:11:import { Auth } from '@/lib/auth';
+src/_legacy_auth/RequestReset.tsx:91:              <Link href="/login">
+src/_legacy_auth/RequestReset.tsx:137:            <Link href="/login" className="text-sm text-teal-600 hover:underline">
+src/_legacy_auth/ResetPassword.tsx:11:import { Auth } from '@/lib/auth';
+src/_legacy_auth/ResetPassword.tsx:72:          setLocation('/login?reset=1');
+src/_legacy_auth/ResetPassword.tsx:134:            <Link href="/login">
+src/_legacy_auth/ResetPassword.tsx:191:            <Link href="/login" className="text-sm text-teal-600 hover:underline">
+src/_legacy_auth/PhoneLogin.tsx:11:import { AuthAPI } from '@/lib/authApi';
+src/_legacy_auth/PhoneLogin.tsx:34:      window.history.replaceState({}, '', '/login');
+src/_legacy_auth/PhoneLogin.tsx:71:        setLocation('/verify-otp');
+src/_legacy_auth/PhoneLogin.tsx:92:          setLocation('/verify-otp');
+src/_legacy_auth/AuthGuard.tsx:19:      '/login',
+src/_legacy_auth/AuthGuard.tsx:21:      '/verify-otp',
+src/_legacy_auth/AuthGuard.tsx:33:      setLocation('/login');
+src/_legacy_auth/AuthGuard.tsx:38:    if (isAuthenticated && (location === '/login' || location === '/register')) {
+src/_legacy_auth/SimpleAuthGuard.tsx:13:  if (!user) return <Navigate to="/login" replace />;
+src/_legacy_auth/AuthContext.tsx:2:import { AuthAPI } from '@/lib/authApi';
+src/_legacy_auth/useInitialAuthRedirect.ts:15:        setLocation('/login');
+src/_legacy_auth/auth.ts:20:      const response = await apiFetch('/auth/login', {
+src/_legacy_auth/auth.ts:45:      const response = await apiFetch('/auth/verify-otp', {
+src/_legacy_auth/authApi.ts:8:      console.log('Attempting login to:', `${import.meta.env.VITE_API_BASE_URL}/auth/login`);
+src/_legacy_auth/authApi.ts:10:      const response = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(body) });
+src/_legacy_auth/authApi.ts:25:            details: 'Check if /auth/login endpoint exists and is configured for JSON responses',
+src/_legacy_auth/authApi.ts:65:      return await apiFetch('/auth/verify-otp', { method: 'POST', body: JSON.stringify(body) });
+src/_legacy_auth/authUtils.ts:1:export function isUnauthorizedError(error: Error): boolean {
+src/_legacy_auth/fallbackApi.ts:152:    const result = await this.makeRequest('/auth/verify-otp', {
+src/_legacy_auth/fallbackApi.ts:203:    const result = await this.makeRequest('/auth/login', {
+src/_legacy_auth/staffApi.ts:109:    return this.request('/auth/verify-otp', {
+src/_legacy_auth/staffApi.ts:117:    return this.request('/auth/login', {
+src/_legacy_auth/README.md:36:- `authUtils.ts` - Authentication helper functions

@@ -1,0 +1,153 @@
+Below is a **surgical clean-up & validation plan** you can hand to **Replit (Client V2)** so the *entire* login / authentication surface is removed **without leaving “ghost” imports or half-broken flows**.
+
+---
+
+## 0. 60-second TL;DR
+
+1. **Inventory** – grep the repo for every `auth` reference.
+2. **ESLint Blocker** – forbid *any* new `@/lib/auth*` import.
+3. **Compile-time Guard** – add a `tsconfig “paths”` alias that deliberately fails for `@/lib/auth*`.
+4. **Autofix** – create a codemod that deletes or rewires each reference.
+5. **Runtime Smoke** – spin up Cypress/MSW to hit every route unauthenticated; expect *no* redirects.
+6. **CI Gate** – job fails if **Step 1** finds a match or **Step 5** sees a 302.
+
+---
+
+## 1. Repo-wide Inventory (one-liner)
+
+```bash
+# from repo root
+grep -R --line-number -E "authUtils|isUnauthorizedError|/login|/verify-otp|@/lib/auth" client/src | tee auth_references.txt
+```
+
+*Outcome:* `auth_references.txt` holds the **definitive to-do list**.
+Hand that file back so you (and ESLint) see exactly what’s left.
+
+---
+
+## 2. ESLint “No-Go” Rule
+
+Add to **client/.eslintrc.js**
+
+```js
+"rules": {
+  "no-restricted-imports": [
+    "error",
+    {
+      "patterns": [
+        {
+          "group": ["@/lib/auth*", "@/context/Auth*", "@/pages/Login*", "@/pages/Register*"],
+          "message": "Authentication layer has been removed from Client V2 – do not re-introduce."
+        }
+      ]
+    }
+  ]
+}
+```
+
+*CI will now fail* the moment someone re-adds an auth import.
+
+---
+
+## 3. Tsconfig “Poison” Alias (optional but brutal)
+
+```jsonc
+// client/tsconfig.json
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["src/*"],
+      "@/lib/auth*": ["__INTENTIONALLY_MISSING__/auth-is-gone.ts"]
+    }
+  }
+}
+```
+
+`tsc` now yells at any stray auth import even before ESLint runs.
+
+---
+
+## 4. Codemod for Auto-clean
+
+Create **scripts/remove-auth-imports.tsx** (jscodeshift / ts-morph).
+Sample:
+
+```ts
+import { Project } from 'ts-morph';
+const project = new Project();
+project.addSourceFilesAtPaths('client/src/**/*.tsx');
+project.getSourceFiles().forEach(file => {
+  file.getImportDeclarations().forEach(imp => {
+    if (imp.getModuleSpecifierValue().startsWith('@/lib/auth')) {
+      imp.remove();
+    }
+  });
+});
+project.saveSync();
+```
+
+Run it once:
+
+```bash
+npx ts-node scripts/remove-auth-imports.tsx
+```
+
+---
+
+## 5. Runtime Smoke – headless test
+
+### cypress/e2e/no-auth.cy.ts
+
+```ts
+const routes = ['/', '/side-by-side-application', '/step-1', '/step-5'];
+routes.forEach(route => {
+  it(`loads ${route} without 302`, () => {
+    cy.request({ url: route, failOnStatusCode: false })
+      .its('status')
+      .should('eq', 200);
+  });
+});
+```
+
+Add to CI:
+
+```yaml
+- name: E2E Smoke
+  run: npx cypress run --browser chrome --config baseUrl=http://localhost:5000
+```
+
+---
+
+## 6. CI Gate
+
+1. **lint** (`npm run lint`) – fails if ESLint finds a banned import.
+2. **build** – standard Vite build.
+3. **smoke** – Cypress test above.
+4. **grep** – ensure `auth_references.txt` is *empty*.
+
+---
+
+## 7. Cleanup of “Patch” authUtils.ts (optional)
+
+If *every* component no longer needs `isUnauthorizedError` et al., delete `client/src/lib/authUtils.ts`.
+Otherwise, **rename** it (`errorUtils.ts`) to avoid misleading future devs.
+
+---
+
+## 8. Documentation for Replit
+
+> **Directive:**
+> *Remove the entire login/OTP/reset flow from Client V2.*
+> *If any component still imports from `@/lib/auth*` or references `/login`, `/verify-otp`, `/request-reset`, flag it in `auth_references.txt` and fail CI.*
+> *After clean-up, run Cypress smoke tests to confirm every public route loads with HTTP 200 (no redirects).*
+> *Provide a final list `Pages Pending Auth Cleanup` (should be empty) and delete `authUtils.ts` if unused.*
+
+---
+
+### What you’ll get back
+
+* `auth_references.txt` – should be **0 lines**
+* CI green ✓ – build, lint, smoke all pass
+* In PR description: “No auth imports left; 100 % login-less workflow verified.”
+
+That guarantees **all login components & code paths are gone** without accidentally breaking core functionality.

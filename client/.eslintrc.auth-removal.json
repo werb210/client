@@ -15,7 +15,8 @@
           { "name": "@/hooks/useInitialAuthRedirect", "message": "Auth redirects removed from Client V2" },
           { "name": "@/lib/auth", "message": "Auth utilities removed from Client V2" },
           { "name": "@/lib/authApi", "message": "Auth API removed from Client V2" },
-          { "name": "@/lib/authUtils", "message": "Auth utilities removed from Client V2" }
+          { "name": "@/lib/authUtils", "message": "Auth utilities removed from Client V2" },
+          { "name": "@/lib/auth*", "message": "All authentication modules removed from Client V2" }
         ],
         "patterns": [
           {
