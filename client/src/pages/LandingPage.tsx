@@ -5,17 +5,11 @@ export default function LandingPage() {
   const [, setLocation] = useLocation();
 
   const handleGetStarted = () => {
-    console.log('LandingPage: handleGetStarted clicked - navigating to /apply/step-1');
-    console.log('Current location before navigation:', window.location.pathname);
     setLocation("/apply/step-1");
-    console.log('setLocation called with: /apply/step-1');
   };
 
   const handleApplyNow = () => {
-    console.log('LandingPage: handleApplyNow clicked - navigating to /apply/step-1');
-    console.log('Current location before navigation:', window.location.pathname);
     setLocation("/apply/step-1");
-    console.log('setLocation called with: /apply/step-1');
   };
 
   return (
@@ -28,9 +22,9 @@ export default function LandingPage() {
               <li>
                 <button 
                   onClick={handleGetStarted}
-                  className="bg-yellow-500 text-black px-4 py-2 rounded font-bold hover:bg-yellow-400"
+                  className="hover:underline bg-transparent border-none text-white cursor-pointer"
                 >
-                  🚀 HEADER BUTTON FIXED 🚀
+                  Start Application
                 </button>
               </li>
             </ul>
@@ -46,9 +40,9 @@ export default function LandingPage() {
           </p>
           <button 
             onClick={handleApplyNow}
-            className="bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 border-none cursor-pointer text-lg font-bold"
+            className="bg-blue-900 text-white px-6 py-3 rounded-md hover:bg-blue-800 border-none cursor-pointer"
           >
-            🔥 FIXED APPLY BUTTON - TEST ME 🔥
+            Start Application
           </button>
         </section>
 
@@ -104,9 +98,9 @@ export default function LandingPage() {
             </p>
             <button 
               onClick={handleApplyNow}
-              className="bg-green-600 text-white px-8 py-4 rounded-md hover:bg-green-700 text-lg border-none cursor-pointer font-bold"
+              className="bg-blue-900 text-white px-8 py-4 rounded-md hover:bg-blue-800 text-lg border-none cursor-pointer"
             >
-              💚 BOTTOM BUTTON FIXED 💚
+              Start Your Application
             </button>
           </div>
         </section>
