@@ -14,14 +14,14 @@ export default function NotFound() {
             The page you're looking for doesn't exist.
           </p>
           <div className="space-y-2">
-            <Link href="/login">
+            <Link href="/">
               <Button className="w-full bg-teal-600 hover:bg-teal-700">
-                Go to Login
+                Go to Home
               </Button>
             </Link>
-            <Link href="/dashboard">
+            <Link href="/simple-application">
               <Button variant="outline" className="w-full">
-                Go to Dashboard
+                Start Application
               </Button>
             </Link>
           </div>

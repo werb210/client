@@ -1,9 +1,8 @@
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { useInitialAuthRedirect } from '@/hooks/useInitialAuthRedirect';
 
 export function NavBar() {
-  const { handleAuthRedirect } = useInitialAuthRedirect();
+  const [, setLocation] = useLocation();
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-sm border-b">
@@ -21,17 +20,10 @@ export function NavBar() {
           {/* Navigation Links */}
           <div className="flex items-center space-x-4">
             <Button 
-              variant="ghost" 
-              className="text-gray-600 hover:text-gray-900"
-              onClick={handleAuthRedirect}
-            >
-              Sign In
-            </Button>
-            <Button 
               className="bg-teal-600 hover:bg-teal-700 text-white"
-              onClick={handleAuthRedirect}
+              onClick={() => setLocation('/simple-application')}
             >
-              Get Started
+              Start Application
             </Button>
           </div>
         </div>

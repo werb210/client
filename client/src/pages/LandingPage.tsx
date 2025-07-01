@@ -1,6 +1,5 @@
 import React from "react";
 import { useLocation } from "wouter";
-import { isFirstVisit } from "@/lib/visitFlags";
 
 export default function LandingPage() {
   const [, setLocation] = useLocation();
