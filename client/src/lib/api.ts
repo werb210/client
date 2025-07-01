@@ -67,10 +67,9 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const response = await apiFetch(endpoint, options);
   
-  // Handle authentication errors
+  // Handle authentication errors (no redirect in auth-less application)
   if (response.status === 401) {
-    window.location.href = '/login';
-    throw new ApiError('Unauthorized - redirecting to login', 401, response);
+    throw new ApiError('Unauthorized - please check your access', 401, response);
   }
   
   // Handle staff backend unavailable

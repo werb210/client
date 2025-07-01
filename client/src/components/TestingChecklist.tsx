@@ -334,7 +334,7 @@ startxref
           <p>• All document uploads must use real PDF or DOCX files</p>
           <p>• Form submission must POST actual data to staff backend API</p>
           <p>• SignNow integration uses redirect flow (no iframe)</p>
-          <p>• Authentication errors should redirect to /api/login</p>
+          <p>• Network errors should display helpful error messages</p>
           <p>• Offline storage queues data for sync when reconnected</p>
         </CardContent>
       </Card>

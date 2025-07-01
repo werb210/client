@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'wouter';
+import { useLocation } from 'wouter';
 
 import { useToast } from '@/hooks/use-toast';
 
@@ -23,7 +23,7 @@ function ApplicationFormContent() {
   const { state, dispatch, saveProgress } = useApplication();
 
   const { toast } = useToast();
-  const [, setLocation] = useRouter();
+  const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [applicationId, setApplicationId] = useState<number | undefined>();
 
