@@ -2,10 +2,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { NavBar } from '@/components/NavBar';
 import { CheckCircle, TrendingUp, Shield } from 'lucide-react';
-import { useInitialAuthRedirect } from '@/hooks/useInitialAuthRedirect';
+import { useLocation } from 'wouter';
 
 export default function Landing() {
-  const { handleAuthRedirect } = useInitialAuthRedirect();
+  const [, setLocation] = useLocation();
+
+  const handleApplyNow = () => {
+    setLocation("/apply/step-1");
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -25,7 +29,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-lg rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-              onClick={handleAuthRedirect}
+              onClick={handleApplyNow}
             >
               Start Your Application
             </Button>
@@ -147,7 +151,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-lg rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-              onClick={handleAuthRedirect}
+              onClick={handleApplyNow}
             >
               Get Started Today
             </Button>
@@ -166,7 +170,7 @@ export default function Landing() {
             <Button 
               variant="outline" 
               className="border-teal-500 text-teal-400 hover:bg-teal-500 hover:text-white"
-              onClick={handleAuthRedirect}
+              onClick={handleApplyNow}
             >
               Start Your Application
             </Button>
