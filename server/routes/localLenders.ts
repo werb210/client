@@ -153,32 +153,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/local/lenders/:id - Get specific lender product
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const [product] = await db
-      .select()
-      .from(lenderProducts)
-      .where(eq(lenderProducts.id, parseInt(id)));
-
-    if (!product) {
-      return res.status(404).json({ error: 'Lender product not found' });
-    }
-
-    res.json(normalizeProduct(product));
-
-  } catch (error) {
-    console.error('Error fetching lender product:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch lender product',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
-
-// GET /api/local/lenders/stats - Get database statistics
+// GET /api/local/lenders/stats - Get database statistics (must come before /:id route)
 router.get('/stats', async (req, res) => {
   try {
     const totalProducts = await db
@@ -213,6 +188,37 @@ router.get('/stats', async (req, res) => {
     console.error('Error fetching lender stats:', error);
     res.status(500).json({ 
       error: 'Failed to fetch lender statistics',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// GET /api/local/lenders/:id - Get specific lender product
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Validate that id is a valid number
+    const numericId = parseInt(id);
+    if (isNaN(numericId)) {
+      return res.status(400).json({ error: 'Invalid product ID. Must be a number.' });
+    }
+    
+    const [product] = await db
+      .select()
+      .from(lenderProducts)
+      .where(eq(lenderProducts.id, numericId));
+
+    if (!product) {
+      return res.status(404).json({ error: 'Lender product not found' });
+    }
+
+    res.json(normalizeProduct(product));
+
+  } catch (error) {
+    console.error('Error fetching lender product:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch lender product',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
