@@ -1,0 +1,136 @@
+To **ensure Client V2 removes all login-related components completely and cleanly**, follow this **systematic teardown plan** — modeled after your high-standards migration practices. This ensures:
+
+* 🧼 Full removal of **login, register, OTP, session** logic
+* ✅ No unused files, routes, or state hooks remain
+* 🔒 No hidden backend dependencies or auth guards are left in code
+
+---
+
+## ✅ **Client V2 Login Removal Checklist**
+
+---
+
+### 1. 🔍 **Frontend Component Teardown**
+
+#### ✅ Delete or Archive the Following Components:
+
+```
+/src/pages/Login.tsx
+/src/pages/Register.tsx
+/src/pages/OTP.tsx
+/src/pages/ForgotPassword.tsx
+/src/pages/ResetPassword.tsx
+/src/components/LoginForm.tsx
+/src/components/RegisterForm.tsx
+/src/components/OTPInput.tsx
+/src/components/AuthLayout.tsx
+/src/components/SessionWrapper.tsx
+```
+
+> 🗃 Archive them to `/src/_legacy_auth/` if unsure about full deletion.
+
+---
+
+### 2. 🗺️ **Route Pruning**
+
+In `src/App.tsx` (or route index), remove any entries like:
+
+```tsx
+<Route path="/login" element={<Login />} />
+<Route path="/register" element={<Register />} />
+<Route path="/otp" element={<OTP />} />
+<Route path="/reset-password" element={<ResetPassword />} />
+```
+
+✅ Ensure `/` now loads the actual application (e.g., `SideBySideApplication`) directly.
+
+---
+
+### 3. ⚙️ **State & Context Cleanup**
+
+#### ✅ Remove Authentication State
+
+* `src/context/AuthContext.tsx` → Delete if only used for login/session
+* Remove usage of:
+
+  * `useAuth()`
+  * `useSession()`
+  * `useIsLoggedIn()`
+
+#### ✅ Remove Session Wrappers
+
+* `SessionProvider`
+* `<RequireLogin />` guards around any routes
+* Cookies / JWT token reading logic
+
+---
+
+### 4. 🧼 **API + Utils Removal**
+
+#### ✅ Delete Auth-Specific API Calls
+
+In `src/api/auth.ts` or similar:
+
+```ts
+login(), register(), requestOTP(), verifyOTP(), logout(), getCurrentUser()
+```
+
+✅ Also delete `useLoginMutation`, `useSessionQuery`, etc. from React Query hooks.
+
+---
+
+### 5. 🧪 **Confirm with ESLint Block Rules**
+
+Add to `.eslintrc.js`:
+
+```js
+"no-restricted-imports": [
+  "error",
+  {
+    "paths": [
+      { "name": "@/pages/Login", "message": "Login removed from V2" },
+      { "name": "@/components/LoginForm", "message": "Auth removed" },
+      { "name": "@/context/AuthContext", "message": "No auth in Client V2" }
+    ]
+  }
+]
+```
+
+✅ Run `npm run lint` to ensure no hidden references remain.
+
+---
+
+### 6. 🔁 **Backend / Proxy Validation (Optional)**
+
+If Client V2 still tries to fetch from backend `/auth/*` endpoints:
+
+* Remove API references in React Query
+* Check for network errors in DevTools
+* Confirm `/auth` routes are no longer hit during any session
+
+---
+
+### 7. 🧪 **Final QA Steps**
+
+✅ Test all of this:
+
+| Test Case           | Expected Result                           |
+| ------------------- | ----------------------------------------- |
+| Visiting `/`        | App loads with no redirect to `/login`    |
+| Attempting `/login` | Route does not exist (404 or fallback)    |
+| Application steps   | Fully accessible with no session errors   |
+| Dev Console         | No token/session warnings or auth fetches |
+
+---
+
+### ✅ Final Instruction for Replit
+
+> “Client V2 no longer uses login or authentication. Please ensure **all login, OTP, and session management components are removed** from routes, API, state, and UI. Use ESLint rules to block any reintroduction. The app should load `/side-by-side-application` directly without redirect, and no `/auth/*` endpoints should be hit from the client.”
+
+---
+
+Would you like me to:
+
+* Generate a `CLIENT_V2_AUTH_REMOVAL.md` checklist?
+* Create a search script to detect any auth leftovers?
+* Scan your current repo for leftover imports right now?

@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/context/AuthContext";
 import { FormDataProvider } from "@/context/FormDataContext";
 import { ApplicationProvider } from "@/context/ApplicationContext";
 import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
@@ -28,16 +27,14 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <FormDataProvider>
-          <ApplicationProvider>
-            <ComprehensiveFormProvider>
-              {children}
-              <Toaster />
-            </ComprehensiveFormProvider>
-          </ApplicationProvider>
-        </FormDataProvider>
-      </AuthProvider>
+      <FormDataProvider>
+        <ApplicationProvider>
+          <ComprehensiveFormProvider>
+            {children}
+            <Toaster />
+          </ComprehensiveFormProvider>
+        </ApplicationProvider>
+      </FormDataProvider>
     </QueryClientProvider>
   );
 }

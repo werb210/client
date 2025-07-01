@@ -1,5 +1,4 @@
 import { Switch, Route } from "wouter";
-import { AuthGuard } from "@/components/AuthGuard";
 
 // V1 Route Components (Source of Truth)
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
@@ -9,13 +8,7 @@ import Step4FinancialInfo from "@/routes/Step4_FinancialInfo";
 import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
 import Step6Signature from "@/routes/Step6_Signature";
 
-// Core Pages
-import LoginPage from "@/pages/LoginPage";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import VerifyOtp from "@/pages/VerifyOtp";
-import RequestReset from "@/pages/RequestReset";
-import ResetPassword from "@/pages/ResetPassword";
+// Core Pages (Authentication removed)
 import LandingPage from "@/pages/LandingPage";
 import Dashboard from "@/pages/Dashboard";
 import PortalPage from "@/pages/PortalPage";
@@ -58,9 +51,6 @@ export function MainLayout() {
       <Route path="/simple-application" component={SimpleApplication} />
       <Route path="/application" component={SideBySideApplication} />
       <Route path="/side-by-side-application" component={SideBySideApplication} />
-      
-      {/* DEPRECATED: Legacy V2 comprehensive application - DO NOT USE */}
-      {/* <Route path="/comprehensive-application" component={ComprehensiveApplication} /> */}
       
       {/* Default Route - Landing Page */}
       <Route path="/" component={LandingPage} />
