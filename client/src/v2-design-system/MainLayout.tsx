@@ -62,6 +62,7 @@ export function MainLayout() {
         <Route path="/upload-documents/:applicationId?" component={UploadDocuments} />
         
         {/* V1 Application Layouts (Source of Truth) */}
+        <Route path="/application" component={SideBySideApplication} />
         <Route path="/side-by-side-application" component={SideBySideApplication} />
         
         {/* DEPRECATED: Legacy V2 comprehensive application - DO NOT USE */}

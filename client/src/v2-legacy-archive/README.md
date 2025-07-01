@@ -1,8 +1,8 @@
-# V2 Legacy Components Archive
+# V2 Legacy Components Archive - OBSOLETE
 
-⚠️ **DO NOT USE THESE COMPONENTS IN V2** ⚠️
+⚠️ **THESE COMPONENTS ARE OBSOLETE AND MUST NOT BE USED** ⚠️
 
-This directory contains the archived V2 components that have been replaced by the V1-based design system. These components are preserved for reference but should not be used in new development.
+This directory contains archived V2 components that have been **permanently replaced** by the V1-based design system. These components are preserved for historical reference only and are blocked by ESLint rules.
 
 ## Archived Components
 
