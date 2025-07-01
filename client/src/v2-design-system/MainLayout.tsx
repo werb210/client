@@ -14,7 +14,7 @@ import SimpleDashboard from "@/pages/SimpleDashboard";
 import NotFound from "@/pages/NotFound";
 import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
-import { BackendDiagnosticPage } from "@/pages/BackendDiagnosticPage";
+import { BackendDiagnosticPage } from "@/_legacy_auth/BackendDiagnosticPage";
 import SideBySideApplication from "@/pages/SideBySideApplication";
 import SimpleApplication from "@/pages/SimpleApplication";
 
