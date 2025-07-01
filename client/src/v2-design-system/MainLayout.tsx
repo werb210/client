@@ -1,7 +1,7 @@
 import { Switch, Route } from "wouter";
 
 // V1 Route Components (Source of Truth)
-import Step1FinancialProfileSimple from "@/routes/Step1_FinancialProfile_Simple";
+import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
 import Step4FinancialInfo from "@/routes/Step4_FinancialInfo";
@@ -40,8 +40,8 @@ export function MainLayout() {
       <Route path="/cors-test" component={CorsTest} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
-      <Route path="/step1-financial-profile" component={Step1FinancialProfileSimple} />
-      <Route path="/apply/step-1" component={Step1FinancialProfileSimple} />
+      <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
+      <Route path="/apply/step-1" component={Step1FinancialProfile} />
       <Route path="/step2-recommendations" component={Step2Recommendations} />
       <Route path="/apply/step-2" component={Step2Recommendations} />
       <Route path="/step3-business-details" component={Step3BusinessDetails} />
