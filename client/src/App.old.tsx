@@ -55,10 +55,7 @@ function Router() {
   return (
     <AuthGuard>
       <Switch>
-        {/* Authentication routes (public) */}
-        <Route path="/login" component={PhoneLogin} />
-        <Route path="/register" component={Register} />
-        <Route path="/verify-otp" component={VerifyOtp} />
+        {/* Authentication routes removed - direct application access */}
         <Route path="/request-reset" component={RequestReset} />
         <Route path="/reset-password/:token" component={ResetPassword} />
         <Route path="/debug-test" component={DebugTest} />
