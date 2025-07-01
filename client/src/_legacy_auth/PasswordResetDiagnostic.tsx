@@ -140,7 +140,7 @@ export default function PasswordResetDiagnostic() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="test@example.com"
+                placeholder="Enter your email"
               />
             </div>
             <div>
@@ -149,7 +149,7 @@ export default function PasswordResetDiagnostic() {
                 id="token"
                 value={testToken}
                 onChange={(e) => setTestToken(e.target.value)}
-                placeholder="test-token-123"
+                placeholder="Enter reset token"
               />
             </div>
             <div>
@@ -159,7 +159,7 @@ export default function PasswordResetDiagnostic() {
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="newpassword123"
+                placeholder="Enter new password"
               />
             </div>
           </div>
