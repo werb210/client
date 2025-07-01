@@ -1,14 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetchLenderProducts } from "@/api/lenderProducts";
+import { usePublicLenders } from "@/hooks/usePublicLenders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export const LenderRecommendation = () => {
-  const { data, error, isLoading } = useQuery({
-    queryKey: ["lenderProducts"],
-    queryFn: fetchLenderProducts
-  });
+  const { data, error, isLoading } = usePublicLenders();
 
   if (isLoading) return (
     <div className="flex items-center justify-center p-8">

@@ -18,21 +18,36 @@ interface LenderProduct {
   active: boolean;
 }
 
+// Environment-based API URL configuration
+const getApiBaseUrl = () => {
+  // In development, use local endpoints
+  if (import.meta.env.DEV) {
+    return '';
+  }
+  // In production, use staff app public API
+  return import.meta.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app';
+};
+
+const API_BASE = getApiBaseUrl();
+
 export async function fetchLenderProducts(): Promise<LenderProduct[]> {
-  const res = await fetch("/api/local/lenders");
+  const url = API_BASE ? `${API_BASE}/api/public/lenders` : '/api/local/lenders';
+  const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch lender products");
   const data = await res.json();
-  return data.products;
+  return data.products || data; // Handle both response formats
 }
 
 export async function fetchLenderStats() {
-  const res = await fetch("/api/local/lenders/stats");
+  const url = API_BASE ? `${API_BASE}/api/public/lenders/stats` : '/api/local/lenders/stats';
+  const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch lender statistics");
   return res.json();
 }
 
 export async function fetchLenderProduct(id: string): Promise<LenderProduct> {
-  const res = await fetch(`/api/local/lenders/${id}`);
+  const url = API_BASE ? `${API_BASE}/api/public/lenders/${id}` : `/api/local/lenders/${id}`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch lender product");
   return res.json();
 }

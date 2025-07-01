@@ -1,48 +1,29 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCachedLenderProducts, syncLenderProducts, getCacheMetadata } from '@/lib/syncLenderProducts';
+import { fetchLenderProducts } from "@/api/lenderProducts";
 
-interface LenderProduct {
-  id: string;
-  product_name: string;
-  lender_name: string;
-  product_type: string;
-  geography: string[];
-  min_amount: number;
-  max_amount: number;
-  min_revenue?: number;
-  industries?: string[];
-  video_url?: string;
-  description?: string;
-}
-
-interface LenderProductsResponse {
-  products: LenderProduct[];
-}
-
+/**
+ * Custom hook for fetching lender products with intelligent fallback
+ * - Development: Uses local API endpoints for testing
+ * - Production: Fetches from staff app public CORS-enabled API
+ */
 export function usePublicLenders() {
   return useQuery({
-    queryKey: ["publicLenders"],
-    queryFn: async () => {
-      // Get cached data immediately (offline-safe)
-      const cachedProducts = await getCachedLenderProducts();
-      
-      // Check cache freshness and sync in background if stale
-      const metadata = await getCacheMetadata();
-      if (metadata?.isStale) {
-        // Background sync without blocking the query
-        syncLenderProducts().catch(error => {
-          console.error('Background sync failed:', error);
-        });
-      }
-      
-      return cachedProducts;
-    },
-    staleTime: 12 * 60 * 60 * 1000, // 12 hours for caching
-    retry: 2,
-    // Return cached data immediately, even if stale
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    queryKey: ["publicLenderProducts"],
+    queryFn: fetchLenderProducts,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
 
-export type { LenderProduct, LenderProductsResponse };
+export function usePublicLenderStats() {
+  return useQuery({
+    queryKey: ["publicLenderStats"],
+    queryFn: async () => {
+      const { fetchLenderStats } = await import("@/api/lenderProducts");
+      return fetchLenderStats();
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    retry: 3,
+  });
+}
