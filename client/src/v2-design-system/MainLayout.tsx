@@ -1,7 +1,7 @@
 import { Switch, Route } from "wouter";
 
 // V1 Route Components (Source of Truth)
-import Step1FinancialProfile from "@/routes/Step1_FinancialProfile";
+import Step1FinancialProfileSimple from "@/routes/Step1_FinancialProfile_Simple";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
 import Step4FinancialInfo from "@/routes/Step4_FinancialInfo";

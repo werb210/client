@@ -177,30 +177,31 @@ export default function Step3BusinessDetails() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {/* Business Structure */}
-                <FormField
-                  control={form.control}
-                  name="businessStructure"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Business Structure</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select your business structure" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {businessStructures.map((structure) => (
-                            <SelectItem key={structure.value} value={structure.value}>
-                              {structure.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                {/* Row 1: Business Structure & Incorporation Date */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="businessStructure"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Business Structure</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select your business structure" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {businessStructures.map((structure) => (
+                              <SelectItem key={structure.value} value={structure.value}>
+                                {structure.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
                   )}
                 />
 
