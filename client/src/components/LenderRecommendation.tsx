@@ -32,24 +32,24 @@ export const LenderRecommendation = () => {
         {data.map((product) => (
           <Card key={product.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
-              <CardTitle className="text-lg">{product.lender_name}</CardTitle>
-              <p className="text-sm text-gray-600">{product.product_name}</p>
+              <CardTitle className="text-lg">{product.lenderName}</CardTitle>
+              <p className="text-sm text-gray-600">{product.productName}</p>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2">
-                <Badge variant="secondary">{product.product_type.replace('_', ' ')}</Badge>
+                <Badge variant="secondary">{product.productType?.replace('_', ' ') || 'Unknown Type'}</Badge>
                 {product.geography.map(geo => (
                   <Badge key={geo} variant="outline">{geo}</Badge>
                 ))}
+                {product.isActive && (
+                  <Badge className="bg-green-100 text-green-800">Active</Badge>
+                )}
               </div>
               
               <div className="text-sm space-y-1">
-                <p><strong>Amount:</strong> ${product.min_amount.toLocaleString()} - ${product.max_amount.toLocaleString()}</p>
-                {product.min_revenue && (
-                  <p><strong>Min Revenue:</strong> ${product.min_revenue.toLocaleString()}</p>
-                )}
-                {product.interest_rate_min && product.interest_rate_max && (
-                  <p><strong>Rate:</strong> {(product.interest_rate_min * 100).toFixed(1)}% - {(product.interest_rate_max * 100).toFixed(1)}%</p>
+                <p><strong>Amount:</strong> ${product.minAmount.toLocaleString()} - ${product.maxAmount.toLocaleString()}</p>
+                {product.minRevenue && (
+                  <p><strong>Min Revenue:</strong> ${product.minRevenue.toLocaleString()}</p>
                 )}
               </div>
 
@@ -76,7 +76,7 @@ export const LenderRecommendation = () => {
                 <Button size="sm" className="flex-1">
                   Learn More
                 </Button>
-                {product.video_url && (
+                {product.videoUrl && (
                   <Button size="sm" variant="outline">
                     Watch Video
                   </Button>

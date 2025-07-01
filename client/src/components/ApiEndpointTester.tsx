@@ -55,8 +55,8 @@ export const ApiEndpointTester = () => {
     const tests = [
       { url: '/api/local/lenders', label: 'Local API (Development)' },
       { url: '/api/local/lenders/stats', label: 'Local Stats API' },
-      { url: 'https://staffportal.replit.app/api/public/lenders', label: 'Staff Public API (Production)' },
-      { url: 'https://staffportal.replit.app/api/public/lenders/stats', label: 'Staff Stats API' },
+      { url: 'https://staffportal.replit.app/api/public/lenders', label: 'Staff Public API - 43 Products (Production)' },
+      { url: 'https://staffportal.replit.app/api/lenders/products', label: 'Staff Direct API - All Products' },
     ];
 
     const testResults: TestResult[] = [];
