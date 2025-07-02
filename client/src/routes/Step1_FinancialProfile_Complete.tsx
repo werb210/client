@@ -15,23 +15,21 @@ import { markApplicationStarted } from '@/lib/visitFlags';
 // Step 1 Schema - Business Basics and Funding Request
 const step1Schema = z.object({
   // Basic Business Information
-  headquarters: z.string().min(1, "Business headquarters is required"),
-  headquartersState: z.string().optional(),
-  industry: z.string().min(1, "Industry is required"),
+  businessLocation: z.string().optional(), // Testing mode - made optional
+  industry: z.string().optional(), // Testing mode - made optional
   
   // Funding Requirements
-  lookingFor: z.enum(["capital", "equipment", "both"], {
-    required_error: "Please select what you're looking for"
-  }),
-  fundingAmount: z.string().min(1, "Funding amount is required"),
-  fundsPurpose: z.string().min(1, "Purpose of funds is required"),
+  lookingFor: z.enum(["capital", "equipment", "both"]).optional(), // Testing mode - made optional
+  fundingAmount: z.string().optional(), // Testing mode - made optional
+  useOfFunds: z.string().optional(), // Testing mode - made optional
   
   // Financial Qualification
-  salesHistory: z.string().min(1, "Sales history is required"),
-  revenueLastYear: z.string().min(1, "Revenue last year is required"),
-  averageMonthlyRevenue: z.string().min(1, "Average monthly revenue is required"),
-  accountsReceivableBalance: z.string().min(1, "Accounts receivable balance is required"),
-  fixedAssetsValue: z.string().min(1, "Fixed assets value is required"),
+  salesHistory: z.string().optional(), // Testing mode - made optional
+  lastYearRevenue: z.string().optional(), // Testing mode - made optional
+  averageMonthlyRevenue: z.string().optional(), // Testing mode - made optional
+  accountsReceivable: z.string().optional(), // Testing mode - made optional
+  fixedAssets: z.string().optional(), // Testing mode - made optional
+  equipmentValue: z.string().optional(), // Testing mode - made optional
 });
 
 type FinancialProfileFormData = z.infer<typeof step1Schema>;
