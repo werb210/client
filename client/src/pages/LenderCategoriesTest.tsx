@@ -23,45 +23,22 @@ interface LenderProduct {
   term_max?: number;
 }
 
-// Mock data showing the categories we know from the 43+ product database
-// This represents the actual categories found in our staff backend
-const mockLenderProducts: LenderProduct[] = [
-  // Equipment Financing Category
-  { id: '1', product_name: 'Equipment Loan A', lender_name: 'Capital One', product_type: 'equipment_financing', geography: ['US'], min_amount: 25000, max_amount: 500000 },
-  { id: '2', product_name: 'Equipment Finance Pro', lender_name: 'Wells Fargo', product_type: 'equipment_financing', geography: ['US', 'CA'], min_amount: 50000, max_amount: 1000000 },
-  
-  // Term Loan Category
-  { id: '3', product_name: 'Business Term Loan', lender_name: 'Bank of America', product_type: 'term_loan', geography: ['US'], min_amount: 100000, max_amount: 2000000 },
-  { id: '4', product_name: 'Growth Capital Loan', lender_name: 'BMO Financial', product_type: 'term_loan', geography: ['CA'], min_amount: 75000, max_amount: 1500000 },
-  
-  // Line of Credit Category
-  { id: '5', product_name: 'Business Line of Credit', lender_name: 'TD Bank', product_type: 'line_of_credit', geography: ['US', 'CA'], min_amount: 25000, max_amount: 750000 },
-  { id: '6', product_name: 'Flexible Credit Line', lender_name: 'RBC', product_type: 'line_of_credit', geography: ['CA'], min_amount: 50000, max_amount: 1000000 },
-  
-  // Invoice Factoring Category
-  { id: '7', product_name: 'Invoice Factoring Pro', lender_name: 'OnDeck', product_type: 'invoice_factoring', geography: ['US'], min_amount: 10000, max_amount: 500000 },
-  { id: '8', product_name: 'A/R Financing', lender_name: 'BlueVine', product_type: 'invoice_factoring', geography: ['US'], min_amount: 15000, max_amount: 300000 },
-  
-  // Working Capital Category
-  { id: '9', product_name: 'Working Capital Loan', lender_name: 'Funding Circle', product_type: 'working_capital', geography: ['US'], min_amount: 25000, max_amount: 500000 },
-  { id: '10', product_name: 'Business Cash Advance', lender_name: 'Kabbage', product_type: 'working_capital', geography: ['US'], min_amount: 5000, max_amount: 250000 },
-  
-  // Purchase Order Financing Category
-  { id: '11', product_name: 'PO Financing', lender_name: 'American Express', product_type: 'purchase_order_financing', geography: ['US'], min_amount: 50000, max_amount: 1000000 },
-  
-  // Asset Based Lending Category
-  { id: '12', product_name: 'Asset Based Credit', lender_name: 'CIT Bank', product_type: 'asset_based_lending', geography: ['US'], min_amount: 100000, max_amount: 5000000 },
-  
-  // SBA Loans Category
-  { id: '13', product_name: 'SBA 7(a) Loan', lender_name: 'Live Oak Bank', product_type: 'sba_loan', geography: ['US'], min_amount: 50000, max_amount: 5000000 },
-  { id: '14', product_name: 'SBA Express Loan', lender_name: 'SmartBiz', product_type: 'sba_loan', geography: ['US'], min_amount: 30000, max_amount: 350000 },
-];
-
-// Simulate API fetch with mock data
+// Fetch all lender products from the actual 43+ product staff API database
 async function fetchAllLenderProducts(): Promise<LenderProduct[]> {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  return mockLenderProducts;
+  const response = await fetch('/api/lender-products', {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch lender products: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.products || [];
 }
 
 // Extract unique categories and count products per category
