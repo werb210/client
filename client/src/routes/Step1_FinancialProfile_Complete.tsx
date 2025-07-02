@@ -394,14 +394,21 @@ export default function Step1FinancialProfile() {
                     name="fixedAssets"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Fixed Assets Value</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter total fixed assets value (optional)"
-                            {...field}
-                            className="h-12"
-                          />
-                        </FormControl>
+                        <FormLabel className="text-base font-semibold">Fixed assets value for loan security</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select fixed assets range" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {fixedAssetsOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
