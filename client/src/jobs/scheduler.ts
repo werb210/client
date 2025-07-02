@@ -1,9 +1,9 @@
-import * as cron from "node-cron";
 import { syncLenderProducts } from "./syncLenderProducts";
 
 // Track scheduler status
 let isSchedulerRunning = false;
 let lastSyncResult: any = null;
+let schedulerInterval: NodeJS.Timeout | null = null;
 
 // Initialize scheduler - runs twice daily at 12:00 PM and 12:00 AM MST
 export function initializeScheduler() {
@@ -12,48 +12,96 @@ export function initializeScheduler() {
     return;
   }
 
-  // MST is UTC-7, so:
-  // 12:00 PM MST = 19:00 UTC (7 PM UTC)
-  // 12:00 AM MST = 07:00 UTC (7 AM UTC)
-  // Cron format: "0 7,19 * * *" = At minute 0 of hours 7 and 19, every day
-  
   console.log('[SCHEDULER] Initializing lender product sync scheduler');
-  console.log('[SCHEDULER] Schedule: 12:00 PM and 12:00 AM MST (7:00 and 19:00 UTC)');
+  console.log('[SCHEDULER] Schedule: 12:00 PM and 12:00 AM MST');
 
-  // Schedule the sync job
-  cron.schedule("0 7,19 * * *", async () => {
-    console.log('[SCHEDULER] Scheduled sync job triggered');
-    
-    try {
-      const result = await syncLenderProducts();
-      lastSyncResult = {
-        ...result,
-        timestamp: new Date().toISOString()
-      };
-      
-      // Store last sync time in localStorage for monitoring
-      localStorage.setItem('lastSyncTime', lastSyncResult.timestamp);
-      
-      if (result.success) {
-        console.log(`[SCHEDULER] Sync completed successfully: ${result.changes} changes, ${result.total} total products from ${result.source}`);
-      } else {
-        console.error(`[SCHEDULER] Sync failed: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('[SCHEDULER] Sync job error:', error);
-      lastSyncResult = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      };
+  // Check every hour if it's time to sync
+  schedulerInterval = setInterval(async () => {
+    if (isTimeToSync()) {
+      console.log('[SCHEDULER] Scheduled sync job triggered');
+      await runScheduledSync();
     }
-  }, {
-    scheduled: true,
-    timezone: "America/Denver" // MST timezone
-  });
+  }, 60 * 60 * 1000); // Check every hour
+
+  // Run initial sync on startup if we haven't synced today
+  checkInitialSync();
 
   isSchedulerRunning = true;
   console.log('[SCHEDULER] Lender product sync scheduler started successfully');
+}
+
+// Check if it's time to sync (12 PM or 12 AM MST)
+function isTimeToSync(): boolean {
+  const now = new Date();
+  const mstOffset = -7 * 60; // MST is UTC-7
+  const mstTime = new Date(now.getTime() + (mstOffset * 60 * 1000));
+  
+  const currentHour = mstTime.getUTCHours();
+  const currentMinute = mstTime.getUTCMinutes();
+  
+  // Sync at 12:00 PM (noon) or 12:00 AM (midnight) MST
+  const isSyncTime = (currentHour === 12 || currentHour === 0) && currentMinute === 0;
+  
+  // Check if we already synced this hour
+  const lastSyncTime = localStorage.getItem('lastSyncTime');
+  if (lastSyncTime) {
+    const lastSync = new Date(lastSyncTime);
+    const hoursSinceSync = (now.getTime() - lastSync.getTime()) / (1000 * 60 * 60);
+    
+    // Don't sync if we synced in the last hour
+    if (hoursSinceSync < 1) {
+      return false;
+    }
+  }
+  
+  return isSyncTime;
+}
+
+// Run the scheduled sync
+async function runScheduledSync() {
+  try {
+    const result = await syncLenderProducts();
+    lastSyncResult = {
+      ...result,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Store last sync time in localStorage for monitoring
+    localStorage.setItem('lastSyncTime', lastSyncResult.timestamp);
+    
+    if (result.success) {
+      console.log(`[SCHEDULER] Sync completed successfully: ${result.changes} changes, ${result.total} total products from ${result.source}`);
+    } else {
+      console.error(`[SCHEDULER] Sync failed: ${result.error}`);
+    }
+  } catch (error) {
+    console.error('[SCHEDULER] Sync job error:', error);
+    lastSyncResult = {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+// Check if we need to run initial sync
+async function checkInitialSync() {
+  const lastSyncTime = localStorage.getItem('lastSyncTime');
+  
+  if (!lastSyncTime) {
+    console.log('[SCHEDULER] No previous sync found, running initial sync');
+    await runScheduledSync();
+    return;
+  }
+  
+  const lastSync = new Date(lastSyncTime);
+  const hoursSinceSync = (new Date().getTime() - lastSync.getTime()) / (1000 * 60 * 60);
+  
+  // If more than 12 hours since last sync, run one now
+  if (hoursSinceSync > 12) {
+    console.log('[SCHEDULER] Last sync was more than 12 hours ago, running sync now');
+    await runScheduledSync();
+  }
 }
 
 // Manual trigger for testing

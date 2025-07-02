@@ -23,6 +23,7 @@ import LendersByCategory from "@/pages/LendersByCategory";
 import StaffApiTest from "@/pages/StaffApiTest";
 import CorsTest from "@/pages/CorsTest";
 import ApiTest from "@/pages/ApiTest";
+import SyncMonitor from "@/pages/SyncMonitor";
 
 
 /**
@@ -41,6 +42,7 @@ export function MainLayout() {
       <Route path="/staff-api-test" component={StaffApiTest} />
       <Route path="/cors-test" component={CorsTest} />
       <Route path="/api-test" component={ApiTest} />
+      <Route path="/sync-monitor" component={SyncMonitor} />
 
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
