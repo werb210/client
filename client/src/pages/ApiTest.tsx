@@ -49,13 +49,14 @@ export default function ApiTest() {
           console.log('Response text:', await directResponse.text());
         }
       } catch (directError) {
-        console.log('❌ Direct fetch error details:', directError.message || directError);
-        console.log('Error type:', directError.name);
-        console.log('Full error object:', directError);
+        const error = directError as Error;
+        console.log('❌ Direct fetch error details:', error.message || error);
+        console.log('Error type:', error.name);
+        console.log('Full error object:', error);
         
-        if (directError.message && directError.message.includes('CORS')) {
+        if (error.message && error.message.includes('CORS')) {
           console.log('🚫 CONFIRMED: CORS policy blocking request');
-        } else if (directError.message && directError.message.includes('network')) {
+        } else if (error.message && error.message.includes('network')) {
           console.log('🌐 NETWORK: Connection issue to staff backend');
         } else {
           console.log('❓ UNKNOWN: Error type not identified');
@@ -70,8 +71,39 @@ export default function ApiTest() {
       setApiSource(result.length > 8 ? 'Staff API (43+ products)' : 'Local Fallback (8 products)');
       console.log(`API Test Success: ${result.length} products loaded`);
       
-      // Diagnostic 4: CORS Check
-      console.log('=== DIAGNOSTIC 4: CORS Status ===');
+      // Diagnostic 4: Definitive Browser Console Test
+      console.log('=== DIAGNOSTIC 4: Definitive Browser CORS Test ===');
+      console.log('Running exact test as requested...');
+      
+      try {
+        const definitiveResponse = await fetch("https://staffportal.replit.app/api/public/lenders", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+        
+        console.log("Status:", definitiveResponse.status);
+        if (definitiveResponse.ok) {
+          const definitiveData = await definitiveResponse.json();
+          console.log("✅ Product count:", definitiveData.length);
+          if (definitiveData.length >= 43) {
+            console.log("🎉 CORS RESOLVED! Full 43+ product dataset accessible!");
+          } else {
+            console.log("⚠️ API accessible but returning limited products:", definitiveData.length);
+          }
+        } else {
+          console.log("❌ API returned error status:", definitiveResponse.status);
+        }
+      } catch (definitiveError) {
+        console.error("❌ Fetch error:", definitiveError);
+        if (definitiveError.name === 'TypeError' && definitiveError.message === 'Failed to fetch') {
+          console.log("🚫 CONFIRMED: This is 100% a CORS preflight block");
+        }
+      }
+      
+      // Diagnostic 5: Final Status Summary
+      console.log('=== DIAGNOSTIC 5: Final Status ===');
       if (result.length > 8) {
         console.log('🎉 CORS RESOLVED! Staff API accessible with 43+ products');
       } else {
