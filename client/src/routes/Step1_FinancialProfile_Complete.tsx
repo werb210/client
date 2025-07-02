@@ -12,21 +12,26 @@ import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import { markApplicationStarted } from '@/lib/visitFlags';
 
-// Step 1 Schema - TESTING MODE: All fields optional
-// TODO: For production, re-enable required validation
+// Step 1 Schema - Business Basics and Funding Request
 const step1Schema = z.object({
-  // TESTING: All fields optional during testing
-  businessLocation: z.string().optional(), // PRODUCTION: .min(1, "Business location is required")
-  industry: z.string().optional(), // PRODUCTION: .min(1, "Industry is required")
-  lookingFor: z.string().optional(), // PRODUCTION: .min(1, "Please specify what you're looking for")
-  fundingAmount: z.string().optional(), // PRODUCTION: .min(1, "Funding amount is required")
-  useOfFunds: z.string().optional(), // PRODUCTION: .min(1, "Use of funds is required")
-  salesHistory: z.string().optional(), // PRODUCTION: .min(1, "Sales history is required")
-  lastYearRevenue: z.string().optional(), // PRODUCTION: .min(1, "Business revenue is required")
-  averageMonthlyRevenue: z.string().optional(), // PRODUCTION: .min(1, "Average monthly revenue is required")
-  accountsReceivable: z.string().optional(),
-  fixedAssets: z.string().optional(),
-  equipmentValue: z.string().optional(),
+  // Basic Business Information
+  headquarters: z.string().min(1, "Business headquarters is required"),
+  headquartersState: z.string().optional(),
+  industry: z.string().min(1, "Industry is required"),
+  
+  // Funding Requirements
+  lookingFor: z.enum(["capital", "equipment", "both"], {
+    required_error: "Please select what you're looking for"
+  }),
+  fundingAmount: z.string().min(1, "Funding amount is required"),
+  fundsPurpose: z.string().min(1, "Purpose of funds is required"),
+  
+  // Financial Qualification
+  salesHistory: z.string().min(1, "Sales history is required"),
+  revenueLastYear: z.string().min(1, "Revenue last year is required"),
+  averageMonthlyRevenue: z.string().min(1, "Average monthly revenue is required"),
+  accountsReceivableBalance: z.string().min(1, "Accounts receivable balance is required"),
+  fixedAssetsValue: z.string().min(1, "Fixed assets value is required"),
 });
 
 type FinancialProfileFormData = z.infer<typeof step1Schema>;
@@ -44,6 +49,12 @@ const industryOptions = [
   { value: 'agriculture', label: 'Agriculture' },
   { value: 'energy', label: 'Energy & Utilities' },
   { value: 'other', label: 'Other' },
+];
+
+const headquartersOptions = [
+  { value: 'US', label: 'United States' },
+  { value: 'CA', label: 'Canada' },
+  { value: 'Other', label: 'Other' },
 ];
 
 const lookingForOptions = [
@@ -108,6 +119,15 @@ const useOfFundsOptions = [
   { value: 'other', label: 'Other' },
 ];
 
+const fundingAmountOptions = [
+  { value: '25k-50k', label: '$25,000 to $50,000' },
+  { value: '50k-100k', label: '$50,000 to $100,000' },
+  { value: '100k-250k', label: '$100,000 to $250,000' },
+  { value: '250k-500k', label: '$250,000 to $500,000' },
+  { value: '500k-1m', label: '$500,000 to $1,000,000' },
+  { value: '1m+', label: 'Over $1,000,000' },
+];
+
 export default function Step1FinancialProfile() {
   const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
@@ -115,17 +135,17 @@ export default function Step1FinancialProfile() {
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
-      businessLocation: state.step1FinancialProfile?.businessLocation || '',
+      headquarters: state.step1FinancialProfile?.headquarters || '',
+      headquartersState: state.step1FinancialProfile?.headquartersState || '',
       industry: state.step1FinancialProfile?.industry || '',
-      lookingFor: state.step1FinancialProfile?.lookingFor || '',
+      lookingFor: state.step1FinancialProfile?.lookingFor || 'capital',
       fundingAmount: state.step1FinancialProfile?.fundingAmount || '',
-      useOfFunds: state.step1FinancialProfile?.useOfFunds || '',
+      fundsPurpose: state.step1FinancialProfile?.fundsPurpose || '',
       salesHistory: state.step1FinancialProfile?.salesHistory || '',
-      lastYearRevenue: state.step1FinancialProfile?.lastYearRevenue || '',
+      revenueLastYear: state.step1FinancialProfile?.revenueLastYear || '',
       averageMonthlyRevenue: state.step1FinancialProfile?.averageMonthlyRevenue || '',
-      accountsReceivable: state.step1FinancialProfile?.accountsReceivable || '',
-      fixedAssets: state.step1FinancialProfile?.fixedAssets || '',
-      equipmentValue: state.step1FinancialProfile?.equipmentValue || '',
+      accountsReceivableBalance: state.step1FinancialProfile?.accountsReceivableBalance || '',
+      fixedAssetsValue: state.step1FinancialProfile?.fixedAssetsValue || '',
     },
   });
 
@@ -161,13 +181,20 @@ export default function Step1FinancialProfile() {
                     name="fundingAmount"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Funding Amount</FormLabel>
+                        <FormLabel className="text-base font-semibold">How much funding are you seeking?</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="Enter amount (e.g., $100,000)"
-                            {...field}
-                            className="h-12"
-                          />
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select funding amount" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {fundingAmountOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
