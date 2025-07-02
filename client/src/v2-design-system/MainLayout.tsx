@@ -27,6 +27,7 @@ import SyncMonitor from "@/pages/SyncMonitor";
 import LenderProductsByCountry from "@/routes/LenderProductsByCountry";
 import CompleteWorkflowTest from "@/test/CompleteWorkflowTest";
 import StageMonitorTest from "@/test/StageMonitorTest";
+import SignNowWorkflowTest from "@/test/SignNowWorkflowTest";
 
 
 /**
@@ -49,6 +50,7 @@ export function MainLayout() {
       <Route path="/sync-monitor" component={SyncMonitor} />
       <Route path="/complete-workflow-test" component={CompleteWorkflowTest} />
       <Route path="/stage-monitor-test" component={StageMonitorTest} />
+      <Route path="/signnow-workflow-test" component={SignNowWorkflowTest} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
