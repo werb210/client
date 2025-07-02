@@ -111,7 +111,7 @@ export default function Step1FinancialProfile() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Funding Amount - First Question */}
+                  {/* Question 1: Funding Amount */}
                   <FormField
                     control={form.control}
                     name="fundingAmount"
@@ -129,6 +129,53 @@ export default function Step1FinancialProfile() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Question 2: What are you looking for? */}
+                  <FormField
+                    control={form.control}
+                    name="lookingFor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">What are you looking for?</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select funding type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {lookingForOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Question 3: Equipment Value - Conditional */}
+                  {(form.watch('lookingFor') === 'equipment' || form.watch('lookingFor') === 'both') && (
+                    <FormField
+                      control={form.control}
+                      name="equipmentValue"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold">Equipment Value</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter equipment value"
+                              {...field}
+                              className="h-12"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   <FormField
                     control={form.control}
@@ -166,31 +213,6 @@ export default function Step1FinancialProfile() {
                           </FormControl>
                           <SelectContent>
                             {industryOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="lookingFor"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">What are you looking for?</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Select funding type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {lookingForOptions.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
                               </SelectItem>
@@ -315,24 +337,6 @@ export default function Step1FinancialProfile() {
                         <FormControl>
                           <Input
                             placeholder="Enter total fixed assets value (optional)"
-                            {...field}
-                            className="h-12"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="equipmentValue"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Equipment Value</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter equipment value (optional)"
                             {...field}
                             className="h-12"
                           />
