@@ -24,6 +24,7 @@ import StaffApiTest from "@/pages/StaffApiTest";
 import CorsTest from "@/pages/CorsTest";
 import ApiTest from "@/pages/ApiTest";
 import SyncMonitor from "@/pages/SyncMonitor";
+import LenderProductsByCountry from "@/routes/LenderProductsByCountry";
 
 
 /**
@@ -39,6 +40,7 @@ export function MainLayout() {
       <Route path="/backend-diagnostic" component={BackendDiagnosticPage} />
       <Route path="/lender-test" component={LenderTest} />
       <Route path="/lenders-by-category" component={LendersByCategory} />
+      <Route path="/lenders-by-country" component={LenderProductsByCountry} />
       <Route path="/staff-api-test" component={StaffApiTest} />
       <Route path="/cors-test" component={CorsTest} />
       <Route path="/api-test" component={ApiTest} />
