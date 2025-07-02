@@ -40,6 +40,7 @@ import DocumentRequirementsTest from "@/pages/DocumentRequirementsTest";
 import LenderProductMatcher from "@/pages/LenderProductMatcher";
 import StrictValidationTest from "@/pages/StrictValidationTest";
 import DataIngestionInterface from "@/pages/DataIngestionInterface";
+import TypedApiDemo from "@/pages/TypedApiDemo";
 
 
 /**
@@ -72,6 +73,7 @@ export function MainLayout() {
       <Route path="/lender-product-matcher" component={LenderProductMatcher} />
       <Route path="/strict-validation-test" component={StrictValidationTest} />
       <Route path="/data-ingestion" component={DataIngestionInterface} />
+      <Route path="/typed-api-demo" component={TypedApiDemo} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
