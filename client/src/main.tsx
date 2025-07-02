@@ -4,6 +4,7 @@ import App from "./App";
 import "./index.css";
 import { initializeScheduler } from "./jobs/scheduler";
 import { clearLegacyCache, shouldClearCache } from "./startup/clearLegacyCache";
+import { runStartupVerification } from "./test/staffDatabaseVerification";
 
 // Clear legacy cache to force use of staff database (43+ products)
 if (shouldClearCache()) {
@@ -12,6 +13,11 @@ if (shouldClearCache()) {
 
 // Initialize the lender product sync scheduler
 initializeScheduler();
+
+// Verify staff database integration
+runStartupVerification().catch(error => {
+  console.error('[STARTUP] Verification failed:', error);
+});
 
 const root = document.getElementById("root");
 if (root) {

@@ -1,4 +1,4 @@
-import { STAFF_API } from './constants';
+import { getStaffApiUrl } from './constants';
 
 export interface LenderProduct {
   // Core Identification
@@ -33,7 +33,7 @@ export interface LenderProduct {
  * NO FALLBACK to ensure we always use the 43+ product dataset
  */
 export async function fetchLenderProducts(): Promise<LenderProduct[]> {
-  const staffUrl = `${STAFF_API}/api/public/lenders`;
+  const staffUrl = `${getStaffApiUrl()}/api/public/lenders`;
   
   console.log(`Fetching lender products from staff API: ${staffUrl}`);
   
@@ -123,7 +123,7 @@ function extractLenderFromName(productName: string): string {
 }
 
 export async function fetchLenderStats() {
-  const url = `${STAFF_API}/api/public/lenders/stats`;
+  const url = `${getStaffApiUrl()}/api/public/lenders/stats`;
   
   const res = await fetch(url, {
     method: 'GET',
@@ -140,7 +140,7 @@ export async function fetchLenderStats() {
 }
 
 export async function fetchLenderProduct(id: string): Promise<LenderProduct> {
-  const url = `${STAFF_API}/api/public/lenders/${id}`;
+  const url = `${getStaffApiUrl()}/api/public/lenders/${id}`;
   
   const res = await fetch(url, {
     method: 'GET',
