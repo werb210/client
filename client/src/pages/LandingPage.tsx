@@ -25,14 +25,6 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center space-x-3">
             <Button 
-              variant="ghost" 
-              onClick={handleGetStarted}
-              className="hover:bg-blue-50"
-              style={{ color: '#003D7A' }}
-            >
-              Start Application
-            </Button>
-            <Button 
               onClick={handleGetStarted}
               className="text-white hover:opacity-90"
               style={{ backgroundColor: '#003D7A' }}
