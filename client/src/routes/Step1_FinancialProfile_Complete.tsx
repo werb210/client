@@ -135,17 +135,17 @@ export default function Step1FinancialProfile() {
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
-      headquarters: state.step1FinancialProfile?.headquarters || '',
-      headquartersState: state.step1FinancialProfile?.headquartersState || '',
+      businessLocation: state.step1FinancialProfile?.businessLocation || '',
       industry: state.step1FinancialProfile?.industry || '',
-      lookingFor: state.step1FinancialProfile?.lookingFor || 'capital',
+      lookingFor: state.step1FinancialProfile?.lookingFor || '',
       fundingAmount: state.step1FinancialProfile?.fundingAmount || '',
-      fundsPurpose: state.step1FinancialProfile?.fundsPurpose || '',
+      useOfFunds: state.step1FinancialProfile?.useOfFunds || '',
       salesHistory: state.step1FinancialProfile?.salesHistory || '',
-      revenueLastYear: state.step1FinancialProfile?.revenueLastYear || '',
+      lastYearRevenue: state.step1FinancialProfile?.lastYearRevenue || '',
       averageMonthlyRevenue: state.step1FinancialProfile?.averageMonthlyRevenue || '',
-      accountsReceivableBalance: state.step1FinancialProfile?.accountsReceivableBalance || '',
-      fixedAssetsValue: state.step1FinancialProfile?.fixedAssetsValue || '',
+      accountsReceivable: state.step1FinancialProfile?.accountsReceivable || '',
+      fixedAssets: state.step1FinancialProfile?.fixedAssets || '',
+      equipmentValue: state.step1FinancialProfile?.equipmentValue || '',
     },
   });
 
@@ -180,18 +180,11 @@ export default function Step1FinancialProfile() {
                       <FormItem>
                         <FormLabel className="text-base font-semibold">How much funding are you seeking?</FormLabel>
                         <FormControl>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Select funding amount" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {fundingAmountOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <Input
+                            placeholder="Enter amount (e.g., $100,000)"
+                            {...field}
+                            className="h-12"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
