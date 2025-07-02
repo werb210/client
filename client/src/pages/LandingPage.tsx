@@ -37,7 +37,6 @@ export default function LandingPage() {
           </div>
         </div>
       </nav>
-      
       <div className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
@@ -142,7 +141,7 @@ export default function LandingPage() {
         {/* Stats Section */}
         <div className="grid md:grid-cols-3 gap-8 mb-16 text-center">
           <div>
-            <div className="text-4xl font-bold mb-2" style={{ color: '#003D7A' }}>43+</div>
+            <div className="text-4xl font-bold mb-2" style={{ color: '#003D7A' }}>83+</div>
             <div style={{ color: '#64748B' }}>Active Lenders</div>
           </div>
           <div>
