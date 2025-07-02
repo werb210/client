@@ -12,7 +12,7 @@ import {
   Loader2,
   ArrowRight
 } from 'lucide-react';
-import { useFormData } from '@/contexts/FormDataContext';
+import { useFormData } from '@/contexts/FormDataProvider';
 import { 
   useUploadDocument, 
   useFinalizeApplication,
@@ -116,7 +116,7 @@ const DocumentUploader: React.FC<DocumentUploadProps> = ({
 };
 
 export const Step5Documents: React.FC = () => {
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const { formData, applicationId } = useFormData();
   const [uploads, setUploads] = useState<DocStatus[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);

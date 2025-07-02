@@ -48,11 +48,18 @@ export const useFinalizeApplication = (id: string) => {
   const queryClient = useQueryClient();
   
   return useMutation<FinalizeResponse, Error, void>({
-    mutationFn: () =>
-      apiFetch(`/api/applications/${id}/complete`, {
+    mutationFn: async () => {
+      const response = await apiFetch(`/api/applications/${id}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
-      }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to finalize application: ${response.statusText}`);
+      }
+      
+      return await response.json() as FinalizeResponse;
+    },
     onSuccess: (data) => {
       // Update application status optimistically
       queryClient.setQueryData(['applications', id], (old: any) => ({
