@@ -14,15 +14,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 
-interface UploadedFile {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  file: File;
-  status: "uploading" | "completed" | "error";
-  documentType: string;
-}
+import type { UploadedFile } from '../components/DynamicDocumentRequirements';
 
 export default function Step5DocumentUpload() {
   const { state, dispatch, saveToStorage } = useFormData();
@@ -53,7 +45,7 @@ export default function Step5DocumentUpload() {
   };
 
   // Handle requirements completion status
-  const handleRequirementsChange = (allComplete: boolean, total: number) => {
+  const handleRequirementsChange = (allComplete: boolean, total: number, completed: number) => {
     setAllRequirementsComplete(allComplete);
     setTotalRequirements(total);
   };
