@@ -145,42 +145,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Application Process */}
-        <div className="rounded-2xl p-8 mb-16" style={{ backgroundColor: '#F7F9FC' }}>
-          <h2 className="text-3xl font-bold mb-8 text-center" style={{ color: '#003D7A' }}>
-            Simple 7-Step Process
-          </h2>
-          <div className="grid md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="w-12 h-12 text-white rounded-full flex items-center justify-center mx-auto mb-3 font-bold" style={{ backgroundColor: '#003D7A' }}>
-                1
-              </div>
-              <h4 className="font-semibold mb-2" style={{ color: '#003D7A' }}>Business Profile</h4>
-              <p className="text-sm" style={{ color: '#64748B' }}>Basic business information and funding needs</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 text-white rounded-full flex items-center justify-center mx-auto mb-3 font-bold" style={{ backgroundColor: '#003D7A' }}>
-                2
-              </div>
-              <h4 className="font-semibold mb-2" style={{ color: '#003D7A' }}>Product Matching</h4>
-              <p className="text-sm" style={{ color: '#64748B' }}>AI-powered recommendations from 43+ lenders</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 text-white rounded-full flex items-center justify-center mx-auto mb-3 font-bold" style={{ backgroundColor: '#FF8C00' }}>
-                3-5
-              </div>
-              <h4 className="font-semibold mb-2" style={{ color: '#003D7A' }}>Details & Documents</h4>
-              <p className="text-sm" style={{ color: '#64748B' }}>Complete application with secure document upload</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 text-white rounded-full flex items-center justify-center mx-auto mb-3 font-bold" style={{ backgroundColor: '#16A34A' }}>
-                6-7
-              </div>
-              <h4 className="font-semibold mb-2" style={{ color: '#003D7A' }}>Sign & Submit</h4>
-              <p className="text-sm" style={{ color: '#64748B' }}>E-signature and final submission to lenders</p>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Stats Section */}
         <div className="grid md:grid-cols-3 gap-8 mb-16 text-center">
