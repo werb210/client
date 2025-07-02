@@ -92,6 +92,13 @@ export function useRecommendations(formStep1Data: Step1FormData) {
         }
       }
       
+      // Exclude Invoice Factoring if no accounts receivable
+      if (formStep1Data.accountsReceivable === "No Account Receivables" && 
+          (p.category.toLowerCase().includes('invoice') || p.category.toLowerCase().includes('factoring'))) {
+        console.log(`❌ Invoice Factoring: ${p.productName} excluded because no accounts receivable`);
+        return false;
+      }
+      
       console.log(`✅ Match: ${p.productName} by ${p.lenderName}`);
       return true;
     })

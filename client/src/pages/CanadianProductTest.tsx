@@ -2,8 +2,8 @@ import React from 'react';
 import { useRecommendations } from '@/hooks/useRecommendations';
 
 const CanadianProductTest: React.FC = () => {
-  // Canadian business capital scenario: $40,000, manufacturing
-  const canadianFormData = {
+  // Test scenarios
+  const scenarioWithAR = {
     businessLocation: "canada" as const,
     industry: "manufacturing",
     lookingFor: "capital" as const,
@@ -11,11 +11,26 @@ const CanadianProductTest: React.FC = () => {
     useOfFunds: "Working capital and inventory",
     lastYearRevenue: "$150,000 - $300,000",
     averageMonthlyRevenue: "$15,000 - $30,000",
-    accountsReceivable: "$10,000 - $25,000",
+    accountsReceivable: "$10,000 - $25,000", // Has AR - should show Invoice Factoring
     equipmentValue: "No fixed assets"
   };
 
-  const { products, categories, isLoading, error } = useRecommendations(canadianFormData);
+  const scenarioNoAR = {
+    businessLocation: "canada" as const,
+    industry: "manufacturing",
+    lookingFor: "capital" as const,
+    fundingAmount: "$40,000",
+    useOfFunds: "Working capital and inventory",
+    lastYearRevenue: "$150,000 - $300,000",
+    averageMonthlyRevenue: "$15,000 - $30,000",
+    accountsReceivable: "No Account Receivables", // No AR - should hide Invoice Factoring
+    equipmentValue: "No fixed assets"
+  };
+
+  const [scenario, setScenario] = React.useState<'withAR' | 'noAR'>('noAR');
+  const currentData = scenario === 'withAR' ? scenarioWithAR : scenarioNoAR;
+  
+  const { products, categories, isLoading, error } = useRecommendations(currentData);
 
   if (isLoading) {
     return (
@@ -41,16 +56,51 @@ const CanadianProductTest: React.FC = () => {
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">Canadian Business Capital Test</h1>
       
-      {/* Test Scenario */}
-      <div className="bg-blue-50 border border-blue-200 rounded p-4 mb-6">
-        <h2 className="font-semibold mb-2">Test Scenario:</h2>
-        <ul className="text-sm">
-          <li>• Country: Canada</li>
-          <li>• Industry: Manufacturing</li>
-          <li>• Looking for: Business Capital</li>
-          <li>• Amount: $40,000</li>
-          <li>• Last year revenue: $150,000 - $300,000</li>
-        </ul>
+      {/* Scenario Selector */}
+      <div className="bg-gray-50 border border-gray-200 rounded p-4 mb-6">
+        <h2 className="font-semibold mb-3">Test Scenario:</h2>
+        <div className="flex gap-4 mb-4">
+          <button
+            onClick={() => setScenario('noAR')}
+            className={`px-4 py-2 rounded text-sm font-medium ${
+              scenario === 'noAR' 
+                ? 'bg-teal-600 text-white' 
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            No Accounts Receivables
+          </button>
+          <button
+            onClick={() => setScenario('withAR')}
+            className={`px-4 py-2 rounded text-sm font-medium ${
+              scenario === 'withAR' 
+                ? 'bg-teal-600 text-white' 
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            Has Accounts Receivables
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <h3 className="font-medium mb-1">Basic Info:</h3>
+            <ul className="text-gray-600">
+              <li>• Country: Canada</li>
+              <li>• Industry: Manufacturing</li>
+              <li>• Looking for: Business Capital</li>
+              <li>• Amount: $40,000</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-medium mb-1">Current Scenario:</h3>
+            <ul className="text-gray-600">
+              <li>• AR Balance: {currentData.accountsReceivable}</li>
+              <li>• Last year revenue: {currentData.lastYearRevenue}</li>
+              <li>• Expected: {scenario === 'noAR' ? 'NO Invoice Factoring' : 'Include Invoice Factoring'}</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* Results Summary */}
@@ -69,16 +119,49 @@ const CanadianProductTest: React.FC = () => {
         </div>
       </div>
 
+      {/* Business Rule Validation */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-3">Business Rule Validation:</h2>
+        <div className="bg-white border rounded p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`w-3 h-3 rounded-full ${
+              scenario === 'noAR' && !Object.keys(categories).some(cat => 
+                cat.toLowerCase().includes('invoice') || cat.toLowerCase().includes('factoring')
+              ) ? 'bg-green-500' : 
+              scenario === 'withAR' && Object.keys(categories).some(cat => 
+                cat.toLowerCase().includes('invoice') || cat.toLowerCase().includes('factoring')
+              ) ? 'bg-green-500' : 'bg-red-500'
+            }`}></div>
+            <span className="font-medium">
+              {scenario === 'noAR' ? 'Invoice Factoring should be HIDDEN' : 'Invoice Factoring should be SHOWN'}
+            </span>
+          </div>
+          <p className="text-sm text-gray-600">
+            {scenario === 'noAR' 
+              ? `✓ Rule working: No Invoice Factoring found in ${Object.keys(categories).length} categories`
+              : `${Object.keys(categories).some(cat => cat.toLowerCase().includes('invoice') || cat.toLowerCase().includes('factoring')) ? '✓' : '✗'} Invoice Factoring presence check`
+            }
+          </p>
+        </div>
+      </div>
+
       {/* Categories Found */}
       {Object.keys(categories).length > 0 && (
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-3">Categories Found:</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {Object.entries(categories).map(([category, details]) => (
-              <div key={category} className="bg-white border rounded p-3">
+              <div key={category} className={`border rounded p-3 ${
+                category.toLowerCase().includes('invoice') || category.toLowerCase().includes('factoring')
+                  ? 'bg-orange-50 border-orange-200' 
+                  : 'bg-white border-gray-200'
+              }`}>
                 <h3 className="font-medium">{category}</h3>
                 <p className="text-sm text-gray-600">{details.count} products</p>
                 <p className="text-sm text-gray-500">Score: {details.score}</p>
+                {(category.toLowerCase().includes('invoice') || category.toLowerCase().includes('factoring')) && (
+                  <p className="text-xs text-orange-600 mt-1">📋 Invoice Factoring</p>
+                )}
               </div>
             ))}
           </div>
