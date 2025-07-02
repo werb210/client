@@ -58,7 +58,7 @@ const headquartersOptions = [
 ];
 
 const lookingForOptions = [
-  { value: 'capital', label: 'Working Capital' },
+  { value: 'capital', label: 'Capital' },
   { value: 'equipment', label: 'Equipment Financing' },
   { value: 'both', label: 'Both Capital & Equipment' },
 ];
