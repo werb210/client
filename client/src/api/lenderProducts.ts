@@ -50,11 +50,18 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
     }
     
     const data = await res.json();
+    console.log('[RAW API DATA]:', data);
+    console.log('[RAW API DATA TYPE]:', typeof data, Array.isArray(data) ? 'array' : 'object');
+    
     const products = Array.isArray(data) ? data : data.products || [];
-    console.log(`Staff API success: ${products.length} products`);
+    console.log(`[BEFORE NORMALIZE] Raw products array length: ${products.length}`);
     
     if (products.length > 0) {
-      return normalizeProducts(products);
+      console.log('[SAMPLE RAW PRODUCT]:', products[0]);
+      const normalized = normalizeProducts(products);
+      console.log(`[AFTER NORMALIZE] Normalized products length: ${normalized.length}`);
+      console.log('[SAMPLE NORMALIZED PRODUCT]:', normalized[0]);
+      return normalized;
     }
   } catch (error) {
     console.warn(`Staff API endpoint ${staffUrl} failed:`, error);
@@ -85,18 +92,24 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
 }
 
 function normalizeProducts(products: any[]): LenderProduct[] {
+  console.log(`[NORMALIZE] Starting normalization of ${products.length} products`);
+  
   // Normalize data format between local API (snake_case) and staff API (camelCase)
-  return products.map((product: any) => {
-    return {
+  const normalized = products.map((product: any, index: number) => {
+    if (index < 3) {
+      console.log(`[NORMALIZE] Product ${index + 1} raw:`, product);
+    }
+    
+    const normalizedProduct = {
       id: String(product.id),
       tenantId: product.tenantId || 'default',
-      productName: product.productName || product.product_name || 'Unknown Product',
-      lenderName: product.lenderName || product.lender_name || 'Unknown Lender',
-      productType: product.productType || product.product_type || 'unknown',
+      productName: product.productName || product.product_name || product.name || 'Unknown Product',
+      lenderName: product.lenderName || product.lender_name || extractLenderFromName(product.productName || product.product_name || product.name),
+      productType: product.productType || product.product_type || product.type || 'unknown',
       description: product.description || '',
       videoUrl: product.videoUrl || product.video_url || null,
-      minAmount: Number(product.minAmount || product.min_amount || 0),
-      maxAmount: Number(product.maxAmount || product.max_amount || 0),
+      minAmount: Number(product.minAmount || product.min_amount || product.amount_min || 0),
+      maxAmount: Number(product.maxAmount || product.max_amount || product.amount_max || 0),
       minRevenue: product.minRevenue || product.min_revenue || null,
       geography: Array.isArray(product.geography) ? product.geography : ['US'],
       industries: Array.isArray(product.industries) ? product.industries : [],
@@ -104,7 +117,36 @@ function normalizeProducts(products: any[]): LenderProduct[] {
       createdAt: product.createdAt || new Date().toISOString(),
       updatedAt: product.updatedAt || new Date().toISOString(),
     };
+    
+    if (index < 3) {
+      console.log(`[NORMALIZE] Product ${index + 1} normalized:`, normalizedProduct);
+    }
+    
+    return normalizedProduct;
   });
+  
+  console.log(`[NORMALIZE] Completed normalization: ${normalized.length} products processed`);
+  return normalized;
+}
+
+function extractLenderFromName(productName: string): string {
+  if (!productName) return 'Unknown Lender';
+  
+  // Extract lender from product names like "Business Loan - Capital One"
+  const parts = productName.split(' - ');
+  if (parts.length > 1) {
+    return parts[parts.length - 1].trim();
+  }
+  
+  // Look for common lender names in the product name
+  const lenderKeywords = ['Capital One', 'Wells Fargo', 'Bank of America', 'BMO', 'TD Bank', 'RBC', 'OnDeck', 'BlueVine'];
+  for (const lender of lenderKeywords) {
+    if (productName.includes(lender)) {
+      return lender;
+    }
+  }
+  
+  return 'Unknown Lender';
 }
 
 export async function fetchLenderStats() {
