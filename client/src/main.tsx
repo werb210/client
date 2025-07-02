@@ -2,7 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { initializeScheduler } from "./jobs/scheduler";
+import { scheduledSyncService } from "./lib/scheduledSync";
 import { clearLegacyCache, shouldClearCache } from "./startup/clearLegacyCache";
 import { runStartupVerification } from "./test/staffDatabaseVerification";
 
@@ -12,7 +12,7 @@ if (shouldClearCache()) {
 }
 
 // Initialize the lender product sync scheduler
-initializeScheduler();
+scheduledSyncService.initialize();
 
 // Verify staff database integration
 runStartupVerification().catch(error => {

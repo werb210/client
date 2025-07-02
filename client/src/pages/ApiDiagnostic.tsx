@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { syncManager } from '@/lib/syncManager';
+import { scheduledSyncService } from '@/lib/scheduledSync';
 
 interface DiagnosticResult {
   test: string;
@@ -12,6 +14,8 @@ interface DiagnosticResult {
 export default function ApiDiagnostic() {
   const [results, setResults] = useState<DiagnosticResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<any>(null);
+  const [localProducts, setLocalProducts] = useState<any[]>([]);
 
   const addResult = (result: DiagnosticResult) => {
     setResults(prev => [...prev, result]);
@@ -35,6 +39,32 @@ export default function ApiDiagnostic() {
         allEnvVars: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_'))
       }
     });
+
+    // Test 1.1: Sync Status Check
+    try {
+      const status = await syncManager.getSyncStatus();
+      const products = await syncManager.getProducts();
+      setSyncStatus(status);
+      setLocalProducts(products);
+      
+      addResult({
+        test: 'IndexedDB Sync Status',
+        status: status.productCount > 0 ? 'success' : 'info',
+        message: `Local products: ${status.productCount}, Last sync: ${status.lastSyncTime ? new Date(status.lastSyncTime).toLocaleString() : 'Never'}`,
+        data: {
+          productCount: status.productCount,
+          lastSyncTime: status.lastSyncTime,
+          syncStatus: status.syncStatus,
+          sampleProducts: products.slice(0, 3)
+        }
+      });
+    } catch (error) {
+      addResult({
+        test: 'IndexedDB Sync Status',
+        status: 'error',
+        message: `Failed to check sync status: ${(error as Error).message}`
+      });
+    }
 
     // Test 2: Browser Console Direct Fetch
     addResult({
@@ -122,6 +152,44 @@ export default function ApiDiagnostic() {
     setIsRunning(false);
   };
 
+  const runManualSync = async () => {
+    setIsRunning(true);
+    addResult({
+      test: 'Manual Sync Trigger',
+      status: 'info',
+      message: 'Starting manual sync with staff API...'
+    });
+
+    try {
+      const result = await scheduledSyncService.manualSync();
+      
+      addResult({
+        test: 'Manual Sync Result',
+        status: result.success ? 'success' : 'error',
+        message: result.message,
+        data: {
+          productCount: result.productCount,
+          success: result.success
+        }
+      });
+
+      // Refresh local status
+      const status = await syncManager.getSyncStatus();
+      const products = await syncManager.getProducts();
+      setSyncStatus(status);
+      setLocalProducts(products);
+
+    } catch (error) {
+      addResult({
+        test: 'Manual Sync Result',
+        status: 'error',
+        message: `Manual sync failed: ${(error as Error).message}`
+      });
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
   useEffect(() => {
     runDiagnostics();
   }, []);
@@ -136,7 +204,7 @@ export default function ApiDiagnostic() {
           </CardHeader>
           <CardContent className="p-8">
             <div className="space-y-6">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-wrap">
                 <Button 
                   onClick={runDiagnostics} 
                   disabled={isRunning}
@@ -144,6 +212,25 @@ export default function ApiDiagnostic() {
                 >
                   {isRunning ? 'Running Diagnostics...' : 'Run Diagnostics'}
                 </Button>
+                
+                <Button 
+                  onClick={runManualSync} 
+                  disabled={isRunning}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {isRunning ? 'Syncing...' : 'Manual Sync'}
+                </Button>
+
+                {syncStatus && (
+                  <div className="text-sm text-gray-600">
+                    <strong>Local DB:</strong> {syncStatus.productCount} products
+                    {syncStatus.lastSyncTime > 0 && (
+                      <span className="ml-2 text-xs">
+                        Last: {new Date(syncStatus.lastSyncTime).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
