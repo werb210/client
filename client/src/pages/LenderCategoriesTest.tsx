@@ -3,43 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Building2, DollarSign, MapPin, Calendar } from 'lucide-react';
-
-// Type for lender product from the database
-interface LenderProduct {
-  id: string;
-  product_name: string;
-  lender_name: string;
-  product_type: string;
-  geography: string[];
-  min_amount: number;
-  max_amount: number;
-  min_revenue?: number;
-  industries?: string[];
-  video_url?: string;
-  description?: string;
-  interest_rate_min?: number;
-  interest_rate_max?: number;
-  term_min?: number;
-  term_max?: number;
-}
-
-// Fetch all lender products from the actual 43+ product staff API database
-async function fetchAllLenderProducts(): Promise<LenderProduct[]> {
-  const response = await fetch('/api/lender-products', {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch lender products: ${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return data.products || [];
-}
+import { fetchLenderProducts, type LenderProduct } from '@/api/lenderProducts';
 
 // Extract unique categories and count products per category
 function analyzeProductCategories(products: LenderProduct[]) {
@@ -53,7 +17,7 @@ function analyzeProductCategories(products: LenderProduct[]) {
   }> = {};
 
   products.forEach(product => {
-    const category = product.product_type;
+    const category = product.productType;
     
     if (!categoryStats[category]) {
       categoryStats[category] = {
@@ -68,17 +32,17 @@ function analyzeProductCategories(products: LenderProduct[]) {
 
     categoryStats[category].count++;
     categoryStats[category].products.push(product);
-    categoryStats[category].lenders.add(product.lender_name);
+    categoryStats[category].lenders.add(product.lenderName);
     
     product.geography.forEach(geo => {
       categoryStats[category].geographies.add(geo);
     });
 
-    if (product.min_amount < categoryStats[category].minAmount) {
-      categoryStats[category].minAmount = product.min_amount;
+    if (product.minAmount < categoryStats[category].minAmount) {
+      categoryStats[category].minAmount = product.minAmount;
     }
-    if (product.max_amount > categoryStats[category].maxAmount) {
-      categoryStats[category].maxAmount = product.max_amount;
+    if (product.maxAmount > categoryStats[category].maxAmount) {
+      categoryStats[category].maxAmount = product.maxAmount;
     }
   });
 
@@ -105,8 +69,8 @@ function formatCategoryName(category: string): string {
 
 export default function LenderCategoriesTest() {
   const { data: products = [], isLoading, error } = useQuery({
-    queryKey: ['/api/lender-products'],
-    queryFn: fetchAllLenderProducts,
+    queryKey: ['lender-products'],
+    queryFn: fetchLenderProducts,
   });
 
   if (isLoading) {
@@ -249,7 +213,7 @@ export default function LenderCategoriesTest() {
                     <div className="space-y-1">
                       {stats.products.slice(0, 2).map(product => (
                         <div key={product.id} className="text-sm text-gray-600">
-                          • {product.product_name} ({product.lender_name})
+                          • {product.productName} ({product.lenderName})
                         </div>
                       ))}
                       {stats.products.length > 2 && (
