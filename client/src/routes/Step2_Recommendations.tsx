@@ -37,10 +37,12 @@ export default function Step2Recommendations() {
   };
 
   const handleContinue = () => {
-    if (!selectedProduct) return;
+    // TESTING MODE: Allow continue without product selection
+    // TODO: For production, enable this validation:
+    // if (!selectedProduct) return;
     
     dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
-    setLocation('/step3-business-details');
+    setLocation('/apply/step-3');
   };
 
   const handlePrevious = () => {

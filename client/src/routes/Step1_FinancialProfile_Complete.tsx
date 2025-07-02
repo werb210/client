@@ -12,16 +12,18 @@ import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import { markApplicationStarted } from '@/lib/visitFlags';
 
-// Comprehensive Step 1 Schema matching FormDataContext interface
+// Step 1 Schema - TESTING MODE: All fields optional
+// TODO: For production, re-enable required validation
 const step1Schema = z.object({
-  businessLocation: z.string().min(1, "Business location is required"),
-  industry: z.string().min(1, "Industry is required"),
-  lookingFor: z.string().min(1, "Please specify what you're looking for"),
-  fundingAmount: z.string().min(1, "Funding amount is required"),
-  useOfFunds: z.string().min(1, "Use of funds is required"),
-  salesHistory: z.string().min(1, "Sales history is required"),
-  lastYearRevenue: z.string().min(1, "Business revenue is required"),
-  averageMonthlyRevenue: z.string().min(1, "Average monthly revenue is required"),
+  // TESTING: All fields optional during testing
+  businessLocation: z.string().optional(), // PRODUCTION: .min(1, "Business location is required")
+  industry: z.string().optional(), // PRODUCTION: .min(1, "Industry is required")
+  lookingFor: z.string().optional(), // PRODUCTION: .min(1, "Please specify what you're looking for")
+  fundingAmount: z.string().optional(), // PRODUCTION: .min(1, "Funding amount is required")
+  useOfFunds: z.string().optional(), // PRODUCTION: .min(1, "Use of funds is required")
+  salesHistory: z.string().optional(), // PRODUCTION: .min(1, "Sales history is required")
+  lastYearRevenue: z.string().optional(), // PRODUCTION: .min(1, "Business revenue is required")
+  averageMonthlyRevenue: z.string().optional(), // PRODUCTION: .min(1, "Average monthly revenue is required")
   accountsReceivable: z.string().optional(),
   fixedAssets: z.string().optional(),
   equipmentValue: z.string().optional(),
@@ -144,6 +146,9 @@ export default function Step1FinancialProfile() {
           <CardHeader className="bg-gradient-to-r from-teal-600 to-teal-700 text-white">
             <CardTitle className="text-2xl font-bold">Step 1: Comprehensive Financial Profile</CardTitle>
             <p className="text-teal-100">Provide detailed information about your business and funding needs</p>
+            <div className="mt-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-md text-sm inline-block">
+              🧪 Testing Mode: All fields are optional for development testing
+            </div>
           </CardHeader>
           <CardContent className="p-8">
             <Form {...form}>
