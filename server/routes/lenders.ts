@@ -187,4 +187,113 @@ router.get('/categories/summary', async (req, res) => {
   }
 });
 
+// GET /api/lenders/required-documents/:category - Get required documents by product category
+router.get('/required-documents/:category', async (req, res) => {
+  try {
+    const { category } = req.params;
+    const { 
+      headquarters = 'united_states',
+      fundingAmount = '$50,000',
+      accountsReceivableBalance = undefined
+    } = req.query;
+
+    console.log(`🔍 GETTING REQUIRED DOCUMENTS for category: ${category}`);
+    
+    // Build base conditions
+    const conditions = [
+      eq(lenderProducts.active, true),
+      eq(lenderProducts.type, category)
+    ];
+
+    // Note: Geographic filtering would require additional schema fields
+    // Currently the schema doesn't have offered_in_canada/offered_in_us fields
+    // This would need to be added to the database schema if needed
+
+    // Parse funding amount for range filtering
+    const parseFundingAmountRange = (fundingAmount: string) => {
+      const cleanAmount = fundingAmount.replace(/[$,]/g, '').trim();
+      
+      if (cleanAmount.toLowerCase().includes('over')) {
+        const match = cleanAmount.match(/over\s+(\d+)/i);
+        if (match) {
+          return { minAmount: parseInt(match[1], 10), maxAmount: 999999999 };
+        }
+      }
+      
+      // Range format: "$10,000 - $50,000"
+      const rangeMatch = cleanAmount.match(/(\d+)[\s-]+(\d+)/);
+      if (rangeMatch) {
+        return {
+          minAmount: parseInt(rangeMatch[1], 10),
+          maxAmount: parseInt(rangeMatch[2], 10)
+        };
+      }
+      
+      return { minAmount: null, maxAmount: null };
+    };
+
+    const { minAmount, maxAmount } = parseFundingAmountRange(fundingAmount as string);
+    if (minAmount !== null && maxAmount !== null) {
+      conditions.push(sql`${lenderProducts.min_amount}::numeric <= ${maxAmount}`);
+      conditions.push(sql`${lenderProducts.max_amount}::numeric >= ${minAmount}`);
+    }
+
+    // Apply accounts receivable filter for factoring products
+    if (accountsReceivableBalance === 'no_account_receivables' && category === 'factoring') {
+      console.log(`❌ Excluding factoring products - user has no account receivables`);
+      return res.json({ success: true, data: [] });
+    }
+
+    const results = await db
+      .select({
+        product_name: lenderProducts.name,
+        requirements: lenderProducts.requirements
+      })
+      .from(lenderProducts)
+      .where(and(...conditions))
+      .orderBy(lenderProducts.name);
+
+    console.log(`📊 Found ${results.length} matching products for ${category}`);
+
+    // Extract and flatten all required documents
+    const allRequiredDocuments: string[] = [];
+    
+    results.forEach((product: any) => {
+      if (product.requirements && Array.isArray(product.requirements)) {
+        allRequiredDocuments.push(...product.requirements);
+      }
+    });
+
+    // Deduplicate and format documents
+    const uniqueDocuments = Array.from(new Set(allRequiredDocuments));
+    const formattedDocuments = uniqueDocuments.map(doc => ({
+      name: doc,
+      description: `Required for ${category.replace('_', ' ')} applications`,
+      quantity: 1,
+      required: true
+    }));
+
+    // Fallback to standard business loan documents if no specific requirements found
+    if (formattedDocuments.length === 0) {
+      const fallbackDocuments = [
+        { name: "Bank Statements", description: "Last 6 months of business bank statements", quantity: 6, required: true },
+        { name: "Tax Returns", description: "Last 3 years of business tax returns", quantity: 3, required: true },
+        { name: "Financial Statements", description: "Recent profit & loss and balance sheet", quantity: 3, required: true },
+        { name: "Business License", description: "Valid business registration or license", quantity: 1, required: true },
+        { name: "Articles of Incorporation", description: "Legal business formation documents", quantity: 1, required: false }
+      ];
+      
+      console.log(`✅ Using fallback documents for ${category}: ${fallbackDocuments.length} documents`);
+      return res.json({ success: true, data: fallbackDocuments });
+    }
+
+    console.log(`✅ DYNAMIC RESPONSE: Found ${formattedDocuments.length} required documents for ${category}`);
+    res.json({ success: true, data: formattedDocuments });
+
+  } catch (error: any) {
+    console.error("Error fetching required documents:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch required documents" });
+  }
+});
+
 export default router;
