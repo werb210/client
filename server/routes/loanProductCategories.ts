@@ -13,7 +13,7 @@ interface ProductCategoryFilters {
   fundsPurpose?: string;
 }
 
-// Multi-filter API endpoint for real-time product categories
+// Multi-filter API endpoint for real-time product categories  
 router.get('/categories', async (req, res) => {
   try {
     const {
@@ -26,15 +26,8 @@ router.get('/categories', async (req, res) => {
 
     console.log(`🔍 FILTERING PRODUCTS:`, { country, lookingFor, fundingAmount, accountsReceivableBalance, fundsPurpose });
 
-    // Build filter conditions
+    // Build filter conditions starting with just active products
     const conditions = [eq(lenderProducts.active, true)];
-
-    // Geographic filtering
-    if (country === 'canada') {
-      conditions.push(sql`${lenderProducts.geography} @> '["CA"]'`);
-    } else {
-      conditions.push(sql`${lenderProducts.geography} @> '["US"]'`);
-    }
 
     // Product type filtering based on "What are you looking for?"
     if (lookingFor === 'equipment') {
@@ -46,8 +39,9 @@ router.get('/categories', async (req, res) => {
     // Funding amount range filtering
     const { minAmount, maxAmount } = parseFundingAmount(fundingAmount);
     if (minAmount && maxAmount) {
-      conditions.push(lte(sql`CAST(${lenderProducts.min_amount} AS INTEGER)`, maxAmount));
-      conditions.push(gte(sql`CAST(${lenderProducts.max_amount} AS INTEGER)`, minAmount));
+      // Check for overlapping ranges
+      conditions.push(gte(sql`CAST(${lenderProducts.max_amount} AS DECIMAL)`, minAmount));
+      conditions.push(lte(sql`CAST(${lenderProducts.min_amount} AS DECIMAL)`, maxAmount));
     }
 
     // Accounts receivable filtering (exclude factoring if no AR)
