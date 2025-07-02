@@ -37,6 +37,7 @@ import TestingFlowValidation from "@/pages/TestingFlowValidation";
 import UnifiedDocumentTest from "@/pages/UnifiedDocumentTest";
 import LenderCategoriesTest from "@/pages/LenderCategoriesTest";
 import DocumentRequirementsTest from "@/pages/DocumentRequirementsTest";
+import LenderProductMatcher from "@/pages/LenderProductMatcher";
 
 
 /**
@@ -66,6 +67,7 @@ export function MainLayout() {
       <Route path="/unified-document-test" component={UnifiedDocumentTest} />
       <Route path="/lender-categories" component={LenderCategoriesTest} />
       <Route path="/document-requirements-test" component={DocumentRequirementsTest} />
+      <Route path="/lender-product-matcher" component={LenderProductMatcher} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
