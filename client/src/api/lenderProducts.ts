@@ -1,157 +1,84 @@
-import { getStaffApiUrl } from './constants';
+import { API_BASE_URL } from '../constants';
+import { LenderProduct } from '../../../shared/lenderProductSchema';
+import { normalizeProducts } from '../lib/lenderProductNormalizer';
 
-export interface LenderProduct {
-  // Core Identification
-  id: string;
-  tenantId: string;
-  productName: string;
-  lenderName: string;
+/**
+ * Fetch lender products with strict validation and normalization
+ * Fails fast on invalid data to surface staff API issues immediately
+ */
+export async function fetchLenderProducts(): Promise<LenderProduct[]> {
+  console.log('[API] Fetching lender products from staff backend...');
   
-  // Product Details
-  productType: 'term_loan' | 'line_of_credit' | 'factoring' | 'merchant_cash_advance' | 'sba_loan' | 
-              'equipment_financing' | 'invoice_factoring' | 'purchase_order_financing' | 'working_capital';
-  description: string;
-  videoUrl?: string;
-  
-  // Financial Parameters
-  minAmount: number;
-  maxAmount: number;
-  minRevenue?: number;
-  
-  // Eligibility Criteria
-  geography: ('US' | 'CA' | 'INTL')[];
-  industries?: string[];
-  isActive: boolean;
-  
-  // Timestamps
-  createdAt: string;
-  updatedAt: string;
+  try {
+    const response = await fetch(`${API_BASE_URL}/public/lenders`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Staff API error: ${response.status} ${response.statusText}`);
+    }
+
+    const rawData = await response.json();
+    console.log('[API] Raw staff response received, normalizing...');
+    
+    // Use strict validation and normalization
+    const normalizedProducts = normalizeProducts(rawData);
+    
+    console.log(`✅ [API] Successfully fetched and validated ${normalizedProducts.length} lender products`);
+    return normalizedProducts;
+    
+  } catch (error) {
+    console.error('❌ [API] Error fetching lender products:', error);
+    
+    // In development, provide more detailed error info
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[API] This indicates either:');
+      console.error('1. Staff backend is unreachable');
+      console.error('2. Staff API returned invalid data structure');
+      console.error('3. Data validation failed due to schema mismatch');
+    }
+    
+    throw error;
+  }
 }
 
 /**
- * Fetch lender products from staff database ONLY
- * NO FALLBACK to ensure we always use the 43+ product dataset
+ * Fetch products filtered by category with validation
  */
-export async function fetchLenderProducts(): Promise<LenderProduct[]> {
-  const staffUrl = `${getStaffApiUrl()}/api/public/lenders`;
-  
-  console.log(`Fetching lender products from staff API: ${staffUrl}`);
-  
-  const res = await fetch(staffUrl, {
-    method: 'GET',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-    mode: 'cors',
-    credentials: 'omit'
-  });
-  
-  if (!res.ok) {
-    throw new Error(`Staff API failed: ${res.status} ${res.statusText} - Lender products unavailable`);
-  }
-  
-  const data = await res.json();
-  const products = Array.isArray(data) ? data : data.products || [];
-  
-  console.log(`Successfully fetched ${products.length} products from staff database`);
-  
-  // Fail fast if we don't get the expected minimum number of products
-  if (products.length < 40) {
-    throw new Error(`Insufficient products received: ${products.length} (expected 40+)`);
-  }
-  
-  return normalizeProducts(products);
+export async function fetchProductsByCategory(category: LenderProduct['category']): Promise<LenderProduct[]> {
+  const allProducts = await fetchLenderProducts();
+  return allProducts.filter(product => product.category === category);
 }
 
-function normalizeProducts(products: any[]): LenderProduct[] {
-  console.log(`[NORMALIZE] Starting normalization of ${products.length} products`);
-  
-  // Normalize data format between local API (snake_case) and staff API (camelCase)
-  const normalized = products.map((product: any, index: number) => {
-    if (index < 3) {
-      console.log(`[NORMALIZE] Product ${index + 1} raw:`, product);
-    }
-    
-    const normalizedProduct = {
-      id: String(product.id),
-      tenantId: product.tenantId || 'default',
-      productName: product.productName || product.product_name || product.name || 'Unknown Product',
-      lenderName: product.lenderName || product.lender_name || extractLenderFromName(product.productName || product.product_name || product.name),
-      productType: product.productType || product.product_type || product.type || 'unknown',
-      description: product.description || '',
-      videoUrl: product.videoUrl || product.video_url || null,
-      minAmount: Number(product.minAmount || product.min_amount || product.amount_min || 0),
-      maxAmount: Number(product.maxAmount || product.max_amount || product.amount_max || 0),
-      minRevenue: product.minRevenue || product.min_revenue || null,
-      geography: Array.isArray(product.geography) ? product.geography : ['US'],
-      industries: Array.isArray(product.industries) ? product.industries : [],
-      isActive: product.isActive !== undefined ? product.isActive : (product.active !== undefined ? product.active : true),
-      createdAt: product.createdAt || new Date().toISOString(),
-      updatedAt: product.updatedAt || new Date().toISOString(),
-    };
-    
-    if (index < 3) {
-      console.log(`[NORMALIZE] Product ${index + 1} normalized:`, normalizedProduct);
-    }
-    
-    return normalizedProduct;
-  });
-  
-  console.log(`[NORMALIZE] Completed normalization: ${normalized.length} products processed`);
-  return normalized;
+/**
+ * Fetch products for a specific country with validation
+ */
+export async function fetchProductsByCountry(country: LenderProduct['country']): Promise<LenderProduct[]> {
+  const allProducts = await fetchLenderProducts();
+  return allProducts.filter(product => product.country === country);
 }
 
-function extractLenderFromName(productName: string): string {
-  if (!productName) return 'Unknown Lender';
-  
-  // Extract lender from product names like "Business Loan - Capital One"
-  const parts = productName.split(' - ');
-  if (parts.length > 1) {
-    return parts[parts.length - 1].trim();
-  }
-  
-  // Look for common lender names in the product name
-  const lenderKeywords = ['Capital One', 'Wells Fargo', 'Bank of America', 'BMO', 'TD Bank', 'RBC', 'OnDeck', 'BlueVine'];
-  for (const lender of lenderKeywords) {
-    if (productName.includes(lender)) {
-      return lender;
-    }
-  }
-  
-  return 'Unknown Lender';
+/**
+ * Get available categories from validated products
+ */
+export async function getAvailableCategories(): Promise<LenderProduct['category'][]> {
+  const allProducts = await fetchLenderProducts();
+  const categories = new Set(allProducts.map(product => product.category));
+  return Array.from(categories);
 }
 
-export async function fetchLenderStats() {
-  const url = `${getStaffApiUrl()}/api/public/lenders/stats`;
-  
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-  
-  if (!res.ok) {
-    throw new Error(`Failed to fetch lender statistics: ${res.status} ${res.statusText}`);
-  }
-  
-  return res.json();
+/**
+ * Get available countries from validated products
+ */
+export async function getAvailableCountries(): Promise<LenderProduct['country'][]> {
+  const allProducts = await fetchLenderProducts();
+  const countries = new Set(allProducts.map(product => product.country));
+  return Array.from(countries);
 }
 
-export async function fetchLenderProduct(id: string): Promise<LenderProduct> {
-  const url = `${getStaffApiUrl()}/api/public/lenders/${id}`;
-  
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-  
-  if (!res.ok) {
-    throw new Error(`Failed to fetch lender product: ${res.status} ${res.statusText}`);
-  }
-  
-  return res.json();
-}
+// Export the type for backward compatibility
+export type { LenderProduct };

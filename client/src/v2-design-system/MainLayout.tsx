@@ -38,6 +38,7 @@ import UnifiedDocumentTest from "@/pages/UnifiedDocumentTest";
 import LenderCategoriesTest from "@/pages/LenderCategoriesTest";
 import DocumentRequirementsTest from "@/pages/DocumentRequirementsTest";
 import LenderProductMatcher from "@/pages/LenderProductMatcher";
+import StrictValidationTest from "@/pages/StrictValidationTest";
 
 
 /**
@@ -68,6 +69,7 @@ export function MainLayout() {
       <Route path="/lender-categories" component={LenderCategoriesTest} />
       <Route path="/document-requirements-test" component={DocumentRequirementsTest} />
       <Route path="/lender-product-matcher" component={LenderProductMatcher} />
+      <Route path="/strict-validation-test" component={StrictValidationTest} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
