@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, ArrowRight, Target, TrendingUp, Shield, Lightbulb, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { AlertCircle, ArrowRight, Target, TrendingUp, Shield, Lightbulb, Loader2, CheckCircle } from 'lucide-react';
 import { useComprehensiveForm } from '@/context/ComprehensiveFormContext';
-import { useProductCategories } from '@/hooks/useProductCategories';
-import { ProductCategoryCard } from '@/components/ProductCategoryCard';
+import { useStaffRecommendations, convertStep1ToRecommendationData, convertRevenueToMonthly } from '@/hooks/useStaffRecommendations';
 import { generateIndustryInsights } from '@/lib/industryInsights';
-import { RecommendationFormData } from '@/lib/recommendation';
 
 interface Step2Props {
   onNext: () => void;
@@ -17,31 +16,25 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
   const { state, updateFormData } = useComprehensiveForm();
   const [selectedProduct, setSelectedProduct] = useState<string>("");
 
-  // Create form data for recommendation filtering
-  const formData: RecommendationFormData = {
-    headquarters: state.formData.headquarters || 'US',
-    fundingAmount: state.formData.fundingAmount || 0,
-    lookingFor: state.formData.lookingFor || 'capital',
-    accountsReceivableBalance: state.formData.accountsReceivableBalance || 0,
-    fundsPurpose: state.formData.fundsPurpose || '',
-  };
+  // Convert Step 1 data to recommendation format
+  const recommendationData = convertStep1ToRecommendationData(state.formData);
+  const monthlyRevenue = convertRevenueToMonthly(state.formData.lastYearRevenue || '');
 
-  // Get product categories based on filtering
-  const { data: productCategories = [], isLoading, error } = useProductCategories(formData);
+  // Get staff database recommendations using your business rules
+  const { recommendations, isLoading, error } = useStaffRecommendations(recommendationData, monthlyRevenue);
   
   // Get industry insights
   const industryInsights = generateIndustryInsights(state.formData.industry || '');
 
   const handleContinue = () => {
-    if (selectedProduct) {
-      // Find the selected category and its first product for basic data
-      const selectedCategory = productCategories.find(cat => cat.category === selectedProduct);
-      if (selectedCategory && selectedCategory.products.length > 0) {
-        const firstProduct = selectedCategory.products[0];
+    if (selectedProduct && recommendations) {
+      // Find the selected product from recommendations
+      const selectedStaffProduct = recommendations.allFilteredProducts.find(p => p.id === selectedProduct);
+      if (selectedStaffProduct) {
         updateFormData({
-          selectedProductId: firstProduct.id,
-          selectedProductName: firstProduct.product_name,
-          selectedLenderName: firstProduct.lender_name,
+          selectedProductId: selectedStaffProduct.id,
+          selectedProductName: selectedStaffProduct.productName,
+          selectedLenderName: selectedStaffProduct.lenderName,
         });
       }
       onNext();
