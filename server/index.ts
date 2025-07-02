@@ -6,6 +6,7 @@ import lendersRouter from "./routes/lenders";
 import localLendersRouter from "./routes/localLenders";
 import loanProductCategoriesRouter from "./routes/loanProductCategories";
 import documentRequirementsRouter from "./routes/documentRequirements";
+import dataIngestionRouter from "./routes/dataIngestion";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -85,6 +86,7 @@ app.use((req, res, next) => {
   app.use('/api/local/lenders', localLendersRouter);
   app.use('/api/loan-products', loanProductCategoriesRouter);
   app.use('/api/loan-products', documentRequirementsRouter);
+  app.use('/api/admin', dataIngestionRouter);
 
   // System status page for authentication troubleshooting
   app.get('/system-status', (req, res) => {
