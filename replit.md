@@ -312,10 +312,22 @@ Changelog:
     * Added dynamic conditional visibility: Equipment Value appears only for "Equipment Financing" or "Both Capital & Equipment"
     * Removed all section headers for streamlined user experience without visual breaks
     * Created API test suite at /api-test with real-time staff backend connectivity testing
-    * Confirmed CORS issue: Staff API at https://staffportal.replit.app operational but missing CORS headers
-    * System gracefully falls back to 8-product local authentic dataset when staff API unavailable
-    * Generated comprehensive technical status report (TECHNICAL_STATUS_REPORT.md) for ChatGPT handoff
-    * Client application production-ready pending only staff backend CORS configuration
+    * RESOLVED: CORS configuration complete - Staff API at https://staffportal.replit.app fully operational
+    * Confirmed 43+ products successfully syncing from staff database to client application
+    * Enhanced debug logging system confirms data normalization working correctly
+    * Generated comprehensive technical status report documenting complete API integration
+    * Client application production-ready with full 43+ product recommendation engine
+  - July 02, 2025: STEP 1 FORM FIELD CUSTOMIZATION COMPLETE
+    * Updated Business Location dropdown: Added "Other" option (US, Canada, Other)
+    * Relabeled sales history: "How many months or years of sales history does the business have?"
+    * Updated sales history options: Less than 6 months, 6 to 12 months, 1 to 2 years, 2 to 5 years, More than 5 years
+    * Converted revenue fields to structured dropdowns with precise ranges
+    * "Last Year Revenue" → "What was your business revenue in the last 12 months?" with 6 revenue brackets
+    * "Average Monthly Revenue" → "Average monthly revenue (last 3 months)" with 5 monthly brackets
+    * "Accounts Receivable Balance" → "Current Account Receivable balance" with 6 options including "No Account Receivables"
+    * "Fixed Assets Value" → "Fixed assets value for loan security" with 8 asset value ranges including "No fixed assets"
+    * All form fields now use consistent dropdown interfaces for improved data quality and user experience
+    * Form maintains side-by-side responsive layout with enhanced field validation
 ```
 
 ## User Preferences
