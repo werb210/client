@@ -1,0 +1,1163 @@
+# Steps 3 & 4 Form Fields Complete Implementation Guide
+
+This guide provides exact specifications for building Steps 3 and 4 form fields in any Replit application, matching the Boreal Financial implementation with all questions, options, formatting rules, and layouts.
+
+## Overview
+
+**Step 3: Business Details** - 12 required fields with regional formatting
+**Step 4: Applicant Information** - Optional fields with conditional partner information
+
+## Technical Stack Requirements
+
+```bash
+# Dependencies
+npm install @radix-ui/react-select @radix-ui/react-popover @radix-ui/react-calendar
+npm install react-hook-form @hookform/resolvers zod
+npm install date-fns lucide-react
+```
+
+## Complete Form Schema
+
+```typescript
+// shared/schema.ts
+import { z } from 'zod';
+
+export const applicationFormSchema = z.object({
+  // Step 3: Business Details (Required)
+  operatingName: z.string().min(1, "Operating name is required"),
+  legalName: z.string().min(1, "Legal name is required"),
+  businessStreetAddress: z.string().min(1, "Street address is required"),
+  businessCity: z.string().min(1, "City is required"),
+  businessState: z.string().min(1, "State/Province is required"),
+  businessPostalCode: z.string().min(1, "Postal/ZIP code is required"),
+  businessPhone: z.string().min(1, "Phone number is required"),
+  businessWebsite: z.string().optional(),
+  businessStructure: z.string().min(1, "Business structure is required"),
+  businessStartDate: z.string().min(1, "Start date is required"),
+  employeeCount: z.string().min(1, "Employee count is required"),
+  estimatedYearlyRevenue: z.string().min(1, "Estimated revenue is required"),
+
+  // Step 4: Applicant Information (Optional)
+  applicantName: z.string().optional(),
+  applicantEmail: z.string().email().optional().or(z.literal("")),
+  titleInBusiness: z.string().optional(),
+  percentageOwnership: z.string().optional(),
+  mobilePhone: z.string().optional(),
+  applicantBirthdate: z.string().optional(),
+  applicantSSN: z.string().optional(),
+  applicantStreetAddress: z.string().optional(),
+  applicantCity: z.string().optional(),
+  applicantState: z.string().optional(),
+  applicantPostalCode: z.string().optional(),
+
+  // Conditional Partner Information
+  partnerName: z.string().optional(),
+  partnerEmail: z.string().email().optional().or(z.literal("")),
+  partnerPhone: z.string().optional(),
+  partnerOwnership: z.string().optional(),
+  partnerTitle: z.string().optional(),
+  partnerSSN: z.string().optional(),
+});
+```
+
+## Regional Configuration System
+
+```typescript
+// Regional formatting utilities
+const formatPhoneNumber = (value: string, isCanadian: boolean): string => {
+  if (!value) return value;
+  const phoneNumber = value.replace(/[^\d]/g, '');
+
+  // Both US and Canada use (XXX) XXX-XXXX format
+  if (phoneNumber.length < 4) {
+    return phoneNumber;
+  } else if (phoneNumber.length < 7) {
+    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+  } else if (phoneNumber.length <= 10) {
+    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6)}`;
+  }
+  return phoneNumber.slice(0, 10);
+};
+
+const formatSSN = (value: string, isCanadian: boolean): string => {
+  if (!value) return value;
+  const ssn = value.replace(/[^\d]/g, '');
+
+  if (isCanadian) {
+    // Canadian SIN format: XXX XXX XXX
+    if (ssn.length < 4) return ssn;
+    else if (ssn.length < 7) return `${ssn.slice(0, 3)} ${ssn.slice(3)}`;
+    else if (ssn.length <= 9) return `${ssn.slice(0, 3)} ${ssn.slice(3, 6)} ${ssn.slice(6)}`;
+  } else {
+    // US SSN format: XXX-XX-XXXX
+    if (ssn.length < 4) return ssn;
+    else if (ssn.length < 6) return `${ssn.slice(0, 3)}-${ssn.slice(3)}`;
+    else if (ssn.length <= 9) return `${ssn.slice(0, 3)}-${ssn.slice(3, 5)}-${ssn.slice(5)}`;
+  }
+  return ssn.slice(0, 9);
+};
+
+const formatPostalCode = (value: string, isCanadian: boolean): string => {
+  if (!value) return value;
+
+  if (isCanadian) {
+    // Canadian postal code format: A1A 1A1
+    const postal = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    if (postal.length <= 3) return postal;
+    else if (postal.length <= 6) return `${postal.slice(0, 3)} ${postal.slice(3)}`;
+    return `${postal.slice(0, 3)} ${postal.slice(3, 6)}`;
+  } else {
+    // US ZIP code format: 12345 or 12345-6789
+    const zip = value.replace(/[^\d]/g, '');
+    if (zip.length <= 5) return zip;
+    else if (zip.length <= 9) return `${zip.slice(0, 5)}-${zip.slice(5)}`;
+    return `${zip.slice(0, 5)}-${zip.slice(5, 9)}`;
+  }
+};
+
+const getRegionalLabels = (isCanadian: boolean) => {
+  if (isCanadian) {
+    return {
+      sin: "SIN",
+      postalCode: "Postal Code",
+      postalCodePlaceholder: "Enter postal code (A1A 1A1)",
+      stateProvince: "Province",
+    };
+  } else {
+    return {
+      sin: "SSN",
+      postalCode: "ZIP Code",
+      postalCodePlaceholder: "Enter ZIP code (12345)",
+      stateProvince: "State",
+    };
+  }
+};
+```
+
+## State/Province Options
+
+```typescript
+const getStateProvinceOptions = (isCanadian: boolean) => {
+  if (isCanadian) {
+    return [
+      { value: "AB", label: "Alberta" },
+      { value: "BC", label: "British Columbia" },
+      { value: "MB", label: "Manitoba" },
+      { value: "NB", label: "New Brunswick" },
+      { value: "NL", label: "Newfoundland and Labrador" },
+      { value: "NS", label: "Nova Scotia" },
+      { value: "ON", label: "Ontario" },
+      { value: "PE", label: "Prince Edward Island" },
+      { value: "QC", label: "Quebec" },
+      { value: "SK", label: "Saskatchewan" },
+      { value: "NT", label: "Northwest Territories" },
+      { value: "NU", label: "Nunavut" },
+      { value: "YT", label: "Yukon" },
+    ];
+  } else {
+    return [
+      { value: "AL", label: "Alabama" },
+      { value: "AK", label: "Alaska" },
+      { value: "AZ", label: "Arizona" },
+      { value: "AR", label: "Arkansas" },
+      { value: "CA", label: "California" },
+      { value: "CO", label: "Colorado" },
+      { value: "CT", label: "Connecticut" },
+      { value: "DE", label: "Delaware" },
+      { value: "FL", label: "Florida" },
+      { value: "GA", label: "Georgia" },
+      { value: "HI", label: "Hawaii" },
+      { value: "ID", label: "Idaho" },
+      { value: "IL", label: "Illinois" },
+      { value: "IN", label: "Indiana" },
+      { value: "IA", label: "Iowa" },
+      { value: "KS", label: "Kansas" },
+      { value: "KY", label: "Kentucky" },
+      { value: "LA", label: "Louisiana" },
+      { value: "ME", label: "Maine" },
+      { value: "MD", label: "Maryland" },
+      { value: "MA", label: "Massachusetts" },
+      { value: "MI", label: "Michigan" },
+      { value: "MN", label: "Minnesota" },
+      { value: "MS", label: "Mississippi" },
+      { value: "MO", label: "Missouri" },
+      { value: "MT", label: "Montana" },
+      { value: "NE", label: "Nebraska" },
+      { value: "NV", label: "Nevada" },
+      { value: "NH", label: "New Hampshire" },
+      { value: "NJ", label: "New Jersey" },
+      { value: "NM", label: "New Mexico" },
+      { value: "NY", label: "New York" },
+      { value: "NC", label: "North Carolina" },
+      { value: "ND", label: "North Dakota" },
+      { value: "OH", label: "Ohio" },
+      { value: "OK", label: "Oklahoma" },
+      { value: "OR", label: "Oregon" },
+      { value: "PA", label: "Pennsylvania" },
+      { value: "RI", label: "Rhode Island" },
+      { value: "SC", label: "South Carolina" },
+      { value: "SD", label: "South Dakota" },
+      { value: "TN", label: "Tennessee" },
+      { value: "TX", label: "Texas" },
+      { value: "UT", label: "Utah" },
+      { value: "VT", label: "Vermont" },
+      { value: "VA", label: "Virginia" },
+      { value: "WA", label: "Washington" },
+      { value: "WV", label: "West Virginia" },
+      { value: "WI", label: "Wisconsin" },
+      { value: "WY", label: "Wyoming" },
+      { value: "DC", label: "District of Columbia" },
+    ];
+  }
+};
+
+const titleOptions = [
+  { value: "owner_operator", label: "Owner/Operator" },
+  { value: "president", label: "President" },
+  { value: "partner_shareholder", label: "Partner/Shareholder" },
+  { value: "executive", label: "Executive" },
+  { value: "financial_officer", label: "Financial Officer" },
+];
+```
+
+## Step 3: Business Details Component
+
+```tsx
+// Step3BusinessDetails.tsx
+import React from 'react';
+import { useFormContext } from 'react-hook-form';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+
+interface Step3Props {
+  onNext: () => void;
+  onBack: () => void;
+  isCanadian: boolean;
+}
+
+export function Step3BusinessDetails({ onNext, onBack, isCanadian }: Step3Props) {
+  const form = useFormContext();
+  const regionalLabels = getRegionalLabels(isCanadian);
+  const stateProvinceOptions = getStateProvinceOptions(isCanadian);
+
+  // Currency formatting for revenue field
+  const formatCurrency = (value: string): string => {
+    const numericValue = value.replace(/[^\d]/g, '');
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  // Validation for Step 3 - all fields required except website
+  const canContinue = () => {
+    const values = form.getValues();
+    const requiredFields = [
+      'operatingName', 'legalName', 'businessStreetAddress', 'businessCity',
+      'businessState', 'businessPostalCode', 'businessPhone', 'businessStructure',
+      'businessStartDate', 'employeeCount', 'estimatedYearlyRevenue'
+    ];
+    return requiredFields.every(field => values[field]?.trim());
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Business Details</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Business Operating Name - Required */}
+          <FormField
+            control={form.control}
+            name="operatingName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Operating Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter business operating name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Business Legal Name - Required */}
+          <FormField
+            control={form.control}
+            name="legalName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Legal Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter business legal name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Business Street Address - Required */}
+          <FormField
+            control={form.control}
+            name="businessStreetAddress"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter business street address" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Business City - Required */}
+          <FormField
+            control={form.control}
+            name="businessCity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business City</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter business city" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Business State/Province - Required Dropdown */}
+          <FormField
+            control={form.control}
+            name="businessState"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business {regionalLabels.stateProvince}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder={`Select business ${regionalLabels.stateProvince.toLowerCase()}`} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {stateProvinceOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Business Postal/ZIP Code - Required with Formatting */}
+          <FormField
+            control={form.control}
+            name="businessPostalCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business {regionalLabels.postalCode}</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder={regionalLabels.postalCodePlaceholder} 
+                    {...field}
+                    onChange={(e) => field.onChange(formatPostalCode(e.target.value, isCanadian))}
+                    maxLength={isCanadian ? 7 : 10}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Business Phone - Required with Formatting */}
+          <FormField
+            control={form.control}
+            name="businessPhone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Phone</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="Enter business phone" 
+                    {...field}
+                    onChange={(e) => field.onChange(formatPhoneNumber(e.target.value, isCanadian))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Business Website - Optional */}
+          <FormField
+            control={form.control}
+            name="businessWebsite"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Website (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter website URL" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Business Structure - Required Dropdown */}
+          <FormField
+            control={form.control}
+            name="businessStructure"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Structure</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select business structure" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="llc">LLC</SelectItem>
+                    <SelectItem value="corporation">Corporation</SelectItem>
+                    <SelectItem value="partnership">Partnership</SelectItem>
+                    <SelectItem value="sole_proprietorship">Sole Proprietorship</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Business Start Date - Required Year/Month Selectors */}
+          <FormField
+            control={form.control}
+            name="businessStartDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Start Date</FormLabel>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <FormLabel className="text-sm text-gray-600">Year</FormLabel>
+                    <Select 
+                      onValueChange={(year) => {
+                        const currentMonth = field.value ? new Date(field.value).getMonth() + 1 : 1;
+                        const newDate = new Date(parseInt(year), currentMonth - 1, 1);
+                        field.onChange(newDate.toISOString());
+                      }}
+                      value={field.value ? new Date(field.value).getFullYear().toString() : ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Year" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Array.from({ length: new Date().getFullYear() - 1950 + 1 }, (_, i) => {
+                          const year = new Date().getFullYear() - i;
+                          return (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <FormLabel className="text-sm text-gray-600">Month</FormLabel>
+                    <Select 
+                      onValueChange={(month) => {
+                        const currentYear = field.value ? new Date(field.value).getFullYear() : new Date().getFullYear();
+                        const newDate = new Date(currentYear, parseInt(month) - 1, 1);
+                        field.onChange(newDate.toISOString());
+                      }}
+                      value={field.value ? (new Date(field.value).getMonth() + 1).toString() : ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Month" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {[
+                          { value: "1", label: "January" },
+                          { value: "2", label: "February" },
+                          { value: "3", label: "March" },
+                          { value: "4", label: "April" },
+                          { value: "5", label: "May" },
+                          { value: "6", label: "June" },
+                          { value: "7", label: "July" },
+                          { value: "8", label: "August" },
+                          { value: "9", label: "September" },
+                          { value: "10", label: "October" },
+                          { value: "11", label: "November" },
+                          { value: "12", label: "December" }
+                        ].map((month) => (
+                          <SelectItem key={month.value} value={month.value}>
+                            {month.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Employee Count - Required Dropdown */}
+          <FormField
+            control={form.control}
+            name="employeeCount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Employee Count</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select employee count" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="1_to_5">1-5 employees</SelectItem>
+                    <SelectItem value="6_to_10">6-10 employees</SelectItem>
+                    <SelectItem value="11_to_25">11-25 employees</SelectItem>
+                    <SelectItem value="26_to_50">26-50 employees</SelectItem>
+                    <SelectItem value="51_to_100">51-100 employees</SelectItem>
+                    <SelectItem value="over_100">Over 100 employees</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* This Year's Estimated Revenue - Required with Currency Formatting */}
+          <FormField
+            control={form.control}
+            name="estimatedYearlyRevenue"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>This Year's Estimated Revenue</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="Enter estimated revenue (e.g., 750,000)" 
+                    {...field}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^\d]/g, '');
+                      const formatted = formatCurrency(value);
+                      field.onChange(formatted);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between">
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={onBack}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <Button 
+            type="button" 
+            onClick={onNext}
+            disabled={!canContinue()}
+            className={`${!canContinue() ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            Continue
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+## Step 4: Applicant Information Component
+
+```tsx
+// Step4ApplicantInfo.tsx
+import React from 'react';
+import { useFormContext } from 'react-hook-form';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+
+interface Step4Props {
+  onNext: () => void;
+  onBack: () => void;
+  isCanadian: boolean;
+}
+
+export function Step4ApplicantInfo({ onNext, onBack, isCanadian }: Step4Props) {
+  const form = useFormContext();
+  const regionalLabels = getRegionalLabels(isCanadian);
+  const stateProvinceOptions = getStateProvinceOptions(isCanadian);
+  const titleOptions = getTitleOptions();
+
+  // Check if partner information should be shown
+  const showPartnerInfo = () => {
+    const ownership = form.watch("percentageOwnership");
+    return ownership && parseInt(ownership || "0") < 100;
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Applicant Information</CardTitle>
+        <p className="text-sm text-gray-600">All fields are optional but may help with processing</p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Main Applicant Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Applicant Name */}
+          <FormField
+            control={form.control}
+            name="applicantName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Applicant Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Applicant Email */}
+          <FormField
+            control={form.control}
+            name="applicantEmail"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Applicant Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="Enter your email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Title in Business - Dropdown */}
+          <FormField
+            control={form.control}
+            name="titleInBusiness"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title in Business</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select your title" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {titleOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Percentage Ownership */}
+          <FormField
+            control={form.control}
+            name="percentageOwnership"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Percentage Ownership</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter ownership percentage" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Mobile Phone with Formatting */}
+          <FormField
+            control={form.control}
+            name="mobilePhone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mobile Phone</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="Enter mobile phone" 
+                    {...field}
+                    onChange={(e) => field.onChange(formatPhoneNumber(e.target.value, isCanadian))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Date of Birth - Calendar Picker */}
+          <FormField
+            control={form.control}
+            name="applicantBirthdate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date of Birth</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={`w-full pl-3 text-left font-normal ${
+                          !field.value && "text-muted-foreground"
+                        }`}
+                      >
+                        {field.value ? (
+                          format(new Date(field.value), "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value ? new Date(field.value) : undefined}
+                      onSelect={(date) => field.onChange(date?.toISOString())}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* SSN/SIN with Regional Formatting */}
+          <FormField
+            control={form.control}
+            name="applicantSSN"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{regionalLabels.sin}</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder={`Enter ${regionalLabels.sin}`} 
+                    {...field}
+                    onChange={(e) => field.onChange(formatSSN(e.target.value || "", isCanadian))}
+                    maxLength={11}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Applicant Address Section */}
+        <div className="border-t pt-4 mt-6">
+          <h4 className="text-sm font-medium text-gray-700 mb-4">Applicant Address (Optional)</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Street Address */}
+            <FormField
+              control={form.control}
+              name="applicantStreetAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Street Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter street address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* City */}
+            <FormField
+              control={form.control}
+              name="applicantCity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter city" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* State/Province */}
+            <FormField
+              control={form.control}
+              name="applicantState"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{regionalLabels.stateProvince}</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={`Select ${regionalLabels.stateProvince.toLowerCase()}`} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {stateProvinceOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Postal/ZIP Code */}
+            <FormField
+              control={form.control}
+              name="applicantPostalCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{regionalLabels.postalCode}</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder={regionalLabels.postalCodePlaceholder} 
+                      {...field}
+                      onChange={(e) => field.onChange(formatPostalCode(e.target.value, isCanadian))}
+                      maxLength={isCanadian ? 7 : 10}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Conditional Partner Information */}
+        {showPartnerInfo() && (
+          <div className="border-t pt-4 mt-6">
+            <h4 className="text-sm font-medium text-gray-700 mb-4">Partner Information (Additional Owner)</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Partner Name */}
+              <FormField
+                control={form.control}
+                name="partnerName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partner Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter partner's name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Partner Email */}
+              <FormField
+                control={form.control}
+                name="partnerEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partner Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="Enter partner's email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Partner Phone */}
+              <FormField
+                control={form.control}
+                name="partnerPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partner Phone</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter partner's phone" 
+                        {...field}
+                        onChange={(e) => field.onChange(formatPhoneNumber(e.target.value, isCanadian))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Partner Ownership % */}
+              <FormField
+                control={form.control}
+                name="partnerOwnership"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partner Ownership %</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter partner's ownership %" 
+                        {...field}
+                        type="number"
+                        min="0"
+                        max="100"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Partner Title */}
+              <FormField
+                control={form.control}
+                name="partnerTitle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partner Title</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select partner's title" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {titleOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Partner SSN/SIN */}
+              <FormField
+                control={form.control}
+                name="partnerSSN"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partner {regionalLabels.sin}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder={`Enter partner's ${regionalLabels.sin}`} 
+                        {...field}
+                        onChange={(e) => field.onChange(formatSSN(e.target.value || "", isCanadian))}
+                        maxLength={11}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between">
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={onBack}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <Button 
+            type="button" 
+            onClick={onNext}
+          >
+            Continue
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+## Complete Implementation Example
+
+```tsx
+// FormSteps.tsx - Complete multi-step form
+import React, { useState } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { applicationFormSchema } from '@/shared/schema';
+import { Step3BusinessDetails } from './Step3BusinessDetails';
+import { Step4ApplicantInfo } from './Step4ApplicantInfo';
+
+export function MultiStepForm() {
+  const [currentStep, setCurrentStep] = useState(0);
+  
+  const form = useForm({
+    resolver: zodResolver(applicationFormSchema),
+    defaultValues: {
+      // Initialize all fields
+      operatingName: '',
+      legalName: '',
+      businessStreetAddress: '',
+      businessCity: '',
+      businessState: '',
+      businessPostalCode: '',
+      businessPhone: '',
+      businessWebsite: '',
+      businessStructure: '',
+      businessStartDate: '',
+      employeeCount: '',
+      estimatedYearlyRevenue: '',
+      applicantName: '',
+      applicantEmail: '',
+      titleInBusiness: '',
+      percentageOwnership: '',
+      mobilePhone: '',
+      applicantBirthdate: '',
+      applicantSSN: '',
+      applicantStreetAddress: '',
+      applicantCity: '',
+      applicantState: '',
+      applicantPostalCode: '',
+      partnerName: '',
+      partnerEmail: '',
+      partnerPhone: '',
+      partnerOwnership: '',
+      partnerTitle: '',
+      partnerSSN: '',
+    },
+  });
+
+  // Determine if Canadian based on headquarters selection
+  const isCanadian = form.watch("headquarters") === "canada";
+
+  const handleNext = () => setCurrentStep(prev => prev + 1);
+  const handleBack = () => setCurrentStep(prev => prev - 1);
+
+  return (
+    <FormProvider {...form}>
+      <form className="space-y-6">
+        {currentStep === 0 && (
+          <Step3BusinessDetails 
+            onNext={handleNext}
+            onBack={handleBack}
+            isCanadian={isCanadian}
+          />
+        )}
+        
+        {currentStep === 1 && (
+          <Step4ApplicantInfo 
+            onNext={handleNext}
+            onBack={handleBack}
+            isCanadian={isCanadian}
+          />
+        )}
+      </form>
+    </FormProvider>
+  );
+}
+```
+
+## Styling Specifications
+
+```css
+/* Additional CSS for consistent styling */
+.form-field-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .form-field-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Optional field styling */
+.optional-section {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+  margin-top: 1.5rem;
+}
+
+.section-header {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+/* Partner information conditional display */
+.partner-section {
+  display: none;
+}
+
+.partner-section.show {
+  display: block;
+}
+```
+
+## Key Features Summary
+
+### Step 3: Business Details
+- **12 fields total**: 11 required, 1 optional (website)
+- **Regional formatting**: Phone, postal codes, state/province dropdowns
+- **Currency formatting**: Automatic comma insertion for revenue
+- **Date selector**: Year/month dropdowns for business start date
+- **Business structure dropdown**: 5 predefined options
+- **Employee count dropdown**: 6 predefined ranges
+
+### Step 4: Applicant Information
+- **All fields optional**: Helps with processing but not required
+- **Calendar picker**: Date of birth selection
+- **SSN/SIN formatting**: Regional formatting (US: XXX-XX-XXXX, Canada: XXX XXX XXX)
+- **Address section**: Separate grouping for applicant address
+- **Conditional partner info**: Appears when ownership < 100%
+- **Partner fields**: Name, email, phone, ownership %, title, SSN/SIN
+
+### Regional Adaptations
+- **Canada**: SIN, Postal Code (A1A 1A1), Provinces
+- **United States**: SSN, ZIP Code (12345), States
+- **Phone formatting**: (XXX) XXX-XXXX for both regions
+- **Dynamic labels**: Automatically switch based on headquarters selection
+
+This guide provides everything needed to recreate the exact Steps 3 & 4 form experience in any Replit application with complete field specifications, formatting rules, and layout matching.
