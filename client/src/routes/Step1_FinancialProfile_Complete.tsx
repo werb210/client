@@ -160,15 +160,12 @@ export default function Step1FinancialProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8" style={{ backgroundColor: '#F7F9FC' }}>
       <div className="max-w-6xl mx-auto px-4">
         <Card className="shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-teal-600 to-teal-700 text-white">
-            <CardTitle className="text-2xl font-bold">Step 1: Comprehensive Financial Profile</CardTitle>
-            <p className="text-teal-100">Provide detailed information about your business and funding needs</p>
-            <div className="mt-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-md text-sm inline-block">
-              🧪 Testing Mode: All fields are optional for development testing
-            </div>
+          <CardHeader className="text-white" style={{ background: 'linear-gradient(to right, #003D7A, #002B5C)' }}>
+            <CardTitle className="text-2xl font-bold">Step 1: Business Basics & Funding Request</CardTitle>
+            <p style={{ color: '#B8D4F0' }}>Provide essential information about your business and funding needs</p>
           </CardHeader>
           <CardContent className="p-8">
             <Form {...form}>
@@ -450,7 +447,13 @@ export default function Step1FinancialProfile() {
                 <div className="flex justify-end pt-6 border-t border-gray-200">
                   <Button
                     type="submit"
-                    className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 h-auto"
+                    className="text-white px-8 py-3 h-auto font-semibold"
+                    style={{ 
+                      background: '#FF8C00',
+                      transition: 'all 0.2s ease-in-out'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#E67E00'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#FF8C00'}
                   >
                     Continue to Recommendations
                     <ArrowRight className="w-4 h-4 ml-2" />
