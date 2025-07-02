@@ -90,11 +90,24 @@ export default function ApiDiagnostic() {
       });
 
       if (directResponse.ok && Array.isArray(directData)) {
+        const productCount = directData.length;
+        const isTargetMet = productCount === 42;
+        
+        // Log the critical verification to console
+        console.log(`🎯 CRITICAL VERIFICATION: products.length === ${productCount}`);
+        console.log(`✅ Expected: 42, Actual: ${productCount}`);
+        console.log(`📋 Products:`, directData);
+        
         addResult({
-          test: 'Product Count',
-          status: 'success',
-          message: `Found ${directData.length} products`,
-          data: { count: directData.length, sample: directData[0] }
+          test: `Product Count Verification - ${isTargetMet ? 'SUCCESS: 42 Products!' : 'Partial Data'}`,
+          status: isTargetMet ? 'success' : productCount > 0 ? 'info' : 'error',
+          message: `Found ${productCount} products ${isTargetMet ? '✅ TARGET MET!' : productCount > 0 ? '(Partial)' : '❌ Empty'}`,
+          data: { 
+            count: productCount, 
+            expected: 42,
+            targetMet: isTargetMet,
+            sample: directData[0] 
+          }
         });
       }
 
