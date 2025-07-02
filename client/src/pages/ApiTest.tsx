@@ -1,175 +1,109 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { fetchLenderProducts } from '@/api/lenderProducts';
 
 export default function ApiTest() {
-  const [email, setEmail] = useState('todd@werboweski.com');
-  const [result, setResult] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [apiSource, setApiSource] = useState<string>('');
 
-  const testDirectFetch = async () => {
-    setIsLoading(true);
-    setResult(null);
-
+  const testApi = async () => {
+    setLoading(true);
+    setError(null);
+    setProducts([]);
+    setApiSource('');
+    
     try {
-      console.log('Testing direct fetch to staff backend...');
-      console.log('API Base URL:', import.meta.env.VITE_API_BASE_URL);
-      
-      const url = `${import.meta.env.VITE_API_BASE_URL}/auth/request-reset`;
-      console.log('Full URL:', url);
-
-      const response = await fetch(url, {
-        method: 'POST',
-        credentials: 'include',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      const contentType = response.headers.get('content-type');
-      console.log('Content-Type:', contentType);
-
-      let responseData;
-      if (contentType?.includes('application/json')) {
-        responseData = await response.json();
-        console.log('JSON response:', responseData);
-      } else {
-        responseData = await response.text();
-        console.log('Text response preview:', responseData.substring(0, 500));
-      }
-
-      setResult({
-        status: response.status,
-        headers: Object.fromEntries(response.headers.entries()),
-        contentType,
-        data: responseData,
-        url,
-      });
-
-    } catch (error) {
-      console.error('API Test error:', error);
-      setResult({
-        error: error.message,
-        url: `${import.meta.env.VITE_API_BASE_URL}/auth/request-reset`,
-      });
+      console.log('Testing lender products API...');
+      const result = await fetchLenderProducts();
+      setProducts(result);
+      setApiSource(result.length > 8 ? 'Staff API (43+ products)' : 'Local Fallback (8 products)');
+      console.log(`API Test Success: ${result.length} products loaded`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      console.error('API Test Failed:', err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const testHealthEndpoint = async () => {
-    setIsLoading(true);
-    setResult(null);
-
-    try {
-      const url = `${import.meta.env.VITE_API_BASE_URL}/health`;
-      console.log('Testing health endpoint:', url);
-
-      const response = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
-        mode: 'cors',
-      });
-
-      const contentType = response.headers.get('content-type');
-      let responseData;
-      
-      if (contentType?.includes('application/json')) {
-        responseData = await response.json();
-      } else {
-        responseData = await response.text();
-      }
-
-      setResult({
-        endpoint: 'health',
-        status: response.status,
-        headers: Object.fromEntries(response.headers.entries()),
-        contentType,
-        data: responseData,
-        url,
-      });
-
-    } catch (error) {
-      console.error('Health endpoint error:', error);
-      setResult({
-        endpoint: 'health',
-        error: error.message,
-        url: `${import.meta.env.VITE_API_BASE_URL}/health`,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    testApi();
+  }, []);
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center text-teal-700">
-            API Connection Test
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">Environment</h3>
-            <div className="text-sm space-y-1">
-              <div><strong>API Base URL:</strong> {import.meta.env.VITE_API_BASE_URL || 'NOT SET'}</div>
-              <div><strong>Mode:</strong> {import.meta.env.MODE}</div>
-              <div><strong>Dev:</strong> {import.meta.env.DEV ? 'Yes' : 'No'}</div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-6xl mx-auto px-4">
+        <Card className="shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-teal-600 to-teal-700 text-white">
+            <CardTitle className="text-2xl font-bold">Lender Products API Test</CardTitle>
+            <p className="text-teal-100">Testing connection to staff backend and product data</p>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <Button 
+                  onClick={testApi} 
+                  disabled={loading}
+                  className="bg-teal-600 hover:bg-teal-700"
+                >
+                  {loading ? 'Testing...' : 'Test API Connection'}
+                </Button>
+                
+                {apiSource && (
+                  <div className="text-sm text-gray-600">
+                    <strong>Source:</strong> {apiSource}
+                  </div>
+                )}
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h3 className="text-red-800 font-semibold">API Error</h3>
+                  <p className="text-red-600">{error}</p>
+                </div>
+              )}
+
+              {products.length > 0 && (
+                <div className="space-y-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h3 className="text-green-800 font-semibold">
+                      Success: {products.length} Products Loaded
+                    </h3>
+                    <p className="text-green-600">
+                      {products.length > 8 
+                        ? '🎉 Staff API connected! Full product dataset available.'
+                        : '⚠️ Using local fallback. Staff API may need CORS configuration.'
+                      }
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {products.slice(0, 6).map((product) => (
+                      <div key={product.id} className="border rounded-lg p-4 bg-white">
+                        <h4 className="font-semibold text-gray-900">{product.productName}</h4>
+                        <p className="text-sm text-gray-600">{product.lenderName}</p>
+                        <p className="text-sm text-teal-600">{product.productType}</p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          ${product.minAmount?.toLocaleString()} - ${product.maxAmount?.toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {products.length > 6 && (
+                    <p className="text-center text-gray-500">
+                      ...and {products.length - 6} more products
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="email">Test Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="todd@werboweski.com"
-            />
-          </div>
-
-          <div className="flex gap-4">
-            <Button 
-              onClick={testHealthEndpoint} 
-              disabled={isLoading}
-              variant="outline"
-              className="flex-1"
-            >
-              {isLoading ? 'Testing...' : 'Test Health Endpoint'}
-            </Button>
-            
-            <Button 
-              onClick={testDirectFetch} 
-              disabled={isLoading}
-              className="flex-1 bg-teal-600 hover:bg-teal-700"
-            >
-              {isLoading ? 'Testing...' : 'Test Password Reset'}
-            </Button>
-          </div>
-
-          {result && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="text-lg">Test Results</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto">
-                  {JSON.stringify(result, null, 2)}
-                </pre>
-              </CardContent>
-            </Card>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

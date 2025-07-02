@@ -22,6 +22,7 @@ import LenderTest from "@/pages/LenderTest";
 import LendersByCategory from "@/pages/LendersByCategory";
 import StaffApiTest from "@/pages/StaffApiTest";
 import CorsTest from "@/pages/CorsTest";
+import ApiTest from "@/pages/ApiTest";
 
 
 /**
@@ -39,6 +40,7 @@ export function MainLayout() {
       <Route path="/lenders-by-category" component={LendersByCategory} />
       <Route path="/staff-api-test" component={StaffApiTest} />
       <Route path="/cors-test" component={CorsTest} />
+      <Route path="/api-test" component={ApiTest} />
 
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
