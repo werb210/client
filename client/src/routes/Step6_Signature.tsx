@@ -241,9 +241,14 @@ export default function Step6Signature() {
     saveToStorage();
     
     toast({
-      title: "Application Complete!",
-      description: "Your application has been submitted and signed successfully.",
+      title: "Signature Complete!",
+      description: "Proceeding to final application submission...",
     });
+    
+    // Redirect to Step 7 for final submission
+    setTimeout(() => {
+      setLocation('/apply/step-7');
+    }, 2000);
   };
 
   const handlePrevious = () => {

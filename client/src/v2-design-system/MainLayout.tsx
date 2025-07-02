@@ -9,11 +9,13 @@ import Step4ApplicantInfoNew from "@/routes/Step4_ApplicantInfo_New";
 
 import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
 import Step6Signature from "@/routes/Step6_Signature";
+import Step7Submit from "@/routes/Step7_Submit";
 
 // Core Pages (Authentication removed)
 import LandingPage from "@/pages/LandingPage";
 import SimpleDashboard from "@/pages/SimpleDashboard";
 import NotFound from "@/pages/NotFound";
+import ApplicationSuccess from "@/pages/ApplicationSuccess";
 import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
 import { BackendDiagnosticPage } from "@/_legacy_auth/BackendDiagnosticPage";
@@ -72,6 +74,8 @@ export function MainLayout() {
       <Route path="/apply/step-5" component={Step5DocumentUpload} />
       <Route path="/step6-signature" component={Step6Signature} />
       <Route path="/apply/step-6" component={Step6Signature} />
+      <Route path="/step7-submit" component={Step7Submit} />
+      <Route path="/apply/step-7" component={Step7Submit} />
       
       {/* Dashboard */}
       <Route path="/dashboard" component={SimpleDashboard} />
