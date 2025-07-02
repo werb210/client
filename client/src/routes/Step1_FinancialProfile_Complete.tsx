@@ -20,7 +20,7 @@ const step1Schema = z.object({
   fundingAmount: z.string().min(1, "Funding amount is required"),
   useOfFunds: z.string().min(1, "Use of funds is required"),
   salesHistory: z.string().min(1, "Sales history is required"),
-  lastYearRevenue: z.string().min(1, "Last year revenue is required"),
+  lastYearRevenue: z.string().min(1, "Business revenue is required"),
   averageMonthlyRevenue: z.string().min(1, "Average monthly revenue is required"),
   accountsReceivable: z.string().optional(),
   fixedAssets: z.string().optional(),
@@ -51,9 +51,48 @@ const lookingForOptions = [
 ];
 
 const salesHistoryOptions = [
-  { value: '<1yr', label: 'Less than 1 year' },
-  { value: '1-2yr', label: '1-2 years' },
-  { value: '2+yr', label: '2+ years' },
+  { value: '<6mo', label: 'Less than 6 months' },
+  { value: '6-12mo', label: '6 to 12 months' },
+  { value: '1-2yr', label: '1 to 2 years' },
+  { value: '2-5yr', label: '2 to 5 years' },
+  { value: '5+yr', label: 'More than 5 years' },
+];
+
+const lastYearRevenueOptions = [
+  { value: '<100k', label: 'Under $100,000' },
+  { value: '100k-250k', label: '$100,000 to $250,000' },
+  { value: '250k-500k', label: '$250,000 to $500,000' },
+  { value: '500k-1m', label: '$500,000 to $1,000,000' },
+  { value: '1m-5m', label: '$1,000,000 to $5,000,000' },
+  { value: '5m+', label: 'Over $5,000,000' },
+];
+
+const averageMonthlyRevenueOptions = [
+  { value: '10k-25k', label: '$10,000 to $25,000' },
+  { value: '25k-50k', label: '$25,000 to $50,000' },
+  { value: '50k-100k', label: '$50,000 to $100,000' },
+  { value: '100k-250k', label: '$100,000 to $250,000' },
+  { value: '250k+', label: 'Over $250,000' },
+];
+
+const accountsReceivableOptions = [
+  { value: '<100k', label: 'Less than $100,000' },
+  { value: '100k-250k', label: '$100,000 to $250,000' },
+  { value: '250k-500k', label: '$250,000 to $500,000' },
+  { value: '500k-1m', label: '$500,000 to $1,000,000' },
+  { value: '1m+', label: 'Over $1,000,000' },
+  { value: 'none', label: 'No Account Receivables' },
+];
+
+const fixedAssetsOptions = [
+  { value: '<25k', label: 'Less than $25,000' },
+  { value: '25k-50k', label: '$25,000 to $50,000' },
+  { value: '50k-100k', label: '$50,000 - $100,000' },
+  { value: '100k-250k', label: '$100,000 - $250,000' },
+  { value: '250k-500k', label: '$250,000 - $500,000' },
+  { value: '500k-1m', label: '$500,000 - $1,000,000' },
+  { value: '1m+', label: 'More than $1,000,000' },
+  { value: 'none', label: 'No fixed assets' },
 ];
 
 const useOfFundsOptions = [
@@ -192,6 +231,7 @@ export default function Step1FinancialProfile() {
                           <SelectContent>
                             <SelectItem value="united-states">United States</SelectItem>
                             <SelectItem value="canada">Canada</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -254,7 +294,7 @@ export default function Step1FinancialProfile() {
                     name="salesHistory"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">How long has your business been generating sales?</FormLabel>
+                        <FormLabel className="text-base font-semibold">How many months or years of sales history does the business have?</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-12">
@@ -279,14 +319,21 @@ export default function Step1FinancialProfile() {
                     name="lastYearRevenue"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Last Year Revenue</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter last year's revenue"
-                            {...field}
-                            className="h-12"
-                          />
-                        </FormControl>
+                        <FormLabel className="text-base font-semibold">What was your business revenue in the last 12 months?</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select revenue range" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {lastYearRevenueOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -297,14 +344,21 @@ export default function Step1FinancialProfile() {
                     name="averageMonthlyRevenue"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Average Monthly Revenue</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter average monthly revenue"
-                            {...field}
-                            className="h-12"
-                          />
-                        </FormControl>
+                        <FormLabel className="text-base font-semibold">Average monthly revenue (last 3 months)</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select monthly revenue range" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {averageMonthlyRevenueOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -315,14 +369,21 @@ export default function Step1FinancialProfile() {
                     name="accountsReceivable"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Accounts Receivable Balance</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter accounts receivable balance (optional)"
-                            {...field}
-                            className="h-12"
-                          />
-                        </FormControl>
+                        <FormLabel className="text-base font-semibold">Current Account Receivable balance</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select receivables range" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {accountsReceivableOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
