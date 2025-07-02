@@ -53,25 +53,24 @@ function categorizeByProductType(products) {
   };
 
   products.forEach(product => {
-    // Extract product type from description
-    const desc = product.description || '';
-    const typeMatch = desc.match(/^(\w+)/);
-    const productType = typeMatch ? typeMatch[1] : '';
+    const category = product.category || '';
+    const productName = (product.productName || '').toLowerCase();
+    const description = (product.description || '').toLowerCase();
     
-    // Determine category based on product type or description content
-    if (desc.toLowerCase().includes('term loan') || desc.toLowerCase().includes('mca')) {
+    // Categorize based on the category field and product name
+    if (category === 'term_loan' || productName.includes('term loan') || description.includes('mca')) {
       categories['Term Loans'].push(product);
-    } else if (desc.toLowerCase().includes('line of credit') || desc.toLowerCase().includes('flexline') || desc.toLowerCase().includes('flex line')) {
+    } else if (category === 'line_of_credit' || productName.includes('line of credit') || productName.includes('working capital') || description.includes('abl')) {
       categories['Lines of Credit'].push(product);
-    } else if (desc.toLowerCase().includes('equipment')) {
+    } else if (category === 'equipment_financing' || productName.includes('equipment')) {
       categories['Equipment Financing'].push(product);
-    } else if (desc.toLowerCase().includes('factoring') || desc.toLowerCase().includes('receivable')) {
+    } else if (category === 'invoice_factoring' || productName.includes('factoring') || productName.includes('receivable')) {
       categories['Invoice Factoring'].push(product);
-    } else if (desc.toLowerCase().includes('purchase order')) {
+    } else if (category === 'purchase_order_financing' || productName.includes('purchase order')) {
       categories['Purchase Order Financing'].push(product);
-    } else if (desc.toLowerCase().includes('working capital') || desc.toLowerCase().includes('accordaccess')) {
+    } else if (productName.includes('working capital') && !description.includes('abl')) {
       categories['Working Capital'].push(product);
-    } else if (desc.toLowerCase().includes('abl') || desc.toLowerCase().includes('asset-based')) {
+    } else if (productName.includes('abl') || productName.includes('asset-based') || description.includes('abl')) {
       categories['Asset-Based Lending'].push(product);
     } else {
       categories['Other Products'].push(product);
@@ -130,17 +129,24 @@ async function main() {
         const terms = termMatch ? `${termMatch[1]}-${termMatch[2]} months` : 'Flexible terms';
         const docs = docsMatch ? docsMatch[1] : 'Standard documentation required';
         
-        // Extract amounts
-        const minAmount = formatAmount(product.min_amount);
-        const maxAmount = formatAmount(product.max_amount);
+        // Extract amounts from amountRange object
+        const minAmount = formatAmount(product.amountRange?.min);
+        const maxAmount = formatAmount(product.amountRange?.max);
         const amountRange = (minAmount === 'Not specified' && maxAmount === 'Not specified') 
           ? 'Contact for limits' 
           : `${minAmount} - ${maxAmount}`;
         
-        console.log(`${index + 1}. **${product.name}**`);
+        // Get minimum revenue requirement
+        const minRevenue = product.requirements?.minMonthlyRevenue 
+          ? formatAmount(product.requirements.minMonthlyRevenue) + '/month' 
+          : 'No minimum specified';
+        
+        console.log(`${index + 1}. **${product.productName}** (${product.lenderName})`);
         console.log(`   - Amount Range: ${amountRange}`);
         console.log(`   - Interest Rate: ${rates}`);
         console.log(`   - Terms: ${terms}`);
+        console.log(`   - Geography: ${product.geography ? product.geography.join(', ') : 'Not specified'}`);
+        console.log(`   - Min Revenue: ${minRevenue}`);
         console.log(`   - Required Documents: ${docs}`);
         console.log('');
       });
