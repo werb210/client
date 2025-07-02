@@ -19,7 +19,9 @@ export default function ApiTest() {
       // Diagnostic 1: Check environment variables
       console.log('=== DIAGNOSTIC 1: Environment Variables ===');
       console.log('VITE_STAFF_API_URL:', import.meta.env.VITE_STAFF_API_URL);
+      console.log('All env vars:', import.meta.env);
       console.log('Expected URL: https://staffportal.replit.app');
+      console.log('Actual STAFF_API_BASE will be:', import.meta.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app');
       
       // Diagnostic 2: Direct fetch test
       console.log('=== DIAGNOSTIC 2: Direct Fetch Test ===');
@@ -41,11 +43,23 @@ export default function ApiTest() {
         if (directResponse.ok) {
           const directData = await directResponse.json();
           console.log('✅ Direct fetch success! Product count:', directData.length);
+          console.log('🎉 CORS RESOLVED! Staff API is accessible!');
         } else {
           console.log('❌ Direct fetch failed with status:', directResponse.status);
+          console.log('Response text:', await directResponse.text());
         }
       } catch (directError) {
-        console.log('❌ Direct fetch error:', directError);
+        console.log('❌ Direct fetch error details:', directError.message || directError);
+        console.log('Error type:', directError.name);
+        console.log('Full error object:', directError);
+        
+        if (directError.message && directError.message.includes('CORS')) {
+          console.log('🚫 CONFIRMED: CORS policy blocking request');
+        } else if (directError.message && directError.message.includes('network')) {
+          console.log('🌐 NETWORK: Connection issue to staff backend');
+        } else {
+          console.log('❓ UNKNOWN: Error type not identified');
+        }
       }
       
       // Diagnostic 3: Use existing API function
