@@ -1,11 +1,66 @@
 import React from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, FileText, DollarSign, Shield, ArrowRight, Clock, TrendingUp } from "lucide-react";
 
+
 export default function LandingPage() {
   const [, setLocation] = useLocation();
+
+  // Fetch live lender products to get maximum funding amount
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ['landing-page-products'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Failed to fetch lender products: ${res.status}`);
+      }
+      
+      const data = await res.json();
+      console.log(`[LANDING] Fetched ${data.products?.length || 0} products for max funding calculation`);
+      return data.products || [];
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 10000, // Consider data stale after 10 seconds
+    retry: 3,
+  });
+
+  // Calculate maximum funding amount from live data
+  const getMaxFunding = () => {
+    if (!products || products.length === 0) {
+      return isLoading ? "Loading..." : "$1M+";
+    }
+    
+    try {
+      // Extract maximum amounts from products (API structure confirmed: amountRange.max)
+      const amounts = products
+        .map((p: any) => p.amountRange?.max || 0)
+        .filter((amount: any) => amount > 0);
+      
+      if (amounts.length === 0) return "$1M+";
+      
+      const maxAmount = Math.max(...amounts);
+      console.log(`[LANDING] Maximum funding amount: $${maxAmount.toLocaleString()}`);
+      
+      if (maxAmount >= 1000000) {
+        return `$${Math.floor(maxAmount / 1000000)}M+`;
+      } else if (maxAmount >= 1000) {
+        return `$${Math.floor(maxAmount / 1000)}K+`;
+      }
+      return `$${Math.floor(maxAmount)}+`;
+    } catch (error) {
+      console.log('[LANDING] Error calculating max funding:', error);
+      return "$1M+";
+    }
+  };
 
   const handleGetStarted = () => {
     setLocation("/apply/step-1");
@@ -149,7 +204,7 @@ export default function LandingPage() {
             <div style={{ color: '#64748B' }}>Day Processing</div>
           </div>
           <div>
-            <div className="text-4xl font-bold mb-2" style={{ color: '#16A34A' }}>$1M+</div>
+            <div className="text-4xl font-bold mb-2" style={{ color: '#16A34A' }}>{getMaxFunding()}</div>
             <div style={{ color: '#64748B' }}>Maximum Funding</div>
           </div>
         </div>
