@@ -1,0 +1,31 @@
+Great — it sounds like the staff-side CORS patch is live and verified ( `200` + the correct `Access-Control-Allow-Origin` header and 43 products returned).
+At this point the **only remaining task is to make sure the client is definitely hitting that endpoint in all environments** and is no longer falling back to the 8-product local list.
+
+Below is a quick “trust-but-verify” checklist you can run through in under five minutes.
+
+| Step                                                       | What to check                                                                                                                 | How to test                                                                  | Expected             |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------- |
+| **1. Client URL**                                          | Confirm the client build really points at `https://staffportal.replit.app/api/public/lenders` (and not an old fallback path). | Search the compiled JS or run `console.log(import.meta.env.VITE_STAFF_URL)`. | Correct URL printed. |
+| **2. Live fetch**                                          | Open the client app → DevTools → Network tab → reload the page that triggers the fetch.                                       | The request returns **200** and \~43 items.                                  |                      |
+| **3. Fallback guard**                                      | Temporarily comment out the local-fallback code in `fetchLenderProducts()` and refresh.                                       | UI still shows 43 products (proves fallback is no longer needed).            |                      |
+| **4. Automated smoke**                                     | Run the Playwright (or Cypress) test: complete Step 1 → Step 2 and assert `expect(products.length).toBeGreaterThan(40)`.      | Test passes.                                                                 |                      |
+| **5. Cron sync job** (if you added the noon/midnight sync) | Force-run the job manually (`await syncLenderProducts()` in console).                                                         | Log shows *0 products added/updated* (means local DB is already in sync).    |                      |
+
+If all five pass, the data pipeline is fully operational and the 8-product fallback can be kept purely as a safety net.
+
+---
+
+### What to do with the old fallback code?
+
+* **Keep it** (commented but available) for disaster-recovery.
+* Or set a feature flag: only enable fallback when `VITE_ENV!=="production"`.
+
+---
+
+### Next mini-milestones (optional)
+
+1. **Audit log** every product edit / external push (DB table `lender_product_log`).
+2. **Webhook** to notify the client when a product changes, letting you skip the twice-daily poll.
+3. **Analytics**: track which lenders are most often recommended vs. selected.
+
+Let me know if any of the validation steps above fail, and we’ll trace it immediately—otherwise, congratulations, your end-to-end lender product management and delivery system is live! 🎉
