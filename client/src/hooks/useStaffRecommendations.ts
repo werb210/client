@@ -93,52 +93,6 @@ export function useStaffRecommendations(formData: RecommendationFormData, monthl
   };
 }
 
-      // Apply your business rules to filter products
-      const filteredProducts = filterProducts(staffProducts, formData);
-      
-      console.log(`[STAFF RECOMMENDATIONS] Filtered to ${filteredProducts.length} matching products`);
-
-      // Calculate scores for each filtered product
-      const productsWithScores = filteredProducts.map(product => ({
-        ...product,
-        matchScore: calculateRecommendationScore(product, formData, monthlyRevenue)
-      }));
-
-      // Sort by match score (highest first)
-      const sortedProducts = productsWithScores.sort((a, b) => b.matchScore - a.matchScore);
-
-      // Group by category for display
-      const productsByCategory = sortedProducts.reduce((acc, product) => {
-        const category = product.category;
-        if (!acc[category]) {
-          acc[category] = [];
-        }
-        acc[category].push(product);
-        return acc;
-      }, {} as Record<string, typeof sortedProducts>);
-
-      console.log('[STAFF RECOMMENDATIONS] Categories found:', Object.keys(productsByCategory));
-
-      return {
-        allFilteredProducts: sortedProducts,
-        productsByCategory,
-        totalMatches: filteredProducts.length,
-        bestMatch: sortedProducts[0] || null,
-        averageScore: sortedProducts.length > 0 
-          ? sortedProducts.reduce((sum, p) => sum + p.matchScore, 0) / sortedProducts.length 
-          : 0
-      };
-    },
-    staleTime: 1000 * 60 * 10, // 10 minutes
-    enabled: !!formData.headquarters && !!formData.fundingAmount
-  });
-
-  return {
-    ...query,
-    recommendations: query.data
-  };
-}
-
 /**
  * Convert Step 1 form data to RecommendationFormData format
  */
