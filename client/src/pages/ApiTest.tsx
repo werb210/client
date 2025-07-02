@@ -16,11 +16,54 @@ export default function ApiTest() {
     setApiSource('');
     
     try {
+      // Diagnostic 1: Check environment variables
+      console.log('=== DIAGNOSTIC 1: Environment Variables ===');
+      console.log('VITE_STAFF_API_URL:', import.meta.env.VITE_STAFF_API_URL);
+      console.log('Expected URL: https://staffportal.replit.app');
+      
+      // Diagnostic 2: Direct fetch test
+      console.log('=== DIAGNOSTIC 2: Direct Fetch Test ===');
+      const directUrl = 'https://staffportal.replit.app/api/public/lenders';
+      console.log('Testing direct fetch to:', directUrl);
+      
+      try {
+        const directResponse = await fetch(directUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        
+        console.log('Direct fetch status:', directResponse.status);
+        console.log('Direct fetch ok:', directResponse.ok);
+        console.log('Response headers:', Object.fromEntries(directResponse.headers.entries()));
+        
+        if (directResponse.ok) {
+          const directData = await directResponse.json();
+          console.log('✅ Direct fetch success! Product count:', directData.length);
+        } else {
+          console.log('❌ Direct fetch failed with status:', directResponse.status);
+        }
+      } catch (directError) {
+        console.log('❌ Direct fetch error:', directError);
+      }
+      
+      // Diagnostic 3: Use existing API function
+      console.log('=== DIAGNOSTIC 3: Using API Function ===');
       console.log('Testing lender products API...');
       const result = await fetchLenderProducts();
       setProducts(result);
       setApiSource(result.length > 8 ? 'Staff API (43+ products)' : 'Local Fallback (8 products)');
       console.log(`API Test Success: ${result.length} products loaded`);
+      
+      // Diagnostic 4: CORS Check
+      console.log('=== DIAGNOSTIC 4: CORS Status ===');
+      if (result.length > 8) {
+        console.log('🎉 CORS RESOLVED! Staff API accessible with 43+ products');
+      } else {
+        console.log('⚠️ CORS still blocked - using 8-product local fallback');
+      }
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('API Test Failed:', err);
