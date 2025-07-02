@@ -35,6 +35,7 @@ import Step5Test from "@/pages/Step5Test";
 import Steps34Test from "@/pages/Steps34Test";
 import TestingFlowValidation from "@/pages/TestingFlowValidation";
 import UnifiedDocumentTest from "@/pages/UnifiedDocumentTest";
+import LenderCategoriesTest from "@/pages/LenderCategoriesTest";
 
 
 /**
@@ -62,6 +63,7 @@ export function MainLayout() {
       <Route path="/steps34-test" component={Steps34Test} />
       <Route path="/testing-flow-validation" component={TestingFlowValidation} />
       <Route path="/unified-document-test" component={UnifiedDocumentTest} />
+      <Route path="/lender-categories" component={LenderCategoriesTest} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
