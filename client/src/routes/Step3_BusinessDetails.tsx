@@ -107,24 +107,7 @@ export default function Step3BusinessDetails() {
     setLocation('/apply/step-2');
   };
 
-  const handleSaveAndContinueLater = () => {
-    const currentData = form.getValues();
-    dispatch({
-      type: 'UPDATE_STEP3',
-      payload: {
-        ...currentData,
-        completed: false,
-        savedAt: new Date().toISOString()
-      }
-    });
-    
-    saveToStorage();
-    
-    toast({
-      title: "Progress Saved",
-      description: "Your business details have been saved. You can continue later.",
-    });
-  };
+
 
   const businessStructureOptions = [
     { value: 'sole_proprietorship', label: 'Sole Proprietorship' },
@@ -157,20 +140,14 @@ export default function Step3BusinessDetails() {
       {/* Header Section */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl text-gray-900 flex items-center gap-2">
-                <Building className="w-6 h-6 text-blue-600" />
-                Business Details
-              </CardTitle>
-              <p className="text-gray-600 mt-1">
-                Please provide detailed information about your business
-              </p>
-            </div>
-            <Button variant="outline" onClick={handleSaveAndContinueLater}>
-              <Save className="w-4 h-4 mr-2" />
-              Save Progress
-            </Button>
+          <div>
+            <CardTitle className="text-2xl text-gray-900 flex items-center gap-2">
+              <Building className="w-6 h-6 text-blue-600" />
+              Business Details
+            </CardTitle>
+            <p className="text-gray-600 mt-1">
+              Please provide detailed information about your business
+            </p>
           </div>
         </CardHeader>
       </Card>

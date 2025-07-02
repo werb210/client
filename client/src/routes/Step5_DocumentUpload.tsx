@@ -165,25 +165,14 @@ export default function Step5DocumentUpload() {
           <span>Previous</span>
         </Button>
 
-        <div className="flex space-x-3">
-          <Button
-            variant="outline"
-            onClick={handleSaveAndContinueLater}
-            className="flex items-center space-x-2"
-          >
-            <Save className="w-4 h-4" />
-            <span>Save & Continue Later</span>
-          </Button>
-
-          <Button
-            onClick={handleNext}
-            disabled={!allRequirementsComplete}
-            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
-          >
-            <span>Continue to Signature</span>
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-        </div>
+        <Button
+          onClick={handleNext}
+          disabled={!allRequirementsComplete}
+          className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+        >
+          <span>Continue to Signature</span>
+          <ArrowRight className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );
