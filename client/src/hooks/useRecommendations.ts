@@ -38,11 +38,11 @@ export interface Step1FormData {
 }
 
 export function useRecommendations(formStep1Data: Step1FormData) {
-  /** 1 — pull products from local database */
+  /** 1 — pull products from synced database (no fallback) */
   const { data: products = [], isLoading, error } = useQuery<LenderProduct[]>({
-    queryKey: ["local-lenders"],
+    queryKey: ["synced-lenders"],
     queryFn: async () => {
-      const res = await fetch("/api/local/lenders", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -54,10 +54,11 @@ export function useRecommendations(formStep1Data: Step1FormData) {
       }
       
       const data = await res.json();
-      return data.products || [];
+      console.log("Matched Products from Synced DB:", data);
+      return data.products || data || [];
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes for local data
-    retry: 1,
+    staleTime: 1000 * 60 * 10, // 10 minutes for synced data
+    retry: 2,
   });
 
   /** 2 — filter + score */

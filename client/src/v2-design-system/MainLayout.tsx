@@ -42,6 +42,7 @@ import StrictValidationTest from "@/pages/StrictValidationTest";
 import DataIngestionInterface from "@/pages/DataIngestionInterface";
 import TypedApiDemo from "@/pages/TypedApiDemo";
 import ApiDiagnostic from "@/pages/ApiDiagnostic";
+import SyncedProductsTest from "@/pages/SyncedProductsTest";
 
 
 /**
@@ -62,6 +63,7 @@ export function MainLayout() {
       <Route path="/cors-test" component={CorsTest} />
       <Route path="/api-test" component={ApiTest} />
       <Route path="/api-diagnostic" component={ApiDiagnostic} />
+      <Route path="/synced-products-test" component={SyncedProductsTest} />
       <Route path="/sync-monitor" component={SyncMonitor} />
       <Route path="/complete-workflow-test" component={CompleteWorkflowTest} />
       <Route path="/stage-monitor-test" component={StageMonitorTest} />

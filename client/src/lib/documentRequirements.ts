@@ -1,11 +1,10 @@
 /**
- * Unified Document Requirements Logic
+ * Unified Document Requirements Logic - Synced Database Only
  * 
  * This module implements the authoritative rule-set for Step 5 required documents.
  * It consolidates requirements from ALL matching lender products and eliminates duplicates.
+ * Uses only synced staff database - NO FALLBACK LOGIC.
  */
-
-import { API_BASE_URL } from '@/constants';
 
 export interface RequiredDoc {
   id?: string;
@@ -106,15 +105,13 @@ function getKeywordCategory(name: string): string | null {
  */
 async function fetchDocsForCategory(category: string, params: QueryParams): Promise<RequiredDoc[]> {
   try {
-    const url = new URL(`/api/loan-products/required-documents/${category}`, API_BASE_URL);
-    url.searchParams.set("headquarters", params.country === 'CA' ? 'canada' : 'united_states');
-    url.searchParams.set("fundingAmount", `$${params.amount}`);
-    
-    if (params.arBalance) {
-      url.searchParams.set("accountsReceivableBalance", params.arBalance);
-    }
+    const queryString = new URLSearchParams({
+      headquarters: params.country === 'CA' ? 'CA' : 'US',
+      fundingAmount: params.amount.toString(),
+      ...(params.arBalance && { arBalance: params.arBalance })
+    }).toString();
 
-    const response = await fetch(url.toString());
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/loan-products/required-documents/${category}?${queryString}`);
     
     if (!response.ok) {
       console.warn(`Failed to fetch documents for category ${category}:`, response.status);

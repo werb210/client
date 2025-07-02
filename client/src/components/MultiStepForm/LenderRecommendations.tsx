@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useApplication } from '@/context/ApplicationContext';
 import { CreditCard, TrendingUp, FileText } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 interface LenderRecommendationsProps {
   onNext: () => void;
@@ -16,11 +17,18 @@ export function LenderRecommendations({ onNext, onBack }: LenderRecommendationsP
     state.formData.selectedProduct || ''
   );
 
-  const mockProducts = [
-    { id: '1', name: 'Working Capital Loan', type: 'working_capital' },
-    { id: '2', name: 'Equipment Financing', type: 'equipment_financing' },
-    { id: '3', name: 'Line of Credit', type: 'line_of_credit' }
-  ];
+  // Use synced lender products from database
+  const { data: products = [], isLoading, error } = useQuery({
+    queryKey: ['synced-lender-products'],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
+      if (!res.ok) throw new Error('Failed to fetch lender products');
+      const data = await res.json();
+      console.log("Step 2 - Matched Products from Synced DB:", data);
+      return data.products || data || [];
+    },
+    staleTime: 1000 * 60 * 10,
+  });
 
   const handleProductSelect = (productType: string) => {
     setSelectedProduct(productType);
@@ -63,22 +71,22 @@ export function LenderRecommendations({ onNext, onBack }: LenderRecommendationsP
       </div>
 
       <div className="grid md:grid-cols-3 gap-4 mb-6">
-        {mockProducts.map((product) => (
+        {products.slice(0, 6).map((product: any) => (
           <Card
             key={product.id}
             className={`cursor-pointer transition-all duration-200 ${
-              selectedProduct === product.type
-                ? `ring-2 ring-blue-500 ${getProductColor(product.type)}`
+              selectedProduct === product.category
+                ? `ring-2 ring-blue-500 ${getProductColor(product.category)}`
                 : 'hover:shadow-md'
             }`}
-            onClick={() => handleProductSelect(product.type)}
+            onClick={() => handleProductSelect(product.category)}
           >
             <CardHeader className="text-center pb-4">
-              <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center ${getProductColor(product.type)}`}>
-                {getProductIcon(product.type)}
+              <div className={`w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center ${getProductColor(product.category)}`}>
+                {getProductIcon(product.category)}
               </div>
               <CardTitle className="text-lg">{product.name}</CardTitle>
-              {selectedProduct === product.type && (
+              {selectedProduct === product.category && (
                 <Badge className="bg-blue-500 text-white">Selected</Badge>
               )}
             </CardHeader>
