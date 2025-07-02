@@ -1,346 +1,504 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
 import { useFormData } from '@/context/FormDataContext';
+import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
+import { staffApi } from '../api/staffApi';
 import { 
-  FileText, 
-  PenTool, 
+  ArrowLeft, 
+  Send, 
+  FileSignature, 
   CheckCircle, 
-  Clock, 
-  AlertCircle,
-  ExternalLink
+  ExternalLink, 
+  Loader2,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
-import { getSignNowUrl, checkSignatureStatus } from '@/lib/api';
 
-interface SignatureStatus {
-  signed: boolean;
-  signedAt?: string;
-  documentUrl?: string;
-}
+type SubmissionStatus = 'idle' | 'submitting' | 'submitted' | 'error';
+type SigningStatus = 'pending' | 'ready' | 'completed' | 'error';
 
 export default function Step6Signature() {
+  const { state, dispatch, saveToStorage } = useFormData();
   const [, setLocation] = useLocation();
-  const { state, dispatch } = useFormData();
   const { toast } = useToast();
+  
+  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('idle');
+  const [signingStatus, setSigningStatus] = useState<SigningStatus>('pending');
+  const [applicationId, setApplicationId] = useState<string | null>(null);
+  const [signUrl, setSignUrl] = useState<string | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
-  const [signatureStatus, setSignatureStatus] = useState<SignatureStatus>({ signed: false });
 
-  // Generate application ID from form data (in real app this would come from backend)
-  const applicationId = React.useMemo(() => {
-    const businessName = state.step3BusinessDetails?.businessAddress?.street || 'unknown';
-    const timestamp = Date.now();
-    return `app_${businessName.toLowerCase().replace(/\s+/g, '_')}_${timestamp}`;
-  }, [state.step3BusinessDetails]);
+  // Get uploaded files from Step 5
+  const uploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
+  const selectedProduct = state.step2Recommendations?.selectedProduct;
 
-  // Mutation to get SignNow URL
-  const signUrlMutation = useMutation({
-    mutationFn: (appId: string) => getSignNowUrl(appId),
-    onSuccess: (data) => {
-      // Redirect to SignNow in same tab
-      window.location.href = data.url;
-    },
-    onError: (error) => {
-      console.error('Failed to get sign URL:', error);
+  useEffect(() => {
+    // Auto-submit if not already submitted and we have all required data
+    if (submissionStatus === 'idle' && hasRequiredData()) {
+      handleSubmitApplication();
+    }
+  }, [submissionStatus]);
+
+  useEffect(() => {
+    // Start polling for signing URL if application is submitted
+    if (applicationId && signingStatus === 'pending' && !isPolling) {
+      startSigningStatusPolling();
+    }
+  }, [applicationId, signingStatus]);
+
+  const hasRequiredData = () => {
+    return (
+      state.step1FinancialProfile?.completed &&
+      state.step2Recommendations?.selectedProduct &&
+      state.step3BusinessDetails?.completed &&
+      state.step4ApplicantDetails?.completed &&
+      uploadedFiles.length > 0
+    );
+  };
+
+  const handleSubmitApplication = async () => {
+    if (!hasRequiredData()) {
       toast({
-        title: "Signature Error",
-        description: "Failed to initialize signature process. Please try again.",
+        title: "Incomplete Application",
+        description: "Please complete all previous steps before submitting.",
         variant: "destructive",
       });
-    },
-  });
+      return;
+    }
 
-  // Poll for signature status
-  const { data: statusData, refetch: refetchStatus } = useQuery({
-    queryKey: ['/api/signatures/status', applicationId],
-    queryFn: () => checkSignatureStatus(applicationId),
-    enabled: isPolling,
-    refetchInterval: isPolling ? 3000 : false, // Poll every 3 seconds
-  });
+    setSubmissionStatus('submitting');
+    setSubmissionError(null);
 
-  // Update signature status when data changes
-  useEffect(() => {
-    if (statusData) {
-      setSignatureStatus(statusData);
-      if (statusData.signed) {
-        setIsPolling(false);
-        toast({
-          title: "Signature Complete",
-          description: "Your application has been successfully signed and submitted.",
-          variant: "default",
+    try {
+      console.log('🚀 Starting application submission...');
+      
+      // Prepare uploaded files with File objects
+      const filesWithFileObjects = uploadedFiles
+        .filter(file => file.file)
+        .map(file => ({
+          file: file.file!,
+          documentType: file.documentType
+        }));
+
+      const result = await staffApi.submitApplication(
+        state,
+        filesWithFileObjects,
+        selectedProduct?.id?.toString() || selectedProduct?.product_name || 'unknown'
+      );
+
+      if (result.status === 'submitted' && result.applicationId) {
+        setApplicationId(result.applicationId);
+        setSubmissionStatus('submitted');
+        
+        dispatch({
+          type: 'UPDATE_STEP6',
+          payload: {
+            applicationId: result.applicationId,
+            submissionStatus: 'submitted',
+            submittedAt: new Date().toISOString(),
+            completed: false // Not completed until signed
+          }
         });
+        
+        saveToStorage();
+        
+        toast({
+          title: "Application Submitted Successfully",
+          description: "Your application has been submitted. Preparing documents for signing...",
+        });
+
+        // Start checking for signing readiness
+        setSigningStatus('pending');
+        
+      } else {
+        throw new Error(result.error || 'Submission failed');
       }
+      
+    } catch (error) {
+      console.error('❌ Application submission failed:', error);
+      setSubmissionStatus('error');
+      setSubmissionError(error instanceof Error ? error.message : 'Unknown error occurred');
+      
+      toast({
+        title: "Submission Failed",
+        description: error instanceof Error ? error.message : 'Failed to submit application',
+        variant: "destructive",
+      });
     }
-  }, [statusData, toast]);
+  };
 
-  // Check for return from SignNow (URL parameters)
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const signatureComplete = urlParams.get('signature_complete');
-    const signed = urlParams.get('signed');
+  const startSigningStatusPolling = async () => {
+    if (!applicationId || isPolling) return;
     
-    if (signatureComplete === 'true' || signed === 'true') {
-      setIsPolling(true);
-      // Clear URL parameters
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
-
-  const handleInitiateSignature = () => {
-    signUrlMutation.mutate(applicationId);
-  };
-
-  const handleWaitForSignature = () => {
     setIsPolling(true);
-    refetchStatus();
+    console.log('🔄 Starting signing status polling...');
+    
+    const maxAttempts = 30; // 5 minutes with 10-second intervals
+    let attempts = 0;
+    
+    const checkStatus = async () => {
+      if (attempts >= maxAttempts) {
+        setIsPolling(false);
+        setSigningStatus('error');
+        toast({
+          title: "Signing Preparation Timeout",
+          description: "Document preparation is taking longer than expected. Please contact support.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      attempts++;
+      
+      try {
+        const statusResult = await staffApi.checkSigningStatus(applicationId);
+        
+        if (statusResult.status === 'ready' && statusResult.signUrl) {
+          setSignUrl(statusResult.signUrl);
+          setSigningStatus('ready');
+          setIsPolling(false);
+          
+          toast({
+            title: "Documents Ready for Signing",
+            description: "Your documents are ready. Click to open SignNow.",
+          });
+          
+        } else if (statusResult.status === 'completed') {
+          setSigningStatus('completed');
+          setIsPolling(false);
+          handleSigningCompleted();
+          
+        } else if (statusResult.status === 'error') {
+          setSigningStatus('error');
+          setIsPolling(false);
+          
+          toast({
+            title: "Document Preparation Error",
+            description: statusResult.error || "Failed to prepare documents for signing",
+            variant: "destructive",
+          });
+          
+        } else {
+          // Continue polling
+          setTimeout(checkStatus, 10000); // Check every 10 seconds
+        }
+        
+      } catch (error) {
+        console.error('❌ Failed to check signing status:', error);
+        setTimeout(checkStatus, 10000); // Retry after 10 seconds
+      }
+    };
+    
+    // Start first check after 5 seconds
+    setTimeout(checkStatus, 5000);
   };
 
-  const handleCompleteApplication = () => {
-    // Navigate to final submission step
-    setLocation('/step7-submit');
+  const handleOpenSignNow = () => {
+    if (signUrl) {
+      window.open(signUrl, '_blank');
+      
+      // Start polling to check if signing is completed
+      setTimeout(() => {
+        if (applicationId) {
+          checkSigningCompletion();
+        }
+      }, 30000); // Check after 30 seconds
+    }
+  };
+
+  const checkSigningCompletion = async () => {
+    if (!applicationId) return;
+    
+    try {
+      const statusResult = await staffApi.checkSigningStatus(applicationId);
+      
+      if (statusResult.status === 'completed') {
+        handleSigningCompleted();
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to check signing completion:', error);
+    }
+  };
+
+  const handleSigningCompleted = () => {
+    setSigningStatus('completed');
+    
+    dispatch({
+      type: 'UPDATE_STEP6',
+      payload: {
+        applicationId,
+        submissionStatus: 'submitted',
+        signingStatus: 'completed',
+        signedAt: new Date().toISOString(),
+        completed: true
+      }
+    });
+    
+    saveToStorage();
     
     toast({
-      title: "Signature Complete",
-      description: "Proceeding to final application review and submission.",
-      variant: "default",
+      title: "Application Complete!",
+      description: "Your application has been submitted and signed successfully.",
     });
   };
 
-  const handleBackToDocuments = () => {
-    setLocation('/step5-documents');
+  const handlePrevious = () => {
+    setLocation('/apply/step-5');
   };
 
-  // Calculate completion progress
-  const completedSteps = [
-    state.step1FinancialProfile.businessLocation,
-    state.step3BusinessDetails?.businessStructure,
-    state.step4FinancialInfo?.annualRevenue,
-    state.step5DocumentUpload?.categories?.some(cat => cat.documents.length > 0),
-  ].filter(Boolean).length;
-  
-  const totalSteps = 5; // Steps 1-5 before signature
-  const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Step 6: Electronic Signature
-          </h1>
-          <p className="text-gray-600">
-            Complete your application with a secure electronic signature
-          </p>
-        </div>
-
-        {/* Progress Indicator */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              Application Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between text-sm">
-                <span>Completed Steps</span>
-                <span>{completedSteps} of {totalSteps}</span>
-              </div>
-              <Progress value={progressPercentage} className="w-full" />
-              <p className="text-sm text-gray-600">
-                Your application is {progressPercentage}% complete and ready for signature.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Signature Status */}
-        {!signatureStatus.signed ? (
-          <Card className="mb-8">
+  const renderSubmissionSection = () => {
+    switch (submissionStatus) {
+      case 'idle':
+        return (
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <PenTool className="h-5 w-5 text-blue-500" />
-                Electronic Signature Required
+                <Send className="w-5 h-5 text-blue-600" />
+                Ready to Submit
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-900 mb-2">What happens next:</h3>
-                <ul className="space-y-2 text-sm text-blue-800">
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2 flex-shrink-0"></span>
-                    You'll be redirected to SignNow to review and sign your application
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2 flex-shrink-0"></span>
-                    The signature process is secure and legally binding
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2 flex-shrink-0"></span>
-                    You'll return here automatically after signing
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2 flex-shrink-0"></span>
-                    Your application will be immediately submitted for review
-                  </li>
-                </ul>
-              </div>
-
-              {!isPolling ? (
-                <div className="flex gap-4">
-                  <Button 
-                    onClick={handleInitiateSignature}
-                    disabled={signUrlMutation.isPending}
-                    className="flex items-center gap-2"
-                  >
-                    {signUrlMutation.isPending ? (
-                      <>
-                        <Clock className="h-4 w-4 animate-spin" />
-                        Preparing Document...
-                      </>
-                    ) : (
-                      <>
-                        <ExternalLink className="h-4 w-4" />
-                        Sign Application Now
-                      </>
-                    )}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleWaitForSignature}
-                    className="flex items-center gap-2"
-                  >
-                    <Clock className="h-4 w-4" />
-                    Already Signed? Check Status
-                  </Button>
-                </div>
-              ) : (
-                <Alert>
-                  <Clock className="h-4 w-4 animate-pulse" />
-                  <AlertDescription>
-                    Waiting for signature completion... We're checking for your signature every few seconds.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {signUrlMutation.error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Failed to initialize signature process. Please try again or contact support.
-                  </AlertDescription>
-                </Alert>
-              )}
+            <CardContent>
+              <p className="text-gray-600 mb-4">
+                Your application is complete and ready for submission to the lender.
+              </p>
+              <Button onClick={handleSubmitApplication} className="w-full">
+                <Send className="w-4 h-4 mr-2" />
+                Submit Application
+              </Button>
             </CardContent>
           </Card>
-        ) : (
-          <Card className="mb-8 border-green-200">
+        );
+
+      case 'submitting':
+        return (
+          <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-700">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                Signature Complete
+              <CardTitle className="flex items-center gap-2">
+                <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                Submitting Application
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-green-800">
-                  ✅ Your application has been successfully signed and submitted for review.
-                </p>
-                {signatureStatus.signedAt && (
-                  <p className="text-sm text-green-600 mt-2">
-                    Signed on: {new Date(signatureStatus.signedAt).toLocaleString()}
-                  </p>
-                )}
-              </div>
-              
-              <div className="flex gap-4">
-                <Button 
-                  onClick={handleCompleteApplication}
-                  className="flex items-center gap-2"
-                >
-                  <CheckCircle className="h-4 w-4" />
-                  Complete Application
-                </Button>
-                {signatureStatus.documentUrl && (
-                  <Button 
-                    variant="outline"
-                    onClick={() => window.open(signatureStatus.documentUrl, '_blank')}
-                    className="flex items-center gap-2"
-                  >
-                    <FileText className="h-4 w-4" />
-                    View Signed Document
-                  </Button>
-                )}
-              </div>
+            <CardContent>
+              <p className="text-gray-600">
+                Please wait while we submit your application and prepare the documents...
+              </p>
             </CardContent>
           </Card>
-        )}
+        );
 
-        {/* Navigation */}
-        <div className="flex justify-between">
-          <Button variant="outline" onClick={handleBackToDocuments}>
-            ← Back to Documents
-          </Button>
-          
-          {signatureStatus.signed && (
-            <Button onClick={handleCompleteApplication}>
-              Complete Application →
-            </Button>
-          )}
-        </div>
+      case 'submitted':
+        return (
+          <Card className="border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-green-800">
+                <CheckCircle className="w-5 h-5" />
+                Application Submitted Successfully
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-green-700 mb-2">
+                Application ID: <span className="font-mono">{applicationId}</span>
+              </p>
+              <p className="text-green-600">
+                Your application has been submitted successfully. Documents are being prepared for signing.
+              </p>
+            </CardContent>
+          </Card>
+        );
 
-        {/* Application Summary */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Application Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Business Information</h4>
-                <p><strong>Location:</strong> {state.step1FinancialProfile.businessLocation}</p>
-                <p><strong>Industry:</strong> {state.step1FinancialProfile.industry}</p>
-                <p><strong>Monthly Revenue:</strong> {state.step1FinancialProfile.monthlyRevenue}</p>
+      case 'error':
+        return (
+          <Card className="border-red-200 bg-red-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-800">
+                <AlertTriangle className="w-5 h-5" />
+                Submission Failed
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-red-700 mb-4">
+                {submissionError || 'Failed to submit application'}
+              </p>
+              <Button onClick={handleSubmitApplication} variant="outline">
+                Retry Submission
+              </Button>
+            </CardContent>
+          </Card>
+        );
+    }
+  };
+
+  const renderSigningSection = () => {
+    if (submissionStatus !== 'submitted') return null;
+
+    switch (signingStatus) {
+      case 'pending':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-blue-600" />
+                Preparing Documents for Signing
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2 mb-4">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-gray-600">Please wait while we prepare your documents...</span>
               </div>
-              
-              {state.step3BusinessDetails && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Business Details</h4>
-                  <p><strong>Structure:</strong> {state.step3BusinessDetails.businessStructure}</p>
-                  <p><strong>Incorporation:</strong> {state.step3BusinessDetails.incorporationDate}</p>
-                  <p><strong>Tax ID:</strong> {state.step3BusinessDetails.taxId}</p>
-                </div>
-              )}
-              
-              {state.step4FinancialInfo && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Financial Information</h4>
-                  <p><strong>Annual Revenue:</strong> {state.step4FinancialInfo.annualRevenue}</p>
-                  <p><strong>Employees:</strong> {state.step4FinancialInfo.numberOfEmployees}</p>
-                </div>
-              )}
-              
-              {state.step5DocumentUpload && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Documents</h4>
-                  <p><strong>Categories:</strong> {state.step5DocumentUpload.categories?.length || 0}</p>
-                  <p><strong>Uploaded:</strong> {
-                    state.step5DocumentUpload.categories?.reduce((acc, cat) => 
-                      acc + cat.documents.filter(doc => doc.status === 'completed').length, 0
-                    ) || 0
-                  }</p>
-                </div>
-              )}
+              <p className="text-sm text-gray-500">
+                This usually takes 1-3 minutes. We'll notify you when ready.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+      case 'ready':
+        return (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-800">
+                <FileSignature className="w-5 h-5" />
+                Documents Ready for Signing
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-blue-700 mb-4">
+                Your documents are ready for electronic signature via SignNow.
+              </p>
+              <Button onClick={handleOpenSignNow} className="w-full">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Open SignNow to Sign Documents
+              </Button>
+              <p className="text-xs text-gray-500 mt-2">
+                This will open SignNow in a new tab. Complete the signing process and return here.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+      case 'completed':
+        return (
+          <Card className="border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-green-800">
+                <CheckCircle className="w-5 h-5" />
+                Application Complete!
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-green-700 mb-4">
+                Congratulations! Your application has been submitted and signed successfully.
+              </p>
+              <p className="text-green-600 text-sm">
+                You will receive updates on your application status via email.
+              </p>
+            </CardContent>
+          </Card>
+        );
+
+      case 'error':
+        return (
+          <Card className="border-red-200 bg-red-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-800">
+                <AlertTriangle className="w-5 h-5" />
+                Signing Error
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-red-700 mb-4">
+                There was an error preparing your documents for signing.
+              </p>
+              <Button onClick={() => setSigningStatus('pending')} variant="outline">
+                Retry Document Preparation
+              </Button>
+            </CardContent>
+          </Card>
+        );
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl text-gray-900 flex items-center gap-2">
+                <FileSignature className="w-6 h-6 text-blue-600" />
+                Application Submission & Signature
+              </CardTitle>
+              <p className="text-gray-600 mt-1">
+                Final step: Submit your application and sign the documents
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Application Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Application Summary</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-gray-500">Selected Product:</span>
+              <p className="font-medium">{selectedProduct?.product_name || 'Not selected'}</p>
+            </div>
+            <div>
+              <span className="text-gray-500">Funding Amount:</span>
+              <p className="font-medium">
+                ${state.step1FinancialProfile?.fundingAmount?.toLocaleString() || 'Not specified'}
+              </p>
+            </div>
+            <div>
+              <span className="text-gray-500">Business Name:</span>
+              <p className="font-medium">{state.step3BusinessDetails?.businessName || 'Not provided'}</p>
+            </div>
+            <div>
+              <span className="text-gray-500">Documents Uploaded:</span>
+              <p className="font-medium">{uploadedFiles.length} files</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Submission Section */}
+      {renderSubmissionSection()}
+
+      {/* Signing Section */}
+      {renderSigningSection()}
+
+      {/* Navigation */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-between">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handlePrevious}
+              disabled={submissionStatus === 'submitting' || isPolling}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Previous
+            </Button>
+            
+            {signingStatus === 'completed' && (
+              <Button onClick={() => setLocation('/dashboard')}>
+                View Dashboard
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

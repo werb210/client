@@ -1,0 +1,590 @@
+# Stage Monitor & Autosave System - Complete Reproduction Guide
+## How to Build Professional Progress Tracking with Automatic Data Persistence
+
+This guide provides everything needed to reproduce the stage monitor and autosave features that create a professional multi-step form experience with automatic data preservation.
+
+---
+
+## 🎯 SYSTEM OVERVIEW
+
+### What This System Does
+- **Visual Progress Tracking** - Desktop horizontal steps with icons, mobile vertical progress bar
+- **Automatic Data Saving** - Real-time localStorage persistence with user feedback
+- **Intelligent Restoration** - Smart form data recovery with security controls
+- **Step Navigation Control** - Visual indicators for active, completed, and pending steps
+- **Mobile Responsive Design** - Optimized layouts for all screen sizes
+
+### Core Flow
+```
+Form Changes → Auto Save (2s delay) → Visual Feedback → Data Restoration → Security Controls
+```
+
+---
+
+## 📋 COMPLETE IMPLEMENTATION
+
+### 1. Steps Configuration & State Management
+
+```typescript
+// components/StageMonitorForm.tsx
+import { useState, useEffect, useCallback } from 'react';
+import { Building, Target, User, Upload, CheckCircle, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+// Steps configuration with icons and titles
+const steps = [
+  { title: "Business Basics", icon: Building },
+  { title: "Recommendations", icon: Target },
+  { title: "Business Details", icon: User },
+  { title: "Applicant Info", icon: User },
+  { title: "Documents", icon: Upload },
+  { title: "Terms & Signature", icon: CheckCircle },
+  { title: "Submit Application", icon: CheckCircle },
+];
+
+interface StageMonitorFormProps {
+  onBack: () => void;
+  onSuccess: () => void;
+}
+
+export function StageMonitorForm({ onBack, onSuccess }: StageMonitorFormProps) {
+  // Core state management
+  const [currentStep, setCurrentStep] = useState(0);
+  
+  // Auto save state
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'saved' | 'saving' | 'error' | null>(null);
+  const [lastSaveTime, setLastSaveTime] = useState<string>("");
+
+  // Form state (replace with your form library)
+  const [formData, setFormData] = useState({});
+  
+  // Auto save form data to localStorage
+  const autoSaveFormData = useCallback(() => {
+    try {
+      setAutoSaveStatus('saving');
+      const saveData = {
+        ...formData,
+        lastSaved: new Date().toISOString(),
+        currentStep
+      };
+      localStorage.setItem('businessLoanFormAutoSave', JSON.stringify(saveData));
+      setAutoSaveStatus('saved');
+      setLastSaveTime(new Date().toLocaleTimeString());
+    } catch (error) {
+      setAutoSaveStatus('error');
+      console.error('Auto save failed:', error);
+    }
+  }, [formData, currentStep]);
+
+  // Load saved form data on component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('businessLoanFormAutoSave');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        const { lastSaved, currentStep: savedStep, ...formValues } = parsed;
+        
+        // Only restore if saved within last 72 hours
+        const saveTime = new Date(lastSaved);
+        const now = new Date();
+        const hoursDiff = (now.getTime() - saveTime.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursDiff < 72) {
+          // Restore form values
+          setFormData(formValues);
+          
+          // SECURITY: Prevent restoration to sensitive steps without verification
+          if (savedStep >= 0 && savedStep <= 4) {
+            setCurrentStep(savedStep);
+          } else if (savedStep === 5 || savedStep === 6) {
+            // Never restore to signature/submission steps - force back to safe step
+            setCurrentStep(4);
+            console.log('🔒 SECURITY: Blocked auto-save restoration to signature/submission step');
+          }
+          
+          console.log('Restored form data from auto save:', { lastSaved, step: savedStep });
+        } else {
+          // Clear old data
+          localStorage.removeItem('businessLoanFormAutoSave');
+        }
+      } catch (error) {
+        console.log('Error loading auto save data:', error);
+        localStorage.removeItem('businessLoanFormAutoSave');
+      }
+    }
+  }, []);
+
+  // Auto save every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(autoSaveFormData, 30000);
+    return () => clearInterval(interval);
+  }, [autoSaveFormData]);
+
+  // Auto save after 2 seconds of inactivity when form changes
+  useEffect(() => {
+    const timeoutId = setTimeout(autoSaveFormData, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [formData, currentStep, autoSaveFormData]);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="mb-6 sm:mb-8">
+          {/* Header with Auto Save Status */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Business Loan Application</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+              {/* Auto Save Status Indicator */}
+              <AutoSaveIndicator 
+                status={autoSaveStatus} 
+                lastSaveTime={lastSaveTime} 
+              />
+              
+              <Button variant="outline" onClick={onBack} size="sm">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Back to Portal</span>
+                <span className="sm:hidden">Back</span>
+              </Button>
+            </div>
+          </div>
+          
+          {/* Progress Monitor */}
+          <ProgressMonitor 
+            steps={steps} 
+            currentStep={currentStep} 
+          />
+        </div>
+
+        {/* Form Content */}
+        <div className="space-y-6">
+          {/* Your form steps go here */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h3 className="text-lg font-semibold mb-4">{steps[currentStep].title}</h3>
+            {/* Form fields for current step */}
+          </div>
+
+          {/* Navigation */}
+          <div className="flex justify-between pt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+              disabled={currentStep === 0}
+            >
+              Previous
+            </Button>
+            <Button 
+              onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+              disabled={currentStep === steps.length - 1}
+            >
+              Continue
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+### 2. Auto Save Status Indicator Component
+
+```typescript
+// components/AutoSaveIndicator.tsx
+import { CheckCircle, AlertCircle } from 'lucide-react';
+
+interface AutoSaveIndicatorProps {
+  status: 'saved' | 'saving' | 'error' | null;
+  lastSaveTime: string;
+}
+
+export function AutoSaveIndicator({ status, lastSaveTime }: AutoSaveIndicatorProps) {
+  return (
+    <div className="flex items-center space-x-2 text-xs text-gray-500">
+      {status === 'saving' && (
+        <>
+          <div className="animate-spin w-3 h-3 border border-gray-300 border-t-blue-500 rounded-full"></div>
+          <span>Saving...</span>
+        </>
+      )}
+      {status === 'saved' && lastSaveTime && (
+        <>
+          <CheckCircle className="w-3 h-3 text-green-500" />
+          <span className="hidden sm:inline">Saved {lastSaveTime}</span>
+          <span className="sm:hidden">Saved</span>
+        </>
+      )}
+      {status === 'error' && (
+        <>
+          <AlertCircle className="w-3 h-3 text-red-500" />
+          <span>Save failed</span>
+        </>
+      )}
+    </div>
+  );
+}
+```
+
+### 3. Progress Monitor Component
+
+```typescript
+// components/ProgressMonitor.tsx
+import { ArrowRight } from 'lucide-react';
+
+interface Step {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+interface ProgressMonitorProps {
+  steps: Step[];
+  currentStep: number;
+}
+
+export function ProgressMonitor({ steps, currentStep }: ProgressMonitorProps) {
+  return (
+    <div className="mb-6">
+      {/* Mobile: Vertical progress indicator */}
+      <div className="block sm:hidden">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-700">
+            Step {currentStep + 1} of {steps.length}
+          </span>
+          <span className="text-xs text-gray-500">
+            {Math.round(((currentStep + 1) / steps.length) * 100)}% Complete
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+          <div 
+            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+          ></div>
+        </div>
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-gray-900">{steps[currentStep].title}</h3>
+        </div>
+      </div>
+
+      {/* Desktop: Horizontal steps */}
+      <div className="hidden sm:flex items-center justify-between">
+        {steps.map((step, index) => {
+          const StepIcon = step.icon;
+          const isActive = index === currentStep;
+          const isCompleted = index < currentStep;
+          
+          return (
+            <div key={index} className="flex items-center">
+              <div className="flex flex-col items-center">
+                <div className={`flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 rounded-full border-2 ${
+                  isActive ? "border-blue-600 bg-blue-600 text-white" :
+                  isCompleted ? "border-green-600 bg-green-600 text-white" :
+                  "border-gray-300 bg-white text-gray-400"
+                }`}>
+                  <StepIcon className="w-4 h-4 lg:w-5 lg:h-5" />
+                </div>
+                <span className={`mt-2 text-xs lg:text-sm font-medium text-center max-w-20 lg:max-w-24 ${
+                  isActive ? "text-blue-600" : isCompleted ? "text-green-600" : "text-gray-400"
+                }`}>
+                  {step.title}
+                </span>
+              </div>
+              {index < steps.length - 1 && (
+                <ArrowRight className="w-4 h-4 text-gray-300 mx-2 lg:mx-4 mt-[-20px]" />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+```
+
+### 4. Enhanced Auto Save Hook (Optional)
+
+```typescript
+// hooks/useAutoSave.ts
+import { useState, useEffect, useCallback } from 'react';
+
+interface UseAutoSaveOptions {
+  key: string;
+  data: any;
+  interval?: number;
+  delay?: number;
+  maxAge?: number; // in hours
+}
+
+export function useAutoSave({ 
+  key, 
+  data, 
+  interval = 30000, 
+  delay = 2000, 
+  maxAge = 72 
+}: UseAutoSaveOptions) {
+  const [status, setStatus] = useState<'saved' | 'saving' | 'error' | null>(null);
+  const [lastSaveTime, setLastSaveTime] = useState<string>("");
+
+  const saveData = useCallback(() => {
+    try {
+      setStatus('saving');
+      const saveData = {
+        ...data,
+        lastSaved: new Date().toISOString(),
+      };
+      localStorage.setItem(key, JSON.stringify(saveData));
+      setStatus('saved');
+      setLastSaveTime(new Date().toLocaleTimeString());
+    } catch (error) {
+      setStatus('error');
+      console.error('Auto save failed:', error);
+    }
+  }, [key, data]);
+
+  const loadData = useCallback(() => {
+    try {
+      const saved = localStorage.getItem(key);
+      if (!saved) return null;
+
+      const parsed = JSON.parse(saved);
+      const { lastSaved, ...formValues } = parsed;
+      
+      // Check if data is within max age
+      const saveTime = new Date(lastSaved);
+      const now = new Date();
+      const hoursDiff = (now.getTime() - saveTime.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursDiff < maxAge) {
+        return formValues;
+      } else {
+        localStorage.removeItem(key);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error loading saved data:', error);
+      localStorage.removeItem(key);
+      return null;
+    }
+  }, [key, maxAge]);
+
+  const clearData = useCallback(() => {
+    localStorage.removeItem(key);
+    setStatus(null);
+    setLastSaveTime("");
+  }, [key]);
+
+  // Auto save on interval
+  useEffect(() => {
+    const interval_id = setInterval(saveData, interval);
+    return () => clearInterval(interval_id);
+  }, [saveData, interval]);
+
+  // Auto save after delay when data changes
+  useEffect(() => {
+    const timeoutId = setTimeout(saveData, delay);
+    return () => clearTimeout(timeoutId);
+  }, [data, saveData, delay]);
+
+  return {
+    status,
+    lastSaveTime,
+    saveData,
+    loadData,
+    clearData
+  };
+}
+```
+
+### 5. Complete Integration Example
+
+```typescript
+// components/BusinessLoanForm.tsx
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { StageMonitorForm } from './StageMonitorForm';
+import { useAutoSave } from '../hooks/useAutoSave';
+
+const formSchema = z.object({
+  businessName: z.string().min(1, "Business name is required"),
+  industry: z.string().min(1, "Industry is required"),
+  fundingAmount: z.string().min(1, "Funding amount is required"),
+  // Add your form fields here
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+export function BusinessLoanForm() {
+  const [currentStep, setCurrentStep] = useState(0);
+  
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      businessName: "",
+      industry: "",
+      fundingAmount: "",
+    }
+  });
+
+  const formData = form.watch();
+
+  // Auto save with custom hook
+  const { status, lastSaveTime, loadData } = useAutoSave({
+    key: 'businessLoanFormAutoSave',
+    data: { ...formData, currentStep },
+    interval: 30000, // 30 seconds
+    delay: 2000,    // 2 second delay
+    maxAge: 72      // 72 hours
+  });
+
+  // Load saved data on mount
+  useEffect(() => {
+    const savedData = loadData();
+    if (savedData) {
+      const { currentStep: savedStep, ...formValues } = savedData;
+      
+      // Restore form values
+      Object.keys(formValues).forEach(key => {
+        if (formValues[key] !== undefined && formValues[key] !== '') {
+          form.setValue(key as keyof FormData, formValues[key]);
+        }
+      });
+      
+      // Security check for step restoration
+      if (savedStep >= 0 && savedStep <= 4) {
+        setCurrentStep(savedStep);
+      } else {
+        setCurrentStep(4); // Force to safe step
+      }
+    }
+  }, [form, loadData]);
+
+  return (
+    <StageMonitorForm
+      currentStep={currentStep}
+      onStepChange={setCurrentStep}
+      autoSaveStatus={status}
+      lastSaveTime={lastSaveTime}
+      onBack={() => {/* navigate back */}}
+      onSuccess={() => {/* handle success */}}
+    >
+      {/* Your form content */}
+      <form>
+        {/* Form fields based on currentStep */}
+      </form>
+    </StageMonitorForm>
+  );
+}
+```
+
+### 6. Responsive CSS Additions
+
+```css
+/* styles/stage-monitor.css */
+.stage-monitor {
+  @apply mb-6;
+}
+
+.progress-bar-mobile {
+  @apply block sm:hidden;
+}
+
+.progress-bar-desktop {
+  @apply hidden sm:flex items-center justify-between;
+}
+
+.step-indicator {
+  @apply flex items-center justify-center rounded-full border-2 transition-all duration-200;
+}
+
+.step-indicator.active {
+  @apply border-blue-600 bg-blue-600 text-white;
+}
+
+.step-indicator.completed {
+  @apply border-green-600 bg-green-600 text-white;
+}
+
+.step-indicator.pending {
+  @apply border-gray-300 bg-white text-gray-400;
+}
+
+.auto-save-indicator {
+  @apply flex items-center space-x-2 text-xs text-gray-500;
+}
+
+.auto-save-spinner {
+  @apply animate-spin w-3 h-3 border border-gray-300 border-t-blue-500 rounded-full;
+}
+```
+
+### 7. Required Dependencies
+
+```bash
+# Install required packages
+npm install lucide-react
+npm install @hookform/resolvers zod react-hook-form
+npm install @/components/ui/button @/components/ui/form # Shadcn components
+```
+
+---
+
+## 🔧 KEY FEATURES
+
+### Stage Monitor Features
+- **Desktop Horizontal Layout** with step icons and titles
+- **Mobile Vertical Progress Bar** with percentage completion
+- **Visual State Indicators** (active, completed, pending)
+- **Responsive Design** optimized for all screen sizes
+- **Step Navigation** with proper state management
+
+### Auto Save Features
+- **Real-Time Saving** with 2-second delay after changes
+- **Periodic Saves** every 30 seconds for reliability
+- **Visual Feedback** with saving/saved/error indicators
+- **Smart Restoration** with 72-hour expiry
+- **Security Controls** preventing unauthorized step access
+
+### Mobile Optimizations
+- **Compact Progress Bar** showing step number and percentage
+- **Simplified Status Text** for small screens
+- **Touch-Friendly Buttons** with appropriate sizing
+- **Responsive Typography** scaling with screen size
+
+---
+
+## 📊 TESTING CHECKLIST
+
+### Stage Monitor
+- ✅ Test desktop horizontal step display
+- ✅ Test mobile vertical progress bar
+- ✅ Verify step state changes (active/completed/pending)
+- ✅ Test responsive breakpoints
+- ✅ Verify step navigation functionality
+
+### Auto Save System
+- ✅ Test form data saving after 2 seconds of inactivity
+- ✅ Test periodic saves every 30 seconds
+- ✅ Verify visual status indicators work correctly
+- ✅ Test data restoration on page reload
+- ✅ Test 72-hour expiry mechanism
+- ✅ Verify security controls for step restoration
+
+### Mobile Experience
+- ✅ Test progress bar on mobile devices
+- ✅ Verify auto save indicators display properly
+- ✅ Test touch interactions and button sizing
+- ✅ Verify text scales appropriately
+
+---
+
+## 🎯 SUCCESS CRITERIA
+
+- **Professional Progress Tracking**: Clear visual indication of form progress
+- **Automatic Data Persistence**: No data loss on page reload or navigation
+- **Mobile Responsive**: Perfect experience on all device sizes
+- **Security Controls**: Prevents unauthorized access to sensitive steps
+- **Visual Feedback**: Clear status indicators for saving operations
+- **Performance Optimized**: Efficient saving with proper debouncing
+
+This system provides a professional, reliable form experience with automatic data preservation and clear progress tracking for users.

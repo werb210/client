@@ -4,7 +4,7 @@ import { Switch, Route } from "wouter";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 import Step3BusinessDetails from "@/routes/Step3_BusinessDetails";
-import Step4FinancialInfo from "@/routes/Step4_FinancialInfo";
+import Step4ApplicantDetails from "@/routes/Step4_ApplicantDetails";
 
 import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
 import Step6Signature from "@/routes/Step6_Signature";
@@ -25,6 +25,7 @@ import CorsTest from "@/pages/CorsTest";
 import ApiTest from "@/pages/ApiTest";
 import SyncMonitor from "@/pages/SyncMonitor";
 import LenderProductsByCountry from "@/routes/LenderProductsByCountry";
+import CompleteWorkflowTest from "@/test/CompleteWorkflowTest";
 
 
 /**
@@ -45,6 +46,7 @@ export function MainLayout() {
       <Route path="/cors-test" component={CorsTest} />
       <Route path="/api-test" component={ApiTest} />
       <Route path="/sync-monitor" component={SyncMonitor} />
+      <Route path="/complete-workflow-test" component={CompleteWorkflowTest} />
 
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
@@ -54,8 +56,8 @@ export function MainLayout() {
       <Route path="/apply/step-2" component={Step2Recommendations} />
       <Route path="/step3-business-details" component={Step3BusinessDetails} />
       <Route path="/apply/step-3" component={Step3BusinessDetails} />
-      <Route path="/step4-financial-info" component={Step4FinancialInfo} />
-      <Route path="/apply/step-4" component={Step4FinancialInfo} />
+      <Route path="/step4-applicant-details" component={Step4ApplicantDetails} />
+      <Route path="/apply/step-4" component={Step4ApplicantDetails} />
       <Route path="/step5-document-upload" component={Step5DocumentUpload} />
       <Route path="/apply/step-5" component={Step5DocumentUpload} />
       <Route path="/step6-signature" component={Step6Signature} />
