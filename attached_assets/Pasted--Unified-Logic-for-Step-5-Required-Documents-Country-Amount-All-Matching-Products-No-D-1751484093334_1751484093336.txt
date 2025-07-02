@@ -1,0 +1,132 @@
+### Unified Logic for Step 5 – Required Documents
+
+(**Country + Amount + All Matching Products, No Duplicates**)
+
+Below is the single, authoritative rule-set you should now implement in the **client app**.
+It replaces the old “one‐product/one‐category” approach and guarantees that *every* document needed by *any* matching lender product appears exactly once in Step 5.
+
+---
+
+## 1  Inputs
+
+| Source     | Variable                                                | Example                                                           |
+| ---------- | ------------------------------------------------------- | ----------------------------------------------------------------- |
+| **Step 1** | `country` (`"US"` \| `"CA"`)                            | `"CA"`                                                            |
+|            | `fundingAmount` (number)                                | `175000`                                                          |
+|            | `lookingFor` (`"equipment"` \| `"capital"` \| `"both"`) | `"both"`                                                          |
+| **Step 2** | `selectedProducts[]` (array of product objects)         | `[ { id:"p1", name:"ABC LOC", category:"line_of_credit", …}, … ]` |
+
+---
+
+## 2  Derive **Document Categories** for the API call
+
+```ts
+function getDocCategories(lookingFor: string, products: Product[]): string[] {
+  const map = {
+    equipment:       "equipment_financing",
+    capital:         "term_loan",
+    both:           "line_of_credit",
+    "line of credit": "line_of_credit",
+    equipment_financing: "equipment_financing",
+    factoring:       "invoice_factoring"
+  };
+
+  const base = map[lookingFor] ? [map[lookingFor]] : [];
+
+  const fromProducts = products
+    .map(p => map[p.category] || map[getKeywordCategory(p.name)])
+    .filter(Boolean);
+
+  return Array.from(new Set([...base, ...fromProducts])); // dedupe
+}
+
+function getKeywordCategory(name: string) {
+  const n = name.toLowerCase();
+  if (n.includes("line of credit")) return "line_of_credit";
+  if (n.includes("equipment"))      return "equipment_financing";
+  if (n.includes("factoring"))      return "invoice_factoring";
+  return "";
+}
+```
+
+---
+
+## 3  Fetch **Required-Document Lists** for *each* category
+
+```ts
+async function fetchDocsForCategory(cat: string, params: QueryParams) {
+  const url = new URL(`/api/loan-products/required-documents/${cat}`, STAFF_API);
+  url.searchParams.set("headquarters", params.country);
+  url.searchParams.set("fundingAmount", String(params.amount));
+  if (params.arBalance) url.searchParams.set("accountsReceivableBalance", params.arBalance);
+
+  const res = await fetch(url);
+  return res.ok ? res.json() : [];
+}
+```
+
+---
+
+## 4  Union & Deduplicate
+
+```ts
+async function buildRequiredDocList(input: WizardData) {
+  const categories = getDocCategories(input.lookingFor, input.selectedProducts);
+
+  const lists = await Promise.all(
+    categories.map(c => fetchDocsForCategory(c, input))
+  );
+
+  const fallback = [
+    "Bank Statements (6 months)",
+    "Tax Returns (3 years)",
+    "Financial Statements",
+    "Business License",
+    "Articles of Incorporation"
+  ];
+
+  // Merge and dedupe
+  const docSet = new Map<string, RequiredDoc>();
+  [...lists.flat(), ...fallback].forEach((doc: RequiredDoc | string) => {
+    const key = typeof doc === "string" ? doc : doc.id ?? doc.label;
+    if (!docSet.has(key)) docSet.set(key, typeof doc === "string" ? { label: doc, required: true } : doc);
+  });
+
+  return Array.from(docSet.values());
+}
+```
+
+---
+
+## 5  Display in **Step 5**
+
+1. Call `buildRequiredDocList()` when Step 5 mounts.
+2. Render each document with:
+
+   * **Label** (e.g., “Bank Statements – last 6 months”)
+   * **Required badge** (🔴 required)
+   * Upload field & status (✔️ uploaded / ❌ rejected / ⏳ pending)
+
+> **Important:** If two products both need *Document B*, you will only show *one* slot for *B*.
+
+---
+
+## 6  Remove Legacy Logic
+
+* Delete or archive the old single-category resolver.
+* Remove hard-coded 8-product mappings or test flags.
+* Ensure **Step 5** now relies *only* on `buildRequiredDocList()`.
+
+---
+
+## 7  Test Matrix
+
+| Scenario                             | Input                         | Expected Docs                                 |
+| ------------------------------------ | ----------------------------- | --------------------------------------------- |
+| Equipment only, US, \$80k            | 1 equipment-financing product | Equipment-specific list                       |
+| Both capital + equipment, CA, \$250k | LOC + equipment products      | Union of term-loan, LOC, and equipment docs   |
+| Multiple factoring products          | factoring x2                  | Unique union (e.g., AR aging, plus base docs) |
+
+---
+
+### ✅ After implementing this module, Step 5 will always show the **complete, non-duplicative document checklist** covering every lender product that matches the user’s choices.

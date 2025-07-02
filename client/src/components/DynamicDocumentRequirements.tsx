@@ -3,9 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { CheckCircle, FileText, AlertCircle, RefreshCcw, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { buildRequiredDocList, convertFormDataToWizardData, type RequiredDoc, type Product } from '@/lib/documentRequirements';
 
-// TypeScript Interfaces
-interface UploadedFile {
+// TypeScript Interfaces - Export for use in other components
+export interface UploadedFile {
   id: string;
   name: string;
   size: number;
@@ -17,6 +18,7 @@ interface UploadedFile {
   uploadProgress?: number;
 }
 
+// Legacy interface for backward compatibility
 interface DocumentRequirement {
   name: string;
   description: string;
@@ -80,26 +82,27 @@ function UploadedFileItem({
   );
 }
 
-// Document Upload Card Component
-function DocumentUploadCard({ 
+// Unified Document Upload Card Component for new RequiredDoc interface
+function UnifiedDocumentUploadCard({ 
   doc, 
   uploadedFiles, 
   onFilesUploaded, 
   cardIndex 
 }: {
-  doc: DocumentRequirement;
+  doc: RequiredDoc;
   uploadedFiles: UploadedFile[];
   onFilesUploaded: (files: UploadedFile[]) => void;
   cardIndex: number;
 }) {
   
-  // Filter files for this document type
+  // Filter files for this document type using label instead of name
   const documentFiles = uploadedFiles.filter(f => 
-    f.documentType?.toLowerCase().includes(doc.name.toLowerCase().replace(/\s+/g, '_')) ||
-    f.name.toLowerCase().includes(doc.name.toLowerCase().split(' ')[0])
+    f.documentType?.toLowerCase().includes(doc.label.toLowerCase().replace(/\s+/g, '_')) ||
+    f.name.toLowerCase().includes(doc.label.toLowerCase().split(' ')[0])
   );
   
-  const isComplete = documentFiles.length >= doc.quantity;
+  const requiredQuantity = doc.quantity || 1;
+  const isComplete = documentFiles.length >= requiredQuantity;
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -110,7 +113,7 @@ function DocumentUploadCard({
         type: file.type,
         file,
         status: "completed" as const,
-        documentType: doc.name.toLowerCase().replace(/\s+/g, '_')
+        documentType: doc.label.toLowerCase().replace(/\s+/g, '_') // Use label instead of name
       }));
       onFilesUploaded([...uploadedFiles, ...newFiles]);
     }
@@ -132,17 +135,17 @@ function DocumentUploadCard({
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-2">
-              <h3 className="text-lg font-semibold text-gray-900">{doc.name}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{doc.label}</h3>
               {isComplete && (
                 <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
                   <CheckCircle className="w-4 h-4 text-green-600" />
                 </div>
               )}
             </div>
-            <p className="text-sm text-gray-600 mb-3">{doc.description}</p>
+            <p className="text-sm text-gray-600 mb-3">{doc.description || 'Document required for your application'}</p>
             <div className="flex items-center space-x-4">
               <span className="text-sm font-medium text-gray-700">
-                Required: {doc.quantity} file{doc.quantity !== 1 ? 's' : ''}
+                Required: {requiredQuantity} file{requiredQuantity !== 1 ? 's' : ''}
               </span>
               <span className={`text-sm font-medium ${
                 isComplete ? 'text-green-600' : 'text-blue-600'
@@ -205,7 +208,7 @@ function DocumentUploadCard({
   );
 }
 
-// Main Component
+// Main Component with Unified Document Requirements Logic
 export function DynamicDocumentRequirements({
   formData,
   uploadedFiles,
@@ -214,71 +217,52 @@ export function DynamicDocumentRequirements({
   onRequirementsChange
 }: DynamicDocumentRequirementsProps) {
   
-  // Determine document category based on user selection
-  const getDocumentCategory = () => {
-    if (selectedProduct && selectedProduct.toLowerCase().includes('line of credit')) {
-      return 'line_of_credit';
-    }
-    
-    if (formData.lookingFor === 'equipment') {
-      return 'equipment_financing';
-    } else if (formData.lookingFor === 'capital') {
-      return 'term_loan';
-    } else if (formData.lookingFor === 'both') {
-      return 'line_of_credit';
-    } else {
-      return 'term_loan';
-    }
-  };
+  // State for document requirements
+  const [documentRequirements, setDocumentRequirements] = useState<RequiredDoc[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const documentCategory = getDocumentCategory();
-
-  // Format category names for display
-  const formatCategoryName = (category: string) => {
-    const categoryNames = {
-      'line_of_credit': 'Business Line of Credit',
-      'term_loan': 'Term Loan',
-      'equipment_financing': 'Equipment Financing',
-      'factoring': 'Invoice Factoring',
-      'working_capital': 'Working Capital',
-      'purchase_order_financing': 'Purchase Order Financing'
-    };
-    return categoryNames[category as keyof typeof categoryNames] || category;
-  };
-
-  // Fetch required documents from API
-  const { data: requiredDocs, isLoading: docsLoading, error: docsError, refetch } = useQuery({
-    queryKey: ['/api/loan-products/required-documents', documentCategory, formData.headquarters, formData.fundingAmount],
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        headquarters: formData.headquarters || 'united_states',
-        fundingAmount: formData.fundingAmount || '$50000',
-        ...(formData.accountsReceivableBalance && { accountsReceivableBalance: formData.accountsReceivableBalance })
-      });
+  // Fetch unified document requirements using new logic
+  useEffect(() => {
+    const loadDocumentRequirements = async () => {
+      setIsLoading(true);
+      setError(null);
       
-      const response = await fetch(`/api/loan-products/required-documents/${documentCategory}?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch required documents');
-      return response.json();
-    },
-    enabled: !!(documentCategory && formData.headquarters && formData.fundingAmount),
-    retry: 1,
-  });
+      try {
+        // Convert form data to WizardData format
+        const selectedProducts: Product[] = formData.selectedProducts || [];
+        
+        const wizardData = convertFormDataToWizardData(formData, selectedProducts);
+        
+        console.log('📋 Loading unified document requirements for:', wizardData);
+        
+        // Use the new unified logic to build requirements list
+        const requirements = await buildRequiredDocList(wizardData);
+        
+        setDocumentRequirements(requirements);
+        
+        console.log(`📄 Loaded ${requirements.length} document requirements:`, 
+          requirements.map(r => r.label));
+          
+      } catch (err) {
+        console.error('❌ Failed to load document requirements:', err);
+        setError('Failed to load document requirements');
+        setDocumentRequirements([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Process document requirements with fallback
-  let documentRequirements = Array.isArray(requiredDocs?.data) ? requiredDocs.data : [];
-  
-  // Fallback to standard business loan documents if no specific requirements found
-  if (documentRequirements.length === 0 && !docsLoading && !docsError) {
-    documentRequirements = [
-      { name: "Bank Statements", description: "Last 6 months of business bank statements", quantity: 6 },
-      { name: "Tax Returns", description: "Last 3 years of business tax returns", quantity: 3 },
-      { name: "Financial Statements", description: "Recent profit & loss and balance sheet", quantity: 3 },
-      { name: "Business License", description: "Valid business registration or license", quantity: 1 },
-      { name: "Articles of Incorporation", description: "Legal business formation documents", quantity: 1 }
-    ];
-  }
+    // Only load if we have the minimum required data
+    if (formData.lookingFor && formData.businessLocation) {
+      loadDocumentRequirements();
+    } else {
+      setIsLoading(false);
+    }
+  }, [formData.lookingFor, formData.businessLocation, formData.fundingAmount, 
+      formData.accountsReceivableBalance, selectedProduct]);
 
-  // Check completion status
+  // Check completion status using new unified requirements
   useEffect(() => {
     if (documentRequirements.length > 0) {
       // TESTING MODE: Always consider documents complete for testing
@@ -288,10 +272,10 @@ export function DynamicDocumentRequirements({
       // PRODUCTION: Uncomment this for required document validation
       // const completedDocs = documentRequirements.filter(doc => {
       //   const documentFiles = uploadedFiles.filter(f => 
-      //     f.documentType?.toLowerCase().includes(doc.name.toLowerCase().replace(/\s+/g, '_')) ||
-      //     f.name.toLowerCase().includes(doc.name.toLowerCase().split(' ')[0])
+      //     f.documentType?.toLowerCase().includes(doc.label.toLowerCase().replace(/\s+/g, '_')) ||
+      //     f.name.toLowerCase().includes(doc.label.toLowerCase().split(' ')[0])
       //   );
-      //   return documentFiles.length >= doc.quantity;
+      //   return documentFiles.length >= (doc.quantity || 1);
       // });
       // 
       // const allComplete = completedDocs.length === documentRequirements.length;
@@ -300,13 +284,13 @@ export function DynamicDocumentRequirements({
   }, [uploadedFiles, documentRequirements, onRequirementsChange]);
 
   // Error state
-  if (docsError && !requiredDocs) {
+  if (error) {
     return (
       <div className="text-center py-8">
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to Load Document Requirements</h3>
         <p className="text-gray-600 mb-4">We're having trouble loading the specific document requirements for your loan type.</p>
-        <Button onClick={() => refetch()} variant="outline">
+        <Button onClick={() => window.location.reload()} variant="outline">
           <RefreshCcw className="w-4 h-4 mr-2" />
           Try Again
         </Button>
@@ -315,37 +299,37 @@ export function DynamicDocumentRequirements({
   }
 
   // Loading state
-  if (docsLoading) {
+  if (isLoading) {
     return (
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading document requirements...</p>
+        <p className="text-gray-600">Loading unified document requirements...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header Section */}
+      {/* Header Section with unified requirements info */}
       <Card className="bg-blue-50 border-blue-200">
         <CardContent className="p-4">
           <h3 className="text-lg font-semibold text-blue-900 mb-2">
-            Required Documents for {formatCategoryName(documentCategory)}
+            Required Documents - Unified Requirements
           </h3>
           <p className="text-sm text-blue-800">
-            Based on your loan selection: {selectedProduct ? formatCategoryName(selectedProduct) : 'Standard requirements'}
+            Consolidated from all matching lender products for your selections
           </p>
           <p className="text-xs text-blue-600 mt-1">
-            Showing {documentRequirements.length} required document types
+            Showing {documentRequirements.length} unique document requirements
           </p>
         </CardContent>
       </Card>
 
-      {/* Document Requirements Grid */}
+      {/* Document Requirements Grid using new structure */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {documentRequirements.length > 0 ? documentRequirements.map((doc: DocumentRequirement, index: number) => (
-          <DocumentUploadCard
-            key={index}
+        {documentRequirements.length > 0 ? documentRequirements.map((doc: RequiredDoc, index: number) => (
+          <UnifiedDocumentUploadCard
+            key={doc.id || index}
             doc={doc}
             uploadedFiles={uploadedFiles}
             onFilesUploaded={onFilesUploaded}
