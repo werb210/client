@@ -28,6 +28,7 @@ import LenderProductsByCountry from "@/routes/LenderProductsByCountry";
 import CompleteWorkflowTest from "@/test/CompleteWorkflowTest";
 import StageMonitorTest from "@/test/StageMonitorTest";
 import SignNowWorkflowTest from "@/test/SignNowWorkflowTest";
+import Step5Test from "@/pages/Step5Test";
 
 
 /**
@@ -51,6 +52,7 @@ export function MainLayout() {
       <Route path="/complete-workflow-test" component={CompleteWorkflowTest} />
       <Route path="/stage-monitor-test" component={StageMonitorTest} />
       <Route path="/signnow-workflow-test" component={SignNowWorkflowTest} />
+      <Route path="/step5-test" component={Step5Test} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
