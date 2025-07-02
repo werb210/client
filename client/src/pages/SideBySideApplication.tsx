@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronLeft, ChevronRight, Monitor, Tablet, Smartphone } from 'lucide-react';
+import { StageMonitor } from '@/components/StageMonitor';
 
 // Import all step components
 import Step1FinancialProfile from '@/routes/Step1_FinancialProfile_Complete';
@@ -117,6 +118,16 @@ export default function SideBySideApplication() {
     }
   };
 
+  const getCurrentStepIndex = () => {
+    // Determine current step based on form completion state (0-indexed for StageMonitor)
+    if (!state.step1FinancialProfile) return 0; // Step 1 - Financial Profile
+    if (!state.step1FinancialProfile.selectedCategory) return 1; // Step 2 - Recommendations
+    if (!state.step3BusinessDetails) return 2; // Step 3 - Business Details  
+    if (!state.step4FinancialInfo) return 3; // Step 4 - Financial Info
+    if (!state.step5DocumentUpload) return 4; // Step 5 - Document Upload
+    return 5; // Step 6 - Signature & Submission
+  };
+
   const visibleStepsList = currentSteps.slice(startIndex, startIndex + visibleSteps);
 
   return (
@@ -134,6 +145,9 @@ export default function SideBySideApplication() {
             }
           </p>
         </div>
+
+        {/* Stage Monitor - Professional Progress Tracking */}
+        <StageMonitor currentStep={getCurrentStepIndex()} />
 
         {/* Navigation Controls */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
