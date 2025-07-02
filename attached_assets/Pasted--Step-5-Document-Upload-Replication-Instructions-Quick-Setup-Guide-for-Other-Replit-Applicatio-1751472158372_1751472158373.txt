@@ -1,0 +1,397 @@
+# Step 5 Document Upload - Replication Instructions
+## Quick Setup Guide for Other Replit Applications
+
+Follow these exact steps to reproduce the dynamic document requirements system in your Replit application.
+
+---
+
+## 📋 WHAT YOU'RE BUILDING
+
+A document upload section that:
+- Queries a real lender database to get authentic document requirements
+- Changes requirements based on user's loan product selection from earlier steps
+- Tracks upload completion and enables/disables continue button accordingly
+- Shows fallback documents when no specific lender requirements match
+
+---
+
+## 🚀 STEP-BY-STEP IMPLEMENTATION
+
+### 1. Database Setup (5 minutes)
+
+Create the lender products table:
+
+```sql
+CREATE TABLE loan_products (
+  id SERIAL PRIMARY KEY,
+  lender_name VARCHAR(255) NOT NULL,
+  product_name VARCHAR(255) NOT NULL,
+  product_type VARCHAR(100) NOT NULL,
+  min_loan_amount INTEGER NOT NULL,
+  max_loan_amount INTEGER NOT NULL,
+  offered_in_us BOOLEAN DEFAULT true,
+  offered_in_canada BOOLEAN DEFAULT false,
+  required_documents TEXT[],
+  is_active BOOLEAN DEFAULT true
+);
+
+-- Sample data
+INSERT INTO loan_products VALUES
+(1, 'Meridian OneCap', 'Business Term Loan', 'term_loan', 25000, 500000, true, false, '["Bank Statements", "Tax Returns", "Financial Statements"]', true),
+(2, 'Dynamic Capital', 'Equipment Financing', 'equipment_financing', 10000, 250000, true, true, '["Bank Statements", "Equipment Quotes", "Business License"]', true),
+(3, 'AccordAccess', 'Line of Credit', 'line_of_credit', 10000, 100000, true, false, '["Bank Statements"]', true);
+```
+
+### 2. Backend API (10 minutes)
+
+Add to your `server/routes.ts`:
+
+```typescript
+// Document requirements endpoint
+app.get('/api/loan-products/required-documents/:category', async (req, res) => {
+  try {
+    const { category } = req.params;
+    const { headquarters = 'united_states', fundingAmount = '$50,000' } = req.query;
+
+    // Build query with geographic filtering
+    let whereConditions = [`product_type = $1`];
+    let params = [category];
+    
+    if (headquarters === 'canada') {
+      whereConditions.push(`offered_in_canada = true`);
+    } else {
+      whereConditions.push(`offered_in_us = true`);
+    }
+
+    const query = `
+      SELECT DISTINCT required_documents
+      FROM loan_products 
+      WHERE ${whereConditions.join(' AND ')} 
+      AND is_active = true 
+      AND required_documents IS NOT NULL
+    `;
+    
+    const results = await db.execute(query, params);
+    
+    // Extract unique documents
+    const allDocs = [];
+    results.forEach(row => {
+      if (row.required_documents) {
+        allDocs.push(...row.required_documents);
+      }
+    });
+    
+    const uniqueDocs = [...new Set(allDocs)].map(doc => ({
+      name: doc,
+      description: `Required for ${category} applications`,
+      quantity: 1
+    }));
+
+    res.json({ success: true, data: uniqueDocs });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+```
+
+### 3. Category Mapping Logic (5 minutes)
+
+Create `utils/categoryMapping.ts`:
+
+```typescript
+export const getDocumentCategory = (formData: any, selectedProduct: string): string => {
+  // Use selectedProduct if specific
+  if (selectedProduct?.toLowerCase().includes('line of credit')) {
+    return 'line_of_credit';
+  }
+  
+  // Map form selections to database categories
+  if (formData.lookingFor === 'equipment') {
+    return 'equipment_financing';
+  } else if (formData.lookingFor === 'capital') {
+    return 'term_loan';
+  } else {
+    return 'line_of_credit';
+  }
+};
+
+export const formatCategoryName = (category: string): string => {
+  const map = {
+    'term_loan': 'Term Loan',
+    'line_of_credit': 'Business Line of Credit',
+    'equipment_financing': 'Equipment Financing'
+  };
+  return map[category] || category;
+};
+```
+
+### 4. Document Upload Component (15 minutes)
+
+Create `components/DocumentUploadStep.tsx`:
+
+```typescript
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { FileText, CheckCircle, X } from 'lucide-react';
+import { getDocumentCategory, formatCategoryName } from '../utils/categoryMapping';
+
+interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  file: File;
+  documentType: string;
+}
+
+interface DocumentRequirement {
+  name: string;
+  description: string;
+  quantity: number;
+}
+
+interface Props {
+  formData: any;
+  uploadedFiles: UploadedFile[];
+  onFilesUploaded: (files: UploadedFile[]) => void;
+  onRequirementsChange: (allComplete: boolean, total: number) => void;
+  selectedProduct: string;
+}
+
+export function DocumentUploadStep({ 
+  formData, 
+  uploadedFiles, 
+  onFilesUploaded, 
+  onRequirementsChange, 
+  selectedProduct 
+}: Props) {
+  
+  const documentCategory = getDocumentCategory(formData, selectedProduct);
+
+  // Query document requirements
+  const { data: requiredDocs, isLoading } = useQuery({
+    queryKey: ['/api/loan-products/required-documents', documentCategory, formData.headquarters],
+    enabled: !!(documentCategory && formData.headquarters)
+  });
+
+  // Process requirements with fallback
+  let documentRequirements: DocumentRequirement[] = requiredDocs?.data || [];
+  
+  if (documentRequirements.length === 0 && !isLoading) {
+    documentRequirements = [
+      { name: "Bank Statements", description: "Last 6 months", quantity: 6 },
+      { name: "Tax Returns", description: "Last 3 years", quantity: 3 },
+      { name: "Financial Statements", description: "P&L and balance sheet", quantity: 3 }
+    ];
+  }
+
+  // Track completion and notify parent
+  useEffect(() => {
+    const allComplete = documentRequirements.every(doc => {
+      const matchingFiles = uploadedFiles.filter(f => 
+        f.documentType?.includes(doc.name.toLowerCase().replace(/\s+/g, '_'))
+      );
+      return matchingFiles.length >= doc.quantity;
+    });
+    onRequirementsChange(allComplete, documentRequirements.length);
+  }, [uploadedFiles, documentRequirements]);
+
+  const handleFileUpload = (files: FileList, documentName: string) => {
+    const newFiles = Array.from(files).map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      file,
+      documentType: documentName.toLowerCase().replace(/\s+/g, '_')
+    }));
+    onFilesUploaded([...uploadedFiles, ...newFiles]);
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-8">Loading document requirements...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-blue-50 p-4 rounded-lg">
+        <h3 className="text-lg font-semibold text-blue-900">
+          Required Documents for {formatCategoryName(documentCategory)}
+        </h3>
+        <p className="text-sm text-blue-800">
+          Based on your selection: {selectedProduct}
+        </p>
+      </div>
+
+      {/* Document Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {documentRequirements.map((doc, index) => {
+          const documentFiles = uploadedFiles.filter(f => 
+            f.documentType?.includes(doc.name.toLowerCase().replace(/\s+/g, '_'))
+          );
+          const isComplete = documentFiles.length >= doc.quantity;
+          
+          return (
+            <div key={index} className={`border-2 rounded-lg p-6 ${
+              isComplete ? 'border-green-200 bg-green-50' : 'border-gray-200'
+            }`}>
+              {/* Document Info */}
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h4 className="font-semibold flex items-center gap-2">
+                    {doc.name}
+                    {isComplete && <CheckCircle className="w-5 h-5 text-green-600" />}
+                  </h4>
+                  <p className="text-sm text-gray-600">{doc.description}</p>
+                  <p className="text-sm text-gray-500">
+                    Required: {doc.quantity} | Uploaded: {documentFiles.length}
+                  </p>
+                </div>
+                <span className={`px-2 py-1 rounded text-xs ${
+                  isComplete ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {isComplete ? 'Complete' : 'Required'}
+                </span>
+              </div>
+
+              {/* Upload Area */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  onChange={(e) => e.target.files && handleFileUpload(e.target.files, doc.name)}
+                  className="hidden"
+                  id={`upload-${index}`}
+                />
+                <label htmlFor={`upload-${index}`} className="cursor-pointer">
+                  <FileText className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm">
+                    <span className="text-blue-600 font-medium">Choose files</span> or drag and drop
+                  </p>
+                </label>
+              </div>
+
+              {/* File List */}
+              {documentFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {documentFiles.map(file => (
+                    <div key={file.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <span className="text-sm">{file.name}</span>
+                      <button
+                        onClick={() => {
+                          const updated = uploadedFiles.filter(f => f.id !== file.id);
+                          onFilesUploaded(updated);
+                        }}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+```
+
+### 5. Integration with Main Form (5 minutes)
+
+In your main form component:
+
+```typescript
+export function ApplicationForm() {
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [documentRequirementsMet, setDocumentRequirementsMet] = useState(false);
+  const [totalDocumentRequirements, setTotalDocumentRequirements] = useState(0);
+
+  const handleRequirementsChange = (allComplete: boolean, total: number) => {
+    setDocumentRequirementsMet(allComplete);
+    setTotalDocumentRequirements(total);
+  };
+
+  return (
+    <div>
+      {/* Step 5 - Document Upload */}
+      {currentStep === 4 && (
+        <DocumentUploadStep
+          formData={formData}
+          uploadedFiles={uploadedFiles}
+          onFilesUploaded={setUploadedFiles}
+          onRequirementsChange={handleRequirementsChange}
+          selectedProduct={selectedProduct}
+        />
+      )}
+      
+      {/* Continue Button */}
+      <button 
+        disabled={!documentRequirementsMet}
+        className={`px-6 py-2 rounded ${
+          documentRequirementsMet 
+            ? 'bg-blue-600 text-white' 
+            : 'bg-gray-200 text-gray-500'
+        }`}
+      >
+        {documentRequirementsMet 
+          ? "Continue" 
+          : `Complete Documents (${totalDocumentRequirements} required)`
+        }
+      </button>
+    </div>
+  );
+}
+```
+
+### 6. Dependencies (2 minutes)
+
+Install required packages:
+
+```bash
+npm install @tanstack/react-query lucide-react
+```
+
+---
+
+## 🔧 CONFIGURATION
+
+### Connect to Your Data
+- Replace `formData.lookingFor` with your form field names
+- Update `selectedProduct` to match your Step 2 product selection
+- Modify `headquarters` field name to match your form
+
+### Customize Documents
+- Edit the fallback documents array in step 4
+- Modify the category mapping in `getDocumentCategory()`
+- Add custom file types to the accept attribute
+
+### Styling
+- Replace Tailwind classes with your CSS framework
+- Customize colors and spacing to match your design
+- Add your own icons instead of Lucide React
+
+---
+
+## ✅ TESTING
+
+1. **Database**: Add sample lender products with document arrays
+2. **API**: Test the endpoint with different categories and countries
+3. **Frontend**: Verify files upload and completion tracking works
+4. **Integration**: Ensure Step 2 selection affects Step 5 requirements
+
+---
+
+## 🎯 RESULT
+
+You'll have a dynamic document upload section that:
+- Loads real lender requirements from your database
+- Adapts to user selections from previous steps
+- Tracks completion and controls form progression
+- Provides fallback documents when needed
+
+The system provides an authentic, intelligent document collection experience that matches real lender requirements.

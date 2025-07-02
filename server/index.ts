@@ -4,6 +4,7 @@ import { dirname, join } from "path";
 import { setupVite, serveStatic, log } from "./vite";
 import lendersRouter from "./routes/lenders";
 import localLendersRouter from "./routes/localLenders";
+import loanProductCategoriesRouter from "./routes/loanProductCategories";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -81,6 +82,7 @@ app.use((req, res, next) => {
   // Mount lender routes
   app.use('/api/lenders', lendersRouter);
   app.use('/api/local/lenders', localLendersRouter);
+  app.use('/api/loan-products', loanProductCategoriesRouter);
 
   // System status page for authentication troubleshooting
   app.get('/system-status', (req, res) => {

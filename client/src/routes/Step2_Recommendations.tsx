@@ -1,48 +1,37 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
-import { useRecommendations } from '@/hooks/useRecommendations';
-import { RecommendationCard } from '@/components/recommendations/RecommendationCard';
-import { CacheStatus } from '@/components/CacheStatus';
-import { ArrowRight, ArrowLeft, AlertCircle, Loader2, User, MapPin, DollarSign, Building } from 'lucide-react';
+import { Step2RecommendationEngine } from '@/components/Step2RecommendationEngine';
 
 export default function Step2Recommendations() {
   const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<string>('');
 
   // Get user's Step 1 data for matching
   const step1Data = state.step1FinancialProfile;
   
-  // Convert form data to match useRecommendations interface
-  const recommendationData = step1Data ? {
-    businessLocation: step1Data.businessLocation as "united-states" | "canada" | undefined,
+  // Convert form data to match Step2RecommendationEngine interface
+  const formData = step1Data ? {
+    headquarters: step1Data.businessLocation === 'united-states' ? 'US' : 
+                  step1Data.businessLocation === 'canada' ? 'CA' : 
+                  step1Data.businessLocation,
     industry: step1Data.industry,
-    lookingFor: step1Data.lookingFor as "capital" | "equipment" | "both" | undefined,
+    lookingFor: step1Data.lookingFor,
     fundingAmount: step1Data.fundingAmount,
-    useOfFunds: step1Data.useOfFunds,
-    lastYearRevenue: step1Data.lastYearRevenue,
-    averageMonthlyRevenue: step1Data.monthlyRevenue, // Use monthlyRevenue field
-    accountsReceivable: step1Data.accountReceivable, // Use accountReceivable field
-    equipmentValue: step1Data.fixedAssets, // Use fixedAssets field
+    fundsPurpose: step1Data.useOfFunds,
+    accountsReceivableBalance: step1Data.accountReceivable || 0,
+    // Additional fields for context
+    salesHistory: step1Data.salesHistory,
+    averageMonthlyRevenue: step1Data.monthlyRevenue,
   } : {};
-  
-  const { categories, isLoading, error } = useRecommendations(recommendationData);
 
-  const totalProducts = Object.values(categories).reduce((t, c) => t + c.count, 0);
-
-  const toTitleCase = (str: string): string => {
-    return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-  };
-
-  const handleCategorySelect = (categoryKey: string) => {
-    setSelectedCategory(categoryKey);
+  const handleProductSelect = (product: string) => {
+    setSelectedProduct(product);
     dispatch({
       type: 'UPDATE_STEP1',
       payload: {
-        selectedCategory: categoryKey
+        selectedCategory: product
       }
     });
   };
