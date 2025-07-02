@@ -39,7 +39,19 @@ export interface FinancialInfoData {
 }
 
 export interface DocumentUploadData {
-  categories: Array<{
+  uploadedFiles?: Array<{
+    id: string;
+    name: string;
+    size: number;
+    type: string;
+    file?: File;
+    status: 'uploading' | 'completed' | 'error';
+    documentType: string;
+  }>;
+  completed?: boolean;
+  completedAt?: string;
+  savedAt?: string;
+  categories?: Array<{
     id: string;
     name: string;
     documents: Array<{
@@ -54,12 +66,17 @@ export interface DocumentUploadData {
     }>;
     uploadLater: boolean;
   }>;
-  completedAt?: string;
-  savedAt?: string;
 }
 
 export interface FormDataState {
   step1FinancialProfile: FinancialProfileData;
+  step2Recommendations?: {
+    selectedProduct?: {
+      product_name?: string;
+      lender_name?: string;
+      product_type?: string;
+    };
+  };
   step3BusinessDetails?: BusinessDetailsData;
   step4FinancialInfo?: FinancialInfoData;
   step5DocumentUpload?: DocumentUploadData;
