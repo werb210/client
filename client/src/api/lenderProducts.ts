@@ -1,3 +1,5 @@
+import { STAFF_API } from './constants';
+
 export interface LenderProduct {
   // Core Identification
   id: string;
@@ -26,69 +28,40 @@ export interface LenderProduct {
   updatedAt: string;
 }
 
-// Always use staff app API for full 43+ product dataset
-const STAFF_API_BASE = import.meta.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app';
-
+/**
+ * Fetch lender products from staff database ONLY
+ * NO FALLBACK to ensure we always use the 43+ product dataset
+ */
 export async function fetchLenderProducts(): Promise<LenderProduct[]> {
-  // Single canonical endpoint for 43+ products
-  const staffUrl = `${STAFF_API_BASE}/api/public/lenders`;
+  const staffUrl = `${STAFF_API}/api/public/lenders`;
   
-  try {
-    console.log(`Attempting staff API: ${staffUrl}`);
-    const res = await fetch(staffUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      mode: 'cors',
-      credentials: 'omit'
-    });
-    
-    if (!res.ok) {
-      throw new Error(`Staff API ${res.status}: ${res.statusText}`);
-    }
-    
-    const data = await res.json();
-    console.log('[RAW API DATA]:', data);
-    console.log('[RAW API DATA TYPE]:', typeof data, Array.isArray(data) ? 'array' : 'object');
-    
-    const products = Array.isArray(data) ? data : data.products || [];
-    console.log(`[BEFORE NORMALIZE] Raw products array length: ${products.length}`);
-    
-    if (products.length > 0) {
-      console.log('[SAMPLE RAW PRODUCT]:', products[0]);
-      const normalized = normalizeProducts(products);
-      console.log(`[AFTER NORMALIZE] Normalized products length: ${normalized.length}`);
-      console.log('[SAMPLE NORMALIZED PRODUCT]:', normalized[0]);
-      return normalized;
-    }
-  } catch (error) {
-    console.warn(`Staff API endpoint ${staffUrl} failed:`, error);
+  console.log(`Fetching lender products from staff API: ${staffUrl}`);
+  
+  const res = await fetch(staffUrl, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    mode: 'cors',
+    credentials: 'omit'
+  });
+  
+  if (!res.ok) {
+    throw new Error(`Staff API failed: ${res.status} ${res.statusText} - Lender products unavailable`);
   }
-
-  // Fallback to local authentic data if staff app is unavailable
-  console.log('Staff API unavailable, using local authentic data fallback');
-  try {
-    const res = await fetch('/api/local/lenders', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!res.ok) {
-      throw new Error(`Local API failed: ${res.status} ${res.statusText}`);
-    }
-    
-    const data = await res.json();
-    const products = Array.isArray(data) ? data : data.products || [];
-    console.log(`Local API fallback: ${products.length} authentic products`);
-    
-    return normalizeProducts(products);
-  } catch (error) {
-    throw new Error(`Both staff and local APIs failed: ${error}`);
+  
+  const data = await res.json();
+  const products = Array.isArray(data) ? data : data.products || [];
+  
+  console.log(`Successfully fetched ${products.length} products from staff database`);
+  
+  // Fail fast if we don't get the expected minimum number of products
+  if (products.length < 40) {
+    throw new Error(`Insufficient products received: ${products.length} (expected 40+)`);
   }
+  
+  return normalizeProducts(products);
 }
 
 function normalizeProducts(products: any[]): LenderProduct[] {
@@ -150,7 +123,7 @@ function extractLenderFromName(productName: string): string {
 }
 
 export async function fetchLenderStats() {
-  const url = `${STAFF_API_BASE}/api/public/lenders/stats`;
+  const url = `${STAFF_API}/api/public/lenders/stats`;
   
   const res = await fetch(url, {
     method: 'GET',
@@ -167,7 +140,7 @@ export async function fetchLenderStats() {
 }
 
 export async function fetchLenderProduct(id: string): Promise<LenderProduct> {
-  const url = `${STAFF_API_BASE}/api/public/lenders/${id}`;
+  const url = `${STAFF_API}/api/public/lenders/${id}`;
   
   const res = await fetch(url, {
     method: 'GET',

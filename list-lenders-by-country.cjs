@@ -40,30 +40,34 @@ function categorizeByCountry(products) {
   const byCountry = {
     'United States': [],
     'Canada': [],
-    'United Kingdom': [],
     'International': [],
     'Other': []
   };
 
   products.forEach(product => {
-    const name = (product.name || product.productName || product.product_name || '').toLowerCase();
-    
-    if (name.includes('bmo') || name.includes('td bank') || name.includes('rbc') || 
-        name.includes('royal bank') || name.includes('scotiabank') || name.includes('cibc')) {
-      byCountry['Canada'].push(product);
-    } else if (name.includes('capital one') || name.includes('wells fargo') || 
-               name.includes('bank of america') || name.includes('chase') || 
-               name.includes('citi') || name.includes('us bank') || name.includes('pnc') ||
-               name.includes('american express') || name.includes('goldman sachs')) {
-      byCountry['United States'].push(product);
-    } else if (name.includes('hsbc') || name.includes('barclays') || 
-               name.includes('lloyds') || name.includes('natwest')) {
-      byCountry['United Kingdom'].push(product);
-    } else if (name.includes('deutsche') || name.includes('bnp') || 
-               name.includes('credit suisse') || name.includes('ubs')) {
-      byCountry['International'].push(product);
+    // Use geography field if available
+    if (product.geography && Array.isArray(product.geography)) {
+      if (product.geography.includes('US')) {
+        byCountry['United States'].push(product);
+      } else if (product.geography.includes('CA')) {
+        byCountry['Canada'].push(product);
+      } else {
+        byCountry['International'].push(product);
+      }
     } else {
-      byCountry['Other'].push(product);
+      // Fallback: Extract info from description
+      const desc = (product.description || '').toLowerCase();
+      const name = (product.name || product.productName || product.product_name || '').toLowerCase();
+      
+      if (desc.includes('us') || desc.includes('united states') || desc.includes('america') ||
+          name.includes('capital one') || name.includes('wells fargo') || name.includes('bank of america')) {
+        byCountry['United States'].push(product);
+      } else if (desc.includes('canada') || desc.includes('canadian') ||
+                 name.includes('bmo') || name.includes('td bank') || name.includes('rbc')) {
+        byCountry['Canada'].push(product);
+      } else {
+        byCountry['Other'].push(product);
+      }
     }
   });
 
@@ -108,13 +112,24 @@ async function main() {
       console.log(`\n## **${country.toUpperCase()} (${countryProducts.length} products)**\n`);
       
       countryProducts.forEach((product, index) => {
-        console.log(`${index + 1}. **${product.name}**`);
-        console.log(`   - Type: ${product.type ? product.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A'}`);
-        console.log(`   - Amount: ${formatAmount(product.min_amount)} - ${formatAmount(product.max_amount)}`);
-        console.log(`   - Interest Rate: ${formatInterestRate(product.interest_rate_min, product.interest_rate_max)}`);
-        if (product.description) {
-          console.log(`   - Description: ${product.description}`);
-        }
+        // Extract info from description since it contains the structured data
+        const desc = product.description || '';
+        const typeMatch = desc.match(/^(\w+)/);
+        const rateMatch = desc.match(/Rate: ([\d.%\s-]+)/);
+        const termMatch = desc.match(/(\d+)-(\d+) months/);
+        const docsMatch = desc.match(/Docs: (.+?)(?:\s*$)/);
+        
+        const productType = typeMatch ? typeMatch[1].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown';
+        const rates = rateMatch ? rateMatch[1] : 'Varies';
+        const terms = termMatch ? `${termMatch[1]}-${termMatch[2]} months` : 'Varies';
+        const docs = docsMatch ? docsMatch[1] : 'Not specified';
+        
+        const productName = product.productName || product.name || `${productType} Product`;
+        
+        console.log(`${index + 1}. **${productName} (${productType})**`);
+        console.log(`   - Interest Rate: ${rates}`);
+        console.log(`   - Terms: ${terms}`);
+        console.log(`   - Required Documents: ${docs}`);
         console.log('');
       });
     });
