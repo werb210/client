@@ -3,24 +3,19 @@ import { z } from "zod";
 
 export const LenderProduct = z.object({
   id: z.string(),
-  product_name: z.string(),
-  lender_name: z.string(),
-  product_type: z.enum([
-    "equipment_financing",
-    "invoice_factoring", 
-    "line_of_credit",
-    "working_capital",
-    "term_loan",
-    "purchase_order_financing",
-  ]),
-  geography: z.array(z.enum(["US", "CA"])),
-  min_amount: z.number(),
-  max_amount: z.number(),
-  min_revenue: z.number().nullable(),
-  industries: z.array(z.string()).nullable(),
-  is_active: z.boolean().optional(),
+  productName: z.string(),
+  lenderName: z.string(),
+  category: z.string(),
+  country: z.string(),
+  amountRange: z.object({
+    min: z.number(),
+    max: z.number(),
+  }),
+  requirements: z.object({
+    minMonthlyRevenue: z.number(),
+    industries: z.array(z.string()).optional(),
+  }).optional(),
   description: z.string().optional(),
-  video_url: z.string().optional(),
 });
 
 export type LenderProduct = z.infer<typeof LenderProduct>;
@@ -64,31 +59,40 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   /** 2 — filter + score */
   const fundingAmount = parseFloat(formStep1Data.fundingAmount?.replace(/[^0-9.-]+/g, '') || '0');
   const revenueLastYear = getRevenueValue(formStep1Data.lastYearRevenue || '');
-  const headquarters = formStep1Data.businessLocation === "united-states" ? "US" as const : "CA" as const;
+  const headquarters = formStep1Data.businessLocation === "united-states" ? "United States" as const : "Canada" as const;
+
+  console.log("🔍 FILTERING PRODUCTS:", {
+    country: headquarters,
+    lookingFor: formStep1Data.lookingFor,
+    fundingAmount: formStep1Data.fundingAmount,
+    industry: formStep1Data.industry,
+    parsedAmount: fundingAmount
+  });
 
   const matches = products
     .filter(p => {
-      // Basic active check
-      if (p.is_active === false) return false;
-      
-      // Geography check
-      if (!p.geography.includes(headquarters)) return false;
-      
-      // Amount range check
-      if (fundingAmount < p.min_amount || fundingAmount > p.max_amount) return false;
-      
-      // Revenue requirement check
-      if (p.min_revenue && revenueLastYear < p.min_revenue) return false;
-      
-      // Industry check (if specified)
-      if (p.industries?.length && formStep1Data.industry && !p.industries.includes(formStep1Data.industry)) return false;
-      
-      // Product type check
-      if (formStep1Data.lookingFor && formStep1Data.lookingFor !== "both") {
-        const mappedType = mapLookingFor(formStep1Data.lookingFor);
-        if (mappedType !== p.product_type) return false;
+      // Geography check - match country
+      if (p.country !== headquarters) {
+        console.log(`❌ Geography: ${p.productName} (${p.country}) doesn't match ${headquarters}`);
+        return false;
       }
       
+      // Amount range check
+      if (fundingAmount < p.amountRange.min || fundingAmount > p.amountRange.max) {
+        console.log(`❌ Amount: ${p.productName} range $${p.amountRange.min}-$${p.amountRange.max} doesn't fit $${fundingAmount}`);
+        return false;
+      }
+      
+      // Product type check for business capital - should include multiple types
+      if (formStep1Data.lookingFor === "capital") {
+        const isCapitalProduct = isBusinessCapitalProduct(p.category);
+        if (!isCapitalProduct) {
+          console.log(`❌ Product Type: ${p.productName} (${p.category}) doesn't match capital requirement`);
+          return false;
+        }
+      }
+      
+      console.log(`✅ Match: ${p.productName} by ${p.lenderName}`);
       return true;
     })
     .map(p => ({
@@ -100,7 +104,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   /** 3 — aggregate to category rows */
   const categories = matches.reduce<Record<string, { score: number; count: number; products: typeof matches }>>(
     (acc, m) => {
-      const key = m.product.product_type;
+      const key = m.product.category;
       if (!acc[key]) {
         acc[key] = { score: m.score, count: 0, products: [] };
       }
@@ -112,35 +116,58 @@ export function useRecommendations(formStep1Data: Step1FormData) {
     {}
   );
 
+  console.log(`✅ FOUND ${matches.length} products across ${Object.keys(categories).length} categories`);
+
   return { products: matches, categories, isLoading, error };
+}
+
+/**
+ * Determines if a product category is suitable for business capital needs
+ */
+function isBusinessCapitalProduct(category: string): boolean {
+  const capitalCategories = [
+    'Working Capital',
+    'Business Line of Credit', 
+    'Term Loan',
+    'Business Term Loan',
+    'SBA Loan',
+    'Asset Based Lending',
+    'Invoice Factoring',
+    'Purchase Order Financing'
+  ];
+  
+  return capitalCategories.some(cat => 
+    category.toLowerCase().includes(cat.toLowerCase()) ||
+    cat.toLowerCase().includes(category.toLowerCase())
+  );
 }
 
 function calculateScore(
   product: LenderProduct, 
   formData: Step1FormData, 
-  headquarters: "US" | "CA",
+  headquarters: "United States" | "Canada",
   fundingAmount: number,
   revenueLastYear: number
 ): number {
   let score = 0;
 
   // Geography match (25 points)
-  if (product.geography.includes(headquarters)) {
+  if (product.country === headquarters) {
     score += 25;
   }
 
   // Funding range match (25 points)
-  if (fundingAmount >= product.min_amount && fundingAmount <= product.max_amount) {
+  if (fundingAmount >= product.amountRange.min && fundingAmount <= product.amountRange.max) {
     score += 25;
   }
 
   // Industry match (25 points)
-  if (formData.industry && product.industries?.includes(formData.industry)) {
+  if (formData.industry && product.requirements?.industries?.includes(formData.industry)) {
     score += 25;
   }
 
-  // Revenue requirement match (25 points)
-  if (!product.min_revenue || revenueLastYear >= product.min_revenue) {
+  // Revenue requirement match (25 points)  
+  if (!product.requirements?.minMonthlyRevenue || revenueLastYear >= product.requirements.minMonthlyRevenue) {
     score += 25;
   }
 
