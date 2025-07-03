@@ -129,38 +129,67 @@ export default function BankingDocumentTest() {
 
       setProgress(40);
 
-      // Step 2: Upload banking documents
+      // Step 2: Upload real banking documents
       setCurrentStep('Uploading banking statements...');
       let documentsUploaded = 0;
 
-      for (let i = 0; i < bankingDocuments.length; i++) {
-        const doc = bankingDocuments[i];
+      // Real banking document file paths from attached assets
+      const realBankingFiles = [
+        { path: '/attached_assets/April 2025_1751579433993.pdf', name: 'April 2025 Statement' },
+        { path: '/attached_assets/March 2025_1751579433994.pdf', name: 'March 2025 Statement' },
+        { path: '/attached_assets/February 2025_1751579433994.pdf', name: 'February 2025 Statement' },
+        { path: '/attached_assets/January 2025_1751579433994.pdf', name: 'January 2025 Statement' },
+        { path: '/attached_assets/December 2024_1751579433994.pdf', name: 'December 2024 Statement' },
+        { path: '/attached_assets/November 2024_1751579433995.pdf', name: 'November 2024 Statement' }
+      ];
+
+      for (let i = 0; i < realBankingFiles.length; i++) {
+        const doc = realBankingFiles[i];
         
-        // Create mock PDF content for testing
-        const mockPdfContent = `%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Contents 4 0 R\n>>\nendobj\n4 0 obj\n<<\n/Length 44\n>>\nstream\nBT\n/F1 12 Tf\n100 700 Td\n(${doc.name} - ${doc.balance}) Tj\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000204 00000 n \ntrailer\n<<\n/Size 5\n/Root 1 0 R\n>>\nstartxref\n297\n%%EOF`;
-        
-        const blob = new Blob([mockPdfContent], { type: 'application/pdf' });
-        const file = new File([blob], `${doc.name.replace(/\s+/g, '_')}.pdf`, { type: 'application/pdf' });
+        try {
+          // Fetch the actual PDF file from attached assets
+          const fileResponse = await fetch(doc.path);
+          if (!fileResponse.ok) {
+            console.log(`Failed to fetch ${doc.name}: ${fileResponse.status}`);
+            continue;
+          }
+          
+          const fileBlob = await fileResponse.blob();
+          const file = new File([fileBlob], `${doc.name.replace(/\s+/g, '_')}.pdf`, { type: 'application/pdf' });
 
-        // Use exact FormData structure
-        const form = new FormData();
-        form.append('files', file);
-        form.append('category', 'Banking Statements');
+          // Use exact FormData structure
+          const form = new FormData();
+          form.append('files', file);
+          form.append('category', 'Banking Statements');
 
-        const uploadResponse = await fetch(`/api/upload/${applicationId}`, {
-          method: 'POST',
-          body: form,
-          credentials: 'include'
-        });
-
-        if (uploadResponse.ok) {
-          documentsUploaded++;
-          toast({
-            title: "Document uploaded",
-            description: `${doc.name} uploaded successfully`,
+          const uploadResponse = await fetch(`/api/upload/${applicationId}`, {
+            method: 'POST',
+            body: form,
+            credentials: 'include'
           });
-        } else {
-          console.log(`Upload failed for ${doc.name}: ${uploadResponse.status}`);
+
+          if (uploadResponse.ok) {
+            documentsUploaded++;
+            toast({
+              title: "Banking statement uploaded",
+              description: `${doc.name} (${(file.size / 1024 / 1024).toFixed(1)} MB) uploaded successfully`,
+            });
+          } else {
+            const errorText = await uploadResponse.text();
+            console.log(`Upload failed for ${doc.name}: ${uploadResponse.status} - ${errorText}`);
+            toast({
+              title: "Upload failed",
+              description: `${doc.name}: ${uploadResponse.status} ${errorText}`,
+              variant: "destructive"
+            });
+          }
+        } catch (error) {
+          console.log(`Error uploading ${doc.name}:`, error);
+          toast({
+            title: "Upload error",
+            description: `Failed to process ${doc.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            variant: "destructive"
+          });
         }
         
         setProgress(40 + (i + 1) * 8); // Progress from 40 to 88
@@ -192,17 +221,25 @@ export default function BankingDocumentTest() {
       setProgress(100);
       setCurrentStep('Complete!');
 
-      // Set final result
+      // Set final result with diagnostic info
       setResult({
-        success: true,
+        success: documentsUploaded > 0,
         applicationId,
         documentsUploaded
       });
 
-      toast({
-        title: "Application submitted successfully!",
-        description: `Application ${applicationId} submitted with ${documentsUploaded} banking statements`,
-      });
+      if (documentsUploaded > 0) {
+        toast({
+          title: "Application submitted successfully!",
+          description: `Application ${applicationId} submitted with ${documentsUploaded} banking statements`,
+        });
+      } else {
+        toast({
+          title: "Application created but uploads failed",
+          description: `Application ${applicationId} created but 0 documents uploaded. Staff backend needs upload endpoint configuration.`,
+          variant: "destructive"
+        });
+      }
 
     } catch (error) {
       setResult({
