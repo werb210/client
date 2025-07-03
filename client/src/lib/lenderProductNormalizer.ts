@@ -32,8 +32,8 @@ export function normalizeProducts(rawData: unknown): LenderProduct[] {
       const rateInfo = parseRateFromDescription(rawProduct.description);
       const termInfo = parseTermFromDescription(rawProduct.description);
       
-      // Normalize geography (handle multi-country products)
-      const geography = normalizeGeography(rawProduct.geography, rawProduct.lenderName, rawProduct.id);
+      // Use country field from staff API - it now provides correct US/CA codes
+      const geography = normalizeGeographyFromCountry(rawProduct.country);
       
       // Validate and normalize category
       const normalizedCategory = normalizeCategoryName(rawProduct.category);
@@ -147,7 +147,36 @@ function parseTermFromDescription(description?: string): { min: number; max: num
 }
 
 /**
- * Normalize geography array - assign products to appropriate markets
+ * Convert staff API country codes to geography array
+ */
+function normalizeGeographyFromCountry(country?: string): ("US" | "CA")[] {
+  if (!country) {
+    console.log('[NORMALIZER] No country provided, defaulting to US');
+    return ['US'];
+  }
+  
+  // Handle multi-country products
+  if (country === 'US/CA' || country === 'CA/US') {
+    return ['US', 'CA'];
+  }
+  
+  // Single country products
+  if (country === 'US') {
+    return ['US'];
+  }
+  
+  if (country === 'CA') {
+    return ['CA'];
+  }
+  
+  // Fallback for unknown country codes
+  console.log(`[NORMALIZER] Unknown country code: ${country}, defaulting to US`);
+  return ['US'];
+}
+
+/**
+ * Legacy normalize geography array - assign products to appropriate markets
+ * DEPRECATED: Now using normalizeGeographyFromCountry for staff API country field
  */
 function normalizeGeography(geography?: string[], lenderName?: string, productId?: string): ("US" | "CA")[] {
   if (!geography || geography.length === 0) {

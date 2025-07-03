@@ -38,6 +38,7 @@ export const StaffAPIResponseSchema = z.object({
     productName: z.string(),
     lenderName: z.string(),
     category: z.string(),
+    country: z.string().optional(), // Staff API now provides country field (US, CA, US/CA)
     geography: z.array(z.string()).optional(), // Staff API may not include geography
     amountRange: z.object({
       min: z.union([z.string(), z.number()]), // Staff API sends numbers, not strings
