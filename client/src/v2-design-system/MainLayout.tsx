@@ -47,6 +47,7 @@ import ApiDiagnostic from "@/pages/ApiDiagnostic";
 import SyncedProductsTest from "@/pages/SyncedProductsTest";
 import WorkflowTest from "@/pages/WorkflowTest";
 import LenderProductsCatalog from "@/pages/LenderProductsCatalog";
+import BankingDocumentTest from "@/pages/BankingDocumentTest";
 
 
 /**
@@ -85,6 +86,7 @@ export function MainLayout() {
       <Route path="/canadian-product-test" component={CanadianProductTest} />
       <Route path="/canadian-filtering-test" component={CanadianFilteringTest} />
       <Route path="/catalog" component={LenderProductsCatalog} />
+      <Route path="/banking-document-test" component={BankingDocumentTest} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
