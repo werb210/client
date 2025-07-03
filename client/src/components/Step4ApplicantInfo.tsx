@@ -134,7 +134,7 @@ export function Step4ApplicantInfo({ onNext, onBack }: Step4Props) {
               <FormItem>
                 <FormLabel>Percentage Ownership</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter ownership percentage" {...field} />
+                  <Input placeholder="Enter ownership percentage" value={field.value || "100"} onChange={field.onChange} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
