@@ -55,15 +55,30 @@ export function Step4ApplicantInfo({ onNext, onBack }: Step4Props) {
       <CardContent className="space-y-4">
         {/* Main Applicant Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Applicant Name */}
+          {/* First Name */}
           <FormField
             control={form.control}
-            name="applicantName"
+            name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Applicant Name</FormLabel>
+                <FormLabel>First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your name" {...field} />
+                  <Input placeholder="Enter your first name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Last Name */}
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your last name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -295,15 +310,30 @@ export function Step4ApplicantInfo({ onNext, onBack }: Step4Props) {
           <div className="border-t pt-4 mt-6">
             <h4 className="text-sm font-medium text-gray-700 mb-4">Partner Information (Additional Owner)</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Partner Name */}
+              {/* Partner First Name */}
               <FormField
                 control={form.control}
-                name="partnerName"
+                name="partnerFirstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Partner Name</FormLabel>
+                    <FormLabel>Partner First Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter partner's name" {...field} />
+                      <Input placeholder="Enter partner's first name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Partner Last Name */}
+              <FormField
+                control={form.control}
+                name="partnerLastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partner Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter partner's last name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
