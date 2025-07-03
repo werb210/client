@@ -44,6 +44,7 @@ export function normalizeProducts(rawData: unknown): LenderProduct[] {
         name: rawProduct.productName,
         lenderName: rawProduct.lenderName,
         geography: geography,
+        country: rawProduct.country, // Preserve raw country field for filtering
         category: normalizedCategory,
         minAmount: typeof rawProduct.amountRange.min === 'number' 
           ? rawProduct.amountRange.min 

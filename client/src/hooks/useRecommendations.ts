@@ -43,10 +43,10 @@ export function useRecommendations(formStep1Data: Step1FormData) {
 
   const matches = products
     .filter((p: LenderProduct) => {
-      // Geography check - match country
-      const targetCountry = headquarters === "United States" ? "US" : "CA";
-      if (!p.geography.includes(targetCountry)) {
-        console.log(`❌ Geography: ${p.name} (${p.geography.join(',')}) doesn't match ${headquarters}`);
+      // Country check - exact match or multi-country (US/CA)
+      const selectedCountryCode = headquarters === "United States" ? "US" : "CA";
+      if (!(p.country === selectedCountryCode || p.country === 'US/CA')) {
+        console.log(`❌ Country: ${p.name} (${p.country}) doesn't match ${headquarters} (${selectedCountryCode})`);
         return false;
       }
       

@@ -6,6 +6,7 @@ export const LenderProductSchema = z.object({
   name: z.string(),
   lenderName: z.string(),
   geography: z.array(z.enum(["US", "CA"])),
+  country: z.string().optional(), // Keep raw country field for filtering
   category: z.enum([
     "line_of_credit",
     "term_loan", 
