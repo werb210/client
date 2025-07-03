@@ -28,6 +28,21 @@ export interface BusinessDetailsData {
     country: string;
   };
   taxId: string;
+  // Step 3 Business Details Fields
+  operatingName?: string;
+  legalName?: string;
+  businessStreetAddress?: string;
+  businessCity?: string;
+  businessState?: string;
+  businessZipCode?: string;
+  businessPostalCode?: string;
+  businessPhone?: string;
+  businessRegistrationDate?: string;
+  numberOfEmployees?: string;
+  estimatedYearlyRevenue?: string;
+  businessWebsite?: string;
+  businessStartDate?: string;
+  employeeCount?: string;
 }
 
 export interface FinancialInfoData {
