@@ -76,6 +76,14 @@ export interface SigningStatusResponse {
   error?: string;
 }
 
+export interface FinalizationResponse {
+  status: 'finalized' | 'error';
+  applicationId?: string;
+  finalizedAt?: string;
+  message?: string;
+  error?: string;
+}
+
 class StaffApiClient {
   private baseUrl: string;
 
@@ -279,6 +287,26 @@ class StaffApiClient {
       return {
         status: 'error',
         error: error instanceof Error ? error.message : 'Failed to initiate signing'
+      };
+    }
+  }
+
+  async finalizeApplication(applicationId: string): Promise<FinalizationResponse> {
+    try {
+      console.log(`🏁 Finalizing application: ${applicationId}`);
+      
+      const response = await this.makeRequest<FinalizationResponse>(`/applications/${applicationId}/finalize`, {
+        method: 'POST',
+      });
+      
+      console.log('✅ Application finalized:', response);
+      return response;
+      
+    } catch (error) {
+      console.error('❌ Failed to finalize application:', error);
+      return {
+        status: 'error',
+        error: error instanceof Error ? error.message : 'Failed to finalize application'
       };
     }
   }
