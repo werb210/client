@@ -1,0 +1,67 @@
+Complete Lender Products Database - All 42 Products
+Here's the comprehensive breakdown of all lender products organized by country:
+
+🇨🇦 Canada Products (22 total)
+Accord (2 products)
+
+AccordAccess - Working Capital: $5K-$50K, 19.99%-49.99%, 6-24 months
+Small Business Revolver - Line of Credit: $25K-$250K, 10%-35%, 12 months
+Accord Financial Corp. (1 product)
+
+Equipment Finance - Equipment: $20K-$1.5M, 9%-20%, 12-72 months
+Baker Garrington Capital (6 products)
+
+Accounts Receivable Factoring (2 variations) - Invoice Factoring: $10K-$30M, 1%-3%
+Asset-Based Lending - Invoice Factoring: $3M-$20M, 12%-16%
+Asset-Based Lending - Line of Credit: $3M-$20M, 12%-16%
+Equipment Financing (2 variations) - Equipment: $1M-$20M, 12%-16%
+Factor+ - Invoice Factoring: $1-$1M, 10%-18%
+Brookridge Funding LLV (1 product)
+
+Purchase Order Financing - PO Financing: $50K-$30M, 2.5%-3%
+Dynamic Capital Equipment Finance (1 product)
+
+Equipment Finance - Equipment: $35K-$2M, 6.5%-20%, 12-72 months
+Meridian OneCap Credit Corp. (1 product)
+
+Equipment Finance - Equipment: $25K-$2M, 6.5%-12%, 12-81 months
+Pathward (2 products)
+
+ABL Working Capital - Line of Credit: $1M-$20M, 2%-4%
+ABL Working Capital Revolver - Line of Credit: $1M-$20M, 2%-4%
+Quantum LS (1 product)
+
+Flex Line - Working Capital: $150K-$200K, 16.99%-35.99%, 12-48 months
+Revenued (5 products)
+
+Flex Line - Line of Credit (5 variations): $3K-$500K, 1%-1.45%, 10-12 months
+Stride Capital Corp. (1 product)
+
+Equipment Finance - Equipment: $35K-$1.5M, 6.5%-20%, 12-84 months
+🇺🇸 United States Products (20 total)
+Baker Garrington Capital (1 product)
+
+Factor+ - Invoice Factoring: $1-$1M, 10%-18%
+Mobilization Funding (3 products)
+
+Contract Financing - Invoice Factoring: $100K-$5M, 1.9%-3%
+Mobilization Funding - Line of Credit: $100K-$5M, 1%
+PO Financing - Purchase Order: $100K-$5M, 1%
+Pearl Capital Final (4 products)
+
+MCA - Term Loan (4 variations): $10K-$1M, 1.24%-1.45%, 3-9 months
+Quantum LS (5 products)
+
+Line of Credit - Business Line: $10K-$150K, 1.9%-3%
+Term Loan (4 variations): $10K-$250K, 16.99%-35.99%, 12-48 months
+Revenued (7 products)
+
+Flex Line - Line of Credit (4 variations): $5K-$500K, 1.25%-1.45%
+Flexline - Term Loan (3 variations): $20K-$500K, 1.25%-1.45%, 3-9 months
+Key Insights:
+Country Distribution: 22 CA, 20 US products
+Product Categories: Business Line of Credit (15), Term Loan (11), Invoice Factoring (6), Equipment Financing (6), Working Capital (2), Purchase Order Financing (2)
+Amount Ranges: From $1 minimum to $30M maximum
+Rate Ranges: From 1% to 49.99%
+All products now use standardized country codes ('CA', 'US')
+The database maintains complete product details including lender information, funding amounts, rates, terms, and required documentation for each product.
