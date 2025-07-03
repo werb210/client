@@ -30,6 +30,11 @@ const parseCurrency = (value: string): string => {
   return value.replace(/\D/g, '');
 };
 
+// Type guard for lookingFor field
+const isValidLookingFor = (value: string | undefined): value is "capital" | "equipment" | "both" => {
+  return value === "capital" || value === "equipment" || value === "both";
+};
+
 // Step 1 Schema - Business Basics and Funding Request
 const step1Schema = z.object({
   // Basic Business Information
@@ -153,7 +158,7 @@ export default function Step1FinancialProfile() {
     defaultValues: {
       businessLocation: state.step1FinancialProfile?.businessLocation || '',
       industry: state.step1FinancialProfile?.industry || '',
-      lookingFor: state.step1FinancialProfile?.lookingFor || '',
+      lookingFor: isValidLookingFor(state.step1FinancialProfile?.lookingFor) ? state.step1FinancialProfile.lookingFor : undefined,
       fundingAmount: state.step1FinancialProfile?.fundingAmount || '',
       useOfFunds: state.step1FinancialProfile?.useOfFunds || '',
       salesHistory: state.step1FinancialProfile?.salesHistory || '',
