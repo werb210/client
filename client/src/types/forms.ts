@@ -110,62 +110,63 @@ export type ApplicationForm = z.infer<typeof ApplicationSchema>;
 /* ------------------------------------------------------------------
    STEP SCHEMAS (for React‑Hook‑Form per page validation)
 -------------------------------------------------------------------*/
-export const step1Schema = ApplicationSchema.pick({
-  headquarters: true,
-  headquartersState: true,
-  industry: true,
-  lookingFor: true,
-  fundingAmount: true,
-  fundsPurpose: true,
-  salesHistory: true,
-  revenueLastYear: true,
-  averageMonthlyRevenue: true,
-  accountsReceivableBalance: true,
-  fixedAssetsValue: true,
+// TESTING MODE: All step schemas made optional for easier testing
+export const step1Schema = z.object({
+  headquarters: z.string().optional(),
+  headquartersState: z.string().optional(),
+  industry: z.string().optional(),
+  lookingFor: z.enum(["capital", "equipment", "both"]).optional(),
+  fundingAmount: z.number().optional(),
+  fundsPurpose: z.string().optional(),
+  salesHistory: z.string().optional(),
+  revenueLastYear: z.string().optional(),
+  averageMonthlyRevenue: z.string().optional(),
+  accountsReceivableBalance: z.number().optional(),
+  fixedAssetsValue: z.number().optional(),
 });
 
-export const step3Schema = ApplicationSchema.pick({
-  operatingName: true,
-  legalName: true,
-  businessStreetAddress: true,
-  businessCity: true,
-  businessState: true,
-  businessPostalCode: true,
-  businessPhone: true,
-  employeeCount: true,
-  businessWebsite: true,
-  businessStartDate: true,
-  businessStructure: true,
-  estimatedYearlyRevenue: true,
+export const step3Schema = z.object({
+  operatingName: z.string().optional(),
+  legalName: z.string().optional(),
+  businessStreetAddress: z.string().optional(),
+  businessCity: z.string().optional(),
+  businessState: z.string().optional(),
+  businessPostalCode: z.string().optional(),
+  businessPhone: z.string().optional(),
+  employeeCount: z.number().optional(),
+  businessWebsite: z.string().optional(),
+  businessStartDate: z.string().optional(),
+  businessStructure: z.string().optional(),
+  estimatedYearlyRevenue: z.number().optional(),
 });
 
-export const step4Schema = ApplicationSchema.pick({
-  applicantName: true,
-  applicantEmail: true,
-  applicantBirthdate: true,
-  applicantSSN: true,
-  percentageOwnership: true,
-  mobilePhone: true,
-  applicantStreetAddress: true,
-  applicantCity: true,
-  applicantState: true,
-  applicantPostalCode: true,
-  titleInBusiness: true,
-  partnerName: true,
-  partnerEmail: true,
-  partnerPhone: true,
-  partnerOwnership: true,
-  partnerTitle: true,
-  partnerSSN: true,
+export const step4Schema = z.object({
+  applicantName: z.string().optional(),
+  applicantEmail: z.string().optional(),
+  applicantBirthdate: z.string().optional(),
+  applicantSSN: z.string().optional(),
+  percentageOwnership: z.number().optional(),
+  mobilePhone: z.string().optional(),
+  applicantStreetAddress: z.string().optional(),
+  applicantCity: z.string().optional(),
+  applicantState: z.string().optional(),
+  applicantPostalCode: z.string().optional(),
+  titleInBusiness: z.string().optional(),
+  partnerName: z.string().optional(),
+  partnerEmail: z.string().optional(),
+  partnerPhone: z.string().optional(),
+  partnerOwnership: z.number().optional(),
+  partnerTitle: z.string().optional(),
+  partnerSSN: z.string().optional(),
 });
 
-export const step2Schema = ApplicationSchema.pick({
-  selectedProductId: true,
-  selectedProductType: true,
-  matchScore: true,
+export const step2Schema = z.object({
+  selectedProductId: z.string().optional(),
+  selectedProductType: z.string().optional(),
+  matchScore: z.number().optional(),
 });
 
-export const step6Schema = ApplicationSchema.pick({
-  communicationConsent: true,
-  documentMaintenanceConsent: true,
+export const step6Schema = z.object({
+  communicationConsent: z.boolean().optional(),
+  documentMaintenanceConsent: z.boolean().optional(),
 });

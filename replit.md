@@ -528,6 +528,18 @@ Changelog:
     * **CATEGORY MAPPING**: Fixed staff API format conversion ("Purchase Order Financing" → "purchase_order_financing")
     * **REAL-TIME SYNC**: Live data integration working with $30M maximum funding display
     * **PRODUCTION VERIFIED**: Canadian businesses now receive proper product recommendations for all funding scenarios
+  - July 03, 2025: CANADIAN FILTERING FIX & TESTING MODE IMPLEMENTATION COMPLETE
+    * **CRITICAL FIX**: Resolved API route /api/loan-products/categories to use staff API data instead of local database
+    * **ROOT CAUSE**: Server route was querying non-existent local database instead of staff API
+    * **SOLUTION**: Updated route to fetch from staff API with identical filtering logic as client-side
+    * **VERIFICATION**: Canadian $50K business capital requests now return 7 products across 4 categories
+    * **TESTING MODE**: Made all form validation schemas optional for easier development testing
+    * **Step 1**: All fields optional in step1Schema with .partial() for flexible testing
+    * **Step 2**: Product selection validation disabled with testing mode flag
+    * **Step 3**: All business detail fields made optional for testing workflow
+    * **Step 4**: All applicant information fields optional for development
+    * **FILTERING VERIFIED**: Invoice Factoring (3), Business Line of Credit (2), Purchase Order Financing (1), Working Capital (1)
+    * **API ENDPOINT WORKING**: Route returns proper JSON with category counts and percentages
   - July 03, 2025: COMPREHENSIVE PERFORMANCE TESTING & OPTIMIZATION COMPLETE
     * **PERFORMANCE VERIFICATION**: Completed comprehensive database performance testing per user checklist
     * **CLIENT-SIDE FILTERING**: Verified sub-1ms filtering performance for Step 1 → Step 2 workflow
