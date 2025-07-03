@@ -136,6 +136,7 @@ export default function Step5DocumentUpload() {
         onFilesUploaded={handleFilesUploaded}
         onRequirementsChange={handleRequirementsChange}
         selectedProduct={selectedProduct}
+        applicationId={state.applicationId || 'test-app-123'}
       />
 
       {/* Progress Summary */}

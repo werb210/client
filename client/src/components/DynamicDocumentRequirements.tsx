@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { CheckCircle, FileText, AlertCircle, RefreshCcw, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { buildRequiredDocList, convertFormDataToWizardData, type RequiredDoc, type Product } from '@/lib/documentRequirements';
 
 // TypeScript Interfaces - Export for use in other components
@@ -31,11 +32,14 @@ interface DynamicDocumentRequirementsProps {
     lookingFor?: string;
     fundingAmount?: string;
     accountsReceivableBalance?: string;
+    businessLocation?: string;
+    selectedProducts?: any[];
   };
   uploadedFiles: UploadedFile[];
   onFilesUploaded: (files: UploadedFile[]) => void;
   selectedProduct?: string;
   onRequirementsChange?: (allComplete: boolean, totalRequirements: number) => void;
+  applicationId: string;
 }
 
 // Individual File Item Component
@@ -87,13 +91,16 @@ function UnifiedDocumentUploadCard({
   doc, 
   uploadedFiles, 
   onFilesUploaded, 
-  cardIndex 
+  cardIndex,
+  applicationId 
 }: {
   doc: RequiredDoc;
   uploadedFiles: UploadedFile[];
   onFilesUploaded: (files: UploadedFile[]) => void;
   cardIndex: number;
+  applicationId: string;
 }) {
+  const { toast } = useToast();
   
   // Filter files for this document type using label instead of name
   const documentFiles = uploadedFiles.filter(f => 
@@ -104,18 +111,75 @@ function UnifiedDocumentUploadCard({
   const requiredQuantity = doc.quantity || 1;
   const isComplete = documentFiles.length >= requiredQuantity;
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files).map(file => ({
+      const files = Array.from(e.target.files);
+      const category = doc.label.toLowerCase().replace(/\s+/g, '_');
+      
+      // Validate file sizes (25MB limit)
+      const oversizedFiles = files.filter(file => file.size > 25 * 1024 * 1024);
+      if (oversizedFiles.length > 0) {
+        toast({
+          title: "File Too Large",
+          description: `Files must be under 25MB. Please reduce file size and try again.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Create upload entries with uploading status
+      const uploadingFiles = files.map(file => ({
         id: Math.random().toString(36).substr(2, 9),
         name: file.name,
         size: file.size,
         type: file.type,
         file,
-        status: "completed" as const,
-        documentType: doc.label.toLowerCase().replace(/\s+/g, '_') // Use label instead of name
+        status: "uploading" as const,
+        documentType: category
       }));
-      onFilesUploaded([...uploadedFiles, ...newFiles]);
+      
+      // Add uploading files to state immediately
+      onFilesUploaded([...uploadedFiles, ...uploadingFiles]);
+      
+      try {
+        // Use the exact FormData structure specified
+        const form = new FormData();
+        files.forEach((file) => form.append('files', file));
+        form.append('category', category);
+        
+        const response = await fetch(`/api/upload/${applicationId}`, {
+          method: 'POST',
+          body: form,
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Upload failed: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+        
+        // Update status to completed
+        const completedFiles = uploadingFiles.map(f => ({ ...f, status: "completed" as const }));
+        onFilesUploaded([...uploadedFiles, ...completedFiles]);
+        
+        toast({
+          title: "Upload Successful",
+          description: `${files.length} file(s) uploaded successfully`,
+        });
+        
+      } catch (error) {
+        // Update status to error
+        const errorFiles = uploadingFiles.map(f => ({ ...f, status: "error" as const }));
+        onFilesUploaded([...uploadedFiles, ...errorFiles]);
+        
+        toast({
+          title: "Upload Failed",
+          description: error instanceof Error ? error.message : "Failed to upload files",
+          variant: "destructive",
+        });
+        
+        console.error('Upload error:', error);
+      }
     }
   };
 
@@ -186,7 +250,7 @@ function UnifiedDocumentUploadCard({
                 <span className="text-sm font-medium text-blue-600 hover:text-blue-500">Choose files</span>
                 <span className="text-sm text-gray-500"> or drag and drop</span>
               </div>
-              <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG up to 10MB each</p>
+              <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG up to 25MB each</p>
             </div>
           </label>
         </div>
@@ -214,7 +278,8 @@ export function DynamicDocumentRequirements({
   uploadedFiles,
   onFilesUploaded,
   selectedProduct,
-  onRequirementsChange
+  onRequirementsChange,
+  applicationId
 }: DynamicDocumentRequirementsProps) {
   
   // State for document requirements
@@ -334,6 +399,7 @@ export function DynamicDocumentRequirements({
             uploadedFiles={uploadedFiles}
             onFilesUploaded={onFilesUploaded}
             cardIndex={index}
+            applicationId={applicationId}
           />
         )) : (
           <div className="col-span-full text-center py-8">

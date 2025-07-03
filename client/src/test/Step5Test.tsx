@@ -116,6 +116,7 @@ export default function Step5Test() {
           onFilesUploaded={setUploadedFiles}
           onRequirementsChange={handleRequirementsChange}
           selectedProduct={selectedProduct}
+          applicationId="test-app-123"
         />
 
         {/* Continue Button Test */}

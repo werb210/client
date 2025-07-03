@@ -30,12 +30,26 @@ export const useUploadDocument = (applicationId: string) => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (filePayload: FormData) =>
-      apiFetch(`/api/upload/${applicationId}`, {
+    mutationFn: async (payload: { files: File[]; category: string }) => {
+      const form = new FormData();
+      
+      // Add files using the exact structure specified
+      payload.files.forEach((file) => form.append('files', file));
+      form.append('category', payload.category);
+      
+      const response = await fetch(`/api/upload/${applicationId}`, {
         method: 'POST',
-        body: filePayload,
-        // Let browser set Content-Type for FormData
-      }),
+        body: form,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       // Invalidate document queries
       queryClient.invalidateQueries({ queryKey: ['documents', applicationId] });

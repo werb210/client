@@ -44,7 +44,7 @@ export const COUNTRY_CODES = {
 export const VALIDATION = {
   MIN_FUNDING_AMOUNT: 5000,
   MAX_FUNDING_AMOUNT: 5000000,
-  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+  MAX_FILE_SIZE: 25 * 1024 * 1024, // 25MB
   ALLOWED_FILE_TYPES: [
     'application/pdf',
     'image/jpeg',

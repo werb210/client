@@ -181,6 +181,7 @@ export default function UnifiedDocumentTest() {
               onFilesUploaded={handleFilesUploaded}
               selectedProduct={scenario.formData.selectedProducts[0]?.name}
               onRequirementsChange={handleRequirementsChange}
+              applicationId="test-unified-123"
             />
           </CardContent>
         </Card>
