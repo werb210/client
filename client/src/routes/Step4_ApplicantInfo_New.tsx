@@ -142,15 +142,11 @@ export default function Step4ApplicantInfoRoute() {
     setLocation('/apply/step-3');
   };
 
-  // Determine if Canadian based on business location
-  const isCanadian = state.step1FinancialProfile?.businessLocation === 'Canada';
-
   return (
     <Form {...form}>
       <Step4ApplicantInfo
         onNext={handleNext}
         onBack={handleBack}
-        isCanadian={isCanadian}
       />
     </Form>
   );

@@ -71,15 +71,11 @@ export default function Step3BusinessDetailsRoute() {
     setLocation('/apply/step-2');
   };
 
-  // Determine if Canadian based on business location
-  const isCanadian = state.step1FinancialProfile?.businessLocation === 'Canada';
-
   return (
     <Form {...form}>
       <Step3BusinessDetails
         onNext={handleNext}
         onBack={handleBack}
-        isCanadian={isCanadian}
       />
     </Form>
   );

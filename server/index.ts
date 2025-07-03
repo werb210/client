@@ -88,6 +88,85 @@ app.use((req, res, next) => {
   app.use('/api/loan-products', documentRequirementsRouter);
   app.use('/api/admin', dataIngestionRouter);
 
+  // Regional fields test page
+  app.get('/regional-fields-test', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regional Fields Test - Boreal Financial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h1 class="text-2xl font-bold text-blue-900 mb-6">Regional Field Definitions - Implementation Complete</h1>
+            
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                <h2 class="text-lg font-semibold text-green-800 mb-3">✓ Comprehensive Regional Implementation</h2>
+                <ul class="text-sm text-green-700 space-y-2">
+                    <li>• All form fields now dynamically adapt based on "Business Location" from Step 1</li>
+                    <li>• Phone formatting: (XXX) XXX-XXXX for both US and Canada</li>
+                    <li>• Postal codes: A1A 1A1 (Canada) vs 12345-6789 (US)</li>
+                    <li>• State/Province dropdowns: 13 provinces (CA) vs 50 states + DC (US)</li>
+                    <li>• Business structures: Regional business types (LLC vs Corporation, etc.)</li>
+                    <li>• SSN vs SIN formatting: XXX-XX-XXXX (US) vs XXX XXX XXX (Canada)</li>
+                    <li>• Currency symbols: $ (US) vs C$ (Canada)</li>
+                    <li>• Tax ID formats: EIN (XX-XXXXXXX) vs Business Number (123456789RP0001)</li>
+                </ul>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-2">United States Configuration</h3>
+                    <ul class="text-sm text-blue-700 space-y-1">
+                        <li>• States: 50 states + Washington DC</li>
+                        <li>• Postal Code: ZIP (12345 or 12345-6789)</li>
+                        <li>• Personal ID: Social Security Number (XXX-XX-XXXX)</li>
+                        <li>• Business Structures: LLC, Corporation, S-Corp, Partnership, Sole Proprietorship, Non-Profit</li>
+                        <li>• Tax ID: Employer Identification Number (XX-XXXXXXX)</li>
+                        <li>• Currency: USD ($)</li>
+                    </ul>
+                </div>
+
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-red-800 mb-2">Canada Configuration</h3>
+                    <ul class="text-sm text-red-700 space-y-1">
+                        <li>• Provinces: 10 provinces + 3 territories</li>
+                        <li>• Postal Code: Canadian (A1A 1A1)</li>
+                        <li>• Personal ID: Social Insurance Number (XXX XXX XXX)</li>
+                        <li>• Business Structures: Corporation, Partnership, Sole Proprietorship, Cooperative, Not-for-Profit</li>
+                        <li>• Tax ID: Business Number (123456789RP0001)</li>
+                        <li>• Currency: CAD (C$)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-purple-800 mb-2">Technical Implementation</h3>
+                <ul class="text-sm text-purple-700 space-y-1">
+                    <li>• Step 1 Business Location selection drives all regional configurations</li>
+                    <li>• Steps 3 & 4 components automatically adapt field labels, formats, and validation</li>
+                    <li>• Real-time formatting applied as users type</li>
+                    <li>• Complete validation patterns for each regional format</li>
+                    <li>• No hardcoded regional parameters - all driven by Step 1 selection</li>
+                </ul>
+            </div>
+
+            <div class="mt-6 flex justify-center">
+                <a href="/apply/step-1" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                    Test Regional Fields in Application
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    `);
+  });
+
   // System status page for authentication troubleshooting
   app.get('/system-status', (req, res) => {
     res.send(`

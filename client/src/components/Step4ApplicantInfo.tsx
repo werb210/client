@@ -16,17 +16,22 @@ import {
   formatSSN,
   getRegionalLabels,
   getStateProvinceOptions,
-  getTitleOptions
+  getTitleOptions,
+  isCanadianBusiness
 } from '@/lib/regionalFormatting';
 
 interface Step4Props {
   onNext: () => void;
   onBack: () => void;
-  isCanadian?: boolean;
 }
 
-export function Step4ApplicantInfo({ onNext, onBack, isCanadian = false }: Step4Props) {
+export function Step4ApplicantInfo({ onNext, onBack }: Step4Props) {
   const form = useFormContext();
+  
+  // Get business location from Step 1 to determine regional field definitions
+  const businessLocation = form.watch('step1FinancialProfile.businessLocation') || 'united-states';
+  const isCanadian = isCanadianBusiness(businessLocation);
+  
   const regionalLabels = getRegionalLabels(isCanadian);
   const stateProvinceOptions = getStateProvinceOptions(isCanadian);
   const titleOptions = getTitleOptions();

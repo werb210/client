@@ -11,17 +11,22 @@ import {
   formatPostalCode,
   formatCurrency,
   getRegionalLabels,
-  getStateProvinceOptions
+  getStateProvinceOptions,
+  isCanadianBusiness
 } from '@/lib/regionalFormatting';
 
 interface Step3Props {
   onNext: () => void;
   onBack: () => void;
-  isCanadian?: boolean;
 }
 
-export function Step3BusinessDetails({ onNext, onBack, isCanadian = false }: Step3Props) {
+export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
   const form = useFormContext();
+  
+  // Get business location from Step 1 to determine regional field definitions
+  const businessLocation = form.watch('step1FinancialProfile.businessLocation') || 'united-states';
+  const isCanadian = isCanadianBusiness(businessLocation);
+  
   const regionalLabels = getRegionalLabels(isCanadian);
   const stateProvinceOptions = getStateProvinceOptions(isCanadian);
 
@@ -189,7 +194,7 @@ export function Step3BusinessDetails({ onNext, onBack, isCanadian = false }: Ste
             )}
           />
 
-          {/* Business Structure - Required Dropdown */}
+          {/* Business Structure - Required Dropdown (Regional) */}
           <FormField
             control={form.control}
             name="businessStructure"
@@ -203,11 +208,11 @@ export function Step3BusinessDetails({ onNext, onBack, isCanadian = false }: Ste
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="llc">LLC</SelectItem>
-                    <SelectItem value="corporation">Corporation</SelectItem>
-                    <SelectItem value="partnership">Partnership</SelectItem>
-                    <SelectItem value="sole_proprietorship">Sole Proprietorship</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    {regionalLabels.businessStructures.map((structure) => (
+                      <SelectItem key={structure.value} value={structure.value}>
+                        {structure.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

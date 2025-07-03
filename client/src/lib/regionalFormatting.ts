@@ -66,6 +66,24 @@ export const getRegionalLabels = (isCanadian: boolean) => {
       postalCode: "Postal Code",
       postalCodePlaceholder: "Enter postal code (A1A 1A1)",
       stateProvince: "Province",
+      country: "Canada",
+      currency: "CAD",
+      currencySymbol: "C$",
+      phoneFormat: "(XXX) XXX-XXXX",
+      phoneExample: "(416) 555-0123",
+      businessStructures: [
+        { value: "sole_proprietorship", label: "Sole Proprietorship" },
+        { value: "partnership", label: "Partnership" },
+        { value: "corporation", label: "Corporation" },
+        { value: "cooperative", label: "Cooperative" },
+        { value: "not_for_profit", label: "Not-for-Profit" }
+      ],
+      industryTerms: {
+        taxId: "Business Number (BN)",
+        taxIdFormat: "123456789RP0001",
+        revenue: "Annual Revenue",
+        employees: "Full-Time Employees"
+      }
     };
   } else {
     return {
@@ -73,6 +91,25 @@ export const getRegionalLabels = (isCanadian: boolean) => {
       postalCode: "ZIP Code",
       postalCodePlaceholder: "Enter ZIP code (12345)",
       stateProvince: "State",
+      country: "United States",
+      currency: "USD",
+      currencySymbol: "$",
+      phoneFormat: "(XXX) XXX-XXXX",
+      phoneExample: "(555) 123-4567",
+      businessStructures: [
+        { value: "sole_proprietorship", label: "Sole Proprietorship" },
+        { value: "partnership", label: "Partnership" },
+        { value: "llc", label: "Limited Liability Company (LLC)" },
+        { value: "corporation", label: "Corporation (C-Corp)" },
+        { value: "s_corp", label: "S Corporation" },
+        { value: "non_profit", label: "Non-Profit Organization" }
+      ],
+      industryTerms: {
+        taxId: "Tax ID / EIN",
+        taxIdFormat: "XX-XXXXXXX",
+        revenue: "Annual Revenue",
+        employees: "Number of Employees"
+      }
     };
   }
 };
@@ -158,3 +195,55 @@ export const getTitleOptions = () => [
   { value: "executive", label: "Executive" },
   { value: "financial_officer", label: "Financial Officer" },
 ];
+
+/**
+ * Determines if business is Canadian based on Step 1 Business Location
+ */
+export const isCanadianBusiness = (businessLocation: string): boolean => {
+  return businessLocation === 'canada';
+};
+
+/**
+ * Formats Tax ID based on region (EIN for US, BN for Canada)
+ */
+export const formatTaxId = (value: string, isCanadian: boolean): string => {
+  if (!value) return value;
+  const digits = value.replace(/[^\d]/g, '');
+  
+  if (isCanadian) {
+    // Canadian Business Number format: 123456789RP0001
+    if (digits.length <= 9) return digits;
+    return `${digits.slice(0, 9)}RP${digits.slice(9, 13).padEnd(4, '0')}`;
+  } else {
+    // US EIN format: XX-XXXXXXX
+    if (digits.length <= 2) return digits;
+    return `${digits.slice(0, 2)}-${digits.slice(2, 9)}`;
+  }
+};
+
+/**
+ * Validates Tax ID format based on region
+ */
+export const validateTaxId = (value: string, isCanadian: boolean): boolean => {
+  if (!value) return false;
+  
+  if (isCanadian) {
+    // Canadian BN: 9 digits + RP + 4 digits
+    return /^\d{9}RP\d{4}$/.test(value);
+  } else {
+    // US EIN: XX-XXXXXXX
+    return /^\d{2}-\d{7}$/.test(value);
+  }
+};
+
+/**
+ * Gets regional field validation patterns
+ */
+export const getRegionalValidation = (isCanadian: boolean) => {
+  return {
+    phonePattern: /^\(\d{3}\) \d{3}-\d{4}$/,
+    postalCodePattern: isCanadian ? /^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$/ : /^\d{5}(-\d{4})?$/,
+    ssnPattern: isCanadian ? /^\d{3} \d{3} \d{3}$/ : /^\d{3}-\d{2}-\d{4}$/,
+    taxIdPattern: isCanadian ? /^\d{9}RP\d{4}$/ : /^\d{2}-\d{7}$/,
+  };
+};
