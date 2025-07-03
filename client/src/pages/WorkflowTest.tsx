@@ -51,9 +51,9 @@ export default function WorkflowTest() {
     },
     {
       id: 'step4',
-      title: 'Step 4: Data Submission',
+      title: 'Step 4: Data Submission + Signing Initiation',
       route: '/apply/step-4',
-      description: 'POST /applications/submit → Generate applicationId',
+      description: 'POST /applications/submit → POST /applications/initiate-signing → Generate signingUrl',
       status: state.applicationId ? 'complete' : 'pending',
       icon: <Send className="w-5 h-5" />
     },
@@ -77,25 +77,32 @@ export default function WorkflowTest() {
 
   const apiEndpoints = [
     {
-      step: 'Step 4',
+      step: 'Step 4 (Submit)',
       method: 'POST',
       endpoint: '/applications/submit',
       description: 'Submit complete form data + documents',
       response: 'applicationId + status'
     },
     {
+      step: 'Step 4 (Initiate)',
+      method: 'POST',
+      endpoint: '/applications/initiate-signing',
+      description: 'Initiate signing with applicationId',
+      response: 'signingUrl ready for Step 6'
+    },
+    {
+      step: 'Step 6 (Receive)',
+      method: 'Context',
+      endpoint: 'state.step6.signingUrl',
+      description: 'Receive signingUrl from Step 4',
+      response: 'Open SignNow in embedded iframe'
+    },
+    {
       step: 'Step 6 (Polling)',
       method: 'GET',
       endpoint: '/applications/{id}/signing-status',
-      description: 'Poll until status = "ready"',
+      description: 'Poll for signing completion',
       response: 'status: pending/ready/completed/error'
-    },
-    {
-      step: 'Step 6 (URL)',
-      method: 'GET',
-      endpoint: '/applications/{id}/signing-url',
-      description: 'Fetch SignNow embedded link',
-      response: 'signUrl for new tab/iframe'
     },
     {
       step: 'Step 7',

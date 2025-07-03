@@ -8,8 +8,8 @@
 
 Successfully restructured the application workflow to match the user's exact specification:
 - **Step 3**: Collect full user data and selected lender product
-- **Step 4**: Submit all Step 1-4 data + documents to POST /applications/submit
-- **Step 6**: Poll SignNow status → Display signing interface → Detect completion
+- **Step 4**: Submit all Step 1-4 data + documents to POST /applications/submit → POST /applications/initiate-signing
+- **Step 6**: Receive signingUrl from Step 4 → Display signing interface → Poll completion status
 - **Step 7**: Terms & conditions → POST /applications/{id}/finalize
 
 ## Core Components Implemented
@@ -21,18 +21,20 @@ Successfully restructured the application workflow to match the user's exact spe
 - ✅ Professional UI with proper field formatting
 - ✅ Data split and storage in correct context sections
 
-### 2. Step 4: Data Submission
+### 2. Step 4: Data Submission + Signing Initiation
 **File**: `client/src/routes/Step4_DataSubmission.tsx`
 - ✅ Submits complete application to POST /applications/submit
 - ✅ Generates applicationId for SignNow workflow
-- ✅ Data summary display with all collected information
-- ✅ Auto-redirect to Step 6 upon successful submission
+- ✅ Immediately calls POST /applications/initiate-signing with applicationId
+- ✅ Receives signingUrl and stores in context for Step 6
+- ✅ Auto-redirect to Step 6 with signingUrl ready
 - ✅ Comprehensive error handling and status indicators
 
 ### 3. Step 6: SignNow Integration
 **File**: `client/src/routes/Step6_SignNowIntegration.tsx`
-- ✅ Polls GET /applications/{id}/signing-status
-- ✅ Fetches GET /applications/{id}/signing-url when ready
+- ✅ Receives signingUrl from Step 4's initiate-signing response
+- ✅ Opens SignNow interface immediately when signingUrl available
+- ✅ Fallback polling GET /applications/{id}/signing-status if no signingUrl provided
 - ✅ Opens SignNow in new tab/window
 - ✅ Completion detection with auto-navigation to Step 7
 - ✅ Real-time status updates and polling system
@@ -52,17 +54,21 @@ Successfully restructured the application workflow to match the user's exact spe
 POST /applications/submit
 - Payload: Complete Steps 1-4 data + uploaded documents
 - Response: applicationId + status
+
+POST /applications/initiate-signing
+- Payload: applicationId from submit response
+- Response: { status: 'ready', signingUrl: 'https://signnow.com/...' }
 ```
 
-### Step 6 Endpoints
+### Step 6 Endpoints (Fallback)
 ```
 GET /applications/{id}/signing-status
-- Poll until status = "ready"
+- Poll until status = "ready" (fallback if no signingUrl from Step 4)
 - Response: status (pending/ready/completed/error)
 
-GET /applications/{id}/signing-url
-- Fetch when status = "ready"
-- Response: signUrl for new tab/iframe
+Context: state.step6.signingUrl
+- Primary source: signingUrl from Step 4's initiate-signing response
+- Used immediately when available to bypass polling
 ```
 
 ### Step 7 Endpoint

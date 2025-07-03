@@ -48,7 +48,17 @@ export default function Step6SignNowIntegration() {
       return;
     }
 
-    // Start polling for signing status
+    // Check if we already have signingUrl from Step 4 POST /applications/initiate-signing
+    const existingSigningUrl = (state as any).step6?.signingUrl;
+    if (existingSigningUrl) {
+      console.log('✅ Step 6: Received signingUrl from Step 4:', existingSigningUrl);
+      setSignUrl(existingSigningUrl);
+      setSigningStatus('ready');
+      return;
+    }
+
+    // Fallback: Start polling for signing status if no URL provided
+    console.log('🔄 Step 6: No signingUrl from Step 4, starting polling...');
     startSigningStatusPolling();
   }, [applicationId]);
 

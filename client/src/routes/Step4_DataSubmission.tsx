@@ -77,7 +77,7 @@ export default function Step4DataSubmission() {
           documentType: file.documentType
         }));
 
-      // Submit complete application data to staff backend
+      // Step 1: Submit complete application data to staff backend
       const result = await staffApi.submitApplication(
         state, // Complete form state with all steps
         filesWithFileObjects, // Any uploaded documents
@@ -85,26 +85,49 @@ export default function Step4DataSubmission() {
       );
 
       if (result.status === 'submitted' && result.applicationId) {
+        console.log('✅ Step 4: Application submitted successfully, ID:', result.applicationId);
         setApplicationId(result.applicationId);
-        setSubmissionStatus('submitted');
         
         // Store application ID in state
         dispatch({
           type: 'SET_APPLICATION_ID',
           payload: result.applicationId
         });
-        
-        saveToStorage();
-        
-        toast({
-          title: "Application Submitted Successfully",
-          description: `Application ID: ${result.applicationId}. Proceeding to document workflow...`,
-        });
 
-        // Auto-redirect to Step 6 (Step 5 is optional document upload)
-        setTimeout(() => {
-          setLocation('/apply/step-6');
-        }, 2000);
+        // Step 2: Initiate signing process (do not show SignNow yet)
+        console.log('🔄 Step 4: Initiating signing with POST /applications/initiate-signing...');
+        
+        const signingResponse = await staffApi.initiateSigning(result.applicationId);
+        
+        if (signingResponse.status === 'ready' && signingResponse.signUrl) {
+          console.log('✅ Step 4: Signing initiated successfully, URL received');
+          setSubmissionStatus('submitted');
+          
+          // Store signing URL in context for Step 6
+          dispatch({
+            type: 'UPDATE_STEP6' as any,
+            payload: {
+              signingUrl: signingResponse.signUrl,
+              signingStatus: 'ready',
+              applicationId: result.applicationId
+            }
+          });
+          
+          saveToStorage();
+          
+          toast({
+            title: "Application Submitted & Signing Ready",
+            description: `Application ID: ${result.applicationId}. Ready for signing workflow.`,
+          });
+
+          // Auto-redirect to Step 6 with signingUrl ready
+          setTimeout(() => {
+            setLocation('/apply/step-6');
+          }, 2000);
+          
+        } else {
+          throw new Error(signingResponse.error || 'Signing initiation failed');
+        }
         
       } else {
         throw new Error(result.error || 'Submission failed');
