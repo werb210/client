@@ -138,17 +138,17 @@ function calculateScore(
   }
 
   // Funding range match (25 points)
-  if (fundingAmount >= product.amountRange.min && fundingAmount <= product.amountRange.max) {
+  if (fundingAmount >= product.minAmount && fundingAmount <= product.maxAmount) {
     score += 25;
   }
 
   // Industry match (25 points)
-  if (formData.industry && product.requirements?.industries?.includes(formData.industry)) {
+  if (formData.industry && product.industries?.includes(formData.industry)) {
     score += 25;
   }
 
   // Revenue requirement match (25 points)  
-  if (!product.requirements?.minMonthlyRevenue || revenueLastYear >= product.requirements.minMonthlyRevenue) {
+  if (!product.minRevenue || revenueLastYear >= product.minRevenue) {
     score += 25;
   }
 
