@@ -42,6 +42,7 @@ import StrictValidationTest from "@/pages/StrictValidationTest";
 import DataIngestionInterface from "@/pages/DataIngestionInterface";
 import TypedApiDemo from "@/pages/TypedApiDemo";
 import CanadianProductTest from "@/pages/CanadianProductTest";
+import CanadianFilteringTest from "@/pages/CanadianFilteringTest";
 import ApiDiagnostic from "@/pages/ApiDiagnostic";
 import SyncedProductsTest from "@/pages/SyncedProductsTest";
 import WorkflowTest from "@/pages/WorkflowTest";
@@ -82,6 +83,7 @@ export function MainLayout() {
       <Route path="/data-ingestion" component={DataIngestionInterface} />
       <Route path="/typed-api-demo" component={TypedApiDemo} />
       <Route path="/canadian-product-test" component={CanadianProductTest} />
+      <Route path="/canadian-filtering-test" component={CanadianFilteringTest} />
       <Route path="/catalog" component={LenderProductsCatalog} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
