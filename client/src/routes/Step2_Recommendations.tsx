@@ -46,7 +46,7 @@ export default function Step2Recommendations() {
   };
 
   const handlePrevious = () => {
-    setLocation('/application/step-1');
+    setLocation('/apply/step-1');
   };
 
   return (
