@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { useFormData } from '@/context/FormDataContext';
 import {
   formatPhoneNumber,
   formatPostalCode,
@@ -27,10 +28,13 @@ interface Step4Props {
 
 export function Step4ApplicantInfo({ onNext, onBack }: Step4Props) {
   const form = useFormContext();
+  const { state } = useFormData();
   
-  // Get business location from Step 1 to determine regional field definitions
-  const businessLocation = form.watch('step1FinancialProfile.businessLocation') || 'united-states';
+  // Get business location from Step 1 FormDataContext to determine regional field definitions
+  const businessLocation = state.step1FinancialProfile?.businessLocation || 'united-states';
   const isCanadian = isCanadianBusiness(businessLocation);
+  
+  console.log(`[STEP4] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`);
   
   const regionalLabels = getRegionalLabels(isCanadian);
   const stateProvinceOptions = getStateProvinceOptions(isCanadian);
