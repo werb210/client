@@ -31,11 +31,32 @@ export interface BusinessDetailsData {
 }
 
 export interface FinancialInfoData {
-  annualRevenue: string;
-  monthlyExpenses: string;
-  numberOfEmployees: string;
-  totalAssets: string;
-  totalLiabilities: string;
+  annualRevenue?: string;
+  monthlyExpenses?: string;
+  numberOfEmployees?: string;
+  totalAssets?: string;
+  totalLiabilities?: string;
+  // Applicant Information Fields
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  dateOfBirth?: string;
+  socialSecurityNumber?: string;
+  ownershipPercentage?: string;
+  creditScore?: string;
+  personalNetWorth?: string;
+  personalAnnualIncome?: string;
+  // Partner Information Fields
+  partnerFirstName?: string;
+  partnerLastName?: string;
+  partnerEmail?: string;
+  partnerPhone?: string;
+  partnerOwnershipPercentage?: string;
 }
 
 export interface DocumentUploadData {
@@ -83,6 +104,7 @@ export interface FormDataState {
   currentStep: number;
   isComplete: boolean;
   applicationId?: string;
+  signingUrl?: string;
 }
 
 type FormDataAction =
@@ -92,6 +114,7 @@ type FormDataAction =
   | { type: 'UPDATE_STEP5'; payload: Partial<DocumentUploadData> }
   | { type: 'SET_CURRENT_STEP'; payload: number }
   | { type: 'SET_APPLICATION_ID'; payload: string }
+  | { type: 'SET_SIGNING_URL'; payload: string }
   | { type: 'MARK_COMPLETE' }
   | { type: 'LOAD_FROM_STORAGE'; payload: FormDataState };
 
@@ -155,6 +178,11 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
       return {
         ...state,
         applicationId: action.payload,
+      };
+    case 'SET_SIGNING_URL':
+      return {
+        ...state,
+        signingUrl: action.payload,
       };
     case 'MARK_COMPLETE':
       return {

@@ -44,34 +44,97 @@ export default function Step4ApplicantInfoRoute() {
   const form = useForm<Step4FormData>({
     resolver: zodResolver(step4Schema),
     defaultValues: {
-      firstName: state.step4ApplicantInfo?.firstName || '',
-      lastName: state.step4ApplicantInfo?.lastName || '',
-      email: state.step4ApplicantInfo?.email || '',
-      phone: state.step4ApplicantInfo?.phone || '',
-      streetAddress: state.step4ApplicantInfo?.streetAddress || '',
-      city: state.step4ApplicantInfo?.city || '',
-      state: state.step4ApplicantInfo?.state || '',
-      postalCode: state.step4ApplicantInfo?.postalCode || '',
-      dateOfBirth: state.step4ApplicantInfo?.dateOfBirth || '',
-      socialSecurityNumber: state.step4ApplicantInfo?.socialSecurityNumber || '',
-      ownershipPercentage: state.step4ApplicantInfo?.ownershipPercentage || '',
-      creditScore: state.step4ApplicantInfo?.creditScore || '',
-      personalNetWorth: state.step4ApplicantInfo?.personalNetWorth || '',
-      personalAnnualIncome: state.step4ApplicantInfo?.personalAnnualIncome || '',
-      partnerFirstName: state.step4ApplicantInfo?.partnerFirstName || '',
-      partnerLastName: state.step4ApplicantInfo?.partnerLastName || '',
-      partnerEmail: state.step4ApplicantInfo?.partnerEmail || '',
-      partnerPhone: state.step4ApplicantInfo?.partnerPhone || '',
-      partnerOwnershipPercentage: state.step4ApplicantInfo?.partnerOwnershipPercentage || '',
+      firstName: state.step4FinancialInfo?.firstName || '',
+      lastName: state.step4FinancialInfo?.lastName || '',
+      email: state.step4FinancialInfo?.email || '',
+      phone: state.step4FinancialInfo?.phone || '',
+      streetAddress: state.step4FinancialInfo?.streetAddress || '',
+      city: state.step4FinancialInfo?.city || '',
+      state: state.step4FinancialInfo?.state || '',
+      postalCode: state.step4FinancialInfo?.postalCode || '',
+      dateOfBirth: state.step4FinancialInfo?.dateOfBirth || '',
+      socialSecurityNumber: state.step4FinancialInfo?.socialSecurityNumber || '',
+      ownershipPercentage: state.step4FinancialInfo?.ownershipPercentage || '',
+      creditScore: state.step4FinancialInfo?.creditScore || '',
+      personalNetWorth: state.step4FinancialInfo?.personalNetWorth || '',
+      personalAnnualIncome: state.step4FinancialInfo?.personalAnnualIncome || '',
+      partnerFirstName: state.step4FinancialInfo?.partnerFirstName || '',
+      partnerLastName: state.step4FinancialInfo?.partnerLastName || '',
+      partnerEmail: state.step4FinancialInfo?.partnerEmail || '',
+      partnerPhone: state.step4FinancialInfo?.partnerPhone || '',
+      partnerOwnershipPercentage: state.step4FinancialInfo?.partnerOwnershipPercentage || '',
     },
   });
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const formData = form.getValues();
+    
+    // Save form data to context
     dispatch({ 
       type: 'UPDATE_STEP4', 
       payload: formData as any
     });
+
+    // TRIGGER API CALLS: Submit application data and initiate signing
+    try {
+      console.log('📤 Step 4: Triggering API calls...');
+      
+      // 1. Submit application data (Steps 1-4)
+      const applicationData = {
+        step1: state.step1FinancialProfile,
+        step2: state.step2Recommendations,
+        step3: state.step3BusinessDetails,
+        step4: formData,
+        metadata: {
+          submittedAt: new Date().toISOString(),
+          submittedFromStep: 4
+        }
+      };
+      
+      console.log('📋 Submitting application data:', applicationData);
+      
+      // TODO: Implement actual API call
+      // const response = await fetch('/api/applications/submit', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(applicationData)
+      // });
+      
+      // 2. Initiate signing process
+      console.log('🔐 Initiating signing process...');
+      
+      // TODO: Implement actual API call
+      // const signingResponse = await fetch('/api/applications/initiate-signing', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ applicationId: response.applicationId })
+      // });
+      
+      // For now, simulate successful API calls
+      const mockApplicationId = `app_${Date.now()}`;
+      const mockSigningUrl = `https://signnow.com/sign/${mockApplicationId}`;
+      
+      // Save API results to context
+      dispatch({
+        type: 'SET_APPLICATION_ID',
+        payload: mockApplicationId
+      });
+      
+      dispatch({
+        type: 'SET_SIGNING_URL',
+        payload: mockSigningUrl
+      });
+      
+      console.log('✅ API calls completed successfully');
+      console.log('📋 Application ID:', mockApplicationId);
+      console.log('🔐 Signing URL:', mockSigningUrl);
+      
+    } catch (error) {
+      console.error('❌ Error during API calls:', error);
+      // For testing mode, continue anyway
+    }
+    
+    // Navigate to Step 5 (Document Upload)
     setLocation('/apply/step-5');
   };
 

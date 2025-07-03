@@ -3,9 +3,9 @@ import { Switch, Route } from "wouter";
 // V1 Route Components (Source of Truth)
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
-// NEW: Updated Step 3 & 4 Route Components (July 3, 2025)
-import Step3ApplicantInfoCombined from "@/routes/Step3_ApplicantInfo_Combined";
-import Step4DataSubmission from "@/routes/Step4_DataSubmission";
+// NEW: Separated Step 3 & 4 Route Components (July 3, 2025)
+import Step3BusinessDetailsRoute from "@/routes/Step3_BusinessDetails_New";
+import Step4ApplicantInfoRoute from "@/routes/Step4_ApplicantInfo_New";
 
 import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
 import Step6SignNowIntegration from "@/routes/Step6_SignNowIntegration";
@@ -91,10 +91,10 @@ export function MainLayout() {
       <Route path="/apply/step-1" component={Step1FinancialProfile} />
       <Route path="/step2-recommendations" component={Step2Recommendations} />
       <Route path="/apply/step-2" component={Step2Recommendations} />
-      <Route path="/step3-business-details" component={Step3ApplicantInfoCombined} />
-      <Route path="/apply/step-3" component={Step3ApplicantInfoCombined} />
-      <Route path="/step4-applicant-details" component={Step4DataSubmission} />
-      <Route path="/apply/step-4" component={Step4DataSubmission} />
+      <Route path="/step3-business-details" component={Step3BusinessDetailsRoute} />
+      <Route path="/apply/step-3" component={Step3BusinessDetailsRoute} />
+      <Route path="/step4-applicant-details" component={Step4ApplicantInfoRoute} />
+      <Route path="/apply/step-4" component={Step4ApplicantInfoRoute} />
       <Route path="/step5-document-upload" component={Step5DocumentUpload} />
       <Route path="/apply/step-5" component={Step5DocumentUpload} />
       <Route path="/step6-signature" component={Step6SignNowIntegration} />

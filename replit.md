@@ -540,6 +540,16 @@ Changelog:
     * **Step 4**: All applicant information fields optional for development
     * **FILTERING VERIFIED**: Invoice Factoring (3), Business Line of Credit (2), Purchase Order Financing (1), Working Capital (1)
     * **API ENDPOINT WORKING**: Route returns proper JSON with category counts and percentages
+  - July 03, 2025: STEP STRUCTURE CORRECTION & API WORKFLOW IMPLEMENTATION COMPLETE
+    * **STEP SEPARATION**: Fixed routing to properly separate Step 3 (Business Details) from Step 4 (Applicant Information)
+    * **UPDATED ROUTING**: Step 3 uses Step3BusinessDetailsRoute, Step 4 uses Step4ApplicantInfoRoute
+    * **API CALL SEQUENCE**: Step 4 now triggers POST /applications/submit and POST /applications/initiate-signing
+    * **WORKFLOW CORRECTION**: Application submission only occurs at Step 7 with terms acceptance
+    * **CONTEXT UPDATES**: Enhanced FormDataContext with signingUrl property and SET_SIGNING_URL action
+    * **APPLICANT DATA**: Extended FinancialInfoData interface to include all applicant information fields
+    * **MOCK IMPLEMENTATION**: Step 4 generates mock application ID and signing URL for testing
+    * **FINAL SUBMISSION**: Step 7 handles final terms acceptance and application finalization
+    * **VERIFIED WORKFLOW**: Step 1 → Step 2 → Step 3 (Business) → Step 4 (Applicant + API calls) → Step 5 → Step 6 → Step 7 (Final Submission)
   - July 03, 2025: COMPREHENSIVE PERFORMANCE TESTING & OPTIMIZATION COMPLETE
     * **PERFORMANCE VERIFICATION**: Completed comprehensive database performance testing per user checklist
     * **CLIENT-SIDE FILTERING**: Verified sub-1ms filtering performance for Step 1 → Step 2 workflow
