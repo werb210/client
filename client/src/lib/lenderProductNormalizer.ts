@@ -45,10 +45,16 @@ export function normalizeProducts(rawData: unknown): LenderProduct[] {
         lenderName: rawProduct.lenderName,
         country: primaryCountry,
         category: normalizedCategory,
-        minAmount: parseFloat(rawProduct.amountRange.min),
-        maxAmount: parseFloat(rawProduct.amountRange.max),
+        minAmount: typeof rawProduct.amountRange.min === 'number' 
+          ? rawProduct.amountRange.min 
+          : parseFloat(rawProduct.amountRange.min),
+        maxAmount: typeof rawProduct.amountRange.max === 'number' 
+          ? rawProduct.amountRange.max 
+          : parseFloat(rawProduct.amountRange.max),
         minRevenue: rawProduct.requirements?.minMonthlyRevenue 
-          ? parseFloat(rawProduct.requirements.minMonthlyRevenue) 
+          ? (typeof rawProduct.requirements.minMonthlyRevenue === 'number'
+             ? rawProduct.requirements.minMonthlyRevenue
+             : parseFloat(rawProduct.requirements.minMonthlyRevenue))
           : 0,
         interestRateMin: rateInfo?.min,
         interestRateMax: rateInfo?.max,
@@ -143,16 +149,20 @@ function parseTermFromDescription(description?: string): { min: number; max: num
 /**
  * Normalize geography array to single country enum value
  */
-function normalizeGeography(geography: string[]): "US" | "CA" {
+function normalizeGeography(geography?: string[]): "US" | "CA" {
   if (!geography || geography.length === 0) {
-    throw new Error('Missing geography information');
+    // Staff API may not include geography - default to US for compatibility
+    console.log('[NORMALIZER] Geography missing, defaulting to US');
+    return 'US';
   }
   
   // Prioritize US if available, then CA
   if (geography.includes('US')) return 'US';
   if (geography.includes('CA')) return 'CA';
   
-  throw new Error(`Unsupported geography: ${geography.join(', ')}`);
+  // If geography provided but not US/CA, default to US
+  console.log(`[NORMALIZER] Unsupported geography ${geography.join(', ')}, defaulting to US`);
+  return 'US';
 }
 
 /**
@@ -160,6 +170,16 @@ function normalizeGeography(geography: string[]): "US" | "CA" {
  */
 function normalizeCategoryName(category: string): LenderProduct['category'] {
   const categoryMap: Record<string, LenderProduct['category']> = {
+    // Staff API format -> Internal enum format
+    'Purchase Order Financing': 'purchase_order_financing',
+    'Business Line of Credit': 'line_of_credit',
+    'Invoice Factoring': 'invoice_factoring',
+    'Equipment Financing': 'equipment_financing',
+    'Term Loan': 'term_loan',
+    'Working Capital': 'working_capital',
+    'Asset-Based Lending': 'asset_based_lending',
+    'SBA Loan': 'sba_loan',
+    // Fallback mappings for underscore format
     'line_of_credit': 'line_of_credit',
     'term_loan': 'term_loan',
     'equipment_financing': 'equipment_financing',
@@ -172,7 +192,19 @@ function normalizeCategoryName(category: string): LenderProduct['category'] {
   
   const normalized = categoryMap[category];
   if (!normalized) {
-    throw new Error(`Unknown product category: "${category}". Staff API needs update.`);
+    // If exact match fails, try to map common variations
+    const lowercaseCategory = category.toLowerCase();
+    if (lowercaseCategory.includes('line of credit')) return 'line_of_credit';
+    if (lowercaseCategory.includes('term loan')) return 'term_loan';
+    if (lowercaseCategory.includes('equipment')) return 'equipment_financing';
+    if (lowercaseCategory.includes('factoring')) return 'invoice_factoring';
+    if (lowercaseCategory.includes('working capital')) return 'working_capital';
+    if (lowercaseCategory.includes('purchase order')) return 'purchase_order_financing';
+    if (lowercaseCategory.includes('asset')) return 'asset_based_lending';
+    if (lowercaseCategory.includes('sba')) return 'sba_loan';
+    
+    console.warn(`[NORMALIZER] Unknown category "${category}", defaulting to working_capital`);
+    return 'working_capital';
   }
   
   return normalized;
