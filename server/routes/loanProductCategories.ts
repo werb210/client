@@ -1,7 +1,5 @@
 import { Router } from 'express';
-import { db } from '../db';
-import { lenderProducts } from '../../shared/lenderSchema';
-import { eq, and, gte, lte, ne, inArray, sql } from 'drizzle-orm';
+import fetch from 'node-fetch';
 
 const router = Router();
 
@@ -13,7 +11,7 @@ interface ProductCategoryFilters {
   fundsPurpose?: string;
 }
 
-// Multi-filter API endpoint for real-time product categories  
+// Multi-filter API endpoint for real-time product categories using staff API data
 router.get('/categories', async (req, res) => {
   try {
     const {
@@ -26,56 +24,71 @@ router.get('/categories', async (req, res) => {
 
     console.log(`🔍 FILTERING PRODUCTS:`, { country, lookingFor, fundingAmount, accountsReceivableBalance, fundsPurpose });
 
-    // Build filter conditions starting with just active products
-    const conditions = [eq(lenderProducts.active, true)];
-
-    // Product type filtering based on "What are you looking for?"
-    if (lookingFor === 'equipment') {
-      conditions.push(eq(lenderProducts.type, 'equipment_financing'));
-    } else if (lookingFor === 'capital') {
-      conditions.push(ne(lenderProducts.type, 'equipment_financing'));
+    // Fetch data from staff API (same source as client)
+    const staffApiUrl = process.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app/api';
+    const response = await fetch(`${staffApiUrl}/public/lenders`);
+    
+    if (!response.ok) {
+      throw new Error(`Staff API error: ${response.status}`);
+    }
+    
+    const data = await response.json() as any;
+    if (!data.products) {
+      throw new Error('No products found in staff API response');
     }
 
-    // Funding amount range filtering
-    const { minAmount, maxAmount } = parseFundingAmount(fundingAmount);
-    if (minAmount && maxAmount) {
-      // Check for overlapping ranges
-      conditions.push(gte(sql`CAST(${lenderProducts.max_amount} AS DECIMAL)`, minAmount));
-      conditions.push(lte(sql`CAST(${lenderProducts.min_amount} AS DECIMAL)`, maxAmount));
-    }
+    // Apply same filtering logic as client-side
+    const fundingAmount_parsed = parseFloat(fundingAmount.replace(/[^0-9.-]+/g, ''));
+    const selectedCountryCode = country === 'united_states' ? 'US' : 'CA';
 
-    // Accounts receivable filtering (exclude factoring if no AR)
-    if (accountsReceivableBalance === 'no_account_receivables') {
-      conditions.push(ne(lenderProducts.type, 'invoice_factoring'));
-    }
-
-    // Purpose-based filtering
-    if (fundsPurpose) {
-      const allowedTypes = getPurposeProductTypes(fundsPurpose);
-      if (allowedTypes.length > 0) {
-        conditions.push(inArray(lenderProducts.type, allowedTypes));
+    const filteredProducts = data.products.filter((p: any) => {
+      // Country filter - exact match or multi-country
+      if (!(p.country === selectedCountryCode || p.country === 'US/CA')) {
+        return false;
       }
-    }
 
-    // Execute query to get product type counts
-    const results = await db
-      .select({
-        product_type: lenderProducts.type,
-        count: sql<number>`count(*)::int`
-      })
-      .from(lenderProducts)
-      .where(and(...conditions))
-      .groupBy(lenderProducts.type)
-      .orderBy(sql`count(*) DESC`);
+      // Amount range filter
+      const min = p.amountRange?.min || 0;
+      const max = p.amountRange?.max || Infinity;
+      if (fundingAmount_parsed < min || fundingAmount_parsed > max) {
+        return false;
+      }
 
-    const totalProducts = results.reduce((sum, row) => sum + row.count, 0);
+      // Product type filter
+      if (lookingFor === 'capital') {
+        const isCapitalProduct = isBusinessCapitalProduct(p.category);
+        if (!isCapitalProduct) {
+          return false;
+        }
+      } else if (lookingFor === 'equipment') {
+        if (p.category !== 'Equipment Financing') {
+          return false;
+        }
+      }
 
-    // Calculate percentages and format response
-    const categories = results.map((row) => ({
-      category: row.product_type,
-      count: row.count,
-      percentage: totalProducts > 0 ? Math.round((row.count / totalProducts) * 100) : 0
-    }));
+      // Accounts receivable filter
+      if (accountsReceivableBalance === 'no_account_receivables' && 
+          (p.category.toLowerCase().includes('invoice') || p.category.toLowerCase().includes('factoring'))) {
+        return false;
+      }
+
+      return true;
+    });
+
+    // Group by category and count
+    const categoryGroups: Record<string, number> = {};
+    filteredProducts.forEach((product: any) => {
+      const category = product.category;
+      categoryGroups[category] = (categoryGroups[category] || 0) + 1;
+    });
+
+    // Format response
+    const totalProducts = filteredProducts.length;
+    const categories = Object.entries(categoryGroups).map(([category, count]) => ({
+      category,
+      count,
+      percentage: totalProducts > 0 ? Math.round((count / totalProducts) * 100) : 0
+    })).sort((a, b) => b.count - a.count);
 
     console.log(`✅ FOUND ${totalProducts} products across ${categories.length} categories`);
 
@@ -92,43 +105,25 @@ router.get('/categories', async (req, res) => {
   }
 });
 
-// Helper function to parse funding amount ranges
-function parseFundingAmount(amount: string): { minAmount: number | null, maxAmount: number | null } {
-  const clean = amount.replace(/[$,]/g, '');
+// Helper function to determine if category is business capital
+function isBusinessCapitalProduct(category: string): boolean {
+  const capitalCategories = [
+    'Working Capital',
+    'Business Line of Credit', 
+    'Term Loan',
+    'Business Term Loan',
+    'SBA Loan',
+    'Asset Based Lending',
+    'Invoice Factoring',
+    'Purchase Order Financing'
+  ];
   
-  if (clean.includes('over')) {
-    const match = clean.match(/over\s+(\d+)/i);
-    return match ? { minAmount: parseInt(match[1]), maxAmount: 999999999 } : { minAmount: null, maxAmount: null };
-  }
-  
-  const rangeMatch = clean.match(/(\d+)[\s-]+(\d+)/);
-  if (rangeMatch) {
-    return { minAmount: parseInt(rangeMatch[1]), maxAmount: parseInt(rangeMatch[2]) };
-  }
-
-  // Single amount - assume range around it
-  const singleMatch = clean.match(/(\d+)/);
-  if (singleMatch) {
-    const amount = parseInt(singleMatch[1]);
-    return { minAmount: Math.floor(amount * 0.5), maxAmount: Math.ceil(amount * 2) };
-  }
-  
-  return { minAmount: null, maxAmount: null };
+  return capitalCategories.some(cat => 
+    category.toLowerCase().includes(cat.toLowerCase()) ||
+    cat.toLowerCase().includes(category.toLowerCase())
+  );
 }
 
-// Helper function to map purpose to allowed product types
-function getPurposeProductTypes(purpose: string): string[] {
-  const purposeMap: Record<string, string[]> = {
-    'business_expansion': ['line_of_credit', 'invoice_factoring', 'working_capital', 'term_loan'],
-    'working_capital': ['line_of_credit', 'working_capital', 'term_loan'],
-    'equipment': ['equipment_financing'],
-    'inventory': ['line_of_credit', 'invoice_factoring', 'purchase_order_financing', 'term_loan', 'working_capital'],
-    'marketing': ['line_of_credit', 'term_loan', 'working_capital'],
-    'debt_consolidation': ['line_of_credit', 'invoice_factoring', 'term_loan', 'working_capital'],
-    'other': [] // No restrictions
-  };
-  
-  return purposeMap[purpose] || [];
-}
+
 
 export default router;
