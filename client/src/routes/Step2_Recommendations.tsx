@@ -20,7 +20,7 @@ export default function Step2Recommendations() {
     lookingFor: step1Data.lookingFor,
     fundingAmount: step1Data.fundingAmount,
     fundsPurpose: step1Data.useOfFunds,
-    accountsReceivableBalance: step1Data.accountReceivable || 0,
+    accountsReceivableBalance: step1Data.accountsReceivable || '',
     // Additional fields for context
     salesHistory: step1Data.salesHistory,
     averageMonthlyRevenue: step1Data.monthlyRevenue,

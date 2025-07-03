@@ -66,9 +66,10 @@ router.get('/categories', async (req, res) => {
         }
       }
 
-      // Accounts receivable filter
-      if (accountsReceivableBalance === 'no_account_receivables' && 
+      // Accounts receivable filter - exclude Invoice Factoring when no AR
+      if (accountsReceivableBalance === 'none' && 
           (p.category.toLowerCase().includes('invoice') || p.category.toLowerCase().includes('factoring'))) {
+        console.log(`Invoice Factoring: ${p.productName || p.lenderName} excluded because no accounts receivable`);
         return false;
       }
 
