@@ -5,7 +5,7 @@ export const LenderProductSchema = z.object({
   id: z.string(),
   name: z.string(),
   lenderName: z.string(),
-  country: z.enum(["US", "CA"]),
+  geography: z.array(z.enum(["US", "CA"])),
   category: z.enum([
     "line_of_credit",
     "term_loan", 

@@ -133,7 +133,7 @@ export default function LenderProductsCatalog() {
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-orange-600">
-                {new Set(products?.map(p => p.country)).size || 0}
+                {new Set(products?.flatMap(p => p.geography)).size || 0}
               </div>
               <div className="text-sm text-gray-600">Countries</div>
             </CardContent>
@@ -163,7 +163,7 @@ export default function LenderProductsCatalog() {
             minAmount: Math.min(...categoryProducts.map(p => p.minAmount)),
             maxAmount: Math.max(...categoryProducts.map(p => p.maxAmount)),
             lenders: new Set(categoryProducts.map(p => p.lenderName)).size,
-            countries: new Set(categoryProducts.map(p => p.country)).size,
+            countries: new Set(categoryProducts.flatMap(p => p.geography)).size,
           };
 
           return (
@@ -213,7 +213,7 @@ export default function LenderProductsCatalog() {
                           {product.name}
                         </CardTitle>
                         <Badge variant="outline" className="ml-2 shrink-0">
-                          {product.country}
+                          {product.geography.join(', ')}
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600 font-medium">
@@ -300,7 +300,7 @@ export default function LenderProductsCatalog() {
               minAmount: Math.min(...lenderProducts.map(p => p.minAmount)),
               maxAmount: Math.max(...lenderProducts.map(p => p.maxAmount)),
               categories: new Set(lenderProducts.map(p => p.category)).size,
-              countries: new Set(lenderProducts.map(p => p.country)).size,
+              countries: new Set(lenderProducts.flatMap(p => p.geography)).size,
             };
 
             return (
@@ -350,7 +350,7 @@ export default function LenderProductsCatalog() {
                             {product.name}
                           </CardTitle>
                           <div className="flex gap-1 ml-2 shrink-0">
-                            <Badge variant="outline">{product.country}</Badge>
+                            <Badge variant="outline">{product.geography.join(', ')}</Badge>
                             <Badge className={getCategoryColor(product.category)} variant="secondary">
                               {formatCategoryName(product.category)}
                             </Badge>

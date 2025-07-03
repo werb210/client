@@ -32,8 +32,8 @@ export function normalizeProducts(rawData: unknown): LenderProduct[] {
       const rateInfo = parseRateFromDescription(rawProduct.description);
       const termInfo = parseTermFromDescription(rawProduct.description);
       
-      // Normalize geography to single country (handle multi-country products)
-      const primaryCountry = normalizeGeography(rawProduct.geography, rawProduct.lenderName, rawProduct.id);
+      // Normalize geography (handle multi-country products)
+      const geography = normalizeGeography(rawProduct.geography, rawProduct.lenderName, rawProduct.id);
       
       // Validate and normalize category
       const normalizedCategory = normalizeCategoryName(rawProduct.category);
@@ -43,7 +43,7 @@ export function normalizeProducts(rawData: unknown): LenderProduct[] {
         id: rawProduct.id,
         name: rawProduct.productName,
         lenderName: rawProduct.lenderName,
-        country: primaryCountry,
+        geography: geography,
         category: normalizedCategory,
         minAmount: typeof rawProduct.amountRange.min === 'number' 
           ? rawProduct.amountRange.min 
@@ -147,9 +147,9 @@ function parseTermFromDescription(description?: string): { min: number; max: num
 }
 
 /**
- * Normalize geography array to single country enum value
+ * Normalize geography array - assign products to appropriate markets
  */
-function normalizeGeography(geography?: string[], lenderName?: string, productId?: string): "US" | "CA" {
+function normalizeGeography(geography?: string[], lenderName?: string, productId?: string): ("US" | "CA")[] {
   if (!geography || geography.length === 0) {
     // Staff API doesn't provide geography - use intelligent assignment
     // Assign products to both US and CA for better coverage
@@ -163,7 +163,7 @@ function normalizeGeography(geography?: string[], lenderName?: string, productId
     // Check if lender name suggests Canadian origin
     if (lenderName && canadianLenders.some(ca => lenderName.includes(ca))) {
       console.log(`[NORMALIZER] Assigning ${lenderName} to CA based on lender name`);
-      return 'CA';
+      return ['CA'];
     }
     
     // Distribute remaining products: assign every 3rd product to CA for geographic diversity
@@ -171,22 +171,24 @@ function normalizeGeography(geography?: string[], lenderName?: string, productId
       const idHash = productId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       if (idHash % 3 === 0) {
         console.log(`[NORMALIZER] Assigning product ${productId} to CA for geographic diversity`);
-        return 'CA';
+        return ['CA'];
       }
     }
     
     // Default to US
     console.log('[NORMALIZER] Geography missing, defaulting to US');
-    return 'US';
+    return ['US'];
   }
   
-  // Prioritize US if available, then CA
-  if (geography.includes('US')) return 'US';
-  if (geography.includes('CA')) return 'CA';
+  // Return valid geography array
+  const validGeography = geography.filter((g): g is 'US' | 'CA' => g === 'US' || g === 'CA');
+  if (validGeography.length > 0) {
+    return validGeography;
+  }
   
   // If geography provided but not US/CA, default to US
   console.log(`[NORMALIZER] Unsupported geography ${geography.join(', ')}, defaulting to US`);
-  return 'US';
+  return ['US'];
 }
 
 /**

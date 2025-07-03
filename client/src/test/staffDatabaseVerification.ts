@@ -48,7 +48,8 @@ export async function verifyStaffDatabaseIntegration(): Promise<VerificationResu
     }
     
     // Verify geographic diversity (US + CA expected, but staff API may not provide geography)
-    const geographies = new Set(products.map(p => p.country));
+    const allGeography = products.flatMap(p => p.geography);
+    const geographies = new Set(allGeography);
     if (geographies.size === 0) {
       return {
         success: false,

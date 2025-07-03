@@ -1,24 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { z } from "zod";
-
-export const LenderProduct = z.object({
-  id: z.string(),
-  productName: z.string(),
-  lenderName: z.string(),
-  category: z.string(),
-  country: z.string(),
-  amountRange: z.object({
-    min: z.number(),
-    max: z.number(),
-  }),
-  requirements: z.object({
-    minMonthlyRevenue: z.number(),
-    industries: z.array(z.string()).optional(),
-  }).optional(),
-  description: z.string().optional(),
-});
-
-export type LenderProduct = z.infer<typeof LenderProduct>;
+import type { LenderProduct } from '@shared/lenderProductSchema';
 
 export interface Step1FormData {
   businessLocation?: "united-states" | "canada";
@@ -33,24 +14,15 @@ export interface Step1FormData {
 }
 
 export function useRecommendations(formStep1Data: Step1FormData) {
-  /** 1 — pull products from synced database (no fallback) */
+  /** 1 — pull products from normalized data source */
   const { data: products = [], isLoading, error } = useQuery<LenderProduct[]>({
-    queryKey: ["synced-lenders"],
+    queryKey: ["normalized-lenders"],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
-      if (!res.ok) {
-        throw new Error(`Failed to fetch lender products: ${res.status}`);
-      }
-      
-      const data = await res.json();
-      console.log("Matched Products from Synced DB:", data);
-      return data.products || data || [];
+      // Import the proper fetchLenderProducts function that includes normalization
+      const { fetchLenderProducts } = await import('@/api/lenderProducts');
+      const normalizedProducts = await fetchLenderProducts();
+      console.log("Step 2 - Matched Products from Synced DB:", normalizedProducts);
+      return normalizedProducts;
     },
     staleTime: 1000 * 60 * 10, // 10 minutes for synced data
     retry: 2,
@@ -70,16 +42,17 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   });
 
   const matches = products
-    .filter(p => {
+    .filter((p: LenderProduct) => {
       // Geography check - match country
-      if (p.country !== headquarters) {
-        console.log(`❌ Geography: ${p.productName} (${p.country}) doesn't match ${headquarters}`);
+      const targetCountry = headquarters === "United States" ? "US" : "CA";
+      if (!p.geography.includes(targetCountry)) {
+        console.log(`❌ Geography: ${p.name} (${p.geography.join(',')}) doesn't match ${headquarters}`);
         return false;
       }
       
       // Amount range check
-      if (fundingAmount < p.amountRange.min || fundingAmount > p.amountRange.max) {
-        console.log(`❌ Amount: ${p.productName} range $${p.amountRange.min}-$${p.amountRange.max} doesn't fit $${fundingAmount}`);
+      if (fundingAmount < p.minAmount || fundingAmount > p.maxAmount) {
+        console.log(`❌ Amount: ${p.name} range $${p.minAmount}-$${p.maxAmount} doesn't fit $${fundingAmount}`);
         return false;
       }
       
@@ -87,7 +60,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
       if (formStep1Data.lookingFor === "capital") {
         const isCapitalProduct = isBusinessCapitalProduct(p.category);
         if (!isCapitalProduct) {
-          console.log(`❌ Product Type: ${p.productName} (${p.category}) doesn't match capital requirement`);
+          console.log(`❌ Product Type: ${p.name} (${p.category}) doesn't match capital requirement`);
           return false;
         }
       }
@@ -95,11 +68,11 @@ export function useRecommendations(formStep1Data: Step1FormData) {
       // Exclude Invoice Factoring if no accounts receivable
       if (formStep1Data.accountsReceivable === "No Account Receivables" && 
           (p.category.toLowerCase().includes('invoice') || p.category.toLowerCase().includes('factoring'))) {
-        console.log(`❌ Invoice Factoring: ${p.productName} excluded because no accounts receivable`);
+        console.log(`❌ Invoice Factoring: ${p.name} excluded because no accounts receivable`);
         return false;
       }
       
-      console.log(`✅ Match: ${p.productName} by ${p.lenderName}`);
+      console.log(`✅ Match: ${p.name} by ${p.lenderName}`);
       return true;
     })
     .map(p => ({
@@ -159,7 +132,8 @@ function calculateScore(
   let score = 0;
 
   // Geography match (25 points)
-  if (product.country === headquarters) {
+  const targetCountry = headquarters === "United States" ? "US" : "CA";
+  if (product.geography.includes(targetCountry)) {
     score += 25;
   }
 
