@@ -48,6 +48,7 @@ import SyncedProductsTest from "@/pages/SyncedProductsTest";
 import WorkflowTest from "@/pages/WorkflowTest";
 import LenderProductsCatalog from "@/pages/LenderProductsCatalog";
 import BankingDocumentTest from "@/pages/BankingDocumentTest";
+import ComprehensiveE2ETest from "@/pages/ComprehensiveE2ETest";
 
 
 /**
@@ -87,6 +88,7 @@ export function MainLayout() {
       <Route path="/canadian-filtering-test" component={CanadianFilteringTest} />
       <Route path="/catalog" component={LenderProductsCatalog} />
       <Route path="/banking-document-test" component={BankingDocumentTest} />
+      <Route path="/comprehensive-e2e-test" component={ComprehensiveE2ETest} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
