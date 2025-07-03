@@ -7,6 +7,7 @@ export default function CanadianFilteringTest() {
   const [normalizedData, setNormalizedData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [canadianProducts, setCanadianProducts] = useState<any[]>([]);
+  const [directApiTest, setDirectApiTest] = useState<any>(null);
 
   const fetchRawData = async () => {
     setLoading(true);
@@ -58,50 +59,108 @@ export default function CanadianFilteringTest() {
       return;
     }
 
-    // Simulate Canadian business scenario
-    const testFormData = {
-      businessLocation: "canada",
-      lookingFor: "capital",
-      fundingAmount: "$40,000",
-      accountsReceivable: "Less than $5,000"
-    };
+    // Test both US and Canadian scenarios
+    const scenarios = [
+      {
+        name: "Canadian Business",
+        businessLocation: "canada",
+        targetCountry: "CA",
+        fundingAmount: 40000
+      },
+      {
+        name: "US Business", 
+        businessLocation: "united-states",
+        targetCountry: "US",
+        fundingAmount: 40000
+      }
+    ];
 
-    console.log('Test Form Data:', testFormData);
-    
-    // Filter logic similar to useRecommendations
-    const targetCountry = "CA";
-    const fundingAmount = 40000;
-    
-    const matches = normalizedData.filter((p: any) => {
-      // Geography check
-      if (!p.geography?.includes(targetCountry)) {
-        return false;
-      }
+    scenarios.forEach(scenario => {
+      console.log(`\n--- Testing ${scenario.name} ---`);
       
-      // Amount check  
-      if (fundingAmount < p.minAmount || fundingAmount > p.maxAmount) {
-        return false;
-      }
-      
-      return true;
+      const matches = normalizedData.filter((p: any) => {
+        // Geography check - exact match or multi-country
+        if (!p.geography?.includes(scenario.targetCountry)) {
+          return false;
+        }
+        
+        // Amount check  
+        if (scenario.fundingAmount < p.minAmount || scenario.fundingAmount > p.maxAmount) {
+          return false;
+        }
+        
+        return true;
+      });
+
+      console.log(`Found ${matches.length} matches for ${scenario.name}`);
+      console.log('Sample products:', matches.slice(0, 3).map((p: any) => ({
+        name: p.name,
+        lenderName: p.lenderName,
+        geography: p.geography,
+        minAmount: p.minAmount,
+        maxAmount: p.maxAmount,
+        category: p.category
+      })));
     });
+  };
 
-    console.log(`Found ${matches.length} matches for Canadian business`);
-    console.log('Matching Products:', matches.map((p: any) => ({
-      name: p.name,
-      lenderName: p.lenderName,
-      geography: p.geography,
-      minAmount: p.minAmount,
-      maxAmount: p.maxAmount,
-      category: p.category
-    })));
+  const runDirectApiTest = async () => {
+    setLoading(true);
+    try {
+      console.log('=== DIRECT API TEST ===');
+      
+      const response = await fetch('https://staffportal.replit.app/api/public/lenders');
+      const data = await response.json();
+      
+      const caCount = data.products?.filter((p: any) => p.country === 'CA').length || 0;
+      const usCount = data.products?.filter((p: any) => p.country === 'US').length || 0;
+      const total = data.products?.length || 0;
+      
+      const testResult = {
+        total,
+        CA: caCount,
+        US: usCount,
+        success: total > 0 && caCount > 0 && usCount > 0
+      };
+      
+      setDirectApiTest(testResult);
+      
+      console.log('Direct API Test Results:', testResult);
+      console.log('Expected: Total: 42, CA: 22, US: 20');
+      
+    } catch (error) {
+      console.error('Direct API test failed:', error);
+      setDirectApiTest({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+    setLoading(false);
+  };
+
+  const clearCacheAndRefresh = async () => {
+    try {
+      // Clear IndexedDB
+      if (typeof window !== 'undefined' && 'indexedDB' in window) {
+        const deleteRequest = indexedDB.deleteDatabase('lenderProducts');
+        deleteRequest.onsuccess = () => {
+          console.log('✅ IndexedDB cleared');
+          
+          // Clear other caches
+          const keys = Object.keys(localStorage);
+          keys.filter(k => k.includes('lender')).forEach(k => localStorage.removeItem(k));
+          
+          console.log('✅ All caches cleared, refreshing page...');
+          window.location.reload();
+        };
+      }
+    } catch (error) {
+      console.error('Cache clearing failed:', error);
+    }
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-bold">Canadian Product Filtering Test</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Button onClick={fetchRawData} disabled={loading}>
           Fetch Raw API Data
         </Button>
@@ -110,6 +169,12 @@ export default function CanadianFilteringTest() {
         </Button>
         <Button onClick={testStep2Logic} disabled={!normalizedData}>
           Test Step 2 Logic
+        </Button>
+        <Button onClick={runDirectApiTest} disabled={loading} variant="outline">
+          Direct API Test
+        </Button>
+        <Button onClick={clearCacheAndRefresh} variant="destructive">
+          Clear Cache & Refresh
         </Button>
       </div>
 
@@ -155,6 +220,36 @@ export default function CanadianFilteringTest() {
               </div>
             ) : (
               <p className="text-gray-500">Click "Fetch Normalized Data" to load</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Direct API Test Results */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Direct API Test Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {directApiTest ? (
+              <div className="space-y-2">
+                {directApiTest.error ? (
+                  <p className="text-red-600">Error: {directApiTest.error}</p>
+                ) : (
+                  <>
+                    <p><strong>Total Products:</strong> {directApiTest.total}</p>
+                    <p><strong>Canadian (CA):</strong> {directApiTest.CA}</p>
+                    <p><strong>US Products:</strong> {directApiTest.US}</p>
+                    <p className={`font-semibold ${directApiTest.success ? 'text-green-600' : 'text-red-600'}`}>
+                      Status: {directApiTest.success ? '✅ SUCCESS' : '❌ FAILED'}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Expected: Total: 42, CA: 22, US: 20
+                    </p>
+                  </>
+                )}
+              </div>
+            ) : (
+              <p className="text-gray-500">Click "Direct API Test" to verify staff API</p>
             )}
           </CardContent>
         </Card>
