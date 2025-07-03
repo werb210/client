@@ -12,6 +12,24 @@ import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import { markApplicationStarted } from '@/lib/visitFlags';
 
+// Currency formatting utilities
+const formatCurrency = (value: string): string => {
+  // Remove all non-digit characters
+  const numbers = value.replace(/\D/g, '');
+  
+  // If empty, return empty string
+  if (!numbers) return '';
+  
+  // Convert to number and format with commas
+  const number = parseInt(numbers, 10);
+  return `$${number.toLocaleString()}`;
+};
+
+const parseCurrency = (value: string): string => {
+  // Extract just the numbers for storage
+  return value.replace(/\D/g, '');
+};
+
 // Step 1 Schema - Business Basics and Funding Request
 const step1Schema = z.object({
   // Basic Business Information
@@ -180,7 +198,11 @@ export default function Step1FinancialProfile() {
                         <FormControl>
                           <Input
                             placeholder="Enter amount (e.g., $100,000)"
-                            {...field}
+                            value={field.value ? formatCurrency(field.value) : ''}
+                            onChange={(e) => {
+                              const rawValue = parseCurrency(e.target.value);
+                              field.onChange(rawValue);
+                            }}
                             className="h-12"
                           />
                         </FormControl>
@@ -225,8 +247,12 @@ export default function Step1FinancialProfile() {
                           <FormLabel className="text-base font-semibold">Equipment Value</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Enter equipment value"
-                              {...field}
+                              placeholder="Enter equipment value (e.g., $50,000)"
+                              value={field.value ? formatCurrency(field.value) : ''}
+                              onChange={(e) => {
+                                const rawValue = parseCurrency(e.target.value);
+                                field.onChange(rawValue);
+                              }}
                               className="h-12"
                             />
                           </FormControl>
