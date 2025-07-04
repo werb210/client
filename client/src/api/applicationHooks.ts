@@ -16,7 +16,10 @@ export const usePatchApplication = (id: string) => {
       apiFetch(`/api/applications/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+        }
       }),
     onSuccess: () => {
       // Invalidate application queries to trigger refetch
@@ -37,10 +40,12 @@ export const useUploadDocument = (applicationId: string) => {
       payload.files.forEach((file) => form.append('files', file));
       form.append('category', payload.category);
       
-      const response = await fetch(`/api/upload/${applicationId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/upload/${applicationId}`, {
         method: 'POST',
+        headers: {
+          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+        },
         body: form,
-        credentials: 'include',
       });
       
       if (!response.ok) {

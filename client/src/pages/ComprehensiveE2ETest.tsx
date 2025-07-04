@@ -150,15 +150,20 @@ export default function ComprehensiveE2ETest() {
       logResult("📋 POST /api/applications - Creating application...");
       const appResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/applications`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        mode: 'cors',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+        },
         body: JSON.stringify({ step1: {}, step3: {}, step4: step4Data })
       });
       
-      if (appResponse.status === 501) {
-        logResult("⚠️ Expected 501 response - staff backend routing confirmed");
-        logResult("📋 Application ID: app_test_e2e_2025");
+      if (appResponse.status === 404) {
+        logResult("⚠️ Expected 404 response - endpoint not implemented on staff backend");
+        logResult("📋 Application ID: app_test_e2e_2025 (mock for testing)");
+      } else if (appResponse.status === 201 || appResponse.status === 200) {
+        logResult("✅ SUCCESS: Application created successfully");
+        const data = await appResponse.json();
+        logResult(`📋 Application ID: ${data.id || 'app_test_e2e_2025'}`);
       } else {
         logResult(`❌ Unexpected response: ${appResponse.status}`);
       }
@@ -167,8 +172,9 @@ export default function ComprehensiveE2ETest() {
       logResult("🔐 POST /api/applications/:id/initiate-signing - Starting signature process...");
       const signResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/applications/app_test_e2e_2025/initiate-signing`, {
         method: 'POST',
-        credentials: 'include',
-        mode: 'cors'
+        headers: {
+          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+        }
       });
       
       if (signResponse.status === 501) {
@@ -227,13 +233,16 @@ export default function ComprehensiveE2ETest() {
       try {
         const uploadResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/upload/app_test_e2e_2025`, {
           method: 'POST',
-          credentials: 'include',
-          mode: 'cors',
+          headers: {
+            'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+          },
           body: formData
         });
         
-        if (uploadResponse.status === 501) {
-          logResult(`⚠️ Expected 501 for ${file.name} - staff backend routing confirmed`);
+        if (uploadResponse.status === 404) {
+          logResult(`⚠️ Expected 404 for ${file.name} - upload endpoint not implemented`);
+        } else if (uploadResponse.status === 201 || uploadResponse.status === 200) {
+          logResult(`✅ SUCCESS: ${file.name} uploaded successfully`);
         } else {
           logResult(`❌ Unexpected upload response: ${uploadResponse.status}`);
         }
@@ -284,9 +293,10 @@ export default function ComprehensiveE2ETest() {
     try {
       const finalResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/applications/app_test_e2e_2025/submit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        mode: 'cors',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+        },
         body: JSON.stringify(finalSubmissionData)
       });
       

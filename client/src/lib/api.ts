@@ -44,9 +44,11 @@ export class ApiError extends Error {
 export const apiFetch = async (path: string, opts: RequestInit = {}): Promise<Response> => {
   try {
     const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${path}`, {
-      credentials: "include",
-      mode: "cors",
-      headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": "Bearer CLIENT_APP_SHARED_TOKEN",
+        ...(opts.headers || {}) 
+      },
       ...opts,
     });
     return response;
