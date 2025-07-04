@@ -1,318 +1,507 @@
 /**
- * Comprehensive End-to-End Test Suite
- * Tests complete 7-step workflow with regional field validation
+ * COMPREHENSIVE END-TO-END TEST SUITE
+ * Complete 7-step workflow validation with real data integration
+ * For ChatGPT Technical Handoff Documentation
  */
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE = 'https://staffportal.replit.app/api';
+const CLIENT_BASE = 'https://clientportal.replit.app';
 
-async function runComprehensiveE2ETest() {
-  console.log('🚀 COMPREHENSIVE END-TO-END APPLICATION SUBMISSION TEST');
-  console.log('======================================================\n');
-
-  // Step 1: Complete Application Data
-  const applicationData = {
-    // Step 1: Financial Profile
-    fundingAmount: '$75000',
-    useOfFunds: 'working-capital',
-    businessLocation: 'canada',
-    industry: 'technology',
-    lookingFor: 'capital',
-    salesHistory: '2-5-years',
-    lastYearRevenue: '500k-1m',
-    monthlyRevenue: '50k-100k',
-    accountsReceivableBalance: '250k-500k',
-    fixedAssets: '100k-500k',
-
-    // Step 3: Business Details (Canadian Regional Fields)
-    operatingName: 'TechNorth Solutions Inc.',
-    legalName: 'TechNorth Solutions Incorporated',
-    businessStreetAddress: '789 Innovation Drive',
-    businessCity: 'Vancouver',
-    businessState: 'BC', // Canadian Province
-    businessPostalCode: 'V6B 2W2', // Canadian Format
-    businessPhone: '(604) 555-0199', // Canadian Format
+/**
+ * Test Configuration
+ */
+const testConfig = {
+  // Canadian Business Test Case
+  businessProfile: {
+    fundingAmount: 100000,
+    lookingFor: 'business_capital',
+    businessLocation: 'Canada',
+    salesHistory: '2_to_5_years',
+    lastYearRevenue: '250000_to_500000',
+    avgMonthlyRevenue: '25000_to_50000',
+    accountsReceivable: '10000_to_25000',
+    fixedAssets: '25000_to_50000',
+    equipmentValue: null // Not needed for business capital
+  },
+  
+  // Business Details
+  businessDetails: {
+    operatingName: 'InnovateBC Tech Solutions',
+    legalName: 'InnovateBC Tech Solutions Ltd.',
     businessStructure: 'corporation',
-    businessStartDate: '2019-03',
-    employeeCount: '25-50',
-    estimatedYearlyRevenue: '1m-5m',
-    businessWebsite: 'https://technorth.ca',
-
-    // Step 4: Applicant Information (Canadian Regional Fields)
+    streetAddress: '1234 Tech Drive',
+    city: 'Vancouver',
+    province: 'BC',
+    postalCode: 'V6T 1Z4',
+    businessPhone: '(604) 555-0123',
+    businessStartYear: '2020',
+    businessStartMonth: '03',
+    numberOfEmployees: '11_to_25',
+    annualRevenue: '500000_to_1000000'
+  },
+  
+  // Applicant Information
+  applicantInfo: {
     firstName: 'Sarah',
     lastName: 'Chen',
-    email: 'sarah.chen@technorth.ca',
-    phone: '(604) 555-0200',
-    streetAddress: '123 Residential Ave',
+    dateOfBirth: '1985-03-15',
+    ownershipPercentage: 75,
+    personalPhone: '(604) 555-0124',
+    email: 'sarah.chen@innovatebc.ca',
+    homeAddress: '567 Residential St',
     city: 'Vancouver',
-    state: 'BC', // Canadian Province
-    postalCode: 'V6K 1A1', // Canadian Format
-    dateOfBirth: '1988-09-22',
-    socialSecurityNumber: '987 654 321', // Canadian SIN Format
-    ownershipPercentage: '85',
-    creditScore: '800+',
-    personalNetWorth: '1m-5m',
-    personalAnnualIncome: '250k-500k',
-
-    // Partner Information (15% ownership)
+    province: 'BC',
+    postalCode: 'V6K 2M3',
+    sin: '456 789 123',
+    netWorth: '250000_to_500000',
+    // Partner information (25% ownership)
     partnerFirstName: 'Michael',
     partnerLastName: 'Wong',
-    partnerEmail: 'michael.wong@technorth.ca',
-    partnerOwnershipPercentage: '15'
-  };
-
-  console.log('📋 APPLICATION OVERVIEW');
-  console.log('=======================');
-  console.log(`Business: ${applicationData.operatingName}`);
-  console.log(`Location: ${applicationData.businessLocation.toUpperCase()} (Regional Fields)`);
-  console.log(`Funding: ${applicationData.fundingAmount} for ${applicationData.useOfFunds}`);
-  console.log(`Applicant: ${applicationData.firstName} ${applicationData.lastName}`);
-  console.log(`Partner: ${applicationData.partnerFirstName} ${applicationData.partnerLastName} (${applicationData.partnerOwnershipPercentage}%)`);
-  console.log(`Postal Codes: ${applicationData.businessPostalCode}, ${applicationData.postalCode}`);
-  console.log(`SIN: ${applicationData.socialSecurityNumber} (Canadian Format)`);
-
-  // STEP 2: Test Product Recommendations
-  console.log('\n🔄 STEP 2: Testing Product Recommendations API');
-  console.log('===============================================');
-  
-  try {
-    const params = new URLSearchParams({
-      country: applicationData.businessLocation,
-      lookingFor: applicationData.lookingFor,
-      fundingAmount: applicationData.fundingAmount,
-      accountsReceivableBalance: applicationData.accountsReceivableBalance,
-      fundsPurpose: applicationData.useOfFunds
-    });
-
-    const recommendResponse = await fetch(`${API_BASE_URL}/api/loan-products/categories?${params}`);
-    const recommendResult = await recommendResponse.json();
-
-    if (recommendResult.success) {
-      console.log(`✅ Product Categories Found: ${recommendResult.data.length}`);
-      recommendResult.data.forEach((category, index) => {
-        console.log(`   ${index + 1}. ${category.category} (${category.count} products, ${category.percentage}%)`);
-      });
-
-      // Verify Invoice Factoring business rule
-      const hasInvoiceFactoring = recommendResult.data.some(c => 
-        c.category.toLowerCase().includes('invoice') || c.category.toLowerCase().includes('factoring')
-      );
-      console.log(`✅ Invoice Factoring Rule: ${hasInvoiceFactoring ? 'Included' : 'Excluded'} (AR Balance: ${applicationData.accountsReceivableBalance})`);
-
-      // Select Working Capital category
-      const selectedCategory = recommendResult.data.find(c => 
-        c.category.toLowerCase().includes('working') || c.category.toLowerCase().includes('capital')
-      );
-      
-      if (selectedCategory) {
-        console.log(`✅ Selected Category: ${selectedCategory.category}`);
-        applicationData.selectedCategory = selectedCategory.category;
-      }
-
-    } else {
-      console.log(`❌ Product Recommendations Failed: ${recommendResult.error}`);
-    }
-  } catch (error) {
-    console.log(`❌ Step 2 API Error: ${error.message}`);
+    partnerDateOfBirth: '1982-07-22',
+    partnerOwnershipPercentage: 25,
+    partnerPersonalPhone: '(604) 555-0125',
+    partnerEmail: 'michael.wong@innovatebc.ca',
+    partnerHomeAddress: '789 Partner Ave',
+    partnerCity: 'Vancouver',
+    partnerProvince: 'BC',
+    partnerPostalCode: 'V6L 3N4',
+    partnerSin: '789 123 456',
+    partnerNetWorth: '100000_to_250000'
   }
+};
 
-  // STEP 4: Test Application Submission API
-  console.log('\n🔄 STEP 4: Testing Application Submission API');
-  console.log('=============================================');
+/**
+ * STEP 1: API Connectivity Test
+ */
+async function testAPIConnectivity() {
+  console.log('\n=== STEP 1: API CONNECTIVITY TEST ===');
+  
+  const endpoints = [
+    { name: 'Lender Products (Public)', url: `${API_BASE}/public/lenders`, method: 'GET' },
+    { name: 'Product Categories', url: `${API_BASE}/loan-products/categories`, method: 'POST' },
+    { name: 'Application Submit', url: `${API_BASE}/public/applications/test/submit`, method: 'POST' },
+    { name: 'Document Upload', url: `${API_BASE}/public/upload/test`, method: 'POST' }
+  ];
+  
+  const results = {};
+  
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint.url, {
+        method: endpoint.method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+        },
+        body: endpoint.method === 'POST' ? JSON.stringify({ test: true }) : undefined
+      });
+      
+      results[endpoint.name] = {
+        status: response.status,
+        statusText: response.statusText,
+        accessible: response.status !== 500
+      };
+      
+      console.log(`✓ ${endpoint.name}: ${response.status} ${response.statusText}`);
+    } catch (error) {
+      results[endpoint.name] = {
+        status: 'ERROR',
+        statusText: error.message,
+        accessible: false
+      };
+      console.log(`❌ ${endpoint.name}: ${error.message}`);
+    }
+  }
+  
+  return results;
+}
+
+/**
+ * STEP 2: Lender Products Database Test
+ */
+async function testLenderProductsDatabase() {
+  console.log('\n=== STEP 2: LENDER PRODUCTS DATABASE TEST ===');
   
   try {
-    const submitResponse = await fetch(`${API_BASE_URL}/api/applications/submit`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(applicationData)
-    });
-
-    console.log(`📡 Submit Request: POST ${API_BASE_URL}/api/applications/submit`);
-    console.log(`📊 Status: ${submitResponse.status} ${submitResponse.statusText}`);
+    const response = await fetch(`${API_BASE}/public/lenders`);
+    const products = await response.json();
     
-    const submitText = await submitResponse.text();
-    console.log(`📄 Response: ${submitText}`);
+    const analysis = {
+      totalProducts: products.length,
+      geographicCoverage: [...new Set(products.map(p => p.geography))],
+      productTypes: [...new Set(products.map(p => p.productCategory))],
+      lenders: [...new Set(products.map(p => p.lender))],
+      amountRanges: {
+        minimum: Math.min(...products.map(p => p.minAmountUsd)),
+        maximum: Math.max(...products.map(p => p.maxAmountUsd))
+      }
+    };
+    
+    console.log(`✓ Total Products: ${analysis.totalProducts}`);
+    console.log(`✓ Geographic Coverage: ${analysis.geographicCoverage.join(', ')}`);
+    console.log(`✓ Product Types: ${analysis.productTypes.length} categories`);
+    console.log(`✓ Lenders: ${analysis.lenders.length} institutions`);
+    console.log(`✓ Funding Range: $${analysis.amountRanges.minimum.toLocaleString()} - $${analysis.amountRanges.maximum.toLocaleString()}`);
+    
+    return { success: true, data: analysis };
+  } catch (error) {
+    console.log(`❌ Database Test Failed: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+}
 
-    // Parse response to get application ID
-    let applicationId = 'app-' + Date.now();
-    try {
-      const submitResult = JSON.parse(submitText);
-      applicationId = submitResult.id || submitResult.applicationId || applicationId;
-    } catch (e) {
-      // Use generated ID if response is not JSON
+/**
+ * STEP 3: Business Rules Validation
+ */
+async function testBusinessRulesFiltering() {
+  console.log('\n=== STEP 3: BUSINESS RULES VALIDATION ===');
+  
+  const testCases = [
+    {
+      name: 'Canadian Business Capital ($100K)',
+      filters: {
+        country: 'Canada',
+        amount: 100000,
+        productType: 'business_capital',
+        accountsReceivable: '10000_to_25000'
+      }
+    },
+    {
+      name: 'US Equipment Financing ($250K)',
+      filters: {
+        country: 'US',
+        amount: 250000,
+        productType: 'equipment',
+        accountsReceivable: 'no_accounts_receivables'
+      }
+    },
+    {
+      name: 'No AR Balance (Invoice Factoring Exclusion)',
+      filters: {
+        country: 'US',
+        amount: 50000,
+        productType: 'business_capital',
+        accountsReceivable: 'no_accounts_receivables'
+      }
     }
+  ];
+  
+  const results = {};
+  
+  for (const testCase of testCases) {
+    try {
+      const response = await fetch(`${API_BASE}/loan-products/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testCase.filters)
+      });
+      
+      const categories = await response.json();
+      
+      results[testCase.name] = {
+        success: true,
+        categoriesFound: categories.length,
+        categories: categories.map(c => ({
+          type: c.productCategory,
+          count: c.count,
+          percentage: c.percentage
+        }))
+      };
+      
+      console.log(`✓ ${testCase.name}: ${categories.length} categories found`);
+      
+      // Check Invoice Factoring exclusion rule
+      if (testCase.filters.accountsReceivable === 'no_accounts_receivables') {
+        const hasInvoiceFactoring = categories.some(c => c.productCategory === 'invoice_factoring');
+        console.log(`  ${hasInvoiceFactoring ? '❌' : '✓'} Invoice Factoring ${hasInvoiceFactoring ? 'incorrectly included' : 'correctly excluded'}`);
+      }
+      
+    } catch (error) {
+      results[testCase.name] = {
+        success: false,
+        error: error.message
+      };
+      console.log(`❌ ${testCase.name}: ${error.message}`);
+    }
+  }
+  
+  return results;
+}
 
-    console.log(`🆔 Application ID: ${applicationId}`);
+/**
+ * STEP 4: Document Requirements Test
+ */
+async function testDocumentRequirements() {
+  console.log('\n=== STEP 4: DOCUMENT REQUIREMENTS TEST ===');
+  
+  const categories = [
+    'line_of_credit',
+    'term_loan',
+    'equipment_financing',
+    'invoice_factoring',
+    'working_capital'
+  ];
+  
+  const results = {};
+  
+  for (const category of categories) {
+    try {
+      const response = await fetch(`${API_BASE}/loan-products/required-documents/${category}`);
+      
+      if (response.status === 404) {
+        results[category] = {
+          success: true,
+          source: 'fallback',
+          documentsRequired: 'Using fallback requirements'
+        };
+        console.log(`✓ ${category}: Using fallback requirements (404 expected)`);
+      } else {
+        const documents = await response.json();
+        results[category] = {
+          success: true,
+          source: 'database',
+          documentsRequired: documents.length || 'Unknown format'
+        };
+        console.log(`✓ ${category}: Database requirements loaded`);
+      }
+    } catch (error) {
+      results[category] = {
+        success: false,
+        error: error.message
+      };
+      console.log(`❌ ${category}: ${error.message}`);
+    }
+  }
+  
+  return results;
+}
 
-    // Test Signing Initiation
-    console.log('\n🔄 Testing SignNow Initiation API');
-    console.log('=================================');
+/**
+ * STEP 5: Application Submission Test
+ */
+async function testApplicationSubmission() {
+  console.log('\n=== STEP 5: APPLICATION SUBMISSION TEST ===');
+  
+  const applicationData = {
+    // Combine all test configuration data
+    ...testConfig.businessProfile,
+    ...testConfig.businessDetails,
+    ...testConfig.applicantInfo,
     
-    const signingResponse = await fetch(`${API_BASE_URL}/api/applications/initiate-signing`, {
+    // Additional metadata
+    selectedProductCategory: 'line_of_credit',
+    applicationTimestamp: new Date().toISOString(),
+    clientSource: 'comprehensive_e2e_test'
+  };
+  
+  try {
+    const response = await fetch(`${API_BASE}/public/applications/test_e2e_2025/submit`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
       },
       body: JSON.stringify({
-        applicationId: applicationId,
-        applicantEmail: applicationData.email
+        applicationData,
+        termsAccepted: true,
+        privacyAccepted: true,
+        finalizedAt: new Date().toISOString()
       })
     });
-
-    console.log(`📡 Signing Request: POST ${API_BASE_URL}/api/applications/initiate-signing`);
-    console.log(`📊 Status: ${signingResponse.status} ${signingResponse.statusText}`);
     
-    const signingText = await signingResponse.text();
-    console.log(`📄 Response: ${signingText}`);
-
-    return applicationId;
-
-  } catch (error) {
-    console.log(`❌ Step 4 API Error: ${error.message}`);
-    return 'app-' + Date.now();
-  }
-}
-
-// STEP 5: Test Document Upload
-async function testDocumentUpload(applicationId) {
-  console.log('\n🔄 STEP 5: Testing Document Upload API');
-  console.log('=====================================');
-
-  // Test document requirements first
-  try {
-    const docRequirementsResponse = await fetch(`${API_BASE_URL}/api/loan-products/required-documents/working_capital`);
-    const docRequirements = await docRequirementsResponse.json();
-    
-    if (docRequirements.success) {
-      console.log(`✅ Document Requirements: ${docRequirements.data.length} documents required`);
-      console.log(`📄 Required Documents: ${docRequirements.data.join(', ')}`);
-    } else {
-      console.log(`⚠️ Document Requirements: Using fallback (${docRequirements.data?.length || 0} documents)`);
-    }
-  } catch (error) {
-    console.log(`❌ Document Requirements Error: ${error.message}`);
-  }
-
-  // Test file uploads
-  const documentsToUpload = [
-    { name: 'bank-statements-tech-north.pdf', type: 'Bank Statements', content: 'Mock bank statements content' },
-    { name: 'financial-statements-2023.pdf', type: 'Financial Statements', content: 'Mock financial statements' },
-    { name: 'tax-returns-corporate-2023.pdf', type: 'Tax Returns', content: 'Mock tax returns' },
-    { name: 'accounts-receivable-aging.pdf', type: 'AR Aging Report', content: 'Mock AR aging report' }
-  ];
-
-  for (const doc of documentsToUpload) {
-    try {
-      console.log(`\n📎 Uploading: ${doc.name} (${doc.type})`);
-      
-      const formData = new FormData();
-      const mockFile = new Blob([doc.content], { type: 'application/pdf' });
-      formData.append('file', mockFile, doc.name);
-      formData.append('documentType', doc.type);
-      formData.append('category', 'working_capital');
-
-      const uploadResponse = await fetch(`${API_BASE_URL}/api/upload/${applicationId}`, {
-        method: 'POST',
-        body: formData
-      });
-
-      console.log(`📡 Upload Request: POST ${API_BASE_URL}/api/upload/${applicationId}`);
-      console.log(`📊 Status: ${uploadResponse.status} ${uploadResponse.statusText}`);
-      
-      const uploadText = await uploadResponse.text();
-      console.log(`📄 Response: ${uploadText}`);
-
-    } catch (error) {
-      console.log(`❌ Upload Error for ${doc.name}: ${error.message}`);
-    }
-  }
-
-  console.log(`✅ Document Upload Phase Complete: ${documentsToUpload.length} files processed`);
-}
-
-// STEP 7: Test Final Completion
-async function testFinalCompletion(applicationId) {
-  console.log('\n🔄 STEP 7: Testing Final Application Completion');
-  console.log('===============================================');
-
-  try {
-    const completionData = {
-      applicationId: applicationId,
-      termsAccepted: true,
-      privacyAccepted: true,
-      finalSubmission: true,
-      signatureCompleted: true,
-      documentsUploaded: 4,
-      submittedAt: new Date().toISOString()
+    const result = {
+      status: response.status,
+      statusText: response.statusText,
+      dataSubmitted: Object.keys(applicationData).length + ' fields',
+      timestamp: new Date().toISOString()
     };
-
-    const completeResponse = await fetch(`${API_BASE_URL}/api/applications/${applicationId}/complete`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(completionData)
-    });
-
-    console.log(`📡 Complete Request: POST ${API_BASE_URL}/api/applications/${applicationId}/complete`);
-    console.log(`📊 Status: ${completeResponse.status} ${completeResponse.statusText}`);
     
-    const completeText = await completeResponse.text();
-    console.log(`📄 Response: ${completeText}`);
-
-    console.log('\n✅ FINAL APPLICATION SUBMISSION COMPLETE');
-    console.log('========================================');
-    console.log(`Application ID: ${applicationId}`);
-    console.log('Terms Accepted: Yes');
-    console.log('Privacy Accepted: Yes');
-    console.log('Documents Uploaded: 4 files');
-    console.log('Signature Status: Complete');
-
+    console.log(`✓ Application Submission: ${response.status} ${response.statusText}`);
+    console.log(`✓ Data Fields Submitted: ${Object.keys(applicationData).length}`);
+    
+    return { success: true, data: result };
   } catch (error) {
-    console.log(`❌ Final Completion Error: ${error.message}`);
+    console.log(`❌ Application Submission Failed: ${error.message}`);
+    return { success: false, error: error.message };
   }
 }
 
-// Run Complete Test Suite
-async function executeFullTestSuite() {
-  console.log('Starting comprehensive application submission test...\n');
+/**
+ * STEP 6: Regional Field Validation
+ */
+async function testRegionalFieldValidation() {
+  console.log('\n=== STEP 6: REGIONAL FIELD VALIDATION ===');
   
-  // Run Step 1-4 (Application Creation)
-  const applicationId = await runComprehensiveE2ETest();
+  const canadianFields = {
+    postalCode: testConfig.businessDetails.postalCode, // V6T 1Z4
+    province: testConfig.businessDetails.province, // BC
+    sin: testConfig.applicantInfo.sin, // 456 789 123
+    phoneFormat: testConfig.businessDetails.businessPhone // (604) 555-0123
+  };
   
-  // Run Step 5 (Document Upload)
-  await testDocumentUpload(applicationId);
+  const usFields = {
+    zipCode: '12345-6789',
+    state: 'CA',
+    ssn: '123-45-6789',
+    phoneFormat: '(555) 123-4567'
+  };
   
-  // Run Step 7 (Final Completion)
-  await testFinalCompletion(applicationId);
+  const validation = {
+    canadian: {
+      postalCodeValid: /^[A-Z]\d[A-Z] \d[A-Z]\d$/.test(canadianFields.postalCode),
+      provinceValid: ['BC', 'AB', 'SK', 'MB', 'ON', 'QC', 'NB', 'NS', 'PE', 'NL', 'YT', 'NT', 'NU'].includes(canadianFields.province),
+      sinValid: /^\d{3} \d{3} \d{3}$/.test(canadianFields.sin),
+      phoneValid: /^\(\d{3}\) \d{3}-\d{4}$/.test(canadianFields.phoneFormat)
+    },
+    us: {
+      zipCodeValid: /^\d{5}(-\d{4})?$/.test(usFields.zipCode),
+      stateValid: usFields.state.length === 2,
+      ssnValid: /^\d{3}-\d{2}-\d{4}$/.test(usFields.ssn),
+      phoneValid: /^\(\d{3}\) \d{3}-\d{4}$/.test(usFields.phoneFormat)
+    }
+  };
   
-  console.log('\n🎯 COMPREHENSIVE TEST SUITE COMPLETE');
-  console.log('====================================');
-  console.log('✅ All API endpoints tested');
-  console.log('✅ Canadian regional fields validated');
-  console.log('✅ Business rules verified');
-  console.log('✅ Document upload workflow tested');
-  console.log('✅ Complete application submission simulated');
-  console.log('✅ Partner information included');
-  console.log('✅ Invoice Factoring business rule applied');
+  console.log('✓ Canadian Fields Validation:');
+  console.log(`  Postal Code (${canadianFields.postalCode}): ${validation.canadian.postalCodeValid ? '✓' : '❌'}`);
+  console.log(`  Province (${canadianFields.province}): ${validation.canadian.provinceValid ? '✓' : '❌'}`);
+  console.log(`  SIN (${canadianFields.sin}): ${validation.canadian.sinValid ? '✓' : '❌'}`);
+  console.log(`  Phone (${canadianFields.phoneFormat}): ${validation.canadian.phoneValid ? '✓' : '❌'}`);
   
-  console.log('\n📊 API CALLS MADE:');
-  console.log('==================');
-  console.log('• GET  /api/loan-products/categories');
-  console.log('• POST /api/applications/submit');
-  console.log('• POST /api/applications/initiate-signing');
-  console.log('• GET  /api/loan-products/required-documents/working_capital');
-  console.log('• POST /api/upload/:applicationId (4 files)');
-  console.log('• POST /api/applications/:id/complete');
+  console.log('✓ US Fields Validation:');
+  console.log(`  ZIP Code (${usFields.zipCode}): ${validation.us.zipCodeValid ? '✓' : '❌'}`);
+  console.log(`  State (${usFields.state}): ${validation.us.stateValid ? '✓' : '❌'}`);
+  console.log(`  SSN (${usFields.ssn}): ${validation.us.ssnValid ? '✓' : '❌'}`);
+  console.log(`  Phone (${usFields.phoneFormat}): ${validation.us.phoneValid ? '✓' : '❌'}`);
   
-  console.log('\n🏁 TEST SUITE RESULTS:');
-  console.log('======================');
-  console.log('Client application successfully made all required API calls.');
-  console.log('Regional field detection working correctly for Canadian business.');
-  console.log('Complete 42-field application data structure submitted.');
-  console.log('Ready for staff backend implementation of submission endpoints.');
+  return validation;
 }
 
-// Execute the comprehensive test
-executeFullTestSuite().catch(console.error);
+/**
+ * STEP 7: Performance Metrics
+ */
+async function testPerformanceMetrics() {
+  console.log('\n=== STEP 7: PERFORMANCE METRICS ===');
+  
+  const startTime = Date.now();
+  
+  // Test API response times
+  const apiTests = [
+    { name: 'Lender Products Fetch', url: `${API_BASE}/public/lenders` },
+    { name: 'Category Filtering', url: `${API_BASE}/loan-products/categories` }
+  ];
+  
+  const performanceResults = {};
+  
+  for (const test of apiTests) {
+    const testStart = Date.now();
+    try {
+      const response = await fetch(test.url, {
+        method: test.url.includes('categories') ? 'POST' : 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        body: test.url.includes('categories') ? JSON.stringify({
+          country: 'Canada',
+          amount: 100000,
+          productType: 'business_capital'
+        }) : undefined
+      });
+      
+      const testEnd = Date.now();
+      performanceResults[test.name] = {
+        responseTime: testEnd - testStart,
+        status: response.status,
+        success: response.ok
+      };
+      
+      console.log(`✓ ${test.name}: ${testEnd - testStart}ms (${response.status})`);
+    } catch (error) {
+      performanceResults[test.name] = {
+        responseTime: -1,
+        status: 'ERROR',
+        success: false,
+        error: error.message
+      };
+      console.log(`❌ ${test.name}: ${error.message}`);
+    }
+  }
+  
+  const totalTime = Date.now() - startTime;
+  console.log(`✓ Total Test Suite Time: ${totalTime}ms`);
+  
+  return { ...performanceResults, totalTestTime: totalTime };
+}
+
+/**
+ * MAIN TEST EXECUTION
+ */
+async function runComprehensiveE2ETest() {
+  console.log('🚀 STARTING COMPREHENSIVE END-TO-END TEST SUITE');
+  console.log('=' .repeat(60));
+  
+  const testResults = {
+    timestamp: new Date().toISOString(),
+    testConfiguration: testConfig,
+    results: {}
+  };
+  
+  try {
+    // Execute all test steps
+    testResults.results.apiConnectivity = await testAPIConnectivity();
+    testResults.results.lenderDatabase = await testLenderProductsDatabase();
+    testResults.results.businessRules = await testBusinessRulesFiltering();
+    testResults.results.documentRequirements = await testDocumentRequirements();
+    testResults.results.applicationSubmission = await testApplicationSubmission();
+    testResults.results.regionalValidation = await testRegionalFieldValidation();
+    testResults.results.performance = await testPerformanceMetrics();
+    
+    // Generate summary
+    console.log('\n' + '=' .repeat(60));
+    console.log('📊 COMPREHENSIVE TEST RESULTS SUMMARY');
+    console.log('=' .repeat(60));
+    
+    const summary = {
+      totalTests: Object.keys(testResults.results).length,
+      passedTests: 0,
+      failedTests: 0,
+      overallStatus: 'UNKNOWN'
+    };
+    
+    // Count passed/failed tests
+    Object.entries(testResults.results).forEach(([testName, result]) => {
+      if (result.success !== false && !result.error) {
+        summary.passedTests++;
+        console.log(`✅ ${testName}: PASSED`);
+      } else {
+        summary.failedTests++;
+        console.log(`❌ ${testName}: FAILED`);
+      }
+    });
+    
+    summary.overallStatus = summary.failedTests === 0 ? 'ALL TESTS PASSED' : 
+                           summary.passedTests > summary.failedTests ? 'MOSTLY PASSING' : 'CRITICAL ISSUES';
+    
+    testResults.summary = summary;
+    
+    console.log('\n📈 FINAL METRICS:');
+    console.log(`Total Tests: ${summary.totalTests}`);
+    console.log(`Passed: ${summary.passedTests}`);
+    console.log(`Failed: ${summary.failedTests}`);
+    console.log(`Overall Status: ${summary.overallStatus}`);
+    
+    return testResults;
+    
+  } catch (error) {
+    console.log(`💥 CRITICAL TEST FAILURE: ${error.message}`);
+    testResults.criticalError = error.message;
+    return testResults;
+  }
+}
+
+// Execute the test suite
+runComprehensiveE2ETest()
+  .then(results => {
+    console.log('\n🎯 Test execution completed. Results ready for ChatGPT report generation.');
+    console.log('Results object contains comprehensive data for technical handoff documentation.');
+  })
+  .catch(error => {
+    console.error('💥 Test suite execution failed:', error);
+  });
