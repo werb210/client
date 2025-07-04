@@ -81,7 +81,7 @@ export default function Step4DataSubmission() {
       const result = await staffApi.submitApplication(
         state, // Complete form state with all steps
         filesWithFileObjects, // Any uploaded documents
-        selectedProduct?.id?.toString() || selectedProduct?.product_name || 'unknown'
+        selectedProduct?.product_name || 'unknown'
       );
 
       if (result.status === 'submitted' && result.applicationId) {
@@ -94,10 +94,18 @@ export default function Step4DataSubmission() {
           payload: result.applicationId
         });
 
-        // Step 2: Initiate signing process (do not show SignNow yet)
+        // Step 2: Initiate signing process with pre-fill data (do not show SignNow yet)
         console.log('🔄 Step 4: Initiating signing with POST /applications/initiate-signing...');
         
-        const signingResponse = await staffApi.initiateSigning(result.applicationId);
+        // Prepare pre-fill data from Steps 3 and 4
+        const prefilData = {
+          step3BusinessDetails: state.step3BusinessDetails,
+          step4ApplicantInfo: state.step4ApplicantInfo
+        };
+        
+        console.log('📋 Sending pre-fill data for SignNow Smart Fields:', prefilData);
+        
+        const signingResponse = await staffApi.initiateSigning(result.applicationId, prefilData);
         
         if (signingResponse.status === 'ready' && signingResponse.signUrl) {
           console.log('✅ Step 4: Signing initiated successfully, URL received');
@@ -105,12 +113,16 @@ export default function Step4DataSubmission() {
           
           // Store signing URL in context for Step 6
           dispatch({
-            type: 'UPDATE_STEP6' as any,
+            type: 'UPDATE_STEP6_SIGNATURE',
             payload: {
               signingUrl: signingResponse.signUrl,
-              signingStatus: 'ready',
-              applicationId: result.applicationId
+              documentId: result.applicationId
             }
+          });
+          
+          dispatch({
+            type: 'SET_SIGNING_URL',
+            payload: signingResponse.signUrl
           });
           
           saveToStorage();
@@ -306,7 +318,7 @@ export default function Step4DataSubmission() {
                 <span className="font-medium">Business Details (Step 3)</span>
               </div>
               <div className="ml-6 text-sm text-gray-600 space-y-1">
-                <p>Business Name: {businessInfo?.businessName || 'Not provided'}</p>
+                <p>Business Name: {businessInfo?.operatingName || businessInfo?.legalName || 'Not provided'}</p>
                 <p>Structure: {businessInfo?.businessStructure || 'Not specified'}</p>
                 <p>Location: {businessInfo?.businessCity}, {businessInfo?.businessState}</p>
                 <p>Phone: {businessInfo?.businessPhone || 'Not provided'}</p>

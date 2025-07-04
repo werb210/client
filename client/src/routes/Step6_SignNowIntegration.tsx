@@ -17,7 +17,7 @@ import {
   Eye
 } from 'lucide-react';
 
-type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'complete' | 'error';
+type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'complete' | 'completed' | 'error';
 
 /**
  * Step 6: SignNow Integration
@@ -95,7 +95,7 @@ export default function Step6SignNowIntegration() {
           console.log('✅ Status "ready" received, fetching signing URL...');
           await fetchSigningUrl();
           
-        } else if (statusResult.status === 'complete') {
+        } else if (statusResult.status === 'completed') {
           console.log('✅ Signing already completed, proceeding to Step 7...');
           handleSigningComplete();
           
@@ -164,19 +164,26 @@ export default function Step6SignNowIntegration() {
   const handleOpenSignNow = () => {
     if (!signUrl) return;
 
-    console.log('🖊️ Opening SignNow in new tab:', signUrl);
+    console.log('🖊️ Redirecting to SignNow for signing:', signUrl);
     setSigningStatus('signing');
     
-    // Open SignNow in new tab
-    window.open(signUrl, '_blank', 'width=1024,height=768,scrollbars=yes,resizable=yes');
+    // Store application state before redirect
+    dispatch({
+      type: 'UPDATE_STEP6_SIGNATURE',
+      payload: {
+        signedAt: new Date().toISOString()
+      }
+    });
     
     toast({
-      title: "SignNow Opened",
-      description: "Complete the signing process in the new tab, then return here.",
+      title: "Redirecting to SignNow",
+      description: "You will be redirected to complete the signing process.",
     });
 
-    // Start polling for completion
-    startCompletionPolling();
+    // Direct redirect to SignNow (not new tab)
+    setTimeout(() => {
+      window.location.href = signUrl;
+    }, 1500); // Brief delay to show the toast
   };
 
   const startCompletionPolling = async () => {
@@ -204,7 +211,7 @@ export default function Step6SignNowIntegration() {
       try {
         const statusResult = await staffApi.checkSigningStatus(applicationId);
         
-        if (statusResult.status === 'complete') {
+        if (statusResult.status === 'completed') {
           console.log('✅ Signing completed detected!');
           handleSigningComplete();
           return;
@@ -228,11 +235,9 @@ export default function Step6SignNowIntegration() {
     
     // Update form state
     dispatch({
-      type: 'UPDATE_STEP6',
+      type: 'UPDATE_STEP6_SIGNATURE',
       payload: {
-        signingStatus: 'complete',
-        signedAt: new Date().toISOString(),
-        completed: true
+        signedAt: new Date().toISOString()
       }
     });
     
@@ -255,7 +260,7 @@ export default function Step6SignNowIntegration() {
     try {
       const statusResult = await staffApi.checkSigningStatus(applicationId);
       
-      if (statusResult.status === 'complete') {
+      if (statusResult.status === 'completed') {
         handleSigningComplete();
       } else {
         toast({
@@ -517,7 +522,7 @@ export default function Step6SignNowIntegration() {
               Previous
             </Button>
             
-            {signingStatus === 'complete' && (
+            {signingStatus === 'completed' && (
               <Button 
                 onClick={handleManualContinue}
                 className="flex items-center gap-2"
