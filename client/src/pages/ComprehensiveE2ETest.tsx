@@ -151,6 +151,8 @@ export default function ComprehensiveE2ETest() {
       const appResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/applications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        mode: 'cors',
         body: JSON.stringify({ step1: {}, step3: {}, step4: step4Data })
       });
       
@@ -164,7 +166,9 @@ export default function ComprehensiveE2ETest() {
       // Simulate signing initiation
       logResult("🔐 POST /api/applications/:id/initiate-signing - Starting signature process...");
       const signResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/applications/app_test_e2e_2025/initiate-signing`, {
-        method: 'POST'
+        method: 'POST',
+        credentials: 'include',
+        mode: 'cors'
       });
       
       if (signResponse.status === 501) {
@@ -223,6 +227,8 @@ export default function ComprehensiveE2ETest() {
       try {
         const uploadResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/upload/app_test_e2e_2025`, {
           method: 'POST',
+          credentials: 'include',
+          mode: 'cors',
           body: formData
         });
         
@@ -279,6 +285,8 @@ export default function ComprehensiveE2ETest() {
       const finalResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/applications/app_test_e2e_2025/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        mode: 'cors',
         body: JSON.stringify(finalSubmissionData)
       });
       
