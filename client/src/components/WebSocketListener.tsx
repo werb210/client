@@ -37,7 +37,7 @@ export function WebSocketListener() {
             if (message.type === 'lender_products.updated') {
               console.log('[WebSocket] Lender products updated - invalidating cache');
               
-              // Invalidate React Query cache
+              // Invalidate React Query cache as per specification
               queryClient.invalidateQueries({ queryKey: ['lender-products'] });
               
               toast({

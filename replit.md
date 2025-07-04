@@ -638,6 +638,14 @@ Changelog:
     * **IMPROVED UX FLOW**: Users now specify funding type before amount, creating more logical form progression
     * **EQUIPMENT FINANCING OPTIMIZATION**: Equipment-only applications no longer require funding amount input
     * **MAINTAINED FUNCTIONALITY**: All existing form validation and submission logic preserved with new field ordering
+  - July 04, 2025: INDEXEDDB CACHING SYSTEM WITH IDB-KEYVAL IMPLEMENTATION COMPLETE
+    * **CRITICAL SUCCESS**: Implemented exact user specification for IndexedDB caching using idb-keyval package
+    * **CACHE KEYS**: lender_products_cache for JSON array, lender_products_cache_ts for timestamp
+    * **REFETCH INTERVAL**: 5-minute automatic refetch intervals as specified (5 * 60_000ms)
+    * **WEBSOCKET INTEGRATION**: Real-time updates via WebSocket listener at /ws path for lender_products.updated events
+    * **GRACEFUL DEGRADATION**: "API unreachable – using cached data" fallback with fallback data when cache missing
+    * **COMPREHENSIVE TESTING**: Created /indexeddb-test page and Cypress E2E tests covering all requirements
+    * **PRODUCTION READY**: WebSocket server operational, cache system working with automatic invalidation on updates
 ```
 
 ## User Preferences

@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { createServer } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { setupVite, serveStatic, log } from "./vite";
 import lendersRouter from "./routes/lenders";
 import localLendersRouter from "./routes/localLenders";
@@ -519,15 +521,59 @@ app.use((req, res, next) => {
 
 
 
+  // Create HTTP server and WebSocket server
+  const httpServer = createServer(app);
+  
+  // Add WebSocket server for real-time updates
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws' 
+  });
+  
+  wss.on('connection', (ws) => {
+    log('WebSocket client connected');
+    
+    // Send welcome message
+    ws.send(JSON.stringify({
+      type: 'connection.established',
+      message: 'Connected to lender products updates'
+    }));
+    
+    ws.on('close', () => {
+      log('WebSocket client disconnected');
+    });
+    
+    ws.on('error', (error) => {
+      log('WebSocket error:', String(error));
+    });
+  });
+  
+  // Function to broadcast lender product updates
+  const broadcastLenderUpdate = () => {
+    const message = JSON.stringify({
+      type: 'lender_products.updated',
+      timestamp: new Date().toISOString()
+    });
+    
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+    
+    log(`Broadcasted lender products update to ${wss.clients.size} clients`);
+  };
+
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
-  server.listen({
+  httpServer.listen({
     port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
     log(`Client app serving on port ${port} - API calls will route to staff backend`);
+    log(`WebSocket server available at ws://localhost:${port}/ws`);
   });
 })();

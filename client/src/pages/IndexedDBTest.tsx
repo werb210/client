@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { useLenderProducts, useLenderProductsCache } from '@/lib/useLenderProducts';
+import { useLenderProducts } from '@/lib/useLenderProducts';
+import { get, set } from 'idb-keyval';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,14 +14,31 @@ import { RefreshCw, Database, Clock, CheckCircle, AlertCircle } from 'lucide-rea
 
 export default function IndexedDBTest() {
   const { data: products, isLoading, isError, error, refetch } = useLenderProducts();
-  const { invalidateCache, getCacheStatus } = useLenderProductsCache();
-  
   const [cacheStatus, setCacheStatus] = React.useState<any>(null);
+
+  // Cache management functions
+  const getCacheStatus = async () => {
+    const cachedProducts = await get('lender_products_cache');
+    const cachedTimestamp = await get('lender_products_cache_ts');
+    
+    return {
+      hasCache: Boolean(cachedProducts && Array.isArray(cachedProducts)),
+      productCount: cachedProducts?.length || 0,
+      timestamp: cachedTimestamp,
+      age: cachedTimestamp ? Date.now() - new Date(cachedTimestamp).getTime() : null
+    };
+  };
+
+  const invalidateCache = async () => {
+    await set('lender_products_cache', null);
+    await set('lender_products_cache_ts', null);
+    refetch();
+  };
 
   // Load cache status on component mount
   React.useEffect(() => {
     getCacheStatus().then(setCacheStatus);
-  }, [getCacheStatus]);
+  }, []);
 
   const handleRefreshCache = () => {
     getCacheStatus().then(setCacheStatus);
@@ -28,124 +46,148 @@ export default function IndexedDBTest() {
 
   const handleInvalidateCache = async () => {
     await invalidateCache();
-    setCacheStatus(null);
-    refetch();
+    await getCacheStatus().then(setCacheStatus);
+  };
+
+  const handleTestWebSocket = () => {
+    // Test WebSocket connection
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    
+    const ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+      console.log('[Test] WebSocket connected successfully');
+    };
+    
+    ws.onmessage = (event) => {
+      console.log('[Test] WebSocket message received:', event.data);
+    };
+    
+    ws.onerror = (error) => {
+      console.error('[Test] WebSocket error:', error);
+    };
+    
+    setTimeout(() => {
+      ws.close();
+    }, 2000);
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">IndexedDB Caching System Test</h1>
-        <p className="text-muted-foreground">
-          Testing idb-keyval implementation with 5-minute refresh intervals and graceful degradation
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          IndexedDB Caching Test
+        </h1>
+        <p className="text-gray-600">
+          Testing idb-keyval caching system with 5-minute refetch intervals and WebSocket updates
         </p>
       </div>
 
-      {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {/* API Status */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Database className="h-4 w-4" />
-              API Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              {isLoading ? (
-                <>
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">Loading...</span>
-                </>
-              ) : isError ? (
-                <>
-                  <AlertCircle className="h-4 w-4 text-red-500" />
-                  <span className="text-sm text-red-600">Error</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-green-600">Connected</span>
-                </>
-              )}
-            </div>
-            {isError && (
-              <p className="text-xs text-red-600 mt-1">
-                {error?.message || 'Unknown error'}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Products Count */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Products Loaded</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {products?.length || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {products?.length === 0 ? 'No products available' : 'Products cached'}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Cache Status */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Cache Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-xs">Has Cache:</span>
-                <Badge variant={cacheStatus?.hasCache ? 'default' : 'secondary'}>
-                  {cacheStatus?.hasCache ? 'Yes' : 'No'}
-                </Badge>
-              </div>
-              {cacheStatus?.timestamp && (
-                <div className="text-xs text-muted-foreground">
-                  Cached: {new Date(cacheStatus.timestamp).toLocaleTimeString()}
-                </div>
-              )}
-              {cacheStatus?.age && (
-                <div className="text-xs text-muted-foreground">
-                  Age: {Math.round(cacheStatus.age / 1000 / 60)} minutes
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Controls */}
-      <Card className="mb-8">
+      {/* Cache Status Card */}
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Cache Controls</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Cache Status
+          </CardTitle>
           <CardDescription>
-            Test IndexedDB operations and cache invalidation
+            IndexedDB cache information and controls
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <Button onClick={handleRefreshCache} variant="outline">
+        <CardContent data-testid="cache-status">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="text-sm text-gray-600">Cache Status</div>
+              <div className="font-semibold">
+                <Badge 
+                  data-testid="cache-status-badge"
+                  variant={cacheStatus?.hasCache ? "default" : "secondary"} 
+                  className={cacheStatus?.hasCache ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
+                >
+                  {cacheStatus?.hasCache ? (
+                    <>
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Active
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      Empty
+                    </>
+                  )}
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="text-sm text-gray-600">Products Cached</div>
+              <div className="font-semibold text-lg" data-testid="cache-count">
+                {cacheStatus?.productCount || 0}
+              </div>
+            </div>
+            
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="text-sm text-gray-600">Cache Age</div>
+              <div className="font-semibold">
+                {cacheStatus?.age ? (
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {Math.round(cacheStatus.age / 1000 / 60)} min
+                  </span>
+                ) : 'N/A'}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button onClick={handleRefreshCache} variant="outline" size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
-              Check Cache Status
+              Refresh Status
             </Button>
-            <Button onClick={handleInvalidateCache} variant="destructive">
-              <Database className="h-4 w-4 mr-2" />
-              Clear Cache & Refetch
+            <Button onClick={handleInvalidateCache} variant="outline" size="sm" data-testid="clear-cache-btn">
+              Clear Cache
             </Button>
-            <Button onClick={() => refetch()} variant="secondary">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Manual Refetch
+            <Button onClick={handleTestWebSocket} variant="outline" size="sm" data-testid="test-websocket-btn">
+              Test WebSocket
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* API Status Card */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>API Status</CardTitle>
+          <CardDescription>
+            Current API fetch status and error handling
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Status:</span>
+              <span data-testid="api-status">
+                {isLoading ? (
+                  <Badge variant="secondary">Loading...</Badge>
+                ) : isError ? (
+                  <Badge variant="destructive">Error</Badge>
+                ) : (
+                  <Badge variant="default" className="bg-green-100 text-green-800">Success</Badge>
+                )}
+              </span>
+            </div>
+            
+            {isError && (
+              <div className="text-sm text-red-600">
+                {String(error)}
+              </div>
+            )}
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Products Fetched:</span>
+              <span className="font-semibold" data-testid="products-fetched">{products?.length || 0}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -156,75 +198,51 @@ export default function IndexedDBTest() {
           <CardHeader>
             <CardTitle>Cached Products</CardTitle>
             <CardDescription>
-              Products loaded from IndexedDB cache or API
+              Products currently available from IndexedDB cache
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {products.slice(0, 6).map((product, index) => (
-                <div key={product.id || index}>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <h4 className="font-medium">{product.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {product.lenderName}
-                      </p>
-                      <div className="flex gap-2">
-                        <Badge variant="outline">
-                          {product.category}
-                        </Badge>
-                        <Badge variant="secondary">
-                          {product.country}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="text-right text-sm">
-                      <div>${product.minAmount?.toLocaleString()} - ${product.maxAmount?.toLocaleString()}</div>
-                      {product.interestRateMin && product.interestRateMax && (
-                        <div className="text-muted-foreground">
-                          {product.interestRateMin}% - {product.interestRateMax}%
-                        </div>
-                      )}
-                    </div>
+          <CardContent data-testid="products-display">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {products.slice(0, 6).map((product: any, index: number) => (
+                <div key={index} className="p-4 border rounded-lg bg-gray-50">
+                  <div className="font-semibold text-sm mb-1">
+                    {product.name || product.lenderName || 'Unknown Product'}
                   </div>
-                  {index < products.slice(0, 6).length - 1 && <Separator className="mt-4" />}
+                  <div className="text-xs text-gray-600 mb-2">
+                    {product.category || 'Unknown Category'}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Amount: ${product.minAmount?.toLocaleString()} - ${product.maxAmount?.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Country: {product.country || 'N/A'}
+                  </div>
                 </div>
               ))}
-              {products.length > 6 && (
-                <p className="text-sm text-muted-foreground text-center pt-4">
-                  ... and {products.length - 6} more products
-                </p>
-              )}
             </div>
+            
+            {products.length > 6 && (
+              <div className="mt-4 text-sm text-gray-500 text-center">
+                ... and {products.length - 6} more products
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Technical Details */}
-      <Card className="mt-8">
+      {/* Implementation Details */}
+      <Card className="mt-6">
         <CardHeader>
           <CardTitle>Implementation Details</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <h4 className="font-medium mb-2">Cache Configuration</h4>
-              <ul className="space-y-1 text-muted-foreground">
-                <li>• Storage: IndexedDB via idb-keyval</li>
-                <li>• Refresh Interval: 5 minutes</li>
-                <li>• Stale Time: 4 minutes</li>
-                <li>• Garbage Collection: 10 minutes</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">Graceful Degradation</h4>
-              <ul className="space-y-1 text-muted-foreground">
-                <li>• API failure → Load from cache</li>
-                <li>• No cache → Show error message</li>
-                <li>• WebSocket updates → Invalidate cache</li>
-                <li>• Fallback data when staff DB empty</li>
-              </ul>
-            </div>
+        <CardContent>
+          <div className="text-sm space-y-2">
+            <div>✅ idb-keyval for IndexedDB storage</div>
+            <div>✅ 5-minute automatic refetch intervals</div>
+            <div>✅ WebSocket listener for real-time updates</div>
+            <div>✅ Graceful degradation on API failure</div>
+            <div>✅ Cache keys: lender_products_cache, lender_products_cache_ts</div>
+            <div>✅ Fallback data when staff database empty</div>
           </div>
         </CardContent>
       </Card>
