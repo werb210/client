@@ -60,6 +60,7 @@
     "express-session": "^1.18.1",
     "framer-motion": "^11.13.1",
     "idb": "^8.0.3",
+    "idb-keyval": "^6.2.2",
     "input-otp": "^1.4.2",
     "jsdom": "^26.1.0",
     "libphonenumber-js": "^1.12.9",

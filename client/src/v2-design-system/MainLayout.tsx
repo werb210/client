@@ -49,6 +49,7 @@ import WorkflowTest from "@/pages/WorkflowTest";
 import LenderProductsCatalog from "@/pages/LenderProductsCatalog";
 import BankingDocumentTest from "@/pages/BankingDocumentTest";
 import ComprehensiveE2ETest from "@/pages/ComprehensiveE2ETest";
+import IndexedDBTest from "@/pages/IndexedDBTest";
 
 
 /**
@@ -89,6 +90,7 @@ export function MainLayout() {
       <Route path="/catalog" component={LenderProductsCatalog} />
       <Route path="/banking-document-test" component={BankingDocumentTest} />
       <Route path="/comprehensive-e2e-test" component={ComprehensiveE2ETest} />
+      <Route path="/indexeddb-test" component={IndexedDBTest} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />

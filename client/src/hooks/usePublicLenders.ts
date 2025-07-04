@@ -1,27 +1,31 @@
+import { useLenderProducts } from "@/lib/useLenderProducts";
 import { useQuery } from "@tanstack/react-query";
 import { fetchLenderProducts } from "@/api/lenderProducts";
 
 /**
- * Custom hook for fetching lender products with intelligent fallback
- * - Development: Uses local API endpoints for testing
- * - Production: Fetches from staff app public CORS-enabled API
+ * Custom hook for fetching lender products with IndexedDB caching
+ * Uses idb-keyval for persistent caching and graceful degradation
  */
 export function usePublicLenders() {
-  return useQuery({
-    queryKey: ["publicLenderProducts"],
-    queryFn: fetchLenderProducts,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-  });
+  // Use the new IndexedDB caching system
+  return useLenderProducts();
 }
 
 export function usePublicLenderStats() {
   return useQuery({
     queryKey: ["publicLenderStats"],
     queryFn: async () => {
-      const { fetchLenderStats } = await import("@/api/lenderProducts");
-      return fetchLenderStats();
+      const products = await fetchLenderProducts();
+      
+      // Calculate stats from products
+      const stats = {
+        totalProducts: products.length,
+        maxFunding: Math.max(...products.map(p => p.maxAmount || 0)),
+        countries: Array.from(new Set(products.map(p => p.country).filter(Boolean))).length,
+        categories: Array.from(new Set(products.map(p => p.category))).length
+      };
+      
+      return stats;
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
     retry: 3,
