@@ -209,6 +209,7 @@ export default function Step1FinancialProfile() {
                               field.onChange(rawValue);
                             }}
                             className="h-12"
+                            data-cy="fundingAmount"
                           />
                         </FormControl>
                         <FormMessage />
@@ -476,6 +477,7 @@ export default function Step1FinancialProfile() {
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.background = '#E67E00'}
                     onMouseLeave={(e) => e.currentTarget.style.background = '#FF8C00'}
+                    data-cy="next"
                   >
                     Continue to Recommendations
                     <ArrowRight className="w-4 h-4 ml-2" />

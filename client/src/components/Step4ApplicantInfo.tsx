@@ -93,7 +93,7 @@ export function Step4ApplicantInfo({ onNext, onBack }: Step4Props) {
               <FormItem>
                 <FormLabel>Applicant Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="Enter your email" {...field} />
+                  <Input type="email" placeholder="Enter your email" {...field} data-cy="contactEmail" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -428,6 +428,7 @@ export function Step4ApplicantInfo({ onNext, onBack }: Step4Props) {
           <Button 
             type="button" 
             onClick={onNext}
+            data-cy="next"
           >
             Continue
             <ArrowRight className="ml-2 h-4 w-4" />

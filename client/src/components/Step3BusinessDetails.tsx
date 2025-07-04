@@ -66,7 +66,7 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
               <FormItem>
                 <FormLabel>Business Operating Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter business operating name" {...field} />
+                  <Input placeholder="Enter business operating name" {...field} data-cy="operatingName" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -81,7 +81,7 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
               <FormItem>
                 <FormLabel>Business Legal Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter business legal name" {...field} />
+                  <Input placeholder="Enter business legal name" {...field} data-cy="legalName" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -368,6 +368,7 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
             onClick={onNext}
             disabled={!canContinue()}
             className={`${!canContinue() ? 'opacity-50 cursor-not-allowed' : ''}`}
+            data-cy="next"
           >
             Continue
             <ArrowRight className="ml-2 h-4 w-4" />

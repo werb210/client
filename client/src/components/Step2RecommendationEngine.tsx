@@ -335,6 +335,7 @@ export function Step2RecommendationEngine({
             ? 'bg-teal-600 hover:bg-teal-700 text-white' 
             : 'bg-gray-200 text-gray-500 cursor-not-allowed'
           } transition-colors`}
+          data-cy="next"
         >
           {selectedProduct ? 'Continue to Business Details' : 'Select a Product First'}
           <ArrowRight className="ml-2 h-4 w-4" />

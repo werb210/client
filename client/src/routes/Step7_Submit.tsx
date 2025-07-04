@@ -385,6 +385,7 @@ export default function Step7Submit() {
                 onClick={handleSubmit}
                 disabled={!termsAccepted || !privacyAccepted || isSubmitting}
                 className="bg-teal-600 hover:bg-teal-700 text-white"
+                data-cy="submitApplication"
               >
                 {isSubmitting ? (
                   <>
