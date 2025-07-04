@@ -3,7 +3,7 @@
  * Automatically syncs lender products from staff API
  */
 
-import { syncManager } from './syncManager';
+import { syncLenderProducts } from './lenderProductSync';
 
 class ScheduledSyncService {
   private intervalId: number | null = null;
@@ -47,14 +47,14 @@ class ScheduledSyncService {
     try {
       console.log('[SCHEDULER] Starting scheduled lender product sync...');
       
-      const result = await syncManager.pullLiveData();
+      const result = await syncLenderProducts();
       
       if (result.success) {
-        console.log(`[SCHEDULER] ✅ Sync successful: ${result.productCount} products`);
-        this.showToast(`Successfully synced ${result.productCount} lender products`, 'success');
+        console.log(`[SCHEDULER] ✅ Sync successful: ${result.data?.length || 0} products`);
+        this.showToast(`Successfully synced ${result.data?.length || 0} lender products`, 'success');
       } else {
-        console.error(`[SCHEDULER] ❌ Sync failed: ${result.message}`);
-        this.showToast(`Sync failed: ${result.message}`, 'error');
+        console.error(`[SCHEDULER] ❌ Sync failed: ${result.error || 'Unknown error'}`);
+        this.showToast(`Sync failed: ${result.error || 'Unknown error'}`, 'error');
       }
       
     } catch (error) {
@@ -84,16 +84,20 @@ class ScheduledSyncService {
 
   async manualSync(): Promise<{ success: boolean; productCount: number; message: string }> {
     console.log('[SCHEDULER] Manual sync triggered');
-    const result = await syncManager.pullLiveData();
+    const result = await syncLenderProducts();
     
     this.showToast(
       result.success 
-        ? `Manual sync: ${result.productCount} products updated`
-        : `Manual sync failed: ${result.message}`,
+        ? `Manual sync: ${result.data?.length || 0} products updated`
+        : `Manual sync failed: ${result.error || 'Unknown error'}`,
       result.success ? 'success' : 'error'
     );
     
-    return result;
+    return {
+      success: result.success,
+      productCount: result.data?.length || 0,
+      message: result.error || 'Success'
+    };
   }
 
   destroy() {

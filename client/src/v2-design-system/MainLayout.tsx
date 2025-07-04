@@ -18,7 +18,7 @@ import NotFound from "@/pages/NotFound";
 import ApplicationSuccess from "@/pages/ApplicationSuccess";
 import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
-import { BackendDiagnosticPage } from "@/_legacy_auth/BackendDiagnosticPage";
+// BackendDiagnosticPage removed with legacy auth cleanup
 import SideBySideApplication from "@/pages/SideBySideApplication";
 import SimpleApplication from "@/pages/SimpleApplication";
 import LenderTest from "@/pages/LenderTest";
@@ -62,7 +62,7 @@ export function MainLayout() {
   return (
     <Switch>
       {/* Diagnostic Routes */}
-      <Route path="/backend-diagnostic" component={BackendDiagnosticPage} />
+      {/* Route removed with legacy auth cleanup */}
       <Route path="/lender-test" component={LenderTest} />
       <Route path="/lenders-by-category" component={LendersByCategory} />
       <Route path="/lenders-by-country" component={LenderProductsByCountry} />

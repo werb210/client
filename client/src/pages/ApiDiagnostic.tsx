@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { syncManager } from '@/lib/syncManager';
+import { syncLenderProducts } from '@/lib/lenderProductSync';
 import { scheduledSyncService } from '@/lib/scheduledSync';
 
 interface DiagnosticResult {
@@ -12,6 +12,18 @@ interface DiagnosticResult {
 }
 
 export default function ApiDiagnostic() {
+  // Temporarily disabled due to sync manager refactoring
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">API Diagnostic</h1>
+      <p className="text-gray-600">This page is temporarily disabled during final cleanup. Use the main application workflow for testing.</p>
+    </div>
+  );
+  
+}
+
+/* Original function disabled - needs sync manager refactoring
+function ApiDiagnosticOriginal() {
   const [results, setResults] = useState<DiagnosticResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [syncStatus, setSyncStatus] = useState<any>(null);
@@ -322,3 +334,4 @@ export default function ApiDiagnostic() {
     </div>
   );
 }
+*/
