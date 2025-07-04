@@ -4,6 +4,7 @@ import { useFormData } from '@/context/FormDataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import type { CheckedState } from '@radix-ui/react-checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -31,6 +32,15 @@ export default function Step7Submit() {
   
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+
+  // Checkbox handlers
+  const handleTermsChange = (checked: CheckedState) => {
+    setTermsAccepted(checked === true);
+  };
+
+  const handlePrivacyChange = (checked: CheckedState) => {
+    setPrivacyAccepted(checked === true);
+  };
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionComplete, setSubmissionComplete] = useState(false);
 
@@ -44,7 +54,7 @@ export default function Step7Submit() {
     state.step3BusinessDetails ? 'Business Details' : null,
     state.step4ApplicantInfo ? 'Applicant Information' : null,
     uploadedFiles.length > 0 ? 'Document Upload' : null,
-    state.step6Signature?.signatureComplete ? 'Electronic Signature' : null
+    state.step6Signature?.signedAt ? 'Electronic Signature' : null
   ].filter(Boolean);
 
   const handleSubmit = async () => {
@@ -96,30 +106,30 @@ export default function Step7Submit() {
         estimatedYearlyRevenue: state.step3BusinessDetails?.estimatedYearlyRevenue || '',
         
         // Step 4: Applicant Information
-        applicantName: state.step4ApplicantInfo?.applicantName || '',
-        applicantEmail: state.step4ApplicantInfo?.applicantEmail || '',
-        applicantPhone: state.step4ApplicantInfo?.applicantPhone || '',
+        applicantName: `${state.step4ApplicantInfo?.firstName || ''} ${state.step4ApplicantInfo?.lastName || ''}`.trim(),
+        applicantEmail: state.step4ApplicantInfo?.email || '',
+        applicantPhone: state.step4ApplicantInfo?.personalPhone || '',
         dateOfBirth: state.step4ApplicantInfo?.dateOfBirth || '',
-        socialSecurityNumber: state.step4ApplicantInfo?.socialSecurityNumber || '',
+        socialSecurityNumber: state.step4ApplicantInfo?.sin || '',
         ownershipPercentage: state.step4ApplicantInfo?.ownershipPercentage || '',
-        titleInBusiness: state.step4ApplicantInfo?.titleInBusiness || '',
+        titleInBusiness: 'Owner/Principal', // Default title
         homeAddress: state.step4ApplicantInfo?.homeAddress || '',
-        homeCity: state.step4ApplicantInfo?.homeCity || '',
-        homeState: state.step4ApplicantInfo?.homeState || '',
-        homePostalCode: state.step4ApplicantInfo?.homePostalCode || '',
+        homeCity: state.step4ApplicantInfo?.city || '',
+        homeState: state.step4ApplicantInfo?.province || '',
+        homePostalCode: state.step4ApplicantInfo?.postalCode || '',
         
         // Partner information (if applicable)
-        partnerName: state.step4ApplicantInfo?.partnerName || '',
+        partnerName: `${state.step4ApplicantInfo?.partnerFirstName || ''} ${state.step4ApplicantInfo?.partnerLastName || ''}`.trim(),
         partnerEmail: state.step4ApplicantInfo?.partnerEmail || '',
-        partnerPhone: state.step4ApplicantInfo?.partnerPhone || '',
-        partnerOwnership: state.step4ApplicantInfo?.partnerOwnership || '',
-        partnerTitle: state.step4ApplicantInfo?.partnerTitle || '',
-        partnerSSN: state.step4ApplicantInfo?.partnerSSN || '',
+        partnerPhone: state.step4ApplicantInfo?.partnerPersonalPhone || '',
+        partnerOwnership: state.step4ApplicantInfo?.partnerOwnershipPercentage || '',
+        partnerTitle: 'Partner', // Default title
+        partnerSSN: state.step4ApplicantInfo?.partnerSin || '',
         
         // Step 6: Signature Status
-        signatureComplete: state.step6Signature?.signatureComplete || false,
-        signatureTimestamp: state.step6Signature?.signatureTimestamp || '',
-        signNowDocumentId: state.step6Signature?.signNowDocumentId || '',
+        signatureComplete: !!state.step6Signature?.signedAt,
+        signatureTimestamp: state.step6Signature?.signedAt || '',
+        signNowDocumentId: state.step6Signature?.documentId || '',
         
         // Submission metadata
         submissionTimestamp: new Date().toISOString(),
@@ -163,12 +173,7 @@ export default function Step7Submit() {
       
       // Update state with submission success
       dispatch({
-        type: 'MARK_COMPLETE',
-        payload: {
-          submissionComplete: true,
-          submissionId: result.submissionId || result.applicationId,
-          submissionTimestamp: new Date().toISOString()
-        }
+        type: 'MARK_COMPLETE'
       });
       
       setSubmissionComplete(true);
@@ -334,7 +339,7 @@ export default function Step7Submit() {
               <Checkbox 
                 id="terms"
                 checked={termsAccepted}
-                onCheckedChange={setTermsAccepted}
+                onCheckedChange={handleTermsChange}
               />
               <label htmlFor="terms" className="text-sm text-gray-700 leading-5">
                 I have read and agree to the Terms & Conditions outlined above
@@ -352,7 +357,7 @@ export default function Step7Submit() {
               <Checkbox 
                 id="privacy"
                 checked={privacyAccepted}
-                onCheckedChange={setPrivacyAccepted}
+                onCheckedChange={handlePrivacyChange}
               />
               <label htmlFor="privacy" className="text-sm text-gray-700 leading-5">
                 I have read and agree to the Privacy Policy

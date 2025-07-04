@@ -115,7 +115,38 @@ export interface FormDataState {
   };
   step3BusinessDetails?: BusinessDetailsData;
   step4FinancialInfo?: FinancialInfoData;
+  step4ApplicantInfo?: {
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+    ownershipPercentage: number;
+    personalPhone: string;
+    email: string;
+    homeAddress: string;
+    city: string;
+    province: string;
+    postalCode: string;
+    sin: string;
+    netWorth: string;
+    partnerFirstName?: string;
+    partnerLastName?: string;
+    partnerDateOfBirth?: string;
+    partnerOwnershipPercentage?: number;
+    partnerPersonalPhone?: string;
+    partnerEmail?: string;
+    partnerHomeAddress?: string;
+    partnerCity?: string;
+    partnerProvince?: string;
+    partnerPostalCode?: string;
+    partnerSin?: string;
+    partnerNetWorth?: string;
+  };
   step5DocumentUpload?: DocumentUploadData;
+  step6Signature?: {
+    signedAt?: string;
+    documentId?: string;
+    signingUrl?: string;
+  };
   currentStep: number;
   isComplete: boolean;
   applicationId?: string;
@@ -126,7 +157,9 @@ type FormDataAction =
   | { type: 'UPDATE_STEP1'; payload: Partial<FinancialProfileData> }
   | { type: 'UPDATE_STEP3'; payload: Partial<BusinessDetailsData> }
   | { type: 'UPDATE_STEP4'; payload: Partial<FinancialInfoData> }
+  | { type: 'UPDATE_STEP4_APPLICANT'; payload: Partial<FormDataState['step4ApplicantInfo']> }
   | { type: 'UPDATE_STEP5'; payload: Partial<DocumentUploadData> }
+  | { type: 'UPDATE_STEP6_SIGNATURE'; payload: Partial<FormDataState['step6Signature']> }
   | { type: 'SET_CURRENT_STEP'; payload: number }
   | { type: 'SET_APPLICATION_ID'; payload: string }
   | { type: 'SET_SIGNING_URL'; payload: string }
@@ -176,6 +209,14 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
           ...action.payload,
         } as FinancialInfoData,
       };
+    case 'UPDATE_STEP4_APPLICANT':
+      return {
+        ...state,
+        step4ApplicantInfo: {
+          ...state.step4ApplicantInfo,
+          ...action.payload,
+        } as FormDataState['step4ApplicantInfo'],
+      };
     case 'UPDATE_STEP5':
       return {
         ...state,
@@ -183,6 +224,14 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
           ...state.step5DocumentUpload,
           ...action.payload,
         } as DocumentUploadData,
+      };
+    case 'UPDATE_STEP6_SIGNATURE':
+      return {
+        ...state,
+        step6Signature: {
+          ...state.step6Signature,
+          ...action.payload,
+        } as FormDataState['step6Signature'],
       };
     case 'SET_CURRENT_STEP':
       return {
