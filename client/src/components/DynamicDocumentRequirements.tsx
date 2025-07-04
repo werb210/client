@@ -327,24 +327,19 @@ export function DynamicDocumentRequirements({
   }, [formData.lookingFor, formData.businessLocation, formData.fundingAmount, 
       formData.accountsReceivableBalance, selectedProduct]);
 
-  // Check completion status using new unified requirements
+  // Check completion status using unified requirements
   useEffect(() => {
     if (documentRequirements.length > 0) {
-      // TESTING MODE: Always consider documents complete for testing
-      // TODO: For production, enable proper document validation
-      onRequirementsChange?.(true, documentRequirements.length);
+      const completedDocs = documentRequirements.filter(doc => {
+        const documentFiles = uploadedFiles.filter(f => 
+          f.documentType?.toLowerCase().includes(doc.label.toLowerCase().replace(/\s+/g, '_')) ||
+          f.name.toLowerCase().includes(doc.label.toLowerCase().split(' ')[0])
+        );
+        return documentFiles.length >= (doc.quantity || 1);
+      });
       
-      // PRODUCTION: Uncomment this for required document validation
-      // const completedDocs = documentRequirements.filter(doc => {
-      //   const documentFiles = uploadedFiles.filter(f => 
-      //     f.documentType?.toLowerCase().includes(doc.label.toLowerCase().replace(/\s+/g, '_')) ||
-      //     f.name.toLowerCase().includes(doc.label.toLowerCase().split(' ')[0])
-      //   );
-      //   return documentFiles.length >= (doc.quantity || 1);
-      // });
-      // 
-      // const allComplete = completedDocs.length === documentRequirements.length;
-      // onRequirementsChange?.(allComplete, documentRequirements.length);
+      const allComplete = completedDocs.length === documentRequirements.length;
+      onRequirementsChange?.(allComplete, documentRequirements.length);
     }
   }, [uploadedFiles, documentRequirements, onRequirementsChange]);
 

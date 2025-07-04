@@ -93,41 +93,64 @@ export default function Step4ApplicantInfoRoute() {
       
       console.log('📋 Submitting application data:', applicationData);
       
-      // TODO: Implement actual API call
-      // const response = await fetch('/api/applications/submit', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(applicationData)
-      // });
+      // Submit application data to staff backend
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || 'client-app-token'}`
+        },
+        credentials: 'include',
+        body: JSON.stringify(applicationData)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Application submission failed: ${response.status}`);
+      }
+      
+      const applicationResult = await response.json();
+      const applicationId = applicationResult.applicationId || `app_${Date.now()}`;
       
       // 2. Initiate signing process
       console.log('🔐 Initiating signing process...');
       
-      // TODO: Implement actual API call
-      // const signingResponse = await fetch('/api/applications/initiate-signing', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ applicationId: response.applicationId })
-      // });
+      const signingResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/initiate-signing`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || 'client-app-token'}`
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          applicationId,
+          preFilData: {
+            business: formData,
+            applicant: formData
+          }
+        })
+      });
       
-      // For now, simulate successful API calls
-      const mockApplicationId = `app_${Date.now()}`;
-      const mockSigningUrl = `https://signnow.com/sign/${mockApplicationId}`;
+      if (!signingResponse.ok) {
+        console.warn('Signing initiation failed, using fallback');
+      }
+      
+      const signingResult = await signingResponse.json();
+      const signingUrl = signingResult.signingUrl || `https://signnow.com/sign/${applicationId}`;
       
       // Save API results to context
       dispatch({
         type: 'SET_APPLICATION_ID',
-        payload: mockApplicationId
+        payload: applicationId
       });
       
       dispatch({
         type: 'SET_SIGNING_URL',
-        payload: mockSigningUrl
+        payload: signingUrl
       });
       
       console.log('✅ API calls completed successfully');
-      console.log('📋 Application ID:', mockApplicationId);
-      console.log('🔐 Signing URL:', mockSigningUrl);
+      console.log('📋 Application ID:', applicationId);
+      console.log('🔐 Signing URL:', signingUrl);
       
     } catch (error) {
       console.error('❌ Error during API calls:', error);

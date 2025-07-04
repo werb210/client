@@ -1,0 +1,79 @@
+Based on the **Client Application Production Readiness Diagnostic Report**, the **first and most critical issues to fix before moving to production** are:
+
+---
+
+### 🔴 **1. Backend API Integration – Critical Blocker**
+
+**Issue:** All API calls to the staff backend (e.g. `/api/public/lenders`, `/api/public/applications`, etc.) return `501 Not Implemented`.
+
+* 🔥 **Impact:** No real-time data retrieval or submission is possible; the app is running in fallback mode.
+* 💥 **Production Risk:** Core workflows like lender product sync, application submission, document uploads, and signing initiation will silently fail or be incomplete.
+* ✅ **Client-side fallback is working**, but it’s not sufficient for live deployment.
+
+> 🔧 **Action:** Coordinate with the **staff app team** immediately to ensure:
+>
+> * All expected endpoints are fully implemented and return 200 OK
+> * CORS headers are enabled and API routes match expected contract
+
+---
+
+### 🔴 **2. `IndexedDBTest.tsx` – Broken Diagnostic Component**
+
+**Issue:** Missing functions (`syncStatus`, `handleForceSync`) cause the test page to crash.
+
+* ⚠️ **Impact:** Internal diagnostic features are unavailable, making it harder to validate offline storage behavior.
+* ✅ **Does NOT impact live user flows**, but should be fixed before using the app in production or for QA.
+
+> 🔧 **Action:** Add `syncStatus` state and the `handleForceSync` method or remove the component from routes if no longer needed.
+
+---
+
+### 🔴 **3. Cypress Test Suite – TypeScript Failures**
+
+**Issue:** 166+ test errors due to missing type declarations for Cypress
+
+* ❌ `describe`, `it`, `expect`, `cy` not recognized
+* 🚫 Prevents running or writing automated tests
+
+> 🔧 **Action:** Install and configure Cypress types:
+
+```bash
+npm install --save-dev @types/cypress
+# or, if using Jest/Mocha alongside:
+npm install --save-dev @types/jest @types/mocha
+```
+
+---
+
+### 🔴 **4. TODO Comments Affecting Production Logic**
+
+**Issue:** Critical validation and behavior is skipped due to leftover development `TODO` blocks.
+
+```ts
+// TODO: Enable validation for production
+// TODO: Add actual API call to Step 4
+```
+
+* ⚠️ **Impact:** Validation and business logic may be bypassed
+* ❌ Puts data integrity and form correctness at risk
+
+> 🔧 **Action:** Search for all `TODO:` comments and:
+>
+> * Remove or complete logic
+> * Re-enable any skipped production validations
+> * Confirm correct API calls are wired in all steps
+
+---
+
+### ✅ Summary of What to Fix First:
+
+| Priority | Area                      | Action Needed                                               |
+| -------- | ------------------------- | ----------------------------------------------------------- |
+| 🔴       | **API Integration**       | Ensure backend endpoints return 200 and connect from client |
+| 🔴       | **Broken Component**      | Fix `IndexedDBTest.tsx` to restore test functionality       |
+| 🔴       | **Test Suite**            | Install Cypress types to restore automated testing          |
+| 🔴       | **Form Validation Logic** | Resolve TODOs and restore proper validation/API flow        |
+
+Once those are addressed, proceed with **medium priority** cleanup (removing legacy archives, unused packages, duplicate code), and conduct **final QA validation** before launch.
+
+Would you like a Replit-ready checklist or shell script to automate the critical fixes?

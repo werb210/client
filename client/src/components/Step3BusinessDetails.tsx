@@ -34,20 +34,15 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
   const regionalLabels = getRegionalLabels(isCanadian);
   const stateProvinceOptions = getStateProvinceOptions(isCanadian);
 
-  // Validation for Step 3 - TESTING MODE: All fields optional
-  // TODO: For production, enable field validation by uncommenting below
+  // Production validation for Step 3
   const canContinue = () => {
-    // TESTING: Always allow continue
-    return true;
-    
-    // PRODUCTION: Uncomment this for required field validation
-    // const values = form.getValues();
-    // const requiredFields = [
-    //   'operatingName', 'legalName', 'businessStreetAddress', 'businessCity',
-    //   'businessState', 'businessPostalCode', 'businessPhone', 'businessStructure',
-    //   'businessStartDate', 'employeeCount', 'estimatedYearlyRevenue'
-    // ];
-    // return requiredFields.every(field => values[field]?.trim?.() || values[field]);
+    const values = form.getValues();
+    const requiredFields = [
+      'operatingName', 'legalName', 'businessStreetAddress', 'businessCity',
+      'businessState', 'businessPostalCode', 'businessPhone', 'businessStructure',
+      'businessStartDate', 'employeeCount', 'estimatedYearlyRevenue'
+    ];
+    return requiredFields.every(field => values[field]?.trim?.() || values[field]);
   };
 
   return (

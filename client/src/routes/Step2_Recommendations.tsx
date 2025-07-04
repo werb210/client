@@ -37,9 +37,11 @@ export default function Step2Recommendations() {
   };
 
   const handleContinue = () => {
-    // TESTING MODE: Allow continue without product selection
-    // TODO: For production, enable this validation:
-    // if (!selectedProduct) return;
+    // Production validation: Require product selection
+    if (!selectedProduct) {
+      alert('Please select a product category before continuing.');
+      return;
+    }
     
     dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
     setLocation('/apply/step-3');
