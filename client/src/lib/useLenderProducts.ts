@@ -1,47 +1,117 @@
 /**
- * Lender Products Hook with IndexedDB Caching
- * Exact implementation per user specification
+ * Lender Products Hook with Production-Ready Sync System
+ * Implements robust caching, retry logic, and data preservation
  */
 
 import React from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { get, set } from 'idb-keyval';
+import { syncLenderProducts, initializeSyncSystem, getSyncStatus } from './lenderProductSync';
+import { toast } from '@/hooks/use-toast';
 
 export function useLenderProducts() {
   const queryClient = useQueryClient();
+  const [syncInitialized, setSyncInitialized] = React.useState(false);
 
   const result = useQuery({
     queryKey: ['lender-products'],
-    queryFn: () => fetch('/api/public/lenders').then(r => r.json()),
-    refetchInterval: 5 * 60_000, // every 5 minutes
-    retry: 3,
+    queryFn: async () => {
+      const syncResult = await syncLenderProducts();
+      
+      if (syncResult.error && syncResult.fromCache) {
+        toast({
+          title: 'Using Cached Data',
+          description: syncResult.error,
+          variant: 'default'
+        });
+      }
+      
+      return syncResult.data;
+    },
+    refetchInterval: false, // Use our custom sync scheduler instead
+    retry: false, // Handle retries in sync system
+    staleTime: Infinity, // Data is managed by sync system
   });
 
-  // Handle initial data loading from cache
+  // Initialize sync system on mount
   React.useEffect(() => {
-    if (!result.data && !result.isLoading) {
-      get('lender_products_cache').then(cachedData => {
-        if (cachedData) {
-          queryClient.setQueryData(['lender-products'], cachedData);
+    if (!syncInitialized) {
+      initializeSyncSystem().then((initialResult) => {
+        setSyncInitialized(true);
+        
+        // Set initial data if not already loaded
+        if (initialResult.data && !result.data) {
+          queryClient.setQueryData(['lender-products'], initialResult.data);
+        }
+        
+        if (initialResult.error) {
+          console.warn('[SYNC] Initial sync warning:', initialResult.error);
         }
       });
     }
-  }, [result.data, result.isLoading, queryClient]);
+  }, [syncInitialized, queryClient, result.data]);
 
-  // Handle successful data fetching
+  // Listen for background sync updates
   React.useEffect(() => {
-    if (result.data && result.isSuccess) {
-      set('lender_products_cache', result.data);
-      set('lender_products_cache_ts', new Date().toISOString());
-    }
-  }, [result.data, result.isSuccess]);
+    const handleSyncUpdate = (event: CustomEvent) => {
+      const syncResult = event.detail;
+      
+      if (syncResult.data) {
+        queryClient.setQueryData(['lender-products'], syncResult.data);
+        
+        if (!syncResult.fromCache) {
+          toast({
+            title: 'Products Updated',
+            description: 'New lender product data available',
+            variant: 'default'
+          });
+        }
+      }
+    };
 
-  // Handle errors
+    window.addEventListener('lender-products-updated', handleSyncUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('lender-products-updated', handleSyncUpdate as EventListener);
+    };
+  }, [queryClient]);
+
+  return {
+    ...result,
+    isInitialized: syncInitialized
+  };
+}
+
+/**
+ * Hook for sync status and manual refresh
+ */
+export function useLenderProductsSync() {
+  const queryClient = useQueryClient();
+  const [status, setStatus] = React.useState<any>(null);
+
+  const refreshStatus = React.useCallback(async () => {
+    const syncStatus = await getSyncStatus();
+    setStatus(syncStatus);
+  }, []);
+
+  const forceSync = React.useCallback(async () => {
+    const { forceSyncLenderProducts } = await import('./lenderProductSync');
+    const result = await forceSyncLenderProducts();
+    
+    if (result.data) {
+      queryClient.setQueryData(['lender-products'], result.data);
+    }
+    
+    await refreshStatus();
+    return result;
+  }, [queryClient, refreshStatus]);
+
   React.useEffect(() => {
-    if (result.isError) {
-      console.warn('API unreachable – using cached data', result.error);
-    }
-  }, [result.isError, result.error]);
+    refreshStatus();
+  }, [refreshStatus]);
 
-  return result;
+  return {
+    status,
+    forceSync,
+    refreshStatus
+  };
 }

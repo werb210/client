@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { useLenderProducts } from '@/lib/useLenderProducts';
+import { useLenderProducts, useLenderProductsSync } from '@/lib/useLenderProducts';
 import { get, set } from 'idb-keyval';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,40 +13,33 @@ import { Separator } from '@/components/ui/separator';
 import { RefreshCw, Database, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function IndexedDBTest() {
-  const { data: products, isLoading, isError, error, refetch } = useLenderProducts();
-  const [cacheStatus, setCacheStatus] = React.useState<any>(null);
+  const { data: products, isLoading, isError, error, isInitialized } = useLenderProducts();
+  const { status: syncStatus, forceSync, refreshStatus } = useLenderProductsSync();
 
-  // Cache management functions
-  const getCacheStatus = async () => {
+  // Load sync status on component mount
+  React.useEffect(() => {
+    const interval = setInterval(refreshStatus, 5000); // Refresh every 5 seconds
+    return () => clearInterval(interval);
+  }, [refreshStatus]);
+
+  const handleForceSync = async () => {
+    try {
+      const result = await forceSync();
+      console.log('[TEST] Force sync result:', result);
+    } catch (error) {
+      console.error('[TEST] Force sync failed:', error);
+    }
+  };
+
+  const handleDataPreservationTest = async () => {
+    // Test that data is never erased unless new version retrieved
     const cachedProducts = await get('lender_products_cache');
     const cachedTimestamp = await get('lender_products_cache_ts');
     
-    return {
-      hasCache: Boolean(cachedProducts && Array.isArray(cachedProducts)),
-      productCount: cachedProducts?.length || 0,
-      timestamp: cachedTimestamp,
-      age: cachedTimestamp ? Date.now() - new Date(cachedTimestamp).getTime() : null
-    };
-  };
-
-  const invalidateCache = async () => {
-    await set('lender_products_cache', null);
-    await set('lender_products_cache_ts', null);
-    refetch();
-  };
-
-  // Load cache status on component mount
-  React.useEffect(() => {
-    getCacheStatus().then(setCacheStatus);
-  }, []);
-
-  const handleRefreshCache = () => {
-    getCacheStatus().then(setCacheStatus);
-  };
-
-  const handleInvalidateCache = async () => {
-    await invalidateCache();
-    await getCacheStatus().then(setCacheStatus);
+    console.log('[TEST] Data Preservation Check:');
+    console.log('- Cached products:', cachedProducts?.length || 0);
+    console.log('- Last sync:', cachedTimestamp);
+    console.log('- Current retry count:', await get('lender_products_retry_count') || 0);
   };
 
   const handleTestWebSocket = () => {
@@ -96,16 +89,16 @@ export default function IndexedDBTest() {
           </CardDescription>
         </CardHeader>
         <CardContent data-testid="cache-status">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-600">Cache Status</div>
+              <div className="text-sm text-gray-600">Sync Status</div>
               <div className="font-semibold">
                 <Badge 
                   data-testid="cache-status-badge"
-                  variant={cacheStatus?.hasCache ? "default" : "secondary"} 
-                  className={cacheStatus?.hasCache ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
+                  variant={syncStatus?.hasCache ? "default" : "secondary"} 
+                  className={syncStatus?.hasCache ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
                 >
-                  {cacheStatus?.hasCache ? (
+                  {syncStatus?.hasCache ? (
                     <>
                       <CheckCircle className="h-3 w-3 mr-1" />
                       Active
@@ -123,30 +116,40 @@ export default function IndexedDBTest() {
             <div className="p-4 bg-gray-50 rounded-lg">
               <div className="text-sm text-gray-600">Products Cached</div>
               <div className="font-semibold text-lg" data-testid="cache-count">
-                {cacheStatus?.productCount || 0}
+                {syncStatus?.productCount || 0}
               </div>
             </div>
             
             <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-600">Cache Age</div>
+              <div className="text-sm text-gray-600">Health Status</div>
               <div className="font-semibold">
-                {cacheStatus?.age ? (
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {Math.round(cacheStatus.age / 1000 / 60)} min
-                  </span>
-                ) : 'N/A'}
+                <Badge 
+                  variant={syncStatus?.isHealthy ? "default" : "destructive"}
+                  className={syncStatus?.isHealthy ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
+                >
+                  {syncStatus?.isHealthy ? 'Healthy' : 'Degraded'}
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="text-sm text-gray-600">Retry Count</div>
+              <div className="font-semibold text-lg">
+                {syncStatus?.retryCount || 0}/10
               </div>
             </div>
           </div>
           
           <div className="flex gap-2">
-            <Button onClick={handleRefreshCache} variant="outline" size="sm">
+            <Button onClick={refreshStatus} variant="outline" size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh Status
             </Button>
-            <Button onClick={handleInvalidateCache} variant="outline" size="sm" data-testid="clear-cache-btn">
-              Clear Cache
+            <Button onClick={handleForceSync} variant="outline" size="sm" data-testid="force-sync-btn">
+              Force Sync
+            </Button>
+            <Button onClick={handleDataPreservationTest} variant="outline" size="sm" data-testid="test-preservation-btn">
+              Test Data Preservation
             </Button>
             <Button onClick={handleTestWebSocket} variant="outline" size="sm" data-testid="test-websocket-btn">
               Test WebSocket
