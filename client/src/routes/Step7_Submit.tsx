@@ -145,8 +145,11 @@ export default function Step7Submit() {
       });
       
       // Submit to staff API with multipart/form-data
-      const response = await fetch('/api/applications/submit', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${state.applicationId}/submit`, {
         method: 'POST',
+        headers: {
+          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+        },
         body: formData, // FormData automatically sets correct Content-Type
         credentials: 'include'
       });

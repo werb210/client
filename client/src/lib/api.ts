@@ -258,14 +258,14 @@ export async function get2FAStatus(): Promise<{
 export const Applications = {
   /* Create draft and get signUrl */
   createDraft: (formData: Record<string, any>) =>
-    apiFetch('/applications/draft', {
+    apiFetch('/api/public/applications', {
       method: 'POST',
       body: JSON.stringify({ formData }),
     }),
 
   /* Complete application after docs */
   complete: (id: string, payload: any) =>
-    apiFetch(`/applications/${id}/complete`, {
+    apiFetch(`/api/public/applications/${id}/complete`, {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),

@@ -29,7 +29,7 @@ async function runCypressSimulation() {
 
   // Step 4: Application Creation (should return 201)
   console.log('\n🎯 STEP 4: Application Creation API Call');
-  console.log('POST /api/applications (expected: 201 Created)');
+  console.log('POST /api/public/applications (expected: 201 Created)');
   
   const applicationData = {
     step1: { fundingAmount: "500000", businessLocation: "canada" },
@@ -38,7 +38,7 @@ async function runCypressSimulation() {
   };
 
   try {
-    const appResponse = await fetch(`${BASE_URL}/api/applications`, {
+    const appResponse = await fetch(`${BASE_URL}/api/public/applications`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ async function runCypressSimulation() {
 
   // Step 5: File Upload (should return 200)
   console.log('\n📁 STEP 5: Document Upload API Call');
-  console.log('POST /api/upload/:id (expected: 200 OK)');
+  console.log('POST /api/public/upload/:id (expected: 200 OK)');
   
   try {
     // Simulate BMO PDF fixture file upload
@@ -76,7 +76,7 @@ async function runCypressSimulation() {
     formData.append('files', blob, 'bmo.pdf');
     formData.append('category', 'Banking Statements');
 
-    const uploadResponse = await fetch(`${BASE_URL}/api/upload/app_cypress_test`, {
+    const uploadResponse = await fetch(`${BASE_URL}/api/public/upload/app_cypress_test`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${SHARED_TOKEN}`
@@ -101,7 +101,7 @@ async function runCypressSimulation() {
 
   // Step 6-7: Final Submission (should return 200)
   console.log('\n🎉 STEP 6-7: Final Submission API Call');
-  console.log('POST /api/applications/:id/submit (expected: 200 OK)');
+  console.log('POST /api/public/applications/:id/submit (expected: 200 OK)');
   
   try {
     const submitData = {
@@ -110,7 +110,7 @@ async function runCypressSimulation() {
       completedSteps: [1,2,3,4,5,6,7]
     };
 
-    const submitResponse = await fetch(`${BASE_URL}/api/applications/app_cypress_test/submit`, {
+    const submitResponse = await fetch(`${BASE_URL}/api/public/applications/app_cypress_test/submit`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -13,7 +13,7 @@ export const usePatchApplication = (id: string) => {
   
   return useMutation({
     mutationFn: (payload: Partial<ApplicationForm>) =>
-      apiFetch(`/api/applications/${id}`, {
+      apiFetch(`/api/public/applications/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(payload),
         headers: { 
@@ -40,7 +40,7 @@ export const useUploadDocument = (applicationId: string) => {
       payload.files.forEach((file) => form.append('files', file));
       form.append('category', payload.category);
       
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/upload/${applicationId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/upload/${applicationId}`, {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
@@ -68,7 +68,7 @@ export const useFinalizeApplication = (id: string) => {
   
   return useMutation<FinalizeResponse, Error, void>({
     mutationFn: async () => {
-      const response = await apiFetch(`/api/applications/${id}/complete`, {
+      const response = await apiFetch(`/api/public/applications/${id}/initiate-signing`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
