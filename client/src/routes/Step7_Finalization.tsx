@@ -255,7 +255,7 @@ export default function Step7Finalization() {
             </div>
             <div>
               <span className="text-gray-500">Business Name:</span>
-              <p className="font-medium">{state.step3BusinessDetails?.businessName || 'Not provided'}</p>
+              <p className="font-medium">{state.step3BusinessDetails?.operatingName || 'Not provided'}</p>
             </div>
           </div>
         </CardContent>
@@ -294,7 +294,7 @@ export default function Step7Finalization() {
             <Checkbox 
               id="terms" 
               checked={termsAccepted}
-              onCheckedChange={(checked) => setTermsAccepted(!!checked)}
+              onCheckedChange={(checked) => setTermsAccepted(checked === true)}
             />
             <label htmlFor="terms" className="text-sm leading-relaxed">
               I have read and agree to the <a href="#" className="text-blue-600 underline">Terms of Service</a> and understand that my application will be shared with potential lenders.
@@ -323,7 +323,7 @@ export default function Step7Finalization() {
             <Checkbox 
               id="privacy" 
               checked={privacyAccepted}
-              onCheckedChange={(checked) => setPrivacyAccepted(!!checked)}
+              onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
             />
             <label htmlFor="privacy" className="text-sm leading-relaxed">
               I acknowledge that I have read and understand the <a href="#" className="text-blue-600 underline">Privacy Policy</a> and consent to the collection and use of my information as described.
