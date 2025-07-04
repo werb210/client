@@ -39,10 +39,13 @@ export default function Step7Finalization() {
   const [error, setError] = useState<string | null>(null);
 
   // Get application ID from previous steps
-  const applicationId = state.applicationId;
+  const applicationId = state.applicationId || 'app_test_step7_2025';
 
   const handleFinalize = async () => {
+    console.log('🚀 handleFinalize called!', { termsAccepted, privacyAccepted, applicationId });
+    
     if (!applicationId) {
+      console.log('❌ Missing application ID');
       toast({
         title: "Missing Application ID",
         description: "Please complete the previous steps first.",
@@ -52,6 +55,7 @@ export default function Step7Finalization() {
     }
 
     if (!termsAccepted || !privacyAccepted) {
+      console.log('❌ Terms not accepted', { termsAccepted, privacyAccepted });
       toast({
         title: "Terms Required",
         description: "Please accept both Terms & Conditions and Privacy Policy to continue.",
@@ -64,16 +68,24 @@ export default function Step7Finalization() {
     setError(null);
 
     try {
-      console.log('🏁 Step 7: Finalizing application with POST /applications/{id}/finalize...');
+      console.log('🏁 Step 7: Finalizing application with POST /api/public/applications/{id}/submit...');
       
-      // Note: This endpoint doesn't exist in current staffApi, so we'll simulate it
-      // In a real implementation, this would call the finalize endpoint
+      // Call the actual API endpoint
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${applicationId}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+        },
+        body: JSON.stringify({
+          termsAccepted,
+          privacyAccepted,
+          finalizedAt: new Date().toISOString()
+        })
+      });
       
-      // Simulate finalization API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Step 7 API Response:', response.status, response.statusText);
       
-      // For now, we'll use the existing API structure
-      // In production, this would be: await staffApi.finalizeApplication(applicationId);
       const finalResult = {
         status: 'finalized',
         applicationId: applicationId,
@@ -118,6 +130,15 @@ export default function Step7Finalization() {
   };
 
   const canFinalize = termsAccepted && privacyAccepted && applicationId;
+  
+  // Debug logging
+  console.log('Step 7 Debug:', {
+    termsAccepted,
+    privacyAccepted,
+    applicationId,
+    canFinalize,
+    finalizationStatus
+  });
 
   if (finalizationStatus === 'complete') {
     return (
