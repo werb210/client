@@ -632,6 +632,12 @@ Changelog:
     * **SMART FIELDS SUPPORT**: All form data from Steps 3-4 properly formatted and sent to staff backend for SignNow template population
     * **IMPROVED USER EXPERIENCE**: Streamlined signing workflow with pre-populated documents reducing manual data entry
     * **PRODUCTION READY**: Enhanced SignNow integration ready for deployment with comprehensive pre-fill functionality
+  - July 04, 2025: STEP 1 FORM FIELD REORDERING & CONDITIONAL LOGIC IMPLEMENTATION COMPLETE
+    * **FIELD REORDERING**: Moved "What are you looking for?" to be the first question in Step 1 form
+    * **CONDITIONAL FUNDING FIELD**: Added logic to hide "How much funding are you seeking?" when user selects "Equipment Financing"
+    * **IMPROVED UX FLOW**: Users now specify funding type before amount, creating more logical form progression
+    * **EQUIPMENT FINANCING OPTIMIZATION**: Equipment-only applications no longer require funding amount input
+    * **MAINTAINED FUNCTIONALITY**: All existing form validation and submission logic preserved with new field ordering
 ```
 
 ## User Preferences

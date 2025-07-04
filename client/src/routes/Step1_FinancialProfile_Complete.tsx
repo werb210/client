@@ -193,31 +193,7 @@ export default function Step1FinancialProfile() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Question 1: Funding Amount */}
-                  <FormField
-                    control={form.control}
-                    name="fundingAmount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">How much funding are you seeking?</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter amount (e.g., $100,000)"
-                            value={field.value ? formatCurrency(field.value) : ''}
-                            onChange={(e) => {
-                              const rawValue = parseCurrency(e.target.value);
-                              field.onChange(rawValue);
-                            }}
-                            className="h-12"
-                            data-cy="fundingAmount"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Question 2: What are you looking for? */}
+                  {/* Question 1: What are you looking for? - MOVED TO FIRST */}
                   <FormField
                     control={form.control}
                     name="lookingFor"
@@ -242,6 +218,32 @@ export default function Step1FinancialProfile() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Question 2: Funding Amount - HIDDEN for Equipment Financing */}
+                  {form.watch('lookingFor') !== 'equipment' && (
+                    <FormField
+                      control={form.control}
+                      name="fundingAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold">How much funding are you seeking?</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter amount (e.g., $100,000)"
+                              value={field.value ? formatCurrency(field.value) : ''}
+                              onChange={(e) => {
+                                const rawValue = parseCurrency(e.target.value);
+                                field.onChange(rawValue);
+                              }}
+                              className="h-12"
+                              data-cy="fundingAmount"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
                   {/* Question 3: Equipment Value - Conditional */}
                   {(form.watch('lookingFor') === 'equipment' || form.watch('lookingFor') === 'both') && (
