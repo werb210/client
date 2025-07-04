@@ -62,11 +62,19 @@ class SyncManager {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
+          'User-Agent': 'Boreal-Client/1.0'
         },
+        mode: 'cors',
+        credentials: 'omit'
       });
 
+      console.log(`[SYNC] Response status: ${response.status} ${response.statusText}`);
+      console.log(`[SYNC] Response headers:`, Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error(`Staff API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`[SYNC] Staff API error response:`, errorText);
+        throw new Error(`Staff API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const rawData = await response.json();
@@ -89,7 +97,27 @@ class SyncManager {
       console.log(`[SYNC] Found ${products.length} products to process`);
       
       if (products.length === 0) {
-        throw new Error('Staff API returned empty product list');
+        console.warn('[SYNC] Staff API returned empty product list - using fallback data');
+        
+        // Import fallback data to ensure application functionality
+        const { FALLBACK_LENDER_PRODUCTS, getFallbackMessage } = await import('./fallbackData');
+        const fallbackCount = await this.importToLocalIndexedDB(FALLBACK_LENDER_PRODUCTS);
+        
+        // Update sync metadata to indicate fallback usage
+        await this.updateSyncMetadata({
+          lastSyncTime: Date.now(),
+          productCount: fallbackCount,
+          syncStatus: 'success',
+          errorMessage: 'Using fallback data - staff database empty'
+        });
+        
+        console.log(`[SYNC] Imported ${fallbackCount} fallback products to maintain functionality`);
+        
+        return {
+          success: true,
+          productCount: fallbackCount,
+          message: getFallbackMessage()
+        };
       }
 
       // Normalize and import to IndexedDB
