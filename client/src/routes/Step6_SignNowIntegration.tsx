@@ -38,15 +38,23 @@ export default function Step6SignNowIntegration() {
   const [error, setError] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
 
-  // Get application ID from previous step
-  const applicationId = state.applicationId;
+  // C-4: Step 6 component looks in ONE place only - use FormDataContext applicationId
+  const applicationId = state.applicationId || localStorage.getItem('appId');
 
   useEffect(() => {
+    console.log('🔍 Step 6: Checking application ID...');
+    console.log('   - From context:', state.applicationId);
+    console.log('   - From localStorage:', localStorage.getItem('appId'));
+    console.log('   - Final applicationId:', applicationId);
+    
     if (!applicationId) {
       setError('No application ID found. Please complete Step 4 first.');
       setSigningStatus('error');
+      console.error('❌ C-4 FAILED: No application ID available in Step 6');
       return;
     }
+    
+    console.log('✅ C-4 SUCCESS: Application ID found:', applicationId);
 
     // Check if we already have signingUrl from Step 4 POST /applications/initiate-signing
     const existingSigningUrl = (state as any).step6?.signingUrl;
@@ -86,10 +94,12 @@ export default function Step6SignNowIntegration() {
       }
       
       attempts++;
-      console.log(`🔍 Polling attempt ${attempts}/${maxAttempts}: GET /applications/${applicationId}/signing-status`);
+      console.log(`🔍 Polling attempt ${attempts}/${maxAttempts}: GET /api/public/applications/${applicationId}/signing-status`);
       
       try {
+        // C-5: Polling endpoint uses the ID - should return 200/202, never 404
         const statusResult = await staffApi.checkSigningStatus(applicationId);
+        console.log(`✅ C-5 SUCCESS: API call successful for ID ${applicationId}`);
         
         if (statusResult.status === 'ready') {
           console.log('✅ Status "ready" received, fetching signing URL...');

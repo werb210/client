@@ -48,6 +48,7 @@ import SyncedProductsTest from "@/pages/SyncedProductsTest";
 import WorkflowTest from "@/pages/WorkflowTest";
 import LenderProductsCatalog from "@/pages/LenderProductsCatalog";
 import BankingDocumentTest from "@/pages/BankingDocumentTest";
+import ApplicationIdFlowTest from "@/pages/ApplicationIdFlowTest";
 import ComprehensiveE2ETest from "@/pages/ComprehensiveE2ETest";
 import IndexedDBTest from "@/pages/IndexedDBTest";
 import ReliableSyncTest from "@/pages/ReliableSyncTest";
@@ -129,6 +130,7 @@ export function MainLayout() {
       
       {/* Workflow Testing */}
       <Route path="/workflow-test" component={WorkflowTest} />
+      <Route path="/application-id-flow-test" component={ApplicationIdFlowTest} />
       
       {/* Diagnostic Pages */}
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />

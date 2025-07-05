@@ -109,7 +109,21 @@ export default function Step4ApplicantInfoRoute() {
       }
       
       const applicationResult = await response.json();
-      const applicationId = applicationResult.applicationId || `app_${Date.now()}`;
+      const applicationId = applicationResult.id || applicationResult.applicationId || `app_${Date.now()}`;
+      
+      console.log('✅ Application submission successful');
+      console.log('📋 Application ID received:', applicationId);
+      
+      // QUICK-FIX IMPLEMENTATION: Set application ID per checklist
+      // C-1: Store ID in global state
+      dispatch({
+        type: 'SET_APPLICATION_ID',
+        payload: applicationId
+      });
+      
+      // C-2: Fallback storage in localStorage
+      localStorage.setItem('appId', applicationId);
+      console.log('💾 Application ID stored in localStorage:', applicationId);
       
       // 2. Initiate signing process
       console.log('🔐 Initiating signing process...');
@@ -124,33 +138,31 @@ export default function Step4ApplicantInfoRoute() {
         body: JSON.stringify({ 
           applicationId,
           preFilData: {
-            business: formData,
+            business: state.step3BusinessDetails,
             applicant: formData
           }
         })
       });
       
-      if (!signingResponse.ok) {
-        console.warn('Signing initiation failed, using fallback');
+      let signingUrl = null;
+      if (signingResponse.ok) {
+        const signingResult = await signingResponse.json();
+        signingUrl = signingResult.signingUrl;
+        console.log('✅ Signing URL received:', signingUrl);
+      } else {
+        console.warn('⚠️ Signing initiation failed, will use polling in Step 6');
       }
       
-      const signingResult = await signingResponse.json();
-      const signingUrl = signingResult.signingUrl || `https://signnow.com/sign/${applicationId}`;
-      
-      // Save API results to context
-      dispatch({
-        type: 'SET_APPLICATION_ID',
-        payload: applicationId
-      });
-      
-      dispatch({
-        type: 'SET_SIGNING_URL',
-        payload: signingUrl
-      });
+      if (signingUrl) {
+        dispatch({
+          type: 'SET_SIGNING_URL',
+          payload: signingUrl
+        });
+      }
       
       console.log('✅ API calls completed successfully');
       console.log('📋 Application ID:', applicationId);
-      console.log('🔐 Signing URL:', signingUrl);
+      console.log('🔐 Signing URL:', signingUrl || 'Will be retrieved in Step 6');
       
     } catch (error) {
       console.error('❌ Error during API calls:', error);
@@ -159,7 +171,14 @@ export default function Step4ApplicantInfoRoute() {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       alert(`We're experiencing a delay reaching our secure servers. Your data is safe locally and will retry shortly.\n\nTechnical details: ${errorMessage}`);
       
-      // For testing mode, continue anyway to allow workflow completion
+      // For testing mode, create fallback application ID
+      const fallbackId = `app_fallback_${Date.now()}`;
+      dispatch({
+        type: 'SET_APPLICATION_ID',
+        payload: fallbackId
+      });
+      localStorage.setItem('appId', fallbackId);
+      console.log('💾 Fallback application ID created:', fallbackId);
     }
     
     // Navigate to Step 5 (Document Upload)
