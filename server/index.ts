@@ -536,22 +536,17 @@ app.use((req, res, next) => {
   // Configure static file serving and SPA routing
   const isProduction = process.env.NODE_ENV === 'production';
   
-  if (isProduction) {
-    // In production, serve the built client files
-    const clientBuildPath = join(__dirname, '../dist/public');
-    console.log(`[STATIC] Serving client files from: ${clientBuildPath}`);
-    app.use(express.static(clientBuildPath));
-    
-    // SPA Routing: All non-API routes should serve index.html for React Router
-    app.get('*', (req, res) => {
-      const indexPath = join(__dirname, '../dist/public/index.html');
-      console.log(`[SPA] Serving index.html for route: ${req.path}`);
-      res.sendFile(indexPath);
-    });
-  } else {
-    // In development, use Vite (handles SPA routing automatically)
-    await setupVite(app, httpServer);
-  }
+  // Always serve the built client files to avoid Vite connection issues
+  const clientBuildPath = join(__dirname, '../dist/public');
+  console.log(`[STATIC] Serving client files from: ${clientBuildPath}`);
+  app.use(express.static(clientBuildPath));
+  
+  // SPA Routing: All non-API routes should serve index.html for React Router
+  app.get('*', (req, res) => {
+    const indexPath = join(__dirname, '../dist/public/index.html');
+    console.log(`[SPA] Serving index.html for route: ${req.path}`);
+    res.sendFile(indexPath);
+  });
   
   // Add WebSocket server for real-time updates
   const wss = new WebSocketServer({ 
