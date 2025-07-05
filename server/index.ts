@@ -16,9 +16,10 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Set development environment for React app
-console.log('🚀 Running in DEVELOPMENT mode with production features');
-console.log('Environment:', process.env.NODE_ENV || 'development');
+// Force production environment
+process.env.NODE_ENV = 'production';
+console.log('🚀 Running in PRODUCTION mode');
+console.log('Environment:', process.env.NODE_ENV);
 
 // Add CORS and security headers to fix 403 errors
 app.use((req, res, next) => {
