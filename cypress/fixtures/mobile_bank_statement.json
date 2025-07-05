@@ -1,0 +1,71 @@
+{
+  "businessName": "5729841 MANITOBA LTD o/a Black Label Automation & Electrical",
+  "accountNumber": "2615 3851-784",
+  "branch": "FORT RICHMOND",
+  "transitNumber": "2615",
+  "address": "30-10 FOXDALE WAY, NIVERVILLE, MB R0A 0A1",
+  "bankAddress": "2785 PEMBINA HWY, WINNIPEG, MAN R3T 2H2",
+  "statements": [
+    {
+      "month": "April 2025",
+      "openingBalance": 637214.34,
+      "closingBalance": 861981.04,
+      "totalDebited": 808122.31,
+      "totalCredited": 1032889.01,
+      "transactions": [
+        {
+          "date": "Apr 2",
+          "description": "Cheque clearing #00317",
+          "debit": 6932.31,
+          "balance": 630282.03
+        },
+        {
+          "date": "Apr 3", 
+          "description": "Deposit",
+          "credit": 263562.15,
+          "balance": 790008.88
+        },
+        {
+          "date": "Apr 14",
+          "description": "Deposit", 
+          "credit": 769326.86,
+          "balance": 1386521.90
+        },
+        {
+          "date": "Apr 23",
+          "description": "Wire Transfer out",
+          "debit": 339250.00,
+          "balance": 1029036.54
+        }
+      ]
+    },
+    {
+      "month": "March 2025",
+      "openingBalance": 876415.97,
+      "closingBalance": 637214.34,
+      "totalDebited": 735991.84,
+      "totalCredited": 496790.21,
+      "transactions": [
+        {
+          "date": "Mar 6",
+          "description": "Deposit",
+          "credit": 365965.21,
+          "balance": 1229759.81
+        },
+        {
+          "date": "Mar 10",
+          "description": "Cheque clearing #00304",
+          "debit": 132000.00,
+          "balance": 1095278.82
+        }
+      ]
+    }
+  ],
+  "businessMetrics": {
+    "averageMonthlyBalance": 1249598.16,
+    "averageMonthlyDeposits": 566654.53,
+    "businessType": "Electrical and Automation Services",
+    "creditProfile": "Strong",
+    "recommendedFunding": "Equipment Financing, Working Capital, Term Loan"
+  }
+}
