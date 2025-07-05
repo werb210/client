@@ -149,25 +149,33 @@ class ReliableLenderSync {
     const validProducts: LenderProduct[] = [];
     
     for (const product of products) {
-      // Check required fields
+      // Handle different field name variations from staff API
+      const minAmount = product.amountMin || product.minAmount || product.min_amount;
+      const maxAmount = product.amountMax || product.maxAmount || product.max_amount;
+      const category = product.category;
+      const country = product.country;
+      const name = product.name;
+      const lenderName = product.lenderName;
+
+      // Check required fields with flexible field names
       const hasRequiredFields = 
-        product.category &&
-        typeof product.minAmount === 'number' &&
-        typeof product.maxAmount === 'number' &&
-        product.country &&
-        product.name &&
-        product.lenderName;
+        category &&
+        typeof minAmount === 'number' &&
+        typeof maxAmount === 'number' &&
+        country &&
+        name &&
+        lenderName;
 
       if (hasRequiredFields) {
         // Normalize product to expected format
         validProducts.push({
-          id: product.id || product.productId || `${product.lenderName}-${product.category}`,
-          name: product.name,
-          lenderName: product.lenderName,
-          category: product.category,
-          country: product.country,
-          minAmount: product.minAmount || product.min_amount,
-          maxAmount: product.maxAmount || product.max_amount,
+          id: product.id || product.productId || `${lenderName}-${category}-${Math.random().toString(36).substr(2, 9)}`,
+          name: name,
+          lenderName: lenderName,
+          category: category,
+          country: country,
+          minAmount: minAmount,
+          maxAmount: maxAmount,
           interestRateMin: product.interestRateMin || product.interest_rate_min || 0,
           interestRateMax: product.interestRateMax || product.interest_rate_max || 0,
           termMin: product.termMin || product.min_term || 12,
@@ -179,7 +187,14 @@ class ReliableLenderSync {
           lastSynced: Date.now()
         });
       } else {
-        console.warn('[SYNC] Skipping product with missing required fields:', product.name || 'Unknown');
+        console.warn('[SYNC] Skipping product with missing required fields:', product.name || 'Unknown', {
+          category: !!category,
+          minAmount: typeof minAmount === 'number',
+          maxAmount: typeof maxAmount === 'number', 
+          country: !!country,
+          name: !!name,
+          lenderName: !!lenderName
+        });
       }
     }
     
