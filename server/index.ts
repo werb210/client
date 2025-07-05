@@ -534,7 +534,7 @@ app.use((req, res, next) => {
   app.get('*', (req, res) => {
     const isProductionMode = process.env.NODE_ENV === 'production';
     if (isProductionMode) {
-      const indexPath = join(__dirname, '../client/dist/index.html');
+      const indexPath = join(__dirname, '../dist/public/index.html');
       console.log(`[SPA] Serving index.html for route: ${req.path}`);
       res.sendFile(indexPath);
     } else {
@@ -553,7 +553,7 @@ app.use((req, res, next) => {
   
   if (isProduction) {
     // In production, serve the built client files
-    const clientBuildPath = join(__dirname, '../client/dist');
+    const clientBuildPath = join(__dirname, '../dist/public');
     console.log(`[STATIC] Serving client files from: ${clientBuildPath}`);
     app.use(express.static(clientBuildPath));
   } else {
