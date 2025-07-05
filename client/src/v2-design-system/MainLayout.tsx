@@ -52,6 +52,7 @@ import ComprehensiveE2ETest from "@/pages/ComprehensiveE2ETest";
 import IndexedDBTest from "@/pages/IndexedDBTest";
 import ReliableSyncTest from "@/pages/ReliableSyncTest";
 import LenderDiagnostics from "@/pages/LenderDiagnostics";
+import SyncDiagnostics from "@/pages/SyncDiagnostics";
 
 
 /**
@@ -74,6 +75,7 @@ export function MainLayout() {
       <Route path="/api-diagnostic" component={ApiDiagnostic} />
       <Route path="/synced-products-test" component={SyncedProductsTest} />
       <Route path="/sync-monitor" component={SyncMonitor} />
+      <Route path="/sync-diagnostics" component={SyncDiagnostics} />
       <Route path="/complete-workflow-test" component={CompleteWorkflowTest} />
       <Route path="/stage-monitor-test" component={StageMonitorTest} />
       <Route path="/signnow-workflow-test" component={SignNowWorkflowTest} />

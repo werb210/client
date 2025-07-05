@@ -1,0 +1,196 @@
+Here's the fully rewritten instruction set for the **Client application**, tailored to reflect its production deployment, read-only lender sync behavior, and correct API usage from the Staff app.
+
+---
+
+### ✅ **CLIENT APPLICATION — FINALIZED INSTRUCTIONS (JULY 2025)**
+
+---
+
+## 📱 SYSTEM RESPONSIBILITIES
+
+The **Client application** is responsible for:
+
+1. **Application Form Workflow**: Handling Steps 1–7 of the application process.
+2. **Product Discovery & Recommendation**: Showing accurate lender matches based on user answers and synced data.
+3. **Document Upload**: Sending uploaded files to the Staff app for processing.
+4. **Triggering SignNow**: After step 5, triggers SignNow signing via API.
+5. **Monitoring Application Status**: Displays UI feedback and errors.
+6. **NEVER performs OCR** – all analysis is handled by the Staff system.
+
+---
+
+## 🔗 BACKEND CONNECTIVITY
+
+### ✅ Staff API Sync Configuration
+
+* Ensure `.env.production` includes:
+
+```env
+VITE_API_BASE_URL=https://staffportal.replit.app/api
+```
+
+* All requests to fetch lender products must go through:
+
+```ts
+GET `${VITE_API_BASE_URL}/public/lenders`
+```
+
+* CORS **must** be enabled on the staff app to allow access from:
+
+```ts
+Origin: https://clientportal.replit.app
+```
+
+---
+
+## 🔁 LENDER PRODUCT SYNC
+
+### ✅ Sync Mechanism (client/src/lib/reliableLenderSync.ts)
+
+* Pulls live products from Staff API on load.
+* Validates product structure before storing.
+* Stores products in IndexedDB (fallback cache).
+* Auto-switches to fallback cache if:
+
+  * Network fails
+  * API returns 0 products
+  * Response is invalid
+
+### ✅ Diagnostic Page
+
+Visit `/diagnostics/lenders` to view:
+
+* Live API product count (should show 41)
+* Fallback vs live status
+* Sync timestamp
+* IndexedDB record count
+* Warning banner when not using live data
+
+---
+
+## 💼 APPLICATION FORM (Steps 1–7)
+
+### ✅ Workflow Overview
+
+1. **Step 1**: Business Basics
+2. **Step 2**: Product Matching
+
+   * Uses synced product list
+   * Filters based on category, country, amount
+   * AI-generated match scores displayed
+3. **Step 3**: Business Questions
+4. **Step 4**: Applicant Questions
+5. **Step 5**: Document Upload
+
+   * Uploads file to `POST /api/client/applications/:id/documents`
+   * Must include correct category (e.g., `bank_statements`)
+6. **Step 6**: SignNow Integration
+
+   * Triggers `POST /api/client/applications/:id/signnow/start`
+   * Redirects to embedded signing URL returned by staff
+7. **Step 7**: Final Submission
+
+   * Locks application and displays confirmation
+
+---
+
+## 🧠 LENDER MATCHING SYSTEM
+
+### ✅ Matching Behavior
+
+* Relies entirely on live product list from Staff API
+* Fields used:
+
+  * `category`, `country`, `amountMin`, `amountMax`, `interestRateMin`, `interestRateMax`, `minRevenue`, `minCreditScore`
+* AI model considers:
+
+  * Business revenue, credit score, use of funds, location
+  * Product constraints from synced data
+
+### ✅ UI Matching Display
+
+* Only show products from active (non-deleted) list
+* Update card design to reflect:
+
+  * Product name
+  * Lender
+  * Amount range
+  * Category
+  * Estimated fit score
+  * CTA: “Start Application” or “Continue”
+
+---
+
+## 🧾 DOCUMENT UPLOAD WORKFLOW
+
+### ✅ Upload Requirements
+
+* Triggered at Step 5
+* Document types must match the expected categories from Staff (e.g., `balance_sheet`, `a_r`, `bank_statements`)
+* Validate file type/size before sending
+
+### ✅ Backend Submission
+
+* Sends to:
+
+  ```ts
+  POST `${VITE_API_BASE_URL}/client/applications/:id/documents`
+  ```
+* Include:
+
+  * `category`
+  * `file` (as FormData)
+  * `applicationId` from previous steps
+
+---
+
+## ✍️ SIGNNOW WORKFLOW (Step 6)
+
+### ✅ Trigger Logic
+
+* When all required fields + documents uploaded
+* Calls:
+
+  ```ts
+  POST `${VITE_API_BASE_URL}/client/applications/:id/signnow/start`
+  ```
+* Server responds with `signingUrl`
+* Client redirects to embedded SignNow URL
+
+### ✅ After Signature
+
+* Waits for webhook trigger from staff
+* On webhook receipt, UI proceeds to Step 7
+
+---
+
+## 📋 APPLICATION STATUS MONITORING
+
+* Polling or WebSocket (if enabled) monitors:
+
+  * Application `status`: `draft`, `in_review`, `contract_signed`, `lender_match`, etc.
+  * Document `status`: `PENDING`, `ACCEPTED`, `REJECTED`
+  * Signing status
+
+* UI Feedback:
+
+  * Banner shows real-time status (e.g., "Waiting for lender decision")
+  * Disable submission after lock
+
+---
+
+## ✅ DEPLOYMENT CHECKLIST
+
+* [ ] `VITE_API_BASE_URL` is set to production staff URL
+* [ ] CORS headers on Staff app allow requests from client domain
+* [ ] `/api/public/lenders` returns 41 products
+* [ ] Product categories: all 8 visible in filters and search
+* [ ] Step 2 shows matching results based on synced product list
+* [ ] Step 5 uploads documents to correct endpoint
+* [ ] Step 6 triggers SignNow signing successfully
+* [ ] IndexedDB properly caches lender data on failure
+* [ ] Diagnostic page at `/diagnostics/lenders` confirms health
+
+---
+
+Let me know if you'd like a combined **QA test script** or end-to-end sync testing flow for both apps.
