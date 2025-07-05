@@ -50,6 +50,7 @@ import LenderProductsCatalog from "@/pages/LenderProductsCatalog";
 import BankingDocumentTest from "@/pages/BankingDocumentTest";
 import ComprehensiveE2ETest from "@/pages/ComprehensiveE2ETest";
 import IndexedDBTest from "@/pages/IndexedDBTest";
+import ReliableSyncTest from "@/pages/ReliableSyncTest";
 
 
 /**
@@ -91,6 +92,7 @@ export function MainLayout() {
       <Route path="/banking-document-test" component={BankingDocumentTest} />
       <Route path="/comprehensive-e2e-test" component={ComprehensiveE2ETest} />
       <Route path="/indexeddb-test" component={IndexedDBTest} />
+      <Route path="/reliable-sync-test" component={ReliableSyncTest} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
