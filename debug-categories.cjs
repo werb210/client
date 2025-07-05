@@ -1,65 +1,45 @@
-// Debug category names in normalized data
+/**
+ * Debug Categories - Count unique product categories in the database
+ */
+
 async function debugCategories() {
+  console.log('🔍 Analyzing product categories from staff database...');
+  
   try {
-    const { default: fetch } = await import('node-fetch');
-    
-    console.log('Fetching products from staff API...');
     const response = await fetch('https://staffportal.replit.app/api/public/lenders');
     const data = await response.json();
     
-    if (!data.products) {
-      console.error('No products found in API response');
-      return;
+    console.log('📊 API Response Status:', response.status);
+    console.log('📋 Total Products:', data.count || data.products?.length || 0);
+    
+    if (data.products && Array.isArray(data.products)) {
+      // Extract unique categories
+      const categories = [...new Set(data.products.map(p => p.category))];
+      
+      console.log('\n📈 PRODUCT CATEGORIES ANALYSIS:');
+      console.log('Total unique categories:', categories.length);
+      console.log('\nCategories found:');
+      
+      categories.forEach((cat, idx) => {
+        const count = data.products.filter(p => p.category === cat).length;
+        console.log(`${idx + 1}. ${cat} (${count} products)`);
+      });
+      
+      console.log('\n📊 CATEGORY BREAKDOWN:');
+      categories.sort().forEach(cat => {
+        const products = data.products.filter(p => p.category === cat);
+        console.log(`\n${cat}:`);
+        products.forEach(p => {
+          console.log(`  - ${p.name} (${p.lenderName}) - $${p.amountMin?.toLocaleString()}-$${p.amountMax?.toLocaleString()}`);
+        });
+      });
+      
+    } else {
+      console.log('❌ No products array found in response');
     }
     
-    // Get unique categories
-    const categories = [...new Set(data.products.map(p => p.category))];
-    console.log('\n=== ACTUAL CATEGORY NAMES IN NORMALIZED DATA ===');
-    categories.forEach(cat => {
-      const count = data.products.filter(p => p.category === cat).length;
-      console.log(`${cat}: ${count} products`);
-    });
-    
-    // Check Canadian products specifically
-    const canadianProducts = data.products.filter(p => p.country === 'CA');
-    console.log('\n=== CANADIAN PRODUCTS BY CATEGORY ===');
-    const canadianCategories = [...new Set(canadianProducts.map(p => p.category))];
-    canadianCategories.forEach(cat => {
-      const count = canadianProducts.filter(p => p.category === cat).length;
-      console.log(`${cat}: ${count} products`);
-    });
-    
-    // Check what should match "business capital"
-    console.log('\n=== BUSINESS CAPITAL MATCHING ANALYSIS ===');
-    const capitalCategories = [
-      'Working Capital',
-      'Business Line of Credit', 
-      'Term Loan',
-      'Business Term Loan',
-      'SBA Loan',
-      'Asset Based Lending',
-      'Invoice Factoring',
-      'Purchase Order Financing'
-    ];
-    
-    console.log('Expected categories to match business capital:');
-    capitalCategories.forEach(cat => console.log(`  - ${cat}`));
-    
-    console.log('\nActual categories in data:');
-    categories.forEach(cat => console.log(`  - ${cat}`));
-    
-    // Test matching logic
-    console.log('\n=== MATCHING TEST ===');
-    categories.forEach(actualCat => {
-      const isMatch = capitalCategories.some(expectedCat => 
-        actualCat.toLowerCase().includes(expectedCat.toLowerCase()) ||
-        expectedCat.toLowerCase().includes(actualCat.toLowerCase())
-      );
-      console.log(`${actualCat}: ${isMatch ? '✅ MATCH' : '❌ NO MATCH'}`);
-    });
-    
   } catch (error) {
-    console.error('Error debugging categories:', error.message);
+    console.error('❌ Error fetching categories:', error);
   }
 }
 
