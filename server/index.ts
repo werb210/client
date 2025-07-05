@@ -530,77 +530,17 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Create HTTP server
-  const { createServer } = await import("http");
-  const server = createServer(app);
-
-  // Removed static HTML route - React app now handles root routing
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    // In production, serve static files from the dist directory
-    const { default: fs } = await import("fs");
-    const distPath = join(__dirname, "..");
-    
-    if (fs.existsSync(join(distPath, "index.html"))) {
-      app.use(express.static(distPath));
-      app.get("*", (req, res) => {
-        res.sendFile(join(distPath, "index.html"));
-      });
+  // SPA Routing: All non-API routes should serve index.html for React Router
+  app.get('*', (req, res) => {
+    const isProductionMode = process.env.NODE_ENV === 'production';
+    if (isProductionMode) {
+      const indexPath = join(__dirname, '../client/dist/index.html');
+      console.log(`[SPA] Serving index.html for route: ${req.path}`);
+      res.sendFile(indexPath);
     } else {
-      // If no built client files, serve the development fallback
-      console.log("No built client files found, serving development fallback");
+      // In development, this is handled by Vite
+      res.status(404).send('Development mode - use Vite dev server');
     }
-  }
-
-  // Add emergency fallback route for 403 issues
-  app.get('/emergency', (req, res) => {
-    res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Boreal Financial - Client Application</title>
-    <style>
-        body { font-family: system-ui; margin: 40px; background: #f8f9fa; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #0d7377; }
-        .status { background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin: 15px 0; }
-        .feature { background: #f8f9fa; padding: 10px; margin: 10px 0; border-left: 4px solid #0d7377; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🏦 Boreal Financial - Client Application</h1>
-        <div class="status">
-            ✅ Server Running Successfully<br>
-            ✅ Application Configured<br>
-            ✅ Port 5000 Active
-        </div>
-        <h2>Implementation Status</h2>
-        <div class="feature">📱 Phone-Based Authentication System: Complete</div>
-        <div class="feature">📋 Draft-Before-Sign Flow: Implemented</div>
-        <div class="feature">📝 SignNow Integration: Ready</div>
-        <div class="feature">🔐 Applications API: Configured</div>
-        <div class="feature">📄 Multi-Step Form: 7 Steps Complete</div>
-        
-        <h2>Testing Endpoints</h2>
-        <p><a href="/test">Authentication Test Interface</a></p>
-        <p><a href="/api/health">Health Check</a></p>
-        
-        <h2>Next Steps</h2>
-        <p>Staff backend CORS configuration required to enable full authentication flow testing.</p>
-        
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 14px;">
-            Environment: Development | Timestamp: ${new Date().toISOString()}
-        </div>
-    </div>
-</body>
-</html>
-    `);
   });
 
 
@@ -608,8 +548,18 @@ app.use((req, res, next) => {
   // Create HTTP server and WebSocket server
   const httpServer = createServer(app);
 
-  // Setup Vite for development
-  await setupVite(app, httpServer);
+  // Configure static file serving and SPA routing
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  if (isProduction) {
+    // In production, serve the built client files
+    const clientBuildPath = join(__dirname, '../client/dist');
+    console.log(`[STATIC] Serving client files from: ${clientBuildPath}`);
+    app.use(express.static(clientBuildPath));
+  } else {
+    // In development, use Vite
+    await setupVite(app, httpServer);
+  }
   
   // Add WebSocket server for real-time updates
   const wss = new WebSocketServer({ 
