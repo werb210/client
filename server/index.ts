@@ -164,6 +164,8 @@ app.use((req, res, next) => {
     }
   });
 
+  // Serve static files - will be configured after httpServer is created
+
   // Mount lender routes
   app.use('/api/lenders', lendersRouter);
   app.use('/api/local/lenders', localLendersRouter);
@@ -519,6 +521,19 @@ app.use((req, res, next) => {
     }
   });
 
+  // SPA Routing: All non-API routes should serve index.html for React Router
+  app.get('*', (req, res) => {
+    const isProductionMode = process.env.NODE_ENV === 'production';
+    if (isProductionMode) {
+      const indexPath = join(__dirname, '../client/dist/index.html');
+      console.log(`[SPA] Serving index.html for route: ${req.path}`);
+      res.sendFile(indexPath);
+    } else {
+      // In development, this is handled by Vite
+      res.status(404).send('Development mode - use Vite dev server');
+    }
+  });
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
@@ -604,6 +619,19 @@ app.use((req, res, next) => {
 
   // Create HTTP server and WebSocket server
   const httpServer = createServer(app);
+
+  // Configure static file serving and SPA routing
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  if (isProduction) {
+    // In production, serve the built client files
+    const clientBuildPath = join(__dirname, '../client/dist');
+    console.log(`[STATIC] Serving client files from: ${clientBuildPath}`);
+    app.use(express.static(clientBuildPath));
+  } else {
+    // In development, use Vite
+    await setupVite(app, httpServer);
+  }
   
   // Add WebSocket server for real-time updates
   const wss = new WebSocketServer({ 
