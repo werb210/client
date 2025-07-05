@@ -53,6 +53,7 @@ import IndexedDBTest from "@/pages/IndexedDBTest";
 import ReliableSyncTest from "@/pages/ReliableSyncTest";
 import LenderDiagnostics from "@/pages/LenderDiagnostics";
 import SyncDiagnostics from "@/pages/SyncDiagnostics";
+import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
 
 
 /**
@@ -76,6 +77,7 @@ export function MainLayout() {
       <Route path="/synced-products-test" component={SyncedProductsTest} />
       <Route path="/sync-monitor" component={SyncMonitor} />
       <Route path="/sync-diagnostics" component={SyncDiagnostics} />
+      <Route path="/diagnostics/lenders" component={LenderDiagnosticsFinalized} />
       <Route path="/complete-workflow-test" component={CompleteWorkflowTest} />
       <Route path="/stage-monitor-test" component={StageMonitorTest} />
       <Route path="/signnow-workflow-test" component={SignNowWorkflowTest} />
