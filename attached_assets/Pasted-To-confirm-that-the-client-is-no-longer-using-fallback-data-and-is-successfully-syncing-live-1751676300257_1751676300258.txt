@@ -1,0 +1,126 @@
+To confirm that the **client** is no longer using **fallback data** and is successfully syncing live data from the **staff API**, follow these updated verification steps.
+
+---
+
+## ✅ CLIENT DIAGNOSTIC STEPS — Confirm Staff Sync vs Cached vs Fallback
+
+### 🔹 Step 1: Check Current Data Source in UI
+
+Look for the banner or console log stating:
+
+* **🟢 "Using live data from Staff API"** – ✅ SUCCESS
+* **🟡 "Using cached data from last sync"** – ⚠️ Still stale, needs sync
+* **🔴 "Using fallback sample data"** – ❌ No connection or empty staff DB
+
+> If you're seeing **cached or fallback**, continue to next steps.
+
+---
+
+### 🔹 Step 2: Use Manual Sync Button (Triggers Real-Time API Fetch)
+
+In the UI, click:
+
+```
+🔄 Sync Now
+```
+
+Then open **Browser Console** and look for output:
+
+```bash
+🌐 Fetching lender products from: https://staffportal.replit.app/api/public/lenders
+✅ Sync Success - 41 products stored
+```
+
+> If you **don't** see this, the client is **not connecting to staff API** or CORS is blocking it.
+
+---
+
+### 🔹 Step 3: Manually Run Fetch in Browser Console
+
+Paste this into DevTools (Console tab):
+
+```js
+fetch('https://staffportal.replit.app/api/public/lenders')
+  .then(res => res.json())
+  .then(data => console.log('Live Products:', data.length, data))
+  .catch(err => console.error('❌ Error fetching live products', err));
+```
+
+**Expect:**
+
+* `Live Products: 41 [...]`
+* Products with valid `name`, `category`, `country`, `min_amount`, etc.
+
+**If error:**
+
+* Check **CORS error** in red
+* That confirms the client is **blocked from staff API**
+
+---
+
+### 🔹 Step 4: Check IndexedDB Directly
+
+Paste in DevTools:
+
+```js
+indexedDB.open('borealClientDB').onsuccess = function(event) {
+  const db = event.target.result;
+  const tx = db.transaction(['lenderProducts'], 'readonly');
+  const store = tx.objectStore('lenderProducts');
+  store.getAll().onsuccess = e => console.log('🗃️ IndexedDB products:', e.target.result.length, e.target.result);
+};
+```
+
+**Expect:** 41 products.
+If still 6: the client **never received** the update from staff.
+
+---
+
+## 🛠️ NEXT STEP IF STILL USING CACHED DATA
+
+Tell **Replit to do the following in the client app only**:
+
+---
+
+### ✅ CLIENT FIX INSTRUCTION FOR REPLIT
+
+> 🧠 **DO NOT MAKE CHANGES – JUST FOLLOW THESE INSTRUCTIONS VERBATIM**
+
+```plaintext
+1. Confirm the current value of VITE_API_BASE_URL in the client `.env` file.
+   It MUST be:
+   VITE_API_BASE_URL=https://staffportal.replit.app/api
+
+2. Confirm CORS access from https://clientportal.replit.app is allowed on the staff API.
+
+3. In `client/src/lib/lenderProductSync.ts` (or wherever the sync logic is):
+   - Log the fetch URL
+   - Log success or failure
+   - Log how many products were returned
+   - Log if IndexedDB was updated
+
+4. Do NOT delete cached data unless a valid new response is returned.
+
+5. Add a fallback log:
+   If API call fails or returns 0 products,
+   log "⚠️ Falling back to IndexedDB cache"
+
+6. Return a visible warning banner in the UI if fallback data is used:
+   "⚠️ Live data unavailable. Using cached lender products."
+
+7. Add a hardcoded sync tester page at `/diagnostics/lenders` showing:
+   - Source: Staff API / Cached / Fallback
+   - Count: X products
+   - Category List
+   - Manual Sync button
+```
+
+---
+
+Once this is done, reply with:
+
+* 🔢 Product count in browser console
+* 🗂 Category list shown
+* ✅ Whether Sync button updates data in IndexedDB
+
+Would you like me to generate a visual diagnostic card UI component for this?

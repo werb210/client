@@ -51,6 +51,7 @@ import BankingDocumentTest from "@/pages/BankingDocumentTest";
 import ComprehensiveE2ETest from "@/pages/ComprehensiveE2ETest";
 import IndexedDBTest from "@/pages/IndexedDBTest";
 import ReliableSyncTest from "@/pages/ReliableSyncTest";
+import LenderDiagnostics from "@/pages/LenderDiagnostics";
 
 
 /**
@@ -124,6 +125,9 @@ export function MainLayout() {
       
       {/* Workflow Testing */}
       <Route path="/workflow-test" component={WorkflowTest} />
+      
+      {/* Diagnostic Pages */}
+      <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
       
       {/* Default Route - Landing Page */}
       <Route path="/" component={LandingPage} />

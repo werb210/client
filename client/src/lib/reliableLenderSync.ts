@@ -64,11 +64,12 @@ class ReliableLenderSync {
    * On app load (or background interval), fetch from staff API
    */
   async pullLenderProducts(): Promise<SyncResult> {
-    console.log('[SYNC] Starting reliable lender product sync...');
+    const fetchUrl = `${this.apiBaseUrl}/public/lenders`;
+    console.log(`🌐 Fetching lender products from: ${fetchUrl}`);
     
     try {
       // Attempt to fetch from staff API
-      const response = await fetch(`${this.apiBaseUrl}/public/lenders`, {
+      const response = await fetch(fetchUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -78,16 +79,20 @@ class ReliableLenderSync {
         signal: AbortSignal.timeout(10000) // 10 second timeout
       });
 
+      console.log(`📡 Staff API Response: ${response.status} ${response.statusText}`);
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const apiData = await response.json();
+      console.log(`📊 Staff API returned ${Array.isArray(apiData) ? apiData.length : 'invalid'} products`);
+      console.log('🔍 Raw API Response:', apiData);
       
       // Check if API returned 0 products or invalid data
       if (!Array.isArray(apiData) || apiData.length === 0) {
-        console.warn('⚠️ Staff API returned 0 products. Falling back to cache.');
-        return await this.useFallbackCache('Staff API returned 0 products');
+        console.warn('⚠️ Staff API returned 0 products. Falling back to IndexedDB cache');
+        return await this.useFallbackCache('Staff API returned 0 products - staff database may be empty');
       }
 
       // 4. Product Matching Requirements - Validate required fields
@@ -105,7 +110,9 @@ class ReliableLenderSync {
       // Store successful API data
       await this.storeValidData(validProducts, currentTimestamp);
       
-      console.log(`✅ [SYNC] Successfully fetched ${validProducts.length} products from staff API`);
+      console.log(`✅ Sync Success - ${validProducts.length} products stored`);
+      const categories = Array.from(new Set(validProducts.map(p => p.category)));
+      console.log(`📋 Categories found: ${categories.join(', ')}`);
       
       return {
         success: true,
