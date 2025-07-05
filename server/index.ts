@@ -530,21 +530,6 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // SPA Routing: All non-API routes should serve index.html for React Router
-  app.get('*', (req, res) => {
-    const isProductionMode = process.env.NODE_ENV === 'production';
-    if (isProductionMode) {
-      const indexPath = join(__dirname, '../dist/public/index.html');
-      console.log(`[SPA] Serving index.html for route: ${req.path}`);
-      res.sendFile(indexPath);
-    } else {
-      // In development, this is handled by Vite
-      res.status(404).send('Development mode - use Vite dev server');
-    }
-  });
-
-
-
   // Create HTTP server and WebSocket server
   const httpServer = createServer(app);
 
@@ -556,8 +541,15 @@ app.use((req, res, next) => {
     const clientBuildPath = join(__dirname, '../dist/public');
     console.log(`[STATIC] Serving client files from: ${clientBuildPath}`);
     app.use(express.static(clientBuildPath));
+    
+    // SPA Routing: All non-API routes should serve index.html for React Router
+    app.get('*', (req, res) => {
+      const indexPath = join(__dirname, '../dist/public/index.html');
+      console.log(`[SPA] Serving index.html for route: ${req.path}`);
+      res.sendFile(indexPath);
+    });
   } else {
-    // In development, use Vite
+    // In development, use Vite (handles SPA routing automatically)
     await setupVite(app, httpServer);
   }
   
