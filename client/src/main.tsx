@@ -6,12 +6,12 @@ import { scheduledSyncService } from "./lib/scheduledSync";
 import { clearLegacyCache, shouldClearCache } from "./startup/clearLegacyCache";
 import { runStartupVerification } from "./test/staffDatabaseVerification";
 // Clear legacy cache to force use of staff database (43+ products)
-if (shouldClearCache()) {
-  clearLegacyCache();
-}
+// if (shouldClearCache()) {
+//   clearLegacyCache();
+// }
 
 // Initialize the lender product sync scheduler
-scheduledSyncService.initialize();
+// scheduledSyncService.initialize();
 
 // Verify staff database integration
 runStartupVerification().catch(error => {
