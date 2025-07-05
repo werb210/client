@@ -86,15 +86,21 @@ class ReliableLenderSync {
       }
 
       const apiData = await response.json();
+      console.log("📦 Raw response from staff API:", apiData);
       console.log('🔍 Raw API Response:', apiData);
       
-      // Handle new API response structure: {products: [], count: 0} or direct array
-      const productArray = Array.isArray(apiData) ? apiData : (apiData.products || []);
+      // Parse staff API response according to FIX INSTRUCTIONS
+      if (!apiData.success || !Array.isArray(apiData.products)) {
+        console.error(`Staff API returned invalid format:`, JSON.stringify(apiData));
+        return await this.useFallbackCache(`Invalid API format: ${JSON.stringify(apiData)}`);
+      }
+      
+      const productArray = apiData.products;
       const productCount = productArray.length;
       
       console.log(`📊 Staff API returned ${productCount} products`);
       
-      // Check if API returned 0 products or invalid data
+      // Check if API returned 0 products
       if (productCount === 0) {
         console.warn('⚠️ Staff API returned 0 products. Falling back to IndexedDB cache');
         return await this.useFallbackCache('Staff API returned 0 products - staff database may be empty');
