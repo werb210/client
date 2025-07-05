@@ -63,8 +63,13 @@ export default function LenderDiagnostics() {
     try {
       const response = await fetch('https://staffportal.replit.app/api/public/lenders');
       const data = await response.json();
-      console.log('Live Products:', data.length, data);
-      setManualFetchResult({ success: true, count: data.length, data });
+      
+      // Handle both direct array and object with products array
+      const productArray = Array.isArray(data) ? data : (data.products || []);
+      const productCount = productArray.length;
+      
+      console.log('Live Products:', productCount, data);
+      setManualFetchResult({ success: true, count: productCount, data });
     } catch (error) {
       console.error('❌ Error fetching live products', error);
       setManualFetchResult({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
@@ -159,52 +164,84 @@ export default function LenderDiagnostics() {
           </Alert>
         )}
 
-        {/* Main Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
-          {/* Product Count */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                Products
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{productCount}</div>
-              <p className="text-sm text-gray-600">Total lender products</p>
-            </CardContent>
-          </Card>
+        {/* Comprehensive Status Display */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Live Diagnostic Status</CardTitle>
+            <CardDescription>
+              Real-time API response analysis
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            
+            {/* Live Source */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="font-medium text-sm text-gray-600">Live Source:</p>
+                <p className="text-sm font-mono">Staff API (https://staffportal.replit.app/api/public/lenders)</p>
+              </div>
+              
+              {/* Status */}
+              <div>
+                <p className="font-medium text-sm text-gray-600">Status:</p>
+                <p className="text-sm">
+                  {manualFetchResult?.success === false ? (
+                    <span className="text-red-600">❌ Error: {manualFetchResult.error}</span>
+                  ) : manualFetchResult?.count === 0 ? (
+                    <span className="text-red-600">❌ Invalid Response (Empty Array)</span>
+                  ) : manualFetchResult?.count > 0 ? (
+                    <span className="text-green-600">✅ Valid Response</span>
+                  ) : (
+                    <span className="text-gray-600">⏳ Click "Test Fetch" to check</span>
+                  )}
+                </p>
+              </div>
+            </div>
 
-          {/* Categories */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Info className="h-5 w-5" />
-                Categories
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600">{categories.length}</div>
-              <p className="text-sm text-gray-600">Product categories</p>
-            </CardContent>
-          </Card>
+            {/* Product Count */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="font-medium text-sm text-gray-600">Product Count:</p>
+                <p className="text-sm">
+                  {manualFetchResult?.count !== undefined ? (
+                    <span>{manualFetchResult.count} (Fallback: {productCount} used)</span>
+                  ) : (
+                    <span>0 (Fallback: {productCount} used)</span>
+                  )}
+                </p>
+              </div>
+              
+              {/* Categories */}
+              <div>
+                <p className="font-medium text-sm text-gray-600">Categories:</p>
+                <p className="text-sm">
+                  [{categories.map(cat => cat.replace(/_/g, ' ')).join(', ')}]
+                </p>
+              </div>
+            </div>
 
-          {/* Source */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                {dataSourceStatus.icon}
-                Source
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Badge className="mb-2">{source?.replace('_', ' ')}</Badge>
-              <p className="text-sm text-gray-600">Data origin</p>
-            </CardContent>
-          </Card>
+            {/* Raw API Response */}
+            {manualFetchResult && (
+              <div>
+                <p className="font-medium text-sm text-gray-600 mb-2">Raw API Response:</p>
+                <div className="bg-gray-100 rounded p-3 text-xs font-mono max-h-40 overflow-auto">
+                  <pre>{JSON.stringify(manualFetchResult.data, null, 2)}</pre>
+                </div>
+                {manualFetchResult.data && !Array.isArray(manualFetchResult.data) && (
+                  <p className="text-sm text-red-600 mt-2">
+                    🔍 Raw API Response is not an array - proof of invalid structure
+                  </p>
+                )}
+                {manualFetchResult.data && Array.isArray(manualFetchResult.data) && manualFetchResult.data.length === 0 && (
+                  <p className="text-sm text-red-600 mt-2">
+                    🔍 Raw API Response is empty array - staff database contains 0 products
+                  </p>
+                )}
+              </div>
+            )}
 
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Manual Tests */}
         <Card>

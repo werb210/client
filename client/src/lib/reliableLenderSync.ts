@@ -86,17 +86,22 @@ class ReliableLenderSync {
       }
 
       const apiData = await response.json();
-      console.log(`📊 Staff API returned ${Array.isArray(apiData) ? apiData.length : 'invalid'} products`);
       console.log('🔍 Raw API Response:', apiData);
       
+      // Handle new API response structure: {products: [], count: 0} or direct array
+      const productArray = Array.isArray(apiData) ? apiData : (apiData.products || []);
+      const productCount = productArray.length;
+      
+      console.log(`📊 Staff API returned ${productCount} products`);
+      
       // Check if API returned 0 products or invalid data
-      if (!Array.isArray(apiData) || apiData.length === 0) {
+      if (productCount === 0) {
         console.warn('⚠️ Staff API returned 0 products. Falling back to IndexedDB cache');
         return await this.useFallbackCache('Staff API returned 0 products - staff database may be empty');
       }
 
       // 4. Product Matching Requirements - Validate required fields
-      const validProducts = this.validateProductFields(apiData);
+      const validProducts = this.validateProductFields(productArray);
       
       if (validProducts.length === 0) {
         console.warn('⚠️ Staff API returned products with missing required fields. Falling back to cache.');
