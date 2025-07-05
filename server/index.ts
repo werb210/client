@@ -88,6 +88,82 @@ app.use((req, res, next) => {
     });
   });
 
+  // API Proxy to Staff Backend with Development Fallback
+  app.get('/api/public/lenders', async (req, res) => {
+    try {
+      const staffApiUrl = process.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api';
+      console.log(`[PROXY] Attempting to fetch from staff API: ${staffApiUrl}/public/lenders`);
+      console.log(`[PROXY] Note: Staff backend currently in development mode`);
+      
+      const response = await fetch(`${staffApiUrl}/public/lenders`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        console.log(`[PROXY] Staff API not ready (${response.status}), serving development data`);
+        
+        // Return development data while staff backend is being prepared
+        const developmentData = {
+          success: true,
+          products: [
+            {
+              id: "dev-001",
+              productName: "Business Term Loan",
+              lenderName: "Development Bank",
+              category: "term_loan",
+              country: "US",
+              amountRange: { min: 25000, max: 500000 },
+              interestRateMin: 8.5,
+              interestRateMax: 15.0,
+              termMin: 12,
+              termMax: 60,
+              description: "Development data - Staff backend in preparation"
+            }
+          ],
+          source: "development_fallback",
+          message: "Staff backend in development - using placeholder data"
+        };
+        
+        return res.json(developmentData);
+      }
+      
+      const data = await response.json();
+      console.log(`[PROXY] Staff API returned ${data?.products?.length || 0} products`);
+      
+      res.json(data);
+    } catch (error) {
+      console.error('[PROXY] Staff API connection failed:', error);
+      
+      // Provide development fallback
+      const fallbackData = {
+        success: true,
+        products: [
+          {
+            id: "fallback-001",
+            productName: "Development Term Loan",
+            lenderName: "Fallback Lender",
+            category: "term_loan",
+            country: "US",
+            amountRange: { min: 10000, max: 250000 },
+            interestRateMin: 7.0,
+            interestRateMax: 18.0,
+            termMin: 6,
+            termMax: 36,
+            description: "Fallback data while staff backend is in development"
+          }
+        ],
+        source: "connection_fallback",
+        message: "Staff backend unavailable - using development data"
+      };
+      
+      res.json(fallbackData);
+    }
+  });
+
   // Mount lender routes
   app.use('/api/lenders', lendersRouter);
   app.use('/api/local/lenders', localLendersRouter);
