@@ -136,337 +136,284 @@ export default function Step3BusinessDetails() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header Section */}
-      <Card>
-        <CardHeader>
-          <div>
-            <CardTitle className="text-2xl text-gray-900 flex items-center gap-2">
-              <Building className="w-6 h-6 text-blue-600" />
-              Business Details
-            </CardTitle>
-            <p className="text-gray-600 mt-1">
-              Please provide detailed information about your business
-            </p>
-          </div>
-        </CardHeader>
-      </Card>
+    <div className="min-h-screen py-8" style={{ backgroundColor: '#F7F9FC' }}>
+      <div className="max-w-6xl mx-auto px-4">
+        <Card className="shadow-lg">
+          <CardHeader className="text-white" style={{ background: 'linear-gradient(to right, #003D7A, #002B5C)' }}>
+            <CardTitle className="text-2xl font-bold">Step 3: Business Details</CardTitle>
+            <p style={{ color: '#B8D4F0' }}>Complete information about your business</p>
+          </CardHeader>
+          <CardContent className="p-8">
 
-      {/* Form */}
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Business Information Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Building className="w-5 h-5 text-blue-600" />
-                Business Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="businessName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Legal Business Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your legal business name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="businessName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Legal Business Name</FormLabel>
+                        <FormControl>
+                          <Input className="h-12" placeholder="Enter your legal business name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="businessStructure"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Business Structure *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select business structure" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {businessStructureOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="businessStructure"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Structure</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select business structure" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {businessStructureOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="businessRegistrationDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Business Registration Date *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="businessRegistrationDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Registration Date</FormLabel>
+                        <FormControl>
+                          <Input className="h-12" type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="businessTaxId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tax ID / EIN *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="XX-XXXXXXX" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="businessTaxId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Tax ID / EIN</FormLabel>
+                        <FormControl>
+                          <Input className="h-12" placeholder="XX-XXXXXXX" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="numberOfEmployees"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Number of Employees *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select number of employees" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {employeeOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
+                  <FormField
+                    control={form.control}
+                    name="businessAddress"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Street Address</FormLabel>
+                        <FormControl>
+                          <Input className="h-12" placeholder="Enter your business address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-          {/* Business Address Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-blue-600" />
-                Business Address
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="md:col-span-2">
-                <FormField
-                  control={form.control}
-                  name="businessAddress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Street Address *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your business address" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                  <FormField
+                    control={form.control}
+                    name="businessCity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">City</FormLabel>
+                        <FormControl>
+                          <Input className="h-12" placeholder="City" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="businessCity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>City *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="City" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="businessState"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">State/Province</FormLabel>
+                        <FormControl>
+                          <Input className="h-12" placeholder="State or Province" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="businessState"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>State/Province *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="State or Province" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="businessZipCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">ZIP/Postal Code</FormLabel>
+                        <FormControl>
+                          <Input className="h-12" placeholder="ZIP or Postal Code" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="businessZipCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ZIP/Postal Code *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="ZIP or Postal Code" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
+                  <FormField
+                    control={form.control}
+                    name="businessPhone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Phone</FormLabel>
+                        <FormControl>
+                          <Input className="h-12" placeholder="(555) 123-4567" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-          {/* Contact Information Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Contact Information</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="businessPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Business Phone *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="(555) 123-4567" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="businessEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Email</FormLabel>
+                        <FormControl>
+                          <Input className="h-12" type="email" placeholder="business@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="businessEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Business Email *</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="business@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="numberOfEmployees"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Number of Employees</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select number of employees" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {employeeOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="businessWebsite"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Business Website</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://www.yourcompany.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
+                  <FormField
+                    control={form.control}
+                    name="primaryBankName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Primary Bank Name</FormLabel>
+                        <FormControl>
+                          <Input className="h-12" placeholder="Enter your primary bank name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-          {/* Business Description Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Business Description</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <FormField
-                control={form.control}
-                name="businessDescription"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Describe Your Business *</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Provide a detailed description of your business, including products/services offered, target market, and key business activities..."
-                        className="min-h-[120px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
+                <div className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="businessWebsite"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Website (Optional)</FormLabel>
+                        <FormControl>
+                          <Input className="h-12" placeholder="https://www.yourcompany.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-          {/* Banking Information Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Banking Information</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="primaryBankName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Primary Bank Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your primary bank name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="businessDescription"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Describe Your Business</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Provide a detailed description of your business, including products/services offered, target market, and key business activities..."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="bankingRelationshipLength"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Banking Relationship Length *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select relationship length" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {bankingOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
+                  <FormField
+                    control={form.control}
+                    name="bankingRelationshipLength"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Banking Relationship Length</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select relationship length" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {bankingOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-          {/* Navigation */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex justify-between">
-                <Button type="button" variant="outline" onClick={handlePrevious}>
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Previous
-                </Button>
-                <Button type="submit">
-                  Next: Applicant Details
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </form>
-      </Form>
+                <div className="flex justify-between pt-6">
+                  <Button type="button" variant="outline" onClick={handlePrevious} className="w-full md:w-auto">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Previous
+                  </Button>
+                  <Button type="submit" className="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white">
+                    Continue
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -155,112 +155,72 @@ export default function Step4FinancialInfo() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Financial Information</h1>
-          <p className="text-gray-600 mt-2">
-            Please provide your business financial details for loan assessment
-          </p>
-          <div className="mt-4">
-            <div className="text-sm text-gray-500">Step 4 of 5</div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-              <div className="bg-blue-600 h-2 rounded-full w-4/5"></div>
-            </div>
-          </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              Financial Details ({getCurrencySymbol()})
-            </CardTitle>
+    <div className="min-h-screen py-8" style={{ backgroundColor: '#F7F9FC' }}>
+      <div className="max-w-6xl mx-auto px-4">
+        <Card className="shadow-lg">
+          <CardHeader className="text-white" style={{ background: 'linear-gradient(to right, #003D7A, #002B5C)' }}>
+            <CardTitle className="text-2xl font-bold">Step 4: Financial Information</CardTitle>
+            <p style={{ color: '#B8D4F0' }}>Provide your business financial details for loan assessment</p>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-8">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {/* Annual Revenue */}
-                <FormField
-                  control={form.control}
-                  name="annualRevenue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Annual Revenue</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                            {getCurrencySymbol()}
-                          </span>
-                          <Input
-                            placeholder="1,000,000"
-                            className="pl-16"
-                            value={field.value}
-                            onChange={(e) => handleCurrencyChange(e.target.value, field.onChange)}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="annualRevenue"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Annual Revenue</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                              {getCurrencySymbol()}
+                            </span>
+                            <Input
+                              placeholder="1,000,000"
+                              className="h-12 pl-16"
+                              value={field.value}
+                              onChange={(e) => handleCurrencyChange(e.target.value, field.onChange)}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {/* Monthly Expenses */}
-                <FormField
-                  control={form.control}
-                  name="monthlyExpenses"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monthly Operating Expenses</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                            {getCurrencySymbol()}
-                          </span>
-                          <Input
-                            placeholder="50,000"
-                            className="pl-16"
-                            value={field.value}
-                            onChange={(e) => handleCurrencyChange(e.target.value, field.onChange)}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="monthlyExpenses"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Monthly Operating Expenses</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                              {getCurrencySymbol()}
+                            </span>
+                            <Input
+                              placeholder="50,000"
+                              className="h-12 pl-16"
+                              value={field.value}
+                              onChange={(e) => handleCurrencyChange(e.target.value, field.onChange)}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {/* Number of Employees */}
-                <FormField
-                  control={form.control}
-                  name="numberOfEmployees"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of Employees</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="25"
-                          min="0"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Assets and Liabilities Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-900">Assets & Liabilities</h3>
-                  
-                  {/* Total Assets */}
                   <FormField
                     control={form.control}
                     name="totalAssets"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Total Assets</FormLabel>
+                        <FormLabel className="text-base font-semibold">Total Assets</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
@@ -268,7 +228,7 @@ export default function Step4FinancialInfo() {
                             </span>
                             <Input
                               placeholder="500,000"
-                              className="pl-16"
+                              className="h-12 pl-16"
                               value={field.value}
                               onChange={(e) => handleCurrencyChange(e.target.value, field.onChange)}
                             />
@@ -279,13 +239,12 @@ export default function Step4FinancialInfo() {
                     )}
                   />
 
-                  {/* Total Liabilities */}
                   <FormField
                     control={form.control}
                     name="totalLiabilities"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Total Liabilities</FormLabel>
+                        <FormLabel className="text-base font-semibold">Total Liabilities</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
@@ -293,7 +252,7 @@ export default function Step4FinancialInfo() {
                             </span>
                             <Input
                               placeholder="200,000"
-                              className="pl-16"
+                              className="h-12 pl-16"
                               value={field.value}
                               onChange={(e) => handleCurrencyChange(e.target.value, field.onChange)}
                             />
@@ -304,13 +263,34 @@ export default function Step4FinancialInfo() {
                     )}
                   />
 
-                  {/* Net Worth Calculation */}
-                  {calculateNetWorth() && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-blue-900">Calculated Net Worth:</span>
-                        <span className="text-lg font-bold text-blue-900">
-                          {getCurrencySymbol()}{calculateNetWorth()}
+                  <FormField
+                    control={form.control}
+                    name="numberOfEmployees"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Number of Employees</FormLabel>
+                        <FormControl>
+                          <Input
+                            className="h-12"
+                            type="number"
+                            placeholder="25"
+                            min="0"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Net Worth Calculation */}
+                {calculateNetWorth() && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-blue-900">Calculated Net Worth:</span>
+                      <span className="text-lg font-bold text-blue-900">
+                        {getCurrencySymbol()}{calculateNetWorth()}
                         </span>
                       </div>
                     </div>
