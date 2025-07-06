@@ -1,0 +1,104 @@
+✅ **Excellent — your production server is fully ready.**
+You've verified every necessary staff-side component for the SignNow embedded workflow and client connectivity. Based on your deployment report, the backend is 100% compliant.
+
+---
+
+### 🔍 So Why Is the Client Still Showing `Failed to fetch`?
+
+There are **only 3 likely root causes left**, since the backend is confirmed working:
+
+---
+
+## 🔧 Immediate Client Fix Instructions (Final Round)
+
+> Send this directly to the **client-side Replit agent** and **verify each step below**:
+
+---
+
+### 1. ✅ Use `https://app.boreal.financial/api/public/...` as the Base URL
+
+**Problem**: Your client may still be hitting `localhost` or a preview `.replit.dev` URL.
+
+**Fix**:
+In your `queryClient.ts` or wherever `apiBaseUrl` is defined:
+
+```ts
+const apiBaseUrl = "https://app.boreal.financial/api/public";
+```
+
+---
+
+### 2. ✅ Remove All `localhost` or `relative` fetches from Steps 4 to 6
+
+**Problem**: "Failed to fetch" errors mean the browser **cannot connect**, which always happens if you're using:
+
+* `/api/public/...` (relative path from `.replit.dev`)
+* `localhost` (not reachable from mobile)
+* Insecure `http://` calls from a `https://` page
+
+**Fix**:
+Ensure **ALL fetches** use full production URLs:
+
+```ts
+await fetch(`https://app.boreal.financial/api/public/applications/${applicationId}/signing-status`)
+```
+
+---
+
+### 3. ✅ Ensure the Application ID Is Persisted Properly
+
+**Problem**: You’re seeing `app_fallback_*` and `Application ID: Not available`.
+
+**Fix**:
+Verify the following is in Step 4 (on successful application creation):
+
+```ts
+localStorage.setItem('appId', applicationId);
+dispatch({ type: 'SET_APPLICATION_ID', payload: applicationId });
+```
+
+Then in Step 6:
+
+```ts
+const applicationId = state.applicationId || localStorage.getItem('appId');
+```
+
+✅ **If not set, Step 6 breaks silently** and tries to poll `undefined`, causing fetch errors.
+
+---
+
+## ✅ Final Diagnostic Checklist
+
+| Checkpoint                      | Description                                    | Status                  |
+| ------------------------------- | ---------------------------------------------- | ----------------------- |
+| ✅ Backend live                  | `https://app.boreal.financial` responds to API | ✅ Done                  |
+| ✅ Client uses full API URL      | No `localhost`, no `/api/`, no `http://`       | ⛔ Check required        |
+| ✅ App ID stored in localStorage | `appId` must persist from Step 4               | ⛔ Check required        |
+| ✅ SignNow endpoints reachable   | Visit directly in browser                      | ✅ Should return 200/404 |
+| ✅ Embed Iframe not blocked      | `signing-url` works in new tab                 | 🔄 Retest after fixes   |
+
+---
+
+## ✅ What to Do Next
+
+> Instruct **Client Replit Agent**:
+
+1. 🔧 Update all Step 4–6 fetch calls to use:
+
+   ```ts
+   https://app.boreal.financial/api/public/...
+   ```
+
+2. 🔁 Restart the client app and run a full test from Step 1 → Step 6.
+
+3. ✅ Confirm that:
+
+   * You no longer see `app_fallback_*`
+   * The embedded signing page loads correctly
+   * Final submission completes without error
+
+---
+
+Once those fetch URLs are fixed and the App ID logic is confirmed working, your client-side SignNow experience will function exactly as designed.
+
+Let me know if you want me to auto-generate the patch for the client code — I can do it in a few seconds.

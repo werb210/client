@@ -16,9 +16,9 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Force production environment
-process.env.NODE_ENV = 'production';
-console.log('🚀 Running in PRODUCTION mode');
+// Use development environment for Vite dev server
+process.env.NODE_ENV = 'development';
+console.log('🚀 Running in DEVELOPMENT mode');
 console.log('Environment:', process.env.NODE_ENV);
 
 // Add CORS and security headers to fix 403 errors
@@ -535,19 +535,25 @@ app.use((req, res, next) => {
   const httpServer = createServer(app);
 
   // Configure static file serving and SPA routing
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = false; // Force development mode to use Vite dev server
   
-  // Always serve the built client files to avoid Vite connection issues
-  const clientBuildPath = join(__dirname, '../dist/public');
-  console.log(`[STATIC] Serving client files from: ${clientBuildPath}`);
-  app.use(express.static(clientBuildPath));
-  
-  // SPA Routing: All non-API routes should serve index.html for React Router
-  app.get('*', (req, res) => {
-    const indexPath = join(__dirname, '../dist/public/index.html');
-    console.log(`[SPA] Serving index.html for route: ${req.path}`);
-    res.sendFile(indexPath);
-  });
+  if (isProduction) {
+    // Production: serve built files
+    const clientBuildPath = join(__dirname, '../dist/public');
+    console.log(`[STATIC] Serving client files from: ${clientBuildPath}`);
+    app.use(express.static(clientBuildPath));
+    
+    // SPA Routing: All non-API routes should serve index.html for React Router
+    app.get('*', (req, res) => {
+      const indexPath = join(__dirname, '../dist/public/index.html');
+      console.log(`[SPA] Serving index.html for route: ${req.path}`);
+      res.sendFile(indexPath);
+    });
+  } else {
+    // Development: use Vite dev server
+    console.log('[VITE] Setting up Vite dev server for development');
+    await setupVite(app);
+  }
   
   // Add WebSocket server for real-time updates
   const wss = new WebSocketServer({ 
