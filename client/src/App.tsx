@@ -1,27 +1,39 @@
-/**
- * Minimal React Test App
- * Testing basic React functionality to identify blocking issues
- */
+import { Route, Switch } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { FormDataProvider } from "@/context/FormDataContext";
+
+// Pages
+import LandingPage from "@/pages/LandingPage";
+import SideBySideApplication from "@/pages/SideBySideApplication";
+import ApplicationSuccess from "@/pages/ApplicationSuccess";
+import NotFound from "@/pages/NotFound";
+
+// Create query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>🚀 Boreal Financial Client Portal</h1>
-      <p><strong>Status:</strong> React Application Loading Successfully</p>
-      <p><strong>Time:</strong> {new Date().toISOString()}</p>
-      <div style={{ marginTop: '20px', padding: '15px', background: '#f0f8ff', border: '1px solid #0066cc' }}>
-        <h3>✅ Components Working</h3>
-        <ul>
-          <li>React rendering functional</li>
-          <li>JavaScript execution active</li>
-          <li>HMR connectivity resolved</li>
-          <li>Server infrastructure operational</li>
-        </ul>
-      </div>
-      <div style={{ marginTop: '20px' }}>
-        <button onClick={() => alert('React event handling working!')}>Test Button</button>
-      </div>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <FormDataProvider>
+        <div className="min-h-screen bg-background">
+          <Switch>
+            <Route path="/" component={LandingPage} />
+            <Route path="/apply/step-1" component={SideBySideApplication} />
+            <Route path="/application-success" component={ApplicationSuccess} />
+            <Route component={NotFound} />
+          </Switch>
+          <Toaster />
+        </div>
+      </FormDataProvider>
+    </QueryClientProvider>
   );
 }
 
