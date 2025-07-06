@@ -291,48 +291,19 @@ export default function Step4FinancialInfo() {
                       <span className="font-medium text-blue-900">Calculated Net Worth:</span>
                       <span className="text-lg font-bold text-blue-900">
                         {getCurrencySymbol()}{calculateNetWorth()}
-                        </span>
-                      </div>
+                      </span>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
-                {/* Action Buttons */}
-                <div className="flex gap-4 pt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleBack}
-                    className="flex-1"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back
+                <div className="flex justify-between pt-6">
+                  <Button type="button" variant="outline" onClick={handleBack} className="w-full md:w-auto">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Previous
                   </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleSaveProgress}
-                    className="flex-1"
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Progress
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Next Step
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleContinueToSign}
-                    disabled={isCreatingDraft}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isCreatingDraft ? 'Creating Draft...' : 'Review & Sign'}
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                  <Button type="submit" className="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white">
+                    Continue
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
               </form>
