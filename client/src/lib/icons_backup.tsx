@@ -470,39 +470,3 @@ export const Bookmark = ({ className }: IconProps) => (
 export const Flag = ({ className }: IconProps) => (
   <span className={`inline-block ${className}`}>🚩</span>
 );
-
-export const Send = ({ className }: IconProps) => (
-  <span className={`inline-block ${className}`}>📤</span>
-);
-
-export const AlertCircle = ({ className }: IconProps) => (
-  <span className={`inline-block ${className}`}>🚨</span>
-);
-
-export const CalendarIcon = ({ className }: IconProps) => (
-  <span className={`inline-block ${className}`}>📅</span>
-);
-
-export const Code = ({ className }: IconProps) => (
-  <span className={`inline-block ${className}`}>💻</span>
-);
-
-export const Grid3X3 = ({ className }: IconProps) => (
-  <span className={`inline-block ${className}`}>⚏</span>
-);
-
-export const MessageCircle = ({ className }: IconProps) => (
-  <span className={`inline-block ${className}`}>💬</span>
-);
-
-export const Smartphone = ({ className }: IconProps) => (
-  <span className={`inline-block ${className}`}>📱</span>
-);
-
-export const Tablet = ({ className }: IconProps) => (
-  <span className={`inline-block ${className}`}>📱</span>
-);
-
-export const TestTube2 = ({ className }: IconProps) => (
-  <span className={`inline-block ${className}`}>🧪</span>
-);
