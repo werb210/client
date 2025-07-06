@@ -95,7 +95,7 @@ export default function Step4ApplicantInfoRoute() {
       
       // Submit application data to staff backend with C-6: Mobile network resilience
       const { fetchWithTimeout } = await import('@/lib/apiTimeout');
-      const response = await fetchWithTimeout(`${import.meta.env.VITE_API_BASE_URL}/public/applications`, {
+      const response = await fetchWithTimeout(`${import.meta.env.VITE_API_BASE_URL}/applications`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ export default function Step4ApplicantInfoRoute() {
       // 2. Initiate signing process
       console.log('🔐 Initiating signing process...');
       
-      const signingResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/initiate-signing`, {
+      const signingResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/initiate-signing`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
