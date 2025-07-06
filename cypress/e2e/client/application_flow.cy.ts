@@ -175,6 +175,90 @@ describe('Client Application Flow - Production', () => {
     });
   });
 
+  describe('Step 2: AI Product Recommendations', () => {
+    beforeEach(() => {
+      // Complete Step 1 to reach Step 2
+      cy.visit('/apply/step-1');
+      cy.get('[data-cy="lookingFor"]').click();
+      cy.contains('Business Capital').click();
+      cy.get('[data-cy="fundingAmount"]').click();
+      cy.contains('$100,000 to $250,000').click();
+      cy.get('[data-cy="businessLocation"]').click();
+      cy.contains('United States').click();
+      cy.get('[data-cy="salesHistory"]').click();
+      cy.contains('1 to 2 years').click();
+      cy.get('[data-cy="lastYearRevenue"]').click();
+      cy.contains('$250,000 to $500,000').click();
+      cy.get('[data-cy="averageMonthlyRevenue"]').click();
+      cy.contains('$20,000 to $50,000').click();
+      cy.get('[data-cy="accountsReceivable"]').click();
+      cy.contains('$10,000 to $50,000').click();
+      cy.get('[data-cy="fixedAssets"]').click();
+      cy.contains('$50,000 to $100,000').click();
+      cy.get('[data-cy="fundsPurpose"]').click();
+      cy.contains('Working Capital').click();
+      cy.get('[data-cy="next"]').click();
+      cy.url().should('include', '/apply/step-2');
+    });
+
+    it('should load AI recommendations with real lender data', () => {
+      // Intercept recommendations API
+      cy.intercept('GET', '**/api/loan-products/categories**').as('getRecommendations');
+      
+      // Wait for recommendations to load
+      cy.wait('@getRecommendations', { timeout: 15000 }).then((interception) => {
+        expect(interception.request.headers).to.have.property('authorization');
+        expect(interception.request.headers.authorization).to.include('Bearer');
+      });
+      
+      // Verify recommendation cards appear
+      cy.contains('Recommendations for You', { timeout: 15000 }).should('be.visible');
+      cy.get('[data-testid="product-category-card"]').should('have.length.greaterThan', 0);
+    });
+
+    it('should display lender product cards with match scores', () => {
+      // Wait for content to load
+      cy.contains('Recommendations', { timeout: 15000 }).should('be.visible');
+      
+      // Verify product cards have required elements
+      cy.get('[data-testid="product-category-card"]').first().within(() => {
+        cy.get('[data-testid="category-name"]').should('be.visible');
+        cy.get('[data-testid="match-percentage"]').should('be.visible');
+        cy.get('[data-testid="lender-count"]').should('be.visible');
+        cy.contains(/\d+%/).should('be.visible'); // Match percentage
+      });
+    });
+
+    it('should allow product selection and navigation to Step 3', () => {
+      // Wait for recommendations
+      cy.contains('Recommendations', { timeout: 15000 }).should('be.visible');
+      
+      // Select first available product category
+      cy.get('[data-testid="product-category-card"]').first().click();
+      
+      // Verify selection is highlighted
+      cy.get('[data-testid="product-category-card"]').first().should('have.class', 'selected');
+      
+      // Continue to Step 3
+      cy.get('button').contains('Continue').click();
+      cy.url().should('include', '/apply/step-3');
+    });
+
+    it('should prevent navigation without product selection', () => {
+      // Wait for page to load
+      cy.contains('Recommendations', { timeout: 15000 }).should('be.visible');
+      
+      // Try to continue without selection
+      cy.get('button').contains('Continue').should('be.disabled');
+      
+      // Select a product
+      cy.get('[data-testid="product-category-card"]').first().click();
+      
+      // Button should now be enabled
+      cy.get('button').contains('Continue').should('not.be.disabled');
+    });
+  });
+
   describe('Step 5: File Upload', () => {
     beforeEach(() => {
       cy.visit('/apply/step-5');
@@ -251,7 +335,7 @@ describe('Client Application Flow - Production', () => {
     });
   });
 
-  describe('SignNow Integration', () => {
+  describe('Step 6: SignNow Integration', () => {
     beforeEach(() => {
       cy.visit('/apply/step-6');
     });
@@ -275,6 +359,21 @@ describe('Client Application Flow - Production', () => {
       cy.get('iframe[src*="signnow"]').should('be.visible');
     });
 
+    it('should validate iframe URL and role configuration', () => {
+      // Start SignNow process
+      cy.get('[data-cy="finalize-application"]', { timeout: 10000 }).click();
+      
+      // Wait for iframe to load and verify URL structure
+      cy.get('[data-testid="signnow-iframe"]', { timeout: 15000 }).should('be.visible');
+      
+      // Check iframe src contains required parameters
+      cy.get('iframe[src*="signnow"]').should(($iframe) => {
+        const src = $iframe.attr('src');
+        expect(src).to.include('role=Borrower');
+        expect(src).to.match(/https:\/\/.+\.signnow\./);
+      });
+    });
+
     it('should handle SignNow iframe communication', () => {
       // Start SignNow process
       cy.get('[data-cy="finalize-application"]', { timeout: 10000 }).click();
@@ -296,6 +395,24 @@ describe('Client Application Flow - Production', () => {
       cy.contains('Continue').should('be.visible');
     });
 
+    it('should handle webhook confirmation and status updates', () => {
+      // Mock successful signing with webhook confirmation
+      cy.intercept('GET', '**/api/applications/*/signing-status', {
+        statusCode: 200,
+        body: { status: 'completed', signedAt: new Date().toISOString() }
+      }).as('signingStatus');
+      
+      // Start SignNow process
+      cy.get('[data-cy="finalize-application"]', { timeout: 10000 }).click();
+      
+      // Wait for status polling
+      cy.wait('@signingStatus', { timeout: 15000 });
+      
+      // Verify webhook confirmation handling
+      cy.contains('Document signing confirmed', { timeout: 10000 }).should('be.visible');
+      cy.get('button').contains('Continue to Step 7').should('be.visible');
+    });
+
     it('should handle SignNow errors and provide fallback options', () => {
       // Mock SignNow initialization failure
       cy.intercept('POST', '**/api/applications/*/complete', {
@@ -313,6 +430,124 @@ describe('Client Application Flow - Production', () => {
       
       // Verify fallback options are available
       cy.contains('Open in new window').should('be.visible');
+    });
+  });
+
+  describe('Step 7: Final Submission', () => {
+    beforeEach(() => {
+      cy.visit('/apply/step-7');
+    });
+
+    it('should display application summary and terms', () => {
+      // Verify step header
+      cy.contains('Step 7').should('be.visible');
+      cy.contains('Review & Submit').should('be.visible');
+      
+      // Verify application summary sections
+      cy.contains('Application Summary').should('be.visible');
+      cy.contains('Business Information').should('be.visible');
+      cy.contains('Funding Details').should('be.visible');
+      
+      // Verify terms and conditions
+      cy.contains('Terms & Conditions').should('be.visible');
+      cy.contains('Privacy Policy').should('be.visible');
+      
+      // Verify submit button is initially disabled
+      cy.get('button').contains('Submit Application').should('be.disabled');
+    });
+
+    it('should require both terms acceptance before submission', () => {
+      // Check only Terms & Conditions
+      cy.get('input[type="checkbox"]').first().check();
+      cy.get('button').contains('Submit Application').should('be.disabled');
+      
+      // Check Privacy Policy as well
+      cy.get('input[type="checkbox"]').last().check();
+      cy.get('button').contains('Submit Application').should('not.be.disabled');
+      
+      // Uncheck one to verify validation
+      cy.get('input[type="checkbox"]').first().uncheck();
+      cy.get('button').contains('Submit Application').should('be.disabled');
+    });
+
+    it('should submit application with proper authentication', () => {
+      // Intercept final submission API
+      cy.intercept('POST', '**/api/public/applications/*/submit').as('finalSubmission');
+      
+      // Accept terms
+      cy.get('input[type="checkbox"]').check();
+      
+      // Submit application
+      cy.get('button').contains('Submit Application').click();
+      
+      // Verify API call with authentication
+      cy.wait('@finalSubmission', { timeout: 30000 }).then((interception) => {
+        expect(interception.request.headers).to.have.property('authorization');
+        expect(interception.request.headers.authorization).to.include('Bearer');
+        expect(interception.request.headers.authorization).to.include(Cypress.env('VITE_CLIENT_APP_SHARED_TOKEN'));
+      });
+      
+      // Verify navigation to success page
+      cy.url().should('include', '/application-success');
+    });
+
+    it('should handle submission errors gracefully', () => {
+      // Mock submission failure
+      cy.intercept('POST', '**/api/public/applications/*/submit', {
+        statusCode: 500,
+        body: { error: 'Submission failed' }
+      }).as('submissionError');
+      
+      // Accept terms and submit
+      cy.get('input[type="checkbox"]').check();
+      cy.get('button').contains('Submit Application').click();
+      
+      // Verify error handling
+      cy.wait('@submissionError');
+      cy.contains('Submission failed').should('be.visible');
+      cy.contains('Try again').should('be.visible');
+      
+      // Verify form remains editable
+      cy.get('button').contains('Submit Application').should('not.be.disabled');
+    });
+  });
+
+  describe('Application Success Page', () => {
+    beforeEach(() => {
+      cy.visit('/application-success');
+    });
+
+    it('should display success confirmation and timeline', () => {
+      // Verify success messaging
+      cy.contains('Application Submitted Successfully').should('be.visible');
+      cy.contains('Thank you').should('be.visible');
+      
+      // Verify application reference ID
+      cy.contains('Application ID').should('be.visible');
+      cy.get('[data-testid="application-id"]').should('be.visible');
+      
+      // Verify timeline or next steps
+      cy.contains('What Happens Next').should('be.visible');
+      cy.contains('Review Process').should('be.visible');
+    });
+
+    it('should provide contact information and support', () => {
+      // Verify contact details
+      cy.contains('Contact Information').should('be.visible');
+      cy.contains('support@boreal.financial').should('be.visible');
+      
+      // Verify support options
+      cy.contains('Questions?').should('be.visible');
+      cy.get('a[href*="mailto"]').should('be.visible');
+    });
+
+    it('should offer next actions or dashboard link', () => {
+      // Verify action buttons
+      cy.contains('Track Application').should('be.visible').or('Return to Dashboard').should('be.visible');
+      
+      // Verify proper routing
+      cy.get('a, button').contains(/Track|Dashboard/).click();
+      cy.url().should('not.include', '/application-success');
     });
   });
 
