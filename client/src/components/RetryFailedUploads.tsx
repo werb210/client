@@ -12,7 +12,7 @@ import {
   CheckCircle, 
   X,
   FileText
-} from 'lucide-react';
+} from '@/lib/icons';
 import { uploadDocument } from '@/lib/api';
 
 interface FailedUpload {

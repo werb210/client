@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2 } from '@/lib/icons';
 
 interface AutoSaveIndicatorProps {
   status: 'saved' | 'saving' | 'error' | null;

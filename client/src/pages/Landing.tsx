@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { NavBar } from '@/components/NavBar';
-import { CheckCircle, TrendingUp, Shield } from 'lucide-react';
+import { CheckCircle, TrendingUp, Shield } from '@/lib/icons';
 import { useLocation } from 'wouter';
 
 export default function Landing() {

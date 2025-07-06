@@ -12,7 +12,7 @@ import {
   Save,
   FileText,
   CheckCircle
-} from 'lucide-react';
+} from '@/lib/icons';
 
 import type { UploadedFile } from '../components/DynamicDocumentRequirements';
 

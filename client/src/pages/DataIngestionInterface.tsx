@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Database, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+// Icons replaced with Unicode symbols to fix build timeout
 
 interface IngestionResult {
   success: number;
@@ -136,7 +136,7 @@ export default function DataIngestionInterface() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5" />
+                <span className="h-5 w-5 flex items-center justify-center">📤</span>
                 Live Data Input
               </CardTitle>
               <CardDescription>
@@ -170,7 +170,7 @@ export default function DataIngestionInterface() {
 
               {validationErrors.length > 0 && (
                 <Alert className={validationErrors[0].startsWith('✅') ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
-                  <AlertTriangle className="h-4 w-4" />
+                  <span className="h-4 w-4 flex items-center justify-center">⚠️</span>
                   <AlertDescription>
                     <div className="space-y-1">
                       {validationErrors.map((error, idx) => (
@@ -189,7 +189,7 @@ export default function DataIngestionInterface() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
+                <span className="h-5 w-5 flex items-center justify-center">🗄️</span>
                 V2 Schema Example
               </CardTitle>
               <CardDescription>
@@ -223,9 +223,9 @@ export default function DataIngestionInterface() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 {result.failed === 0 ? (
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="h-5 w-5 flex items-center justify-center text-green-600">✅</span>
                 ) : (
-                  <XCircle className="h-5 w-5 text-red-600" />
+                  <span className="h-5 w-5 flex items-center justify-center text-red-600">❌</span>
                 )}
                 Ingestion Results
               </CardTitle>
@@ -257,7 +257,7 @@ export default function DataIngestionInterface() {
 
               {result.success > 0 && (
                 <Alert className="mt-4 border-green-200 bg-green-50">
-                  <CheckCircle className="h-4 w-4" />
+                  <span className="h-4 w-4 flex items-center justify-center">✅</span>
                   <AlertDescription className="text-green-700">
                     Live data ingestion completed! The client application will now use your new data with the V2 schema.
                   </AlertDescription>

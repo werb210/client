@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { useApplication } from '@/context/ApplicationContext';
 import { Document } from '@shared/schema';
-import { File, Trash2 } from 'lucide-react';
+import { File, Trash2 } from '@/lib/icons';
 
 interface DocumentStepProps {
   onNext: () => void;

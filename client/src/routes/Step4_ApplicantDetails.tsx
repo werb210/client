@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, ArrowLeft, Save, User, Home, Calendar } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Save, User, Home, Calendar } from '@/lib/icons';
 
 const Step4Schema = z.object({
   // Personal Information

@@ -15,7 +15,7 @@ import {
   Loader2,
   AlertTriangle,
   Eye
-} from 'lucide-react';
+} from '@/lib/icons';
 
 type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'complete' | 'completed' | 'error';
 

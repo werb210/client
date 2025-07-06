@@ -16,7 +16,7 @@ import {
   Clock,
   Shield,
   Users
-} from 'lucide-react';
+} from '@/lib/icons';
 import { useToast } from '@/hooks/use-toast';
 
 /**

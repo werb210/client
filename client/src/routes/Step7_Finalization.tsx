@@ -17,7 +17,7 @@ import {
   Loader2,
   AlertTriangle,
   ExternalLink
-} from 'lucide-react';
+} from '@/lib/icons';
 
 type FinalizationStatus = 'idle' | 'finalizing' | 'complete' | 'error';
 

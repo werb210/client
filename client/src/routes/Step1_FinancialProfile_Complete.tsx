@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from '@/lib/icons';
 import { markApplicationStarted } from '@/lib/visitFlags';
 
 // Currency formatting utilities

@@ -67,7 +67,6 @@
     "input-otp": "^1.4.2",
     "jsdom": "^26.1.0",
     "libphonenumber-js": "^1.12.9",
-    "lucide-react": "^0.453.0",
     "memoizee": "^0.4.17",
     "memorystore": "^1.6.7",
     "mochawesome": "^7.1.3",

@@ -14,7 +14,7 @@ import {
   Search,
   Filter,
   Globe
-} from 'lucide-react';
+} from '@/lib/icons';
 
 interface LenderProduct {
   id: string;

@@ -7,7 +7,7 @@ import { useApplication } from '@/context/ApplicationContext';
 import { useToast } from '@/hooks/use-toast';
 import * as api from '@/lib/api';
 
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle } from '@/lib/icons';
 
 interface ReviewStepProps {
   onBack: () => void;

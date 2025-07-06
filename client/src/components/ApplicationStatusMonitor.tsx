@@ -14,7 +14,7 @@ import {
   PenTool,
   Send,
   Eye
-} from 'lucide-react';
+} from '@/lib/icons';
 import { getUserApplications } from '@/lib/api';
 
 interface ApplicationStatus {

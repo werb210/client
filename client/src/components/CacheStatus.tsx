@@ -1,6 +1,6 @@
 import { useLocalLenderStats } from '@/hooks/useLocalLenders';
 import { Badge } from '@/components/ui/badge';
-import { Server, CheckCircle, AlertCircle, Database } from 'lucide-react';
+import { Server, CheckCircle, AlertCircle, Database } from '@/lib/icons';
 
 export function CacheStatus() {
   const { data: stats, isLoading, error } = useLocalLenderStats();

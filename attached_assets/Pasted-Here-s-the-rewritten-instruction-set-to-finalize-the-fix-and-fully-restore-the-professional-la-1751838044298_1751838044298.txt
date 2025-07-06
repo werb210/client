@@ -1,0 +1,89 @@
+Here’s the **rewritten instruction set** to finalize the fix and fully restore the **professional landing page** on the **Boreal Financial Client Portal**. This assumes the routing and server setup are already correct, and only the build blocker (caused by `lucide-react`) remains.
+
+---
+
+## ✅ Final Instruction Set: Restore Landing Page & Build Completion
+
+### 🛠️ GOAL
+
+* Eliminate all remaining `lucide-react` icon imports
+* Generate a fresh static bundle that includes the correct route to `LandingPage.tsx`
+* Serve the updated bundle using the existing production server (`FORCE_PRODUCTION=true`)
+
+---
+
+### 🔁 Step 1: Replace `lucide-react` in `DataIngestionInterface.tsx`
+
+**File:** `client/src/components/DataIngestionInterface.tsx`
+**Action:**
+
+* Find and replace **all icon components** imported from `lucide-react` with Unicode or text equivalents
+
+#### Example:
+
+```tsx
+// ❌ REMOVE
+import { FileText, Upload, Check } from "lucide-react";
+
+// ✅ REPLACE with Unicode equivalents in JSX
+<span>📄</span>   // instead of <FileText />
+<span>📤</span>   // instead of <Upload />
+<span>✅</span>   // instead of <Check />
+```
+
+Then **delete the import** line entirely once all usages are removed.
+
+---
+
+### 🧹 Step 2: Confirm All `lucide-react` Imports Are Gone
+
+From project root:
+
+```bash
+grep -r "lucide-react" client/src
+```
+
+✅ You should see **no output** if all imports have been removed.
+
+If anything shows up:
+
+* Repeat Step 1 for those remaining files
+
+---
+
+### ⚙️ Step 3: Build the Application
+
+From root:
+
+```bash
+timeout 120 npm run build
+```
+
+✅ If the icon removals are complete, the build should finish within 30–60 seconds.
+
+---
+
+### 🚀 Step 4: Verify the Deployment
+
+Once the build completes:
+
+1. Navigate to the deployed URL (e.g. `https://clientportal.boreal.financial`)
+2. You should now see the correct **“Professional Business Financing Solutions”** landing page
+3. Click **“Start Your Application”** – ensure it routes to `/apply/step-1`
+4. Proceed through the full 7-step workflow to confirm
+
+---
+
+### ✅ Recap of Expected Outcome
+
+| Element                                  | Should Now Be Working |
+| ---------------------------------------- | --------------------- |
+| Landing page displays correctly          | ✅                     |
+| No `lucide-react` imports remain         | ✅                     |
+| Build completes successfully             | ✅                     |
+| Static bundle is served with new routing | ✅                     |
+| 7-step workflow loads fully              | ✅                     |
+
+---
+
+Let me know once you've completed these steps or if you want me to verify specific files before building.

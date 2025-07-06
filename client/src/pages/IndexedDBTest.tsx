@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { RefreshCw, Database, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { RefreshCw, Database, Clock, CheckCircle, AlertCircle } from '@/lib/icons';
 
 export default function IndexedDBTest() {
   const { data: products, isLoading, isError, error, isInitialized } = useLenderProducts();

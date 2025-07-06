@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Building2, DollarSign, TrendingUp } from 'lucide-react';
+import { Building2, DollarSign, TrendingUp } from '@/lib/icons';
 
 interface Step1Props {
   defaultValues?: Partial<ApplicationForm>;
