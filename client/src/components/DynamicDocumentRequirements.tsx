@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle, FileText, AlertCircle, RefreshCcw, Upload, X } from 'lucide-react';
+// Icons replaced with Unicode symbols to fix build timeout
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -61,7 +61,7 @@ function UploadedFileItem({
   return (
     <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded border">
       <div className="flex items-center space-x-3">
-        <FileText className="w-4 h-4 text-gray-500" />
+        <span className="w-4 h-4 text-gray-500 flex items-center justify-center">📄</span>
         <span className="text-sm font-medium text-gray-900">{file.name}</span>
         <span className="text-xs text-gray-500">({formatFileSize(file.size)})</span>
         {file.status === "uploading" && (
@@ -70,17 +70,17 @@ function UploadedFileItem({
           </div>
         )}
         {file.status === "completed" && (
-          <CheckCircle className="w-4 h-4 text-green-500" />
+          <span className="w-4 h-4 text-green-500 flex items-center justify-center">✅</span>
         )}
         {file.status === "error" && (
-          <AlertCircle className="w-4 h-4 text-red-500" />
+          <span className="w-4 h-4 text-red-500 flex items-center justify-center">❌</span>
         )}
       </div>
       <button
         onClick={() => onRemove(file.id)}
         className="text-red-500 hover:text-red-700 text-sm font-medium transition-colors p-1"
       >
-        <X className="w-4 h-4" />
+        <span className="w-4 h-4 flex items-center justify-center">✖</span>
       </button>
     </div>
   );
@@ -202,7 +202,7 @@ function UnifiedDocumentUploadCard({
               <h3 className="text-lg font-semibold text-gray-900">{doc.label}</h3>
               {isComplete && (
                 <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="w-4 h-4 text-green-600 flex items-center justify-center">✓</span>
                 </div>
               )}
             </div>
@@ -245,7 +245,7 @@ function UnifiedDocumentUploadCard({
           />
           <label htmlFor={`upload-${cardIndex}`} className="cursor-pointer">
             <div className="space-y-2">
-              <Upload className="w-8 h-8 mx-auto text-gray-400" />
+              <div className="w-8 h-8 mx-auto text-gray-400 flex items-center justify-center text-2xl">📤</div>
               <div>
                 <span className="text-sm font-medium text-blue-600 hover:text-blue-500">Choose files</span>
                 <span className="text-sm text-gray-500"> or drag and drop</span>
@@ -347,11 +347,11 @@ export function DynamicDocumentRequirements({
   if (error) {
     return (
       <div className="text-center py-8">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <div className="w-12 h-12 text-red-500 mx-auto mb-4 flex items-center justify-center text-3xl">❌</div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to Load Document Requirements</h3>
         <p className="text-gray-600 mb-4">We're having trouble loading the specific document requirements for your loan type.</p>
         <Button onClick={() => window.location.reload()} variant="outline">
-          <RefreshCcw className="w-4 h-4 mr-2" />
+          <span className="w-4 h-4 mr-2">🔄</span>
           Try Again
         </Button>
       </div>
