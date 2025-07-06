@@ -138,8 +138,8 @@ export function MainLayout() {
       {/* Diagnostic Pages */}
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
       
-      {/* Default Route - Interactive Portal */}
-      <Route path="/" component={Portal} />
+      {/* Default Route - Professional Landing Page */}
+      <Route path="/" component={LandingPage} />
       <Route component={NotFound} />
     </Switch>
   );

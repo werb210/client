@@ -84,7 +84,7 @@ function startProductionServer() {
 }
 
 // Force production mode to bypass Vite file system restrictions
-// TESTING: Re-enable FORCE_PRODUCTION for stability
+// TESTING: Re-enable for stability, need to rebuild with LandingPage routing
 process.env.FORCE_PRODUCTION = 'true';
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.FORCE_PRODUCTION === 'true';
