@@ -17,10 +17,10 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Use development environment for Vite dev server
-process.env.NODE_ENV = 'development';
-console.log(`🚀 Running in ${cfg.nodeEnv.toUpperCase()} mode`);
-console.log('Environment:', cfg.nodeEnv);
+// Determine actual environment from NODE_ENV, don't override
+const isProduction = process.env.NODE_ENV === 'production';
+console.log(`🚀 Running in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
+console.log('Environment:', process.env.NODE_ENV);
 console.log('Staff API URL:', cfg.staffApiUrl);
 
 // Production-ready CORS configuration
@@ -538,9 +538,9 @@ app.use((req, res, next) => {
   const httpServer = createServer(app);
 
   // Configure static file serving and SPA routing
-  const isProduction = false; // Force development mode to use Vite dev server
+  const isProductionBuild = process.env.NODE_ENV === 'production';
   
-  if (isProduction) {
+  if (isProductionBuild) {
     // Production: serve built files
     const clientBuildPath = join(__dirname, '../dist/public');
     console.log(`[STATIC] Serving client files from: ${clientBuildPath}`);
