@@ -15,7 +15,7 @@ if [ ! -d "node_modules" ]; then
 fi
 
 # Set environment variables
-export VITE_CLIENT_APP_SHARED_TOKEN="83f8f007b62dfe94e4e4def10b2f8958c028de8abaa047e1376d3b9c1f3c6256"
+export VITE_CLIENT_APP_SHARED_TOKEN="ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042"
 
 case "${1:-run}" in
     "open")
