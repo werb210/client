@@ -19,11 +19,89 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Use development mode for Vite HMR
-const isProduction = process.env.NODE_ENV === 'production';
+// FORCE_PRODUCTION server function - completely bypasses Vite
+function startProductionServer() {
+  console.log('[PRODUCTION] Starting static bundle server - NO VITE, NO HMR');
+  
+  // Serve static files from dist/public
+  app.use(express.static(path.join(__dirname, '../dist/public')));
+  
+  // API routes for staff backend communication
+  app.use('/api/lenders', lendersRouter);
+  app.use('/api/local-lenders', localLendersRouter);
+  app.use('/api/loan-products/categories', loanProductCategoriesRouter);
+  app.use('/api/loan-products/required-documents', documentRequirementsRouter);
+  app.use('/api/data-ingestion', dataIngestionRouter);
+  
+  // Production proxy for staff backend API calls
+  app.use('/api/public/*', (req: Request, res: Response) => {
+    const staffUrl = `${cfg.staffApiUrl}${req.path}`;
+    console.log(`[PROXY] ${req.method} ${staffUrl}`);
+    
+    fetch(staffUrl, {
+      method: req.method,
+      headers: {
+        'Authorization': `Bearer ${cfg.clientToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined
+    })
+    .then(response => response.json())
+    .then(data => res.json(data))
+    .catch(error => {
+      console.error(`[PROXY] Error:`, error);
+      res.status(500).json({ error: 'Staff backend unavailable' });
+    });
+  });
+
+  // WebSocket server for real-time updates
+  const httpServer = createServer(app);
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+  wss.on('connection', (ws) => {
+    console.log('[WS] Client connected');
+    ws.on('close', () => console.log('[WS] Client disconnected'));
+  });
+
+  // Fallback route for React Router (SPA) - MUST BE LAST
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/public/index.html'));
+  });
+
+  // Start server on port 5000
+  const port = 5000;
+  httpServer.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    console.log(`[PRODUCTION] Static bundle server running on port ${port}`);
+    console.log(`[PRODUCTION] React app serving from /dist/public`);
+    console.log(`[PRODUCTION] API proxy active for staff backend calls`);
+    console.log(`[PRODUCTION] WebSocket available at ws://localhost:${port}/api/ws`);
+    console.log(`[PRODUCTION] No Vite, No HMR - Pure static serving`);
+  });
+}
+
+// Force production mode to bypass Vite file system restrictions
+// TESTING: Hardcode FORCE_PRODUCTION for immediate testing
+process.env.FORCE_PRODUCTION = 'true';
+
+const isProduction = process.env.NODE_ENV === 'production' || process.env.FORCE_PRODUCTION === 'true';
 console.log(`🚀 Running in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Staff API URL:', cfg.staffApiUrl);
+console.log('FORCE_PRODUCTION:', process.env.FORCE_PRODUCTION);
+
+// PERMANENT FIX: Complete FORCE_PRODUCTION execution path
+if (process.env.FORCE_PRODUCTION === 'true') {
+  console.log('[BOOT] FORCE_PRODUCTION enabled — serving static /dist bundle');
+  console.log('[BOOT] Completely bypassing Vite development server and HMR');
+  
+  // Start static server execution path
+  startProductionServer();
+  // Exit this scope to prevent the rest of the code from running
+} else {
 
 // Production-ready CORS configuration
 app.use((req, res, next) => {
@@ -49,6 +127,24 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Handle WebSocket token authentication for Vite HMR
+app.use('/', (req, res, next) => {
+  // Allow WebSocket upgrade requests with token
+  if (req.headers.upgrade === 'websocket' && req.url.includes('token=')) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Upgrade, Connection, Sec-WebSocket-Key, Sec-WebSocket-Version, Sec-WebSocket-Extensions');
+    res.header('Connection', 'Upgrade');
+    res.header('Upgrade', 'websocket');
+  }
+  
+  // For development resources, allow access
+  if (req.url.includes('src/') || req.url.includes('@vite') || req.url.includes('node_modules')) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Cache-Control', 'no-cache');
+  }
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -82,6 +178,60 @@ app.use((req, res, next) => {
 
 (async () => {
   // CORS already configured above with production-ready settings
+
+  // Simple test page for immediate verification
+  app.get('/test', (req, res) => {
+    res.send(`
+      <html>
+        <head><title>Test Page</title></head>
+        <body>
+          <h1>🚀 Server Working</h1>
+          <p>Time: ${new Date().toISOString()}</p>
+          <p>Port: 5000</p>
+          <p>Mode: ${isProduction ? 'Production' : 'Development'}</p>
+          <a href="/">Go to React App</a> | <a href="/status">Full Status</a>
+        </body>
+      </html>
+    `);
+  });
+
+  // Status page for direct server access (bypassing React)
+  app.get('/status', (req, res) => {
+    res.send(`
+      <html>
+        <head><title>Boreal Financial Client Portal - Status</title></head>
+        <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px;">
+          <h1>🚀 Boreal Financial Client Portal</h1>
+          <h2>Server Status: Active</h2>
+          <p><strong>Server Mode:</strong> ${isProduction ? 'Production' : 'Development'}</p>
+          <p><strong>Environment:</strong> ${process.env.NODE_ENV}</p>
+          <p><strong>Staff API URL:</strong> ${cfg.staffApiUrl}</p>
+          <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+          
+          <h3>📋 System Information</h3>
+          <ul>
+            <li>Express server running on port 5000</li>
+            <li>WebSocket server available at /api/ws</li>
+            <li>API proxy configured for staff backend</li>
+            <li>Bearer token authentication active</li>
+          </ul>
+          
+          <h3>🔗 Available Endpoints</h3>
+          <ul>
+            <li><a href="/api/health">/api/health</a> - Health check</li>
+            <li><a href="/api/public/lenders">/api/public/lenders</a> - Lender products API</li>
+            <li><a href="/">/</a> - React application (main portal)</li>
+          </ul>
+          
+          <div style="margin-top: 30px; padding: 15px; background: #f0f8ff; border-left: 4px solid #0066cc;">
+            <h4>🔧 Development Notes</h4>
+            <p>If the main React application shows a blank page, this status page confirms the server infrastructure is working correctly.</p>
+            <p>WebSocket HMR connectivity issues may be resolved by refreshing the main application.</p>
+          </div>
+        </body>
+      </html>
+    `);
+  });
 
   // Health check endpoint for monitoring
   app.get('/api/health', (req, res) => {
@@ -541,7 +691,12 @@ app.use((req, res, next) => {
 
   // Setup Vite middleware to serve React application
   try {
-    if (isProduction) {
+    // FORCE_PRODUCTION completely bypasses Vite - no HMR, no WebSocket issues
+    if (process.env.FORCE_PRODUCTION === 'true') {
+      console.log('[BOOT] FORCE_PRODUCTION: Skipping Vite entirely, serving static dist/');
+      serveStatic(app);
+      log("Static bundle serving enabled - no Vite/HMR");
+    } else if (isProduction) {
       serveStatic(app);
       log("Serving static files in production mode");
     } else {
@@ -556,7 +711,9 @@ app.use((req, res, next) => {
   // Add WebSocket server for real-time updates (use different path to avoid Vite HMR conflict)
   const wss = new WebSocketServer({ 
     server: httpServer, 
-    path: '/api/ws' 
+    path: '/api/ws',
+    // Allow any connection to avoid blocking Vite HMR
+    verifyClient: () => true
   });
   
   wss.on('connection', (ws) => {
@@ -606,3 +763,6 @@ app.use((req, res, next) => {
     log(`WebSocket server available at ws://localhost:${port}/api/ws`);
   });
 })();
+
+// Close the else block that started at line 40
+}

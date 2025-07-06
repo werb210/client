@@ -1,0 +1,134 @@
+Here’s what’s happening in plain terms — and how to **permanently stabilize the client portal React app on Replit**, bypassing all Vite/HMR/WebSocket token issues.
+
+---
+
+## ✅ Root Cause (Confirmed)
+
+You're in **development mode** because `NODE_ENV=development`, even though `FORCE_PRODUCTION=true` is set.
+This causes:
+
+* **Vite HMR** (Hot Module Replacement) to spin up.
+* It tries to use **WebSocket connections with a token query param**, like:
+  `ws://127.0.0.1:5000/?token=...`
+* Your **custom Express server doesn’t handle this format**, resulting in 403s.
+* These errors interrupt the HMR lifecycle and break rendering.
+
+So although React technically loads (we see `[STARTUP] Sync system disabled`), the browser **never paints a usable UI** due to startup errors and failed asset loads.
+
+---
+
+## 🔥 Stop It Permanently (One-Time Fix)
+
+You need to:
+
+### 1. ❌ Completely disable Vite dev/HMR (skip it entirely)
+
+This means:
+
+* Don’t call `createViteServer()` or anything in `vite.ts`
+* Never allow HMR code to run (even if NODE\_ENV is `development`)
+* Always serve from the `/dist` static bundle
+
+### ✅ Do this in `server/index.ts`:
+
+**At the top of the file** (before Vite logic), insert:
+
+```ts
+if (process.env.FORCE_PRODUCTION === 'true') {
+  console.log('[BOOT] FORCE_PRODUCTION enabled — serving static /dist bundle');
+  app.use(express.static(path.join(__dirname, '../dist')));
+  app.get('*', (_req, res) =>
+    res.sendFile(path.join(__dirname, '../dist/index.html')));
+  return start(); // call your app.listen here
+}
+```
+
+Then **comment out or delete all Vite logic below**:
+
+```ts
+// DO NOT call createViteServer()
+// DO NOT run vite middleware
+// DO NOT try to run viteNodeApp()
+```
+
+Now, even if NODE\_ENV is `development`, the app will skip HMR and just serve the final build.
+
+---
+
+## 🛠 How to Build & Upload the Bundle
+
+You must **build the React app locally** (not on Replit) because:
+
+* Replit’s CPU is too slow
+* Lucide React icons (1,400+) choke during build
+
+### A. Run locally or on GitHub Actions:
+
+```bash
+npm install
+npm run build
+```
+
+This will generate a `dist/` folder.
+
+### B. Drag-and-drop the `dist/` folder into Replit root
+
+Place it at `/home/runner/<client-app>/dist`.
+
+---
+
+## 🧪 Sanity Check: Does It Work?
+
+1. In the Replit **Secrets** tab:
+
+   * Set `FORCE_PRODUCTION = true`
+
+2. Click **Run**
+
+3. Console output should say:
+
+```
+[BOOT] FORCE_PRODUCTION enabled — serving static /dist bundle
+```
+
+4. Visit [https://clientportal.boreal.financial](https://clientportal.boreal.financial)
+
+   * You should see the working React UI
+   * Console **no longer shows** `[vite] connected` or `[vite] polling`
+   * No `403` errors or WebSocket warnings
+
+---
+
+## 🔒 Bonus: Fail-safe Error Handling
+
+Update your `client/src/main.tsx` startup so bad API calls don’t crash rendering:
+
+```ts
+syncLenders().catch(err => {
+  console.warn('[SYNC] Failed to fetch lenders, using fallback.', err);
+  queryClient.setQueryData('lender-products', []);
+});
+```
+
+---
+
+## ✅ Final Outcome
+
+| Area              | Status                  |
+| ----------------- | ----------------------- |
+| Vite/HMR          | 🔒 Disabled permanently |
+| WebSocket Errors  | ✅ Eliminated            |
+| React UI          | ✅ Stable and visible    |
+| Build strategy    | ✅ External-only         |
+| Token auth errors | ✅ Gone                  |
+
+---
+
+## ⏭ Next Recommended Actions
+
+* ✅ Staff app is stable — no changes needed.
+* ✅ Client now serves a stable UI — finalize upload scripts.
+* 🧪 Run **Cypress tests** to verify flow from Step 1 → Step 7.
+* 🔁 When changing the UI: rebuild locally and re-upload `dist/`.
+
+Let me know if you’d like a GitHub Action or shell script to automate bundle build + Replit sync.
