@@ -63,9 +63,22 @@ function startProductionServer() {
     ws.on('close', () => console.log('[WS] Client disconnected'));
   });
 
+  // Debug route for testing
+  app.get('/debug', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'debug-console-test.html'));
+  });
+
+  // Debug React app with error handling
+  app.get('/debug-react', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/index-debug.html'));
+  });
+
+  // Static files from dist/public
+  app.use(express.static(path.join(__dirname, 'public')));
+
   // Fallback route for React Router (SPA) - MUST BE LAST
   app.get('*', (_req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/public/index.html'));
+    res.sendFile(path.join(__dirname, 'public/index.html'));
   });
 
   // Start server on port 5000
@@ -84,7 +97,7 @@ function startProductionServer() {
 }
 
 // Force production mode to bypass Vite file system restrictions
-// TESTING: Re-enable for stability, need to rebuild with LandingPage routing
+// RE-ENABLED: Development server unstable, return to production
 process.env.FORCE_PRODUCTION = 'true';
 
 const isProduction = process.env.NODE_ENV === 'production' || process.env.FORCE_PRODUCTION === 'true';
