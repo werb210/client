@@ -173,14 +173,18 @@ export default function Step4ApplicantInfoRoute() {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       alert(`We're experiencing a delay reaching our secure servers. Your data is safe locally and will retry shortly.\n\nTechnical details: ${errorMessage}`);
       
-      // For testing mode, create fallback application ID
-      const fallbackId = `app_fallback_${Date.now()}`;
-      dispatch({
-        type: 'SET_APPLICATION_ID',
-        payload: fallbackId
-      });
-      localStorage.setItem('appId', fallbackId);
-      console.log('💾 Fallback application ID created:', fallbackId);
+      // Handle API failure - show error without creating fallback ID
+      console.error('❌ Application submission failed - production backend may be unavailable');
+      
+      // Show retry button instead of fallback ID
+      if (confirm('Application submission failed. Would you like to retry now?')) {
+        // Retry the submission
+        return handleContinue();
+      } else {
+        // User chose not to retry - they can try again later
+        console.log('ℹ️ User chose not to retry. Application can be submitted later.');
+        return;
+      }
     }
     
     // Navigate to Step 5 (Document Upload)
