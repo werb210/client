@@ -40,9 +40,9 @@ export default function LandingPage() {
     }
     
     try {
-      // Extract maximum amounts from products (API structure confirmed: amountRange.max)
+      // Extract maximum amounts from products (API structure: amountMax)
       const amounts = products
-        .map((p: any) => p.amountRange?.max || 0)
+        .map((p: any) => p.amountMax || 0)
         .filter((amount: any) => amount > 0);
       
       if (amounts.length === 0) return "$1M+";
