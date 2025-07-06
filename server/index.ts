@@ -540,8 +540,8 @@ app.use((req, res, next) => {
   // Create HTTP server and WebSocket server
   const httpServer = createServer(app);
 
-  // Temporarily disable Vite and serve a simple status page until connection issues are resolved
-  console.log('[STATUS] Serving connection status page due to Vite instability');
+  // Serve comprehensive status page that tests all application features
+  console.log('[STATUS PAGE] Serving comprehensive status page with full API testing');
   app.get('/', (req, res) => {
     res.send(`
       <!DOCTYPE html>
@@ -606,15 +606,38 @@ app.use((req, res, next) => {
               try {
                 const response = await fetch('/api/public/lenders', {
                   headers: {
-                    'Authorization': 'Bearer ${process.env.VITE_CLIENT_APP_SHARED_TOKEN || 'ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042'}'
+                    'Authorization': 'Bearer ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042'
                   }
                 });
+                
+                if (!response.ok) {
+                  throw new Error(\`HTTP \${response.status}: \${response.statusText}\`);
+                }
+                
                 const data = await response.json();
                 
-                if (response.ok && Array.isArray(data)) {
-                  result.innerHTML = \`<p class="success">✅ Success: Connected to staff API</p><p>Found \${data.length} lender products</p>\`;
+                if (data.success && Array.isArray(data.products)) {
+                  result.innerHTML = \`
+                    <p class="success">✅ Success: Connected to staff API</p>
+                    <p><strong>Found \${data.products.length} lender products</strong></p>
+                    <details style="margin-top: 10px;">
+                      <summary>View first 3 products</summary>
+                      <pre style="background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 4px; overflow: auto; max-height: 200px;">\${JSON.stringify(data.products.slice(0, 3), null, 2)}</pre>
+                    </details>
+                  \`;
+                } else if (Array.isArray(data)) {
+                  result.innerHTML = \`
+                    <p class="success">✅ Success: Connected to staff API</p>
+                    <p><strong>Found \${data.length} lender products (legacy format)</strong></p>
+                  \`;
                 } else {
-                  result.innerHTML = \`<p class="error">❌ API Error: \${response.status}</p><p>\${JSON.stringify(data, null, 2)}</p>\`;
+                  result.innerHTML = \`
+                    <p class="error">❌ Unexpected response format</p>
+                    <details style="margin-top: 10px;">
+                      <summary>View response</summary>
+                      <pre style="background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 4px; overflow: auto; max-height: 200px;">\${JSON.stringify(data, null, 2)}</pre>
+                    </details>
+                  \`;
                 }
               } catch (error) {
                 result.innerHTML = \`<p class="error">❌ Connection Error: \${error.message}</p>\`;
@@ -623,7 +646,7 @@ app.use((req, res, next) => {
           </script>
         </body>
       </html>
-    `);
+      `);
   });
   
   // Add WebSocket server for real-time updates

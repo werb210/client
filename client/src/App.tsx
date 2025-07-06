@@ -7,9 +7,9 @@
  * ✅ V1 Components Used: SideBySideApplication, Step routes
  * ❌ V2 Legacy Archived: ComprehensiveApplication, individual Step forms
  */
-import { AppShell } from "@/v2-design-system/AppShell";
-import { MainLayout } from "@/v2-design-system/MainLayout";
-import { WebSocketListener } from "@/components/WebSocketListener";
+import { AppShell } from "./v2-design-system/AppShell";
+import { MainLayout } from "./v2-design-system/MainLayout";
+import { WebSocketListener } from "./components/WebSocketListener";
 
 function App() {
   return (
