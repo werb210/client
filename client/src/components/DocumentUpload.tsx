@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, File, X, Check, AlertCircle } from 'lucide-react';
+import { Upload, File, X, Check, AlertCircle } from '@/lib/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as api from '@/lib/api';
 

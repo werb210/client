@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { triggerManualSync, getSchedulerStatus } from '@/jobs/scheduler';
 import { getSyncStats } from '@/db/lenderProducts';
-import { RefreshCw, Clock, Database, CheckCircle, XCircle } from 'lucide-react';
+import { RefreshCw, Clock, Database, CheckCircle, XCircle } from '@/lib/icons';
 
 export default function SyncMonitor() {
   const [syncStats, setSyncStats] = useState<any>(null);

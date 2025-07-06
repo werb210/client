@@ -14,7 +14,7 @@ interface LenderProduct {
 }
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Database, CheckCircle, Play } from 'lucide-react';
+import { AlertCircle, Database, CheckCircle, Play } from '@/lib/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 

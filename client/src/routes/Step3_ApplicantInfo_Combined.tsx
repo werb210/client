@@ -21,7 +21,7 @@ import {
   Calendar,
   Users,
   DollarSign
-} from 'lucide-react';
+} from '@/lib/icons';
 
 // Step 3 Schema for combined business + applicant info
 const step3Schema = z.object({

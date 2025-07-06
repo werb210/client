@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Building2, DollarSign, MapPin, Calendar } from 'lucide-react';
+import { Loader2, Building2, DollarSign, MapPin, Calendar } from '@/lib/icons';
 import { fetchLenderProducts, type LenderProduct } from '@/api/lenderProducts';
 
 // Extract unique categories and count products per category

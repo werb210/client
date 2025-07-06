@@ -248,6 +248,14 @@ export const PenTool = ({ className }: IconProps) => (
   <span className={`inline-block ${className}`}>✍️</span>
 );
 
+export const Settings = ({ className }: IconProps) => (
+  <span className={`inline-block ${className}`}>⚙️</span>
+);
+
+export const TestTube2 = ({ className }: IconProps) => (
+  <span className={`inline-block ${className}`}>🧪</span>
+);
+
 export const Send = ({ className }: IconProps) => (
   <span className={`inline-block ${className}`}>📤</span>
 );
@@ -342,4 +350,11 @@ export const ExternalLink = ({ className }: IconProps) => (
 
 export const Save = ({ className }: IconProps) => (
   <span className={`inline-block ${className}`}>💾</span>
+);
+export const Filter = ({ className }: IconProps) => (
+  <span className={`inline-block ${className}`}>🔽</span>
+);
+
+export const Globe = ({ className }: IconProps) => (
+  <span className={`inline-block ${className}`}>🌍</span>
 );
