@@ -4,6 +4,7 @@ import { dirname, join } from "path";
 import { createServer } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupVite, serveStatic, log } from "./vite";
+import cfg from "./config";
 import lendersRouter from "./routes/lenders";
 import localLendersRouter from "./routes/localLenders";
 import loanProductCategoriesRouter from "./routes/loanProductCategories";
@@ -18,14 +19,27 @@ const app = express();
 
 // Use development environment for Vite dev server
 process.env.NODE_ENV = 'development';
-console.log('🚀 Running in DEVELOPMENT mode');
-console.log('Environment:', process.env.NODE_ENV);
+console.log(`🚀 Running in ${cfg.nodeEnv.toUpperCase()} mode`);
+console.log('Environment:', cfg.nodeEnv);
+console.log('Staff API URL:', cfg.staffApiUrl);
 
-// Add CORS and security headers to fix 403 errors
+// Production-ready CORS configuration
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  const allowedOrigins = cfg.allowedOrigins;
+  
+  // Allow any origin from our allowed list
+  if (allowedOrigins.some(allowed => 
+    allowed === '*' || 
+    origin === allowed || 
+    (allowed.includes('*') && origin?.includes(allowed.replace('*.', '')))
+  )) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
   res.header('X-Frame-Options', 'DENY');
   res.header('X-Content-Type-Options', 'nosniff');
   next();
@@ -65,19 +79,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Configure CORS and security headers to prevent 403 errors
-  app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-      res.sendStatus(200);
-    } else {
-      next();
-    }
-  });
+  // CORS already configured above with production-ready settings
 
   // Health check endpoint for monitoring
   app.get('/api/health', (req, res) => {
@@ -91,7 +93,7 @@ app.use((req, res, next) => {
   // API Proxy to Staff Backend with Development Fallback
   app.get('/api/public/lenders', async (req, res) => {
     try {
-      const staffApiUrl = process.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api';
+      const staffApiUrl = cfg.staffApiUrl + '/api';
       console.log(`[PROXY] Attempting to fetch from staff API: ${staffApiUrl}/public/lenders`);
       console.log(`[PROXY] Note: Staff backend currently in development mode`);
       
@@ -99,7 +101,8 @@ app.use((req, res, next) => {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
         }
       });
       
