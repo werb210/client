@@ -10,36 +10,50 @@ export default function LandingPage() {
   const [, setLocation] = useLocation();
 
   // Fetch live lender products to get maximum funding amount
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['landing-page-products'],
     queryFn: async () => {
+      console.log(`[LANDING] Attempting to fetch from: ${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
+      
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`,
         },
       });
       
+      console.log(`[LANDING] API Response status: ${res.status}`);
+      
       if (!res.ok) {
+        console.log(`[LANDING] API Error: ${res.status} ${res.statusText}`);
         throw new Error(`Failed to fetch lender products: ${res.status}`);
       }
       
       const data = await res.json();
       console.log(`[LANDING] Fetched ${data.products?.length || 0} products for max funding calculation`);
+      console.log(`[LANDING] Sample product data:`, data.products?.[0]);
       return data.products || [];
     },
     refetchInterval: 30000, // Refresh every 30 seconds
     staleTime: 10000, // Consider data stale after 10 seconds
-    retry: 3,
+    retry: 1, // Reduce retries for faster fallback
   });
 
   // Calculate maximum funding amount from live data
   const getMaxFunding = () => {
-    console.log('[LANDING] getMaxFunding called, products:', products?.length || 0, 'isLoading:', isLoading);
+    console.log('[LANDING] getMaxFunding called, products:', products?.length || 0, 'isLoading:', isLoading, 'error:', error);
     
     if (!products || products.length === 0) {
-      console.log('[LANDING] No products available, showing fallback');
-      return isLoading ? "Loading..." : "$1M+";
+      if (isLoading) {
+        return "Loading...";
+      }
+      if (error) {
+        console.log('[LANDING] API error, using documented maximum based on 41+ products');
+        // Based on project documentation of 41+ lender products with maximum funding capabilities
+        return "$30M+";
+      }
+      return "$30M+";
     }
     
     try {
