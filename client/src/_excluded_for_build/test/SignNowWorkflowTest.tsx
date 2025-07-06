@@ -12,7 +12,7 @@ import {
   Loader2,
   ArrowRight,
   ExternalLink
-} from 'lucide-react';
+} from '@/lib/icons';
 
 interface TestDocument {
   category: string;

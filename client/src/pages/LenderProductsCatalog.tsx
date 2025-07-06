@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, DollarSign, MapPin, Building, Clock, Grid3X3, Users } from 'lucide-react';
+import { Loader2, DollarSign, MapPin, Building, Clock, Grid3X3, Users } from '@/lib/icons';
 import { fetchLenderProducts } from '@/api/lenderProducts';
 
 const formatCurrency = (amount: number): string => {

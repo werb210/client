@@ -19,7 +19,7 @@ import {
   AlertCircle,
   CheckCircle,
   Info
-} from 'lucide-react';
+} from '@/lib/icons';
 
 export default function LenderDiagnostics() {
   const { 

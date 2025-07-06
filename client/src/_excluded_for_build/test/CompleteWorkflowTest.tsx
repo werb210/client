@@ -15,7 +15,7 @@ import {
   Upload,
   FileSignature,
   ExternalLink
-} from 'lucide-react';
+} from '@/lib/icons';
 
 interface WorkflowStep {
   id: string;

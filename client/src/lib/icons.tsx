@@ -200,6 +200,33 @@ export const MoreHorizontal = ({ className }: IconProps) => (
   <span className={`inline-block ${className}`}>⋯</span>
 );
 
+// Network and connection icons
+export const Wifi = ({ className }: IconProps) => (
+  <span className={`inline-block ${className}`}>📶</span>
+);
+
+export const WifiOff = ({ className }: IconProps) => (
+  <span className={`inline-block ${className}`}>📵</span>
+);
+
+// Hardware icons
+export const HardDrive = ({ className }: IconProps) => (
+  <span className={`inline-block ${className}`}>💾</span>
+);
+
+export const Server = ({ className }: IconProps) => (
+  <span className={`inline-block ${className}`}>🖥️</span>
+);
+
+// Information and status icons
+export const Info = ({ className }: IconProps) => (
+  <span className={`inline-block ${className}`}>ℹ️</span>
+);
+
+export const AlertTriangle = ({ className }: IconProps) => (
+  <span className={`inline-block ${className}`}>⚠️</span>
+);
+
 export const PanelLeft = ({ className }: IconProps) => (
   <span className={`inline-block ${className}`}>⬅</span>
 );
