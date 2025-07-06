@@ -121,12 +121,7 @@ export default function Step4ApplicantInfoRoute() {
         type: 'SET_APPLICATION_ID',
         payload: applicationId
       });
-      console.log('💾 Application ID saved to localStorage + context:', applicationId);r checklist
-      // C-1: Store ID in global state
-      dispatch({
-        type: 'SET_APPLICATION_ID',
-        payload: applicationId
-      });
+      console.log('💾 Application ID saved to localStorage + context:', applicationId);
       
       // C-2: Fallback storage in localStorage
       localStorage.setItem('appId', applicationId);

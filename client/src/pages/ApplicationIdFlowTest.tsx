@@ -366,7 +366,7 @@ export default function ApplicationIdFlowTest() {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <Button onClick={runAllTests} className="flex items-center gap-2">
               <RefreshCw className="w-4 h-4" />
               Run All Tests
@@ -378,6 +378,16 @@ export default function ApplicationIdFlowTest() {
             <Button onClick={() => setLocation('/apply/step-6')} variant="outline">
               <ArrowRight className="w-4 h-4 mr-2" />
               Go to Step 6
+            </Button>
+            <Button 
+              onClick={() => {
+                console.log('📋 Opening browser console diagnostic...');
+                console.log('Copy and run this script in the browser console:');
+                console.log('https://github.com/your-repo/client-side-diagnostic.js');
+              }} 
+              variant="secondary"
+            >
+              📋 Console Diagnostic
             </Button>
           </div>
         </CardContent>

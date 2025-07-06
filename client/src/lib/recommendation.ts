@@ -1,14 +1,12 @@
-// Staff Database Product Type (updated to match actual staff database structure)
+// Staff Database Product Type (C-1: Updated to match actual API response)
 export interface StaffLenderProduct {
   id: string;
-  productName: string;
+  name: string; // Changed from productName to name
   lenderName: string;
   category: string; // e.g., 'term_loan', 'line_of_credit', 'equipment_financing', etc.
   geography: string[]; // e.g., ['US'], ['CA'], ['US', 'CA']
-  amountRange: {
-    min: string;
-    max: string;
-  };
+  amountMin: number; // Changed from amountRange.min to amountMin
+  amountMax: number; // Changed from amountRange.max to amountMax
   requirements: {
     minMonthlyRevenue: string;
     industries: string[] | null;
@@ -37,13 +35,16 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     fundsPurpose,
   } = form;
 
-  // Convert string amounts to numbers for comparison
-  const getAmountValue = (amount: string): number => parseFloat(amount) || 0;
+  // Convert amounts to numbers for comparison - handles both string and number types
+  const getAmountValue = (amount: string | number): number => {
+    if (typeof amount === 'number') return amount;
+    return parseFloat(amount) || 0;
+  };
 
-  // Core filtering logic
+  // Core filtering logic - C-1: Use amountMin/amountMax from API
   const matchesCore = products.filter(product => {
-    const minAmount = getAmountValue(product.amountRange.min);
-    const maxAmount = getAmountValue(product.amountRange.max);
+    const minAmount = getAmountValue(product.amountMin);
+    const maxAmount = getAmountValue(product.amountMax);
     
     return (
       // 1. Country match - geography contains headquarters
@@ -59,10 +60,10 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     );
   });
 
-  // Extra inclusions based on special rules
+  // Extra inclusions based on special rules - C-1: Use amountMin/amountMax from API
   const extras = products.filter(product => {
-    const minAmount = getAmountValue(product.amountRange.min);
-    const maxAmount = getAmountValue(product.amountRange.max);
+    const minAmount = getAmountValue(product.amountMin);
+    const maxAmount = getAmountValue(product.amountMax);
     
     return (
       // Geography and amount must still match for extras

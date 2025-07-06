@@ -47,9 +47,9 @@ router.get('/categories', async (req, res) => {
         return false;
       }
 
-      // Amount range filter
-      const min = p.amountRange?.min || 0;
-      const max = p.amountRange?.max || Infinity;
+      // Amount range filter - C-1: Use amountMin/amountMax from API
+      const min = p.amountMin || 0;
+      const max = p.amountMax || Infinity;
       if (fundingAmount_parsed < min || fundingAmount_parsed > max) {
         return false;
       }
@@ -69,7 +69,7 @@ router.get('/categories', async (req, res) => {
       // Accounts receivable filter - exclude Invoice Factoring when no AR
       if (accountsReceivableBalance === 'none' && 
           (p.category.toLowerCase().includes('invoice') || p.category.toLowerCase().includes('factoring'))) {
-        console.log(`Invoice Factoring: ${p.productName || p.lenderName} excluded because no accounts receivable`);
+        console.log(`Invoice Factoring: ${p.name || p.lenderName} excluded because no accounts receivable`);
         return false;
       }
 
