@@ -125,6 +125,8 @@ The application follows a client-staff separation architecture:
   * BROWSER CACHE ISSUE: Changes implemented but require hard refresh (Ctrl+Shift+R) to become visible
   * CYPRESS E2E TESTS: Implemented comprehensive test suite with apply-step-flow, document-upload, and signnow-flow tests
   * AUTHENTICATION TESTING: All tests validate VITE_CLIENT_APP_SHARED_TOKEN usage in API headers
+  * PRODUCTION TEST SUITE: Created cypress/e2e/client/application_flow.cy.ts for https://clientportal.boreal.financial
+  * TEST CONFIGURATION: Updated cypress.config.ts with production base URL and authentication token
 
 ## Changelog
 
