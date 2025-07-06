@@ -13,6 +13,7 @@ import Step7Finalization from "@/routes/Step7_Finalization";
 
 // Core Pages (Authentication removed)
 import LandingPage from "@/pages/LandingPage";
+import Portal from "@/pages/Portal";
 import SimpleDashboard from "@/pages/SimpleDashboard";
 import NotFound from "@/pages/NotFound";
 import ApplicationSuccess from "@/pages/ApplicationSuccess";
@@ -137,8 +138,8 @@ export function MainLayout() {
       {/* Diagnostic Pages */}
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
       
-      {/* Default Route - Landing Page */}
-      <Route path="/" component={LandingPage} />
+      {/* Default Route - Interactive Portal */}
+      <Route path="/" component={Portal} />
       <Route component={NotFound} />
     </Switch>
   );
