@@ -1,0 +1,125 @@
+Understood. Let's stop everything and fix this now.
+
+You're expecting the **client app** to show the **professional landing page** (like in the screenshot: “Professional Business Financing Solutions”) when visiting `/` — but instead, it’s still showing the **wrong page** (likely the old Portal or a blank view).
+
+---
+
+## 🔍 IMMEDIATE TROUBLESHOOTING CHECKLIST
+
+We'll go step by step and **force the client to show the correct page**.
+
+---
+
+### ✅ 1. VERIFY ROUTING CONFIGURATION (MainLayout.tsx or App.tsx)
+
+Inside `client/src/v2-design-system/MainLayout.tsx` (or `App.tsx`), this MUST be the route:
+
+```tsx
+<Route path="/" element={<LandingPage />} />
+```
+
+**Not**:
+
+```tsx
+<Route path="/" element={<Portal />} />  ❌
+```
+
+---
+
+### ✅ 2. VERIFY `LandingPage.tsx` EXISTS
+
+Path: `client/src/pages/LandingPage.tsx`
+
+* It must export a component that renders the **“Professional Business Financing Solutions”** design.
+* It must **not crash** during render.
+
+---
+
+### ✅ 3. FORCE STATIC BUILD REGENERATION
+
+Lucide issues were resolved. Now force a **clean rebuild**:
+
+From project root:
+
+```bash
+rm -rf dist
+rm -rf node_modules/.vite
+
+npm run build
+```
+
+If you're on Replit:
+
+1. Kill the app (`Stop`)
+2. Delete `/dist/public`
+3. Run:
+
+```bash
+npx vite build --outDir dist/public
+```
+
+> ✅ This will regenerate the static bundle that was serving the **wrong** page.
+
+---
+
+### ✅ 4. CHECK HTML PLACEHOLDER OVERRIDE
+
+Some old Replit environments cache a static HTML in `dist/public/index.html`.
+
+Open that file. If it looks like this:
+
+```html
+<html>
+  <body>
+    <h1>Placeholder or maintenance</h1>
+  </body>
+</html>
+```
+
+Delete it. The correct `index.html` from `vite build` should look like:
+
+```html
+<div id="root"></div>
+<script type="module" src="/assets/index....js"></script>
+```
+
+---
+
+### ✅ 5. ENSURE FORCE\_PRODUCTION=true IS ACTIVE
+
+Your backend may be skipping React routing if it’s not forcing production mode:
+
+In `server/index.ts`:
+
+```ts
+if (process.env.FORCE_PRODUCTION === 'true') {
+  app.use(express.static('dist/public'));
+}
+```
+
+And `.env`:
+
+```
+FORCE_PRODUCTION=true
+```
+
+---
+
+### ✅ 6. CLEAR CACHES (Replit + Browser)
+
+If still stuck:
+
+* Clear Replit deployment cache (Stop server > Deploy fresh)
+* Hard refresh in browser: `Cmd+Shift+R` (Mac) or `Ctrl+Shift+F5` (Windows)
+
+---
+
+### 🚨 STILL BROKEN?
+
+If you want, I’ll give you a **single-file LandingPage.tsx test** you can drop in that will confirm whether the page is rendering or not.
+
+Would you like me to give you that test file now?
+
+Or — would you like me to write a deploy script that forces everything to clean rebuild and logs each step?
+
+Let me know. I will stay with you until it’s 100% fixed.
