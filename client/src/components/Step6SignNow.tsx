@@ -1,23 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  FileSignature, 
-  CheckCircle, 
-  AlertCircle, 
-  ExternalLink,
-  ArrowLeft,
-  Loader2
-} from 'lucide-react';
+// Lucide icons replaced with Unicode symbols to fix build timeout
+// FileSignature = ✍️, CheckCircle = ✓, AlertCircle = ⚠️, ExternalLink = ↗️, ArrowLeft = ←, Loader2 = ⟳
 
 interface LocationState {
   signUrl?: string;
 }
 
 export const Step6SignNow: React.FC = () => {
-  const navigate = useNavigate();
+  // Navigation handled via window.location.href
   const location = useLocation();
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
   const [signingComplete, setSigningComplete] = useState(false);
@@ -52,7 +46,7 @@ export const Step6SignNow: React.FC = () => {
   };
 
   const handleBackToDocuments = () => {
-    navigate('/apply/step-5');
+    window.location.href = '/apply/step-5';
   };
 
   const handleOpenInNewTab = () => {
@@ -63,7 +57,7 @@ export const Step6SignNow: React.FC = () => {
 
   const handleComplete = () => {
     // Navigate to completion/thank you page
-    navigate('/application-complete');
+    window.location.href = '/application-complete';
   };
 
   // Safety check - redirect if no signUrl
@@ -73,7 +67,7 @@ export const Step6SignNow: React.FC = () => {
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle className="flex items-center text-red-600">
-              <AlertCircle className="w-5 h-5 mr-2" />
+              <span className="text-lg mr-2">⚠️</span>
               Access Error
             </CardTitle>
           </CardHeader>
@@ -82,7 +76,7 @@ export const Step6SignNow: React.FC = () => {
               No signing URL available. Please return to the document upload step to generate your signing link.
             </p>
             <Button onClick={handleBackToDocuments} className="w-full">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <span className="mr-2">←</span>
               Back to Documents
             </Button>
           </CardContent>
@@ -98,7 +92,7 @@ export const Step6SignNow: React.FC = () => {
           {/* Header */}
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center justify-center">
-              <FileSignature className="w-8 h-8 mr-3 text-teal-600" />
+              <span className="text-2xl mr-3 text-teal-600">✍️</span>
               Review & Sign Documents
             </h1>
             <p className="text-gray-600">
@@ -109,7 +103,7 @@ export const Step6SignNow: React.FC = () => {
           {/* Completion alert */}
           {signingComplete && (
             <Alert className="mb-6 border-green-200 bg-green-50">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <span className="text-green-600">✓</span>
               <AlertDescription className="text-green-800">
                 <strong>Signing Complete!</strong> Your documents have been signed successfully. 
                 You can now proceed to complete your application.
@@ -120,7 +114,7 @@ export const Step6SignNow: React.FC = () => {
           {/* Error alert */}
           {error && (
             <Alert variant="destructive" className="mb-6">
-              <AlertCircle className="h-4 w-4" />
+              <span className="text-red-600">⚠️</span>
               <AlertDescription>
                 {error}
               </AlertDescription>
@@ -140,7 +134,7 @@ export const Step6SignNow: React.FC = () => {
                     size="sm"
                     onClick={handleOpenInNewTab}
                   >
-                    <ExternalLink className="w-4 h-4 mr-2" />
+                    <span className="mr-2">↗️</span>
                     Open in New Tab
                   </Button>
                   <Button
@@ -148,7 +142,7 @@ export const Step6SignNow: React.FC = () => {
                     size="sm"
                     onClick={handleBackToDocuments}
                   >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    <span className="mr-2">←</span>
                     Back to Documents
                   </Button>
                 </div>
@@ -159,7 +153,7 @@ export const Step6SignNow: React.FC = () => {
               {!isIframeLoaded && (
                 <div className="h-[80vh] flex items-center justify-center">
                   <div className="text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-teal-600 mx-auto mb-4" />
+                    <div className="w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading signing interface...</p>
                   </div>
                 </div>
@@ -204,7 +198,7 @@ export const Step6SignNow: React.FC = () => {
                 className="px-8"
               >
                 Complete Application
-                <CheckCircle className="w-4 h-4 ml-2" />
+                <span className="ml-2">✓</span>
               </Button>
             </div>
           )}

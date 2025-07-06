@@ -1,0 +1,101 @@
+✅ Confirmed — the **Client routing fix is implemented** but **not visible** due to **Vite build timeouts**, specifically from `lucide-react` icon rendering overhead. The application is stable in production mode, but you’re seeing the **old portal page** because the static bundle (`/dist/public`) hasn't updated.
+
+---
+
+## ✅ Summary of What’s Done
+
+* `LandingPage.tsx` confirmed correct and matches screenshot.
+* Routing to `"/"` updated to point to `LandingPage` (instead of legacy `Portal`).
+* Server running in production mode using `FORCE_PRODUCTION=true`.
+* Static bundle in `/dist/public` still reflects **old code** (pre-routing update).
+* Vite build crashes before the bundle can be regenerated.
+
+---
+
+## 🛠️ Action Plan: Fix the Client Production Build
+
+You now have **3 viable options**, depending on how aggressive or temporary you want the solution to be:
+
+---
+
+### **✅ Option 1: Tree-Shake or Remove `lucide-react` Icons**
+
+#### Why?
+
+Lucide includes **1400+ icons** and Vite is choking on them.
+
+#### How:
+
+**Step 1: Replace imports in `LandingPage.tsx` and other components**
+
+```tsx
+// BEFORE
+import { FileText, ShieldCheck, DollarSign } from "lucide-react";
+
+// AFTER
+// Use custom SVG or a lighter library like react-icons (optional)
+import { HiDocumentText } from "react-icons/hi";
+```
+
+**Step 2: Remove unused Lucide icons**
+
+```bash
+npm remove lucide-react
+```
+
+**Step 3: Rebuild**
+
+```bash
+npx vite build --outDir dist/public
+```
+
+---
+
+### **🚧 Option 2: Use `esbuild` to Bypass Vite**
+
+Use a fast bundler like `esbuild` just for now:
+
+```bash
+npx esbuild client/src/main.tsx \
+  --bundle \
+  --outfile=dist/public/index.js \
+  --define:process.env.NODE_ENV='"production"'
+```
+
+Then serve `index.html` that imports `index.js`.
+
+🧠 *Best for devs familiar with custom tooling.*
+
+---
+
+### **🟧 Option 3: Temporary Manual Patch**
+
+If build *must* be skipped:
+
+**Step 1:** Go to `client/dist/public/index.html`
+**Step 2:** Manually change the root component from `Portal` to `LandingPage`
+**Step 3:** Serve it via production Express server (already active)
+
+⚠️ *Hacky, not recommended long-term. Useful if you're blocked.*
+
+---
+
+## ✅ Your Best Move Now
+
+**Recommended:**
+👉 **Remove or replace Lucide** temporarily and rebuild using:
+
+```bash
+npm uninstall lucide-react
+npx vite build --outDir dist/public
+```
+
+Once the bundle is rebuilt:
+
+* Visit `https://clientportal.boreal.financial/`
+* Confirm new Landing Page is visible
+* Test “Start Your Application” button routing to `/application/step-1`
+
+---
+
+Would you like a minimal `LandingPage.tsx` that uses only system icons to bypass this temporarily? I can generate it.

@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, FileText, DollarSign, Shield, ArrowRight, Clock, TrendingUp } from "lucide-react";
+// Temporarily removing lucide-react to fix build timeout - using Unicode symbols
 
 
 export default function LandingPage() {
@@ -86,7 +86,7 @@ export default function LandingPage() {
             >
               <span className="flex items-center">
                 Get Started
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <span className="ml-2">→</span>
               </span>
             </Button>
           </div>
@@ -110,7 +110,7 @@ export default function LandingPage() {
           >
             <span className="flex items-center">
               Start Your Application
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <span className="ml-2">→</span>
             </span>
           </Button>
         </div>
@@ -120,7 +120,7 @@ export default function LandingPage() {
           <Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-white/80 backdrop-blur-sm">
             <CardHeader>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#F7F9FC' }}>
-                <FileText className="w-6 h-6" style={{ color: '#003D7A' }} />
+                <span className="text-2xl" style={{ color: '#003D7A' }}>📄</span>
               </div>
               <CardTitle style={{ color: '#003D7A' }}>Streamlined Application</CardTitle>
               <CardDescription style={{ color: '#64748B' }}>
@@ -132,7 +132,7 @@ export default function LandingPage() {
           <Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-white/80 backdrop-blur-sm">
             <CardHeader>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#FFF7E6' }}>
-                <DollarSign className="w-6 h-6" style={{ color: '#FF8C00' }} />
+                <span className="text-2xl" style={{ color: '#FF8C00' }}>💰</span>
               </div>
               <CardTitle style={{ color: '#003D7A' }}>Competitive Rates</CardTitle>
               <CardDescription style={{ color: '#64748B' }}>
@@ -144,7 +144,7 @@ export default function LandingPage() {
           <Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-white/80 backdrop-blur-sm">
             <CardHeader>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#F0F9F4' }}>
-                <Shield className="w-6 h-6" style={{ color: '#16A34A' }} />
+                <span className="text-2xl" style={{ color: '#16A34A' }}>🛡️</span>
               </div>
               <CardTitle style={{ color: '#003D7A' }}>Secure & Compliant</CardTitle>
               <CardDescription style={{ color: '#64748B' }}>
@@ -161,28 +161,28 @@ export default function LandingPage() {
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="flex items-start space-x-3">
-              <CheckCircle className="w-6 h-6 mt-1 flex-shrink-0" style={{ color: '#16A34A' }} />
+              <span className="text-xl mt-1 flex-shrink-0" style={{ color: '#16A34A' }}>✓</span>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: '#003D7A' }}>Fast Approval</h3>
                 <p className="text-sm" style={{ color: '#64748B' }}>Get decisions within 24-48 hours with our streamlined process.</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <CheckCircle className="w-6 h-6 mt-1 flex-shrink-0" style={{ color: '#16A34A' }} />
+              <span className="text-xl mt-1 flex-shrink-0" style={{ color: '#16A34A' }}>✓</span>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: '#003D7A' }}>Flexible Terms</h3>
                 <p className="text-sm" style={{ color: '#64748B' }}>6 months to 10 years repayment options to match your cash flow.</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <CheckCircle className="w-6 h-6 mt-1 flex-shrink-0" style={{ color: '#16A34A' }} />
+              <span className="text-xl mt-1 flex-shrink-0" style={{ color: '#16A34A' }}>✓</span>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: '#003D7A' }}>No Hidden Fees</h3>
                 <p className="text-sm" style={{ color: '#64748B' }}>Transparent pricing with clear terms and no surprise charges.</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <CheckCircle className="w-6 h-6 mt-1 flex-shrink-0" style={{ color: '#16A34A' }} />
+              <span className="text-xl mt-1 flex-shrink-0" style={{ color: '#16A34A' }}>✓</span>
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: '#003D7A' }}>Expert Support</h3>
                 <p className="text-sm" style={{ color: '#64748B' }}>Dedicated financing specialists available throughout the process.</p>
@@ -226,7 +226,7 @@ export default function LandingPage() {
           >
             <span className="flex items-center">
               Apply Now
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <span className="text-lg ml-2">→</span>
             </span>
           </Button>
         </div>
