@@ -44,7 +44,9 @@ export async function syncLenderProducts(): Promise<ProductSyncResult> {
   try {
     console.log(`[SYNC] Fetching from Staff API: ${LENDERS_ENDPOINT}`);
     
-    const response = await fetch(LENDERS_ENDPOINT, {
+    // C-2: Guard API errors gracefully with try/catch + C-6: Mobile network resilience
+    const { fetchWithTimeout } = await import('./apiTimeout');
+    const response = await fetchWithTimeout(LENDERS_ENDPOINT, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',

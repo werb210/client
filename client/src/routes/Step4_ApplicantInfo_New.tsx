@@ -93,8 +93,9 @@ export default function Step4ApplicantInfoRoute() {
       
       console.log('📋 Submitting application data:', applicationData);
       
-      // Submit application data to staff backend
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications`, {
+      // Submit application data to staff backend with C-6: Mobile network resilience
+      const { fetchWithTimeout } = await import('@/lib/apiTimeout');
+      const response = await fetchWithTimeout(`${import.meta.env.VITE_API_BASE_URL}/public/applications`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -114,7 +115,13 @@ export default function Step4ApplicantInfoRoute() {
       console.log('✅ Application submission successful');
       console.log('📋 Application ID received:', applicationId);
       
-      // QUICK-FIX IMPLEMENTATION: Set application ID per checklist
+      // C-3: Persist real applicationId immediately after Step 4 success
+      localStorage.setItem('appId', applicationId);
+      dispatch({
+        type: 'SET_APPLICATION_ID',
+        payload: applicationId
+      });
+      console.log('💾 Application ID saved to localStorage + context:', applicationId);r checklist
       // C-1: Store ID in global state
       dispatch({
         type: 'SET_APPLICATION_ID',

@@ -37,8 +37,9 @@ export default function Step6SignNowIntegration() {
   const [signUrl, setSignUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
+  const [retryCount, setRetryCount] = useState(0); // C-5: Track retry attempts for auto-retry
 
-  // C-4: Step 6 component looks in ONE place only - use FormDataContext applicationId
+  // C-4: Single source of truth for applicationId - always use useApplicationId() pattern
   const applicationId = state.applicationId || localStorage.getItem('appId');
 
   useEffect(() => {

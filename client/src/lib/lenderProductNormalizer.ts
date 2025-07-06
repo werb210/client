@@ -38,20 +38,20 @@ export function normalizeProducts(rawData: unknown): LenderProduct[] {
       // Validate and normalize category
       const normalizedCategory = normalizeCategoryName(rawProduct.category);
       
-      // Build normalized product
+      // Build normalized product - C-1: Use name, amountMin, amountMax from API
       const normalizedProduct: LenderProduct = {
         id: rawProduct.id,
-        name: rawProduct.productName,
+        name: rawProduct.name, // Changed from productName to name
         lenderName: rawProduct.lenderName,
         geography: geography,
         country: rawProduct.country, // Preserve raw country field for filtering
         category: normalizedCategory,
-        minAmount: typeof rawProduct.amountRange.min === 'number' 
-          ? rawProduct.amountRange.min 
-          : parseFloat(rawProduct.amountRange.min),
-        maxAmount: typeof rawProduct.amountRange.max === 'number' 
-          ? rawProduct.amountRange.max 
-          : parseFloat(rawProduct.amountRange.max),
+        minAmount: typeof rawProduct.amountMin === 'number' 
+          ? rawProduct.amountMin 
+          : parseFloat(rawProduct.amountMin || '0'),
+        maxAmount: typeof rawProduct.amountMax === 'number' 
+          ? rawProduct.amountMax 
+          : parseFloat(rawProduct.amountMax || '0'),
         minRevenue: rawProduct.requirements?.minMonthlyRevenue 
           ? (typeof rawProduct.requirements.minMonthlyRevenue === 'number'
              ? rawProduct.requirements.minMonthlyRevenue
@@ -86,7 +86,7 @@ export function normalizeProducts(rawData: unknown): LenderProduct[] {
     } catch (error) {
       errors.push({
         index,
-        productName: rawProduct.productName,
+        productName: rawProduct.name, // Changed from productName to name
         issues: [(error as Error).message]
       });
       console.error(`❌ [NORMALIZER] Error processing product at index ${index}:`, error);
