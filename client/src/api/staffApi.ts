@@ -1,6 +1,6 @@
 // Staff API client for application submission and SignNow integration
 
-const STAFF_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api';
+const STAFF_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://app.boreal.financial/api/public';
 
 export interface ApplicationSubmissionData {
   formFields: {
