@@ -41,17 +41,17 @@ export function normalizeProducts(rawData: unknown): LenderProduct[] {
       // Build normalized product - C-1: Use name, amountMin, amountMax from API
       const normalizedProduct: LenderProduct = {
         id: rawProduct.id,
-        name: rawProduct.name, // Changed from productName to name
+        name: rawProduct.name, // API returns 'name'
         lenderName: rawProduct.lenderName,
         geography: geography,
         country: rawProduct.country, // Preserve raw country field for filtering
         category: normalizedCategory,
         minAmount: typeof rawProduct.amountMin === 'number' 
           ? rawProduct.amountMin 
-          : parseFloat(rawProduct.amountMin || '0'),
+          : parseFloat(String(rawProduct.amountMin) || '0'),
         maxAmount: typeof rawProduct.amountMax === 'number' 
           ? rawProduct.amountMax 
-          : parseFloat(rawProduct.amountMax || '0'),
+          : parseFloat(String(rawProduct.amountMax) || '0'),
         minRevenue: rawProduct.requirements?.minMonthlyRevenue 
           ? (typeof rawProduct.requirements.minMonthlyRevenue === 'number'
              ? rawProduct.requirements.minMonthlyRevenue
@@ -74,7 +74,7 @@ export function normalizeProducts(rawData: unknown): LenderProduct[] {
         );
         errors.push({
           index,
-          productName: rawProduct.productName,
+          productName: rawProduct.name, // C-1: Use 'name' field from API
           issues
         });
         console.error(`❌ [NORMALIZER] Invalid product at index ${index}:`, issues);

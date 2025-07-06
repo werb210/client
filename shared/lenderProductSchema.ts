@@ -31,20 +31,18 @@ export const LenderProductSchema = z.object({
 
 export type LenderProduct = z.infer<typeof LenderProductSchema>;
 
-// Raw API response schema - Updated to match actual staff API response format
+// Raw API response schema - C-1: Fixed to match ACTUAL staff API response format
 export const StaffAPIResponseSchema = z.object({
   success: z.boolean(),
   products: z.array(z.object({
     id: z.string(),
-    productName: z.string(),
+    name: z.string(), // API returns 'name', not 'productName'
     lenderName: z.string(),
     category: z.string(),
     country: z.string().optional(), // Staff API now provides country field (US, CA, US/CA)
     geography: z.array(z.string()).optional(), // Staff API may not include geography
-    amountRange: z.object({
-      min: z.union([z.string(), z.number()]), // Staff API sends numbers, not strings
-      max: z.union([z.string(), z.number()]), // Staff API sends numbers, not strings
-    }),
+    amountMin: z.union([z.string(), z.number()]), // API returns amountMin directly
+    amountMax: z.union([z.string(), z.number()]), // API returns amountMax directly
     requirements: z.object({
       minMonthlyRevenue: z.union([z.string(), z.number()]).optional(), // Staff API sends numbers
       industries: z.array(z.string()).nullable().optional(),
