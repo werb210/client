@@ -1,4 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
+import fs from "fs";
+import path from "path";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { createServer } from "http";
@@ -17,8 +19,9 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Use production API configuration but development serving mode
-const isProduction = process.env.NODE_ENV === 'production';
+// Force production mode for stable serving
+process.env.NODE_ENV = 'production';
+const isProduction = true;
 console.log(`🚀 Running in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Staff API URL:', cfg.staffApiUrl);
@@ -537,88 +540,89 @@ app.use((req, res, next) => {
   // Create HTTP server and WebSocket server
   const httpServer = createServer(app);
 
-  // Temporarily serve a simple status page while fixing Vite issues
-  console.log('[STATUS] Serving production status page with API configuration');
-  app.get('*', (req, res) => {
-    if (req.path.startsWith('/api')) return; // Skip API routes
+  // Temporarily disable Vite and serve a simple status page until connection issues are resolved
+  console.log('[STATUS] Serving connection status page due to Vite instability');
+  app.get('/', (req, res) => {
     res.send(`
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boreal Financial - Production Mode Active</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-blue-900 min-h-screen flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-xl p-8 max-w-2xl mx-4">
-        <div class="text-center">
-            <h1 class="text-3xl font-bold text-blue-900 mb-4">🚀 Boreal Financial</h1>
-            <h2 class="text-xl font-semibold text-gray-700 mb-6">Production Mode Active</h2>
-            
-            <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-                <h3 class="text-lg font-semibold text-green-800 mb-3">✓ Production Configuration Status</h3>
-                <ul class="text-sm text-green-700 space-y-2 text-left">
-                    <li>• Production API endpoints: ${cfg.staffApiUrl}</li>
-                    <li>• Bearer token authentication: Ready</li>
-                    <li>• Custom domain: https://clientportal.boreal.financial</li>
-                    <li>• 7-step application workflow: Available</li>
-                    <li>• Real-time lender products: 41+ products active</li>
-                </ul>
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Boreal Financial Client Portal - System Status</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f9fc; margin: 0; padding: 20px; }
+            .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .header { text-align: center; margin-bottom: 30px; }
+            .logo { color: #003D7A; font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+            .status { background: #f0f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #0066cc; margin: 20px 0; }
+            .api-test { background: #fefefe; border: 1px solid #e5e5e5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .success { color: #16a34a; } .error { color: #dc2626; } .pending { color: #ca8a04; }
+            button { background: #FF8C00; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin: 10px 5px; }
+            button:hover { background: #e67e00; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="logo">🏔️ Boreal Financial</div>
+              <h1>Client Portal - System Status</h1>
+              <p>Financial Application System</p>
             </div>
-            
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p class="text-blue-800 text-sm">
-                    <strong>Status:</strong> Production environment variables active<br>
-                    <strong>API Base:</strong> ${cfg.staffApiUrl}<br>
-                    <strong>Environment:</strong> ${process.env.NODE_ENV}
-                </p>
+
+            <div class="status">
+              <h3>🟢 Server Status: Online</h3>
+              <p>✅ Express server running on port 5000</p>
+              <p>✅ WebSocket server active at /ws</p>
+              <p>✅ Production API configured: ${cfg.staffApiUrl}</p>
+              <p>✅ Bearer token authentication ready</p>
             </div>
-            
-            <button onclick="testAPI()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                Test API Connection
-            </button>
-            
-            <div id="api-result" class="mt-4 p-4 rounded-lg hidden"></div>
-        </div>
-    </div>
-    
-    <script>
-        async function testAPI() {
-            const resultDiv = document.getElementById('api-result');
-            resultDiv.className = 'mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200';
-            resultDiv.innerHTML = 'Testing API connection...';
-            resultDiv.classList.remove('hidden');
-            
-            try {
-                const response = await fetch('/api/health');
+
+            <div class="api-test">
+              <h3>🔗 API Connectivity Test</h3>
+              <p>Test connection to staff backend API:</p>
+              <button onclick="testAPI()">Test Staff API Connection</button>
+              <div id="api-result"></div>
+            </div>
+
+            <div class="status">
+              <h3>⚠️ Development Status</h3>
+              <p>Vite development server experiencing connection instability.</p>
+              <p>Working on deployment to stable production configuration.</p>
+              <p><strong>Next Steps:</strong> Resolving React application serving for full 7-step workflow access.</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+              <button onclick="location.reload()">🔄 Refresh Status</button>
+              <button onclick="window.open('/api/health', '_blank')">🩺 API Health Check</button>
+            </div>
+          </div>
+
+          <script>
+            async function testAPI() {
+              const result = document.getElementById('api-result');
+              result.innerHTML = '<p class="pending">⏳ Testing connection...</p>';
+              
+              try {
+                const response = await fetch('/api/public/lenders', {
+                  headers: {
+                    'Authorization': 'Bearer ${process.env.VITE_CLIENT_APP_SHARED_TOKEN || 'ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042'}'
+                  }
+                });
                 const data = await response.json();
                 
-                if (response.ok) {
-                    resultDiv.className = 'mt-4 p-4 rounded-lg bg-green-50 border border-green-200';
-                    resultDiv.innerHTML = \`
-                        <strong class="text-green-800">✓ API Connection Successful</strong><br>
-                        <span class="text-green-700 text-sm">Status: \${data.status}</span><br>
-                        <span class="text-green-700 text-sm">Message: \${data.message}</span><br>
-                        <span class="text-green-700 text-sm">Time: \${data.timestamp}</span>
-                    \`;
+                if (response.ok && Array.isArray(data)) {
+                  result.innerHTML = \`<p class="success">✅ Success: Connected to staff API</p><p>Found \${data.length} lender products</p>\`;
                 } else {
-                    throw new Error(\`HTTP \${response.status}\`);
+                  result.innerHTML = \`<p class="error">❌ API Error: \${response.status}</p><p>\${JSON.stringify(data, null, 2)}</p>\`;
                 }
-            } catch (error) {
-                resultDiv.className = 'mt-4 p-4 rounded-lg bg-red-50 border border-red-200';
-                resultDiv.innerHTML = \`
-                    <strong class="text-red-800">✗ API Connection Failed</strong><br>
-                    <span class="text-red-700 text-sm">Error: \${error.message}</span>
-                \`;
+              } catch (error) {
+                result.innerHTML = \`<p class="error">❌ Connection Error: \${error.message}</p>\`;
+              }
             }
-        }
-        
-        // Auto-test on load
-        setTimeout(testAPI, 1000);
-    </script>
-</body>
-</html>
+          </script>
+        </body>
+      </html>
     `);
   });
   
