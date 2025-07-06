@@ -46,22 +46,24 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Business Details</CardTitle>
-        <p className="text-sm text-gray-600">Complete information about your business</p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="min-h-screen py-8" style={{ backgroundColor: '#F7F9FC' }}>
+      <div className="max-w-6xl mx-auto px-4">
+        <Card className="shadow-lg">
+          <CardHeader className="text-white" style={{ background: 'linear-gradient(to right, #003D7A, #002B5C)' }}>
+            <CardTitle className="text-2xl font-bold">Step 3: Business Details</CardTitle>
+            <p style={{ color: '#B8D4F0' }}>Complete information about your business</p>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Business Operating Name - Required */}
           <FormField
             control={form.control}
             name="operatingName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Business Operating Name</FormLabel>
+                <FormLabel className="text-base font-semibold">Business Operating Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter business operating name" {...field} data-cy="operatingName" />
+                  <Input placeholder="Enter business operating name" {...field} data-cy="operatingName" className="h-12" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -74,9 +76,9 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
             name="legalName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Business Legal Name</FormLabel>
+                <FormLabel className="text-base font-semibold">Business Legal Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter business legal name" {...field} data-cy="legalName" />
+                  <Input placeholder="Enter business legal name" {...field} data-cy="legalName" className="h-12" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -89,9 +91,9 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
             name="businessStreetAddress"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Business Address</FormLabel>
+                <FormLabel className="text-base font-semibold">Business Address</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter business street address" {...field} />
+                  <Input placeholder="Enter business street address" {...field} className="h-12" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -104,9 +106,9 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
             name="businessCity"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Business City</FormLabel>
+                <FormLabel className="text-base font-semibold">Business City</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter business city" {...field} />
+                  <Input placeholder="Enter business city" {...field} className="h-12" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -119,10 +121,10 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
             name="businessState"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Business {regionalLabels.stateProvince}</FormLabel>
+                <FormLabel className="text-base font-semibold">Business {regionalLabels.stateProvince}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12">
                       <SelectValue placeholder={`Select business ${regionalLabels.stateProvince.toLowerCase()}`} />
                     </SelectTrigger>
                   </FormControl>
@@ -354,6 +356,7 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
             type="button" 
             variant="outline"
             onClick={onBack}
+            className="bg-gray-500 hover:bg-gray-600 text-white"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
@@ -362,14 +365,16 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
             type="button" 
             onClick={onNext}
             disabled={!canContinue()}
-            className={`${!canContinue() ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`bg-orange-500 hover:bg-orange-600 text-white ${!canContinue() ? 'opacity-50 cursor-not-allowed' : ''}`}
             data-cy="next"
           >
             Continue
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

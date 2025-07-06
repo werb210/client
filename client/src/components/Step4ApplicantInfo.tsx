@@ -47,23 +47,25 @@ export function Step4ApplicantInfo({ onNext, onBack }: Step4Props) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Applicant Information</CardTitle>
-        <p className="text-sm text-gray-600">All fields are optional but may help with processing</p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Main Applicant Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="min-h-screen py-8" style={{ backgroundColor: '#F7F9FC' }}>
+      <div className="max-w-6xl mx-auto px-4">
+        <Card className="shadow-lg">
+          <CardHeader className="text-white" style={{ background: 'linear-gradient(to right, #003D7A, #002B5C)' }}>
+            <CardTitle className="text-2xl font-bold">Step 4: Applicant Information</CardTitle>
+            <p style={{ color: '#B8D4F0' }}>All fields are optional but may help with processing</p>
+          </CardHeader>
+          <CardContent className="p-8">
+            {/* Main Applicant Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* First Name */}
           <FormField
             control={form.control}
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel className="text-base font-semibold">First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your first name" {...field} />
+                  <Input placeholder="Enter your first name" {...field} className="h-12" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -76,9 +78,9 @@ export function Step4ApplicantInfo({ onNext, onBack }: Step4Props) {
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel className="text-base font-semibold">Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your last name" {...field} />
+                  <Input placeholder="Enter your last name" {...field} className="h-12" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -421,6 +423,7 @@ export function Step4ApplicantInfo({ onNext, onBack }: Step4Props) {
             type="button" 
             variant="outline"
             onClick={onBack}
+            className="bg-gray-500 hover:bg-gray-600 text-white"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
@@ -428,13 +431,16 @@ export function Step4ApplicantInfo({ onNext, onBack }: Step4Props) {
           <Button 
             type="button" 
             onClick={onNext}
+            className="bg-orange-500 hover:bg-orange-600 text-white"
             data-cy="next"
           >
             Continue
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
