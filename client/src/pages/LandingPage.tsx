@@ -35,27 +35,43 @@ export default function LandingPage() {
 
   // Calculate maximum funding amount from live data
   const getMaxFunding = () => {
+    console.log('[LANDING] getMaxFunding called, products:', products?.length || 0, 'isLoading:', isLoading);
+    
     if (!products || products.length === 0) {
+      console.log('[LANDING] No products available, showing fallback');
       return isLoading ? "Loading..." : "$1M+";
     }
     
     try {
-      // Extract maximum amounts from products (API structure: amountMax)
+      console.log('[LANDING] Sample product structure:', products[0]);
+      
+      // Extract maximum amounts from products (try both amountMax and maxAmount)
       const amounts = products
-        .map((p: any) => p.amountMax || 0)
+        .map((p: any) => p.amountMax || p.maxAmount || 0)
         .filter((amount: any) => amount > 0);
       
-      if (amounts.length === 0) return "$1M+";
+      console.log('[LANDING] Extracted amounts:', amounts.slice(0, 5), '(showing first 5)');
+      
+      if (amounts.length === 0) {
+        console.log('[LANDING] No valid amounts found, using fallback');
+        return "$1M+";
+      }
       
       const maxAmount = Math.max(...amounts);
-      console.log(`[LANDING] Maximum funding amount: $${maxAmount.toLocaleString()}`);
+      console.log(`[LANDING] Maximum funding amount calculated: $${maxAmount.toLocaleString()}`);
       
       if (maxAmount >= 1000000) {
-        return `$${Math.floor(maxAmount / 1000000)}M+`;
+        const formatted = `$${Math.floor(maxAmount / 1000000)}M+`;
+        console.log(`[LANDING] Formatted for millions: ${formatted}`);
+        return formatted;
       } else if (maxAmount >= 1000) {
-        return `$${Math.floor(maxAmount / 1000)}K+`;
+        const formatted = `$${Math.floor(maxAmount / 1000)}K+`;
+        console.log(`[LANDING] Formatted for thousands: ${formatted}`);
+        return formatted;
       }
-      return `$${Math.floor(maxAmount)}+`;
+      const formatted = `$${Math.floor(maxAmount)}+`;
+      console.log(`[LANDING] Formatted as basic amount: ${formatted}`);
+      return formatted;
     } catch (error) {
       console.log('[LANDING] Error calculating max funding:', error);
       return "$1M+";
