@@ -19,9 +19,8 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Force production mode for stable serving
-process.env.NODE_ENV = 'production';
-const isProduction = true;
+// Use development mode for Vite HMR
+const isProduction = process.env.NODE_ENV === 'production';
 console.log(`🚀 Running in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Staff API URL:', cfg.staffApiUrl);
@@ -540,12 +539,24 @@ app.use((req, res, next) => {
   // Create HTTP server and WebSocket server
   const httpServer = createServer(app);
 
-  // Remove status page override - let Vite serve the React application
+  // Setup Vite middleware to serve React application
+  try {
+    if (isProduction) {
+      serveStatic(app);
+      log("Serving static files in production mode");
+    } else {
+      await setupVite(app, httpServer);
+      log("Vite development server setup complete");
+    }
+  } catch (error) {
+    log(`Vite setup error: ${error}. Falling back to static serving.`);
+    serveStatic(app);
+  }
   
-  // Add WebSocket server for real-time updates
+  // Add WebSocket server for real-time updates (use different path to avoid Vite HMR conflict)
   const wss = new WebSocketServer({ 
     server: httpServer, 
-    path: '/ws' 
+    path: '/api/ws' 
   });
   
   wss.on('connection', (ws) => {
@@ -592,6 +603,6 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`Client app serving on port ${port} - API calls will route to staff backend`);
-    log(`WebSocket server available at ws://localhost:${port}/ws`);
+    log(`WebSocket server available at ws://localhost:${port}/api/ws`);
   });
 })();
