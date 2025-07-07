@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -17,8 +17,7 @@ interface LocationState {
 }
 
 export const Step6SignNow: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [location, setLocation] = useLocation();
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
   const [signingComplete, setSigningComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +51,7 @@ export const Step6SignNow: React.FC = () => {
   };
 
   const handleBackToDocuments = () => {
-    navigate('/apply/step-5');
+    setLocation('/apply/step-5');
   };
 
   const handleOpenInNewTab = () => {
@@ -63,7 +62,7 @@ export const Step6SignNow: React.FC = () => {
 
   const handleComplete = () => {
     // Navigate to completion/thank you page
-    navigate('/application-complete');
+    setLocation('/application-complete');
   };
 
   // Safety check - redirect if no signUrl

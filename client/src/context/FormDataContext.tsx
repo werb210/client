@@ -1,77 +1,21 @@
 import { createContext, useContext, useReducer, ReactNode } from 'react';
+import { ApplicationForm } from '../../../shared/schema';
 
-export interface FinancialProfileData {
-  fundingAmount?: string;
-  useOfFunds?: string;
-  businessLocation?: string;
-  industry?: string;
-  lookingFor?: string;
-  salesHistory?: string;
-  lastYearRevenue?: string;
-  monthlyRevenue?: string;
-  accountReceivable?: string;
-  fixedAssets?: string;
+// Use the ApplicationForm type from shared schema as the base
+export interface FinancialProfileData extends Partial<ApplicationForm> {
   selectedCategory?: string;
-  averageMonthlyRevenue?: string;
-  accountsReceivable?: string;
-  equipmentValue?: string;
+  selectedCategoryName?: string;
+  completed?: boolean;
 }
 
-export interface BusinessDetailsData {
-  businessStructure: string;
-  incorporationDate: string;
-  businessAddress: {
-    street: string;
-    city: string;
-    province: string;
-    postalCode: string;
-    country: string;
-  };
-  taxId: string;
-  // Step 3 Business Details Fields
-  operatingName?: string;
-  legalName?: string;
-  businessStreetAddress?: string;
-  businessCity?: string;
-  businessState?: string;
-  businessZipCode?: string;
-  businessPostalCode?: string;
-  businessPhone?: string;
-  businessRegistrationDate?: string;
-  numberOfEmployees?: string;
-  estimatedYearlyRevenue?: string;
-  businessWebsite?: string;
-  businessStartDate?: string;
-  employeeCount?: string;
+// Business Details inherit from ApplicationForm schema
+export interface BusinessDetailsData extends Partial<ApplicationForm> {
+  completed?: boolean;
 }
 
-export interface FinancialInfoData {
-  annualRevenue?: string;
-  monthlyExpenses?: string;
-  numberOfEmployees?: string;
-  totalAssets?: string;
-  totalLiabilities?: string;
-  // Applicant Information Fields
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  streetAddress?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  dateOfBirth?: string;
-  socialSecurityNumber?: string;
-  ownershipPercentage?: string;
-  creditScore?: string;
-  personalNetWorth?: string;
-  personalAnnualIncome?: string;
-  // Partner Information Fields
-  partnerFirstName?: string;
-  partnerLastName?: string;
-  partnerEmail?: string;
-  partnerPhone?: string;
-  partnerOwnershipPercentage?: string;
+// Financial Info Data inherit from ApplicationForm schema
+export interface FinancialInfoData extends Partial<ApplicationForm> {
+  completed?: boolean;
 }
 
 export interface DocumentUploadData {
@@ -108,6 +52,7 @@ export interface FormDataState {
   step1FinancialProfile: FinancialProfileData;
   step2Recommendations?: {
     selectedProduct?: {
+      id?: string;
       product_name?: string;
       lender_name?: string;
       product_type?: string;
@@ -140,17 +85,49 @@ export interface FormDataState {
     partnerPostalCode?: string;
     partnerSin?: string;
     partnerNetWorth?: string;
+    completed?: boolean;
+  };
+  step4ApplicantDetails?: {
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+    ownershipPercentage: number;
+    personalPhone: string;
+    email: string;
+    homeAddress: string;
+    city: string;
+    province: string;
+    postalCode: string;
+    sin: string;
+    netWorth: string;
+    partnerFirstName?: string;
+    partnerLastName?: string;
+    partnerDateOfBirth?: string;
+    partnerOwnershipPercentage?: number;
+    partnerPersonalPhone?: string;
+    partnerEmail?: string;
+    partnerHomeAddress?: string;
+    partnerCity?: string;
+    partnerProvince?: string;
+    partnerPostalCode?: string;
+    partnerSin?: string;
+    partnerNetWorth?: string;
+    completed?: boolean;
   };
   step5DocumentUpload?: DocumentUploadData;
   step6Signature?: {
     signedAt?: string;
     documentId?: string;
     signingUrl?: string;
+    completed?: boolean;
   };
   currentStep: number;
   isComplete: boolean;
+  isCompleted?: boolean;
   applicationId?: string;
   signingUrl?: string;
+  submissionStatus?: string;
+  signingStatus?: string;
 }
 
 type FormDataAction =
@@ -159,7 +136,9 @@ type FormDataAction =
   | { type: 'UPDATE_STEP4'; payload: Partial<FinancialInfoData> }
   | { type: 'UPDATE_STEP4_APPLICANT'; payload: Partial<FormDataState['step4ApplicantInfo']> }
   | { type: 'UPDATE_STEP5'; payload: Partial<DocumentUploadData> }
+  | { type: 'UPDATE_STEP6'; payload: Partial<FormDataState['step6Signature']> }
   | { type: 'UPDATE_STEP6_SIGNATURE'; payload: Partial<FormDataState['step6Signature']> }
+  | { type: 'UPDATE_STEP4_SUBMISSION'; payload: Partial<FormDataState> }
   | { type: 'SET_CURRENT_STEP'; payload: number }
   | { type: 'SET_APPLICATION_ID'; payload: string }
   | { type: 'SET_SIGNING_URL'; payload: string }
@@ -306,3 +285,6 @@ export function useFormData() {
   }
   return context;
 }
+
+// Export alias for useFormDataContext (used by other components)
+export const useFormDataContext = useFormData;

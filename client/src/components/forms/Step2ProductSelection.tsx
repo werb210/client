@@ -18,7 +18,7 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
 
   // Convert Step 1 data to recommendation format
   const recommendationData = convertStep1ToRecommendationData(state.formData);
-  const monthlyRevenue = convertRevenueToMonthly(state.formData.lastYearRevenue || '');
+  const monthlyRevenue = convertRevenueToMonthly(state.formData.revenueLastYear?.toString() || "0");
 
   // Get staff database recommendations using your business rules
   const { recommendations, isLoading, error } = useStaffRecommendations(recommendationData, monthlyRevenue);
@@ -33,7 +33,7 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
       if (selectedStaffProduct) {
         updateFormData({
           selectedProductId: selectedStaffProduct.id,
-          selectedProductName: selectedStaffProduct.productName,
+          selectedProductName: selectedStaffProduct.name,
           selectedLenderName: selectedStaffProduct.lenderName,
         });
       }
@@ -150,7 +150,7 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-blue-800">{industryInsights}</p>
+            <p className="text-blue-800">{String(industryInsights)}</p>
           </CardContent>
         </Card>
       )}
@@ -221,7 +221,7 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-semibold text-lg">{recommendations.bestMatch.productName}</h4>
+                <h4 className="font-semibold text-lg">{recommendations.bestMatch.name}</h4>
                 <p className="text-teal-700">{recommendations.bestMatch.lenderName}</p>
                 <p className="text-sm text-teal-600 mt-1">{recommendations.bestMatch.description}</p>
               </div>

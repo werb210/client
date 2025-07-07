@@ -4,7 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { useApplication } from '@/context/ApplicationContext';
-import { Document } from '@shared/schema';
+// Document interface
+interface Document {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  uploadedAt: string;
+}
 import { File, Trash2 } from 'lucide-react';
 
 interface DocumentStepProps {

@@ -17,7 +17,7 @@ function analyzeProductCategories(products: LenderProduct[]) {
   }> = {};
 
   products.forEach(product => {
-    const category = product.productType;
+    const category = product.category;
     
     if (!categoryStats[category]) {
       categoryStats[category] = {
@@ -213,7 +213,7 @@ export default function LenderCategoriesTest() {
                     <div className="space-y-1">
                       {stats.products.slice(0, 2).map(product => (
                         <div key={product.id} className="text-sm text-gray-600">
-                          • {product.productName} ({product.lenderName})
+                          • {product.name} ({product.lenderName})
                         </div>
                       ))}
                       {stats.products.length > 2 && (

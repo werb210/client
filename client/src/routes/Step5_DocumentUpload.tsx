@@ -23,7 +23,7 @@ export default function Step5DocumentUpload() {
   
   // State for tracking uploaded files and requirements completion
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
-    state.step5DocumentUpload?.uploadedFiles || []
+    (state.step5DocumentUpload?.uploadedFiles || []).filter(file => file.file) as UploadedFile[]
   );
   const [allRequirementsComplete, setAllRequirementsComplete] = useState(false);
   const [totalRequirements, setTotalRequirements] = useState(0);
@@ -45,7 +45,7 @@ export default function Step5DocumentUpload() {
   };
 
   // Handle requirements completion status
-  const handleRequirementsChange = (allComplete: boolean, total: number, completed: number) => {
+  const handleRequirementsChange = (allComplete: boolean, total: number) => {
     setAllRequirementsComplete(allComplete);
     setTotalRequirements(total);
   };

@@ -156,17 +156,18 @@ export default function Step1FinancialProfile() {
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
-      businessLocation: state.step1FinancialProfile?.businessLocation || '',
+      businessLocation: state.step1FinancialProfile?.businessLocation || 'US',
+      businessState: state.step1FinancialProfile?.businessState || '',
       industry: state.step1FinancialProfile?.industry || '',
       lookingFor: isValidLookingFor(state.step1FinancialProfile?.lookingFor) ? state.step1FinancialProfile.lookingFor : undefined,
-      fundingAmount: state.step1FinancialProfile?.fundingAmount || '',
+      fundingAmount: state.step1FinancialProfile?.fundingAmount?.toString() || '0',
       useOfFunds: state.step1FinancialProfile?.useOfFunds || '',
       salesHistory: state.step1FinancialProfile?.salesHistory || '',
-      lastYearRevenue: state.step1FinancialProfile?.lastYearRevenue || '',
-      averageMonthlyRevenue: state.step1FinancialProfile?.averageMonthlyRevenue || '',
-      accountsReceivable: state.step1FinancialProfile?.accountsReceivable || '',
-      fixedAssets: state.step1FinancialProfile?.fixedAssets || '',
-      equipmentValue: state.step1FinancialProfile?.equipmentValue || '',
+      lastYearRevenue: state.step1FinancialProfile?.lastYearRevenue?.toString() || '0',
+      averageMonthlyRevenue: state.step1FinancialProfile?.averageMonthlyRevenue?.toString() || '0',
+      accountsReceivable: state.step1FinancialProfile?.accountsReceivable?.toString() || '0',
+      fixedAssets: state.step1FinancialProfile?.fixedAssets?.toString() || '0',
+      equipmentValue: state.step1FinancialProfile?.equipmentValue?.toString() || '0',
     },
   });
 
@@ -175,7 +176,17 @@ export default function Step1FinancialProfile() {
   }, []);
 
   const onSubmit = (data: FinancialProfileFormData) => {
-    dispatch({ type: 'UPDATE_STEP1', payload: data });
+    // Convert string values back to numbers for context storage
+    const formattedData = {
+      ...data,
+      fundingAmount: parseInt(data.fundingAmount || '0', 10),
+      revenueLastYear: parseInt(data.revenueLastYear || '0', 10),
+      averageMonthlyRevenue: parseInt(data.averageMonthlyRevenue || '0', 10),
+      accountsReceivableBalance: parseInt(data.accountsReceivableBalance || '0', 10),
+      fixedAssetsValue: parseInt(data.fixedAssetsValue || '0', 10),
+    };
+    
+    dispatch({ type: 'UPDATE_STEP1', payload: formattedData });
     dispatch({ type: 'SET_CURRENT_STEP', payload: 2 });
     setLocation('/step2-recommendations');
   };

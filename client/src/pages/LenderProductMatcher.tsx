@@ -38,9 +38,9 @@ export default function LenderProductMatcher() {
       
       // Product type match for capital/working capital
       const typeMatch = userScenario.lookingFor === 'capital' && 
-                       (product.productType === 'term_loan' || 
-                        product.productType === 'working_capital' ||
-                        product.productType === 'line_of_credit');
+                       (product.category === 'term_loan' || 
+                        product.category === 'working_capital' ||
+                        product.category === 'line_of_credit');
 
       return geoMatch && amountMatch && typeMatch;
     });

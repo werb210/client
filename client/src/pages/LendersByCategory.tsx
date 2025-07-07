@@ -134,7 +134,7 @@ export default function LendersByCategory() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categoryProducts.map((product) => (
+                {categoryProducts.map((product: any) => (
                   <Card key={product.id} className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-lg text-gray-900">
@@ -170,7 +170,7 @@ export default function LendersByCategory() {
                         <div className="space-y-1">
                           <p className="text-sm font-medium text-gray-700">Industries:</p>
                           <div className="flex flex-wrap gap-1">
-                            {product.industries.slice(0, 3).map((industry, index) => (
+                            {product.industries.slice(0, 3).map((industry: string, index: number) => (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {industry}
                               </Badge>

@@ -100,6 +100,7 @@ export const Step5Documents: React.FC = () => {
         onFilesUploaded={handleFilesUploaded}
         selectedProduct={selectedProduct}
         onRequirementsChange={handleRequirementsChange}
+        applicationId="test-app-123"
       />
 
       {/* Upload Summary */}

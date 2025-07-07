@@ -243,14 +243,14 @@ export default function ReliableSyncTest() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-medium text-gray-900">
-                        {category.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        {category.name.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                       </h3>
                       <Badge variant="secondary">
                         {category.count}
                       </Badge>
                     </div>
                     <div className="space-y-1">
-                      {category.products.slice(0, 3).map((product, idx) => (
+                      {category.products.slice(0, 3).map((product: any, idx: number) => (
                         <p key={idx} className="text-sm text-gray-600 truncate">
                           {product.name} ({product.lenderName})
                         </p>
