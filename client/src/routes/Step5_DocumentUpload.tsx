@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useFormData } from '@/context/FormDataContext';
+import { useFormDataContext } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequirements';
@@ -17,13 +17,13 @@ import {
 import type { UploadedFile } from '../components/DynamicDocumentRequirements';
 
 export default function Step5DocumentUpload() {
-  const { state, dispatch, saveToStorage } = useFormData();
+  const { state, dispatch } = useFormDataContext();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
   // State for tracking uploaded files and requirements completion
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
-    (state.step5DocumentUpload?.uploadedFiles || []).filter(file => file.file) as UploadedFile[]
+    (state.uploadedDocuments || []).filter(file => file.file) as UploadedFile[]
   );
   const [allRequirementsComplete, setAllRequirementsComplete] = useState(false);
   const [totalRequirements, setTotalRequirements] = useState(0);
@@ -32,16 +32,13 @@ export default function Step5DocumentUpload() {
   const handleFilesUploaded = (files: UploadedFile[]) => {
     setUploadedFiles(files);
     
-    // Update form data state
+    // Update form data state using unified schema
     dispatch({
-      type: 'UPDATE_STEP5',
+      type: 'UPDATE_FORM_DATA',
       payload: {
-        uploadedFiles: files,
-        completed: true
+        uploadedDocuments: files,
       }
     });
-    
-    saveToStorage();
   };
 
   // Handle requirements completion status
@@ -69,27 +66,21 @@ export default function Step5DocumentUpload() {
     }
 
     dispatch({
-      type: 'UPDATE_STEP5',
+      type: 'UPDATE_FORM_DATA',
       payload: {
-        uploadedFiles,
-        completed: true
+        uploadedDocuments: uploadedFiles,
       }
     });
-    
-    saveToStorage();
     setLocation('/apply/step-6');
   };
 
   const handleSaveAndContinueLater = () => {
     dispatch({
-      type: 'UPDATE_STEP5',
+      type: 'UPDATE_FORM_DATA',
       payload: {
-        uploadedFiles,
-        completed: false
+        uploadedDocuments: uploadedFiles,
       }
     });
-    
-    saveToStorage();
     
     toast({
       title: "Progress Saved",

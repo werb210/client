@@ -49,10 +49,10 @@ export default function Step7Submit() {
   
   // Calculate completion status
   const completedSteps = [
-    state.step1FinancialProfile ? 'Financial Profile' : null,
-    state.step2Recommendations ? 'Product Recommendations' : null,
-    state.step3BusinessDetails ? 'Business Details' : null,
-    state.step4ApplicantInfo ? 'Applicant Information' : null,
+    state.step1Completed ? 'Financial Profile' : null,
+    state.step2Completed ? 'Product Recommendations' : null,
+    state.step3Completed ? 'Business Details' : null,
+    state.step4Completed ? 'Applicant Information' : null,
     uploadedFiles.length > 0 ? 'Document Upload' : null,
     state.step6Signature?.signedAt ? 'Electronic Signature' : null
   ].filter(Boolean);
@@ -76,55 +76,68 @@ export default function Step7Submit() {
       // Add all application data as JSON
       const applicationData = {
         // Step 1: Financial Profile
-        businessLocation: state.step1FinancialProfile?.businessLocation || '',
-        industry: state.step1FinancialProfile?.industry || '',
-        lookingFor: state.step1FinancialProfile?.lookingFor || '',
-        fundingAmount: state.step1FinancialProfile?.fundingAmount || '',
-        useOfFunds: state.step1FinancialProfile?.useOfFunds || '',
-        salesHistory: state.step1FinancialProfile?.salesHistory || '',
-        lastYearRevenue: state.step1FinancialProfile?.lastYearRevenue || '',
-        averageMonthlyRevenue: state.step1FinancialProfile?.averageMonthlyRevenue || '',
-        accountsReceivable: state.step1FinancialProfile?.accountsReceivable || '',
-        fixedAssets: state.step1FinancialProfile?.fixedAssets || '',
-        equipmentValue: state.step1FinancialProfile?.equipmentValue || '',
+        businessLocation: state.businessLocation || '',
+        industry: state.industry || '',
+        lookingFor: state.lookingFor || '',
+        fundingAmount: state.fundingAmount || '',
+        fundsPurpose: state.fundsPurpose || '',
+        salesHistory: state.salesHistory || '',
+        revenueLastYear: state.revenueLastYear || '',
+        averageMonthlyRevenue: state.averageMonthlyRevenue || '',
+        accountsReceivableBalance: state.accountsReceivableBalance || '',
+        fixedAssetsValue: state.fixedAssetsValue || '',
+        equipmentValue: state.equipmentValue || '',
         
         // Step 2: Selected Product
-        selectedCategory: state.step1FinancialProfile?.selectedCategory || '',
+        selectedCategory: state.selectedCategory || '',
         
         // Step 3: Business Details
-        operatingName: state.step3BusinessDetails?.operatingName || '',
-        legalName: state.step3BusinessDetails?.legalName || '',
-        businessStreetAddress: state.step3BusinessDetails?.businessStreetAddress || '',
-        businessCity: state.step3BusinessDetails?.businessCity || '',
-        businessState: state.step3BusinessDetails?.businessState || '',
-        businessPostalCode: state.step3BusinessDetails?.businessPostalCode || '',
-        businessPhone: state.step3BusinessDetails?.businessPhone || '',
-        businessWebsite: state.step3BusinessDetails?.businessWebsite || '',
-        businessStructure: state.step3BusinessDetails?.businessStructure || '',
-        businessStartDate: state.step3BusinessDetails?.businessStartDate || '',
-        employeeCount: state.step3BusinessDetails?.employeeCount || '',
-        estimatedYearlyRevenue: state.step3BusinessDetails?.estimatedYearlyRevenue || '',
+        businessName: state.businessName || '',
+        businessAddress: state.businessAddress || '',
+        businessCity: state.businessCity || '',
+        businessState: state.businessState || '',
+        businessZipCode: state.businessZipCode || '',
+        businessPhone: state.businessPhone || '',
+        businessEmail: state.businessEmail || '',
+        businessWebsite: state.businessWebsite || '',
+        businessStructure: state.businessStructure || '',
+        businessStartDate: state.businessStartDate || '',
+        employeeCount: state.employeeCount || '',
+        estimatedYearlyRevenue: state.estimatedYearlyRevenue || '',
         
         // Step 4: Applicant Information
-        applicantName: `${state.step4ApplicantInfo?.firstName || ''} ${state.step4ApplicantInfo?.lastName || ''}`.trim(),
-        applicantEmail: state.step4ApplicantInfo?.email || '',
-        applicantPhone: state.step4ApplicantInfo?.personalPhone || '',
-        dateOfBirth: state.step4ApplicantInfo?.dateOfBirth || '',
-        socialSecurityNumber: state.step4ApplicantInfo?.sin || '',
-        ownershipPercentage: state.step4ApplicantInfo?.ownershipPercentage || '',
-        titleInBusiness: 'Owner/Principal', // Default title
-        homeAddress: state.step4ApplicantInfo?.homeAddress || '',
-        homeCity: state.step4ApplicantInfo?.city || '',
-        homeState: state.step4ApplicantInfo?.province || '',
-        homePostalCode: state.step4ApplicantInfo?.postalCode || '',
+        title: state.title || '',
+        firstName: state.firstName || '',
+        lastName: state.lastName || '',
+        personalEmail: state.personalEmail || '',
+        personalPhone: state.personalPhone || '',
+        dateOfBirth: state.dateOfBirth || '',
+        socialSecurityNumber: state.socialSecurityNumber || '',
+        ownershipPercentage: state.ownershipPercentage || '',
+        creditScore: state.creditScore || '',
+        personalAnnualIncome: state.personalAnnualIncome || '',
+        applicantAddress: state.applicantAddress || '',
+        applicantCity: state.applicantCity || '',
+        applicantState: state.applicantState || '',
+        applicantPostalCode: state.applicantPostalCode || '',
+        yearsWithBusiness: state.yearsWithBusiness || '',
+        previousLoans: state.previousLoans || '',
+        bankruptcyHistory: state.bankruptcyHistory || '',
         
         // Partner information (if applicable)
-        partnerName: `${state.step4ApplicantInfo?.partnerFirstName || ''} ${state.step4ApplicantInfo?.partnerLastName || ''}`.trim(),
-        partnerEmail: state.step4ApplicantInfo?.partnerEmail || '',
-        partnerPhone: state.step4ApplicantInfo?.partnerPhone || '',
-        partnerOwnership: state.step4ApplicantInfo?.partnerOwnershipPercentage || '',
-        partnerTitle: 'Partner', // Default title
-        partnerSSN: state.step4ApplicantInfo?.partnerSinSsn || '',
+        partnerFirstName: state.partnerFirstName || '',
+        partnerLastName: state.partnerLastName || '',
+        partnerEmail: state.partnerEmail || '',
+        partnerPhone: state.partnerPhone || '',
+        partnerDateOfBirth: state.partnerDateOfBirth || '',
+        partnerSinSsn: state.partnerSinSsn || '',
+        partnerOwnershipPercentage: state.partnerOwnershipPercentage || '',
+        partnerCreditScore: state.partnerCreditScore || '',
+        partnerPersonalAnnualIncome: state.partnerPersonalAnnualIncome || '',
+        partnerAddress: state.partnerAddress || '',
+        partnerCity: state.partnerCity || '',
+        partnerState: state.partnerState || '',
+        partnerPostalCode: state.partnerPostalCode || '',
         
         // Step 6: Signature Status
         signatureComplete: !!state.step6Signature?.signedAt,
@@ -255,20 +268,20 @@ export default function Step7Submit() {
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Business Information</h4>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p><strong>Business:</strong> {state.step3BusinessDetails?.operatingName || 'Not provided'}</p>
-                  <p><strong>Industry:</strong> {state.step1FinancialProfile?.industry || 'Not provided'}</p>
-                  <p><strong>Location:</strong> {state.step1FinancialProfile?.businessLocation || 'Not provided'}</p>
-                  <p><strong>Structure:</strong> {state.step3BusinessDetails?.businessStructure || 'Not provided'}</p>
+                  <p><strong>Business:</strong> {state.businessName || 'Not provided'}</p>
+                  <p><strong>Industry:</strong> {state.industry || 'Not provided'}</p>
+                  <p><strong>Location:</strong> {state.businessLocation || 'Not provided'}</p>
+                  <p><strong>Structure:</strong> {state.businessStructure || 'Not provided'}</p>
                 </div>
               </div>
               
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Funding Request</h4>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p><strong>Amount:</strong> {state.step1FinancialProfile?.fundingAmount || 'Not provided'}</p>
-                  <p><strong>Purpose:</strong> {state.step1FinancialProfile?.useOfFunds || 'Not provided'}</p>
-                  <p><strong>Product Type:</strong> {state.step1FinancialProfile?.selectedCategory || 'Not selected'}</p>
-                  <p><strong>Revenue:</strong> {state.step1FinancialProfile?.lastYearRevenue || 'Not provided'}</p>
+                  <p><strong>Amount:</strong> {state.fundingAmount || 'Not provided'}</p>
+                  <p><strong>Purpose:</strong> {state.fundsPurpose || 'Not provided'}</p>
+                  <p><strong>Product Type:</strong> {state.selectedCategory || 'Not selected'}</p>
+                  <p><strong>Revenue:</strong> {state.revenueLastYear || 'Not provided'}</p>
                 </div>
               </div>
             </div>

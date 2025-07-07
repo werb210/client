@@ -71,41 +71,38 @@ export default function Step7FinalSubmission() {
   // Compile application summary from form data
   const applicationSummary: ApplicationSummary = {
     businessInfo: {
-      location: state.step1FinancialProfile.businessLocation || '',
-      industry: state.step1FinancialProfile.industry || '',
-      monthlyRevenue: state.step1FinancialProfile.monthlyRevenue || '',
-      businessAge: state.step1FinancialProfile.businessAge || '',
-      useOfFunds: state.step1FinancialProfile.useOfFunds || '',
-      selectedCategory: state.step1FinancialProfile.selectedCategory || '',
-      selectedCategoryName: state.step1FinancialProfile.selectedCategoryName || '',
+      location: state.businessLocation || '',
+      industry: state.industry || '',
+      monthlyRevenue: state.averageMonthlyRevenue?.toString() || '',
+      businessAge: state.salesHistory || '',
+      useOfFunds: state.fundsPurpose || '',
+      selectedCategory: state.selectedCategory || '',
+      selectedCategoryName: state.selectedCategoryName || '',
     },
     businessDetails: {
-      businessStructure: state.step3BusinessDetails?.businessStructure || '',
-      incorporationDate: state.step3BusinessDetails?.incorporationDate || '',
-      businessAddress: state.step3BusinessDetails?.businessAddress || {
-        street: '',
-        city: '',
-        province: '',
-        postalCode: '',
-        country: ''
+      businessStructure: state.businessStructure || '',
+      incorporationDate: state.businessStartDate || '',
+      businessAddress: {
+        street: state.businessAddress || '',
+        city: state.businessCity || '',
+        province: state.businessState || '',
+        postalCode: state.businessZipCode || '',
+        country: state.businessLocation || ''
       },
-      taxId: state.step3BusinessDetails?.taxId || '',
+      taxId: state.socialSecurityNumber || '',
     },
     financialInfo: {
-      annualRevenue: state.step4FinancialInfo?.annualRevenue || '',
-      monthlyExpenses: state.step4FinancialInfo?.monthlyExpenses || '',
-      numberOfEmployees: state.step4FinancialInfo?.numberOfEmployees || '',
-      totalAssets: state.step4FinancialInfo?.totalAssets || '',
-      totalLiabilities: state.step4FinancialInfo?.totalLiabilities || '',
+      annualRevenue: state.revenueLastYear?.toString() || '',
+      monthlyExpenses: state.monthlyExpenses?.toString() || '',
+      numberOfEmployees: state.numberOfEmployees?.toString() || '',
+      totalAssets: state.totalAssets?.toString() || '',
+      totalLiabilities: state.totalLiabilities?.toString() || '',
     },
     documents: {
-      totalCategories: state.step5DocumentUpload?.categories?.length || 0,
-      uploadedDocuments: state.step5DocumentUpload?.categories?.reduce((acc, cat) => 
-        acc + cat.documents.filter(doc => doc.status === 'completed').length, 0
-      ) || 0,
-      completedCategories: state.step5DocumentUpload?.categories?.filter(cat => 
-        cat.uploadLater || cat.documents.some(doc => doc.status === 'completed')
-      ).length || 0,
+      totalCategories: state.step5DocumentUpload?.uploadedFiles?.length || 0,
+      uploadedDocuments: state.step5DocumentUpload?.uploadedFiles?.filter(file => 
+        file.status === 'completed').length || 0,
+      completedCategories: state.step5DocumentUpload?.uploadedFiles?.length || 0,
     },
     signatureStatus: {
       completed: true, // Assume signature completed to reach this step

@@ -39,6 +39,8 @@ export const ApplicationFormSchema = z.object({
   selectedProductName: z.string().optional(),
   selectedLenderName: z.string().optional(),
   matchScore: z.number().optional(),
+  selectedCategory: z.string().optional(),
+  selectedCategoryName: z.string().optional(),
 
   // Stage 3 – Business Details
   businessName: z.string(),
@@ -53,6 +55,8 @@ export const ApplicationFormSchema = z.object({
   businessStructure: z.enum(['sole_proprietorship', 'partnership', 'llc', 'corporation', 's_corp', 'non_profit']),
   employeeCount: z.number().int().positive(),
   estimatedYearlyRevenue: z.number().optional(),
+  incorporationDate: z.string().optional(),
+  taxId: z.string().optional(),
 
   // Stage 4A - Financial Information
   annualRevenue: z.string().optional(),

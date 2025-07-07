@@ -10,7 +10,7 @@ import { StageMonitor } from '@/components/StageMonitor';
 import Step1FinancialProfile from '@/routes/Step1_FinancialProfile_Complete';
 import Step2Recommendations from '@/routes/Step2_Recommendations';
 import Step3BusinessDetails from '@/routes/Step3_BusinessDetails';
-import Step4FinancialInfo from '@/routes/Step4_FinancialInfo';
+import Step4ApplicantDetails from '@/routes/Step4_ApplicantDetails';
 import Step5DocumentUpload from '@/routes/Step5_DocumentUpload';
 import Step6Signature from '@/routes/Step6_Signature';
 
@@ -18,7 +18,7 @@ const steps = [
   { id: 1, title: 'Financial Profile', component: Step1FinancialProfile },
   { id: 2, title: 'Recommendations', component: Step2Recommendations },
   { id: 3, title: 'Business Details', component: Step3BusinessDetails },
-  { id: 4, title: 'Financial Info', component: Step4FinancialInfo },
+  { id: 4, title: 'Applicant Details', component: Step4ApplicantDetails },
   { id: 5, title: 'Document Upload', component: Step5DocumentUpload },
   { id: 6, title: 'Signature', component: Step6Signature },
 ];
@@ -27,7 +27,7 @@ const steps = [
 const focusedSteps = [
   { id: 1, title: 'Financial Profile', component: Step1FinancialProfile },
   { id: 3, title: 'Business Details', component: Step3BusinessDetails },
-  { id: 4, title: 'Financial Info', component: Step4FinancialInfo },
+  { id: 4, title: 'Applicant Details', component: Step4ApplicantDetails },
 ];
 
 export default function SideBySideApplication() {
@@ -87,21 +87,21 @@ export default function SideBySideApplication() {
   const getStepStatus = (stepId: number) => {
     switch (stepId) {
       case 1:
-        return state.step1FinancialProfile ? 'completed' : 'current';
+        return state.step1Completed ? 'completed' : 'current';
       case 2:
-        return state.step1FinancialProfile?.selectedCategory ? 'completed' : 
-               state.step1FinancialProfile ? 'current' : 'pending';
+        return state.selectedCategory ? 'completed' : 
+               state.step1Completed ? 'current' : 'pending';
       case 3:
-        return state.step3BusinessDetails ? 'completed' :
-               state.step1FinancialProfile?.selectedCategory ? 'current' : 'pending';
+        return state.step3Completed ? 'completed' :
+               state.selectedCategory ? 'current' : 'pending';
       case 4:
-        return state.step4FinancialInfo ? 'completed' :
-               state.step3BusinessDetails ? 'current' : 'pending';
+        return state.step4Completed ? 'completed' :
+               state.step3Completed ? 'current' : 'pending';
       case 5:
-        return state.step5DocumentUpload ? 'completed' :
-               state.step4FinancialInfo ? 'current' : 'pending';
+        return state.step5Completed ? 'completed' :
+               state.step4Completed ? 'current' : 'pending';
       case 6:
-        return state.step5DocumentUpload ? 'current' : 'pending';
+        return state.step5Completed ? 'current' : 'pending';
       default:
         return 'pending';
     }
@@ -120,11 +120,11 @@ export default function SideBySideApplication() {
 
   const getCurrentStepIndex = () => {
     // Determine current step based on form completion state (0-indexed for StageMonitor)
-    if (!state.step1FinancialProfile) return 0; // Step 1 - Financial Profile
-    if (!state.step1FinancialProfile.selectedCategory) return 1; // Step 2 - Recommendations
-    if (!state.step3BusinessDetails) return 2; // Step 3 - Business Details  
-    if (!state.step4FinancialInfo) return 3; // Step 4 - Financial Info
-    if (!state.step5DocumentUpload) return 4; // Step 5 - Document Upload
+    if (!state.step1Completed) return 0; // Step 1 - Financial Profile
+    if (!state.selectedCategory) return 1; // Step 2 - Recommendations
+    if (!state.step3Completed) return 2; // Step 3 - Business Details  
+    if (!state.step4Completed) return 3; // Step 4 - Financial Info
+    if (!state.step5Completed) return 4; // Step 5 - Document Upload
     return 5; // Step 6 - Signature & Submission
   };
 
