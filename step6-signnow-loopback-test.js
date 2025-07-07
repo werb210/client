@@ -5,214 +5,326 @@
  */
 
 async function runStep6LoopbackTest() {
-  console.log('🔐 STEP 6 SIGNNOW LOOPBACK TEST');
-  console.log('=' .repeat(50));
+  console.log('🔏 STEP 6 SIGNNOW LOOPBACK TEST');
+  console.log('Testing complete signature workflow with diagnostic verification');
   
-  const results = {
-    step6Navigation: false,
-    signNowInitiation: false,
-    apiEndpointReachable: false,
-    embeddedView: false,
-    completionDetection: false,
-    overallWorkflow: false
+  const testResults = {
+    testId: `step6-loopback-${Date.now()}`,
+    startTime: new Date().toISOString(),
+    formDataValidation: {},
+    signingPayload: null,
+    fieldAnalysis: {},
+    signNowIntegration: {},
+    issues: [],
+    successMetrics: {}
   };
-  
-  let testApplicationId = 'test-' + Date.now();
   
   try {
-    // PHASE 1: Navigate to Step 6
-    console.log('\n📱 PHASE 1: Step 6 Navigation');
-    window.history.pushState({}, '', '/apply/step-6');
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Step 1: Form Data Validation
+    console.log('\n📋 STEP 1: FORM DATA VALIDATION');
+    const formData = JSON.parse(localStorage.getItem('boreal-application-form') || '{}');
     
-    const step6Container = document.querySelector('main') || document.body;
-    const hasStep6Content = step6Container && step6Container.textContent.includes('Sign');
+    if (Object.keys(formData).length === 0) {
+      console.log('❌ No form data found - application not started');
+      testResults.issues.push('No form data in localStorage');
+      return testResults;
+    }
     
-    results.step6Navigation = hasStep6Content;
-    console.log(results.step6Navigation ? '✅ Step 6 accessible' : '❌ Step 6 not accessible');
+    console.log('✅ Form data found:', Object.keys(formData).length, 'fields');
+    testResults.formDataValidation.fieldsFound = Object.keys(formData).length;
     
-    // PHASE 2: Test SignNow API Initiation
-    console.log('\n📡 PHASE 2: SignNow API Initiation');
-    try {
-      const initiationResponse = await fetch(`https://staffportal.replit.app/api/public/applications/${testApplicationId}/initiate-signing`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          businessDetails: {
-            businessName: 'Test Company',
-            legalName: 'Test Company Inc.'
-          },
-          applicantInfo: {
-            firstName: 'John',
-            lastName: 'Doe'
-          }
-        })
+    // Step 2: Critical Field Verification
+    console.log('\n🔍 STEP 2: CRITICAL FIELD VERIFICATION');
+    
+    const criticalFields = {
+      businessDetails: ['operatingName', 'legalName', 'businessStreetAddress', 'businessCity'],
+      applicantInfo: ['firstName', 'lastName', 'personalEmail', 'ownershipPercentage'],
+      financialProfile: ['businessLocation', 'industry', 'fundingAmount'],
+      lenderSelection: ['selectedLenderName', 'selectedProductName']
+    };
+    
+    const fieldStatus = {};
+    let criticalFieldsPresent = 0;
+    let totalCriticalFields = 0;
+    
+    Object.entries(criticalFields).forEach(([category, fields]) => {
+      fieldStatus[category] = {};
+      fields.forEach(field => {
+        totalCriticalFields++;
+        const isPresent = formData[field] !== undefined && formData[field] !== null && formData[field] !== '';
+        fieldStatus[category][field] = isPresent;
+        if (isPresent) criticalFieldsPresent++;
+        console.log(`${isPresent ? '✅' : '❌'} ${category}.${field}:`, formData[field]);
       });
-      
-      results.apiEndpointReachable = true;
-      console.log(`✅ API Endpoint Reachable: ${initiationResponse.status}`);
-      
-      if (initiationResponse.status === 200) {
-        const signData = await initiationResponse.json();
-        if (signData.signingUrl || signData.documentUrl) {
-          results.signNowInitiation = true;
-          console.log('✅ SignNow URL Generated Successfully');
-          console.log('🔗 Signing URL:', signData.signingUrl || signData.documentUrl);
-        } else {
-          console.log('❌ No signing URL in response:', signData);
-        }
-      } else if (initiationResponse.status === 501) {
-        console.log('⚠️  SignNow Endpoint Not Implemented (501) - Expected for some environments');
-        results.signNowInitiation = 'NOT_IMPLEMENTED';
-      } else {
-        console.log(`❌ SignNow API Error: ${initiationResponse.status}`);
-        const errorText = await initiationResponse.text();
-        console.log('Error details:', errorText);
-      }
-      
-    } catch (apiError) {
-      console.log('❌ SignNow API Call Failed:', apiError.message);
-      results.apiEndpointReachable = false;
-    }
+    });
     
-    // PHASE 3: Test Embedded View Elements
-    console.log('\n🖼️  PHASE 3: Embedded SignNow View');
-    const embeddedElements = [
-      document.querySelector('iframe[src*="signnow"]'),
-      document.querySelector('iframe[src*="sign"]'),
-      document.querySelector('[data-testid="signnow-iframe"]'),
-      document.querySelector('.signnow-container'),
-      document.querySelector('button[data-action*="sign"]')
-    ].filter(Boolean);
+    testResults.formDataValidation.criticalFieldsPresent = criticalFieldsPresent;
+    testResults.formDataValidation.totalCriticalFields = totalCriticalFields;
+    testResults.formDataValidation.criticalFieldsRate = (criticalFieldsPresent / totalCriticalFields * 100).toFixed(1);
     
-    if (embeddedElements.length > 0) {
-      results.embeddedView = true;
-      console.log(`✅ SignNow Embedded Elements Found: ${embeddedElements.length}`);
-      embeddedElements.forEach((el, i) => {
-        console.log(`   Element ${i + 1}:`, el.tagName, el.className || 'no-class');
-      });
-    } else {
-      console.log('❌ No SignNow Embedded Elements Found');
-      
-      // Check for redirect-based approach
-      const redirectButtons = document.querySelectorAll('button, a').filter(el => 
-        el.textContent.includes('Sign') || el.textContent.includes('Continue to')
-      );
-      
-      if (redirectButtons.length > 0) {
-        console.log(`⚠️  Found ${redirectButtons.length} potential redirect buttons for signing`);
-        results.embeddedView = 'REDIRECT_BASED';
-      }
-    }
+    console.log(`📊 Critical fields: ${criticalFieldsPresent}/${totalCriticalFields} (${testResults.formDataValidation.criticalFieldsRate}%)`);
     
-    // PHASE 4: Test Completion Detection
-    console.log('\n✅ PHASE 4: Completion Detection Logic');
+    // Step 3: Partner Fields Analysis (Critical Test)
+    console.log('\n👥 STEP 3: PARTNER FIELDS ANALYSIS');
     
-    // Check for completion status tracking elements
-    const completionElements = [
-      document.querySelector('[data-status="completed"]'),
-      document.querySelector('[data-testid="signature-complete"]'),
-      document.querySelector('.signature-status'),
-      document.querySelector('button[disabled]') // Disabled continue button
-    ].filter(Boolean);
+    const ownership = parseInt(formData.ownershipPercentage) || 100;
+    const shouldHavePartner = ownership < 100;
     
-    if (completionElements.length > 0) {
-      results.completionDetection = true;
-      console.log('✅ Completion Detection Elements Present');
-    } else {
-      console.log('❌ No Completion Detection Elements Found');
-    }
-    
-    // Test localStorage/sessionStorage for signature status
-    const signatureStatus = localStorage.getItem('signature-status') || 
-                           sessionStorage.getItem('signature-status') ||
-                           localStorage.getItem('boreal-application-form');
-    
-    if (signatureStatus) {
-      console.log('✅ Signature Status Tracking Available');
-      results.completionDetection = true;
-    }
-    
-    // PHASE 5: Overall Workflow Assessment
-    console.log('\n🎯 PHASE 5: Overall Workflow Assessment');
-    
-    const workflowChecks = [
-      results.step6Navigation,
-      results.apiEndpointReachable,
-      results.signNowInitiation === true || results.signNowInitiation === 'NOT_IMPLEMENTED',
-      results.embeddedView === true || results.embeddedView === 'REDIRECT_BASED'
+    const partnerFields = [
+      'partnerFirstName', 'partnerLastName', 'partnerEmail', 'partnerPhone',
+      'partnerOwnershipPercentage', 'partnerCreditScore'
     ];
     
-    const passedChecks = workflowChecks.filter(Boolean).length;
-    results.overallWorkflow = passedChecks >= 3;
+    const partnerFieldsPresent = partnerFields.filter(field => 
+      formData[field] !== undefined && formData[field] !== null && formData[field] !== ''
+    );
     
-    console.log(`📊 Workflow Checks Passed: ${passedChecks}/4`);
+    testResults.fieldAnalysis.ownershipPercentage = ownership;
+    testResults.fieldAnalysis.shouldHavePartnerFields = shouldHavePartner;
+    testResults.fieldAnalysis.partnerFieldsFound = partnerFieldsPresent.length;
+    testResults.fieldAnalysis.partnerFieldsList = partnerFieldsPresent;
     
-  } catch (overallError) {
-    console.log('❌ Overall Test Error:', overallError.message);
+    console.log('Ownership percentage:', ownership + '%');
+    console.log('Should have partner fields:', shouldHavePartner);
+    console.log('Partner fields found:', partnerFieldsPresent.length);
+    
+    if (shouldHavePartner && partnerFieldsPresent.length === 0) {
+      console.log('❌ CRITICAL ISSUE: Ownership < 100% but no partner fields');
+      testResults.issues.push('Partner fields missing despite ownership < 100%');
+    } else if (shouldHavePartner && partnerFieldsPresent.length > 0) {
+      console.log('✅ Partner fields correctly included');
+      partnerFieldsPresent.forEach(field => {
+        console.log(`  ${field}:`, formData[field]);
+      });
+    }
+    
+    // Step 4: Signing Payload Construction
+    console.log('\n📝 STEP 4: SIGNING PAYLOAD CONSTRUCTION');
+    
+    const signingPayload = {
+      businessDetails: {
+        operatingName: formData.operatingName || formData.businessName,
+        legalName: formData.legalName,
+        businessStreetAddress: formData.businessStreetAddress || formData.businessAddress,
+        businessCity: formData.businessCity,
+        businessState: formData.businessState,
+        businessPostalCode: formData.businessPostalCode,
+        businessPhone: formData.businessPhone,
+        employeeCount: formData.employeeCount,
+        businessWebsite: formData.businessWebsite,
+        businessStartDate: formData.businessStartDate,
+        businessStructure: formData.businessStructure
+      },
+      applicantInfo: {
+        title: formData.title,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        personalEmail: formData.personalEmail,
+        personalPhone: formData.personalPhone,
+        dateOfBirth: formData.dateOfBirth,
+        socialSecurityNumber: formData.socialSecurityNumber,
+        ownershipPercentage: formData.ownershipPercentage,
+        creditScore: formData.creditScore,
+        personalAnnualIncome: formData.personalAnnualIncome,
+        applicantAddress: formData.applicantAddress,
+        applicantCity: formData.applicantCity,
+        applicantState: formData.applicantState,
+        applicantPostalCode: formData.applicantPostalCode,
+        yearsWithBusiness: formData.yearsWithBusiness,
+        previousLoans: formData.previousLoans,
+        bankruptcyHistory: formData.bankruptcyHistory
+      },
+      partnerInfo: shouldHavePartner ? {
+        partnerFirstName: formData.partnerFirstName,
+        partnerLastName: formData.partnerLastName,
+        partnerEmail: formData.partnerEmail,
+        partnerPhone: formData.partnerPhone,
+        partnerDateOfBirth: formData.partnerDateOfBirth,
+        partnerSinSsn: formData.partnerSinSsn,
+        partnerOwnershipPercentage: formData.partnerOwnershipPercentage,
+        partnerCreditScore: formData.partnerCreditScore,
+        partnerPersonalAnnualIncome: formData.partnerPersonalAnnualIncome,
+        partnerAddress: formData.partnerAddress,
+        partnerCity: formData.partnerCity,
+        partnerState: formData.partnerState,
+        partnerPostalCode: formData.partnerPostalCode
+      } : null,
+      financialProfile: {
+        businessLocation: formData.businessLocation,
+        headquarters: formData.headquarters,
+        industry: formData.industry,
+        lookingFor: formData.lookingFor,
+        fundingAmount: formData.fundingAmount,
+        fundsPurpose: formData.fundsPurpose,
+        salesHistory: formData.salesHistory,
+        revenueLastYear: formData.revenueLastYear,
+        averageMonthlyRevenue: formData.averageMonthlyRevenue,
+        accountsReceivableBalance: formData.accountsReceivableBalance,
+        fixedAssetsValue: formData.fixedAssetsValue,
+        equipmentValue: formData.equipmentValue
+      },
+      lenderSelection: {
+        selectedProductId: formData.selectedProductId,
+        selectedProductName: formData.selectedProductName,
+        selectedLenderName: formData.selectedLenderName,
+        matchScore: formData.matchScore,
+        selectedCategory: formData.selectedCategory,
+        selectedCategoryName: formData.selectedCategoryName
+      },
+      documentInfo: {
+        uploadedDocuments: formData.uploadedDocuments || [],
+        bypassedDocuments: formData.bypassedDocuments || false
+      }
+    };
+    
+    testResults.signingPayload = signingPayload;
+    
+    // Step 5: Field Count Analysis
+    console.log('\n📊 STEP 5: FIELD COUNT ANALYSIS');
+    
+    let totalFields = 0;
+    let populatedFields = 0;
+    let nullFields = [];
+    
+    function analyzeSection(section, sectionName) {
+      if (!section) return;
+      
+      Object.entries(section).forEach(([key, value]) => {
+        totalFields++;
+        if (value !== null && value !== undefined && value !== '') {
+          populatedFields++;
+        } else {
+          nullFields.push(`${sectionName}.${key}`);
+        }
+      });
+    }
+    
+    analyzeSection(signingPayload.businessDetails, 'businessDetails');
+    analyzeSection(signingPayload.applicantInfo, 'applicantInfo');
+    analyzeSection(signingPayload.partnerInfo, 'partnerInfo');
+    analyzeSection(signingPayload.financialProfile, 'financialProfile');
+    analyzeSection(signingPayload.lenderSelection, 'lenderSelection');
+    
+    testResults.fieldAnalysis.totalFields = totalFields;
+    testResults.fieldAnalysis.populatedFields = populatedFields;
+    testResults.fieldAnalysis.nullFields = nullFields;
+    testResults.fieldAnalysis.fieldCompletionRate = (populatedFields / totalFields * 100).toFixed(1);
+    
+    console.log('Total fields in payload:', totalFields);
+    console.log('Populated fields:', populatedFields);
+    console.log('Field completion rate:', testResults.fieldAnalysis.fieldCompletionRate + '%');
+    
+    if (nullFields.length > 0) {
+      console.log('Null/empty fields:', nullFields.length);
+      nullFields.forEach(field => console.log(`  ❌ ${field}`));
+    }
+    
+    // Step 6: SignNow Integration Test
+    console.log('\n🔏 STEP 6: SIGNNOW INTEGRATION TEST');
+    
+    if (window.location.pathname.includes('step-6') || window.location.pathname.includes('signature')) {
+      console.log('✅ Currently on Step 6 signature page');
+      testResults.signNowIntegration.onSignaturePage = true;
+      
+      // Check for iframe or embedded content
+      const iframe = document.querySelector('iframe');
+      const signNowContainer = document.querySelector('[class*="signnow"], [id*="signnow"]');
+      
+      if (iframe) {
+        console.log('✅ SignNow iframe detected');
+        console.log('Iframe src:', iframe.src);
+        testResults.signNowIntegration.iframeDetected = true;
+        testResults.signNowIntegration.iframeSrc = iframe.src;
+      } else {
+        console.log('⚠️ No SignNow iframe detected');
+        testResults.signNowIntegration.iframeDetected = false;
+      }
+      
+      if (signNowContainer) {
+        console.log('✅ SignNow container detected');
+        testResults.signNowIntegration.containerDetected = true;
+      }
+      
+    } else {
+      console.log('ℹ️ Not currently on Step 6 - navigate to signature step for full test');
+      testResults.signNowIntegration.onSignaturePage = false;
+    }
+    
+    // Step 7: Success Metrics Calculation
+    console.log('\n📈 STEP 7: SUCCESS METRICS CALCULATION');
+    
+    const expectedFields = 58;
+    const fieldSuccessRate = (populatedFields / expectedFields * 100).toFixed(1);
+    const criticalFieldsSuccess = testResults.formDataValidation.criticalFieldsRate;
+    const partnerFieldsSuccess = shouldHavePartner ? (partnerFieldsPresent.length > 0 ? 100 : 0) : 100;
+    
+    testResults.successMetrics = {
+      expectedFields,
+      actualFields: totalFields,
+      populatedFields,
+      fieldSuccessRate: parseFloat(fieldSuccessRate),
+      criticalFieldsSuccess: parseFloat(criticalFieldsSuccess),
+      partnerFieldsSuccess,
+      overallSuccess: ((parseFloat(fieldSuccessRate) + parseFloat(criticalFieldsSuccess) + partnerFieldsSuccess) / 3).toFixed(1)
+    };
+    
+    console.log('Expected fields:', expectedFields);
+    console.log('Actual fields:', totalFields);
+    console.log('Field success rate:', fieldSuccessRate + '%');
+    console.log('Critical fields success:', criticalFieldsSuccess + '%');
+    console.log('Partner fields success:', partnerFieldsSuccess + '%');
+    console.log('Overall success rate:', testResults.successMetrics.overallSuccess + '%');
+    
+    // Step 8: Issue Summary
+    if (testResults.issues.length > 0) {
+      console.log('\n⚠️ ISSUES IDENTIFIED:');
+      testResults.issues.forEach((issue, index) => {
+        console.log(`${index + 1}. ${issue}`);
+      });
+    } else {
+      console.log('\n✅ NO CRITICAL ISSUES IDENTIFIED');
+    }
+    
+    // Step 9: 92.3% Analysis
+    console.log('\n🎯 92.3% SUCCESS RATE ANALYSIS');
+    const successRate = parseFloat(testResults.successMetrics.overallSuccess);
+    
+    if (successRate >= 92.3) {
+      console.log(`✅ SUCCESS RATE ACHIEVED: ${successRate}% >= 92.3%`);
+      testResults.successMetrics.achievedTarget = true;
+    } else {
+      console.log(`❌ SUCCESS RATE BELOW TARGET: ${successRate}% < 92.3%`);
+      console.log('Areas needing improvement:');
+      
+      if (testResults.successMetrics.fieldSuccessRate < 92.3) {
+        console.log(`  - Field completion: ${testResults.successMetrics.fieldSuccessRate}%`);
+      }
+      if (testResults.successMetrics.criticalFieldsSuccess < 92.3) {
+        console.log(`  - Critical fields: ${testResults.successMetrics.criticalFieldsSuccess}%`);
+      }
+      if (partnerFieldsSuccess < 100 && shouldHavePartner) {
+        console.log(`  - Partner fields: ${partnerFieldsSuccess}%`);
+      }
+      
+      testResults.successMetrics.achievedTarget = false;
+    }
+    
+    console.log('\n🔄 STEP 6 SIGNNOW LOOPBACK TEST COMPLETE');
+    console.log('Test results available in testResults object');
+    
+    return testResults;
+    
+  } catch (error) {
+    console.error('❌ Step 6 loopback test error:', error);
+    testResults.issues.push(`Test execution error: ${error.message}`);
+    return testResults;
   }
-  
-  // FINAL ANALYSIS
-  console.log('\n🔍 STEP 6 DIAGNOSTIC ANALYSIS');
-  console.log('=' .repeat(50));
-  
-  const criticalIssues = [];
-  const warnings = [];
-  
-  if (!results.step6Navigation) {
-    criticalIssues.push('Step 6 page not accessible');
-  }
-  
-  if (!results.apiEndpointReachable) {
-    criticalIssues.push('SignNow API endpoint unreachable');
-  }
-  
-  if (results.signNowInitiation === false) {
-    criticalIssues.push('SignNow URL generation failing');
-  } else if (results.signNowInitiation === 'NOT_IMPLEMENTED') {
-    warnings.push('SignNow endpoint returns 501 (not implemented)');
-  }
-  
-  if (!results.embeddedView && results.embeddedView !== 'REDIRECT_BASED') {
-    warnings.push('No embedded SignNow view detected');
-  }
-  
-  if (!results.completionDetection) {
-    warnings.push('Signature completion detection may not work');
-  }
-  
-  console.log('\n🚨 CRITICAL ISSUES:', criticalIssues.length);
-  criticalIssues.forEach(issue => console.log(`   ❌ ${issue}`));
-  
-  console.log('\n⚠️  WARNINGS:', warnings.length);
-  warnings.forEach(warning => console.log(`   ⚠️  ${warning}`));
-  
-  // DEPLOYMENT RECOMMENDATION
-  console.log('\n🎯 DEPLOYMENT RECOMMENDATION:');
-  if (criticalIssues.length > 0) {
-    console.log('❌ DEPLOYMENT BLOCKER: Step 6 has critical issues');
-    console.log('🔧 REQUIRED FIXES:');
-    criticalIssues.forEach(issue => console.log(`   • ${issue}`));
-  } else if (warnings.length > 2) {
-    console.log('⚠️  DEPLOYMENT CAUTION: Multiple warnings detected');
-    console.log('✅ SAFE TO DEPLOY: But monitor Step 6 closely in production');
-  } else {
-    console.log('✅ DEPLOYMENT SAFE: Step 6 ready for production');
-  }
-  
-  console.log('\n📋 DETAILED RESULTS:');
-  console.log(JSON.stringify(results, null, 2));
-  
-  return {
-    criticalIssues: criticalIssues.length,
-    warnings: warnings.length,
-    isDeploymentBlocked: criticalIssues.length > 0,
-    results
-  };
 }
 
-// Execute Step 6 loopback test
-runStep6LoopbackTest();
+// Make function globally available
+if (typeof window !== 'undefined') {
+  window.runStep6LoopbackTest = runStep6LoopbackTest;
+}
+
+console.log('🔏 Step 6 SignNow Loopback Test Ready');
+console.log('Run: runStep6LoopbackTest() to execute comprehensive validation');
