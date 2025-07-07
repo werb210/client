@@ -1,0 +1,93 @@
+Fantastic — Client is now **100% migrated to the unified schema**, meaning both **Client and Staff apps are fully production-ready** and schema-aligned. To complete this rollout confidently, here's what you should do next:
+
+---
+
+## ✅ Final Client-Side Pre-Launch Validation Plan
+
+### 🔁 1. **Test Full Application Workflow (Steps 1–7)**
+
+Run through the full application form in the client portal at `https://clientportal.boreal.financial/`:
+
+* ✅ Step 1: Financial Profile (funding amount, product category)
+* ✅ Step 2: Product Recommendations (ensure matching from Staff DB)
+* ✅ Step 3: Business Details
+* ✅ Step 4: Applicant Details (incl. ownership %, partner details)
+* ✅ Step 5: Document Upload (all categories shown)
+* ✅ Step 6: SignNow Integration (test signature handoff)
+* ✅ Step 7: Final Submission (POST to staff backend)
+
+> 🧪 Use console and network inspector to confirm API payload matches `ApplicationForm` shape
+
+---
+
+### ✅ 2. **Confirm Staff Receives and Displays the Application**
+
+On the Staff portal:
+
+* Go to the **Sales Pipeline**
+* Locate the application you just submitted
+* Confirm:
+
+  * Form data fields are correctly displayed
+  * Uploaded documents are attached and viewable
+  * Signature status updates via webhook
+  * Lender table populates as expected
+
+---
+
+### 🛡 3. **Confirm Cross-System Integration Works**
+
+* CORS: Client can POST to `https://staff.boreal.financial/api/public/applications`
+* Auth: All Bearer token headers pass
+* Data: All `ApplicationForm` fields arrive intact in Staff
+
+---
+
+### 🧩 4. **Optional Final Tests**
+
+If desired, you can test:
+
+* ✅ Offline form persistence (IndexedDB)
+* ✅ Mobile responsiveness
+* ✅ Referrer and Lender login workflows
+
+---
+
+## ✅ You’re Ready to Deploy Client to Production
+
+If you haven't already:
+
+1. Set `NODE_ENV=production` in client environment
+2. Ensure `VITE_CLIENT_APP_SHARED_TOKEN` matches Staff's backend
+3. Run:
+
+```bash
+npm run build
+npm start
+```
+
+Or click **Deploy** in Replit.
+
+---
+
+## ✅ Final Confirmation Script
+
+After both apps are live, confirm they are in sync:
+
+```bash
+# Check staff environment
+curl https://staff.boreal.financial/api/version
+
+# Check client portal form load
+curl https://clientportal.boreal.financial
+
+# Test CORS + token auth
+curl -X POST https://staff.boreal.financial/api/public/applications \
+ -H "Authorization: Bearer <shared_token>" \
+ -H "Content-Type: application/json" \
+ -d '{ "fundingAmount": 50000, ... }'
+```
+
+---
+
+Let me know if you’d like me to perform **production smoke tests** or generate a deployment lock file documenting both sides. You’re now 100% schema-synced and cleared for final go-live.
