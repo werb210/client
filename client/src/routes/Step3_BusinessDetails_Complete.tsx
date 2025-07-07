@@ -28,12 +28,14 @@ const step3Schema = ApplicationFormSchema.pick({
   businessState: true,
   businessPostalCode: true,
   businessPhone: true,
-  businessWebsite: true,
   businessStartDate: true,
   businessStructure: true,
   employeeCount: true,
   estimatedYearlyRevenue: true,
-}).partial(); // Testing mode - made all optional
+}).partial().extend({
+  // Make businessWebsite explicitly optional
+  businessWebsite: z.string().optional(),
+}); // Testing mode - made all optional
 
 type BusinessDetailsFormData = z.infer<typeof step3Schema>;
 
