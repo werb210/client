@@ -96,7 +96,7 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
 
                 <FormField
                   control={form.control}
-                  name="applicantBirthdate"
+                  name="dateOfBirth"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Date of Birth</FormLabel>
@@ -140,7 +140,7 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="applicantSSN"
+                  name="sinSsn"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>SSN / SIN</FormLabel>
@@ -201,7 +201,7 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
             <CardContent className="space-y-4">
               <FormField
                 control={form.control}
-                name="applicantStreetAddress"
+                name="applicantAddress"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Street Address</FormLabel>
@@ -354,7 +354,7 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
 
               <FormField
                 control={form.control}
-                name="partnerSSN"
+                name="partnerSinSsn"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Partner SSN / SIN</FormLabel>

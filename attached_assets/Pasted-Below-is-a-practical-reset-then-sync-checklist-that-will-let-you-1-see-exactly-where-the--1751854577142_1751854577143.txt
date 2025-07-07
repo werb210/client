@@ -1,0 +1,158 @@
+Below is a **practical, “reset-then-sync” checklist** that will let you
+
+1. **see exactly where the schema diverges** (side-by-side);
+2. **standardise the field names once** (DB → server → shared → client);
+3. **prove the POST / api/applications path now works end-to-end**.
+
+Everything is designed so you can execute items one-by-one without breaking the running portal.
+
+---
+
+## 1 · Tag the version you know works
+
+```bash
+# on the Staff repo
+git tag -a pre-schema-sync -m "Last known good before schema work"
+git push --tags
+```
+
+If you need to roll back you can simply:
+
+```bash
+git switch pre-schema-sync
+```
+
+---
+
+## 2 · Generate a single-source “truth file” from the DB
+
+> The DB is the most authoritative copy of your field names.
+> We’ll export the `applications` table (plus any JOINed applicant + business tables) as JSON, then treat that JSON as the canonical schema for the rest of the stack.
+
+```bash
+# Run inside the Staff container
+psql "$DATABASE_URL" -t -A -F"," -c \
+  "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'applications';" \
+  | jq -R -s -c 'split("\n")[:-1] | map(split(",") | {name:.[0], type:.[1]})' \
+  > /tmp/db_schema.json
+```
+
+---
+
+## 3 · Side-by-side comparison script
+
+Create a tiny Node script (`compareSchemas.mjs`) in the repo root:
+
+```js
+import fs from 'fs';
+import path from 'path';
+
+const dbSchema = JSON.parse(fs.readFileSync('/tmp/db_schema.json'));
+const shared  = JSON.parse(fs.readFileSync('shared/schema.json'));   // or .ts after stripping types
+const client  = JSON.parse(fs.readFileSync('client/src/types/forms.json')); // ditto
+
+function diff(src, tgt, label) {
+  const missing = src.filter(f => !tgt.some(t => t.name === f.name));
+  if (missing.length) {
+    console.log(`\n❌  ${label} is missing:`);
+    missing.forEach(f => console.log(`   • ${f.name}`));
+  }
+}
+
+diff(dbSchema, shared,  'shared schema');
+diff(dbSchema, client,  'client types');
+diff(shared,   dbSchema,'database (extra in shared)');
+```
+
+Run it:
+
+```bash
+node compareSchemas.mjs
+```
+
+You will get a **human-readable list** of exactly which fields are absent / duplicated in each layer.
+
+---
+
+## 4 · Fix order of truth
+
+1. **Database migration (if needed).**
+   If the DB is genuinely missing a column that shared/client rely on, create it in a migration; otherwise remove/rename it in code.
+
+2. **Shared schema (`shared/schema.ts`).**
+   Make this file *identical* to the DB export. Use the diff list you just produced.
+   Keep it as a `zod` or `Yup` schema so both server and client can import it.
+
+3. **Client types.**
+   Generate the client `FormData` TypeScript types **from the shared zod schema** so they can never drift again:
+
+   ```ts
+   // client/src/types/forms.d.ts
+   import { ApplicationSchema } from "@/shared/schema";
+   export type ApplicationForm = z.infer<typeof ApplicationSchema>;
+   ```
+
+4. **Server validation.**
+   Every POST/PATCH route that touches an application should use the same `ApplicationSchema` to validate incoming data; this guarantees that if the client compiles, the server accepts.
+
+---
+
+## 5 · Re-run automated tests
+
+```bash
+# staff
+npm run test:staff  # (16/16 still expected to pass)
+
+# client
+npm run test:e2e    # Cypress suite; should now post WITHOUT 500/400
+```
+
+If **any** field mismatch remains the tests will throw, giving you the exact missing key.
+
+---
+
+## 6 · Smoke-test the one endpoint that was at 80 %
+
+```bash
+curl -X POST https://staff.boreal.financial/api/applications \
+  -H "Authorization: Bearer $CLIENT_APP_SHARED_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d @fixtures/valid-application.json -i
+```
+
+Expected: **201 Created** with `"applicationId":"app_prod_…"` in body.
+
+---
+
+## 7 · Lock it in
+
+1. Commit the synchronised schemas:
+   `git add shared/schema.ts client/src/types/forms.d.ts && git commit -m "Schema unified"`
+2. Push & deploy.
+3. Tag release: `git tag -a v1.0-schema-sync -m "First unified-schema release"`
+
+---
+
+### 🔄 Keeping them in sync, forever
+
+Add a **pre-commit hook** (Husky) that re-runs `compareSchemas.mjs`; reject the commit if any diff appears. No drift possible.
+
+```bash
+# .husky/pre-commit
+npm run build:schemas && node compareSchemas.mjs || (echo "❌ schema drift"; exit 1)
+```
+
+---
+
+## ✅ What this gives you
+
+| Layer        | Source of Truth | Guaranteed In-Sync? | How                                     |
+| ------------ | --------------- | ------------------- | --------------------------------------- |
+| Database     | ✔               | ✔                   | migration files                         |
+| Shared (TS)  | ✔ (generated)   | ✔                   | direct export from DB or zod generation |
+| Server DTOs  | ✔ (import)      | ✔                   | validates with same zod schema          |
+| Client forms | ✔ (import)      | ✔                   | `z.infer` from shared schema            |
+
+Once the above steps pass you’ll have **zero schema mismatches**, the POST `/api/applications` reliability rises to 100 %, and you can safely promote Staff to production.
+
+Let me know if you need copy-and-paste snippets for the zod schema generation or the Husky hook — otherwise, this guide will close the last gap.

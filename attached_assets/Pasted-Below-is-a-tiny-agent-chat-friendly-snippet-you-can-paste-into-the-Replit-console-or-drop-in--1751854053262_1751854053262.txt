@@ -1,0 +1,92 @@
+Below is a tiny “agent-chat friendly” snippet you can paste into the **Replit console** (or drop in a quick `schema-diff.ts` file and run with `npx ts-node schema-diff.ts`).
+It prints a **side-by-side match table** of every column that exists in…
+
+* **Drizzle / Prisma / Knex schema** – whatever you keep under `server/db/schema/*`
+* **Client TypeScript interface** – whatever you keep under `client/src/types/*` (or equivalent)
+
+> **Everything happens in-process, so the result appears right in the Agent chat / Replit shell.**
+
+```ts
+/**
+ * schema-diff.ts  –  Run with:  npx ts-node schema-diff.ts
+ *
+ * 1️⃣  Edit the two glob patterns so they point at:
+ *     • the file that exports your DB model  (drizzle, zodSchemas, etc)
+ *     • the file that exports your client TS interface
+ *
+ * 2️⃣  Run -> You’ll get a console.table() showing exactly which keys
+ *     are shared, missing from DB, or missing from Client.
+ */
+
+import * as path from "path";
+import * as fs from "fs";
+
+// ------------------------------------------------------------------
+// 🔧 Adjust THESE two paths if your filenames are different
+// ------------------------------------------------------------------
+const DB_SCHEMA_PATH      = path.resolve("server/db/schema/lenderProducts.ts");
+const CLIENT_INTERFACE_PATH = path.resolve("client/src/types/LenderProduct.ts");
+// ------------------------------------------------------------------
+
+function getKeysFromFile(filePath: string): string[] {
+  const raw = fs.readFileSync(filePath, "utf8");
+  // very naive parsing: grab words that look like   foo?:  foo:  foo,
+  return [...new Set(raw.match(/\b([A-Za-z0-9_]+)\s*[:?]/g) ?? [])]
+    .map((s) => s.replace(/[:?]/g, "").trim())
+    .filter(Boolean);
+}
+
+const dbKeys     = getKeysFromFile(DB_SCHEMA_PATH);
+const clientKeys = getKeysFromFile(CLIENT_INTERFACE_PATH);
+
+const ALL = Array.from(new Set([...dbKeys, ...clientKeys]));
+
+const rows = ALL.map((key) => ({
+  field: key,
+  inDB: dbKeys.includes(key) ? "✅" : "❌",
+  inClient: clientKeys.includes(key) ? "✅" : "❌",
+}));
+
+console.table(rows);
+
+const missingInDB     = rows.filter(r => r.inDB === "❌").map(r => r.field);
+const missingInClient = rows.filter(r => r.inClient === "❌").map(r => r.field);
+
+console.log("\n🔍  Summary");
+console.log("───────────");
+console.log("Fields only in CLIENT ➜", missingInDB.length     ? missingInDB.join(", ")     : "None 🙌");
+console.log("Fields only in DB      ➜", missingInClient.length? missingInClient.join(", "): "None 🙌");
+```
+
+### What you’ll see in the Replit / Agent console
+
+```
+┌─────────┬────────────────────┬─────┬──────────┐
+│ (index) │       field        │ inDB│ inClient │
+├─────────┼────────────────────┼─────┼──────────┤
+│    0    │       id           │ ✅  │   ✅     │
+│    1    │    lenderName      │ ✅  │   ✅     │
+│    2    │    minAmount       │ ✅  │   ✅     │
+│    3    │    maxAmount       │ ✅  │   ✅     │
+│    4    │   interestRate     │ ✅  │   ❌     │  ◀─ missing in client
+│    5    │     country        │ ❌  │   ✅     │  ◀─ missing in DB
+└─────────┴────────────────────┴─────┴──────────┘
+
+🔍  Summary
+───────────
+Fields only in CLIENT ➜ country
+Fields only in DB      ➜ interestRate
+```
+
+### How to use the output
+
+* **“❌ in Client”** ➜ add the field to the client TS interface or strip it from the API payload (whichever is correct).
+* **“❌ in DB”** ➜ either add a column (migration) or stop the client from sending that property.
+
+### Why this works well in the Agent chat
+
+* No extra dependencies – just `fs`, `path`, and a few regexes.
+* Runs instantly; prints a clear table.
+* You can re-run it any time after changes to verify the schemas are *actually* unified.
+
+Feel free to drop the script in `scripts/` and call it from your CI pipeline so future PRs fail if someone introduces a fourth naming scheme again.

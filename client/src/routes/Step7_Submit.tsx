@@ -121,10 +121,10 @@ export default function Step7Submit() {
         // Partner information (if applicable)
         partnerName: `${state.step4ApplicantInfo?.partnerFirstName || ''} ${state.step4ApplicantInfo?.partnerLastName || ''}`.trim(),
         partnerEmail: state.step4ApplicantInfo?.partnerEmail || '',
-        partnerPhone: state.step4ApplicantInfo?.partnerPersonalPhone || '',
+        partnerPhone: state.step4ApplicantInfo?.partnerPhone || '',
         partnerOwnership: state.step4ApplicantInfo?.partnerOwnershipPercentage || '',
         partnerTitle: 'Partner', // Default title
-        partnerSSN: state.step4ApplicantInfo?.partnerSin || '',
+        partnerSSN: state.step4ApplicantInfo?.partnerSinSsn || '',
         
         // Step 6: Signature Status
         signatureComplete: !!state.step6Signature?.signedAt,

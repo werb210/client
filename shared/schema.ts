@@ -1,124 +1,92 @@
 //  =========================
-//  CLIENT – FORM TYPES & SCHEMA
+//  UNIFIED CLIENT & STAFF SCHEMA - SINGLE SOURCE OF TRUTH
 //  =========================
 import { z } from 'zod';
 
 /* ------------------------------------------------------------------
    REGION HELPERS (US vs CA masks)
 -------------------------------------------------------------------*/
-const phoneValidation = z
+export const phoneSchema = z
   .string()
   .min(10, 'Phone must have 10 digits')
   .transform((val) => val.replace(/\D/g, ''));
 
-const postalValidation = z.string().refine((v) => /[0-9A-Za-z]{3,10}/.test(v), {
+export const postalSchema = z.string().refine((v) => /[0-9A-Za-z]{3,10}/.test(v), {
   message: 'Invalid postal/ZIP code',
 });
 
 /* ------------------------------------------------------------------
-   MASTER FORM SCHEMA (42 FIELDS)
+   UNIFIED APPLICATION SCHEMA (ALL FIELD NAMES STANDARDIZED)
 -------------------------------------------------------------------*/
 export const ApplicationFormSchema = z.object({
-  // Stage 1 - Financial Profile
+  // Stage 1 - Financial Profile 
   businessLocation: z.enum(['US', 'CA']),
+  headquarters: z.enum(['US', 'CA']),
   headquartersState: z.string().optional(),
   industry: z.string(),
   lookingFor: z.enum(['capital', 'equipment', 'both']),
   fundingAmount: z.number().positive(),
-  useOfFunds: z.string(),
   fundsPurpose: z.string(),
   salesHistory: z.enum(['<1yr', '1-2yr', '2+yr']),
-  businessAge: z.string().optional(),
   revenueLastYear: z.number().nonnegative(),
-  lastYearRevenue: z.number().nonnegative(),
   averageMonthlyRevenue: z.number().nonnegative(),
-  monthlyRevenue: z.number().nonnegative(),
   accountsReceivableBalance: z.number().nonnegative(),
-  accountsReceivable: z.number().nonnegative(),
   fixedAssetsValue: z.number().nonnegative(),
-  fixedAssets: z.number().nonnegative(),
   equipmentValue: z.number().nonnegative().optional(),
+
+  // Stage 2 - Product Selection
+  selectedProductId: z.string().optional(),
+  selectedProductName: z.string().optional(),
+  selectedLenderName: z.string().optional(),
+  matchScore: z.number().optional(),
 
   // Stage 3 – Business Details
   businessName: z.string(),
-  operatingName: z.string(),
-  legalName: z.string(),
   businessAddress: z.string(),
-  businessStreetAddress: z.string(),
   businessCity: z.string(),
   businessState: z.string(),
-  businessPostalCode: postalValidation,
-  businessZipCode: z.string().optional(),
-  businessCountry: z.string().optional(),
-  businessPhone: phoneValidation,
+  businessZipCode: z.string(),
+  businessPhone: phoneSchema,
   businessEmail: z.string().email().optional(),
   businessWebsite: z.string().url().optional(),
-  businessStartDate: z.coerce.date(),
-  incorporationDate: z.coerce.date().optional(),
+  businessStartDate: z.string(),
   businessStructure: z.enum(['sole_proprietorship', 'partnership', 'llc', 'corporation', 's_corp', 'non_profit']),
-  businessTaxId: z.string().optional(),
-  taxId: z.string().optional(),
-  businessDescription: z.string().optional(),
   employeeCount: z.number().int().positive(),
-  numberOfEmployees: z.string().optional(),
   estimatedYearlyRevenue: z.number().optional(),
-  annualRevenue: z.string().optional(),
-  monthlyExpenses: z.string().optional(),
-  totalAssets: z.string().optional(),
-  totalLiabilities: z.string().optional(),
 
-  // Stage 4 – Applicant Info
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  applicantName: z.string().optional(),
-  title: z.string().optional(),
-  titleInBusiness: z.string().optional(),
-  email: z.string().email().optional(),
-  applicantEmail: z.string().email().optional(),
-  personalEmail: z.string().email().optional(),
-  personalPhone: phoneValidation.optional(),
-  mobilePhone: phoneValidation.optional(),
-  dateOfBirth: z.coerce.date().optional(),
-  applicantBirthdate: z.coerce.date().optional(),
-  sin: z.string().optional(),
-  socialSecurityNumber: z.string().optional(),
-  applicantSSN: z.string().optional(),
-  ownershipPercentage: z.number().optional(),
-  percentageOwnership: z.number().optional(),
-  creditScore: z.string().optional(),
-  personalAnnualIncome: z.string().optional(),
-  homeAddress: z.string().optional(),
-  applicantStreetAddress: z.string().optional(),
-  city: z.string().optional(),
-  homeCity: z.string().optional(),
-  applicantCity: z.string().optional(),
-  province: z.string().optional(),
-  homeState: z.string().optional(),
-  applicantState: z.string().optional(),
-  postalCode: postalValidation.optional(),
-  homePostalCode: postalValidation.optional(),
-  applicantPostalCode: postalValidation.optional(),
+  // Stage 4 – Applicant Information
+  title: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  personalEmail: z.string().email(),
+  personalPhone: phoneSchema,
+  dateOfBirth: z.string(),
+  socialSecurityNumber: z.string(),
+  ownershipPercentage: z.string(),
+  creditScore: z.enum(['unknown', 'excellent_750_plus', 'good_700_749', 'fair_650_699', 'poor_600_649', 'very_poor_below_600']),
+  personalAnnualIncome: z.string(),
+  applicantAddress: z.string(),
+  applicantCity: z.string(),
+  applicantState: z.string(),
+  applicantPostalCode: z.string(),
+  yearsWithBusiness: z.string(),
+  previousLoans: z.enum(['yes', 'no']),
+  bankruptcyHistory: z.enum(['yes', 'no']),
 
-  // Partner (optional)
+  // Partner Information (conditional on ownership < 100%)
   partnerFirstName: z.string().optional(),
   partnerLastName: z.string().optional(),
-  partnerName: z.string().optional(),
   partnerEmail: z.string().email().optional(),
-  partnerPersonalPhone: phoneValidation.optional(),
-  partnerPhone: phoneValidation.optional(),
-  partnerOwnership: z.number().optional(),
-  partnerOwnershipPercentage: z.number().optional(),
-  partnerTitle: z.string().optional(),
-  partnerSin: z.string().optional(),
-  partnerSSN: z.string().optional(),
-
-  // Stage 6 – Consents
-  communicationConsent: z.boolean().refine((v) => v, {
-    message: 'You must consent to communication',
-  }),
-  documentMaintenanceConsent: z.boolean().refine((v) => v, {
-    message: 'You must consent to document maintenance',
-  }),
+  partnerPhone: phoneSchema.optional(),
+  partnerDateOfBirth: z.string().optional(),
+  partnerSinSsn: z.string().optional(),
+  partnerOwnershipPercentage: z.string().optional(),
+  partnerCreditScore: z.enum(['unknown', 'excellent_750_plus', 'good_700_749', 'fair_650_699', 'poor_600_649', 'very_poor_below_600']).optional(),
+  partnerPersonalAnnualIncome: z.string().optional(),
+  partnerAddress: z.string().optional(),
+  partnerCity: z.string().optional(),
+  partnerState: z.string().optional(),
+  partnerPostalCode: z.string().optional(),
 
   // Stage 5 - Document Upload
   uploadedDocuments: z.array(z.object({
@@ -127,14 +95,112 @@ export const ApplicationFormSchema = z.object({
     size: z.number(),
     type: z.string(),
     documentType: z.string(),
-    status: z.enum(['uploading', 'completed', 'error']),
-    url: z.string().optional(),
+    status: z.string(),
   })).optional(),
 
-  // Hidden/signature fields (populated server-side)
-  signNowSignatureCompleted: z.boolean().optional(),
-  signatureData: z.any().optional(),
-  submissionConfirmed: z.boolean().optional(),
+  // Stage 6 – Signature & Submission
+  signedAt: z.string().optional(),
+  documentId: z.string().optional(),
+  signingUrl: z.string().optional(),
+  applicationId: z.string().optional(),
+  submissionStatus: z.string().optional(),
+  submittedAt: z.string().optional(),
+  completed: z.boolean().optional(),
+  
+  // Stage 7 – Consents
+  communicationConsent: z.boolean().refine((v) => v, {
+    message: 'You must consent to communication',
+  }),
+  documentMaintenanceConsent: z.boolean().refine((v) => v, {
+    message: 'You must consent to document maintenance',
+  }),
+});
+
+// Infer the type from the schema
+export type ApplicationForm = z.infer<typeof ApplicationFormSchema>;
+
+/* ------------------------------------------------------------------
+   STEP-SPECIFIC SCHEMAS (FOR FORM VALIDATION)
+-------------------------------------------------------------------*/
+export const step1Schema = z.object({
+  businessLocation: z.enum(['US', 'CA']),
+  headquarters: z.enum(['US', 'CA']),
+  industry: z.string(),
+  lookingFor: z.enum(['capital', 'equipment', 'both']),
+  fundingAmount: z.number().positive(),
+  fundsPurpose: z.string(),
+  salesHistory: z.enum(['<1yr', '1-2yr', '2+yr']),
+  revenueLastYear: z.number().nonnegative(),
+  averageMonthlyRevenue: z.number().nonnegative(),
+  accountsReceivableBalance: z.number().nonnegative(),
+  fixedAssetsValue: z.number().nonnegative(),
+  equipmentValue: z.number().nonnegative().optional(),
+});
+
+export const step2Schema = z.object({
+  selectedProductId: z.string().optional(),
+  selectedProductName: z.string().optional(),
+  selectedLenderName: z.string().optional(),
+});
+
+export const step3Schema = z.object({
+  businessName: z.string(),
+  businessAddress: z.string(),
+  businessCity: z.string(),
+  businessState: z.string(),
+  businessZipCode: z.string(),
+  businessPhone: phoneSchema,
+  businessEmail: z.string().email().optional(),
+  businessWebsite: z.string().url().optional(),
+  businessStartDate: z.string(),
+  businessStructure: z.enum(['sole_proprietorship', 'partnership', 'llc', 'corporation', 's_corp', 'non_profit']),
+  employeeCount: z.number().int().positive(),
+  estimatedYearlyRevenue: z.number().optional(),
+});
+
+export const step4Schema = z.object({
+  title: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  personalEmail: z.string().email(),
+  personalPhone: phoneSchema,
+  dateOfBirth: z.string(),
+  socialSecurityNumber: z.string(),
+  ownershipPercentage: z.string(),
+  creditScore: z.enum(['unknown', 'excellent_750_plus', 'good_700_749', 'fair_650_699', 'poor_600_649', 'very_poor_below_600']),
+  personalAnnualIncome: z.string(),
+  applicantAddress: z.string(),
+  applicantCity: z.string(),
+  applicantState: z.string(),
+  applicantPostalCode: z.string(),
+  yearsWithBusiness: z.string(),
+  previousLoans: z.enum(['yes', 'no']),
+  bankruptcyHistory: z.enum(['yes', 'no']),
+  // Partner fields (conditional)
+  partnerFirstName: z.string().optional(),
+  partnerLastName: z.string().optional(),
+  partnerEmail: z.string().email().optional(),
+  partnerPhone: phoneSchema.optional(),
+  partnerDateOfBirth: z.string().optional(),
+  partnerSinSsn: z.string().optional(),
+  partnerOwnershipPercentage: z.string().optional(),
+  partnerCreditScore: z.enum(['unknown', 'excellent_750_plus', 'good_700_749', 'fair_650_699', 'poor_600_649', 'very_poor_below_600']).optional(),
+  partnerPersonalAnnualIncome: z.string().optional(),
+  partnerAddress: z.string().optional(),
+  partnerCity: z.string().optional(),
+  partnerState: z.string().optional(),
+  partnerPostalCode: z.string().optional(),
+});
+
+export const step6Schema = z.object({
+  signedAt: z.string().optional(),
+  documentId: z.string().optional(),
+  signingUrl: z.string().optional(),
+  applicationId: z.string().optional(),
+  completed: z.boolean().optional(),
+  submissionStatus: z.string().optional(),
+  signUrl: z.string().optional(),
+  submittedAt: z.string().optional(),
 });
 
 export type ApplicationForm = z.infer<typeof ApplicationFormSchema>;
@@ -144,6 +210,7 @@ export type ApplicationForm = z.infer<typeof ApplicationFormSchema>;
 -------------------------------------------------------------------*/
 export const Step1Schema = ApplicationFormSchema.pick({
   businessLocation: true,
+  headquarters: true,
   headquartersState: true,
   industry: true,
   lookingFor: true,
@@ -178,6 +245,7 @@ export const Step4Schema = ApplicationFormSchema.pick({
   applicantSSN: true,
   percentageOwnership: true,
   mobilePhone: true,
+  applicantAddress: true,
   applicantStreetAddress: true,
   applicantCity: true,
   applicantState: true,
@@ -196,6 +264,6 @@ export const Step6Schema = ApplicationFormSchema.pick({
   documentMaintenanceConsent: true,
 });
 
-// Export validation helpers
-export const phoneSchema = phoneValidation;
-export const postalSchema = postalValidation;
+// Export validation helpers (aliases for backward compatibility)
+export const phoneValidation = phoneSchema;
+export const postalValidation = postalSchema;

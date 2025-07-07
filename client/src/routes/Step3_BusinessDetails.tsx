@@ -1,48 +1,34 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowRight, ArrowLeft, Save, Building, MapPin, Calendar } from 'lucide-react';
+import { ApplicationFormSchema } from '@shared/schema';
+import { z } from 'zod';
 
-const Step3Schema = z.object({
-  // Business Information
-  businessName: z.string().min(2, "Business name must be at least 2 characters"),
-  businessAddress: z.string().min(5, "Please enter a complete business address"),
-  businessCity: z.string().min(2, "City is required"),
-  businessState: z.string().min(2, "State/Province is required"),
-  businessZipCode: z.string().min(3, "ZIP/Postal code is required"),
-  businessPhone: z.string().min(10, "Please enter a valid phone number"),
-  businessEmail: z.string().email("Please enter a valid email address"),
-  businessWebsite: z.string().url("Please enter a valid website URL").optional().or(z.literal("")),
-  
-  // Business Legal Structure
-  businessStructure: z.enum(['sole_proprietorship', 'partnership', 'llc', 'corporation', 's_corp', 'non_profit'], {
-    required_error: "Please select your business structure"
-  }),
-  businessRegistrationDate: z.string().min(1, "Business registration date is required"),
-  businessTaxId: z.string().min(9, "Tax ID must be at least 9 characters"),
-  
-  // Business Operations
-  businessDescription: z.string().min(20, "Please provide a detailed business description (minimum 20 characters)"),
-  numberOfEmployees: z.enum(['1', '2-10', '11-50', '51-100', '101-500', '500+'], {
-    required_error: "Please select number of employees"
-  }),
-  
-  // Banking Information
-  primaryBankName: z.string().min(2, "Bank name is required"),
-  bankingRelationshipLength: z.enum(['less_than_1_year', '1-2_years', '2-5_years', '5-10_years', 'more_than_10_years'], {
-    required_error: "Please select banking relationship length"
-  })
-});
+// Extract only Step 3 fields from the unified schema
+const Step3Schema = ApplicationFormSchema.pick({
+  businessName: true,
+  businessAddress: true,
+  businessCity: true,
+  businessState: true,
+  businessZipCode: true,
+  businessPhone: true,
+  businessEmail: true,
+  businessWebsite: true,
+  businessStartDate: true,
+  businessStructure: true,
+  employeeCount: true,
+  estimatedYearlyRevenue: true
+}).partial();
 
 type Step3FormData = z.infer<typeof Step3Schema>;
 
@@ -54,18 +40,18 @@ export default function Step3BusinessDetails() {
   const form = useForm<Step3FormData>({
     resolver: zodResolver(Step3Schema),
     defaultValues: {
-      businessName: state.step3BusinessDetails?.businessName || '',
-      businessAddress: state.step3BusinessDetails?.businessAddress || '',
-      businessCity: state.step3BusinessDetails?.businessCity || '',
-      businessState: state.step3BusinessDetails?.businessState || '',
-      businessZipCode: state.step3BusinessDetails?.businessZipCode || '',
-      businessPhone: state.step3BusinessDetails?.businessPhone || '',
-      businessEmail: state.step3BusinessDetails?.businessEmail || '',
-      businessWebsite: state.step3BusinessDetails?.businessWebsite || '',
-      businessStructure: state.step3BusinessDetails?.businessStructure || undefined,
-      businessStartDate: state.step3BusinessDetails?.businessStartDate || new Date(),
-      employeeCount: state.step3BusinessDetails?.employeeCount || undefined,
-      estimatedYearlyRevenue: state.step3BusinessDetails?.estimatedYearlyRevenue || undefined
+      businessName: state.step1FinancialProfile?.businessName || '',
+      businessAddress: state.step1FinancialProfile?.businessAddress || '',
+      businessCity: state.step1FinancialProfile?.businessCity || '',
+      businessState: state.step1FinancialProfile?.businessState || '',
+      businessZipCode: state.step1FinancialProfile?.businessZipCode || '',
+      businessPhone: state.step1FinancialProfile?.businessPhone || '',
+      businessEmail: state.step1FinancialProfile?.businessEmail || '',
+      businessWebsite: state.step1FinancialProfile?.businessWebsite || '',
+      businessStructure: state.step1FinancialProfile?.businessStructure || undefined,
+      businessStartDate: state.step1FinancialProfile?.businessStartDate || '',
+      employeeCount: state.step1FinancialProfile?.employeeCount || undefined,
+      estimatedYearlyRevenue: state.step1FinancialProfile?.estimatedYearlyRevenue || undefined
     }
   });
 

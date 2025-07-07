@@ -1,24 +1,21 @@
 import { createContext, useContext, useReducer, ReactNode } from 'react';
 import { ApplicationForm } from '../../../shared/schema';
 
-// Base interface that extends ApplicationForm with additional UI properties
+// All step data interfaces now directly use the unified ApplicationForm
 export interface FinancialProfileData extends Partial<ApplicationForm> {
   selectedCategory?: string;
   selectedCategoryName?: string;
   completed?: boolean;
 }
 
-// Business Details Data - matches shared schema exactly
 export interface BusinessDetailsData extends Partial<ApplicationForm> {
   completed?: boolean;
 }
 
-// Financial Info Data - matches shared schema exactly  
 export interface FinancialInfoData extends Partial<ApplicationForm> {
   completed?: boolean;
 }
 
-// Applicant Info Data - matches shared schema exactly
 export interface ApplicantInfoData extends Partial<ApplicationForm> {
   completed?: boolean;
 }
@@ -34,40 +31,21 @@ export interface DocumentUploadData {
     documentType: string;
   }>;
   completed?: boolean;
-  completedAt?: string;
-  savedAt?: string;
-  categories?: Array<{
-    id: string;
-    name: string;
-    documents: Array<{
-      id: string;
-      categoryId: string;
-      name: string;
-      size: number;
-      status: 'uploading' | 'completed' | 'error';
-      progress: number;
-      url?: string;
-      error?: string;
-    }>;
-    uploadLater: boolean;
-  }>;
 }
 
-export interface FormDataState {
-  step1FinancialProfile: FinancialProfileData;
-  step2Recommendations?: {
-    selectedProduct?: {
-      id?: string;
-      product_name?: string;
-      lender_name?: string;
-      product_type?: string;
-    };
-  };
-  step3BusinessDetails?: BusinessDetailsData;
-  step4FinancialInfo?: FinancialInfoData;
-  step4ApplicantInfo?: ApplicantInfoData;
-  step4ApplicantDetails?: ApplicantInfoData;
+export interface FormDataState extends Partial<ApplicationForm> {
+  // Step-specific completion tracking
+  step1Completed?: boolean;
+  step2Completed?: boolean;
+  step3Completed?: boolean;
+  step4Completed?: boolean;
+  step5Completed?: boolean;
+  step6Completed?: boolean;
+  
+  // Document upload data
   step5DocumentUpload?: DocumentUploadData;
+  
+  // Signature data
   step6Signature?: {
     signedAt?: string;
     documentId?: string;
@@ -75,90 +53,63 @@ export interface FormDataState {
     completed?: boolean;
     applicationId?: string;
   };
+  
+  // Application flow state
   currentStep: number;
   isComplete: boolean;
-  isCompleted?: boolean;
   applicationId?: string;
   signingUrl?: string;
-  submissionStatus?: string;
-  signingStatus?: string;
 }
 
 type FormDataAction =
-  | { type: 'UPDATE_STEP1'; payload: Partial<FinancialProfileData> }
-  | { type: 'UPDATE_STEP3'; payload: Partial<BusinessDetailsData> }
-  | { type: 'UPDATE_STEP4'; payload: Partial<FinancialInfoData> }
-  | { type: 'UPDATE_STEP4_APPLICANT'; payload: Partial<ApplicantInfoData> }
-  | { type: 'UPDATE_STEP4_APPLICANT_DETAILS'; payload: Partial<ApplicantInfoData> }
+  | { type: 'UPDATE_FORM_DATA'; payload: Partial<ApplicationForm> }
+  | { type: 'UPDATE_STEP1'; payload: Partial<ApplicationForm> }
+  | { type: 'UPDATE_STEP2'; payload: Partial<ApplicationForm> }
+  | { type: 'UPDATE_STEP3'; payload: Partial<ApplicationForm> }
+  | { type: 'UPDATE_STEP4'; payload: Partial<ApplicationForm> }
   | { type: 'UPDATE_STEP5'; payload: Partial<DocumentUploadData> }
   | { type: 'UPDATE_STEP6'; payload: Partial<FormDataState['step6Signature']> }
-  | { type: 'UPDATE_STEP6_SIGNATURE'; payload: Partial<FormDataState['step6Signature']> }
-  | { type: 'UPDATE_STEP4_SUBMISSION'; payload: Partial<FormDataState> }
   | { type: 'SET_CURRENT_STEP'; payload: number }
   | { type: 'SET_APPLICATION_ID'; payload: string }
   | { type: 'SET_SIGNING_URL'; payload: string }
+  | { type: 'MARK_STEP_COMPLETE'; payload: number }
   | { type: 'MARK_COMPLETE' }
   | { type: 'LOAD_FROM_STORAGE'; payload: FormDataState };
 
 const initialState: FormDataState = {
-  step1FinancialProfile: {
-    headquarters: undefined,
-    headquartersState: undefined,
-    industry: undefined,
-    lookingFor: undefined,
-    fundingAmount: undefined,
-    fundsPurpose: undefined,
-    salesHistory: undefined,
-    revenueLastYear: undefined,
-    averageMonthlyRevenue: undefined,
-    accountsReceivableBalance: undefined,
-    fixedAssetsValue: undefined,
-  },
+  // Application flow state
   currentStep: 1,
   isComplete: false,
+  applicationId: '',
+  signingUrl: '',
+  
+  // Step completion tracking
+  step1Completed: false,
+  step2Completed: false,
+  step3Completed: false,
+  step4Completed: false,
+  step5Completed: false,
+  step6Completed: false,
+  
+  // Document upload data
+  step5DocumentUpload: {
+    uploadedFiles: []
+  },
+  
+  // Signature data
+  step6Signature: {}
 };
 
 function formDataReducer(state: FormDataState, action: FormDataAction): FormDataState {
   switch (action.type) {
+    case 'UPDATE_FORM_DATA':
     case 'UPDATE_STEP1':
-      return {
-        ...state,
-        step1FinancialProfile: {
-          ...state.step1FinancialProfile,
-          ...action.payload,
-        },
-      };
+    case 'UPDATE_STEP2':
     case 'UPDATE_STEP3':
-      return {
-        ...state,
-        step3BusinessDetails: {
-          ...state.step3BusinessDetails,
-          ...action.payload,
-        } as BusinessDetailsData,
-      };
     case 'UPDATE_STEP4':
       return {
         ...state,
-        step4FinancialInfo: {
-          ...state.step4FinancialInfo,
-          ...action.payload,
-        } as FinancialInfoData,
-      };
-    case 'UPDATE_STEP4_APPLICANT':
-      return {
-        ...state,
-        step4ApplicantInfo: {
-          ...state.step4ApplicantInfo,
-          ...action.payload,
-        } as FormDataState['step4ApplicantInfo'],
-      };
-    case 'UPDATE_STEP4_APPLICANT_DETAILS':
-      return {
-        ...state,
-        step4ApplicantDetails: {
-          ...state.step4ApplicantDetails,
-          ...action.payload,
-        } as ApplicantInfoData,
+        ...action.payload,
       };
     case 'UPDATE_STEP5':
       return {
@@ -168,7 +119,7 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
           ...action.payload,
         } as DocumentUploadData,
       };
-    case 'UPDATE_STEP6_SIGNATURE':
+    case 'UPDATE_STEP6':
       return {
         ...state,
         step6Signature: {
@@ -190,6 +141,12 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
       return {
         ...state,
         signingUrl: action.payload,
+      };
+    case 'MARK_STEP_COMPLETE':
+      const stepKey = `step${action.payload}Completed` as keyof FormDataState;
+      return {
+        ...state,
+        [stepKey]: true,
       };
     case 'MARK_COMPLETE':
       return {
