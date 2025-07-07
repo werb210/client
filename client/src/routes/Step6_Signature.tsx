@@ -33,7 +33,7 @@ export default function Step6Signature() {
 
   // Get uploaded files from Step 5
   const uploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
-  const selectedProduct = state.selectedProductType;
+  const selectedProduct = state.selectedProductId;
 
   useEffect(() => {
     // Auto-submit if not already submitted and we have all required data
@@ -52,7 +52,7 @@ export default function Step6Signature() {
   const hasRequiredData = () => {
     return (
       state.businessLocation &&
-      state.selectedProductType &&
+      state.selectedProductId &&
       state.businessName &&
       state.firstName &&
       uploadedFiles.length > 0
@@ -86,7 +86,7 @@ export default function Step6Signature() {
       const result = await staffApi.submitApplication(
         state,
         filesWithFileObjects,
-        selectedProduct?.id?.toString() || selectedProduct?.product_name || 'unknown'
+        selectedProduct || 'unknown'
       );
 
       if (result.status === 'submitted' && result.applicationId) {
@@ -227,11 +227,10 @@ export default function Step6Signature() {
     setSigningStatus('completed');
     
     dispatch({
-      type: 'UPDATE_STEP6',
+      type: 'UPDATE_FORM_DATA',
       payload: {
-        applicationId,
+        applicationId: applicationId || undefined,
         submissionStatus: 'submitted',
-        signingStatus: 'completed',
         signedAt: new Date().toISOString(),
         completed: true
       }
@@ -455,17 +454,17 @@ export default function Step6Signature() {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-gray-500">Selected Product:</span>
-              <p className="font-medium">{selectedProduct?.product_name || 'Not selected'}</p>
+              <p className="font-medium">{selectedProduct || 'Not selected'}</p>
             </div>
             <div>
               <span className="text-gray-500">Funding Amount:</span>
               <p className="font-medium">
-                ${state.step1FinancialProfile?.fundingAmount?.toLocaleString() || 'Not specified'}
+                ${state.fundingAmount?.toLocaleString() || 'Not specified'}
               </p>
             </div>
             <div>
               <span className="text-gray-500">Business Name:</span>
-              <p className="font-medium">{state.step3BusinessDetails?.businessName || 'Not provided'}</p>
+              <p className="font-medium">{state.businessName || 'Not provided'}</p>
             </div>
             <div>
               <span className="text-gray-500">Documents Uploaded:</span>
