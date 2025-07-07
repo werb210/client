@@ -739,6 +739,14 @@ Changelog:
   * **PRODUCTION VALIDATION**: Created comprehensive test suite validating full 7-step workflow
   * **CLIENT-STAFF ALIGNMENT**: Both applications now use identical ApplicationForm schema for seamless integration
   * **DEPLOYMENT STATUS**: 100% production-ready with unified schema, ready for final validation and go-live
+  - July 07, 2025: ✅ STEP 3 BUSINESS DETAILS FORM IMPROVEMENTS COMPLETE
+  * **INVOICE FACTORING FIX**: Fixed business rule to exclude Invoice Factoring when accountsReceivableBalance = 0
+  * **FIELD UPDATES**: Changed "Business Name" to "Business Name (DBA)" and added "Business Legal Name" as second field
+  * **UI CLEANUP**: Removed Business Email field and Testing Mode badge for professional production appearance
+  * **SCHEMA ALIGNMENT**: Updated to use unified schema fields (operatingName, legalName, businessStreetAddress, businessPostalCode)
+  * **EMPLOYEE COUNT DROPDOWN**: Converted from number input to dropdown with options: "1-5", "6-10", "10-25", "Over 25"
+  * **SERVER FILTERING**: Enhanced to handle multiple zero formats (0, '0', 'none') for Account Receivables business rule
+  * **REGIONAL SUPPORT**: Maintained Canadian/US field formatting and validation with proper schema integration
 - July 05, 2025: ✅ FINALIZED CLIENT APPLICATION IMPLEMENTATION COMPLETE
     * **PRODUCTION DEPLOYMENT COMPLIANCE**: Implemented complete finalized instructions per client application specification
     * **ENHANCED SYNC SYSTEM**: Built finalizedLenderSync.ts with production-ready sync mechanism and fallback cache
