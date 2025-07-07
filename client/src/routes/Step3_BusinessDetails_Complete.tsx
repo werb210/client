@@ -21,13 +21,13 @@ import {
 
 // Step 3 Schema - Use unified schema fields for business details
 const step3Schema = ApplicationFormSchema.pick({
-  businessName: true,
-  businessAddress: true,
+  operatingName: true,
+  legalName: true,
+  businessStreetAddress: true,
   businessCity: true,
   businessState: true,
-  businessZipCode: true,
+  businessPostalCode: true,
   businessPhone: true,
-  businessEmail: true,
   businessWebsite: true,
   businessStartDate: true,
   businessStructure: true,
@@ -53,13 +53,13 @@ export default function Step3BusinessDetailsComplete() {
   const form = useForm<BusinessDetailsFormData>({
     resolver: zodResolver(step3Schema),
     defaultValues: {
-      businessName: state.businessName || '',
-      businessAddress: state.businessAddress || '',
+      operatingName: state.operatingName || '',
+      legalName: state.legalName || '',
+      businessStreetAddress: state.businessStreetAddress || '',
       businessCity: state.businessCity || '',
       businessState: state.businessState || '',
-      businessZipCode: state.businessZipCode || '',
+      businessPostalCode: state.businessPostalCode || '',
       businessPhone: state.businessPhone || '',
-      businessEmail: state.businessEmail || '',
       businessWebsite: state.businessWebsite || '',
       businessStartDate: state.businessStartDate || '',
       businessStructure: state.businessStructure || undefined,
@@ -74,13 +74,13 @@ export default function Step3BusinessDetailsComplete() {
       // Convert form data to unified schema format
       const updatedData: Partial<typeof state> = {};
       
-      if (data.businessName !== undefined) updatedData.businessName = data.businessName;
-      if (data.businessAddress !== undefined) updatedData.businessAddress = data.businessAddress;
+      if (data.operatingName !== undefined) updatedData.operatingName = data.operatingName;
+      if (data.legalName !== undefined) updatedData.legalName = data.legalName;
+      if (data.businessStreetAddress !== undefined) updatedData.businessStreetAddress = data.businessStreetAddress;
       if (data.businessCity !== undefined) updatedData.businessCity = data.businessCity;
       if (data.businessState !== undefined) updatedData.businessState = data.businessState;
-      if (data.businessZipCode !== undefined) updatedData.businessZipCode = data.businessZipCode;
+      if (data.businessPostalCode !== undefined) updatedData.businessPostalCode = data.businessPostalCode;
       if (data.businessPhone !== undefined) updatedData.businessPhone = data.businessPhone;
-      if (data.businessEmail !== undefined) updatedData.businessEmail = data.businessEmail;
       if (data.businessWebsite !== undefined) updatedData.businessWebsite = data.businessWebsite;
       if (data.businessStartDate !== undefined) updatedData.businessStartDate = data.businessStartDate;
       if (data.businessStructure !== undefined) updatedData.businessStructure = data.businessStructure;
@@ -143,10 +143,7 @@ export default function Step3BusinessDetailsComplete() {
               <div className="text-center text-white">
                 <h1 className="text-3xl font-bold mb-3">Business Details</h1>
                 <p className="text-xl opacity-90">Tell us about your business</p>
-                {/* Testing Mode Badge */}
-                <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-500 text-white">
-                  Testing Mode Active
-                </div>
+
               </div>
             </div>
 
@@ -156,16 +153,35 @@ export default function Step3BusinessDetailsComplete() {
               </CardHeader>
               <CardContent className="p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Business Name */}
+                  {/* Business Name (DBA) */}
                   <FormField
                     control={form.control}
-                    name="businessName"
+                    name="operatingName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Business Name *</FormLabel>
+                        <FormLabel className="text-base font-semibold">Business Name (DBA) *</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter your business name"
+                            placeholder="Enter your business operating name"
+                            {...field}
+                            className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Business Legal Name */}
+                  <FormField
+                    control={form.control}
+                    name="legalName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Legal Name *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your legal entity name"
                             {...field}
                             className="h-12"
                           />
@@ -205,7 +221,7 @@ export default function Step3BusinessDetailsComplete() {
                   {/* Business Address */}
                   <FormField
                     control={form.control}
-                    name="businessAddress"
+                    name="businessStreetAddress"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold">Business Address *</FormLabel>
@@ -271,7 +287,7 @@ export default function Step3BusinessDetailsComplete() {
                   {/* Business ZIP/Postal Code */}
                   <FormField
                     control={form.control}
-                    name="businessZipCode"
+                    name="businessPostalCode"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold">
