@@ -220,7 +220,7 @@ export default function Step1FinancialProfile() {
                   control={form.control}
                   name="lookingFor"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem data-onboarding="funding-type">
                       <FormLabel>What are you looking for?</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -247,7 +247,7 @@ export default function Step1FinancialProfile() {
                     control={form.control}
                     name="fundingAmount"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem data-onboarding="funding-amount">
                         <FormLabel>How much funding are you seeking?</FormLabel>
                         <FormControl>
                           <div className="relative">
@@ -302,7 +302,7 @@ export default function Step1FinancialProfile() {
                   control={form.control}
                   name="businessLocation"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem data-onboarding="business-location">
                       <FormLabel>Business Location</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>

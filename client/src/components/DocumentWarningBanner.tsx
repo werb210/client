@@ -1,8 +1,8 @@
-import { useFormDataContext } from '@/context/FormDataContext';
+import { useFormData } from '@/context/FormDataContext';
 import { Link } from 'wouter';
 
 export function DocumentWarningBanner() {
-  const { state } = useFormDataContext();
+  const { state } = useFormData();
   
   // Only show if documents were bypassed and no documents uploaded
   if (!state.bypassedDocuments || (state.uploadedDocuments && state.uploadedDocuments.length > 0)) {
