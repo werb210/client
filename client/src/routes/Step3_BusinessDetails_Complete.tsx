@@ -379,19 +379,15 @@ export default function Step3BusinessDetailsComplete() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold">Number of Employees *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <FormControl>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Select number of employees" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="1-5">1-5</SelectItem>
-                            <SelectItem value="6-10">6-10</SelectItem>
-                            <SelectItem value="10-25">10-25</SelectItem>
-                            <SelectItem value="over-25">Over 25</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter number of employees"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            className="h-12"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

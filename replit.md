@@ -744,7 +744,7 @@ Changelog:
   * **FIELD UPDATES**: Changed "Business Name" to "Business Name (DBA)" and added "Business Legal Name" as second field
   * **UI CLEANUP**: Removed Business Email field and Testing Mode badge for professional production appearance
   * **SCHEMA ALIGNMENT**: Updated to use unified schema fields (operatingName, legalName, businessStreetAddress, businessPostalCode)
-  * **EMPLOYEE COUNT DROPDOWN**: Converted from number input to dropdown with options: "1-5", "6-10", "10-25", "Over 25"
+  * **EMPLOYEE COUNT FIELD**: Changed back to number input for direct entry of employee count
   * **SERVER FILTERING**: Enhanced to handle multiple zero formats (0, '0', 'none') for Account Receivables business rule
   * **REGIONAL SUPPORT**: Maintained Canadian/US field formatting and validation with proper schema integration
 - July 05, 2025: ✅ FINALIZED CLIENT APPLICATION IMPLEMENTATION COMPLETE
