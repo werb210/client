@@ -1,77 +1,87 @@
-// Debug script to find the specific Working Capital lender for Canadian $50K request
-import fetch from 'node-fetch';
+/**
+ * Debug Working Capital Lender Products
+ * Find the exact lenders that match Canadian working capital $40,000
+ */
 
 async function findWorkingCapitalLender() {
+  console.log('🔍 Finding Working Capital Lenders');
+  console.log('Criteria: Canada, $40,000, Working Capital');
+  console.log('=' * 50);
+
   try {
-    console.log('🔍 Fetching all lender products from staff API...');
+    // Use the local server endpoint
+    const response = await fetch('http://localhost:5000/api/public/lenders');
     
-    const response = await fetch('https://staffportal.replit.app/api/public/lenders');
-    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
     
-    console.log(`📊 API Response type: ${typeof data}`);
-    console.log(`📊 Response keys: ${Object.keys(data)}`);
+    const response_data = await response.json();
+    console.log('📦 API Response structure:', Object.keys(response_data));
     
-    // Handle different response formats
-    const products = Array.isArray(data) ? data : (data.data || data.products || []);
+    if (!response_data.success || !response_data.products) {
+      console.log('❌ API response missing products:', response_data);
+      return;
+    }
     
-    console.log(`📊 Total products received: ${products.length}`);
+    const products = response_data.products;
+    console.log(`📦 Total products: ${products.length}`);
+
+    // Apply filtering logic
+    const matchingProducts = [];
     
-    // Filter for Canadian products matching the criteria
-    const canadianProducts = products.filter(product => {
-      const geography = product.geography || product.country;
-      return geography === 'CA' || geography === 'Canada' || geography?.includes('CA');
+    products.forEach((product, index) => {
+      const geography = (product.geography || '').toString().toLowerCase();
+      const hasCanada = geography.includes('ca') || geography.includes('canada');
+      
+      const minAmount = product.amountMin || 0;
+      const maxAmount = product.amountMax || Infinity;
+      const amountMatch = 40000 >= minAmount && 40000 <= maxAmount;
+      
+      const category = (product.productCategory || product.product || '').toLowerCase();
+      const isWorkingCapital = category.includes('working') ||
+                              category.includes('capital') ||
+                              category.includes('line_of_credit') ||
+                              category.includes('term_loan');
+      
+      const isInvoiceFactoring = category.includes('invoice') || category.includes('factoring');
+      
+      console.log(`\n${index + 1}. ${product.name || product.lender || 'Unknown'}`);
+      console.log(`   Category: ${product.productCategory || product.product}`);
+      console.log(`   Geography: ${geography} (Canada: ${hasCanada})`);
+      console.log(`   Amount: $${minAmount?.toLocaleString()} - $${maxAmount?.toLocaleString()} (Match: ${amountMatch})`);
+      console.log(`   Working Capital: ${isWorkingCapital}, Invoice Factoring: ${isInvoiceFactoring}`);
+      
+      if (hasCanada && amountMatch && isWorkingCapital && !isInvoiceFactoring) {
+        console.log(`   ✅ MATCHES CRITERIA`);
+        matchingProducts.push(product);
+      } else {
+        console.log(`   ❌ No match`);
+      }
     });
-    
-    console.log(`🇨🇦 Canadian products: ${canadianProducts.length}`);
-    
-    // Filter for working capital category
-    const workingCapitalProducts = canadianProducts.filter(product => {
-      const category = product.category || product.productCategory || product.product || product.type || '';
-      return category.toLowerCase().includes('working') || 
-             category.toLowerCase().includes('capital') ||
-             category === 'working_capital' ||
-             category === 'Working Capital';
-    });
-    
-    console.log(`💰 Working Capital products in Canada: ${workingCapitalProducts.length}`);
-    
-    // Filter for $50K funding amount
-    const matchingProducts = workingCapitalProducts.filter(product => {
-      const minAmount = product.amountRange?.min || product.minAmountUsd || product.minAmount || 0;
-      const maxAmount = product.amountRange?.max || product.maxAmountUsd || product.maxAmount || Infinity;
-      return 50000 >= minAmount && 50000 <= maxAmount;
-    });
-    
-    console.log(`✅ Products matching $50K: ${matchingProducts.length}`);
+
+    console.log('\n' + '=' * 50);
+    console.log(`🎯 FINAL RESULTS: ${matchingProducts.length} matching products`);
     
     if (matchingProducts.length > 0) {
-      console.log('\n🏦 WORKING CAPITAL LENDER DETAILS:');
+      console.log('\n🏛️ MATCHING LENDER PRODUCTS:');
       matchingProducts.forEach((product, index) => {
-        console.log(`\n--- Product ${index + 1} ---`);
-        console.log(`Lender: ${product.lenderName || product.lender || product.institution || 'Unknown'}`);
-        console.log(`Product: ${product.productName || product.product || product.category || 'Working Capital'}`);
-        console.log(`Geography: ${product.country || product.geography || 'Unknown'}`);
-        console.log(`Amount Range: $${product.amountRange?.min?.toLocaleString() || 'Unknown'} - $${product.amountRange?.max?.toLocaleString() || 'Unknown'}`);
-        console.log(`Terms: ${product.termMonths || product.terms || 'Unknown'} months`);
-        console.log(`Interest Rate: ${product.interestRateMin || product.rate || 'Unknown'}%`);
-      });
-    } else {
-      console.log('❌ No Working Capital products found matching criteria');
-      
-      console.log('\n🔍 All Canadian products for debugging:');
-      canadianProducts.forEach((product, index) => {
-        console.log(`${index + 1}. ${product.lender || product.institution || product.name || 'Unknown'} - ${product.product || product.productCategory || product.type || 'Unknown'} (${product.geography || product.country})`);
-        
-        // Show all product properties for the first few
-        if (index < 3) {
-          console.log(`   Raw product data:`, JSON.stringify(product, null, 2));
+        console.log(`\n${index + 1}. LENDER: ${product.lender || product.name}`);
+        console.log(`   PRODUCT: ${product.productCategory || product.product}`);
+        console.log(`   AMOUNT RANGE: $${product.amountMin?.toLocaleString()} - $${product.amountMax?.toLocaleString()}`);
+        console.log(`   INTEREST RATE: ${product.interestRateMin}% - ${product.interestRateMax}%`);
+        console.log(`   TERMS: ${product.termMin} - ${product.termMax} months`);
+        console.log(`   GEOGRAPHY: ${product.geography}`);
+        if (product.description) {
+          console.log(`   DESCRIPTION: ${product.description}`);
         }
       });
     }
-    
+
   } catch (error) {
-    console.error('❌ Error fetching lender data:', error.message);
+    console.error('🚨 Error:', error.message);
   }
 }
 
-findWorkingCapitalLender();
+// Run the function
+findWorkingCapitalLender().catch(console.error);
