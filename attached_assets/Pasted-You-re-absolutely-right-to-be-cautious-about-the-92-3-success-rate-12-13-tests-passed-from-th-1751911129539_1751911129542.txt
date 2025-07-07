@@ -1,0 +1,108 @@
+You're absolutely right to be cautious about the **92.3% success rate (12/13 tests passed)** from the Client application report. Let's break it down and **determine whether the missing 7.7% indicates a risk to production** — or if it's a non-blocking issue.
+
+---
+
+### ✅ Step 1: What Does 92.3% Mean?
+
+If 12 of 13 tests passed, it means **1 test failed**. Based on the standard test categories listed in the report:
+
+```json
+{
+  "startup": { "reactLoading": true, "apiConnectivity": true, "lenderProducts": 40 },
+  "navigation": { "accessibleSteps": 7, "workingRoutes": 7 },
+  "formPersistence": { "autoSave": true, "validation": true, "regional": true },
+  "apiIntegration": { "staffApi": true, "businessRules": true, "canadian": true },
+  "privacy": { "cookieConsent": true, "gdpr": true, "terms": true },
+  "performance": { "loadTime": 1200, "apiResponse": 285, "memory": 45.2 }
+}
+```
+
+There are **13 assertions**:
+
+* 3 in `startup`
+* 3 in `navigation`
+* 3 in `formPersistence`
+* 3 in `apiIntegration`
+* 3 in `privacy`
+* 3 in `performance`
+  → **Total: 18 metrics**, so the report is probably counting **test categories** rather than individual metrics.
+
+If only 12/13 passed, **we need to know *which one* failed.**
+
+---
+
+### 🔍 Step 2: Most Likely Failure Candidates
+
+From past context and deployment logs, the **most probable failing test** is **SignNow E-Signature (Step 6)** or **Geolocation-prefill (Step 1)**.
+
+Here’s why:
+
+#### ❌ Likely Failure: **Step 6 – SignNow Signature Redirect Not Triggering**
+
+* This has been a known intermittent issue.
+* If Step 6 doesn’t redirect to the embedded SignNow view or webhook doesn’t update signed status, that would fail an end-to-end test.
+
+#### ❌ Possible Secondary: **Step 1 Geolocation Pre-fill**
+
+* IP-based country detection may fail in some cases (e.g., VPN, local dev).
+* Would cause Step 1 not to prefill country, but not block form flow.
+
+---
+
+### 🧪 Step 3: How to Confirm the Failure
+
+Ask client or inspect test logs for:
+
+```ts
+// Run this if available
+node client-e2e-test.cjs | grep -i "fail"
+```
+
+Or check the console/CLI for:
+
+* "Step 6 timeout"
+* "Unable to load SignNow"
+* "GeoIP failed"
+
+---
+
+### 🛡️ Step 4: Is This a Deployment Blocker?
+
+| Scenario                               | Blocking?   | Why                                                          |
+| -------------------------------------- | ----------- | ------------------------------------------------------------ |
+| **SignNow signature not triggering**   | ✅ **YES**   | Prevents completing Step 6                                   |
+| **Webhook not firing after signature** | ⚠️ Possibly | Depends on user perception and data sync                     |
+| **Geolocation not working**            | ❌ **No**    | Just affects default value in Step 1, user can still proceed |
+| **Cosmetic issue (e.g., slow load)**   | ❌ **No**    | Non-critical                                                 |
+
+---
+
+### ✅ Step 5: Safe Action Plan
+
+**If you suspect Step 6 is the cause** of the 92.3% result:
+
+1. **Manually complete Step 1 → Step 7 in production**
+2. Confirm:
+
+   * You are redirected to SignNow
+   * You can sign the doc
+   * You are returned to Step 7
+   * The Staff app reflects the signed status
+3. If any of these fail:
+
+   * We'll fix webhook or SignNow initiation in Staff
+
+---
+
+### ✅ RECOMMENDATION
+
+> ✅ If the **only failed test is Step 6 SignNow redirect or webhook**, **pause production push until we verify a full signature loop works.**
+
+Otherwise, if it's **Step 1 location or a visual issue**, go ahead with deployment.
+
+Would you like me to prepare:
+
+* 🔄 A Step 6 Signature **Loopback Test Checklist**, or
+* 🧪 A manual test script for all 7 steps in production?
+
+Let me know which direction you'd like to go.
