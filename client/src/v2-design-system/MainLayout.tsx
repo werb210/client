@@ -13,7 +13,6 @@ import Step7Finalization from "@/routes/Step7_Finalization";
 
 // Core Pages (Authentication removed)
 import LandingPage from "@/pages/LandingPage";
-import Portal from "@/pages/Portal";
 import SimpleDashboard from "@/pages/SimpleDashboard";
 import NotFound from "@/pages/NotFound";
 import ApplicationSuccess from "@/pages/ApplicationSuccess";
@@ -29,17 +28,15 @@ import CorsTest from "@/pages/CorsTest";
 import ApiTest from "@/pages/ApiTest";
 import SyncMonitor from "@/pages/SyncMonitor";
 import LenderProductsByCountry from "@/routes/LenderProductsByCountry";
-// CompleteWorkflowTest excluded from build to resolve lucide-react timeout
-// StageMonitorTest and SignNowWorkflowTest excluded from build to resolve lucide-react timeout
-// import StageMonitorTest from "@/test/StageMonitorTest";
-// import SignNowWorkflowTest from "@/test/SignNowWorkflowTest";
+import CompleteWorkflowTest from "@/test/CompleteWorkflowTest";
+import StageMonitorTest from "@/test/StageMonitorTest";
+import SignNowWorkflowTest from "@/test/SignNowWorkflowTest";
 import Step5Test from "@/pages/Step5Test";
 import Steps34Test from "@/pages/Steps34Test";
 import TestingFlowValidation from "@/pages/TestingFlowValidation";
 import UnifiedDocumentTest from "@/pages/UnifiedDocumentTest";
 import LenderCategoriesTest from "@/pages/LenderCategoriesTest";
-// DocumentRequirementsTest excluded from build to resolve lucide-react timeout
-// import DocumentRequirementsTest from "@/pages/DocumentRequirementsTest";
+import DocumentRequirementsTest from "@/pages/DocumentRequirementsTest";
 import LenderProductMatcher from "@/pages/LenderProductMatcher";
 import StrictValidationTest from "@/pages/StrictValidationTest";
 import DataIngestionInterface from "@/pages/DataIngestionInterface";
@@ -83,17 +80,15 @@ export function MainLayout() {
       <Route path="/sync-monitor" component={SyncMonitor} />
       <Route path="/sync-diagnostics" component={SyncDiagnostics} />
       <Route path="/diagnostics/lenders" component={LenderDiagnosticsFinalized} />
-      {/* CompleteWorkflowTest route excluded from build to resolve lucide-react timeout */}
-      {/* Stage monitor and SignNow workflow tests excluded from build to resolve lucide-react timeout */}
-      {/* <Route path="/stage-monitor-test" component={StageMonitorTest} /> */}
-      {/* <Route path="/signnow-workflow-test" component={SignNowWorkflowTest} /> */}
+      <Route path="/complete-workflow-test" component={CompleteWorkflowTest} />
+      <Route path="/stage-monitor-test" component={StageMonitorTest} />
+      <Route path="/signnow-workflow-test" component={SignNowWorkflowTest} />
       <Route path="/step5-test" component={Step5Test} />
       <Route path="/steps34-test" component={Steps34Test} />
       <Route path="/testing-flow-validation" component={TestingFlowValidation} />
       <Route path="/unified-document-test" component={UnifiedDocumentTest} />
       <Route path="/lender-categories" component={LenderCategoriesTest} />
-      {/* DocumentRequirementsTest route excluded from build to resolve lucide-react timeout */}
-      {/* <Route path="/document-requirements-test" component={DocumentRequirementsTest} /> */}
+      <Route path="/document-requirements-test" component={DocumentRequirementsTest} />
       <Route path="/lender-product-matcher" component={LenderProductMatcher} />
       <Route path="/strict-validation-test" component={StrictValidationTest} />
       <Route path="/data-ingestion" component={DataIngestionInterface} />
@@ -142,7 +137,7 @@ export function MainLayout() {
       {/* Diagnostic Pages */}
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
       
-      {/* Default Route - Professional Landing Page */}
+      {/* Default Route - Landing Page */}
       <Route path="/" component={LandingPage} />
       <Route component={NotFound} />
     </Switch>

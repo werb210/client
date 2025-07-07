@@ -7,7 +7,7 @@ import { Step4ApplicantInfo } from '@/components/Step4ApplicantInfo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ArrowLeft, ArrowRight } from '@/lib/icons';
+import { CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 
 // Complete form schema for Steps 3-4
 const applicationFormSchema = z.object({

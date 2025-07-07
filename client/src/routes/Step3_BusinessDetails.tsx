@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, ArrowLeft, Save, Building, MapPin, Calendar } from '@/lib/icons';
+import { ArrowRight, ArrowLeft, Save, Building, MapPin, Calendar } from 'lucide-react';
 
 const Step3Schema = z.object({
   // Business Information

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { User, MapPin, CalendarIcon, Phone, UserPlus, Percent } from '@/lib/icons';
+import { User, MapPin, Calendar as CalendarIcon, Phone, UserPlus, Percent } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 

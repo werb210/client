@@ -19,7 +19,7 @@ import {
   Clock,
   Loader2,
   AlertTriangle
-} from '@/lib/icons';
+} from 'lucide-react';
 
 type SubmissionStatus = 'idle' | 'submitting' | 'submitted' | 'error';
 

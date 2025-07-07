@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, ArrowRight, Target, TrendingUp, Shield, Lightbulb, Loader2, CheckCircle } from '@/lib/icons';
+import { AlertCircle, ArrowRight, Target, TrendingUp, Shield, Lightbulb, Loader2, CheckCircle } from 'lucide-react';
 import { useComprehensiveForm } from '@/context/ComprehensiveFormContext';
 import { useStaffRecommendations, convertStep1ToRecommendationData, convertRevenueToMonthly } from '@/hooks/useStaffRecommendations';
 import { generateIndustryInsights } from '@/lib/industryInsights';

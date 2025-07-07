@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight } from '@/lib/icons';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { StageMonitor } from '@/components/StageMonitor';
 import { AutoSaveIndicator } from '@/components/AutoSaveIndicator';
 import { ProgressMonitor } from '@/components/ProgressMonitor';
-import { Building, Target, User, FileText, Upload, FileSignature } from '@/lib/icons';
+import { Building, Target, User, FileText, Upload, FileSignature } from 'lucide-react';
 
 const steps = [
   { title: "Financial Profile", icon: Building },

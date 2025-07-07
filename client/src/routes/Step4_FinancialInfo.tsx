@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, ArrowLeft, Save, DollarSign } from '@/lib/icons';
+import { ArrowRight, ArrowLeft, Save, DollarSign } from 'lucide-react';
 import { Applications } from '@/lib/api';
 import { useState } from 'react';
 

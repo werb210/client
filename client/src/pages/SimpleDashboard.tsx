@@ -1,7 +1,7 @@
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, TrendingUp, FileText, Building } from '@/lib/icons';
+import { Plus, TrendingUp, FileText, Building } from 'lucide-react';
 
 export default function SimpleDashboard() {
   const [, setLocation] = useLocation();

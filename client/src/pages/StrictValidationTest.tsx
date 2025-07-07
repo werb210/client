@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CheckCircle, XCircle, AlertTriangle } from '@/lib/icons';
+import { Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { fetchLenderProducts } from '@/api/lenderProducts';
 import { getProductRecommendations, type RecommendationFilters } from '@/lib/strictRecommendationEngine';
 import { getDocumentRequirements } from '@/lib/lenderProductNormalizer';

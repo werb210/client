@@ -12,7 +12,7 @@ import {
   Database,
   ArrowRight,
   RefreshCw
-} from '@/lib/icons';
+} from 'lucide-react';
 
 interface ChecklistItem {
   id: string;

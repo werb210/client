@@ -20,7 +20,7 @@ import {
   WifiOff,
   Server,
   HardDrive
-} from '@/lib/icons';
+} from 'lucide-react';
 
 export default function ReliableSyncTest() {
   const { 

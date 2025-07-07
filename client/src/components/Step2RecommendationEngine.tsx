@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Target, CheckCircle, ArrowRight, AlertTriangle } from '@/lib/icons';
+import { Target, CheckCircle, ArrowRight, AlertTriangle } from 'lucide-react';
 import { formatCategoryName } from '../utils/formatters';
 
 interface ProductCategory {

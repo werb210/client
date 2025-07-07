@@ -14,7 +14,7 @@ import {
   Clock,
   Building,
   User
-} from '@/lib/icons';
+} from 'lucide-react';
 
 /**
  * Workflow Test Page - Verify new Step 4 → Step 6 → Step 7 flow

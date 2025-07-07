@@ -2,7 +2,7 @@ import { usePublicLenders } from '@/hooks/usePublicLenders';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, DollarSign, MapPin, Building2 } from '@/lib/icons';
+import { Loader2, DollarSign, MapPin, Building2 } from 'lucide-react';
 import { LenderProduct } from '@/api/lenderProducts';
 
 const formatCurrency = (amount: number) => {

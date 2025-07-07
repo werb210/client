@@ -2,14 +2,25 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-// Temporarily disable all sync imports to resolve startup blocking
-// import { scheduledSyncService } from "./lib/scheduledSync";
-// import { clearLegacyCache, shouldClearCache } from "./startup/clearLegacyCache";
-// import { runStartupVerification } from "./test/staffDatabaseVerification";
-// import { syncLenderProducts } from "./lib/finalizedLenderSync";
+import { scheduledSyncService } from "./lib/scheduledSync";
+import { clearLegacyCache, shouldClearCache } from "./startup/clearLegacyCache";
+import { runStartupVerification } from "./test/staffDatabaseVerification";
+// Initialize finalized production sync system
+import { syncLenderProducts } from "./lib/finalizedLenderSync";
 
-// Completely disable sync and verification to resolve startup blocking
-console.log('[STARTUP] Sync system disabled to prevent HMR connectivity issues');
+// Trigger initial sync on application startup
+syncLenderProducts().then(result => {
+  if (result.success) {
+    console.log(`[STARTUP] ✅ Synced ${result.productCount} products from ${result.source}`);
+  } else {
+    console.warn(`[STARTUP] ⚠️ Sync failed:`, result.errors);
+  }
+});
+
+// Verify staff database integration
+runStartupVerification().catch(error => {
+  console.error('[STARTUP] Verification failed:', error);
+});
 
 const root = document.getElementById("root");
 if (root) {

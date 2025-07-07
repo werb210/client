@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Building, Target, User, FileText, Upload, FileSignature } from '@/lib/icons';
+import { Building, Target, User, FileText, Upload, FileSignature } from 'lucide-react';
 import { useFormData } from '@/context/FormDataContext';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { ProgressMonitor } from './ProgressMonitor';

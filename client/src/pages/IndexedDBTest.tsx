@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { RefreshCw, Database, Clock, CheckCircle, AlertCircle } from '@/lib/icons';
+import { RefreshCw, Database, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function IndexedDBTest() {
   const { data: products, isLoading, isError, error, isInitialized } = useLenderProducts();
@@ -45,7 +45,7 @@ export default function IndexedDBTest() {
   const handleTestWebSocket = () => {
     // Test WebSocket connection
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/api/ws`;
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
     
     const ws = new WebSocket(wsUrl);
     

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { OTPInput, OTPInputContext } from "input-otp"
-// Icons replaced with Unicode symbols to fix build timeout
+import { Dot } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -61,7 +61,7 @@ const InputOTPSeparator = React.forwardRef<
   React.ComponentPropsWithoutRef<"div">
 >(({ ...props }, ref) => (
   <div ref={ref} role="separator" {...props}>
-    <span className="h-4 w-4 flex items-center justify-center">•</span>
+    <Dot />
   </div>
 ))
 InputOTPSeparator.displayName = "InputOTPSeparator"

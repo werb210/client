@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Database, AlertCircle, CheckCircle } from '@/lib/icons';
+import { RefreshCw, Database, AlertCircle, CheckCircle } from 'lucide-react';
 import { get, set, clear } from 'idb-keyval';
 import { useToast } from '@/hooks/use-toast';
 import { validateV2Schema, normalizeProduct, type ProductStats } from '@/types/enhancedLenderProduct';

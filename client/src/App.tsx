@@ -1,31 +1,22 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { FormDataProvider } from "@/context/FormDataContext";
-import { ApplicationProvider } from "@/context/ApplicationContext";
+/**
+ * V2 Application - Using V1 Design System
+ * 
+ * This application now uses the proven V1 layout and design patterns
+ * extracted into the v2-design-system for consistency and reliability.
+ * 
+ * ✅ V1 Components Used: SideBySideApplication, Step routes
+ * ❌ V2 Legacy Archived: ComprehensiveApplication, individual Step forms
+ */
+import { AppShell } from "@/v2-design-system/AppShell";
 import { MainLayout } from "@/v2-design-system/MainLayout";
-
-// Create query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import { WebSocketListener } from "@/components/WebSocketListener";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <FormDataProvider>
-        <ApplicationProvider>
-          <div className="min-h-screen bg-background">
-            <MainLayout />
-            <Toaster />
-          </div>
-        </ApplicationProvider>
-      </FormDataProvider>
-    </QueryClientProvider>
+    <AppShell>
+      <WebSocketListener />
+      <MainLayout />
+    </AppShell>
   );
 }
 

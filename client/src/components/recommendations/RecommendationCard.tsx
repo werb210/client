@@ -1,4 +1,4 @@
-// Icons replaced with Unicode symbols to fix build timeout
+import { TrendingUp, Building, Cog, CreditCard, FileText, ShoppingCart } from 'lucide-react';
 
 interface Props {
   title: string;
@@ -12,14 +12,14 @@ interface Props {
 
 const getCategoryIcon = (productType: string) => {
   const icons = {
-    working_capital: <span className="w-5 h-5 flex items-center justify-center">📈</span>,
-    equipment_financing: <span className="w-5 h-5 flex items-center justify-center">⚙️</span>,
-    line_of_credit: <span className="w-5 h-5 flex items-center justify-center">💳</span>,
-    term_loan: <span className="w-5 h-5 flex items-center justify-center">🏢</span>,
-    invoice_factoring: <span className="w-5 h-5 flex items-center justify-center">📄</span>,
-    purchase_order_financing: <span className="w-5 h-5 flex items-center justify-center">🛒</span>,
+    working_capital: <TrendingUp className="w-5 h-5" />,
+    equipment_financing: <Cog className="w-5 h-5" />,
+    line_of_credit: <CreditCard className="w-5 h-5" />,
+    term_loan: <Building className="w-5 h-5" />,
+    invoice_factoring: <FileText className="w-5 h-5" />,
+    purchase_order_financing: <ShoppingCart className="w-5 h-5" />,
   };
-  return icons[productType as keyof typeof icons] || <span className="w-5 h-5 flex items-center justify-center">📄</span>;
+  return icons[productType as keyof typeof icons] || <FileText className="w-5 h-5" />;
 };
 
 export const RecommendationCard = ({

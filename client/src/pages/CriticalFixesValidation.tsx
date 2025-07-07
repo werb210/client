@@ -14,7 +14,7 @@ import {
   RefreshCw,
   FileText,
   Clock
-} from '@/lib/icons';
+} from 'lucide-react';
 
 interface ValidationResult {
   id: string;

@@ -3,7 +3,7 @@ import { useFormData } from '@/context/FormDataContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronLeft, ChevronRight, Monitor, Tablet, Smartphone } from '@/lib/icons';
+import { ChevronLeft, ChevronRight, Monitor, Tablet, Smartphone } from 'lucide-react';
 import { StageMonitor } from '@/components/StageMonitor';
 
 // Import all step components

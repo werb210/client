@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Shield, FileText, MessageCircle, Lock } from '@/lib/icons';
+import { Shield, FileText, MessageCircle, Lock } from 'lucide-react';
 
 interface Step6Props {
   defaultValues?: Partial<ApplicationForm>;

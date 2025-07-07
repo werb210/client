@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, ArrowLeft, Play, CheckCircle, Loader2 } from '@/lib/icons';
+import { ArrowRight, ArrowLeft, Play, CheckCircle, Loader2 } from 'lucide-react';
 import { apiRequest } from '@/lib/api';
 
 interface LenderRecommendation {

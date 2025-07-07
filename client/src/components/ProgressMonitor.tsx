@@ -1,5 +1,5 @@
 import React from 'react';
-// Icons replaced with Unicode symbols to fix build timeout
+import { ArrowRight } from 'lucide-react';
 
 interface Step {
   title: string;
@@ -61,9 +61,9 @@ export function ProgressMonitor({ steps, currentStep }: ProgressMonitorProps) {
                 </span>
               </div>
               {index < steps.length - 1 && (
-                <span className={`w-4 h-4 mx-2 lg:mx-4 mt-[-20px] transition-colors duration-200 flex items-center justify-center ${
+                <ArrowRight className={`w-4 h-4 mx-2 lg:mx-4 mt-[-20px] transition-colors duration-200 ${
                   isCompleted ? "text-orange-400" : "text-gray-300"
-                }`}>→</span>
+                }`} />
               )}
             </div>
           );

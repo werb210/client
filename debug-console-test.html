@@ -1,40 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debug Console Test</title>
+    <title>Console API Test</title>
 </head>
 <body>
-    <h1>Debug Console Test</h1>
-    <div id="status">Testing...</div>
+    <h1>Direct Console API Test</h1>
+    <p>Open DevTools Console and run the test commands</p>
     
     <script>
-        console.log('Debug script loaded');
+        console.log('=== DIRECT API TEST ===');
+        console.log('Testing Staff API directly via browser console...');
         
-        // Test if we can load the main bundle
-        const script = document.createElement('script');
-        script.type = 'module';
-        script.src = '/assets/index-CljxFoTg.js';
-        script.onload = function() {
-            console.log('Main bundle loaded successfully');
-            document.getElementById('status').textContent = 'Main bundle loaded successfully';
-        };
-        script.onerror = function(error) {
-            console.error('Failed to load main bundle:', error);
-            document.getElementById('status').textContent = 'Failed to load main bundle: ' + error;
-        };
-        
-        document.head.appendChild(script);
-        
-        // Also test a simple fetch to the API
-        fetch('/api/health')
-            .then(response => {
-                console.log('API health check:', response.status);
+        // Test 1: Direct fetch
+        console.log('\n1. Direct fetch test:');
+        fetch('https://staffportal.replit.app/api/public/lenders')
+            .then(r => {
+                console.log('Response status:', r.status);
+                console.log('Response OK:', r.ok);
+                console.log('Response headers:', Object.fromEntries(r.headers.entries()));
+                return r.json();
+            })
+            .then(data => {
+                console.log('✅ SUCCESS - Data received:', data);
+                if (Array.isArray(data)) {
+                    console.log('📊 Product count:', data.length);
+                    if (data.length > 0) {
+                        console.log('📋 Sample product:', data[0]);
+                    }
+                } else if (data.products) {
+                    console.log('📊 Product count:', data.products.length);
+                    if (data.products.length > 0) {
+                        console.log('📋 Sample product:', data.products[0]);
+                    }
+                } else {
+                    console.log('📊 Response structure:', Object.keys(data));
+                }
             })
             .catch(error => {
-                console.error('API health check failed:', error);
+                console.error('❌ FETCH FAILED:', error);
+                console.error('Error type:', error.name);
+                console.error('Error message:', error.message);
+                
+                if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                    console.log('🚫 CORS BLOCK: Browser blocked the request due to CORS policy');
+                } else if (error.message.includes('network')) {
+                    console.log('🌐 NETWORK: Connection issue to staff backend');
+                } else {
+                    console.log('❓ UNKNOWN: Check Network tab in DevTools');
+                }
             });
+        
+        // Test 2: Environment check
+        console.log('\n2. Environment variable check:');
+        console.log('Current page origin:', window.location.origin);
+        console.log('User agent:', navigator.userAgent);
+        
+        // Test 3: Alternative endpoints
+        console.log('\n3. Testing alternative endpoints:');
+        const endpoints = [
+            'https://staffportal.replit.app/api/lenders',
+            'https://staffportal.replit.app/api/products',
+            'https://staff.replit.app/api/public/lenders'
+        ];
+        
+        endpoints.forEach((url, index) => {
+            setTimeout(() => {
+                console.log(`\nTesting endpoint ${index + 1}: ${url}`);
+                fetch(url)
+                    .then(r => {
+                        console.log(`Status: ${r.status} ${r.statusText}`);
+                        return r.text();
+                    })
+                    .then(text => {
+                        console.log(`Response: ${text.slice(0, 200)}...`);
+                    })
+                    .catch(err => {
+                        console.error(`Error: ${err.message}`);
+                    });
+            }, (index + 1) * 1000);
+        });
     </script>
 </body>
 </html>

@@ -12,7 +12,7 @@ import {
   TestTube2, 
   ArrowRight,
   AlertTriangle
-} from '@/lib/icons';
+} from 'lucide-react';
 
 /**
  * Testing Flow Validation Page

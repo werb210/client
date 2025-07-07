@@ -19,7 +19,7 @@ import {
   Send,
   Clock,
   AlertCircle
-} from '@/lib/icons';
+} from 'lucide-react';
 import { submitApplication } from '@/lib/api';
 
 interface ApplicationSummary {

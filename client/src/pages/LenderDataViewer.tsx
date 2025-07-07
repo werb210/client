@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Database, Globe, DollarSign, MapPin, Building2, RefreshCw } from '@/lib/icons';
+import { Loader2, Database, Globe, DollarSign, MapPin, Building2, RefreshCw } from 'lucide-react';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
 
 interface RawApiData {

@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { apiRequest } from '@/lib/queryClient';
 
-import { ArrowLeft, Save } from '@/lib/icons';
+import { ArrowLeft, Save } from 'lucide-react';
 
 function ApplicationFormContent() {
   const { state, dispatch, saveProgress } = useApplication();

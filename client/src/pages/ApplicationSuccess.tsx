@@ -11,7 +11,7 @@ import {
   FileText,
   Home,
   Calendar
-} from '@/lib/icons';
+} from 'lucide-react';
 
 /**
  * Application Success Page

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useApplication } from '@/context/ApplicationContext';
-import { CreditCard, TrendingUp, FileText } from '@/lib/icons';
+import { CreditCard, TrendingUp, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
 interface LenderRecommendationsProps {

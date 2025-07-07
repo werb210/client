@@ -4,7 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-// Icons replaced with Unicode symbols to fix build timeout
+import { 
+  FileText, 
+  Upload, 
+  CheckCircle, 
+  AlertCircle, 
+  Building, 
+  DollarSign,
+  Calendar,
+  MapPin 
+} from 'lucide-react';
 
 interface TestResult {
   success: boolean;
@@ -254,7 +263,7 @@ export default function BankingDocumentTest() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl">
-            <span className="h-6 w-6 text-blue-600 flex items-center justify-center text-lg">📄</span>
+            <FileText className="h-6 w-6 text-blue-600" />
             Banking Document Application Test
           </CardTitle>
           <p className="text-gray-600">
@@ -268,7 +277,7 @@ export default function BankingDocumentTest() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <span className="h-5 w-5 text-blue-600 flex items-center justify-center">🏢</span>
+              <Building className="h-5 w-5 text-blue-600" />
               Company Information
             </CardTitle>
           </CardHeader>
@@ -285,14 +294,14 @@ export default function BankingDocumentTest() {
               <div>
                 <span className="font-medium text-gray-700">Location:</span>
                 <p className="text-gray-900 flex items-center gap-1">
-                  <span className="h-3 w-3 flex items-center justify-center text-xs">📍</span>
+                  <MapPin className="h-3 w-3" />
                   {testData.location}
                 </p>
               </div>
               <div>
                 <span className="font-medium text-gray-700">Funding Amount:</span>
                 <p className="text-gray-900 flex items-center gap-1">
-                  <span className="h-3 w-3 flex items-center justify-center text-xs">💰</span>
+                  <DollarSign className="h-3 w-3" />
                   {testData.fundingAmount}
                 </p>
               </div>
@@ -312,7 +321,7 @@ export default function BankingDocumentTest() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <span className="h-5 w-5 text-green-600 flex items-center justify-center">📅</span>
+              <Calendar className="h-5 w-5 text-green-600" />
               Banking Documents ({bankingDocuments.length})
             </CardTitle>
             <p className="text-sm text-gray-600">
@@ -361,12 +370,12 @@ export default function BankingDocumentTest() {
           >
             {isRunning ? (
               <>
-                <span className="mr-2 h-4 w-4 animate-spin flex items-center justify-center">📤</span>
+                <Upload className="mr-2 h-4 w-4 animate-spin" />
                 Running Test...
               </>
             ) : (
               <>
-                <span className="mr-2 h-4 w-4 flex items-center justify-center">📤</span>
+                <Upload className="mr-2 h-4 w-4" />
                 Submit Test Application
               </>
             )}
@@ -377,9 +386,9 @@ export default function BankingDocumentTest() {
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2">
                   {result.success ? (
-                    <span className="h-5 w-5 text-green-600 flex items-center justify-center">✅</span>
+                    <CheckCircle className="h-5 w-5 text-green-600" />
                   ) : (
-                    <span className="h-5 w-5 text-red-600 flex items-center justify-center">❌</span>
+                    <AlertCircle className="h-5 w-5 text-red-600" />
                   )}
                   <span className="font-medium">
                     {result.success ? 'Test Completed Successfully!' : 'Test Failed'}

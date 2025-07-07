@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-// Icons replaced with Unicode symbols to fix build timeout
+import { ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 import { DynamicDocumentRequirements } from './DynamicDocumentRequirements';
 
 // Define the UploadedFile type to match DynamicDocumentRequirements
@@ -76,9 +76,9 @@ export const Step5Documents: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               {allRequiredDocsComplete ? (
-                <span className="w-5 h-5 text-green-600 flex items-center justify-center">✓</span>
+                <CheckCircle className="w-5 h-5 text-green-600" />
               ) : (
-                <span className="w-5 h-5 text-orange-500 flex items-center justify-center">⚠️</span>
+                <AlertCircle className="w-5 h-5 text-orange-500" />
               )}
               <span className={`text-sm font-medium ${
                 allRequiredDocsComplete ? 'text-green-600' : 'text-orange-600'
@@ -95,7 +95,6 @@ export const Step5Documents: React.FC = () => {
 
       {/* Dynamic Document Requirements Component */}
       <DynamicDocumentRequirements
-        applicationId="mock-app-id"
         formData={formData}
         uploadedFiles={uploadedFiles}
         onFilesUploaded={handleFilesUploaded}
@@ -137,7 +136,7 @@ export const Step5Documents: React.FC = () => {
       {/* Warning Alert */}
       {!allRequiredDocsComplete && totalRequiredDocs > 0 && (
         <Alert>
-          <span className="h-4 w-4 text-orange-500 flex items-center justify-center">⚠️</span>
+          <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Please upload all required documents before proceeding to the next step. 
             Missing documents may delay the processing of your application.
@@ -160,7 +159,7 @@ export const Step5Documents: React.FC = () => {
           className="bg-teal-600 hover:bg-teal-700 text-white"
         >
           Continue to Signature
-          <span className="w-4 h-4 ml-2">→</span>
+          <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
 

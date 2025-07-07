@@ -3,89 +3,59 @@ import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-// Temporarily removing lucide-react to fix build timeout - using Unicode symbols
+import { CheckCircle, FileText, DollarSign, Shield, ArrowRight, Clock, TrendingUp } from "lucide-react";
 
 
 export default function LandingPage() {
   const [, setLocation] = useLocation();
 
   // Fetch live lender products to get maximum funding amount
-  const { data: products = [], isLoading, error } = useQuery({
+  const { data: products = [], isLoading } = useQuery({
     queryKey: ['landing-page-products'],
     queryFn: async () => {
-      console.log(`[LANDING] Attempting to fetch from: ${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
-      
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`,
         },
       });
       
-      console.log(`[LANDING] API Response status: ${res.status}`);
-      
       if (!res.ok) {
-        console.log(`[LANDING] API Error: ${res.status} ${res.statusText}`);
         throw new Error(`Failed to fetch lender products: ${res.status}`);
       }
       
       const data = await res.json();
       console.log(`[LANDING] Fetched ${data.products?.length || 0} products for max funding calculation`);
-      console.log(`[LANDING] Sample product data:`, data.products?.[0]);
       return data.products || [];
     },
     refetchInterval: 30000, // Refresh every 30 seconds
     staleTime: 10000, // Consider data stale after 10 seconds
-    retry: 1, // Reduce retries for faster fallback
+    retry: 3,
   });
 
   // Calculate maximum funding amount from live data
   const getMaxFunding = () => {
-    console.log('[LANDING] getMaxFunding called, products:', products?.length || 0, 'isLoading:', isLoading, 'error:', error);
-    
     if (!products || products.length === 0) {
-      if (isLoading) {
-        return "Loading...";
-      }
-      if (error) {
-        console.log('[LANDING] API error, using documented maximum based on 41+ products');
-        // Based on project documentation of 41+ lender products with maximum funding capabilities
-        return "$30M+";
-      }
-      return "$30M+";
+      return isLoading ? "Loading..." : "$1M+";
     }
     
     try {
-      console.log('[LANDING] Sample product structure:', products[0]);
-      
-      // Extract maximum amounts from products (try both amountMax and maxAmount)
+      // Extract maximum amounts from products (API structure: amountMax)
       const amounts = products
-        .map((p: any) => p.amountMax || p.maxAmount || 0)
+        .map((p: any) => p.amountMax || 0)
         .filter((amount: any) => amount > 0);
       
-      console.log('[LANDING] Extracted amounts:', amounts.slice(0, 5), '(showing first 5)');
-      
-      if (amounts.length === 0) {
-        console.log('[LANDING] No valid amounts found, using fallback');
-        return "$1M+";
-      }
+      if (amounts.length === 0) return "$1M+";
       
       const maxAmount = Math.max(...amounts);
-      console.log(`[LANDING] Maximum funding amount calculated: $${maxAmount.toLocaleString()}`);
+      console.log(`[LANDING] Maximum funding amount: $${maxAmount.toLocaleString()}`);
       
       if (maxAmount >= 1000000) {
-        const formatted = `$${Math.floor(maxAmount / 1000000)}M+`;
-        console.log(`[LANDING] Formatted for millions: ${formatted}`);
-        return formatted;
+        return `$${Math.floor(maxAmount / 1000000)}M+`;
       } else if (maxAmount >= 1000) {
-        const formatted = `$${Math.floor(maxAmount / 1000)}K+`;
-        console.log(`[LANDING] Formatted for thousands: ${formatted}`);
-        return formatted;
+        return `$${Math.floor(maxAmount / 1000)}K+`;
       }
-      const formatted = `$${Math.floor(maxAmount)}+`;
-      console.log(`[LANDING] Formatted as basic amount: ${formatted}`);
-      return formatted;
+      return `$${Math.floor(maxAmount)}+`;
     } catch (error) {
       console.log('[LANDING] Error calculating max funding:', error);
       return "$1M+";
@@ -116,7 +86,7 @@ export default function LandingPage() {
             >
               <span className="flex items-center">
                 Get Started
-                <span className="ml-2">→</span>
+                <ArrowRight className="w-4 h-4 ml-2" />
               </span>
             </Button>
           </div>
@@ -140,7 +110,7 @@ export default function LandingPage() {
           >
             <span className="flex items-center">
               Start Your Application
-              <span className="ml-2">→</span>
+              <ArrowRight className="w-5 h-5 ml-2" />
             </span>
           </Button>
         </div>
@@ -150,7 +120,7 @@ export default function LandingPage() {
           <Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-white/80 backdrop-blur-sm">
             <CardHeader>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#F7F9FC' }}>
-                <span className="text-2xl" style={{ color: '#003D7A' }}>📄</span>
+                <FileText className="w-6 h-6" style={{ color: '#003D7A' }} />
               </div>
               <CardTitle style={{ color: '#003D7A' }}>Streamlined Application</CardTitle>
               <CardDescription style={{ color: '#64748B' }}>
@@ -162,7 +132,7 @@ export default function LandingPage() {
           <Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-white/80 backdrop-blur-sm">
             <CardHeader>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#FFF7E6' }}>
-                <span className="text-2xl" style={{ color: '#FF8C00' }}>💰</span>
+                <DollarSign className="w-6 h-6" style={{ color: '#FF8C00' }} />
               </div>
               <CardTitle style={{ color: '#003D7A' }}>Competitive Rates</CardTitle>
               <CardDescription style={{ color: '#64748B' }}>
@@ -174,7 +144,7 @@ export default function LandingPage() {
           <Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-white/80 backdrop-blur-sm">
             <CardHeader>
               <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: '#F0F9F4' }}>
-                <span className="text-2xl" style={{ color: '#16A34A' }}>🛡️</span>
+                <Shield className="w-6 h-6" style={{ color: '#16A34A' }} />
               </div>
               <CardTitle style={{ color: '#003D7A' }}>Secure & Compliant</CardTitle>
               <CardDescription style={{ color: '#64748B' }}>
@@ -191,28 +161,28 @@ export default function LandingPage() {
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="flex items-start space-x-3">
-              <span className="text-xl mt-1 flex-shrink-0" style={{ color: '#16A34A' }}>✓</span>
+              <CheckCircle className="w-6 h-6 mt-1 flex-shrink-0" style={{ color: '#16A34A' }} />
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: '#003D7A' }}>Fast Approval</h3>
                 <p className="text-sm" style={{ color: '#64748B' }}>Get decisions within 24-48 hours with our streamlined process.</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <span className="text-xl mt-1 flex-shrink-0" style={{ color: '#16A34A' }}>✓</span>
+              <CheckCircle className="w-6 h-6 mt-1 flex-shrink-0" style={{ color: '#16A34A' }} />
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: '#003D7A' }}>Flexible Terms</h3>
                 <p className="text-sm" style={{ color: '#64748B' }}>6 months to 10 years repayment options to match your cash flow.</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <span className="text-xl mt-1 flex-shrink-0" style={{ color: '#16A34A' }}>✓</span>
+              <CheckCircle className="w-6 h-6 mt-1 flex-shrink-0" style={{ color: '#16A34A' }} />
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: '#003D7A' }}>No Hidden Fees</h3>
                 <p className="text-sm" style={{ color: '#64748B' }}>Transparent pricing with clear terms and no surprise charges.</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <span className="text-xl mt-1 flex-shrink-0" style={{ color: '#16A34A' }}>✓</span>
+              <CheckCircle className="w-6 h-6 mt-1 flex-shrink-0" style={{ color: '#16A34A' }} />
               <div>
                 <h3 className="font-semibold mb-1" style={{ color: '#003D7A' }}>Expert Support</h3>
                 <p className="text-sm" style={{ color: '#64748B' }}>Dedicated financing specialists available throughout the process.</p>
@@ -256,7 +226,7 @@ export default function LandingPage() {
           >
             <span className="flex items-center">
               Apply Now
-              <span className="text-lg ml-2">→</span>
+              <ArrowRight className="w-5 h-5 ml-2" />
             </span>
           </Button>
         </div>
