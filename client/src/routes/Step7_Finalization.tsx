@@ -276,7 +276,7 @@ export default function Step7Finalization() {
             </div>
             <div>
               <span className="text-gray-500">Business Name:</span>
-              <p className="font-medium">{state.operatingName || 'Not provided'}</p>
+              <p className="font-medium">{state.businessName || 'Not provided'}</p>
             </div>
           </div>
         </CardContent>
