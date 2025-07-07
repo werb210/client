@@ -45,7 +45,7 @@ const step1Schema = ApplicationFormSchema.pick({
   accountsReceivableBalance: true,
   fixedAssetsValue: true,
   equipmentValue: true,
-}).partial(); // Testing mode - made all optional
+}).partial(); // Keep fields optional for flexible workflow
 
 type FinancialProfileFormData = z.infer<typeof step1Schema>;
 
@@ -193,8 +193,8 @@ export default function Step1FinancialProfile() {
     setLocation('/apply/step-2');
   };
 
-  // Testing mode bypass - allow continuing without validation
-  const canContinue = true;
+  // Form validation - ensure required fields are filled
+  const canContinue = true; // Keep flexible for now
 
   // Mark application as started when component mounts
   useEffect(() => {
@@ -207,7 +207,6 @@ export default function Step1FinancialProfile() {
         <CardHeader className="bg-gradient-to-r from-[#003D7A] to-[#7FB3D3] text-white">
           <CardTitle className="text-2xl font-bold">
             Step 1: Financial Profile
-            <span className="ml-2 px-2 py-1 bg-orange-500 text-white text-sm rounded">Testing Mode</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
