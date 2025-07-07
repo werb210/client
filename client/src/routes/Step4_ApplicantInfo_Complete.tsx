@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatPhoneNumber, formatPostalCode, formatSSN, isCanadianBusiness } from "@/lib/regionalFormatting";
+import { formatPhoneNumber, formatPostalCode as formatPostalCodeHelper, formatSSN as formatSSNHelper, isCanadianBusiness, getStateProvinceOptions } from "@/lib/regionalFormatting";
 import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -138,21 +138,11 @@ export default function Step4ApplicantInfoComplete() {
   };
 
   // Regional formatting helpers
-  const getStateOptions = () => isCanadian ? regionalFormatting.canada.provinces : regionalFormatting.us.states;
+  const getStateOptions = () => getStateProvinceOptions(isCanadian);
   const getPostalLabel = () => isCanadian ? "Postal Code" : "ZIP Code";
   const getSSNLabel = () => isCanadian ? "SIN" : "SSN";
-  const formatPostalCode = (value: string) => {
-    if (isCanadian) {
-      return regionalFormatting.canada.formatPostalCode(value);
-    }
-    return regionalFormatting.us.formatZipCode(value);
-  };
-  const formatSSN = (value: string) => {
-    if (isCanadian) {
-      return regionalFormatting.canada.formatSIN(value);
-    }
-    return regionalFormatting.us.formatSSN(value);
-  };
+  const formatPostalCode = (value: string) => formatPostalCodeHelper(value, isCanadian);
+  const formatSSN = (value: string) => formatSSNHelper(value, isCanadian);
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
@@ -235,7 +225,7 @@ export default function Step4ApplicantInfoComplete() {
                           {...field}
                           className="h-12"
                           onChange={(e) => {
-                            const formatted = regionalFormatting.formatPhoneNumber(e.target.value, isCanadian);
+                            const formatted = formatPhoneNumber(e.target.value, isCanadian);
                             field.onChange(formatted);
                           }}
                         />
@@ -473,7 +463,7 @@ export default function Step4ApplicantInfoComplete() {
                             {...field}
                             className="h-12"
                             onChange={(e) => {
-                              const formatted = regionalFormatting.formatPhoneNumber(e.target.value, isCanadian);
+                              const formatted = formatPhoneNumber(e.target.value, isCanadian);
                               field.onChange(formatted);
                             }}
                           />
