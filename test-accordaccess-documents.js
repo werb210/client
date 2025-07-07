@@ -4,101 +4,108 @@
  */
 
 async function testAccordAccessDocuments() {
-  console.log('📄 Testing AccordAccess Working Capital Document Requirements');
-  console.log('=' * 60);
+  console.log('🧪 Testing AccordAccess Specific Document Requirements');
+  console.log('=' * 70);
 
   try {
-    // First, get the AccordAccess product details
-    const productsResponse = await fetch('http://localhost:5000/api/public/lenders');
-    const productsData = await productsResponse.json();
+    // Fetch all lender products
+    const response = await fetch('http://localhost:5000/api/public/lenders');
+    const data = await response.json();
     
-    if (productsData.success && productsData.products) {
-      // Find AccordAccess product
-      const accordAccess = productsData.products.find(product => 
-        product.name === 'AccordAccess' && product.country === 'CA'
-      );
-      
-      if (accordAccess) {
-        console.log('✅ Found AccordAccess Product:');
-        console.log(`   Name: ${accordAccess.name}`);
-        console.log(`   Lender: ${accordAccess.lenderName}`);
-        console.log(`   Category: ${accordAccess.category}`);
-        console.log(`   Amount: $${accordAccess.amountMin?.toLocaleString()} - $${accordAccess.amountMax?.toLocaleString()}`);
-        console.log(`   Required Documents: ${JSON.stringify(accordAccess.requiredDocuments, null, 2)}`);
-        
-        console.log('\n📋 AccordAccess Required Documents:');
-        if (accordAccess.requiredDocuments && accordAccess.requiredDocuments.length > 0) {
-          accordAccess.requiredDocuments.forEach((doc, index) => {
-            console.log(`${index + 1}. ${doc}`);
-          });
-        } else {
-          console.log('   No specific documents listed in product data');
-        }
-      } else {
-        console.log('❌ AccordAccess product not found');
-      }
+    if (!data.success || !data.products) {
+      throw new Error('Failed to fetch lender products');
     }
 
-    // Test the document requirements API endpoint
-    console.log('\n🔍 Testing Document Requirements API...');
-    const docResponse = await fetch('http://localhost:5000/api/loan-products/required-documents/working_capital');
-    
-    console.log(`API Status: ${docResponse.status} ${docResponse.statusText}`);
-    
-    if (docResponse.ok) {
-      const docData = await docResponse.json();
-      console.log('✅ API Response:', JSON.stringify(docData, null, 2));
+    const allLenders = data.products;
+    console.log(`🌐 Fetched ${allLenders.length} total lender products`);
+
+    // Find AccordAccess specifically
+    const accordProducts = allLenders.filter(product => 
+      product.lenderName?.toLowerCase().includes('accord') || 
+      product.name?.toLowerCase().includes('accordaccess')
+    );
+
+    console.log(`\n🎯 Found ${accordProducts.length} Accord products:`);
+    accordProducts.forEach((product, index) => {
+      console.log(`   ${index + 1}. ${product.lenderName}: ${product.name}`);
+      console.log(`      Category: ${product.category}`);
+      console.log(`      Country: ${product.country}`);
+      console.log(`      Amount: $${product.amountMin?.toLocaleString()} - $${product.amountMax?.toLocaleString()}`);
+      console.log(`      Required Documents: [${product.requiredDocuments?.join(', ') || 'None specified'}]`);
+      console.log(`      Interest Rate: ${product.interestRate || 'N/A'}`);
+      console.log(`      Credit Score: ${product.creditScore || 'N/A'}`);
+      console.log('');
+    });
+
+    // Test with US Business Line of Credit scenario
+    console.log('\n🇺🇸 Testing US Business Line of Credit $100K scenario:');
+    const usTestParams = {
+      selectedProductType: 'Business Line of Credit',
+      businessLocation: 'united-states',
+      fundingAmount: 100000
+    };
+
+    const usEligibleLenders = allLenders.filter(product => {
+      const categoryMatch = product.category?.toLowerCase() === usTestParams.selectedProductType.toLowerCase();
+      const countryMatch = product.country === 'US';
+      const amountMatch = product.amountMin <= usTestParams.fundingAmount && product.amountMax >= usTestParams.fundingAmount;
       
-      if (docData.success && docData.data) {
-        console.log('\n📋 API-Generated Document Requirements for Working Capital:');
-        docData.data.forEach((doc, index) => {
-          console.log(`${index + 1}. ${doc.name}`);
-          if (doc.description) {
-            console.log(`   Description: ${doc.description}`);
-          }
-          if (doc.quantity) {
-            console.log(`   Quantity: ${doc.quantity}`);
-          }
+      return categoryMatch && countryMatch && amountMatch;
+    });
+
+    console.log(`   ✅ Found ${usEligibleLenders.length} eligible US lenders:`);
+    usEligibleLenders.forEach((lender, index) => {
+      console.log(`      ${index + 1}. ${lender.lenderName}: ${lender.name}`);
+      console.log(`         Documents: [${lender.requiredDocuments?.join(', ') || 'None'}]`);
+    });
+
+    // Calculate intersection for US scenario
+    if (usEligibleLenders.length > 1) {
+      const usAllRequiredDocs = usEligibleLenders.map(product => product.requiredDocuments || []);
+      let usRequiredDocuments = usAllRequiredDocs[0] || [];
+      for (let i = 1; i < usAllRequiredDocs.length; i++) {
+        usRequiredDocuments = usRequiredDocuments.filter(doc => 
+          usAllRequiredDocs[i].includes(doc)
+        );
+      }
+
+      console.log(`\n   🎯 US Document Intersection: ${usRequiredDocuments.length} documents`);
+      if (usRequiredDocuments.length > 0) {
+        usRequiredDocuments.forEach((doc, index) => {
+          console.log(`      ${index + 1}. ${doc}`);
         });
-        
-        console.log(`\n📊 Document Source: ${docData.source || 'API'}`);
-        if (docData.message) {
-          console.log(`📝 Message: ${docData.message}`);
-        }
-      }
-    } else {
-      const errorText = await docResponse.text();
-      console.log('❌ API Error:', errorText);
-    }
-
-    // Also test if there's a specific AccordAccess or Accord endpoint
-    console.log('\n🏛️ Testing Lender-Specific Documents...');
-    const lenderSpecificEndpoints = [
-      'accord',
-      'accordaccess',
-      'working_capital_accord'
-    ];
-
-    for (const endpoint of lenderSpecificEndpoints) {
-      try {
-        const response = await fetch(`http://localhost:5000/api/loan-products/required-documents/${endpoint}`);
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`✅ ${endpoint}: ${data.success ? `${data.data?.length || 0} documents` : 'No data'}`);
-        } else {
-          console.log(`❌ ${endpoint}: ${response.status}`);
-        }
-      } catch (error) {
-        console.log(`❌ ${endpoint}: Error`);
+      } else {
+        console.log('      ❌ No common documents required by ALL US lenders');
       }
     }
+
+    // Test edge case scenarios
+    console.log('\n🔍 Edge Case Testing:');
+    
+    // Very high amount
+    const highAmountLenders = allLenders.filter(product => 
+      product.amountMax >= 1000000
+    );
+    console.log(`   📈 Lenders supporting $1M+: ${highAmountLenders.length}`);
+
+    // Very low amount
+    const lowAmountLenders = allLenders.filter(product => 
+      product.amountMin <= 5000
+    );
+    console.log(`   📉 Lenders supporting $5K or less: ${lowAmountLenders.length}`);
+
+    // Equipment financing specific
+    const equipmentLenders = allLenders.filter(product => 
+      product.category?.toLowerCase().includes('equipment')
+    );
+    console.log(`   🔧 Equipment financing lenders: ${equipmentLenders.length}`);
 
   } catch (error) {
-    console.error('🚨 Test Error:', error.message);
+    console.error('❌ Test Error:', error.message);
   }
 
-  console.log('\n' + '=' * 60);
-  console.log('🎯 AccordAccess Document Requirements Test Complete');
+  console.log('\n' + '=' * 70);
+  console.log('🏁 AccordAccess Document Requirements Test Complete');
 }
 
 // Run the test

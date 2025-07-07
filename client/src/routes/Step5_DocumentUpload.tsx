@@ -1,18 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFormDataContext } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequirements';
 import { ProceedBypassBanner } from '@/components/ProceedBypassBanner';
+import { getDocumentRequirementsIntersection } from '@/lib/documentIntersection';
 import { 
   ArrowRight, 
   ArrowLeft, 
   Save,
   FileText,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 
 import type { UploadedFile } from '../components/DynamicDocumentRequirements';
@@ -36,6 +40,94 @@ export default function Step5DocumentUpload() {
   );
   const [allRequirementsComplete, setAllRequirementsComplete] = useState(false);
   const [totalRequirements, setTotalRequirements] = useState(0);
+  
+  // New state for intersection-based document requirements
+  const [intersectionResults, setIntersectionResults] = useState<{
+    eligibleLenders: any[];
+    requiredDocuments: string[];
+    message: string;
+    hasMatches: boolean;
+    isLoading: boolean;
+  }>({
+    eligibleLenders: [],
+    requiredDocuments: [],
+    message: '',
+    hasMatches: false,
+    isLoading: true
+  });
+
+  // Calculate document requirements on component mount
+  useEffect(() => {
+    const calculateDocumentRequirements = async () => {
+      // A. Use the form state to access required fields
+      const { selectedCategory, businessLocation, fundingAmount } = state;
+      
+      // Validate required fields
+      if (!selectedCategory || !businessLocation || !fundingAmount) {
+        setIntersectionResults({
+          eligibleLenders: [],
+          requiredDocuments: [],
+          message: 'Missing required form data for document calculation',
+          hasMatches: false,
+          isLoading: false
+        });
+        return;
+      }
+
+      console.log('🔍 [STEP5] Calculating document requirements with intersection logic...');
+      console.log('Form data:', { selectedCategory, businessLocation, fundingAmount });
+
+      // Parse funding amount if it's a string
+      const parsedFundingAmount = typeof fundingAmount === 'string' 
+        ? parseFloat(fundingAmount.replace(/[^0-9.-]+/g, '')) 
+        : fundingAmount;
+
+      try {
+        const results = await getDocumentRequirementsIntersection(
+          selectedCategory,
+          businessLocation,
+          parsedFundingAmount
+        );
+
+        setIntersectionResults({
+          ...results,
+          isLoading: false
+        });
+
+        // Show toast notification about results
+        if (results.hasMatches && results.requiredDocuments.length > 0) {
+          toast({
+            title: "Document Requirements Calculated",
+            description: `${results.requiredDocuments.length} documents required by all matching lenders`
+          });
+        } else if (results.hasMatches && results.requiredDocuments.length === 0) {
+          toast({
+            title: "No Common Documents Required",
+            description: "Review individual lender requirements",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "No Matching Lenders",
+            description: "Please review your selection criteria",
+            variant: "destructive"
+          });
+        }
+
+      } catch (error) {
+        console.error('❌ [STEP5] Error calculating document requirements:', error);
+        setIntersectionResults({
+          eligibleLenders: [],
+          requiredDocuments: [],
+          message: `Error: ${error.message}`,
+          hasMatches: false,
+          isLoading: false
+        });
+      }
+    };
+
+    calculateDocumentRequirements();
+  }, [state.selectedCategory, state.businessLocation, state.fundingAmount, toast]);
 
   // Handle file upload from DynamicDocumentRequirements component
   const handleFilesUploaded = (files: UploadedFile[]) => {
@@ -165,6 +257,84 @@ export default function Step5DocumentUpload() {
 
       {/* Proceed Without Documents Banner */}
       <ProceedBypassBanner onBypass={handleBypass} />
+
+      {/* Intersection Results Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Info className="w-5 h-5 text-blue-600" />
+            <span>Document Requirements Analysis</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {intersectionResults.isLoading ? (
+            <div className="flex items-center space-x-2 text-gray-600">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span>Calculating document requirements...</span>
+            </div>
+          ) : intersectionResults.hasMatches ? (
+            <div className="space-y-4">
+              {/* Matching Lenders Info */}
+              <Alert>
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Found {intersectionResults.eligibleLenders.length} matching lender
+                  {intersectionResults.eligibleLenders.length !== 1 ? 's' : ''} for your criteria:
+                  <div className="mt-2">
+                    {intersectionResults.eligibleLenders.map((lender, index) => (
+                      <Badge key={index} variant="outline" className="mr-2 mb-1">
+                        {lender.lenderName}: {lender.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </AlertDescription>
+              </Alert>
+
+              {/* Document Requirements */}
+              {intersectionResults.requiredDocuments.length > 0 ? (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-2">
+                    Documents Required by ALL Matching Lenders:
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {intersectionResults.requiredDocuments.map((doc, index) => (
+                      <div key={index} className="flex items-center space-x-2 p-2 bg-green-50 rounded-lg">
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium">{doc}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {intersectionResults.message}
+                  </p>
+                </div>
+              ) : (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>No Common Documents Required:</strong> {intersectionResults.message}
+                    <br />
+                    <span className="text-sm mt-1 block">
+                      You may need to review individual lender requirements or contact support.
+                    </span>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          ) : (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>No Matching Lenders:</strong> {intersectionResults.message}
+                <br />
+                <span className="text-sm mt-1 block">
+                  Please review your selection in previous steps or contact support.
+                </span>
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Dynamic Document Requirements Component */}
       <DynamicDocumentRequirements
