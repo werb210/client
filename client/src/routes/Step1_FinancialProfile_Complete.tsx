@@ -99,6 +99,18 @@ const averageMonthlyRevenueOptions = [
   { value: 250000, label: 'Over $250,000' },
 ];
 
+const fundsPurposeOptions = [
+  { value: 'working_capital', label: 'Working Capital' },
+  { value: 'inventory', label: 'Inventory Purchase' },
+  { value: 'equipment', label: 'Equipment Purchase' },
+  { value: 'expansion', label: 'Business Expansion' },
+  { value: 'real_estate', label: 'Real Estate Purchase' },
+  { value: 'marketing', label: 'Marketing & Advertising' },
+  { value: 'debt_consolidation', label: 'Debt Consolidation' },
+  { value: 'payroll', label: 'Payroll & Operating Expenses' },
+  { value: 'other', label: 'Other Business Purpose' },
+];
+
 const accountsReceivableOptions = [
   { value: 0, label: 'No Account Receivables' },
   { value: 10000, label: 'Under $10,000' },
@@ -132,7 +144,7 @@ export default function Step1FinancialProfile() {
       industry: state.industry || '',
       lookingFor: state.lookingFor || 'capital',
       fundingAmount: state.fundingAmount || 0,
-      fundsPurpose: state.fundsPurpose || '',
+      fundsPurpose: state.fundsPurpose || 'working_capital',
       salesHistory: state.salesHistory || '<1yr',
       revenueLastYear: state.revenueLastYear || 0,
       averageMonthlyRevenue: state.averageMonthlyRevenue || 0,
@@ -345,13 +357,20 @@ export default function Step1FinancialProfile() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Purpose of funds</FormLabel>
-                      <FormControl>
-                        <Input
-                          className="h-12"
-                          placeholder="e.g., Inventory, Equipment, Working Capital"
-                          {...field}
-                        />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder="Select purpose of funds" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {fundsPurposeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
