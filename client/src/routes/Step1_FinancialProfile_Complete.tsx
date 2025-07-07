@@ -38,21 +38,21 @@ const isValidLookingFor = (value: string | undefined): value is "capital" | "equ
 // Step 1 Schema - Business Basics and Funding Request
 const step1Schema = z.object({
   // Basic Business Information
-  businessLocation: z.string().optional(), // Testing mode - made optional
+  headquarters: z.enum(["US", "CA"]).optional(), // Testing mode - made optional
+  headquartersState: z.string().optional(), // Testing mode - made optional
   industry: z.string().optional(), // Testing mode - made optional
   
   // Funding Requirements
   lookingFor: z.enum(["capital", "equipment", "both"]).optional(), // Testing mode - made optional
   fundingAmount: z.string().optional(), // Testing mode - made optional
-  useOfFunds: z.string().optional(), // Testing mode - made optional
+  fundsPurpose: z.string().optional(), // Testing mode - made optional
   
   // Financial Qualification
-  salesHistory: z.string().optional(), // Testing mode - made optional
-  lastYearRevenue: z.string().optional(), // Testing mode - made optional
+  salesHistory: z.enum(["<1yr", "1-2yr", "2+yr"]).optional(), // Testing mode - made optional
+  revenueLastYear: z.string().optional(), // Testing mode - made optional
   averageMonthlyRevenue: z.string().optional(), // Testing mode - made optional
-  accountsReceivable: z.string().optional(), // Testing mode - made optional
-  fixedAssets: z.string().optional(), // Testing mode - made optional
-  equipmentValue: z.string().optional(), // Testing mode - made optional
+  accountsReceivableBalance: z.string().optional(), // Testing mode - made optional
+  fixedAssetsValue: z.string().optional(), // Testing mode - made optional
 });
 
 type FinancialProfileFormData = z.infer<typeof step1Schema>;
@@ -156,18 +156,17 @@ export default function Step1FinancialProfile() {
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
-      businessLocation: state.step1FinancialProfile?.businessLocation || 'US',
-      businessState: state.step1FinancialProfile?.businessState || '',
+      headquarters: state.step1FinancialProfile?.headquarters || 'US',
+      headquartersState: state.step1FinancialProfile?.headquartersState || '',
       industry: state.step1FinancialProfile?.industry || '',
       lookingFor: isValidLookingFor(state.step1FinancialProfile?.lookingFor) ? state.step1FinancialProfile.lookingFor : undefined,
       fundingAmount: state.step1FinancialProfile?.fundingAmount?.toString() || '0',
-      useOfFunds: state.step1FinancialProfile?.useOfFunds || '',
+      fundsPurpose: state.step1FinancialProfile?.fundsPurpose || '',
       salesHistory: state.step1FinancialProfile?.salesHistory || '',
-      lastYearRevenue: state.step1FinancialProfile?.lastYearRevenue?.toString() || '0',
+      revenueLastYear: state.step1FinancialProfile?.revenueLastYear?.toString() || '0',
       averageMonthlyRevenue: state.step1FinancialProfile?.averageMonthlyRevenue?.toString() || '0',
-      accountsReceivable: state.step1FinancialProfile?.accountsReceivable?.toString() || '0',
-      fixedAssets: state.step1FinancialProfile?.fixedAssets?.toString() || '0',
-      equipmentValue: state.step1FinancialProfile?.equipmentValue?.toString() || '0',
+      accountsReceivableBalance: state.step1FinancialProfile?.accountsReceivableBalance?.toString() || '0',
+      fixedAssetsValue: state.step1FinancialProfile?.fixedAssetsValue?.toString() || '0',
     },
   });
 
@@ -260,7 +259,7 @@ export default function Step1FinancialProfile() {
                   {(form.watch('lookingFor') === 'equipment' || form.watch('lookingFor') === 'both') && (
                     <FormField
                       control={form.control}
-                      name="equipmentValue"
+                      name="fixedAssetsValue"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-base font-semibold">Equipment Value</FormLabel>
@@ -283,7 +282,7 @@ export default function Step1FinancialProfile() {
 
                   <FormField
                     control={form.control}
-                    name="businessLocation"
+                    name="headquarters"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold">Business Location</FormLabel>
@@ -331,7 +330,7 @@ export default function Step1FinancialProfile() {
 
                   <FormField
                     control={form.control}
-                    name="useOfFunds"
+                    name="fundsPurpose"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold">Primary Use of Funds</FormLabel>
@@ -381,7 +380,7 @@ export default function Step1FinancialProfile() {
 
                   <FormField
                     control={form.control}
-                    name="lastYearRevenue"
+                    name="revenueLastYear"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold">What was your business revenue in the last 12 months?</FormLabel>
@@ -431,7 +430,7 @@ export default function Step1FinancialProfile() {
 
                   <FormField
                     control={form.control}
-                    name="accountsReceivable"
+                    name="accountsReceivableBalance"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold">Current Account Receivable balance</FormLabel>
@@ -456,7 +455,7 @@ export default function Step1FinancialProfile() {
 
                   <FormField
                     control={form.control}
-                    name="fixedAssets"
+                    name="fixedAssetsValue"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold">Fixed assets value for loan security</FormLabel>

@@ -54,21 +54,18 @@ export default function Step3BusinessDetails() {
   const form = useForm<Step3FormData>({
     resolver: zodResolver(Step3Schema),
     defaultValues: {
-      businessName: state.step3BusinessDetails?.businessName || '',
-      businessAddress: state.step3BusinessDetails?.businessAddress || '',
+      operatingName: state.step3BusinessDetails?.operatingName || '',
+      legalName: state.step3BusinessDetails?.legalName || '',
+      businessStreetAddress: state.step3BusinessDetails?.businessStreetAddress || '',
       businessCity: state.step3BusinessDetails?.businessCity || '',
       businessState: state.step3BusinessDetails?.businessState || '',
-      businessZipCode: state.step3BusinessDetails?.businessZipCode || '',
+      businessPostalCode: state.step3BusinessDetails?.businessPostalCode || '',
       businessPhone: state.step3BusinessDetails?.businessPhone || '',
-      businessEmail: state.step3BusinessDetails?.businessEmail || '',
       businessWebsite: state.step3BusinessDetails?.businessWebsite || '',
       businessStructure: state.step3BusinessDetails?.businessStructure || undefined,
-      businessRegistrationDate: state.step3BusinessDetails?.businessRegistrationDate || '',
-      businessTaxId: state.step3BusinessDetails?.businessTaxId || '',
-      businessDescription: state.step3BusinessDetails?.businessDescription || '',
-      numberOfEmployees: state.step3BusinessDetails?.numberOfEmployees || undefined,
-      primaryBankName: state.step3BusinessDetails?.primaryBankName || '',
-      bankingRelationshipLength: state.step3BusinessDetails?.bankingRelationshipLength || undefined
+      businessStartDate: state.step3BusinessDetails?.businessStartDate || new Date(),
+      employeeCount: state.step3BusinessDetails?.employeeCount || undefined,
+      estimatedYearlyRevenue: state.step3BusinessDetails?.estimatedYearlyRevenue || undefined
     }
   });
 

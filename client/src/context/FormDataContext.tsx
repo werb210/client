@@ -1,20 +1,25 @@
 import { createContext, useContext, useReducer, ReactNode } from 'react';
 import { ApplicationForm } from '../../../shared/schema';
 
-// Use the ApplicationForm type from shared schema as the base
+// Base interface that extends ApplicationForm with additional UI properties
 export interface FinancialProfileData extends Partial<ApplicationForm> {
   selectedCategory?: string;
   selectedCategoryName?: string;
   completed?: boolean;
 }
 
-// Business Details inherit from ApplicationForm schema
+// Business Details Data - matches shared schema exactly
 export interface BusinessDetailsData extends Partial<ApplicationForm> {
   completed?: boolean;
 }
 
-// Financial Info Data inherit from ApplicationForm schema
+// Financial Info Data - matches shared schema exactly  
 export interface FinancialInfoData extends Partial<ApplicationForm> {
+  completed?: boolean;
+}
+
+// Applicant Info Data - matches shared schema exactly
+export interface ApplicantInfoData extends Partial<ApplicationForm> {
   completed?: boolean;
 }
 
@@ -60,60 +65,7 @@ export interface FormDataState {
   };
   step3BusinessDetails?: BusinessDetailsData;
   step4FinancialInfo?: FinancialInfoData;
-  step4ApplicantInfo?: {
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-    ownershipPercentage: number;
-    personalPhone: string;
-    email: string;
-    homeAddress: string;
-    city: string;
-    province: string;
-    postalCode: string;
-    sin: string;
-    netWorth: string;
-    partnerFirstName?: string;
-    partnerLastName?: string;
-    partnerDateOfBirth?: string;
-    partnerOwnershipPercentage?: number;
-    partnerPersonalPhone?: string;
-    partnerEmail?: string;
-    partnerHomeAddress?: string;
-    partnerCity?: string;
-    partnerProvince?: string;
-    partnerPostalCode?: string;
-    partnerSin?: string;
-    partnerNetWorth?: string;
-    completed?: boolean;
-  };
-  step4ApplicantDetails?: {
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-    ownershipPercentage: number;
-    personalPhone: string;
-    email: string;
-    homeAddress: string;
-    city: string;
-    province: string;
-    postalCode: string;
-    sin: string;
-    netWorth: string;
-    partnerFirstName?: string;
-    partnerLastName?: string;
-    partnerDateOfBirth?: string;
-    partnerOwnershipPercentage?: number;
-    partnerPersonalPhone?: string;
-    partnerEmail?: string;
-    partnerHomeAddress?: string;
-    partnerCity?: string;
-    partnerProvince?: string;
-    partnerPostalCode?: string;
-    partnerSin?: string;
-    partnerNetWorth?: string;
-    completed?: boolean;
-  };
+  step4ApplicantInfo?: ApplicantInfoData;
   step5DocumentUpload?: DocumentUploadData;
   step6Signature?: {
     signedAt?: string;
@@ -134,7 +86,7 @@ type FormDataAction =
   | { type: 'UPDATE_STEP1'; payload: Partial<FinancialProfileData> }
   | { type: 'UPDATE_STEP3'; payload: Partial<BusinessDetailsData> }
   | { type: 'UPDATE_STEP4'; payload: Partial<FinancialInfoData> }
-  | { type: 'UPDATE_STEP4_APPLICANT'; payload: Partial<FormDataState['step4ApplicantInfo']> }
+  | { type: 'UPDATE_STEP4_APPLICANT'; payload: Partial<ApplicantInfoData> }
   | { type: 'UPDATE_STEP5'; payload: Partial<DocumentUploadData> }
   | { type: 'UPDATE_STEP6'; payload: Partial<FormDataState['step6Signature']> }
   | { type: 'UPDATE_STEP6_SIGNATURE'; payload: Partial<FormDataState['step6Signature']> }
@@ -147,16 +99,17 @@ type FormDataAction =
 
 const initialState: FormDataState = {
   step1FinancialProfile: {
-    fundingAmount: '',
-    useOfFunds: '',
-    businessLocation: '',
-    industry: '',
-    lookingFor: '',
-    salesHistory: '',
-    lastYearRevenue: '',
-    monthlyRevenue: '',
-    accountReceivable: '',
-    fixedAssets: '',
+    headquarters: undefined,
+    headquartersState: undefined,
+    industry: undefined,
+    lookingFor: undefined,
+    fundingAmount: undefined,
+    fundsPurpose: undefined,
+    salesHistory: undefined,
+    revenueLastYear: undefined,
+    averageMonthlyRevenue: undefined,
+    accountsReceivableBalance: undefined,
+    fixedAssetsValue: undefined,
   },
   currentStep: 1,
   isComplete: false,
