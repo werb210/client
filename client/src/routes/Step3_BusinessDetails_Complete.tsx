@@ -379,7 +379,7 @@ export default function Step3BusinessDetailsComplete() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-base font-semibold">Number of Employees *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
                           <FormControl>
                             <SelectTrigger className="h-12">
                               <SelectValue placeholder="Select number of employees" />
