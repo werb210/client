@@ -20,7 +20,7 @@ import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
 import LateUpload from "@/routes/LateUpload";
 import UploadComplete from "@/routes/UploadComplete";
-import OnboardingDemo from "@/pages/OnboardingDemo";
+
 // BackendDiagnosticPage removed with legacy auth cleanup
 import SideBySideApplication from "@/pages/SideBySideApplication";
 import SimpleApplication from "@/pages/SimpleApplication";
@@ -140,7 +140,6 @@ export function MainLayout() {
       <Route path="/critical-fixes-validation" component={CriticalFixesValidation} />
       
       {/* Diagnostic Pages */}
-      <Route path="/onboarding-demo" component={OnboardingDemo} />
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
       
       {/* Default Route - Landing Page */}

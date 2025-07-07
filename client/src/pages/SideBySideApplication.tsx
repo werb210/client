@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronLeft, ChevronRight, Monitor, Tablet, Smartphone } from 'lucide-react';
 import { StageMonitor } from '@/components/StageMonitor';
-import { OnboardingSidebar } from '@/components/OnboardingSidebar';
+
 
 // Import all step components
 import Step1FinancialProfile from '@/routes/Step1_FinancialProfile_Complete';
@@ -275,9 +275,6 @@ export default function SideBySideApplication() {
           </p>
         </div>
       </div>
-      
-      {/* Onboarding Sidebar */}
-      <OnboardingSidebar />
     </div>
   );
 }
