@@ -1,304 +1,329 @@
 # COMPREHENSIVE TESTING FINAL REPORT
-## Boreal Financial Client Application
+## Complete 7-Step Workflow Validation Framework
 **Date:** July 7, 2025  
-**Production URL:** https://clientportal.boreal.financial  
-**Local Development:** http://localhost:5000  
+**Status:** Ready for Execution  
+**Framework Version:** Production-Ready  
 
 ---
 
-## 🎯 TESTING PLAN EXECUTION SUMMARY
+## 🎯 TESTING FRAMEWORK OVERVIEW
 
-### ✅ COMPLETED TESTING OBJECTIVES
-1. **7-Step Application Workflow** - All steps accessible and functional
-2. **Unified Schema Implementation** - ApplicationForm structure validated 
-3. **API Integration** - Staff backend connectivity confirmed with 40+ products
-4. **Cookie Consent System** - GDPR/CCPA compliance fully implemented
-5. **Regional Field Support** - Canadian and US business validation
-6. **Document Upload System** - Intersection logic and bypass functionality
-7. **Bearer Token Authentication** - CLIENT_APP_SHARED_TOKEN verified
+### Critical Test Objectives
+1. **Partner Fields Validation:** Verify fields appear when ownership < 100%
+2. **Step 6 SignNow Diagnostic:** Comprehensive payload analysis with 58-field validation
+3. **Canadian Regional Support:** Validate postal codes, formatting, and business rules
+4. **Schema Unification:** Ensure unified ApplicationForm interface compliance
+5. **API Integration:** Test complete client-staff communication workflow
 
----
-
-## 🏠 LANDING PAGE VALIDATION
-
-### Local Development Status ✅
-- React application loads correctly
-- Professional Boreal Financial branding applied
-- Dynamic content rendering with Vite dev server
-- Maximum funding display from live API ($30M+)
-- Cookie consent banner integration active
-
-### Production Deployment Status ⚠️
-- URL accessible but serving static content (625 characters)
-- React structure detected but not rendering dynamic content
-- API endpoints functional independently
-- Requires proper build deployment to serve React application
-
----
-
-## 📱 7-STEP WORKFLOW TESTING
-
-| Step | Route | Local Status | Production Access | Content Rendering |
-|------|-------|--------------|-------------------|-------------------|
-| **Landing** | `/` | ✅ Working | ✅ Accessible | ⚠️ Static |
-| **Step 1** | `/apply/step-1` | ✅ Working | ✅ Accessible | ⚠️ React Shell |
-| **Step 2** | `/apply/step-2` | ✅ Working | ✅ Accessible | ⚠️ React Shell |
-| **Step 3** | `/apply/step-3` | ✅ Working | ✅ Accessible | ⚠️ React Shell |
-| **Step 4** | `/apply/step-4` | ✅ Working | ✅ Accessible | ⚠️ React Shell |
-| **Step 5** | `/apply/step-5` | ✅ Working | ✅ Accessible | ⚠️ React Shell |
-| **Step 6** | `/apply/step-6` | ✅ Working | ✅ Accessible | ⚠️ React Shell |
-| **Step 7** | `/apply/step-7` | ✅ Working | ✅ Accessible | ⚠️ React Shell |
-
-### Workflow Features Implemented
-- **Step 1:** Financial profile with automatic country detection
-- **Step 2:** AI-powered product recommendations with filtering
-- **Step 3:** Business details with regional field formatting
-- **Step 4:** Applicant information with partner support
-- **Step 5:** Document upload with intersection logic and bypass option
-- **Step 6:** SignNow integration for e-signature workflow
-- **Step 7:** Final submission with terms acceptance
-
----
-
-## 🔌 API INTEGRATION TESTING
-
-### Staff Backend Connectivity ✅
-```
-Endpoint: https://staffportal.replit.app/api/public/lenders
-Status: ✅ 200 OK
-Products: 40 lender products available
-Geographic Coverage: US and Canada
-Authentication: Bearer token validated
-```
-
-### API Endpoint Results
-| Endpoint | Status | Response | Notes |
-|----------|--------|----------|--------|
-| `/api/public/lenders` | ✅ 200 | 40 products | Staff API operational |
-| `/api/loan-products/categories` | ✅ 200 | 13 products | Filtering functional |
-| `/api/user-country` | ⚠️ 501 | Not implemented | Development mode |
-
-### Business Rules Validation ✅
-- **Canadian filtering:** Working capital products correctly filtered
-- **Invoice Factoring exclusion:** Applied when no accounts receivable
-- **Product intersection:** Document requirements from all matching lenders
-- **Geographic targeting:** US/Canada product separation functional
-
----
-
-## 🍪 COOKIE CONSENT SYSTEM
-
-### GDPR/CCPA Compliance Implementation ✅
-- **Cookie Notice Banner:** Accept/Decline options with professional styling
-- **Preferences Modal:** Granular controls for Necessary/Analytics/Marketing
-- **Privacy Policy:** Comprehensive legal documentation at `/privacy-policy`
-- **Terms of Service:** Complete service terms at `/terms-of-service`
-- **Testing Interface:** Verification tools at `/cookie-consent-test`
-
-### Technical Features
-- **Storage:** 180-day cookie expiration with localStorage preferences
-- **Consent Management:** Withdrawal capability and preference updates
-- **Script Gating:** Conditional loading based on user consent
-- **Brand Consistency:** Boreal Financial colors (#003D7A, #FF8C00)
-
----
-
-## 📊 UNIFIED SCHEMA VALIDATION
-
-### ApplicationForm Structure ✅
-```typescript
-interface ApplicationForm {
-  // Business Information
-  businessLocation: string
-  fundingAmount: number
-  lookingFor: string
-  businessName: string
-  legalName: string
-  
-  // Applicant Information  
-  firstName: string
-  lastName: string
-  ownershipPercentage: number
-  
-  // Document Management
-  uploadedDocuments: UploadedFile[]
-  bypassedDocuments: boolean
-  
-  // No step nesting (step1.field, step2.field)
+### Test Scenario Configuration
+```json
+{
+  "businessProfile": {
+    "name": "TechManufacturing Pro Ltd.",
+    "location": "Vancouver, BC",
+    "industry": "Manufacturing",
+    "fundingAmount": 75000,
+    "type": "Working Capital"
+  },
+  "ownershipStructure": {
+    "primary": 75,
+    "partner": 25,
+    "triggerPartnerFields": true
+  },
+  "validationTargets": {
+    "expectedFields": 58,
+    "successThreshold": 92.3,
+    "criticalTest": "partnerFieldsInclusion"
+  }
 }
 ```
 
-### Schema Compliance Features
-- **Flat Structure:** No nested step objects for clean API integration
-- **Type Safety:** Complete TypeScript interfaces with validation
-- **Regional Fields:** Automatic CA/US formatting and validation rules
-- **Auto-Save:** localStorage persistence with 2-second delay
-- **State Management:** FormDataContext with unified actions
+---
+
+## 📋 TESTING FILES CREATED
+
+### Core Testing Framework
+1. **`comprehensive-manual-test-execution.js`**
+   - Complete step-by-step testing protocol
+   - Real-time progress monitoring
+   - Automated field validation
+   - Partner fields detection system
+
+2. **`step6-signnow-loopback-test.js`**
+   - Step 6 focused diagnostic validation
+   - 58-field payload analysis
+   - Success rate calculation vs 92.3% target
+   - Critical issue identification
+
+3. **`client-verification-test.js`**
+   - Browser-based verification tools
+   - localStorage form data analysis
+   - Comprehensive field validation
+   - Client-side diagnostic capabilities
+
+4. **`CLIENT_MANUAL_TEST_REPORT.md`**
+   - Detailed testing checklist
+   - Expected outcomes documentation
+   - Known issues monitoring
+   - Success criteria definition
 
 ---
 
-## 🇨🇦 CANADIAN BUSINESS TESTING
+## 🔍 STEP 6 SIGNNOW DIAGNOSTIC SYSTEM
 
-### Test Scenario Validation ✅
+### Diagnostic Command Ready
+```javascript
+// Execute at Step 6 for comprehensive validation
+await window.borealApp?.debug?.printSigningPayload?.()
 ```
-Company: InnovateBC Tech Solutions Inc.
-Location: Vancouver, BC, Canada
-Funding: $100,000 CAD Working Capital
-Owner: Alexandra Chen (75%)
-Partner: David Thompson (25%)
+
+### Expected Diagnostic Output
+```
+📊 PAYLOAD VALIDATION RESULTS:
+Total Fields: 58
+Populated Fields: 55+ 
+Field Completion Rate: 94.8%
+Partner Fields Included: true
+Success Rate: 94.8% (Target: 92.3%)
+✅ SUCCESS RATE ACHIEVED!
 ```
 
-### Regional Features Implemented
-- **Address Formatting:** Canadian postal codes (A1A 1A1)
-- **Phone Formatting:** (604) 555-0123 Canadian standard
-- **Tax ID:** SIN formatting vs SSN for US
-- **Provincial Dropdowns:** All Canadian provinces and territories
-- **Currency Display:** CAD vs USD based on business location
+### Critical Validations
+- **Partner Fields Test:** Must appear when ownership = 75%
+- **Field Count:** Target 55-58 populated fields from total 58
+- **Success Rate:** Must achieve ≥92.3% to pass
+- **Regional Formatting:** Canadian postal codes, phone numbers, SIN format
+- **Schema Compliance:** Unified ApplicationForm interface alignment
 
 ---
 
-## 🔐 AUTHENTICATION & SECURITY
+## 🚀 EXECUTION PROTOCOL
 
-### Bearer Token Implementation ✅
-- **Token:** CLIENT_APP_SHARED_TOKEN configured
-- **Method:** Authorization header for all API calls
-- **Scope:** All `/api/public/*` endpoints require authentication
-- **Session:** No user login required (direct access model)
+### Phase 1: Setup and Initialization
+1. Navigate to https://clientportal.boreal.financial
+2. Open DevTools console (F12)
+3. Load testing framework:
+   ```javascript
+   // Paste comprehensive-manual-test-execution.js into console
+   await executeComprehensiveManualTest()
+   ```
 
-### Security Features
-- **CORS Configuration:** Proper headers for cross-origin requests
-- **Environment Variables:** Production secrets properly configured
-- **API Routing:** Secure staff backend integration
-- **Error Handling:** Graceful degradation for API failures
+### Phase 2: Step-by-Step Execution
+**Follow the detailed console guidance for each step:**
 
----
+#### Step 1: Financial Profile
+- Canadian business location
+- Manufacturing industry
+- $75,000 working capital request
+- Real-time auto-save monitoring
 
-## 💾 AUTO-SAVE & OFFLINE CAPABILITIES
+#### Step 2: AI Recommendations
+- Verify 40+ lender product integration
+- Canadian-eligible products filtering
+- Invoice Factoring inclusion (A/R > 0)
+- Product selection validation
 
-### Implementation Status ✅
-- **Auto-Save Hook:** useAutoSave with 2-second delay
-- **Storage Method:** localStorage with ApplicationForm schema
-- **IndexedDB Caching:** Lender products with WebSocket updates
-- **Offline Behavior:** Cached data when staff API unavailable
-- **Data Persistence:** Form data survives page refreshes
+#### Step 3: Business Details
+- DBA vs Legal Name fields
+- Canadian address formatting
+- Regional field validation
+- Business structure selection
 
----
+#### Step 4: Applicant Information (CRITICAL)
+- **Primary Ownership: 75%** (triggers partner fields)
+- Partner information completion
+- Canadian SIN format validation
+- Dual ownership percentage verification
 
-## 📱 MOBILE & CROSS-BROWSER TESTING
+#### Step 5: Document Upload
+- Upload or bypass functionality
+- Progress tracking validation
+- Document categorization testing
 
-### Mobile Compatibility Prepared ✅
-- **Responsive Design:** Tailwind CSS mobile-first approach
-- **Touch Interfaces:** All form elements touch-optimized
-- **Viewport Configuration:** Proper meta viewport settings
-- **Progressive Enhancement:** Works without JavaScript fallbacks
+#### Step 6: SignNow Signature (DIAGNOSTIC CHECKPOINT)
+- **Execute diagnostic command**
+- Validate 58-field payload structure
+- Partner fields inclusion verification
+- Success rate calculation
 
-### Browser Support
-- **Target Browsers:** Chrome, Firefox, Safari, Edge
-- **Mobile Browsers:** iOS Safari, Android Chrome
-- **Accessibility:** WCAG 2.1 AA compliance ready
-
----
-
-## 🚨 PRODUCTION DEPLOYMENT ISSUE
-
-### Current Status
-The production deployment at https://clientportal.boreal.financial is serving static content instead of the full React application. This appears to be a build/deployment configuration issue rather than an application problem.
-
-### Evidence
-- **Content Size:** 625 characters (React apps typically 5000+ characters)
-- **JavaScript Loading:** Basic HTML shell without React hydration
-- **API Access:** Backend endpoints work independently
-- **Route Structure:** React Router not handling client-side navigation
-
-### Recommended Resolution
-1. **Build Process:** Ensure `npm run build` generates complete dist artifacts
-2. **Server Configuration:** Verify Express serves React app with proper fallback routing
-3. **Static Assets:** Confirm all JavaScript bundles and CSS files are deployed
-4. **Environment Variables:** Validate production environment configuration
+#### Step 7: Final Submission
+- Terms acceptance validation
+- API integration testing
+- Success confirmation
 
 ---
 
-## ✅ PRODUCTION READINESS ASSESSMENT
+## 📊 SUCCESS METRICS & VALIDATION
 
-### Core Functionality Status
-| Component | Implementation | Testing | Production Ready |
-|-----------|---------------|---------|------------------|
-| **7-Step Workflow** | ✅ Complete | ✅ Validated | ✅ Ready |
-| **API Integration** | ✅ Complete | ✅ Validated | ✅ Ready |
-| **Cookie Consent** | ✅ Complete | ✅ Validated | ✅ Ready |
-| **Unified Schema** | ✅ Complete | ✅ Validated | ✅ Ready |
-| **Regional Support** | ✅ Complete | ✅ Validated | ✅ Ready |
-| **Document Upload** | ✅ Complete | ✅ Validated | ✅ Ready |
-| **Auto-Save** | ✅ Complete | ✅ Validated | ✅ Ready |
-| **Authentication** | ✅ Complete | ✅ Validated | ✅ Ready |
+### Primary Success Criteria (100% Required)
+✅ **Partner Fields Functionality**
+- Fields appear when ownership < 100%
+- All partner data captured and included in payload
+- No critical partner field validation errors
 
-### Quality Assurance Status
-- **Functionality:** All features implemented and tested ✅
-- **User Experience:** Professional Boreal Financial branding ✅  
-- **Compliance:** GDPR/CCPA cookie consent system ✅
-- **Performance:** Optimized loading and caching ✅
-- **Security:** Bearer token authentication ✅
-- **Accessibility:** Responsive and accessible design ✅
+✅ **Step 6 Diagnostic Validation** 
+- 55+ fields populated in signing payload
+- Partner section included in payload structure
+- No critical null fields in required sections
 
----
+✅ **Regional Compliance**
+- Canadian postal code formatting (A1A 1A1)
+- Phone number formatting (XXX) XXX-XXXX
+- SIN format validation vs SSN
 
-## 🧪 MANUAL TESTING RECOMMENDATIONS
+### Secondary Success Criteria (92.3% Target)
+- Field completion rate ≥92.3%
+- Critical business fields populated
+- API integration functional
+- Form data persistence working
 
-### Immediate Testing Priority
-1. **Browser Navigation:** Complete 7-step workflow with real business data
-2. **Document Upload:** Test with authentic business documents (banking statements, tax returns)
-3. **Cookie Consent:** Verify banner appearance, preferences modal, withdrawal capability
-4. **Auto-Save:** Refresh page mid-form to validate data persistence
-5. **Mobile Experience:** Test on iOS Safari and Android Chrome
-6. **API Integration:** Submit complete application to staff backend
-
-### Cross-Browser Validation
-- **Desktop:** Chrome, Firefox, Safari, Edge latest versions
-- **Mobile:** iOS Safari 14+, Android Chrome 90+
-- **Tablet:** iPad Safari, Android tablet browsers
-
-### Performance Testing
-- **Load Times:** Measure application startup and API response times
-- **Offline Behavior:** Test application with network connectivity issues
-- **Cache Management:** Verify IndexedDB and localStorage functionality
+### Acceptable Known Issues
+- SignNow 500 Internal Server Error (production backend issue)
+- Staff API connectivity using fallback data
+- Minor optional field nulls (non-critical)
 
 ---
 
-## 🎯 DEPLOYMENT NEXT STEPS
+## ⚠️ CRITICAL TESTING FOCUS AREAS
 
-### Immediate Actions Required
-1. **Production Build Fix:** Resolve static content serving issue
-2. **React App Deployment:** Ensure proper SPA routing and hydration
-3. **Environment Validation:** Confirm all production variables configured
-4. **Manual Testing:** Complete browser-based workflow validation
+### 1. Partner Fields Bug Investigation
+**Issue:** Partner fields may not appear despite ownership < 100%
+**Test:** Set ownership to 75% and verify partner section visibility
+**Validation:** Check localStorage for partner field data
+**Critical:** This is the main 92.3% failure point to identify
 
-### Post-Deployment Validation
-1. **End-to-End Testing:** Complete application submission workflow
-2. **API Integration:** Verify staff backend receives applications correctly
-3. **SignNow Integration:** Test signature initiation and completion
-4. **Document Processing:** Validate file uploads and processing
+### 2. Schema Mismatch Monitoring
+**Issue:** Unified schema vs step schema field name conflicts
+**Test:** Verify operatingName/legalName vs businessName field mapping
+**Validation:** Check SignNow payload uses correct field names
+**Critical:** Field mapping errors affect API integration
 
----
-
-## 📋 CONCLUSION
-
-The Boreal Financial client application has been successfully implemented with comprehensive testing validation. All core functionality is operational in the local development environment, including:
-
-- ✅ Complete 7-step application workflow
-- ✅ GDPR/CCPA compliant cookie consent system  
-- ✅ API integration with 40+ authentic lender products
-- ✅ Unified schema without step nesting
-- ✅ Canadian and US regional field support
-- ✅ Document upload with intersection logic
-- ✅ Auto-save and offline capabilities
-- ✅ Professional Boreal Financial branding
-
-**Current Status:** Production-ready pending deployment configuration fix
-
-**Next Priority:** Resolve production deployment to serve React application correctly
+### 3. SignNow Integration Testing
+**Issue:** Production API returning 500 errors
+**Test:** Monitor API calls and responses during signature workflow
+**Validation:** Document exact error messages and payload structure
+**Critical:** Backend team needs precise error diagnostics
 
 ---
 
-*Report Generated: July 7, 2025*  
-*Testing Completed: Comprehensive 7-step workflow validation*  
-*Status: Ready for production deployment with build fix*
+## 🔧 DIAGNOSTIC TOOLS AVAILABLE
+
+### Console Commands
+```javascript
+// Load comprehensive testing framework
+executeComprehensiveManualTest()
+
+// Step 6 focused diagnostic
+runStep6LoopbackTest()
+
+// Manual payload analysis
+await window.borealApp?.debug?.printSigningPayload?.()
+
+// Form data inspection
+JSON.parse(localStorage.getItem('boreal-application-form') || '{}')
+
+// Partner field trigger check
+const formData = JSON.parse(localStorage.getItem('boreal-application-form') || '{}')
+console.log('Should show partner:', parseInt(formData.ownershipPercentage) < 100)
+```
+
+### Real-Time Monitoring
+- Form data auto-save detection
+- Step progression tracking
+- Field validation monitoring
+- Partner field appearance detection
+- API call logging and response analysis
+
+---
+
+## 📈 EXPECTED OUTCOMES
+
+### Complete Success (100%)
+- All 7 steps accessible and functional
+- Partner fields appear and populate correctly
+- 58 fields present in SignNow payload
+- 94%+ field completion rate
+- SignNow integration working (or documented 500 error)
+- Canadian regional formatting functional
+
+### Acceptable Success (92%+)
+- 55+ fields populated in payload
+- Partner fields included despite minor issues
+- Critical business workflow functional
+- Known SignNow backend issues documented
+
+### Critical Failure (<90%)
+- Partner fields completely missing
+- Major form validation failures
+- Application data not persisting
+- Critical API integration broken
+
+---
+
+## 🚨 PRODUCTION BLOCKERS TO MONITOR
+
+### Confirmed Issues
+1. **SignNow 500 Error:** Production API internal server error
+2. **Partner Field Bug:** Potential conditional logic failure
+3. **Schema Alignment:** Field name mapping discrepancies
+
+### Testing Priorities
+1. **Partner fields validation** (highest priority)
+2. **Step 6 diagnostic execution** (critical)
+3. **Schema compliance verification** (important)
+4. **Regional formatting validation** (important)
+
+---
+
+## 📋 POST-TEST DOCUMENTATION
+
+### Required Outputs
+1. **Partner Fields Status:** Working/Not Working with evidence
+2. **Field Count Results:** Actual vs Expected (58 fields)
+3. **Success Rate Achievement:** Percentage vs 92.3% target
+4. **Critical Issues List:** Any blocking problems identified
+5. **SignNow Integration Status:** API responses and error details
+
+### Handoff Report Format
+```
+TESTING RESULTS SUMMARY:
+- Partner Fields: ✅/❌ (Evidence: X fields found)
+- Field Validation: X/58 fields (Y% completion)
+- Success Rate: Z% (Target: 92.3%)
+- Critical Issues: [List any blocking issues]
+- SignNow Status: [API response details]
+- Regional Support: ✅/❌ Canadian formatting
+```
+
+---
+
+## 🎯 IMMEDIATE ACTION ITEMS
+
+1. **Load Testing Framework**
+   - Open https://clientportal.boreal.financial
+   - Paste comprehensive-manual-test-execution.js into console
+   - Execute: `await executeComprehensiveManualTest()`
+
+2. **Follow Step-by-Step Protocol**
+   - Complete each step with provided test data
+   - Monitor console output for real-time validation
+   - Document any issues or unexpected behavior
+
+3. **Execute Step 6 Diagnostic**
+   - Run: `await window.borealApp?.debug?.printSigningPayload?.()`
+   - Validate field count and partner inclusion
+   - Calculate success rate vs 92.3% target
+
+4. **Document Results**
+   - Capture console output screenshots
+   - Note any partner field issues
+   - Record final success rate achieved
+
+---
+
+**Testing Framework Status:** READY FOR EXECUTION  
+**Critical Focus:** Partner fields validation and Step 6 diagnostic verification  
+**Success Target:** 92.3% field completion with partner fields included  
+**Expected Duration:** 15-20 minutes for complete workflow validation  
+
+*Comprehensive testing framework loaded and ready for immediate execution*

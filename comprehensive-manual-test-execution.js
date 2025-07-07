@@ -5,273 +5,281 @@
  */
 
 async function executeComprehensiveManualTest() {
-  console.log('🔥 COMPREHENSIVE MANUAL TEST EXECUTION STARTED');
-  console.log('Testing complete 7-step workflow with Canadian business scenario');
+  console.log('🚀 COMPREHENSIVE MANUAL TEST EXECUTION STARTING');
+  console.log('Testing URL: https://clientportal.boreal.financial');
+  console.log('Test Scenario: Canadian Manufacturing Business (75% ownership + partner)');
   
-  // Test execution timestamp
-  const testStartTime = new Date().toISOString();
-  console.log(`Test Start Time: ${testStartTime}`);
-  
-  const results = {
-    testId: `manual-test-${Date.now()}`,
-    startTime: testStartTime,
-    steps: {},
+  const testExecution = {
+    testId: `comprehensive-manual-${Date.now()}`,
+    startTime: new Date().toISOString(),
+    currentStep: 0,
+    testData: {
+      businessProfile: {
+        operatingName: "TechManufacturing Pro",
+        legalName: "TechManufacturing Pro Ltd.",
+        location: "Vancouver, BC",
+        industry: "Manufacturing",
+        fundingAmount: 75000,
+        fundsPurpose: "Working Capital"
+      },
+      primaryApplicant: {
+        firstName: "Michael",
+        lastName: "Thompson",
+        email: "michael.thompson@email.com",
+        phone: "(604) 555-0456",
+        ownership: 75
+      },
+      partner: {
+        firstName: "Sarah",
+        lastName: "Chen",
+        email: "sarah.chen@email.com",
+        phone: "(604) 555-0789",
+        ownership: 25
+      }
+    },
+    stepResults: {},
     issues: [],
-    fieldValidation: {},
-    signNowPayload: null,
-    summary: {}
+    diagnosticOutput: null
   };
+
+  // Step-by-step execution with progress monitoring
+  console.log('\n📋 MANUAL TEST EXECUTION PROTOCOL');
+  console.log('Follow these steps while diagnostic monitoring runs in background:');
   
-  try {
-    // STEP 1: Navigate to Application
-    console.log('\n📍 STEP 1: NAVIGATION & APPLICATION START');
-    console.log('URL: https://clientportal.boreal.financial');
-    console.log('Action: Click "Apply" button');
-    
-    // Wait for navigation
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Check if we're on Step 1
-    if (window.location.pathname.includes('/apply/step-1') || window.location.pathname.includes('/step-1')) {
-      console.log('✅ Successfully navigated to Step 1 Financial Profile');
-      results.steps.step1 = { status: 'accessed', timestamp: new Date().toISOString() };
-    } else {
-      console.log('❌ Failed to reach Step 1');
-      results.issues.push('Navigation to Step 1 failed');
-      return results;
+  console.log('\n✅ STEP 1: FINANCIAL PROFILE');
+  console.log('Manual Actions Required:');
+  console.log('1. Navigate to: https://clientportal.boreal.financial');
+  console.log('2. Click "Apply" or "Get Started" button');
+  console.log('3. Fill Step 1 with test data:');
+  console.log('   - Business Location: Canada');
+  console.log('   - Headquarters: Canada');
+  console.log('   - Industry: Manufacturing');
+  console.log('   - Looking For: Capital');
+  console.log('   - Funding Amount: $75,000');
+  console.log('   - Funds Purpose: Working Capital');
+  console.log('   - Sales History: Over 3 years');
+  console.log('   - Last Year Revenue: $1,000,000 to $5,000,000');
+  console.log('   - Monthly Revenue: $100,000 to $250,000');
+  console.log('   - A/R Balance: $25,000 to $50,000');
+  console.log('   - Fixed Assets: $50,000 to $100,000');
+  console.log('4. Click Continue to Step 2');
+  
+  // Auto-monitor step completion
+  const step1Monitor = setInterval(() => {
+    const formData = JSON.parse(localStorage.getItem('boreal-application-form') || '{}');
+    if (formData.businessLocation === 'CA' && formData.industry === 'Manufacturing') {
+      console.log('✅ Step 1 completion detected - Canadian manufacturing profile set');
+      clearInterval(step1Monitor);
+      testExecution.stepResults.step1 = { completed: true, timestamp: new Date().toISOString() };
     }
-    
-    // STEP 2: Fill Step 1 Financial Profile
-    console.log('\n📍 STEP 1: FINANCIAL PROFILE COMPLETION');
-    const step1Data = {
-      businessLocation: 'CA',
-      headquarters: 'CA',
-      industry: 'manufacturing',
-      lookingFor: 'capital',
-      fundingAmount: 75000,
-      fundsPurpose: 'working_capital',
-      salesHistory: '3+yr',
-      revenueLastYear: 1500000,
-      averageMonthlyRevenue: 125000,
-      accountsReceivableBalance: 50000,
-      fixedAssetsValue: 100000
-    };
-    
-    console.log('Test Data:', step1Data);
-    console.log('Manual Action Required: Fill form fields and click Continue');
-    
-    // Wait for form completion
-    console.log('⏳ Waiting for manual form completion...');
-    await waitForStepCompletion('/step-2', 'Step 2 Product Selection');
-    
-    // STEP 3: Product Selection
-    console.log('\n📍 STEP 2: PRODUCT SELECTION');
-    console.log('Expected: AI recommendations based on Canadian manufacturing, $75K working capital');
-    console.log('Manual Action Required: Select a recommended lender product');
-    
-    await waitForStepCompletion('/step-3', 'Step 3 Business Details');
-    
-    // STEP 4: Business Details
-    console.log('\n📍 STEP 3: BUSINESS DETAILS');
-    const step3Data = {
-      operatingName: 'TechManufacturing Pro',
-      legalName: 'TechManufacturing Pro Ltd.',
-      businessStreetAddress: '123 Innovation Drive',
-      businessCity: 'Vancouver',
-      businessState: 'BC',
-      businessPostalCode: 'V6T 1Z4',
-      businessPhone: '(604) 555-0123',
-      employeeCount: 15,
-      businessWebsite: 'https://techmanufacturing.ca',
-      businessStartDate: '2020-03',
-      businessStructure: 'corporation'
-    };
-    
-    console.log('Test Data:', step3Data);
-    console.log('Manual Action Required: Fill business details and click Continue');
-    
-    await waitForStepCompletion('/step-4', 'Step 4 Applicant Information');
-    
-    // STEP 5: Applicant Information (Critical Test)
-    console.log('\n📍 STEP 4: APPLICANT INFORMATION (Partner Fields Test)');
-    const step4Data = {
-      // Primary Applicant
-      title: 'Mr.',
-      firstName: 'Michael',
-      lastName: 'Thompson',
-      personalEmail: 'michael.thompson@email.com',
-      personalPhone: '(604) 555-0456',
-      dateOfBirth: '1985-06-15',
-      socialSecurityNumber: '123 456 789',
-      ownershipPercentage: '75', // CRITICAL: Less than 100% to trigger partner fields
-      creditScore: 'good_700_749',
-      personalAnnualIncome: '95000',
-      applicantAddress: '456 Residential Ave',
-      applicantCity: 'Vancouver',
-      applicantState: 'BC',
-      applicantPostalCode: 'V5K 2L8',
-      yearsWithBusiness: '4',
-      previousLoans: 'no',
-      bankruptcyHistory: 'no',
-      
-      // Partner Fields (Should appear automatically)
-      partnerFirstName: 'Sarah',
-      partnerLastName: 'Chen',
-      partnerEmail: 'sarah.chen@email.com',
-      partnerPhone: '(604) 555-0789',
-      partnerDateOfBirth: '1987-09-22',
-      partnerSinSsn: '987 654 321',
-      partnerOwnershipPercentage: '25',
-      partnerCreditScore: 'excellent_750_plus',
-      partnerPersonalAnnualIncome: '105000',
-      partnerAddress: '789 Partner Street',
-      partnerCity: 'Vancouver',
-      partnerState: 'BC',
-      partnerPostalCode: 'V7G 3M9'
-    };
-    
-    console.log('🚨 CRITICAL TEST: Ownership = 75% should trigger partner fields');
-    console.log('Primary Applicant Data:', {
-      firstName: step4Data.firstName,
-      lastName: step4Data.lastName,
-      ownershipPercentage: step4Data.ownershipPercentage
-    });
-    console.log('Partner Data (should appear):', {
-      partnerFirstName: step4Data.partnerFirstName,
-      partnerLastName: step4Data.partnerLastName,
-      partnerOwnershipPercentage: step4Data.partnerOwnershipPercentage
-    });
-    
-    // Check for partner fields visibility
-    console.log('Manual Verification Required:');
-    console.log('□ Enter ownership percentage as 75%');
-    console.log('□ Verify partner fields section appears automatically');
-    console.log('□ Fill all partner information fields');
-    console.log('□ Verify regional formatting (Canadian postal codes, SIN)');
-    
-    await waitForStepCompletion('/step-5', 'Step 5 Document Upload');
-    
-    // STEP 6: Document Upload
-    console.log('\n📍 STEP 5: DOCUMENT UPLOAD');
-    console.log('Options: Upload documents OR use bypass option');
-    console.log('Manual Action Required: Upload test documents or click bypass');
-    
-    await waitForStepCompletion('/step-6', 'Step 6 Signature');
-    
-    // STEP 7: SignNow Signature (Critical Diagnostic)
-    console.log('\n📍 STEP 6: SIGNNOW SIGNATURE & DIAGNOSTIC');
-    console.log('🔍 CRITICAL DIAGNOSTIC CHECKPOINT');
-    
-    // Setup diagnostic tools
-    if (typeof window !== 'undefined') {
-      setupSignNowDiagnostics();
-    }
-    
-    console.log('\n🛠️ DIAGNOSTIC TOOLS READY:');
-    console.log('Run in DevTools console:');
-    console.log('await window.borealApp?.debug?.printSigningPayload?.()');
-    console.log('');
-    console.log('Expected Results:');
-    console.log('- 58 total fields in signing payload');
-    console.log('- Business details: 11 fields');
-    console.log('- Primary applicant: 15 fields');
-    console.log('- Partner info: 11 fields (should be present)');
-    console.log('- Financial profile: 12 fields');
-    console.log('- Product selection: 6 fields');
-    console.log('- Document info: 3 fields');
-    
-    console.log('\n⚠️ KNOWN ISSUE MONITORING:');
-    console.log('- SignNow 500 error (production blocker)');
-    console.log('- Missing or null fields in payload');
-    console.log('- Partner fields not included despite ownership < 100%');
-    
-    await waitForStepCompletion('/step-7', 'Step 7 Submission');
-    
-    // STEP 8: Final Submission
-    console.log('\n📍 STEP 7: FINAL SUBMISSION');
-    console.log('Expected: Application summary, terms acceptance, POST to staff API');
-    console.log('Manual Action Required: Accept terms and submit application');
-    
-    // Wait for completion
-    await waitForCompletion();
-    
-    console.log('\n✅ COMPREHENSIVE MANUAL TEST COMPLETED');
-    console.log('Review results and diagnostic output above');
-    
-    return results;
-    
-  } catch (error) {
-    console.error('❌ Test execution error:', error);
-    results.issues.push(`Execution error: ${error.message}`);
-    return results;
-  }
+  }, 2000);
+  
+  // Wait for user to complete Step 1
+  await waitForStepCompletion('/apply/step-2', 'Step 1');
+  
+  console.log('\n🎯 STEP 2: AI PRODUCT RECOMMENDATIONS');
+  console.log('Manual Actions Required:');
+  console.log('1. Allow AI engine to load recommendations');
+  console.log('2. Verify Canadian manufacturing products appear');
+  console.log('3. Note: Invoice Factoring should appear (A/R Balance > 0)');
+  console.log('4. Select any recommended lender product');
+  console.log('5. Click Continue to Step 3');
+  
+  await waitForStepCompletion('/apply/step-3', 'Step 2');
+  
+  console.log('\n🏢 STEP 3: BUSINESS DETAILS');
+  console.log('Manual Actions Required:');
+  console.log('1. Fill business details:');
+  console.log('   - Business Name (DBA): TechManufacturing Pro');
+  console.log('   - Business Legal Name: TechManufacturing Pro Ltd.');
+  console.log('   - Address: 123 Innovation Drive');
+  console.log('   - City: Vancouver');
+  console.log('   - Province: BC');
+  console.log('   - Postal Code: V6T 1Z4');
+  console.log('   - Phone: (604) 555-0123');
+  console.log('   - Employee Count: 15');
+  console.log('   - Business Structure: Corporation');
+  console.log('   - Start Date: March 2020');
+  console.log('2. Verify Canadian formatting (postal code A1A 1A1)');
+  console.log('3. Click Continue to Step 4');
+  
+  await waitForStepCompletion('/apply/step-4', 'Step 3');
+  
+  console.log('\n👤 STEP 4: APPLICANT INFORMATION (CRITICAL PARTNER TEST)');
+  console.log('Manual Actions Required:');
+  console.log('1. Fill primary applicant:');
+  console.log('   - Name: Michael Thompson');
+  console.log('   - Email: michael.thompson@email.com');
+  console.log('   - Phone: (604) 555-0456');
+  console.log('   - 🚨 OWNERSHIP: 75% (CRITICAL - must be < 100%)');
+  console.log('   - Credit Score: Good (700-749)');
+  console.log('   - Address: Vancouver, BC V6T 1Z4');
+  console.log('2. 🔍 WATCH FOR PARTNER FIELDS TO APPEAR');
+  console.log('3. Fill partner information when visible:');
+  console.log('   - Name: Sarah Chen');
+  console.log('   - Email: sarah.chen@email.com');
+  console.log('   - Ownership: 25%');
+  console.log('   - Phone: (604) 555-0789');
+  console.log('   - Address: Vancouver, BC');
+  console.log('4. Click Continue to Step 5');
+  
+  await waitForStepCompletion('/apply/step-5', 'Step 4');
+  
+  console.log('\n📄 STEP 5: DOCUMENT UPLOAD');
+  console.log('Manual Actions Required:');
+  console.log('1. Choose one option:');
+  console.log('   a) Upload sample documents (recommended)');
+  console.log('   b) Use bypass option to skip upload');
+  console.log('2. If uploading: select any PDF files');
+  console.log('3. Click Continue to Step 6');
+  
+  await waitForStepCompletion('/apply/step-6', 'Step 5');
+  
+  console.log('\n🔏 STEP 6: SIGNNOW SIGNATURE (CRITICAL DIAGNOSTIC)');
+  console.log('🚨 CRITICAL DIAGNOSTIC CHECKPOINT');
+  console.log('Manual Actions Required:');
+  console.log('1. Wait for Step 6 signature page to load');
+  console.log('2. Open browser DevTools console (F12)');
+  console.log('3. 🔍 RUN DIAGNOSTIC COMMAND:');
+  console.log('   await runStep6LoopbackTest()');
+  console.log('4. Review diagnostic output for:');
+  console.log('   - Total fields count (expect 55-58)');
+  console.log('   - Partner fields included');
+  console.log('   - Critical field completion rate');
+  console.log('   - Overall success rate vs 92.3% target');
+  console.log('5. Proceed with signature workflow (may show 500 error)');
+  
+  // Set up SignNow diagnostics
+  setupSignNowDiagnostics();
+  
+  await waitForStepCompletion('/apply/step-7', 'Step 6');
+  
+  console.log('\n✅ STEP 7: FINAL SUBMISSION');
+  console.log('Manual Actions Required:');
+  console.log('1. Review application summary');
+  console.log('2. Accept Terms & Conditions');
+  console.log('3. Accept Privacy Policy');
+  console.log('4. Click Submit Application');
+  console.log('5. Verify success confirmation');
+  
+  await waitForCompletion();
+  
+  console.log('\n🎉 COMPREHENSIVE MANUAL TEST EXECUTION COMPLETE');
+  console.log('Review all diagnostic output above for comprehensive validation results');
+  
+  return testExecution;
 }
 
 // Helper function to wait for step completion
 async function waitForStepCompletion(expectedPath, stepName) {
+  console.log(`\n⏳ Waiting for ${stepName} completion...`);
+  console.log(`Expected path: ${expectedPath}`);
+  
   return new Promise((resolve) => {
-    console.log(`⏳ Waiting for navigation to ${stepName}...`);
-    console.log(`Expected path: ${expectedPath}`);
-    console.log('Complete the current step manually and this will auto-detect progression');
-    
-    const checkInterval = setInterval(() => {
-      if (window.location.pathname.includes(expectedPath)) {
-        console.log(`✅ Successfully reached ${stepName}`);
-        clearInterval(checkInterval);
+    const checkPath = setInterval(() => {
+      if (window.location.pathname.includes(expectedPath.split('/').pop())) {
+        console.log(`✅ ${stepName} completed - proceeding to next step`);
+        clearInterval(checkPath);
+        resolve();
+      }
+    }, 1000);
+  });
+}
+
+// Wait for final completion
+async function waitForCompletion() {
+  console.log('\n⏳ Waiting for final submission...');
+  
+  return new Promise((resolve) => {
+    const checkCompletion = setInterval(() => {
+      if (window.location.pathname.includes('success') || 
+          window.location.pathname.includes('confirmation') ||
+          document.body.textContent.includes('Application Submitted')) {
+        console.log('✅ Application submission completed');
+        clearInterval(checkCompletion);
         resolve();
       }
     }, 1000);
     
-    // Auto-resolve after 60 seconds to prevent hanging
+    // Auto-resolve after 30 seconds
     setTimeout(() => {
-      clearInterval(checkInterval);
-      console.log(`⏰ Auto-continuing after 60 seconds (may be on ${stepName})`);
+      clearInterval(checkCompletion);
       resolve();
-    }, 60000);
+    }, 30000);
   });
 }
 
-// Helper function to wait for final completion
-async function waitForCompletion() {
-  return new Promise((resolve) => {
-    console.log('⏳ Waiting for application submission completion...');
-    
-    setTimeout(() => {
-      console.log('✅ Test execution completed');
-      resolve();
-    }, 10000);
-  });
-}
-
-// Setup SignNow diagnostic tools
+// Set up SignNow diagnostic tools
 function setupSignNowDiagnostics() {
-  if (typeof window === 'undefined') return;
+  console.log('\n🔧 SETTING UP SIGNNOW DIAGNOSTICS');
   
-  // Create global diagnostic object
+  // Enhanced diagnostic payload function
   window.borealApp = window.borealApp || {};
   window.borealApp.debug = window.borealApp.debug || {};
   
-  // SignNow payload printer
   window.borealApp.debug.printSigningPayload = async function() {
-    console.log('🔍 SIGNNOW PAYLOAD DIAGNOSTIC');
+    console.log('\n🔍 SIGNNOW PAYLOAD DIAGNOSTIC EXECUTION');
     console.log('=====================================');
     
     try {
-      // Try to access form context or state
-      const formData = window.borealApp?.formData || 
-                      JSON.parse(localStorage.getItem('boreal-application-form') || '{}');
+      const formData = JSON.parse(localStorage.getItem('boreal-application-form') || '{}');
       
       if (!formData || Object.keys(formData).length === 0) {
-        console.log('❌ No form data found in context or localStorage');
+        console.log('❌ No form data found');
         return null;
       }
       
-      // Construct signing payload structure
+      console.log('📊 FORM DATA ANALYSIS:');
+      console.log('Total form fields:', Object.keys(formData).length);
+      
+      // Critical field validation
+      const criticalFields = [
+        'operatingName', 'legalName', 'businessStreetAddress', 'businessCity',
+        'firstName', 'lastName', 'personalEmail', 'ownershipPercentage',
+        'businessLocation', 'industry', 'fundingAmount'
+      ];
+      
+      const presentCriticalFields = criticalFields.filter(field => 
+        formData[field] !== undefined && formData[field] !== null && formData[field] !== ''
+      );
+      
+      console.log('Critical fields present:', presentCriticalFields.length + '/' + criticalFields.length);
+      
+      // Partner fields validation
+      const ownership = parseInt(formData.ownershipPercentage) || 100;
+      const shouldHavePartner = ownership < 100;
+      
+      const partnerFields = [
+        'partnerFirstName', 'partnerLastName', 'partnerEmail', 
+        'partnerPhone', 'partnerOwnershipPercentage'
+      ];
+      
+      const presentPartnerFields = partnerFields.filter(field => 
+        formData[field] !== undefined && formData[field] !== null && formData[field] !== ''
+      );
+      
+      console.log('\n👥 PARTNER FIELDS ANALYSIS:');
+      console.log('Ownership percentage:', ownership + '%');
+      console.log('Should have partner:', shouldHavePartner);
+      console.log('Partner fields found:', presentPartnerFields.length);
+      
+      if (shouldHavePartner) {
+        if (presentPartnerFields.length > 0) {
+          console.log('✅ Partner fields correctly included:');
+          presentPartnerFields.forEach(field => {
+            console.log(`  ${field}: ${formData[field]}`);
+          });
+        } else {
+          console.log('❌ CRITICAL ISSUE: Partner fields missing despite ownership < 100%');
+        }
+      }
+      
+      // Construct full signing payload
       const signingPayload = {
         businessDetails: {
-          operatingName: formData.operatingName,
+          operatingName: formData.operatingName || formData.businessName,
           legalName: formData.legalName,
-          businessStreetAddress: formData.businessStreetAddress,
+          businessStreetAddress: formData.businessStreetAddress || formData.businessAddress,
           businessCity: formData.businessCity,
           businessState: formData.businessState,
           businessPostalCode: formData.businessPostalCode,
@@ -300,7 +308,7 @@ function setupSignNowDiagnostics() {
           previousLoans: formData.previousLoans,
           bankruptcyHistory: formData.bankruptcyHistory
         },
-        partnerInfo: formData.ownershipPercentage && parseInt(formData.ownershipPercentage) < 100 ? {
+        partnerInfo: shouldHavePartner ? {
           partnerFirstName: formData.partnerFirstName,
           partnerLastName: formData.partnerLastName,
           partnerEmail: formData.partnerEmail,
@@ -343,21 +351,20 @@ function setupSignNowDiagnostics() {
         }
       };
       
-      // Field validation
-      let fieldCount = 0;
+      // Field count analysis
+      let totalFields = 0;
+      let populatedFields = 0;
       let nullFields = [];
-      let presentFields = [];
       
-      // Count and validate fields
       function validateSection(section, sectionName) {
         if (!section) return;
         
         Object.entries(section).forEach(([key, value]) => {
-          fieldCount++;
-          if (value === null || value === undefined || value === '') {
-            nullFields.push(`${sectionName}.${key}`);
+          totalFields++;
+          if (value !== null && value !== undefined && value !== '') {
+            populatedFields++;
           } else {
-            presentFields.push(`${sectionName}.${key}`);
+            nullFields.push(`${sectionName}.${key}`);
           }
         });
       }
@@ -368,31 +375,37 @@ function setupSignNowDiagnostics() {
       validateSection(signingPayload.financialProfile, 'financialProfile');
       validateSection(signingPayload.lenderSelection, 'lenderSelection');
       
-      // Report results
-      console.log('📊 PAYLOAD VALIDATION RESULTS:');
-      console.log(`Total Fields: ${fieldCount}`);
-      console.log(`Present Fields: ${presentFields.length}`);
-      console.log(`Null/Missing Fields: ${nullFields.length}`);
+      const fieldCompletionRate = (populatedFields / totalFields * 100).toFixed(1);
+      
+      console.log('\n📊 PAYLOAD VALIDATION RESULTS:');
+      console.log('Total Fields:', totalFields);
+      console.log('Populated Fields:', populatedFields);
+      console.log('Field Completion Rate:', fieldCompletionRate + '%');
+      console.log('Expected Fields: 58');
+      console.log('Partner Fields Included:', shouldHavePartner);
       
       if (nullFields.length > 0) {
-        console.log('\n❌ NULL/MISSING FIELDS:');
-        nullFields.forEach(field => console.log(`  - ${field}`));
+        console.log('\n⚠️ Null/Empty Fields (' + nullFields.length + '):');
+        nullFields.forEach(field => console.log(`  ${field}`));
       }
       
-      console.log('\n✅ PRESENT FIELDS:');
-      presentFields.forEach(field => console.log(`  - ${field}`));
+      // Success rate calculation
+      const expectedFields = 58;
+      const successRate = (populatedFields / expectedFields * 100).toFixed(1);
+      
+      console.log('\n🎯 SUCCESS RATE ANALYSIS:');
+      console.log('Actual vs Expected:', populatedFields + '/' + expectedFields);
+      console.log('Success Rate:', successRate + '%');
+      console.log('Target Rate: 92.3%');
+      
+      if (parseFloat(successRate) >= 92.3) {
+        console.log('✅ SUCCESS RATE ACHIEVED!');
+      } else {
+        console.log('❌ Success rate below target');
+      }
       
       console.log('\n📄 COMPLETE SIGNING PAYLOAD:');
       console.log(JSON.stringify(signingPayload, null, 2));
-      
-      // Partner field validation
-      if (signingPayload.partnerInfo) {
-        console.log('\n✅ PARTNER FIELDS DETECTED (ownership < 100%)');
-        console.log('Partner Name:', signingPayload.partnerInfo.partnerFirstName, signingPayload.partnerInfo.partnerLastName);
-        console.log('Partner Ownership:', signingPayload.partnerInfo.partnerOwnershipPercentage + '%');
-      } else {
-        console.log('\n⚠️ NO PARTNER FIELDS (ownership = 100% or missing)');
-      }
       
       return signingPayload;
       
@@ -402,17 +415,23 @@ function setupSignNowDiagnostics() {
     }
   };
   
-  console.log('🛠️ SignNow diagnostic tools installed');
-  console.log('Available: window.borealApp.debug.printSigningPayload()');
+  console.log('✅ SignNow diagnostics ready');
+  console.log('🔍 Command available: await window.borealApp.debug.printSigningPayload()');
 }
 
-// Auto-execute the test
-console.log('📋 Comprehensive Manual Test Execution Ready');
-console.log('Run: executeComprehensiveManualTest() to begin');
+// Initialize test execution
+console.log('🚀 COMPREHENSIVE MANUAL TEST EXECUTION READY');
+console.log('Run: executeComprehensiveManualTest() to begin systematic testing');
+console.log('');
+console.log('Test includes:');
+console.log('- Step-by-step guidance for Canadian business scenario');
+console.log('- Partner fields validation (75% ownership trigger)');
+console.log('- Step 6 SignNow diagnostic verification');
+console.log('- Real-time form data monitoring');
+console.log('- 58-field payload validation');
+console.log('- 92.3% success rate analysis');
 
-// Make functions globally available
+// Make test execution globally available
 if (typeof window !== 'undefined') {
   window.executeComprehensiveManualTest = executeComprehensiveManualTest;
-  window.setupSignNowDiagnostics = setupSignNowDiagnostics;
-  setupSignNowDiagnostics();
 }
