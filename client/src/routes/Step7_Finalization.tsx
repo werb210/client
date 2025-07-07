@@ -268,15 +268,15 @@ export default function Step7Finalization() {
             </div>
             <div>
               <span className="text-gray-500">Selected Product:</span>
-              <p className="font-medium">{state.step2Recommendations?.selectedProduct?.product_name || 'Not selected'}</p>
+              <p className="font-medium">{state.selectedProduct || 'Not selected'}</p>
             </div>
             <div>
               <span className="text-gray-500">Funding Amount:</span>
-              <p className="font-medium">${state.step1FinancialProfile?.fundingAmount?.toLocaleString() || 'Not specified'}</p>
+              <p className="font-medium">${state.fundingAmount?.toLocaleString() || 'Not specified'}</p>
             </div>
             <div>
               <span className="text-gray-500">Business Name:</span>
-              <p className="font-medium">{state.step3BusinessDetails?.operatingName || 'Not provided'}</p>
+              <p className="font-medium">{state.operatingName || 'Not provided'}</p>
             </div>
           </div>
         </CardContent>
