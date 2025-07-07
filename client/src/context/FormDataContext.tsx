@@ -66,12 +66,14 @@ export interface FormDataState {
   step3BusinessDetails?: BusinessDetailsData;
   step4FinancialInfo?: FinancialInfoData;
   step4ApplicantInfo?: ApplicantInfoData;
+  step4ApplicantDetails?: ApplicantInfoData;
   step5DocumentUpload?: DocumentUploadData;
   step6Signature?: {
     signedAt?: string;
     documentId?: string;
     signingUrl?: string;
     completed?: boolean;
+    applicationId?: string;
   };
   currentStep: number;
   isComplete: boolean;
@@ -87,6 +89,7 @@ type FormDataAction =
   | { type: 'UPDATE_STEP3'; payload: Partial<BusinessDetailsData> }
   | { type: 'UPDATE_STEP4'; payload: Partial<FinancialInfoData> }
   | { type: 'UPDATE_STEP4_APPLICANT'; payload: Partial<ApplicantInfoData> }
+  | { type: 'UPDATE_STEP4_APPLICANT_DETAILS'; payload: Partial<ApplicantInfoData> }
   | { type: 'UPDATE_STEP5'; payload: Partial<DocumentUploadData> }
   | { type: 'UPDATE_STEP6'; payload: Partial<FormDataState['step6Signature']> }
   | { type: 'UPDATE_STEP6_SIGNATURE'; payload: Partial<FormDataState['step6Signature']> }
@@ -148,6 +151,14 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
           ...state.step4ApplicantInfo,
           ...action.payload,
         } as FormDataState['step4ApplicantInfo'],
+      };
+    case 'UPDATE_STEP4_APPLICANT_DETAILS':
+      return {
+        ...state,
+        step4ApplicantDetails: {
+          ...state.step4ApplicantDetails,
+          ...action.payload,
+        } as ApplicantInfoData,
       };
     case 'UPDATE_STEP5':
       return {

@@ -54,13 +54,13 @@ export default function Step3BusinessDetails() {
   const form = useForm<Step3FormData>({
     resolver: zodResolver(Step3Schema),
     defaultValues: {
-      operatingName: state.step3BusinessDetails?.operatingName || '',
-      legalName: state.step3BusinessDetails?.legalName || '',
-      businessStreetAddress: state.step3BusinessDetails?.businessStreetAddress || '',
+      businessName: state.step3BusinessDetails?.businessName || '',
+      businessAddress: state.step3BusinessDetails?.businessAddress || '',
       businessCity: state.step3BusinessDetails?.businessCity || '',
       businessState: state.step3BusinessDetails?.businessState || '',
-      businessPostalCode: state.step3BusinessDetails?.businessPostalCode || '',
+      businessZipCode: state.step3BusinessDetails?.businessZipCode || '',
       businessPhone: state.step3BusinessDetails?.businessPhone || '',
+      businessEmail: state.step3BusinessDetails?.businessEmail || '',
       businessWebsite: state.step3BusinessDetails?.businessWebsite || '',
       businessStructure: state.step3BusinessDetails?.businessStructure || undefined,
       businessStartDate: state.step3BusinessDetails?.businessStartDate || new Date(),

@@ -162,7 +162,7 @@ export default function Step1FinancialProfile() {
       lookingFor: isValidLookingFor(state.step1FinancialProfile?.lookingFor) ? state.step1FinancialProfile.lookingFor : undefined,
       fundingAmount: state.step1FinancialProfile?.fundingAmount?.toString() || '0',
       fundsPurpose: state.step1FinancialProfile?.fundsPurpose || '',
-      salesHistory: state.step1FinancialProfile?.salesHistory || '',
+      salesHistory: state.step1FinancialProfile?.salesHistory || undefined,
       revenueLastYear: state.step1FinancialProfile?.revenueLastYear?.toString() || '0',
       averageMonthlyRevenue: state.step1FinancialProfile?.averageMonthlyRevenue?.toString() || '0',
       accountsReceivableBalance: state.step1FinancialProfile?.accountsReceivableBalance?.toString() || '0',

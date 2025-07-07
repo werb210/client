@@ -131,7 +131,11 @@ export default function Step5DocumentUpload() {
 
       {/* Dynamic Document Requirements Component */}
       <DynamicDocumentRequirements
-        formData={state.step1FinancialProfile}
+        formData={{
+          ...state.step1FinancialProfile,
+          fundingAmount: state.step1FinancialProfile.fundingAmount?.toString(),
+          accountsReceivableBalance: state.step1FinancialProfile.accountsReceivableBalance?.toString()
+        }}
         uploadedFiles={uploadedFiles}
         onFilesUploaded={handleFilesUploaded}
         onRequirementsChange={handleRequirementsChange}
