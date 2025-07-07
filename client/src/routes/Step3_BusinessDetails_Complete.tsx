@@ -316,26 +316,6 @@ export default function Step3BusinessDetailsComplete() {
                     )}
                   />
 
-                  {/* Business Email */}
-                  <FormField
-                    control={form.control}
-                    name="businessEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Business Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="business@example.com"
-                            {...field}
-                            className="h-12"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   {/* Business Website */}
                   <FormField
                     control={form.control}
