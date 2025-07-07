@@ -59,6 +59,7 @@ import ReliableSyncTest from "@/pages/ReliableSyncTest";
 import LenderDiagnostics from "@/pages/LenderDiagnostics";
 import SyncDiagnostics from "@/pages/SyncDiagnostics";
 import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
+import SignNowWorkflowTestNew from "@/pages/SignNowWorkflowTest";
 
 
 /**
@@ -103,6 +104,7 @@ export function MainLayout() {
       <Route path="/comprehensive-e2e-test" component={ComprehensiveE2ETest} />
       <Route path="/indexeddb-test" component={IndexedDBTest} />
       <Route path="/reliable-sync-test" component={ReliableSyncTest} />
+      <Route path="/signnow-workflow-test-new" component={SignNowWorkflowTestNew} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
