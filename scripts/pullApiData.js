@@ -2,7 +2,7 @@
  * Pull lender products from staff backend API
  */
 
-const STAFF_API_URL = 'https://staffportal.replit.app/api';
+const STAFF_API_URL = 'https://staff.boreal.financial/api';
 
 async function pullLenderProducts() {
   console.log('🔄 Pulling lender products from staff backend API...');

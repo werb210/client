@@ -18,7 +18,7 @@ export const cfg = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   
   // API Configuration
-  staffApiUrl: process.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app',
+  staffApiUrl: process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial',
   
   // Authentication Tokens
   clientToken: process.env.CLIENT_APP_SHARED_TOKEN!,
