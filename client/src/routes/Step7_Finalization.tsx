@@ -268,7 +268,7 @@ export default function Step7Finalization() {
             </div>
             <div>
               <span className="text-gray-500">Selected Product:</span>
-              <p className="font-medium">{state.selectedProduct || 'Not selected'}</p>
+              <p className="font-medium">{state.selectedProductName || state.selectedCategoryName || state.selectedCategory || 'Not selected'}</p>
             </div>
             <div>
               <span className="text-gray-500">Funding Amount:</span>
