@@ -4,6 +4,7 @@ import { FormDataProvider } from "@/context/FormDataContext";
 import { ApplicationProvider } from "@/context/ApplicationContext";
 import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
 import { DocumentWarningBanner } from "@/components/DocumentWarningBanner";
+import { CookieManager } from "@/components/CookieManager";
 
 // Create query client instance
 const queryClient = new QueryClient({
@@ -34,6 +35,7 @@ export function AppShell({ children }: AppShellProps) {
             <DocumentWarningBanner />
             {children}
             <Toaster />
+            <CookieManager />
           </ComprehensiveFormProvider>
         </ApplicationProvider>
       </FormDataProvider>

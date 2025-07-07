@@ -20,6 +20,9 @@ import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
 import LateUpload from "@/routes/LateUpload";
 import UploadComplete from "@/routes/UploadComplete";
+import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
+import { TermsOfService } from "@/pages/TermsOfService";
+import { CookieConsentTest } from "@/pages/CookieConsentTest";
 
 // BackendDiagnosticPage removed with legacy auth cleanup
 import SideBySideApplication from "@/pages/SideBySideApplication";
@@ -147,6 +150,11 @@ export function MainLayout() {
       
       {/* Diagnostic Pages */}
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
+      
+      {/* Legal Pages */}
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/cookie-consent-test" component={CookieConsentTest} />
       
       {/* Default Route - Landing Page */}
       <Route path="/" component={LandingPage} />
