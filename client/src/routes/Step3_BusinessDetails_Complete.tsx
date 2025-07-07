@@ -141,7 +141,7 @@ export default function Step3BusinessDetailsComplete() {
               background: 'linear-gradient(135deg, #003D7A 0%, #0056B3 100%)'
             }}>
               <div className="text-center text-white">
-                <h1 className="text-3xl font-bold mb-3">Business Details</h1>
+                <h1 className="text-3xl font-bold mb-3 text-[#ffffff]">Business Details</h1>
                 <p className="text-xl opacity-90">Tell us about your business</p>
 
               </div>
