@@ -1,0 +1,105 @@
+Understood — and I completely agree with your frustration.
+
+Here’s exactly what we’ll do to **lock in the correct landing page** — the one from your attached screenshot with:
+
+* **Title**: *Professional Business Financing Solutions*
+* **Orange CTA**: *Start Your Application*
+* **3 Info Cards**: *Streamlined Application*, *Competitive Rates*, *Secure & Compliant*
+* **“Why Choose Boreal Financial”** section
+
+---
+
+## ✅ IMMEDIATE FIX PLAN: Revert and Lock in the Correct Landing Page
+
+### ✅ Step 1: Identify the Correct Component
+
+The file **`client/src/pages/LandingPage.tsx`** should match your screenshot exactly.
+
+If needed, restore the **known-good version** from git history or local backup.
+
+---
+
+### ✅ Step 2: Confirm Route Setup
+
+Ensure this route exists (in `MainLayout.tsx`, `App.tsx`, or wherever your routing is defined):
+
+```tsx
+<Route path="/" element={<LandingPage />} />
+```
+
+And nothing is wrapping or conditionally hiding it for unauthenticated users.
+
+---
+
+### ✅ Step 3: DELETE the Rogue Page
+
+If a new file like `Home.tsx`, `HomePage.tsx`, or `Index.tsx` was created by mistake, **delete it**.
+
+Also check:
+
+* `client/src/pages`
+* `client/src/v2-design-system`
+* Any file routing root (`/`) that isn’t `LandingPage.tsx`
+
+---
+
+### ✅ Step 4: LOCK IT DOWN
+
+To **prevent this from happening again**, do **one** of the following:
+
+#### Option A: Git Reset (Hard Lock to Known Good Commit)
+
+```bash
+git log --oneline
+git checkout <commit_hash_that_has_correct_landing_page>
+```
+
+Then delete all new pages added since, and force-push.
+
+#### Option B: Make a Permanent Page Component
+
+Rename `LandingPage.tsx` → `PermanentLandingPage.tsx`, and route `"/"` to it.
+
+```tsx
+<Route path="/" element={<PermanentLandingPage />} />
+```
+
+So that no one can accidentally overwrite it again with a generic `LandingPage`.
+
+---
+
+### ✅ Step 5: Visually Confirm
+
+Once restored:
+
+1. Visit `http://localhost:5173/` (or production link)
+2. Confirm:
+
+   * Large navy title ✅
+   * Orange “Start Your Application” CTA ✅
+   * 3 feature cards ✅
+   * “Why Choose Boreal” section ✅
+
+---
+
+### ✅ Step 6: (Optional) Lock Styling
+
+If this keeps happening, you can **snapshot the correct HTML/CSS** as a visual regression test:
+
+```tsx
+test('landing page does not change', () => {
+  cy.visit('/');
+  cy.contains('Professional Business Financing Solutions');
+  cy.get('.hero').should('have.css', 'background-color', 'rgb(255, 255, 255)');
+});
+```
+
+---
+
+### 🔒 Final Lock-In Option (If You Want It)
+
+You can also request that I create a **read-only static HTML version** of the correct landing page and serve it at `/index.html`, bypassing React for the homepage. Just say the word.
+
+---
+
+Would you like me to regenerate the correct `LandingPage.tsx` based on your screenshot and freeze it? I can write and paste the whole thing here to overwrite the current one and end this once and for all.
