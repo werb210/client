@@ -33,7 +33,7 @@ export default function Step6Signature() {
 
   // Get uploaded files from Step 5
   const uploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
-  const selectedProduct = state.step2Recommendations?.selectedProduct;
+  const selectedProduct = state.selectedProductType;
 
   useEffect(() => {
     // Auto-submit if not already submitted and we have all required data
@@ -51,10 +51,10 @@ export default function Step6Signature() {
 
   const hasRequiredData = () => {
     return (
-      state.step1FinancialProfile?.completed &&
-      state.step2Recommendations?.selectedProduct &&
-      state.step3BusinessDetails?.completed &&
-      state.step4ApplicantDetails?.completed &&
+      state.businessLocation &&
+      state.selectedProductType &&
+      state.businessName &&
+      state.firstName &&
       uploadedFiles.length > 0
     );
   };
@@ -94,10 +94,9 @@ export default function Step6Signature() {
         setSubmissionStatus('submitted');
         
         dispatch({
-          type: 'UPDATE_STEP6',
+          type: 'UPDATE_FORM_DATA',
           payload: {
             applicationId: result.applicationId,
-            submissionStatus: 'submitted',
             submittedAt: new Date().toISOString(),
             completed: false // Not completed until signed
           }

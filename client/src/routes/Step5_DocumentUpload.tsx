@@ -37,7 +37,7 @@ export default function Step5DocumentUpload() {
       type: 'UPDATE_STEP5',
       payload: {
         uploadedFiles: files,
-        completedAt: new Date().toISOString()
+        completed: true
       }
     });
     
@@ -51,7 +51,7 @@ export default function Step5DocumentUpload() {
   };
 
   // Get selected product from previous steps for document categorization
-  const selectedProduct = state.step2Recommendations?.selectedProduct?.product_name || '';
+  const selectedProduct = state.selectedProductId || '';
   
   // Navigation handlers
   const handlePrevious = () => {
@@ -72,8 +72,7 @@ export default function Step5DocumentUpload() {
       type: 'UPDATE_STEP5',
       payload: {
         uploadedFiles,
-        completed: true,
-        completedAt: new Date().toISOString()
+        completed: true
       }
     });
     
@@ -86,8 +85,7 @@ export default function Step5DocumentUpload() {
       type: 'UPDATE_STEP5',
       payload: {
         uploadedFiles,
-        completed: false,
-        savedAt: new Date().toISOString()
+        completed: false
       }
     });
     
@@ -132,9 +130,10 @@ export default function Step5DocumentUpload() {
       {/* Dynamic Document Requirements Component */}
       <DynamicDocumentRequirements
         formData={{
-          ...state.step1FinancialProfile,
-          fundingAmount: state.step1FinancialProfile.fundingAmount?.toString(),
-          accountsReceivableBalance: state.step1FinancialProfile.accountsReceivableBalance?.toString()
+          lookingFor: state.lookingFor,
+          businessLocation: state.businessLocation,
+          fundingAmount: state.fundingAmount?.toString(),
+          accountsReceivableBalance: state.accountsReceivableBalance?.toString()
         }}
         uploadedFiles={uploadedFiles}
         onFilesUploaded={handleFilesUploaded}

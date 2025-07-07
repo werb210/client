@@ -54,7 +54,14 @@ export const ApplicationFormSchema = z.object({
   employeeCount: z.number().int().positive(),
   estimatedYearlyRevenue: z.number().optional(),
 
-  // Stage 4 – Applicant Information
+  // Stage 4A - Financial Information
+  annualRevenue: z.string().optional(),
+  monthlyExpenses: z.string().optional(),
+  numberOfEmployees: z.string().optional(),
+  totalAssets: z.string().optional(),
+  totalLiabilities: z.string().optional(),
+
+  // Stage 4B – Applicant Information
   title: z.string(),
   firstName: z.string(),
   lastName: z.string(),

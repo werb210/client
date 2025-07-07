@@ -8,28 +8,25 @@ export default function Step2Recommendations() {
   const [, setLocation] = useLocation();
   const [selectedProduct, setSelectedProduct] = useState<string>('');
 
-  // Get user's Step 1 data for matching
-  const step1Data = state.step1FinancialProfile;
-  
-  // Convert form data to match Step2RecommendationEngine interface
-  const formData = step1Data ? {
-    headquarters: step1Data.businessLocation === 'united-states' ? 'US' : 
-                  step1Data.businessLocation === 'canada' ? 'CA' : 
-                  step1Data.businessLocation,
-    industry: step1Data.industry,
-    lookingFor: step1Data.lookingFor,
-    fundingAmount: step1Data.fundingAmount,
-    fundsPurpose: step1Data.useOfFunds,
-    accountsReceivableBalance: step1Data.accountsReceivable || '',
+  // Get user's Step 1 data for matching from unified schema
+  const formData = {
+    headquarters: state.businessLocation === 'united-states' ? 'US' : 
+                  state.businessLocation === 'canada' ? 'CA' : 
+                  state.businessLocation,
+    industry: state.industry,
+    lookingFor: state.lookingFor,
+    fundingAmount: state.fundingAmount,
+    fundsPurpose: state.fundsPurpose,
+    accountsReceivableBalance: state.accountsReceivableBalance || '',
     // Additional fields for context
-    salesHistory: step1Data.salesHistory,
-    averageMonthlyRevenue: step1Data.monthlyRevenue,
-  } : {};
+    salesHistory: state.salesHistory,
+    averageMonthlyRevenue: state.averageMonthlyRevenue,
+  };
 
   const handleProductSelect = (product: string) => {
     setSelectedProduct(product);
     dispatch({
-      type: 'UPDATE_STEP1',
+      type: 'UPDATE_FORM_DATA',
       payload: {
         selectedCategory: product
       }

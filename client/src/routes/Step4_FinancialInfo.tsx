@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { ApplicationForm } from '../../../shared/schema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -30,7 +31,7 @@ export default function Step4FinancialInfo() {
 
   // Get currency symbol based on country from previous step
   const getCurrencySymbol = () => {
-    const country = state.step3BusinessDetails?.businessAddress?.country;
+    const country = state.headquarters;
     return country === 'US' ? '$' : 'CAD $';
   };
 
@@ -51,11 +52,11 @@ export default function Step4FinancialInfo() {
   const form = useForm<FinancialInfoFormData>({
     resolver: zodResolver(financialInfoSchema),
     defaultValues: {
-      annualRevenue: state.step4FinancialInfo?.annualRevenue || '',
-      monthlyExpenses: state.step4FinancialInfo?.monthlyExpenses || '',
-      numberOfEmployees: state.step4FinancialInfo?.numberOfEmployees || '',
-      totalAssets: state.step4FinancialInfo?.totalAssets || '',
-      totalLiabilities: state.step4FinancialInfo?.totalLiabilities || '',
+      annualRevenue: state.annualRevenue || '',
+      monthlyExpenses: state.monthlyExpenses || '',
+      numberOfEmployees: state.numberOfEmployees || '',
+      totalAssets: state.totalAssets || '',
+      totalLiabilities: state.totalLiabilities || '',
     },
   });
 
@@ -66,7 +67,7 @@ export default function Step4FinancialInfo() {
 
   const onSubmit = (data: FinancialInfoFormData) => {
     // Update context with form data
-    dispatch({ type: 'UPDATE_STEP4', payload: data });
+    dispatch({ type: 'UPDATE_FORM_DATA', payload: data });
     dispatch({ type: 'SET_CURRENT_STEP', payload: 5 });
     
     // Save to storage
@@ -85,7 +86,7 @@ export default function Step4FinancialInfo() {
     const currentData = form.getValues();
     
     // Update context with current form data
-    dispatch({ type: 'UPDATE_STEP4', payload: currentData });
+    dispatch({ type: 'UPDATE_FORM_DATA', payload: currentData });
     saveToStorage();
 
     setIsCreatingDraft(true);
@@ -93,9 +94,8 @@ export default function Step4FinancialInfo() {
     try {
       // Gather all form data from all steps
       const allFormValues = {
-        step1FinancialProfile: state.step1FinancialProfile,
-        step3BusinessDetails: state.step3BusinessDetails,
-        step4FinancialInfo: currentData,
+        ...state,
+        ...currentData,
         submittedAt: new Date().toISOString()
       };
 
@@ -124,7 +124,7 @@ export default function Step4FinancialInfo() {
     const currentData = form.getValues();
     
     // Update context with current form data (even if incomplete)
-    dispatch({ type: 'UPDATE_STEP4', payload: currentData });
+    dispatch({ type: 'UPDATE_FORM_DATA', payload: currentData });
     
     // Save to storage
     saveToStorage();

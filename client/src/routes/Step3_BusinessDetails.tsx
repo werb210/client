@@ -1,402 +1,272 @@
-import React from 'react';
+import { useFormData } from '@/context/FormDataContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFormData } from '@/context/FormDataContext';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useLocation } from 'wouter';
-import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, ArrowLeft, Save, Building, MapPin, Calendar } from 'lucide-react';
-import { ApplicationFormSchema } from '@shared/schema';
+import { Step3Schema } from '@shared/schema';
 import { z } from 'zod';
-
-// Extract only Step 3 fields from the unified schema
-const Step3Schema = ApplicationFormSchema.pick({
-  businessName: true,
-  businessAddress: true,
-  businessCity: true,
-  businessState: true,
-  businessZipCode: true,
-  businessPhone: true,
-  businessEmail: true,
-  businessWebsite: true,
-  businessStartDate: true,
-  businessStructure: true,
-  employeeCount: true,
-  estimatedYearlyRevenue: true
-}).partial();
 
 type Step3FormData = z.infer<typeof Step3Schema>;
 
 export default function Step3BusinessDetails() {
-  const { state, dispatch, saveToStorage } = useFormData();
+  const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
 
   const form = useForm<Step3FormData>({
     resolver: zodResolver(Step3Schema),
     defaultValues: {
-      businessName: state.step1FinancialProfile?.businessName || '',
-      businessAddress: state.step1FinancialProfile?.businessAddress || '',
-      businessCity: state.step1FinancialProfile?.businessCity || '',
-      businessState: state.step1FinancialProfile?.businessState || '',
-      businessZipCode: state.step1FinancialProfile?.businessZipCode || '',
-      businessPhone: state.step1FinancialProfile?.businessPhone || '',
-      businessEmail: state.step1FinancialProfile?.businessEmail || '',
-      businessWebsite: state.step1FinancialProfile?.businessWebsite || '',
-      businessStructure: state.step1FinancialProfile?.businessStructure || undefined,
-      businessStartDate: state.step1FinancialProfile?.businessStartDate || '',
-      employeeCount: state.step1FinancialProfile?.employeeCount || undefined,
-      estimatedYearlyRevenue: state.step1FinancialProfile?.estimatedYearlyRevenue || undefined
-    }
+      businessName: state.businessName || '',
+      businessAddress: state.businessAddress || '',
+      businessCity: state.businessCity || '',
+      businessState: state.businessState || '',
+      businessZipCode: state.businessZipCode || '',
+      businessPhone: state.businessPhone || '',
+      businessEmail: state.businessEmail || '',
+      businessWebsite: state.businessWebsite || '',
+      businessStartDate: state.businessStartDate || '',
+      businessStructure: state.businessStructure || 'llc',
+      employeeCount: state.employeeCount || 1,
+      estimatedYearlyRevenue: state.estimatedYearlyRevenue || 0,
+    },
   });
 
   const onSubmit = (data: Step3FormData) => {
     dispatch({
       type: 'UPDATE_STEP3',
-      payload: {
-        ...data,
-        completed: true,
-        completedAt: new Date().toISOString()
-      }
+      payload: data,
     });
-    
-    saveToStorage();
-    
-    toast({
-      title: "Business Details Saved",
-      description: "Your business information has been saved successfully.",
-    });
-    
     setLocation('/apply/step-4');
   };
 
-  const handlePrevious = () => {
-    // Save current form data before navigating
-    const currentData = form.getValues();
-    dispatch({
-      type: 'UPDATE_STEP3',
-      payload: {
-        ...currentData,
-        completed: false,
-        savedAt: new Date().toISOString()
-      }
-    });
-    saveToStorage();
-    setLocation('/apply/step-2');
-  };
-
-
-
-  const businessStructureOptions = [
-    { value: 'sole_proprietorship', label: 'Sole Proprietorship' },
-    { value: 'partnership', label: 'Partnership' },
-    { value: 'llc', label: 'Limited Liability Company (LLC)' },
-    { value: 'corporation', label: 'Corporation (C-Corp)' },
-    { value: 's_corp', label: 'S Corporation' },
-    { value: 'non_profit', label: 'Non-Profit Organization' }
-  ];
-
-  const employeeOptions = [
-    { value: '1', label: 'Just me (1 employee)' },
-    { value: '2-10', label: '2-10 employees' },
-    { value: '11-50', label: '11-50 employees' },
-    { value: '51-100', label: '51-100 employees' },
-    { value: '101-500', label: '101-500 employees' },
-    { value: '500+', label: '500+ employees' }
-  ];
-
-  const bankingOptions = [
-    { value: 'less_than_1_year', label: 'Less than 1 year' },
-    { value: '1-2_years', label: '1-2 years' },
-    { value: '2-5_years', label: '2-5 years' },
-    { value: '5-10_years', label: '5-10 years' },
-    { value: 'more_than_10_years', label: 'More than 10 years' }
-  ];
-
   return (
-    <div className="min-h-screen py-8" style={{ backgroundColor: '#F7F9FC' }}>
-      <div className="max-w-6xl mx-auto px-4">
-        <Card className="shadow-lg">
-          <CardHeader className="text-white" style={{ background: 'linear-gradient(to right, #003D7A, #002B5C)' }}>
-            <CardTitle className="text-2xl font-bold">Step 3: Business Details</CardTitle>
-            <p style={{ color: '#B8D4F0' }}>Complete information about your business</p>
-          </CardHeader>
-          <CardContent className="p-8">
-
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="businessName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Legal Business Name</FormLabel>
-                        <FormControl>
-                          <Input className="h-12" placeholder="Enter your legal business name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="businessStructure"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Business Structure</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Select business structure" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {businessStructureOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="businessRegistrationDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Business Registration Date</FormLabel>
-                        <FormControl>
-                          <Input className="h-12" type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="businessTaxId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Tax ID / EIN</FormLabel>
-                        <FormControl>
-                          <Input className="h-12" placeholder="XX-XXXXXXX" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="businessAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Street Address</FormLabel>
-                        <FormControl>
-                          <Input className="h-12" placeholder="Enter your business address" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="businessCity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">City</FormLabel>
-                        <FormControl>
-                          <Input className="h-12" placeholder="City" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="businessState"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">State/Province</FormLabel>
-                        <FormControl>
-                          <Input className="h-12" placeholder="State or Province" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="businessZipCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">ZIP/Postal Code</FormLabel>
-                        <FormControl>
-                          <Input className="h-12" placeholder="ZIP or Postal Code" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="businessPhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Business Phone</FormLabel>
-                        <FormControl>
-                          <Input className="h-12" placeholder="(555) 123-4567" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="businessEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Business Email</FormLabel>
-                        <FormControl>
-                          <Input className="h-12" type="email" placeholder="business@example.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="numberOfEmployees"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Number of Employees</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Select number of employees" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {employeeOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="primaryBankName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Primary Bank Name</FormLabel>
-                        <FormControl>
-                          <Input className="h-12" placeholder="Enter your primary bank name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="businessWebsite"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Business Website (Optional)</FormLabel>
-                        <FormControl>
-                          <Input className="h-12" placeholder="https://www.yourcompany.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="businessDescription"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Describe Your Business</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Provide a detailed description of your business, including products/services offered, target market, and key business activities..."
-                            className="min-h-[120px]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="bankingRelationshipLength"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-semibold">Banking Relationship Length</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="h-12">
-                              <SelectValue placeholder="Select relationship length" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {bankingOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="flex justify-between pt-6">
-                  <Button type="button" variant="outline" onClick={handlePrevious} className="w-full md:w-auto">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Previous
-                  </Button>
-                  <Button type="submit" className="w-full md:w-auto bg-orange-500 hover:bg-orange-600 text-white">
-                    Continue
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Business Details</h1>
+        <p className="text-gray-600">Tell us about your business</p>
       </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Business Name and Address */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="businessName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Your business name" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="businessStructure"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business Structure</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select business structure" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="sole_proprietorship">Sole Proprietorship</SelectItem>
+                      <SelectItem value="partnership">Partnership</SelectItem>
+                      <SelectItem value="llc">LLC</SelectItem>
+                      <SelectItem value="corporation">Corporation</SelectItem>
+                      <SelectItem value="s_corp">S Corporation</SelectItem>
+                      <SelectItem value="non_profit">Non-Profit</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Address Fields */}
+          <FormField
+            control={form.control}
+            name="businessAddress"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Address</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Street address" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <FormField
+              control={form.control}
+              name="businessCity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="City" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="businessState"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State/Province</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="State or Province" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="businessZipCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ZIP/Postal Code</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="ZIP or Postal Code" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Contact Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="businessPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business Phone</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="(555) 123-4567" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="businessEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business Email (Optional)</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="email" placeholder="business@example.com" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="businessWebsite"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business Website (Optional)</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="https://www.yourbusiness.com" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Business Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="businessStartDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business Start Date</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="date" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="employeeCount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Employees</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      type="number" 
+                      min="1"
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="estimatedYearlyRevenue"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Estimated Yearly Revenue (Optional)</FormLabel>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    type="number" 
+                    min="0"
+                    placeholder="0"
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between pt-6">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setLocation('/apply/step-2')}
+            >
+              Back
+            </Button>
+            <Button type="submit">Continue</Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }

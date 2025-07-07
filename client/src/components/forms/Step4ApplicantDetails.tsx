@@ -1,15 +1,19 @@
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { step4Schema, type ApplicationForm } from '@/types/forms';
+import { Step4Schema, type ApplicationForm } from '@shared/schema';
 import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { User, MapPin, Calendar as CalendarIcon, Phone, UserPlus, Percent } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { z } from 'zod';
+
+type Step4FormData = z.infer<typeof Step4Schema>;
 
 interface Step4Props {
   defaultValues?: Partial<ApplicationForm>;
@@ -19,12 +23,33 @@ interface Step4Props {
 }
 
 export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevious }: Step4Props) {
-  const form = useForm<ApplicationForm>({
-    resolver: zodResolver(step4Schema),
-    defaultValues,
+  const form = useForm<Step4FormData>({
+    resolver: zodResolver(Step4Schema),
+    defaultValues: {
+      title: defaultValues?.title || '',
+      firstName: defaultValues?.firstName || '',
+      lastName: defaultValues?.lastName || '',
+      personalEmail: defaultValues?.personalEmail || '',
+      personalPhone: defaultValues?.personalPhone || '',
+      dateOfBirth: defaultValues?.dateOfBirth || '',
+      socialSecurityNumber: defaultValues?.socialSecurityNumber || '',
+      ownershipPercentage: defaultValues?.ownershipPercentage || '',
+      creditScore: defaultValues?.creditScore || 'unknown',
+      personalAnnualIncome: defaultValues?.personalAnnualIncome || '',
+      applicantAddress: defaultValues?.applicantAddress || '',
+      applicantCity: defaultValues?.applicantCity || '',
+      applicantState: defaultValues?.applicantState || '',
+      applicantPostalCode: defaultValues?.applicantPostalCode || '',
+      yearsWithBusiness: defaultValues?.yearsWithBusiness || '',
+      previousLoans: defaultValues?.previousLoans || 'no',
+      bankruptcyHistory: defaultValues?.bankruptcyHistory || 'no',
+    },
   });
 
-  const handleSubmit = (data: Partial<ApplicationForm>) => {
+  const watchOwnership = form.watch('ownershipPercentage');
+  const hasPartner = watchOwnership && parseFloat(watchOwnership) < 100;
+
+  const handleSubmit = (data: Step4FormData) => {
     onSubmit(data);
     onNext();
   };
@@ -49,15 +74,15 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
-                  name="applicantName"
+                  name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>Title</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="John Smith" />
+                        <Input {...field} placeholder="CEO, President, etc." />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -66,12 +91,26 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
 
                 <FormField
                   control={form.control}
-                  name="applicantEmail"
+                  name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Address</FormLabel>
+                      <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <Input {...field} type="email" placeholder="john@business.com" />
+                        <Input {...field} placeholder="John" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Smith" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -82,10 +121,24 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="mobilePhone"
+                  name="personalEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mobile Phone</FormLabel>
+                      <FormLabel>Personal Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="john@email.com" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="personalPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Personal Phone</FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="(555) 123-4567" />
                       </FormControl>
@@ -93,7 +146,9 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
                     </FormItem>
                   )}
                 />
+              </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="dateOfBirth"
@@ -122,8 +177,8 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
+                            selected={field.value ? new Date(field.value) : undefined}
+                            onSelect={(date) => field.onChange(date?.toISOString().split('T')[0])}
                             disabled={(date) =>
                               date > new Date() || date < new Date("1900-01-01")
                             }
@@ -140,7 +195,7 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="sinSsn"
+                  name="socialSecurityNumber"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>SSN / SIN</FormLabel>
@@ -154,7 +209,7 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
 
                 <FormField
                   control={form.control}
-                  name="percentageOwnership"
+                  name="ownershipPercentage"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Ownership Percentage</FormLabel>
@@ -176,7 +231,7 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
 
               <FormField
                 control={form.control}
-                name="titleInBusiness"
+                name="title"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Title in Business</FormLabel>
@@ -274,12 +329,12 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="partnerName"
+                  name="partnerFirstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Partner Name</FormLabel>
+                      <FormLabel>Partner First Name</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Jane Smith" />
+                        <Input {...field} placeholder="Jane" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -294,6 +349,20 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
                       <FormLabel>Partner Email</FormLabel>
                       <FormControl>
                         <Input {...field} type="email" placeholder="jane@business.com" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="partnerLastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Partner Last Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Smith" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -318,7 +387,7 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
 
                 <FormField
                   control={form.control}
-                  name="partnerOwnership"
+                  name="partnerOwnershipPercentage"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Partner Ownership %</FormLabel>
@@ -337,19 +406,6 @@ export function Step4ApplicantDetails({ defaultValues, onSubmit, onNext, onPrevi
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="partnerTitle"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Partner Title</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="COO, Co-Owner, etc." />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
               <FormField

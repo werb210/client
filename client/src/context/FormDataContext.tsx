@@ -69,6 +69,8 @@ type FormDataAction =
   | { type: 'UPDATE_STEP4'; payload: Partial<ApplicationForm> }
   | { type: 'UPDATE_STEP5'; payload: Partial<DocumentUploadData> }
   | { type: 'UPDATE_STEP6'; payload: Partial<FormDataState['step6Signature']> }
+  | { type: 'UPDATE_STEP6_SIGNATURE'; payload: Partial<FormDataState['step6Signature']> }
+  | { type: 'UPDATE_STEP4_SUBMISSION'; payload: Partial<ApplicationForm> }
   | { type: 'SET_CURRENT_STEP'; payload: number }
   | { type: 'SET_APPLICATION_ID'; payload: string }
   | { type: 'SET_SIGNING_URL'; payload: string }
@@ -126,6 +128,19 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
           ...state.step6Signature,
           ...action.payload,
         } as FormDataState['step6Signature'],
+      };
+    case 'UPDATE_STEP6_SIGNATURE':
+      return {
+        ...state,
+        step6Signature: {
+          ...state.step6Signature,
+          ...action.payload,
+        } as FormDataState['step6Signature'],
+      };
+    case 'UPDATE_STEP4_SUBMISSION':
+      return {
+        ...state,
+        ...action.payload,
       };
     case 'SET_CURRENT_STEP':
       return {
