@@ -200,7 +200,8 @@ export const getTitleOptions = () => [
  * Determines if business is Canadian based on Step 1 Business Location
  */
 export const isCanadianBusiness = (businessLocation: string): boolean => {
-  return businessLocation === 'canada';
+  // Handle all possible Canadian values from Step 1 dropdown
+  return businessLocation === 'canada' || businessLocation === 'CA' || businessLocation === 'Canada' || businessLocation === 'canadian';
 };
 
 /**

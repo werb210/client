@@ -45,7 +45,7 @@ export default function Step3BusinessDetailsComplete() {
   const businessLocation = state.businessLocation || 'US';
   const isCanadian = isCanadianBusiness(businessLocation);
   
-  console.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`);
+  console.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`, { state: state.businessLocation, detected: isCanadian });
   
   const regionalLabels = getRegionalLabels(isCanadian);
   const stateProvinceOptions = getStateProvinceOptions(isCanadian);
