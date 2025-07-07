@@ -174,7 +174,10 @@ app.use((req, res, next) => {
   app.use('/api/local/lenders', localLendersRouter);
   app.use('/api/loan-products', loanProductCategoriesRouter);
   app.use('/api/loan-products', documentRequirementsRouter);
+
   app.use('/api/admin', dataIngestionRouter);
+
+  // Remove duplicate - moved above catch-all handler
 
   // Regional fields test page
   app.get('/regional-fields-test', (req, res) => {
@@ -503,6 +506,46 @@ app.use((req, res, next) => {
   });
 
 
+
+  // User country detection endpoint (local handling, not staff backend)
+  app.get('/api/user-country', async (req, res) => {
+    try {
+      // Get client IP address, handling proxies
+      const ip = req.headers['cf-connecting-ip'] || 
+                 req.headers['x-forwarded-for'] || 
+                 req.headers['x-real-ip'] || 
+                 req.connection.remoteAddress || 
+                 req.socket.remoteAddress ||
+                 req.ip;
+
+      console.log(`[GEO] Client IP detected: ${ip}`);
+
+      // For development/localhost, return null to fallback to manual selection
+      if (!ip || ip === '::1' || ip === '127.0.0.1' || ip.includes('localhost')) {
+        console.log('[GEO] Development environment detected, returning null for manual selection');
+        return res.json({ country: null });
+      }
+
+      // Use external geolocation service with proper fetch
+      console.log(`[GEO] Querying geolocation for IP: ${ip}`);
+      const geoResponse = await fetch(`https://ipapi.co/${ip}/country_code/`, {
+        signal: AbortSignal.timeout(3000),
+      });
+
+      if (geoResponse.ok) {
+        const countryCode = (await geoResponse.text()).trim();
+        const country = countryCode === 'CA' || countryCode === 'US' ? countryCode : null;
+        console.log(`[GEO] Detected country: ${countryCode} → ${country || 'Not US/CA'}`);
+        return res.json({ country });
+      }
+
+      console.log(`[GEO] Geolocation service failed: ${geoResponse.status}`);
+      res.json({ country: null });
+    } catch (error) {
+      console.log('[GEO] Country detection failed:', error.message);
+      res.json({ country: null });
+    }
+  });
 
   // All other API routes inform about staff backend configuration
   app.use('/api', (req, res) => {

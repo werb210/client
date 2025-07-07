@@ -12,6 +12,7 @@ import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import { markApplicationStarted } from '@/lib/visitFlags';
 import { ApplicationFormSchema } from '../../../shared/schema';
+import { fetchUserCountry, countryCodeToBusinessLocation } from '@/lib/location';
 
 // Currency formatting utilities
 const formatCurrency = (value: string): string => {
@@ -196,10 +197,43 @@ export default function Step1FinancialProfile() {
   // Form validation - ensure required fields are filled
   const canContinue = true; // Keep flexible for now
 
-  // Mark application as started when component mounts
+  // Country detection and application startup
   useEffect(() => {
     markApplicationStarted();
-  }, []);
+    
+    // Auto-detect user's country if not already set
+    if (!state.businessLocation || !state.headquarters) {
+      fetchUserCountry().then(countryCode => {
+        if (countryCode) {
+          const businessLocation = countryCodeToBusinessLocation(countryCode);
+          const headquarters = countryCode; // CA or US
+          
+          if (businessLocation && headquarters) {
+            console.log(`🌍 Auto-detected country: ${countryCode} (${businessLocation})`);
+            
+            // Update form values
+            if (!state.businessLocation) {
+              form.setValue('businessLocation', headquarters);
+            }
+            if (!state.headquarters) {
+              form.setValue('headquarters', headquarters);
+            }
+            
+            // Update context
+            dispatch({
+              type: 'UPDATE_FORM_DATA',
+              payload: {
+                businessLocation: businessLocation,
+                headquarters: headquarters,
+              },
+            });
+          }
+        }
+      }).catch(error => {
+        console.log('Country detection failed, using manual selection:', error.message);
+      });
+    }
+  }, [state.businessLocation, state.headquarters, form, dispatch]);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
