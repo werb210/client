@@ -1,0 +1,103 @@
+Excellent—this report confirms that the **client application** is midway through a **critical schema unification process**. Here’s how we ensure that:
+
+---
+
+### ✅ You Maintain 100% Functionality While Migrating
+
+#### **1. Continue Migration in Phases**
+
+You’re currently at **42.9% complete** with Steps 1, 2, and 6 done. Next:
+
+* 🔄 **Step 3**: Business Details (use mappings already listed)
+* 🔄 **Step 4**: Applicant Information (consolidate variants)
+* 🔄 **Step 5**: Document Upload (align categories + filenames)
+* 🔄 **Step 7**: Final Submission (ensure summary + API match)
+
+➡ **Tip**: Clone the structure of Step 1/2 components for consistency — they already align with `ApplicationForm`.
+
+---
+
+#### **2. Test Each Step in Isolation (Component-Level QA)**
+
+For each step (3–7), follow this workflow **before moving to the next**:
+
+| ✅ Task                 | How to Do It                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------ |
+| Field Mapping          | Confirm each field matches `ApplicationForm` (e.g., `businessName`)            |
+| Zod Validation         | Make sure Zod matches the unified types (number, enum, etc.)                   |
+| React Hook Form        | Ensure `defaultValues` are correct                                             |
+| FormDataContext        | Check that the `UPDATE_FORM_DATA` dispatch maps to the new field names         |
+| API Compatibility      | Trigger `POST /public/applications` to ensure fields arrive in expected format |
+| TypeScript Cleanliness | `tsc` passes with **no** TypeScript errors                                     |
+| Visual Regression      | Use before/after screenshots to confirm UI hasn't changed unexpectedly         |
+
+---
+
+#### **3. Use These Diagnostic Commands to Confirm Integrity**
+
+```bash
+# Check client → staff backend connectivity
+curl -H "Authorization: Bearer $VITE_CLIENT_APP_SHARED_TOKEN" \
+  https://staff.boreal.financial/api/deployment-status
+
+# Validate application POST schema
+curl -X POST -H "Content-Type: application/json" \
+     -H "Authorization: Bearer $VITE_CLIENT_APP_SHARED_TOKEN" \
+     -d '{"fundingAmount":150000, ... }' \
+     https://staff.boreal.financial/api/public/applications
+```
+
+---
+
+### 🧪 Centralized Testing Strategy
+
+Use this structured test plan to verify **all 7 steps**:
+
+| Step | Component File                        | Status     | Test Method                  |
+| ---- | ------------------------------------- | ---------- | ---------------------------- |
+| 1    | `Step1_FinancialProfile_Complete.tsx` | ✅ Migrated | Submit + verify data types   |
+| 2    | `Step2_Recommendations.tsx`           | ✅ Migrated | Product engine + matching    |
+| 3    | `Step3_BusinessDetails.tsx`           | 🔄 Pending | Check structure enums/fields |
+| 4    | `Step4ApplicantDetails.tsx` variants  | 🔄 Pending | Consolidate + validate       |
+| 5    | `Step5_DocumentUpload.tsx`            | 🔄 Pending | Categories + filenames       |
+| 6    | `Step6_Signature.tsx`                 | ✅ Migrated | Signing + display            |
+| 7    | `Step7_FinalSubmit.tsx` (or variants) | 🔄 Pending | Terms acceptance, summary    |
+
+---
+
+### ✅ When to Consider the Client App Fully Migrated
+
+You’ll be **100% migrated** when:
+
+* [ ] All 7 steps use `ApplicationForm` directly (no `stepX.*` usage)
+* [ ] TypeScript shows **0 errors**
+* [ ] All form dispatches use `UPDATE_FORM_DATA` with unified keys
+* [ ] `POST /public/applications` works from Step 7
+* [ ] Summary views (Step 6/7) show correct unified fields
+* [ ] Staff receives valid applications and attached files
+* [ ] Document categories match the expected enum values
+
+---
+
+### 🧠 Optional: Use Feature Flags
+
+If needed, wrap new schema components in a flag like:
+
+```ts
+{ isUnifiedSchema ? <NewStep3 /> : <LegacyStep3 /> }
+```
+
+This allows gradual rollout and rollback.
+
+---
+
+### ✅ What You Can Do Right Now
+
+1. ✅ Migrate **Step 3** using the provided mapping.
+2. ✅ Fix any remaining field mismatch errors in TypeScript.
+3. ✅ Validate form context (`FormDataContext`) and `defaultValues`.
+4. ✅ Run a **full test submission** from Steps 1–6 and inspect the payload on staff backend.
+
+Let me know and I can help generate **test scripts**, **schema migration stubs**, or **regression checklists** for each step.
+
+Would you like those now?

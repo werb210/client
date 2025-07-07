@@ -1,0 +1,448 @@
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useFormData } from '@/context/FormDataContext';
+import { useLocation } from 'wouter';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ApplicationFormSchema } from '../../../shared/schema';
+import {
+  formatPhoneNumber,
+  formatPostalCode,
+  getRegionalLabels,
+  getStateProvinceOptions,
+  isCanadianBusiness
+} from '@/lib/regionalFormatting';
+
+// Step 3 Schema - Use unified schema fields for business details
+const step3Schema = ApplicationFormSchema.pick({
+  businessName: true,
+  businessAddress: true,
+  businessCity: true,
+  businessState: true,
+  businessZipCode: true,
+  businessPhone: true,
+  businessEmail: true,
+  businessWebsite: true,
+  businessStartDate: true,
+  businessStructure: true,
+  employeeCount: true,
+  estimatedYearlyRevenue: true,
+}).partial(); // Testing mode - made all optional
+
+type BusinessDetailsFormData = z.infer<typeof step3Schema>;
+
+export default function Step3BusinessDetailsComplete() {
+  const { state, dispatch } = useFormData();
+  const [, setLocation] = useLocation();
+
+  // Get business location from unified state to determine regional formatting
+  const businessLocation = state.businessLocation || 'US';
+  const isCanadian = isCanadianBusiness(businessLocation);
+  
+  console.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`);
+  
+  const regionalLabels = getRegionalLabels(isCanadian);
+  const stateProvinceOptions = getStateProvinceOptions(isCanadian);
+
+  const form = useForm<BusinessDetailsFormData>({
+    resolver: zodResolver(step3Schema),
+    defaultValues: {
+      businessName: state.businessName || '',
+      businessAddress: state.businessAddress || '',
+      businessCity: state.businessCity || '',
+      businessState: state.businessState || '',
+      businessZipCode: state.businessZipCode || '',
+      businessPhone: state.businessPhone || '',
+      businessEmail: state.businessEmail || '',
+      businessWebsite: state.businessWebsite || '',
+      businessStartDate: state.businessStartDate || '',
+      businessStructure: state.businessStructure || undefined,
+      employeeCount: state.employeeCount || undefined,
+      estimatedYearlyRevenue: state.estimatedYearlyRevenue || undefined,
+    },
+  });
+
+  // Auto-save functionality
+  useEffect(() => {
+    const subscription = form.watch((data) => {
+      // Convert form data to unified schema format
+      const updatedData: Partial<typeof state> = {};
+      
+      if (data.businessName !== undefined) updatedData.businessName = data.businessName;
+      if (data.businessAddress !== undefined) updatedData.businessAddress = data.businessAddress;
+      if (data.businessCity !== undefined) updatedData.businessCity = data.businessCity;
+      if (data.businessState !== undefined) updatedData.businessState = data.businessState;
+      if (data.businessZipCode !== undefined) updatedData.businessZipCode = data.businessZipCode;
+      if (data.businessPhone !== undefined) updatedData.businessPhone = data.businessPhone;
+      if (data.businessEmail !== undefined) updatedData.businessEmail = data.businessEmail;
+      if (data.businessWebsite !== undefined) updatedData.businessWebsite = data.businessWebsite;
+      if (data.businessStartDate !== undefined) updatedData.businessStartDate = data.businessStartDate;
+      if (data.businessStructure !== undefined) updatedData.businessStructure = data.businessStructure;
+      if (data.employeeCount !== undefined) updatedData.employeeCount = data.employeeCount;
+      if (data.estimatedYearlyRevenue !== undefined) updatedData.estimatedYearlyRevenue = data.estimatedYearlyRevenue;
+
+      dispatch({
+        type: 'UPDATE_FORM_DATA',
+        payload: updatedData
+      });
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form, dispatch]);
+
+  const onSubmit = (data: BusinessDetailsFormData) => {
+    console.log('[STEP3] Form submitted with data:', data);
+    
+    // Update context with unified field names
+    dispatch({
+      type: 'UPDATE_FORM_DATA',
+      payload: {
+        ...data,
+        completed: true
+      }
+    });
+
+    dispatch({
+      type: 'MARK_STEP_COMPLETE',
+      payload: { step: 3 }
+    });
+
+    // Navigate to Step 4
+    setLocation('/apply/step-4');
+  };
+
+  const handleBack = () => {
+    setLocation('/apply/step-2');
+  };
+
+  // Testing mode validation bypass
+  const canContinue = () => {
+    return true; // Testing mode - allow progression without full validation
+    // TODO: For production, restore validation:
+    // const values = form.getValues();
+    // return values.businessName && values.businessAddress && values.businessCity && 
+    //        values.businessState && values.businessZipCode && values.businessPhone &&
+    //        values.businessStructure && values.businessStartDate && values.employeeCount;
+  };
+
+  return (
+    <div className="min-h-screen py-8" style={{ backgroundColor: '#F7F9FC' }}>
+      <div className="max-w-6xl mx-auto px-4">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            {/* Header with gradient background */}
+            <div className="mb-8 p-8 rounded-xl" style={{
+              background: 'linear-gradient(135deg, #003D7A 0%, #0056B3 100%)'
+            }}>
+              <div className="text-center text-white">
+                <h1 className="text-3xl font-bold mb-3">Business Details</h1>
+                <p className="text-xl opacity-90">Tell us about your business</p>
+                {/* Testing Mode Badge */}
+                <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-500 text-white">
+                  Testing Mode Active
+                </div>
+              </div>
+            </div>
+
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b">
+                <CardTitle className="text-2xl text-slate-800">Business Information</CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Business Name */}
+                  <FormField
+                    control={form.control}
+                    name="businessName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Name *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your business name"
+                            {...field}
+                            className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Business Structure */}
+                  <FormField
+                    control={form.control}
+                    name="businessStructure"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Structure *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select business structure" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="sole_proprietorship">Sole Proprietorship</SelectItem>
+                            <SelectItem value="partnership">Partnership</SelectItem>
+                            <SelectItem value="llc">LLC</SelectItem>
+                            <SelectItem value="corporation">Corporation</SelectItem>
+                            <SelectItem value="s_corp">S Corporation</SelectItem>
+                            <SelectItem value="non_profit">Non-Profit</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Business Address */}
+                  <FormField
+                    control={form.control}
+                    name="businessAddress"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Address *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter business street address"
+                            {...field}
+                            className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Business City */}
+                  <FormField
+                    control={form.control}
+                    name="businessCity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">City *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter city"
+                            {...field}
+                            className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Business State/Province */}
+                  <FormField
+                    control={form.control}
+                    name="businessState"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">
+                          {regionalLabels.stateProvince} *
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder={`Select ${regionalLabels.stateProvince.toLowerCase()}`} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {stateProvinceOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Business ZIP/Postal Code */}
+                  <FormField
+                    control={form.control}
+                    name="businessZipCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">
+                          {regionalLabels.postalCode} *
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={`Enter ${regionalLabels.postalCode.toLowerCase()}`}
+                            {...field}
+                            onChange={(e) => {
+                              const formatted = formatPostalCode(e.target.value, isCanadian);
+                              field.onChange(formatted);
+                            }}
+                            className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Business Phone */}
+                  <FormField
+                    control={form.control}
+                    name="businessPhone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Phone *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="(XXX) XXX-XXXX"
+                            {...field}
+                            onChange={(e) => {
+                              const formatted = formatPhoneNumber(e.target.value);
+                              field.onChange(formatted);
+                            }}
+                            className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Business Email */}
+                  <FormField
+                    control={form.control}
+                    name="businessEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="business@example.com"
+                            {...field}
+                            className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Business Website */}
+                  <FormField
+                    control={form.control}
+                    name="businessWebsite"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Website</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="https://www.example.com"
+                            {...field}
+                            className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Business Start Date */}
+                  <FormField
+                    control={form.control}
+                    name="businessStartDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Business Start Date *</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="date"
+                            {...field}
+                            className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Employee Count */}
+                  <FormField
+                    control={form.control}
+                    name="employeeCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Number of Employees *</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter number of employees"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Estimated Yearly Revenue */}
+                  <FormField
+                    control={form.control}
+                    name="estimatedYearlyRevenue"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Estimated Yearly Revenue</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter estimated yearly revenue"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleBack}
+                className="flex items-center gap-2 px-6 py-3"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Button>
+              
+              <Button
+                type="submit"
+                disabled={!canContinue()}
+                className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                Continue
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+    </div>
+  );
+}

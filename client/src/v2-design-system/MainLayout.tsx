@@ -4,7 +4,7 @@ import { Switch, Route } from "wouter";
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
 import Step2Recommendations from "@/routes/Step2_Recommendations";
 // NEW: Separated Step 3 & 4 Route Components (July 3, 2025)
-import Step3BusinessDetailsRoute from "@/routes/Step3_BusinessDetails_New";
+import Step3BusinessDetailsComplete from "@/routes/Step3_BusinessDetails_Complete";
 import Step4ApplicantInfoRoute from "@/routes/Step4_ApplicantInfo_New";
 
 import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
@@ -106,8 +106,8 @@ export function MainLayout() {
       <Route path="/apply/step-1" component={Step1FinancialProfile} />
       <Route path="/step2-recommendations" component={Step2Recommendations} />
       <Route path="/apply/step-2" component={Step2Recommendations} />
-      <Route path="/step3-business-details" component={Step3BusinessDetailsRoute} />
-      <Route path="/apply/step-3" component={Step3BusinessDetailsRoute} />
+      <Route path="/step3-business-details" component={Step3BusinessDetailsComplete} />
+      <Route path="/apply/step-3" component={Step3BusinessDetailsComplete} />
       <Route path="/step4-applicant-details" component={Step4ApplicantInfoRoute} />
       <Route path="/apply/step-4" component={Step4ApplicantInfoRoute} />
       <Route path="/step5-document-upload" component={Step5DocumentUpload} />
