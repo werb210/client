@@ -78,8 +78,8 @@ const lookingForOptions = [
 
 const salesHistoryOptions = [
   { value: '<1yr', label: 'Less than 1 year' },
-  { value: '1-2yr', label: '1 to 2 years' },
-  { value: '2+yr', label: 'More than 2 years' },
+  { value: '1-3yr', label: '1 to 3 years' },
+  { value: '3+yr', label: 'Over 3 years' },
 ];
 
 const lastYearRevenueOptions = [
