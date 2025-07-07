@@ -25,10 +25,10 @@ router.get('/categories', async (req, res) => {
     console.log(`🔍 FILTERING PRODUCTS:`, { country, lookingFor, fundingAmount, accountsReceivableBalance, fundsPurpose });
 
     // Fetch authentic data from staff API
-    const staffApiUrl = process.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app/api';
-    console.log(`🔗 Connecting to staff API: ${staffApiUrl}/public/lenders`);
+    const staffApiUrl = process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial';
+    console.log(`🔗 Connecting to staff API: ${staffApiUrl}/api/public/lenders`);
     
-    const response = await fetch(`${staffApiUrl}/public/lenders`, {
+    const response = await fetch(`${staffApiUrl}/api/public/lenders`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
