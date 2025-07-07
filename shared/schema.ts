@@ -108,6 +108,7 @@ export const ApplicationFormSchema = z.object({
     documentType: z.string(),
     status: z.string(),
   })).optional(),
+  bypassedDocuments: z.boolean().optional(),
 
   // Stage 6 – Signature & Submission
   signedAt: z.string().optional(),

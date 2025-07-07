@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { FormDataProvider } from "@/context/FormDataContext";
 import { ApplicationProvider } from "@/context/ApplicationContext";
 import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
+import { DocumentWarningBanner } from "@/components/DocumentWarningBanner";
 
 // Create query client instance
 const queryClient = new QueryClient({
@@ -30,6 +31,7 @@ export function AppShell({ children }: AppShellProps) {
       <FormDataProvider>
         <ApplicationProvider>
           <ComprehensiveFormProvider>
+            <DocumentWarningBanner />
             {children}
             <Toaster />
           </ComprehensiveFormProvider>

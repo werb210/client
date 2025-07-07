@@ -18,6 +18,8 @@ import NotFound from "@/pages/NotFound";
 import ApplicationSuccess from "@/pages/ApplicationSuccess";
 import SignComplete from "@/pages/SignComplete";
 import UploadDocuments from "@/pages/UploadDocuments";
+import LateUpload from "@/routes/LateUpload";
+import UploadComplete from "@/routes/UploadComplete";
 // BackendDiagnosticPage removed with legacy auth cleanup
 import SideBySideApplication from "@/pages/SideBySideApplication";
 import SimpleApplication from "@/pages/SimpleApplication";
@@ -123,6 +125,8 @@ export function MainLayout() {
       {/* Document Management */}
       <Route path="/sign-complete" component={SignComplete} />
       <Route path="/upload-documents/:applicationId?" component={UploadDocuments} />
+      <Route path="/upload-documents/:id" component={LateUpload} />
+      <Route path="/upload-complete" component={UploadComplete} />
       
       {/* Application Entry Points */}
       <Route path="/simple-application" component={SimpleApplication} />

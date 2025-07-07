@@ -6,6 +6,7 @@ import { useFormDataContext } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequirements';
+import { ProceedBypassBanner } from '@/components/ProceedBypassBanner';
 import { 
   ArrowRight, 
   ArrowLeft, 
@@ -101,6 +102,35 @@ export default function Step5DocumentUpload() {
     });
   };
 
+  const handleBypass = async () => {
+    try {
+      dispatch({ 
+        type: "UPDATE_FORM_DATA", 
+        payload: { bypassedDocuments: true } 
+      });
+
+      // Make API call to mark documents as bypassed
+      if (state.applicationId) {
+        await fetch(`/api/applications/${state.applicationId}/nudge-documents`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ bypassed: true }),
+        });
+      }
+
+      setLocation('/apply/step-6');
+    } catch (error) {
+      console.error('Failed to bypass documents:', error);
+      toast({
+        title: "Error",
+        description: "Failed to proceed without documents. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header Section */}
@@ -132,6 +162,9 @@ export default function Step5DocumentUpload() {
           </div>
         </CardHeader>
       </Card>
+
+      {/* Proceed Without Documents Banner */}
+      <ProceedBypassBanner onBypass={handleBypass} />
 
       {/* Dynamic Document Requirements Component */}
       <DynamicDocumentRequirements
