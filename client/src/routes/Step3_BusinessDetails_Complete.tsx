@@ -404,10 +404,15 @@ export default function Step3BusinessDetailsComplete() {
                         <FormLabel className="text-base font-semibold">Estimated Yearly Revenue</FormLabel>
                         <FormControl>
                           <Input
-                            type="number"
-                            placeholder="Enter estimated yearly revenue"
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            type="text"
+                            placeholder="$0"
+                            value={field.value ? `$${field.value.toLocaleString()}` : ''}
+                            onChange={(e) => {
+                              // Remove all non-digits
+                              const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                              // Convert to number and update field
+                              field.onChange(numericValue ? parseInt(numericValue) : undefined);
+                            }}
                             className="h-12"
                           />
                         </FormControl>
