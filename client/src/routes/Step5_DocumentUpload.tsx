@@ -23,7 +23,15 @@ export default function Step5DocumentUpload() {
   
   // State for tracking uploaded files and requirements completion
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
-    (state.uploadedDocuments || []).filter(file => file.file) as UploadedFile[]
+    (state.uploadedDocuments || []).map(doc => ({
+      id: doc.id,
+      name: doc.name,
+      size: doc.size,
+      type: doc.type,
+      status: (doc.status as "completed" | "uploading" | "error") || "completed",
+      documentType: doc.documentType,
+      file: new File([], doc.name) // Create placeholder File object for existing documents
+    }))
   );
   const [allRequirementsComplete, setAllRequirementsComplete] = useState(false);
   const [totalRequirements, setTotalRequirements] = useState(0);
@@ -71,6 +79,11 @@ export default function Step5DocumentUpload() {
         uploadedDocuments: uploadedFiles,
       }
     });
+    
+    dispatch({
+      type: 'MARK_STEP_COMPLETE',
+      payload: 5
+    });
     setLocation('/apply/step-6');
   };
 
@@ -93,26 +106,28 @@ export default function Step5DocumentUpload() {
       {/* Header Section */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl text-gray-900">
-                Document Upload
-              </CardTitle>
-              <p className="text-gray-600 mt-1">
-                Upload the required documents for your application
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="flex items-center space-x-1">
-                <FileText className="w-3 h-3" />
-                <span>{uploadedFiles.length} Uploaded</span>
-              </Badge>
-              {allRequirementsComplete && (
-                <Badge variant="default" className="flex items-center space-x-1 bg-green-600">
-                  <CheckCircle className="w-3 h-3" />
-                  <span>Complete</span>
+          <div className="bg-gradient-to-r from-teal-600 to-orange-500 text-white p-6 rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-3xl font-bold text-white">
+                  Document Upload
+                </CardTitle>
+                <p className="text-white/90 mt-2">
+                  Upload the required documents for your application
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge variant="outline" className="flex items-center space-x-1">
+                  <FileText className="w-3 h-3" />
+                  <span>{uploadedFiles.length} Uploaded</span>
                 </Badge>
-              )}
+                {allRequirementsComplete && (
+                  <Badge variant="default" className="flex items-center space-x-1 bg-green-600">
+                    <CheckCircle className="w-3 h-3" />
+                    <span>Complete</span>
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
         </CardHeader>

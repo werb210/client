@@ -7,17 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useLocation } from 'wouter';
-import { Step3Schema } from '@shared/schema';
+import { step3Schema } from '@shared/schema';
 import { z } from 'zod';
 
-type Step3FormData = z.infer<typeof Step3Schema>;
+type Step3FormData = z.infer<typeof step3Schema>;
 
 export default function Step3BusinessDetails() {
   const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
 
   const form = useForm<Step3FormData>({
-    resolver: zodResolver(Step3Schema),
+    resolver: zodResolver(step3Schema),
     defaultValues: {
       businessName: state.businessName || '',
       businessAddress: state.businessAddress || '',
@@ -36,8 +36,13 @@ export default function Step3BusinessDetails() {
 
   const onSubmit = (data: Step3FormData) => {
     dispatch({
-      type: 'UPDATE_STEP3',
+      type: 'UPDATE_FORM_DATA',
       payload: data,
+    });
+    
+    dispatch({
+      type: 'MARK_STEP_COMPLETE',
+      payload: 3
     });
     setLocation('/apply/step-4');
   };
