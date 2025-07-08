@@ -62,8 +62,38 @@ export default function Step5DocumentUpload() {
       // A. Use the form state to access required fields
       const { selectedCategory, businessLocation, fundingAmount } = state;
       
+      // Convert selectedCategory display name to API format
+      const convertCategoryToApiFormat = (category: string): string => {
+        const mappings: { [key: string]: string } = {
+          'Working Capital': 'working_capital',
+          'Business Line of Credit': 'line_of_credit',
+          'Term Loan': 'term_loan',
+          'Equipment Financing': 'equipment_financing',
+          'Invoice Factoring': 'invoice_factoring',
+          'Purchase Order Financing': 'purchase_order_financing',
+          'Asset Based Lending': 'asset_based_lending',
+          'SBA Loan': 'sba_loan'
+        };
+        return mappings[category] || category.toLowerCase().replace(/\s+/g, '_');
+      };
+      
+      const apiCategory = selectedCategory ? convertCategoryToApiFormat(selectedCategory) : '';
+      
+      // Convert business location to API format (CA -> canada, US -> united_states)
+      const convertLocationToApiFormat = (location: string): string => {
+        const mappings: { [key: string]: string } = {
+          'CA': 'canada',
+          'US': 'united_states',
+          'canada': 'canada',
+          'united_states': 'united_states'
+        };
+        return mappings[location] || location.toLowerCase();
+      };
+      
+      const apiLocation = businessLocation ? convertLocationToApiFormat(businessLocation) : '';
+      
       // Validate required fields
-      if (!selectedCategory || !businessLocation || !fundingAmount) {
+      if (!apiCategory || !apiLocation || !fundingAmount) {
         setIntersectionResults({
           eligibleLenders: [],
           requiredDocuments: [],
@@ -75,7 +105,7 @@ export default function Step5DocumentUpload() {
       }
 
       console.log('🔍 [STEP5] Calculating document requirements with intersection logic...');
-      console.log('Form data:', { selectedCategory, businessLocation, fundingAmount });
+      console.log('Form data:', { selectedCategory, apiCategory, businessLocation, apiLocation, fundingAmount });
 
       // Parse funding amount if it's a string
       const parsedFundingAmount = typeof fundingAmount === 'string' 
@@ -84,8 +114,8 @@ export default function Step5DocumentUpload() {
 
       try {
         const results = await getDocumentRequirementsIntersection(
-          selectedCategory,
-          businessLocation,
+          apiCategory,
+          apiLocation,
           parsedFundingAmount
         );
 
