@@ -34,7 +34,7 @@ export const CookieNotice = () => {
       declineButtonText="Decline Optional"
       enableDeclineButton
       declineButtonStyle={{
-        color: "#003D7A",
+        color: "#ffffff",
         background: "transparent",
         border: "2px solid #ffffff",
         borderRadius: "6px",
