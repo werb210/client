@@ -62,22 +62,13 @@ export default function Step5DocumentUpload() {
       // A. Use the form state to access required fields
       const { selectedCategory, businessLocation, fundingAmount } = state;
       
-      // Convert selectedCategory display name to API format
-      const convertCategoryToApiFormat = (category: string): string => {
-        const mappings: { [key: string]: string } = {
-          'Working Capital': 'working_capital',
-          'Business Line of Credit': 'line_of_credit',
-          'Term Loan': 'term_loan',
-          'Equipment Financing': 'equipment_financing',
-          'Invoice Factoring': 'invoice_factoring',
-          'Purchase Order Financing': 'purchase_order_financing',
-          'Asset Based Lending': 'asset_based_lending',
-          'SBA Loan': 'sba_loan'
-        };
-        return mappings[category] || category.toLowerCase().replace(/\s+/g, '_');
-      };
+      // Use selectedCategory directly - no conversion needed since we updated intersection logic
+      const apiCategory = selectedCategory || '';
       
-      const apiCategory = selectedCategory ? convertCategoryToApiFormat(selectedCategory) : '';
+      console.log(`🔧 [STEP5] selectedCategory from state: "${selectedCategory}"`);
+      console.log(`🔧 [STEP5] businessLocation from state: "${businessLocation}"`);
+      console.log(`🔧 [STEP5] fundingAmount from state: "${fundingAmount}"`);
+      console.log(`🔧 [STEP5] Using apiCategory: "${apiCategory}"`);
       
       // Convert business location to API format (CA -> canada, US -> united_states)
       const convertLocationToApiFormat = (location: string): string => {
@@ -111,6 +102,8 @@ export default function Step5DocumentUpload() {
       const parsedFundingAmount = typeof fundingAmount === 'string' 
         ? parseFloat(fundingAmount.replace(/[^0-9.-]+/g, '')) 
         : fundingAmount;
+        
+      console.log(`🔧 [STEP5] Parsed funding amount: ${parsedFundingAmount} (from "${fundingAmount}")`);
 
       try {
         const results = await getDocumentRequirementsIntersection(

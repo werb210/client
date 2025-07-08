@@ -82,8 +82,14 @@ export async function getDocumentRequirementsIntersection(
       // Category match - handle multiple formats (working_capital, Working Capital, etc.)
       const productCategory = product.category?.toLowerCase().replace(/\s+/g, '_');
       const searchCategory = selectedProductType?.toLowerCase().replace(/\s+/g, '_');
-      const categoryMatch = productCategory === searchCategory || 
-                           product.category?.toLowerCase() === selectedProductType?.toLowerCase();
+      
+      // Multiple category matching approaches
+      const directMatch = product.category?.toLowerCase() === selectedProductType?.toLowerCase();
+      const normalizedMatch = productCategory === searchCategory;
+      const underscoreToSpaceMatch = product.category === selectedProductType?.replace(/_/g, ' ');
+      const spaceToUnderscoreMatch = product.category?.replace(/\s+/g, '_').toLowerCase() === selectedProductType?.toLowerCase();
+      
+      const categoryMatch = directMatch || normalizedMatch || underscoreToSpaceMatch || spaceToUnderscoreMatch;
       
       // Country match
       const countryMatch = product.country === countryCode;
