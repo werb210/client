@@ -46,40 +46,32 @@ export async function getDocumentRequirementsIntersection(
     console.log('🔍 [INTERSECTION] Starting document requirements calculation...');
     console.log('Parameters:', { selectedProductType, businessLocation, fundingAmount });
 
-    // B. Fetch all lender products - FORCE API ONLY (no cache fallback for testing)
+    // B. Use local cached lender products (as designed - no API calls needed)
     let allLenders: LenderProduct[] = [];
     
     try {
-      console.log(`🌐 [INTERSECTION] Fetching from: ${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
-      console.log(`📡 [INTERSECTION] API Response status: ${response.status}`);
+      console.log(`📦 [INTERSECTION] Loading from local IndexedDB cache...`);
+      const { get } = await import('idb-keyval');
+      const cachedProducts = await get('lender_products_cache');
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`📊 [INTERSECTION] API Response structure:`, Object.keys(data));
+      if (cachedProducts && Array.isArray(cachedProducts)) {
+        allLenders = cachedProducts;
+        console.log(`✅ [INTERSECTION] Loaded ${allLenders.length} products from local cache`);
         
-        if (data.success && data.products) {
-          allLenders = data.products;
-          console.log(`📦 [INTERSECTION] Fetched ${allLenders.length} products from API`);
-          
-          // Check for AccordAccess specifically
-          const accordAccess = allLenders.find(p => p.name === 'AccordAccess');
-          console.log(`🎯 [INTERSECTION] AccordAccess found in API data:`, accordAccess ? 'YES' : 'NO');
-          if (accordAccess) {
-            console.log(`🎯 [INTERSECTION] AccordAccess details:`, accordAccess);
-          }
-        } else {
-          console.log(`❌ [INTERSECTION] API response invalid:`, data);
+        // Check for AccordAccess specifically
+        const accordAccess = allLenders.find(p => p.name === 'AccordAccess');
+        console.log(`🎯 [INTERSECTION] AccordAccess found in cache:`, accordAccess ? 'YES' : 'NO');
+        if (accordAccess) {
+          console.log(`🎯 [INTERSECTION] AccordAccess details:`, accordAccess);
         }
       } else {
-        console.log(`❌ [INTERSECTION] API response not OK: ${response.status} ${response.statusText}`);
+        console.log(`❌ [INTERSECTION] No cached products found`);
+        throw new Error('No lender products in local cache - sync required');
       }
-    } catch (apiError) {
-      console.log(`⚠️ [INTERSECTION] API failed:`, apiError);
-      throw new Error(`API connection failed: ${apiError.message}`);
+    } catch (cacheError) {
+      console.log(`❌ [INTERSECTION] Cache access failed:`, cacheError);
+      throw new Error(`Local cache unavailable: ${cacheError.message}`);
     }
-    
-    // NO CACHE FALLBACK - API ONLY FOR TESTING
     
     if (allLenders.length === 0) {
       throw new Error('No lender products available');
