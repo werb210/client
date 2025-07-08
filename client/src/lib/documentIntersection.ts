@@ -30,46 +30,56 @@ export async function getDocumentRequirementsIntersection(
   fundingAmount: number
 ): Promise<DocumentIntersectionResult> {
   
+  console.log(`🔧 [INTERSECTION] ===== STARTING NEW TEST =====`);
   console.log(`🔧 [INTERSECTION] Called with:`, {
     selectedProductType,
     businessLocation,
     fundingAmount
+  });
+  console.log(`🔧 [INTERSECTION] Parameter types:`, {
+    selectedProductType: typeof selectedProductType,
+    businessLocation: typeof businessLocation,
+    fundingAmount: typeof fundingAmount
   });
   
   try {
     console.log('🔍 [INTERSECTION] Starting document requirements calculation...');
     console.log('Parameters:', { selectedProductType, businessLocation, fundingAmount });
 
-    // B. Fetch all lender products - try API first, then fallback to cache
+    // B. Fetch all lender products - FORCE API ONLY (no cache fallback for testing)
     let allLenders: LenderProduct[] = [];
     
     try {
+      console.log(`🌐 [INTERSECTION] Fetching from: ${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
+      console.log(`📡 [INTERSECTION] API Response status: ${response.status}`);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log(`📊 [INTERSECTION] API Response structure:`, Object.keys(data));
+        
         if (data.success && data.products) {
           allLenders = data.products;
           console.log(`📦 [INTERSECTION] Fetched ${allLenders.length} products from API`);
+          
+          // Check for AccordAccess specifically
+          const accordAccess = allLenders.find(p => p.name === 'AccordAccess');
+          console.log(`🎯 [INTERSECTION] AccordAccess found in API data:`, accordAccess ? 'YES' : 'NO');
+          if (accordAccess) {
+            console.log(`🎯 [INTERSECTION] AccordAccess details:`, accordAccess);
+          }
+        } else {
+          console.log(`❌ [INTERSECTION] API response invalid:`, data);
         }
+      } else {
+        console.log(`❌ [INTERSECTION] API response not OK: ${response.status} ${response.statusText}`);
       }
     } catch (apiError) {
-      console.log(`⚠️ [INTERSECTION] API failed, trying cache: ${apiError.message}`);
+      console.log(`⚠️ [INTERSECTION] API failed:`, apiError);
+      throw new Error(`API connection failed: ${apiError.message}`);
     }
     
-    // Fallback to IndexedDB cache if API fails
-    if (allLenders.length === 0) {
-      try {
-        const { get } = await import('idb-keyval');
-        const cachedProducts = await get('lender_products_cache');
-        if (cachedProducts && Array.isArray(cachedProducts)) {
-          allLenders = cachedProducts;
-          console.log(`📦 [INTERSECTION] Using cached ${allLenders.length} products`);
-        }
-      } catch (cacheError) {
-        console.log(`❌ [INTERSECTION] Cache failed: ${cacheError.message}`);
-        throw new Error('Unable to fetch lender products from API or cache');
-      }
-    }
+    // NO CACHE FALLBACK - API ONLY FOR TESTING
     
     if (allLenders.length === 0) {
       throw new Error('No lender products available');

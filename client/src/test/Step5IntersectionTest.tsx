@@ -63,6 +63,7 @@ export default function Step5IntersectionTest() {
     for (const scenario of testScenarios) {
       try {
         console.log(`🧪 Testing: ${scenario.name}`);
+        console.log(`🔧 Parameters: selectedProductType="${scenario.selectedProductType}", businessLocation="${scenario.businessLocation}", fundingAmount=${scenario.fundingAmount}`);
         
         const result = await getDocumentRequirementsIntersection(
           scenario.selectedProductType,
