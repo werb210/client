@@ -85,17 +85,21 @@ export async function getDocumentRequirementsIntersection(
 
     // C. Filter matching products
     const eligibleLenders = allLenders.filter(product => {
-      // Category match - handle multiple formats (working_capital, Working Capital, etc.)
-      const productCategory = product.category?.toLowerCase().replace(/\s+/g, '_');
-      const searchCategory = selectedProductType?.toLowerCase().replace(/\s+/g, '_');
+      // Category match - normalize both to compare properly
+      const productCategory = product.category?.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+      const searchCategory = selectedProductType?.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
       
-      // Multiple category matching approaches
+      // Also try direct string match and title case conversion
       const directMatch = product.category?.toLowerCase() === selectedProductType?.toLowerCase();
       const normalizedMatch = productCategory === searchCategory;
-      const underscoreToSpaceMatch = product.category === selectedProductType?.replace(/_/g, ' ');
-      const spaceToUnderscoreMatch = product.category?.replace(/\s+/g, '_').toLowerCase() === selectedProductType?.toLowerCase();
       
-      const categoryMatch = directMatch || normalizedMatch || underscoreToSpaceMatch || spaceToUnderscoreMatch;
+      // Convert search term to title case for DB comparison (working_capital -> Working Capital)
+      const titleCaseSearch = selectedProductType?.split(/[_\s-]/).map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      ).join(' ');
+      const titleCaseMatch = product.category === titleCaseSearch;
+      
+      const categoryMatch = directMatch || normalizedMatch || titleCaseMatch;
       
       // Country match
       const countryMatch = product.country === countryCode;
@@ -105,7 +109,7 @@ export async function getDocumentRequirementsIntersection(
       const maxAmount = product.amountMax || Number.MAX_SAFE_INTEGER;
       const amountMatch = minAmount <= fundingAmount && maxAmount >= fundingAmount;
 
-      console.log(`🔍 [INTERSECTION] ${product.name} (${product.lenderName}): category="${product.category}"→"${productCategory}" vs "${searchCategory}" = ${categoryMatch}, country="${product.country}" vs "${countryCode}" = ${countryMatch}, amount=${minAmount}-${maxAmount} vs ${fundingAmount} = ${amountMatch}`);
+      console.log(`🔍 [INTERSECTION] ${product.name} (${product.lenderName}): category="${product.category}"→"${productCategory}" vs "${searchCategory}" (titleCase: "${titleCaseSearch}") = ${categoryMatch}, country="${product.country}" vs "${countryCode}" = ${countryMatch}, amount=${minAmount}-${maxAmount} vs ${fundingAmount} = ${amountMatch}`);
       
       return categoryMatch && countryMatch && amountMatch;
     });
