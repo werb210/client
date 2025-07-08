@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { useFormDataContext } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { AutoSaveIndicator } from '@/components/AutoSaveIndicator';
 import { useDebounce } from 'use-debounce';
 import { useState, useEffect } from 'react';
 
@@ -65,16 +66,13 @@ export default function Step4ApplicantInfo() {
   const [debouncedFormData] = useDebounce(form.watch(), 2000);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  useAutoSave({
-    data: debouncedFormData,
-    onSave: (data) => {
-      dispatch({
-        type: 'UPDATE_FORM_DATA',
-        payload: data,
-      });
-      setHasUnsavedChanges(false);
-    },
-    enabled: hasUnsavedChanges,
+  const { status: autoSaveStatus, lastSaveTime } = useAutoSave({
+    key: 'borealFinancialApplicationAutoSave_step4',
+    data: { ...state, ...debouncedFormData, currentStep: 4 },
+    interval: 30000, // 30 seconds
+    delay: 2000, // 2 seconds after changes
+    maxAge: 72, // 72 hours
+    securitySteps: [5, 6] // Don't auto-restore to signature/submission steps
   });
 
   // Track form changes
@@ -123,9 +121,12 @@ export default function Step4ApplicantInfo() {
           {/* Primary Applicant Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-teal-700">
-                <User className="h-5 w-5" />
-                Primary Applicant Information
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-teal-700">
+                  <User className="h-5 w-5" />
+                  Primary Applicant Information
+                </div>
+                <AutoSaveIndicator status={autoSaveStatus} lastSaveTime={lastSaveTime} />
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">

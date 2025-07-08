@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Autosave Test - Browser Console</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Autosave System Test</h1>
+    <p>Open Developer Console (F12) to see detailed results</p>
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = message;
+            document.getElementById('results').appendChild(div);
+            console.log(message);
+        }
+
+        function testAutosave() {
+            console.log('🔍 Testing Autosave Functionality in Browser Environment\n');
+            
+            const autosaveKey = 'borealFinancialApplicationAutoSave';
+            let results = [];
+            
+            // Check localStorage for autosave data
+            const savedData = localStorage.getItem(autosaveKey);
+            
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    results.push('✅ Autosave data found in localStorage');
+                    results.push(`📊 Data size: ${savedData.length} characters`);
+                    results.push(`📅 Last saved: ${parsed.lastSaved || 'Unknown'}`);
+                    results.push(`📍 Current step: ${parsed.currentStep || 'Unknown'}`);
+                    
+                    const fieldCount = Object.keys(parsed).length;
+                    results.push(`📋 Total fields: ${fieldCount}`);
+                    
+                    // Check if data is recent
+                    if (parsed.lastSaved) {
+                        const saveTime = new Date(parsed.lastSaved);
+                        const now = new Date();
+                        const minutesAgo = Math.round((now.getTime() - saveTime.getTime()) / (1000 * 60));
+                        results.push(`⏰ Data age: ${minutesAgo} minutes ago`);
+                        
+                        if (minutesAgo < 60) {
+                            results.push('✅ Data is recent (less than 1 hour old)');
+                            addResult('Autosave data found and is recent', 'success');
+                        } else {
+                            results.push('⚠️ Data is older than 1 hour');
+                            addResult('Autosave data found but is old', 'warning');
+                        }
+                    }
+                    
+                    // Show sample fields
+                    const sampleFields = Object.keys(parsed)
+                        .filter(key => !['lastSaved', 'currentStep'].includes(key))
+                        .slice(0, 5);
+                    if (sampleFields.length > 0) {
+                        results.push(`🔍 Sample fields: ${sampleFields.join(', ')}`);
+                    }
+                    
+                } catch (error) {
+                    results.push('❌ Error parsing autosave data: ' + error.message);
+                    addResult('Error parsing autosave data', 'error');
+                }
+            } else {
+                results.push('❌ No autosave data found in localStorage');
+                results.push(`🔍 Expected key: ${autosaveKey}`);
+                addResult('No autosave data found - fill out some form fields first', 'warning');
+            }
+            
+            // Show all localStorage items
+            results.push('\n🔍 All localStorage items:');
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key) {
+                    const value = localStorage.getItem(key);
+                    results.push(`  ${key}: ${value ? value.length : 0} characters`);
+                }
+            }
+            
+            // Test autosave creation
+            results.push('\n🧪 Testing autosave creation...');
+            const testData = {
+                currentStep: 1,
+                businessLocation: 'canada',
+                lookingFor: 'capital',
+                fundingAmount: '40000',
+                lastSaved: new Date().toISOString()
+            };
+            
+            try {
+                localStorage.setItem(autosaveKey + '_test', JSON.stringify(testData));
+                results.push('✅ Test autosave data created successfully');
+                
+                // Verify it can be read back
+                const retrieved = localStorage.getItem(autosaveKey + '_test');
+                if (retrieved) {
+                    const parsed = JSON.parse(retrieved);
+                    results.push('✅ Test autosave data retrieved successfully');
+                    addResult('Autosave system is working correctly', 'success');
+                } else {
+                    results.push('❌ Could not retrieve test autosave data');
+                    addResult('Autosave system may have issues', 'error');
+                }
+                
+                // Clean up test data
+                localStorage.removeItem(autosaveKey + '_test');
+                results.push('🧹 Test data cleaned up');
+                
+            } catch (error) {
+                results.push('❌ Error creating test autosave data: ' + error.message);
+                addResult('Autosave system error: ' + error.message, 'error');
+            }
+            
+            // Log all results
+            results.forEach(result => console.log(result));
+            
+            // Summary
+            console.log('\n📋 AUTOSAVE SYSTEM STATUS:');
+            if (savedData) {
+                console.log('✅ WORKING - Autosave data exists and system functional');
+                addResult('SUMMARY: Autosave system is working', 'success');
+            } else {
+                console.log('⚠️ NO DATA - System appears functional but no data saved yet');
+                addResult('SUMMARY: System ready, no data saved yet', 'warning');
+            }
+            
+            console.log('\n💡 HOW TO TEST:');
+            console.log('1. Go to the application (/apply/step-1)');
+            console.log('2. Fill out some form fields');
+            console.log('3. Wait 2-30 seconds for autosave');
+            console.log('4. Look for "💾 Auto-saved form data" in console');
+            console.log('5. Run this test again to see saved data');
+        }
+
+        // Run the test when page loads
+        document.addEventListener('DOMContentLoaded', testAutosave);
+    </script>
+</body>
+</html>
