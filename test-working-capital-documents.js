@@ -4,95 +4,82 @@
  */
 
 async function testWorkingCapitalDocuments() {
-  console.log('🧪 Testing Working Capital Document Requirements with Intersection Logic');
-  console.log('=' * 70);
-
+  console.log('🔍 Testing Working Capital Document Requirements\n');
+  
+  const testParams = {
+    selectedProductType: 'working_capital',
+    businessLocation: 'canada', 
+    fundingAmount: 40000
+  };
+  
+  console.log('Test parameters:', testParams);
+  
   try {
-    // Test Parameters: Canadian Working Capital $40,000 (matching your specification)
-    const testParams = {
-      selectedProductType: 'Working Capital',
-      businessLocation: 'canada',
-      fundingAmount: 40000
-    };
-
-    console.log('📋 Test Parameters:');
-    console.log(`   Product Type: ${testParams.selectedProductType}`);
-    console.log(`   Location: ${testParams.businessLocation}`);
-    console.log(`   Amount: $${testParams.fundingAmount.toLocaleString()}`);
-
-    // Call our new intersection logic
-    const response = await fetch('http://localhost:5000/api/public/lenders');
-    const data = await response.json();
-    
-    if (!data.success || !data.products) {
-      throw new Error('Failed to fetch lender products');
+    // Fetch products from correct API
+    const response = await fetch('https://staff.boreal.financial/api/public/lenders');
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
     }
-
-    const allLenders = data.products;
-    console.log(`\n🌐 Fetched ${allLenders.length} total lender products`);
-
-    // Apply filtering logic (same as in documentIntersection.ts)
-    const countryCode = testParams.businessLocation === 'canada' ? 'CA' : 'US';
     
+    const data = await response.json();
+    if (!data.success || !data.products) {
+      throw new Error('Invalid API response');
+    }
+    
+    const allLenders = data.products;
+    console.log(`📦 Found ${allLenders.length} total products\n`);
+    
+    // Apply the same filtering logic as intersection
+    const countryCode = 'CA'; // canada → CA
     const eligibleLenders = allLenders.filter(product => {
-      const categoryMatch = product.category?.toLowerCase() === testParams.selectedProductType.toLowerCase();
+      // Category match
+      const productCategory = product.category?.toLowerCase().replace(/\s+/g, '_');
+      const searchCategory = 'working_capital';
+      const categoryMatch = productCategory === searchCategory || 
+                           product.category?.toLowerCase() === 'working capital';
+      
+      // Country match
       const countryMatch = product.country === countryCode;
-      const amountMatch = product.amountMin <= testParams.fundingAmount && product.amountMax >= testParams.fundingAmount;
+      
+      // Amount range match with safe defaults
+      const minAmount = product.amountMin || 0;
+      const maxAmount = product.amountMax || Number.MAX_SAFE_INTEGER;
+      const amountMatch = minAmount <= 40000 && maxAmount >= 40000;
+      
+      console.log(`🔍 ${product.name} (${product.lenderName}):`);
+      console.log(`   Category: "${product.category}" → "${productCategory}" vs "${searchCategory}" = ${categoryMatch}`);
+      console.log(`   Country: "${product.country}" vs "${countryCode}" = ${countryMatch}`);
+      console.log(`   Amount: ${minAmount}-${maxAmount} vs 40000 = ${amountMatch}`);
+      console.log(`   Match: ${categoryMatch && countryMatch && amountMatch}\n`);
       
       return categoryMatch && countryMatch && amountMatch;
     });
-
-    console.log(`\n✅ Found ${eligibleLenders.length} eligible lenders:`);
-    eligibleLenders.forEach((lender, index) => {
-      console.log(`   ${index + 1}. ${lender.lenderName}: ${lender.name}`);
-      console.log(`      Amount: $${lender.amountMin?.toLocaleString()} - $${lender.amountMax?.toLocaleString()}`);
-      console.log(`      Documents: [${lender.requiredDocuments?.join(', ') || 'None specified'}]`);
+    
+    console.log(`✅ Found ${eligibleLenders.length} eligible lenders:`);
+    eligibleLenders.forEach(lender => {
+      console.log(`   ${lender.lenderName}: ${lender.name}`);
+      console.log(`     Documents: ${lender.requiredDocuments?.join(', ') || 'None specified'}`);
     });
-
-    if (eligibleLenders.length === 0) {
-      console.log('\n❌ No matching lenders found for criteria');
-      return;
-    }
-
-    // Calculate document intersection
-    const allRequiredDocs = eligibleLenders.map(product => product.requiredDocuments || []);
-    console.log('\n📄 Document lists from each lender:');
-    allRequiredDocs.forEach((docs, index) => {
-      console.log(`   ${eligibleLenders[index].lenderName}: [${docs.join(', ')}]`);
-    });
-
-    // Compute intersection
-    let requiredDocuments = allRequiredDocs[0] || [];
-    for (let i = 1; i < allRequiredDocs.length; i++) {
-      requiredDocuments = requiredDocuments.filter(doc => 
-        allRequiredDocs[i].includes(doc)
+    
+    if (eligibleLenders.length > 0) {
+      // Calculate intersection of required documents
+      const allDocuments = eligibleLenders.map(l => l.requiredDocuments || []);
+      const intersection = allDocuments.reduce((common, docs) => 
+        common.filter(doc => docs.includes(doc))
       );
+      
+      console.log(`\n📋 Common documents required by ALL ${eligibleLenders.length} lenders:`);
+      if (intersection.length > 0) {
+        intersection.forEach(doc => console.log(`   ✓ ${doc}`));
+      } else {
+        console.log('   No common documents required by all lenders');
+      }
     }
-
-    console.log('\n🎯 FINAL DOCUMENT INTERSECTION:');
-    if (requiredDocuments.length > 0) {
-      console.log(`   ✅ ${requiredDocuments.length} documents required by ALL matching lenders:`);
-      requiredDocuments.forEach((doc, index) => {
-        console.log(`   ${index + 1}. ${doc}`);
-      });
-    } else {
-      console.log('   ❌ No documents are required by ALL matching lenders');
-      console.log('   📝 Users would need to review individual lender requirements');
-    }
-
-    // Summary
-    console.log('\n📊 SUMMARY:');
-    console.log(`   Matching Lenders: ${eligibleLenders.length}`);
-    console.log(`   Document Intersection: ${requiredDocuments.length} documents`);
-    console.log(`   Result: ${requiredDocuments.length > 0 ? 'SUCCESS - Common documents found' : 'INFO - No common documents'}`);
-
+    
   } catch (error) {
-    console.error('❌ Test Error:', error.message);
+    console.error('❌ Error:', error.message);
   }
-
-  console.log('\n' + '=' * 70);
-  console.log('🏁 Working Capital Document Requirements Test Complete');
 }
 
 // Run the test
-testWorkingCapitalDocuments().catch(console.error);
+testWorkingCapitalDocuments();

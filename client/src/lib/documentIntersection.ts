@@ -38,7 +38,7 @@ export async function getDocumentRequirementsIntersection(
     let allLenders: LenderProduct[] = [];
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/lenders`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.products) {
@@ -88,10 +88,12 @@ export async function getDocumentRequirementsIntersection(
       // Country match
       const countryMatch = product.country === countryCode;
       
-      // Amount range match
-      const amountMatch = product.amountMin <= fundingAmount && product.amountMax >= fundingAmount;
+      // Amount range match - handle undefined/null amounts gracefully
+      const minAmount = product.amountMin || 0;
+      const maxAmount = product.amountMax || Number.MAX_SAFE_INTEGER;
+      const amountMatch = minAmount <= fundingAmount && maxAmount >= fundingAmount;
 
-      console.log(`🔍 [INTERSECTION] ${product.name} (${product.lenderName}): category="${product.category}"→"${productCategory}" vs "${searchCategory}" = ${categoryMatch}, country="${product.country}" vs "${countryCode}" = ${countryMatch}, amount=${product.amountMin}-${product.amountMax} vs ${fundingAmount} = ${amountMatch}`);
+      console.log(`🔍 [INTERSECTION] ${product.name} (${product.lenderName}): category="${product.category}"→"${productCategory}" vs "${searchCategory}" = ${categoryMatch}, country="${product.country}" vs "${countryCode}" = ${countryMatch}, amount=${minAmount}-${maxAmount} vs ${fundingAmount} = ${amountMatch}`);
       
       return categoryMatch && countryMatch && amountMatch;
     });
