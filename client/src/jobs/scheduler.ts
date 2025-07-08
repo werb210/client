@@ -110,7 +110,7 @@ export async function triggerManualSync(): Promise<any> {
   
   try {
     // Enhanced debug: Test direct API call first
-    const staffUrl = 'https://staffportal.replit.app/api/public/lenders';
+    const staffUrl = `${import.meta.env.VITE_API_BASE_URL}/public/lenders`;
     console.log('[DEBUG] Testing direct API call to:', staffUrl);
     
     const testResponse = await fetch(staffUrl, {

@@ -30,6 +30,12 @@ export async function getDocumentRequirementsIntersection(
   fundingAmount: number
 ): Promise<DocumentIntersectionResult> {
   
+  console.log(`🔧 [INTERSECTION] Called with:`, {
+    selectedProductType,
+    businessLocation,
+    fundingAmount
+  });
+  
   try {
     console.log('🔍 [INTERSECTION] Starting document requirements calculation...');
     console.log('Parameters:', { selectedProductType, businessLocation, fundingAmount });

@@ -1,284 +1,253 @@
-/**
- * Step 5 Intersection Test Component
- * Tests the client-side document intersection logic
- */
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 import { getDocumentRequirementsIntersection } from '@/lib/documentIntersection';
-import { CheckCircle, AlertTriangle, Calculator, Play } from 'lucide-react';
 
-export default function Step5IntersectionTest() {
-  const [testParams, setTestParams] = useState({
+interface TestScenario {
+  name: string;
+  selectedProductType: string;
+  businessLocation: string;
+  fundingAmount: number;
+  expectedLenders?: string[];
+  expectedDocuments?: string[];
+}
+
+const testScenarios: TestScenario[] = [
+  {
+    name: 'Canadian Working Capital $40K (AccordAccess)',
     selectedProductType: 'Working Capital',
     businessLocation: 'canada',
-    fundingAmount: 40000
-  });
+    fundingAmount: 40000,
+    expectedLenders: ['AccordAccess'],
+    expectedDocuments: ['Bank Statements']
+  },
+  {
+    name: 'US Working Capital $100K',
+    selectedProductType: 'Working Capital',
+    businessLocation: 'united-states',
+    fundingAmount: 100000
+  },
+  {
+    name: 'Canadian Equipment Financing $75K',
+    selectedProductType: 'Equipment Financing',
+    businessLocation: 'canada',
+    fundingAmount: 75000
+  },
+  {
+    name: 'US Term Loan $200K',
+    selectedProductType: 'Term Loan',
+    businessLocation: 'united-states',
+    fundingAmount: 200000
+  }
+];
 
-  const [results, setResults] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
+interface TestResult {
+  scenario: TestScenario;
+  result: any;
+  success: boolean;
+  error?: string;
+}
 
-  const handleRunTest = async () => {
-    setIsLoading(true);
-    setResults(null);
+export default function Step5IntersectionTest() {
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
 
-    try {
-      console.log('🧪 [TEST] Running intersection test with params:', testParams);
-      
-      const intersectionResults = await getDocumentRequirementsIntersection(
-        testParams.selectedProductType,
-        testParams.businessLocation,
-        testParams.fundingAmount
-      );
+  const runTests = async () => {
+    setIsRunning(true);
+    setTestResults([]);
 
-      setResults(intersectionResults);
-      console.log('🧪 [TEST] Results:', intersectionResults);
+    const results: TestResult[] = [];
 
-    } catch (error) {
-      console.error('🧪 [TEST] Error:', error);
-      setResults({
-        eligibleLenders: [],
-        requiredDocuments: [],
-        message: `Test Error: ${error.message}`,
-        hasMatches: false
-      });
-    } finally {
-      setIsLoading(false);
+    for (const scenario of testScenarios) {
+      try {
+        console.log(`🧪 Testing: ${scenario.name}`);
+        
+        const result = await getDocumentRequirementsIntersection(
+          scenario.selectedProductType,
+          scenario.businessLocation,
+          scenario.fundingAmount
+        );
+
+        const success = result.hasMatches && result.eligibleLenders.length > 0;
+        
+        // Check expectations if provided
+        let expectationsMet = true;
+        if (scenario.expectedLenders) {
+          const actualLenderNames = result.eligibleLenders.map(l => l.name);
+          expectationsMet = scenario.expectedLenders.every(expected => 
+            actualLenderNames.includes(expected)
+          );
+        }
+
+        results.push({
+          scenario,
+          result,
+          success: success && expectationsMet,
+          error: !expectationsMet ? 'Expected lenders not found' : undefined
+        });
+
+      } catch (error) {
+        console.error(`❌ Test failed for ${scenario.name}:`, error);
+        results.push({
+          scenario,
+          result: null,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
     }
+
+    setTestResults(results);
+    setIsRunning(false);
   };
 
-  // Test scenarios
-  const testScenarios = [
-    {
-      name: 'Canadian Working Capital $40K',
-      params: {
-        selectedProductType: 'Working Capital',
-        businessLocation: 'canada',
-        fundingAmount: 40000
-      }
-    },
-    {
-      name: 'US Business Line of Credit $100K',
-      params: {
-        selectedProductType: 'Business Line of Credit',
-        businessLocation: 'united-states',
-        fundingAmount: 100000
-      }
-    },
-    {
-      name: 'Canadian Term Loan $25K',
-      params: {
-        selectedProductType: 'Term Loan',
-        businessLocation: 'canada',
-        fundingAmount: 25000
-      }
-    },
-    {
-      name: 'US Equipment Financing $75K',
-      params: {
-        selectedProductType: 'Equipment Financing',
-        businessLocation: 'united-states',
-        fundingAmount: 75000
-      }
-    }
-  ];
+  useEffect(() => {
+    runTests();
+  }, []);
+
+  const successCount = testResults.filter(r => r.success).length;
+  const totalTests = testResults.length;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 space-y-6">
-        {/* Header */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Calculator className="w-6 h-6 text-blue-600" />
-              <span>Step 5 Document Intersection Logic Test</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600">
-              Test the client-side document intersection logic that filters matching lenders 
-              and computes the intersection of their required documents.
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Test Parameters */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Parameters</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Product Type</label>
-                <Select
-                  value={testParams.selectedProductType}
-                  onValueChange={(value) => setTestParams(prev => ({ ...prev, selectedProductType: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Working Capital">Working Capital</SelectItem>
-                    <SelectItem value="Business Line of Credit">Business Line of Credit</SelectItem>
-                    <SelectItem value="Term Loan">Term Loan</SelectItem>
-                    <SelectItem value="Equipment Financing">Equipment Financing</SelectItem>
-                    <SelectItem value="Invoice Factoring">Invoice Factoring</SelectItem>
-                    <SelectItem value="Asset-Based Lending">Asset-Based Lending</SelectItem>
-                    <SelectItem value="Purchase Order Financing">Purchase Order Financing</SelectItem>
-                  </SelectContent>
-                </Select>
+    <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Step 5 Document Intersection Tests</span>
+            <Button 
+              onClick={runTests} 
+              disabled={isRunning}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRunning ? 'animate-spin' : ''}`} />
+              {isRunning ? 'Running...' : 'Run Tests'}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {testResults.length > 0 && (
+            <div className="mb-4">
+              <div className="text-lg font-semibold">
+                Results: {successCount}/{totalTests} tests passed
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Business Location</label>
-                <Select
-                  value={testParams.businessLocation}
-                  onValueChange={(value) => setTestParams(prev => ({ ...prev, businessLocation: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="canada">Canada</SelectItem>
-                    <SelectItem value="united-states">United States</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Funding Amount ($)</label>
-                <Input
-                  type="number"
-                  value={testParams.fundingAmount}
-                  onChange={(e) => setTestParams(prev => ({ ...prev, fundingAmount: parseInt(e.target.value) || 0 }))}
-                  placeholder="40000"
-                />
+              <div className="text-sm text-gray-600">
+                {successCount === totalTests ? 
+                  '🎉 All tests passing!' : 
+                  `⚠️ ${totalTests - successCount} tests failed`
+                }
               </div>
             </div>
+          )}
 
-            <div className="flex space-x-2">
-              <Button onClick={handleRunTest} disabled={isLoading} className="flex items-center space-x-2">
-                <Play className="w-4 h-4" />
-                <span>{isLoading ? 'Testing...' : 'Run Intersection Test'}</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Test Scenarios */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Test Scenarios</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {testScenarios.map((scenario, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  onClick={() => {
-                    setTestParams(scenario.params);
-                    setTimeout(() => handleRunTest(), 100);
-                  }}
-                  className="text-left justify-start h-auto p-3"
-                >
-                  <div>
-                    <div className="font-medium">{scenario.name}</div>
-                    <div className="text-xs text-gray-500">
-                      {scenario.params.selectedProductType} • {scenario.params.businessLocation} • ${scenario.params.fundingAmount.toLocaleString()}
+          <div className="space-y-4">
+            {testResults.map((testResult, index) => (
+              <Card key={index} className={`border-l-4 ${testResult.success ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center justify-between text-base">
+                    <span>{testResult.scenario.name}</span>
+                    {testResult.success ? (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <AlertTriangle className="h-5 w-5 text-red-600" />
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Test Parameters */}
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2">Test Parameters</h4>
+                      <div className="text-sm space-y-1">
+                        <div><strong>Product Type:</strong> {testResult.scenario.selectedProductType}</div>
+                        <div><strong>Location:</strong> {testResult.scenario.businessLocation}</div>
+                        <div><strong>Amount:</strong> ${testResult.scenario.fundingAmount.toLocaleString()}</div>
+                      </div>
                     </div>
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Test Results */}
-        {results && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                {results.hasMatches ? (
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                ) : (
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
-                )}
-                <span>Test Results</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {results.hasMatches ? (
-                <div className="space-y-4">
-                  {/* Matching Lenders */}
-                  <div>
-                    <h4 className="font-semibold mb-2">
-                      Eligible Lenders ({results.eligibleLenders.length}):
-                    </h4>
-                    <div className="space-y-2">
-                      {results.eligibleLenders.map((lender, index) => (
-                        <div key={index} className="p-3 bg-blue-50 rounded-lg">
-                          <div className="font-medium">{lender.lenderName}: {lender.name}</div>
-                          <div className="text-sm text-gray-600">
-                            Category: {lender.category} • 
-                            Amount: ${lender.amountMin?.toLocaleString()} - ${lender.amountMax?.toLocaleString()} • 
-                            Country: {lender.country}
+                    {/* Results */}
+                    <div>
+                      <h4 className="font-semibold text-sm mb-2">Results</h4>
+                      {testResult.error ? (
+                        <div className="text-red-600 text-sm">{testResult.error}</div>
+                      ) : testResult.result ? (
+                        <div className="text-sm space-y-2">
+                          <div>
+                            <strong>Matches:</strong> {testResult.result.eligibleLenders.length}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Required Documents: [{lender.requiredDocuments?.join(', ') || 'None'}]
+                          {testResult.result.eligibleLenders.length > 0 && (
+                            <div>
+                              <strong>Lenders:</strong>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {testResult.result.eligibleLenders.map((lender, idx) => (
+                                  <Badge key={idx} variant="outline" className="text-xs">
+                                    {lender.name} ({lender.lenderName})
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {testResult.result.requiredDocuments.length > 0 && (
+                            <div>
+                              <strong>Required Documents:</strong>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {testResult.result.requiredDocuments.map((doc, idx) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    {doc}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-500">
+                            {testResult.result.message}
                           </div>
                         </div>
-                      ))}
+                      ) : (
+                        <div className="text-gray-500 text-sm">No result data</div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Document Intersection */}
-                  <div>
-                    <h4 className="font-semibold mb-2">
-                      Document Intersection ({results.requiredDocuments.length} documents):
-                    </h4>
-                    {results.requiredDocuments.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {results.requiredDocuments.map((doc, index) => (
-                          <Badge key={index} variant="default" className="p-2 justify-start">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            {doc}
-                          </Badge>
-                        ))}
+                  {/* Expected vs Actual */}
+                  {testResult.scenario.expectedLenders && (
+                    <div className="mt-4 p-3 bg-gray-50 rounded">
+                      <h4 className="font-semibold text-sm mb-2">Expected vs Actual</h4>
+                      <div className="text-sm">
+                        <div><strong>Expected Lenders:</strong> {testResult.scenario.expectedLenders.join(', ')}</div>
+                        <div><strong>Actual Lenders:</strong> {testResult.result?.eligibleLenders?.map(l => l.name).join(', ') || 'None'}</div>
+                        {testResult.scenario.expectedDocuments && (
+                          <>
+                            <div><strong>Expected Documents:</strong> {testResult.scenario.expectedDocuments.join(', ')}</div>
+                            <div><strong>Actual Documents:</strong> {testResult.result?.requiredDocuments?.join(', ') || 'None'}</div>
+                          </>
+                        )}
                       </div>
-                    ) : (
-                      <Alert variant="destructive">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertDescription>
-                          No documents are required by ALL matching lenders.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                  </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-                  {/* Message */}
-                  <Alert>
-                    <AlertDescription>{results.message}</AlertDescription>
-                  </Alert>
-                </div>
-              ) : (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>No Matches:</strong> {results.message}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      {/* Debug Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Debug Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm font-mono bg-gray-100 p-4 rounded">
+            <div>API Endpoint: {import.meta.env.VITE_API_BASE_URL}/public/lenders</div>
+            <div>Test Environment: {import.meta.env.NODE_ENV}</div>
+            <div>Timestamp: {new Date().toISOString()}</div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

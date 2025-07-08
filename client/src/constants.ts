@@ -5,7 +5,7 @@
  */
 
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://staff.boreal.financial/api';
 
 // Staff API Configuration
 export const STAFF_API_BASE_URL = API_BASE_URL;
