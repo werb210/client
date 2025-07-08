@@ -57,8 +57,11 @@ export async function getDocumentRequirementsIntersection(
 
     // C. Filter matching products
     const eligibleLenders = allLenders.filter(product => {
-      // Category match
-      const categoryMatch = product.category?.toLowerCase() === selectedProductType?.toLowerCase();
+      // Category match - handle multiple formats (working_capital, Working Capital, etc.)
+      const productCategory = product.category?.toLowerCase().replace(/\s+/g, '_');
+      const searchCategory = selectedProductType?.toLowerCase().replace(/\s+/g, '_');
+      const categoryMatch = productCategory === searchCategory || 
+                           product.category?.toLowerCase() === selectedProductType?.toLowerCase();
       
       // Country match
       const countryMatch = product.country === countryCode;
@@ -66,7 +69,7 @@ export async function getDocumentRequirementsIntersection(
       // Amount range match
       const amountMatch = product.amountMin <= fundingAmount && product.amountMax >= fundingAmount;
 
-      console.log(`🔍 [INTERSECTION] ${product.name}: category=${categoryMatch}, country=${countryMatch}, amount=${amountMatch}`);
+      console.log(`🔍 [INTERSECTION] ${product.name} (${product.lenderName}): category="${product.category}"→"${productCategory}" vs "${searchCategory}" = ${categoryMatch}, country="${product.country}" vs "${countryCode}" = ${countryMatch}, amount=${product.amountMin}-${product.amountMax} vs ${fundingAmount} = ${amountMatch}`);
       
       return categoryMatch && countryMatch && amountMatch;
     });

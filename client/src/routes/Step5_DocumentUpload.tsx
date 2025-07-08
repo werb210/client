@@ -360,6 +360,12 @@ export default function Step5DocumentUpload() {
                 <span className="text-sm mt-1 block">
                   Please review your selection in previous steps or contact support.
                 </span>
+                <br />
+                <span className="text-xs text-gray-500 mt-2 block">
+                  Debug: hasMatches={intersectionResults.hasMatches.toString()}, 
+                  eligibleLenders={intersectionResults.eligibleLenders.length}, 
+                  requiredDocs={intersectionResults.requiredDocuments.length}
+                </span>
               </AlertDescription>
             </Alert>
           )}
