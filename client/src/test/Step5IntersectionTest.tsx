@@ -172,7 +172,7 @@ export default function Step5IntersectionTest() {
                     <div>
                       <h4 className="font-semibold text-sm mb-2">Results</h4>
                       {testResult.error ? (
-                        <div className="text-red-600 text-sm">{testResult.error}</div>
+                        <div className="text-red-600 text-sm">{String(testResult.error)}</div>
                       ) : testResult.result ? (
                         <div className="text-sm space-y-2">
                           <div>

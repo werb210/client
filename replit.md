@@ -750,6 +750,13 @@ Changelog:
   - July 07, 2025: ✅ DOCUMENT UPLOAD BYPASS SYSTEM IMPLEMENTATION COMPLETE
   * **BYPASS BANNER**: Added ProceedBypassBanner component to Step 5 allowing users to skip document upload
   * **WARNING SYSTEM**: Created DocumentWarningBanner that appears app-wide when documents are bypassed
+  - July 08, 2025: ✅ CRITICAL API ENDPOINT MISMATCH RESOLUTION COMPLETE
+  * **ROOT CAUSE FIXED**: Updated hardcoded URLs from staffportal.replit.app to staff.boreal.financial across scheduler.ts, constants.ts, and .env.staging
+  * **ENVIRONMENT VARIABLE UNIFICATION**: Fixed mismatch between VITE_STAFF_API_URL and VITE_API_BASE_URL usage
+  * **STEP 5 INTERSECTION FIX**: Resolved Step 5 document intersection failures by updating all API endpoints to production URL
+  * **ACCORDACCESS VERIFICATION**: Confirmed AccordAccess product availability for Canadian $40K Working Capital scenarios
+  * **SCHEMA HEALTH CHECK**: Created comprehensive test suite validating all 40 authentic lender products load correctly
+  * **PRODUCTION API INTEGRATION**: Successfully migrated from development staffportal.replit.app to production staff.boreal.financial/api
   * **LATE UPLOAD FLOW**: Built LateUpload route (/upload-documents/:id) for post-application document submission
   * **COMPLETION PAGE**: Created UploadComplete confirmation page for successful late uploads
   * **SCHEMA ENHANCEMENT**: Added bypassedDocuments boolean field to unified ApplicationForm schema
