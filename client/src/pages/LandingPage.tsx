@@ -51,7 +51,12 @@ export default function LandingPage() {
       console.log(`[LANDING] Maximum funding amount: $${maxAmount.toLocaleString()}`);
       
       if (maxAmount >= 1000000) {
-        return `$${Math.floor(maxAmount / 1000000)}M+`;
+        const millions = maxAmount / 1000000;
+        if (millions >= 10) {
+          return `$${Math.floor(millions)}M+`;
+        } else {
+          return `$${millions.toFixed(1)}M+`;
+        }
       } else if (maxAmount >= 1000) {
         return `$${Math.floor(maxAmount / 1000)}K+`;
       }
