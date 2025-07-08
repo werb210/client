@@ -146,10 +146,11 @@ export default function Step5DocumentUpload() {
 
       } catch (error) {
         console.error('❌ [STEP5] Error calculating document requirements:', error);
+        console.error('❌ [STEP5] Error details:', error.message, error.stack);
         setIntersectionResults({
           eligibleLenders: [],
           requiredDocuments: [],
-          message: `Error: ${error.message}`,
+          message: `Error: ${error?.message || 'Unknown error occurred'}`,
           hasMatches: false,
           isLoading: false
         });
