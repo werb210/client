@@ -34,18 +34,40 @@ export async function getDocumentRequirementsIntersection(
     console.log('🔍 [INTERSECTION] Starting document requirements calculation...');
     console.log('Parameters:', { selectedProductType, businessLocation, fundingAmount });
 
-    // B. Fetch all lender products
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/lenders`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch lenders: ${response.statusText}`);
+    // B. Fetch all lender products - try API first, then fallback to cache
+    let allLenders: LenderProduct[] = [];
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/lenders`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.products) {
+          allLenders = data.products;
+          console.log(`📦 [INTERSECTION] Fetched ${allLenders.length} products from API`);
+        }
+      }
+    } catch (apiError) {
+      console.log(`⚠️ [INTERSECTION] API failed, trying cache: ${apiError.message}`);
     }
-
-    const data = await response.json();
-    if (!data.success || !data.products) {
-      throw new Error('Invalid API response structure');
+    
+    // Fallback to IndexedDB cache if API fails
+    if (allLenders.length === 0) {
+      try {
+        const { get } = await import('idb-keyval');
+        const cachedProducts = await get('lender_products_cache');
+        if (cachedProducts && Array.isArray(cachedProducts)) {
+          allLenders = cachedProducts;
+          console.log(`📦 [INTERSECTION] Using cached ${allLenders.length} products`);
+        }
+      } catch (cacheError) {
+        console.log(`❌ [INTERSECTION] Cache failed: ${cacheError.message}`);
+        throw new Error('Unable to fetch lender products from API or cache');
+      }
     }
-
-    const allLenders: LenderProduct[] = data.products;
+    
+    if (allLenders.length === 0) {
+      throw new Error('No lender products available');
+    }
     console.log(`📦 [INTERSECTION] Fetched ${allLenders.length} total products`);
 
     // Map business location to country code
