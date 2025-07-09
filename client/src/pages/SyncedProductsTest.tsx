@@ -23,11 +23,27 @@ export default function SyncedProductsTest() {
   const { data: products = [], isLoading, error } = useQuery<Product[]>({
     queryKey: ['synced-products-test'],
     queryFn: async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
-      if (!res.ok) throw new Error('Failed to fetch lender products');
-      const data = await res.json();
-      console.log("🎯 SYNCED PRODUCTS TEST - Raw Data:", data);
-      return data.products || data || [];
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`).catch(fetchError => {
+          console.warn('[SYNCED_PRODUCTS_TEST] Network error:', fetchError.message);
+          throw new Error(`Network error: ${fetchError.message}`);
+        });
+        
+        if (!res.ok) {
+          console.warn('[SYNCED_PRODUCTS_TEST] API error:', res.status, res.statusText);
+          throw new Error(`API error: ${res.status} ${res.statusText}`);
+        }
+        
+        const data = await res.json().catch(jsonError => {
+          throw new Error(`Invalid JSON response: ${jsonError.message}`);
+        });
+        
+        console.log("🎯 SYNCED PRODUCTS TEST - Raw Data:", data);
+        return data.products || data || [];
+      } catch (error) {
+        console.warn('[SYNCED_PRODUCTS_TEST] Query failed:', error instanceof Error ? error.message : error);
+        return [];
+      }
     },
     staleTime: 1000 * 60 * 5,
   });

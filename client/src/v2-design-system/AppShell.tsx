@@ -5,6 +5,7 @@ import { ApplicationProvider } from "@/context/ApplicationContext";
 import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
 import { DocumentWarningBanner } from "@/components/DocumentWarningBanner";
 import { CookieManager } from "@/components/CookieManager";
+import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 
 // Create query client instance
 const queryClient = new QueryClient({
@@ -28,17 +29,19 @@ interface AppShellProps {
  */
 export function AppShell({ children }: AppShellProps) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <FormDataProvider>
-        <ApplicationProvider>
-          <ComprehensiveFormProvider>
-            <DocumentWarningBanner />
-            {children}
-            <Toaster />
-            <CookieManager />
-          </ComprehensiveFormProvider>
-        </ApplicationProvider>
-      </FormDataProvider>
-    </QueryClientProvider>
+    <GlobalErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <FormDataProvider>
+          <ApplicationProvider>
+            <ComprehensiveFormProvider>
+              <DocumentWarningBanner />
+              {children}
+              <Toaster />
+              <CookieManager />
+            </ComprehensiveFormProvider>
+          </ApplicationProvider>
+        </FormDataProvider>
+      </QueryClientProvider>
+    </GlobalErrorBoundary>
   );
 }

@@ -8,10 +8,27 @@ import { runStartupVerification } from "./test/staffDatabaseVerification";
 // Initialize finalized production sync system
 import { syncLenderProducts } from "./lib/finalizedLenderSync";
 
-// Add global error handler for unhandled promise rejections
+// Enhanced global error handler for unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
-  console.warn('[GLOBAL] Unhandled promise rejection:', event.reason?.message || event.reason);
-  event.preventDefault(); // Prevent default behavior
+  console.error('🚨 Unhandled Promise Rejection:', event.reason?.message || event.reason);
+  
+  // In development, provide detailed debugging information
+  if (import.meta.env.DEV) {
+    console.error('[DEV] Promise rejection details:', {
+      reason: event.reason,
+      stack: event.reason?.stack,
+      promise: event.promise,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Log specific error types for debugging
+    if (event.reason?.message?.includes('Failed to fetch')) {
+      console.error('[DEV] Network error detected - check API endpoints and connectivity');
+      console.error('[DEV] Consider implementing retry logic or fallback mechanisms');
+    }
+  }
+  
+  event.preventDefault(); // Prevent default browser behavior
 });
 
 // Trigger initial sync on application startup with comprehensive error handling
