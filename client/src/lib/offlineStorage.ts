@@ -181,19 +181,25 @@ class OfflineStorage {
   }
 
   async syncWithStaffBackend(): Promise<void> {
-    await this.init();
-    
-    const pendingDocuments = await this.getPendingDocuments();
-    
-    for (const doc of pendingDocuments) {
-      try {
-        const api = await import('./api');
-        const result = await api.uploadDocument(doc.file, 'general', doc.applicationId.toString());
-        await this.markDocumentUploaded(doc.id);
-        console.log(`Document ${doc.id} synced to staff backend:`, result);
-      } catch (error) {
-        console.error(`Failed to sync document ${doc.id}:`, error);
+    try {
+      await this.init();
+      
+      const pendingDocuments = await this.getPendingDocuments();
+      
+      for (const doc of pendingDocuments) {
+        try {
+          const api = await import('./api');
+          const result = await api.uploadDocument(doc.file, 'general', doc.applicationId.toString());
+          await this.markDocumentUploaded(doc.id);
+          console.log(`Document ${doc.id} synced to staff backend:`, result);
+        } catch (error) {
+          console.error(`Failed to sync document ${doc.id}:`, error);
+          // Continue with other documents even if one fails
+        }
       }
+    } catch (error) {
+      console.error('Failed to sync with staff backend:', error);
+      // Don't throw - handle gracefully to prevent unhandled promise rejection
     }
   }
 
@@ -204,7 +210,8 @@ class OfflineStorage {
       console.log('Application data synced to staff backend');
     } catch (error) {
       console.error('Failed to sync application data:', error);
-      throw error;
+      // Don't throw - handle gracefully to prevent unhandled promise rejection
+      return;
     }
   }
 }

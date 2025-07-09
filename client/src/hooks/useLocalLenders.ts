@@ -72,19 +72,32 @@ export function useLocalLenders(filters?: LenderFilters) {
       const queryString = params.toString();
       const url = `/api/local/lenders${queryString ? `?${queryString}` : ''}`;
       
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch lender products: ${response.status}`);
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).catch(fetchError => {
+          console.warn('[LOCAL_LENDERS] Network error:', fetchError.message);
+          throw new Error(`Network error: ${fetchError.message}`);
+        });
+        
+        if (!response.ok) {
+          console.warn('[LOCAL_LENDERS] API error:', response.status, response.statusText);
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
+        
+        const data: LenderProductsResponse = await response.json().catch(jsonError => {
+          throw new Error(`Invalid JSON response: ${jsonError.message}`);
+        });
+        
+        return data.products;
+      } catch (error) {
+        console.warn('[LOCAL_LENDERS] Query failed:', error instanceof Error ? error.message : error);
+        // Return empty array to prevent app crash
+        return [];
       }
-      
-      const data: LenderProductsResponse = await response.json();
-      return data.products;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
@@ -95,18 +108,30 @@ export function useLocalLenderStats() {
   return useQuery({
     queryKey: ['local-lender-stats'],
     queryFn: async () => {
-      const response = await fetch('/api/local/lenders/stats', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch lender stats: ${response.status}`);
+      try {
+        const response = await fetch('/api/local/lenders/stats', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).catch(fetchError => {
+          console.warn('[LOCAL_LENDER_STATS] Network error:', fetchError.message);
+          throw new Error(`Network error: ${fetchError.message}`);
+        });
+        
+        if (!response.ok) {
+          console.warn('[LOCAL_LENDER_STATS] API error:', response.status, response.statusText);
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
+        
+        return await response.json().catch(jsonError => {
+          throw new Error(`Invalid JSON response: ${jsonError.message}`);
+        });
+      } catch (error) {
+        console.warn('[LOCAL_LENDER_STATS] Query failed:', error instanceof Error ? error.message : error);
+        // Return empty stats to prevent app crash
+        return { total: 0, categories: [], averageAmount: 0 };
       }
-      
-      return response.json();
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 60 * 60 * 1000, // 1 hour

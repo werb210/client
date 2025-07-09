@@ -111,17 +111,24 @@ async function fetchDocsForCategory(category: string, params: QueryParams): Prom
       ...(params.arBalance && { arBalance: params.arBalance })
     }).toString();
 
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/loan-products/required-documents/${category}?${queryString}`);
+    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/loan-products/required-documents/${category}?${queryString}`).catch(fetchError => {
+      console.warn(`[DOCUMENT_REQUIREMENTS] Network error for category ${category}:`, fetchError.message);
+      throw new Error(`Network error: ${fetchError.message}`);
+    });
     
     if (!response.ok) {
-      console.warn(`Failed to fetch documents for category ${category}:`, response.status);
+      console.warn(`[DOCUMENT_REQUIREMENTS] API error for category ${category}:`, response.status, response.statusText);
       return [];
     }
 
-    const result = await response.json();
+    const result = await response.json().catch(jsonError => {
+      console.warn(`[DOCUMENT_REQUIREMENTS] Invalid JSON for category ${category}:`, jsonError.message);
+      return { data: [] };
+    });
+    
     return Array.isArray(result.data) ? result.data : [];
   } catch (error) {
-    console.error(`Error fetching documents for category ${category}:`, error);
+    console.warn(`[DOCUMENT_REQUIREMENTS] Query failed for category ${category}:`, error instanceof Error ? error.message : error);
     return [];
   }
 }

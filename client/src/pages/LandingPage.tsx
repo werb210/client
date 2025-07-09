@@ -50,13 +50,18 @@ export default function LandingPage() {
         return data.products || [];
       } catch (fetchError) {
         console.error('[LANDING] Fetch error:', fetchError);
-        throw fetchError;
+        // Return empty array instead of throwing to prevent unhandled promise rejection
+        return [];
       }
     },
     refetchInterval: 30000, // Refresh every 30 seconds
     staleTime: 10000, // Consider data stale after 10 seconds
     retry: false, // Don't retry on failure
     retryDelay: 1000,
+    // Prevent unhandled promise rejections by handling errors gracefully
+    onError: (error) => {
+      console.warn('[LANDING] Query error handled gracefully:', error.message);
+    }
   });
 
   // Calculate maximum funding amount from live data

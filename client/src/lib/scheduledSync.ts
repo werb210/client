@@ -15,12 +15,18 @@ class ScheduledSyncService {
     console.log('[SCHEDULER] Initializing lender product sync scheduler');
     console.log('[SCHEDULER] Schedule: 12:00 PM and 12:00 AM MST');
     
-    // Run immediately on startup
-    this.runSync();
+    // Run immediately on startup with error handling
+    this.runSync().catch(error => {
+      console.warn('[SCHEDULER] Initial sync failed:', error?.message || error);
+    });
     
     // Schedule sync jobs every hour, check if it's sync time
     this.intervalId = window.setInterval(() => {
-      this.checkAndRunSync();
+      try {
+        this.checkAndRunSync();
+      } catch (error) {
+        console.warn('[SCHEDULER] Scheduled check failed:', error);
+      }
     }, 60 * 60 * 1000); // Check every hour
     
     this.isInitialized = true;
@@ -28,18 +34,24 @@ class ScheduledSyncService {
   }
 
   private checkAndRunSync() {
-    const now = new Date();
-    const mstOffset = -7; // MST is UTC-7
-    const currentMSTHour = new Date(now.getTime() + (mstOffset * 60 * 60 * 1000)).getUTCHours();
-    
-    // Run at 12:00 PM (12) and 12:00 AM (0) MST
-    if (currentMSTHour === 12 || currentMSTHour === 0) {
-      const minutes = now.getMinutes();
-      // Only run during the first 5 minutes of the hour to avoid multiple triggers
-      if (minutes < 5) {
-        console.log(`[SCHEDULER] Triggering scheduled sync at ${currentMSTHour === 12 ? '12:00 PM' : '12:00 AM'} MST`);
-        this.runSync();
+    try {
+      const now = new Date();
+      const mstOffset = -7; // MST is UTC-7
+      const currentMSTHour = new Date(now.getTime() + (mstOffset * 60 * 60 * 1000)).getUTCHours();
+      
+      // Run at 12:00 PM (12) and 12:00 AM (0) MST
+      if (currentMSTHour === 12 || currentMSTHour === 0) {
+        const minutes = now.getMinutes();
+        // Only run during the first 5 minutes of the hour to avoid multiple triggers
+        if (minutes < 5) {
+          console.log(`[SCHEDULER] Triggering scheduled sync at ${currentMSTHour === 12 ? '12:00 PM' : '12:00 AM'} MST`);
+          this.runSync().catch(error => {
+            console.warn('[SCHEDULER] Scheduled sync failed:', error?.message || error);
+          });
+        }
       }
+    } catch (error) {
+      console.warn('[SCHEDULER] Error in scheduled check:', error);
     }
   }
 
@@ -83,21 +95,34 @@ class ScheduledSyncService {
   }
 
   async manualSync(): Promise<{ success: boolean; productCount: number; message: string }> {
-    console.log('[SCHEDULER] Manual sync triggered');
-    const result = await syncLenderProducts();
-    
-    this.showToast(
-      result.success 
-        ? `Manual sync: ${result.data?.length || 0} products updated`
-        : `Manual sync failed: ${result.error || 'Unknown error'}`,
-      result.success ? 'success' : 'error'
-    );
-    
-    return {
-      success: result.success,
-      productCount: result.data?.length || 0,
-      message: result.error || 'Success'
-    };
+    try {
+      console.log('[SCHEDULER] Manual sync triggered');
+      const result = await syncLenderProducts();
+      
+      this.showToast(
+        result.success 
+          ? `Manual sync: ${result.data?.length || 0} products updated`
+          : `Manual sync failed: ${result.error || 'Unknown error'}`,
+        result.success ? 'success' : 'error'
+      );
+      
+      return {
+        success: result.success,
+        productCount: result.data?.length || 0,
+        message: result.error || 'Success'
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.warn('[SCHEDULER] Manual sync error:', errorMessage);
+      
+      this.showToast(`Manual sync failed: ${errorMessage}`, 'error');
+      
+      return {
+        success: false,
+        productCount: 0,
+        message: errorMessage
+      };
+    }
   }
 
   destroy() {

@@ -45,6 +45,10 @@ async function fetchFromStaffAPI(): Promise<{ data: any[]; hash: string } | null
         'Content-Type': 'application/json'
       },
       credentials: 'include'
+    }).catch(fetchError => {
+      // Handle fetch failures gracefully
+      console.warn('[SYNC] Network error during fetch:', fetchError.message);
+      throw new Error(`Network error: ${fetchError.message}`);
     });
 
     // Handle RBAC/401 errors gracefully
@@ -57,7 +61,9 @@ async function fetchFromStaffAPI(): Promise<{ data: any[]; hash: string } | null
       throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json().catch(jsonError => {
+      throw new Error(`Invalid JSON response: ${jsonError.message}`);
+    });
     
     // Validate response structure
     if (!data || (!Array.isArray(data) && !data.products)) {
@@ -71,7 +77,7 @@ async function fetchFromStaffAPI(): Promise<{ data: any[]; hash: string } | null
     return { data: products, hash };
     
   } catch (error) {
-    console.warn('[SYNC] ❌ Staff API failed:', error.message || error);
+    console.warn('[SYNC] ❌ Staff API failed:', error instanceof Error ? error.message : error);
     return null;
   }
 }

@@ -90,9 +90,15 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: Infinity,
       retry: false, // Disable retries to prevent infinite loops
+      onError: (error) => {
+        console.warn('[QUERY] Query error handled gracefully:', error);
+      }
     },
     mutations: {
       retry: false,
+      onError: (error) => {
+        console.warn('[MUTATION] Mutation error handled gracefully:', error);
+      }
     },
   },
 });

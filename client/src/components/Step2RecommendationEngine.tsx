@@ -72,11 +72,30 @@ export function Step2RecommendationEngine({
 
       console.log('🔍 Fetching product categories with params:', params.toString());
       
-      const response = await fetch(`/api/loan-products/categories?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch categories: ${response.statusText}`);
+      try {
+        const response = await fetch(`/api/loan-products/categories?${params.toString()}`).catch(fetchError => {
+          console.warn('[STEP2_RECOMMENDATION] Network error:', fetchError.message);
+          throw new Error(`Network error: ${fetchError.message}`);
+        });
+        
+        if (!response.ok) {
+          console.warn('[STEP2_RECOMMENDATION] API error:', response.status, response.statusText);
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
+        
+        return await response.json().catch(jsonError => {
+          throw new Error(`Invalid JSON response: ${jsonError.message}`);
+        });
+      } catch (error) {
+        console.warn('[STEP2_RECOMMENDATION] Query failed:', error instanceof Error ? error.message : error);
+        // Return empty response to prevent app crash
+        return {
+          success: false,
+          data: [],
+          totalProducts: 0,
+          filters: { country: '', lookingFor: '', fundingAmount: '' }
+        };
       }
-      return response.json();
     },
     enabled: !!formData.headquarters, // Only fetch when headquarters is selected
     refetchOnWindowFocus: false,
