@@ -27,25 +27,11 @@ interface DocumentRequirement {
 }
 
 interface DynamicDocumentRequirementsProps {
-  formData: {
-    headquarters?: string;
-    lookingFor?: string;
-    fundingAmount?: string;
-    accountsReceivableBalance?: string;
-    businessLocation?: string;
-    selectedProducts?: any[];
-  };
+  requirements: string[];  // The 14-item intersection results
   uploadedFiles: UploadedFile[];
   onFilesUploaded: (files: UploadedFile[]) => void;
-  selectedProduct?: string;
   onRequirementsChange?: (allComplete: boolean, totalRequirements: number) => void;
   applicationId: string;
-  intersectionResults?: {
-    eligibleLenders: any[];
-    requiredDocuments: string[];
-    message: string;
-    hasMatches: boolean;
-  };
 }
 
 // Individual File Item Component
@@ -278,72 +264,33 @@ function UnifiedDocumentUploadCard({
   );
 }
 
-// Main Component with Unified Document Requirements Logic
+// Main Component - Always accept whatever the parent sends
 export function DynamicDocumentRequirements({
-  formData,
+  requirements,
   uploadedFiles,
   onFilesUploaded,
-  selectedProduct,
   onRequirementsChange,
-  applicationId,
-  intersectionResults
+  applicationId
 }: DynamicDocumentRequirementsProps) {
   
-  // State for document requirements
+  // State for document requirements  
   const [documentRequirements, setDocumentRequirements] = useState<RequiredDoc[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Use intersection results if available, otherwise use unified logic
+  // Always accept whatever the parent sends
   useEffect(() => {
-    const loadDocumentRequirements = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        // PRIORITY: Use intersection results if available (authentic lender data)
-        if (intersectionResults && intersectionResults.hasMatches && intersectionResults.requiredDocuments.length > 0) {
-          console.log('📋 Using authentic intersection results from matching lenders');
-          console.log('📋 Raw intersection documents:', intersectionResults.requiredDocuments);
-          const requirements = intersectionResults.requiredDocuments.map((docName: string, index: number) => ({
-            id: `intersection-${index}`,
-            label: docName,
-            description: `Required by all ${intersectionResults.eligibleLenders.length} matching lenders`,
-            quantity: 1,
-            category: 'intersection',
-            priority: 'high'
-          }));
-          
-          setDocumentRequirements(requirements);
-          console.log(`📄 [DYNAMIC REQUIREMENTS] Loaded ${requirements.length} authentic document requirements from intersection:`, 
-            requirements.map(r => r.label));
-          console.log('📄 [DYNAMIC REQUIREMENTS] Equipment Quote in list?', requirements.find(r => r.label.includes('Equipment')));
-          setIsLoading(false);
-          return;
-        }
-        
-        // FALLBACK: Only show message that authentic data is required
-        console.log('📋 No intersection results available - authentic lender data required');
-        setDocumentRequirements([]);
-        setError('Authentic lender intersection data not available. Please ensure Step 1 form data is properly submitted.');
-          
-      } catch (err) {
-        console.error('❌ Failed to load document requirements:', err);
-        setError('Failed to load document requirements');
-        setDocumentRequirements([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Only load if we have the minimum required data
-    if (formData.lookingFor && formData.businessLocation) {
-      loadDocumentRequirements();
-    } else {
-      setIsLoading(false);
-    }
-  }, [formData.lookingFor, formData.businessLocation, formData.fundingAmount, 
-      formData.accountsReceivableBalance, selectedProduct, intersectionResults]);
+    const docRequirements = requirements.map((docName: string, index: number) => ({
+      id: `requirement-${index}`,
+      label: docName,
+      description: `Required document for your loan application`,
+      quantity: 1,
+      category: 'required',
+      priority: 'high'
+    }));
+    
+    setDocumentRequirements(docRequirements);
+    console.debug("📄 Final visible doc list:", requirements);
+    console.debug("📄 Equipment Quote in list?", requirements.find(doc => doc.includes('Equipment')));
+  }, [requirements]);
 
   // Check completion status using unified requirements
   useEffect(() => {
@@ -361,30 +308,7 @@ export function DynamicDocumentRequirements({
     }
   }, [uploadedFiles, documentRequirements, onRequirementsChange]);
 
-  // Error state
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to Load Document Requirements</h3>
-        <p className="text-gray-600 mb-4">We're having trouble loading the specific document requirements for your loan type.</p>
-        <Button onClick={() => window.location.reload()} variant="outline">
-          <RefreshCcw className="w-4 h-4 mr-2" />
-          Try Again
-        </Button>
-      </div>
-    );
-  }
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading unified document requirements...</p>
-      </div>
-    );
-  }
+  // No loading or error states needed - we always have the requirements from props
 
   return (
     <div className="space-y-6">

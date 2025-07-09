@@ -121,6 +121,7 @@ export default function Step5DocumentUpload() {
           parsedFundingAmount
         );
 
+        console.debug("✅ Intersection result:", results.requiredDocuments); // length should be 14
         setIntersectionResults({
           ...results,
           isLoading: false
@@ -377,18 +378,11 @@ export default function Step5DocumentUpload() {
 
       {/* Dynamic Document Requirements Component */}
       <DynamicDocumentRequirements
-        formData={{
-          lookingFor: state.lookingFor,
-          businessLocation: state.businessLocation,
-          fundingAmount: state.fundingAmount?.toString(),
-          accountsReceivableBalance: state.accountsReceivableBalance?.toString()
-        }}
+        requirements={intersectionResults.requiredDocuments || []}
         uploadedFiles={uploadedFiles}
         onFilesUploaded={handleFilesUploaded}
         onRequirementsChange={handleRequirementsChange}
-        selectedProduct={selectedProduct}
         applicationId={state.applicationId || 'test-app-123'}
-        intersectionResults={intersectionResults}
       />
 
       {/* Progress Summary */}
