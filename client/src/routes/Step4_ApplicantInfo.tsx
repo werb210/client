@@ -12,7 +12,7 @@ import { User, MapPin, Calendar as CalendarIcon, Phone, UserPlus, Percent, Arrow
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { z } from 'zod';
-import { useFormDataContext } from '@/context/FormDataContext';
+import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { AutoSaveIndicator } from '@/components/AutoSaveIndicator';
@@ -22,7 +22,7 @@ import { useState, useEffect } from 'react';
 type Step4FormData = z.infer<typeof step4Schema>;
 
 export default function Step4ApplicantInfo() {
-  const { state, dispatch } = useFormDataContext();
+  const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
   
   const form = useForm<Step4FormData>({
