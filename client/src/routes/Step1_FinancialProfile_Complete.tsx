@@ -269,9 +269,25 @@ export default function Step1FinancialProfile() {
               },
             });
           }
+        } else {
+          // Default to US when location detection fails
+          console.log('🇺🇸 Location detection failed, defaulting to US');
+          if (!state.businessLocation) {
+            form.setValue('businessLocation', 'US');
+          }
+          if (!state.headquarters) {
+            form.setValue('headquarters', 'US');
+          }
         }
       }).catch(error => {
-        console.log('Country detection failed, using manual selection:', error?.message || 'Unknown error');
+        console.log('Country detection failed, defaulting to US:', error?.message || 'Unknown error');
+        // Default to US when location detection fails
+        if (!state.businessLocation) {
+          form.setValue('businessLocation', 'US');
+        }
+        if (!state.headquarters) {
+          form.setValue('headquarters', 'US');
+        }
       });
     }
   }, [state.businessLocation, state.headquarters, form, dispatch]);
@@ -389,7 +405,7 @@ export default function Step1FinancialProfile() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Business Location</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-12">
                             <SelectValue placeholder="Select location" />
