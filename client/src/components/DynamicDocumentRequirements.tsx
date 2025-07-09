@@ -40,6 +40,12 @@ interface DynamicDocumentRequirementsProps {
   selectedProduct?: string;
   onRequirementsChange?: (allComplete: boolean, totalRequirements: number) => void;
   applicationId: string;
+  intersectionResults?: {
+    eligibleLenders: any[];
+    requiredDocuments: string[];
+    message: string;
+    hasMatches: boolean;
+  };
 }
 
 // Individual File Item Component
@@ -279,7 +285,8 @@ export function DynamicDocumentRequirements({
   onFilesUploaded,
   selectedProduct,
   onRequirementsChange,
-  applicationId
+  applicationId,
+  intersectionResults
 }: DynamicDocumentRequirementsProps) {
   
   // State for document requirements
@@ -287,14 +294,34 @@ export function DynamicDocumentRequirements({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch unified document requirements using new logic
+  // Use intersection results if available, otherwise use unified logic
   useEffect(() => {
     const loadDocumentRequirements = async () => {
       setIsLoading(true);
       setError(null);
       
       try {
-        // Convert form data to WizardData format
+        // PRIORITY: Use intersection results if available (authentic lender data)
+        if (intersectionResults && intersectionResults.hasMatches && intersectionResults.requiredDocuments.length > 0) {
+          console.log('📋 Using authentic intersection results from matching lenders');
+          const requirements = intersectionResults.requiredDocuments.map((docName: string, index: number) => ({
+            id: `intersection-${index}`,
+            label: docName,
+            description: `Required by all ${intersectionResults.eligibleLenders.length} matching lenders`,
+            quantity: 1,
+            category: 'intersection',
+            priority: 'high'
+          }));
+          
+          setDocumentRequirements(requirements);
+          console.log(`📄 Loaded ${requirements.length} authentic document requirements from intersection:`, 
+            requirements.map(r => r.label));
+          setIsLoading(false);
+          return;
+        }
+        
+        // FALLBACK: Use unified logic only if no intersection results
+        console.log('📋 No intersection results available, using unified logic fallback');
         const selectedProducts: Product[] = formData.selectedProducts || [];
         
         const wizardData = convertFormDataToWizardData(formData, selectedProducts);
@@ -325,7 +352,7 @@ export function DynamicDocumentRequirements({
       setIsLoading(false);
     }
   }, [formData.lookingFor, formData.businessLocation, formData.fundingAmount, 
-      formData.accountsReceivableBalance, selectedProduct]);
+      formData.accountsReceivableBalance, selectedProduct, intersectionResults]);
 
   // Check completion status using unified requirements
   useEffect(() => {
@@ -370,17 +397,20 @@ export function DynamicDocumentRequirements({
 
   return (
     <div className="space-y-6">
-      {/* Header Section with unified requirements info */}
-      <Card className="bg-blue-50 border-blue-200">
+      {/* Header Section with authentic intersection info */}
+      <Card className="bg-green-50 border-green-200">
         <CardContent className="p-4">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">
-            Required Documents - Unified Requirements
+          <h3 className="text-lg font-semibold text-green-900 mb-2">
+            Required Documents - Authentic Lender Requirements
           </h3>
-          <p className="text-sm text-blue-800">
-            Consolidated from all matching lender products for your selections
+          <p className="text-sm text-green-800">
+            {intersectionResults && intersectionResults.hasMatches 
+              ? `Documents required by ALL ${intersectionResults.eligibleLenders.length} matching lenders`
+              : 'Consolidated from all matching lender products for your selections'
+            }
           </p>
-          <p className="text-xs text-blue-600 mt-1">
-            Showing {documentRequirements.length} unique document requirements
+          <p className="text-xs text-green-600 mt-1">
+            Showing {documentRequirements.length} document requirements
           </p>
         </CardContent>
       </Card>

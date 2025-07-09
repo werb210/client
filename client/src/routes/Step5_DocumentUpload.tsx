@@ -387,6 +387,7 @@ export default function Step5DocumentUpload() {
         onRequirementsChange={handleRequirementsChange}
         selectedProduct={selectedProduct}
         applicationId={state.applicationId || 'test-app-123'}
+        intersectionResults={intersectionResults}
       />
 
       {/* Progress Summary */}
