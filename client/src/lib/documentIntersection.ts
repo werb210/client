@@ -50,27 +50,35 @@ export async function getDocumentRequirementsIntersection(
     let allLenders: LenderProduct[] = [];
     
     try {
-      console.log(`📦 [INTERSECTION] Loading from local IndexedDB cache...`);
-      const { get } = await import('idb-keyval');
-      const cachedProducts = await get('lender_products_cache');
+      console.log(`📦 [INTERSECTION] Loading from staff API...`);
+      const response = await fetch('/api/public/lenders');
       
-      if (cachedProducts && Array.isArray(cachedProducts)) {
-        allLenders = cachedProducts;
-        console.log(`✅ [INTERSECTION] Loaded ${allLenders.length} products from local cache`);
-        
-        // Check for AccordAccess specifically
-        const accordAccess = allLenders.find(p => p.name === 'AccordAccess');
-        console.log(`🎯 [INTERSECTION] AccordAccess found in cache:`, accordAccess ? 'YES' : 'NO');
-        if (accordAccess) {
-          console.log(`🎯 [INTERSECTION] AccordAccess details:`, accordAccess);
-        }
-      } else {
-        console.log(`❌ [INTERSECTION] No cached products found`);
-        throw new Error('No lender products in local cache - sync required');
+      if (!response.ok) {
+        throw new Error(`Staff API error: ${response.status}`);
       }
-    } catch (cacheError) {
-      console.log(`❌ [INTERSECTION] Cache access failed:`, cacheError);
-      throw new Error(`Local cache unavailable: ${cacheError.message}`);
+      
+      const data = await response.json();
+      
+      if (data.success && data.products && Array.isArray(data.products)) {
+        allLenders = data.products;
+        console.log(`✅ [INTERSECTION] Loaded ${allLenders.length} products from staff API`);
+        
+        // Check for equipment financing products specifically
+        const equipmentProducts = allLenders.filter(p => 
+          p.category === 'Equipment Financing' || 
+          p.category === 'Equipment Finance'
+        );
+        console.log(`🏗️ [INTERSECTION] Equipment financing products found: ${equipmentProducts.length}`);
+        
+        const canadianEquipment = equipmentProducts.filter(p => p.country === 'CA');
+        console.log(`🇨🇦 [INTERSECTION] Canadian equipment products: ${canadianEquipment.length}`);
+      } else {
+        console.log(`❌ [INTERSECTION] Invalid API response format:`, data);
+        throw new Error('Invalid API response format');
+      }
+    } catch (apiError) {
+      console.log(`❌ [INTERSECTION] API access failed:`, apiError);
+      throw new Error(`Staff API unavailable: ${apiError.message}`);
     }
     
     if (allLenders.length === 0) {

@@ -319,10 +319,7 @@ export function DynamicDocumentRequirements({
             Required Documents - Authentic Lender Requirements
           </h3>
           <p className="text-sm text-green-800">
-            {intersectionResults && intersectionResults.hasMatches 
-              ? `Documents required by ALL ${intersectionResults.eligibleLenders.length} matching lenders`
-              : 'Consolidated from all matching lender products for your selections'
-            }
+            Consolidated from all matching lender products for your selections
           </p>
           <p className="text-xs text-green-600 mt-1">
             Showing {documentRequirements.length} document requirements

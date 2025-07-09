@@ -3,115 +3,84 @@
  * Run this in browser console while on Step 5 to see exactly what's happening
  */
 
-console.log('🔍 LIVE STEP 5 DEBUG - Form State Analysis');
-
-// 1. Check autosave data
-const autoSaveData = localStorage.getItem('borealFinancialApplicationAutoSave');
-if (autoSaveData) {
-  try {
-    const parsed = JSON.parse(autoSaveData);
-    console.log('\n📋 Form State from localStorage:');
-    console.log('selectedCategory:', parsed.selectedCategory);
-    console.log('businessLocation:', parsed.businessLocation);
-    console.log('fundingAmount:', parsed.fundingAmount);
-    console.log('lookingFor:', parsed.lookingFor);
-    console.log('accountsReceivableBalance:', parsed.accountsReceivableBalance);
-  } catch (e) {
-    console.log('❌ Error parsing autosave data:', e);
-  }
-} else {
-  console.log('❌ No autosave data found');
-}
-
-// 2. Test intersection function directly
 async function testDirectIntersection() {
-  console.log('\n🧪 Direct Intersection Test');
+  console.log("🔧 DEBUGGING STEP 5 DOCUMENT INTERSECTION");
   
-  // Test with known working parameters
+  // Test the exact parameters that would be used in Step 5
   const testParams = {
-    selectedProductType: 'Working Capital',
-    businessLocation: 'canada',
-    fundingAmount: 40000
+    selectedCategory: "Equipment Financing",
+    businessLocation: "canada", 
+    fundingAmount: 50000
   };
   
-  console.log('Test params:', testParams);
+  console.log("Test parameters:", testParams);
   
   try {
-    // Import and test the intersection function directly
-    const { getDocumentRequirementsIntersection } = await import('/src/lib/documentIntersection.ts');
+    // Import the intersection function
+    const { getDocumentRequirementsIntersection } = await import('./client/src/lib/documentIntersection.ts');
     
     const result = await getDocumentRequirementsIntersection(
-      testParams.selectedProductType,
-      testParams.businessLocation, 
+      testParams.selectedCategory,
+      testParams.businessLocation,
       testParams.fundingAmount
     );
     
-    console.log('\n📊 Direct intersection result:', result);
-    console.log('Eligible lenders:', result.eligibleLenders?.length || 0);
-    console.log('Required documents:', result.requiredDocuments?.length || 0);
-    console.log('Has matches:', result.hasMatches);
-    console.log('Message:', result.message);
-    
-    if (result.eligibleLenders?.length > 0) {
-      console.log('\n✅ Found lenders:');
-      result.eligibleLenders.forEach(lender => {
-        console.log(`- ${lender.name} (${lender.lenderName})`);
-      });
-    }
-    
-    if (result.requiredDocuments?.length > 0) {
-      console.log('\n📋 Required documents:');
-      result.requiredDocuments.forEach(doc => {
-        console.log(`- ${doc}`);
-      });
-    }
+    console.log("✅ Intersection result:", result);
+    return result;
     
   } catch (error) {
-    console.error('❌ Direct test failed:', error);
+    console.error("❌ Intersection failed:", error);
+    return null;
   }
 }
 
-// 3. Check API directly
 async function testApiDirect() {
-  console.log('\n🌐 API Direct Test');
+  console.log("🔧 TESTING API DIRECT");
   
   try {
-    const response = await fetch('https://staff.boreal.financial/api/public/lenders');
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
-    }
-    
+    const response = await fetch('/api/public/lenders');
     const data = await response.json();
-    const products = data.success ? data.products : [];
     
-    console.log(`Found ${products.length} products from API`);
+    console.log("✅ API Response:", data);
     
-    // Find AccordAccess specifically
-    const accordAccess = products.find(p => p.name === 'AccordAccess');
-    if (accordAccess) {
-      console.log('\n🎯 AccordAccess found:', accordAccess);
-    } else {
-      console.log('\n❌ AccordAccess NOT found in API response');
+    if (data.products) {
+      const equipmentProducts = data.products.filter(p => p.category === 'Equipment Financing');
+      console.log("🏗️ Equipment Financing products:", equipmentProducts);
+      
+      const canadianEquipment = equipmentProducts.filter(p => p.country === 'CA');
+      console.log("🇨🇦 Canadian equipment products:", canadianEquipment);
     }
     
-    // Test filtering
-    const matches = products.filter(p => {
-      const categoryMatch = p.category === 'Working Capital';
-      const countryMatch = p.country === 'CA';
-      const amountMatch = (p.amountMin || 0) <= 40000 && (p.amountMax || Number.MAX_SAFE_INTEGER) >= 40000;
-      
-      console.log(`${p.name}: cat=${categoryMatch} country=${countryMatch} amount=${amountMatch}`);
-      
-      return categoryMatch && countryMatch && amountMatch;
-    });
-    
-    console.log(`\n📊 Manual filter result: ${matches.length} matches`);
+    return data;
     
   } catch (error) {
-    console.error('❌ API test failed:', error);
+    console.error("❌ API failed:", error);
+    return null;
   }
 }
 
-// Run tests
-testDirectIntersection();
-testApiDirect();
+// Run both tests
+async function runStep5Debug() {
+  console.log("🚀 STARTING STEP 5 DEBUG SESSION");
+  
+  // Test 1: Direct API call
+  console.log("\n=== TEST 1: Direct API ===");
+  const apiResult = await testApiDirect();
+  
+  // Test 2: Document intersection
+  console.log("\n=== TEST 2: Document Intersection ===");
+  const intersectionResult = await testDirectIntersection();
+  
+  console.log("\n=== SUMMARY ===");
+  console.log("API working:", apiResult ? "✅" : "❌");
+  console.log("Intersection working:", intersectionResult ? "✅" : "❌");
+  
+  if (intersectionResult) {
+    console.log("Has matches:", intersectionResult.hasMatches);
+    console.log("Eligible lenders:", intersectionResult.eligibleLenders.length);
+    console.log("Required documents:", intersectionResult.requiredDocuments.length);
+  }
+}
+
+// Auto-run
+runStep5Debug();
