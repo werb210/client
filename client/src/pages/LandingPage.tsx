@@ -13,43 +13,49 @@ export default function LandingPage() {
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['landing-page-products'],
     queryFn: async () => {
-      console.log('[LANDING] Fetching products from:', `${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
+      // Use the same API pattern as the main application
+      const apiUrl = '/api/public/lenders';
+      console.log('[LANDING] Fetching products from:', apiUrl);
       
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        mode: 'cors',
-        credentials: 'omit'
-      });
-      
-      console.log('[LANDING] API Response status:', res.status, res.statusText);
-      
-      if (!res.ok) {
-        console.error('[LANDING] API Error:', res.status, res.statusText);
-        throw new Error(`Failed to fetch lender products: ${res.status}`);
+      try {
+        const res = await fetch(apiUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: 'include'
+        });
+        
+        console.log('[LANDING] API Response status:', res.status, res.statusText);
+        
+        if (!res.ok) {
+          console.error('[LANDING] API Error:', res.status, res.statusText);
+          throw new Error(`Failed to fetch lender products: ${res.status}`);
+        }
+        
+        const data = await res.json();
+        console.log('[LANDING] API Response data:', {
+          success: data.success,
+          productCount: data.products?.length || 0,
+          hasProducts: !!data.products,
+          maxAmount: data.products ? Math.max(...data.products.map((p: any) => p.amountMax || 0)) : 0
+        });
+        
+        if (!data.success || !data.products) {
+          console.error('[LANDING] Invalid API response structure:', data);
+          return [];
+        }
+        
+        console.log(`[LANDING] Successfully fetched ${data.products.length} products for max funding calculation`);
+        return data.products || [];
+      } catch (fetchError) {
+        console.error('[LANDING] Fetch error:', fetchError);
+        throw fetchError;
       }
-      
-      const data = await res.json();
-      console.log('[LANDING] API Response data:', {
-        success: data.success,
-        productCount: data.products?.length || 0,
-        hasProducts: !!data.products,
-        maxAmount: data.products ? Math.max(...data.products.map((p: any) => p.amountMax || 0)) : 0
-      });
-      
-      if (!data.success || !data.products) {
-        console.error('[LANDING] Invalid API response structure:', data);
-        return [];
-      }
-      
-      console.log(`[LANDING] Successfully fetched ${data.products.length} products for max funding calculation`);
-      return data.products || [];
     },
     refetchInterval: 30000, // Refresh every 30 seconds
     staleTime: 10000, // Consider data stale after 10 seconds
-    retry: 1, // Reduce retries to fail faster
+    retry: false, // Don't retry on failure
     retryDelay: 1000,
   });
 

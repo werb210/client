@@ -1,0 +1,213 @@
+Based on the **client report** and **staff deployment issues**, here's a split **Production Deployment Recovery Plan**, clearly broken down by **Client Application** and **Staff Application**, addressing both blocker resolution and schema testing for recommendation engine failure.
+
+---
+
+# ✅ STAFF APPLICATION – PRODUCTION DEPLOYMENT FIX PLAN
+
+## 🔧 Current Issue: Replit Deployment Failure
+
+### ❌ Errors:
+
+* TypeScript compilation errors in `user-service.ts`
+* Missing `esModuleInterop` in `tsconfig.json`
+* Object literal assignment mismatch with DB schema
+
+### ✅ Fix Instructions (in Replit):
+
+#### Step 1: **Fix `tsconfig.json`**
+
+```json
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "module": "ESNext",
+    "target": "ES2020",
+    ...
+  }
+}
+```
+
+#### Step 2: **Fix DB Schema Mismatch**
+
+* Open `user-service.ts`
+* Align object shapes to your Drizzle schema
+
+  * Example fix:
+
+    ```ts
+    // ❌ Incorrect
+    db.insert(users).values({ name: "Todd" })
+
+    // ✅ Correct (match schema exactly)
+    db.insert(users).values({ name: "Todd", email: "todd@example.com", createdAt: new Date() })
+    ```
+
+#### Step 3: **Rebuild + Deploy**
+
+* Click **"Shell"** tab in Replit
+* Run:
+
+  ```bash
+  rm -rf dist && npx tsc && npm run build
+  ```
+* Then **Deploy** via Replit interface
+
+#### Step 4: **Set Production Host (Replit deploys to):**
+
+Use:
+
+```
+https://staff.boreal.financial
+```
+
+#### Step 5: **Verify API**
+
+```bash
+curl https://staff.boreal.financial/api/version
+curl https://staff.boreal.financial/api/public/lenders
+```
+
+---
+
+# ✅ CLIENT APPLICATION – RECOMMENDATION + DEPLOYMENT FIX PLAN
+
+## 🚨 Current Issues:
+
+* ❌ Environment variable `VITE_API_BASE_URL` not loading
+* ❌ API cannot fetch lenders → Recommendation engine fails
+* ❌ IndexedDB cache empty → No offline fallback
+* ❌ Smart field mapping broken due to field rename drift
+
+---
+
+## 🔧 Phase 1: Fix Environment & API Connection
+
+### Step 1: **Fix `VITE_API_BASE_URL`**
+
+In Replit:
+
+1. Go to **Secrets**
+
+2. Add:
+
+   ```
+   VITE_API_BASE_URL=https://staff.boreal.financial/api
+   ```
+
+3. Restart the app
+
+4. In browser console:
+
+   ```js
+   console.log(import.meta.env.VITE_API_BASE_URL)
+   // ✅ Should show: "https://staff.boreal.financial/api"
+   ```
+
+---
+
+## 🔧 Phase 2: Test Recommendation Engine Schema
+
+### Step 1: **Run Diagnostic Tool**
+
+In browser DevTools (Step 2 or 4 of app):
+
+```js
+window.borealApp?.debug?.printRecommendedProducts?.()
+```
+
+Expected output:
+
+```js
+[
+  {
+    productId: "23",
+    country: "CA",
+    amountMin: 5000,
+    amountMax: 100000,
+    category: "Factoring"
+  },
+  ...
+]
+```
+
+### Step 2: **Check Field Name Drift**
+
+Compare the **form fields** to the **staff product schema**:
+
+* Does form send `country = CA` or `canadian = true`?
+* Does form send `requestedAmount = 75000` or `fundingAmount = 75_000`?
+* Does form send `productCategory` or `categoryType`?
+
+### Step 3: **Fix Recommendation Logic**
+
+Inside `recommendationEngine.ts`:
+
+1. Normalize form input:
+
+```ts
+const normalizedCountry = formData.country === 'Canada' ? 'CA' : 'US';
+const requested = parseInt(formData.fundingAmount);
+```
+
+2. Adjust matching logic:
+
+```ts
+products.filter(p => (
+  p.country === normalizedCountry &&
+  requested >= p.amountMin &&
+  requested <= p.amountMax &&
+  p.category === selectedCategory
+));
+```
+
+---
+
+## 🔧 Phase 3: Rebuild IndexedDB Cache
+
+1. Open DevTools → Application → IndexedDB
+2. Run this in console:
+
+```js
+indexedDB.deleteDatabase('boreal-cache')
+```
+
+3. Trigger fresh sync:
+
+```js
+await window.borealApp?.debug?.forceProductSync?.()
+```
+
+4. Confirm cache is populated:
+
+```js
+await window.borealApp?.debug?.dumpCache?.()
+```
+
+---
+
+## ✅ Deployment Checklist – Client
+
+| Task                                          | Status                  |
+| --------------------------------------------- | ----------------------- |
+| VITE\_API\_BASE\_URL loads correctly          | ❌ Fix required          |
+| Staff API reachable from client               | ⚠️ Pending              |
+| Recommendation engine receives valid products | ❌ Failing               |
+| Product schema correctly matched              | ⚠️ Requires mapping fix |
+| IndexedDB cache rebuilt                       | ❌ Not populated         |
+| Error handling added for all promises         | ❌ Crashes on rejections |
+
+---
+
+## 🚀 Deployment Order (Recommended)
+
+1. **Fix staff schema errors → redeploy**
+2. **Fix VITE\_API\_BASE\_URL → restart client**
+3. **Verify staff CORS → `/api/public/lenders` reachable**
+4. **Normalize recommendation logic**
+5. **Rebuild cache + validate field mapping**
+6. **Run full Step 1–7 validation in both apps**
+7. **Once all pass, deploy both to production**
+
+---
+
+Would you like me to write a unified **checklist summary document** you can track progress with for this combined rollout?

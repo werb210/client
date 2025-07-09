@@ -8,6 +8,12 @@ import { runStartupVerification } from "./test/staffDatabaseVerification";
 // Initialize finalized production sync system
 import { syncLenderProducts } from "./lib/finalizedLenderSync";
 
+// Add global error handler for unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[GLOBAL] Unhandled promise rejection:', event.reason);
+  event.preventDefault(); // Prevent default behavior
+});
+
 // Trigger initial sync on application startup
 syncLenderProducts().then(result => {
   if (result.success) {
@@ -15,6 +21,8 @@ syncLenderProducts().then(result => {
   } else {
     console.warn(`[STARTUP] ⚠️ Sync failed:`, result.errors);
   }
+}).catch(error => {
+  console.error('[STARTUP] Sync failed:', error);
 });
 
 // Verify staff database integration
