@@ -14,6 +14,7 @@ import { markApplicationStarted } from '@/lib/visitFlags';
 import { ApplicationFormSchema } from '../../../shared/schema';
 import { fetchUserCountry, countryCodeToBusinessLocation } from '@/lib/location';
 import { useDebouncedCallback } from 'use-debounce';
+import { StepHeader } from '@/components/StepHeader';
 
 // Currency formatting utilities
 const formatCurrency = (value: string): string => {
@@ -294,20 +295,11 @@ export default function Step1FinancialProfile() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div className="w-1/6 h-full bg-gradient-to-r from-teal-500 to-blue-600 rounded-full"></div>
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
-            Step 1: Financial Profile
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Overview of your funding needs and business revenue
-          </p>
-        </div>
-      </div>
+      <StepHeader 
+        stepNumber={1}
+        title="Financial Profile"
+        description="Overview of your funding needs and business revenue"
+      />
 
       <Card>
         <CardContent className="p-6">

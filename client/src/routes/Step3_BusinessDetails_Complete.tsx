@@ -24,6 +24,7 @@ import {
   isValidPhone,
   getCountryFromBusinessLocation
 } from '@/lib/phoneUtils';
+import { StepHeader } from '@/components/StepHeader';
 
 // Step 3 Schema - Use unified schema fields for business details
 const step3Schema = ApplicationFormSchema.pick({
@@ -152,20 +153,11 @@ export default function Step3BusinessDetailsComplete() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div className="w-3/6 h-full bg-gradient-to-r from-teal-500 to-blue-600 rounded-full"></div>
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
-            Step 3: Business Details
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Your business address, ownership, and contact information
-          </p>
-        </div>
-      </div>
+      <StepHeader 
+        stepNumber={3}
+        title="Business Details"
+        description="Your business address, ownership, and contact information"
+      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>

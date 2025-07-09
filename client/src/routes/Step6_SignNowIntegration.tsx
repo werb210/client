@@ -7,6 +7,7 @@ import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDebouncedCallback } from 'use-debounce';
 import { extractUuid } from '@/lib/uuidUtils';
+import { StepHeader } from '@/components/StepHeader';
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -63,24 +64,27 @@ export default function Step6SignNowIntegration() {
     debouncedSave(signingStatus, signUrl);
   }, [signingStatus, signUrl, debouncedSave]);
 
-  // Recovery logic for applicationId
+  // Enhanced recovery logic for applicationId - as specified by user
   useEffect(() => {
     if (!state.applicationId) {
-      const stored = localStorage.getItem("applicationId");
-      if (stored) {
-        const uuid = extractUuid(stored);
+      const storedId = localStorage.getItem("applicationId");
+      if (storedId) {
+        const uuid = extractUuid(storedId); // Strip any prefixes
         dispatch({
           type: "UPDATE_FORM_DATA",
           payload: { applicationId: uuid },
         });
-        console.log("💾 Recovered applicationId from localStorage:", uuid);
+        console.log("💾 Step 6: Recovered applicationId from localStorage:", uuid);
       } else {
-        console.warn("⚠️ No applicationId found. Please complete Step 4 first.");
+        console.error("❌ No application ID found in context or storage.");
+        setError('No application ID found. Please complete Step 4 first.');
+        setSigningStatus('error');
       }
     }
   }, [state.applicationId, dispatch]);
 
-  const applicationId = state.applicationId || localStorage.getItem('applicationId');
+  // Use clean UUID from context or localStorage
+  const applicationId = state.applicationId || extractUuid(localStorage.getItem('applicationId') || '');
 
   useEffect(() => {
     console.log('Step 6 loaded. FormData ID:', state.applicationId);
@@ -129,7 +133,7 @@ export default function Step6SignNowIntegration() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
-        body: JSON.stringify({ applicationId: state.applicationId }),
+        body: JSON.stringify({ applicationId: applicationId }),
         credentials: 'include'
       });
 
@@ -403,15 +407,11 @@ export default function Step6SignNowIntegration() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Step 6: Electronic Signature
-          </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Sign your application documents electronically using SignNow. This secure process ensures your application is legally binding and ready for processing.
-          </p>
-        </div>
+        <StepHeader 
+          stepNumber={6}
+          title="Electronic Signature"
+          description="Sign your application documents electronically using SignNow. This secure process ensures your application is legally binding and ready for processing."
+        />
 
         {/* Main Content */}
         <div className="max-w-2xl mx-auto">

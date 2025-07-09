@@ -8,6 +8,7 @@ import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequirements';
 import { ProceedBypassBanner } from '@/components/ProceedBypassBanner';
+import { StepHeader } from '@/components/StepHeader';
 import { getDocumentRequirementsIntersection } from '@/lib/documentIntersection';
 import { useDebouncedCallback } from 'use-debounce';
 import { 
@@ -298,20 +299,11 @@ export default function Step5DocumentUpload() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div className="w-5/6 h-full bg-gradient-to-r from-teal-500 to-blue-600 rounded-full"></div>
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
-            Step 5: Upload Documents
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Upload the required documents for lender review
-          </p>
-        </div>
-      </div>
+      <StepHeader 
+        stepNumber={5}
+        title="Upload Documents"
+        description="Upload the required documents for lender review"
+      />
 
       {/* Status Badges */}
       <div className="flex justify-center items-center space-x-4">

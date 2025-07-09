@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
 import { staffApi } from '../api/staffApi';
+import { StepHeader } from '@/components/StepHeader';
 import { 
   ArrowLeft, 
   Send, 
@@ -238,22 +239,11 @@ export default function Step7Finalization() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl text-gray-900 flex items-center gap-2">
-                <FileText className="w-6 h-6 text-blue-600" />
-                Step 7: Final Review & Terms
-              </CardTitle>
-              <p className="text-gray-600 mt-1">
-                Review terms and finalize your application
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+      <StepHeader 
+        stepNumber={7}
+        title="Final Review & Terms"
+        description="Review terms and finalize your application"
+      />
 
       {/* Application Summary */}
       <Card>

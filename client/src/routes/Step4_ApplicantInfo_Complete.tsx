@@ -15,6 +15,7 @@ import { extractUuid } from "@/lib/uuidUtils";
 import { staffApi } from "@/api/staffApi";
 import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
+import { StepHeader } from "@/components/StepHeader";
 
 // Unified Step 4 Schema - matches ApplicationForm interface
 const step4Schema = z.object({
@@ -126,7 +127,7 @@ export default function Step4ApplicantInfoComplete() {
   }, [ownershipPercentage, hasPartner, form]);
 
   const onSubmit = async (data: Step4FormData) => {
-    // Convert percentage strings to numbers
+    // Convert percentage strings to numbers and phone numbers to E.164 format
     const processedData = {
       ...data,
       ownershipPercentage: typeof data.ownershipPercentage === "string" 
@@ -135,7 +136,14 @@ export default function Step4ApplicantInfoComplete() {
       partnerOwnershipPercentage: typeof data.partnerOwnershipPercentage === "string"
         ? parseFloat(data.partnerOwnershipPercentage) || 0
         : data.partnerOwnershipPercentage || 0,
+      // Convert phone numbers to E.164 format for API submission
+      applicantPhone: data.applicantPhone ? normalizePhone(data.applicantPhone, countryCode) || data.applicantPhone : '',
+      partnerPhone: data.partnerPhone ? normalizePhone(data.partnerPhone, countryCode) || data.partnerPhone : '',
     };
+
+    console.log('📞 Phone conversion results:');
+    console.log(`   Applicant: ${data.applicantPhone} → ${processedData.applicantPhone}`);
+    console.log(`   Partner: ${data.partnerPhone} → ${processedData.partnerPhone}`);
 
     // Save form data to context
     dispatch({
@@ -216,20 +224,11 @@ export default function Step4ApplicantInfoComplete() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div className="w-4/6 h-full bg-gradient-to-r from-teal-500 to-blue-600 rounded-full"></div>
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
-            Step 4: Applicant Information
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Provide primary applicant details and ownership information
-          </p>
-        </div>
-      </div>
+      <StepHeader 
+        stepNumber={4}
+        title="Applicant Information"
+        description="Provide primary applicant details and ownership information"
+      />
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
