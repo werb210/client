@@ -59,16 +59,23 @@ export default function Step5DocumentUpload() {
   // Calculate document requirements on component mount
   useEffect(() => {
     const calculateDocumentRequirements = async () => {
-      // A. Use the form state to access required fields
-      const { selectedCategory, businessLocation, fundingAmount } = state;
+      // A. Use the form state to access required fields - map from unified schema
+      const { selectedCategory, businessLocation, fundingAmount, lookingFor, headquarters } = state;
       
-      // Use selectedCategory directly - no conversion needed since we updated intersection logic
-      const apiCategory = selectedCategory || '';
+      // Try multiple field mappings since the schema has evolved
+      const productCategory = selectedCategory || lookingFor || '';
+      const location = businessLocation || headquarters || '';
+      const amount = fundingAmount || state.fundingAmount || '';
       
       console.log(`🔧 [STEP5] selectedCategory from state: "${selectedCategory}"`);
       console.log(`🔧 [STEP5] businessLocation from state: "${businessLocation}"`);
       console.log(`🔧 [STEP5] fundingAmount from state: "${fundingAmount}"`);
-      console.log(`🔧 [STEP5] Using apiCategory: "${apiCategory}"`);
+      console.log(`🔧 [STEP5] headquarters from state: "${headquarters}"`);
+      console.log(`🔧 [STEP5] lookingFor from state: "${lookingFor}"`);
+      console.log(`🔧 [STEP5] Full state keys:`, Object.keys(state));
+      
+      // Use selectedCategory directly - no conversion needed since we updated intersection logic
+      const apiCategory = productCategory || '';
       
       // Convert business location to API format (CA -> canada, US -> united_states)
       const convertLocationToApiFormat = (location: string): string => {
@@ -81,14 +88,15 @@ export default function Step5DocumentUpload() {
         return mappings[location] || location.toLowerCase();
       };
       
-      const apiLocation = businessLocation ? convertLocationToApiFormat(businessLocation) : '';
+      const apiLocation = location ? convertLocationToApiFormat(location) : '';
       
       // Validate required fields
-      if (!apiCategory || !apiLocation || !fundingAmount) {
+      if (!apiCategory || !apiLocation || !amount) {
+        console.log(`🔧 [STEP5] Missing required data: category="${apiCategory}", location="${apiLocation}", amount="${amount}"`);
         setIntersectionResults({
           eligibleLenders: [],
-          requiredDocuments: [],
-          message: 'Missing required form data for document calculation',
+          requiredDocuments: ['Bank Statements', 'Tax Returns', 'Financial Statements', 'Business License', 'Articles of Incorporation'],
+          message: 'Using fallback document requirements - form data incomplete',
           hasMatches: false,
           isLoading: false
         });
@@ -96,14 +104,14 @@ export default function Step5DocumentUpload() {
       }
 
       console.log('🔍 [STEP5] Calculating document requirements with intersection logic...');
-      console.log('Form data:', { selectedCategory, apiCategory, businessLocation, apiLocation, fundingAmount });
+      console.log('Form data:', { selectedCategory, apiCategory, businessLocation, apiLocation, fundingAmount: amount });
 
       // Parse funding amount if it's a string
-      const parsedFundingAmount = typeof fundingAmount === 'string' 
-        ? parseFloat(fundingAmount.replace(/[^0-9.-]+/g, '')) 
-        : fundingAmount;
+      const parsedFundingAmount = typeof amount === 'string' 
+        ? parseFloat(amount.replace(/[^0-9.-]+/g, '')) 
+        : amount;
         
-      console.log(`🔧 [STEP5] Parsed funding amount: ${parsedFundingAmount} (from "${fundingAmount}")`);
+      console.log(`🔧 [STEP5] Parsed funding amount: ${parsedFundingAmount} (from "${amount}")`);
 
       try {
         const results = await getDocumentRequirementsIntersection(
