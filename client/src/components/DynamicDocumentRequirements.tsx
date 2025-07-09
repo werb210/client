@@ -4,7 +4,7 @@ import { CheckCircle, FileText, AlertCircle, RefreshCcw, Upload, X } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { buildRequiredDocList, convertFormDataToWizardData, type RequiredDoc, type Product } from '@/lib/documentRequirements';
+import { type RequiredDoc } from '@/lib/documentRequirements';
 
 // TypeScript Interfaces - Export for use in other components
 export interface UploadedFile {
@@ -304,6 +304,7 @@ export function DynamicDocumentRequirements({
         // PRIORITY: Use intersection results if available (authentic lender data)
         if (intersectionResults && intersectionResults.hasMatches && intersectionResults.requiredDocuments.length > 0) {
           console.log('📋 Using authentic intersection results from matching lenders');
+          console.log('📋 Raw intersection documents:', intersectionResults.requiredDocuments);
           const requirements = intersectionResults.requiredDocuments.map((docName: string, index: number) => ({
             id: `intersection-${index}`,
             label: docName,
@@ -314,8 +315,9 @@ export function DynamicDocumentRequirements({
           }));
           
           setDocumentRequirements(requirements);
-          console.log(`📄 Loaded ${requirements.length} authentic document requirements from intersection:`, 
+          console.log(`📄 [DYNAMIC REQUIREMENTS] Loaded ${requirements.length} authentic document requirements from intersection:`, 
             requirements.map(r => r.label));
+          console.log('📄 [DYNAMIC REQUIREMENTS] Equipment Quote in list?', requirements.find(r => r.label.includes('Equipment')));
           setIsLoading(false);
           return;
         }
