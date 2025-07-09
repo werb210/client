@@ -1,4 +1,5 @@
 import { Switch, Route } from "wouter";
+import { lazy } from "react";
 
 // V1 Route Components (Source of Truth)
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
@@ -124,6 +125,7 @@ export function MainLayout() {
       <Route path="/step4-step6-test" component={Step4Step6Test} />
       <Route path="/backend-request-test" component={BackendRequestTest} />
       <Route path="/cache-management" component={CacheManagement} />
+      <Route path="/security-test-runner" component={lazy(() => import('../security/SecurityTestRunner'))} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
