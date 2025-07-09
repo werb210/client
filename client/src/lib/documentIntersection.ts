@@ -139,8 +139,18 @@ export async function getDocumentRequirementsIntersection(
       };
     }
 
-    // D. Extract required documents across all matches
-    const allRequiredDocs = eligibleLenders.map(product => product.requiredDocuments || []);
+    // Document name transformation function
+    const transformDocumentName = (docName: string): string => {
+      if (docName === 'Financial Statements') {
+        return 'Accountant Prepared Financial Statements';
+      }
+      return docName;
+    };
+
+    // D. Extract required documents across all matches with name transformation
+    const allRequiredDocs = eligibleLenders.map(product => 
+      (product.requiredDocuments || []).map(transformDocumentName)
+    );
     
     console.log('📋 [INTERSECTION] Document lists from each lender:');
     allRequiredDocs.forEach((docs, index) => {

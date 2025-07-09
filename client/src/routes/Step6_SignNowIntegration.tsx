@@ -129,8 +129,23 @@ export default function Step6SignNowIntegration() {
         
       } catch (error) {
         console.error('❌ Failed to check signing status:', error);
-        // Continue polling with backoff
-        setTimeout(checkStatus, 15000);
+        setRetryCount(prev => prev + 1);
+        
+        // After too many retries, show bypass option
+        if (retryCount >= 5) {
+          setSigningStatus('error');
+          setIsPolling(false);
+          setError('SignNow service is currently unavailable. You may proceed to the next step.');
+          
+          toast({
+            title: "SignNow Service Unavailable",
+            description: "You can continue without signing at this time. Documents can be signed later.",
+            variant: "destructive",
+          });
+        } else {
+          // Continue polling with backoff
+          setTimeout(checkStatus, 15000);
+        }
       }
     };
     
