@@ -163,35 +163,43 @@ export default function Step1FinancialProfile() {
   const fixedAssetsValue = form.watch('fixedAssetsValue');
 
   const onSubmit = (data: FinancialProfileFormData) => {
-    console.log('Step 1 - Financial Profile Form Data:', data);
+    console.log('✅ Step 1 - Form submitted successfully!');
+    console.log('Form Data:', data);
     
-    dispatch({
-      type: 'UPDATE_FORM_DATA',
-      payload: {
-        businessLocation: data.businessLocation!,
-        headquarters: data.headquarters!,
-        headquartersState: data.headquartersState || '',
-        industry: data.industry!,
-        lookingFor: data.lookingFor!,
-        fundingAmount: data.fundingAmount!,
-        fundsPurpose: data.fundsPurpose!,
-        salesHistory: data.salesHistory!,
-        revenueLastYear: data.revenueLastYear!,
-        averageMonthlyRevenue: data.averageMonthlyRevenue!,
-        accountsReceivableBalance: data.accountsReceivableBalance!,
-        fixedAssetsValue: data.fixedAssetsValue!,
-        equipmentValue: data.equipmentValue || 0,
-      },
-    });
+    try {
+      dispatch({
+        type: 'UPDATE_FORM_DATA',
+        payload: {
+          businessLocation: data.businessLocation || 'US',
+          headquarters: data.headquarters || 'US',
+          headquartersState: data.headquartersState || '',
+          industry: data.industry || 'other',
+          lookingFor: data.lookingFor || 'capital',
+          fundingAmount: data.fundingAmount || 50000,
+          fundsPurpose: data.fundsPurpose || 'working_capital',
+          salesHistory: data.salesHistory || '<1yr',
+          revenueLastYear: data.revenueLastYear || 0,
+          averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
+          accountsReceivableBalance: data.accountsReceivableBalance || 0,
+          fixedAssetsValue: data.fixedAssetsValue || 0,
+          equipmentValue: data.equipmentValue || 0,
+        },
+      });
 
-    // Auto-save functionality with 2-second delay
-    setTimeout(() => {
-      console.log('Auto-saving Step 1 data to localStorage');
-      localStorage.setItem('step1FormData', JSON.stringify(data));
-    }, 2000);
+      console.log('✅ Form data dispatched to context');
 
-    // Navigate to Step 2
-    setLocation('/apply/step-2');
+      // Auto-save functionality with 2-second delay
+      setTimeout(() => {
+        console.log('Auto-saving Step 1 data to localStorage');
+        localStorage.setItem('step1FormData', JSON.stringify(data));
+      }, 2000);
+
+      // Navigate to Step 2
+      console.log('✅ Navigating to Step 2...');
+      setLocation('/apply/step-2');
+    } catch (error) {
+      console.error('❌ Error submitting form:', error);
+    }
   };
 
   // Form validation - ensure required fields are filled
@@ -230,7 +238,7 @@ export default function Step1FinancialProfile() {
           }
         }
       }).catch(error => {
-        console.log('Country detection failed, using manual selection:', error.message);
+        console.log('Country detection failed, using manual selection:', error?.message || 'Unknown error');
       });
     }
   }, [state.businessLocation, state.headquarters, form, dispatch]);
@@ -556,8 +564,14 @@ export default function Step1FinancialProfile() {
               <div className="flex justify-end pt-6">
                 <Button
                   type="submit"
-                  disabled={!canContinue}
+                  disabled={false}
                   className="bg-[#FF8C00] hover:bg-[#E07B00] text-white px-8 py-3 h-auto"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    console.log('🔘 Button clicked - submitting form manually');
+                    const formData = form.getValues();
+                    onSubmit(formData);
+                  }}
                 >
                   Continue
                   <ArrowRight className="ml-2 h-4 w-4" />

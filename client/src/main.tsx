@@ -27,7 +27,7 @@ syncLenderProducts().then(result => {
 
 // Verify staff database integration
 runStartupVerification().catch(error => {
-  console.error('[STARTUP] Verification failed:', error);
+  console.warn('[STARTUP] ❌ Staff database unreachable:', error?.message || error);
 });
 
 const root = document.getElementById("root");
