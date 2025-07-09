@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFormData } from '@/context/FormDataContext';
+import { useFormDataContext } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import { markApplicationStarted } from '@/lib/visitFlags';
@@ -133,7 +133,7 @@ const fixedAssetsOptions = [
 ];
 
 export default function Step1FinancialProfile() {
-  const { state, dispatch } = useFormData();
+  const { state, dispatch } = useFormDataContext();
   const [location, setLocation] = useLocation();
 
   const form = useForm<FinancialProfileFormData>({
