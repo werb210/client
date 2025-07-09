@@ -65,6 +65,7 @@ import SyncDiagnostics from "@/pages/SyncDiagnostics";
 import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
 import SignNowWorkflowTestNew from "@/pages/SignNowWorkflowTest";
 import CanadianWorkingCapitalTest from "@/pages/CanadianWorkingCapitalTest";
+import DebugCanadianEquipmentAPI from "@/pages/DebugCanadianEquipmentAPI";
 
 
 /**
@@ -112,6 +113,7 @@ export function MainLayout() {
       <Route path="/reliable-sync-test" component={ReliableSyncTest} />
       <Route path="/signnow-workflow-test-new" component={SignNowWorkflowTestNew} />
       <Route path="/canadian-working-capital-test" component={CanadianWorkingCapitalTest} />
+      <Route path="/debug-canadian-equipment-api" component={DebugCanadianEquipmentAPI} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
