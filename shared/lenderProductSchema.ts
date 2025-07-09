@@ -59,7 +59,7 @@ export const DOCUMENT_REQUIREMENTS_MAP: Record<string, string[]> = {
   "line_of_credit": [
     "Bank Statements (6 months)",
     "Business Tax Returns (2-3 years)",
-    "Financial Statements (P&L and Balance Sheet)",
+    "Accountant Prepared Financial Statements (P&L and Balance Sheet)",
     "Business License",
     "Articles of Incorporation",
     "Accounts Receivable Aging Report",
@@ -69,7 +69,7 @@ export const DOCUMENT_REQUIREMENTS_MAP: Record<string, string[]> = {
   "term_loan": [
     "Bank Statements (6 months)",
     "Business Tax Returns (2-3 years)",
-    "Financial Statements (P&L and Balance Sheet)",
+    "Accountant Prepared Financial Statements (P&L and Balance Sheet)",
     "Business License",
     "Articles of Incorporation",
     "Business Plan with Use of Funds",
@@ -80,7 +80,7 @@ export const DOCUMENT_REQUIREMENTS_MAP: Record<string, string[]> = {
   "equipment_financing": [
     "Bank Statements (6 months)",
     "Business Tax Returns (2-3 years)",
-    "Financial Statements (P&L and Balance Sheet)",
+    "Accountant Prepared Financial Statements (P&L and Balance Sheet)",
     "Business License",
     "Articles of Incorporation",
     "Equipment Quote or Invoice",
@@ -91,7 +91,7 @@ export const DOCUMENT_REQUIREMENTS_MAP: Record<string, string[]> = {
   "invoice_factoring": [
     "Bank Statements (6 months)",
     "Business Tax Returns (2-3 years)",
-    "Financial Statements (P&L and Balance Sheet)",
+    "Accountant Prepared Financial Statements (P&L and Balance Sheet)",
     "Business License",
     "Articles of Incorporation",
     "Invoice Samples (90 days)",
@@ -102,7 +102,7 @@ export const DOCUMENT_REQUIREMENTS_MAP: Record<string, string[]> = {
   "working_capital": [
     "Bank Statements (6 months)",
     "Business Tax Returns (2-3 years)",
-    "Financial Statements (P&L and Balance Sheet)",
+    "Accountant Prepared Financial Statements (P&L and Balance Sheet)",
     "Business License",
     "Articles of Incorporation",
     "Accounts Receivable Aging Report",
@@ -112,7 +112,7 @@ export const DOCUMENT_REQUIREMENTS_MAP: Record<string, string[]> = {
   "purchase_order_financing": [
     "Bank Statements (6 months)",
     "Business Tax Returns (2-3 years)",
-    "Financial Statements (P&L and Balance Sheet)",
+    "Accountant Prepared Financial Statements (P&L and Balance Sheet)",
     "Business License",
     "Articles of Incorporation",
     "Purchase Order Documentation",
@@ -122,7 +122,7 @@ export const DOCUMENT_REQUIREMENTS_MAP: Record<string, string[]> = {
   "asset_based_lending": [
     "Bank Statements (6 months)",
     "Business Tax Returns (2-3 years)",
-    "Financial Statements (P&L and Balance Sheet)",
+    "Accountant Prepared Financial Statements (P&L and Balance Sheet)",
     "Business License",
     "Articles of Incorporation",
     "Asset Appraisals",
@@ -133,7 +133,7 @@ export const DOCUMENT_REQUIREMENTS_MAP: Record<string, string[]> = {
   "sba_loan": [
     "Bank Statements (6 months)",
     "Business Tax Returns (2-3 years)",
-    "Financial Statements (P&L and Balance Sheet)",
+    "Accountant Prepared Financial Statements (P&L and Balance Sheet)",
     "Business License",
     "Articles of Incorporation",
     "SBA Form 1919",

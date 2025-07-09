@@ -278,7 +278,7 @@ router.get('/required-documents/:category', async (req, res) => {
       const fallbackDocuments = [
         { name: "Bank Statements", description: "Last 6 months of business bank statements", quantity: 6, required: true },
         { name: "Tax Returns", description: "Last 3 years of business tax returns", quantity: 3, required: true },
-        { name: "Financial Statements", description: "Recent profit & loss and balance sheet", quantity: 3, required: true },
+        { name: "Accountant Prepared Financial Statements", description: "Recent profit & loss and balance sheet", quantity: 3, required: true },
         { name: "Business License", description: "Valid business registration or license", quantity: 1, required: true },
         { name: "Articles of Incorporation", description: "Legal business formation documents", quantity: 1, required: false }
       ];

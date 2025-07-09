@@ -153,12 +153,12 @@ export default function Step5DocumentUpload() {
         // Provide fallback document requirements for Equipment Financing
         const fallbackDocuments = apiCategory === 'Equipment Financing' ? [
           'Equipment Quote',
-          'Financial Statements',
+          'Accountant Prepared Financial Statements',
           'Bank Statements',
           'Equipment Specifications',
           'Business Tax Returns'
         ] : [
-          'Financial Statements',
+          'Accountant Prepared Financial Statements',
           'Bank Statements',
           'Business Tax Returns',
           'Application Form'

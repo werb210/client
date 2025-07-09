@@ -91,7 +91,7 @@ function getDocumentDescription(docName: string, category: string): string {
   const descriptions: Record<string, string> = {
     'Bank Statements': 'Last 6 months of business bank statements',
     'Tax Returns': 'Business tax returns for last 2-3 years',
-    'Financial Statements': 'Profit & Loss and Balance Sheet',
+    'Accountant Prepared Financial Statements': 'Profit & Loss and Balance Sheet',
     'Business License': 'Current business registration and licenses',
     'Equipment Quotes': 'Quotes for equipment to be financed',
     'Invoice Samples': 'Recent customer invoices for factoring',
@@ -111,7 +111,7 @@ function getDocumentQuantity(docName: string): number {
   const quantities: Record<string, number> = {
     'Bank Statements': 6, // 6 months
     'Tax Returns': 3,     // 3 years
-    'Financial Statements': 3, // 3 years
+    'Accountant Prepared Financial Statements': 3, // 3 years
     'Invoice Samples': 10,     // 10 recent invoices
     'Equipment Quotes': 1,     // 1 quote minimum
     'Purchase Orders': 5       // 5 recent POs
@@ -126,12 +126,12 @@ function getFallbackDocuments(category: string) {
     'term_loan': [
       { name: "Bank Statements", description: "Last 6 months of business bank statements", quantity: 6 },
       { name: "Tax Returns", description: "Business tax returns for last 3 years", quantity: 3 },
-      { name: "Financial Statements", description: "Profit & Loss and Balance Sheet", quantity: 3 },
+      { name: "Accountant Prepared Financial Statements", description: "Profit & Loss and Balance Sheet", quantity: 3 },
       { name: "Business License", description: "Current business registration", quantity: 1 }
     ],
     'line_of_credit': [
       { name: "Bank Statements", description: "Last 6 months of business bank statements", quantity: 6 },
-      { name: "Financial Statements", description: "Current P&L and Balance Sheet", quantity: 2 },
+      { name: "Accountant Prepared Financial Statements", description: "Current P&L and Balance Sheet", quantity: 3 },
       { name: "Business License", description: "Current business registration", quantity: 1 }
     ],
     'equipment_financing': [
@@ -149,7 +149,7 @@ function getFallbackDocuments(category: string) {
     'working_capital': [
       { name: "Bank Statements", description: "Last 6 months of business bank statements", quantity: 6 },
       { name: "Tax Returns", description: "Business tax returns for last 2 years", quantity: 2 },
-      { name: "Financial Statements", description: "Current P&L and Balance Sheet", quantity: 2 }
+      { name: "Accountant Prepared Financial Statements", description: "Current P&L and Balance Sheet", quantity: 3 }
     ]
   };
 

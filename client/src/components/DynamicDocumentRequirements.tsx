@@ -276,13 +276,38 @@ export function DynamicDocumentRequirements({
   // State for document requirements  
   const [documentRequirements, setDocumentRequirements] = useState<RequiredDoc[]>([]);
 
-  // Always accept whatever the parent sends
+  // Always accept whatever the parent sends with proper quantity mapping
   useEffect(() => {
+    const getDocumentQuantity = (docName: string): number => {
+      const normalizedName = docName.toLowerCase();
+      
+      // Banking Statements always require 6 documents
+      if (normalizedName.includes('bank') && normalizedName.includes('statement')) {
+        return 6;
+      }
+      
+      // Financial Statements require 3 documents
+      if (normalizedName.includes('financial') && normalizedName.includes('statement')) {
+        return 3;
+      }
+      
+      // All other documents require 1
+      return 1;
+    };
+    
+    const getDocumentLabel = (docName: string): string => {
+      // Change "Financial Statements" to "Accountant Prepared Financial Statements"
+      if (docName === 'Financial Statements') {
+        return 'Accountant Prepared Financial Statements';
+      }
+      return docName;
+    };
+    
     const docRequirements = requirements.map((docName: string, index: number) => ({
       id: `requirement-${index}`,
-      label: docName,
+      label: getDocumentLabel(docName),
       description: `Required document for your loan application`,
-      quantity: 1,
+      quantity: getDocumentQuantity(docName),
       category: 'required',
       priority: 'high'
     }));
