@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { Step2RecommendationEngine } from '@/components/Step2RecommendationEngine';
+import { StepHeader } from '@/components/StepHeader';
 import { useDebouncedCallback } from 'use-debounce';
 
 export default function Step2Recommendations() {
@@ -71,7 +72,13 @@ export default function Step2Recommendations() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-4 space-y-6">
+        <StepHeader 
+          stepNumber={2}
+          title="Product Recommendations"
+          description="Select the best financing option based on your business profile"
+        />
+        
         <Step2RecommendationEngine
           formData={formData}
           selectedProduct={selectedProduct}
