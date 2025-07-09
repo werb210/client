@@ -215,18 +215,20 @@ export default function Step7FinalSubmissionComplete() {
   const canSubmit = termsAccepted && privacyAccepted && !isSubmitting;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="text-center space-y-4">
-        <div className="flex items-center justify-center mb-4">
-          <div className="bg-gradient-to-r from-teal-500 to-blue-600 rounded-full p-3">
-            <Send className="h-8 w-8 text-white" />
-          </div>
+        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-full h-full bg-gradient-to-r from-teal-500 to-blue-600 rounded-full"></div>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900">Final Submission</h1>
-        <p className="text-lg text-gray-600">
-          Review your application and submit for processing
-        </p>
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
+            Step 7: Final Submission
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Review your application and submit for processing
+          </p>
+        </div>
       </div>
 
       {/* Application Summary */}

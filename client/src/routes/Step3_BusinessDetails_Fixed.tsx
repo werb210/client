@@ -93,18 +93,32 @@ export default function Step3BusinessDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <Card className="shadow-2xl border-0">
-          <CardHeader className="bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-t-lg">
-            <CardTitle className="text-2xl font-bold text-center">
-              Business Details
-            </CardTitle>
-            <p className="text-center text-teal-100 mt-2">
-              Tell us about your business
-            </p>
-          </CardHeader>
-          <CardContent className="p-8">
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-3/6 h-full bg-gradient-to-r from-teal-500 to-blue-600 rounded-full"></div>
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
+            Step 3: Business Details
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Your business address, ownership, and contact information
+          </p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">
+            Business Details
+          </CardTitle>
+          <p className="text-center text-gray-600 mt-2">
+            Tell us about your business
+          </p>
+        </CardHeader>
+          <CardContent className="p-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {/* Business Information Section */}
@@ -336,7 +350,6 @@ export default function Step3BusinessDetails() {
             </Form>
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 }

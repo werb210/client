@@ -277,13 +277,23 @@ export default function Step1FinancialProfile() {
   }, [state.businessLocation, state.headquarters, form, dispatch]);
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Card>
-        <CardHeader className="bg-gradient-to-r from-[#003D7A] to-[#7FB3D3] text-white">
-          <CardTitle className="text-2xl font-bold">
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-1/6 h-full bg-gradient-to-r from-teal-500 to-blue-600 rounded-full"></div>
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
             Step 1: Financial Profile
-          </CardTitle>
-        </CardHeader>
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Overview of your funding needs and business revenue
+          </p>
+        </div>
+      </div>
+
+      <Card>
         <CardContent className="p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

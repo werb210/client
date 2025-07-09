@@ -297,36 +297,35 @@ export default function Step5DocumentUpload() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header Section */}
-      <Card>
-        <CardHeader>
-          <div className="bg-gradient-to-r from-teal-600 to-orange-500 text-white p-6 rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-3xl font-bold text-white">
-                  Document Upload
-                </CardTitle>
-                <p className="text-white/90 mt-2">
-                  Upload the required documents for your application
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="flex items-center space-x-1">
-                  <FileText className="w-3 h-3" />
-                  <span>{uploadedFiles.length} Uploaded</span>
-                </Badge>
-                {allRequirementsComplete && (
-                  <Badge variant="default" className="flex items-center space-x-1 bg-green-600">
-                    <CheckCircle className="w-3 h-3" />
-                    <span>Complete</span>
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-5/6 h-full bg-gradient-to-r from-teal-500 to-blue-600 rounded-full"></div>
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
+            Step 5: Upload Documents
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Upload the required documents for lender review
+          </p>
+        </div>
+      </div>
+
+      {/* Status Badges */}
+      <div className="flex justify-center items-center space-x-4">
+        <Badge variant="outline" className="flex items-center space-x-1">
+          <FileText className="w-3 h-3" />
+          <span>{uploadedFiles.length} Uploaded</span>
+        </Badge>
+        {allRequirementsComplete && (
+          <Badge variant="default" className="flex items-center space-x-1 bg-green-600">
+            <CheckCircle className="w-3 h-3" />
+            <span>Complete</span>
+          </Badge>
+        )}
+      </div>
 
       {/* Proceed Without Documents Banner */}
       <ProceedBypassBanner onBypass={handleBypass} />
