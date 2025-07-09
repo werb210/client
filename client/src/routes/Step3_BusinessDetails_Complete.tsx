@@ -134,26 +134,27 @@ export default function Step3BusinessDetailsComplete() {
   };
 
   return (
-    <div className="min-h-screen py-8" style={{ backgroundColor: '#F7F9FC' }}>
-      <div className="max-w-6xl mx-auto px-4">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            {/* Header with gradient background */}
-            <div className="mb-8 p-8 rounded-xl" style={{
-              background: 'linear-gradient(135deg, #003D7A 0%, #0056B3 100%)'
-            }}>
-              <div className="text-center text-white">
-                <h1 className="text-3xl font-bold mb-3 text-[#ffffff]">Business Details</h1>
-                <p className="text-xl opacity-90">Tell us about your business</p>
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="w-3/6 h-full bg-gradient-to-r from-teal-500 to-blue-600 rounded-full"></div>
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">
+            Step 3: Business Details
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Your business address, ownership, and contact information
+          </p>
+        </div>
+      </div>
 
-              </div>
-            </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
 
-            <Card className="shadow-lg border-0">
-              <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b">
-                <CardTitle className="text-2xl text-slate-800">Business Information</CardTitle>
-              </CardHeader>
-              <CardContent className="p-8">
+          <Card>
+            <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Business Name (DBA) */}
                   <FormField
@@ -418,12 +419,12 @@ export default function Step3BusinessDetailsComplete() {
                       </FormItem>
                     )}
                   />
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-8">
               <Button
                 type="button"
                 variant="outline"
@@ -442,10 +443,9 @@ export default function Step3BusinessDetailsComplete() {
                 Continue
                 <ArrowRight className="w-4 h-4" />
               </Button>
-            </div>
-          </form>
-        </Form>
-      </div>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }
