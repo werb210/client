@@ -66,6 +66,8 @@ import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
 import SignNowWorkflowTestNew from "@/pages/SignNowWorkflowTest";
 import CanadianWorkingCapitalTest from "@/pages/CanadianWorkingCapitalTest";
 import DebugCanadianEquipmentAPI from "@/pages/DebugCanadianEquipmentAPI";
+import ListLenderCategories from "@/pages/ListLenderCategories";
+import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
 
 
 /**
@@ -114,6 +116,8 @@ export function MainLayout() {
       <Route path="/signnow-workflow-test-new" component={SignNowWorkflowTestNew} />
       <Route path="/canadian-working-capital-test" component={CanadianWorkingCapitalTest} />
       <Route path="/debug-canadian-equipment-api" component={DebugCanadianEquipmentAPI} />
+      <Route path="/list-lender-categories" component={ListLenderCategories} />
+      <Route path="/equipment-financing-fix-test" component={EquipmentFinancingFixTest} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />

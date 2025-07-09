@@ -766,6 +766,11 @@ Changelog:
   * **PRODUCTION BLOCKER**: Canadian equipment financing workflow non-functional due to missing data source
   * **REQUIRED ACTION**: Staff backend must add 4 Canadian equipment financing products with proper category and Equipment Quote requirements
   * **CLIENT STATUS**: Code fix complete and production-ready, blocked only by staff database missing equipment financing products
+  * **CRITICAL FIX COMPLETE**: Fixed equipment financing filtering logic - API contains 5 Equipment Financing products (4 Canadian, 1 US)
+  * **ROOT CAUSE RESOLVED**: Missing isEquipmentFinancingProduct() function in useRecommendations.ts was filtering out all equipment products
+  * **FILTERING LOGIC UPDATED**: Added proper handling for lookingFor === "equipment" and lookingFor === "both" scenarios
+  * **CATEGORY MATCHING**: Implemented Equipment Financing, Equipment Finance, Asset-Based Lending category detection
+  * **PRODUCTION READY**: Canadian equipment financing workflow now functional with 4 available products
   * **SERVER FILTERING**: Enhanced to handle multiple zero formats (0, '0', 'none') for Account Receivables business rule
   * **REGIONAL SUPPORT**: Maintained Canadian/US field formatting and validation with proper schema integration
   - July 07, 2025: ✅ DOCUMENT UPLOAD BYPASS SYSTEM IMPLEMENTATION COMPLETE

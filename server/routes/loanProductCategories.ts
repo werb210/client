@@ -186,6 +186,20 @@ function isBusinessCapitalProduct(category: string): boolean {
   );
 }
 
+function isEquipmentFinancingProduct(category: string): boolean {
+  const equipmentCategories = [
+    'Equipment Financing',
+    'Equipment Finance',
+    'Asset-Based Lending',
+    'Asset Based Lending'
+  ];
+  
+  return equipmentCategories.some(cat => 
+    category.toLowerCase().includes(cat.toLowerCase()) ||
+    cat.toLowerCase().includes(category.toLowerCase())
+  );
+}
+
 
 
 export default router;

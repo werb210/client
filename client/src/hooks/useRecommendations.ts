@@ -56,11 +56,25 @@ export function useRecommendations(formStep1Data: Step1FormData) {
         return false;
       }
       
-      // Product type check for business capital - should include multiple types
+      // Product type check based on what user is looking for
       if (formStep1Data.lookingFor === "capital") {
         const isCapitalProduct = isBusinessCapitalProduct(p.category);
         if (!isCapitalProduct) {
           console.log(`❌ Product Type: ${p.name} (${p.category}) doesn't match capital requirement`);
+          return false;
+        }
+      } else if (formStep1Data.lookingFor === "equipment") {
+        const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
+        if (!isEquipmentProduct) {
+          console.log(`❌ Product Type: ${p.name} (${p.category}) doesn't match equipment financing requirement`);
+          return false;
+        }
+      } else if (formStep1Data.lookingFor === "both") {
+        // For "both", include both capital and equipment financing products
+        const isCapitalProduct = isBusinessCapitalProduct(p.category);
+        const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
+        if (!isCapitalProduct && !isEquipmentProduct) {
+          console.log(`❌ Product Type: ${p.name} (${p.category}) doesn't match capital or equipment requirement`);
           return false;
         }
       }
@@ -117,6 +131,23 @@ function isBusinessCapitalProduct(category: string): boolean {
   ];
   
   return capitalCategories.some(cat => 
+    category.toLowerCase().includes(cat.toLowerCase()) ||
+    cat.toLowerCase().includes(category.toLowerCase())
+  );
+}
+
+/**
+ * Determines if a product category is suitable for equipment financing needs
+ */
+function isEquipmentFinancingProduct(category: string): boolean {
+  const equipmentCategories = [
+    'Equipment Financing',
+    'Equipment Finance',
+    'Asset-Based Lending',
+    'Asset Based Lending'
+  ];
+  
+  return equipmentCategories.some(cat => 
     category.toLowerCase().includes(cat.toLowerCase()) ||
     cat.toLowerCase().includes(category.toLowerCase())
   );
