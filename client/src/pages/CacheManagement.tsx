@@ -208,10 +208,10 @@ export default function CacheManagement() {
               <div className="p-3 bg-purple-50 rounded-lg">
                 <h4 className="font-medium text-purple-800 mb-2">Integration Verification:</h4>
                 <ul className="list-disc list-inside space-y-1 text-purple-700">
-                  <li>Staff Portal Login page should show without error</li>
+                  <li>Staff Portal should be accessible without error</li>
                   <li>App.tsx console should show "CACHE BYPASS"</li>
                   <li>No React Router warnings in console</li>
-                  <li>GET /api/rbac/auth/me returns 401 when unauthenticated</li>
+                  <li>GET /api/public/lenders returns 200 with product data</li>
                 </ul>
               </div>
 
