@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -18,6 +18,12 @@ import {
   getStateProvinceOptions,
   isCanadianBusiness
 } from '@/lib/regionalFormatting';
+import {
+  normalizePhone,
+  formatPhoneDisplay,
+  isValidPhone,
+  getCountryFromBusinessLocation
+} from '@/lib/phoneUtils';
 
 // Step 3 Schema - Use unified schema fields for business details
 const step3Schema = ApplicationFormSchema.pick({
@@ -46,11 +52,15 @@ export default function Step3BusinessDetailsComplete() {
   // Get business location from unified state to determine regional formatting
   const businessLocation = state.businessLocation || 'US';
   const isCanadian = isCanadianBusiness(businessLocation);
+  const countryCode = getCountryFromBusinessLocation(businessLocation);
   
   console.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`, { state: state.businessLocation, detected: isCanadian });
   
   const regionalLabels = getRegionalLabels(isCanadian);
   const stateProvinceOptions = getStateProvinceOptions(isCanadian);
+
+  // Phone number display state
+  const [phoneDisplay, setPhoneDisplay] = useState('');
 
   const form = useForm<BusinessDetailsFormData>({
     resolver: zodResolver(step3Schema),
@@ -69,6 +79,13 @@ export default function Step3BusinessDetailsComplete() {
       estimatedYearlyRevenue: state.estimatedYearlyRevenue || undefined,
     },
   });
+
+  // Initialize phone display state
+  useEffect(() => {
+    if (state.businessPhone && !phoneDisplay) {
+      setPhoneDisplay(formatPhoneDisplay(state.businessPhone, countryCode));
+    }
+  }, [state.businessPhone, phoneDisplay, countryCode]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -321,11 +338,29 @@ export default function Step3BusinessDetailsComplete() {
                         <FormLabel className="text-base font-semibold">Business Phone *</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="(XXX) XXX-XXXX"
-                            {...field}
+                            placeholder={isCanadian ? "+1 (XXX) XXX-XXXX" : "(XXX) XXX-XXXX"}
+                            value={phoneDisplay || field.value || ''}
                             onChange={(e) => {
-                              const formatted = formatPhoneNumber(e.target.value);
-                              field.onChange(formatted);
+                              const input = e.target.value;
+                              const formatted = formatPhoneDisplay(input, countryCode);
+                              setPhoneDisplay(formatted);
+                              
+                              // Store raw input for form state
+                              field.onChange(input);
+                            }}
+                            onBlur={(e) => {
+                              const input = e.target.value;
+                              const normalized = normalizePhone(input, countryCode);
+                              
+                              if (normalized) {
+                                // Store normalized phone number
+                                field.onChange(normalized);
+                                setPhoneDisplay(formatPhoneDisplay(normalized, countryCode));
+                                console.log(`📞 Phone normalized: ${input} → ${normalized}`);
+                              } else if (input.trim()) {
+                                // Show validation error for invalid phone
+                                console.warn(`❌ Invalid phone number: ${input}`);
+                              }
                             }}
                             className="h-12"
                           />

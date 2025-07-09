@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatPhoneNumber, formatPostalCode as formatPostalCodeHelper, formatSSN as formatSSNHelper, isCanadianBusiness, getStateProvinceOptions } from "@/lib/regionalFormatting";
+import { normalizePhone, formatPhoneDisplay, isValidPhone, getCountryFromBusinessLocation } from "@/lib/phoneUtils";
 import { staffApi } from "@/api/staffApi";
 import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
@@ -50,11 +51,15 @@ export default function Step4ApplicantInfoComplete() {
   const [, setLocation] = useLocation();
   const { state, dispatch } = useFormDataContext();
   const [isCanadian, setIsCanadian] = useState(false);
+  const [applicantPhoneDisplay, setApplicantPhoneDisplay] = useState('');
+  const [partnerPhoneDisplay, setPartnerPhoneDisplay] = useState('');
 
   // Detect region from Step 1 business location
   useEffect(() => {
     setIsCanadian(state.businessLocation === "CA");
   }, [state.businessLocation]);
+
+  const countryCode = getCountryFromBusinessLocation(state.businessLocation);
 
   const form = useForm<Step4FormData>({
     resolver: zodResolver(step4Schema),
@@ -84,6 +89,16 @@ export default function Step4ApplicantInfoComplete() {
       partnerOwnershipPercentage: state.partnerOwnershipPercentage || 0,
     },
   });
+
+  // Initialize phone display states
+  useEffect(() => {
+    if (state.applicantPhone && !applicantPhoneDisplay) {
+      setApplicantPhoneDisplay(formatPhoneDisplay(state.applicantPhone, countryCode));
+    }
+    if (state.partnerPhone && !partnerPhoneDisplay) {
+      setPartnerPhoneDisplay(formatPhoneDisplay(state.partnerPhone, countryCode));
+    }
+  }, [state.applicantPhone, state.partnerPhone, applicantPhoneDisplay, partnerPhoneDisplay, countryCode]);
 
   const watchedValues = form.watch();
   const hasPartner = form.watch("hasPartner");
@@ -261,12 +276,27 @@ export default function Step4ApplicantInfoComplete() {
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
                         <Input
-                          {...field}
-                          className="h-12"
+                          placeholder={isCanadian ? "+1 (XXX) XXX-XXXX" : "(XXX) XXX-XXXX"}
+                          value={applicantPhoneDisplay || field.value || ''}
                           onChange={(e) => {
-                            const formatted = formatPhoneNumber(e.target.value, isCanadian);
-                            field.onChange(formatted);
+                            const input = e.target.value;
+                            const formatted = formatPhoneDisplay(input, countryCode);
+                            setApplicantPhoneDisplay(formatted);
+                            field.onChange(input);
                           }}
+                          onBlur={(e) => {
+                            const input = e.target.value;
+                            const normalized = normalizePhone(input, countryCode);
+                            
+                            if (normalized) {
+                              field.onChange(normalized);
+                              setApplicantPhoneDisplay(formatPhoneDisplay(normalized, countryCode));
+                              console.log(`📞 Applicant phone normalized: ${input} → ${normalized}`);
+                            } else if (input.trim()) {
+                              console.warn(`❌ Invalid applicant phone: ${input}`);
+                            }
+                          }}
+                          className="h-12"
                         />
                       </FormControl>
                       <FormMessage />
@@ -499,12 +529,27 @@ export default function Step4ApplicantInfoComplete() {
                         <FormLabel>Partner Phone</FormLabel>
                         <FormControl>
                           <Input
-                            {...field}
-                            className="h-12"
+                            placeholder={isCanadian ? "+1 (XXX) XXX-XXXX" : "(XXX) XXX-XXXX"}
+                            value={partnerPhoneDisplay || field.value || ''}
                             onChange={(e) => {
-                              const formatted = formatPhoneNumber(e.target.value, isCanadian);
-                              field.onChange(formatted);
+                              const input = e.target.value;
+                              const formatted = formatPhoneDisplay(input, countryCode);
+                              setPartnerPhoneDisplay(formatted);
+                              field.onChange(input);
                             }}
+                            onBlur={(e) => {
+                              const input = e.target.value;
+                              const normalized = normalizePhone(input, countryCode);
+                              
+                              if (normalized) {
+                                field.onChange(normalized);
+                                setPartnerPhoneDisplay(formatPhoneDisplay(normalized, countryCode));
+                                console.log(`📞 Partner phone normalized: ${input} → ${normalized}`);
+                              } else if (input.trim()) {
+                                console.warn(`❌ Invalid partner phone: ${input}`);
+                              }
+                            }}
+                            className="h-12"
                           />
                         </FormControl>
                         <FormMessage />
