@@ -97,10 +97,16 @@ class StaffApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
+    // Get the bearer token from environment
+    const bearerToken = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN;
+    
     const response = await fetch(url, {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': bearerToken ? `Bearer ${bearerToken}` : '',
+        'Origin': window.location.origin,
+        'Referer': window.location.href,
         ...options.headers,
       },
       ...options,
@@ -127,9 +133,16 @@ class StaffApiClient {
       formData.append('file', file);
       formData.append('documentType', file.name.toLowerCase().includes('bank') ? 'bank_statement' : 'business_document');
 
+      const bearerToken = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN;
+      
       const response = await fetch(`${this.baseUrl}/uploads`, {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          'Authorization': bearerToken ? `Bearer ${bearerToken}` : '',
+          'Origin': window.location.origin,
+          'Referer': window.location.href,
+        },
         body: formData,
       });
 
@@ -174,55 +187,55 @@ class StaffApiClient {
         console.log('✅ Documents uploaded successfully');
       }
 
-      // Prepare application data
+      // Prepare application data using unified schema
       const applicationData: ApplicationSubmissionData = {
         formFields: {
           // Step 1 data
-          headquarters: formData.step1FinancialProfile?.headquarters || formData.headquarters || 'US',
-          industry: formData.step1FinancialProfile?.industry || formData.industry || '',
-          lookingFor: formData.step1FinancialProfile?.lookingFor || formData.lookingFor || '',
-          fundingAmount: formData.step1FinancialProfile?.fundingAmount || formData.fundingAmount || 0,
-          salesHistory: formData.step1FinancialProfile?.salesHistory || formData.salesHistory || '',
-          averageMonthlyRevenue: formData.step1FinancialProfile?.averageMonthlyRevenue || formData.averageMonthlyRevenue || 0,
-          accountsReceivableBalance: formData.step1FinancialProfile?.accountsReceivableBalance || formData.accountsReceivableBalance || 0,
-          fixedAssetsValue: formData.step1FinancialProfile?.fixedAssetsValue || formData.fixedAssetsValue || 0,
-          equipmentValue: formData.step1FinancialProfile?.equipmentValue || formData.equipmentValue,
+          headquarters: formData.headquarters || 'US',
+          industry: formData.industry || '',
+          lookingFor: formData.lookingFor || '',
+          fundingAmount: formData.fundingAmount || 0,
+          salesHistory: formData.salesHistory || '',
+          averageMonthlyRevenue: formData.averageMonthlyRevenue || 0,
+          accountsReceivableBalance: formData.accountsReceivableBalance || 0,
+          fixedAssetsValue: formData.fixedAssetsValue || 0,
+          equipmentValue: formData.equipmentValue,
           
           // Step 3 data
-          businessName: formData.step3BusinessDetails?.businessName || '',
-          businessAddress: formData.step3BusinessDetails?.businessAddress || '',
-          businessCity: formData.step3BusinessDetails?.businessCity || '',
-          businessState: formData.step3BusinessDetails?.businessState || '',
-          businessZipCode: formData.step3BusinessDetails?.businessZipCode || '',
-          businessPhone: formData.step3BusinessDetails?.businessPhone || '',
-          businessEmail: formData.step3BusinessDetails?.businessEmail || '',
-          businessWebsite: formData.step3BusinessDetails?.businessWebsite || '',
-          businessStructure: formData.step3BusinessDetails?.businessStructure || '',
-          businessRegistrationDate: formData.step3BusinessDetails?.businessRegistrationDate || '',
-          businessTaxId: formData.step3BusinessDetails?.businessTaxId || '',
-          businessDescription: formData.step3BusinessDetails?.businessDescription || '',
-          numberOfEmployees: formData.step3BusinessDetails?.numberOfEmployees || '',
-          primaryBankName: formData.step3BusinessDetails?.primaryBankName || '',
-          bankingRelationshipLength: formData.step3BusinessDetails?.bankingRelationshipLength || '',
+          businessName: formData.operatingName || formData.businessName || '',
+          businessAddress: formData.businessStreetAddress || formData.businessAddress || '',
+          businessCity: formData.businessCity || '',
+          businessState: formData.businessState || '',
+          businessZipCode: formData.businessPostalCode || formData.businessZipCode || '',
+          businessPhone: formData.businessPhone || '',
+          businessEmail: formData.businessEmail || '',
+          businessWebsite: formData.businessWebsite || '',
+          businessStructure: formData.businessStructure || '',
+          businessRegistrationDate: formData.businessRegistrationDate || '',
+          businessTaxId: formData.businessTaxId || '',
+          businessDescription: formData.businessDescription || '',
+          numberOfEmployees: formData.numberOfEmployees?.toString() || '',
+          primaryBankName: formData.primaryBankName || '',
+          bankingRelationshipLength: formData.bankingRelationshipLength || '',
           
           // Step 4 data
-          firstName: formData.step4ApplicantDetails?.firstName || '',
-          lastName: formData.step4ApplicantDetails?.lastName || '',
-          title: formData.step4ApplicantDetails?.title || '',
-          dateOfBirth: formData.step4ApplicantDetails?.dateOfBirth || '',
-          socialSecurityNumber: formData.step4ApplicantDetails?.socialSecurityNumber || '',
-          personalEmail: formData.step4ApplicantDetails?.personalEmail || '',
-          personalPhone: formData.step4ApplicantDetails?.personalPhone || '',
-          homeAddress: formData.step4ApplicantDetails?.homeAddress || '',
-          homeCity: formData.step4ApplicantDetails?.homeCity || '',
-          homeState: formData.step4ApplicantDetails?.homeState || '',
-          homeZipCode: formData.step4ApplicantDetails?.homeZipCode || '',
-          personalIncome: formData.step4ApplicantDetails?.personalIncome || '',
-          creditScore: formData.step4ApplicantDetails?.creditScore || '',
-          ownershipPercentage: formData.step4ApplicantDetails?.ownershipPercentage || '',
-          yearsWithBusiness: formData.step4ApplicantDetails?.yearsWithBusiness || '',
-          previousLoans: formData.step4ApplicantDetails?.previousLoans || '',
-          bankruptcyHistory: formData.step4ApplicantDetails?.bankruptcyHistory || '',
+          firstName: formData.applicantFirstName || '',
+          lastName: formData.applicantLastName || '',
+          title: formData.applicantTitle || '',
+          dateOfBirth: formData.applicantDateOfBirth || '',
+          socialSecurityNumber: formData.applicantSSN || '',
+          personalEmail: formData.applicantEmail || '',
+          personalPhone: formData.applicantPhone || '',
+          homeAddress: formData.applicantAddress || '',
+          homeCity: formData.applicantCity || '',
+          homeState: formData.applicantState || '',
+          homeZipCode: formData.applicantZipCode || '',
+          personalIncome: formData.personalIncome || '',
+          creditScore: formData.creditScore || '',
+          ownershipPercentage: formData.ownershipPercentage?.toString() || '',
+          yearsWithBusiness: formData.yearsWithBusiness || '',
+          previousLoans: formData.previousLoans || '',
+          bankruptcyHistory: formData.bankruptcyHistory || '',
         },
         uploadedDocuments,
         productId: selectedProductId,
@@ -235,10 +248,58 @@ class StaffApiClient {
         productId: selectedProductId
       });
 
-      // Submit to staff API
-      const response = await this.makeRequest<ApplicationSubmissionResponse>('/applications/submit', {
+      // Submit to staff API - use correct endpoint and format
+      const correctPayload = {
+        step1: {
+          headquarters: formData.headquarters || 'US',
+          industry: formData.industry || '',
+          lookingFor: formData.lookingFor || '',
+          fundingAmount: formData.fundingAmount || 0,
+          salesHistory: formData.salesHistory || '',
+          averageMonthlyRevenue: formData.averageMonthlyRevenue || 0,
+          accountsReceivableBalance: formData.accountsReceivableBalance || 0,
+          fixedAssetsValue: formData.fixedAssetsValue || 0,
+          equipmentValue: formData.equipmentValue,
+        },
+        step3: {
+          operatingName: formData.operatingName || formData.businessName || '',
+          legalName: formData.legalName || formData.operatingName || formData.businessName || '',
+          businessStreetAddress: formData.businessStreetAddress || formData.businessAddress || '',
+          businessCity: formData.businessCity || '',
+          businessState: formData.businessState || '',
+          businessPostalCode: formData.businessPostalCode || formData.businessZipCode || '',
+          businessPhone: formData.businessPhone || '',
+          businessWebsite: formData.businessWebsite || '',
+          businessStructure: formData.businessStructure || '',
+          businessRegistrationDate: formData.businessRegistrationDate || '',
+          businessTaxId: formData.businessTaxId || '',
+          businessDescription: formData.businessDescription || '',
+          numberOfEmployees: formData.numberOfEmployees || 0,
+          primaryBankName: formData.primaryBankName || '',
+          bankingRelationshipLength: formData.bankingRelationshipLength || '',
+        },
+        step4: {
+          applicantFirstName: formData.applicantFirstName || '',
+          applicantLastName: formData.applicantLastName || '',
+          applicantEmail: formData.applicantEmail || '',
+          applicantPhone: formData.applicantPhone || '',
+          applicantAddress: formData.applicantAddress || '',
+          applicantCity: formData.applicantCity || '',
+          applicantState: formData.applicantState || '',
+          applicantZipCode: formData.applicantZipCode || '',
+          applicantDateOfBirth: formData.applicantDateOfBirth || '',
+          applicantSSN: formData.applicantSSN || '',
+          ownershipPercentage: formData.ownershipPercentage || 100,
+        },
+        uploadedDocuments,
+        productId: selectedProductId,
+      };
+
+      console.log('📋 Submitting with correct payload structure:', correctPayload);
+
+      const response = await this.makeRequest<ApplicationSubmissionResponse>('/applications', {
         method: 'POST',
-        body: JSON.stringify(applicationData),
+        body: JSON.stringify(correctPayload),
       });
 
       console.log('✅ Application submitted successfully:', response);

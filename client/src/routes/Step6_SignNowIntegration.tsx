@@ -458,8 +458,8 @@ export default function Step6SignNowIntegration() {
                   <Button onClick={() => { setSigningStatus('loading'); startSigningStatusPolling(); }} variant="outline">
                     Retry Polling
                   </Button>
-                  <Button onClick={handleManualContinue} variant="secondary">
-                    Continue Anyway
+                  <Button onClick={() => { setSigningStatus('loading'); startSigningStatusPolling(); }} variant="secondary">
+                    Try Again
                   </Button>
                 </div>
               </div>
