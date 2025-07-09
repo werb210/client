@@ -19,8 +19,9 @@ export function fetchWithTimeout(url: string, options: RequestInit = {}): Promis
   
   return Promise.race([
     fetch(url, options),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(`Request timeout after ${timeout}ms`)), timeout)
-    )
+    new Promise<never>((_, reject) => {
+      const timeoutId = setTimeout(() => reject(new Error(`Request timeout after ${timeout}ms`)), timeout);
+      return timeoutId;
+    })
   ]);
 }

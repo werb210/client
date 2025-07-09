@@ -77,7 +77,7 @@ export async function verifyStaffDatabaseIntegration(): Promise<VerificationResu
     };
     
   } catch (error) {
-    console.error('[VERIFICATION] Staff database test failed:', error);
+    console.warn('[VERIFICATION] Staff database test failed:', error?.message || error);
     
     return {
       success: false,

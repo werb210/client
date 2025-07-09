@@ -32,14 +32,14 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
     return normalizedProducts;
     
   } catch (error) {
-    console.error('❌ [API] Error fetching lender products:', error);
+    console.warn('❌ [API] Error fetching lender products:', error?.message || error);
     
     // In development, provide more detailed error info
     if (process.env.NODE_ENV === 'development') {
-      console.error('[API] This indicates either:');
-      console.error('1. Staff backend is unreachable');
-      console.error('2. Staff API returned invalid data structure');
-      console.error('3. Data validation failed due to schema mismatch');
+      console.warn('[API] This indicates either:');
+      console.warn('1. Staff backend is unreachable');
+      console.warn('2. Staff API returned invalid data structure');
+      console.warn('3. Data validation failed due to schema mismatch');
     }
     
     throw error;

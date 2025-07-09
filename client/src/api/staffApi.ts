@@ -97,27 +97,32 @@ class StaffApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    // Get the bearer token from environment
-    const bearerToken = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN;
-    
-    const response = await fetch(url, {
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': bearerToken ? `Bearer ${bearerToken}` : '',
-        'Origin': window.location.origin,
-        'Referer': window.location.href,
-        ...options.headers,
-      },
-      ...options,
-    });
+    try {
+      // Get the bearer token from environment
+      const bearerToken = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN;
+      
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': bearerToken ? `Bearer ${bearerToken}` : '',
+          'Origin': window.location.origin,
+          'Referer': window.location.href,
+          ...options.headers,
+        },
+        ...options,
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Staff API error: ${response.status} - ${errorText}`);
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unknown error');
+        throw new Error(`Staff API error: ${response.status} - ${errorText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.warn('[STAFF_API] Request failed:', error.message || error);
+      throw error;
     }
-
-    return response.json();
   }
 
   private async uploadFiles(files: File[]): Promise<Array<{

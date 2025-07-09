@@ -71,7 +71,7 @@ async function fetchFromStaffAPI(): Promise<{ data: any[]; hash: string } | null
     return { data: products, hash };
     
   } catch (error) {
-    console.error('[SYNC] API fetch failed:', error);
+    console.warn('[SYNC] ❌ Staff API failed:', error.message || error);
     return null;
   }
 }

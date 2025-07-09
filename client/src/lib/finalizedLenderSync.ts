@@ -45,14 +45,16 @@ export async function syncLenderProducts(): Promise<ProductSyncResult> {
     console.log(`[SYNC] Fetching from Staff API: ${LENDERS_ENDPOINT}`);
     
     // C-2: Guard API errors gracefully with try/catch + C-6: Mobile network resilience
-    const { fetchWithTimeout } = await import('./apiTimeout');
-    const response = await fetchWithTimeout(LENDERS_ENDPOINT, {
+    const response = await fetch(LENDERS_ENDPOINT, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache'
       }
+    }).catch(error => {
+      console.warn('[SYNC] Fetch error:', error.message || error);
+      throw error;
     });
     
     if (!response.ok) {

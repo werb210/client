@@ -10,7 +10,7 @@ import { syncLenderProducts } from "./lib/finalizedLenderSync";
 
 // Add global error handler for unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('[GLOBAL] Unhandled promise rejection:', event.reason);
+  console.warn('[GLOBAL] Unhandled promise rejection:', event.reason?.message || event.reason);
   event.preventDefault(); // Prevent default behavior
 });
 
@@ -22,7 +22,7 @@ syncLenderProducts().then(result => {
     console.warn(`[STARTUP] ⚠️ Sync failed:`, result.errors);
   }
 }).catch(error => {
-  console.error('[STARTUP] Sync failed:', error);
+  console.warn('[STARTUP] Sync failed:', error?.message || error);
 });
 
 // Verify staff database integration
