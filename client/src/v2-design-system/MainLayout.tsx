@@ -70,6 +70,7 @@ import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
 import Step4Step6Test from "@/pages/Step4Step6Test";
 import BackendRequestTest from "@/pages/BackendRequestTest";
+import CacheManagement from "@/pages/CacheManagement";
 
 
 /**
@@ -122,6 +123,7 @@ export function MainLayout() {
       <Route path="/equipment-financing-fix-test" component={EquipmentFinancingFixTest} />
       <Route path="/step4-step6-test" component={Step4Step6Test} />
       <Route path="/backend-request-test" component={BackendRequestTest} />
+      <Route path="/cache-management" component={CacheManagement} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
