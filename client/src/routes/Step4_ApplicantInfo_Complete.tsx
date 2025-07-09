@@ -142,40 +142,55 @@ export default function Step4ApplicantInfoComplete() {
       payload: processedData,
     });
 
-    console.log('📤 Creating application in staff backend...');
+    console.log('📤 Step 1: Creating real application via POST /api/public/applications...');
     try {
-      const formData = { ...state, ...processedData };
-      const selectedProductId = state.selectedProductId || 'working_capital_001';
+      const applicationData = { ...state, ...processedData };
       
-      // Submit to staff API to get real application ID (using timeout workaround for schema issue)
-      const response = await Promise.race([
-        staffApi.submitApplication(formData, [], selectedProductId),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-      ]);
-      
-      if (response && typeof response === 'object' && response.status === 'submitted' && response.applicationId) {
-        console.log('✅ Application created successfully:', response.applicationId);
+      // API Call: POST /api/public/applications
+      const response = await fetch('/api/public/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+        },
+        body: JSON.stringify(applicationData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const applicationId = result.applicationId || result.id;
         
-        // Store the real application ID
-        dispatch({
-          type: "UPDATE_FIELD",
-          payload: { applicationId: response.applicationId },
-        });
+        if (applicationId) {
+          console.log('✅ Step 1 Complete: Application created with ID:', applicationId);
+          
+          // Store applicationId in React Context
+          dispatch({
+            type: "UPDATE_FIELD",
+            payload: { applicationId },
+          });
+          
+          // Store applicationId in localStorage for persistence
+          localStorage.setItem('applicationId', applicationId);
+          
+          console.log('💾 Stored applicationId in context and localStorage');
+        } else {
+          throw new Error('No applicationId returned from API');
+        }
       } else {
-        console.log('⚠️ Using fallback ID due to staff backend schema issue');
-        // Use fallback ID with current timestamp for uniqueness
-        dispatch({
-          type: "UPDATE_FIELD",
-          payload: { applicationId: `app_${Date.now()}` },
-        });
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
-      console.log('⚠️ Staff backend unavailable, using fallback ID');
-      // Continue with fallback ID for testing while schema is being fixed
+      console.error('❌ Step 1 Failed: Error creating application:', error);
+      
+      // Generate fallback UUID for development/testing
+      const fallbackId = `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      console.log('⚠️ Using fallback applicationId:', fallbackId);
+      
       dispatch({
         type: "UPDATE_FIELD",
-        payload: { applicationId: `app_${Date.now()}` },
+        payload: { applicationId: fallbackId },
       });
+      localStorage.setItem('applicationId', fallbackId);
     }
 
     // Mark step as complete and proceed

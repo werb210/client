@@ -134,13 +134,24 @@ function UnifiedDocumentUploadCard({
       onFilesUploaded([...uploadedFiles, ...uploadingFiles]);
       
       try {
-        // Use the exact FormData structure specified
+        // Step 2: Upload Required Documents (Step 5)
+        // API Call: POST /api/documents
+        // Payload: Includes applicationId, file data, and document type
+        console.log('📤 Step 2: Uploading documents via POST /api/documents...');
+        console.log(`   - ApplicationId: ${applicationId}`);
+        console.log(`   - Document Type: ${category}`);
+        console.log(`   - Files: ${files.map(f => f.name).join(', ')}`);
+        
         const form = new FormData();
         files.forEach((file) => form.append('files', file));
-        form.append('category', category);
+        form.append('applicationId', applicationId);
+        form.append('documentType', category);
         
-        const response = await fetch(`/api/upload/${applicationId}`, {
+        const response = await fetch('/api/documents', {
           method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+          },
           body: form,
           credentials: 'include',
         });
