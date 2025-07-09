@@ -107,7 +107,7 @@ export default function Step4ApplicantInfoComplete() {
   // Auto-save with 2-second delay
   const debouncedSave = useDebouncedCallback((data: Step4FormData) => {
     dispatch({
-      type: "UPDATE_FIELD",
+      type: "UPDATE_FORM_DATA",
       payload: data,
     });
   }, 2000);
@@ -138,7 +138,7 @@ export default function Step4ApplicantInfoComplete() {
 
     // Save form data to context
     dispatch({
-      type: "UPDATE_FIELD",
+      type: "UPDATE_FORM_DATA",
       payload: processedData,
     });
 
@@ -161,15 +161,12 @@ export default function Step4ApplicantInfoComplete() {
         const applicationId = result.applicationId || result.id;
         
         if (applicationId) {
-          console.log('✅ Step 1 Complete: Application created with ID:', applicationId);
+          console.log('✅ Application created and stored:', applicationId);
           
-          // Store applicationId in React Context
-          dispatch({
-            type: "UPDATE_FIELD",
-            payload: { applicationId },
-          });
+          // Save to Context
+          dispatch({ type: 'UPDATE_FORM_DATA', payload: { applicationId } });
           
-          // Store applicationId in localStorage for persistence
+          // Save to localStorage
           localStorage.setItem('applicationId', applicationId);
           
           console.log('💾 Stored applicationId in context and localStorage');
@@ -187,7 +184,7 @@ export default function Step4ApplicantInfoComplete() {
       console.log('⚠️ Using fallback applicationId:', fallbackId);
       
       dispatch({
-        type: "UPDATE_FIELD",
+        type: "UPDATE_FORM_DATA",
         payload: { applicationId: fallbackId },
       });
       localStorage.setItem('applicationId', fallbackId);

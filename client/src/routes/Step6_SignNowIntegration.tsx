@@ -62,23 +62,32 @@ export default function Step6SignNowIntegration() {
     debouncedSave(signingStatus, signUrl);
   }, [signingStatus, signUrl, debouncedSave]);
 
-  // C-4: Single source of truth for applicationId - always use useApplicationId() pattern
-  const applicationId = state.applicationId || localStorage.getItem('appId');
+  // Recovery logic for applicationId
+  useEffect(() => {
+    if (!state.applicationId && localStorage.getItem("applicationId")) {
+      dispatch({
+        type: "UPDATE_FORM_DATA",
+        payload: { applicationId: localStorage.getItem("applicationId") },
+      });
+      console.log("💾 Restored applicationId from localStorage");
+    }
+  }, [state.applicationId, dispatch]);
+
+  const applicationId = state.applicationId || localStorage.getItem('applicationId');
 
   useEffect(() => {
-    console.log('🔍 Step 6: Checking application ID...');
-    console.log('   - From context:', state.applicationId);
-    console.log('   - From localStorage:', localStorage.getItem('appId'));
-    console.log('   - Final applicationId:', applicationId);
+    console.log('Step 6 loaded. FormData ID:', state.applicationId);
+    console.log('LocalStorage ID:', localStorage.getItem("applicationId"));
+    console.log('Final applicationId:', applicationId);
     
     if (!applicationId) {
       setError('No application ID found. Please complete Step 4 first.');
       setSigningStatus('error');
-      console.error('❌ C-4 FAILED: No application ID available in Step 6');
+      console.error('❌ No application ID available in Step 6');
       return;
     }
     
-    console.log('✅ C-4 SUCCESS: Application ID found:', applicationId);
+    console.log('✅ Application ID found:', applicationId);
 
     // Check if we already have signingUrl from Step 4 POST /applications/initiate-signing
     const existingSigningUrl = (state as any).step6?.signingUrl;
