@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatPhoneNumber, formatPostalCode as formatPostalCodeHelper, formatSSN as formatSSNHelper, isCanadianBusiness, getStateProvinceOptions } from "@/lib/regionalFormatting";
 import { normalizePhone, formatPhoneDisplay, isValidPhone, getCountryFromBusinessLocation } from "@/lib/phoneUtils";
+import { extractUuid } from "@/lib/uuidUtils";
 import { staffApi } from "@/api/staffApi";
 import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
@@ -158,36 +159,39 @@ export default function Step4ApplicantInfoComplete() {
 
       if (response.ok) {
         const result = await response.json();
-        const applicationId = result.applicationId || result.id;
+        const rawId = result.applicationId || result.id || result.uuid;
         
-        if (applicationId) {
-          console.log('✅ Application created and stored:', applicationId);
+        if (rawId) {
+          const uuid = extractUuid(rawId); // strips app_prod_ prefix if needed
+          console.log('✅ Application created and stored:', uuid);
           
           // Save to Context
-          dispatch({ type: 'UPDATE_FORM_DATA', payload: { applicationId } });
+          dispatch({ type: 'UPDATE_FORM_DATA', payload: { applicationId: uuid } });
           
           // Save to localStorage
-          localStorage.setItem('applicationId', applicationId);
+          localStorage.setItem('applicationId', uuid);
           
-          console.log('💾 Stored applicationId in context and localStorage');
+          console.log('💾 Stored applicationId in context and localStorage:', uuid);
         } else {
+          console.error('❌ Failed to get applicationId from response:', result);
           throw new Error('No applicationId returned from API');
         }
       } else {
         throw new Error(`API returned ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('❌ Step 1 Failed: Error creating application:', error);
+      console.error('❌ Step 4 Failed: Error creating application:', error);
       
       // Generate fallback UUID for development/testing
-      const fallbackId = `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      console.log('⚠️ Using fallback applicationId:', fallbackId);
+      const fallbackId = `app_fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const uuid = extractUuid(fallbackId);
+      console.log('⚠️ Using fallback applicationId:', uuid);
       
       dispatch({
         type: "UPDATE_FORM_DATA",
-        payload: { applicationId: fallbackId },
+        payload: { applicationId: uuid },
       });
-      localStorage.setItem('applicationId', fallbackId);
+      localStorage.setItem('applicationId', uuid);
     }
 
     // Mark step as complete and proceed

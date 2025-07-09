@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDebouncedCallback } from 'use-debounce';
+import { extractUuid } from '@/lib/uuidUtils';
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -64,12 +65,18 @@ export default function Step6SignNowIntegration() {
 
   // Recovery logic for applicationId
   useEffect(() => {
-    if (!state.applicationId && localStorage.getItem("applicationId")) {
-      dispatch({
-        type: "UPDATE_FORM_DATA",
-        payload: { applicationId: localStorage.getItem("applicationId") },
-      });
-      console.log("💾 Restored applicationId from localStorage");
+    if (!state.applicationId) {
+      const stored = localStorage.getItem("applicationId");
+      if (stored) {
+        const uuid = extractUuid(stored);
+        dispatch({
+          type: "UPDATE_FORM_DATA",
+          payload: { applicationId: uuid },
+        });
+        console.log("💾 Recovered applicationId from localStorage:", uuid);
+      } else {
+        console.warn("⚠️ No applicationId found. Please complete Step 4 first.");
+      }
     }
   }, [state.applicationId, dispatch]);
 
@@ -122,7 +129,7 @@ export default function Step6SignNowIntegration() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
-        body: JSON.stringify({ applicationId }),
+        body: JSON.stringify({ applicationId: state.applicationId }),
         credentials: 'include'
       });
 
