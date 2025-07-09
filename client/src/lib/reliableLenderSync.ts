@@ -77,6 +77,9 @@ class ReliableLenderSync {
         credentials: 'include',
         mode: 'cors',
         signal: AbortSignal.timeout(10000) // 10 second timeout
+      }).catch(fetchError => {
+        console.warn('[RELIABLE_SYNC] Network error:', fetchError.message);
+        throw new Error(`Network error: ${fetchError.message}`);
       });
 
       console.log(`📡 Staff API Response: ${response.status} ${response.statusText}`);

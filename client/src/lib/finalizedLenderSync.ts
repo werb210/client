@@ -52,9 +52,9 @@ export async function syncLenderProducts(): Promise<ProductSyncResult> {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache'
       }
-    }).catch(error => {
-      console.warn('[SYNC] Fetch error:', error.message || error);
-      throw error;
+    }).catch(fetchError => {
+      console.warn('[FINALIZED_SYNC] Network error:', fetchError.message);
+      throw new Error(`Network error: ${fetchError.message}`);
     });
     
     if (!response.ok) {

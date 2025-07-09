@@ -21,7 +21,11 @@ export async function verifyStaffDatabaseIntegration(): Promise<VerificationResu
   try {
     console.log('[VERIFICATION] Testing staff database integration...');
     
-    const products = await fetchLenderProducts();
+    const products = await fetchLenderProducts().catch(fetchError => {
+      console.warn('[VERIFICATION] Staff database test failed:', fetchError.message);
+      throw new Error(`Verification fetch failed: ${fetchError.message}`);
+    });
+    
     const productCount = products.length;
     
     console.log(`[VERIFICATION] Fetched ${productCount} products from staff database`);

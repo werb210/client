@@ -16,13 +16,20 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
+    }).catch(fetchError => {
+      console.warn('[LENDER_PRODUCTS] Network error:', fetchError.message);
+      throw new Error(`Network error: ${fetchError.message}`);
     });
 
     if (!response.ok) {
-      throw new Error(`Staff API error: ${response.status} ${response.statusText}`);
+      console.warn('[LENDER_PRODUCTS] API error:', response.status, response.statusText);
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
 
-    const rawData = await response.json();
+    const rawData = await response.json().catch(jsonError => {
+      throw new Error(`Invalid JSON response: ${jsonError.message}`);
+    });
+    
     console.log('[API] Raw staff response received, normalizing...');
     
     // Use strict validation and normalization
@@ -32,7 +39,7 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
     return normalizedProducts;
     
   } catch (error) {
-    console.warn('❌ [API] Error fetching lender products:', error?.message || error);
+    console.warn('❌ [API] Error fetching lender products:', error instanceof Error ? error.message : error);
     
     // In development, provide more detailed error info
     if (process.env.NODE_ENV === 'development') {
