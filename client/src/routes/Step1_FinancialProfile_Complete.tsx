@@ -13,6 +13,7 @@ import { ArrowRight } from 'lucide-react';
 import { markApplicationStarted } from '@/lib/visitFlags';
 import { ApplicationFormSchema } from '../../../shared/schema';
 import { fetchUserCountry, countryCodeToBusinessLocation } from '@/lib/location';
+import { useDebouncedCallback } from 'use-debounce';
 
 // Currency formatting utilities
 const formatCurrency = (value: string): string => {
@@ -161,6 +162,38 @@ export default function Step1FinancialProfile() {
   const averageMonthlyRevenueValue = form.watch('averageMonthlyRevenue');
   const accountsReceivableValue = form.watch('accountsReceivableBalance');
   const fixedAssetsValue = form.watch('fixedAssetsValue');
+
+  // Watch all form values for autosave
+  const watchedValues = form.watch();
+
+  // Auto-save with 2-second delay
+  const debouncedSave = useDebouncedCallback((data: FinancialProfileFormData) => {
+    // Convert form data to unified schema format and dispatch to context
+    dispatch({
+      type: 'UPDATE_FORM_DATA',
+      payload: {
+        businessLocation: data.businessLocation || 'US',
+        headquarters: data.headquarters || 'US',
+        headquartersState: data.headquartersState || '',
+        industry: data.industry || 'other',
+        lookingFor: data.lookingFor || 'capital',
+        fundingAmount: data.fundingAmount || 0,
+        fundsPurpose: data.fundsPurpose || 'working_capital',
+        salesHistory: data.salesHistory || '<1yr',
+        revenueLastYear: data.revenueLastYear || 0,
+        averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
+        accountsReceivableBalance: data.accountsReceivableBalance || 0,
+        fixedAssetsValue: data.fixedAssetsValue || 0,
+        equipmentValue: data.equipmentValue || 0,
+      },
+    });
+    console.log('💾 Step 1 - Auto-saved form data');
+  }, 2000);
+
+  // Trigger autosave when form values change
+  useEffect(() => {
+    debouncedSave(watchedValues);
+  }, [watchedValues, debouncedSave]);
 
   const onSubmit = (data: FinancialProfileFormData) => {
     console.log('✅ Step 1 - Form submitted successfully!');

@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
 import { staffApi } from '../api/staffApi';
+import { useDebouncedCallback } from 'use-debounce';
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -38,6 +39,28 @@ export default function Step6SignNowIntegration() {
   const [error, setError] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
   const [retryCount, setRetryCount] = useState(0); // C-5: Track retry attempts for auto-retry
+
+  // Auto-save signing progress with 2-second delay
+  const debouncedSave = useDebouncedCallback((status: SigningStatus, url: string | null) => {
+    dispatch({
+      type: 'UPDATE_FORM_DATA',
+      payload: {
+        signingStatus: status,
+        signUrl: url,
+        step6Progress: {
+          status,
+          url,
+          timestamp: new Date().toISOString()
+        }
+      }
+    });
+    console.log('💾 Step 6 - Auto-saved signing progress:', status);
+  }, 2000);
+
+  // Trigger autosave when signing status or URL changes
+  useEffect(() => {
+    debouncedSave(signingStatus, signUrl);
+  }, [signingStatus, signUrl, debouncedSave]);
 
   // C-4: Single source of truth for applicationId - always use useApplicationId() pattern
   const applicationId = state.applicationId || localStorage.getItem('appId');

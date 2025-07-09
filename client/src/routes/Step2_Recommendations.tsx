@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { Step2RecommendationEngine } from '@/components/Step2RecommendationEngine';
+import { useDebouncedCallback } from 'use-debounce';
 
 export default function Step2Recommendations() {
   const { state, dispatch } = useFormData();
@@ -32,6 +33,26 @@ export default function Step2Recommendations() {
       }
     });
   };
+
+  // Auto-save selected product with 2-second delay
+  const debouncedSave = useDebouncedCallback((product: string) => {
+    if (product) {
+      dispatch({
+        type: 'UPDATE_FORM_DATA',
+        payload: {
+          selectedCategory: product
+        }
+      });
+      console.log('💾 Step 2 - Auto-saved product selection:', product);
+    }
+  }, 2000);
+
+  // Trigger autosave when product selection changes
+  useEffect(() => {
+    if (selectedProduct) {
+      debouncedSave(selectedProduct);
+    }
+  }, [selectedProduct, debouncedSave]);
 
   const handleContinue = () => {
     // Production validation: Require product selection

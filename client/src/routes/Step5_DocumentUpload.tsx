@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequirements';
 import { ProceedBypassBanner } from '@/components/ProceedBypassBanner';
 import { getDocumentRequirementsIntersection } from '@/lib/documentIntersection';
+import { useDebouncedCallback } from 'use-debounce';
 import { 
   ArrowRight, 
   ArrowLeft, 
@@ -183,11 +184,22 @@ export default function Step5DocumentUpload() {
     calculateDocumentRequirements();
   }, [state.selectedCategory, state.businessLocation, state.fundingAmount, toast]);
 
+  // Auto-save uploaded documents with 2-second delay
+  const debouncedSave = useDebouncedCallback((files: UploadedFile[]) => {
+    dispatch({
+      type: 'UPDATE_FORM_DATA',
+      payload: {
+        uploadedDocuments: files,
+      }
+    });
+    console.log('💾 Step 5 - Auto-saved document uploads:', files.length, 'files');
+  }, 2000);
+
   // Handle file upload from DynamicDocumentRequirements component
   const handleFilesUploaded = (files: UploadedFile[]) => {
     setUploadedFiles(files);
     
-    // Update form data state using unified schema
+    // Immediate save for uploads
     dispatch({
       type: 'UPDATE_FORM_DATA',
       payload: {
@@ -195,6 +207,13 @@ export default function Step5DocumentUpload() {
       }
     });
   };
+
+  // Trigger autosave when uploaded files change
+  useEffect(() => {
+    if (uploadedFiles.length > 0) {
+      debouncedSave(uploadedFiles);
+    }
+  }, [uploadedFiles, debouncedSave]);
 
   // Handle requirements completion status
   const handleRequirementsChange = (allComplete: boolean, total: number) => {

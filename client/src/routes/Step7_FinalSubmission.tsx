@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
+import { useDebouncedCallback } from 'use-debounce';
 import { 
   CheckCircle, 
   FileText, 
@@ -67,6 +68,25 @@ export default function Step7FinalSubmission() {
   const { state, dispatch } = useFormData();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Auto-save submission progress with 2-second delay
+  const debouncedSave = useDebouncedCallback((submissionStatus: boolean) => {
+    dispatch({
+      type: 'UPDATE_FORM_DATA',
+      payload: {
+        step7Progress: {
+          isSubmitting: submissionStatus,
+          timestamp: new Date().toISOString()
+        }
+      }
+    });
+    console.log('💾 Step 7 - Auto-saved submission progress:', submissionStatus);
+  }, 2000);
+
+  // Trigger autosave when submission status changes
+  useEffect(() => {
+    debouncedSave(isSubmitting);
+  }, [isSubmitting, debouncedSave]);
 
   // Compile application summary from form data
   const applicationSummary: ApplicationSummary = {
