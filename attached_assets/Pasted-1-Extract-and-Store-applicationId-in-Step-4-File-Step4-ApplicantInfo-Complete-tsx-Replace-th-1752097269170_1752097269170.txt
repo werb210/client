@@ -1,0 +1,80 @@
+1. ✅ Extract and Store applicationId in Step 4
+📄 File: Step4_ApplicantInfo_Complete.tsx
+
+Replace the current application submission logic with:
+
+ts
+Copy
+Edit
+const response = await fetch(`${API_BASE_URL}/api/public/applications`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`,
+  },
+  body: JSON.stringify(applicationData),
+});
+
+const result = await response.json();
+const rawId = result.applicationId || result.id || result.uuid;
+
+if (rawId) {
+  const uuid = extractUuid(rawId); // strips app_prod_ prefix if needed
+  dispatch({ type: 'UPDATE_FORM_DATA', payload: { applicationId: uuid } });
+  localStorage.setItem('applicationId', uuid);
+  console.log('✅ Stored applicationId in context and localStorage:', uuid);
+} else {
+  console.error('❌ Failed to get applicationId from response:', result);
+}
+2. ✅ Add extractUuid() Utility
+📄 File: client/src/lib/uuidUtils.ts
+
+ts
+Copy
+Edit
+export const extractUuid = (id: string): string => {
+  return id.replace(/^app_prod_/, '').replace(/^app_fallback_/, '');
+};
+3. ✅ Recover applicationId in Step 6
+📄 File: Step6_SignNowIntegration.tsx (or wherever Step 6 starts)
+
+In the useEffect:
+
+ts
+Copy
+Edit
+useEffect(() => {
+  if (!formData.applicationId) {
+    const stored = localStorage.getItem('applicationId');
+    if (stored) {
+      const uuid = extractUuid(stored);
+      dispatch({ type: 'UPDATE_FORM_DATA', payload: { applicationId: uuid } });
+      console.log('💾 Recovered applicationId from localStorage:', uuid);
+    } else {
+      console.warn('⚠️ No applicationId found. Please complete Step 4 first.');
+    }
+  }
+}, []);
+4. ✅ Use Raw UUID in SignNow Call
+ts
+Copy
+Edit
+await fetch('/api/signnow/create', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`,
+  },
+  body: JSON.stringify({ applicationId: formData.applicationId }),
+});
+5. ✅ Test at /step4-step6-test
+Confirm the following:
+
+✅ ID saved in both localStorage + React Context
+
+✅ Refresh does not lose it
+
+✅ Step 6 can recover ID without error
+
+✅ POST to SignNow works with clean UUID
+

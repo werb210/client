@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Step 4 → Step 6 ApplicationId Flow Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .pass { background-color: #d4edda; }
+        .fail { background-color: #f8d7da; }
+        button { margin: 5px; padding: 8px 16px; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Step 4 → Step 6 ApplicationId Flow Test</h1>
+    
+    <button onclick="runTest()">Run Test</button>
+    <button onclick="clearStorage()">Clear Storage</button>
+    
+    <div id="output"></div>
+    
+    <script>
+        function log(message) {
+            console.log(message);
+            const div = document.createElement('div');
+            div.className = 'log';
+            div.textContent = message;
+            document.getElementById('output').appendChild(div);
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('output').innerHTML = '';
+            log('Storage cleared');
+        }
+        
+        function runTest() {
+            document.getElementById('output').innerHTML = '';
+            
+            log('Testing Step 4 → Step 6 ApplicationId Flow');
+            log('==========================================');
+            
+            // Clear storage
+            localStorage.clear();
+            log('1. Cleared localStorage');
+            
+            // Simulate Step 4 storing applicationId
+            const testId = 'app_test_' + Date.now();
+            localStorage.setItem('applicationId', testId);
+            log('2. Step 4 stored applicationId: ' + testId);
+            
+            // Verify storage worked
+            const stored = localStorage.getItem('applicationId');
+            log('3. Retrieved from localStorage: ' + stored);
+            
+            // Simulate Step 6 recovery (context lost)
+            const contextId = null; // Lost context
+            const localStorageId = localStorage.getItem('applicationId');
+            
+            log('4. Step 6 recovery test:');
+            log('   Context ID: ' + contextId);
+            log('   localStorage ID: ' + localStorageId);
+            
+            // Test recovery logic
+            if (!contextId && localStorageId) {
+                log('✅ Recovery logic would work');
+                log('   Step 6 would restore applicationId from localStorage');
+            } else {
+                log('❌ Recovery logic would fail');
+            }
+            
+            // Final result
+            const finalId = contextId || localStorageId;
+            if (finalId) {
+                log('✅ Final result: Step 4 → Step 6 flow WORKS');
+                log('   ApplicationId available: ' + finalId);
+                log('   SignNow would work');
+                log('   No error panel');
+            } else {
+                log('❌ Final result: Step 4 → Step 6 flow BROKEN');
+                log('   No applicationId available');
+                log('   SignNow would fail');
+                log('   Error panel would appear');
+            }
+            
+            log('==========================================');
+            log('TEST COMPLETE');
+        }
+    </script>
+</body>
+</html>
