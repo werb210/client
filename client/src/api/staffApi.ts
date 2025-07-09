@@ -425,6 +425,47 @@ class StaffApiClient {
       };
     }
   }
+
+  async createSignNowDocument(applicationId: string): Promise<SigningStatusResponse> {
+    try {
+      console.log(`📝 Creating SignNow document for application: ${applicationId}`);
+      
+      const response = await this.makeRequest<SigningStatusResponse>(`/api/signnow/create`, {
+        method: 'POST',
+        body: JSON.stringify({
+          applicationId: applicationId
+        }),
+      });
+      
+      console.log('✅ SignNow document created:', response);
+      return response;
+      
+    } catch (error) {
+      console.error('❌ Failed to create SignNow document:', error);
+      return {
+        status: 'error',
+        error: error instanceof Error ? error.message : 'Failed to create SignNow document'
+      };
+    }
+  }
+
+  async createApplication(applicationData: any): Promise<{ applicationId: string }> {
+    try {
+      console.log('📝 Creating new application via POST /api/public/applications');
+      
+      const response = await this.makeRequest<{ applicationId: string }>('/api/public/applications', {
+        method: 'POST',
+        body: JSON.stringify(applicationData),
+      });
+      
+      console.log('✅ Application created with ID:', response.applicationId);
+      return response;
+      
+    } catch (error) {
+      console.error('❌ Failed to create application:', error);
+      throw error;
+    }
+  }
 }
 
 export const staffApi = new StaffApiClient();

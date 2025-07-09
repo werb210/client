@@ -89,10 +89,59 @@ export default function Step6SignNowIntegration() {
       return;
     }
 
-    // Fallback: Start polling for signing status if no URL provided
-    console.log('🔄 Step 6: No signingUrl from Step 4, starting polling...');
-    startSigningStatusPolling();
+    // Create SignNow document using correct API endpoint
+    console.log('🔄 Step 6: Creating SignNow document via POST /api/signnow/create');
+    createSignNowDocument();
   }, [applicationId]);
+
+  const createSignNowDocument = async () => {
+    if (!applicationId) return;
+    
+    setSigningStatus('loading');
+    console.log('📝 Step 6: Creating SignNow document via POST /api/signnow/create');
+    
+    try {
+      // Call the correct API endpoint: POST /api/signnow/create
+      const response = await staffApi.createSignNowDocument(applicationId);
+      
+      if (response.status === 'ready' && response.signUrl) {
+        console.log('✅ SignNow document created successfully:', response.signUrl);
+        setSignUrl(response.signUrl);
+        setSigningStatus('ready');
+        
+        toast({
+          title: "Document Ready",
+          description: "Your signing document has been prepared successfully.",
+        });
+        
+      } else if (response.status === 'error') {
+        setSigningStatus('error');
+        setError(response.error || 'Failed to create SignNow document');
+        
+        toast({
+          title: "Document Creation Error",
+          description: response.error || "Failed to prepare documents for signing",
+          variant: "destructive",
+        });
+        
+      } else {
+        // If not ready immediately, start polling
+        console.log('📝 Document created but not ready, starting polling...');
+        startSigningStatusPolling();
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to create SignNow document:', error);
+      setSigningStatus('error');
+      setError('Failed to create signing document');
+      
+      toast({
+        title: "Document Creation Failed",
+        description: "Failed to prepare documents for signing. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const startSigningStatusPolling = async () => {
     if (!applicationId || isPolling) return;

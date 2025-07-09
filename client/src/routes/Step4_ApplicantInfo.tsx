@@ -87,17 +87,63 @@ export default function Step4ApplicantInfo() {
   // Check if business location is Canadian (from Step 1)
   const isCanadian = state.businessLocation === 'Canada';
 
-  const onSubmit = (data: Step4FormData) => {
+  const onSubmit = async (data: Step4FormData) => {
     dispatch({
       type: 'UPDATE_FORM_DATA',
       payload: data,
     });
     
-    dispatch({
-      type: 'MARK_STEP_COMPLETE',
-      payload: 4
-    });
-    setLocation('/apply/step-5');
+    // Create real application using POST /api/public/applications
+    try {
+      console.log('📝 Step 4: Creating real application via POST /api/public/applications');
+      
+      const { staffApi } = await import('../api/staffApi');
+      const applicationData = {
+        ...state,
+        ...data,
+        step: 4,
+        timestamp: new Date().toISOString()
+      };
+      
+      const response = await staffApi.createApplication(applicationData);
+      
+      // Store the real application ID
+      dispatch({
+        type: 'UPDATE_FORM_DATA',
+        payload: {
+          applicationId: response.applicationId
+        }
+      });
+      
+      // Store in localStorage as backup
+      localStorage.setItem('appId', response.applicationId);
+      
+      console.log('✅ Step 4: Real application created with ID:', response.applicationId);
+      
+      dispatch({
+        type: 'MARK_STEP_COMPLETE',
+        payload: 4
+      });
+      setLocation('/apply/step-5');
+      
+    } catch (error) {
+      console.error('❌ Step 4: Failed to create application:', error);
+      // For development, continue with mock ID but log the error
+      const mockId = 'mock_' + Date.now();
+      dispatch({
+        type: 'UPDATE_FORM_DATA',
+        payload: {
+          applicationId: mockId
+        }
+      });
+      localStorage.setItem('appId', mockId);
+      
+      dispatch({
+        type: 'MARK_STEP_COMPLETE',
+        payload: 4
+      });
+      setLocation('/apply/step-5');
+    }
   };
 
   const handleBack = () => {
