@@ -110,15 +110,7 @@ export default function Step3BusinessDetails() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Business Details
-          </CardTitle>
-          <p className="text-center text-gray-600 mt-2">
-            Tell us about your business
-          </p>
-        </CardHeader>
-          <CardContent className="p-6">
+        <CardContent className="p-6">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 {/* Business Information Section */}
