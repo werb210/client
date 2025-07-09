@@ -72,6 +72,7 @@ export default function Step5DocumentUpload() {
       console.log(`🔧 [STEP5] fundingAmount from state: "${fundingAmount}"`);
       console.log(`🔧 [STEP5] headquarters from state: "${headquarters}"`);
       console.log(`🔧 [STEP5] lookingFor from state: "${lookingFor}"`);
+      console.log(`🔧 [STEP5] Derived values: category="${productCategory}", location="${location}", amount="${amount}"`);
       console.log(`🔧 [STEP5] Full state keys:`, Object.keys(state));
       
       // Use selectedCategory directly - no conversion needed since we updated intersection logic
@@ -90,13 +91,13 @@ export default function Step5DocumentUpload() {
       
       const apiLocation = location ? convertLocationToApiFormat(location) : '';
       
-      // Validate required fields
-      if (!apiCategory || !apiLocation || !amount) {
-        console.log(`🔧 [STEP5] Missing required data: category="${apiCategory}", location="${apiLocation}", amount="${amount}"`);
+      // Validate required fields - use more flexible validation since intersection logic handles missing data better
+      if (!apiLocation) {
+        console.log(`🔧 [STEP5] Missing required location data: location="${apiLocation}"`);
         setIntersectionResults({
           eligibleLenders: [],
-          requiredDocuments: ['Bank Statements', 'Tax Returns', 'Financial Statements', 'Business License', 'Articles of Incorporation'],
-          message: 'Using fallback document requirements - form data incomplete',
+          requiredDocuments: [],
+          message: 'Business location required for document requirements calculation',
           hasMatches: false,
           isLoading: false
         });

@@ -320,21 +320,10 @@ export function DynamicDocumentRequirements({
           return;
         }
         
-        // FALLBACK: Use unified logic only if no intersection results
-        console.log('📋 No intersection results available, using unified logic fallback');
-        const selectedProducts: Product[] = formData.selectedProducts || [];
-        
-        const wizardData = convertFormDataToWizardData(formData, selectedProducts);
-        
-        console.log('📋 Loading unified document requirements for:', wizardData);
-        
-        // Use the new unified logic to build requirements list
-        const requirements = await buildRequiredDocList(wizardData);
-        
-        setDocumentRequirements(requirements);
-        
-        console.log(`📄 Loaded ${requirements.length} document requirements:`, 
-          requirements.map(r => r.label));
+        // FALLBACK: Only show message that authentic data is required
+        console.log('📋 No intersection results available - authentic lender data required');
+        setDocumentRequirements([]);
+        setError('Authentic lender intersection data not available. Please ensure Step 1 form data is properly submitted.');
           
       } catch (err) {
         console.error('❌ Failed to load document requirements:', err);
