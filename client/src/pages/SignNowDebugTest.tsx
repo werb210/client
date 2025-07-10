@@ -79,6 +79,29 @@ export default function SignNowDebugTest() {
     });
   };
 
+  // Simple test button as requested by user
+  const handleClick = async () => {
+    console.log('🔍 SignNow Direct Test - Making API call to staff backend');
+    
+    try {
+      const response = await fetch(`https://staff.boreal.financial/api/applications/${applicationId}/signnow`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json" 
+        }
+      });
+      
+      const data = await response.json();
+      console.log('SignNow API Response:', data);
+      alert(JSON.stringify(data, null, 2));
+      
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error('SignNow API Error:', error);
+      alert(`Error: ${errorMsg}`);
+    }
+  };
+
   const runSignNowDebugTest = async () => {
     setIsRunning(true);
     setDebugResults([]);
@@ -111,127 +134,74 @@ export default function SignNowDebugTest() {
         console.error('❌ UUID Format Check:', applicationId, 'INVALID');
       }
 
-      // Test 2: Confirm API Endpoint Construction
-      setCurrentStep('Building API endpoint...');
-      updateResult('API Endpoint Construction', 'testing', 'Building SignNow API URL...');
+      // Test 2: Execute Direct API Call as requested
+      setCurrentStep('Making direct SignNow API request...');
+      updateResult('Direct SignNow API Test', 'testing', 'Testing direct staff backend API call...');
       
-      const apiBaseUrl = 'https://staff.boreal.financial';
-      const signNowEndpoint = `${apiBaseUrl}/api/applications/${applicationId}/signnow`;
-      
-      updateResult('API Endpoint Construction', 'success', `API URL: ${signNowEndpoint}`, {
-        baseUrl: apiBaseUrl,
-        fullEndpoint: signNowEndpoint,
-        applicationId,
-        method: 'POST'
-      });
-      console.log('🔗 API Endpoint:', signNowEndpoint);
-
-      // Test 3: Check Application Data Availability
-      setCurrentStep('Verifying application data...');
-      updateResult('Application Data Check', 'testing', 'Checking form data availability...');
-      
-      const hasBusinessData = !!(state.operatingName || state.legalName);
-      const hasApplicantData = !!(state.firstName && state.lastName);
-      const hasFundingAmount = !!(state.fundingAmount);
-      
-      if (hasBusinessData && hasApplicantData && hasFundingAmount) {
-        updateResult('Application Data Check', 'success', 'Application data complete for SignNow', {
-          businessName: state.operatingName || state.legalName,
-          applicantName: `${state.firstName} ${state.lastName}`,
-          fundingAmount: state.fundingAmount,
-          dataComplete: true
-        });
-      } else {
-        updateResult('Application Data Check', 'error', 'Missing required application data', {
-          hasBusinessData,
-          hasApplicantData,
-          hasFundingAmount,
-          missing: [
-            !hasBusinessData && 'Business Name',
-            !hasApplicantData && 'Applicant Name',
-            !hasFundingAmount && 'Funding Amount'
-          ].filter(Boolean)
-        });
-      }
-
-      // Test 4: Execute Actual SignNow API Call
-      setCurrentStep('Making SignNow API request...');
-      updateResult('SignNow API Request', 'testing', 'Sending POST request to staff backend...');
-      
-      console.log('📤 Making SignNow API call...');
+      console.log('📤 Making direct SignNow API call...');
       console.log('   Method: POST');
-      console.log('   URL:', `/api/applications/${applicationId}/signnow`);
-      console.log('   Headers: Content-Type: application/json, Authorization: Bearer [TOKEN]');
-      console.log('   Body:', JSON.stringify({ applicationId }));
+      console.log('   URL:', `https://staff.boreal.financial/api/applications/${applicationId}/signnow`);
+      console.log('   Headers: Content-Type: application/json');
       
-      const response = await fetch(`/api/applications/${applicationId}/signnow`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-        },
-        body: JSON.stringify({ applicationId }),
-        credentials: 'include'
+      const response = await fetch(`https://staff.boreal.financial/api/applications/${applicationId}/signnow`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json" 
+        }
       });
 
       console.log('📥 Response Status:', response.status, response.statusText);
       
-      const responseData = await response.text();
-      let parsedData;
-      try {
-        parsedData = JSON.parse(responseData);
-      } catch {
-        parsedData = responseData;
-      }
+      const responseData = await response.json();
 
       if (response.ok) {
-        updateResult('SignNow API Request', 'success', `✅ API call successful (${response.status})`, {
+        updateResult('Direct SignNow API Test', 'success', `✅ Direct API call successful (${response.status})`, {
           status: response.status,
           statusText: response.statusText,
-          response: parsedData,
-          endpoint: `/api/applications/${applicationId}/signnow`
+          response: responseData,
+          endpoint: `https://staff.boreal.financial/api/applications/${applicationId}/signnow`
         });
-        console.log('✅ SignNow API Success:', parsedData);
+        console.log('✅ SignNow API Success:', responseData);
         
         toast({
-          title: "SignNow API Success",
+          title: "Direct SignNow API Success",
           description: `Received ${response.status} response from staff backend`,
         });
       } else {
-        const errorMessage = parsedData?.error || response.statusText || 'Unknown error';
-        updateResult('SignNow API Request', 'error', `❌ API call failed (${response.status}): ${errorMessage}`, {
+        const errorMessage = responseData?.error || response.statusText || 'Unknown error';
+        updateResult('Direct SignNow API Test', 'error', `❌ Direct API call failed (${response.status}): ${errorMessage}`, {
           status: response.status,
           statusText: response.statusText,
           error: errorMessage,
-          response: parsedData,
-          endpoint: `/api/applications/${applicationId}/signnow`
+          response: responseData,
+          endpoint: `https://staff.boreal.financial/api/applications/${applicationId}/signnow`
         });
-        console.error('❌ SignNow API Error:', response.status, errorMessage, parsedData);
+        console.error('❌ SignNow API Error:', response.status, errorMessage, responseData);
         
         toast({
-          title: "SignNow API Error",
+          title: "Direct SignNow API Error",
           description: `${response.status}: ${errorMessage}`,
           variant: "destructive"
         });
       }
 
-      // Test 5: Network Tab Verification Instructions
+      // Test 3: Network Tab Verification Instructions
       updateResult('Network Tab Verification', 'success', 'Check browser dev tools Network tab for the API call', {
         instructions: [
           'Open browser dev tools (F12)',
           'Go to Network tab',
-          'Look for: POST /api/applications/[UUID]/signnow',
+          'Look for: POST https://staff.boreal.financial/api/applications/[UUID]/signnow',
           'Verify UUID format in URL',
-          'Check request payload includes applicationId',
+          'Check request headers include Content-Type: application/json',
           'Verify response status and content'
         ],
-        expectedUrl: `/api/applications/${applicationId}/signnow`,
+        expectedUrl: `https://staff.boreal.financial/api/applications/${applicationId}/signnow`,
         method: 'POST'
       });
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      updateResult('SignNow API Request', 'error', `❌ Network error: ${errorMessage}`, {
+      updateResult('Direct SignNow API Test', 'error', `❌ Network error: ${errorMessage}`, {
         error: errorMessage,
         type: 'NetworkError'
       });
@@ -338,15 +308,26 @@ export default function SignNowDebugTest() {
         <CardHeader>
           <CardTitle>Debug Test Execution</CardTitle>
           <p className="text-sm text-gray-600">
-            {currentStep || 'Click to run comprehensive SignNow debug test'}
+            {currentStep || 'Click to test SignNow integration directly'}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
+          <Button 
+            onClick={handleClick} 
+            className="w-full mb-4"
+            size="lg"
+            variant="default"
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Test SignNow API (Direct)
+          </Button>
+          
           <Button 
             onClick={runSignNowDebugTest} 
             disabled={isRunning}
             className="w-full"
             size="lg"
+            variant="outline"
           >
             {isRunning ? (
               <>
@@ -356,7 +337,7 @@ export default function SignNowDebugTest() {
             ) : (
               <>
                 <Play className="mr-2 h-4 w-4" />
-                Run SignNow Debug Test
+                Run Comprehensive Debug Test
               </>
             )}
           </Button>
