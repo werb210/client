@@ -126,13 +126,29 @@ export default function Step6SignNowIntegration() {
     setError(null);
     
     try {
+      // PRODUCTION DEBUG LOGGING - as requested by user
+      console.log("🔍 PRODUCTION DEBUG - Environment Variables:");
+      console.log("   - window.location.origin:", window.location.origin);
+      console.log("   - VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
+      console.log("   - VITE_STAFF_API_URL:", import.meta.env.VITE_STAFF_API_URL);
+      console.log("   - Has AUTH TOKEN:", import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ? 'YES' : 'NO');
+      
       // Step 3: Trigger SignNow Document Generation (Step 6)
       // API Call: POST /api/signnow/create
       // Body: { applicationId }
       console.log('📤 Step 3: Triggering SignNow document generation...');
-      console.log(`   - ApplicationId: ${applicationId}`);
+      console.log(`   - ApplicationId being used for SignNow: ${applicationId}`);
       
-      const response = await fetch(`/api/applications/${applicationId}/signnow`, {
+      const signNowEndpoint = `/api/applications/${applicationId}/signnow`;
+      const fullUrl = `${window.location.origin}${signNowEndpoint}`;
+      
+      console.log("🔍 PRODUCTION DEBUG - API Call Details:");
+      console.log(`   - SignNow endpoint: ${signNowEndpoint}`);
+      console.log(`   - Full URL: ${fullUrl}`);
+      console.log(`   - Should be calling: ${window.location.origin} (local proxy)`);
+      console.log(`   - NOT calling: https://staff.boreal.financial (direct)`);
+      
+      const response = await fetch(signNowEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,9 +157,13 @@ export default function Step6SignNowIntegration() {
         body: JSON.stringify({ applicationId: applicationId }),
         credentials: 'include'
       });
+      
+      console.log("🔍 PRODUCTION DEBUG - Response Status:", response.status);
+      console.log("🔍 PRODUCTION DEBUG - Response OK:", response.ok);
 
       if (response.ok) {
         const result = await response.json();
+        console.log("🔍 PRODUCTION DEBUG - SignNow Response:", result);
         
         if (result.signUrl) {
           // Direct signUrl received - ready for signing
@@ -188,8 +208,16 @@ export default function Step6SignNowIntegration() {
         }
       }
     } catch (error) {
+      console.error('🔍 PRODUCTION DEBUG - SignNow request failed:', error);
       console.error('❌ Step 3 Failed: Error creating SignNow document:', error);
-      setError(error instanceof Error ? error.message : 'Failed to create SignNow document');
+      
+      // Check if this is a network error (CORS, unreachable endpoint)
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        console.error('🔍 PRODUCTION DEBUG - This is a network error, likely CORS or unreachable endpoint');
+        setError('Network error: Cannot reach SignNow service. Please check your connection.');
+      } else {
+        setError(error instanceof Error ? error.message : 'Failed to create SignNow document');
+      }
       setSigningStatus('error');
     }
   };
