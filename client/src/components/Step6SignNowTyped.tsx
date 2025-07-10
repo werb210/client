@@ -35,7 +35,7 @@ export default function Step6SignNowTyped({ onNext, onBack }: Step6SignNowTypedP
     try {
       // Build strongly-typed payload from form data
       const payload: GeneratePayload = {
-        applicationId: formData.applicationId || `app-${Date.now()}`,
+        applicationId: formData.applicationId || crypto.randomUUID(),
         formFields: {
           businessName: formData.operatingName || formData.legalName || 'Business Name',
           ownerName: formData.firstName && formData.lastName 

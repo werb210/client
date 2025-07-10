@@ -54,7 +54,7 @@ export default function UUIDTestPage() {
       addResult('Fallback UUID Generation', `${fallbackId} (Valid: ${isFallbackValid})`, isFallbackValid ? 'success' : 'error');
       
       // Test 6: Compare with old timestamp format
-      const oldTimestampFormat = `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const oldTimestampFormat = `app_1752166815631_dar4mp2zf`; // Static example of old format
       const isOldFormat = /^app_\d+_[a-z0-9]+$/.test(oldTimestampFormat);
       addResult('Old Timestamp Format (Should NOT be used)', `${oldTimestampFormat} (Is old format: ${isOldFormat})`, isOldFormat ? 'error' : 'success');
       

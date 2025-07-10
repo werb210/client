@@ -96,7 +96,7 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
         return;
       }
 
-      const fileId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const fileId = crypto.randomUUID();
       
       // Add to uploading files
       setUploadingFiles(prev => [...prev, {

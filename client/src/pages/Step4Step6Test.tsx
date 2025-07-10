@@ -115,7 +115,7 @@ export default function Step4Step6Test() {
     dispatch({ type: 'UPDATE_FORM_DATA', payload: { applicationId: null } });
     
     // Step 4: Store ID
-    const mockId = `app_prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const mockId = `app_prod_${crypto.randomUUID()}`;
     const uuid = extractUuid(mockId);
     dispatch({ type: 'UPDATE_FORM_DATA', payload: { applicationId: uuid } });
     localStorage.setItem('applicationId', uuid);

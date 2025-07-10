@@ -56,7 +56,7 @@ class OfflineStorage {
       
       const applicationData = {
         ...data,
-        lastSaved: Date.now(),
+        lastSaved: Date.now(), // Keep timestamp for storage purposes
       };
 
       const request = store.put(applicationData);
@@ -96,7 +96,7 @@ class OfflineStorage {
   async saveDocument(applicationId: number, file: File): Promise<string> {
     if (!this.db) await this.init();
 
-    const documentId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const documentId = crypto.randomUUID();
     
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['documents'], 'readwrite');
