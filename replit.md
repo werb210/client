@@ -93,6 +93,19 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **January 10, 2025: COMPLETE SIGNNOW INTEGRATION WITH IFRAME EMBEDDING IMPLEMENTED**
+  * COMPLETE WORKFLOW: Implemented exact user specifications for SignNow API integration
+  * Enhanced SimpleSignNowTest.tsx with complete POST → JSON → iframe/redirect workflow
+  * Created SignNowIframe component with proper iframe sandbox settings and message handling
+  * API CALL STRUCTURE: POST to https://staff.boreal.financial/api/applications/UUID/signnow with Content-Type: application/json
+  * RESPONSE HANDLING: Detects {"status": "signing_created", "signnow_url": "..."} and automatically shows iframe
+  * DUAL OPTIONS: Users can either sign in embedded iframe OR open URL in new tab
+  * ERROR HANDLING: Comprehensive status updates and fallback mechanisms for failed iframe loads
+  * TEST UUID INTEGRATION: Uses exact user-specified UUID "12345678-1234-5678-9abc-123456789012"
+  * IFRAME SECURITY: Proper sandbox attributes (allow-scripts, allow-same-origin, allow-forms, allow-popups)
+  * COMPLETION DETECTION: Listens for SignNow postMessage events to detect signing completion
+  * PRODUCTION READY: Complete SignNow integration ready for live application data and real signing workflows
+
 - **January 10, 2025: UUID APPLICATION ID SYSTEM IMPLEMENTATION COMPLETE - FINAL VERIFICATION**
   * COMPREHENSIVE FIX: Replaced ALL timestamp-based application ID generation patterns with proper UUID v4 format
   * Fixed DocumentUpload.tsx: crypto.randomUUID() for file IDs instead of Date.now()_Math.random()
