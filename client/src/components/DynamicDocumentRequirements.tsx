@@ -94,11 +94,32 @@ function UnifiedDocumentUploadCard({
 }) {
   const { toast } = useToast();
   
-  // Filter files for this document type using label instead of name
-  const documentFiles = uploadedFiles.filter(f => 
-    f.documentType?.toLowerCase().includes(doc.label.toLowerCase().replace(/\s+/g, '_')) ||
-    f.name.toLowerCase().includes(doc.label.toLowerCase().split(' ')[0])
-  );
+  // Filter files for this document type using more flexible matching
+  const documentFiles = uploadedFiles.filter(f => {
+    const docLabelLower = doc.label.toLowerCase();
+    const fileNameLower = f.name.toLowerCase();
+    const documentTypeLower = f.documentType?.toLowerCase() || '';
+    
+    // Match bank statements (most important - files are uploaded with documentType: 'bank_statements')
+    if (docLabelLower.includes('bank') && docLabelLower.includes('statement')) {
+      return documentTypeLower === 'bank_statements' ||
+             documentTypeLower.includes('bank') || 
+             fileNameLower.includes('bank');
+    }
+    
+    // Match financial statements 
+    if (docLabelLower.includes('financial') && docLabelLower.includes('statement')) {
+      return documentTypeLower.includes('financial') || 
+             fileNameLower.includes('financial') ||
+             documentTypeLower === 'financial_statements';
+    }
+    
+    // Generic matching for other document types
+    const firstWord = docLabelLower.split(' ')[0];
+    return documentTypeLower.includes(firstWord) ||
+           fileNameLower.includes(firstWord) ||
+           documentTypeLower === doc.label.toLowerCase().replace(/\s+/g, '_');
+  });
   
   const requiredQuantity = doc.quantity || 1;
   const isComplete = documentFiles.length >= requiredQuantity;
@@ -106,7 +127,25 @@ function UnifiedDocumentUploadCard({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      const category = doc.label.toLowerCase().replace(/\s+/g, '_');
+      // Map document labels to API categories
+      const getApiCategory = (label: string): string => {
+        const labelLower = label.toLowerCase();
+        if (labelLower.includes('bank') && labelLower.includes('statement')) {
+          return 'bank_statements';
+        }
+        if (labelLower.includes('financial') && labelLower.includes('statement')) {
+          return 'financial_statements';
+        }
+        if (labelLower.includes('tax')) {
+          return 'tax_returns';
+        }
+        if (labelLower.includes('equipment')) {
+          return 'equipment_quotes';
+        }
+        return label.toLowerCase().replace(/\s+/g, '_');
+      };
+      
+      const category = getApiCategory(doc.label);
       
       // Validate file sizes (25MB limit)
       const oversizedFiles = files.filter(file => file.size > 25 * 1024 * 1024);
@@ -332,14 +371,38 @@ export function DynamicDocumentRequirements({
   useEffect(() => {
     if (documentRequirements.length > 0) {
       const completedDocs = documentRequirements.filter(doc => {
-        const documentFiles = uploadedFiles.filter(f => 
-          f.documentType?.toLowerCase().includes(doc.label.toLowerCase().replace(/\s+/g, '_')) ||
-          f.name.toLowerCase().includes(doc.label.toLowerCase().split(' ')[0])
-        );
+        const documentFiles = uploadedFiles.filter(f => {
+          const docLabelLower = doc.label.toLowerCase();
+          const fileNameLower = f.name.toLowerCase();
+          const documentTypeLower = f.documentType?.toLowerCase() || '';
+          
+          // Match bank statements (primary match by documentType)
+          if (docLabelLower.includes('bank') && docLabelLower.includes('statement')) {
+            return documentTypeLower === 'bank_statements' ||
+                   documentTypeLower.includes('bank') || 
+                   fileNameLower.includes('bank');
+          }
+          
+          // Match financial statements 
+          if (docLabelLower.includes('financial') && docLabelLower.includes('statement')) {
+            return documentTypeLower.includes('financial') || 
+                   fileNameLower.includes('financial') ||
+                   documentTypeLower === 'financial_statements';
+          }
+          
+          // Generic matching for other document types
+          const firstWord = docLabelLower.split(' ')[0];
+          return documentTypeLower.includes(firstWord) ||
+                 fileNameLower.includes(firstWord) ||
+                 documentTypeLower === doc.label.toLowerCase().replace(/\s+/g, '_');
+        });
+        
+        console.log(`📊 Document "${doc.label}" files found: ${documentFiles.length}/${doc.quantity || 1}`);
         return documentFiles.length >= (doc.quantity || 1);
       });
       
       const allComplete = completedDocs.length === documentRequirements.length;
+      console.log(`📋 Document completion: ${completedDocs.length}/${documentRequirements.length} complete`);
       onRequirementsChange?.(allComplete, documentRequirements.length);
     }
   }, [uploadedFiles, documentRequirements, onRequirementsChange]);
