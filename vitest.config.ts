@@ -1,16 +1,21 @@
 import { defineConfig } from 'vitest/config';
-import { resolve } from 'path';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
+  plugins: [react()],
   test: {
-    globals: true,
     environment: 'jsdom',
-    setupFiles: ['./client/tests/setup.ts'],
+    setupFiles: ['./client/src/tests/setup.ts'],
+    globals: true,
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './client/src'),
-      '@shared': resolve(__dirname, './shared'),
+      '@': path.resolve(__dirname, './client/src'),
+      '@assets': path.resolve(__dirname, './attached_assets'),
     },
+  },
+  esbuild: {
+    jsx: 'automatic',
   },
 });

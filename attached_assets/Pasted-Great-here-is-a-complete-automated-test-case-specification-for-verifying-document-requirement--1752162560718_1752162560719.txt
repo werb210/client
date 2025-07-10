@@ -1,0 +1,115 @@
+Great — here is a **complete automated test case specification** for verifying document requirement matching using `documentType`. This test ensures that the **red “Required” badge turns green (“Complete”)** once the correct documents are uploaded — regardless of filename.
+
+---
+
+## ✅ Automated Test Case: `documentUploadRequirementMatch.spec.ts`
+
+### 🎯 **Goal**
+
+Verify that uploading documents with the correct `documentType` satisfies the corresponding required document category and updates the UI from "Required" (🔴) to "Complete" (🟢).
+
+---
+
+### 🧪 **Test Steps**
+
+#### 1. **Load Application Form**
+
+```ts
+goTo('/step5-documents'); // Navigate to document upload step
+```
+
+#### 2. **Initial State Validation**
+
+* Assert that the “Bank Statements” badge is `🔴 Required`
+
+```ts
+expect(screen.getByText('Bank Statements')).toHaveClass('badge-red');
+expect(screen.getByText('Required')).toBeVisible();
+```
+
+#### 3. **Upload 1 Valid Document With Correct `documentType`**
+
+```ts
+uploadFile({
+  fileName: 'March2025.pdf',
+  fileType: 'application/pdf',
+  documentType: 'bank_statements' // Important: internal tag
+});
+```
+
+#### 4. **Validate Completion Status**
+
+* Badge should now show as `🟢 Complete`
+
+```ts
+expect(screen.getByText('Bank Statements')).toHaveClass('badge-green');
+expect(screen.getByText('Complete')).toBeVisible();
+```
+
+#### 5. **Repeat for Other Categories**
+
+You can reuse this logic to test all document types:
+
+```ts
+[
+  { label: 'Voided Cheque', type: 'void_cheque' },
+  { label: 'Business License', type: 'business_license' },
+  { label: 'Articles of Incorporation', type: 'articles_of_incorporation' }
+].forEach(({ label, type }) => {
+  uploadFile({ fileName: `${label}.pdf`, fileType: 'application/pdf', documentType: type });
+  expect(screen.getByText(label)).toHaveClass('badge-green');
+});
+```
+
+---
+
+### 🔁 **Negative Test: Wrong `documentType`**
+
+```ts
+uploadFile({
+  fileName: 'randombank.pdf',
+  fileType: 'application/pdf',
+  documentType: 'misc'
+});
+expect(screen.getByText('Bank Statements')).toHaveClass('badge-red');
+```
+
+---
+
+## 🧱 Test Environment Setup
+
+### Required Mock:
+
+```ts
+mockUploadAPI({
+  success: true,
+  acceptedTypes: ['pdf', 'jpeg', 'png'],
+  maxSizeMB: 25,
+});
+```
+
+### Required Seed State:
+
+```json
+{
+  "requiredDocuments": [
+    { "name": "Bank Statements", "documentType": "bank_statements", "required": true },
+    { "name": "Voided Cheque", "documentType": "void_cheque", "required": true }
+  ]
+}
+```
+
+---
+
+## ✅ Pass Criteria
+
+| Test                               | Expected Behavior                   |
+| ---------------------------------- | ----------------------------------- |
+| Upload valid bank statement        | "Required" → "Complete"             |
+| Upload wrong file type             | "Required" remains                  |
+| Upload valid for each required doc | All badges turn green               |
+| UI reflects completion             | Final submit button becomes enabled |
+
+---
+
+Would you like this test integrated directly into your Replit test suite under `client/src/tests/documentUploadRequirementMatch.spec.ts`?

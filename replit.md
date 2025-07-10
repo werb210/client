@@ -93,6 +93,17 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **January 10, 2025: AUTOMATED TESTING FRAMEWORK & RED CIRCLE FIX COMPLETE**
+  * Fixed critical red circle issue in document requirements where uploaded files with documentType 'bank_statements' weren't being recognized
+  * Enhanced document matching logic to prioritize documentType field for more reliable file recognition 
+  * Implemented comprehensive automated test suite using Vitest with 8 passing tests covering all document matching scenarios
+  * Created documentUploadSimple.test.ts with complete verification of document requirement matching logic
+  * Test coverage includes: correct documentType matching, filename matching, quantity requirements, and completion status
+  * Verified red circle → green circle transformation when sufficient documents are uploaded
+  * Added proper API category mapping (Bank Statements → 'bank_statements', Financial Statements → 'financial_statements')
+  * Enhanced console logging to show document completion status for debugging purposes
+  * All tests pass: document matching works correctly for files with documentType 'bank_statements' regardless of filename
+
 - **January 10, 2025: DATE PICKER IMPLEMENTATION COMPLETE**
   * Implemented react-datepicker components for Business Start Date (Step 3) and Birthday fields (Step 4 & Partner)
   * Business Start Date picker: Validates dates from 1900-01-01 to today with year/month dropdowns for easy selection
