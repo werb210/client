@@ -110,7 +110,10 @@ export default function Step4ApplicantInfoRoute() {
       }
       
       const applicationResult = await response.json();
-      const applicationId = applicationResult.id || applicationResult.applicationId || `app_${Date.now()}`;
+      
+      // Import UUID for proper ID generation
+      const { v4: uuidv4 } = await import('uuid');
+      const applicationId = applicationResult.id || applicationResult.applicationId || uuidv4();
       
       console.log('✅ Application submission successful');
       console.log('📋 Application ID received:', applicationId);

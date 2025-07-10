@@ -143,7 +143,8 @@ async function testApplicationSubmission() {
       console.log(`   📄 Response: ${JSON.stringify(submitResult, null, 2)}`);
       
       // Extract application ID if available
-      const applicationId = submitResult.id || submitResult.applicationId || 'test-123';
+      const crypto = require('crypto');
+      const applicationId = submitResult.id || submitResult.applicationId || crypto.randomUUID();
       console.log(`   🆔 Application ID: ${applicationId}`);
       
       // Test Step 4 signing initiation

@@ -191,7 +191,8 @@ export default function Step4ApplicantInfoComplete() {
       console.error('❌ Step 4 Failed: Error creating application:', error);
       
       // Generate fallback UUID for development/testing
-      const fallbackId = `app_fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const { v4: uuidv4 } = await import('uuid');
+      const fallbackId = uuidv4();
       const uuid = extractUuid(fallbackId);
       console.log('⚠️ Using fallback applicationId:', uuid);
       

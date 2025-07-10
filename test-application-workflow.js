@@ -140,7 +140,8 @@ async function testApplicationWorkflow() {
     console.log(`📄 Response: ${submitResult}`);
 
     // Generate application ID
-    const applicationId = `app-${Date.now()}`;
+    const crypto = require('crypto');
+    const applicationId = crypto.randomUUID();
     console.log(`🆔 Application ID: ${applicationId}`);
 
     // Test signing initiation

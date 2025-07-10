@@ -170,7 +170,8 @@ export default function Step7FinalSubmission() {
         // If staff backend is not available, simulate success for demo
         console.log('Staff backend not available, simulating successful submission');
         await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-        return { applicationId: `APP-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}` };
+        const { v4: uuidv4 } = await import('uuid');
+        return { applicationId: uuidv4() };
       }
     },
     onSuccess: (data) => {

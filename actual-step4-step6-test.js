@@ -15,7 +15,9 @@ console.log('✅ Storage cleared');
 
 // Step 2: Simulate what Step 4 onSubmit actually does
 console.log('\n2. Simulating Step 4 onSubmit...');
-const mockApplicationId = `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+// Import crypto for UUID generation
+const crypto = require('crypto');
+const mockApplicationId = crypto.randomUUID();
 
 // This is what Step 4 does when it gets a successful API response
 console.log('📤 Step 4: Creating application via POST /api/public/applications...');

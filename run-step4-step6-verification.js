@@ -19,7 +19,9 @@ try {
 
 // Test 2: Simulate Step 4 storing applicationId
 console.log('\n2. SIMULATING STEP 4 STORING APPLICATIONID');
-const mockApplicationId = `app_test_${Date.now()}`;
+// Import crypto for UUID generation
+const crypto = require('crypto');
+const mockApplicationId = crypto.randomUUID();
 try {
   localStorage.setItem('applicationId', mockApplicationId);
   console.log(`✅ Step 4 stored applicationId: ${mockApplicationId}`);
