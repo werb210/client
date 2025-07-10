@@ -1,0 +1,111 @@
+Here is the fully updated and consolidated instruction for **Replit**, with all dropdown changes and matching enforcement in the lender recommendation engine and all dependent logic:
+
+---
+
+## ✅ **Client Application – Instruction for Replit**
+
+### 🎯 Objective:
+
+Lock specific dropdown options in the multi-step application form, and ensure all downstream logic — including the AI-powered lender recommendation engine — reflects the changes. Disallow auto-modification of these values in future deployments.
+
+---
+
+### 🔧 1. **Step 1 – “Purpose of Funds” Dropdown**
+
+#### ✅ **Set dropdown options to ONLY**:
+
+```
+Equipment Purchase  
+Inventory Purchase  
+Business Expansion  
+Working Capital
+```
+
+#### ❌ **Remove any other options**, including:
+
+* Real Estate Purchase
+* Marketing and Advertising
+* Debt Consolidation
+* Payroll and Operating Expenses
+* Other Business Purposes
+* Technology Upgrade
+
+#### 📌 Mandatory Rewiring:
+
+* Update **all form steps**, **API payloads**, and **display logic**.
+* Confirm the **AI Recommendation Engine (Step 2)** uses this new list only.
+* Ensure no hardcoded fallback values persist in cached data or legacy logic.
+* Lock this field from automatic modification without admin approval.
+
+---
+
+### 🔧 2. **Step 1 – “Current Account Receivable Balance” Dropdown**
+
+#### ✅ **Replace with the following options**:
+
+```
+No Account Receivables  
+Zero to $100,000  
+$100,000 to $250,000  
+$250,000 to $500,000  
+$500,000 to $1,000,000  
+$1,000,000 to $3,000,000  
+Over $3,000,000
+```
+
+#### 📌 Mandatory Rewiring:
+
+* Ensure the **recommendation engine**, validation schema, and backend logic are synced with these values.
+* Confirm these new ranges are what drive product eligibility in Step 2.
+* Remove any legacy comparisons or ranges from previous configurations.
+
+---
+
+### 🔧 3. **Step 1 – “Fixed Assets Value for Loan Security” Dropdown**
+
+#### ✅ **Replace with the following options**:
+
+```
+No fixed assets  
+Zero to $25,000  
+$25,000 to $100,000  
+$100,000 to $250,000  
+$250,000 to $500,000  
+$500,000 to $1,000,000  
+Over $1,000,000
+```
+
+#### 📌 Mandatory Rewiring:
+
+* Update all use cases where this field is used for:
+
+  * Eligibility filtering
+  * Product score calculation
+  * Lender display ranking
+* Ensure **Step 2 AI product recommendation engine** uses these ranges exclusively.
+* Validate that API submissions and summaries show these new options only.
+
+---
+
+### 📋 Final Requirements for Replit
+
+Replit must confirm the following:
+
+* ✅ **All dropdowns updated** to match the above lists exactly
+* ✅ **Step 2 recommendation engine** updated to use these field values only
+* ✅ **Legacy logic purged**: no hardcoded or legacy values remain in conditionals
+* ✅ **API payloads updated** to match new enums
+* ✅ **Form validation and schema (Zod or equivalent)** reflect these values
+* ✅ **No automatic regeneration or fallback** overwrites these values again
+* ✅ **Locked and confirmed**: Any future change to dropdowns must trigger a review
+
+---
+
+Please notify once this patch is deployed so a full regression test can be conducted across:
+
+* Step 1 dropdown rendering
+* Step 2 lender matching logic
+* Step 6 document generation
+* Final payloads to the staff application
+
+These dropdowns must be tightly controlled for compliance, accuracy, and funding eligibility logic.

@@ -93,6 +93,16 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **January 10, 2025: DROPDOWN OPTIONS SPECIFICATION COMPLIANCE COMPLETE**
+  * Updated Purpose of Funds dropdown to exactly 4 specified options: Equipment Purchase, Inventory Purchase, Business Expansion, Working Capital
+  * Removed Technology Upgrade option from Purpose of Funds dropdown and all related schema/validation logic
+  * Updated Current Account Receivable Balance dropdown to 7 options with new ranges: No Account Receivables, Zero to $100,000, $100,000 to $250,000, $250,000 to $500,000, $500,000 to $1,000,000, $1,000,000 to $3,000,000, Over $3,000,000
+  * Updated Fixed Assets Value dropdown to 7 options with new ranges: No fixed assets, Zero to $25,000, $25,000 to $100,000, $100,000 to $250,000, $250,000 to $500,000, $500,000 to $1,000,000, Over $1,000,000
+  * Updated shared schema in shared/schema.ts to remove 'technology_upgrade' from fundsPurpose enum
+  * Verified recommendation engine continues to work correctly with new dropdown values
+  * All changes maintain compatibility with existing Step 2 AI recommendation engine and filtering logic
+  * No legacy hardcoded values remain - all dropdown options locked and controlled for compliance accuracy
+
 - **January 10, 2025: LIVE STAFF BACKEND INTEGRATION COMPLETE**
   * Successfully integrated client application with operational staff backend at https://staff.boreal.financial
   * Removed all development fallback data and placeholder logic per user requirements

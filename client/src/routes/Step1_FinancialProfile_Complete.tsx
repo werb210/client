@@ -107,27 +107,26 @@ const fundsPurposeOptions = [
   { value: 'inventory', label: 'Inventory Purchase' },
   { value: 'expansion', label: 'Business Expansion' },
   { value: 'working_capital', label: 'Working Capital' },
-  { value: 'technology_upgrade', label: 'Technology Upgrade' },
 ];
 
 const accountsReceivableOptions = [
   { value: 0, label: 'No Account Receivables' },
-  { value: 10000, label: 'Under $10,000' },
-  { value: 25000, label: '$10,000 to $25,000' },
-  { value: 50000, label: '$25,000 to $50,000' },
-  { value: 100000, label: '$50,000 to $100,000' },
-  { value: 250000, label: 'Over $100,000' },
+  { value: 100000, label: 'Zero to $100,000' },
+  { value: 250000, label: '$100,000 to $250,000' },
+  { value: 500000, label: '$250,000 to $500,000' },
+  { value: 1000000, label: '$500,000 to $1,000,000' },
+  { value: 3000000, label: '$1,000,000 to $3,000,000' },
+  { value: 3000001, label: 'Over $3,000,000' },
 ];
 
 const fixedAssetsOptions = [
   { value: 0, label: 'No fixed assets' },
-  { value: 10000, label: 'Under $10,000' },
-  { value: 25000, label: '$10,000 to $25,000' },
-  { value: 50000, label: '$25,000 to $50,000' },
-  { value: 100000, label: '$50,000 to $100,000' },
+  { value: 25000, label: 'Zero to $25,000' },
+  { value: 100000, label: '$25,000 to $100,000' },
   { value: 250000, label: '$100,000 to $250,000' },
   { value: 500000, label: '$250,000 to $500,000' },
-  { value: 1000000, label: 'Over $500,000' },
+  { value: 1000000, label: '$500,000 to $1,000,000' },
+  { value: 1000001, label: 'Over $1,000,000' },
 ];
 
 export default function Step1FinancialProfile() {

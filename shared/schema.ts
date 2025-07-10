@@ -26,7 +26,7 @@ export const ApplicationFormSchema = z.object({
   industry: z.string(),
   lookingFor: z.enum(['capital', 'equipment', 'both']),
   fundingAmount: z.number().positive(),
-  fundsPurpose: z.enum(['equipment', 'inventory', 'expansion', 'working_capital', 'technology_upgrade']),
+  fundsPurpose: z.enum(['equipment', 'inventory', 'expansion', 'working_capital']),
   salesHistory: z.enum(['<1yr', '1-3yr', '3+yr']),
   revenueLastYear: z.number().nonnegative(),
   averageMonthlyRevenue: z.number().nonnegative(),
