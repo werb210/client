@@ -152,11 +152,35 @@ export default function Step6SignNowIntegration() {
           startPollingSigningStatus();
         }
       } else {
+        // Enhanced error handling per user debug instructions
+        const responseText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = responseText;
+        }
+        
+        const errorMessage = errorData?.error || errorData?.message || response.statusText || 'Unknown error';
+        
+        console.error('❌ SignNow API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorMessage,
+          response: errorData,
+          endpoint: `/api/applications/${applicationId}/signnow`
+        });
+        
         // Handle 501/500 errors gracefully
         if (response.status === 501 || response.status === 500) {
           throw new Error("Signature system not yet implemented. Please try again later.");
+        } else if (response.status === 404) {
+          throw new Error(`Application not found (${response.status}): ${errorMessage}. Please verify the application ID is correct.`);
+        } else if (response.status === 401) {
+          throw new Error(`Authentication failed (${response.status}): ${errorMessage}. Please check API credentials.`);
+        } else {
+          throw new Error(`SignNow creation failed (${response.status}): ${errorMessage}`);
         }
-        throw new Error(`SignNow creation failed: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
       console.error('❌ Step 3 Failed: Error creating SignNow document:', error);

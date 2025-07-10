@@ -73,6 +73,7 @@ import Step4Step6Test from "@/pages/Step4Step6Test";
 import BackendRequestTest from "@/pages/BackendRequestTest";
 import CacheManagement from "@/pages/CacheManagement";
 import UUIDTestPage from "@/pages/UUIDTestPage";
+import SignNowDebugTest from "@/pages/SignNowDebugTest";
 
 
 /**
@@ -127,6 +128,7 @@ export function MainLayout() {
       <Route path="/backend-request-test" component={BackendRequestTest} />
       <Route path="/cache-management" component={CacheManagement} />
       <Route path="/uuid-test" component={UUIDTestPage} />
+      <Route path="/signnow-debug-test" component={SignNowDebugTest} />
       <Route path="/security-test-runner" component={lazy(() => import('../security/SecurityTestRunner'))} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
