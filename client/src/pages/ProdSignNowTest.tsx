@@ -11,11 +11,11 @@ export default function ProdSignNowTest() {
 
     if (id) {
       setLoading(true);
-      fetch(`https://staff.boreal.financial/api/applications/${id}/signnow`, {
+      // Use local proxy to avoid CORS issues
+      fetch(`/api/applications/${id}/signnow`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
       })
         .then((res) => res.json())
@@ -34,11 +34,11 @@ export default function ProdSignNowTest() {
     const manualId = prompt('Enter applicationId to test:');
     if (manualId) {
       setLoading(true);
-      fetch(`https://staff.boreal.financial/api/applications/${manualId}/signnow`, {
+      // Use local proxy to avoid CORS issues
+      fetch(`/api/applications/${manualId}/signnow`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
       })
         .then((res) => res.json())
