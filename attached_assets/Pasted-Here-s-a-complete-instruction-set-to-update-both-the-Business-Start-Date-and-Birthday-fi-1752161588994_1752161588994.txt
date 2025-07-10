@@ -1,0 +1,152 @@
+Here's a complete **instruction set** to update both the **Business Start Date** and **Birthday** fields in your application, with clear implementation and downstream integration rules.
+
+---
+
+## ✅ OVERVIEW
+
+You are replacing static text inputs with **validated date pickers** using `react-datepicker` for:
+
+1. **Business Start Date**
+2. **Applicant Birthday**
+
+You must also ensure:
+
+* All **form validation**, **recommendation engine logic**, and **submission payloads** are updated
+* Styling and accessibility are preserved
+* Mobile support is functional
+
+---
+
+## 🧩 CLIENT APPLICATION
+
+### 🔄 Change 1: Replace **Business Start Date** with Date Picker
+
+#### **Implementation**
+
+1. Replace the current input for `businessStartDate` with:
+
+```tsx
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+// Inside form component:
+<DatePicker
+  selected={businessStartDate}
+  onChange={(date) => setBusinessStartDate(date)}
+  dateFormat="yyyy-MM-dd"
+  placeholderText="YYYY-MM-DD"
+  maxDate={new Date()}
+  minDate={new Date("1900-01-01")}
+  showYearDropdown
+  showMonthDropdown
+  dropdownMode="select"
+  className="border p-2 rounded-md w-full"
+/>
+```
+
+2. Set state type to `Date | null`.
+
+```tsx
+const [businessStartDate, setBusinessStartDate] = useState<Date | null>(null);
+```
+
+---
+
+### 🔄 Change 2: Replace **Birthday Field** with Age-Validated Picker
+
+#### **Implementation**
+
+1. Replace the `birthday` input with:
+
+```tsx
+const eighteenYearsAgo = new Date();
+eighteenYearsAgo.setFullYear(new Date().getFullYear() - 18);
+
+<DatePicker
+  selected={birthday}
+  onChange={(date) => setBirthday(date)}
+  dateFormat="yyyy-MM-dd"
+  placeholderText="YYYY-MM-DD"
+  maxDate={eighteenYearsAgo}
+  showYearDropdown
+  showMonthDropdown
+  dropdownMode="select"
+  className="border p-2 rounded-md w-full"
+/>
+```
+
+2. Set state:
+
+```tsx
+const [birthday, setBirthday] = useState<Date | null>(null);
+```
+
+3. Optionally display a warning if selected age < 18 using date diff.
+
+---
+
+### 🔁 Form Submission Adjustments
+
+✅ Convert dates to ISO string format before sending to backend:
+
+```tsx
+const payload = {
+  ...formValues,
+  businessStartDate: businessStartDate?.toISOString().split("T")[0],
+  birthday: birthday?.toISOString().split("T")[0],
+};
+```
+
+✅ Validate in client that both dates are present and valid.
+
+---
+
+### 📦 Validation and UX
+
+* Add conditional error if either field is empty
+* Use `react-datepicker` styles for mobile responsiveness
+* Autofocus or scroll to date picker if invalid on submit
+
+---
+
+## 🧠 RECOMMENDATION ENGINE
+
+### 🔁 Adjustments
+
+* Ensure the backend engine correctly handles ISO-formatted dates (`YYYY-MM-DD`)
+* If logic is based on business age (e.g., > 2 years), compute it from the `businessStartDate` server-side
+* Add validation to reject applications with future dates
+
+Example logic:
+
+```ts
+const yearsInBusiness = getYearDifference(new Date(businessStartDate), new Date());
+if (yearsInBusiness < 1) {
+  return "Ineligible for Term Loans";
+}
+```
+
+---
+
+## 📊 DATABASE & API
+
+* Confirm your `/api/applications` POST route accepts and parses `businessStartDate` and `birthday` as ISO strings
+* Add server-side validation to reject malformed or future-dated values
+* Log both fields in the audit record
+
+---
+
+## ✅ TEST PLAN
+
+| Component             | Test Case                             | Expected Result                       |
+| --------------------- | ------------------------------------- | ------------------------------------- |
+| Business Start Date   | Pick a valid date before today        | Accepted and formatted to ISO string  |
+| Birthday Field        | Pick a date < 18 years ago            | Accepted                              |
+| Birthday Field        | Pick a date < 18 years old            | Error shown                           |
+| Recommendation Engine | Application with < 1 year in business | Filters out long-term loans           |
+| Form Submission       | Date not selected                     | Prevent submission with error message |
+| Mobile Picker UI      | Use on iOS/Android browser            | Loads mobile-friendly picker          |
+
+---
+
+Would you like this deployed as a reusable shared date component across the form system?

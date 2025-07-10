@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowRight, ArrowLeft, Save, User, Home, Calendar } from 'lucide-react';
 import { step4Schema, type ApplicationForm } from '@shared/schema';
 import { useDebounce } from 'use-debounce';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 type Step4FormData = Pick<ApplicationForm,
   | 'title' | 'firstName' | 'lastName' | 'personalEmail' | 'personalPhone' | 'dateOfBirth'
@@ -89,6 +91,20 @@ export default function Step4ApplicantDetails() {
 
   // Determine if user is Canadian based on business location
   const isCanadian = state.businessLocation === 'Canada';
+  
+  // Date state for birthday field with age validation
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(
+    state.dateOfBirth ? new Date(state.dateOfBirth) : null
+  );
+  
+  // Date state for partner birthday field with age validation
+  const [partnerDateOfBirth, setPartnerDateOfBirth] = useState<Date | null>(
+    state.partnerDateOfBirth ? new Date(state.partnerDateOfBirth) : null
+  );
+  
+  // Calculate eighteen years ago for age validation
+  const eighteenYearsAgo = new Date();
+  eighteenYearsAgo.setFullYear(new Date().getFullYear() - 18);
 
   // Ownership percentage to determine if partner section should show
   const ownershipValue = parseInt(form.watch('ownershipPercentage') || '100');
@@ -223,7 +239,20 @@ export default function Step4ApplicantDetails() {
                     <FormItem>
                       <FormLabel>Date of Birth</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <DatePicker
+                          selected={dateOfBirth}
+                          onChange={(date) => {
+                            setDateOfBirth(date);
+                            field.onChange(date ? date.toISOString().split('T')[0] : '');
+                          }}
+                          dateFormat="yyyy-MM-dd"
+                          placeholderText="YYYY-MM-DD"
+                          maxDate={eighteenYearsAgo}
+                          showYearDropdown
+                          showMonthDropdown
+                          dropdownMode="select"
+                          className="border border-input bg-background px-3 py-2 text-sm ring-offset-background rounded-md h-12 w-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -556,6 +585,33 @@ export default function Step4ApplicantDetails() {
                         <FormLabel>Partner Phone</FormLabel>
                         <FormControl>
                           <Input placeholder="(123) 456-7890" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="partnerDateOfBirth"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Date of Birth</FormLabel>
+                        <FormControl>
+                          <DatePicker
+                            selected={partnerDateOfBirth}
+                            onChange={(date) => {
+                              setPartnerDateOfBirth(date);
+                              field.onChange(date ? date.toISOString().split('T')[0] : '');
+                            }}
+                            dateFormat="yyyy-MM-dd"
+                            placeholderText="YYYY-MM-DD"
+                            maxDate={eighteenYearsAgo}
+                            showYearDropdown
+                            showMonthDropdown
+                            dropdownMode="select"
+                            className="border border-input bg-background px-3 py-2 text-sm ring-offset-background rounded-md h-12 w-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

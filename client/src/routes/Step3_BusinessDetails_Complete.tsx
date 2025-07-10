@@ -11,6 +11,8 @@ import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { ApplicationFormSchema } from '../../../shared/schema';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import {
   formatPhoneNumber,
   formatPostalCode,
@@ -62,6 +64,11 @@ export default function Step3BusinessDetailsComplete() {
 
   // Phone number display state
   const [phoneDisplay, setPhoneDisplay] = useState('');
+  
+  // Date state for business start date
+  const [businessStartDate, setBusinessStartDate] = useState<Date | null>(
+    state.businessStartDate ? new Date(state.businessStartDate) : null
+  );
 
   const form = useForm<BusinessDetailsFormData>({
     resolver: zodResolver(step3Schema),
@@ -389,10 +396,20 @@ export default function Step3BusinessDetailsComplete() {
                       <FormItem>
                         <FormLabel className="text-base font-semibold">Business Start Date *</FormLabel>
                         <FormControl>
-                          <Input
-                            type="date"
-                            {...field}
-                            className="h-12"
+                          <DatePicker
+                            selected={businessStartDate}
+                            onChange={(date) => {
+                              setBusinessStartDate(date);
+                              field.onChange(date ? date.toISOString().split('T')[0] : '');
+                            }}
+                            dateFormat="yyyy-MM-dd"
+                            placeholderText="YYYY-MM-DD"
+                            maxDate={new Date()}
+                            minDate={new Date("1900-01-01")}
+                            showYearDropdown
+                            showMonthDropdown
+                            dropdownMode="select"
+                            className="border border-input bg-background px-3 py-2 text-sm ring-offset-background rounded-md h-12 w-full focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                           />
                         </FormControl>
                         <FormMessage />
