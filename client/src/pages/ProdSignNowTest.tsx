@@ -18,59 +18,46 @@ export default function ProdSignNowTest() {
     setLoading(true);
     setResponse(null);
     
+    console.log("🌍 VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
+    console.log("🧾 Application ID:", testId);
+
+    const signNowUrl = `${import.meta.env.VITE_API_BASE_URL}/applications/${testId}/signnow`;
+
+    console.log('📡 Now calling SignNow endpoint:', signNowUrl);
+
     try {
-      // PRODUCTION DEBUG LOGGING - matching Step 6 format
-      console.log("🔍 PRODUCTION DEBUG - Environment Variables (Test Page):");
-      console.log("   - window.location.origin:", window.location.origin);
-      console.log("   - VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
-      console.log("   - VITE_STAFF_API_URL:", import.meta.env.VITE_STAFF_API_URL);
-      console.log("   - Has AUTH TOKEN:", import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ? 'YES' : 'NO');
-      
-      console.log('🔍 Testing SignNow with applicationId:', testId);
-      
-      const url = `${import.meta.env.VITE_API_BASE_URL}/applications/${testId}/signnow`;
-      
-      console.log("🔍 PRODUCTION DEBUG - Test API Call Details:");
-      console.log(`   - VITE_API_BASE_URL: ${import.meta.env.VITE_API_BASE_URL}`);
-      console.log("🔗 Final SignNow URL:", url);
-      console.log(`   - NOW calling: https://staff.boreal.financial (direct)`);
-      console.log(`   - NO LONGER using: ${window.location.origin} (local proxy)`);
-      
-      const response = await fetch(url, {
+      const response = await fetch(signNowUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
-        body: JSON.stringify({ applicationId: testId }),
-        credentials: 'include'
+        credentials: 'include',
       });
-      
-      console.log("🔍 PRODUCTION DEBUG - Test Response Status:", response.status);
-      console.log("🔍 PRODUCTION DEBUG - Test Response OK:", response.ok);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log("🔍 PRODUCTION DEBUG - Test SignNow Response:", data);
-        setResponse(data);
-        console.log('✅ SignNow test successful:', data);
-      } else {
-        const error = await response.text();
-        console.log("🔍 PRODUCTION DEBUG - Test Error Response:", error);
-        setResponse({ error: `${response.status}: ${error}` });
-        console.error('❌ SignNow test failed:', error);
+
+      console.log('📬 SignNow response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ SignNow error body:', errorText);
+        setResponse({ error: `SignNow request failed: ${response.status}` });
+        return;
       }
-    } catch (error) {
-      console.error('🔍 PRODUCTION DEBUG - Test SignNow request failed:', error);
-      
-      // Check if this is a network error (CORS, unreachable endpoint)
-      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        console.error('🔍 PRODUCTION DEBUG - This is a network error, likely CORS or unreachable endpoint');
-        setResponse({ error: 'Network error: Cannot reach SignNow service. Check console for details.' });
+
+      const json = await response.json();
+      console.log('✅ SignNow response JSON:', json);
+
+      if (json.success && json.data?.signingUrl) {
+        setResponse({ 
+          success: true, 
+          signingUrl: json.data.signingUrl,
+          message: 'SignNow test successful'
+        });
       } else {
-        setResponse({ error: `Network error: ${error}` });
+        setResponse({ error: 'Invalid SignNow response structure' });
       }
-      console.error('❌ SignNow test error:', error);
+    } catch (err: any) {
+      console.error('❌ SignNow fetch failed:', err);
+      setResponse({ error: `Network error: ${err.message}` });
     } finally {
       setLoading(false);
     }

@@ -125,98 +125,42 @@ export default function Step6SignNowIntegration() {
     setSigningStatus('loading');
     setError(null);
     
+    console.log("🌍 VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
+    console.log("🧾 Application ID:", applicationId);
+
+    const signNowUrl = `${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/signnow`;
+
+    console.log('📡 Now calling SignNow endpoint:', signNowUrl);
+
     try {
-      // PRODUCTION DEBUG LOGGING - as requested by user
-      console.log("🔍 PRODUCTION DEBUG - Environment Variables:");
-      console.log("   - window.location.origin:", window.location.origin);
-      console.log("   - VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
-      console.log("   - VITE_STAFF_API_URL:", import.meta.env.VITE_STAFF_API_URL);
-      console.log("   - Has AUTH TOKEN:", import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ? 'YES' : 'NO');
-      
-      // Step 3: Trigger SignNow Document Generation (Step 6)
-      // API Call: POST /api/signnow/create
-      // Body: { applicationId }
-      console.log('📤 Step 3: Triggering SignNow document generation...');
-      console.log(`   - ApplicationId being used for SignNow: ${applicationId}`);
-      
-      const url = `${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/signnow`;
-      
-      console.log("🔍 PRODUCTION DEBUG - API Call Details:");
-      console.log(`   - VITE_API_BASE_URL: ${import.meta.env.VITE_API_BASE_URL}`);
-      console.log("🔗 Final SignNow URL:", url);
-      console.log(`   - NOW calling: https://staff.boreal.financial (direct)`);
-      console.log(`   - NO LONGER using: ${window.location.origin} (local proxy)`);
-      
-      const response = await fetch(url, {
+      const response = await fetch(signNowUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
-        body: JSON.stringify({ applicationId: applicationId }),
-        credentials: 'include'
+        credentials: 'include',
       });
-      
-      console.log("🔍 PRODUCTION DEBUG - Response Status:", response.status);
-      console.log("🔍 PRODUCTION DEBUG - Response OK:", response.ok);
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log("🔍 PRODUCTION DEBUG - SignNow Response:", result);
-        
-        if (result.signUrl) {
-          // Direct signUrl received - ready for signing
-          console.log('✅ Step 3 Complete: Received signUrl directly');
-          setSignUrl(result.signUrl);
-          setSigningStatus('ready');
-        } else {
-          // Need to poll for signing status
-          console.log('⏳ Step 3: Document generating, starting status polling...');
-          setSigningStatus('polling');
-          startPollingSigningStatus();
-        }
-      } else {
-        // Enhanced error handling per user debug instructions
-        const responseText = await response.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(responseText);
-        } catch {
-          errorData = responseText;
-        }
-        
-        const errorMessage = errorData?.error || errorData?.message || response.statusText || 'Unknown error';
-        
-        console.error('❌ SignNow API Error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorMessage,
-          response: errorData,
-          endpoint: `/api/applications/${applicationId}/signnow`
-        });
-        
-        // Handle 501/500 errors gracefully
-        if (response.status === 501 || response.status === 500) {
-          throw new Error("Signature system not yet implemented. Please try again later.");
-        } else if (response.status === 404) {
-          throw new Error(`Application not found (${response.status}): ${errorMessage}. Please verify the application ID is correct.`);
-        } else if (response.status === 401) {
-          throw new Error(`Authentication failed (${response.status}): ${errorMessage}. Please check API credentials.`);
-        } else {
-          throw new Error(`SignNow creation failed (${response.status}): ${errorMessage}`);
-        }
+      console.log('📬 SignNow response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ SignNow error body:', errorText);
+        throw new Error(`SignNow request failed: ${response.status}`);
       }
-    } catch (error) {
-      console.error('🔍 PRODUCTION DEBUG - SignNow request failed:', error);
-      console.error('❌ Step 3 Failed: Error creating SignNow document:', error);
-      
-      // Check if this is a network error (CORS, unreachable endpoint)
-      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        console.error('🔍 PRODUCTION DEBUG - This is a network error, likely CORS or unreachable endpoint');
-        setError('Network error: Cannot reach SignNow service. Please check your connection.');
+
+      const json = await response.json();
+      console.log('✅ SignNow response JSON:', json);
+
+      if (json.success && json.data?.signingUrl) {
+        setSignUrl(json.data.signingUrl);
+        setSigningStatus('ready');
       } else {
-        setError(error instanceof Error ? error.message : 'Failed to create SignNow document');
+        throw new Error('Invalid SignNow response structure');
       }
+    } catch (err: any) {
+      console.error('❌ SignNow fetch failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create SignNow document');
       setSigningStatus('error');
     }
   };
