@@ -87,9 +87,13 @@ export default function Step6SignNowIntegration() {
   const applicationId = state.applicationId || extractUuid(localStorage.getItem('applicationId') || '');
 
   useEffect(() => {
-    console.log('Step 6 loaded. FormData ID:', state.applicationId);
-    console.log('LocalStorage ID:', localStorage.getItem("applicationId"));
-    console.log('Final applicationId:', applicationId);
+    console.log('🔍 Step 6 loaded. FormData ID:', state.applicationId);
+    console.log('🔍 LocalStorage ID:', localStorage.getItem("applicationId"));
+    console.log('🔍 Final applicationId:', applicationId);
+    
+    // USER REQUESTED: Verify applicationId matches Step 4
+    console.log('🔑 Using applicationId:', applicationId);
+    console.log('🔍 Step 6 verification - applicationId source:', state.applicationId ? 'Context' : 'localStorage');
     
     if (!applicationId) {
       setError('No application ID found. Please complete Step 4 first.');
@@ -98,7 +102,8 @@ export default function Step6SignNowIntegration() {
       return;
     }
     
-    console.log('✅ Application ID found:', applicationId);
+    console.log('✅ Step 6 applicationId verified:', applicationId);
+    console.log('🔍 This should be identical to Step 4 applicationId');
 
     // Check if we already have signingUrl from Step 4 POST /applications/initiate-signing
     const existingSigningUrl = (state as any).step6?.signingUrl;

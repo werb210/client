@@ -165,13 +165,28 @@ export default function Step4ApplicantInfoComplete() {
         body: JSON.stringify(applicationData)
       });
 
+      console.log('🔍 API Response Status:', response.status, response.ok ? 'OK' : 'FAILED');
+      
       if (response.ok) {
         const result = await response.json();
+        console.log('📋 Application created:', result);
+        console.log('📋 Full API response data:', JSON.stringify(result, null, 2));
+        
         const rawId = result.applicationId || result.id || result.uuid;
+        console.log('🔑 Raw applicationId from response:', rawId);
+        
+        // FAILSAFE CHECK - User requested verification
+        if (!result?.data?.applicationId && !result?.applicationId) {
+          alert("❌ Application creation failed. Cannot continue.");
+          console.error('❌ FAILSAFE TRIGGERED: No applicationId in response');
+          return;
+        }
         
         if (rawId) {
           const uuid = extractUuid(rawId); // strips app_prod_ prefix if needed
-          console.log('✅ Application created and stored:', uuid);
+          console.log('✅ Application created successfully');
+          console.log('🔑 Full applicationId from response:', rawId);
+          console.log('🔑 Clean UUID extracted:', uuid);
           
           // Save to Context
           dispatch({ type: 'UPDATE_FORM_DATA', payload: { applicationId: uuid } });
@@ -180,11 +195,15 @@ export default function Step4ApplicantInfoComplete() {
           localStorage.setItem('applicationId', uuid);
           
           console.log('💾 Stored applicationId in context and localStorage:', uuid);
+          console.log('✅ Step 4 API call SUCCESSFUL - Status 200');
         } else {
           console.error('❌ Failed to get applicationId from response:', result);
+          alert("❌ Application creation failed. No ID returned. Cannot continue.");
           throw new Error('No applicationId returned from API');
         }
       } else {
+        const errorText = await response.text();
+        console.error('❌ API call FAILED - Status:', response.status, 'Error:', errorText);
         throw new Error(`API returned ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
