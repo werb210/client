@@ -132,6 +132,7 @@ export function MainLayout() {
       <Route path="/signnow-debug-test" component={SignNowDebugTest} />
       <Route path="/simple-signnow-test" component={SimpleSignNowTest} />
       <Route path="/application-creation-test" component={lazy(() => import('@/pages/ApplicationCreationTest'))} />
+      <Route path="/application-flow-test" component={lazy(() => import('@/pages/ApplicationFlowTest'))} />
       <Route path="/security-test-runner" component={lazy(() => import('../security/SecurityTestRunner'))} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
