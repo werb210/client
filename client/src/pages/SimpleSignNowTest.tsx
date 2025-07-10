@@ -20,21 +20,57 @@ export default function SimpleSignNowTest() {
 
   const handleClick = async () => {
     console.log('🔍 SignNow Direct Test - Making API call to staff backend');
-    console.log('Test UUID:', testUUID);
+    console.log('📋 VERIFICATION STEP 1: Application ID Details');
+    console.log('  → Application ID being sent:', testUUID);
+    console.log('  → Application ID type:', typeof testUUID);
+    console.log('  → Application ID length:', testUUID.length);
+    console.log('  → Is valid UUID format:', /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(testUUID));
+    console.log('  → Is undefined/null:', testUUID === undefined || testUUID === null);
+    
+    console.log('📋 VERIFICATION STEP 2: Endpoint Details');
+    const endpoint = `https://staff.boreal.financial/api/applications/${testUUID}/signnow`;
+    console.log('  → Full endpoint URL:', endpoint);
+    console.log('  → Method: POST');
+    console.log('  → Content-Type: application/json');
     
     setIsLoading(true);
     setStatus('Making SignNow API request...');
     
     try {
-      const response = await fetch(`https://staff.boreal.financial/api/applications/${testUUID}/signnow`, {
+      console.log('📋 VERIFICATION STEP 3: Making Request');
+      console.log('  → Sending SignNow request for Application ID:', testUUID);
+      
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         }
       });
       
-      const data: SignNowResponse = await response.json();
-      console.log('SignNow API Response:', data);
+      console.log('📋 VERIFICATION STEP 4: Response Analysis');
+      console.log('  → Response status:', response.status);
+      console.log('  → Response status text:', response.statusText);
+      console.log('  → Response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('  → Response OK:', response.ok);
+      
+      const responseText = await response.text();
+      console.log('  → Raw response text:', responseText);
+      
+      let data: SignNowResponse;
+      try {
+        data = JSON.parse(responseText);
+        console.log('  → Parsed JSON response:', data);
+      } catch (parseError) {
+        console.log('  → JSON parse error:', parseError);
+        console.log('  → Response is not valid JSON, likely HTML/CORS error');
+        throw new Error(`Invalid JSON response: ${responseText.substring(0, 200)}`);
+      }
+      
+      console.log('📋 VERIFICATION STEP 5: Response Content Analysis');
+      console.log('  → Response structure:', Object.keys(data));
+      console.log('  → Has status field:', 'status' in data);
+      console.log('  → Has signnow_url field:', 'signnow_url' in data);
+      console.log('  → Has error field:', 'error' in data);
       
       // Handle successful signing creation
       if (data.status === 'signing_created' && data.signnow_url) {
@@ -54,8 +90,13 @@ export default function SimpleSignNowTest() {
       }
       
     } catch (error) {
+      console.log('📋 VERIFICATION STEP 6: Error Analysis');
+      console.log('  → Error type:', error?.constructor?.name);
+      console.log('  → Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.log('  → Full error object:', error);
+      
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error('SignNow API Error:', error);
+      console.error('❌ SignNow API Error:', error);
       setStatus(`❌ Network Error: ${errorMsg}`);
       alert(`Error: ${errorMsg}`);
     } finally {
@@ -148,13 +189,45 @@ export default function SimpleSignNowTest() {
 
       {/* Debug Information */}
       <div className="bg-gray-50 border rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">Debug Information</h2>
-        <ul className="space-y-2 text-sm">
-          <li><strong>API Endpoint:</strong> https://staff.boreal.financial/api/applications/{testUUID}/signnow</li>
-          <li><strong>Method:</strong> POST</li>
-          <li><strong>Headers:</strong> Content-Type: application/json</li>
-          <li><strong>Expected Flow:</strong> API call → JSON response → Extract signnow_url → Show iframe/redirect</li>
-        </ul>
+        <h2 className="text-lg font-semibold mb-4">Debug Information & Verification Steps</h2>
+        <div className="space-y-4 text-sm">
+          <div>
+            <h3 className="font-medium text-gray-800 mb-2">1. Application ID Verification</h3>
+            <ul className="space-y-1 ml-4">
+              <li><strong>ID Value:</strong> {testUUID}</li>
+              <li><strong>ID Type:</strong> {typeof testUUID}</li>
+              <li><strong>ID Length:</strong> {testUUID.length} characters</li>
+              <li><strong>UUID Format:</strong> {/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(testUUID) ? '✅ Valid' : '❌ Invalid'}</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-medium text-gray-800 mb-2">2. Endpoint Configuration</h3>
+            <ul className="space-y-1 ml-4">
+              <li><strong>URL:</strong> https://staff.boreal.financial/api/applications/{testUUID}/signnow</li>
+              <li><strong>Method:</strong> POST</li>
+              <li><strong>Headers:</strong> Content-Type: application/json</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-medium text-gray-800 mb-2">3. Expected Response Types</h3>
+            <ul className="space-y-1 ml-4">
+              <li><strong>Success:</strong> {`{"status": "signing_created", "signnow_url": "..."}`}</li>
+              <li><strong>Not Found:</strong> {`{"error": "Application not found", "requested_id": "..."}`}</li>
+              <li><strong>CORS Error:</strong> HTML response or network failure</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-medium text-gray-800 mb-2">4. Troubleshooting</h3>
+            <ul className="space-y-1 ml-4">
+              <li>• Check browser DevTools → Network tab for the signnow request</li>
+              <li>• Look for HTTP status code and response content type</li>
+              <li>• Verify console logs show all verification steps</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );
