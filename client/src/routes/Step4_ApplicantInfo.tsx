@@ -169,6 +169,15 @@ export default function Step4ApplicantInfo() {
       
       const response = await staffApi.createApplication(applicationData);
       
+      if (!response?.applicationId) {
+        alert("❌ Application creation failed");
+        return;
+      }
+      
+      // ✅ Store applicationId in both context and localStorage
+      state.applicationId = response.applicationId;
+      localStorage.setItem("applicationId", response.applicationId); // 🔥 THIS IS THE FIX
+      
       // Store the real application ID
       dispatch({
         type: 'UPDATE_FORM_DATA',

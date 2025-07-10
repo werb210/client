@@ -84,7 +84,7 @@ export default function Step6SignNowIntegration() {
   }, [state.applicationId, dispatch]);
 
   // Use clean UUID from context or localStorage
-  const applicationId = state.applicationId || extractUuid(localStorage.getItem('applicationId') || '');
+  const applicationId = localStorage.getItem("applicationId"); // Always pull from storage
 
   useEffect(() => {
     console.log('🔍 Step 6 loaded. FormData ID:', state.applicationId);
