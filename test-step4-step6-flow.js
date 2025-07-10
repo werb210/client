@@ -21,7 +21,7 @@ async function runStep4Step6SmokeTest() {
   console.log('\n📋 STEP 2: Simulate Steps 1-4 completion and applicationId generation');
   
   // Mock the Step 4 applicationId creation process
-  const mockApplicationId = `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const mockApplicationId = crypto.randomUUID();
   
   // Simulate what Step 4 should do
   console.log('📤 Step 4: Creating application via POST /api/public/applications...');

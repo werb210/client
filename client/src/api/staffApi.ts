@@ -244,7 +244,7 @@ class StaffApiClient {
         },
         uploadedDocuments,
         productId: selectedProductId,
-        clientId: 'client_' + Date.now(), // Generate unique client ID
+        clientId: 'client_' + crypto.randomUUID(), // Generate unique client ID
       };
 
       console.log('📋 Submitting application with data:', {
