@@ -129,7 +129,7 @@ export default function Step4ApplicantInfo() {
     } catch (error) {
       console.error('❌ Step 4: Failed to create application:', error);
       // For development, continue with mock ID but log the error
-      const mockId = 'mock_' + Date.now();
+      const mockId = 'mock_' + crypto.randomUUID();
       dispatch({
         type: 'UPDATE_FORM_DATA',
         payload: {

@@ -121,7 +121,7 @@ export default function BankingDocumentTest() {
         credentials: 'include'
       });
 
-      let applicationId = `test-banking-${Date.now()}`;
+      let applicationId = `test-banking-${crypto.randomUUID()}`;
       if (createResponse.ok) {
         const createResult = await createResponse.json();
         applicationId = createResult.applicationId || applicationId;

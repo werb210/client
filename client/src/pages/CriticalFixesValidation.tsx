@@ -137,7 +137,7 @@ export default function CriticalFixesValidation() {
       console.log('🧪 C-3: Testing application ID persistence...');
       
       // Simulate Step 4 success with mock application ID
-      const mockApplicationId = `app_test_${Date.now()}`;
+      const mockApplicationId = `app_test_${crypto.randomUUID()}`;
       
       // Test localStorage persistence
       localStorage.setItem('appId', mockApplicationId);
