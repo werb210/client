@@ -133,6 +133,7 @@ export function MainLayout() {
       <Route path="/signnow-debug-test" component={SignNowDebugTest} />
       <Route path="/simple-signnow-test" component={SimpleSignNowTest} />
       <Route path="/prod-signnow-test" component={ProdSignNowTest} />
+      <Route path="/fallback-test" component={lazy(() => import('@/pages/FallbackTest').then(m => ({ default: m.FallbackTest })))} />
       <Route path="/application-creation-test" component={lazy(() => import('@/pages/ApplicationCreationTest'))} />
       <Route path="/application-flow-test" component={lazy(() => import('@/pages/ApplicationFlowTest'))} />
       <Route path="/security-test-runner" component={lazy(() => import('../security/SecurityTestRunner'))} />

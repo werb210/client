@@ -1,0 +1,108 @@
+{
+  "data": [
+    {
+      "id": "1",
+      "lender": "Bank of Montreal (BMO)",
+      "product": "Equipment Financing",
+      "productCategory": "equipment_financing",
+      "minAmountUsd": 25000,
+      "maxAmountUsd": 5000000,
+      "geography": ["CA"],
+      "interestRate": "6.5% - 12.0%",
+      "termMonths": "12-84",
+      "industries": ["manufacturing", "construction", "transportation"],
+      "description": "Competitive equipment financing for Canadian businesses"
+    },
+    {
+      "id": "2", 
+      "lender": "Royal Bank of Canada (RBC)",
+      "product": "Business Line of Credit",
+      "productCategory": "business_line_of_credit",
+      "minAmountUsd": 10000,
+      "maxAmountUsd": 2000000,
+      "geography": ["CA"],
+      "interestRate": "Prime + 1.5% - 4.0%",
+      "termMonths": "12-60",
+      "industries": ["retail", "services", "technology"],
+      "description": "Flexible credit line for Canadian business operations"
+    },
+    {
+      "id": "3",
+      "lender": "TD Bank",
+      "product": "Working Capital Loan", 
+      "productCategory": "working_capital",
+      "minAmountUsd": 50000,
+      "maxAmountUsd": 10000000,
+      "geography": ["CA", "US"],
+      "interestRate": "5.5% - 11.0%",
+      "termMonths": "6-36",
+      "industries": ["manufacturing", "wholesale", "retail"],
+      "description": "Short-term working capital for business growth"
+    },
+    {
+      "id": "4",
+      "lender": "Capital One Business",
+      "product": "Term Loan",
+      "productCategory": "term_loan", 
+      "minAmountUsd": 100000,
+      "maxAmountUsd": 15000000,
+      "geography": ["US"],
+      "interestRate": "7.0% - 15.0%",
+      "termMonths": "12-120",
+      "industries": ["technology", "healthcare", "professional_services"],
+      "description": "Fixed-rate term loans for US business expansion"
+    },
+    {
+      "id": "5",
+      "lender": "Wells Fargo Commercial",
+      "product": "SBA 7(a) Loan",
+      "productCategory": "sba_loan",
+      "minAmountUsd": 25000,
+      "maxAmountUsd": 5000000,
+      "geography": ["US"],
+      "interestRate": "Prime + 2.25% - 4.75%",
+      "termMonths": "60-300", 
+      "industries": ["retail", "restaurants", "services"],
+      "description": "SBA-guaranteed loans with competitive rates"
+    },
+    {
+      "id": "6",
+      "lender": "OnDeck Capital",
+      "product": "Invoice Factoring",
+      "productCategory": "invoice_factoring",
+      "minAmountUsd": 5000,
+      "maxAmountUsd": 1000000,
+      "geography": ["US", "CA"],
+      "interestRate": "1.5% - 5.0% per month",
+      "termMonths": "1-6",
+      "industries": ["manufacturing", "wholesale", "business_services"],
+      "description": "Fast cash flow through invoice factoring"
+    },
+    {
+      "id": "7",
+      "lender": "BlueVine",
+      "product": "Purchase Order Financing",
+      "productCategory": "purchase_order_financing", 
+      "minAmountUsd": 10000,
+      "maxAmountUsd": 2000000,
+      "geography": ["US"],
+      "interestRate": "1.0% - 3.0% per month",
+      "termMonths": "1-12",
+      "industries": ["wholesale", "manufacturing", "distribution"],
+      "description": "Financing to fulfill large purchase orders"
+    },
+    {
+      "id": "8",
+      "lender": "Scotiabank",
+      "product": "Asset Based Lending",
+      "productCategory": "asset_based_lending",
+      "minAmountUsd": 250000,
+      "maxAmountUsd": 30000000,
+      "geography": ["CA"],
+      "interestRate": "Prime + 2.0% - 6.0%",
+      "termMonths": "12-84",
+      "industries": ["manufacturing", "distribution", "retail"],
+      "description": "Large credit facilities secured by business assets"
+    }
+  ]
+}

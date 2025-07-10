@@ -40,16 +40,36 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
     
   } catch (error) {
     console.warn('❌ [API] Error fetching lender products:', error instanceof Error ? error.message : error);
+    console.warn('⚠️ [API] Staff API failed, attempting fallback data...');
     
-    // In development, provide more detailed error info
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[API] This indicates either:');
-      console.warn('1. Staff backend is unreachable');
-      console.warn('2. Staff API returned invalid data structure');
-      console.warn('3. Data validation failed due to schema mismatch');
+    // Fallback to local JSON file
+    try {
+      const fallbackResponse = await fetch('/fallback/lenders.json');
+      if (!fallbackResponse.ok) {
+        throw new Error(`Fallback fetch failed: ${fallbackResponse.statusText}`);
+      }
+      
+      const fallbackData = await fallbackResponse.json();
+      console.log('📦 [API] Using fallback lender data:', fallbackData.data.length, 'products');
+      
+      // Normalize fallback data through the same validation process
+      const normalizedProducts = normalizeProducts(fallbackData);
+      console.log(`✅ [API] Successfully validated ${normalizedProducts.length} fallback products`);
+      return normalizedProducts;
+    } catch (fallbackError) {
+      console.error('❌ [API] Fallback also failed:', fallbackError);
+      
+      // In development, provide more detailed error info
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[API] This indicates either:');
+        console.warn('1. Staff backend is unreachable');
+        console.warn('2. Staff API returned invalid data structure');
+        console.warn('3. Data validation failed due to schema mismatch');
+        console.warn('4. Fallback data is also unavailable');
+      }
+      
+      throw new Error('Both staff API and fallback data unavailable');
     }
-    
-    throw error;
   }
 }
 
