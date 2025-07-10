@@ -103,15 +103,11 @@ const averageMonthlyRevenueOptions = [
 ];
 
 const fundsPurposeOptions = [
-  { value: 'working_capital', label: 'Working Capital' },
-  { value: 'inventory', label: 'Inventory Purchase' },
   { value: 'equipment', label: 'Equipment Purchase' },
+  { value: 'inventory', label: 'Inventory Purchase' },
   { value: 'expansion', label: 'Business Expansion' },
-  { value: 'real_estate', label: 'Real Estate Purchase' },
-  { value: 'marketing', label: 'Marketing & Advertising' },
-  { value: 'debt_consolidation', label: 'Debt Consolidation' },
-  { value: 'payroll', label: 'Payroll & Operating Expenses' },
-  { value: 'other', label: 'Other Business Purpose' },
+  { value: 'working_capital', label: 'Working Capital' },
+  { value: 'technology_upgrade', label: 'Technology Upgrade' },
 ];
 
 const accountsReceivableOptions = [

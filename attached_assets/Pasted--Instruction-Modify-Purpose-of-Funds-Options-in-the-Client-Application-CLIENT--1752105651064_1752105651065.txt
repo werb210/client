@@ -1,0 +1,76 @@
+### ✅ Instruction: Modify “Purpose of Funds” Options in the Client Application
+
+---
+
+## 🧭 **CLIENT APPLICATION CHANGES**
+
+### 🎯 Task:
+
+In the **“Purpose of Funds”** selection field (Step 1 or 3 depending on form layout), **remove** the following options:
+
+* ❌ Real Estate Purchase
+* ❌ Marketing and Advertising
+* ❌ Debt Consolidation
+* ❌ Payroll and Operating Expenses
+* ❌ Other Business Purposes
+
+---
+
+## 🛠️ Updated Dropdown or Select List Example:
+
+```ts
+const purposeOfFundsOptions = [
+  { value: 'equipment_purchase', label: 'Equipment Purchase' },
+  { value: 'inventory_purchase', label: 'Inventory Purchase' },
+  { value: 'expansion', label: 'Business Expansion' },
+  { value: 'working_capital', label: 'Working Capital' },
+  { value: 'technology_upgrade', label: 'Technology Upgrade' }
+];
+```
+
+---
+
+## 🧪 Fixes & Considerations
+
+### ✅ Validation Schema (Zod):
+
+Ensure your Zod schema or form validation is updated to only allow valid new values:
+
+```ts
+purposeOfFunds: z.enum([
+  'equipment_purchase',
+  'inventory_purchase',
+  'expansion',
+  'working_capital',
+  'technology_upgrade'
+])
+```
+
+### 🧼 UX Cleanup:
+
+* 🗑️ Remove conditional logic or components tied to deleted options.
+* 🧪 Test prefill values: make sure no test accounts or cached sessions are auto-selecting removed values.
+* 🧼 Reword empty state messaging (e.g., “Please select a purpose for the funds” if previously it defaulted to “Other Business Purposes”).
+
+---
+
+## ❗ Risk of Existing Data
+
+* If some **in-flight applications** or **cached form data** already use the removed values, you must **normalize or reject** those before submission. Example:
+
+```ts
+if (!validPurposes.includes(userInput.purposeOfFunds)) {
+  return { error: "Invalid purpose of funds selection." };
+}
+```
+
+---
+
+## ✅ Recommended Next Steps
+
+1. ✅ Modify dropdown list in the form component.
+2. ✅ Update all references in form validation (Zod or Yup).
+3. ✅ Add safeguard in submission payload transformation to reject invalid legacy values.
+4. ✅ Retest full Step 1 to Step 7 submission for regressions.
+
+Would you like me to regenerate the final list of accepted values for frontend, backend, and API submission validation?

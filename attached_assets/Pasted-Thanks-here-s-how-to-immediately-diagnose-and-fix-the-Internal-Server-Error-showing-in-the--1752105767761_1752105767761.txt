@@ -1,0 +1,132 @@
+Thanks — here’s how to **immediately diagnose and fix** the `Internal Server Error` showing in the **staff production version** (`https://staff.boreal.financial/`):
+
+---
+
+## 🔍 **Step-by-Step Diagnostic Checklist**
+
+### ✅ 1. **Check Logs on Replit (or Hosting Environment)**
+
+Look at the Replit “Shell” or “Console” output:
+
+```bash
+# Replit Console Logs
+npm run start
+# or if using tsx
+npx tsx server/index.ts
+```
+
+Look for:
+
+* Stack traces
+* Environment variable errors (e.g., `SIGNNOW_API_TOKEN is undefined`)
+* Routing errors
+* Database connection issues
+
+---
+
+### ✅ 2. **Environment Variables Audit**
+
+A **missing secret** is the most common cause of a `500 Internal Server Error` in production.
+
+Check for missing/undefined variables in **Replit Secrets**:
+
+* ✅ `JWT_SECRET`
+* ✅ `DATABASE_URL`
+* ✅ `SIGNNOW_API_TOKEN`
+* ✅ `TEMPLATE_ID_PROD`
+* ✅ `TWILIO_ACCOUNT_SID`
+* ✅ `TWILIO_AUTH_TOKEN`
+* ✅ `TWILIO_VERIFY_SERVICE_SID`
+
+**Also check:**
+
+```ts
+process.env.NODE_ENV === 'production' // may trigger stricter paths
+```
+
+---
+
+### ✅ 3. **Test the Server Endpoint Locally**
+
+From Replit Shell or your dev machine:
+
+```bash
+curl -i https://staff.boreal.financial/api/rbac/auth/login
+```
+
+Expected:
+
+* `405 Method Not Allowed` or `400` if malformed
+* `500` confirms internal crash
+
+---
+
+### ✅ 4. **Check `server/index.ts` for Default Route Handling**
+
+Ensure **no infinite loop or improper wildcard route**:
+
+```ts
+app.use("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+```
+
+☠️ This will fail if `index.html` is missing or `__dirname` resolves incorrectly in production (ESM bug).
+
+✅ Fix: Replace with Vite-safe path resolution using `import.meta.url` or `resolve()` helper.
+
+---
+
+### ✅ 5. **Build Artifacts Present?**
+
+If serving React with `express.static`, make sure `client/dist` or `apps/staff-portal/dist` is actually built:
+
+```bash
+ls client/dist
+# or
+ls apps/staff-portal/dist
+```
+
+If empty, re-run:
+
+```bash
+npm run build
+```
+
+---
+
+## 🛠️ Quick Fix Commands (on Replit)
+
+```bash
+# Rebuild frontend if not found
+cd client
+npm run build
+cd ..
+
+# Restart server cleanly
+killall node
+npx tsx server/index.ts
+```
+
+---
+
+## 📋 Summary
+
+| Check                | Status                                    |
+| -------------------- | ----------------------------------------- |
+| ✅ Logs for errors    | Check stack trace or crash                |
+| ✅ Secrets configured | JWT, DB, SignNow, Twilio                  |
+| ✅ Routing safe       | No wildcard crash                         |
+| ✅ React dist present | `client/dist` or `apps/staff-portal/dist` |
+| ✅ Vite paths working | `index.html` resolved safely              |
+| ✅ Build artifacts    | `npm run build` completed                 |
+
+---
+
+Would you like me to:
+
+* Scan your deployed site for specific error codes?
+* Walk through rewriting the routing fallback safely for production?
+* Help debug the Replit console output?
+
+Let me know what you see in the logs or if you'd like a `server/index.ts` fix template.
