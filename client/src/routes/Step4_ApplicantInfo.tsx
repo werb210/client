@@ -98,12 +98,74 @@ export default function Step4ApplicantInfo() {
       console.log('📝 Step 4: Creating real application via POST /api/public/applications');
       
       const { staffApi } = await import('../api/staffApi');
+      
+      // Format data properly for staff backend
       const applicationData = {
-        ...state,
-        ...data,
-        step: 4,
-        timestamp: new Date().toISOString()
+        step1: {
+          businessLocation: state.businessLocation || 'US',
+          industry: state.industry || 'Other',
+          lookingFor: state.lookingFor || 'capital',
+          fundingAmount: state.fundingAmount || 0,
+          salesHistory: state.salesHistory || 'less_than_6_months',
+          lastYearRevenue: state.lastYearRevenue || 0,
+          averageMonthlyRevenue: state.averageMonthlyRevenue || 0,
+          currentAccountReceivableBalance: state.currentAccountReceivableBalance || 0,
+          fixedAssetsValue: state.fixedAssetsValue || 0,
+          equipmentValue: state.equipmentValue || 0,
+          fundsPurpose: state.fundsPurpose || 'working_capital'
+        },
+        step3: {
+          operatingName: state.operatingName || '',
+          legalName: state.legalName || state.operatingName || '',
+          businessStreetAddress: state.businessStreetAddress || '',
+          businessCity: state.businessCity || '',
+          businessState: state.businessState || '',
+          businessPostalCode: state.businessPostalCode || '',
+          businessPhone: state.businessPhone || '',
+          businessWebsite: state.businessWebsite || '',
+          businessStructure: state.businessStructure || 'corporation',
+          businessStartDate: state.businessStartDate || '',
+          numberOfEmployees: state.numberOfEmployees || 1,
+          estimatedYearlyRevenue: state.estimatedYearlyRevenue || 0,
+          primaryBankName: state.primaryBankName || '',
+          bankingRelationshipLength: state.bankingRelationshipLength || '1_year'
+        },
+        step4: {
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          title: data.title || '',
+          personalEmail: data.personalEmail || '',
+          personalPhone: data.personalPhone || '',
+          dateOfBirth: data.dateOfBirth || '',
+          socialSecurityNumber: data.socialSecurityNumber || '',
+          ownershipPercentage: parseFloat(data.ownershipPercentage) || 100,
+          creditScore: data.creditScore || 'unknown',
+          personalAnnualIncome: data.personalAnnualIncome || '',
+          applicantAddress: data.applicantAddress || '',
+          applicantCity: data.applicantCity || '',
+          applicantState: data.applicantState || '',
+          applicantPostalCode: data.applicantPostalCode || '',
+          yearsWithBusiness: data.yearsWithBusiness || '',
+          previousLoans: data.previousLoans || 'no',
+          bankruptcyHistory: data.bankruptcyHistory || 'no',
+          // Partner fields if applicable
+          partnerFirstName: data.partnerFirstName || '',
+          partnerLastName: data.partnerLastName || '',
+          partnerEmail: data.partnerEmail || '',
+          partnerPhone: data.partnerPhone || '',
+          partnerDateOfBirth: data.partnerDateOfBirth || '',
+          partnerSinSsn: data.partnerSinSsn || '',
+          partnerOwnershipPercentage: parseFloat(data.partnerOwnershipPercentage) || 0,
+          partnerCreditScore: data.partnerCreditScore || 'unknown',
+          partnerPersonalAnnualIncome: data.partnerPersonalAnnualIncome || '',
+          partnerAddress: data.partnerAddress || '',
+          partnerCity: data.partnerCity || '',
+          partnerState: data.partnerState || '',
+          partnerPostalCode: data.partnerPostalCode || ''
+        }
       };
+      
+      console.log('📝 Step 4: Application data structure:', applicationData);
       
       const response = await staffApi.createApplication(applicationData);
       

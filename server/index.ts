@@ -152,6 +152,46 @@ app.use((req, res, next) => {
     }
   });
 
+  // Application submission endpoint - proxy to staff backend
+  app.post('/api/public/applications', async (req, res) => {
+    try {
+      const staffApiUrl = cfg.staffApiUrl + '/api';
+      console.log(`[APPLICATION] Creating application via staff API: ${staffApiUrl}/public/applications`);
+      console.log(`[APPLICATION] Application data keys: ${Object.keys(req.body).join(', ')}`);
+      
+      const response = await fetch(`${staffApiUrl}/public/applications`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
+        },
+        body: JSON.stringify(req.body)
+      });
+      
+      if (!response.ok) {
+        console.error(`[APPLICATION] Staff API error (${response.status}): ${response.statusText}`);
+        const errorData = await response.text();
+        console.error(`[APPLICATION] Error details: ${errorData}`);
+        throw new Error(`Staff API returned ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log(`[APPLICATION] ✅ Application created with ID: ${data.applicationId}`);
+      
+      res.json(data);
+    } catch (error) {
+      console.error('[APPLICATION] ❌ Application creation failed:', error);
+      
+      res.status(502).json({
+        success: false,
+        error: 'Staff backend unavailable',
+        message: 'Cannot create application - staff backend unavailable',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Serve static files - will be configured after httpServer is created
 
   // Mount lender routes

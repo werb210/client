@@ -302,7 +302,7 @@ class StaffApiClient {
 
       console.log('📋 Submitting with correct payload structure:', correctPayload);
 
-      const response = await this.makeRequest<ApplicationSubmissionResponse>('/applications', {
+      const response = await this.makeRequest<ApplicationSubmissionResponse>('/public/applications', {
         method: 'POST',
         body: JSON.stringify(correctPayload),
       });
@@ -461,8 +461,9 @@ class StaffApiClient {
   async createApplication(applicationData: any): Promise<{ applicationId: string }> {
     try {
       console.log('📝 Creating new application via POST /api/public/applications');
+      console.log('📝 Application data:', applicationData);
       
-      const response = await this.makeRequest<{ applicationId: string }>('/api/public/applications', {
+      const response = await this.makeRequest<{ applicationId: string }>('/public/applications', {
         method: 'POST',
         body: JSON.stringify(applicationData),
       });
