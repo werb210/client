@@ -42,22 +42,17 @@ export default function SignNowDebugTest() {
   const [applicationId, setApplicationId] = useState<string>('');
   const [currentStep, setCurrentStep] = useState('');
 
-  // Generate a test UUID if none exists
+  // Use the test UUID from user specification
   useEffect(() => {
-    const contextId = state.applicationId;
-    const storageId = localStorage.getItem('applicationId');
-    const finalId = contextId || extractUuid(storageId || '') || crypto.randomUUID();
+    const testUUID = "12345678-1234-5678-9abc-123456789012";
+    setApplicationId(testUUID);
     
-    setApplicationId(finalId);
-    
-    // Ensure we have a clean UUID stored
-    if (!contextId) {
-      dispatch({
-        type: 'UPDATE_FORM_DATA',
-        payload: { applicationId: finalId }
-      });
-      localStorage.setItem('applicationId', finalId);
-    }
+    // Store test UUID for debugging
+    dispatch({
+      type: 'UPDATE_FORM_DATA',
+      payload: { applicationId: testUUID }
+    });
+    localStorage.setItem('applicationId', testUUID);
   }, [state.applicationId, dispatch]);
 
   const updateResult = (test: string, status: DebugResult['status'], details: string, data?: any) => {

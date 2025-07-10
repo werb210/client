@@ -5,16 +5,17 @@
 import React from 'react';
 
 export default function SimpleSignNowTest() {
-  const applicationId = "550e8400-e29b-41d4-a716-446655440000";
+  const testUUID = "12345678-1234-5678-9abc-123456789012";
 
   const handleClick = async () => {
     console.log('🔍 SignNow Direct Test - Making API call to staff backend');
+    console.log('Test UUID:', testUUID);
     
     try {
-      const response = await fetch(`https://staff.boreal.financial/api/applications/${applicationId}/signnow`, {
+      const response = await fetch(`https://staff.boreal.financial/api/applications/${testUUID}/signnow`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json" 
+        headers: {
+          "Content-Type": "application/json"
         }
       });
       
@@ -36,7 +37,10 @@ export default function SimpleSignNowTest() {
       <div className="bg-white border rounded-lg p-6">
         <h2 className="text-lg font-semibold mb-4">Test SignNow API</h2>
         <p className="text-gray-600 mb-4">
-          Current UUID: <code className="bg-gray-100 px-2 py-1 rounded">{applicationId}</code>
+          Test UUID: <code className="bg-gray-100 px-2 py-1 rounded">{testUUID}</code>
+        </p>
+        <p className="text-sm text-blue-600 mb-4">
+          Expected Response: JSON with "SignNow envelope created..." message
         </p>
         
         <button 
