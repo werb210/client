@@ -28,16 +28,15 @@ export default function ProdSignNowTest() {
       
       console.log('🔍 Testing SignNow with applicationId:', testId);
       
-      const signNowEndpoint = `/api/applications/${testId}/signnow`;
-      const fullUrl = `${window.location.origin}${signNowEndpoint}`;
+      const url = `${import.meta.env.VITE_API_BASE_URL}/applications/${testId}/signnow`;
       
       console.log("🔍 PRODUCTION DEBUG - Test API Call Details:");
-      console.log(`   - SignNow endpoint: ${signNowEndpoint}`);
-      console.log(`   - Full URL: ${fullUrl}`);
-      console.log(`   - Should be calling: ${window.location.origin} (local proxy)`);
-      console.log(`   - NOT calling: https://staff.boreal.financial (direct)`);
+      console.log(`   - VITE_API_BASE_URL: ${import.meta.env.VITE_API_BASE_URL}`);
+      console.log("🔗 Final SignNow URL:", url);
+      console.log(`   - NOW calling: https://staff.boreal.financial (direct)`);
+      console.log(`   - NO LONGER using: ${window.location.origin} (local proxy)`);
       
-      const response = await fetch(signNowEndpoint, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

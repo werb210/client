@@ -139,16 +139,15 @@ export default function Step6SignNowIntegration() {
       console.log('📤 Step 3: Triggering SignNow document generation...');
       console.log(`   - ApplicationId being used for SignNow: ${applicationId}`);
       
-      const signNowEndpoint = `/api/applications/${applicationId}/signnow`;
-      const fullUrl = `${window.location.origin}${signNowEndpoint}`;
+      const url = `${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/signnow`;
       
       console.log("🔍 PRODUCTION DEBUG - API Call Details:");
-      console.log(`   - SignNow endpoint: ${signNowEndpoint}`);
-      console.log(`   - Full URL: ${fullUrl}`);
-      console.log(`   - Should be calling: ${window.location.origin} (local proxy)`);
-      console.log(`   - NOT calling: https://staff.boreal.financial (direct)`);
+      console.log(`   - VITE_API_BASE_URL: ${import.meta.env.VITE_API_BASE_URL}`);
+      console.log("🔗 Final SignNow URL:", url);
+      console.log(`   - NOW calling: https://staff.boreal.financial (direct)`);
+      console.log(`   - NO LONGER using: ${window.location.origin} (local proxy)`);
       
-      const response = await fetch(signNowEndpoint, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -235,7 +234,10 @@ export default function Step6SignNowIntegration() {
       try {
         // GET /api/public/applications/:applicationId/signing-status
         // Check: signingStatus === 'completed'
-        const response = await fetch(`/api/public/applications/${applicationId}/signing-status`, {
+        const pollingUrl = `${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/signing-status`;
+        console.log("🔍 Polling URL:", pollingUrl);
+        
+        const response = await fetch(pollingUrl, {
           headers: {
             'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
           },
