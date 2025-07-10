@@ -491,7 +491,6 @@ app.use((req, res, next) => {
   });
 
 
-
   // User country detection endpoint (local handling, not staff backend)
   app.get('/api/user-country', async (req, res) => {
     try {
@@ -529,6 +528,103 @@ app.use((req, res, next) => {
     } catch (error) {
       console.log('[GEO] Country detection failed:', error.message);
       res.json({ country: null });
+    }
+  });
+
+  // SignNow API Proxy - Route to Staff Backend
+  app.post('/api/applications/:id/signnow', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const staffApiUrl = cfg.staffApiUrl + '/api';
+      console.log(`[SIGNNOW] Routing POST /api/applications/${id}/signnow to staff backend`);
+      
+      const response = await fetch(`${staffApiUrl}/applications/${id}/signnow`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          applicationId: id,
+          ...req.body
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`[SIGNNOW] ✅ Staff backend returned SignNow data for application ${id}`);
+        res.json(data);
+      } else {
+        console.log(`[SIGNNOW] Staff backend error (${response.status}) for application ${id}`);
+        if (response.status === 501 || response.status === 500) {
+          res.status(501).json({
+            error: 'Signature system not yet implemented. Please try again later.',
+            applicationId: id,
+            status: response.status
+          });
+        } else {
+          res.status(response.status).json({
+            error: `Staff backend returned ${response.status}`,
+            applicationId: id
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`[SIGNNOW] ❌ Connection failed for application ${req.params.id}:`, error);
+      res.status(502).json({
+        error: 'Signature system not yet implemented. Please try again later.',
+        applicationId: req.params.id,
+        details: error instanceof Error ? error.message : 'Connection failed'
+      });
+    }
+  });
+
+  // Legacy SignNow endpoint (for compatibility)
+  app.post('/api/signnow/create', async (req, res) => {
+    try {
+      const { applicationId } = req.body;
+      if (!applicationId) {
+        return res.status(400).json({ error: 'applicationId is required' });
+      }
+      
+      const staffApiUrl = cfg.staffApiUrl + '/api';
+      console.log(`[SIGNNOW] Legacy route - redirecting to /api/applications/${applicationId}/signnow`);
+      
+      const response = await fetch(`${staffApiUrl}/applications/${applicationId}/signnow`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ applicationId, ...req.body })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`[SIGNNOW] ✅ Legacy route success for application ${applicationId}`);
+        res.json(data);
+      } else {
+        console.log(`[SIGNNOW] Legacy route error (${response.status}) for application ${applicationId}`);
+        if (response.status === 501 || response.status === 500) {
+          res.status(501).json({
+            error: 'Signature system not yet implemented. Please try again later.',
+            applicationId
+          });
+        } else {
+          res.status(response.status).json({
+            error: `Staff backend returned ${response.status}`,
+            applicationId
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`[SIGNNOW] ❌ Legacy route failed:`, error);
+      res.status(502).json({
+        error: 'Signature system not yet implemented. Please try again later.',
+        details: error instanceof Error ? error.message : 'Connection failed'
+      });
     }
   });
 

@@ -127,7 +127,7 @@ export default function Step6SignNowIntegration() {
       console.log('📤 Step 3: Triggering SignNow document generation...');
       console.log(`   - ApplicationId: ${applicationId}`);
       
-      const response = await fetch('/api/signnow/create', {
+      const response = await fetch(`/api/applications/${applicationId}/signnow`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -152,6 +152,10 @@ export default function Step6SignNowIntegration() {
           startPollingSigningStatus();
         }
       } else {
+        // Handle 501/500 errors gracefully
+        if (response.status === 501 || response.status === 500) {
+          throw new Error("Signature system not yet implemented. Please try again later.");
+        }
         throw new Error(`SignNow creation failed: ${response.status} ${response.statusText}`);
       }
     } catch (error) {

@@ -430,7 +430,7 @@ class StaffApiClient {
     try {
       console.log(`📝 Creating SignNow document for application: ${applicationId}`);
       
-      const response = await this.makeRequest<SigningStatusResponse>(`/api/signnow/create`, {
+      const response = await this.makeRequest<SigningStatusResponse>(`/applications/${applicationId}/signnow`, {
         method: 'POST',
         body: JSON.stringify({
           applicationId: applicationId
@@ -442,6 +442,15 @@ class StaffApiClient {
       
     } catch (error) {
       console.error('❌ Failed to create SignNow document:', error);
+      
+      // Handle 501/500 errors gracefully
+      if (error instanceof Error && (error.message.includes('501') || error.message.includes('500'))) {
+        return {
+          status: 'error',
+          error: 'Signature system not yet implemented. Please try again later.'
+        };
+      }
+      
       return {
         status: 'error',
         error: error instanceof Error ? error.message : 'Failed to create SignNow document'
