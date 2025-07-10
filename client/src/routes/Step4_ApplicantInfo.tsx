@@ -99,19 +99,34 @@ export default function Step4ApplicantInfo() {
       
       const { staffApi } = await import('../api/staffApi');
       
-      // Format data properly for staff backend
+      // Log current state to debug what data we have
+      console.log('🔍 Current state data available:', Object.keys(state));
+      console.log('🔍 Step 1 data:', {
+        businessLocation: state.businessLocation,
+        industry: state.industry,
+        lookingFor: state.lookingFor,
+        fundingAmount: state.fundingAmount,
+        fundsPurpose: state.fundsPurpose
+      });
+      console.log('🔍 Step 3 data:', {
+        operatingName: state.operatingName,
+        businessCity: state.businessCity,
+        businessState: state.businessState
+      });
+      
+      // Format data properly for staff backend using actual field names from context
       const applicationData = {
         step1: {
-          businessLocation: state.businessLocation || 'US',
+          businessLocation: state.businessLocation || state.headquarters || 'US',
           industry: state.industry || 'Other',
           lookingFor: state.lookingFor || 'capital',
-          fundingAmount: state.fundingAmount || 0,
+          fundingAmount: parseFloat(state.fundingAmount?.toString().replace(/[,$]/g, '') || '0') || 0,
           salesHistory: state.salesHistory || 'less_than_6_months',
-          lastYearRevenue: state.lastYearRevenue || 0,
-          averageMonthlyRevenue: state.averageMonthlyRevenue || 0,
-          currentAccountReceivableBalance: state.currentAccountReceivableBalance || 0,
-          fixedAssetsValue: state.fixedAssetsValue || 0,
-          equipmentValue: state.equipmentValue || 0,
+          revenueLastYear: parseFloat(state.revenueLastYear?.toString().replace(/[,$]/g, '') || '0') || 0,
+          averageMonthlyRevenue: parseFloat(state.averageMonthlyRevenue?.toString().replace(/[,$]/g, '') || '0') || 0,
+          accountsReceivableBalance: state.accountsReceivableBalance || 'no_account_receivables',
+          fixedAssetsValue: state.fixedAssetsValue || 'no_fixed_assets',
+          equipmentValue: parseFloat(state.equipmentValue?.toString().replace(/[,$]/g, '') || '0') || 0,
           fundsPurpose: state.fundsPurpose || 'working_capital'
         },
         step3: {
@@ -119,49 +134,48 @@ export default function Step4ApplicantInfo() {
           legalName: state.legalName || state.operatingName || '',
           businessStreetAddress: state.businessStreetAddress || '',
           businessCity: state.businessCity || '',
-          businessState: state.businessState || '',
+          businessState: state.businessState || state.headquartersState || '',
           businessPostalCode: state.businessPostalCode || '',
           businessPhone: state.businessPhone || '',
           businessWebsite: state.businessWebsite || '',
           businessStructure: state.businessStructure || 'corporation',
           businessStartDate: state.businessStartDate || '',
-          numberOfEmployees: state.numberOfEmployees || 1,
-          estimatedYearlyRevenue: state.estimatedYearlyRevenue || 0,
-          primaryBankName: state.primaryBankName || '',
-          bankingRelationshipLength: state.bankingRelationshipLength || '1_year'
+          employeeCount: parseInt(state.employeeCount?.toString() || '1') || 1,
+          estimatedYearlyRevenue: parseFloat(state.estimatedYearlyRevenue?.toString().replace(/[,$]/g, '') || '0') || 0
         },
         step4: {
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
+          firstName: data.firstName || state.applicantFirstName || '',
+          lastName: data.lastName || state.applicantLastName || '',
           title: data.title || '',
-          personalEmail: data.personalEmail || '',
-          personalPhone: data.personalPhone || '',
-          dateOfBirth: data.dateOfBirth || '',
-          socialSecurityNumber: data.socialSecurityNumber || '',
-          ownershipPercentage: parseFloat(data.ownershipPercentage) || 100,
+          personalEmail: data.personalEmail || state.applicantEmail || '',
+          personalPhone: data.personalPhone || state.applicantPhone || '',
+          dateOfBirth: data.dateOfBirth || state.applicantDateOfBirth || '',
+          socialSecurityNumber: data.socialSecurityNumber || state.applicantSSN || '',
+          ownershipPercentage: parseFloat(data.ownershipPercentage || '100') || 100,
           creditScore: data.creditScore || 'unknown',
           personalAnnualIncome: data.personalAnnualIncome || '',
-          applicantAddress: data.applicantAddress || '',
-          applicantCity: data.applicantCity || '',
-          applicantState: data.applicantState || '',
-          applicantPostalCode: data.applicantPostalCode || '',
+          applicantAddress: data.applicantAddress || state.applicantAddress || '',
+          applicantCity: data.applicantCity || state.applicantCity || '',
+          applicantState: data.applicantState || state.applicantState || '',
+          applicantPostalCode: data.applicantPostalCode || state.applicantZipCode || '',
           yearsWithBusiness: data.yearsWithBusiness || '',
           previousLoans: data.previousLoans || 'no',
           bankruptcyHistory: data.bankruptcyHistory || 'no',
           // Partner fields if applicable
-          partnerFirstName: data.partnerFirstName || '',
-          partnerLastName: data.partnerLastName || '',
-          partnerEmail: data.partnerEmail || '',
-          partnerPhone: data.partnerPhone || '',
-          partnerDateOfBirth: data.partnerDateOfBirth || '',
-          partnerSinSsn: data.partnerSinSsn || '',
-          partnerOwnershipPercentage: parseFloat(data.partnerOwnershipPercentage) || 0,
+          hasPartner: hasPartner || false,
+          partnerFirstName: data.partnerFirstName || state.partnerFirstName || '',
+          partnerLastName: data.partnerLastName || state.partnerLastName || '',
+          partnerEmail: data.partnerEmail || state.partnerEmail || '',
+          partnerPhone: data.partnerPhone || state.partnerPhone || '',
+          partnerDateOfBirth: data.partnerDateOfBirth || state.partnerDateOfBirth || '',
+          partnerSinSsn: data.partnerSinSsn || state.partnerSSN || '',
+          partnerOwnershipPercentage: parseFloat(data.partnerOwnershipPercentage || '0') || 0,
           partnerCreditScore: data.partnerCreditScore || 'unknown',
           partnerPersonalAnnualIncome: data.partnerPersonalAnnualIncome || '',
-          partnerAddress: data.partnerAddress || '',
-          partnerCity: data.partnerCity || '',
-          partnerState: data.partnerState || '',
-          partnerPostalCode: data.partnerPostalCode || ''
+          partnerAddress: data.partnerAddress || state.partnerAddress || '',
+          partnerCity: data.partnerCity || state.partnerCity || '',
+          partnerState: data.partnerState || state.partnerState || '',
+          partnerPostalCode: data.partnerPostalCode || state.partnerZipCode || ''
         }
       };
       
@@ -199,21 +213,8 @@ export default function Step4ApplicantInfo() {
       
     } catch (error) {
       console.error('❌ Step 4: Failed to create application:', error);
-      // For development, continue with mock ID but log the error
-      const mockId = 'mock_' + crypto.randomUUID();
-      dispatch({
-        type: 'UPDATE_FORM_DATA',
-        payload: {
-          applicationId: mockId
-        }
-      });
-      localStorage.setItem('appId', mockId);
-      
-      dispatch({
-        type: 'MARK_STEP_COMPLETE',
-        payload: 4
-      });
-      setLocation('/apply/step-5');
+      alert("❌ Application creation failed: " + (error instanceof Error ? error.message : 'Unknown error'));
+      return; // Stop here - don't continue with mock data
     }
   };
 
