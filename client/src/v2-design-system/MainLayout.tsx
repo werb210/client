@@ -75,6 +75,7 @@ import CacheManagement from "@/pages/CacheManagement";
 import UUIDTestPage from "@/pages/UUIDTestPage";
 import SignNowDebugTest from "@/pages/SignNowDebugTest";
 import SimpleSignNowTest from "@/pages/SimpleSignNowTest";
+import ProdSignNowTest from "@/pages/ProdSignNowTest";
 
 
 /**
@@ -131,6 +132,7 @@ export function MainLayout() {
       <Route path="/uuid-test" component={UUIDTestPage} />
       <Route path="/signnow-debug-test" component={SignNowDebugTest} />
       <Route path="/simple-signnow-test" component={SimpleSignNowTest} />
+      <Route path="/prod-signnow-test" component={ProdSignNowTest} />
       <Route path="/application-creation-test" component={lazy(() => import('@/pages/ApplicationCreationTest'))} />
       <Route path="/application-flow-test" component={lazy(() => import('@/pages/ApplicationFlowTest'))} />
       <Route path="/security-test-runner" component={lazy(() => import('../security/SecurityTestRunner'))} />

@@ -1,0 +1,109 @@
+Thanks — that’s **exactly** the insight we needed.
+
+---
+
+## 🚨 Root Cause Identified
+
+> **The production client app is minified and stripped of all console logs**, so:
+>
+> * You can't see the `applicationId` being generated.
+> * You can't verify if Step 4 POSTed it to the staff backend.
+> * You can't confirm if Step 6 is using the right ID.
+
+---
+
+## ✅ Solution: Add a Temporary Debug Page to Production
+
+Let’s inject a **temporary debug page** into the client production build:
+
+---
+
+### 🔧 Step-by-Step (Client App)
+
+1. **Create this file**:
+
+`client/src/pages/ProdSignNowTest.tsx`
+
+```tsx
+import { useEffect, useState } from 'react';
+
+export default function ProdSignNowTest() {
+  const [appId, setAppId] = useState<string | null>(null);
+  const [response, setResponse] = useState<any>(null);
+
+  useEffect(() => {
+    const id = localStorage.getItem('applicationId');
+    setAppId(id);
+
+    if (id) {
+      fetch(`https://staff.boreal.financial/api/applications/${id}/signnow`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => setResponse(data))
+        .catch((err) => setResponse({ error: err.message }));
+    }
+  }, []);
+
+  return (
+    <div style={{ padding: '2rem' }}>
+      <h1>🧪 Production SignNow Debug</h1>
+      <p><strong>📦 Local Storage applicationId:</strong> {appId}</p>
+      <pre style={{ background: '#eee', padding: '1rem' }}>
+        {JSON.stringify(response, null, 2)}
+      </pre>
+    </div>
+  );
+}
+```
+
+2. **Add route in your router**:
+
+```tsx
+<Route path="/prod-signnow-test" element={<ProdSignNowTest />} />
+```
+
+3. **Redeploy** the client app.
+
+4. ✅ Visit: `https://YOUR_PROD_CLIENT_URL/prod-signnow-test`
+
+---
+
+## 🧪 What This Will Show You
+
+* 📦 The `applicationId` stored in localStorage (Step 4 ID)
+* 🌐 Whether it reaches the production staff API
+* ✅ If the ID is valid and SignNow generates successfully
+* ❌ If the ID returns 404 (not found in DB)
+
+---
+
+## ✅ Bonus: Manual Testing from Browser Console
+
+After completing Step 4 in production, open DevTools Console and paste:
+
+```js
+localStorage.getItem("applicationId");
+```
+
+Then use the result in this:
+
+```bash
+curl -X POST https://staff.boreal.financial/api/applications/YOUR-UUID/signnow \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Next Step
+
+Let me know when you've added the debug page. Once deployed, we’ll know **for sure** whether:
+
+* The client is sending the UUID correctly
+* The staff backend is storing and accepting it
+* The SignNow endpoint is operational in production
+
+We are **one debug page away** from closing this for good.
