@@ -13,7 +13,7 @@ interface SignNowResponse {
 }
 
 export default function SimpleSignNowTest() {
-  const testUUID = "12345678-1234-5678-9abc-123456789012";
+  const testUUID = "11111111-2222-3333-4444-555555555555";
   const [signingUrl, setSigningUrl] = useState<string>('');
   const [status, setStatus] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
