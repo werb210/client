@@ -169,15 +169,13 @@ export async function uploadDocument(
 
 // Upload document to public endpoint (NO Authorization required - Step 5 specific)
 export async function uploadDocumentPublic(
-  file: File, 
   applicationId: string,
-  documentType?: string
+  file: File,
+  documentType: string
 ): Promise<{ documentId: string; url: string }> {
   const formData = new FormData();
-  formData.append('file', file);
-  if (documentType) {
-    formData.append('documentType', documentType);
-  }
+  formData.append('document', file);
+  formData.append('documentType', documentType);
 
   // Use direct fetch without Authorization headers
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/upload/${applicationId}`, {

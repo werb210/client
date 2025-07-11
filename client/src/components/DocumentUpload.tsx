@@ -37,7 +37,7 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
       );
 
       // Upload actual file using public endpoint (no Authorization required)
-      const result = await api.uploadDocumentPublic(file, applicationId.toString(), 'general');
+      const result = await api.uploadDocumentPublic(applicationId.toString(), file, 'general');
       return { ...result, fileId };
     },
     onSuccess: (data, { fileId }) => {

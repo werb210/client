@@ -189,7 +189,7 @@ class OfflineStorage {
       for (const doc of pendingDocuments) {
         try {
           const api = await import('./api');
-          const result = await api.uploadDocumentPublic(doc.file, doc.applicationId.toString(), 'general');
+          const result = await api.uploadDocumentPublic(doc.applicationId.toString(), doc.file, 'general');
           await this.markDocumentUploaded(doc.id);
           console.log(`Document ${doc.id} synced to staff backend:`, result);
         } catch (error) {
