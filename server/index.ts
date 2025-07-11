@@ -577,28 +577,22 @@ app.use((req, res, next) => {
   });
 
   // SignNow API Proxy - Route to Staff Backend
-  app.post('/api/applications/:id/signnow', async (req, res) => {
+  app.get('/api/applications/:id/signnow', async (req, res) => {
     try {
       const { id } = req.params;
       const staffApiUrl = cfg.staffApiUrl + '/api';
       
       // Enhanced logging for CORS and request debugging
       console.log(`[SIGNNOW] Incoming request headers.origin:`, req.headers.origin);
-      console.log(`[SIGNNOW] Routing POST /api/applications/${id}/signnow to staff backend`);
+      console.log(`[SIGNNOW] Routing GET /api/applications/${id}/signnow to staff backend`);
       console.log(`[SIGNNOW] Target URL: ${staffApiUrl}/applications/${id}/signnow`);
       
       const response = await fetch(`${staffApiUrl}/applications/${id}/signnow`, {
-        method: 'POST',
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${cfg.clientToken}`,
           'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          applicationId: id,
-          templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5',
-          ...req.body
-        })
+        }
       });
       
       if (response.ok) {
@@ -612,7 +606,7 @@ app.use((req, res, next) => {
         if (response.status === 404 || response.status === 501 || response.status === 500) {
           console.log(`[SIGNNOW] 🔧 Generating temporary SignNow document for demonstration...`);
           
-          const templateId = req.body.templateId || 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5';
+          const templateId = 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5';
           const signNowDocId = `doc_${id}_${Date.now()}`;
           const signingUrl = `https://app.signnow.com/webapp/document/${signNowDocId}/invite?token=temp_${templateId.slice(0, 8)}`;
           

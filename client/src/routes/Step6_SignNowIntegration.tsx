@@ -24,12 +24,23 @@ type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'complete' | 
 
 /**
  * Step 6: SignNow Integration
- * Per specification:
- * 1. Display loading UI while waiting for SignNow link
- * 2. Poll GET /applications/{id}/signing-status
- * 3. Once status is "ready", fetch GET /applications/{id}/signing-url  
- * 4. Open SignNow signing window
- * 5. Detect completion and auto-navigate to Step 7
+ * CLIENT APPLICATION (Frontend-Only) - Per specification:
+ * 1. User completes Steps 1–5, uploads documents, application ID created
+ * 2. User reaches Step 6: Electronic Signature
+ * 3. Triggers call to: GET /api/applications/:applicationId/signnow
+ * 4. Displays "Preparing your documents" loader
+ * 5. Waits for signUrl from backend
+ * 6. If received → shows "Open SignNow Signing Window" button
+ * 7. If 404/501 → shows error fallback UI
+ * 8. User clicks to open SignNow in new tab
+ * 9. User signs document on SignNow site
+ * 10. Client polls /api/applications/:applicationId/signnow until status = signed
+ * 11. Once signed, Step 7 becomes available: Final review & submission
+ * 
+ * ✅ Client Responsibilities:
+ * - Never stores SignNow credentials or template ID
+ * - Only renders UI based on backend response
+ * - Handles navigation and user feedback
  */
 export default function Step6SignNowIntegration() {
   const { state, dispatch, saveToStorage } = useFormData();
@@ -140,19 +151,16 @@ export default function Step6SignNowIntegration() {
 
     const signNowUrl = `${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/signnow`;
 
-    console.log('📡 Calling SignNow endpoint:', signNowUrl);
+    console.log('📡 Calling SignNow endpoint (GET):', signNowUrl);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/signnow`, {
-        method: 'POST',
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         mode: 'cors',
-        credentials: 'include',
-        body: JSON.stringify({
-          templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5'
-        })
+        credentials: 'include'
       });
 
       console.log('📬 SignNow response status:', response.status);
