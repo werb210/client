@@ -37,7 +37,7 @@ import SyncMonitor from "@/pages/SyncMonitor";
 import LenderProductsByCountry from "@/routes/LenderProductsByCountry";
 import CompleteWorkflowTest from "@/test/CompleteWorkflowTest";
 import StageMonitorTest from "@/test/StageMonitorTest";
-import SignNowWorkflowTest from "@/test/SignNowWorkflowTest";
+
 import Step5Test from "@/pages/Step5Test";
 import Steps34Test from "@/pages/Steps34Test";
 import Step5IntersectionTest from "@/test/Step5IntersectionTest";
@@ -64,7 +64,7 @@ import ReliableSyncTest from "@/pages/ReliableSyncTest";
 import LenderDiagnostics from "@/pages/LenderDiagnostics";
 import SyncDiagnostics from "@/pages/SyncDiagnostics";
 import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
-import SignNowWorkflowTestNew from "@/pages/SignNowWorkflowTest";
+
 import CanadianWorkingCapitalTest from "@/pages/CanadianWorkingCapitalTest";
 import DebugCanadianEquipmentAPI from "@/pages/DebugCanadianEquipmentAPI";
 import ListLenderCategories from "@/pages/ListLenderCategories";
@@ -107,7 +107,7 @@ export function MainLayout() {
       <Route path="/diagnostics/lenders" component={LenderDiagnosticsFinalized} />
       <Route path="/complete-workflow-test" component={CompleteWorkflowTest} />
       <Route path="/stage-monitor-test" component={StageMonitorTest} />
-      <Route path="/signnow-workflow-test" component={SignNowWorkflowTest} />
+
       <Route path="/step5-test" component={Step5Test} />
       <Route path="/step5-intersection-test" component={Step5IntersectionTest} />
       <Route path="/steps34-test" component={Steps34Test} />
@@ -126,7 +126,7 @@ export function MainLayout() {
       <Route path="/comprehensive-e2e-test" component={ComprehensiveE2ETest} />
       <Route path="/indexeddb-test" component={IndexedDBTest} />
       <Route path="/reliable-sync-test" component={ReliableSyncTest} />
-      <Route path="/signnow-workflow-test-new" component={SignNowWorkflowTestNew} />
+
       <Route path="/canadian-working-capital-test" component={CanadianWorkingCapitalTest} />
       <Route path="/debug-canadian-equipment-api" component={DebugCanadianEquipmentAPI} />
       <Route path="/list-lender-categories" component={ListLenderCategories} />
