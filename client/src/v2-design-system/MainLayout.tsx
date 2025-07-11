@@ -80,6 +80,7 @@ import LenderDataTest from "@/pages/LenderDataTest";
 import SignNowDebugTest from "@/pages/SignNowDebugTest";
 import SimpleSignNowTest from "@/pages/SimpleSignNowTest";
 import ProdSignNowTest from "@/pages/ProdSignNowTest";
+import ClientVerificationDiagnostic from "@/pages/ClientVerificationDiagnostic";
 
 
 /**
@@ -142,6 +143,7 @@ export function MainLayout() {
       <Route path="/application-creation-test" component={lazy(() => import('@/pages/ApplicationCreationTest'))} />
       <Route path="/application-flow-test" component={lazy(() => import('@/pages/ApplicationFlowTest'))} />
       <Route path="/security-test-runner" component={lazy(() => import('../security/SecurityTestRunner'))} />
+      <Route path="/client-verification-diagnostic" component={ClientVerificationDiagnostic} />
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
