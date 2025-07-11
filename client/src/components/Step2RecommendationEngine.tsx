@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProductCategories } from '@/hooks/useProductCategories';
+import { usePublicLenders } from '@/hooks/usePublicLenders';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, CheckCircle, ArrowRight, AlertTriangle } from 'lucide-react';
@@ -31,14 +32,30 @@ export function Step2RecommendationEngine({
   
   // Use client-side authentic 41-product database for filtering
   const { data: productCategories, isLoading, error } = useProductCategories({
-    country: formData.headquarters === 'US' ? 'united_states' : 'canada',
+    headquarters: formData.headquarters, // Use 'headquarters' not 'country'
     lookingFor: formData.lookingFor,
     fundingAmount: formData.fundingAmount,
     accountsReceivableBalance: formData.accountsReceivableBalance,
     fundsPurpose: formData.fundsPurpose
   });
 
+  // Also get raw products status for debugging
+  const { data: rawProducts, isLoading: rawLoading, error: rawError } = usePublicLenders();
+
   console.log('✅ Using authentic 41-product database from client-side cache');
+  console.log('[STEP2] Form data passed to useProductCategories:', {
+    headquarters: formData.headquarters,
+    lookingFor: formData.lookingFor,
+    fundingAmount: formData.fundingAmount,
+    accountsReceivableBalance: formData.accountsReceivableBalance,
+    fundsPurpose: formData.fundsPurpose
+  });
+  console.log('[STEP2] Hook response:', { productCategories, isLoading, error });
+  console.log('[STEP2] Raw products status:', { 
+    rawProductCount: rawProducts?.length, 
+    rawLoading, 
+    rawError: rawError?.message 
+  });
 
   const handleProductClick = (categoryKey: string) => {
     const isCurrentlySelected = selectedProduct === categoryKey;
@@ -144,6 +161,12 @@ export function Step2RecommendationEngine({
                 <p className="text-red-500 mb-4">
                   {error instanceof Error ? error.message : 'Failed to load product recommendations'}
                 </p>
+                <details className="text-left mb-4">
+                  <summary className="text-sm text-red-600 cursor-pointer">Technical Details</summary>
+                  <pre className="text-xs text-red-500 mt-1 whitespace-pre-wrap bg-red-50 p-2 rounded">
+                    {JSON.stringify(error, null, 2)}
+                  </pre>
+                </details>
                 <Button 
                   variant="outline" 
                   onClick={() => window.location.reload()}
@@ -151,6 +174,39 @@ export function Step2RecommendationEngine({
                 >
                   Retry
                 </Button>
+              </div>
+            )}
+            
+            {/* No Products Debug */}
+            {!isLoading && !error && (!productCategories || productCategories.length === 0) && (
+              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <div className="flex items-start space-x-3">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-semibold text-yellow-800 mb-1">No Products Found</h4>
+                    <p className="text-sm text-yellow-700 mb-3">
+                      No loan products match your current criteria. This could be due to geographic restrictions, 
+                      funding amount outside available ranges, or product type preferences.
+                    </p>
+                    <details>
+                      <summary className="text-xs text-yellow-600 cursor-pointer">Debug Information</summary>
+                      <pre className="text-xs text-yellow-500 mt-1 whitespace-pre-wrap bg-yellow-50 p-2 rounded border">
+{JSON.stringify({
+  formData: {
+    headquarters: formData.headquarters,
+    lookingFor: formData.lookingFor,
+    fundingAmount: formData.fundingAmount,
+    accountsReceivableBalance: formData.accountsReceivableBalance,
+    fundsPurpose: formData.fundsPurpose
+  },
+  productCategories,
+  isLoading,
+  error
+}, null, 2)}
+                      </pre>
+                    </details>
+                  </div>
+                </div>
               </div>
             )}
 
