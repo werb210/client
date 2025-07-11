@@ -93,13 +93,15 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
-- **July 11, 2025: COMPREHENSIVE FIELD MAPPING DEBUG SYSTEM IMPLEMENTED**
+- **July 11, 2025: COMPREHENSIVE FIELD MAPPING DEBUG SYSTEM IMPLEMENTED + FACTORING BUSINESS RULE UPDATED**
   * CREATED: Complete field validation system with `expectedLenderFields.ts` schema definition
   * CREATED: Auto-fix utility `sanitizeLenderProduct.ts` for normalizing malformed API data  
   * CREATED: `FieldMappingDebugOverlay` component with real-time field mapping diagnostics
   * ENHANCED: Step 2 with debug button showing detailed field analysis across all 41 products
   * IMPLEMENTED: Comprehensive testing tools for field mapping verification and troubleshooting
   * FIXED: All remaining `formData.headquarters` references to use mapped `headquarters` variable
+  * UPDATED: Factoring business rule - now displays when "No Account Receivables" selected (for future receivables)
+  * ENHANCED: Step 2 messaging shows appropriate factoring descriptions for existing vs future receivables
   * VERIFIED: Complete debug system provides overview, product details, and sanitization logs
   * DEBUG READY: Red debug button in Step 2 opens overlay with complete field mapping analysis
   * PRODUCTION READY: Debug tools available for staff to troubleshoot any future field mapping issues

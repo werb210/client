@@ -70,8 +70,8 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
       geography.includes(headquarters) &&
       fundingAmount >= minAmount && fundingAmount <= maxAmount &&
       (
-        // 4. AR balance rule - include invoice factoring if AR > 0
-        (accountsReceivableBalance > 0 && product.category.toLowerCase().includes("factoring")) ||
+        // 4. AR balance rule - include invoice factoring for all AR scenarios (existing or future receivables)
+        product.category.toLowerCase().includes("factoring") ||
         // 5. Inventory purpose rule - include purchase order financing for inventory
         (fundsPurpose === "inventory" && product.category.toLowerCase().includes("purchase order"))
       )
@@ -132,8 +132,8 @@ export function calculateRecommendationScore(
   }
 
   // Bonus points for special matching rules
-  if (accountsReceivableBalance > 0 && product.category.toLowerCase().includes("factoring")) {
-    score += 10; // Bonus for AR factoring match
+  if (product.category.toLowerCase().includes("factoring")) {
+    score += 10; // Bonus for factoring (existing or future receivables)
   }
   
   if (fundsPurpose === "inventory" && product.category.toLowerCase().includes("purchase order")) {

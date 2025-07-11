@@ -302,10 +302,14 @@ export function Step2RecommendationEngine({
                           <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                           <span>Available in your region ({formatHeadquarters(headquarters)})</span>
                         </div>
-                        {category.category === 'invoice_factoring' && formData.accountsReceivableBalance > 0 && (
+                        {category.category.toLowerCase().includes('factoring') && (
                           <div className="flex items-center space-x-2 text-green-600">
                             <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                            <span>Compatible with your accounts receivable balance</span>
+                            <span>
+                              {formData.accountsReceivableBalance > 0 
+                                ? 'Compatible with your existing accounts receivable' 
+                                : 'Available for future receivables financing'}
+                            </span>
                           </div>
                         )}
                         {formData.lookingFor === 'equipment' && category.category === 'equipment_financing' && (
