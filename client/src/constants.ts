@@ -4,8 +4,10 @@
  * Centralized configuration for API endpoints and other constants
  */
 
-// API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://staff.boreal.financial/api';
+// API Configuration - Development uses direct server connection, production uses relative path
+export const API_BASE_URL = import.meta.env.DEV 
+  ? 'http://localhost:5000/api'  // Direct to Express server in development (Vite proxy workaround)
+  : (import.meta.env.VITE_API_BASE_URL || '/api'); // Production uses environment variable or relative path
 
 // Staff API Configuration
 export const STAFF_API_BASE_URL = API_BASE_URL;
