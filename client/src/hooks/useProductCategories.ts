@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { useLocalLenders, LenderProduct } from '@/hooks/useLocalLenders';
+import { usePublicLenders } from '@/hooks/usePublicLenders';
+import { LenderProduct } from '@/hooks/useLocalLenders';
 import { filterProducts, RecommendationFormData } from '@/lib/recommendation';
 
 export interface ProductCategory {
@@ -10,7 +11,7 @@ export interface ProductCategory {
 }
 
 export function useProductCategories(formData: RecommendationFormData) {
-  const { data: products = [], isLoading: productsLoading, error: productsError } = useLocalLenders();
+  const { data: products = [], isLoading: productsLoading, error: productsError } = usePublicLenders();
 
   return useQuery({
     queryKey: ['product-categories', formData],
