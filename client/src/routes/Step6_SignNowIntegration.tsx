@@ -120,17 +120,19 @@ export default function Step6SignNowIntegration() {
   }, [applicationId]);
 
   const createSignNowDocument = async () => {
+    console.log('🚀 Triggered createSignNowDocument()');
+    
     if (!applicationId) return;
     
     setSigningStatus('loading');
     setError(null);
     
-    console.log("🌍 VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
-    console.log("🧾 Application ID:", applicationId);
+    console.log('🌍 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+    console.log('🆔 Application ID:', applicationId);
 
     const signNowUrl = `${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/signnow`;
 
-    console.log('📡 Now calling SignNow endpoint:', signNowUrl);
+    console.log('📡 Calling SignNow endpoint:', signNowUrl);
 
     try {
       const response = await fetch(signNowUrl, {
