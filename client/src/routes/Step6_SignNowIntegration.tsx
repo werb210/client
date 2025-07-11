@@ -87,18 +87,26 @@ export default function Step6SignNowIntegration() {
   const applicationId = localStorage.getItem("applicationId"); // Always pull from storage
 
   useEffect(() => {
+    console.log("🧭 Step 6 mounted. Application ID:", applicationId);
     console.log('🔍 Step 6 loaded. FormData ID:', state.applicationId);
     console.log('🔍 LocalStorage ID:', localStorage.getItem("applicationId"));
     console.log('🔍 Final applicationId:', applicationId);
     
-    // USER REQUESTED: Verify applicationId matches Step 4
-    console.log('🔑 Using applicationId:', applicationId);
-    console.log('🔍 Step 6 verification - applicationId source:', state.applicationId ? 'Context' : 'localStorage');
-    
+    console.log("🧪 Checking trigger conditions...", {
+      applicationId,
+      signingStatus,
+    });
+
     if (!applicationId) {
+      console.warn("⛔ No application ID. Aborting.");
       setError('No application ID found. Please complete Step 4 first.');
       setSigningStatus('error');
       console.error('❌ No application ID available in Step 6');
+      return;
+    }
+
+    if (signingStatus === 'success') {
+      console.info("✅ Already signed. Skipping.");
       return;
     }
     
@@ -115,7 +123,7 @@ export default function Step6SignNowIntegration() {
     }
 
     // Create SignNow document using correct API endpoint
-    console.log('🔄 Step 6: Creating SignNow document via POST /api/signnow/create');
+    console.log("🚀 Triggering createSignNowDocument()");
     createSignNowDocument();
   }, [applicationId]);
 
