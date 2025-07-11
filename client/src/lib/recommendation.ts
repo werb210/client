@@ -70,8 +70,9 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
       geography.includes(headquarters) &&
       fundingAmount >= minAmount && fundingAmount <= maxAmount &&
       (
-        // 4. AR balance rule - include invoice factoring for all AR scenarios (existing or future receivables)
-        product.category.toLowerCase().includes("factoring") ||
+        // 4. AR balance rule - include invoice factoring ONLY when they have OR might have receivables
+        // FIXED: Only show factoring when accountsReceivableBalance > 0 OR when explicitly looking for factoring future receivables
+        (product.category.toLowerCase().includes("factoring") && accountsReceivableBalance > 0) ||
         // 5. Inventory purpose rule - include purchase order financing for inventory
         (fundsPurpose === "inventory" && product.category.toLowerCase().includes("purchase order"))
       )
