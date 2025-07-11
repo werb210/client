@@ -1,22 +1,8 @@
-// Staff Database Product Type (Updated to match usePublicLenders interface)
-export interface StaffLenderProduct {
-  id: string;
-  product_name: string;
-  lender_name: string;
-  product_type: string; // e.g., 'term_loan', 'line_of_credit', 'equipment_financing', etc.
-  geography: string[]; // e.g., ['US'], ['CA'], ['US', 'CA']
-  min_amount: number;
-  max_amount: number;
-  min_revenue: number;
-  industries: string[];
-  description: string;
-  interest_rate_min: number;
-  interest_rate_max: number;
-  term_min: number;
-  term_max: number;
-  requirements: string[];
-  active: boolean;
-}
+// Import and use the official LenderProduct type from schema
+import { LenderProduct } from '../../../shared/lenderProductSchema';
+
+// Use the normalized LenderProduct type from schema
+export type StaffLenderProduct = LenderProduct;
 
 export interface RecommendationFormData {
   headquarters: string; // 'US' or 'CA'
@@ -47,8 +33,8 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
 
   // Core filtering logic - Updated to use actual API response format
   const matchesCore = products.filter(product => {
-    const minAmount = getAmountValue(product.min_amount);
-    const maxAmount = getAmountValue(product.max_amount);
+    const minAmount = getAmountValue(product.minAmount);
+    const maxAmount = getAmountValue(product.maxAmount);
     
     // Safe geography check - handle both string and array
     const geography = Array.isArray(product.geography) ? product.geography : 
@@ -62,16 +48,16 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
       // 3. Product-type rules using staff database categories
       (
         lookingFor === "both" ||
-        (lookingFor === "capital" && product.product_type !== "equipment_financing") ||
-        (lookingFor === "equipment" && product.product_type === "equipment_financing")
+        (lookingFor === "capital" && product.category !== "equipment_financing") ||
+        (lookingFor === "equipment" && product.category === "equipment_financing")
       )
     );
   });
 
   // Extra inclusions based on special rules - Updated to use actual API response format
   const extras = products.filter(product => {
-    const minAmount = getAmountValue(product.min_amount);
-    const maxAmount = getAmountValue(product.max_amount);
+    const minAmount = getAmountValue(product.minAmount);
+    const maxAmount = getAmountValue(product.maxAmount);
     
     // Safe geography check - handle both string and array
     const geography = Array.isArray(product.geography) ? product.geography : 
@@ -83,9 +69,9 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
       fundingAmount >= minAmount && fundingAmount <= maxAmount &&
       (
         // 4. AR balance rule - include invoice factoring if AR > 0
-        (accountsReceivableBalance > 0 && product.product_type === "invoice_factoring") ||
+        (accountsReceivableBalance > 0 && product.category === "invoice_factoring") ||
         // 5. Inventory purpose rule - include purchase order financing for inventory
-        (fundsPurpose === "inventory" && product.product_type === "purchase_order_financing")
+        (fundsPurpose === "inventory" && product.category === "purchase_order_financing")
       )
     );
   });
@@ -114,9 +100,9 @@ export function calculateRecommendationScore(
     fundsPurpose,
   } = form;
 
-  const minAmount = getAmountValue(product.min_amount);
-  const maxAmount = getAmountValue(product.max_amount);
-  const minMonthlyRevenue = product.min_revenue || 0;
+  const minAmount = getAmountValue(product.minAmount);
+  const maxAmount = getAmountValue(product.maxAmount);
+  const minMonthlyRevenue = product.minRevenue || 0;
 
   // Geography match (25 points) - Safe geography check
   const geography = Array.isArray(product.geography) ? product.geography : 
@@ -132,8 +118,8 @@ export function calculateRecommendationScore(
 
   // Product type preference match (25 points)
   if (lookingFor === "both" ||
-      (lookingFor === "capital" && product.product_type !== "equipment_financing") ||
-      (lookingFor === "equipment" && product.product_type === "equipment_financing")) {
+      (lookingFor === "capital" && product.category !== "equipment_financing") ||
+      (lookingFor === "equipment" && product.category === "equipment_financing")) {
     score += 25;
   }
 
@@ -143,11 +129,11 @@ export function calculateRecommendationScore(
   }
 
   // Bonus points for special matching rules
-  if (accountsReceivableBalance > 0 && product.product_type === "invoice_factoring") {
+  if (accountsReceivableBalance > 0 && product.category === "invoice_factoring") {
     score += 10; // Bonus for AR factoring match
   }
   
-  if (fundsPurpose === "inventory" && product.product_type === "purchase_order_financing") {
+  if (fundsPurpose === "inventory" && product.category === "purchase_order_financing") {
     score += 10; // Bonus for PO financing match
   }
 
