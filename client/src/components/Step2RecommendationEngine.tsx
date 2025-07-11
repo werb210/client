@@ -35,7 +35,7 @@ export function Step2RecommendationEngine({
     headquarters: formData.headquarters, // Use 'headquarters' not 'country'
     lookingFor: formData.lookingFor,
     fundingAmount: formData.fundingAmount,
-    accountsReceivableBalance: formData.accountsReceivableBalance,
+    accountsReceivableBalance: formData.accountsReceivableBalance || 0,
     fundsPurpose: formData.fundsPurpose
   });
 
@@ -47,7 +47,7 @@ export function Step2RecommendationEngine({
     headquarters: formData.headquarters,
     lookingFor: formData.lookingFor,
     fundingAmount: formData.fundingAmount,
-    accountsReceivableBalance: formData.accountsReceivableBalance,
+    accountsReceivableBalance: formData.accountsReceivableBalance || 0,
     fundsPurpose: formData.fundsPurpose
   });
   console.log('[STEP2] Hook response:', { productCategories, isLoading, error });

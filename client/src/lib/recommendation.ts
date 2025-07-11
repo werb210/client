@@ -36,9 +36,10 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     const minAmount = getAmountValue(product.minAmount);
     const maxAmount = getAmountValue(product.maxAmount);
     
-    // Safe geography check - handle both string and array
+    // Safe geography check - handle both geography and country fields from API
     const geography = Array.isArray(product.geography) ? product.geography : 
-                     typeof product.geography === 'string' ? [product.geography] : [];
+                     typeof product.geography === 'string' ? [product.geography] :
+                     product.country ? [product.country] : [];
     
     return (
       // 1. Country match - geography contains headquarters
@@ -48,8 +49,8 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
       // 3. Product-type rules using staff database categories
       (
         lookingFor === "both" ||
-        (lookingFor === "capital" && product.category !== "equipment_financing") ||
-        (lookingFor === "equipment" && product.category === "equipment_financing")
+        (lookingFor === "capital" && !product.category.toLowerCase().includes("equipment")) ||
+        (lookingFor === "equipment" && product.category.toLowerCase().includes("equipment"))
       )
     );
   });
@@ -59,9 +60,10 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     const minAmount = getAmountValue(product.minAmount);
     const maxAmount = getAmountValue(product.maxAmount);
     
-    // Safe geography check - handle both string and array
+    // Safe geography check - handle both geography and country fields from API
     const geography = Array.isArray(product.geography) ? product.geography : 
-                     typeof product.geography === 'string' ? [product.geography] : [];
+                     typeof product.geography === 'string' ? [product.geography] :
+                     product.country ? [product.country] : [];
     
     return (
       // Geography and amount must still match for extras
@@ -69,9 +71,9 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
       fundingAmount >= minAmount && fundingAmount <= maxAmount &&
       (
         // 4. AR balance rule - include invoice factoring if AR > 0
-        (accountsReceivableBalance > 0 && product.category === "invoice_factoring") ||
+        (accountsReceivableBalance > 0 && product.category.toLowerCase().includes("factoring")) ||
         // 5. Inventory purpose rule - include purchase order financing for inventory
-        (fundsPurpose === "inventory" && product.category === "purchase_order_financing")
+        (fundsPurpose === "inventory" && product.category.toLowerCase().includes("purchase order"))
       )
     );
   });
@@ -106,7 +108,8 @@ export function calculateRecommendationScore(
 
   // Geography match (25 points) - Safe geography check
   const geography = Array.isArray(product.geography) ? product.geography : 
-                   typeof product.geography === 'string' ? [product.geography] : [];
+                   typeof product.geography === 'string' ? [product.geography] :
+                   product.country ? [product.country] : [];
   if (geography.includes(headquarters)) {
     score += 25;
   }
@@ -118,8 +121,8 @@ export function calculateRecommendationScore(
 
   // Product type preference match (25 points)
   if (lookingFor === "both" ||
-      (lookingFor === "capital" && product.category !== "equipment_financing") ||
-      (lookingFor === "equipment" && product.category === "equipment_financing")) {
+      (lookingFor === "capital" && !product.category.toLowerCase().includes("equipment")) ||
+      (lookingFor === "equipment" && product.category.toLowerCase().includes("equipment"))) {
     score += 25;
   }
 
@@ -129,11 +132,11 @@ export function calculateRecommendationScore(
   }
 
   // Bonus points for special matching rules
-  if (accountsReceivableBalance > 0 && product.category === "invoice_factoring") {
+  if (accountsReceivableBalance > 0 && product.category.toLowerCase().includes("factoring")) {
     score += 10; // Bonus for AR factoring match
   }
   
-  if (fundsPurpose === "inventory" && product.category === "purchase_order_financing") {
+  if (fundsPurpose === "inventory" && product.category.toLowerCase().includes("purchase order")) {
     score += 10; // Bonus for PO financing match
   }
 
