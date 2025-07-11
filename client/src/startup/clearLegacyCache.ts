@@ -48,7 +48,7 @@ export function clearLegacyCache(): void {
   // Clear any React Query cache keys related to old endpoints
   if (typeof window !== 'undefined' && (window as any).queryClient) {
     const queryClient = (window as any).queryClient;
-    queryClient.removeQueries({ queryKey: ['/api/local/lenders'] });
+    queryClient.removeQueries({ queryKey: ['local-lenders'] });
     queryClient.removeQueries({ queryKey: ['lenders'] });
     console.log('[CACHE CLEANUP] Cleared React Query cache');
   }

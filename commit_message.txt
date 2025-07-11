@@ -1,0 +1,1 @@
+🔥 Removed obsolete /api/local/lenders fallback – client now uses live staff data only

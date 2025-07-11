@@ -53,8 +53,7 @@ export const ApiEndpointTester = () => {
     setResults([]);
 
     const tests = [
-      { url: '/api/local/lenders', label: 'Local API (Development)' },
-      { url: '/api/local/lenders/stats', label: 'Local Stats API' },
+
       { url: 'https://staffportal.replit.app/api/public/lenders', label: 'Staff Public API - 43 Products (Production)' },
       { url: 'https://staffportal.replit.app/api/lenders/products', label: 'Staff Direct API - All Products' },
     ];
@@ -102,7 +101,7 @@ export const ApiEndpointTester = () => {
         <p><strong>Staff API URL:</strong> {import.meta.env.VITE_STAFF_API_URL || 'Not set'}</p>
         <p><strong>Expected Behavior:</strong></p>
         <ul className="list-disc ml-4 mt-2">
-          <li>Development: Should use local endpoints (/api/local/lenders)</li>
+          <li>Development: Local API endpoints have been removed - using staff backend only</li>
           <li>Production: Should use staff endpoints (https://staffportal.replit.app/api/public/lenders)</li>
         </ul>
       </div>

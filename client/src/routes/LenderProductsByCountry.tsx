@@ -37,7 +37,7 @@ interface ProductsByCountry {
 }
 
 async function fetchLenderProductsByCountry(): Promise<ProductsByCountry> {
-  const response = await fetch('/api/local/lenders');
+  const response = await fetch('/api/public/lenders');
   if (!response.ok) {
     throw new Error('Failed to fetch lender products');
   }

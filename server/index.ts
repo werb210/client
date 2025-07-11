@@ -6,7 +6,6 @@ import { WebSocketServer, WebSocket } from "ws";
 import { setupVite, serveStatic, log } from "./vite";
 import cfg from "./config";
 import lendersRouter from "./routes/lenders";
-import localLendersRouter from "./routes/localLenders";
 import loanProductCategoriesRouter from "./routes/loanProductCategories";
 import documentRequirementsRouter from "./routes/documentRequirements";
 import dataIngestionRouter from "./routes/dataIngestion";
@@ -196,7 +195,7 @@ app.use((req, res, next) => {
 
   // Mount lender routes
   app.use('/api/lenders', lendersRouter);
-  app.use('/api/local/lenders', localLendersRouter);
+
   app.use('/api/loan-products', loanProductCategoriesRouter);
   app.use('/api/loan-products', documentRequirementsRouter);
 

@@ -36,17 +36,8 @@ export default function LenderDataViewer() {
 
   const fetchLocalData = async () => {
     setLocalLoading(true);
-    setLocalError(null);
-    try {
-      const response = await fetch('/api/local/lenders');
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      setLocalData(data);
-    } catch (error) {
-      setLocalError(error instanceof Error ? error.message : 'Failed to fetch local data');
-    } finally {
-      setLocalLoading(false);
-    }
+    setLocalError('Local lenders API has been removed - using staff backend only');
+    setLocalLoading(false);
   };
 
   const fetchStaffData = async () => {

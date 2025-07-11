@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
-import { LenderProduct } from '@/hooks/useLocalLenders';
+import { LenderProduct } from '@/hooks/usePublicLenders';
 import { filterProducts, RecommendationFormData } from '@/lib/recommendation';
 
 export interface ProductCategory {

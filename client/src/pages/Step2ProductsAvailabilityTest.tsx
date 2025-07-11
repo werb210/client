@@ -34,22 +34,11 @@ export default function Step2ProductsAvailabilityTest() {
       });
     }
 
-    // Test 2: Check Local IndexedDB Cache
-    try {
-      const localResponse = await fetch('/api/local/lenders');
-      const localData = await localResponse.json();
-      
-      addResult('IndexedDB Cache', localResponse.ok ? 'success' : 'error', {
-        status: localResponse.status,
-        productCount: localData.products?.length || 0,
-        data: localData
-      });
-    } catch (error) {
-      addResult('IndexedDB Cache', 'error', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        type: 'Local Storage Error'
-      });
-    }
+    // Test 2: Check for Removed Local API
+    addResult('Local API Status', 'info', {
+      message: 'Local lenders API has been removed - using staff backend only',
+      status: 'Removed as requested'
+    });
 
     // Test 3: Check Step 2 API Endpoint
     try {

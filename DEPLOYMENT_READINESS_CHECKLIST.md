@@ -10,6 +10,7 @@
 - **Step 2 Filtering:** Real-time product recommendations from cached data
 - **Step 5 Documents:** Intelligent document deduplication system
 - **Diagnostic Tools:** Comprehensive verification and testing framework
+- **Local Fallback Removal:** Removed obsolete /api/local/lenders route - client now fully relies on staff backend
 
 ### ✅ Architecture Components Ready
 ```
