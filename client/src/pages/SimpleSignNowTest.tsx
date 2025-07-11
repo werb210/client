@@ -3,7 +3,7 @@
  */
 
 import React, { useState } from 'react';
-import { SignNowIframe } from '@/components/SignNowIframe';
+
 
 interface SignNowResponse {
   status: string;
@@ -170,15 +170,16 @@ export default function SimpleSignNowTest() {
       {signingUrl && (
         <div className="bg-white border rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4">Embedded SignNow Signing</h2>
-          <SignNowIframe 
-            signingUrl={signingUrl}
-            onComplete={() => {
-              console.log('🎉 Document signing completed successfully');
-              setStatus('🎉 Document signing completed successfully!');
+          <iframe
+            src={signingUrl}
+            className="w-full h-[600px] border rounded"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            onLoad={() => {
+              console.log('🎉 SignNow iframe loaded successfully');
             }}
-            onError={(error) => {
-              console.error('SignNow iframe error:', error);
-              setStatus(`❌ Signing Error: ${error}`);
+            onError={() => {
+              console.error('SignNow iframe failed to load');
+              setStatus('❌ Signing iframe failed to load');
             }}
           />
           <p className="text-sm text-gray-500 mt-2">
