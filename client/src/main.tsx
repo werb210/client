@@ -31,29 +31,32 @@ window.addEventListener('unhandledrejection', (event) => {
   event.preventDefault(); // Prevent default browser behavior
 });
 
+// TESTING MODE: Disable startup verification to test SignNow console output
+console.log('🧪 TESTING MODE: Startup verification disabled for SignNow console testing');
+
 // Trigger initial sync on application startup with comprehensive error handling
-(async () => {
-  try {
-    const result = await syncLenderProducts();
-    if (result.success) {
-      console.log(`[STARTUP] ✅ Synced ${result.productCount} products from ${result.source}`);
-    } else {
-      console.warn(`[STARTUP] ⚠️ Sync failed:`, result.errors);
-    }
-  } catch (error) {
-    console.warn('[STARTUP] Sync failed:', error?.message || error);
-  }
-})();
+// (async () => {
+//   try {
+//     const result = await syncLenderProducts();
+//     if (result.success) {
+//       console.log(`[STARTUP] ✅ Synced ${result.productCount} products from ${result.source}`);
+//     } else {
+//       console.warn(`[STARTUP] ⚠️ Sync failed:`, result.errors);
+//     }
+//   } catch (error) {
+//     console.warn('[STARTUP] Sync failed:', error?.message || error);
+//   }
+// })();
 
 // Verify staff database integration with comprehensive error handling
-(async () => {
-  try {
-    await runStartupVerification();
-    console.log('[STARTUP] ✅ Staff database verification completed');
-  } catch (error) {
-    console.warn('[STARTUP] ❌ Staff database unreachable:', error?.message || error);
-  }
-})();
+// (async () => {
+//   try {
+//     await runStartupVerification();
+//     console.log('[STARTUP] ✅ Staff database verification completed');
+//   } catch (error) {
+//     console.warn('[STARTUP] ❌ Staff database unreachable:', error?.message || error);
+//   }
+// })();
 
 const root = document.getElementById("root");
 if (root) {

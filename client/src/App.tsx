@@ -1,23 +1,10 @@
 /**
- * V2 Application - Using V1 Design System
- * 
- * This application now uses the proven V1 layout and design patterns
- * extracted into the v2-design-system for consistency and reliability.
- * 
- * ✅ V1 Components Used: SideBySideApplication, Step routes
- * ❌ V2 Legacy Archived: ComprehensiveApplication, individual Step forms
+ * TESTING MODE: Simple SignNow Test
  */
-import { AppShell } from "@/v2-design-system/AppShell";
-import { MainLayout } from "@/v2-design-system/MainLayout";
-import { WebSocketListener } from "@/components/WebSocketListener";
+import { SimpleSignNowTest } from "./SimpleSignNowTest";
 
 function App() {
-  return (
-    <AppShell>
-      <WebSocketListener />
-      <MainLayout />
-    </AppShell>
-  );
+  return <SimpleSignNowTest />;
 }
 
 export default App;
