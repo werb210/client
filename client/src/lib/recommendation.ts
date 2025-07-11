@@ -1,17 +1,21 @@
-// Staff Database Product Type (C-1: Updated to match actual API response)
+// Staff Database Product Type (Updated to match usePublicLenders interface)
 export interface StaffLenderProduct {
   id: string;
-  name: string; // Changed from productName to name
-  lenderName: string;
-  category: string; // e.g., 'term_loan', 'line_of_credit', 'equipment_financing', etc.
+  product_name: string;
+  lender_name: string;
+  product_type: string; // e.g., 'term_loan', 'line_of_credit', 'equipment_financing', etc.
   geography: string[]; // e.g., ['US'], ['CA'], ['US', 'CA']
-  amountMin: number; // Changed from amountRange.min to amountMin
-  amountMax: number; // Changed from amountRange.max to amountMax
-  requirements: {
-    minMonthlyRevenue: string;
-    industries: string[] | null;
-  };
-  description: string; // Contains rate, terms, and document info
+  min_amount: number;
+  max_amount: number;
+  min_revenue: number;
+  industries: string[];
+  description: string;
+  interest_rate_min: number;
+  interest_rate_max: number;
+  term_min: number;
+  term_max: number;
+  requirements: string[];
+  active: boolean;
 }
 
 export interface RecommendationFormData {
@@ -41,39 +45,47 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     return parseFloat(amount) || 0;
   };
 
-  // Core filtering logic - C-1: Use amountMin/amountMax from API
+  // Core filtering logic - Updated to use actual API response format
   const matchesCore = products.filter(product => {
-    const minAmount = getAmountValue(product.amountMin);
-    const maxAmount = getAmountValue(product.amountMax);
+    const minAmount = getAmountValue(product.min_amount);
+    const maxAmount = getAmountValue(product.max_amount);
+    
+    // Safe geography check - handle both string and array
+    const geography = Array.isArray(product.geography) ? product.geography : 
+                     typeof product.geography === 'string' ? [product.geography] : [];
     
     return (
       // 1. Country match - geography contains headquarters
-      product.geography.includes(headquarters) &&
+      geography.includes(headquarters) &&
       // 2. Amount range - within min/max bounds
       fundingAmount >= minAmount && fundingAmount <= maxAmount &&
       // 3. Product-type rules using staff database categories
       (
         lookingFor === "both" ||
-        (lookingFor === "capital" && product.category !== "equipment_financing") ||
-        (lookingFor === "equipment" && product.category === "equipment_financing")
+        (lookingFor === "capital" && product.product_type !== "equipment_financing") ||
+        (lookingFor === "equipment" && product.product_type === "equipment_financing")
       )
     );
   });
 
-  // Extra inclusions based on special rules - C-1: Use amountMin/amountMax from API
+  // Extra inclusions based on special rules - Updated to use actual API response format
   const extras = products.filter(product => {
-    const minAmount = getAmountValue(product.amountMin);
-    const maxAmount = getAmountValue(product.amountMax);
+    const minAmount = getAmountValue(product.min_amount);
+    const maxAmount = getAmountValue(product.max_amount);
+    
+    // Safe geography check - handle both string and array
+    const geography = Array.isArray(product.geography) ? product.geography : 
+                     typeof product.geography === 'string' ? [product.geography] : [];
     
     return (
       // Geography and amount must still match for extras
-      product.geography.includes(headquarters) &&
+      geography.includes(headquarters) &&
       fundingAmount >= minAmount && fundingAmount <= maxAmount &&
       (
         // 4. AR balance rule - include invoice factoring if AR > 0
-        (accountsReceivableBalance > 0 && product.category === "invoice_factoring") ||
+        (accountsReceivableBalance > 0 && product.product_type === "invoice_factoring") ||
         // 5. Inventory purpose rule - include purchase order financing for inventory
-        (fundsPurpose === "inventory" && product.category === "purchase_order_financing")
+        (fundsPurpose === "inventory" && product.product_type === "purchase_order_financing")
       )
     );
   });
@@ -102,12 +114,14 @@ export function calculateRecommendationScore(
     fundsPurpose,
   } = form;
 
-  const minAmount = parseFloat(product.amountRange.min) || 0;
-  const maxAmount = parseFloat(product.amountRange.max) || 0;
-  const minMonthlyRevenue = parseFloat(product.requirements.minMonthlyRevenue) || 0;
+  const minAmount = getAmountValue(product.min_amount);
+  const maxAmount = getAmountValue(product.max_amount);
+  const minMonthlyRevenue = product.min_revenue || 0;
 
-  // Geography match (25 points)
-  if (product.geography.includes(headquarters)) {
+  // Geography match (25 points) - Safe geography check
+  const geography = Array.isArray(product.geography) ? product.geography : 
+                   typeof product.geography === 'string' ? [product.geography] : [];
+  if (geography.includes(headquarters)) {
     score += 25;
   }
 
@@ -118,8 +132,8 @@ export function calculateRecommendationScore(
 
   // Product type preference match (25 points)
   if (lookingFor === "both" ||
-      (lookingFor === "capital" && product.category !== "equipment_financing") ||
-      (lookingFor === "equipment" && product.category === "equipment_financing")) {
+      (lookingFor === "capital" && product.product_type !== "equipment_financing") ||
+      (lookingFor === "equipment" && product.product_type === "equipment_financing")) {
     score += 25;
   }
 
@@ -129,11 +143,11 @@ export function calculateRecommendationScore(
   }
 
   // Bonus points for special matching rules
-  if (accountsReceivableBalance > 0 && product.category === "invoice_factoring") {
+  if (accountsReceivableBalance > 0 && product.product_type === "invoice_factoring") {
     score += 10; // Bonus for AR factoring match
   }
   
-  if (fundsPurpose === "inventory" && product.category === "purchase_order_financing") {
+  if (fundsPurpose === "inventory" && product.product_type === "purchase_order_financing") {
     score += 10; // Bonus for PO financing match
   }
 
