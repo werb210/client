@@ -31,8 +31,10 @@ export function Step2RecommendationEngine({
 }: Step2Props) {
   
   // Use client-side authentic 41-product database for filtering
+  // FIX: Map businessLocation to headquarters for backward compatibility
+  const headquarters = formData.headquarters || formData.businessLocation || 'US';
   const { data: productCategories, isLoading, error } = useProductCategories({
-    headquarters: formData.headquarters, // Use 'headquarters' not 'country'
+    headquarters: headquarters,
     lookingFor: formData.lookingFor,
     fundingAmount: formData.fundingAmount,
     accountsReceivableBalance: formData.accountsReceivableBalance || 0,
@@ -44,7 +46,9 @@ export function Step2RecommendationEngine({
 
   console.log('✅ Using authentic 41-product database from client-side cache');
   console.log('[STEP2] Form data passed to useProductCategories:', {
+    businessLocation: formData.businessLocation,
     headquarters: formData.headquarters,
+    mappedHeadquarters: headquarters,
     lookingFor: formData.lookingFor,
     fundingAmount: formData.fundingAmount,
     accountsReceivableBalance: formData.accountsReceivableBalance || 0,
@@ -62,9 +66,12 @@ export function Step2RecommendationEngine({
     onProductSelect(isCurrentlySelected ? '' : categoryKey);
   };
 
-  // Format headquarters for display
+  // Format headquarters for display - handle multiple business location formats
   const formatHeadquarters = (hq: string) => {
-    return hq === 'US' ? 'United States' : hq === 'CA' ? 'Canada' : hq;
+    if (hq === 'US' || hq === 'United States') return 'United States';
+    if (hq === 'CA' || hq === 'Canada') return 'Canada';
+    if (hq === 'Other') return 'International';
+    return hq;
   };
 
   // Format looking for display
@@ -98,7 +105,7 @@ export function Step2RecommendationEngine({
                 <div>
                   <span className="text-teal-600">Headquarters:</span>
                   <div className="font-medium text-teal-900">
-                    {formData.headquarters ? formatHeadquarters(formData.headquarters) : 'Not specified'}
+                    {headquarters ? formatHeadquarters(headquarters) : 'Not specified'}
                   </div>
                 </div>
                 <div>
@@ -123,10 +130,10 @@ export function Step2RecommendationEngine({
             </div>
 
             {/* Geographic Filter Notice */}
-            {formData.headquarters && (
+            {headquarters && (
               <div className="bg-green-50 p-3 rounded-lg border border-green-200">
                 <p className="text-sm text-green-700">
-                  <strong>Geographic Filter Active:</strong> Showing loan products available in {formatHeadquarters(formData.headquarters)}
+                  <strong>Geographic Filter Active:</strong> Showing loan products available in {formatHeadquarters(headquarters)}
                 </p>
               </div>
             )}
@@ -276,7 +283,7 @@ export function Step2RecommendationEngine({
                         </div>
                         <div className="flex items-center space-x-2 text-green-600">
                           <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                          <span>Available in your region ({formatHeadquarters(formData.headquarters)})</span>
+                          <span>Available in your region ({formatHeadquarters(headquarters)})</span>
                         </div>
                         {category.category === 'invoice_factoring' && formData.accountsReceivableBalance > 0 && (
                           <div className="flex items-center space-x-2 text-green-600">

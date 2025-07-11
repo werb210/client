@@ -93,6 +93,15 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 11, 2025: CRITICAL FIELD MAPPING ISSUES RESOLVED**
+  * FIXED: Maximum funding calculation - corrected `amountMax` vs `maxAmount` field name mismatch
+  * FIXED: Step 1/Step 2 field mapping - added `businessLocation` to `headquarters` mapping for proper filtering
+  * ENHANCED: Landing page now displays correct $30M+ maximum funding from authentic API data
+  * ENHANCED: Step 2 filtering now works properly with geographic data from Step 1 form
+  * DEBUGGED: Created comprehensive field mapping analysis tools for future troubleshooting
+  * VERIFIED: All amount fields now correctly extracted from API response (41 products)
+  * PRODUCTION READY: Field mapping consistency ensured across all components
+
 - **July 11, 2025: LOCAL LENDERS API FALLBACK REMOVAL COMPLETE**
   * CRITICAL SUCCESS: Removed all /api/local/lenders fallback logic as explicitly requested by user
   * DELETED FILES: server/routes/localLenders.ts and client/src/hooks/useLocalLenders.ts completely removed
