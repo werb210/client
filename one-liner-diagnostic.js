@@ -1,2 +1,43 @@
-// ONE-LINER DIAGNOSTIC - Copy and paste into browser console
-(async()=>{console.log('🚀 RUNNING COMPLETE DIAGNOSTIC');const{get,set}=await import('idb-keyval');let cache=await get('lender_products_cache');console.log('📊 Cache:',cache?.length||0,'products');try{const r=await fetch('/api/public/lenders');const d=await r.json();console.log('🔗 API:',r.status,d.success?`${d.products?.length} products`:'failed');if(r.ok&&d.products){await set('lender_products_cache',d.products);cache=d.products;console.log('✅ Sync: PASS');}else{console.log('❌ Sync: FAIL');}}catch(e){console.log('❌ API Error:',e.message);}if(cache?.length>0){const factoring=cache.filter(p=>p.category?.includes('Factoring')||p.category?.includes('factoring'));const docs=new Set();factoring.forEach(p=>p.requiredDocuments?.forEach(d=>docs.add(d)));console.log('📦 Step2:',factoring.length,'factoring products');console.log('📄 Step5:',docs.size,'unique documents');console.log('🎯 RESULT:',cache.length>=41&&factoring.length>0&&docs.size>0?'✅ ALL PASS':'❌ SOME FAIL');}else{console.log('❌ No data for Step2/5 tests');}})();
+// COPY AND PASTE THIS INTO BROWSER CONSOLE FOR INSTANT DIAGNOSIS
+(async () => {
+  console.log('🔍 API CONFIGURATION DIAGNOSTIC');
+  console.log('============================');
+  
+  // Check what API_BASE_URL is actually being used
+  try {
+    const response = await fetch('/debug-env');
+    console.log('Environment check failed, using direct test...');
+  } catch (e) {
+    console.log('Direct environment check not available');
+  }
+  
+  // Test all possible endpoints
+  const tests = [
+    { name: 'Relative API', url: '/api/public/lenders' },
+    { name: 'Direct Express', url: 'http://localhost:5000/api/public/lenders' },
+    { name: 'Express Health', url: 'http://localhost:5000/api/health' },
+    { name: 'Staff Direct', url: 'https://staffportal.replit.app/api/public/lenders' }
+  ];
+  
+  for (const test of tests) {
+    try {
+      console.log(`🔗 Testing ${test.name}: ${test.url}`);
+      const response = await fetch(test.url);
+      const text = await response.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = text; }
+      
+      if (response.ok) {
+        console.log(`✅ ${test.name}: SUCCESS (${response.status})`);
+        if (data.products) console.log(`   📦 Products: ${data.products.length}`);
+      } else {
+        console.log(`❌ ${test.name}: FAILED (${response.status})`);
+        console.log(`   📄 Response: ${text.substring(0, 100)}...`);
+      }
+    } catch (error) {
+      console.log(`❌ ${test.name}: ERROR - ${error.message}`);
+    }
+  }
+  
+  console.log('\n🎯 DIAGNOSIS COMPLETE');
+})();

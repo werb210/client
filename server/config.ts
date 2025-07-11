@@ -17,8 +17,8 @@ if (process.env.NODE_ENV !== 'production') {
 export const cfg = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   
-  // API Configuration - Using working staff portal due to staff.boreal.financial downtime
-  staffApiUrl: process.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app',
+  // API Configuration - Use production staff backend
+  staffApiUrl: process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial',
   
   // Authentication Tokens
   clientToken: process.env.CLIENT_APP_SHARED_TOKEN!,
