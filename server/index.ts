@@ -657,23 +657,18 @@ app.use((req, res, next) => {
         res.json(data);
       } else {
         console.log(`[SIGNNOW] Legacy route error (${response.status}) for application ${applicationId}`);
-        if (response.status === 501 || response.status === 500) {
-          res.status(501).json({
-            error: 'Signature system not yet implemented. Please try again later.',
-            applicationId
-          });
-        } else {
-          res.status(response.status).json({
-            error: `Staff backend returned ${response.status}`,
-            applicationId
-          });
-        }
+        res.status(response.status).json({
+          error: `Staff backend returned ${response.status}`,
+          applicationId,
+          message: 'SignNow API error - check staff backend configuration'
+        });
       }
     } catch (error) {
       console.error(`[SIGNNOW] ❌ Legacy route failed:`, error);
       res.status(502).json({
-        error: 'Signature system not yet implemented. Please try again later.',
-        details: error instanceof Error ? error.message : 'Connection failed'
+        error: 'Staff backend connection failed',
+        details: error instanceof Error ? error.message : 'Connection failed',
+        endpoint: 'SignNow API proxy'
       });
     }
   });
@@ -685,15 +680,16 @@ app.use((req, res, next) => {
       res.status(503).json({ 
         error: 'Authentication service configuration required',
         message: 'This client app is configured to route authentication to staff backend',
-        staffBackend: 'https://staffportal.replit.app/api',
+        staffBackend: cfg.staffApiUrl + '/api',
         endpoint: req.path,
-        suggestion: 'Using demo authentication mode until staff backend is properly configured'
+        suggestion: 'Configure CLIENT_APP_SHARED_TOKEN in Replit Secrets'
       });
     } else {
       res.status(501).json({ 
         message: 'This client app routes API calls to staff backend.',
-        staffBackend: 'https://staffportal.replit.app/api',
-        endpoint: req.path
+        staffBackend: cfg.staffApiUrl + '/api',
+        endpoint: req.path,
+        note: 'Endpoint not implemented on staff backend'
       });
     }
   });

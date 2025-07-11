@@ -162,17 +162,8 @@ export default function Step7FinalSubmission() {
         documents: applicationSummary.documents,
       };
 
-      // Demo mode: Since staff backend may not be available during testing,
-      // simulate a successful submission with realistic response
-      try {
-        return await submitApplication(applicationData);
-      } catch (error) {
-        // If staff backend is not available, simulate success for demo
-        console.log('Staff backend not available, simulating successful submission');
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-        const { v4: uuidv4 } = await import('uuid');
-        return { applicationId: uuidv4() };
-      }
+      // Production mode: Direct submission to staff backend - no fallback simulation
+      return await submitApplication(applicationData);
     },
     onSuccess: (data) => {
       // Mark application as complete
