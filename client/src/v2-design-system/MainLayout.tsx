@@ -75,6 +75,7 @@ import CacheManagement from "@/pages/CacheManagement";
 import UUIDTestPage from "@/pages/UUIDTestPage";
 import EnvTest from "@/pages/EnvTest";
 import SignNowNetworkTest from "@/pages/SignNowNetworkTest";
+import Step2ProductsAvailabilityTest from "@/pages/Step2ProductsAvailabilityTest";
 import LenderDataTest from "@/pages/LenderDataTest";
 import SignNowDebugTest from "@/pages/SignNowDebugTest";
 import SimpleSignNowTest from "@/pages/SimpleSignNowTest";
@@ -175,6 +176,7 @@ export function MainLayout() {
       {/* Workflow Testing */}
       <Route path="/env-test" component={EnvTest} />
       <Route path="/signnow-network-test" component={SignNowNetworkTest} />
+      <Route path="/step2-products-test" component={Step2ProductsAvailabilityTest} />
       <Route path="/workflow-test" component={WorkflowTest} />
       <Route path="/application-id-flow-test" component={ApplicationIdFlowTest} />
       <Route path="/critical-fixes-validation" component={CriticalFixesValidation} />
