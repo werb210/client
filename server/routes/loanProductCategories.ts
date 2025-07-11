@@ -24,54 +24,18 @@ router.get('/categories', async (req, res) => {
 
     console.log(`🔍 FILTERING PRODUCTS:`, { country, lookingFor, fundingAmount, accountsReceivableBalance, fundsPurpose });
 
-    // Try to fetch from staff API first, fall back to local data
-    let products: any[] = [];
+    // CRITICAL: Only use authentic 41-product database - delegate to client-side cached data
+    console.log(`🔄 Delegating to client-side Step 2 system with authentic 41-product IndexedDB cache`);
     
-    try {
-      const staffApiUrl = process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial';
-      console.log(`🔗 Connecting to staff API: ${staffApiUrl}/api/public/lenders`);
-      
-      const response = await fetch(`${staffApiUrl}/api/public/lenders`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json() as any;
-        products = data.products || data.lenders || data;
-        console.log(`📊 Found ${products.length} authentic products from staff API`);
-      } else {
-        console.warn(`Staff API returned ${response.status}, falling back to local data`);
-        throw new Error(`Staff API error: ${response.status}`);
-      }
-    } catch (error) {
-      console.warn(`⚠️ Staff API unavailable, using fallback data:`, error.message);
-      
-      // Use fallback data
-      const fs = await import('fs');
-      const path = await import('path');
-      
-      try {
-        const fallbackPath = path.join(process.cwd(), 'public', 'fallback', 'lenders.json');
-        const fallbackData = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-        products = fallbackData.products || [];
-        console.log(`📦 Using fallback data: ${products.length} products`);
-        console.log(`📦 First 3 products:`, products.slice(0, 3));
-      } catch (fallbackError) {
-        console.error(`❌ Fallback data also failed:`, fallbackError.message);
-        // Return empty result instead of throwing
-        return res.json({
-          success: true,
-          data: [],
-          totalProducts: 0,
-          filters: { country, lookingFor, fundingAmount, accountsReceivableBalance, fundsPurpose },
-          message: 'No products available - fallback data unavailable'
-        });
-      }
-    }
+    // Return error to force Step 2 to use client-side useLocalLenders hook with authentic data
+    return res.status(503).json({
+      success: false,
+      error: 'Server route disabled - use client-side authentic data',
+      details: 'Step 2 configured to use useLocalLenders hook with authentic 41-product database from IndexedDB cache.',
+      message: 'Client-side Step 2 system has authentic data available',
+      useClientSide: true,
+      filters: { country, lookingFor, fundingAmount, accountsReceivableBalance, fundsPurpose }
+    });
 
     // Apply filtering logic to authentic API data
     const fundingAmount_parsed = parseFloat(fundingAmount.replace(/[^0-9.-]+/g, ''));

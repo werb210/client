@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useProductCategories } from '@/hooks/useProductCategories';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, CheckCircle, ArrowRight, AlertTriangle } from 'lucide-react';
@@ -11,18 +11,7 @@ interface ProductCategory {
   percentage: number;
 }
 
-interface ProductCategoriesResponse {
-  success: boolean;
-  data: ProductCategory[];
-  totalProducts: number;
-  filters: {
-    country: string;
-    lookingFor: string;
-    fundingAmount: string;
-    accountsReceivableBalance?: string;
-    fundsPurpose?: string;
-  };
-}
+// Interface removed - using client-side ProductCategory from useProductCategories hook
 
 interface Step2Props {
   formData: any;
@@ -40,67 +29,16 @@ export function Step2RecommendationEngine({
   onPrevious 
 }: Step2Props) {
   
-  // Real-time query for product categories with all filters
-  const { data: productCategories, isLoading, error } = useQuery<ProductCategoriesResponse>({
-    queryKey: [
-      '/api/loan-products/categories', 
-      formData.headquarters, 
-      formData.lookingFor, 
-      formData.accountsReceivableBalance, 
-      formData.fundingAmount, 
-      formData.fundsPurpose
-    ],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      
-      // Map form data to API parameters
-      if (formData.headquarters) {
-        params.append('country', formData.headquarters === 'US' ? 'united_states' : 'canada');
-      }
-      if (formData.lookingFor) {
-        params.append('lookingFor', formData.lookingFor);
-      }
-      if (formData.accountsReceivableBalance) {
-        params.append('accountsReceivableBalance', formData.accountsReceivableBalance.toString());
-      }
-      if (formData.fundingAmount) {
-        params.append('fundingAmount', `$${formData.fundingAmount.toLocaleString()}`);
-      }
-      if (formData.fundsPurpose) {
-        params.append('fundsPurpose', formData.fundsPurpose);
-      }
-
-      console.log('🔍 Fetching product categories with params:', params.toString());
-      
-      try {
-        const response = await fetch(`/api/loan-products/categories?${params.toString()}`).catch(fetchError => {
-          console.warn('[STEP2_RECOMMENDATION] Network error:', fetchError.message);
-          throw new Error(`Network error: ${fetchError.message}`);
-        });
-        
-        if (!response.ok) {
-          console.warn('[STEP2_RECOMMENDATION] API error:', response.status, response.statusText);
-          throw new Error(`API error: ${response.status} ${response.statusText}`);
-        }
-        
-        return await response.json().catch(jsonError => {
-          throw new Error(`Invalid JSON response: ${jsonError.message}`);
-        });
-      } catch (error) {
-        console.warn('[STEP2_RECOMMENDATION] Query failed:', error instanceof Error ? error.message : error);
-        // Return empty response to prevent app crash
-        return {
-          success: false,
-          data: [],
-          totalProducts: 0,
-          filters: { country: '', lookingFor: '', fundingAmount: '' }
-        };
-      }
-    },
-    enabled: !!formData.headquarters, // Only fetch when headquarters is selected
-    refetchOnWindowFocus: false,
-    staleTime: 30000, // Cache for 30 seconds
+  // Use client-side authentic 41-product database for filtering
+  const { data: productCategories, isLoading, error } = useProductCategories({
+    country: formData.headquarters === 'US' ? 'united_states' : 'canada',
+    lookingFor: formData.lookingFor,
+    fundingAmount: formData.fundingAmount,
+    accountsReceivableBalance: formData.accountsReceivableBalance,
+    fundsPurpose: formData.fundsPurpose
   });
+
+  console.log('✅ Using authentic 41-product database from client-side cache');
 
   const handleProductClick = (categoryKey: string) => {
     const isCurrentlySelected = selectedProduct === categoryKey;
@@ -217,9 +155,9 @@ export function Step2RecommendationEngine({
             )}
 
             {/* Product Categories */}
-            {!isLoading && !error && productCategories?.data && (
+            {!isLoading && !error && productCategories && (
               <div className="space-y-4">
-                {productCategories.data.map((category: ProductCategory, index: number) => {
+                {productCategories.map((category, index: number) => {
                   const categoryName = formatCategoryName(category.category);
                   const isSelected = selectedProduct === category.category;
                   const matchScore = Math.max(95 - index * 5, 60); // Simulate intelligent scoring
@@ -309,27 +247,10 @@ export function Step2RecommendationEngine({
                   );
                 })}
 
-                {/* Empty State */}
-                {productCategories.data.length === 0 && (
-                  <div className="text-center py-8">
-                    <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-600 mb-2">No Products Available</h3>
-                    <p className="text-gray-500 mb-4">
-                      No loan products match your current criteria. Please adjust your requirements in Step 1.
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      onClick={onPrevious}
-                      className="border-gray-300 text-gray-600 hover:bg-gray-50"
-                    >
-                      Back to Step 1
-                    </Button>
-                  </div>
-                )}
-
-                {productCategories.totalProducts > 0 && (
+                {/* Summary */}
+                {productCategories.length > 0 && (
                   <div className="text-center text-sm text-gray-600 pt-4 border-t">
-                    Found {productCategories.totalProducts} total products across {productCategories.data.length} categories
+                    ✅ Found authentic lender products across {productCategories.length} categories using 41-product database
                   </div>
                 )}
               </div>
