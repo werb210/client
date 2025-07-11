@@ -24,35 +24,54 @@ router.get('/categories', async (req, res) => {
 
     console.log(`🔍 FILTERING PRODUCTS:`, { country, lookingFor, fundingAmount, accountsReceivableBalance, fundsPurpose });
 
-    // Fetch authentic data from staff API
-    const staffApiUrl = process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial';
-    console.log(`🔗 Connecting to staff API: ${staffApiUrl}/api/public/lenders`);
+    // Try to fetch from staff API first, fall back to local data
+    let products: any[] = [];
     
-    const response = await fetch(`${staffApiUrl}/api/public/lenders`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+    try {
+      const staffApiUrl = process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial';
+      console.log(`🔗 Connecting to staff API: ${staffApiUrl}/api/public/lenders`);
+      
+      const response = await fetch(`${staffApiUrl}/api/public/lenders`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json() as any;
+        products = data.products || data.lenders || data;
+        console.log(`📊 Found ${products.length} authentic products from staff API`);
+      } else {
+        console.warn(`Staff API returned ${response.status}, falling back to local data`);
+        throw new Error(`Staff API error: ${response.status}`);
       }
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ Staff API Error (${response.status}):`, errorText);
-      throw new Error(`Staff API error: ${response.status} - ${errorText}`);
+    } catch (error) {
+      console.warn(`⚠️ Staff API unavailable, using fallback data:`, error.message);
+      
+      // Use fallback data
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      try {
+        const fallbackPath = path.join(process.cwd(), 'public', 'fallback', 'lenders.json');
+        const fallbackData = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+        products = fallbackData.products || [];
+        console.log(`📦 Using fallback data: ${products.length} products`);
+        console.log(`📦 First 3 products:`, products.slice(0, 3));
+      } catch (fallbackError) {
+        console.error(`❌ Fallback data also failed:`, fallbackError.message);
+        // Return empty result instead of throwing
+        return res.json({
+          success: true,
+          data: [],
+          totalProducts: 0,
+          filters: { country, lookingFor, fundingAmount, accountsReceivableBalance, fundsPurpose },
+          message: 'No products available - fallback data unavailable'
+        });
+      }
     }
-    
-    const data = await response.json() as any;
-    console.log(`📊 Staff API response structure:`, Object.keys(data));
-    
-    if (!data.products && !data.lenders && !Array.isArray(data)) {
-      console.error(`❌ Unexpected API response format:`, data);
-      throw new Error('Invalid API response format - expected products array or lenders array');
-    }
-
-    // Handle different API response formats
-    const products = data.products || data.lenders || data;
-    console.log(`📊 Found ${products.length} authentic products from staff API`);
 
     // Apply filtering logic to authentic API data
     const fundingAmount_parsed = parseFloat(fundingAmount.replace(/[^0-9.-]+/g, ''));
@@ -62,6 +81,7 @@ router.get('/categories', async (req, res) => {
       // Log product structure for debugging
       if (products.indexOf(p) === 0) {
         console.log(`📋 Sample product structure:`, Object.keys(p));
+        console.log(`📋 Sample product:`, p);
       }
 
       // Country filter - check different possible field names
@@ -72,6 +92,7 @@ router.get('/categories', async (req, res) => {
           : productCountry === selectedCountryCode || productCountry === 'US/CA';
         
         if (!countryMatches) {
+          console.log(`❌ Product ${p.name} rejected: country mismatch (${productCountry} vs ${selectedCountryCode})`);
           return false;
         }
       }
@@ -89,10 +110,12 @@ router.get('/categories', async (req, res) => {
       if (lookingFor === 'capital') {
         const isCapitalProduct = isBusinessCapitalProduct(productType);
         if (!isCapitalProduct) {
+          console.log(`❌ Product ${p.name} rejected: not a capital product (${productType})`);
           return false;
         }
       } else if (lookingFor === 'equipment') {
         if (!productType || !productType.toLowerCase().includes('equipment')) {
+          console.log(`❌ Product ${p.name} rejected: not an equipment product (${productType})`);
           return false;
         }
       }
@@ -169,21 +192,26 @@ router.get('/categories', async (req, res) => {
 
 // Helper function to determine if category is business capital
 function isBusinessCapitalProduct(category: string): boolean {
+  if (!category) return false;
+  
   const capitalCategories = [
-    'Working Capital',
-    'Business Line of Credit', 
-    'Term Loan',
-    'Business Term Loan',
-    'SBA Loan',
-    'Asset Based Lending',
-    'Invoice Factoring',
-    'Purchase Order Financing'
+    'working_capital',
+    'line_of_credit', 
+    'term_loan',
+    'business_term_loan',
+    'sba_loan',
+    'asset_based_lending',
+    'invoice_factoring',
+    'purchase_order_financing'
   ];
   
-  return capitalCategories.some(cat => 
-    category.toLowerCase().includes(cat.toLowerCase()) ||
-    cat.toLowerCase().includes(category.toLowerCase())
+  const categoryLower = category.toLowerCase();
+  const isCapital = capitalCategories.some(cat => 
+    categoryLower.includes(cat) || cat.includes(categoryLower)
   );
+  
+  console.log(`🔍 Category check: "${category}" -> ${isCapital ? 'CAPITAL' : 'NOT CAPITAL'}`);
+  return isCapital;
 }
 
 function isEquipmentFinancingProduct(category: string): boolean {
