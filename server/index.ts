@@ -571,12 +571,22 @@ app.use((req, res, next) => {
     }
   });
 
+  // SignNow CORS Preflight Handler
+  app.options('/api/applications/:id/signnow', (req, res) => {
+    console.log(`[SIGNNOW] CORS preflight for ${req.params.id} from origin:`, req.headers.origin);
+    res.status(204).end();
+  });
+
   // SignNow API Proxy - Route to Staff Backend
   app.post('/api/applications/:id/signnow', async (req, res) => {
     try {
       const { id } = req.params;
       const staffApiUrl = cfg.staffApiUrl + '/api';
+      
+      // Enhanced logging for CORS and request debugging
+      console.log(`[SIGNNOW] Incoming request headers.origin:`, req.headers.origin);
       console.log(`[SIGNNOW] Routing POST /api/applications/${id}/signnow to staff backend`);
+      console.log(`[SIGNNOW] Target URL: ${staffApiUrl}/applications/${id}/signnow`);
       
       const response = await fetch(`${staffApiUrl}/applications/${id}/signnow`, {
         method: 'POST',
