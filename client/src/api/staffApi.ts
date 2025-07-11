@@ -125,30 +125,28 @@ class StaffApiClient {
     }
   }
 
-  private async uploadFiles(files: File[]): Promise<Array<{
+  private async uploadFiles(files: File[], applicationId?: string): Promise<Array<{
     id: string;
     name: string;
     documentType: string;
     size: number;
     type: string;
   }>> {
-    // Upload files to staff backend and return metadata
+    // Upload files to staff backend using PUBLIC endpoint (no Authorization required)
     const uploadPromises = files.map(async (file) => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('documentType', file.name.toLowerCase().includes('bank') ? 'bank_statement' : 'business_document');
 
-      const bearerToken = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN;
+      // Use public upload endpoint without Authorization headers
+      const uploadUrl = applicationId 
+        ? `${this.baseUrl}/api/public/upload/${applicationId}`
+        : `${this.baseUrl}/uploads`;
       
-      const response = await fetch(`${this.baseUrl}/uploads`, {
+      const response = await fetch(uploadUrl, {
         method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Authorization': bearerToken ? `Bearer ${bearerToken}` : '',
-          'Origin': window.location.origin,
-          'Referer': window.location.href,
-        },
         body: formData,
+        // ⚠️ No Authorization headers for public upload!
       });
 
       if (!response.ok) {

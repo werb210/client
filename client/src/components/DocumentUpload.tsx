@@ -36,8 +36,8 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
         prev.map(f => f.id === fileId ? { ...f, progress: 50 } : f)
       );
 
-      // Upload actual file using FormData to staff backend
-      const result = await api.uploadDocument(file, 'general', applicationId.toString());
+      // Upload actual file using public endpoint (no Authorization required)
+      const result = await api.uploadDocumentPublic(file, applicationId.toString(), 'general');
       return { ...result, fileId };
     },
     onSuccess: (data, { fileId }) => {

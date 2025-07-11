@@ -147,7 +147,7 @@ export async function submitApplication(data: ApplicationPayload): Promise<{ app
   });
 }
 
-// Upload document file to staff backend
+// Upload document file to staff backend (authenticated)
 export async function uploadDocument(
   file: File, 
   category: string, 
@@ -165,6 +165,32 @@ export async function uploadDocument(
     headers: {}, // Remove Content-Type to let browser set multipart boundary
     body: formData,
   });
+}
+
+// Upload document to public endpoint (NO Authorization required - Step 5 specific)
+export async function uploadDocumentPublic(
+  file: File, 
+  applicationId: string,
+  documentType?: string
+): Promise<{ documentId: string; url: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (documentType) {
+    formData.append('documentType', documentType);
+  }
+
+  // Use direct fetch without Authorization headers
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/upload/${applicationId}`, {
+    method: 'POST',
+    body: formData,
+    // ⚠️ No headers like Authorization!
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.status}`);
+  }
+
+  return await response.json();
 }
 
 // Fetch required documents for a specific category/product

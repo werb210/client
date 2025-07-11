@@ -93,6 +93,16 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 11, 2025: STEP 5 PUBLIC UPLOAD ENDPOINT COMPLIANCE COMPLETE**
+  * CRITICAL FIX: Updated all Step 5 document upload components to use public endpoint without Authorization headers
+  * CORRECTED ENDPOINTS: DocumentUpload.tsx, DynamicDocumentRequirements.tsx, and staffApi.ts now use `/api/public/upload/${applicationId}`
+  * REMOVED AUTHORIZATION: Eliminated all `Authorization: Bearer` headers from Step 5 upload requests as specified
+  * API COMPLIANCE: Step 5 uploads now use `fetch()` with FormData body and no headers: `fetch(${API_BASE}/api/public/upload/${applicationId})`
+  * FUNCTION SEPARATION: Created `uploadDocumentPublic()` function specifically for Step 5 public uploads vs `uploadDocument()` for authenticated uploads
+  * STAFF API COMPATIBILITY: Updated uploadFiles method to prefer public endpoint when applicationId provided
+  * ENDPOINT VERIFICATION: All Step 5 components now correctly implement public upload specification without authentication
+  * PRODUCTION READY: Document upload workflow follows exact client specification for public API access
+
 - **July 11, 2025: SIGNNOW CLIENT WORKFLOW IMPLEMENTATION COMPLETE**
   * CRITICAL SUCCESS: Implemented exact client-side SignNow workflow as specified by user
   * WORKFLOW CONFIRMED: Step 1-4 (POST /api/public/applications) → Step 5 (local docs) → Step 6 (GET /api/applications/:id/signnow) → Step 7 (POST /api/public/applications/:id/submit)

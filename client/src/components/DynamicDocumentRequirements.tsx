@@ -173,26 +173,22 @@ function UnifiedDocumentUploadCard({
       onFilesUploaded([...uploadedFiles, ...uploadingFiles]);
       
       try {
-        // Step 2: Upload Required Documents (Step 5)
-        // API Call: POST /api/documents
-        // Payload: Includes applicationId, file data, and document type
-        console.log('📤 Step 2: Uploading documents via POST /api/documents...');
+        // Step 2: Upload Required Documents (Step 5) - Using Public Endpoint
+        // API Call: POST /api/public/upload/{applicationId}
+        // Payload: File data and document type (NO Authorization headers)
+        console.log('📤 Step 2: Uploading documents via POST /api/public/upload...');
         console.log(`   - ApplicationId: ${applicationId}`);
         console.log(`   - Document Type: ${category}`);
         console.log(`   - Files: ${files.map(f => f.name).join(', ')}`);
         
         const form = new FormData();
-        files.forEach((file) => form.append('files', file));
-        form.append('applicationId', applicationId);
+        files.forEach((file) => form.append('file', file));
         form.append('documentType', category);
         
-        const response = await fetch('/api/documents', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/upload/${applicationId}`, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-          },
           body: form,
-          credentials: 'include',
+          // ⚠️ No Authorization headers for public upload!
         });
         
         if (!response.ok) {
