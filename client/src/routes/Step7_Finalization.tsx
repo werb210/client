@@ -39,8 +39,8 @@ export default function Step7Finalization() {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get application ID from previous steps
-  const applicationId = state.applicationId || 'app_test_step7_2025';
+  // Get application ID from previous steps - NO FALLBACK
+  const applicationId = state.applicationId;
 
   const handleFinalize = async () => {
     console.log('🚀 handleFinalize called!', { termsAccepted, privacyAccepted, applicationId });

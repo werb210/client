@@ -312,10 +312,8 @@ class StaffApiClient {
 
     } catch (error) {
       console.error('❌ Application submission failed:', error);
-      return {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
-      };
+      // Production mode: Throw error instead of returning fallback response
+      throw error;
     }
   }
 
