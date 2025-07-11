@@ -73,6 +73,7 @@ import Step4Step6Test from "@/pages/Step4Step6Test";
 import BackendRequestTest from "@/pages/BackendRequestTest";
 import CacheManagement from "@/pages/CacheManagement";
 import UUIDTestPage from "@/pages/UUIDTestPage";
+import LenderDataTest from "@/pages/LenderDataTest";
 import SignNowDebugTest from "@/pages/SignNowDebugTest";
 import SimpleSignNowTest from "@/pages/SimpleSignNowTest";
 import ProdSignNowTest from "@/pages/ProdSignNowTest";

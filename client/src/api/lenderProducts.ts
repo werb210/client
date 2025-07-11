@@ -7,69 +7,19 @@ import { normalizeProducts } from '../lib/lenderProductNormalizer';
  * Fails fast on invalid data to surface staff API issues immediately
  */
 export async function fetchLenderProducts(): Promise<LenderProduct[]> {
-  console.log('[API] Fetching lender products from staff backend...');
+  console.log('[API] Fetching lender products...');
   
   try {
-    const response = await fetch(`${API_BASE_URL}/public/lenders`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-    }).catch(fetchError => {
-      console.warn('[LENDER_PRODUCTS] Network error:', fetchError.message);
-      throw new Error(`Network error: ${fetchError.message}`);
-    });
-
-    if (!response.ok) {
-      console.warn('[LENDER_PRODUCTS] API error:', response.status, response.statusText);
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
-    }
-
-    const rawData = await response.json().catch(jsonError => {
-      throw new Error(`Invalid JSON response: ${jsonError.message}`);
-    });
+    // Use the new comprehensive fetcher
+    const { fetchLenderProducts: fetchData } = await import('./lenderDataFetcher');
+    const result = await fetchData();
     
-    console.log('[API] Raw staff response received, normalizing...');
-    
-    // Use strict validation and normalization
-    const normalizedProducts = normalizeProducts(rawData);
-    
-    console.log(`✅ [API] Successfully fetched and validated ${normalizedProducts.length} lender products`);
-    return normalizedProducts;
+    console.log(`✅ [API] Successfully fetched ${result.count} products from ${result.source}`);
+    return result.products;
     
   } catch (error) {
-    console.warn('❌ [API] Error fetching lender products:', error instanceof Error ? error.message : error);
-    console.warn('⚠️ [API] Staff API failed, attempting fallback data...');
-    
-    // Fallback to local JSON file
-    try {
-      const fallbackResponse = await fetch('/fallback/lenders.json');
-      if (!fallbackResponse.ok) {
-        throw new Error(`Fallback fetch failed: ${fallbackResponse.statusText}`);
-      }
-      
-      const fallbackData = await fallbackResponse.json();
-      console.log('📦 [API] Using fallback lender data:', fallbackData.data.length, 'products');
-      
-      // Normalize fallback data through the same validation process
-      const normalizedProducts = normalizeProducts(fallbackData);
-      console.log(`✅ [API] Successfully validated ${normalizedProducts.length} fallback products`);
-      return normalizedProducts;
-    } catch (fallbackError) {
-      console.error('❌ [API] Fallback also failed:', fallbackError);
-      
-      // In development, provide more detailed error info
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[API] This indicates either:');
-        console.warn('1. Staff backend is unreachable');
-        console.warn('2. Staff API returned invalid data structure');
-        console.warn('3. Data validation failed due to schema mismatch');
-        console.warn('4. Fallback data is also unavailable');
-      }
-      
-      throw new Error('Both staff API and fallback data unavailable');
-    }
+    console.error('❌ [API] All data sources failed:', error);
+    throw error;
   }
 }
 
