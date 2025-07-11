@@ -143,11 +143,12 @@ export default function Step6SignNowIntegration() {
     console.log('📡 Calling SignNow endpoint:', signNowUrl);
 
     try {
-      const response = await fetch(signNowUrl, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/signnow`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        mode: 'cors',
         credentials: 'include',
       });
 
