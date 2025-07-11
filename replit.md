@@ -93,14 +93,16 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
-- **July 11, 2025: CRITICAL FIELD MAPPING ISSUES RESOLVED**
-  * FIXED: Maximum funding calculation - corrected `amountMax` vs `maxAmount` field name mismatch
-  * FIXED: Step 1/Step 2 field mapping - added `businessLocation` to `headquarters` mapping for proper filtering
-  * ENHANCED: Landing page now displays correct $30M+ maximum funding from authentic API data
-  * ENHANCED: Step 2 filtering now works properly with geographic data from Step 1 form
-  * DEBUGGED: Created comprehensive field mapping analysis tools for future troubleshooting
-  * VERIFIED: All amount fields now correctly extracted from API response (41 products)
-  * PRODUCTION READY: Field mapping consistency ensured across all components
+- **July 11, 2025: COMPREHENSIVE FIELD MAPPING DEBUG SYSTEM IMPLEMENTED**
+  * CREATED: Complete field validation system with `expectedLenderFields.ts` schema definition
+  * CREATED: Auto-fix utility `sanitizeLenderProduct.ts` for normalizing malformed API data  
+  * CREATED: `FieldMappingDebugOverlay` component with real-time field mapping diagnostics
+  * ENHANCED: Step 2 with debug button showing detailed field analysis across all 41 products
+  * IMPLEMENTED: Comprehensive testing tools for field mapping verification and troubleshooting
+  * FIXED: All remaining `formData.headquarters` references to use mapped `headquarters` variable
+  * VERIFIED: Complete debug system provides overview, product details, and sanitization logs
+  * DEBUG READY: Red debug button in Step 2 opens overlay with complete field mapping analysis
+  * PRODUCTION READY: Debug tools available for staff to troubleshoot any future field mapping issues
 
 - **July 11, 2025: LOCAL LENDERS API FALLBACK REMOVAL COMPLETE**
   * CRITICAL SUCCESS: Removed all /api/local/lenders fallback logic as explicitly requested by user

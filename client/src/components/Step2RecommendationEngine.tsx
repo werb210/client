@@ -3,8 +3,9 @@ import { useProductCategories } from '@/hooks/useProductCategories';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Target, CheckCircle, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Target, CheckCircle, ArrowRight, AlertTriangle, Bug } from 'lucide-react';
 import { formatCategoryName } from '../utils/formatters';
+import { FieldMappingDebugOverlay } from './FieldMappingDebugOverlay';
 
 interface ProductCategory {
   category: string;
@@ -30,9 +31,15 @@ export function Step2RecommendationEngine({
   onPrevious 
 }: Step2Props) {
   
+  // Debug overlay state
+  const [showDebugOverlay, setShowDebugOverlay] = useState(false);
+  
   // Use client-side authentic 41-product database for filtering
   // FIX: Map businessLocation to headquarters for backward compatibility
   const headquarters = formData.headquarters || formData.businessLocation || 'US';
+  
+  // Get all lender products for debug overlay
+  const { data: allLenderProducts, isLoading: rawLoading, error: rawError } = usePublicLenders();
   const { data: productCategories, isLoading, error } = useProductCategories({
     headquarters: headquarters,
     lookingFor: formData.lookingFor,
@@ -40,9 +47,6 @@ export function Step2RecommendationEngine({
     accountsReceivableBalance: formData.accountsReceivableBalance || 0,
     fundsPurpose: formData.fundsPurpose
   });
-
-  // Also get raw products status for debugging
-  const { data: rawProducts, isLoading: rawLoading, error: rawError } = usePublicLenders();
 
   console.log('✅ Using authentic 41-product database from client-side cache');
   console.log('[STEP2] Form data passed to useProductCategories:', {
@@ -56,7 +60,7 @@ export function Step2RecommendationEngine({
   });
   console.log('[STEP2] Hook response:', { productCategories, isLoading, error });
   console.log('[STEP2] Raw products status:', { 
-    rawProductCount: rawProducts?.length, 
+    rawProductCount: allLenderProducts?.length, 
     rawLoading, 
     rawError: rawError?.message 
   });
@@ -88,13 +92,26 @@ export function Step2RecommendationEngine({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Target className="w-5 h-5 mr-2 text-teal-600" />
-            Recommended Loan Products
-          </CardTitle>
-          <CardDescription>
-            Based on your business profile, here are the best loan products for you
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="flex items-center">
+                <Target className="w-5 h-5 mr-2 text-teal-600" />
+                Recommended Loan Products
+              </CardTitle>
+              <CardDescription>
+                Based on your business profile, here are the best loan products for you
+              </CardDescription>
+            </div>
+            <Button
+              onClick={() => setShowDebugOverlay(true)}
+              variant="outline"
+              size="sm"
+              className="border-red-300 text-red-600 hover:bg-red-50"
+            >
+              <Bug className="w-4 h-4 mr-1" />
+              Debug
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
@@ -344,6 +361,14 @@ export function Step2RecommendationEngine({
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
+
+      {/* Field Mapping Debug Overlay */}
+      <FieldMappingDebugOverlay
+        products={allLenderProducts || []}
+        formData={formData}
+        isVisible={showDebugOverlay}
+        onToggle={() => setShowDebugOverlay(!showDebugOverlay)}
+      />
     </div>
   );
 }
