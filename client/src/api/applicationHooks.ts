@@ -18,7 +18,7 @@ export const usePatchApplication = (id: string) => {
         body: JSON.stringify(payload),
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         }
       }),
     onSuccess: () => {
@@ -43,7 +43,7 @@ export const useUploadDocument = (applicationId: string) => {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/upload/${applicationId}`, {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
         body: form,
       });

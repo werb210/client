@@ -171,7 +171,7 @@ export default function Step7Submit() {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${state.applicationId}/submit`, {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
         body: formData, // FormData automatically sets correct Content-Type
         credentials: 'include'

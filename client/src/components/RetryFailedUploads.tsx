@@ -13,13 +13,14 @@ import {
   X,
   FileText
 } from 'lucide-react';
-import { uploadDocument } from '@/lib/api';
+import { uploadDocumentPublic } from '@/lib/api';
 
 interface FailedUpload {
   id: string;
   file: File;
   fileName: string;
   categoryId: string;
+  applicationId: string;
   error: string;
   attempts: number;
   lastAttempt: Date;
@@ -61,7 +62,7 @@ export function RetryFailedUploads() {
     setRetryingIds(prev => new Set(prev).add(upload.id));
 
     try {
-      await uploadDocument(upload.file, upload.categoryId);
+      await uploadDocumentPublic(upload.file, upload.applicationId, upload.categoryId);
       
       // Remove from failed uploads on success
       const updatedUploads = failedUploads.filter(u => u.id !== upload.id);
@@ -108,7 +109,7 @@ export function RetryFailedUploads() {
 
     for (const upload of failedUploads) {
       try {
-        await uploadDocument(upload.file, upload.categoryId);
+        await uploadDocumentPublic(upload.file, upload.applicationId, upload.categoryId);
         successCount++;
       } catch (error) {
         failureCount++;

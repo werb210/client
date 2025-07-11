@@ -76,7 +76,7 @@ export default function Step7Finalization() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer CLIENT_APP_SHARED_TOKEN'
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
         body: JSON.stringify({
           termsAccepted,
