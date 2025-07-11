@@ -150,6 +150,9 @@ export default function Step6SignNowIntegration() {
         },
         mode: 'cors',
         credentials: 'include',
+        body: JSON.stringify({
+          templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5'
+        })
       });
 
       console.log('📬 SignNow response status:', response.status);

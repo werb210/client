@@ -596,6 +596,7 @@ app.use((req, res, next) => {
         },
         body: JSON.stringify({
           applicationId: id,
+          templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5',
           ...req.body
         })
       });
@@ -647,7 +648,11 @@ app.use((req, res, next) => {
           'Authorization': `Bearer ${cfg.clientToken}`,
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ applicationId, ...req.body })
+        body: JSON.stringify({ 
+          applicationId, 
+          templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5',
+          ...req.body 
+        })
       });
       
       if (response.ok) {

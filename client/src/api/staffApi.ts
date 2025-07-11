@@ -431,7 +431,8 @@ class StaffApiClient {
       const response = await this.makeRequest<SigningStatusResponse>(`/applications/${applicationId}/signnow`, {
         method: 'POST',
         body: JSON.stringify({
-          applicationId: applicationId
+          applicationId: applicationId,
+          templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5'
         }),
       });
       
