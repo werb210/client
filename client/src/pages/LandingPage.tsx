@@ -84,11 +84,18 @@ export default function LandingPage() {
     }
     
     try {
-      // Extract maximum amounts from products (API structure: amountMax)
+      // Extract maximum amounts from products - try multiple field names
       const amounts = products
         .map((p: any) => {
-          console.log('[LANDING] Product amount:', p.name, p.amountMax);
-          return p.amountMax || 0;
+          console.log('[LANDING] Product fields:', p.name, {
+            maxAmount: p.maxAmount,
+            max_amount: p.max_amount,
+            amountMax: p.amountMax,
+            amount_max: p.amount_max
+          });
+          // Try various possible field names for maximum amount
+          const maxAmount = p.maxAmount || p.max_amount || p.amountMax || p.amount_max;
+          return typeof maxAmount === 'number' ? maxAmount : (typeof maxAmount === 'string' ? parseFloat(maxAmount) : 0);
         })
         .filter((amount: any) => amount > 0);
       
