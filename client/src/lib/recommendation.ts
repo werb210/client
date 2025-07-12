@@ -50,6 +50,17 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     console.log('[DEBUG] Sample product:', products[0]);
   }
 
+  // Check for Accord products specifically
+  const accordProducts = products.filter(p => 
+    p.name?.toLowerCase().includes('accord') ||
+    p.lender_name?.toLowerCase().includes('accord') ||
+    p.product_name?.toLowerCase().includes('accord')
+  );
+  console.log(`[DEBUG] Accord products found: ${accordProducts.length}`);
+  accordProducts.forEach(p => {
+    console.log(`[DEBUG] Accord product: ${p.name} - Category: ${p.category}, Country: ${p.country}, Min: ${p.min_amount}, Max: ${p.max_amount}`);
+  });
+
   // Helper function to get amount value with multiple field name support
   const getAmountValue = (product: any, field: 'min' | 'max'): number => {
     let amount: any;
