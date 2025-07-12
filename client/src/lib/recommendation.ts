@@ -25,6 +25,17 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     fundsPurpose,
   } = form;
 
+  // Debug logging to identify filtering issues
+  console.log('[FILTER] DEBUG - Input parameters:', {
+    productCount: products.length,
+    headquarters,
+    fundingAmount,
+    lookingFor,
+    accountsReceivableBalance,
+    fundsPurpose,
+    sampleProduct: products[0]
+  });
+
   // Convert amounts to numbers for comparison - handles both string and number types
   const getAmountValue = (amount: string | number): number => {
     if (typeof amount === 'number') return amount;
@@ -83,7 +94,17 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
   const byId = new Map<string, StaffLenderProduct>();
   [...matchesCore, ...extras].forEach(p => byId.set(p.id, p));
   
-  return Array.from(byId.values());
+  const finalResults = Array.from(byId.values());
+  
+  // Debug logging to show final results
+  console.log('[FILTER] DEBUG - Final results:', {
+    coreMatches: matchesCore.length,
+    extraMatches: extras.length,
+    finalCount: finalResults.length,
+    resultCategories: finalResults.map(p => p.category)
+  });
+  
+  return finalResults;
 }
 
 /**

@@ -124,7 +124,7 @@ export default function Step4ApplicantInfo() {
           salesHistory: state.salesHistory || 'less_than_6_months',
           revenueLastYear: parseFloat(state.revenueLastYear?.toString().replace(/[,$]/g, '') || '0') || 0,
           averageMonthlyRevenue: parseFloat(state.averageMonthlyRevenue?.toString().replace(/[,$]/g, '') || '0') || 0,
-          accountsReceivableBalance: state.accountsReceivableBalance || 'no_account_receivables',
+          accountsReceivableBalance: state.accountsReceivableBalance || 0,
           fixedAssetsValue: state.fixedAssetsValue || 'no_fixed_assets',
           equipmentValue: parseFloat(state.equipmentValue?.toString().replace(/[,$]/g, '') || '0') || 0,
           fundsPurpose: state.fundsPurpose || 'working_capital'

@@ -9,7 +9,7 @@ export interface Step1FormData {
   useOfFunds?: string;
   lastYearRevenue?: string;
   averageMonthlyRevenue?: string;
-  accountsReceivable?: string;
+  accountsReceivableBalance?: number; // Fixed: Use numeric field to match Step1 data
   equipmentValue?: string;
 }
 
@@ -80,9 +80,10 @@ export function useRecommendations(formStep1Data: Step1FormData) {
       }
       
       // Exclude Invoice Factoring if no accounts receivable
-      if (formStep1Data.accountsReceivable === "No Account Receivables" && 
+      // Fix: Use accountsReceivableBalance (numeric) instead of accountsReceivable (string)
+      if (formStep1Data.accountsReceivableBalance === 0 && 
           (p.category.toLowerCase().includes('invoice') || p.category.toLowerCase().includes('factoring'))) {
-        console.log(`❌ Invoice Factoring: ${p.name} excluded because no accounts receivable`);
+        console.log(`❌ Invoice Factoring: ${p.name} excluded because no accounts receivable (balance: ${formStep1Data.accountsReceivableBalance})`);
         return false;
       }
       
