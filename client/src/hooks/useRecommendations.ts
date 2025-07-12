@@ -16,16 +16,22 @@ export interface Step1FormData {
 export function useRecommendations(formStep1Data: Step1FormData) {
   /** 1 — pull products from normalized data source */
   const { data: products = [], isLoading, error } = useQuery<LenderProduct[]>({
-    queryKey: ["normalized-lenders"],
+    queryKey: ["normalized-lenders-cache-only"],
     queryFn: async () => {
-      // Import the proper fetchLenderProducts function that includes normalization
-      const { fetchLenderProducts } = await import('@/api/lenderProducts');
-      const normalizedProducts = await fetchLenderProducts();
-      console.log("Step 2 - Matched Products from Synced DB:", normalizedProducts);
-      return normalizedProducts;
+      try {
+        const { loadLenderProducts } = await import('../utils/lenderCache');
+        const cached = await loadLenderProducts();
+        return cached || [];
+      } catch (error) {
+        return [];
+      }
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes for synced data
-    retry: 2,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false
   });
 
   /** 2 — filter + score */
@@ -33,26 +39,18 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   const revenueLastYear = getRevenueValue(formStep1Data.lastYearRevenue || '');
   const headquarters = formStep1Data.businessLocation === "united-states" ? "United States" as const : "Canada" as const;
 
-  console.log("🔍 FILTERING PRODUCTS:", {
-    country: headquarters,
-    lookingFor: formStep1Data.lookingFor,
-    fundingAmount: formStep1Data.fundingAmount,
-    industry: formStep1Data.industry,
-    parsedAmount: fundingAmount
-  });
+  // Production mode: Console logging disabled
 
   const matches = products
     .filter((p: LenderProduct) => {
       // Country check - exact match or multi-country (US/CA)
       const selectedCountryCode = headquarters === "United States" ? "US" : "CA";
       if (!(p.country === selectedCountryCode || p.country === 'US/CA')) {
-        console.log(`❌ Country: ${p.name} (${p.country}) doesn't match ${headquarters} (${selectedCountryCode})`);
         return false;
       }
       
       // Amount range check
       if (fundingAmount < p.minAmount || fundingAmount > p.maxAmount) {
-        console.log(`❌ Amount: ${p.name} range $${p.minAmount}-$${p.maxAmount} doesn't fit $${fundingAmount}`);
         return false;
       }
       
@@ -60,13 +58,11 @@ export function useRecommendations(formStep1Data: Step1FormData) {
       if (formStep1Data.lookingFor === "capital") {
         const isCapitalProduct = isBusinessCapitalProduct(p.category);
         if (!isCapitalProduct) {
-          console.log(`❌ Product Type: ${p.name} (${p.category}) doesn't match capital requirement`);
           return false;
         }
       } else if (formStep1Data.lookingFor === "equipment") {
         const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
         if (!isEquipmentProduct) {
-          console.log(`❌ Product Type: ${p.name} (${p.category}) doesn't match equipment financing requirement`);
           return false;
         }
       } else if (formStep1Data.lookingFor === "both") {
@@ -74,7 +70,6 @@ export function useRecommendations(formStep1Data: Step1FormData) {
         const isCapitalProduct = isBusinessCapitalProduct(p.category);
         const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
         if (!isCapitalProduct && !isEquipmentProduct) {
-          console.log(`❌ Product Type: ${p.name} (${p.category}) doesn't match capital or equipment requirement`);
           return false;
         }
       }
@@ -83,11 +78,9 @@ export function useRecommendations(formStep1Data: Step1FormData) {
       // Fix: Use accountsReceivableBalance (numeric) instead of accountsReceivable (string)
       if (formStep1Data.accountsReceivableBalance === 0 && 
           (p.category.toLowerCase().includes('invoice') || p.category.toLowerCase().includes('factoring'))) {
-        console.log(`❌ Invoice Factoring: ${p.name} excluded because no accounts receivable (balance: ${formStep1Data.accountsReceivableBalance})`);
         return false;
       }
       
-      console.log(`✅ Match: ${p.name} by ${p.lenderName}`);
       return true;
     })
     .map(p => ({
@@ -111,7 +104,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
     {}
   );
 
-  console.log(`✅ FOUND ${matches.length} products across ${Object.keys(categories).length} categories`);
+  // Production mode: Console logging disabled
 
   return { products: matches, categories, isLoading, error };
 }

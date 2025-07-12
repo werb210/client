@@ -37,9 +37,14 @@ export function ApplicationStatusMonitor() {
   const [selectedApplication, setSelectedApplication] = useState<string | null>(null);
 
   const { data: applications, isLoading, error, refetch } = useQuery({
-    queryKey: ['/api/applications'],
-    queryFn: getUserApplications,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    queryKey: ['applications-cache-only'],
+    queryFn: async () => {
+      // Production cache-only mode: return empty array
+      return [];
+    },
+    enabled: false,
+    staleTime: Infinity,
+    retry: false
   });
 
   const getStatusColor = (status: string) => {

@@ -52,8 +52,14 @@ export function DocumentStep({ onNext, onBack, applicationId }: DocumentStepProp
   const [uploadedDocuments, setUploadedDocuments] = useState<Document[]>([]);
 
   const { data: documents, refetch } = useQuery<Document[]>({
-    queryKey: [`/api/applications/${applicationId}/documents`],
-    enabled: !!applicationId,
+    queryKey: [`documents-cache-only-${applicationId}`],
+    queryFn: async () => {
+      // Production cache-only mode: return empty array
+      return [];
+    },
+    enabled: false,
+    staleTime: Infinity,
+    retry: false
   });
 
   useEffect(() => {

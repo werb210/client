@@ -10,30 +10,8 @@ export type CountryCode = "CA" | "US" | null;
  * Returns country code or null if detection fails
  */
 export const fetchUserCountry = async (): Promise<CountryCode> => {
-  try {
-    // First try our own API route
-    const response = await fetch("/api/user-country");
-    if (response.ok) {
-      const data = await response.json();
-      const country = data.country;
-      return country === "CA" || country === "US" ? country : null;
-    }
-
-    // Fallback to external service for development
-    const fallbackResponse = await fetch("https://ipapi.co/country_code/", {
-      timeout: 3000,
-    } as RequestInit);
-    
-    if (fallbackResponse.ok) {
-      const countryCode = await fallbackResponse.text();
-      return countryCode === "CA" || countryCode === "US" ? countryCode : null;
-    }
-
-    return null;
-  } catch (error) {
-    console.log("Country detection failed, using manual selection:", error.message);
-    return null;
-  }
+  // Production cache-only mode: Return null to bypass geolocation API calls
+  return null;
 };
 
 /**

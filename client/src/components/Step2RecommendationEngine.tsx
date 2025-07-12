@@ -48,22 +48,7 @@ export function Step2RecommendationEngine({
     fundsPurpose: formData.fundsPurpose
   });
 
-  console.log('✅ Using authentic 41-product database from client-side cache');
-  console.log('[STEP2] Form data passed to useProductCategories:', {
-    businessLocation: formData.businessLocation,
-    headquarters: formData.headquarters,
-    mappedHeadquarters: headquarters,
-    fundingAmount: formData.fundingAmount,
-    lookingFor: formData.lookingFor,
-    accountsReceivableBalance: formData.accountsReceivableBalance,
-    fundsPurpose: formData.fundsPurpose
-  });
-  console.log('[STEP2] Hook response:', { productCategories, isLoading, error });
-  console.log('[STEP2] Raw products status:', { 
-    rawProductCount: allLenderProducts?.length, 
-    rawLoading, 
-    rawError: rawError?.message 
-  });
+  // Production mode: Console logging disabled
 
   const handleProductClick = (categoryKey: string) => {
     const isCurrentlySelected = selectedProduct === categoryKey;
