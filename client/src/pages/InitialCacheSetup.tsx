@@ -17,12 +17,22 @@ export default function InitialCacheSetup() {
   const populateCache = async () => {
     setIsLoading(true);
     try {
-      // Production cache-only mode: Cache must be pre-populated
+      // Use finalizedLenderSync to populate cache
+      const { syncLenderProducts } = await import('../lib/finalizedLenderSync');
+      const result = await syncLenderProducts();
+      
       setResult({
-        success: false,
-        error: 'Production cache-only mode',
-        message: 'Cache population disabled in production'
+        success: result.success,
+        productCount: result.productCount,
+        source: result.source,
+        errors: result.errors,
+        message: result.success 
+          ? `Successfully cached ${result.productCount} products from ${result.source}` 
+          : `Failed to populate cache: ${result.errors.join(', ')}`
       });
+      
+      // Refresh cache status after population
+      await checkCacheStatus();
     } catch (error) {
       setResult({
         success: false,
@@ -36,18 +46,27 @@ export default function InitialCacheSetup() {
 
   const checkCacheStatus = async () => {
     try {
-      const { loadLenderProducts, loadCacheSource, loadLastFetchTime } = await import('../utils/lenderCache');
-      const cached = await loadLenderProducts();
-      const source = await loadCacheSource();
-      const lastFetched = await loadLastFetchTime();
+      const { get } = await import('idb-keyval');
+      
+      // Check both cache keys for backward compatibility
+      let products = await get('lenderProducts'); // New cache system
+      if (!products || !Array.isArray(products) || products.length === 0) {
+        products = await get('lender_products_cache'); // Old cache system
+      }
+      
+      const timestamp = await get('lender_products_cache_ts') || await get('lenderProductsLastFetched');
       
       setCacheStats({
-        productCount: cached?.length || 0,
-        source,
-        lastFetched: lastFetched ? new Date(lastFetched).toLocaleString() : 'Never'
+        productCount: products?.length || 0,
+        source: products?.length > 0 ? 'IndexedDB Cache' : 'No cache',
+        lastFetched: timestamp ? new Date(timestamp).toLocaleString() : 'Never'
       });
     } catch (error) {
-      // Silent error handling in production
+      setCacheStats({
+        productCount: 0,
+        source: 'Error',
+        lastFetched: 'Error'
+      });
     }
   };
 
@@ -73,8 +92,8 @@ export default function InitialCacheSetup() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-slate-600">
-              This will fetch 41 products from the staff API and store them in IndexedDB 
-              for cache-only operation in Steps 2 and 5.
+              This will fetch products from the staff API and store them in IndexedDB 
+              for cache-only operation in Steps 2 and 5. Required for proper application function.
             </p>
             
             <Button 
