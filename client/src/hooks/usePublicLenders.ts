@@ -8,37 +8,39 @@ import { fetchLenderProducts } from "@/api/lenderProducts";
  */
 export function usePublicLenders() {
   // Use TanStack Query with the IndexedDB caching system
+  // CACHE-ONLY SYSTEM: Return static data from IndexedDB cache only
   return useQuery({
-    queryKey: ['/api/public/lenders'],
+    queryKey: ['cache-only-lenders'],
     queryFn: async () => {
-      console.log('[DEBUG] usePublicLenders - Starting fetch');
+      console.log('[DEBUG] usePublicLenders - CACHE-ONLY mode');
       try {
-        const response = await fetchLenderProducts();
-        console.log('[DEBUG] usePublicLenders - Fetched response:', response);
-        return response.products || [];
+        // Only read from IndexedDB cache, no API calls
+        const { loadLenderProducts } = await import('../utils/lenderCache');
+        const cached = await loadLenderProducts();
+        console.log(`[DEBUG] usePublicLenders - Cache returned ${cached?.length || 0} products`);
+        return cached || [];
       } catch (error) {
-        console.error('[DEBUG] usePublicLenders - Fetch error:', error);
-        // Return empty array instead of throwing to prevent unhandled rejections
+        console.warn('[usePublicLenders] Cache read failed:', error);
         return [];
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: Infinity, // Never refetch in cache-only mode
     refetchOnWindowFocus: false,
-    retry: false, // Disable retries for cache-only operation
-    onError: (error) => {
-      console.warn('[usePublicLenders] Query error (handled):', error);
-      // Silently handle errors to prevent unhandled rejections
-    }
+    retry: false,
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false
   });
 }
 
 export function usePublicLenderStats() {
   return useQuery({
-    queryKey: ["publicLenderStats"],
+    queryKey: ["cache-only-lender-stats"],
     queryFn: async () => {
       try {
-        const response = await fetchLenderProducts();
-        const products = response.products || [];
+        // Only read from IndexedDB cache, no API calls
+        const { loadLenderProducts } = await import('../utils/lenderCache');
+        const products = (await loadLenderProducts()) || [];
         
         // Calculate stats from products
         const stats = {
@@ -50,7 +52,7 @@ export function usePublicLenderStats() {
         
         return stats;
       } catch (error) {
-        console.warn('[usePublicLenderStats] Query error (handled):', error);
+        console.warn('[usePublicLenderStats] Cache read failed:', error);
         return {
           totalProducts: 0,
           maxFunding: 0,
@@ -59,10 +61,11 @@ export function usePublicLenderStats() {
         };
       }
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: Infinity, // Never refetch in cache-only mode
+    refetchOnWindowFocus: false,
     retry: false,
-    onError: (error) => {
-      console.warn('[usePublicLenderStats] Query error (handled):', error);
-    }
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false
   });
 }
