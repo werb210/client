@@ -118,8 +118,6 @@ app.use((req, res, next) => {
   app.get('/api/public/lenders', async (req, res) => {
     try {
       const staffApiUrl = cfg.staffApiUrl + '/api';
-      console.log(`[PROXY] Fetching from live staff API: ${staffApiUrl}/public/lenders`);
-      
       const response = await fetch(`${staffApiUrl}/public/lenders`, {
         method: 'GET',
         headers: {
@@ -130,18 +128,13 @@ app.use((req, res, next) => {
       });
       
       if (!response.ok) {
-        console.error(`[PROXY] Staff API error (${response.status}): ${response.statusText}`);
         throw new Error(`Staff API returned ${response.status}`);
       }
       
       const data = await response.json();
-      console.log(`[PROXY] ✅ Live staff API returned ${data?.products?.length || 0} products`);
       
       res.json(data);
     } catch (error) {
-      console.error('[PROXY] ❌ Staff API connection failed:', error);
-      
-      // Return error response - no fallback data as per user requirements
       res.status(502).json({
         success: false,
         error: 'Staff backend unavailable',
@@ -155,9 +148,6 @@ app.use((req, res, next) => {
   app.post('/api/public/applications', async (req, res) => {
     try {
       const staffApiUrl = cfg.staffApiUrl + '/api';
-      console.log(`[APPLICATION] Creating application via staff API: ${staffApiUrl}/public/applications`);
-      console.log(`[APPLICATION] Application data keys: ${Object.keys(req.body).join(', ')}`);
-      
       const response = await fetch(`${staffApiUrl}/public/applications`, {
         method: 'POST',
         headers: {
@@ -169,18 +159,14 @@ app.use((req, res, next) => {
       });
       
       if (!response.ok) {
-        console.error(`[APPLICATION] Staff API error (${response.status}): ${response.statusText}`);
         const errorData = await response.text();
-        console.error(`[APPLICATION] Error details: ${errorData}`);
         throw new Error(`Staff API returned ${response.status}`);
       }
       
       const data = await response.json();
-      console.log(`[APPLICATION] ✅ Application created with ID: ${data.applicationId}`);
       
       res.json(data);
     } catch (error) {
-      console.error('[APPLICATION] ❌ Application creation failed:', error);
       
       res.status(502).json({
         success: false,

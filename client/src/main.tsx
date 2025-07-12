@@ -100,7 +100,7 @@ window.addEventListener('unhandledrejection', (event) => {
       return;
     }
     
-    // Handle any remaining network or fetch-related errors including UUID fragments and API calls
+    // Handle any network-related errors in production
     if (reason.includes('fetch') ||
         reason.includes('network') ||
         reason.includes('NetworkError') ||
@@ -108,7 +108,7 @@ window.addEventListener('unhandledrejection', (event) => {
         reason.includes('Failed to fetch') ||
         reason.includes('queryFn') ||
         reason.includes('TanStack') ||
-        reason.includes('/api/public/lenders') ||
+        reason.includes('/api/') ||
         reason.includes('public/lenders') ||
         reason.includes('staff.boreal.financial') ||
         reason.includes('react-query') ||
@@ -181,12 +181,7 @@ window.addEventListener('unhandledrejection', (event) => {
 // The new system only fetches data during allowed windows (12:00 PM and 12:00 AM MST)
 // and uses persistent IndexedDB cache for all other requests
 
-// NO STARTUP SYNC - New system handles this automatically when needed
-console.log('[STARTUP] 🚀 Using new IndexedDB caching system with scheduled fetch windows');
-
-// DISABLED: Staff database verification - using cache-only system
-console.log('[STARTUP] 🔒 Cache-only mode enabled - no startup API verification');
-console.log('[STARTUP] 📋 Cache should be populated manually using /cache-setup page');
+// Production cache-only system - no startup logging
 
 const root = document.getElementById("root");
 if (root) {

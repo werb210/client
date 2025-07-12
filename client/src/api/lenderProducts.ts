@@ -17,37 +17,13 @@ import {
  * Fails fast on invalid data to surface staff API issues immediately
  */
 export async function fetchLenderProducts(): Promise<LenderProduct[]> {
-  console.log('[DEBUG] fetchLenderProducts - Starting API call');
-  const windowInfo = getFetchWindowInfo();
-  const lastFetched = await loadLastFetchTime();
-  
-  // Use persistent cache if outside fetch window and cache exists
-  if (!windowInfo.isAllowed && lastFetched) {
+  // CACHE-ONLY SYSTEM: Only use IndexedDB cache, no API calls
+  try {
     const cached = await loadLenderProducts();
-    if (cached && cached.length > 0) {
-      const source = await loadCacheSource();
-      console.log(`[CLIENT] 📦 Using persistent cache (${cached.length} products)`);
-      console.log(`[CLIENT] 🕒 ${windowInfo.reason}`);
-      console.log(`[CLIENT] ⏰ Next fetch window: ${formatMSTTime(windowInfo.nextWindow)}`);
-      console.log(`[CLIENT] 💾 Cache from: ${source} at ${formatMSTTime(new Date(lastFetched))}`);
-      return cached;
-    }
+    return cached || [];
+  } catch (error) {
+    return [];
   }
-  
-  // CACHE-ONLY SYSTEM: No live API calls allowed during Steps 2 and 5
-  console.log('[CLIENT] ❌ No persistent cache available - cache must be populated manually at /cache-setup');
-  console.log('[CLIENT] ⚠️ CACHE-ONLY MODE: No live API calls permitted');
-  
-  // Always use fallback cache if available, even if empty
-  const fallbackCache = await loadLenderProducts();
-  if (fallbackCache && fallbackCache.length > 0) {
-    console.log(`[CLIENT] 📦 Using fallback cache (${fallbackCache.length} products)`);
-    return fallbackCache;
-  }
-  
-  // Return empty array to prevent API calls - no exceptions
-  console.warn('[CLIENT] ❌ No cache available - returning empty array to prevent live API calls');
-  return [];
 }
 
 /**

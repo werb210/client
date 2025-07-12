@@ -94,13 +94,9 @@ async function checkInitialSync() {
 
 // Manual trigger for testing
 export async function triggerManualSync(): Promise<any> {
-  console.log('[SCHEDULER] LEGACY MANUAL SYNC DISABLED - Using cache-only system');
-  console.log('[SCHEDULER] Cache must be populated manually at /cache-setup page');
-  
-  // Return success result without any network operations
   const result = {
     success: true,
-    source: 'disabled_legacy_system',
+    source: 'cache_only',
     changes: 0,
     total: 0,
     timestamp: new Date().toISOString()

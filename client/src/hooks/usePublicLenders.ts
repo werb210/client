@@ -12,15 +12,11 @@ export function usePublicLenders() {
   return useQuery({
     queryKey: ['cache-only-lenders'],
     queryFn: async () => {
-      console.log('[DEBUG] usePublicLenders - CACHE-ONLY mode');
       try {
-        // Only read from IndexedDB cache, no API calls
         const { loadLenderProducts } = await import('../utils/lenderCache');
         const cached = await loadLenderProducts();
-        console.log(`[DEBUG] usePublicLenders - Cache returned ${cached?.length || 0} products`);
         return cached || [];
       } catch (error) {
-        console.warn('[usePublicLenders] Cache read failed:', error);
         return [];
       }
     },
@@ -38,11 +34,9 @@ export function usePublicLenderStats() {
     queryKey: ["cache-only-lender-stats"],
     queryFn: async () => {
       try {
-        // Only read from IndexedDB cache, no API calls
         const { loadLenderProducts } = await import('../utils/lenderCache');
         const products = (await loadLenderProducts()) || [];
         
-        // Calculate stats from products
         const stats = {
           totalProducts: products.length,
           maxFunding: Math.max(...products.map(p => p.maxAmount || 0)),
@@ -52,7 +46,6 @@ export function usePublicLenderStats() {
         
         return stats;
       } catch (error) {
-        console.warn('[usePublicLenderStats] Cache read failed:', error);
         return {
           totalProducts: 0,
           maxFunding: 0,

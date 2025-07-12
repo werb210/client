@@ -17,49 +17,17 @@ export default function InitialCacheSetup() {
   const populateCache = async () => {
     setIsLoading(true);
     try {
-      console.log('[CACHE SETUP] Starting one-time cache population...');
-      
-      // Make live API call to get 41 products
-      const response = await fetch('/api/public/lenders');
-      if (!response.ok) {
-        throw new Error(`API failed: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      const rawProducts = data.products || data.data || data;
-      
-      console.log(`[CACHE SETUP] Got ${rawProducts.length} products from API`);
-      
-      // Import cache utilities and save to IndexedDB
-      const { saveLenderProducts } = await import('../utils/lenderCache');
-      await saveLenderProducts(rawProducts, 'initial_setup');
-      
-      console.log('[CACHE SETUP] ✅ Cache populated successfully');
-      
+      // Production cache-only mode: Cache must be pre-populated
       setResult({
-        success: true,
-        productCount: rawProducts.length,
-        message: 'Cache populated successfully'
+        success: false,
+        error: 'Production cache-only mode',
+        message: 'Cache population disabled in production'
       });
-      
-      // Get updated cache stats
-      const { loadLenderProducts, loadCacheSource, loadLastFetchTime } = await import('../utils/lenderCache');
-      const cached = await loadLenderProducts();
-      const source = await loadCacheSource();
-      const lastFetched = await loadLastFetchTime();
-      
-      setCacheStats({
-        productCount: cached?.length || 0,
-        source,
-        lastFetched: lastFetched ? new Date(lastFetched).toLocaleString() : 'Never'
-      });
-      
     } catch (error) {
-      console.error('[CACHE SETUP] ❌ Failed to populate cache:', error);
       setResult({
         success: false,
         error: error.message,
-        message: 'Cache population failed'
+        message: 'Cache operation failed'
       });
     } finally {
       setIsLoading(false);
@@ -79,7 +47,7 @@ export default function InitialCacheSetup() {
         lastFetched: lastFetched ? new Date(lastFetched).toLocaleString() : 'Never'
       });
     } catch (error) {
-      console.error('[CACHE SETUP] ❌ Failed to check cache:', error);
+      // Silent error handling in production
     }
   };
 

@@ -17,9 +17,8 @@ interface LenderDataResponse {
  * Normalize raw product data to match our schema
  */
 function normalizeProductData(rawProduct: any): LenderProduct {
-  console.log('[DEBUG] Normalizing product:', rawProduct.product_name || rawProduct.name || rawProduct.id);
   try {
-    const normalized = {
+    return {
       id: rawProduct.id,
       name: rawProduct.product_name || rawProduct.name,
       lenderName: rawProduct.lender_name || rawProduct.lenderName,
@@ -37,10 +36,7 @@ function normalizeProductData(rawProduct: any): LenderProduct {
       description: rawProduct.description || '',
       industries: rawProduct.industries || rawProduct.requirements?.industries || ['general']
     };
-    console.log('[DEBUG] Normalized successfully:', normalized.name);
-    return normalized;
   } catch (error) {
-    console.error('[DEBUG] Normalization failed for product:', rawProduct);
     throw error;
   }
 }
@@ -67,24 +63,14 @@ function getDocRequirementsForCategory(category: string): string[] {
  * Fetch lender products from IndexedDB cache only (strict caching enforcement)
  */
 export async function fetchLenderProducts(): Promise<LenderDataResponse> {
-  console.log('[CACHE-ONLY] Reading lender products from IndexedDB cache only');
-  
-  // Import cache utilities
   const { loadLenderProducts, loadCacheSource, loadLastFetchTime } = await import('../utils/lenderCache');
   
   try {
-    // Try reading from IndexedDB only
     const cached = await loadLenderProducts();
     const source = await loadCacheSource();
     const lastFetched = await loadLastFetchTime();
     
     if (cached?.length) {
-      console.log(`[CACHED] ✅ Using IndexedDB lender products: ${cached.length} products`);
-      console.log(`[CACHED] 💾 Cache source: ${source}`);
-      if (lastFetched) {
-        console.log(`[CACHED] 🕒 Last updated: ${new Date(lastFetched).toLocaleString()}`);
-      }
-      
       return {
         success: true,
         products: cached,
@@ -94,24 +80,20 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
       };
     }
     
-    console.warn("❌ [CACHE-ONLY] IndexedDB cache empty. Returning [] to avoid live fetch.");
-    console.warn("❌ [CACHE-ONLY] Cache should be populated by scheduled refresh (noon/midnight MST)");
-    
     return {
       success: false,
       products: [],
       count: 0,
-      source: 'fallback',
+      source: 'cache_empty',
       timestamp: new Date().toISOString()
     };
     
   } catch (error) {
-    console.error('[CACHE-ONLY] Error reading from IndexedDB:', error);
     return {
       success: false,
       products: [],
       count: 0,
-      source: 'fallback',
+      source: 'cache_error',
       timestamp: new Date().toISOString()
     };
   }
@@ -122,8 +104,7 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
  * Cache must be populated manually via /cache-setup page
  */
 export async function scheduledCacheRefresh(): Promise<void> {
-  console.log('[SCHEDULED REFRESH] DISABLED - Cache must be populated manually at /cache-setup');
-  console.log('[SCHEDULED REFRESH] No automatic network calls permitted in cache-only system');
+  // Disabled in production cache-only mode
   return;
 }
 
