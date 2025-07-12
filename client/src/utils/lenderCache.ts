@@ -49,14 +49,44 @@ export async function saveLenderProducts(
 }
 
 /**
- * Load lender products from persistent cache
+ * Normalize product fields to standardize field names
+ */
+function normalizeProductFields(product: any): any {
+  return {
+    ...product,
+    minAmount:
+      product.minAmount ??
+      product.amountMin ??
+      product.min_amount ??
+      product.minAmountUsd ??
+      product.fundingMin ??
+      product.loanMin ??
+      null,
+    maxAmount:
+      product.maxAmount ??
+      product.amountMax ??
+      product.max_amount ??
+      product.maxAmountUsd ??
+      product.fundingMax ??
+      product.loanMax ??
+      null,
+  };
+}
+
+/**
+ * Load lender products from persistent cache with field normalization
  */
 export async function loadLenderProducts(): Promise<LenderProduct[] | null> {
   try {
     const products = await get(CACHE_KEY);
     if (products && Array.isArray(products) && products.length > 0) {
       console.log(`[CACHE] 📦 Loaded ${products.length} products from IndexedDB`);
-      return products;
+      
+      // Normalize all products to ensure consistent field names
+      const normalizedProducts = products.map(normalizeProductFields);
+      console.log(`[CACHE] 🔧 Normalized field names for ${normalizedProducts.length} products`);
+      
+      return normalizedProducts;
     }
     return null;
   } catch (error) {

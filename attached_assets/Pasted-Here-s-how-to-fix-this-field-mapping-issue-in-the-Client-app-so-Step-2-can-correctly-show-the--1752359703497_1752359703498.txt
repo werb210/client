@@ -1,0 +1,128 @@
+Here's how to **fix this field mapping issue in the Client app** so Step 2 can correctly show the **funding range** from the cached products:
+
+---
+
+## ✅ Problem Summary
+
+Client's **Step 2 recommendation engine** can't determine the `minAmount` / `maxAmount` of each product because:
+
+* The field names in the **IndexedDB cache** are inconsistent (`amountMin`, `min_amount`, `minAmountUsd`, etc.)
+* The logic only expects one naming convention (`minAmount` / `maxAmount`)
+* As a result, **"Funding Range"** displays:
+
+  > *"Field mapping issue - no valid amount fields found"*
+
+---
+
+## ✅ Solution
+
+You must **normalize the product fields** **once** during cache load — instead of trying to support dozens of field variants **during rendering**.
+
+This guarantees:
+
+* Simpler rendering logic in Step 2 UI
+* Consistent field names throughout (`minAmount`, `maxAmount`)
+* More reliable filtering and scoring
+
+---
+
+## 🔧 Client Fix Instructions (for Replit Agent)
+
+### 1. Update `lenderDataFetcher.ts` to normalize amount fields
+
+📄 `src/api/lenderDataFetcher.ts`
+
+Inside the `fetchLenderProducts()` method, after fetching products from the staff API or IndexedDB, normalize each product:
+
+```ts
+function normalizeProductFields(product: any): LenderProduct {
+  return {
+    ...product,
+    minAmount:
+      product.minAmount ??
+      product.amountMin ??
+      product.min_amount ??
+      product.minAmountUsd ??
+      product.fundingMin ??
+      product.loanMin ??
+      null,
+    maxAmount:
+      product.maxAmount ??
+      product.amountMax ??
+      product.max_amount ??
+      product.maxAmountUsd ??
+      product.fundingMax ??
+      product.loanMax ??
+      null,
+  };
+}
+```
+
+Then, when saving to IndexedDB or returning products, apply normalization:
+
+```ts
+const normalizedProducts = fetchedProducts.map(normalizeProductFields);
+return { products: normalizedProducts };
+```
+
+---
+
+### 2. Clean Up Step 2 UI Logic
+
+📄 `src/components/Step2ProductionSimple.tsx`
+
+Now that all products are normalized, **you can stop trying to detect multiple variations** like `amountMin`, `min_amount`, etc.
+
+Replace this logic:
+
+```ts
+const min = product.amountMin || product.minAmount || product.min_amount || ...;
+```
+
+With this:
+
+```ts
+const min = product.minAmount;
+const max = product.maxAmount;
+```
+
+✅ This will now work cleanly because **normalization happened at the data load level**.
+
+---
+
+### 3. Verify IndexedDB Contains Normalized Products
+
+Run this in your browser console to confirm:
+
+```js
+async function verifyNormalizedFields() {
+  const request = indexedDB.open('lender-cache', 1);
+  request.onsuccess = (event) => {
+    const db = event.target.result;
+    const tx = db.transaction(['products'], 'readonly');
+    const store = tx.objectStore('products');
+    const getRequest = store.get('products');
+    getRequest.onsuccess = () => {
+      const cached = getRequest.result;
+      if (cached?.data?.[0]) {
+        console.log('✅ Normalized minAmount:', cached.data[0].minAmount);
+        console.log('✅ Normalized maxAmount:', cached.data[0].maxAmount);
+      }
+    };
+  };
+}
+verifyNormalizedFields();
+```
+
+---
+
+## ✅ Result
+
+* "Funding Range" will now show properly like:
+  **Funding Range: \$25,000 – \$350,000**
+* The recommendation engine will **filter accurately**
+* Step 5 will also show the correct **document set**
+
+---
+
+Would you like me to provide a **patch for Replit to run now** or instructions to reset the IndexedDB and re-fetch the normalized product list?
