@@ -1,10 +1,12 @@
 /**
  * Test Specific Lender Products for Canadian Working Capital $40,000
  * Shows the actual lender names and product details that match the criteria
+ * 
+ * SECURITY: Uses environment variable for authentication token
  */
 
 const API_BASE_URL = 'https://staff.boreal.financial/api';
-const BEARER_TOKEN = 'ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042';
+const BEARER_TOKEN = process.env.CLIENT_APP_SHARED_TOKEN || 'YOUR_TOKEN_HERE';
 
 async function testSpecificLenderProducts() {
   console.log('🇨🇦 Testing Specific Lender Products');
