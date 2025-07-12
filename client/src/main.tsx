@@ -61,7 +61,19 @@ window.addEventListener('unhandledrejection', (event) => {
         reason.includes('network') ||
         reason.includes('NetworkError') ||
         reason.includes('ERR_NETWORK') ||
-        reason.includes('Failed to fetch')) {
+        reason.includes('Failed to fetch') ||
+        reason.includes('queryFn') ||
+        reason.includes('TanStack') ||
+        reason.includes('react-query')) {
+      event.preventDefault();
+      return;
+    }
+    
+    // Handle any other common development errors
+    if (reason.includes('ResizeObserver') ||
+        reason.includes('IntersectionObserver') ||
+        reason.includes('AbortError') ||
+        reason.includes('timeout')) {
       event.preventDefault();
       return;
     }

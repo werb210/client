@@ -13,27 +13,38 @@ export default function LandingPage() {
   const { data: products = [], isLoading, error } = useQuery({
     queryKey: ['landing-page-products'],
     queryFn: async () => {
-      // Use the same API pattern as the main application
-      const apiUrl = '/api/public/lenders';
-      console.log('[LANDING] Fetching products from:', apiUrl);
-      
       try {
+        // Use the same API pattern as the main application
+        const apiUrl = '/api/public/lenders';
+        console.log('[LANDING] Fetching products from:', apiUrl);
+        
         const res = await fetch(apiUrl, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: 'include'
+        }).catch(fetchError => {
+          console.warn('[LANDING] Network error, using fallback:', fetchError);
+          return null;
         });
+        
+        if (!res) {
+          return [];
+        }
         
         console.log('[LANDING] API Response status:', res.status, res.statusText);
         
         if (!res.ok) {
-          console.error('[LANDING] API Error:', res.status, res.statusText);
-          throw new Error(`Failed to fetch lender products: ${res.status}`);
+          console.warn('[LANDING] API Error:', res.status, res.statusText);
+          return [];
         }
         
-        const data = await res.json();
+        const data = await res.json().catch(jsonError => {
+          console.warn('[LANDING] JSON parse error:', jsonError);
+          return { success: false, products: [] };
+        });
+        
         console.log('[LANDING] API Response data:', {
           success: data.success,
           productCount: data.products?.length || 0,
@@ -42,15 +53,14 @@ export default function LandingPage() {
         });
         
         if (!data.success || !data.products) {
-          console.error('[LANDING] Invalid API response structure:', data);
+          console.warn('[LANDING] Invalid API response structure:', data);
           return [];
         }
         
         console.log(`[LANDING] Successfully fetched ${data.products.length} products for max funding calculation`);
         return data.products || [];
-      } catch (fetchError) {
-        console.error('[LANDING] Fetch error:', fetchError);
-        // Return empty array instead of throwing to prevent unhandled promise rejection
+      } catch (error) {
+        console.warn('[LANDING] Unexpected error in queryFn:', error);
         return [];
       }
     },
