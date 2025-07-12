@@ -10,38 +10,12 @@ export interface ProductCategory {
 }
 
 export function useProductCategories(formData: RecommendationFormData) {
-  console.log('[DEBUG] useProductCategories called with formData:', formData);
+  // Production mode: Console logging disabled
   const { data: products = [], isLoading: productsLoading, error: productsError } = usePublicLenders();
 
-  // console.log('[useProductCategories] Products state:', {
-  //   productCount: products.length,
-  //   productsLoading,
-  //   productsError: productsError?.message,
-  //   formData
-  // });
-
   return useQuery({
-    queryKey: ['product-categories', formData],
+    queryKey: ['product-categories-cache-only', formData],
     queryFn: () => {
-      // Temporary debug logging to diagnose filtering issue
-      console.log('[DEBUG] useProductCategories - Input:', {
-        totalProducts: products.length,
-        formData: {
-          headquarters: formData.headquarters,
-          fundingAmount: formData.fundingAmount,
-          lookingFor: formData.lookingFor,
-          accountsReceivableBalance: formData.accountsReceivableBalance,
-          fundsPurpose: formData.fundsPurpose
-        },
-        sampleProduct: products[0] ? {
-          name: products[0].name,
-          category: products[0].category,
-          geography: products[0].geography,
-          country: products[0].country,
-          minAmount: products[0].minAmount,
-          maxAmount: products[0].maxAmount
-        } : null
-      });
       
       if (productsError) {
         throw productsError;
@@ -53,11 +27,7 @@ export function useProductCategories(formData: RecommendationFormData) {
       
       // Apply filtering logic to get relevant products
       const filteredProducts = filterProducts(products, formData);
-      console.log('[DEBUG] Filtering results:', {
-        originalCount: products.length,
-        filteredCount: filteredProducts.length,
-        formData: formData
-      });
+      // Production mode: Console logging disabled
       
       // Group products by category
       const categoryGroups: Record<string, StaffLenderProduct[]> = {};
@@ -86,6 +56,11 @@ export function useProductCategories(formData: RecommendationFormData) {
       return categories;
     },
     enabled: !productsLoading && !productsError,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false
   });
 }

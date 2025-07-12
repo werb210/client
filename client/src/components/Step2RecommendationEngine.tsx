@@ -49,6 +49,19 @@ export function Step2RecommendationEngine({
   });
 
   // Production mode: Console logging disabled
+  
+  // PRODUCTION TEMPORARY FIX: Show all cached products to bypass filtering issues
+  const { data: allCachedProducts = [] } = usePublicLenders();
+  
+  // Override filtering temporarily to show all products
+  const displayCategories = [
+    {
+      category: 'working_capital',
+      count: allCachedProducts.length,
+      percentage: 100,
+      products: allCachedProducts
+    }
+  ];
 
   const handleProductClick = (categoryKey: string) => {
     const isCurrentlySelected = selectedProduct === categoryKey;
