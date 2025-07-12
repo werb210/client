@@ -1,0 +1,96 @@
+The errors shown in your console are all **`ERR_CONNECTION_TIMED_OUT`** errors from a Replit-hosted subdomain:
+
+```
+https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsx0yl1l2.janeway.replit.dev
+```
+
+---
+
+### 🔍 What These Errors Are
+
+This URL represents a **Replit internal dev environment URL** — possibly a legacy or orphaned worker container still referenced by your build or from an older deployment.
+
+The errors all say:
+
+```
+GET https://[janeway.replit.dev container] net::ERR_CONNECTION_TIMED_OUT
+```
+
+This means your application is trying to **call a resource that no longer exists** — likely from:
+
+* A stale `fetch()` call
+* A previously loaded script or stylesheet (e.g. `eruda.js`)
+* A background sync process
+* Or a Replit iframe or test resource trying to reconnect
+
+---
+
+### ✅ How to Fix This
+
+#### 🔧 Step 1: Locate and Remove All References to This Domain
+
+1. Search your entire **client app source code** for this string:
+
+```
+janeway.replit.dev
+```
+
+2. Delete or disable any fetch, import, or iframe calls pointing to this domain.
+
+Also look for hardcoded URLs like:
+
+```ts
+fetch("https://dfab1952-...janeway.replit.dev/...")
+```
+
+> **Tip:** Replit sometimes includes dev-only tracking scripts (e.g. `eruda.js` or `main.tsx:123`) in the preview. These are safe to disable.
+
+---
+
+#### 🔧 Step 2: Check for Orphaned Service Workers or Beacon Calls
+
+* Open DevTools → Application → Service Workers
+  → Unregister any ghost workers still listening to janeway domains.
+
+* Open DevTools → Network → filter by `beacon` or `websocket`
+  → Suppress or disable these calls in production.
+
+---
+
+#### 🔧 Step 3: Suppress These in Production Logs
+
+If the above calls are part of **Replit's background dev tools**, suppress them using global error handling:
+
+```ts
+// productionConsole.ts
+window.addEventListener('unhandledrejection', (event) => {
+  if (String(event.reason).includes("janeway.replit.dev")) {
+    event.preventDefault(); // suppress
+  }
+});
+```
+
+Or use a centralized logging override:
+
+```ts
+console.error = (...args) => {
+  if (args.join(" ").includes("janeway.replit.dev")) return;
+  originalConsoleError(...args);
+};
+```
+
+---
+
+### 🧹 Summary of Fixes
+
+| Task                                   | Action                                            |
+| -------------------------------------- | ------------------------------------------------- |
+| 🔍 Identify offending domain           | `janeway.replit.dev`                              |
+| 🔥 Remove old references               | Search codebase for fetch/imports                 |
+| 🧼 Clean Replit Dev Scripts            | Disable `eruda.js`, old iframe links              |
+| 🧵 Suppress noisy logs                 | Use `unhandledrejection` + `console.error` filter |
+| ✅ Confirm cache-only system unaffected | Steps 2 + 5 will still work if IndexedDB is valid |
+
+---
+
+Would you like a Replit-specific cleanup script that removes `janeway.replit.dev` references and hardens the client for production mode?

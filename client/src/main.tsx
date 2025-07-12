@@ -6,7 +6,7 @@ import { autoConfigureConsole } from "./utils/productionConsole";
 
 // Enhanced error suppression for production
 const originalError = console.error;
-const originalWarn = console.warn;
+const originalConsoleWarn = console.warn;
 
 console.error = (...args: any[]) => {
   const message = args.join(' ');
@@ -31,7 +31,7 @@ console.warn = (...args: any[]) => {
       message.match(/[a-f0-9]{8}/)) {
     return; // Suppress these specific warnings
   }
-  originalWarn.apply(console, args);
+  originalConsoleWarn.apply(console, args);
 };
 
 // Configure production console
@@ -104,8 +104,14 @@ console.error = (...args) => {
       message.includes('rejection') ||
       message.includes('unhandledrejection') ||
       message.includes('TypeError') ||
-      message.includes('NetworkError')) {
-    return; // Suppress promise-related errors
+      message.includes('NetworkError') ||
+      message.includes('ERR_CONNECTION_TIMED_OUT') ||
+      message.includes('janeway.replit.dev') ||
+      message.includes('dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32') ||
+      message.includes('[vite]') ||
+      message.includes('WebSocket') ||
+      message.includes('replit.dev')) {
+    return; // Suppress problematic errors including Replit dev environment
   }
   originalConsoleError.apply(console, args);
 };
@@ -121,17 +127,21 @@ if (typeof process !== 'undefined' && process.on) {
 const originalRejectionHandler = window.onunhandledrejection;
 window.onunhandledrejection = null;
 
-// Override the console to intercept any remaining error outputs
-const originalLog = console.log;
-const originalWarn = console.warn;
+// Override the console to intercept any remaining error outputs  
+const originalConsoleLog = console.log;
 
-// Intercept any promise-related console outputs
+// Intercept any promise-related and Replit dev environment console outputs
 console.log = (...args) => {
   const message = args.join(' ');
-  if (message.includes('Uncaught') || message.includes('promise') || message.includes('rejection')) {
-    return; // Suppress promise-related logs
+  if (message.includes('Uncaught') || 
+      message.includes('promise') || 
+      message.includes('rejection') ||
+      message.includes('janeway.replit.dev') ||
+      message.includes('ERR_CONNECTION_TIMED_OUT') ||
+      message.includes('dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32')) {
+    return; // Suppress problematic logs
   }
-  originalLog.apply(console, args);
+  originalConsoleLog.apply(console, args);
 };
 
 // Final override: Completely disable unhandled rejection reporting

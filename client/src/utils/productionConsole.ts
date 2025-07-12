@@ -51,8 +51,19 @@ export function autoConfigureConsole() {
   // Force production console in all environments for clean deployment
   enableProductionConsole();
   
-  // ULTIMATE promise rejection suppression
+  // ULTIMATE promise rejection suppression with Replit domain filtering
   const suppressUnhandledRejection = (event: any) => {
+    // Special handling for Replit dev environment errors
+    const errorMessage = String(event.reason || event.error || '');
+    if (errorMessage.includes('janeway.replit.dev') || 
+        errorMessage.includes('ERR_CONNECTION_TIMED_OUT') ||
+        errorMessage.includes('dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32')) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      return false;
+    }
+    
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
