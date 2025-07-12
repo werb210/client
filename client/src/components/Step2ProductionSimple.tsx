@@ -31,6 +31,15 @@ export function Step2ProductionSimple({
   React.useEffect(() => {
     if (!isLoading) {
       console.log(`[STEP2] Cache status: ${allProducts.length} products, error:`, error?.message || 'none');
+      if (allProducts.length > 0) {
+        console.log('[STEP2] Sample product:', allProducts[0]);
+        console.log('[STEP2] Product structure check:', {
+          hasMinAmount: !!allProducts[0]?.minAmount,
+          hasMaxAmount: !!allProducts[0]?.maxAmount,
+          hasCountry: !!allProducts[0]?.country,
+          fields: Object.keys(allProducts[0] || {})
+        });
+      }
     }
   }, [allProducts, isLoading, error]);
   
@@ -59,11 +68,17 @@ export function Step2ProductionSimple({
           <p className="text-blue-700">Loading financing products from cache...</p>
         </div>
       ) : allProducts.length === 0 ? (
-        <div className="p-6 border border-amber-200 bg-amber-50 rounded-lg text-center">
+        <div className="p-6 border border-amber-200 bg-amber-50 rounded-lg text-center space-y-4">
           <p className="text-amber-700">No products in cache. Cache status: {error ? `Error: ${error.message}` : 'Empty'}</p>
-          <p className="text-sm text-amber-600 mt-2">
+          <p className="text-sm text-amber-600">
             Debug: isLoading={String(isLoading)}, products={allProducts.length}, error={error?.message || 'none'}
           </p>
+          <div className="text-sm text-amber-600">
+            <p>To populate the cache, please navigate to:</p>
+            <a href="/cache-management" className="text-blue-600 underline hover:text-blue-800">
+              Cache Management Page
+            </a>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
@@ -100,7 +115,11 @@ export function Step2ProductionSimple({
                   <strong>Product Count:</strong> {allProducts.length}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  <strong>Funding Range:</strong> ${Math.min(...allProducts.map(p => p.minAmount || 0)).toLocaleString()} - ${Math.max(...allProducts.map(p => p.maxAmount || 0)).toLocaleString()}
+                  <strong>Funding Range:</strong> {
+                    allProducts.length > 0 && allProducts.some(p => p.minAmount && p.maxAmount) 
+                      ? `$${Math.min(...allProducts.filter(p => p.minAmount).map(p => p.minAmount)).toLocaleString()} - $${Math.max(...allProducts.filter(p => p.maxAmount).map(p => p.maxAmount)).toLocaleString()}`
+                      : 'Range not available'
+                  }
                 </div>
                 <div className="text-sm text-muted-foreground">
                   <strong>Available Markets:</strong> {Array.from(new Set(allProducts.map(p => p.country))).join(', ')}
