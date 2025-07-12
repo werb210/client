@@ -25,16 +25,23 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     fundsPurpose,
   } = form;
 
-  // Debug logging disabled for production
-  // console.log('[FILTER] DEBUG - Input parameters:', {
-  //   productCount: products.length,
-  //   headquarters,
-  //   fundingAmount,
-  //   lookingFor,
-  //   accountsReceivableBalance,
-  //   fundsPurpose,
-  //   sampleProduct: products[0]
-  // });
+  // Temporary debug logging to diagnose filtering issue
+  console.log('[DEBUG] filterProducts - Input parameters:', {
+    productCount: products.length,
+    headquarters,
+    fundingAmount,
+    lookingFor,
+    accountsReceivableBalance,
+    fundsPurpose,
+    sampleProducts: products.slice(0, 3).map(p => ({
+      name: p.name,
+      category: p.category,
+      geography: p.geography,
+      country: p.country,
+      minAmount: p.minAmount,
+      maxAmount: p.maxAmount
+    }))
+  });
 
   // Convert amounts to numbers for comparison - handles both string and number types
   const getAmountValue = (amount: string | number): number => {
@@ -96,8 +103,13 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
   
   const finalResults = Array.from(byId.values());
   
-  // Debug logging disabled for production
-  // Final results calculated and returned
+  // Temporary debug logging to show results
+  console.log('[DEBUG] filterProducts - Results:', {
+    coreMatches: matchesCore.length,
+    extras: extras.length,
+    finalResults: finalResults.length,
+    categories: [...new Set(finalResults.map(p => p.category))]
+  });
   
   return finalResults;
 }

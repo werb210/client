@@ -22,23 +22,41 @@ export function useProductCategories(formData: RecommendationFormData) {
   return useQuery({
     queryKey: ['product-categories', formData],
     queryFn: () => {
-      // console.log('[useProductCategories] QueryFn called with products:', products.length);
+      // Temporary debug logging to diagnose filtering issue
+      console.log('[DEBUG] useProductCategories - Input:', {
+        totalProducts: products.length,
+        formData: {
+          headquarters: formData.headquarters,
+          fundingAmount: formData.fundingAmount,
+          lookingFor: formData.lookingFor,
+          accountsReceivableBalance: formData.accountsReceivableBalance,
+          fundsPurpose: formData.fundsPurpose
+        },
+        sampleProduct: products[0] ? {
+          name: products[0].name,
+          category: products[0].category,
+          geography: products[0].geography,
+          country: products[0].country,
+          minAmount: products[0].minAmount,
+          maxAmount: products[0].maxAmount
+        } : null
+      });
       
       if (productsError) {
-        // console.error('[useProductCategories] Propagating products error:', productsError);
         throw productsError;
       }
       
       if (!products || products.length === 0) {
-        // console.warn('[useProductCategories] No products available for filtering');
         throw new Error('No products available from staff API');
       }
-
-      // console.log('[useProductCategories] Sample product:', products[0]);
       
       // Apply filtering logic to get relevant products
       const filteredProducts = filterProducts(products, formData);
-      // console.log('[useProductCategories] Filtered products:', filteredProducts.length);
+      console.log('[DEBUG] Filtering results:', {
+        inputProducts: products.length,
+        filteredProducts: filteredProducts.length,
+        filterCriteria: formData
+      });
       
       // Group products by category
       const categoryGroups: Record<string, StaffLenderProduct[]> = {};
