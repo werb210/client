@@ -32,7 +32,7 @@ export function FieldMappingDebugOverlay({
 
   useEffect(() => {
     if (products && products.length > 0) {
-      console.log('[DEBUG_OVERLAY] Running field mapping diagnostics...');
+      // console.log('[DEBUG_OVERLAY] Running field mapping diagnostics...');
       
       // Run diagnostics on all products
       const productDiagnostics = products.map(product => validateLenderProduct(product));
@@ -55,14 +55,15 @@ export function FieldMappingDebugOverlay({
       const warningCount = productDiagnostics.filter(d => d.status === 'warning').length;
       const healthyCount = productDiagnostics.filter(d => d.status === 'healthy').length;
       
-      console.log(`[DEBUG_OVERLAY] Diagnostics complete:`, {
+      // Debug logging disabled for production
+      const diagnosticsComplete = {
         total: products.length,
         healthy: healthyCount,
         warnings: warningCount,
         errors: errorCount,
         sanitizationFixes: allSanitizationLogs.length,
         documentsValidation: docValidation
-      });
+      };
     }
   }, [products]);
 

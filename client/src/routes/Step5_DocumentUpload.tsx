@@ -123,7 +123,7 @@ export default function Step5DocumentUpload() {
           parsedFundingAmount
         );
 
-        console.debug("✅ Intersection result:", results.requiredDocuments);
+        // console.debug("✅ Intersection result:", results.requiredDocuments);
         setIntersectionResults({
           ...results,
           isLoading: false

@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Target, CheckCircle, ArrowRight, AlertTriangle, Bug } from 'lucide-react';
 import { formatCategoryName } from '../utils/formatters';
-import { FieldMappingDebugOverlay } from './FieldMappingDebugOverlay';
+// import { FieldMappingDebugOverlay } from './FieldMappingDebugOverlay'; // Disabled for production
 
 interface ProductCategory {
   category: string;
@@ -32,7 +32,7 @@ export function Step2RecommendationEngine({
 }: Step2Props) {
   
   // Debug overlay state
-  const [showDebugOverlay, setShowDebugOverlay] = useState(false);
+  // const [showDebugOverlay, setShowDebugOverlay] = useState(false); // Disabled for production
   
   // Use client-side authentic 41-product database for filtering
   // FIX: Map businessLocation to headquarters for backward compatibility
@@ -102,15 +102,18 @@ export function Step2RecommendationEngine({
                 Based on your business profile, here are the best loan products for you
               </CardDescription>
             </div>
-            <Button
-              onClick={() => setShowDebugOverlay(true)}
-              variant="outline"
-              size="sm"
-              className="border-red-300 text-red-600 hover:bg-red-50"
-            >
-              <Bug className="w-4 h-4 mr-1" />
-              Debug
-            </Button>
+            {/* Debug button disabled for production */}
+            {false && (
+              <Button
+                onClick={() => {}}
+                variant="outline"
+                size="sm"
+                className="border-red-300 text-red-600 hover:bg-red-50"
+              >
+                <Bug className="w-4 h-4 mr-1" />
+                Debug
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -366,13 +369,10 @@ export function Step2RecommendationEngine({
         </Button>
       </div>
 
-      {/* Field Mapping Debug Overlay */}
-      <FieldMappingDebugOverlay
-        products={allLenderProducts || []}
-        formData={formData}
-        isVisible={showDebugOverlay}
-        onToggle={() => setShowDebugOverlay(!showDebugOverlay)}
-      />
+      {/* Field Mapping Debug Overlay - Disabled for production */}
+      {false && (
+        <div>Debug overlay disabled for production</div>
+      )}
     </div>
   );
 }

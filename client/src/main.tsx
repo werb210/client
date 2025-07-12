@@ -2,12 +2,16 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { autoConfigureConsole } from "./utils/productionConsole";
 // LEGACY SYNC IMPORT DISABLED - Using new IndexedDB caching system
 // import { scheduledSyncService } from "./lib/scheduledSync";
 import { clearLegacyCache, shouldClearCache } from "./startup/clearLegacyCache";
 import { runStartupVerification } from "./test/staffDatabaseVerification";
 // LEGACY SYNC SYSTEM DISABLED - NOW USING NEW INDEXEDDB CACHING SYSTEM
 // import { syncLenderProducts } from "./lib/finalizedLenderSync";
+
+// Configure production console (disable all debug output)
+autoConfigureConsole();
 
 // Enhanced global error handler for unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
@@ -103,12 +107,14 @@ window.addEventListener('unhandledrejection', (event) => {
     
     // Final catch-all: suppress ALL unhandled rejections in development
     // This ensures a completely clean console for production deployment
-    console.warn('[DEV] Suppressed unhandled rejection:', reason);
+    // console.warn('[DEV] Suppressed unhandled rejection:', reason);
     event.preventDefault();
   }
   
-  // Only log genuine application errors
-  console.error('🚨 Unhandled Promise Rejection:', event.reason?.message || event.reason);
+  // Only log genuine application errors in development
+  if (import.meta.env.DEV) {
+    // console.error('🚨 Unhandled Promise Rejection:', event.reason?.message || event.reason);
+  }
   event.preventDefault();
 });
 

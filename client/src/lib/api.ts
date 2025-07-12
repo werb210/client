@@ -1,11 +1,7 @@
 import { API_BASE_URL, APP_CONFIG } from '@/constants';
 
-// Disable debug logs in production
-if (APP_CONFIG.IS_PRODUCTION) {
-  console.log = () => {};
-  console.warn = () => {};
-  console.info = () => {};
-}
+// Production console management handled by global configuration
+// Console output is controlled in main.tsx through productionConsole.ts
 
 // Test function to verify staff backend connectivity
 export async function testStaffBackendConnection(): Promise<{ connected: boolean; error?: string }> {

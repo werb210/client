@@ -25,16 +25,8 @@ export default function Step2Recommendations() {
     averageMonthlyRevenue: state.averageMonthlyRevenue,
   };
 
-  // Debug logging to identify the filtering issue
-  console.log('[STEP2] DEBUG - Form data being passed to filtering:', {
-    businessLocation: state.businessLocation,
-    headquarters: formData.headquarters,
-    lookingFor: state.lookingFor,
-    fundingAmount: state.fundingAmount,
-    accountsReceivableBalance: state.accountsReceivableBalance,
-    fundsPurpose: state.fundsPurpose,
-    allFormData: formData
-  });
+  // Debug logging disabled for production
+  // All form data passed to filtering algorithm
 
   const handleProductSelect = (product: string) => {
     setSelectedProduct(product);

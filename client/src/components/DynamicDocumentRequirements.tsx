@@ -360,8 +360,8 @@ export function DynamicDocumentRequirements({
     }));
     
     setDocumentRequirements(docRequirements);
-    console.debug("📄 Final visible doc list:", requirements);
-    console.debug("📄 Equipment Quote in list?", requirements.find(doc => doc.includes('Equipment')));
+    // console.debug("📄 Final visible doc list:", requirements);
+    // console.debug("📄 Equipment Quote in list?", requirements.find(doc => doc.includes('Equipment')));
   }, [requirements]);
 
   // Check completion status using unified requirements
