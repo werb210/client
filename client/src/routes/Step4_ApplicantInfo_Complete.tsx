@@ -315,8 +315,7 @@ export default function Step4ApplicantInfoComplete() {
                           value={applicantPhoneDisplay || field.value || ''}
                           onChange={(e) => {
                             const input = e.target.value;
-                            const formatted = formatPhoneDisplay(input, countryCode);
-                            setApplicantPhoneDisplay(formatted);
+                            setApplicantPhoneDisplay(input);
                             field.onChange(input);
                           }}
                           onBlur={(e) => {
@@ -568,8 +567,7 @@ export default function Step4ApplicantInfoComplete() {
                             value={partnerPhoneDisplay || field.value || ''}
                             onChange={(e) => {
                               const input = e.target.value;
-                              const formatted = formatPhoneDisplay(input, countryCode);
-                              setPartnerPhoneDisplay(formatted);
+                              setPartnerPhoneDisplay(input);
                               field.onChange(input);
                             }}
                             onBlur={(e) => {
