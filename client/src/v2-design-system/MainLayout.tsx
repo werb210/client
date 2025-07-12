@@ -82,6 +82,7 @@ import SignNowDebugTest from "@/pages/SignNowDebugTest";
 import SimpleSignNowTest from "@/pages/SimpleSignNowTest";
 import ProdSignNowTest from "@/pages/ProdSignNowTest";
 import ClientVerificationDiagnostic from "@/pages/ClientVerificationDiagnostic";
+import { FetchWindowTest } from "@/pages/FetchWindowTest";
 
 
 /**
@@ -137,6 +138,7 @@ export function MainLayout() {
       <Route path="/backend-request-test" component={BackendRequestTest} />
       <Route path="/cache-management" component={CacheManagement} />
       <Route path="/uuid-test" component={UUIDTestPage} />
+      <Route path="/fetch-window-test" component={FetchWindowTest} />
       <Route path="/signnow-debug-test" component={SignNowDebugTest} />
       <Route path="/simple-signnow-test" component={SimpleSignNowTest} />
       <Route path="/prod-signnow-test" component={ProdSignNowTest} />

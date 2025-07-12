@@ -1,0 +1,90 @@
+Here’s how to instruct the **Client application** (Replit agent) to implement that logic:
+
+---
+
+## ✅ Instruction for Replit Agent – **Client Application**
+
+### 🧠 INTENT:
+
+You are **no longer allowed to fetch live lender product data from the staff backend on every visit to Step 2 and Step 5**.
+Instead, you must:
+
+* Fetch data **only twice per day** (12:00 PM and 12:00 AM MST)
+* **Use locally cached data** the rest of the time
+
+---
+
+### 🔧 IMPLEMENTATION INSTRUCTIONS
+
+#### 1. **Fetch Window Control (client/src/utils/fetchWindow\.ts)**
+
+Create a utility that returns `true` only during the allowed windows:
+
+```ts
+export function isAllowedToFetchNow(): boolean {
+  const now = new Date();
+  const utcHour = now.getUTCHours();
+
+  // MST is UTC-7, so 12PM MST = 19 UTC, 12AM MST = 7 UTC
+  return utcHour === 7 || utcHour === 19;
+}
+```
+
+---
+
+#### 2. **Modify Lender Product Fetch Logic**
+
+**File:** `client/src/api/lenderProducts.ts`
+
+Update the `fetchLenderProducts` function:
+
+```ts
+import { isAllowedToFetchNow } from '../utils/fetchWindow';
+
+let cachedProducts: LenderProduct[] | null = null;
+
+export async function fetchLenderProducts(): Promise<LenderProduct[]> {
+  if (!isAllowedToFetchNow() && cachedProducts) {
+    console.log('[CLIENT] Using cached lender products');
+    return cachedProducts;
+  }
+
+  const { fetchLenderProducts: fetchData } = await import('./lenderDataFetcher');
+  const result = await fetchData();
+  cachedProducts = result.products;
+
+  console.log('[CLIENT] Fetched new lender products from staff API');
+  return cachedProducts;
+}
+```
+
+---
+
+#### 3. **Confirm Usage in Step 2 and Step 5**
+
+Ensure **Step 2** (Recommendation Engine) and **Step 5** (Document Upload) are already using `fetchLenderProducts()` from `lenderProducts.ts` and **not** calling the backend directly.
+
+---
+
+### 🧪 OPTIONAL DEBUG TOOL
+
+Add a button or overlay in dev mode (Step 2/Step 5) to show:
+
+* 📅 Last successful API fetch time
+* 📦 Number of cached products
+* 🕒 Whether API fetch is currently allowed
+
+---
+
+### ✅ Summary
+
+| Rule                                     | Enforced?               |
+| ---------------------------------------- | ----------------------- |
+| Only 2 API fetches per day               | ✅ Yes (via time gate)   |
+| Use cached results the rest of the time  | ✅ Yes                   |
+| Step 2 and 5 both use the shared fetcher | ✅ Should already be set |
+| No unapproved backend hits               | ✅ Controlled            |
+
+---
+
+Let me know if you want this policy enforced via build-time environment variables (e.g., to override in dev), or if you want the staff app to **log/alert** if more than 2 fetches/day are detected.
