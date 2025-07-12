@@ -73,6 +73,7 @@ import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
 import Step4Step6Test from "@/pages/Step4Step6Test";
 import BackendRequestTest from "@/pages/BackendRequestTest";
+import InitialCacheSetup from "@/pages/InitialCacheSetup";
 import CacheManagement from "@/pages/CacheManagement";
 import UUIDTestPage from "@/pages/UUIDTestPage";
 import EnvTest from "@/pages/EnvTest";
@@ -195,6 +196,7 @@ export function MainLayout() {
       {/* Diagnostic Pages */}
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
       <Route path="/api-connectivity-test" component={ApiConnectivityTest} />
+      <Route path="/cache-setup" component={InitialCacheSetup} />
       
       {/* Legal Pages */}
       <Route path="/privacy-policy" component={PrivacyPolicy} />

@@ -13,16 +13,22 @@ export function usePublicLenders() {
     queryFn: async () => {
       console.log('[DEBUG] usePublicLenders - Starting fetch');
       try {
-        const products = await fetchLenderProducts();
-        console.log('[DEBUG] usePublicLenders - Fetched products:', products.length);
-        return products;
+        const response = await fetchLenderProducts();
+        console.log('[DEBUG] usePublicLenders - Fetched response:', response);
+        return response.products || [];
       } catch (error) {
         console.error('[DEBUG] usePublicLenders - Fetch error:', error);
-        throw error;
+        // Return empty array instead of throwing to prevent unhandled rejections
+        return [];
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: 2,
+    refetchOnWindowFocus: false,
+    retry: false, // Disable retries for cache-only operation
+    onError: (error) => {
+      console.warn('[usePublicLenders] Query error (handled):', error);
+      // Silently handle errors to prevent unhandled rejections
+    }
   });
 }
 
@@ -30,19 +36,33 @@ export function usePublicLenderStats() {
   return useQuery({
     queryKey: ["publicLenderStats"],
     queryFn: async () => {
-      const products = await fetchLenderProducts();
-      
-      // Calculate stats from products
-      const stats = {
-        totalProducts: products.length,
-        maxFunding: Math.max(...products.map(p => p.maxAmount || 0)),
-        countries: Array.from(new Set(products.map(p => p.country).filter(Boolean))).length,
-        categories: Array.from(new Set(products.map(p => p.category))).length
-      };
-      
-      return stats;
+      try {
+        const response = await fetchLenderProducts();
+        const products = response.products || [];
+        
+        // Calculate stats from products
+        const stats = {
+          totalProducts: products.length,
+          maxFunding: Math.max(...products.map(p => p.maxAmount || 0)),
+          countries: Array.from(new Set(products.map(p => p.country).filter(Boolean))).length,
+          categories: Array.from(new Set(products.map(p => p.category))).length
+        };
+        
+        return stats;
+      } catch (error) {
+        console.warn('[usePublicLenderStats] Query error (handled):', error);
+        return {
+          totalProducts: 0,
+          maxFunding: 0,
+          countries: 0,
+          categories: 0
+        };
+      }
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
-    retry: 3,
+    retry: false,
+    onError: (error) => {
+      console.warn('[usePublicLenderStats] Query error (handled):', error);
+    }
   });
 }
