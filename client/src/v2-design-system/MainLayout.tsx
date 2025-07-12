@@ -68,6 +68,7 @@ import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
 
 import CanadianWorkingCapitalTest from "@/pages/CanadianWorkingCapitalTest";
 import DebugCanadianEquipmentAPI from "@/pages/DebugCanadianEquipmentAPI";
+import ApiConnectivityTest from "@/pages/ApiConnectivityTest";
 import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
 import Step4Step6Test from "@/pages/Step4Step6Test";
@@ -193,6 +194,7 @@ export function MainLayout() {
       
       {/* Diagnostic Pages */}
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
+      <Route path="/api-connectivity-test" component={ApiConnectivityTest} />
       
       {/* Legal Pages */}
       <Route path="/privacy-policy" component={PrivacyPolicy} />

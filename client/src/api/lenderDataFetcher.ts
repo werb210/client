@@ -76,6 +76,9 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
           'Content-Type': 'application/json'
         }
       });
+      
+      console.log('[DEBUG] Fetch response status:', response.status);
+      console.log('[DEBUG] Fetch response ok:', response.ok);
 
       if (response.ok) {
         const data = await response.json();
@@ -95,6 +98,7 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
         console.warn(`[LENDER_FETCHER] Staff API failed: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
+      console.error('[DEBUG] Fetch error details:', error);
       console.warn('[LENDER_FETCHER] Staff API error:', error);
     }
   }
