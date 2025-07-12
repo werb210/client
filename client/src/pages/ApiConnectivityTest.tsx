@@ -11,6 +11,7 @@ export default function ApiConnectivityTest() {
     // Test 1: Direct fetch to /api/public/lenders
     try {
       console.log('[TEST] Testing direct fetch to /api/public/lenders');
+      console.log('[TEST] About to make direct fetch call...');
       const response = await fetch('/api/public/lenders', {
         method: 'GET',
         headers: {
@@ -38,11 +39,13 @@ export default function ApiConnectivityTest() {
         });
       }
     } catch (error) {
-      console.error('[TEST] ❌ Direct fetch error:', error);
+      console.error('[TEST] ❌ Direct fetch error type:', typeof error);
+      console.error('[TEST] ❌ Direct fetch error message:', error instanceof Error ? error.message : 'Not an Error object');
+      console.error('[TEST] ❌ Direct fetch full error:', error);
       results.push({
         test: 'Direct fetch to /api/public/lenders',
         status: 'ERROR',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : `Unknown error: ${JSON.stringify(error)}`
       });
     }
 

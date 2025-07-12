@@ -69,6 +69,7 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
       console.log(`[LENDER_FETCHER] Attempting staff API: ${staffApiUrl}/public/lenders`);
       console.log('[DEBUG] Environment API URL:', staffApiUrl);
       
+      console.log('[DEBUG] About to make fetch request...');
       const response = await fetch(`${staffApiUrl}/public/lenders`, {
         method: 'GET',
         headers: {
@@ -77,6 +78,7 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
         }
       });
       
+      console.log('[DEBUG] Fetch completed successfully');
       console.log('[DEBUG] Fetch response status:', response.status);
       console.log('[DEBUG] Fetch response ok:', response.ok);
 
@@ -98,7 +100,9 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
         console.warn(`[LENDER_FETCHER] Staff API failed: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
-      console.error('[DEBUG] Fetch error details:', error);
+      console.error('[DEBUG] Fetch failed - error type:', typeof error);
+      console.error('[DEBUG] Fetch failed - error message:', error instanceof Error ? error.message : 'Unknown');
+      console.error('[DEBUG] Fetch failed - full error:', error);
       console.warn('[LENDER_FETCHER] Staff API error:', error);
     }
   }
