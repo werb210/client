@@ -50,4 +50,20 @@ export function restoreOriginalConsole() {
 export function autoConfigureConsole() {
   // Force production console in all environments for clean deployment
   enableProductionConsole();
+  
+  // Additional global error suppression for third-party scripts
+  window.addEventListener('error', (event) => {
+    const source = event.filename || '';
+    const message = event.message || '';
+    
+    // Suppress beacon.js and other third-party tracking errors
+    if (source.includes('beacon') || 
+        source.includes('tracking') || 
+        source.includes('analytics') ||
+        message.includes('beacon') ||
+        message.includes('replit')) {
+      event.preventDefault();
+      return false;
+    }
+  });
 }

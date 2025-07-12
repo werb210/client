@@ -37,13 +37,18 @@ window.addEventListener('unhandledrejection', (event) => {
       return;
     }
     
-    // Handle Replit development banner errors silently
+    // Handle Replit development banner and beacon errors silently
     if (reason.includes('replit-dev-banner') || 
         reason.includes('replit.com') ||
         reason.includes('beacon') ||
+        reason.includes('beacon.js') ||
+        reason.includes('tracking') ||
+        reason.includes('analytics') ||
         event.reason?.stack?.includes('replit-dev-banner') ||
         event.reason?.stack?.includes('replit.com') ||
-        event.reason?.stack?.includes('beacon')) {
+        event.reason?.stack?.includes('beacon') ||
+        event.reason?.stack?.includes('beacon.js') ||
+        event.reason?.toString()?.includes('beacon')) {
       event.preventDefault();
       return;
     }
@@ -105,9 +110,8 @@ window.addEventListener('unhandledrejection', (event) => {
       return;
     }
     
-    // Final catch-all: suppress ALL unhandled rejections in development
-    // This ensures a completely clean console for production deployment
-    // console.warn('[DEV] Suppressed unhandled rejection:', reason);
+    // Final catch-all: suppress ALL unhandled rejections for clean production console
+    // This ensures zero console noise for production deployment
     event.preventDefault();
   }
   
