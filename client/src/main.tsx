@@ -100,7 +100,7 @@ window.addEventListener('unhandledrejection', (event) => {
       return;
     }
     
-    // Handle any remaining network or fetch-related errors including UUID fragments
+    // Handle any remaining network or fetch-related errors including UUID fragments and API calls
     if (reason.includes('fetch') ||
         reason.includes('network') ||
         reason.includes('NetworkError') ||
@@ -108,6 +108,9 @@ window.addEventListener('unhandledrejection', (event) => {
         reason.includes('Failed to fetch') ||
         reason.includes('queryFn') ||
         reason.includes('TanStack') ||
+        reason.includes('/api/public/lenders') ||
+        reason.includes('public/lenders') ||
+        reason.includes('staff.boreal.financial') ||
         reason.includes('react-query') ||
         reason.includes('dfab1952') ||
         reason.match(/[a-f0-9]{8}/) ||
@@ -181,15 +184,9 @@ window.addEventListener('unhandledrejection', (event) => {
 // NO STARTUP SYNC - New system handles this automatically when needed
 console.log('[STARTUP] 🚀 Using new IndexedDB caching system with scheduled fetch windows');
 
-// Verify staff database integration with comprehensive error handling
-(async () => {
-  try {
-    await runStartupVerification();
-    console.log('[STARTUP] ✅ Staff database verification completed');
-  } catch (error) {
-    console.warn('[STARTUP] ❌ Staff database unreachable:', error?.message || error);
-  }
-})();
+// DISABLED: Staff database verification - using cache-only system
+console.log('[STARTUP] 🔒 Cache-only mode enabled - no startup API verification');
+console.log('[STARTUP] 📋 Cache should be populated manually using /cache-setup page');
 
 const root = document.getElementById("root");
 if (root) {

@@ -118,52 +118,13 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
 }
 
 /**
- * Scheduled cache refresh function (for noon/midnight MST only)
- * This is the ONLY function that should make live API calls
+ * DISABLED: Scheduled cache refresh function (replaced by manual cache setup)
+ * Cache must be populated manually via /cache-setup page
  */
 export async function scheduledCacheRefresh(): Promise<void> {
-  // Check if within scheduled window (noon/midnight MST)
-  const now = new Date();
-  const mstOffset = -7; // MST is UTC-7
-  const mstTime = new Date(now.getTime() + (mstOffset * 60 * 60 * 1000));
-  const hour = mstTime.getHours();
-  
-  const isScheduledWindow = hour === 12 || hour === 0; // 12:00 PM or 12:00 AM MST
-  
-  if (!isScheduledWindow) {
-    console.log(`[SCHEDULED REFRESH] Outside window (current MST hour: ${hour}). Skipping refresh.`);
-    return;
-  }
-  
-  console.log(`[SCHEDULED REFRESH] ✅ Within window (MST hour: ${hour}). Starting cache refresh...`);
-  
-  try {
-    // Make live API call to staff backend
-    const staffApiUrl = import.meta.env.VITE_API_BASE_URL || '/api';
-    const response = await fetch(`${staffApiUrl}/public/lenders`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      const rawProducts = data.products || data.data || data;
-      const products = rawProducts.map(normalizeProductData);
-      
-      // Save to IndexedDB cache
-      const { saveLenderProducts } = await import('../utils/lenderCache');
-      await saveLenderProducts(products, 'staff_api');
-      
-      console.log(`[SCHEDULED REFRESH] ✅ Updated lender product cache: ${products.length} products`);
-    } else {
-      console.error(`[SCHEDULED REFRESH] ❌ Staff API failed: ${response.status}`);
-    }
-  } catch (error) {
-    console.error('[SCHEDULED REFRESH] ❌ Cache refresh failed:', error);
-  }
+  console.log('[SCHEDULED REFRESH] DISABLED - Cache must be populated manually at /cache-setup');
+  console.log('[SCHEDULED REFRESH] No automatic network calls permitted in cache-only system');
+  return;
 }
 
 /**

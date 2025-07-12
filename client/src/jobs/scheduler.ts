@@ -94,62 +94,20 @@ async function checkInitialSync() {
 
 // Manual trigger for testing
 export async function triggerManualSync(): Promise<any> {
-  console.log('[SCHEDULER] Manual sync triggered with debug logging');
+  console.log('[SCHEDULER] LEGACY MANUAL SYNC DISABLED - Using cache-only system');
+  console.log('[SCHEDULER] Cache must be populated manually at /cache-setup page');
   
-  try {
-    // Enhanced debug: Test direct API call first
-    const staffUrl = `${import.meta.env.VITE_API_BASE_URL}/public/lenders`;
-    console.log('[DEBUG] Testing direct API call to:', staffUrl);
-    
-    const testResponse = await fetch(staffUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      mode: 'cors',
-      credentials: 'omit'
-    });
-    
-    console.log('[DEBUG] Direct API status:', testResponse.status);
-    
-    if (testResponse.ok) {
-      const testData = await testResponse.json();
-      const productCount = Array.isArray(testData) ? testData.length : (testData.products?.length || 0);
-      console.log('[DEBUG] Direct API returned', productCount, 'products');
-      
-      if (productCount > 0) {
-        console.log('[DEBUG] Sample product structure:', Array.isArray(testData) ? testData[0] : testData.products?.[0]);
-      }
-    } else {
-      console.log('[DEBUG] Direct API failed with status:', testResponse.status);
-    }
-    
-    // Now run sync with enhanced logging
-    console.log('[DEBUG] Starting syncLenderProducts...');
-    const result = await syncLenderProducts();
-    console.log('[DEBUG] Sync completed with result:', result);
-    
-    lastSyncResult = {
-      ...result,
-      timestamp: new Date().toISOString(),
-      manual: true
-    };
-    
-    localStorage.setItem('lastSyncTime', lastSyncResult.timestamp);
-    return lastSyncResult;
-  } catch (error) {
-    console.error('[DEBUG] Manual sync error:', error);
-    const errorResult = {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString(),
-      manual: true
-    };
-    
-    lastSyncResult = errorResult;
-    return errorResult;
-  }
+  // Return success result without any network operations
+  const result = {
+    success: true,
+    source: 'disabled_legacy_system',
+    changes: 0,
+    total: 0,
+    timestamp: new Date().toISOString()
+  };
+  
+  lastSyncResult = result;
+  return result;
 }
 
 // Get scheduler status

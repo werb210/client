@@ -34,41 +34,20 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
     }
   }
   
-  // If within fetch window OR no cache exists, fetch from API
-  console.log('[CLIENT] 🔄 Fetching fresh lender products from staff API...');
-  if (windowInfo.isAllowed) {
-    console.log(`[CLIENT] ✅ ${windowInfo.reason}`);
-  } else {
-    console.log(`[CLIENT] ⚠️ No persistent cache available, forcing API fetch despite being outside window`);
+  // CACHE-ONLY SYSTEM: No live API calls allowed during Steps 2 and 5
+  console.log('[CLIENT] ❌ No persistent cache available - cache must be populated manually at /cache-setup');
+  console.log('[CLIENT] ⚠️ CACHE-ONLY MODE: No live API calls permitted');
+  
+  // Always use fallback cache if available, even if empty
+  const fallbackCache = await loadLenderProducts();
+  if (fallbackCache && fallbackCache.length > 0) {
+    console.log(`[CLIENT] 📦 Using fallback cache (${fallbackCache.length} products)`);
+    return fallbackCache;
   }
   
-  try {
-    // Use the comprehensive fetcher
-    console.log('[DEBUG] lenderProducts - Importing lenderDataFetcher');
-    const { fetchLenderProducts: fetchData } = await import('./lenderDataFetcher');
-    console.log('[DEBUG] lenderProducts - Calling fetchData()');
-    const result = await fetchData();
-    console.log('[DEBUG] lenderProducts - fetchData() completed:', result);
-    
-    // Save to persistent cache
-    await saveLenderProducts(result.products, result.source);
-    
-    console.log(`✅ [CLIENT] Successfully fetched ${result.count} products from ${result.source}`);
-    console.log(`[CLIENT] 💾 Saved to persistent IndexedDB cache`);
-    return result.products;
-    
-  } catch (error) {
-    console.error('❌ [CLIENT] All data sources failed:', error);
-    
-    // If fetch fails but we have persistent cache, use it as fallback
-    const fallbackCache = await loadLenderProducts();
-    if (fallbackCache && fallbackCache.length > 0) {
-      console.log(`[CLIENT] 🔄 API fetch failed, falling back to persistent cache (${fallbackCache.length} products)`);
-      return fallbackCache;
-    }
-    
-    throw error;
-  }
+  // Return empty array to prevent API calls - no exceptions
+  console.warn('[CLIENT] ❌ No cache available - returning empty array to prevent live API calls');
+  return [];
 }
 
 /**
