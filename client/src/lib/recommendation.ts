@@ -50,7 +50,7 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     console.log('[DEBUG] Sample product:', products[0]);
   }
 
-  // Check for Accord products specifically
+  // Check for specific missing products (Accord and Small Business Revolver)
   const accordProducts = products.filter(p => 
     p.name?.toLowerCase().includes('accord') ||
     p.lender_name?.toLowerCase().includes('accord') ||
@@ -59,6 +59,15 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
   console.log(`[DEBUG] Accord products found: ${accordProducts.length}`);
   accordProducts.forEach(p => {
     console.log(`[DEBUG] Accord product: ${p.name} - Category: ${p.category}, Country: ${p.country}, Min: ${p.min_amount}, Max: ${p.max_amount}`);
+  });
+
+  const revolverProducts = products.filter(p => 
+    p.name?.toLowerCase().includes('revolver') ||
+    p.name?.toLowerCase().includes('small business')
+  );
+  console.log(`[DEBUG] Small Business Revolver products found: ${revolverProducts.length}`);
+  revolverProducts.forEach(p => {
+    console.log(`[DEBUG] Revolver product: ${p.name} - Category: ${p.category}, Country: ${p.country}, Min: ${p.min_amount}, Max: ${p.max_amount}`);
   });
 
   // Helper function to get amount value with multiple field name support
@@ -133,7 +142,24 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     
     const passes = geographyMatch && amountMatch && typeMatch && !factorExclusion;
     
-    // Log first few products for debugging
+    // Log specific products for debugging
+    if (product.name?.includes('Small Business Revolver') || product.name?.includes('Accord')) {
+      console.log(`[DEBUG] Product ${product.name}:`, {
+        originalGeography: geography,
+        normalizedGeography: geography,
+        requestedHQ: normalizedHQ,
+        geographyMatch,
+        amountRange: `${minAmount}-${maxAmount}`,
+        requestedAmount: fundingAmount,
+        amountMatch,
+        category: product.category,
+        lookingFor,
+        typeMatch,
+        accountsReceivableBalance,
+        factorExclusion,
+        passes
+      });
+    }
     if (products.indexOf(product) < 3) {
       const categoryLower = product.category?.toLowerCase() || '';
       const factorExclusion = accountsReceivableBalance === 0 && 
