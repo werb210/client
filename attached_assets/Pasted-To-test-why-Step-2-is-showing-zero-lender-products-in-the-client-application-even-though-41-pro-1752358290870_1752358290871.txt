@@ -1,0 +1,145 @@
+To **test why Step 2 is showing zero lender products** in the client application (even though 41 products are cached), here is a **targeted QA and debug checklist** you (or Replit) can follow immediately. This is designed specifically for the cache-only production mode you've enabled.
+
+---
+
+## ✅ STEP-BY-STEP TEST PLAN – Step 2 Lender Product Debug
+
+---
+
+### 🔍 1. **Confirm IndexedDB Cache Has 41 Products**
+
+**Instruction to Replit Agent (Client App):**
+
+* Open browser console
+* Run:
+
+```ts
+indexedDB.open('LenderProductCache').onsuccess = function(event) {
+  const db = event.target.result;
+  const tx = db.transaction('products', 'readonly');
+  const store = tx.objectStore('products');
+  const request = store.getAll();
+  request.onsuccess = () => console.log('[IndexedDB] Products cached:', request.result.length);
+};
+```
+
+✅ You should see:
+`[IndexedDB] Products cached: 41`
+
+❌ If `0`, then Step 2 will fail — stop and re-run the "Populate Cache" flow.
+
+---
+
+### 🔍 2. **Check `fetchLenderProducts()` Fallback Behavior**
+
+**Check file:** `client/src/api/lenderProducts.ts`
+
+Confirm this logic order:
+
+```ts
+// Should only try IndexedDB by default
+export async function fetchLenderProducts(): Promise<LenderProduct[]> {
+  try {
+    const { fetchLenderProducts } = await import('./lenderDataFetcher');
+    const result = await fetchLenderProducts({ cacheOnly: true });
+    return result.products;
+  } catch (error) {
+    console.error('[CLIENT] Lender fetch failed:', error);
+    return []; // Safe fallback
+  }
+}
+```
+
+✅ Expected: `cacheOnly: true` passed and live API NOT hit.
+
+---
+
+### 🔍 3. **Verify Step 2 Calls Are Using the Cached Data**
+
+**Check file:** `client/src/hooks/useRecommendations.ts`
+
+Ensure it uses `usePublicLenders()` which must now return the 41 cached products.
+
+Test by adding a log in `usePublicLenders` like:
+
+```ts
+console.log('[RECOMMENDATIONS] Lenders from cache:', lenders.length);
+```
+
+Then load Step 2.
+
+✅ Expect to see:
+`[RECOMMENDATIONS] Lenders from cache: 41`
+
+❌ If 0: IndexedDB read failed or hook returned empty array.
+
+---
+
+### 🔍 4. **Check for Product Filtering Side Effects**
+
+Even if 41 products are loaded, **Step 2 might filter them all out.** This can happen if:
+
+* `fundingAmount` is below all product `minAmount`
+* `geography` doesn't match
+* `industry` is unmatched
+* user selected "no accounts receivable", excluding factoring
+
+✅ To confirm this, log each score:
+
+In `useRecommendations.ts`, inside your `calculateScore` function:
+
+```ts
+console.log(`[Scoring] ${product.name} → score: ${score}`);
+```
+
+If all products show `score: 0`, you’ll end up with zero displayed results.
+
+---
+
+### 🔍 5. **Bypass Form Filtering Temporarily**
+
+To test if **Step 2 UI is broken vs filtered**, bypass all filtering with this quick override:
+
+In `useRecommendations.ts` (temp change):
+
+```ts
+return {
+  recommendations: lenders, // Show all instead of filtered
+  bestCategory: 'Testing',
+};
+```
+
+✅ Step 2 should now show 41 products.
+
+---
+
+### ✅ FINAL TEST — Manual Force Load Button
+
+Add this temp test button in Step 2 (for dev only):
+
+```tsx
+<button onClick={async () => {
+  const { fetchLenderProducts } = await import('@/api/lenderProducts');
+  const result = await fetchLenderProducts();
+  console.log('[MANUAL TEST] Products fetched:', result.length);
+}}>Manual Load Test</button>
+```
+
+Use this to trigger and inspect the raw return data.
+
+---
+
+## ✅ Summary of What to Report
+
+| Check                           | Result | Action                             |
+| ------------------------------- | ------ | ---------------------------------- |
+| IndexedDB has 41 products       | ✅ / ❌  | Re-run Populate Cache              |
+| `cacheOnly: true` being passed  | ✅ / ❌  | Fix fallback config                |
+| Hook returns lenders to Step 2  | ✅ / ❌  | Fix `usePublicLenders` logic       |
+| Filtered to 0 due to form logic | ✅ / ❌  | Tweak user input or add debug logs |
+| Temp override shows data        | ✅      | UI rendering is fine               |
+| Manual button works             | ✅      | Confirms API vs cache source       |
+
+---
+
+Would you like me to instruct Replit to **temporarily disable all filters in Step 2** so you can visually confirm the data is flowing correctly from the cache?
