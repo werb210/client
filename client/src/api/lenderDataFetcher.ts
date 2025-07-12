@@ -59,6 +59,7 @@ function getDocRequirementsForCategory(category: string): string[] {
  * Fetch lender products from staff API with fallback
  */
 export async function fetchLenderProducts(): Promise<LenderDataResponse> {
+  console.log('[DEBUG] lenderDataFetcher - Starting fetch process');
   console.log('[LENDER_FETCHER] Starting lender product fetch...');
   
   // Try staff API first
@@ -66,6 +67,7 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
   if (staffApiUrl) {
     try {
       console.log(`[LENDER_FETCHER] Attempting staff API: ${staffApiUrl}/public/lenders`);
+      console.log('[DEBUG] Environment API URL:', staffApiUrl);
       
       const response = await fetch(`${staffApiUrl}/public/lenders`, {
         method: 'GET',

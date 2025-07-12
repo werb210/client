@@ -7,8 +7,18 @@ import { fetchLenderProducts } from "@/api/lenderProducts";
  * Uses idb-keyval for persistent caching and graceful degradation
  */
 export function usePublicLenders() {
-  // Use the new IndexedDB caching system
-  return useLenderProducts();
+  // Use TanStack Query with the IndexedDB caching system
+  return useQuery({
+    queryKey: ['/api/public/lenders'],
+    queryFn: async () => {
+      console.log('[DEBUG] usePublicLenders - Starting fetch');
+      const products = await fetchLenderProducts();
+      console.log('[DEBUG] usePublicLenders - Fetched products:', products.length);
+      return products;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
+  });
 }
 
 export function usePublicLenderStats() {

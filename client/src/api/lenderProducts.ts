@@ -17,6 +17,7 @@ import {
  * Fails fast on invalid data to surface staff API issues immediately
  */
 export async function fetchLenderProducts(): Promise<LenderProduct[]> {
+  console.log('[DEBUG] fetchLenderProducts - Starting API call');
   const windowInfo = getFetchWindowInfo();
   const lastFetched = await loadLastFetchTime();
   
