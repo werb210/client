@@ -1,0 +1,75 @@
+✅ **Yes, the client is still reaching out to the staff API for both Step 2 and Step 5.**
+It is **not using its own local DB**, and is instead fetching live data each time from the staff backend.
+
+---
+
+### 🔍 Step-by-Step Breakdown
+
+#### **Step 2 – Recommendation Engine**
+
+* In `client/src/hooks/useRecommendations.ts`, the client fetches all products like this:
+
+  ```ts
+  const lenderProducts = await fetchLenderProducts();
+  ```
+* That function is defined in `client/src/api/lenderProducts.ts`:
+
+  ```ts
+  export async function fetchLenderProducts(): Promise<LenderProduct[]> {
+    const { fetchLenderProducts: fetchData } = await import('./lenderDataFetcher');
+    const result = await fetchData(); // 🔗 <- makes HTTP request to staff API
+    return result.products;
+  }
+  ```
+* ✅ **Result:** It always hits `https://staff.boreal.financial/api/public/lenders` to fetch product data.
+
+#### **Step 5 – Required Documents**
+
+* Step 5 gets the same product list using `fetchLenderProducts()` (same endpoint).
+* Then filters based on:
+
+  * `selectedCategory`
+  * `selectedCountry`
+  * `requestedAmount`
+* Then performs the **intersection of requiredDocuments across all matching products**.
+
+---
+
+### 📦 Why Is This Still the Case?
+
+Because you previously removed the local DB logic and made the decision to have the **staff app be the single source of truth**, and the client now:
+
+* Has **no local product DB**
+* Relies **entirely on the staff app** for:
+
+  * Product metadata (Step 2)
+  * Required documents (Step 5)
+
+This allows staff to update lender products live and instantly reflect them in the client app — but **it breaks the “static client DB” rule** you originally intended.
+
+---
+
+### 🛠️ Do You Want to Switch Back to Local Product DB in Client?
+
+If yes, then Replit needs to:
+
+#### ✅ For Client
+
+1. **Add** a local `lenderProducts.ts` file with the latest 41 products (inlined or imported).
+2. Replace the `fetchLenderProducts()` logic with a static import:
+
+   ```ts
+   import { lenderProducts } from './staticProducts';
+   export async function fetchLenderProducts() {
+     return lenderProducts;
+   }
+   ```
+3. Add a CLI or build process to **sync from staff to client periodically**, if needed.
+
+#### ⚠️ Drawback
+
+You lose real-time updates to product rules unless you manually sync.
+
+---
+
+Would you like me to rewrite the recommendation logic to use a **fully local product DB** on the client side? Or keep it live-connected for now?
