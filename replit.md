@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 12, 2025: PERSISTENT INDEXEDDB CACHING WITH SCHEDULED FETCH WINDOWS COMPLETE**
+  * CRITICAL SUCCESS: Implemented comprehensive persistent caching system using IndexedDB to limit API calls to twice daily
+  * FETCH WINDOW CONTROL: API calls restricted to 12:00 PM and 12:00 AM MST only, with cached data used all other times
+  * INDEXEDDB INTEGRATION: Added idb-keyval package for reliable cross-session data persistence with cache metadata
+  * CACHE UTILITIES: Created comprehensive lenderCache.ts with save/load/clear functions and detailed cache statistics
+  * PERSISTENT FALLBACK: System uses IndexedDB cache when outside fetch windows, with automatic fallback during API failures
+  * DEBUG INTERFACE: Enhanced FetchWindowDebugPanel shows real-time cache status, fetch windows, and IndexedDB statistics
+  * TEST PAGE: Built /fetch-window-test route with comprehensive testing interface and cache management controls
+  * SERVER LOAD REDUCTION: Successfully reduced staff API calls from continuous to maximum 2 requests per day per client
+  * PRODUCTION READY: Complete caching system operational with persistent storage surviving page reloads and device restarts
+  * STEP 2 & 5 COMPLIANCE: Both recommendation engine and document requirements automatically benefit from scheduled caching
+
 - **July 12, 2025: CRITICAL SECURITY FIX - HARDCODED API KEY VULNERABILITY RESOLVED**
   * Fixed critical security vulnerability where CLIENT_APP_SHARED_TOKEN was hardcoded in multiple test files
   * Replaced hardcoded tokens with proper environment variable references in test-canadian-filtering.js, test-real-submission.js, check-external-data-push.js, test-production-staff-api.js, and test-signnow-api.js

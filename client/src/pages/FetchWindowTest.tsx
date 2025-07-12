@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FetchWindowDebugPanel } from '../components/FetchWindowDebugPanel';
-import { fetchLenderProducts } from '../api/lenderProducts';
+import { fetchLenderProducts, getCacheInfo } from '../api/lenderProducts';
 import { getFetchWindowInfo } from '../utils/fetchWindow';
+import { clearLenderCache, getCacheStats } from '../utils/lenderCache';
 
 /**
  * Test page for fetch window control functionality
@@ -14,6 +15,7 @@ export function FetchWindowTest() {
   const [lastFetchTime, setLastFetchTime] = useState<Date | null>(null);
   const [fetchCount, setFetchCount] = useState(0);
   const [windowInfo, setWindowInfo] = useState(getFetchWindowInfo());
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Update window info every second
   useEffect(() => {
@@ -33,8 +35,23 @@ export function FetchWindowTest() {
       setProducts(result);
       setLastFetchTime(new Date());
       setFetchCount(prev => prev + 1);
+      setRefreshTrigger(prev => prev + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch products');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleClearCache = async () => {
+    setLoading(true);
+    try {
+      await clearLenderCache();
+      setProducts([]);
+      setRefreshTrigger(prev => prev + 1);
+      console.log('[TEST] Cache cleared successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to clear cache');
     } finally {
       setLoading(false);
     }
@@ -53,11 +70,7 @@ export function FetchWindowTest() {
           </p>
           
           {/* Debug Panel */}
-          <FetchWindowDebugPanel 
-            lastFetchTime={lastFetchTime}
-            cachedProductCount={products.length}
-            cacheSource="staff API"
-          />
+          <FetchWindowDebugPanel refreshTrigger={refreshTrigger} />
           
           {/* Manual Test Controls */}
           <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
@@ -65,17 +78,25 @@ export function FetchWindowTest() {
               Manual Testing
             </h3>
             
-            <div className="flex gap-4 items-center mb-4">
+            <div className="flex gap-4 items-center mb-4 flex-wrap">
               <button
                 onClick={handleFetchProducts}
                 disabled={loading}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Fetching...' : 'Fetch Products'}
+                {loading ? 'Working...' : 'Fetch Products'}
+              </button>
+              
+              <button
+                onClick={handleClearCache}
+                disabled={loading}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Clear IndexedDB Cache
               </button>
               
               <span className="text-slate-600 dark:text-slate-400">
-                Total fetches this session: {fetchCount}
+                Session fetches: {fetchCount}
               </span>
             </div>
             

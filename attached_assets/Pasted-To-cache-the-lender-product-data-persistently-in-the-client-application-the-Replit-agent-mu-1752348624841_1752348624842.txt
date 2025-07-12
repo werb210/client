@@ -1,0 +1,117 @@
+To cache the **lender product data persistently** in the **client application**, the Replit agent must store the fetched data in **IndexedDB** or **localStorage** — so it survives page reloads and device restarts. Below are precise instructions for the **Replit agent in the client app**.
+
+---
+
+## ✅ INSTRUCTION FOR REPLIT AGENT – **CLIENT APP**
+
+### 🎯 INTENT:
+
+You are to **persist lender product data locally** on the client side and only refresh it **twice per day** (12PM and 12AM MST).
+Use **IndexedDB** (preferred) or `localStorage` as a fallback.
+
+---
+
+## 🔧 IMPLEMENTATION
+
+### 1. **Install `idb-keyval` for IndexedDB Access**
+
+Use this lightweight wrapper for IndexedDB:
+
+```bash
+npm install idb-keyval
+```
+
+---
+
+### 2. **Create Client Cache Layer**
+
+**File:** `client/src/utils/lenderCache.ts`
+
+```ts
+import { get, set } from 'idb-keyval';
+
+const CACHE_KEY = 'lenderProducts';
+const TIMESTAMP_KEY = 'lenderProductsLastFetched';
+
+export async function saveLenderProducts(products: any[]) {
+  await set(CACHE_KEY, products);
+  await set(TIMESTAMP_KEY, Date.now());
+}
+
+export async function loadLenderProducts(): Promise<any[] | null> {
+  return await get(CACHE_KEY);
+}
+
+export async function loadLastFetchTime(): Promise<number | null> {
+  return await get(TIMESTAMP_KEY);
+}
+```
+
+---
+
+### 3. **Update Lender Product Fetcher**
+
+**File:** `client/src/api/lenderProducts.ts`
+
+```ts
+import { isAllowedToFetchNow } from '../utils/fetchWindow';
+import {
+  saveLenderProducts,
+  loadLenderProducts,
+  loadLastFetchTime,
+} from '../utils/lenderCache';
+
+export async function fetchLenderProducts(): Promise<LenderProduct[]> {
+  const now = new Date();
+  const lastFetched = await loadLastFetchTime();
+
+  // If we are NOT allowed to fetch OR already fetched recently
+  if (!isAllowedToFetchNow() && lastFetched) {
+    const cached = await loadLenderProducts();
+    if (cached && cached.length) {
+      console.log('[CLIENT] ✅ Using persisted lender product cache');
+      return cached;
+    }
+  }
+
+  // Otherwise, fetch fresh data from staff API
+  console.log('[CLIENT] 🌐 Fetching lender products from staff backend...');
+  const { fetchLenderProducts: fetchData } = await import('./lenderDataFetcher');
+  const result = await fetchData();
+
+  await saveLenderProducts(result.products);
+  return result.products;
+}
+```
+
+---
+
+### 4. **Confirm Data Flow**
+
+Ensure:
+
+* **Step 2** → Uses `fetchLenderProducts()`
+* **Step 5** → Uses `fetchLenderProducts()` to build document list
+
+They will now receive **persisted lender product data**, only refreshed at allowed times.
+
+---
+
+## ✅ Summary
+
+| Feature                          | Status                 |
+| -------------------------------- | ---------------------- |
+| Persistent client cache          | ✅ IndexedDB            |
+| Time-restricted fetching         | ✅ MST 12PM & 12AM only |
+| Cached fallback if fetch blocked | ✅ Yes                  |
+| Step 2 & Step 5 use shared logic | ✅ Confirmed            |
+
+---
+
+Would you like to also add a **debug overlay in dev mode** to display:
+
+* Last fetch time
+* Whether a new fetch is currently allowed
+* Number of cached products
+
+Let me know and I’ll instruct the Replit agent to add it.

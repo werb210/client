@@ -1,22 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { getFetchWindowInfo, formatMSTTime } from '../utils/fetchWindow';
+import { getCacheStats } from '../utils/lenderCache';
 
 interface FetchWindowDebugPanelProps {
-  lastFetchTime?: Date | null;
-  cachedProductCount?: number;
-  cacheSource?: string;
+  refreshTrigger?: number;
 }
 
 /**
- * Debug panel showing fetch window status and cache information
+ * Debug panel showing fetch window status and persistent cache information
  * Useful for development and testing the scheduled fetch logic
  */
-export function FetchWindowDebugPanel({ 
-  lastFetchTime, 
-  cachedProductCount = 0, 
-  cacheSource = 'unknown' 
-}: FetchWindowDebugPanelProps) {
+export function FetchWindowDebugPanel({ refreshTrigger }: FetchWindowDebugPanelProps) {
   const windowInfo = getFetchWindowInfo();
+  const [cacheStats, setCacheStats] = useState<any>(null);
+  
+  useEffect(() => {
+    const loadCacheStats = async () => {
+      const stats = await getCacheStats();
+      setCacheStats(stats);
+    };
+    
+    loadCacheStats();
+  }, [refreshTrigger]);
   
   return (
     <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 text-sm">
@@ -45,19 +50,38 @@ export function FetchWindowDebugPanel({
           ⏰ Next window: {formatMSTTime(windowInfo.nextWindow)}
         </div>
         
-        {/* Cache Info */}
+        {/* Persistent Cache Info */}
         <div className="border-t border-slate-300 dark:border-slate-600 pt-2 mt-2">
-          <div className="text-slate-600 dark:text-slate-400">
-            📦 Cached products: {cachedProductCount}
+          <div className="text-slate-600 dark:text-slate-400 font-medium mb-1">
+            💾 IndexedDB Cache Status:
           </div>
-          {lastFetchTime && (
-            <div className="text-slate-600 dark:text-slate-400">
-              💾 Last fetch: {formatMSTTime(lastFetchTime)}
+          {cacheStats ? (
+            <>
+              <div className="text-slate-600 dark:text-slate-400 ml-4">
+                📦 Products: {cacheStats.productCount}
+              </div>
+              {cacheStats.lastFetchTime && (
+                <div className="text-slate-600 dark:text-slate-400 ml-4">
+                  🕒 Last fetch: {formatMSTTime(cacheStats.lastFetchTime)}
+                </div>
+              )}
+              <div className="text-slate-600 dark:text-slate-400 ml-4">
+                🔗 Source: {cacheStats.source}
+              </div>
+              {cacheStats.cacheAge && (
+                <div className="text-slate-600 dark:text-slate-400 ml-4">
+                  ⏱️ Age: {Math.round(cacheStats.cacheAge / (1000 * 60))} minutes
+                </div>
+              )}
+              <div className="text-slate-600 dark:text-slate-400 ml-4">
+                ✅ Cache Status: {cacheStats.hasCache ? 'Available' : 'Empty'}
+              </div>
+            </>
+          ) : (
+            <div className="text-slate-500 dark:text-slate-500 ml-4">
+              Loading cache info...
             </div>
           )}
-          <div className="text-slate-600 dark:text-slate-400">
-            🔗 Cache source: {cacheSource}
-          </div>
         </div>
         
         {/* Schedule Info */}

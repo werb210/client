@@ -2,27 +2,35 @@ import { API_BASE_URL } from '../constants';
 import { LenderProduct } from '../../../shared/lenderProductSchema';
 import { normalizeProducts } from '../lib/lenderProductNormalizer';
 import { isAllowedToFetchNow, getFetchWindowInfo, formatMSTTime } from '../utils/fetchWindow';
-
-// Cache for lender products with metadata
-let cachedProducts: LenderProduct[] | null = null;
-let lastFetchTime: Date | null = null;
-let cacheSource: string = 'none';
+import {
+  saveLenderProducts,
+  loadLenderProducts,
+  loadLastFetchTime,
+  loadCacheSource,
+  hasCachedData,
+  getCacheStats
+} from '../utils/lenderCache';
 
 /**
  * Fetch lender products with scheduled window control (12:00 PM and 12:00 AM MST only)
- * Uses cached data outside of allowed fetch windows
+ * Uses persistent IndexedDB cache outside of allowed fetch windows
  * Fails fast on invalid data to surface staff API issues immediately
  */
 export async function fetchLenderProducts(): Promise<LenderProduct[]> {
   const windowInfo = getFetchWindowInfo();
+  const lastFetched = await loadLastFetchTime();
   
-  // Use cached data if outside fetch window and cache exists
-  if (!windowInfo.isAllowed && cachedProducts) {
-    console.log(`[CLIENT] 📦 Using cached lender products (${cachedProducts.length} products)`);
-    console.log(`[CLIENT] 🕒 ${windowInfo.reason}`);
-    console.log(`[CLIENT] ⏰ Next fetch window: ${formatMSTTime(windowInfo.nextWindow)}`);
-    console.log(`[CLIENT] 💾 Cache source: ${cacheSource} at ${lastFetchTime ? formatMSTTime(lastFetchTime) : 'unknown'}`);
-    return cachedProducts;
+  // Use persistent cache if outside fetch window and cache exists
+  if (!windowInfo.isAllowed && lastFetched) {
+    const cached = await loadLenderProducts();
+    if (cached && cached.length > 0) {
+      const source = await loadCacheSource();
+      console.log(`[CLIENT] 📦 Using persistent cache (${cached.length} products)`);
+      console.log(`[CLIENT] 🕒 ${windowInfo.reason}`);
+      console.log(`[CLIENT] ⏰ Next fetch window: ${formatMSTTime(windowInfo.nextWindow)}`);
+      console.log(`[CLIENT] 💾 Cache from: ${source} at ${formatMSTTime(new Date(lastFetched))}`);
+      return cached;
+    }
   }
   
   // If within fetch window OR no cache exists, fetch from API
@@ -30,7 +38,7 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
   if (windowInfo.isAllowed) {
     console.log(`[CLIENT] ✅ ${windowInfo.reason}`);
   } else {
-    console.log(`[CLIENT] ⚠️ No cache available, forcing API fetch despite being outside window`);
+    console.log(`[CLIENT] ⚠️ No persistent cache available, forcing API fetch despite being outside window`);
   }
   
   try {
@@ -38,22 +46,21 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
     const { fetchLenderProducts: fetchData } = await import('./lenderDataFetcher');
     const result = await fetchData();
     
-    // Update cache
-    cachedProducts = result.products;
-    lastFetchTime = new Date();
-    cacheSource = result.source;
+    // Save to persistent cache
+    await saveLenderProducts(result.products, result.source);
     
     console.log(`✅ [CLIENT] Successfully fetched ${result.count} products from ${result.source}`);
-    console.log(`[CLIENT] 💾 Updated cache at ${formatMSTTime(lastFetchTime)}`);
-    return cachedProducts;
+    console.log(`[CLIENT] 💾 Saved to persistent IndexedDB cache`);
+    return result.products;
     
   } catch (error) {
     console.error('❌ [CLIENT] All data sources failed:', error);
     
-    // If fetch fails but we have cached data, use it as fallback
-    if (cachedProducts) {
-      console.log(`[CLIENT] 🔄 API fetch failed, falling back to cached data (${cachedProducts.length} products)`);
-      return cachedProducts;
+    // If fetch fails but we have persistent cache, use it as fallback
+    const fallbackCache = await loadLenderProducts();
+    if (fallbackCache && fallbackCache.length > 0) {
+      console.log(`[CLIENT] 🔄 API fetch failed, falling back to persistent cache (${fallbackCache.length} products)`);
+      return fallbackCache;
     }
     
     throw error;
@@ -61,15 +68,10 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
 }
 
 /**
- * Get cache information for debugging
+ * Get cache information for debugging (uses persistent cache)
  */
-export function getCacheInfo() {
-  return {
-    hasCache: cachedProducts !== null,
-    productCount: cachedProducts?.length || 0,
-    lastFetchTime,
-    cacheSource
-  };
+export async function getCacheInfo() {
+  return await getCacheStats();
 }
 
 /**
