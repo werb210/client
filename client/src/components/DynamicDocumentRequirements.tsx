@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { type RequiredDoc } from '@/lib/documentRequirements';
+import { normalizeDocumentName } from '@/utils/documentNormalization';
 
 // TypeScript Interfaces - Export for use in other components
 export interface UploadedFile {
@@ -107,8 +108,9 @@ function UnifiedDocumentUploadCard({
              fileNameLower.includes('bank');
     }
     
-    // Match financial statements 
-    if (docLabelLower.includes('financial') && docLabelLower.includes('statement')) {
+    // Match Accountant Prepared Financial Statements
+    if (docLabelLower.includes('accountant') && docLabelLower.includes('financial') ||
+        docLabelLower.includes('financial') && docLabelLower.includes('statement')) {
       return documentTypeLower.includes('financial') || 
              fileNameLower.includes('financial') ||
              documentTypeLower === 'financial_statements';
@@ -133,7 +135,8 @@ function UnifiedDocumentUploadCard({
         if (labelLower.includes('bank') && labelLower.includes('statement')) {
           return 'bank_statements';
         }
-        if (labelLower.includes('financial') && labelLower.includes('statement')) {
+        if (labelLower.includes('accountant') && labelLower.includes('financial') ||
+            labelLower.includes('financial') && labelLower.includes('statement')) {
           return 'financial_statements';
         }
         if (labelLower.includes('tax')) {
@@ -332,8 +335,9 @@ export function DynamicDocumentRequirements({
         return 6;
       }
       
-      // Financial Statements require 3 documents
-      if (normalizedName.includes('financial') && normalizedName.includes('statement')) {
+      // Accountant Prepared Financial Statements require 3 documents
+      if (normalizedName.includes('accountant') && normalizedName.includes('financial') ||
+          normalizedName.includes('financial') && normalizedName.includes('statement')) {
         return 3;
       }
       
@@ -342,11 +346,8 @@ export function DynamicDocumentRequirements({
     };
     
     const getDocumentLabel = (docName: string): string => {
-      // Change "Financial Statements" to "Accountant Prepared Financial Statements"
-      if (docName === 'Financial Statements') {
-        return 'Accountant Prepared Financial Statements';
-      }
-      return docName;
+      // Use centralized normalization utility
+      return normalizeDocumentName(docName);
     };
     
     const docRequirements = requirements.map((docName: string, index: number) => ({

@@ -26,14 +26,14 @@ export interface ValidationSummary {
  * Used as fallback when requiredDocuments field is missing
  */
 export const DEFAULT_REQUIRED_DOCUMENTS_BY_CATEGORY: Record<string, string[]> = {
-  'Term Loan': ['bank_statements', 'tax_returns', 'financial_statements'],
-  'Business Line of Credit': ['bank_statements', 'tax_returns', 'financial_statements'],
+  'Term Loan': ['bank_statements', 'tax_returns', 'Accountant Prepared Financial Statements'],
+  'Business Line of Credit': ['bank_statements', 'tax_returns', 'Accountant Prepared Financial Statements'],
   'Equipment Financing': ['bank_statements', 'tax_returns', 'equipment_quote'],
   'Invoice Factoring': ['bank_statements', 'accounts_receivable_aging', 'sample_invoices'],
   'Working Capital': ['bank_statements', 'tax_returns', 'cash_flow_statement'],
   'Purchase Order Financing': ['bank_statements', 'purchase_orders', 'supplier_contracts'],
-  'Asset-Based Lending': ['bank_statements', 'tax_returns', 'asset_appraisal', 'financial_statements'],
-  'SBA Loan': ['bank_statements', 'tax_returns', 'financial_statements', 'business_plan']
+  'Asset-Based Lending': ['bank_statements', 'tax_returns', 'asset_appraisal', 'Accountant Prepared Financial Statements'],
+  'SBA Loan': ['bank_statements', 'tax_returns', 'Accountant Prepared Financial Statements', 'business_plan']
 };
 
 /**

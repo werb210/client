@@ -11,32 +11,32 @@ import { runStartupVerification } from "./test/staffDatabaseVerification";
 
 // Enhanced global error handler for unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
-  // Only log Vite-related WebSocket errors in development without cluttering console
-  if (import.meta.env.DEV && event.reason?.stack?.includes('@vite/client')) {
-    // Silently handle Vite WebSocket reconnection errors - these are normal in development
-    event.preventDefault();
-    return;
-  }
-  
-  console.error('🚨 Unhandled Promise Rejection:', event.reason?.message || event.reason);
-  
-  // In development, provide detailed debugging information for non-Vite errors
+  // Silently handle common development errors
   if (import.meta.env.DEV) {
-    console.error('[DEV] Promise rejection details:', {
-      reason: event.reason,
-      stack: event.reason?.stack,
-      promise: event.promise,
-      timestamp: new Date().toISOString()
-    });
+    const reason = event.reason?.message || event.reason?.toString() || '';
     
-    // Log specific error types for debugging
-    if (event.reason?.message?.includes('Failed to fetch')) {
-      console.error('[DEV] Network error detected - check API endpoints and connectivity');
-      console.error('[DEV] Consider implementing retry logic or fallback mechanisms');
+    // Handle Vite WebSocket errors silently
+    if (event.reason?.stack?.includes('@vite/client') || 
+        reason.includes('WebSocket') || 
+        reason.includes('hmr') ||
+        reason.includes('vite')) {
+      event.preventDefault();
+      return;
+    }
+    
+    // Handle fetch errors from disabled legacy sync systems
+    if (reason.includes('syncManager') || 
+        reason.includes('getSyncStatus') || 
+        reason.includes('getProducts') ||
+        reason.includes('scheduledSyncService')) {
+      event.preventDefault();
+      return;
     }
   }
   
-  event.preventDefault(); // Prevent default browser behavior
+  // Only log genuine application errors
+  console.error('🚨 Unhandled Promise Rejection:', event.reason?.message || event.reason);
+  event.preventDefault();
 });
 
 // LEGACY SYNC SYSTEM DISABLED - Replaced by new IndexedDB caching with fetch windows

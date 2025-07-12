@@ -84,6 +84,7 @@ import ProdSignNowTest from "@/pages/ProdSignNowTest";
 import ClientVerificationDiagnostic from "@/pages/ClientVerificationDiagnostic";
 import { FetchWindowTest } from "@/pages/FetchWindowTest";
 import FetchWindowDebugRoute from "@/pages/FetchWindowDebugRoute";
+import DocumentNormalizationTest from "@/pages/DocumentNormalizationTest";
 
 
 /**
@@ -141,6 +142,7 @@ export function MainLayout() {
       <Route path="/uuid-test" component={UUIDTestPage} />
       <Route path="/fetch-window-test" component={FetchWindowTest} />
       <Route path="/fetch-window-debug-route" component={FetchWindowDebugRoute} />
+      <Route path="/document-normalization-test" component={DocumentNormalizationTest} />
       <Route path="/signnow-debug-test" component={SignNowDebugTest} />
       <Route path="/simple-signnow-test" component={SimpleSignNowTest} />
       <Route path="/prod-signnow-test" component={ProdSignNowTest} />
