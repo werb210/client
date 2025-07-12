@@ -27,18 +27,40 @@ export function Step2ProductionSimple({
   // Direct cache access - no complex filtering
   const { data: allProducts = [], isLoading, error } = usePublicLenders();
 
-  // Debug cache status
+  // Debug cache status and field validation
   React.useEffect(() => {
     if (!isLoading) {
       console.log(`[STEP2] Cache status: ${allProducts.length} products, error:`, error?.message || 'none');
       if (allProducts.length > 0) {
-        console.log('[STEP2] Sample product:', allProducts[0]);
-        console.log('[STEP2] Product structure check:', {
-          hasMinAmount: !!allProducts[0]?.minAmount,
-          hasMaxAmount: !!allProducts[0]?.maxAmount,
-          hasCountry: !!allProducts[0]?.country,
-          fields: Object.keys(allProducts[0] || {})
-        });
+        const sample = allProducts[0];
+        console.log('[STEP2] Sample product:', sample);
+        
+        // Detailed field analysis
+        const fieldCheck = {
+          hasMinAmount: !!sample?.minAmount,
+          hasMaxAmount: !!sample?.maxAmount,
+          hasCountry: !!sample?.country,
+          minAmountType: typeof sample?.minAmount,
+          maxAmountType: typeof sample?.maxAmount,
+          minAmountValue: sample?.minAmount,
+          maxAmountValue: sample?.maxAmount,
+          isMinAmountNaN: isNaN(sample?.minAmount),
+          isMaxAmountNaN: isNaN(sample?.maxAmount),
+          allFields: Object.keys(sample || {})
+        };
+        console.log('[STEP2] Field validation:', fieldCheck);
+        
+        // Check for problematic products
+        const problemProducts = allProducts.filter(p => 
+          !p.minAmount || !p.maxAmount || 
+          isNaN(p.minAmount) || isNaN(p.maxAmount) ||
+          p.minAmount === null || p.maxAmount === null
+        );
+        console.log(`[STEP2] Products with field issues: ${problemProducts.length}/${allProducts.length}`);
+        
+        if (problemProducts.length > 0) {
+          console.log('[STEP2] Problem products sample:', problemProducts.slice(0, 3));
+        }
       }
     }
   }, [allProducts, isLoading, error]);
@@ -69,15 +91,23 @@ export function Step2ProductionSimple({
         </div>
       ) : allProducts.length === 0 ? (
         <div className="p-6 border border-amber-200 bg-amber-50 rounded-lg text-center space-y-4">
-          <p className="text-amber-700">No products in cache. Cache status: {error ? `Error: ${error.message}` : 'Empty'}</p>
-          <p className="text-sm text-amber-600">
-            Debug: isLoading={String(isLoading)}, products={allProducts.length}, error={error?.message || 'none'}
-          </p>
-          <div className="text-sm text-amber-600">
-            <p>To populate the cache, please navigate to:</p>
-            <a href="/cache-management" className="text-blue-600 underline hover:text-blue-800">
-              Cache Management Page
-            </a>
+          <p className="text-amber-700">No products in cache. Please populate the cache first.</p>
+          <div className="text-sm text-amber-600 space-y-2">
+            <p>Debug info:</p>
+            <p>• Loading: {String(isLoading)}</p>
+            <p>• Products: {allProducts.length}</p>
+            <p>• Error: {error?.message || 'none'}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-amber-700">Options to populate cache:</p>
+            <div className="flex gap-2 justify-center">
+              <a href="/cache-management" className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+                Cache Management
+              </a>
+              <a href="/initial-cache-setup" className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600">
+                Initial Setup
+              </a>
+            </div>
           </div>
         </div>
       ) : (
@@ -116,13 +146,34 @@ export function Step2ProductionSimple({
                 </div>
                 <div className="text-sm text-muted-foreground">
                   <strong>Funding Range:</strong> {
-                    allProducts.length > 0 && allProducts.some(p => p.minAmount && p.maxAmount) 
-                      ? `$${Math.min(...allProducts.filter(p => p.minAmount).map(p => p.minAmount)).toLocaleString()} - $${Math.max(...allProducts.filter(p => p.maxAmount).map(p => p.maxAmount)).toLocaleString()}`
-                      : 'Range not available'
+                    (() => {
+                      // Check if products have proper amount fields
+                      const validProducts = allProducts.filter(p => 
+                        p && 
+                        typeof p.minAmount === 'number' && 
+                        typeof p.maxAmount === 'number' && 
+                        !isNaN(p.minAmount) && 
+                        !isNaN(p.maxAmount) &&
+                        p.minAmount > 0 && 
+                        p.maxAmount > 0
+                      );
+                      
+                      if (validProducts.length === 0) {
+                        return 'Data validation needed - check field mapping';
+                      }
+                      
+                      const min = Math.min(...validProducts.map(p => p.minAmount));
+                      const max = Math.max(...validProducts.map(p => p.maxAmount));
+                      return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+                    })()
                   }
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  <strong>Available Markets:</strong> {Array.from(new Set(allProducts.map(p => p.country))).join(', ')}
+                  <strong>Available Markets:</strong> {
+                    allProducts.length > 0 
+                      ? Array.from(new Set(allProducts.map(p => p.country).filter(Boolean))).join(', ') || 'Not specified'
+                      : 'None'
+                  }
                 </div>
               </div>
             </CardContent>
