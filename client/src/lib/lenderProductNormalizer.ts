@@ -152,7 +152,7 @@ function parseTermFromDescription(description?: string): { min: number; max: num
  */
 function normalizeGeographyFromCountry(country?: string): ("US" | "CA")[] {
   if (!country) {
-    console.log('[NORMALIZER] No country provided, defaulting to US');
+    // console.log('[NORMALIZER] No country provided, defaulting to US');
     return ['US'];
   }
   
@@ -171,7 +171,7 @@ function normalizeGeographyFromCountry(country?: string): ("US" | "CA")[] {
   }
   
   // Fallback for unknown country codes
-  console.log(`[NORMALIZER] Unknown country code: ${country}, defaulting to US`);
+  // console.log(`[NORMALIZER] Unknown country code: ${country}, defaulting to US`);
   return ['US'];
 }
 
@@ -192,7 +192,7 @@ function normalizeGeography(geography?: string[], lenderName?: string, productId
     
     // Check if lender name suggests Canadian origin
     if (lenderName && canadianLenders.some(ca => lenderName.includes(ca))) {
-      console.log(`[NORMALIZER] Assigning ${lenderName} to CA based on lender name`);
+      // console.log(`[NORMALIZER] Assigning ${lenderName} to CA based on lender name`);
       return ['CA'];
     }
     

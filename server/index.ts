@@ -541,16 +541,16 @@ app.use((req, res, next) => {
                  req.socket.remoteAddress ||
                  req.ip;
 
-      console.log(`[GEO] Client IP detected: ${ip}`);
+      // console.log(`[GEO] Client IP detected: ${ip}`);
 
       // For development/localhost, return null to fallback to manual selection
       if (!ip || ip === '::1' || ip === '127.0.0.1' || ip.includes('localhost')) {
-        console.log('[GEO] Development environment detected, returning null for manual selection');
+        // console.log('[GEO] Development environment detected, returning null for manual selection');
         return res.json({ country: null });
       }
 
       // Use external geolocation service with proper fetch
-      console.log(`[GEO] Querying geolocation for IP: ${ip}`);
+      // console.log(`[GEO] Querying geolocation for IP: ${ip}`);
       const geoResponse = await fetch(`https://ipapi.co/${ip}/country_code/`, {
         signal: AbortSignal.timeout(3000),
       });
@@ -558,14 +558,14 @@ app.use((req, res, next) => {
       if (geoResponse.ok) {
         const countryCode = (await geoResponse.text()).trim();
         const country = countryCode === 'CA' || countryCode === 'US' ? countryCode : null;
-        console.log(`[GEO] Detected country: ${countryCode} → ${country || 'Not US/CA'}`);
+        // console.log(`[GEO] Detected country: ${countryCode} → ${country || 'Not US/CA'}`);
         return res.json({ country });
       }
 
-      console.log(`[GEO] Geolocation service failed: ${geoResponse.status}`);
+      // console.log(`[GEO] Geolocation service failed: ${geoResponse.status}`);
       res.json({ country: null });
     } catch (error) {
-      console.log('[GEO] Country detection failed:', error.message);
+      // console.log('[GEO] Country detection failed:', error.message);
       res.json({ country: null });
     }
   });

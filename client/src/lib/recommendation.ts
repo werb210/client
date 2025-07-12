@@ -53,8 +53,8 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
                      product.country ? [product.country] : [];
     
     return (
-      // 1. Country match - geography contains headquarters
-      geography.includes(headquarters) &&
+      // 1. Country match - geography contains headquarters OR if no headquarters, show all products
+      (!headquarters || geography.includes(headquarters)) &&
       // 2. Amount range - within min/max bounds
       fundingAmount >= minAmount && fundingAmount <= maxAmount &&
       // 3. Product-type rules using staff database categories
@@ -78,7 +78,7 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     
     return (
       // Geography and amount must still match for extras
-      geography.includes(headquarters) &&
+      (!headquarters || geography.includes(headquarters)) &&
       fundingAmount >= minAmount && fundingAmount <= maxAmount &&
       (
         // 4. AR balance rule - include invoice factoring ONLY when they have OR might have receivables
