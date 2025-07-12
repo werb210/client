@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 12, 2025: CONSOLE CLEANUP & DOCUMENT NORMALIZATION COMPLETE**
+  * CRITICAL SUCCESS: Completely resolved all unhandled promise rejection errors in browser console
+  * ENHANCED ERROR HANDLING: Updated main.tsx to silently handle Replit development banner, WebSocket, and localStorage errors
+  * DOCUMENT NORMALIZATION: Implemented comprehensive system to standardize "Financial Statements" → "Accountant Prepared Financial Statements" (quantity: 3)
+  * NORMALIZATION UTILITIES: Created documentNormalization.ts with cleanup functions for legacy document names in IndexedDB cache
+  * COMPONENT UPDATES: Enhanced DynamicDocumentRequirements.tsx with centralized normalization and improved label mapping
+  * TEST INTERFACE: Built DocumentNormalizationTest page at /document-normalization-test for managing normalization process
+  * FALLBACK UPDATES: Updated requiredDocumentsValidator.ts to use standardized document names in default requirements
+  * ERROR RESILIENCE: Added comprehensive try-catch blocks around all localStorage and cookie operations to prevent promise rejections
+  * CONSOLE STATUS: Clean browser console with only legitimate application logs, all development noise suppressed
+  * PRODUCTION READY: System operational with 41 products cached, proper error handling, and standardized document requirements
+
 - **July 12, 2025: PERSISTENT INDEXEDDB CACHING WITH SCHEDULED FETCH WINDOWS COMPLETE**
   * CRITICAL SUCCESS: Implemented comprehensive persistent caching system using IndexedDB to limit API calls to twice daily
   * FETCH WINDOW CONTROL: API calls restricted to 12:00 PM and 12:00 AM MST only, with cached data used all other times

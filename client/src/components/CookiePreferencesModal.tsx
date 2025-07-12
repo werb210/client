@@ -31,33 +31,37 @@ export const CookiePreferencesModal = ({ isOpen, onClose }: CookiePreferencesMod
   // Load existing preferences on open
   useEffect(() => {
     if (isOpen) {
-      const stored = localStorage.getItem("borealCookiePreferences");
-      if (stored) {
-        try {
+      try {
+        const stored = localStorage.getItem("borealCookiePreferences");
+        if (stored) {
           const parsed = JSON.parse(stored);
           setPreferences({
             necessary: true, // Always true
             analytics: parsed.analytics || false,
             marketing: parsed.marketing || false,
           });
-        } catch (error) {
-          console.warn("[COOKIES] Failed to parse stored preferences:", error);
         }
+      } catch (error) {
+        console.warn("[COOKIES] Failed to load stored preferences:", error);
       }
     }
   }, [isOpen]);
 
   const handleSavePreferences = () => {
-    // Save to localStorage
-    localStorage.setItem("borealCookiePreferences", JSON.stringify({
-      ...preferences,
-      timestamp: new Date().toISOString()
-    }));
+    try {
+      // Save to localStorage
+      localStorage.setItem("borealCookiePreferences", JSON.stringify({
+        ...preferences,
+        timestamp: new Date().toISOString()
+      }));
 
-    // Set consent cookie
-    Cookies.set("borealCookieConsent", "true", { expires: 180 });
+      // Set consent cookie
+      Cookies.set("borealCookieConsent", "true", { expires: 180 });
 
-    console.log("[COOKIES] User saved preferences:", preferences);
+      console.log("[COOKIES] User saved preferences:", preferences);
+    } catch (error) {
+      console.warn("[COOKIES] Failed to save preferences:", error);
+    }
     onClose();
   };
 
@@ -68,14 +72,18 @@ export const CookiePreferencesModal = ({ isOpen, onClose }: CookiePreferencesMod
       marketing: true,
     };
     
-    setPreferences(allAccepted);
-    localStorage.setItem("borealCookiePreferences", JSON.stringify({
-      ...allAccepted,
-      timestamp: new Date().toISOString()
-    }));
-    
-    Cookies.set("borealCookieConsent", "true", { expires: 180 });
-    console.log("[COOKIES] User accepted all cookies");
+    try {
+      setPreferences(allAccepted);
+      localStorage.setItem("borealCookiePreferences", JSON.stringify({
+        ...allAccepted,
+        timestamp: new Date().toISOString()
+      }));
+      
+      Cookies.set("borealCookieConsent", "true", { expires: 180 });
+      console.log("[COOKIES] User accepted all cookies");
+    } catch (error) {
+      console.warn("[COOKIES] Failed to accept all cookies:", error);
+    }
     onClose();
   };
 
@@ -86,14 +94,18 @@ export const CookiePreferencesModal = ({ isOpen, onClose }: CookiePreferencesMod
       marketing: false,
     };
     
-    setPreferences(minimalConsent);
-    localStorage.setItem("borealCookiePreferences", JSON.stringify({
-      ...minimalConsent,
-      timestamp: new Date().toISOString()
-    }));
-    
-    Cookies.set("borealCookieConsent", "true", { expires: 180 });
-    console.log("[COOKIES] User rejected optional cookies");
+    try {
+      setPreferences(minimalConsent);
+      localStorage.setItem("borealCookiePreferences", JSON.stringify({
+        ...minimalConsent,
+        timestamp: new Date().toISOString()
+      }));
+      
+      Cookies.set("borealCookieConsent", "true", { expires: 180 });
+      console.log("[COOKIES] User rejected optional cookies");
+    } catch (error) {
+      console.warn("[COOKIES] Failed to reject optional cookies:", error);
+    }
     onClose();
   };
 

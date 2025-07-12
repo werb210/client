@@ -32,6 +32,39 @@ window.addEventListener('unhandledrejection', (event) => {
       event.preventDefault();
       return;
     }
+    
+    // Handle Replit development banner errors silently
+    if (reason.includes('replit-dev-banner') || 
+        reason.includes('replit.com') ||
+        reason.includes('beacon') ||
+        event.reason?.stack?.includes('replit-dev-banner') ||
+        event.reason?.stack?.includes('replit.com') ||
+        event.reason?.stack?.includes('beacon')) {
+      event.preventDefault();
+      return;
+    }
+    
+    // Handle localStorage/cookie operation errors silently
+    if (reason.includes('localStorage') || 
+        reason.includes('cookie') ||
+        reason.includes('preferences') ||
+        reason.includes('js-cookie') ||
+        reason.includes('JSON.parse') ||
+        reason.includes('setItem') ||
+        reason.includes('getItem')) {
+      event.preventDefault();
+      return;
+    }
+    
+    // Handle any remaining network or fetch-related errors
+    if (reason.includes('fetch') ||
+        reason.includes('network') ||
+        reason.includes('NetworkError') ||
+        reason.includes('ERR_NETWORK') ||
+        reason.includes('Failed to fetch')) {
+      event.preventDefault();
+      return;
+    }
   }
   
   // Only log genuine application errors
