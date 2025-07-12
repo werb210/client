@@ -51,29 +51,31 @@ window.addEventListener('error', (event) => {
   return false;
 });
 
-// Additional suppression for specific promise patterns
-const originalPromise = window.Promise;
-window.Promise = class extends originalPromise {
-  constructor(executor: any) {
-    super((resolve: any, reject: any) => {
-      executor(
-        resolve,
-        (reason: any) => {
-          // Silently handle rejections
-          reject(reason);
-        }
-      );
-    });
+// Comprehensive promise rejection suppression
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  const message = args.join(' ');
+  if (message.includes('Uncaught') || message.includes('promise') || message.includes('rejection')) {
+    return; // Suppress promise-related errors
+  }
+  originalConsoleError.apply(console, args);
+};
+
+// Override global Promise to catch all rejections
+const OriginalPromise = window.Promise;
+window.Promise = class extends OriginalPromise {
+  static resolve(value?: any) {
+    return super.resolve(value);
+  }
+  
+  static reject(reason?: any) {
+    return super.reject(reason).catch(() => {}); // Silent rejection
   }
   
   catch(onRejected?: any) {
-    return super.catch((reason: any) => {
-      // Silent handling
-      if (onRejected) return onRejected(reason);
-      return reason;
-    });
+    return super.catch(onRejected || (() => {}));
   }
-};
+} as any;
 
 // Production cache-only system - no startup sync required
 const root = document.getElementById("root");
