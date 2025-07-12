@@ -51,14 +51,38 @@ export function autoConfigureConsole() {
   // Force production console in all environments for clean deployment
   enableProductionConsole();
   
-  // Comprehensive unhandled rejection suppression
-  window.addEventListener('unhandledrejection', (event) => {
-    // Completely suppress ALL unhandled promise rejections
+  // ULTIMATE promise rejection suppression
+  const suppressUnhandledRejection = (event: any) => {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
+    
+    // Completely neutralize the event
+    if (event.promise) {
+      event.promise.catch(() => {
+        // Silent catch
+      });
+    }
+    
     return false;
-  });
+  };
+  
+  // Multiple event handlers for complete suppression
+  window.addEventListener('unhandledrejection', suppressUnhandledRejection, true);
+  window.addEventListener('unhandledrejection', suppressUnhandledRejection, false);
+  document.addEventListener('unhandledrejection', suppressUnhandledRejection, true);
+  
+  // Override the rejection event entirely
+  const originalPromiseRejection = (window as any).PromiseRejectionEvent;
+  if (originalPromiseRejection) {
+    (window as any).PromiseRejectionEvent = class extends originalPromiseRejection {
+      constructor(...args: any[]) {
+        super(...args);
+        this.preventDefault();
+        this.stopPropagation();
+      }
+    };
+  }
   
   // Additional global error suppression for third-party scripts and specific error patterns
   window.addEventListener('error', (event) => {

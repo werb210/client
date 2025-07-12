@@ -3,7 +3,7 @@ import { lazy } from "react";
 
 // V1 Route Components (Source of Truth)
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
-import Step2ProductionSimpleRoute from "@/routes/Step2_ProductionSimple";
+import Step2RecommendationsRoute from "@/routes/Step2_Recommendations";
 // NEW: Separated Step 3 & 4 Route Components (July 3, 2025)
 import Step3BusinessDetailsComplete from "@/routes/Step3_BusinessDetails_Complete";
 import Step4ApplicantInfoComplete from "@/routes/Step4_ApplicantInfo_Complete";
@@ -158,8 +158,8 @@ export function MainLayout() {
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
       <Route path="/apply/step-1" component={Step1FinancialProfile} />
-      <Route path="/step2-recommendations" component={Step2ProductionSimpleRoute} />
-      <Route path="/apply/step-2" component={Step2ProductionSimpleRoute} />
+      <Route path="/step2-recommendations" component={Step2RecommendationsRoute} />
+      <Route path="/apply/step-2" component={Step2RecommendationsRoute} />
       <Route path="/step3-business-details" component={Step3BusinessDetailsComplete} />
       <Route path="/apply/step-3" component={Step3BusinessDetailsComplete} />
       <Route path="/step4-applicant-details" component={Step4ApplicantInfoComplete} />
