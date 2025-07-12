@@ -2,7 +2,8 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-import { scheduledSyncService } from "./lib/scheduledSync";
+// LEGACY SYNC IMPORT DISABLED - Using new IndexedDB caching system
+// import { scheduledSyncService } from "./lib/scheduledSync";
 import { clearLegacyCache, shouldClearCache } from "./startup/clearLegacyCache";
 import { runStartupVerification } from "./test/staffDatabaseVerification";
 // LEGACY SYNC SYSTEM DISABLED - NOW USING NEW INDEXEDDB CACHING SYSTEM

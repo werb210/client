@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { syncLenderProducts } from '@/lib/lenderProductSync';
-import { scheduledSyncService } from '@/lib/scheduledSync';
+// LEGACY SYNC IMPORTS DISABLED - Using new IndexedDB caching system
+// import { syncLenderProducts } from '@/lib/lenderProductSync';
+// import { scheduledSyncService } from '@/lib/scheduledSync';
 
 interface DiagnosticResult {
   test: string;
@@ -186,7 +187,8 @@ function ApiDiagnosticOriginal() {
     });
 
     try {
-      const result = await scheduledSyncService.manualSync();
+      // LEGACY SYNC DISABLED - Using new IndexedDB caching system
+      // const result = await scheduledSyncService.manualSync();
       
       addResult({
         test: 'Manual Sync Result',

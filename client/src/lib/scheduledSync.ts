@@ -21,14 +21,14 @@ class ScheduledSyncService {
     //   console.warn('[SCHEDULER] Initial sync failed:', error?.message || error);
     // });
     
-    // Schedule sync jobs every hour, check if it's sync time
-    this.intervalId = window.setInterval(() => {
-      try {
-        this.checkAndRunSync();
-      } catch (error) {
-        console.warn('[SCHEDULER] Scheduled check failed:', error);
-      }
-    }, 60 * 60 * 1000); // Check every hour
+    // DISABLED: Schedule sync jobs every hour, check if it's sync time
+    // this.intervalId = window.setInterval(() => {
+    //   try {
+    //     this.checkAndRunSync();
+    //   } catch (error) {
+    //     console.warn('[SCHEDULER] Scheduled check failed:', error);
+    //   }
+    // }, 60 * 60 * 1000); // Check every hour
     
     this.isInitialized = true;
     console.log('[SCHEDULER] Lender product sync scheduler started successfully');
@@ -45,10 +45,10 @@ class ScheduledSyncService {
         const minutes = now.getMinutes();
         // Only run during the first 5 minutes of the hour to avoid multiple triggers
         if (minutes < 5) {
-          console.log(`[SCHEDULER] Triggering scheduled sync at ${currentMSTHour === 12 ? '12:00 PM' : '12:00 AM'} MST`);
-          this.runSync().catch(error => {
-            console.warn('[SCHEDULER] Scheduled sync failed:', error?.message || error);
-          });
+          console.log(`[SCHEDULER] LEGACY SYNC DISABLED - Would have triggered at ${currentMSTHour === 12 ? '12:00 PM' : '12:00 AM'} MST`);
+          // this.runSync().catch(error => {
+          //   console.warn('[SCHEDULER] Scheduled sync failed:', error?.message || error);
+          // });
         }
       }
     } catch (error) {
