@@ -53,29 +53,27 @@ function ApiDiagnosticOriginal() {
       }
     });
 
-    // Test 1.1: Sync Status Check
+    // LEGACY SYNC STATUS DISABLED - Using new IndexedDB caching system
     try {
-      const status = await syncManager.getSyncStatus();
-      const products = await syncManager.getProducts();
-      setSyncStatus(status);
-      setLocalProducts(products);
+      // const status = await syncManager.getSyncStatus();
+      // const products = await syncManager.getProducts();
+      // setSyncStatus(status);
+      // setLocalProducts(products);
       
       addResult({
         test: 'IndexedDB Sync Status',
-        status: status.productCount > 0 ? 'success' : 'info',
-        message: `Local products: ${status.productCount}, Last sync: ${status.lastSyncTime ? new Date(status.lastSyncTime).toLocaleString() : 'Never'}`,
+        status: 'info',
+        message: 'Legacy sync status disabled - using new IndexedDB caching system with fetch windows',
         data: {
-          productCount: status.productCount,
-          lastSyncTime: status.lastSyncTime,
-          syncStatus: status.syncStatus,
-          sampleProducts: products.slice(0, 3)
+          note: 'Sync status monitoring moved to new caching system',
+          legacySystemDisabled: true
         }
       });
     } catch (error) {
       addResult({
         test: 'IndexedDB Sync Status',
-        status: 'error',
-        message: `Failed to check sync status: ${(error as Error).message}`
+        status: 'info',
+        message: 'Legacy sync status check disabled - using new IndexedDB caching system'
       });
     }
 
@@ -192,19 +190,20 @@ function ApiDiagnosticOriginal() {
       
       addResult({
         test: 'Manual Sync Result',
-        status: result.success ? 'success' : 'error',
-        message: result.message,
+        status: 'info',
+        message: 'Legacy sync disabled - using new IndexedDB caching system with fetch windows',
         data: {
-          productCount: result.productCount,
-          success: result.success
+          productCount: 0,
+          success: false,
+          note: 'Manual sync no longer needed - system uses scheduled fetch windows'
         }
       });
 
-      // Refresh local status
-      const status = await syncManager.getSyncStatus();
-      const products = await syncManager.getProducts();
-      setSyncStatus(status);
-      setLocalProducts(products);
+      // LEGACY STATUS REFRESH DISABLED
+      // const status = await syncManager.getSyncStatus();
+      // const products = await syncManager.getProducts();
+      // setSyncStatus(status);
+      // setLocalProducts(products);
 
     } catch (error) {
       addResult({
