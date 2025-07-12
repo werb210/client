@@ -1,9 +1,10 @@
 /**
- * Scheduled Sync Jobs - 12:00 PM and 12:00 AM MST
- * Automatically syncs lender products from staff API
+ * LEGACY SCHEDULED SYNC - DISABLED
+ * Replaced by new IndexedDB caching system with fetch window controls
+ * The new system is integrated directly into fetchLenderProducts() function
  */
 
-import { syncLenderProducts } from './lenderProductSync';
+// DISABLED: import { syncLenderProducts } from './lenderProductSync';
 
 class ScheduledSyncService {
   private intervalId: number | null = null;
@@ -12,13 +13,13 @@ class ScheduledSyncService {
   initialize() {
     if (this.isInitialized) return;
     
-    console.log('[SCHEDULER] Initializing lender product sync scheduler');
-    console.log('[SCHEDULER] Schedule: 12:00 PM and 12:00 AM MST');
+    console.log('[SCHEDULER] LEGACY SYNC DISABLED - Using new IndexedDB caching system');
+    console.log('[SCHEDULER] New system: Fetch windows at 12:00 PM and 12:00 AM MST with persistent cache');
     
-    // Run immediately on startup with error handling
-    this.runSync().catch(error => {
-      console.warn('[SCHEDULER] Initial sync failed:', error?.message || error);
-    });
+    // DISABLED: Run immediately on startup with error handling
+    // this.runSync().catch(error => {
+    //   console.warn('[SCHEDULER] Initial sync failed:', error?.message || error);
+    // });
     
     // Schedule sync jobs every hour, check if it's sync time
     this.intervalId = window.setInterval(() => {
@@ -56,24 +57,12 @@ class ScheduledSyncService {
   }
 
   async runSync(): Promise<void> {
-    try {
-      console.log('[SCHEDULER] Starting scheduled lender product sync...');
-      
-      const result = await syncLenderProducts();
-      
-      if (result.success) {
-        console.log(`[SCHEDULER] ✅ Sync successful: ${result.data?.length || 0} products`);
-        this.showToast(`Successfully synced ${result.data?.length || 0} lender products`, 'success');
-      } else {
-        console.error(`[SCHEDULER] ❌ Sync failed: ${result.error || 'Unknown error'}`);
-        this.showToast(`Sync failed: ${result.error || 'Unknown error'}`, 'error');
-      }
-      
-    } catch (error) {
-      const message = `Sync error: ${(error as Error).message}`;
-      console.error('[SCHEDULER]', message);
-      this.showToast(message, 'error');
-    }
+    // DISABLED: Legacy sync system replaced by new IndexedDB caching
+    console.log('[SCHEDULER] LEGACY SYNC DISABLED - No action taken');
+    console.log('[SCHEDULER] Use new IndexedDB caching system with fetchLenderProducts()');
+    
+    // No network calls, no sync operations
+    return Promise.resolve();
   }
 
   private showToast(message: string, type: 'success' | 'error') {
@@ -95,34 +84,17 @@ class ScheduledSyncService {
   }
 
   async manualSync(): Promise<{ success: boolean; productCount: number; message: string }> {
-    try {
-      console.log('[SCHEDULER] Manual sync triggered');
-      const result = await syncLenderProducts();
-      
-      this.showToast(
-        result.success 
-          ? `Manual sync: ${result.data?.length || 0} products updated`
-          : `Manual sync failed: ${result.error || 'Unknown error'}`,
-        result.success ? 'success' : 'error'
-      );
-      
-      return {
-        success: result.success,
-        productCount: result.data?.length || 0,
-        message: result.error || 'Success'
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.warn('[SCHEDULER] Manual sync error:', errorMessage);
-      
-      this.showToast(`Manual sync failed: ${errorMessage}`, 'error');
-      
-      return {
-        success: false,
-        productCount: 0,
-        message: errorMessage
-      };
-    }
+    // DISABLED: Legacy manual sync replaced by new IndexedDB caching
+    console.log('[SCHEDULER] LEGACY MANUAL SYNC DISABLED');
+    console.log('[SCHEDULER] Use new IndexedDB caching system with fetch window controls');
+    
+    this.showToast('Legacy sync disabled - using new IndexedDB caching system', 'success');
+    
+    return {
+      success: true,
+      productCount: 0,
+      message: 'Legacy sync disabled - using new IndexedDB caching system'
+    };
   }
 
   destroy() {
