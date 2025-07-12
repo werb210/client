@@ -59,18 +59,31 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
                      typeof product.geography === 'string' ? [product.geography] :
                      product.country ? [product.country] : [];
     
-    return (
-      // 1. Country match - geography contains headquarters OR if no headquarters, show all products
-      (!headquarters || geography.includes(headquarters)) &&
-      // 2. Amount range - within min/max bounds
-      fundingAmount >= minAmount && fundingAmount <= maxAmount &&
-      // 3. Product-type rules using staff database categories
-      (
-        lookingFor === "both" ||
-        (lookingFor === "capital" && !product.category.toLowerCase().includes("equipment")) ||
-        (lookingFor === "equipment" && product.category.toLowerCase().includes("equipment"))
-      )
-    );
+    // Debug individual product filtering
+    const geographyMatch = !headquarters || geography.includes(headquarters);
+    const amountMatch = fundingAmount >= minAmount && fundingAmount <= maxAmount;
+    const typeMatch = lookingFor === "both" ||
+      (lookingFor === "capital" && !product.category.toLowerCase().includes("equipment")) ||
+      (lookingFor === "equipment" && product.category.toLowerCase().includes("equipment"));
+    
+    const passes = geographyMatch && amountMatch && typeMatch;
+    
+    // Log first few products for debugging
+    if (products.indexOf(product) < 3) {
+      console.log(`[DEBUG] Product ${product.name || product.lender}:`, {
+        geography: geography,
+        geographyMatch,
+        amountRange: `${minAmount}-${maxAmount}`,
+        requestedAmount: fundingAmount,
+        amountMatch,
+        category: product.category,
+        lookingFor,
+        typeMatch,
+        passes
+      });
+    }
+    
+    return passes;
   });
 
   // Extra inclusions based on special rules - Updated to use actual API response format

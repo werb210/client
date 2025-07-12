@@ -53,9 +53,9 @@ export function Step2RecommendationEngine({
     businessLocation: formData.businessLocation,
     headquarters: formData.headquarters,
     mappedHeadquarters: headquarters,
-    lookingFor: formData.lookingFor,
     fundingAmount: formData.fundingAmount,
-    accountsReceivableBalance: formData.accountsReceivableBalance || 0,
+    lookingFor: formData.lookingFor,
+    accountsReceivableBalance: formData.accountsReceivableBalance,
     fundsPurpose: formData.fundsPurpose
   });
   console.log('[STEP2] Hook response:', { productCategories, isLoading, error });
