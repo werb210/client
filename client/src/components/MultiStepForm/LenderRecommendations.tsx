@@ -17,34 +17,24 @@ export function LenderRecommendations({ onNext, onBack }: LenderRecommendationsP
     state.formData.selectedProduct || ''
   );
 
-  // Use synced lender products from database
+  // Production cache-only mode: Use IndexedDB cache
   const { data: products = [], isLoading, error } = useQuery({
-    queryKey: ['synced-lender-products'],
+    queryKey: ['lender-recommendations-cache-only'],
     queryFn: async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`).catch(fetchError => {
-          console.warn('[LENDER_RECOMMENDATIONS] Network error:', fetchError.message);
-          throw new Error(`Network error: ${fetchError.message}`);
-        });
-        
-        if (!res.ok) {
-          console.warn('[LENDER_RECOMMENDATIONS] API error:', res.status, res.statusText);
-          throw new Error(`API error: ${res.status} ${res.statusText}`);
-        }
-        
-        const data = await res.json().catch(jsonError => {
-          throw new Error(`Invalid JSON response: ${jsonError.message}`);
-        });
-        
-        console.log("Step 2 - Matched Products from Synced DB:", data);
-        return data.products || data || [];
+        const { loadLenderProducts } = await import('../../utils/lenderCache');
+        const cached = await loadLenderProducts();
+        return cached || [];
       } catch (error) {
-        console.warn('[LENDER_RECOMMENDATIONS] Query failed:', error instanceof Error ? error.message : error);
-        // Return empty array to prevent app crash
         return [];
       }
     },
-    staleTime: 1000 * 60 * 10,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false
   });
 
   const handleProductSelect = (productType: string) => {

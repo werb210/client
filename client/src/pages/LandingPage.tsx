@@ -9,69 +9,24 @@ import { CheckCircle, FileText, DollarSign, Shield, ArrowRight, Clock, TrendingU
 export default function LandingPage() {
   const [, setLocation] = useLocation();
 
-  // Fetch live lender products to get maximum funding amount
+  // Production cache-only mode: Use IndexedDB cache for landing page stats
   const { data: products = [], isLoading, error } = useQuery({
-    queryKey: ['landing-page-products'],
+    queryKey: ['landing-page-cache-only'],
     queryFn: async () => {
       try {
-        // Use the same API pattern as the main application
-        const apiUrl = '/api/public/lenders';
-        console.log('[LANDING] Fetching products from:', apiUrl);
-        
-        const res = await fetch(apiUrl, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: 'include'
-        }).catch(fetchError => {
-          console.warn('[LANDING] Network error, using fallback:', fetchError);
-          return null;
-        });
-        
-        if (!res) {
-          return [];
-        }
-        
-        console.log('[LANDING] API Response status:', res.status, res.statusText);
-        
-        if (!res.ok) {
-          console.warn('[LANDING] API Error:', res.status, res.statusText);
-          return [];
-        }
-        
-        const data = await res.json().catch(jsonError => {
-          console.warn('[LANDING] JSON parse error:', jsonError);
-          return { success: false, products: [] };
-        });
-        
-        console.log('[LANDING] API Response data:', {
-          success: data.success,
-          productCount: data.products?.length || 0,
-          hasProducts: !!data.products,
-          maxAmount: data.products ? Math.max(...data.products.map((p: any) => p.amountMax || 0)) : 0
-        });
-        
-        if (!data.success || !data.products) {
-          console.warn('[LANDING] Invalid API response structure:', data);
-          return [];
-        }
-        
-        console.log(`[LANDING] Successfully fetched ${data.products.length} products for max funding calculation`);
-        return data.products || [];
+        const { loadLenderProducts } = await import('../utils/lenderCache');
+        const cached = await loadLenderProducts();
+        return cached || [];
       } catch (error) {
-        console.warn('[LANDING] Unexpected error in queryFn:', error);
         return [];
       }
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
-    staleTime: 10000, // Consider data stale after 10 seconds
-    retry: false, // Don't retry on failure
-    retryDelay: 1000,
-    // Prevent unhandled promise rejections by handling errors gracefully
-    onError: (error) => {
-      console.warn('[LANDING] Query error handled gracefully:', error.message);
-    }
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false
   });
 
   // Calculate maximum funding amount from live data
