@@ -1,6 +1,6 @@
 /**
- * Comprehensive lender data fetcher with staff API and fallback support
- * Ensures products are always available for the application
+ * Comprehensive lender data fetcher with IndexedDB cache-only enforcement
+ * Ensures products are only retrieved from local cache
  */
 
 import { LenderProduct, LenderProductSchema } from '../../../shared/lenderProductSchema';
@@ -64,100 +64,105 @@ function getDocRequirementsForCategory(category: string): string[] {
 }
 
 /**
- * Fetch lender products from staff API with fallback
+ * Fetch lender products from IndexedDB cache only (strict caching enforcement)
  */
 export async function fetchLenderProducts(): Promise<LenderDataResponse> {
-  console.log('[DEBUG] lenderDataFetcher - Starting fetch process');
-  console.log('[LENDER_FETCHER] Starting lender product fetch...');
+  console.log('[CACHE-ONLY] Reading lender products from IndexedDB cache only');
   
-  // Try staff API first
-  const staffApiUrl = import.meta.env.VITE_API_BASE_URL;
-  if (staffApiUrl) {
-    try {
-      console.log(`[LENDER_FETCHER] Attempting staff API: ${staffApiUrl}/public/lenders`);
-      console.log('[DEBUG] Environment API URL:', staffApiUrl);
-      
-      console.log('[DEBUG] About to make fetch request...');
-      const response = await fetch(`${staffApiUrl}/public/lenders`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('[DEBUG] Fetch completed successfully');
-      console.log('[DEBUG] Fetch response status:', response.status);
-      console.log('[DEBUG] Fetch response ok:', response.ok);
-
-      if (response.ok) {
-        console.log('[DEBUG] Response OK, parsing JSON...');
-        const data = await response.json();
-        console.log('[LENDER_FETCHER] Staff API response received');
-        console.log('[DEBUG] Raw API response structure:', {
-          hasProducts: !!data.products,
-          hasData: !!data.data,
-          isArray: Array.isArray(data),
-          keys: Object.keys(data)
-        });
-        
-        const rawProducts = data.products || data.data || data;
-        console.log('[DEBUG] Raw products to normalize:', rawProducts.length);
-        console.log('[DEBUG] Sample raw product:', rawProducts[0]);
-        
-        const products = rawProducts.map((product: any, index: number) => {
-          try {
-            return normalizeProductData(product);
-          } catch (error) {
-            console.error(`[DEBUG] Failed to normalize product ${index}:`, product, error);
-            throw error;
-          }
-        });
-        console.log('[DEBUG] Normalized products:', products.length);
-        
-        console.log(`[LENDER_FETCHER] ✅ Staff API success: ${products.length} products`);
-        const response = {
-          success: true,
-          products,
-          count: products.length,
-          source: 'staff_api',
-          timestamp: new Date().toISOString()
-        };
-        console.log('[DEBUG] Returning successful response:', response);
-        return response;
-      } else {
-        console.warn(`[LENDER_FETCHER] Staff API failed: ${response.status} ${response.statusText}`);
-      }
-    } catch (error) {
-      console.error('[DEBUG] Fetch failed - error type:', typeof error);
-      console.error('[DEBUG] Fetch failed - error message:', error instanceof Error ? error.message : 'Unknown');
-      console.error('[DEBUG] Fetch failed - full error:', error);
-      console.warn('[LENDER_FETCHER] Staff API error:', error);
-    }
-  }
-
-  // Fall back to local data
-  console.log('[LENDER_FETCHER] Using fallback data...');
+  // Import cache utilities
+  const { loadLenderProducts, loadCacheSource, loadLastFetchTime } = await import('../utils/lenderCache');
+  
   try {
-    const fallbackResponse = await fetch('/fallback/lenders.json');
-    if (!fallbackResponse.ok) {
-      throw new Error(`Fallback fetch failed: ${fallbackResponse.status}`);
+    // Try reading from IndexedDB only
+    const cached = await loadLenderProducts();
+    const source = await loadCacheSource();
+    const lastFetched = await loadLastFetchTime();
+    
+    if (cached?.length) {
+      console.log(`[CACHED] ✅ Using IndexedDB lender products: ${cached.length} products`);
+      console.log(`[CACHED] 💾 Cache source: ${source}`);
+      if (lastFetched) {
+        console.log(`[CACHED] 🕒 Last updated: ${new Date(lastFetched).toLocaleString()}`);
+      }
+      
+      return {
+        success: true,
+        products: cached,
+        count: cached.length,
+        source: 'staff_api',
+        timestamp: lastFetched ? new Date(lastFetched).toISOString() : new Date().toISOString()
+      };
     }
     
-    const fallbackData = await fallbackResponse.json();
-    const products = fallbackData.products.map(normalizeProductData);
+    console.warn("❌ [CACHE-ONLY] IndexedDB cache empty. Returning [] to avoid live fetch.");
+    console.warn("❌ [CACHE-ONLY] Cache should be populated by scheduled refresh (noon/midnight MST)");
     
-    console.log(`[LENDER_FETCHER] ✅ Fallback success: ${products.length} products`);
     return {
-      success: true,
-      products,
-      count: products.length,
+      success: false,
+      products: [],
+      count: 0,
       source: 'fallback',
       timestamp: new Date().toISOString()
     };
+    
   } catch (error) {
-    console.error('[LENDER_FETCHER] Fallback failed:', error);
-    throw new Error('Both staff API and fallback data unavailable');
+    console.error('[CACHE-ONLY] Error reading from IndexedDB:', error);
+    return {
+      success: false,
+      products: [],
+      count: 0,
+      source: 'fallback',
+      timestamp: new Date().toISOString()
+    };
+  }
+}
+
+/**
+ * Scheduled cache refresh function (for noon/midnight MST only)
+ * This is the ONLY function that should make live API calls
+ */
+export async function scheduledCacheRefresh(): Promise<void> {
+  // Check if within scheduled window (noon/midnight MST)
+  const now = new Date();
+  const mstOffset = -7; // MST is UTC-7
+  const mstTime = new Date(now.getTime() + (mstOffset * 60 * 60 * 1000));
+  const hour = mstTime.getHours();
+  
+  const isScheduledWindow = hour === 12 || hour === 0; // 12:00 PM or 12:00 AM MST
+  
+  if (!isScheduledWindow) {
+    console.log(`[SCHEDULED REFRESH] Outside window (current MST hour: ${hour}). Skipping refresh.`);
+    return;
+  }
+  
+  console.log(`[SCHEDULED REFRESH] ✅ Within window (MST hour: ${hour}). Starting cache refresh...`);
+  
+  try {
+    // Make live API call to staff backend
+    const staffApiUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+    const response = await fetch(`${staffApiUrl}/public/lenders`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      const rawProducts = data.products || data.data || data;
+      const products = rawProducts.map(normalizeProductData);
+      
+      // Save to IndexedDB cache
+      const { saveLenderProducts } = await import('../utils/lenderCache');
+      await saveLenderProducts(products, 'staff_api');
+      
+      console.log(`[SCHEDULED REFRESH] ✅ Updated lender product cache: ${products.length} products`);
+    } else {
+      console.error(`[SCHEDULED REFRESH] ❌ Staff API failed: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('[SCHEDULED REFRESH] ❌ Cache refresh failed:', error);
   }
 }
 
@@ -165,46 +170,38 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
  * Get products by category
  */
 export async function getProductsByCategory(category: string): Promise<LenderProduct[]> {
-  const { products } = await fetchLenderProducts();
-  return products.filter(product => product.category === category);
+  const response = await fetchLenderProducts();
+  return response.products.filter(product => product.category === category);
 }
 
 /**
  * Get products by country
  */
 export async function getProductsByCountry(country: string): Promise<LenderProduct[]> {
-  const { products } = await fetchLenderProducts();
-  return products.filter(product => 
-    product.geography.includes(country.toUpperCase()) || 
-    product.country?.toUpperCase() === country.toUpperCase()
-  );
+  const response = await fetchLenderProducts();
+  return response.products.filter(product => product.country === country);
 }
 
 /**
  * Get maximum funding amount available
  */
 export async function getMaximumFunding(): Promise<number> {
-  const { products } = await fetchLenderProducts();
-  return Math.max(...products.map(p => p.maxAmount));
+  const response = await fetchLenderProducts();
+  return Math.max(...response.products.map(p => p.maxAmount));
 }
 
 /**
  * Get all available categories
  */
 export async function getAvailableCategories(): Promise<string[]> {
-  const { products } = await fetchLenderProducts();
-  return [...new Set(products.map(p => p.category))];
+  const response = await fetchLenderProducts();
+  return [...new Set(response.products.map(p => p.category))];
 }
 
 /**
  * Get all available countries
  */
 export async function getAvailableCountries(): Promise<string[]> {
-  const { products } = await fetchLenderProducts();
-  const countries = new Set<string>();
-  products.forEach(p => {
-    if (p.country) countries.add(p.country);
-    p.geography.forEach(geo => countries.add(geo));
-  });
-  return Array.from(countries);
+  const response = await fetchLenderProducts();
+  return [...new Set(response.products.map(p => p.country))];
 }

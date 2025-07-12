@@ -160,6 +160,19 @@ export default function LenderDiagnosticsFinalized() {
         </div>
       )}
 
+      {/* Cache Missing Warning Banner */}
+      {status && status.indexedDBCount === 0 && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 text-red-600" />
+          <div>
+            <h3 className="font-semibold text-red-800">❌ Lender Cache Missing</h3>
+            <p className="text-sm text-red-700">
+              IndexedDB cache is empty. Products should be populated by scheduled refresh (noon/midnight MST).
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-6 md:grid-cols-3">
         {/* Live API Status */}
         <Card>
