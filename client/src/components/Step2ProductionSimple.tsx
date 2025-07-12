@@ -50,16 +50,30 @@ export function Step2ProductionSimple({
         };
         console.log('[STEP2] Field validation:', fieldCheck);
         
-        // Check for problematic products
-        const problemProducts = allProducts.filter(p => 
-          !p.minAmount || !p.maxAmount || 
-          isNaN(p.minAmount) || isNaN(p.maxAmount) ||
-          p.minAmount === null || p.maxAmount === null
-        );
-        console.log(`[STEP2] Products with field issues: ${problemProducts.length}/${allProducts.length}`);
+        // Additional field mapping check
+        const hasAPIFields = !!(sample?.amountMin && sample?.amountMax);
+        const hasSchemaFields = !!(sample?.minAmount && sample?.maxAmount);
+        console.log('[STEP2] Field mapping check:', { hasAPIFields, hasSchemaFields });
         
-        if (problemProducts.length > 0) {
-          console.log('[STEP2] Problem products sample:', problemProducts.slice(0, 3));
+        // Check for field name variations and problematic products
+        const fieldAnalysis = allProducts.map(p => ({
+          hasMinAmount: !!p.minAmount,
+          hasMaxAmount: !!p.maxAmount,
+          hasAmountMin: !!p.amountMin,
+          hasAmountMax: !!p.amountMax,
+          minAmountType: typeof p.minAmount,
+          maxAmountType: typeof p.maxAmount,
+          amountMinType: typeof p.amountMin,
+          amountMaxType: typeof p.amountMax
+        }));
+        
+        const withSchemaFields = fieldAnalysis.filter(p => p.hasMinAmount && p.hasMaxAmount).length;
+        const withAPIFields = fieldAnalysis.filter(p => p.hasAmountMin && p.hasAmountMax).length;
+        
+        console.log(`[STEP2] Field analysis - Schema format: ${withSchemaFields}, API format: ${withAPIFields}, Total: ${allProducts.length}`);
+        
+        if (fieldAnalysis.length > 0) {
+          console.log('[STEP2] Field structure sample:', fieldAnalysis[0]);
         }
       }
     }
@@ -147,23 +161,41 @@ export function Step2ProductionSimple({
                 <div className="text-sm text-muted-foreground">
                   <strong>Funding Range:</strong> {
                     (() => {
-                      // Check if products have proper amount fields
-                      const validProducts = allProducts.filter(p => 
-                        p && 
-                        typeof p.minAmount === 'number' && 
-                        typeof p.maxAmount === 'number' && 
-                        !isNaN(p.minAmount) && 
-                        !isNaN(p.maxAmount) &&
-                        p.minAmount > 0 && 
-                        p.maxAmount > 0
-                      );
+                      // Check multiple field name variations for amount fields
+                      const validProducts = allProducts.filter(p => p && (
+                        // Check schema format (minAmount/maxAmount)
+                        (typeof p.minAmount === 'number' && typeof p.maxAmount === 'number' && 
+                         !isNaN(p.minAmount) && !isNaN(p.maxAmount) && p.minAmount > 0 && p.maxAmount > 0) ||
+                        // Check API format (amountMin/amountMax)
+                        (typeof p.amountMin === 'number' && typeof p.amountMax === 'number' && 
+                         !isNaN(p.amountMin) && !isNaN(p.amountMax) && p.amountMin > 0 && p.amountMax > 0) ||
+                        // Check string versions that can be parsed
+                        (p.amountMin && p.amountMax && !isNaN(parseFloat(p.amountMin)) && !isNaN(parseFloat(p.amountMax)))
+                      ));
                       
                       if (validProducts.length === 0) {
-                        return 'Data validation needed - check field mapping';
+                        return 'Field mapping issue - no valid amount fields found';
                       }
                       
-                      const min = Math.min(...validProducts.map(p => p.minAmount));
-                      const max = Math.max(...validProducts.map(p => p.maxAmount));
+                      // Extract min/max amounts handling different field names
+                      const amounts = validProducts.map(p => {
+                        let min, max;
+                        if (p.minAmount && p.maxAmount) {
+                          min = p.minAmount;
+                          max = p.maxAmount;
+                        } else if (p.amountMin && p.amountMax) {
+                          min = typeof p.amountMin === 'number' ? p.amountMin : parseFloat(p.amountMin);
+                          max = typeof p.amountMax === 'number' ? p.amountMax : parseFloat(p.amountMax);
+                        }
+                        return { min, max };
+                      }).filter(a => a.min && a.max);
+                      
+                      if (amounts.length === 0) {
+                        return 'Unable to parse amount fields';
+                      }
+                      
+                      const min = Math.min(...amounts.map(a => a.min));
+                      const max = Math.max(...amounts.map(a => a.max));
                       return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
                     })()
                   }
