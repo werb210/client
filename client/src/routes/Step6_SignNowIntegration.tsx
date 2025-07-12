@@ -266,8 +266,6 @@ export default function Step6SignNowIntegration() {
   const handleOpenSigningUrl = () => {
     if (signUrl) {
       console.log('📝 Opening SignNow signing URL...');
-      // Open signUrl in embedded iframe or new tab
-      window.open(signUrl, '_blank', 'width=900,height=700');
       setSigningStatus('signing');
       
       // Start polling to detect completion
@@ -335,15 +333,33 @@ export default function Step6SignNowIntegration() {
             <CardContent>
               <div className="space-y-4">
                 <p className="text-blue-700">
-                  Your documents have been prepared and are ready for electronic signature via SignNow.
+                  Your documents have been prepared and are ready for electronic signature. Complete the signing process below.
                 </p>
-                <Button onClick={handleOpenSigningUrl} className="w-full bg-blue-600 hover:bg-blue-700">
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Open SignNow Signing Window
-                </Button>
-                <p className="text-xs text-gray-500 text-center">
-                  This will open SignNow in a new tab. Complete the signing process and we'll automatically detect completion.
-                </p>
+                {signUrl ? (
+                  <div className="w-full">
+                    <iframe
+                      src={signUrl}
+                      width="100%"
+                      height="800px"
+                      style={{ border: "none" }}
+                      title="SignNow Embedded Signing"
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                      onLoad={() => {
+                        console.log('📝 SignNow iframe loaded successfully');
+                        handleOpenSigningUrl();
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <Alert className="border-red-200 bg-red-50">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="text-red-700">
+                      SignNow signature URL is not ready. Please refresh or contact support.
+                      <br />
+                      <span className="text-xs">Application ID: {applicationId || 'Not available'}</span>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -354,8 +370,8 @@ export default function Step6SignNowIntegration() {
           <Card className="border-orange-200 bg-orange-50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-orange-800">
-                <Eye className="w-5 h-5" />
-                Waiting for Signature Completion
+                <FileSignature className="w-5 h-5" />
+                Complete Your Signature
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -365,14 +381,29 @@ export default function Step6SignNowIntegration() {
                   <span className="text-orange-700">Monitoring for signature completion...</span>
                 </div>
                 <p className="text-orange-600">
-                  Complete the signing process in the SignNow window. We'll automatically proceed once signing is finished.
+                  Complete the signing process in the embedded SignNow window below. We'll automatically proceed once signing is finished.
                 </p>
-                <Alert>
-                  <Clock className="h-4 w-4" />
-                  <AlertDescription>
-                    You can continue signing in the other tab. We're monitoring the status and will automatically proceed.
-                  </AlertDescription>
-                </Alert>
+                {signUrl ? (
+                  <div className="w-full">
+                    <iframe
+                      src={signUrl}
+                      width="100%"
+                      height="800px"
+                      style={{ border: "none" }}
+                      title="SignNow Embedded Signing"
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                    />
+                  </div>
+                ) : (
+                  <Alert className="border-red-200 bg-red-50">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="text-red-700">
+                      SignNow signature URL is not ready. Please refresh or contact support.
+                      <br />
+                      <span className="text-xs">Application ID: {applicationId || 'Not available'}</span>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
             </CardContent>
           </Card>

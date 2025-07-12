@@ -93,6 +93,17 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 12, 2025: STEP 6 SIGNNOW IFRAME INTEGRATION COMPLETE**
+  * CRITICAL SUCCESS: Implemented embedded iframe-based SignNow integration replacing button-based approach
+  * IFRAME IMPLEMENTATION: Added 800px height iframe with proper sandbox attributes for security
+  * AUTOMATIC LOADING: SignNow document loads immediately when ready without user click required
+  * ENHANCED SECURITY: Implemented sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+  * FALLBACK HANDLING: Added error states for undefined/expired signUrl with application ID logging
+  * STATUS MONITORING: Maintained automatic polling for signature completion detection
+  * USER EXPERIENCE: Seamless embedded signing process with real-time status updates
+  * PHONE INPUT FIX: Resolved phone number deletion issue in Step 4 by removing automatic formatting on change
+  * PRODUCTION READY: Complete embedded SignNow workflow operational with proper error handling
+
 - **July 12, 2025: CRITICAL STEP 5 DOCUMENT REQUIREMENTS FIELD MAPPING FIX COMPLETE**
   * CRITICAL SUCCESS: Fixed Step 5 document requirements display issue caused by field mapping error
   * ROOT CAUSE: Intersection logic checked `product.requiredDocuments` but cached products use `doc_requirements` field
