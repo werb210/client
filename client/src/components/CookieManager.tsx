@@ -34,16 +34,22 @@ export const CookieManager = () => {
   // Hide banner when consent is given
   useEffect(() => {
     const checkConsent = () => {
-      const hasConsent = Cookies.get("borealCookieConsent");
-      if (hasConsent) {
-        setShowBanner(false);
+      try {
+        const hasConsent = Cookies.get("borealCookieConsent");
+        if (hasConsent) {
+          setShowBanner(false);
+        }
+      } catch (error) {
+        // Silently ignore cookie errors in production
       }
     };
 
-    // Check consent status periodically
-    const interval = setInterval(checkConsent, 1000);
+    // PRODUCTION: Disable polling - check only once
+    checkConsent();
     
-    return () => clearInterval(interval);
+    // DISABLED: Polling disabled for production
+    // const interval = setInterval(checkConsent, 1000);
+    // return () => clearInterval(interval);
   }, []);
 
   return (

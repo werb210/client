@@ -47,8 +47,12 @@ export function StageMonitor({ currentStep }: StageMonitorProps) {
     if (state.applicationId && currentStep === 5) {
       // Clear auto-save when application is submitted
       const timer = setTimeout(() => {
-        clearData();
-        console.log('🎉 Application submitted - auto-save data cleared');
+        try {
+          clearData();
+          console.log('🎉 Application submitted - auto-save data cleared');
+        } catch (error) {
+          // Silently ignore auto-save cleanup errors
+        }
       }, 5000); // Wait 5 seconds to ensure submission is complete
 
       return () => clearTimeout(timer);

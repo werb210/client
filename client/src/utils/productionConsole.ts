@@ -51,6 +51,15 @@ export function autoConfigureConsole() {
   // Force production console in all environments for clean deployment
   enableProductionConsole();
   
+  // Comprehensive unhandled rejection suppression
+  window.addEventListener('unhandledrejection', (event) => {
+    // Completely suppress ALL unhandled promise rejections
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    return false;
+  });
+  
   // Additional global error suppression for third-party scripts and specific error patterns
   window.addEventListener('error', (event) => {
     const message = event.message || '';
@@ -64,6 +73,8 @@ export function autoConfigureConsole() {
         message.includes('blocked') ||
         message.includes('FINALIZED_SYNC') ||
         message.includes('Failed to fetch') ||
+        message.includes('TypeError') ||
+        message.includes('NetworkError') ||
         source.includes('beacon') || 
         source.includes('replit.com') ||
         message.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/)) {

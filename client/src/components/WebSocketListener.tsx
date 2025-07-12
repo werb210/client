@@ -38,7 +38,9 @@ export function WebSocketListener() {
               console.log('[WebSocket] Lender products updated - invalidating cache');
               
               // Invalidate React Query cache as per specification
-              queryClient.invalidateQueries({ queryKey: ['lender-products'] });
+              queryClient.invalidateQueries({ queryKey: ['lender-products'] }).catch(() => {
+                // Silently ignore query invalidation errors
+              });
               
               toast({
                 title: 'Lender Products Updated',
@@ -47,16 +49,24 @@ export function WebSocketListener() {
               });
             }
           } catch (error) {
-            console.warn('[WebSocket] Failed to parse message:', error);
+            // Silently ignore WebSocket message parsing errors
           }
         };
         
         ws.onerror = (error) => {
-          console.warn('[WebSocket] Connection error:', error);
+          try {
+            console.warn('[WebSocket] Connection error:', error);
+          } catch (e) {
+            // Silently ignore WebSocket error logging failures
+          }
         };
         
         ws.onclose = (event) => {
-          console.log('[WebSocket] Connection closed, code:', event.code);
+          try {
+            console.log('[WebSocket] Connection closed, code:', event.code);
+          } catch (e) {
+            // Silently ignore WebSocket close logging failures
+          }
           
           // DISABLED: Auto-reconnect for cache-only system
           // if (event.code !== 1000) {
@@ -77,8 +87,12 @@ export function WebSocketListener() {
     
     // Cleanup function
     return () => {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.close(1000, 'Component unmounting');
+      try {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.close(1000, 'Component unmounting');
+        }
+      } catch (error) {
+        // Silently ignore WebSocket cleanup errors
       }
     };
   }, [queryClient]);

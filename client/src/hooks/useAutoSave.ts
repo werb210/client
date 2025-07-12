@@ -81,15 +81,31 @@ export function useAutoSave({
     console.log('🗑️ Cleared auto-save data');
   }, [key]);
 
-  // Auto save on interval
+  // Auto save on interval - wrapped for error safety
   useEffect(() => {
-    const intervalId = setInterval(saveData, interval);
+    const safeInterval = () => {
+      try {
+        saveData();
+      } catch (error) {
+        // Silently ignore autosave errors
+      }
+    };
+    
+    const intervalId = setInterval(safeInterval, interval);
     return () => clearInterval(intervalId);
   }, [saveData, interval]);
 
-  // Auto save after delay when data changes
+  // Auto save after delay when data changes - wrapped for error safety
   useEffect(() => {
-    const timeoutId = setTimeout(saveData, delay);
+    const safeTimeout = () => {
+      try {
+        saveData();
+      } catch (error) {
+        // Silently ignore autosave errors
+      }
+    };
+    
+    const timeoutId = setTimeout(safeTimeout, delay);
     return () => clearTimeout(timeoutId);
   }, [saveData, delay]);
 

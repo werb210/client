@@ -98,12 +98,17 @@ export default function Step6SignNowTyped({ onNext, onBack }: Step6SignNowTypedP
       // Open SignNow in a new window
       const signWindow = window.open(signData.signUrl, '_blank', 'width=800,height=600');
       
-      // Poll for window close to detect completion
+      // Poll for window close to detect completion - with error handling
       const pollTimer = setInterval(() => {
-        if (signWindow?.closed) {
+        try {
+          if (signWindow?.closed) {
+            clearInterval(pollTimer);
+            setIsSigned(true);
+            console.log('✅ SignNow window closed - document likely signed');
+          }
+        } catch (error) {
+          // Silently ignore polling errors
           clearInterval(pollTimer);
-          setIsSigned(true);
-          console.log('✅ SignNow window closed - document likely signed');
         }
       }, 1000);
     }
