@@ -27,7 +27,7 @@ Successfully secured the VITE_CLIENT_APP_SHARED_TOKEN by removing all plaintext 
 #### Before (INSECURE):
 ```bash
 # .env
-VITE_CLIENT_APP_SHARED_TOKEN=ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042
+VITE_CLIENT_APP_SHARED_TOKEN=<hardcoded-token-removed-for-security>
 ```
 
 #### After (SECURE):

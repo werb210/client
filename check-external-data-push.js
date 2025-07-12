@@ -15,7 +15,7 @@ async function checkExternalDataPush() {
     const response = await fetch(productionStaffUrl, {
       method: 'GET',
       headers: {
-        'Authorization': 'Bearer ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042',
+        'Authorization': `Bearer ${process.env.CLIENT_APP_SHARED_TOKEN || 'your-token-here'}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }

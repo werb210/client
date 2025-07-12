@@ -4,7 +4,7 @@
  */
 
 const API_BASE_URL = 'https://staff.boreal.financial/api';
-const BEARER_TOKEN = 'ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042';
+const BEARER_TOKEN = process.env.CLIENT_APP_SHARED_TOKEN || 'your-token-here';
 
 async function testCanadianFiltering() {
   console.log('🇨🇦 Testing Canadian Working Capital Filtering');

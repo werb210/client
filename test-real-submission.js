@@ -4,7 +4,7 @@
  */
 
 const STAFF_API_URL = 'https://staff.boreal.financial/api/public';
-const BEARER_TOKEN = 'ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042';
+const BEARER_TOKEN = process.env.CLIENT_APP_SHARED_TOKEN || 'your-token-here';
 
 async function testRealSubmission() {
   console.log('🧪 Testing real application submission...');
