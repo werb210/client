@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
 import { validateLenderProduct, type ProductDiagnostic, type FieldMismatch } from '@/lib/expectedLenderFields';
 import { sanitizeLenderProduct, type SanitizationLog } from '@/lib/sanitizeLenderProduct';
+import { validateAllProductsRequiredDocuments, type ValidationSummary } from '@/utils/requiredDocumentsValidator';
 
 interface FieldMappingDebugOverlayProps {
   products: any[];
@@ -26,7 +27,8 @@ export function FieldMappingDebugOverlay({
 }: FieldMappingDebugOverlayProps) {
   const [diagnostics, setDiagnostics] = useState<ProductDiagnostic[]>([]);
   const [sanitizationLogs, setSanitizationLogs] = useState<SanitizationLog[]>([]);
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'products' | 'sanitization'>('overview');
+  const [documentsValidation, setDocumentsValidation] = useState<ValidationSummary | null>(null);
+  const [selectedTab, setSelectedTab] = useState<'overview' | 'products' | 'sanitization' | 'documents'>('overview');
 
   useEffect(() => {
     if (products && products.length > 0) {
@@ -44,6 +46,10 @@ export function FieldMappingDebugOverlay({
       });
       setSanitizationLogs(allSanitizationLogs);
       
+      // Run critical Step 5 document validation
+      const docValidation = validateAllProductsRequiredDocuments(products);
+      setDocumentsValidation(docValidation);
+      
       // Log summary
       const errorCount = productDiagnostics.filter(d => d.status === 'error').length;
       const warningCount = productDiagnostics.filter(d => d.status === 'warning').length;
@@ -54,7 +60,8 @@ export function FieldMappingDebugOverlay({
         healthy: healthyCount,
         warnings: warningCount,
         errors: errorCount,
-        sanitizationFixes: allSanitizationLogs.length
+        sanitizationFixes: allSanitizationLogs.length,
+        documentsValidation: docValidation
       });
     }
   }, [products]);
@@ -100,14 +107,16 @@ export function FieldMappingDebugOverlay({
             
             {/* Tab Navigation */}
             <div className="flex space-x-2 mt-4">
-              {(['overview', 'products', 'sanitization'] as const).map(tab => (
+              {(['overview', 'products', 'sanitization', 'documents'] as const).map(tab => (
                 <Button
                   key={tab}
                   onClick={() => setSelectedTab(tab)}
                   variant={selectedTab === tab ? 'default' : 'outline'}
                   size="sm"
+                  className={tab === 'documents' && documentsValidation?.criticalIssues.length ? 'border-red-500 text-red-600' : ''}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab === 'documents' && documentsValidation?.criticalIssues.length ? ` (${documentsValidation.criticalIssues.length})` : ''}
                 </Button>
               ))}
             </div>
@@ -256,6 +265,96 @@ export function FieldMappingDebugOverlay({
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+            
+            {selectedTab === 'documents' && (
+              <div className="space-y-6">
+                {/* Critical Step 5 Document Requirements Analysis */}
+                <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+                  <h3 className="font-semibold text-orange-800 mb-2 flex items-center">
+                    <AlertTriangle className="w-5 h-5 mr-2" />
+                    Step 5 Document Upload Dependencies
+                  </h3>
+                  <p className="text-sm text-orange-700 mb-4">
+                    Step 5 (Document Upload) <strong>completely depends</strong> on products having valid `requiredDocuments` arrays. 
+                    Missing this field breaks the entire document collection workflow.
+                  </p>
+                  
+                  {documentsValidation && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="bg-white p-3 rounded border">
+                        <div className="text-lg font-bold text-gray-800">{documentsValidation.totalProducts}</div>
+                        <div className="text-xs text-gray-600">Total Products</div>
+                      </div>
+                      <div className="bg-green-50 p-3 rounded border border-green-200">
+                        <div className="text-lg font-bold text-green-800">{documentsValidation.productsWithDocuments}</div>
+                        <div className="text-xs text-green-600">With requiredDocuments</div>
+                      </div>
+                      <div className="bg-red-50 p-3 rounded border border-red-200">
+                        <div className="text-lg font-bold text-red-800">{documentsValidation.productsWithoutDocuments}</div>
+                        <div className="text-xs text-red-600">Missing requiredDocuments</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {documentsValidation?.criticalIssues.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 p-3 rounded">
+                      <h4 className="font-medium text-red-800 mb-2">Products That Will Break Step 5:</h4>
+                      <div className="space-y-1 text-sm">
+                        {documentsValidation.criticalIssues.slice(0, 10).map(issue => (
+                          <div key={issue.productId} className="flex justify-between items-center">
+                            <span className="text-red-700">{issue.productName}</span>
+                            <Badge variant="destructive" className="text-xs">
+                              No Documents Field
+                            </Badge>
+                          </div>
+                        ))}
+                        {documentsValidation.criticalIssues.length > 10 && (
+                          <div className="text-red-600 text-xs mt-2">
+                            +{documentsValidation.criticalIssues.length - 10} more products missing requiredDocuments
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {documentsValidation?.recommendations.length > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 p-3 rounded mt-4">
+                      <h4 className="font-medium text-blue-800 mb-2">Immediate Actions Required:</h4>
+                      <ul className="space-y-1 text-sm">
+                        {documentsValidation.recommendations.map((rec, index) => (
+                          <li key={index} className="text-blue-700 flex items-start">
+                            <span className="text-blue-500 mr-2">•</span>
+                            {rec}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Fallback Document Categories Reference */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">Default Document Requirements by Category</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    When products are missing requiredDocuments, the system can use these category-based defaults:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-2">
+                      <div><strong>Term Loan:</strong> Bank Statements, Tax Returns, Financial Statements</div>
+                      <div><strong>Business Line of Credit:</strong> Bank Statements, Tax Returns, Financial Statements</div>
+                      <div><strong>Equipment Financing:</strong> Bank Statements, Tax Returns, Equipment Quote</div>
+                      <div><strong>Working Capital:</strong> Bank Statements, Tax Returns, Cash Flow Statement</div>
+                    </div>
+                    <div className="space-y-2">
+                      <div><strong>Invoice Factoring:</strong> Bank Statements, A/R Aging, Sample Invoices</div>
+                      <div><strong>Purchase Order Financing:</strong> Bank Statements, Purchase Orders, Supplier Contracts</div>
+                      <div><strong>Asset-Based Lending:</strong> Bank Statements, Tax Returns, Asset Appraisal, Financial Statements</div>
+                      <div><strong>SBA Loan:</strong> Bank Statements, Tax Returns, Financial Statements, Business Plan</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

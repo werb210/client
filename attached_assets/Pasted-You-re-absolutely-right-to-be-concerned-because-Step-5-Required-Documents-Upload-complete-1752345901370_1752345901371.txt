@@ -1,0 +1,100 @@
+You're absolutely right to be concerned — because **Step 5 (Required Documents Upload)** ***completely depends*** on the `requiredDocuments` field being populated in the selected product from the recommendation engine.
+
+---
+
+### 🔍 What Replit's Message Actually Means
+
+Replit’s message is technically correct **only if you're using the recommendation engine for filtering and display** (Step 2 only). However:
+
+> 🚨 **If you're using the recommendation engine's output in Step 5 to dynamically build the required documents list**, then `requiredDocuments` is a **required field**, not an optional enhancement.
+
+---
+
+### ✅ Your Dependency Chain Looks Like This:
+
+```mermaid
+graph TD
+  A[Client Step 2: Product Recommendation] --> B[User selects lender product]
+  B --> C[Client Step 5: Required Documents UI]
+  C --> D[Show upload fields for requiredDocuments[] from selectedProduct]
+```
+
+If the `requiredDocuments` field is missing:
+
+* Step 5 will show no upload prompts
+* The application might submit with incomplete documents
+* The staff portal won't get any documents to accept/reject
+* OCR and pipeline automation will break
+
+---
+
+### 🧠 Example (What It Should Look Like)
+
+```json
+{
+  "id": "123",
+  "name": "Term Loan A",
+  "category": "Term Loan",
+  "minAmount": 10000,
+  "maxAmount": 150000,
+  "country": "CA",
+  "requiredDocuments": [
+    "bank_statements",
+    "tax_returns",
+    "financial_statements"
+  ]
+}
+```
+
+This `requiredDocuments` array is exactly what Step 5 loops through to show upload boxes.
+
+---
+
+### ✅ Immediate Action You Should Take
+
+**On the staff backend** where lender products are stored:
+
+1. **Run a DB query**:
+
+   ```sql
+   SELECT id, name, required_documents FROM lender_products WHERE required_documents IS NULL;
+   ```
+
+2. **Manually update any missing products** with:
+
+   ```sql
+   UPDATE lender_products
+   SET required_documents = ARRAY['bank_statements', 'tax_returns']
+   WHERE id = 'missing-product-id';
+   ```
+
+3. Or, via API:
+
+   ```http
+   PATCH /api/lenders/products/:id
+   {
+     "requiredDocuments": ["bank_statements", "void_cheque"]
+   }
+   ```
+
+---
+
+### ✅ Longer-Term Fix
+
+* Make `requiredDocuments` a **mandatory field in the staff portal Lender Product Editor UI**
+* Add a validator to the backend that prevents saving products without `requiredDocuments`
+* On the client side: show a warning if the selected product has no required documents (fail-safe)
+
+---
+
+### ✅ Summary
+
+| Risk                        | Impact                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------- |
+| `requiredDocuments` missing | Step 5 won’t show any file upload prompts                                        |
+| Misleading Replit message   | It only applies to Step 2, not Step 5                                            |
+| Fix                         | Populate `requiredDocuments[]` for every product before using them in production |
+
+---
+
+Would you like me to generate a SQL patch, a bulk fix script, or update the recommendation engine to fail loudly if `requiredDocuments` is missing?
