@@ -161,16 +161,31 @@ export function Step2ProductionSimple({
                 <div className="text-sm text-muted-foreground">
                   <strong>Funding Range:</strong> {
                     (() => {
-                      // Now that products are normalized, check simple minAmount/maxAmount
-                      const validProducts = allProducts.filter(p => 
-                        p && 
-                        typeof p.minAmount === 'number' && 
-                        typeof p.maxAmount === 'number' && 
-                        !isNaN(p.minAmount) && 
-                        !isNaN(p.maxAmount) &&
-                        p.minAmount > 0 && 
-                        p.maxAmount > 0
-                      );
+                      // Check ALL possible field name variations for amount fields
+                      const validProducts = allProducts.filter(p => {
+                        if (!p) return false;
+                        
+                        // Try many possible field name combinations
+                        const amountFields = [
+                          [p.minAmount, p.maxAmount],
+                          [p.amountMin, p.amountMax],
+                          [p.minAmountUsd, p.maxAmountUsd],
+                          [p.amount_min, p.amount_max],
+                          [p.min_amount, p.max_amount],
+                          [p.fundingMin, p.fundingMax],
+                          [p.loanMin, p.loanMax],
+                        ];
+                        
+                        // Check if any field pair has valid numeric values
+                        return amountFields.some(([min, max]) => {
+                          if (!min || !max) return false;
+                          
+                          const minNum = typeof min === 'number' ? min : parseFloat(String(min));
+                          const maxNum = typeof max === 'number' ? max : parseFloat(String(max));
+                          
+                          return !isNaN(minNum) && !isNaN(maxNum) && minNum > 0 && maxNum > 0;
+                        });
+                      });
                       
                       if (validProducts.length === 0) {
                         // Show detailed field analysis for debugging
@@ -178,11 +193,32 @@ export function Step2ProductionSimple({
                         return `No amount fields found. Sample fields: ${sampleFields.slice(0, 5).join(', ')}...`;
                       }
                       
-                      // Extract min/max amounts from normalized fields
-                      const amounts = validProducts.map(p => ({
-                        min: p.minAmount,
-                        max: p.maxAmount
-                      }));
+                      // Extract min/max amounts from any valid field combination
+                      const amounts = validProducts.map(p => {
+                        // Try all possible field combinations
+                        const fieldPairs = [
+                          [p.minAmount, p.maxAmount],
+                          [p.amountMin, p.amountMax],
+                          [p.minAmountUsd, p.maxAmountUsd],
+                          [p.amount_min, p.amount_max],
+                          [p.min_amount, p.max_amount],
+                          [p.fundingMin, p.fundingMax],
+                          [p.loanMin, p.loanMax],
+                        ];
+                        
+                        for (const [minField, maxField] of fieldPairs) {
+                          if (minField && maxField) {
+                            const min = typeof minField === 'number' ? minField : parseFloat(String(minField));
+                            const max = typeof maxField === 'number' ? maxField : parseFloat(String(maxField));
+                            
+                            if (!isNaN(min) && !isNaN(max) && min > 0 && max > 0) {
+                              return { min, max };
+                            }
+                          }
+                        }
+                        
+                        return null;
+                      }).filter(a => a !== null);
                       
                       if (amounts.length === 0) {
                         return 'Unable to parse amount fields';

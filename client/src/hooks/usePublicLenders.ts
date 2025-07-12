@@ -13,26 +13,9 @@ export function usePublicLenders() {
     queryKey: ['cache-only-lenders'],
     queryFn: async () => {
       try {
-        const { get } = await import('idb-keyval');
-        
-        // Check both cache keys for compatibility
-        let products = await get('lenderProducts'); // New cache system
-        if (!products || !Array.isArray(products) || products.length === 0) {
-          products = await get('lender_products_cache'); // Old cache system
-        }
-        
-        if (products && Array.isArray(products) && products.length > 0) {
-          // Normalize field names for consistency
-          const normalizeProductFields = (product: any) => ({
-            ...product,
-            minAmount: product.minAmount ?? product.amountMin ?? product.min_amount ?? product.minAmountUsd ?? product.fundingMin ?? product.loanMin ?? null,
-            maxAmount: product.maxAmount ?? product.amountMax ?? product.max_amount ?? product.maxAmountUsd ?? product.fundingMax ?? product.loanMax ?? null,
-          });
-          
-          return products.map(normalizeProductFields);
-        }
-        
-        return [];
+        const { loadLenderProducts } = await import('../utils/lenderCache');
+        const cached = await loadLenderProducts();
+        return cached || [];
       } catch (error) {
         return [];
       }
@@ -51,40 +34,17 @@ export function usePublicLenderStats() {
     queryKey: ["cache-only-lender-stats"],
     queryFn: async () => {
       try {
-        const { get } = await import('idb-keyval');
+        const { loadLenderProducts } = await import('../utils/lenderCache');
+        const products = (await loadLenderProducts()) || [];
         
-        // Check both cache keys for compatibility
-        let products = await get('lenderProducts'); // New cache system
-        if (!products || !Array.isArray(products) || products.length === 0) {
-          products = await get('lender_products_cache'); // Old cache system
-        }
-        
-        if (products && Array.isArray(products) && products.length > 0) {
-          // Normalize field names for consistency
-          const normalizeProductFields = (product: any) => ({
-            ...product,
-            minAmount: product.minAmount ?? product.amountMin ?? product.min_amount ?? product.minAmountUsd ?? product.fundingMin ?? product.loanMin ?? null,
-            maxAmount: product.maxAmount ?? product.amountMax ?? product.max_amount ?? product.maxAmountUsd ?? product.fundingMax ?? product.loanMax ?? null,
-          });
-          
-          const normalizedProducts = products.map(normalizeProductFields);
-          
-          const stats = {
-            totalProducts: normalizedProducts.length,
-            maxFunding: Math.max(...normalizedProducts.map(p => p.maxAmount || 0)),
-            countries: Array.from(new Set(normalizedProducts.map(p => p.country).filter(Boolean))).length,
-            categories: Array.from(new Set(normalizedProducts.map(p => p.category))).length
-          };
-          
-          return stats;
-        }
-        
-        return {
-          totalProducts: 0,
-          maxFunding: 0,
-          countries: 0,
-          categories: 0
+        const stats = {
+          totalProducts: products.length,
+          maxFunding: Math.max(...products.map(p => p.maxAmount || 0)),
+          countries: Array.from(new Set(products.map(p => p.country).filter(Boolean))).length,
+          categories: Array.from(new Set(products.map(p => p.category))).length
         };
+        
+        return stats;
       } catch (error) {
         return {
           totalProducts: 0,
