@@ -44,8 +44,11 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
   
   try {
     // Use the comprehensive fetcher
+    console.log('[DEBUG] lenderProducts - Importing lenderDataFetcher');
     const { fetchLenderProducts: fetchData } = await import('./lenderDataFetcher');
+    console.log('[DEBUG] lenderProducts - Calling fetchData()');
     const result = await fetchData();
+    console.log('[DEBUG] lenderProducts - fetchData() completed:', result);
     
     // Save to persistent cache
     await saveLenderProducts(result.products, result.source);

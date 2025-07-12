@@ -17,24 +17,32 @@ interface LenderDataResponse {
  * Normalize raw product data to match our schema
  */
 function normalizeProductData(rawProduct: any): LenderProduct {
-  return {
-    id: rawProduct.id,
-    name: rawProduct.name,
-    lenderName: rawProduct.lenderName,
-    geography: Array.isArray(rawProduct.geography) ? rawProduct.geography : [rawProduct.country || 'US'],
-    country: rawProduct.country || 'US',
-    category: rawProduct.category,
-    minAmount: typeof rawProduct.amountMin === 'number' ? rawProduct.amountMin : rawProduct.minAmountUsd || 0,
-    maxAmount: typeof rawProduct.amountMax === 'number' ? rawProduct.amountMax : rawProduct.maxAmountUsd || 0,
-    minRevenue: rawProduct.requirements?.minMonthlyRevenue || 0,
-    interestRateMin: undefined,
-    interestRateMax: undefined,
-    termMin: undefined,
-    termMax: undefined,
-    docRequirements: getDocRequirementsForCategory(rawProduct.category),
-    description: rawProduct.description,
-    industries: rawProduct.requirements?.industries || rawProduct.industries
-  };
+  console.log('[DEBUG] Normalizing product:', rawProduct.product_name || rawProduct.name || rawProduct.id);
+  try {
+    const normalized = {
+      id: rawProduct.id,
+      name: rawProduct.product_name || rawProduct.name,
+      lenderName: rawProduct.lender_name || rawProduct.lenderName,
+      geography: Array.isArray(rawProduct.geography) ? rawProduct.geography : [rawProduct.country || 'US'],
+      country: rawProduct.country || 'US',
+      category: rawProduct.category || rawProduct.product_type || 'term_loan',
+      minAmount: rawProduct.min_amount || rawProduct.amountMin || 0,
+      maxAmount: rawProduct.max_amount || rawProduct.amountMax || 0,
+      minRevenue: rawProduct.min_revenue || rawProduct.requirements?.minMonthlyRevenue || 0,
+      interestRateMin: rawProduct.interest_rate_min,
+      interestRateMax: rawProduct.interest_rate_max,
+      termMin: rawProduct.term_min,
+      termMax: rawProduct.term_max,
+      docRequirements: rawProduct.doc_requirements || getDocRequirementsForCategory(rawProduct.category),
+      description: rawProduct.description || '',
+      industries: rawProduct.industries || rawProduct.requirements?.industries || ['general']
+    };
+    console.log('[DEBUG] Normalized successfully:', normalized.name);
+    return normalized;
+  } catch (error) {
+    console.error('[DEBUG] Normalization failed for product:', rawProduct);
+    throw error;
+  }
 }
 
 /**
@@ -83,19 +91,40 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
       console.log('[DEBUG] Fetch response ok:', response.ok);
 
       if (response.ok) {
+        console.log('[DEBUG] Response OK, parsing JSON...');
         const data = await response.json();
         console.log('[LENDER_FETCHER] Staff API response received');
+        console.log('[DEBUG] Raw API response structure:', {
+          hasProducts: !!data.products,
+          hasData: !!data.data,
+          isArray: Array.isArray(data),
+          keys: Object.keys(data)
+        });
         
-        const products = (data.products || data.data || data).map(normalizeProductData);
+        const rawProducts = data.products || data.data || data;
+        console.log('[DEBUG] Raw products to normalize:', rawProducts.length);
+        console.log('[DEBUG] Sample raw product:', rawProducts[0]);
+        
+        const products = rawProducts.map((product: any, index: number) => {
+          try {
+            return normalizeProductData(product);
+          } catch (error) {
+            console.error(`[DEBUG] Failed to normalize product ${index}:`, product, error);
+            throw error;
+          }
+        });
+        console.log('[DEBUG] Normalized products:', products.length);
         
         console.log(`[LENDER_FETCHER] ✅ Staff API success: ${products.length} products`);
-        return {
+        const response = {
           success: true,
           products,
           count: products.length,
           source: 'staff_api',
           timestamp: new Date().toISOString()
         };
+        console.log('[DEBUG] Returning successful response:', response);
+        return response;
       } else {
         console.warn(`[LENDER_FETCHER] Staff API failed: ${response.status} ${response.statusText}`);
       }

@@ -12,9 +12,14 @@ export function usePublicLenders() {
     queryKey: ['/api/public/lenders'],
     queryFn: async () => {
       console.log('[DEBUG] usePublicLenders - Starting fetch');
-      const products = await fetchLenderProducts();
-      console.log('[DEBUG] usePublicLenders - Fetched products:', products.length);
-      return products;
+      try {
+        const products = await fetchLenderProducts();
+        console.log('[DEBUG] usePublicLenders - Fetched products:', products.length);
+        return products;
+      } catch (error) {
+        console.error('[DEBUG] usePublicLenders - Fetch error:', error);
+        throw error;
+      }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 2,
