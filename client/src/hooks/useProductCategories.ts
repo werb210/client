@@ -10,6 +10,7 @@ export interface ProductCategory {
 }
 
 export function useProductCategories(formData: RecommendationFormData) {
+  console.log('[DEBUG] useProductCategories called with formData:', formData);
   const { data: products = [], isLoading: productsLoading, error: productsError } = usePublicLenders();
 
   // console.log('[useProductCategories] Products state:', {
@@ -53,9 +54,9 @@ export function useProductCategories(formData: RecommendationFormData) {
       // Apply filtering logic to get relevant products
       const filteredProducts = filterProducts(products, formData);
       console.log('[DEBUG] Filtering results:', {
-        inputProducts: products.length,
-        filteredProducts: filteredProducts.length,
-        filterCriteria: formData
+        originalCount: products.length,
+        filteredCount: filteredProducts.length,
+        formData: formData
       });
       
       // Group products by category
