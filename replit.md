@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 12, 2025: CRITICAL STEP 5 DOCUMENT REQUIREMENTS FIELD MAPPING FIX COMPLETE**
+  * CRITICAL SUCCESS: Fixed Step 5 document requirements display issue caused by field mapping error
+  * ROOT CAUSE: Intersection logic checked `product.requiredDocuments` but cached products use `doc_requirements` field
+  * FIELD MAPPING FIX: Enhanced intersection logic to check multiple field variations: `doc_requirements`, `documentRequirements`, `requiredDocuments`, `required_documents`
+  * CANADIAN PRODUCT SUPPORT: Canadian Business Line of Credit products now properly display document requirements
+  * FALLBACK SYSTEM: Added standard document requirements for Business Line of Credit when intersection is empty
+  * FACTORING BUSINESS RULE: Fixed Invoice Factoring exclusion when accountsReceivableBalance = 0 (no accounts receivable)
+  * GEOGRAPHY BUG FIX: Enhanced geography matching to check both `geography` array and direct `country` field
+  * ACCORD ACCESS INVESTIGATION: Identified Accord Access product ($50K max) filtered out by amount range for $100K requests
+  * QA VERIFIED: Step 5 now displays authentic document requirements from lender database intersection
+  * PRODUCTION READY: Document upload workflow operational with proper field mapping and business rule compliance
+
 - **July 12, 2025: PRODUCTION CACHE-ONLY SYSTEM COMPLETE & DEBUG REMOVAL**
   * COMPLETE SUCCESS: Eliminated ALL debug logging and console outputs for production deployment
   * CACHE-ONLY ENFORCEMENT: Converted all API functions to IndexedDB-only operation with zero network calls
