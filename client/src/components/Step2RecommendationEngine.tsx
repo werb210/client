@@ -36,7 +36,13 @@ export function Step2RecommendationEngine({
   
   // Use client-side authentic 41-product database for filtering
   // FIX: Map businessLocation to headquarters for backward compatibility
-  const headquarters = formData.headquarters || formData.businessLocation || 'US';
+  const normalizeLocation = (location: string): string => {
+    if (location === 'united-states' || location === 'United States') return 'US';
+    if (location === 'canada' || location === 'Canada') return 'CA';
+    return location || 'US';
+  };
+  
+  const headquarters = normalizeLocation(formData.headquarters || formData.businessLocation);
   
   // Get all lender products for debug overlay
   const { data: allLenderProducts, isLoading: rawLoading, error: rawError } = usePublicLenders();
@@ -50,18 +56,8 @@ export function Step2RecommendationEngine({
 
   // Production mode: Console logging disabled
   
-  // PRODUCTION TEMPORARY FIX: Show all cached products to bypass filtering issues
-  const { data: allCachedProducts = [] } = usePublicLenders();
-  
-  // Override filtering temporarily to show all products
-  const displayCategories = [
-    {
-      category: 'working_capital',
-      count: allCachedProducts.length,
-      percentage: 100,
-      products: allCachedProducts
-    }
-  ];
+  // Use actual filtered product categories
+  const displayCategories = productCategories || [];
 
   const handleProductClick = (categoryKey: string) => {
     const isCurrentlySelected = selectedProduct === categoryKey;

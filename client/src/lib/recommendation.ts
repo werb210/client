@@ -43,35 +43,70 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     }))
   });
 
-  // Convert amounts to numbers for comparison - handles both string and number types
-  const getAmountValue = (amount: string | number): number => {
+  // Helper function to get amount value with multiple field name support
+  const getAmountValue = (product: any, field: 'min' | 'max'): number => {
+    let amount: any;
+    if (field === 'min') {
+      amount = product.minAmount ?? product.amountMin ?? product.amount_min ?? product.fundingMin ?? 0;
+    } else {
+      amount = product.maxAmount ?? product.amountMax ?? product.amount_max ?? product.fundingMax ?? Infinity;
+    }
+    
     if (typeof amount === 'number') return amount;
-    return parseFloat(amount) || 0;
+    if (typeof amount === 'string') return parseFloat(amount.replace(/[^0-9.-]/g, '')) || (field === 'min' ? 0 : Infinity);
+    return field === 'min' ? 0 : Infinity;
   };
 
-  // Core filtering logic - Updated to use actual API response format
+  // Helper function to get geography/country with multiple field name support
+  const getGeography = (product: any): string[] => {
+    // Try different field names for geography/country
+    const geography = product.geography ?? product.countries ?? product.markets ?? product.country;
+    
+    if (Array.isArray(geography)) return geography;
+    if (typeof geography === 'string') return [geography];
+    return [];
+  };
+
+  // Helper function to normalize headquarters format
+  const normalizeHeadquarters = (hq: string): string => {
+    if (hq === 'united-states' || hq === 'United States' || hq === 'US') return 'US';
+    if (hq === 'canada' || hq === 'Canada' || hq === 'CA') return 'CA';
+    return hq;
+  };
+
+  const normalizedHQ = normalizeHeadquarters(headquarters);
+
+  // Core filtering logic - Fixed field mapping
   const matchesCore = products.filter(product => {
-    const minAmount = getAmountValue(product.minAmount);
-    const maxAmount = getAmountValue(product.maxAmount);
+    const minAmount = getAmountValue(product, 'min');
+    const maxAmount = getAmountValue(product, 'max');
+    const geography = getGeography(product);
     
-    // Safe geography check - handle both geography and country fields from API
-    const geography = Array.isArray(product.geography) ? product.geography : 
-                     typeof product.geography === 'string' ? [product.geography] :
-                     product.country ? [product.country] : [];
+    // Geography check - support multiple formats
+    const geographyMatch = !normalizedHQ || 
+                          geography.includes(normalizedHQ) || 
+                          geography.includes('US/CA') || 
+                          geography.includes('CA/US') ||
+                          (normalizedHQ === 'US' && geography.includes('United States')) ||
+                          (normalizedHQ === 'CA' && geography.includes('Canada'));
     
-    // Debug individual product filtering
-    const geographyMatch = !headquarters || geography.includes(headquarters);
+    // Amount check - ensure fundingAmount is within range
     const amountMatch = fundingAmount >= minAmount && fundingAmount <= maxAmount;
+    
+    // Type check - improved category matching
+    const categoryLower = product.category?.toLowerCase() || '';
     const typeMatch = lookingFor === "both" ||
-      (lookingFor === "capital" && !product.category.toLowerCase().includes("equipment")) ||
-      (lookingFor === "equipment" && product.category.toLowerCase().includes("equipment"));
+      (lookingFor === "capital" && !categoryLower.includes("equipment")) ||
+      (lookingFor === "equipment" && categoryLower.includes("equipment"));
     
     const passes = geographyMatch && amountMatch && typeMatch;
     
     // Log first few products for debugging
     if (products.indexOf(product) < 3) {
       console.log(`[DEBUG] Product ${product.name || product.lender}:`, {
-        geography: geography,
+        originalGeography: product.geography || product.country,
+        normalizedGeography: geography,
+        requestedHQ: normalizedHQ,
         geographyMatch,
         amountRange: `${minAmount}-${maxAmount}`,
         requestedAmount: fundingAmount,
@@ -86,27 +121,31 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     return passes;
   });
 
-  // Extra inclusions based on special rules - Updated to use actual API response format
+  // Extra inclusions based on special rules - Fixed field mapping
   const extras = products.filter(product => {
-    const minAmount = getAmountValue(product.minAmount);
-    const maxAmount = getAmountValue(product.maxAmount);
+    const minAmount = getAmountValue(product, 'min');
+    const maxAmount = getAmountValue(product, 'max');
+    const geography = getGeography(product);
     
-    // Safe geography check - handle both geography and country fields from API
-    const geography = Array.isArray(product.geography) ? product.geography : 
-                     typeof product.geography === 'string' ? [product.geography] :
-                     product.country ? [product.country] : [];
+    // Geography check with normalized format
+    const geographyMatch = !normalizedHQ || 
+                          geography.includes(normalizedHQ) || 
+                          geography.includes('US/CA') || 
+                          geography.includes('CA/US') ||
+                          (normalizedHQ === 'US' && geography.includes('United States')) ||
+                          (normalizedHQ === 'CA' && geography.includes('Canada'));
+    
+    const amountMatch = fundingAmount >= minAmount && fundingAmount <= maxAmount;
+    
+    if (!geographyMatch || !amountMatch) return false;
+    
+    const categoryLower = product.category?.toLowerCase() || '';
     
     return (
-      // Geography and amount must still match for extras
-      (!headquarters || geography.includes(headquarters)) &&
-      fundingAmount >= minAmount && fundingAmount <= maxAmount &&
-      (
-        // 4. AR balance rule - include invoice factoring ONLY when they have OR might have receivables
-        // FIXED: Only show factoring when accountsReceivableBalance > 0 OR when explicitly looking for factoring future receivables
-        (product.category.toLowerCase().includes("factoring") && accountsReceivableBalance > 0) ||
-        // 5. Inventory purpose rule - include purchase order financing for inventory
-        (fundsPurpose === "inventory" && product.category.toLowerCase().includes("purchase order"))
-      )
+      // AR balance rule - include invoice factoring ONLY when they have receivables
+      (categoryLower.includes("factoring") && accountsReceivableBalance > 0) ||
+      // Inventory purpose rule - include purchase order financing for inventory
+      (fundsPurpose === "inventory" && categoryLower.includes("purchase order"))
     );
   });
 
@@ -144,15 +183,18 @@ export function calculateRecommendationScore(
     fundsPurpose,
   } = form;
 
-  const minAmount = getAmountValue(product.minAmount);
-  const maxAmount = getAmountValue(product.maxAmount);
+  const minAmount = getAmountValue(product, 'min');
+  const maxAmount = getAmountValue(product, 'max');
   const minMonthlyRevenue = product.minRevenue || 0;
+  const geography = getGeography(product);
+  const normalizedHQ = normalizeHeadquarters(headquarters);
 
-  // Geography match (25 points) - Safe geography check
-  const geography = Array.isArray(product.geography) ? product.geography : 
-                   typeof product.geography === 'string' ? [product.geography] :
-                   product.country ? [product.country] : [];
-  if (geography.includes(headquarters)) {
+  // Geography match (25 points) - Fixed geography check
+  if (geography.includes(normalizedHQ) || 
+      geography.includes('US/CA') || 
+      geography.includes('CA/US') ||
+      (normalizedHQ === 'US' && geography.includes('United States')) ||
+      (normalizedHQ === 'CA' && geography.includes('Canada'))) {
     score += 25;
   }
 
@@ -162,9 +204,10 @@ export function calculateRecommendationScore(
   }
 
   // Product type preference match (25 points)
+  const categoryLower = product.category?.toLowerCase() || '';
   if (lookingFor === "both" ||
-      (lookingFor === "capital" && !product.category.toLowerCase().includes("equipment")) ||
-      (lookingFor === "equipment" && product.category.toLowerCase().includes("equipment"))) {
+      (lookingFor === "capital" && !categoryLower.includes("equipment")) ||
+      (lookingFor === "equipment" && categoryLower.includes("equipment"))) {
     score += 25;
   }
 
@@ -174,13 +217,41 @@ export function calculateRecommendationScore(
   }
 
   // Bonus points for special matching rules
-  if (product.category.toLowerCase().includes("factoring")) {
-    score += 10; // Bonus for factoring (existing or future receivables)
+  if (categoryLower.includes("factoring") && accountsReceivableBalance > 0) {
+    score += 10; // Bonus for factoring when they have receivables
   }
   
-  if (fundsPurpose === "inventory" && product.category.toLowerCase().includes("purchase order")) {
+  if (fundsPurpose === "inventory" && categoryLower.includes("purchase order")) {
     score += 10; // Bonus for PO financing match
   }
 
   return Math.min(score, 100); // Cap at 100%
+}
+
+// Helper functions to be accessible from the module
+function getAmountValue(product: any, field: 'min' | 'max'): number {
+  let amount: any;
+  if (field === 'min') {
+    amount = product.minAmount ?? product.amountMin ?? product.amount_min ?? product.fundingMin ?? 0;
+  } else {
+    amount = product.maxAmount ?? product.amountMax ?? product.amount_max ?? product.fundingMax ?? Infinity;
+  }
+  
+  if (typeof amount === 'number') return amount;
+  if (typeof amount === 'string') return parseFloat(amount.replace(/[^0-9.-]/g, '')) || (field === 'min' ? 0 : Infinity);
+  return field === 'min' ? 0 : Infinity;
+}
+
+function getGeography(product: any): string[] {
+  const geography = product.geography ?? product.countries ?? product.markets ?? product.country;
+  
+  if (Array.isArray(geography)) return geography;
+  if (typeof geography === 'string') return [geography];
+  return [];
+}
+
+function normalizeHeadquarters(hq: string): string {
+  if (hq === 'united-states' || hq === 'United States' || hq === 'US') return 'US';
+  if (hq === 'canada' || hq === 'Canada' || hq === 'CA') return 'CA';
+  return hq;
 }
