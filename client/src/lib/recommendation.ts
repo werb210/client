@@ -25,31 +25,38 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     fundsPurpose,
   } = form;
 
-  // Temporary debug logging to diagnose filtering issue
+  // Enhanced debug logging to diagnose Canadian product filtering issue
   console.log('[DEBUG] filterProducts - Input parameters:', {
     productCount: products.length,
     headquarters,
     fundingAmount,
     lookingFor,
     accountsReceivableBalance,
-    fundsPurpose,
-    sampleProducts: products.slice(0, 3).map(p => ({
-      name: p.name,
-      category: p.category,
-      geography: p.geography,
-      country: p.country,
-      minAmount: p.minAmount,
-      maxAmount: p.maxAmount
-    }))
+    fundsPurpose
   });
+
+  // Count products by country to understand the distribution
+  const countryStats = products.reduce((acc, p) => {
+    const country = p.country || 'Unknown';
+    acc[country] = (acc[country] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  console.log('[DEBUG] Products by country:', countryStats);
+
+  // Show all available field names in first product
+  if (products.length > 0) {
+    console.log('[DEBUG] Available fields in products:', Object.keys(products[0]));
+    console.log('[DEBUG] Sample product:', products[0]);
+  }
 
   // Helper function to get amount value with multiple field name support
   const getAmountValue = (product: any, field: 'min' | 'max'): number => {
     let amount: any;
     if (field === 'min') {
-      amount = product.minAmount ?? product.amountMin ?? product.amount_min ?? product.fundingMin ?? 0;
+      amount = product.minAmount ?? product.amountMin ?? product.amount_min ?? product.min_amount ?? product.fundingMin ?? 0;
     } else {
-      amount = product.maxAmount ?? product.amountMax ?? product.amount_max ?? product.fundingMax ?? Infinity;
+      amount = product.maxAmount ?? product.amountMax ?? product.amount_max ?? product.max_amount ?? product.fundingMax ?? Infinity;
     }
     
     if (typeof amount === 'number') return amount;
@@ -63,7 +70,13 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     const geography = product.geography ?? product.countries ?? product.markets ?? product.country;
     
     if (Array.isArray(geography)) return geography;
-    if (typeof geography === 'string') return [geography];
+    if (typeof geography === 'string') {
+      // Handle multi-country strings like "US/CA"
+      if (geography.includes('/')) {
+        return geography.split('/').map(c => c.trim());
+      }
+      return [geography];
+    }
     return [];
   };
 
@@ -82,13 +95,17 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     const maxAmount = getAmountValue(product, 'max');
     const geography = getGeography(product);
     
-    // Geography check - support multiple formats
+    // Geography check - support multiple formats including direct country field
     const geographyMatch = !normalizedHQ || 
                           geography.includes(normalizedHQ) || 
                           geography.includes('US/CA') || 
                           geography.includes('CA/US') ||
                           (normalizedHQ === 'US' && geography.includes('United States')) ||
-                          (normalizedHQ === 'CA' && geography.includes('Canada'));
+                          (normalizedHQ === 'CA' && geography.includes('Canada')) ||
+                          // CRITICAL: Check the direct country field that most products use
+                          product.country === normalizedHQ ||
+                          (normalizedHQ === 'CA' && product.country?.includes('CA')) ||
+                          (normalizedHQ === 'US' && product.country?.includes('US'));
     
     // Amount check - ensure fundingAmount is within range
     const amountMatch = fundingAmount >= minAmount && fundingAmount <= maxAmount;
@@ -127,13 +144,17 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     const maxAmount = getAmountValue(product, 'max');
     const geography = getGeography(product);
     
-    // Geography check with normalized format
+    // Geography check with normalized format including direct country field
     const geographyMatch = !normalizedHQ || 
                           geography.includes(normalizedHQ) || 
                           geography.includes('US/CA') || 
                           geography.includes('CA/US') ||
                           (normalizedHQ === 'US' && geography.includes('United States')) ||
-                          (normalizedHQ === 'CA' && geography.includes('Canada'));
+                          (normalizedHQ === 'CA' && geography.includes('Canada')) ||
+                          // CRITICAL: Check the direct country field that most products use
+                          product.country === normalizedHQ ||
+                          (normalizedHQ === 'CA' && product.country?.includes('CA')) ||
+                          (normalizedHQ === 'US' && product.country?.includes('US'));
     
     const amountMatch = fundingAmount >= minAmount && fundingAmount <= maxAmount;
     
@@ -189,12 +210,16 @@ export function calculateRecommendationScore(
   const geography = getGeography(product);
   const normalizedHQ = normalizeHeadquarters(headquarters);
 
-  // Geography match (25 points) - Fixed geography check
+  // Geography match (25 points) - Fixed geography check including direct country field
   if (geography.includes(normalizedHQ) || 
       geography.includes('US/CA') || 
       geography.includes('CA/US') ||
       (normalizedHQ === 'US' && geography.includes('United States')) ||
-      (normalizedHQ === 'CA' && geography.includes('Canada'))) {
+      (normalizedHQ === 'CA' && geography.includes('Canada')) ||
+      // CRITICAL: Check the direct country field that most products use
+      product.country === normalizedHQ ||
+      (normalizedHQ === 'CA' && product.country?.includes('CA')) ||
+      (normalizedHQ === 'US' && product.country?.includes('US'))) {
     score += 25;
   }
 
