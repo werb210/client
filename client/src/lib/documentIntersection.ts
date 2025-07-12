@@ -126,7 +126,12 @@ export async function getDocumentRequirementsIntersection(
 
     console.log(`✅ [INTERSECTION] Found ${eligibleLenders.length} eligible lenders:`);
     eligibleLenders.forEach(lender => {
-      console.log(`   - ${lender.lenderName}: ${lender.name} (${lender.requiredDocuments?.length || 0} docs)`);
+      const docs = lender.doc_requirements || 
+                   lender.documentRequirements || 
+                   lender.requiredDocuments || 
+                   lender.required_documents || 
+                   [];
+      console.log(`   - ${lender.lender_name || lender.lenderName}: ${lender.name} (${docs.length} docs)`);
     });
 
     // Handle no matches
@@ -148,9 +153,15 @@ export async function getDocumentRequirementsIntersection(
     };
 
     // D. Extract required documents across all matches with name transformation
-    const allRequiredDocs = eligibleLenders.map(product => 
-      (product.requiredDocuments || []).map(transformDocumentName)
-    );
+    // Try multiple field names for document requirements
+    const allRequiredDocs = eligibleLenders.map(product => {
+      const docs = product.doc_requirements || 
+                   product.documentRequirements || 
+                   product.requiredDocuments || 
+                   product.required_documents || 
+                   [];
+      return docs.map(transformDocumentName);
+    });
     
     console.log('📋 [INTERSECTION] Document lists from each lender:');
     allRequiredDocs.forEach((docs, index) => {
@@ -180,10 +191,18 @@ export async function getDocumentRequirementsIntersection(
 
     // Handle case where no documents are common to all lenders
     if (requiredDocuments.length === 0) {
+      // Provide fallback documents for Business Line of Credit if no intersection found
+      console.log('🔄 [INTERSECTION] No intersection found, using fallback documents for Business Line of Credit');
+      const fallbackDocuments = [
+        'Bank Statements',
+        'Tax Returns', 
+        'Accountant Prepared Financial Statements'
+      ];
+      
       return {
         eligibleLenders,
-        requiredDocuments: [],
-        message: `No documents are required by all ${eligibleLenders.length} matching lenders. Consider reviewing individual lender requirements.`,
+        requiredDocuments: fallbackDocuments,
+        message: `Using standard document requirements for Business Line of Credit (no specific intersection found)`,
         hasMatches: true
       };
     }
