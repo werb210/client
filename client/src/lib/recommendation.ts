@@ -116,10 +116,18 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
       (lookingFor === "capital" && !categoryLower.includes("equipment")) ||
       (lookingFor === "equipment" && categoryLower.includes("equipment"));
     
-    const passes = geographyMatch && amountMatch && typeMatch;
+    // CRITICAL: Exclude Invoice Factoring when accountsReceivableBalance = 0
+    const factorExclusion = accountsReceivableBalance === 0 && 
+                           (categoryLower.includes("factoring") || categoryLower.includes("invoice"));
+    
+    const passes = geographyMatch && amountMatch && typeMatch && !factorExclusion;
     
     // Log first few products for debugging
     if (products.indexOf(product) < 3) {
+      const categoryLower = product.category?.toLowerCase() || '';
+      const factorExclusion = accountsReceivableBalance === 0 && 
+                             (categoryLower.includes("factoring") || categoryLower.includes("invoice"));
+      
       console.log(`[DEBUG] Product ${product.name || product.lender}:`, {
         originalGeography: product.geography || product.country,
         normalizedGeography: geography,
@@ -131,7 +139,9 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
         category: product.category,
         lookingFor,
         typeMatch,
-        passes
+        accountsReceivableBalance,
+        factorExclusion,
+        passes: geographyMatch && amountMatch && typeMatch && !factorExclusion
       });
     }
     
@@ -176,12 +186,14 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
   
   const finalResults = Array.from(byId.values());
   
-  // Temporary debug logging to show results
+  // Enhanced debug logging to show results
   console.log('[DEBUG] filterProducts - Results:', {
     coreMatches: matchesCore.length,
     extras: extras.length,
     finalResults: finalResults.length,
-    categories: [...new Set(finalResults.map(p => p.category))]
+    categories: [...new Set(finalResults.map(p => p.category))],
+    accountsReceivableBalance,
+    shouldExcludeFactoring: accountsReceivableBalance === 0
   });
   
   return finalResults;
