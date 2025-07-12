@@ -58,13 +58,13 @@ export function WebSocketListener() {
         ws.onclose = (event) => {
           console.log('[WebSocket] Connection closed, code:', event.code);
           
-          // Attempt to reconnect after 5 seconds if not a clean close
-          if (event.code !== 1000) {
-            setTimeout(() => {
-              console.log('[WebSocket] Attempting to reconnect...');
-              setupWebSocketListener();
-            }, 5000);
-          }
+          // DISABLED: Auto-reconnect for cache-only system
+          // if (event.code !== 1000) {
+          //   setTimeout(() => {
+          //     console.log('[WebSocket] Attempting to reconnect...');
+          //     setupWebSocketListener();
+          //   }, 5000);
+          // }
         };
         
       } catch (error) {

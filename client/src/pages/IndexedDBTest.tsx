@@ -16,10 +16,11 @@ export default function IndexedDBTest() {
   const { data: products, isLoading, isError, error, isInitialized } = useLenderProducts();
   const { status: syncStatus, forceSync, refreshStatus } = useLenderProductsSync();
 
-  // Load sync status on component mount
+  // DISABLED: Load sync status on component mount - no polling for cache-only system
   React.useEffect(() => {
-    const interval = setInterval(refreshStatus, 5000); // Refresh every 5 seconds
-    return () => clearInterval(interval);
+    console.log('[IndexedDBTest] Legacy polling disabled - using cache-only system');
+    // DISABLED: const interval = setInterval(refreshStatus, 5000); // Refresh every 5 seconds
+    // DISABLED: return () => clearInterval(interval);
   }, [refreshStatus]);
 
   const handleForceSync = async () => {

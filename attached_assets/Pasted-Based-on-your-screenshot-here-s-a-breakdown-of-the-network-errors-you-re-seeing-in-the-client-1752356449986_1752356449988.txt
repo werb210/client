@@ -1,0 +1,106 @@
+Based on your screenshot, here’s a breakdown of the **network errors** you're seeing in the **client app** and what each means, along with exactly what to do in Replit:
+
+---
+
+## 🔍 Error Analysis (Right-Side Console Logs)
+
+### ❌ `dfab1952-efa3-4ab8-aff0-afc6b34a3c32-00-3fud...`
+
+* **Type**: `WebSocket`, Status: `blocked:csp`
+* **Cause**: This is a **Content Security Policy (CSP)** block — Replit’s environment is blocking certain WebSocket traffic.
+* **Impact**: None on production. This is specific to Replit dev sandboxing.
+
+> ✅ **Safe to ignore**
+
+---
+
+### ❌ `WebSocket connection failed` (client:736)
+
+* **Type**: `WebSocket`, Status: `net::ERR_CONNECTION_REFUSED`
+* **Cause**: This is **Vite’s hot reload (HMR)** WebSocket trying to reconnect.
+* **Impact**: Only affects **hot reloading** in development. Does **not** affect production or user behavior.
+
+> ✅ **Harmless in dev**, not present in production builds
+
+---
+
+### ❌ `[FINALIZED_SYNC] Network error: Failed to fetch`
+
+* **Cause**: This is from the **old sync system**, which is now deprecated since you've enabled cache-only mode.
+* **Fix**: Remove or disable any lingering sync interval/job that tries to fetch from the staff API outside the allowed fetch windows.
+
+> 🔧 **Action required** — remove legacy polling
+
+---
+
+### ✅ `initialCacheSetup.tsx:23`
+
+* **Status**: 200 OK
+* **Meaning**: This shows that IndexedDB cache population succeeded
+* **Confirmed**: 41 products cached successfully
+
+> ✅ **Working correctly**
+
+---
+
+## ✅ What You Need to Do (Instructions for Replit Agent)
+
+### **1. Disable Legacy Sync Jobs**
+
+In `client/src/jobs/legacyLenderSync.ts` (or similar file), disable or delete the polling:
+
+```ts
+// REMOVE or disable legacy fetch loop
+setInterval(async () => {
+  await fetchFromStaffApi(); // ❌ DELETE THIS
+}, 60000);
+```
+
+Also remove any references to this job in `main.tsx` or `App.tsx`.
+
+---
+
+### **2. Suppress Development-Only Errors**
+
+In `client/src/productionConsole.ts`:
+
+```ts
+// Suppress known harmless dev errors
+const suppressedErrors = ["dfab1952", "WebSocket connection failed"];
+
+window.addEventListener("unhandledrejection", event => {
+  if (suppressedErrors.some(e => event.reason?.toString().includes(e))) {
+    return;
+  }
+  console.error("Unhandled Rejection:", event.reason);
+});
+```
+
+> ✅ Makes dev console easier to read and avoids confusion
+
+---
+
+### **3. Test Cache Integrity**
+
+* Navigate to: `/dev/cache-setup`
+* Confirm green ✅ “Cache populated successfully” message
+* Click `Refresh Status` to validate
+* Then go to Step 2 and Step 5:
+
+  * Ensure `fetchLenderProducts()` reads from IndexedDB
+  * Check console for `[CACHED] Using IndexedDB lender products`
+
+---
+
+## ✅ Summary
+
+| Error                         | Cause                          | Action    |
+| ----------------------------- | ------------------------------ | --------- |
+| `blocked:csp`                 | Replit blocking dev WebSockets | ✅ Ignore  |
+| `WebSocket connection failed` | Dev-only hot reload            | ✅ Ignore  |
+| `[FINALIZED_SYNC]`            | Old background job             | 🔧 Remove |
+| `200 OK` on `/cache-setup`    | Successful cache               | ✅ Keep    |
+
+---
+
+Would you like me to instruct the Replit agent to clean up all legacy sync jobs and console errors now?

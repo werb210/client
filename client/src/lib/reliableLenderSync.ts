@@ -1,12 +1,9 @@
 /**
- * CLIENT INSTRUCTIONS – Sync, Store, and Update Lender Products Reliably
- * Implements comprehensive sync system with fallback and validation
+ * LEGACY RELIABLE LENDER SYNC - DISABLED
+ * Replaced by IndexedDB cache-only system
+ * This file is kept for compatibility but all network operations are disabled
  */
 
-import { get, set } from 'idb-keyval';
-import { FALLBACK_LENDER_PRODUCTS } from './fallbackData';
-
-// LenderProduct interface for sync system
 interface LenderProduct {
   id: string;
   name: string;
@@ -60,264 +57,96 @@ class ReliableLenderSync {
   }
 
   /**
-   * 1. Pull Lender Product List from Staff API
-   * On app load (or background interval), fetch from staff API
+   * LEGACY SYNC DISABLED - Replaced by IndexedDB cache-only system
    */
   async pullLenderProducts(): Promise<SyncResult> {
-    const fetchUrl = `${this.apiBaseUrl}/public/lenders`;
-    console.log(`🌐 Fetching lender products from: ${fetchUrl}`);
+    console.log('[RELIABLE_SYNC] LEGACY SYNC DISABLED - Using cache-only system');
+    console.log('[RELIABLE_SYNC] Cache should be populated manually at /cache-setup');
+    
+    // Return cached data only, no network operations
+    try {
+      return await this.useFallbackCache('Legacy sync disabled - using cache-only system');
+    } catch (error) {
+      console.warn('[RELIABLE_SYNC] Cache read failed:', error);
+      return {
+        success: false,
+        data: [],
+        source: 'fallback_data',
+        productCount: 0,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Use cached fallback data when staff API is unavailable
+   */
+  private async useFallbackCache(error: string): Promise<SyncResult> {
+    console.warn('[RELIABLE_SYNC] Using fallback cache:', error);
     
     try {
-      // Attempt to fetch from staff API
-      const response = await fetch(fetchUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        mode: 'cors',
-        signal: AbortSignal.timeout(10000) // 10 second timeout
-      }).catch(fetchError => {
-        console.warn('[RELIABLE_SYNC] Network error:', fetchError.message);
-        throw new Error(`Network error: ${fetchError.message}`);
-      });
-
-      console.log(`📡 Staff API Response: ${response.status} ${response.statusText}`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Try to load from localStorage cache
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const data = JSON.parse(cached);
+        console.log(`[RELIABLE_SYNC] Loaded ${data.length} products from fallback cache`);
+        return {
+          success: true,
+          data: data,
+          source: 'cached_data',
+          productCount: data.length,
+          timestamp: new Date().toISOString()
+        };
       }
-
-      const apiData = await response.json();
-      console.log("📦 Raw response from staff API:", apiData);
-      console.log('🔍 Raw API Response:', apiData);
-      
-      // Parse staff API response according to FIX INSTRUCTIONS
-      if (!apiData.success || !Array.isArray(apiData.products)) {
-        console.error(`Staff API returned invalid format:`, JSON.stringify(apiData));
-        return await this.useFallbackCache(`Invalid API format: ${JSON.stringify(apiData)}`);
-      }
-      
-      const productArray = apiData.products;
-      const productCount = productArray.length;
-      
-      console.log(`📊 Staff API returned ${productCount} products`);
-      
-      // Check if API returned 0 products
-      if (productCount === 0) {
-        console.warn('⚠️ Staff API returned 0 products. Falling back to IndexedDB cache');
-        return await this.useFallbackCache('Staff API returned 0 products - staff database may be empty');
-      }
-
-      // 4. Product Matching Requirements - Validate required fields
-      const validProducts = this.validateProductFields(productArray);
-      
-      if (validProducts.length === 0) {
-        console.warn('⚠️ Staff API returned products with missing required fields. Falling back to cache.');
-        return await this.useFallbackCache('Invalid product data structure');
-      }
-
-      // 3. Watch for Changes in Product List - Compare timestamps
-      const currentTimestamp = new Date().toISOString();
-      const lastSync = await get(TIMESTAMP_KEY);
-      
-      // Store successful API data
-      await this.storeValidData(validProducts, currentTimestamp);
-      
-      console.log(`✅ Sync Success - ${validProducts.length} products stored`);
-      const categories = Array.from(new Set(validProducts.map(p => p.category)));
-      console.log(`📋 Categories found: ${categories.join(', ')}`);
-      
-      return {
-        success: true,
-        data: validProducts,
-        source: 'staff_api',
-        productCount: validProducts.length,
-        timestamp: currentTimestamp
-      };
-      
-    } catch (error) {
-      console.error('[SYNC] Staff API fetch failed:', error);
-      
-      // If fetch fails, use fallback cache
-      return await this.useFallbackCache(`Network error: ${error}`);
-    }
-  }
-
-  /**
-   * 4. Product Matching Requirements
-   * Validate required fields for recommendation engine
-   */
-  private validateProductFields(products: any[]): LenderProduct[] {
-    const validProducts: LenderProduct[] = [];
-    
-    for (const product of products) {
-      // Handle different field name variations from staff API
-      const minAmount = product.amountMin || product.minAmount || product.min_amount;
-      const maxAmount = product.amountMax || product.maxAmount || product.max_amount;
-      const category = product.category;
-      const country = product.country;
-      const name = product.name;
-      const lenderName = product.lenderName;
-
-      // Check required fields with flexible field names
-      const hasRequiredFields = 
-        category &&
-        typeof minAmount === 'number' &&
-        typeof maxAmount === 'number' &&
-        country &&
-        name &&
-        lenderName;
-
-      if (hasRequiredFields) {
-        // Normalize product to expected format
-        validProducts.push({
-          id: product.id || product.productId || `${lenderName}-${category}-${Math.random().toString(36).substr(2, 9)}`,
-          name: name,
-          lenderName: lenderName,
-          category: category,
-          country: country,
-          minAmount: minAmount,
-          maxAmount: maxAmount,
-          interestRateMin: product.interestRateMin || product.interest_rate_min || 0,
-          interestRateMax: product.interestRateMax || product.interest_rate_max || 0,
-          termMin: product.termMin || product.min_term || 12,
-          termMax: product.termMax || product.max_term || 60,
-          description: product.description || '',
-          requiredDocuments: product.requiredDocuments || product.required_documents || [],
-          minCreditScore: product.minCreditScore || product.min_credit_score,
-          minRevenue: product.minRevenue || product.min_revenue,
-          lastSynced: Date.now()
-        });
-      } else {
-        console.warn('[SYNC] Skipping product with missing required fields:', product.name || 'Unknown', {
-          category: !!category,
-          minAmount: typeof minAmount === 'number',
-          maxAmount: typeof maxAmount === 'number', 
-          country: !!country,
-          name: !!name,
-          lenderName: !!lenderName
-        });
-      }
+    } catch (cacheError) {
+      console.warn('[RELIABLE_SYNC] Cache read failed:', cacheError);
     }
     
-    return validProducts;
-  }
-
-  /**
-   * 2. Store Fallback Data Locally & Use when API unavailable
-   */
-  private async useFallbackCache(reason: string): Promise<SyncResult> {
-    // First try to get cached data from previous successful sync
-    const cachedProducts = await get(CACHE_KEY);
-    const cachedTimestamp = await get(TIMESTAMP_KEY);
-    
-    if (cachedProducts && Array.isArray(cachedProducts) && cachedProducts.length > 0) {
-      console.log(`[SYNC] Using cached data from ${cachedTimestamp} (${cachedProducts.length} products)`);
-      
-      // Update status to indicate using cache
-      await this.updateSyncStatus({
-        lastSync: cachedTimestamp,
-        productCount: cachedProducts.length,
-        usingFallback: false,
-        apiHealthy: false,
-        lastError: reason
-      });
-      
-      return {
-        success: true,
-        data: cachedProducts,
-        source: 'cached_data',
-        warning: `Using cached product list – may not include latest offers (${reason})`,
-        productCount: cachedProducts.length,
-        timestamp: cachedTimestamp || new Date().toISOString()
-      };
-    }
-    
-    // No cache available, use fallback data
-    console.log('[SYNC] No cache available, using fallback products');
-    
-    // Store fallback data for future use
-    await set(CACHE_KEY, FALLBACK_LENDER_PRODUCTS);
-    await set(TIMESTAMP_KEY, new Date().toISOString());
-    
-    // Update status
-    await this.updateSyncStatus({
-      lastSync: new Date().toISOString(),
-      productCount: FALLBACK_LENDER_PRODUCTS.length,
-      usingFallback: true,
-      apiHealthy: false,
-      lastError: reason
-    });
-    
+    // Return empty result if no cache available
     return {
-      success: true,
-      data: FALLBACK_LENDER_PRODUCTS,
+      success: false,
+      data: [],
       source: 'fallback_data',
-      warning: `Using cached product list – may not include latest offers (${reason})`,
-      productCount: FALLBACK_LENDER_PRODUCTS.length,
+      productCount: 0,
       timestamp: new Date().toISOString()
     };
   }
 
   /**
-   * Store successful API data with timestamp
-   */
-  private async storeValidData(products: LenderProduct[], timestamp: string): Promise<void> {
-    await set(CACHE_KEY, products);
-    await set(TIMESTAMP_KEY, timestamp);
-    
-    // Update sync status
-    await this.updateSyncStatus({
-      lastSync: timestamp,
-      productCount: products.length,
-      usingFallback: false,
-      apiHealthy: true,
-      lastError: undefined
-    });
-  }
-
-  /**
-   * Update sync status for monitoring
-   */
-  private async updateSyncStatus(status: SyncStatus): Promise<void> {
-    await set(STATUS_KEY, status);
-  }
-
-  /**
-   * Get current sync status
+   * Store sync status for monitoring
    */
   async getSyncStatus(): Promise<SyncStatus> {
-    const status = await get(STATUS_KEY);
-    return status || {
-      lastSync: null,
-      productCount: 0,
-      usingFallback: true,
-      apiHealthy: false
+    const lastSync = localStorage.getItem(TIMESTAMP_KEY);
+    const cached = localStorage.getItem(CACHE_KEY);
+    const status = localStorage.getItem(STATUS_KEY);
+    
+    const parsedStatus = status ? JSON.parse(status) : null;
+    
+    return {
+      lastSync: lastSync || null,
+      productCount: cached ? JSON.parse(cached).length : 0,
+      usingFallback: true, // Always using fallback in cache-only mode
+      apiHealthy: false, // API disabled in cache-only mode
+      lastError: parsedStatus?.lastError || 'Legacy sync disabled'
     };
-  }
-
-  /**
-   * Manual sync trigger for testing
-   */
-  async forcSync(): Promise<SyncResult> {
-    console.log('[SYNC] Manual sync triggered...');
-    return await this.pullLenderProducts();
   }
 }
 
 // Export singleton instance
 export const reliableLenderSync = ReliableLenderSync.getInstance();
 
-// Export functions for compatibility
-export async function pullLiveData(): Promise<SyncResult> {
+// Export main function for compatibility
+export async function syncLenderProducts(): Promise<SyncResult> {
   return await reliableLenderSync.pullLenderProducts();
 }
 
+// Export status function for compatibility
 export async function getSyncStatus(): Promise<SyncStatus> {
   return await reliableLenderSync.getSyncStatus();
 }
 
-export async function forceSync(): Promise<SyncResult> {
-  return await reliableLenderSync.forcSync();
+// Export legacy function name for compatibility
+export async function pullLiveData(): Promise<SyncResult> {
+  console.log('[RELIABLE_SYNC] Legacy pullLiveData() called - redirecting to cache-only system');
+  return await reliableLenderSync.pullLenderProducts();
 }

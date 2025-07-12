@@ -5,29 +5,29 @@ let isSchedulerRunning = false;
 let lastSyncResult: any = null;
 let schedulerInterval: NodeJS.Timeout | null = null;
 
-// Initialize scheduler - runs twice daily at 12:00 PM and 12:00 AM MST
+// LEGACY SCHEDULER DISABLED - Replaced by IndexedDB cache-only system
 export function initializeScheduler() {
   if (isSchedulerRunning) {
-    console.log('[SCHEDULER] Already running, skipping initialization');
+    console.log('[SCHEDULER] LEGACY SYNC DISABLED - Already marked as running');
     return;
   }
 
-  console.log('[SCHEDULER] Initializing lender product sync scheduler');
-  console.log('[SCHEDULER] Schedule: 12:00 PM and 12:00 AM MST');
+  console.log('[SCHEDULER] LEGACY SYNC DISABLED - Using new IndexedDB cache-only system');
+  console.log('[SCHEDULER] NO BACKGROUND SYNC JOBS - Cache populated manually at /cache-setup');
 
-  // Check every hour if it's time to sync
-  schedulerInterval = setInterval(async () => {
-    if (isTimeToSync()) {
-      console.log('[SCHEDULER] Scheduled sync job triggered');
-      await runScheduledSync();
-    }
-  }, 60 * 60 * 1000); // Check every hour
+  // DISABLED: Check every hour if it's time to sync
+  // schedulerInterval = setInterval(async () => {
+  //   if (isTimeToSync()) {
+  //     console.log('[SCHEDULER] Scheduled sync job triggered');
+  //     await runScheduledSync();
+  //   }
+  // }, 60 * 60 * 1000); // Check every hour
 
-  // Run initial sync on startup if we haven't synced today
-  checkInitialSync();
+  // DISABLED: Run initial sync on startup if we haven't synced today
+  // checkInitialSync();
 
   isSchedulerRunning = true;
-  console.log('[SCHEDULER] Lender product sync scheduler started successfully');
+  console.log('[SCHEDULER] Legacy scheduler marked as disabled - no background jobs');
 }
 
 // Check if it's time to sync (12 PM or 12 AM MST)
@@ -57,31 +57,19 @@ function isTimeToSync(): boolean {
   return isSyncTime;
 }
 
-// Run the scheduled sync
+// DISABLED: Run the scheduled sync
 async function runScheduledSync() {
-  try {
-    const result = await syncLenderProducts();
-    lastSyncResult = {
-      ...result,
-      timestamp: new Date().toISOString()
-    };
-    
-    // Store last sync time in localStorage for monitoring
-    localStorage.setItem('lastSyncTime', lastSyncResult.timestamp);
-    
-    if (result.success) {
-      console.log(`[SCHEDULER] Sync completed successfully: ${result.changes} changes, ${result.total} total products from ${result.source}`);
-    } else {
-      console.error(`[SCHEDULER] Sync failed: ${result.error}`);
-    }
-  } catch (error) {
-    console.error('[SCHEDULER] Sync job error:', error);
-    lastSyncResult = {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    };
-  }
+  console.log('[SCHEDULER] LEGACY SYNC DISABLED - No background sync operations');
+  console.log('[SCHEDULER] Cache should be populated manually using /cache-setup page');
+  
+  // Return success result without any network operations
+  lastSyncResult = {
+    success: true,
+    changes: 0,
+    total: 0,
+    source: 'disabled_legacy_system',
+    timestamp: new Date().toISOString()
+  };
 }
 
 // Check if we need to run initial sync
