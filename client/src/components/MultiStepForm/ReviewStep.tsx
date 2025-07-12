@@ -47,7 +47,10 @@ export function ReviewStep({ onBack, onComplete, applicationId }: ReviewStepProp
       };
 
       // Submit application to staff backend
-      const result = await api.submitApplication(applicationData);
+      const result = await api.submitApplication(applicationData).catch(error => {
+        console.error('[REVIEW_STEP] Application submission failed:', error);
+        throw error;
+      });
       return result;
     },
     onSuccess: async (data) => {
@@ -61,7 +64,10 @@ export function ReviewStep({ onBack, onComplete, applicationId }: ReviewStepProp
 
       // Generate SignNow URL for signature
       try {
-        const signResponse = await api.getSignNowUrl(data.applicationId);
+        const signResponse = await api.getSignNowUrl(data.applicationId).catch(error => {
+          console.error('[REVIEW_STEP] SignNow URL generation failed:', error);
+          throw error;
+        });
         
         // Redirect to SignNow for signature (no iframe - redirect flow)
         window.location.href = signResponse.url;

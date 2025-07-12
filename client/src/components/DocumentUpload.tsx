@@ -37,7 +37,10 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
       );
 
       // Upload actual file using public endpoint (no Authorization required)
-      const result = await api.uploadDocumentPublic(applicationId.toString(), file, 'general');
+      const result = await api.uploadDocumentPublic(applicationId.toString(), file, 'general').catch(error => {
+        console.error('[DOCUMENT_UPLOAD] Upload failed:', error);
+        throw error;
+      });
       return { ...result, fileId };
     },
     onSuccess: (data, { fileId }) => {

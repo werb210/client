@@ -63,14 +63,20 @@ export default function Step6SignNowTyped({ onNext, onBack }: Step6SignNowTypedP
           "Accept": "application/json"
         },
         body: JSON.stringify(payload)
+      }).catch(fetchError => {
+        console.error('[STEP6_SIGNNOW] Network error:', fetchError);
+        throw new Error(`Network error: ${fetchError.message}`);
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
+        const errorData = await response.text().catch(() => 'Unknown error');
         throw new Error(`SignNow generation failed: ${response.status} ${errorData}`);
       }
 
-      const result: GenerateResponse = await response.json();
+      const result: GenerateResponse = await response.json().catch(jsonError => {
+        console.error('[STEP6_SIGNNOW] JSON parse error:', jsonError);
+        throw new Error(`Invalid response format: ${jsonError.message}`);
+      });
       
       if (!result.success) {
         throw new Error('SignNow document generation was not successful');

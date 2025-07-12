@@ -56,7 +56,9 @@ export function SignatureStep({ onNext, onBack }: SignatureStepProps) {
       // 3. Handle callback/webhook
       
       // Simulated delay for signing process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 2000)).catch(error => {
+        console.error('[SIGNATURE_STEP] Delay failed:', error);
+      });
       
       dispatch({
         type: 'UPDATE_FORM_DATA',

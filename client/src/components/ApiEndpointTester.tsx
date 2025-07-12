@@ -18,7 +18,9 @@ export const ApiEndpointTester = () => {
   const testEndpoint = async (url: string, label: string): Promise<TestResult> => {
     const startTime = Date.now();
     try {
-      const response = await fetch(url);
+      const response = await fetch(url).catch(fetchError => {
+        throw new Error(`Network error: ${fetchError.message}`);
+      });
       const responseTime = Date.now() - startTime;
       
       if (!response.ok) {
@@ -30,7 +32,9 @@ export const ApiEndpointTester = () => {
         };
       }
       
-      const data = await response.json();
+      const data = await response.json().catch(jsonError => {
+        throw new Error(`JSON parse error: ${jsonError.message}`);
+      });
       return {
         endpoint: label,
         status: 'success',
@@ -63,7 +67,12 @@ export const ApiEndpointTester = () => {
     for (const test of tests) {
       setResults(prev => [...prev, { endpoint: test.label, status: 'testing' }]);
       
-      const result = await testEndpoint(test.url, test.label);
+      const result = await testEndpoint(test.url, test.label).catch(error => ({
+        endpoint: test.label,
+        status: 'error' as const,
+        error: `Test failed: ${error.message}`,
+        responseTime: 0
+      }));
       testResults.push(result);
       
       setResults(prev => 
