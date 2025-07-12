@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,14 @@ export function Step2ProductionSimple({
 }: Step2Props) {
   
   // Direct cache access - no complex filtering
-  const { data: allProducts = [] } = usePublicLenders();
+  const { data: allProducts = [], isLoading, error } = usePublicLenders();
+
+  // Debug cache status
+  React.useEffect(() => {
+    if (!isLoading) {
+      console.log(`[STEP2] Cache status: ${allProducts.length} products, error:`, error?.message || 'none');
+    }
+  }, [allProducts, isLoading, error]);
   
   const handleProductClick = (categoryKey: string) => {
     const isCurrentlySelected = selectedProduct === categoryKey;
@@ -47,9 +54,16 @@ export function Step2ProductionSimple({
         </p>
       </div>
 
-      {allProducts.length === 0 ? (
+      {isLoading ? (
+        <div className="p-6 border border-blue-200 bg-blue-50 rounded-lg text-center">
+          <p className="text-blue-700">Loading financing products from cache...</p>
+        </div>
+      ) : allProducts.length === 0 ? (
         <div className="p-6 border border-amber-200 bg-amber-50 rounded-lg text-center">
-          <p className="text-amber-700">No products available. Please populate the cache first.</p>
+          <p className="text-amber-700">No products in cache. Cache status: {error ? `Error: ${error.message}` : 'Empty'}</p>
+          <p className="text-sm text-amber-600 mt-2">
+            Debug: isLoading={String(isLoading)}, products={allProducts.length}, error={error?.message || 'none'}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">

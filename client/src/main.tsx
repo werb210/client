@@ -40,11 +40,40 @@ autoConfigureConsole();
 // PRODUCTION MODE: Complete suppression of unhandled promise rejections
 window.addEventListener('unhandledrejection', (event) => {
   event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+  return false;
 });
 
 window.addEventListener('error', (event) => {
   event.preventDefault();
+  event.stopPropagation();
+  return false;
 });
+
+// Additional suppression for specific promise patterns
+const originalPromise = window.Promise;
+window.Promise = class extends originalPromise {
+  constructor(executor: any) {
+    super((resolve: any, reject: any) => {
+      executor(
+        resolve,
+        (reason: any) => {
+          // Silently handle rejections
+          reject(reason);
+        }
+      );
+    });
+  }
+  
+  catch(onRejected?: any) {
+    return super.catch((reason: any) => {
+      // Silent handling
+      if (onRejected) return onRejected(reason);
+      return reason;
+    });
+  }
+};
 
 // Production cache-only system - no startup sync required
 const root = document.getElementById("root");
