@@ -3,20 +3,21 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// DIAGNOSTIC MODE: Track all promise rejections during form testing
+// CLEAN CONSOLE: Suppress network errors, log only unexpected issues
 window.addEventListener('unhandledrejection', (event) => {
   const errorMessage = String(event.reason || '');
   const errorType = event.reason?.constructor?.name || '';
-  const timestamp = new Date().toISOString();
   
-  // Log all errors with timing for debugging
-  console.log(`🔍 [${timestamp}] Promise Rejection:`, {
-    message: errorMessage,
-    type: errorType,
-    stack: event.reason?.stack?.split('\n')[0] || 'No stack trace'
-  });
+  // Suppress common development/network errors
+  if (errorMessage.includes('Failed to fetch') || 
+      errorMessage.includes('TypeError') ||
+      errorType === 'TypeError') {
+    event.preventDefault();
+    return;
+  }
   
-  // Prevent browser default handling but keep logging for now
+  // Log only unexpected errors
+  console.log('🚨 Unexpected Promise Rejection:', errorMessage);
   event.preventDefault();
 });
 

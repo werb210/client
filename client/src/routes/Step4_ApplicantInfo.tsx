@@ -170,6 +170,7 @@ export default function Step4ApplicantInfo() {
           estimatedYearlyRevenue: parseFloat(state.estimatedYearlyRevenue?.toString().replace(/[,$]/g, '') || '0') || 0
         },
         step4: {
+          // Primary applicant information with SignNow field mapping
           firstName: data.firstName || state.applicantFirstName || '',
           lastName: data.lastName || state.applicantLastName || '',
           title: data.title || '',
@@ -205,8 +206,50 @@ export default function Step4ApplicantInfo() {
         }
       };
       
+      // Create flattened data structure for SignNow field population
+      const signNowFields = {
+        // Personal Information
+        'First Name': applicationData.step4.firstName,
+        'Last Name': applicationData.step4.lastName,
+        'Email': applicationData.step4.personalEmail,
+        'Phone': applicationData.step4.personalPhone,
+        'Date of Birth': applicationData.step4.dateOfBirth,
+        'SSN': applicationData.step4.socialSecurityNumber,
+        'Personal Address': applicationData.step4.applicantAddress,
+        'Personal City': applicationData.step4.applicantCity,
+        'Personal State': applicationData.step4.applicantState,
+        'Personal Zip': applicationData.step4.applicantPostalCode,
+        
+        // Business Information
+        'Business Name': applicationData.step3.operatingName,
+        'Legal Business Name': applicationData.step3.legalName,
+        'Business Address': applicationData.step3.businessStreetAddress,
+        'Business City': applicationData.step3.businessCity,
+        'Business State': applicationData.step3.businessState,
+        'Business Zip': applicationData.step3.businessPostalCode,
+        'Business Phone': applicationData.step3.businessPhone,
+        'Business Website': applicationData.step3.businessWebsite,
+        
+        // Loan Information
+        'Funding Amount': applicationData.step1.fundingAmount,
+        'Purpose of Funds': applicationData.step1.fundsPurpose,
+        'Industry': applicationData.step1.industry,
+        
+        // Additional
+        'Ownership Percentage': applicationData.step4.ownershipPercentage,
+        'Credit Score': applicationData.step4.creditScore,
+        'Years with Business': applicationData.step4.yearsWithBusiness
+      };
+
+      // Add SignNow field data to application payload
+      const enhancedApplicationData = {
+        ...applicationData,
+        signNowFields: signNowFields
+      };
+      
       // Add one-time console log before submit as requested
-      console.log('🟢 Final payload being sent:', applicationData);
+      console.log('🟢 Final payload being sent:', enhancedApplicationData);
+      console.log('📋 SignNow field mapping:', signNowFields);
       
       // Verify critical field values are non-empty
       console.log('🔍 Critical field verification:', {
@@ -214,10 +257,7 @@ export default function Step4ApplicantInfo() {
         'step3.operatingName (businessName)': applicationData.step3.operatingName,
         'step4.firstName': applicationData.step4.firstName,
         'step4.personalEmail': applicationData.step4.personalEmail,
-        'data.firstName (from form)': data.firstName,
-        'data.personalEmail (from form)': data.personalEmail,
-        'state.firstName (from context)': state.firstName,
-        'state.personalEmail (from context)': state.personalEmail,
+        'signNowFields populated': Object.keys(signNowFields).length,
         allFieldsPresent: !!(
           applicationData.step1.fundingAmount && 
           applicationData.step3.operatingName && 
@@ -242,7 +282,7 @@ export default function Step4ApplicantInfo() {
       
       console.log('🚀 CALLING staffApi.createApplication with mapped payload...');
       
-      const response = await staffApi.createApplication(applicationData);
+      const response = await staffApi.createApplication(enhancedApplicationData);
       
       console.log('📋 Step 4: Full API response received:', {
         response: JSON.stringify(response, null, 2),

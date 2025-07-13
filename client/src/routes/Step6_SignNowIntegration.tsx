@@ -46,13 +46,27 @@ export default function Step6SignNowIntegration() {
   // Load real signing URL on mount (only if we have a valid applicationId)
   useEffect(() => {
     if (applicationId && applicationId !== 'null' && applicationId.length > 10) {
-      // ✅ A. Log the outgoing application payload
+      // ✅ A. Log the outgoing application payload with actual form data
       const applicationPayload = {
         applicationId,
-        step1: state.step1 || "Not available",
-        step3: state.step3 || "Not available", 
-        step4: state.step4 || "Not available",
-        allFormData: Object.keys(state)
+        // Map actual form fields for SignNow
+        firstName: state.applicantFirstName,
+        lastName: state.applicantLastName,
+        email: state.applicantEmail,
+        phone: state.applicantPhone,
+        businessName: state.operatingName || state.legalName,
+        fundingAmount: state.fundingAmount,
+        businessAddress: state.businessStreetAddress,
+        businessCity: state.businessCity,
+        businessState: state.businessState,
+        businessPostalCode: state.businessPostalCode,
+        // Include complete form state
+        fullFormData: {
+          step1: state.step1 || "Not in step format",
+          step3: state.step3 || "Not in step format", 
+          step4: state.step4 || "Not in step format",
+          rawState: Object.keys(state).length + " fields available"
+        }
       };
       console.log("📤 Submitting Application:", applicationPayload);
       
