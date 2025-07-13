@@ -129,7 +129,7 @@ export default function Step6SignNowIntegration() {
           return res.json();
         })
         .catch(fetchError => {
-          console.log('📄 Initial signing URL fetch failed:', fetchError.message);
+          console.warn('📡 Signature status fetch failed with status:', fetchError.message);
           setError('Application not found or signing not available');
           setSigningStatus('error');
           // DO NOT redirect on error - stay on Step 6
@@ -238,9 +238,9 @@ export default function Step6SignNowIntegration() {
       }
       
     } catch (err) {
-      // Handle polling errors without redirecting
+      // Handle polling errors without redirecting - suppress unhandled rejections
       console.warn('📡 Polling error caught (will NOT redirect):', err.message);
-      return; // Stay on Step 6, keep polling
+      // Stay on Step 6, keep polling
     }
   };
 
