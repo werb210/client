@@ -215,7 +215,7 @@ export default function Step7Finalization() {
             <div className="space-y-2 text-sm">
               <p>If you have any questions about your application:</p>
               <ul className="list-disc list-inside text-gray-600 space-y-1">
-                <li>Email: support@borealfinance.com</li>
+                <li>Email: info@boreal.finance</li>
                 <li>Phone: 1-888-811-1887</li>
                 <li>Reference your Application ID: {applicationId}</li>
               </ul>
