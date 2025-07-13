@@ -84,6 +84,8 @@ export default function Step6SignNowIntegration() {
           console.error('Failed to load signing URL:', err);
           setError('Failed to load signing document');
           setSigningStatus('error');
+          // Don't throw unhandled promise rejection for initial URL load errors
+          return;
         });
     }
   }, [applicationId]);
@@ -126,6 +128,8 @@ export default function Step6SignNowIntegration() {
       
     } catch (err) {
       console.error('Signature status polling error:', err);
+      // Don't throw unhandled promise rejection for polling errors
+      return;
     }
   };
 
@@ -151,6 +155,8 @@ export default function Step6SignNowIntegration() {
         description: "Unable to mark document as signed. Please try again.",
         variant: "destructive"
       });
+      // Don't throw unhandled promise rejection for override errors
+      return;
     });
   };
 
