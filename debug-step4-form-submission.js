@@ -3,89 +3,73 @@
  * Run this in browser console while on Step 4 to debug form submission
  */
 
-console.log('🧪 Step 4 Form Submission Debug Active');
-
-// Check current form values
 function checkStep4FormValues() {
-  console.log('\n📋 STEP 4 FORM VALUES CHECK');
+  console.log('🔍 STEP 4 FORM DEBUG');
+  console.log('===================');
   
-  // Get form inputs
-  const firstNameInput = document.querySelector('input[name="firstName"]');
-  const lastNameInput = document.querySelector('input[name="lastName"]');
-  const emailInput = document.querySelector('input[name="personalEmail"]');
-  const phoneInput = document.querySelector('input[name="personalPhone"]');
-  const titleInput = document.querySelector('input[name="title"]');
+  // Try to access React form state
+  const forms = document.querySelectorAll('form');
+  console.log('📝 Forms found:', forms.length);
   
-  console.log('📝 Form Input Values:');
-  console.log('  firstName:', firstNameInput?.value);
-  console.log('  lastName:', lastNameInput?.value);
-  console.log('  personalEmail:', emailInput?.value);
-  console.log('  personalPhone:', phoneInput?.value);
-  console.log('  title:', titleInput?.value);
+  // Check all input fields
+  const inputs = document.querySelectorAll('input, select, textarea');
+  console.log('📋 Total form inputs:', inputs.length);
   
-  // Check if inputs exist
-  console.log('\n🔍 Input Element Check:');
-  console.log('  firstName input exists:', !!firstNameInput);
-  console.log('  lastName input exists:', !!lastNameInput);
-  console.log('  personalEmail input exists:', !!emailInput);
-  console.log('  personalPhone input exists:', !!phoneInput);
-  console.log('  title input exists:', !!titleInput);
+  // Check required fields specifically
+  const requiredFields = [
+    'input[name="applicantFirstName"]',
+    'input[name="applicantLastName"]', 
+    'input[name="applicantEmail"]',
+    'input[name="applicantPhone"]',
+    'input[name="applicantDateOfBirth"]',
+    'input[name="applicantSSN"]'
+  ];
   
-  // Check localStorage
-  const formData = JSON.parse(localStorage.getItem('formData') || '{}');
-  console.log('\n📱 localStorage formData:');
-  console.log('  firstName:', formData.firstName);
-  console.log('  lastName:', formData.lastName);
-  console.log('  personalEmail:', formData.personalEmail);
-  console.log('  personalPhone:', formData.personalPhone);
-  console.log('  title:', formData.title);
+  console.log('📊 Required Field Values:');
+  requiredFields.forEach(selector => {
+    const field = document.querySelector(selector);
+    if (field) {
+      console.log(`  ${selector}: "${field.value}" (${field.value ? 'FILLED' : 'EMPTY'})`);
+    } else {
+      console.log(`  ${selector}: FIELD NOT FOUND`);
+    }
+  });
   
-  // Check if form is valid
-  const hasRequiredFields = !!(firstNameInput?.value && lastNameInput?.value && emailInput?.value);
-  console.log('\n✅ Form Ready for Submission:', hasRequiredFields);
-  
-  return {
-    formInputs: {
-      firstName: firstNameInput?.value,
-      lastName: lastNameInput?.value,
-      personalEmail: emailInput?.value,
-      personalPhone: phoneInput?.value,
-      title: titleInput?.value
-    },
-    localStorage: {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      personalEmail: formData.personalEmail,
-      personalPhone: formData.personalPhone,
-      title: formData.title
-    },
-    isValid: hasRequiredFields
-  };
-}
-
-// Auto-check form values every 3 seconds
-setInterval(checkStep4FormValues, 3000);
-
-// Manual function to call
-window.checkStep4FormValues = checkStep4FormValues;
-
-// Override form submission to see what data is being sent
-const originalSubmit = HTMLFormElement.prototype.submit;
-HTMLFormElement.prototype.submit = function() {
-  console.log('\n🚀 STEP 4 FORM SUBMISSION INTERCEPTED');
-  
-  const formData = new FormData(this);
-  console.log('📋 FormData being submitted:');
-  for (let [key, value] of formData.entries()) {
-    console.log(`  ${key}: ${value}`);
+  // Check continue button
+  const continueButton = document.querySelector('button[type="submit"]');
+  if (continueButton) {
+    console.log('🔘 Continue button found:', continueButton.textContent);
+    console.log('🔘 Button disabled?', continueButton.disabled);
   }
   
-  return originalSubmit.call(this);
-};
+  // Check for error messages
+  const errorMessages = document.querySelectorAll('[role="alert"], .text-red-500, .text-destructive');
+  if (errorMessages.length > 0) {
+    console.log('❌ Error messages found:');
+    errorMessages.forEach((error, index) => {
+      console.log(`  ${index + 1}: ${error.textContent}`);
+    });
+  } else {
+    console.log('✅ No error messages visible');
+  }
+}
 
-console.log('💡 Step 4 form debugging enabled');
-console.log('💡 Use checkStep4FormValues() to manually check form state');
-console.log('💡 Form will be automatically checked every 3 seconds');
+// Monitor button clicks
+document.addEventListener('click', function(event) {
+  if (event.target.type === 'submit' || event.target.textContent.includes('Continue')) {
+    console.log('🖱️ SUBMIT/CONTINUE BUTTON CLICKED');
+    console.log('🎯 Button text:', event.target.textContent);
+    console.log('⏰ Click timestamp:', new Date().toISOString());
+    
+    // Check form state at click time
+    setTimeout(() => {
+      checkStep4FormValues();
+    }, 100);
+  }
+});
 
-// Initial check
-checkStep4FormValues();
+console.log('🔍 Step 4 form debugging enabled. Click Continue button and check console output.');
+console.log('📋 Run checkStep4FormValues() anytime to see current form state.');
+
+// Make function globally available
+window.checkStep4FormValues = checkStep4FormValues;

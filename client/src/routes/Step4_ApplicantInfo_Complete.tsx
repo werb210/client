@@ -131,6 +131,13 @@ export default function Step4ApplicantInfoComplete() {
     console.log('📝 Form data received:', data);
     console.log('✅ Form validation state:', form.formState.isValid);
     console.log('❌ Form errors:', form.formState.errors);
+    
+    // Check if form is invalid and prevent submission
+    if (!form.formState.isValid) {
+      console.log('❌ FORM VALIDATION FAILED - preventing submission');
+      console.log('📋 Invalid fields:', Object.keys(form.formState.errors));
+      return; // Exit early if form is invalid
+    }
     // Convert percentage strings to numbers and phone numbers to E.164 format
     const processedData = {
       ...data,
@@ -715,6 +722,18 @@ export default function Step4ApplicantInfoComplete() {
             <Button
               type="submit"
               className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white"
+              onClick={(e) => {
+                console.log('🖱️ CONTINUE BUTTON CLICKED');
+                console.log('📝 Form valid?', form.formState.isValid);
+                console.log('❌ Form errors:', form.formState.errors);
+                console.log('🔍 Required field values:', {
+                  firstName: form.getValues('applicantFirstName'),
+                  lastName: form.getValues('applicantLastName'),
+                  email: form.getValues('applicantEmail'),
+                  phone: form.getValues('applicantPhone')
+                });
+                // Let the form submission proceed normally
+              }}
             >
               Continue to Documents →
             </Button>
