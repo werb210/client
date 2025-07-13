@@ -148,29 +148,41 @@ export default function Step6SignNowIntegration() {
 
   // Poll for signature status every 5 seconds with timeout warnings
   const checkSignatureStatus = async () => {
-    if (!applicationId) return;
+    if (!applicationId) {
+      console.warn('📡 No applicationId available for polling');
+      return;
+    }
     
     try {
       // ✅ B. Confirm polling hits correct endpoint (using public API path)
       const pollingEndpoint = `/api/public/applications/${applicationId}/signature-status`;
-      console.log('📡 Polling endpoint:', pollingEndpoint);
+      console.log('📡 Polling signature status for:', applicationId);
       
       const res = await fetch(pollingEndpoint).catch(fetchError => {
         // Handle fetch errors silently to prevent unhandled promise rejections
-        console.log('📡 Polling fetch failed (expected if application not found):', fetchError.message);
+        console.warn('📡 Signature status fetch failed:', fetchError.message);
         return null;
       });
       
-      if (!res || !res.ok) {
-        return; // Exit early if fetch failed or response not ok
+      if (!res) {
+        console.warn('📡 No response from signature status endpoint');
+        return; // Do NOT navigate away — just keep polling
+      }
+      
+      if (!res.ok) {
+        console.warn('📡 Signature status fetch failed with status:', res.status, res.statusText);
+        return; // Do NOT navigate away — just keep polling
       }
       
       const data = await res.json().catch(jsonError => {
-        console.log('📡 Polling JSON parse failed:', jsonError.message);
+        console.warn('📡 Polling JSON parse failed:', jsonError.message);
         return null;
       });
       
-      if (!data) return;
+      if (!data) {
+        console.warn('📡 No data in signature status response');
+        return; // Do NOT navigate away — just keep polling
+      }
       
       const { status } = data;
       
@@ -182,6 +194,7 @@ export default function Step6SignNowIntegration() {
       if (status === "invite_signed") {
         console.log('✅ Signature completed - redirecting to Step 7');
         console.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
+        console.log('🧭 This is the ONLY legitimate redirect from Step 6');
         setLocation('/apply/step-7');
         return;
       }
@@ -198,14 +211,16 @@ export default function Step6SignNowIntegration() {
       }
       
     } catch (err) {
-      // Silently handle all polling errors to prevent console noise
-      return;
+      // Handle polling errors without redirecting
+      console.warn('📡 Polling error caught (will NOT redirect):', err.message);
+      return; // Stay on Step 6, keep polling
     }
   };
 
   useEffect(() => {
     if (applicationId && signUrl && signingStatus === 'ready') {
       console.log('🔄 Starting signature status polling every 5s for application:', applicationId);
+      console.log('🧭 Polling will NOT redirect on errors - only on successful signature completion');
       
       const interval = setInterval(checkSignatureStatus, 5000);
       return () => clearInterval(interval);

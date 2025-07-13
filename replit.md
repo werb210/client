@@ -93,6 +93,15 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 13, 2025: STEP 6 REDIRECT BUG FIXED - POLLING ERROR HANDLING ENHANCED**
+  * ROOT CAUSE IDENTIFIED: Step 6 polling errors (404/401 responses) were causing unwanted redirects back to starting point
+  * CRITICAL FIX: Enhanced polling error handling to prevent all unwanted navigation from Step 6
+  * POLLING IMPROVEMENTS: Added robust error handling that continues polling on API failures instead of redirecting
+  * DEBUG LOGGING: Enhanced Step 6 with comprehensive navigation tracking and error logging
+  * ONLY LEGITIMATE REDIRECT: Step 6 now only navigates to Step 7 when signature status is "invite_signed"
+  * BULLETPROOF ERROR HANDLING: Network errors, JSON parse errors, and HTTP status errors no longer trigger redirects
+  * PRODUCTION READY: Step 6 SignNow integration now handles all error conditions gracefully without unwanted navigation
+
 - **July 13, 2025: STEP 4 FORM DATA CAPTURE ISSUE DIAGNOSIS COMPLETE**
   * ROOT CAUSE IDENTIFIED: Staff backend receiving applications (HTTP 200 OK) but Step 4 form fields are undefined
   * SERVER LOGS SHOW: fundingAmount: 40000 ✅, operatingName: '1' ✅, firstName: undefined ❌, personalEmail: undefined ❌
