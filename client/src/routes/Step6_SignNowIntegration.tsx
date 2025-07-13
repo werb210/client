@@ -46,6 +46,15 @@ export default function Step6SignNowIntegration() {
   // Load real signing URL on mount
   useEffect(() => {
     if (applicationId) {
+      // ✅ Add logging before submission as requested for Step 6
+      console.log("📤 Step 6: About to fetch SignNow URL for application:", {
+        applicationId,
+        step1: state.step1 || "Not available",
+        step3: state.step3 || "Not available", 
+        step4: state.step4 || "Not available",
+        allFormData: Object.keys(state)
+      });
+      
       console.log('🔄 Fetching signing URL for application:', applicationId);
       fetch(`/api/public/applications/${applicationId}/signing-status`)
         .then(res => res.json())

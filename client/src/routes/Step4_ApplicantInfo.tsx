@@ -202,6 +202,13 @@ export default function Step4ApplicantInfo() {
         step4Fields: Object.keys(applicationData.step4).length
       });
       
+      // ✅ Add logging before submission as requested
+      console.log("📤 Submitting application:", {
+        step1: applicationData.step1,
+        step3: applicationData.step3,
+        step4: applicationData.step4,
+      });
+      
       console.log('🚀 CALLING staffApi.createApplication with mapped payload...');
       
       const response = await staffApi.createApplication(applicationData);
