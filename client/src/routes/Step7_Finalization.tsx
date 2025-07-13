@@ -165,7 +165,6 @@ export default function Step7Finalization() {
             </div>
           </CardContent>
         </Card>
-
         {/* Next Steps */}
         <Card>
           <CardHeader>
@@ -207,7 +206,6 @@ export default function Step7Finalization() {
             </div>
           </CardContent>
         </Card>
-
         {/* Contact Information */}
         <Card>
           <CardHeader>
@@ -218,13 +216,12 @@ export default function Step7Finalization() {
               <p>If you have any questions about your application:</p>
               <ul className="list-disc list-inside text-gray-600 space-y-1">
                 <li>Email: support@borealfinance.com</li>
-                <li>Phone: 1-800-BOREAL-1</li>
+                <li>Phone: 1-888-811-1887</li>
                 <li>Reference your Application ID: {applicationId}</li>
               </ul>
             </div>
           </CardContent>
         </Card>
-
         {/* Dashboard Button */}
         <Card>
           <CardContent className="pt-6">
