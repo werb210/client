@@ -664,6 +664,9 @@ app.use((req, res, next) => {
       
       // Route to staff backend for real implementation
       const staffApiUrl = cfg.staffApiUrl + '/api';
+      console.log(`[SIGNING-STATUS] Making request to: ${staffApiUrl}/public/applications/${id}/signing-status`);
+      console.log(`[SIGNING-STATUS] Using token: ${cfg.clientToken ? 'Token present' : 'No token'}`);
+      
       const response = await fetch(`${staffApiUrl}/public/applications/${id}/signing-status`, {
         method: 'GET',
         headers: {
@@ -671,14 +674,18 @@ app.use((req, res, next) => {
           'Accept': 'application/json'
         }
       });
+      
+      console.log(`[SIGNING-STATUS] Response status: ${response.status} ${response.statusText}`);
 
       if (response.ok) {
         const result = await response.json();
         console.log(`[SIGNING-STATUS] ✅ Status fetched for application ${id}:`, result);
         res.json(result);
       } else {
-        // Fallback for development - provide mock SignNow URL
-        console.log(`[SIGNING-STATUS] 🔧 Staff backend unavailable, using fallback response`);
+        // Log the exact error from staff backend
+        const errorText = await response.text();
+        console.log(`[SIGNING-STATUS] ❌ Staff backend error ${response.status}: ${errorText}`);
+        console.log(`[SIGNING-STATUS] 🔧 Using fallback response due to backend error`);
         const templateId = 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5';
         const signNowDocId = `doc_${id}_${Date.now()}`;
         const signingUrl = `https://app.signnow.com/webapp/document/${signNowDocId}/invite?token=temp_${templateId.slice(0, 8)}`;
@@ -695,7 +702,8 @@ app.use((req, res, next) => {
         });
       }
     } catch (error) {
-      console.error(`[SIGNING-STATUS] Error for application ${req.params.id}:`, error.message);
+      console.error(`[SIGNING-STATUS] Network error for application ${req.params.id}:`, error.message);
+      console.error(`[SIGNING-STATUS] Full error:`, error);
       
       // Always provide fallback response for development
       const templateId = 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5';

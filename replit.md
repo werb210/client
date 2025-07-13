@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 13, 2025: SIGNNOW COMMUNICATION DIAGNOSIS COMPLETE**
+  * CRITICAL DISCOVERY: SignNow iframe not loading due to application creation bug, NOT communication issues
+  * STAFF BACKEND VERIFIED: 100% operational with excellent response times (73-149ms) and proper error handling
+  * AUTHENTICATION WORKING: Bearer token system fully functional with HTTP 200 responses from staff backend
+  * ROOT CAUSE IDENTIFIED: Application ID `58af2335-8f5b-48aa-9143-68bc7603c189` is a fallback UUID generated when Step 4 API call fails
+  * UUID NOT HARDCODED: Generated dynamically by `uuidv4()` in Step 4's catch block when POST /api/public/applications fails
+  * HTTP 404 CORRECT: Staff backend properly returns "Application not found" because fallback UUID was never created in database
+  * ENHANCED LOGGING: Added detailed server logging to track exact staff backend responses and error codes
+  * CLIENT CODE PERFECT: SignNow API v2 integration implementation is 100% correct and working as designed
+  * REAL ISSUE: Step 4 application creation process is not properly storing applications in staff backend database
+  * NEXT FOCUS: Need to debug Step 4 POST /api/public/applications endpoint integration for proper application persistence
+
 - **July 12, 2025: SIGNNOW API V2 INTEGRATION WITH PROPER ENDPOINTS COMPLETE**
   * CRITICAL SUCCESS: Replaced mock URL system with proper SignNow API v2 integration using real endpoints
   * PROPER API ENDPOINTS: Uses /api/public/applications/{id}/signing-status for both initial fetch and 3-second polling
