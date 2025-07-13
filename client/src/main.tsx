@@ -8,12 +8,15 @@ window.addEventListener('unhandledrejection', (event) => {
   const errorMessage = String(event.reason || '');
   console.log('🚨 Unhandled Promise Rejection:', errorMessage);
   
-  // Suppress "Failed to fetch" errors for automatic retries
+  // Suppress development environment errors and network failures
   if (errorMessage.includes('Failed to fetch') || 
       errorMessage.includes('janeway.replit.dev') || 
       errorMessage.includes('ERR_CONNECTION_TIMED_OUT') ||
-      errorMessage.includes('dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32')) {
-    // Only suppress specific Replit dev environment errors and network failures
+      errorMessage.includes('dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32') ||
+      errorMessage.includes('server connection lost') ||
+      errorMessage.includes('WebSocket connection') ||
+      errorMessage.includes('NetworkError')) {
+    // Suppress development environment errors and network failures
     event.preventDefault();
     return;
   }

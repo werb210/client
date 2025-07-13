@@ -27,7 +27,7 @@ export function WebSocketListener() {
         ws = new WebSocket(wsUrl);
         
         ws.onopen = () => {
-          console.log('[WebSocket] Connected to lender products updates');
+          // console.log('[WebSocket] Connected to lender products updates'); // Suppressed for clean console
         };
         
         ws.onmessage = (event) => {
