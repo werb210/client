@@ -42,6 +42,29 @@ export default function Step6SignNowIntegration() {
 
   // Get applicationId from localStorage (always use stored value)
   const applicationId = localStorage.getItem("applicationId");
+  
+  // Navigation tracking to debug redirect issue
+  console.log('🧭 Step 6 mounted with applicationId:', applicationId);
+  
+  // Override setLocation to track any navigation attempts
+  useEffect(() => {
+    const originalSetLocation = setLocation;
+    console.log('🧭 Step 6 setLocation function type:', typeof setLocation);
+    
+    // Log any error that might trigger navigation
+    const handleError = (error: any) => {
+      console.log('🚨 Step 6 error detected:', error);
+      console.log('🚨 This error might cause unwanted navigation');
+    };
+    
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleError);
+    
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleError);
+    };
+  }, []);
 
   // Load real signing URL on mount (only if we have a valid applicationId)
   useEffect(() => {
@@ -82,6 +105,7 @@ export default function Step6SignNowIntegration() {
           console.log('📄 Initial signing URL fetch failed:', fetchError.message);
           setError('Application not found or signing not available');
           setSigningStatus('error');
+          // DO NOT redirect on error - stay on Step 6
           return null;
         })
         .then(data => {
@@ -114,8 +138,9 @@ export default function Step6SignNowIntegration() {
         });
     } else {
       console.log('⚠️ No valid applicationId found, skipping SignNow URL fetch');
-      setError('No application ID available');
+      setError('No application ID available - please restart the application process');
       setSigningStatus('error');
+      // DO NOT redirect - show error message instead
     }
   }, [applicationId]);
 
@@ -156,6 +181,7 @@ export default function Step6SignNowIntegration() {
       // ✅ B. Ensure exact status check
       if (status === "invite_signed") {
         console.log('✅ Signature completed - redirecting to Step 7');
+        console.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
         setLocation('/apply/step-7');
         return;
       }
