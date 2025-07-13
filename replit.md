@@ -94,15 +94,17 @@ The application follows a client-staff separation architecture:
 ## Recent Changes
 
 - **July 12, 2025: STEP 6 SIGNNOW IFRAME INTEGRATION COMPLETE**
-  * CRITICAL SUCCESS: Implemented embedded iframe-based SignNow integration replacing button-based approach
-  * IFRAME IMPLEMENTATION: Added 800px height iframe with proper sandbox attributes for security
-  * AUTOMATIC LOADING: SignNow document loads immediately when ready without user click required
-  * ENHANCED SECURITY: Implemented sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-  * FALLBACK HANDLING: Added error states for undefined/expired signUrl with application ID logging
-  * STATUS MONITORING: Maintained automatic polling for signature completion detection
-  * USER EXPERIENCE: Seamless embedded signing process with real-time status updates
+  * CRITICAL SUCCESS: Implemented embedded iframe-based SignNow integration with automatic polling and advancement
+  * IFRAME COMPONENT: Created dedicated SignNowIframe component with 700px height and security sandbox attributes
+  * AUTOMATIC LOADING: SignNow document loads immediately when ready without manual button interaction
+  * ENHANCED SECURITY: Implemented sandbox="allow-same-origin allow-scripts allow-forms allow-popups" with camera/microphone permissions
+  * AUTOMATIC POLLING: Every 3 seconds polls GET /api/public/applications/{applicationId}/signing-status for completion
+  * AUTO-ADVANCEMENT: Automatically redirects to Step 7 when canAdvance=true or signed=true detected
+  * FALLBACK HANDLING: Retry button for document preparation failures with clear error messaging
+  * STATUS MONITORING: Real-time polling with 10-minute timeout and comprehensive error handling
+  * USER EXPERIENCE: Seamless embedded signing process with automatic workflow progression
   * PHONE INPUT FIX: Resolved phone number deletion issue in Step 4 by removing automatic formatting on change
-  * PRODUCTION READY: Complete embedded SignNow workflow operational with proper error handling
+  * PRODUCTION READY: Complete embedded SignNow workflow operational with automatic completion detection
 
 - **July 12, 2025: CRITICAL STEP 5 DOCUMENT REQUIREMENTS FIELD MAPPING FIX COMPLETE**
   * CRITICAL SUCCESS: Fixed Step 5 document requirements display issue caused by field mapping error

@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDebouncedCallback } from 'use-debounce';
 import { extractUuid } from '@/lib/uuidUtils';
 import { StepHeader } from '@/components/StepHeader';
+import SignNowIframe from '@/components/SignNowIframe';
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -51,7 +52,8 @@ export default function Step6SignNowIntegration() {
   const [signUrl, setSignUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
-  const [retryCount, setRetryCount] = useState(0); // C-5: Track retry attempts for auto-retry
+  const [retryCount, setRetryCount] = useState(0);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Auto-save signing progress with 2-second delay
   const debouncedSave = useDebouncedCallback((status: SigningStatus, url: string | null) => {
@@ -177,6 +179,8 @@ export default function Step6SignNowIntegration() {
       if (json.success && json.data?.signingUrl) {
         setSignUrl(json.data.signingUrl);
         setSigningStatus('ready');
+        // Start automatic polling for completion
+        startAutomaticPolling();
       } else {
         throw new Error('Invalid SignNow response structure');
       }
@@ -187,19 +191,15 @@ export default function Step6SignNowIntegration() {
     }
   };
 
-  // Step 4: Handle Signing Status  
-  // Preferred: Wait for backend webhook to process
-  // Fallback: Poll periodically using GET /api/public/applications/:applicationId/signing-status
-  const startPollingSigningStatus = () => {
+  // Automatic polling for signing completion detection
+  const startAutomaticPolling = () => {
     if (isPolling) return;
     
     setIsPolling(true);
-    console.log('🔄 Step 4: Starting signing status polling...');
+    console.log('🔄 Starting automatic signing status polling...');
     
-    const pollInterval = setInterval(async () => {
+    const interval = setInterval(async () => {
       try {
-        // GET /api/public/applications/:applicationId/signing-status
-        // Check: signingStatus === 'completed'
         const pollingUrl = `${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/signing-status`;
         console.log("🔍 Polling URL:", pollingUrl);
         
@@ -212,65 +212,71 @@ export default function Step6SignNowIntegration() {
 
         if (response.ok) {
           const result = await response.json();
-          console.log('📊 Step 4: Polling status result:', result.signingStatus);
+          console.log('📊 Polling status result:', result);
           
-          if (result.signingStatus === 'ready' && result.signUrl) {
-            console.log('✅ Step 4: Document ready for signing');
-            setSignUrl(result.signUrl);
-            setSigningStatus('ready');
-            clearInterval(pollInterval);
-            setIsPolling(false);
-          } else if (result.signingStatus === 'completed') {
-            console.log('✅ Step 5: Signing completed - auto-redirecting to Step 7');
+          // Check for completion using the specified format
+          if (result?.data?.canAdvance || result?.data?.signed || result.signingStatus === 'completed') {
+            console.log('✅ Signing completed - auto-redirecting to Step 7');
             setSigningStatus('completed');
-            clearInterval(pollInterval);
+            
+            // Clear the polling interval
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              setPollingInterval(null);
+            }
             setIsPolling(false);
             
-            // Step 5: Auto-Redirect to Step 7
-            // Action: When signing is complete: navigate('/step7');
+            // Auto-redirect to Step 7
             setTimeout(() => {
               setLocation('/apply/step-7');
             }, 2000);
-          } else if (result.signingStatus === 'error') {
-            setError('Document signing failed. Please try again.');
-            setSigningStatus('error');
-            clearInterval(pollInterval);
-            setIsPolling(false);
           }
         }
       } catch (error) {
-        console.error('Step 4: Polling error:', error);
+        console.error('Polling error:', error);
         setRetryCount(prev => prev + 1);
         
         // Stop polling after too many failures
         if (retryCount >= 10) {
           setError('Unable to check signing status. Please refresh the page.');
           setSigningStatus('error');
-          clearInterval(pollInterval);
+          if (pollingInterval) {
+            clearInterval(pollingInterval);
+            setPollingInterval(null);
+          }
           setIsPolling(false);
         }
       }
     }, 3000); // Poll every 3 seconds
+    
+    setPollingInterval(interval);
 
-    // Cleanup polling after 5 minutes
+    // Cleanup polling after 10 minutes
     setTimeout(() => {
-      clearInterval(pollInterval);
+      if (interval) {
+        clearInterval(interval);
+        setPollingInterval(null);
+      }
       setIsPolling(false);
-      if (signingStatus === 'polling') {
+      if (signingStatus !== 'completed') {
         setError('Signing document is taking longer than expected. Please refresh the page.');
         setSigningStatus('error');
       }
-    }, 300000);
+    }, 600000);
   };
 
-  const handleOpenSigningUrl = () => {
-    if (signUrl) {
-      console.log('📝 Opening SignNow signing URL...');
-      setSigningStatus('signing');
-      
-      // Start polling to detect completion
-      startPollingSigningStatus();
-    }
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
+
+  const handleIframeLoad = () => {
+    console.log('📝 SignNow iframe loaded successfully');
+    setSigningStatus('signing');
   };
 
   const renderStatusSection = () => {
@@ -337,24 +343,13 @@ export default function Step6SignNowIntegration() {
                 </p>
                 {signUrl ? (
                   <div className="w-full">
-                    <iframe
-                      src={signUrl}
-                      width="100%"
-                      height="800px"
-                      style={{ border: "none" }}
-                      title="SignNow Embedded Signing"
-                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                      onLoad={() => {
-                        console.log('📝 SignNow iframe loaded successfully');
-                        handleOpenSigningUrl();
-                      }}
-                    />
+                    <SignNowIframe signingUrl={signUrl} />
                   </div>
                 ) : (
-                  <Alert className="border-red-200 bg-red-50">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="text-red-700">
-                      SignNow signature URL is not ready. Please refresh or contact support.
+                  <Alert className="border-yellow-200 bg-yellow-50">
+                    <Clock className="h-4 w-4" />
+                    <AlertDescription className="text-yellow-700">
+                      Still preparing your documents. Please wait...
                       <br />
                       <span className="text-xs">Application ID: {applicationId || 'Not available'}</span>
                     </AlertDescription>
@@ -385,24 +380,26 @@ export default function Step6SignNowIntegration() {
                 </p>
                 {signUrl ? (
                   <div className="w-full">
-                    <iframe
-                      src={signUrl}
-                      width="100%"
-                      height="800px"
-                      style={{ border: "none" }}
-                      title="SignNow Embedded Signing"
-                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                    />
+                    <SignNowIframe signingUrl={signUrl} />
                   </div>
                 ) : (
-                  <Alert className="border-red-200 bg-red-50">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription className="text-red-700">
-                      SignNow signature URL is not ready. Please refresh or contact support.
-                      <br />
-                      <span className="text-xs">Application ID: {applicationId || 'Not available'}</span>
-                    </AlertDescription>
-                  </Alert>
+                  <div className="space-y-4">
+                    <Alert className="border-yellow-200 bg-yellow-50">
+                      <Clock className="h-4 w-4" />
+                      <AlertDescription className="text-yellow-700">
+                        Still preparing your documents. Please wait...
+                        <br />
+                        <span className="text-xs">Application ID: {applicationId || 'Not available'}</span>
+                      </AlertDescription>
+                    </Alert>
+                    <Button 
+                      onClick={createSignNowDocument} 
+                      variant="outline" 
+                      className="w-full"
+                    >
+                      Retry Document Preparation
+                    </Button>
+                  </div>
                 )}
               </div>
             </CardContent>
