@@ -500,11 +500,62 @@ class StaffApiClient {
         step4FieldCount: Object.keys(applicationData.step4 || {}).length
       });
       
-      console.log('📝 Complete application payload:', JSON.stringify(applicationData, null, 2));
+      // Map to proper field names that staff backend expects for SignNow field population
+      const mappedPayload = {
+        step1: {
+          requestedAmount: applicationData.step1?.fundingAmount || 0,
+          useOfFunds: applicationData.step1?.fundsPurpose || applicationData.step1?.lookingFor || "Unknown",
+          businessLocation: applicationData.step1?.businessLocation || applicationData.step1?.headquarters || "US",
+          industry: applicationData.step1?.industry || "N/A",
+          salesHistory: applicationData.step1?.salesHistory || "N/A",
+          revenueLastYear: applicationData.step1?.revenueLastYear || 0,
+          averageMonthlyRevenue: applicationData.step1?.averageMonthlyRevenue || 0,
+          accountsReceivableBalance: applicationData.step1?.accountsReceivableBalance || 0,
+          fixedAssetsValue: applicationData.step1?.fixedAssetsValue || "N/A",
+          equipmentValue: applicationData.step1?.equipmentValue || 0
+        },
+        step3: {
+          businessName: applicationData.step3?.operatingName || "Unknown Business",
+          legalName: applicationData.step3?.legalName || applicationData.step3?.operatingName || "Unknown Business",
+          businessType: applicationData.step3?.businessStructure || "N/A",
+          industry: applicationData.step1?.industry || "N/A",
+          businessAddress: applicationData.step3?.businessStreetAddress || "N/A",
+          businessCity: applicationData.step3?.businessCity || "N/A",
+          businessState: applicationData.step3?.businessState || "N/A",
+          businessZip: applicationData.step3?.businessPostalCode || "N/A",
+          businessPhone: applicationData.step3?.businessPhone || "000-000-0000",
+          businessWebsite: applicationData.step3?.businessWebsite || "",
+          businessStartDate: applicationData.step3?.businessStartDate || "",
+          employeeCount: applicationData.step3?.employeeCount || 1,
+          estimatedYearlyRevenue: applicationData.step3?.estimatedYearlyRevenue || 0
+        },
+        step4: {
+          firstName: applicationData.step4?.firstName || "Unknown",
+          lastName: applicationData.step4?.lastName || "User", 
+          email: applicationData.step4?.personalEmail || "unknown@unknown.com",
+          phoneNumber: applicationData.step4?.personalPhone || "000-000-0000",
+          title: applicationData.step4?.title || "",
+          dateOfBirth: applicationData.step4?.dateOfBirth || "",
+          ssn: applicationData.step4?.socialSecurityNumber || "",
+          ownershipPercentage: applicationData.step4?.ownershipPercentage || 100,
+          creditScore: applicationData.step4?.creditScore || "unknown",
+          personalIncome: applicationData.step4?.personalAnnualIncome || "",
+          homeAddress: applicationData.step4?.applicantAddress || "",
+          homeCity: applicationData.step4?.applicantCity || "",
+          homeState: applicationData.step4?.applicantState || "",
+          homeZip: applicationData.step4?.applicantPostalCode || "",
+          yearsWithBusiness: applicationData.step4?.yearsWithBusiness || "",
+          previousLoans: applicationData.step4?.previousLoans || "no",
+          bankruptcyHistory: applicationData.step4?.bankruptcyHistory || "no"
+        }
+      };
+
+      console.log('🟢 Final payload being sent to staff backend:', mappedPayload);
+      console.log('📝 Complete mapped payload:', JSON.stringify(mappedPayload, null, 2));
       
       const response = await this.makeRequest<{ applicationId: string; signNowDocumentId?: string }>('/public/applications', {
         method: 'POST',
-        body: JSON.stringify(applicationData),
+        body: JSON.stringify(mappedPayload),
       });
       
       console.log('✅ Application creation response received:', {

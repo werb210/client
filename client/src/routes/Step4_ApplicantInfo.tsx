@@ -199,9 +199,10 @@ export default function Step4ApplicantInfo() {
       console.log('📝 Step 4: Complete payload for POST /api/public/applications:', {
         step1Fields: Object.keys(applicationData.step1).length,
         step3Fields: Object.keys(applicationData.step3).length,
-        step4Fields: Object.keys(applicationData.step4).length,
-        payload: JSON.stringify(applicationData, null, 2)
+        step4Fields: Object.keys(applicationData.step4).length
       });
+      
+      console.log('🚀 CALLING staffApi.createApplication with mapped payload...');
       
       const response = await staffApi.createApplication(applicationData);
       
