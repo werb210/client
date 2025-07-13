@@ -22,7 +22,8 @@ type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'completed' |
  * Step 6: SignNow Integration - API v2 Implementation
  * - Uses /api/public/applications/{id}/signing-status for initial fetch
  * - Embedded iframe with proper sandbox attributes
- * - Optional polling of GET /api/applications/{id}/signature-status for real-time feedback
+ * - Polls GET /api/applications/{id}/signature-status every 10s for 'invite_signed' status
+ * - Auto-redirects to Step 7 when signature detected
  * - Manual override fallback via PATCH /api/public/applications/{id}/override-signing
  * - No webhook handling (webhooks only go to backend, not browser clients)
  */
@@ -76,25 +77,30 @@ export default function Step6SignNowIntegration() {
 
 
 
-  // Optional: Poll for signature status to provide real-time feedback
-  // GET /api/applications/:id/signature-status → { status: "signed" }
+  // Poll for signature status every 10 seconds
+  const checkSignatureStatus = async () => {
+    if (!applicationId) return;
+    
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/signature-status`);
+      const { status } = await res.json();
+      
+      console.log('📄 Signature status check:', { applicationId, status });
+      
+      if (status === 'invite_signed') {
+        console.log('✅ Signature completed - redirecting to Step 7');
+        setLocation('/apply/step-7');
+      }
+    } catch (err) {
+      console.error('Signature status polling error:', err);
+    }
+  };
+
   useEffect(() => {
     if (applicationId && signUrl) {
-      console.log('🔄 Starting signature status polling for application:', applicationId);
+      console.log('🔄 Starting signature status polling every 10s for application:', applicationId);
       
-      const interval = setInterval(() => {
-        fetch(`/api/applications/${applicationId}/signature-status`)
-          .then(res => res.json())
-          .then(data => {
-            console.log('📄 Signature status:', data);
-            if (data.status === 'signed' || data.data?.canAdvance || data.data?.signed) {
-              console.log('✅ Signature completed - redirecting to Step 7');
-              setLocation('/apply/step-7');
-            }
-          })
-          .catch(err => console.error('Signature status polling error:', err));
-      }, 3000);
-      
+      const interval = setInterval(checkSignatureStatus, 10000);
       return () => clearInterval(interval);
     }
   }, [applicationId, signUrl, setLocation]);
