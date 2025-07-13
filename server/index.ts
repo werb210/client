@@ -147,7 +147,28 @@ app.use((req, res, next) => {
   // Application submission endpoint - proxy to staff backend
   app.post('/api/public/applications', async (req, res) => {
     try {
+      console.log('\n🚀 [SERVER] POST /api/public/applications - Received payload from client');
+      console.log('🟢 [SERVER] Final payload being sent to staff backend:', req.body);
+      
+      // Verify critical fields are present in the payload
+      const payload = req.body;
+      console.log('🔍 [SERVER] Critical field verification:', {
+        'step1.fundingAmount': payload?.step1?.fundingAmount,
+        'step3.operatingName': payload?.step3?.operatingName,
+        'step4.firstName': payload?.step4?.firstName,
+        'step4.personalEmail': payload?.step4?.personalEmail,
+        allFieldsPresent: !!(
+          payload?.step1?.fundingAmount && 
+          payload?.step3?.operatingName && 
+          payload?.step4?.firstName &&
+          payload?.step4?.personalEmail
+        )
+      });
+      
       const staffApiUrl = cfg.staffApiUrl + '/api';
+      console.log(`📡 [SERVER] Forwarding to: ${staffApiUrl}/public/applications`);
+      console.log('🔑 [SERVER] Using auth token:', cfg.clientToken ? 'Present' : 'Missing');
+      
       const response = await fetch(`${staffApiUrl}/public/applications`, {
         method: 'POST',
         headers: {
@@ -158,15 +179,20 @@ app.use((req, res, next) => {
         body: JSON.stringify(req.body)
       });
       
+      console.log(`📋 [SERVER] Staff backend response: ${response.status} ${response.statusText}`);
+      
       if (!response.ok) {
         const errorData = await response.text();
-        throw new Error(`Staff API returned ${response.status}`);
+        console.error('❌ [SERVER] Staff backend error:', errorData);
+        throw new Error(`Staff API returned ${response.status}: ${errorData}`);
       }
       
       const data = await response.json();
+      console.log('✅ [SERVER] Staff backend success response:', data);
       
       res.json(data);
     } catch (error) {
+      console.error('❌ [SERVER] Application creation failed:', error);
       
       res.status(502).json({
         success: false,
