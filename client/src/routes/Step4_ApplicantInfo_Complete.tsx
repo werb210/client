@@ -200,8 +200,9 @@ export default function Step4ApplicantInfoComplete() {
       });
       console.log('📋 Full payload being sent:', JSON.stringify(applicationData, null, 2));
       
-      // ✅ Confirm the POST URL
+      // ✅ Confirm the POST URL and VITE_API_BASE_URL
       const postUrl = '/api/public/applications';
+      console.log('🎯 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
       console.log('🎯 Confirmed POST URL:', postUrl);
       console.log('🎯 Full POST endpoint:', `${window.location.origin}${postUrl}`);
       

@@ -188,7 +188,7 @@ function UnifiedDocumentUploadCard({
         files.forEach((file) => form.append('file', file));
         form.append('documentType', category);
         
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/upload/${applicationId}`, {
+        const response = await fetch(`/api/public/upload/${applicationId}`, {
           method: 'POST',
           body: form,
           // ⚠️ No Authorization headers for public upload!

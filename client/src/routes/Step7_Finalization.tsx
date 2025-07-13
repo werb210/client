@@ -70,6 +70,7 @@ export default function Step7Finalization() {
 
     try {
       console.log('🏁 Step 7: Finalizing application with POST /api/public/applications/{id}/submit...');
+      console.log('🎯 Step 7 Final URL verification:', `/api/public/applications/${applicationId}/submit`);
       
       // Call the actual API endpoint
       const response = await fetch(`/api/public/applications/${applicationId}/submit`, {

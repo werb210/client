@@ -111,7 +111,7 @@ async function fetchDocsForCategory(category: string, params: QueryParams): Prom
       ...(params.arBalance && { arBalance: params.arBalance })
     }).toString();
 
-    const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/loan-products/required-documents/${category}?${queryString}`).catch(fetchError => {
+    const response = await fetch(`/api/loan-products/required-documents/${category}?${queryString}`).catch(fetchError => {
       console.warn(`[DOCUMENT_REQUIREMENTS] Network error for category ${category}:`, fetchError.message);
       throw new Error(`Network error: ${fetchError.message}`);
     });
