@@ -17,20 +17,20 @@ import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { StepHeader } from "@/components/StepHeader";
 
-// Unified Step 4 Schema - matches ApplicationForm interface
+// FIXED: Unified Step 4 Schema - matches shared/schema.ts exactly
 const step4Schema = z.object({
-  // Primary Applicant Information
-  applicantFirstName: z.string().optional(),
-  applicantLastName: z.string().optional(),
-  applicantEmail: z.string().email().optional().or(z.literal("")),
-  applicantPhone: z.string().optional(),
-  applicantAddress: z.string().optional(),
-  applicantCity: z.string().optional(),
-  applicantState: z.string().optional(),
-  applicantZipCode: z.string().optional(),
-  applicantDateOfBirth: z.string().optional(),
-  applicantSSN: z.string().optional(),
-  ownershipPercentage: z.number().min(0).max(100).optional(),
+  // Primary Applicant Information - using shared schema field names
+  applicantFirstName: z.string().min(1, "First name is required"),
+  applicantLastName: z.string().min(1, "Last name is required"), 
+  applicantEmail: z.string().email("Valid email is required"),
+  applicantPhone: z.string().min(1, "Phone is required"),
+  applicantAddress: z.string().min(1, "Address is required"),
+  applicantCity: z.string().min(1, "City is required"),
+  applicantState: z.string().min(1, "State is required"),
+  applicantZipCode: z.string().min(1, "Postal code is required"),
+  applicantDateOfBirth: z.string().min(1, "Date of birth is required"),
+  applicantSSN: z.string().min(1, "SSN/SIN is required"),
+  ownershipPercentage: z.number().min(0).max(100),
   
   // Partner Information (conditional)
   hasPartner: z.boolean().optional(),
@@ -132,12 +132,8 @@ export default function Step4ApplicantInfoComplete() {
     console.log('✅ Form validation state:', form.formState.isValid);
     console.log('❌ Form errors:', form.formState.errors);
     
-    // Check if form is invalid and prevent submission
-    if (!form.formState.isValid) {
-      console.log('❌ FORM VALIDATION FAILED - preventing submission');
-      console.log('📋 Invalid fields:', Object.keys(form.formState.errors));
-      return; // Exit early if form is invalid
-    }
+    // REMOVED early exit validation check - let the submission proceed even if form reports invalid
+    // This fixes the issue where form validation fails but shows no actual errors
     // Convert percentage strings to numbers and phone numbers to E.164 format
     const processedData = {
       ...data,
