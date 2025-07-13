@@ -193,7 +193,7 @@ export default function Step7Finalization() {
                 <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
                 <div>
                   <p className="font-medium">Direct Contact</p>
-                  <p className="text-gray-600">Qualified lenders will contact you directly with offers</p>
+                  <p className="text-gray-600">Qualified lenders may contact you directly with offers</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
