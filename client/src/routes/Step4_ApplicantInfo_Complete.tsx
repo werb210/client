@@ -127,6 +127,10 @@ export default function Step4ApplicantInfoComplete() {
   }, [ownershipPercentage, hasPartner, form]);
 
   const onSubmit = async (data: Step4FormData) => {
+    console.log('🚀 STEP 4 SUBMIT TRIGGERED - onSubmit function called');
+    console.log('📝 Form data received:', data);
+    console.log('✅ Form validation state:', form.formState.isValid);
+    console.log('❌ Form errors:', form.formState.errors);
     // Convert percentage strings to numbers and phone numbers to E.164 format
     const processedData = {
       ...data,

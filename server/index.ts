@@ -148,6 +148,9 @@ app.use((req, res, next) => {
   app.post('/api/public/applications', async (req, res) => {
     try {
       console.log('\n🚀 [SERVER] POST /api/public/applications - Received payload from client');
+      console.log('⏰ [SERVER] Request timestamp:', new Date().toISOString());
+      console.log('🔍 [SERVER] Request headers:', req.headers);
+      console.log('📝 [SERVER] Request body size:', JSON.stringify(req.body).length + ' bytes');
       console.log('🟢 [SERVER] Final payload being sent to staff backend:', req.body);
       
       // Verify critical fields are present in the payload
@@ -171,6 +174,7 @@ app.use((req, res, next) => {
       console.log(`🎯 [SERVER] Confirmed staff backend URL: https://staff.boreal.financial/api/public/applications`);
       console.log('🔑 [SERVER] Using auth token:', cfg.clientToken ? 'Present' : 'Missing');
       
+      console.log('📤 [SERVER] Making request to staff backend...');
       const response = await fetch(`${staffApiUrl}/public/applications`, {
         method: 'POST',
         headers: {
@@ -180,6 +184,8 @@ app.use((req, res, next) => {
         },
         body: JSON.stringify(req.body)
       });
+      
+      console.log('📥 [SERVER] Staff backend responded in', Date.now() - Date.now(), 'ms');
       
       console.log(`📋 [SERVER] Staff backend response: ${response.status} ${response.statusText}`);
       
