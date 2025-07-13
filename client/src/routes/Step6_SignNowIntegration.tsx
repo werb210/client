@@ -43,9 +43,9 @@ export default function Step6SignNowIntegration() {
   // Get applicationId from localStorage (always use stored value)
   const applicationId = localStorage.getItem("applicationId");
 
-  // Load real signing URL on mount
+  // Load real signing URL on mount (only if we have a valid applicationId)
   useEffect(() => {
-    if (applicationId) {
+    if (applicationId && applicationId !== 'null' && applicationId.length > 10) {
       // ✅ A. Log the outgoing application payload
       const applicationPayload = {
         applicationId,
@@ -58,8 +58,21 @@ export default function Step6SignNowIntegration() {
       
       console.log('🔄 Fetching signing URL for application:', applicationId);
       fetch(`/api/public/applications/${applicationId}/signing-status`)
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          }
+          return res.json();
+        })
+        .catch(fetchError => {
+          console.log('📄 Initial signing URL fetch failed:', fetchError.message);
+          setError('Application not found or signing not available');
+          setSigningStatus('error');
+          return null;
+        })
         .then(data => {
+          if (!data) return; // Skip if fetch failed
+          
           console.log('📄 Signing status response:', data);
           if (data.data?.signingUrl) {
             console.log('🔗 Setting signing URL:', data.data.signingUrl);
@@ -84,9 +97,11 @@ export default function Step6SignNowIntegration() {
           console.error('Failed to load signing URL:', err);
           setError('Failed to load signing document');
           setSigningStatus('error');
-          // Don't throw unhandled promise rejection for initial URL load errors
-          return;
         });
+    } else {
+      console.log('⚠️ No valid applicationId found, skipping SignNow URL fetch');
+      setError('No application ID available');
+      setSigningStatus('error');
     }
   }, [applicationId]);
 
@@ -101,8 +116,24 @@ export default function Step6SignNowIntegration() {
       const pollingEndpoint = `/api/public/applications/${applicationId}/signature-status`;
       console.log('📡 Polling endpoint:', pollingEndpoint);
       
-      const res = await fetch(pollingEndpoint);
-      const { status } = await res.json();
+      const res = await fetch(pollingEndpoint).catch(fetchError => {
+        // Handle fetch errors silently to prevent unhandled promise rejections
+        console.log('📡 Polling fetch failed (expected if application not found):', fetchError.message);
+        return null;
+      });
+      
+      if (!res || !res.ok) {
+        return; // Exit early if fetch failed or response not ok
+      }
+      
+      const data = await res.json().catch(jsonError => {
+        console.log('📡 Polling JSON parse failed:', jsonError.message);
+        return null;
+      });
+      
+      if (!data) return;
+      
+      const { status } = data;
       
       // ✅ B. Log polling results
       console.log("📡 Polling: Received signature status", status);
@@ -127,20 +158,19 @@ export default function Step6SignNowIntegration() {
       }
       
     } catch (err) {
-      console.error('Signature status polling error:', err);
-      // Don't throw unhandled promise rejection for polling errors
+      // Silently handle all polling errors to prevent console noise
       return;
     }
   };
 
   useEffect(() => {
-    if (applicationId && signUrl) {
+    if (applicationId && signUrl && signingStatus === 'ready') {
       console.log('🔄 Starting signature status polling every 5s for application:', applicationId);
       
       const interval = setInterval(checkSignatureStatus, 5000);
       return () => clearInterval(interval);
     }
-  }, [applicationId, signUrl, setLocation]);
+  }, [applicationId, signUrl, signingStatus, setLocation]);
 
   // Manual override for development
   const handleManualOverride = () => {

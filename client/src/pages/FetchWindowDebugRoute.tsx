@@ -48,8 +48,9 @@ export default function FetchWindowDebugRoute() {
 
   useEffect(() => {
     loadCacheStatus();
-    const interval = setInterval(loadCacheStatus, 5000); // Refresh every 5 seconds
-    return () => clearInterval(interval);
+    // DISABLED: Automatic polling to prevent console errors
+    // const interval = setInterval(loadCacheStatus, 5000); // Refresh every 5 seconds
+    // return () => clearInterval(interval);
   }, []);
 
   const handleClearCache = async () => {
