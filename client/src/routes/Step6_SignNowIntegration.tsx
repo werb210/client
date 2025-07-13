@@ -151,6 +151,10 @@ export default function Step6SignNowIntegration() {
       console.log('🔄 Fetching signing URL for application:', applicationId);
       console.log('🎯 SignNow URL confirmation:', `/api/public/applications/${applicationId}/signing-status`);
       
+      // ✅ Task 3: Log SignNow redirect URL configuration
+      const redirectUrl = import.meta.env.VITE_SIGNNOW_REDIRECT_URL || 'https://clientportal.boreal.financial/#/step7-finalization';
+      console.log("🧭 Configuring redirect URL for SignNow:", redirectUrl);
+      
       fetch(`/api/public/applications/${applicationId}/signing-status`)
         .then(res => {
           if (!res.ok) {
