@@ -22,7 +22,7 @@ type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'completed' |
  * Step 6: SignNow Integration - API v2 Implementation
  * - Uses /api/public/applications/{id}/signing-status for initial fetch
  * - Embedded iframe with proper sandbox attributes
- * - Polls GET /api/applications/{id}/signature-status every 10s for 'invite_signed' status
+ * - Polls GET /api/applications/{id}/signature-status every 5s for 'invite_signed' status
  * - Auto-redirects to Step 7 when signature detected
  * - Manual override fallback via PATCH /api/public/applications/{id}/override-signing
  * - No webhook handling (webhooks only go to backend, not browser clients)
@@ -77,7 +77,7 @@ export default function Step6SignNowIntegration() {
 
 
 
-  // Poll for signature status every 10 seconds
+  // Poll for signature status every 5 seconds
   const checkSignatureStatus = async () => {
     if (!applicationId) return;
     
@@ -98,9 +98,9 @@ export default function Step6SignNowIntegration() {
 
   useEffect(() => {
     if (applicationId && signUrl) {
-      console.log('🔄 Starting signature status polling every 10s for application:', applicationId);
+      console.log('🔄 Starting signature status polling every 5s for application:', applicationId);
       
-      const interval = setInterval(checkSignatureStatus, 10000);
+      const interval = setInterval(checkSignatureStatus, 5000);
       return () => clearInterval(interval);
     }
   }, [applicationId, signUrl, setLocation]);

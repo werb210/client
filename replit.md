@@ -110,7 +110,7 @@ The application follows a client-staff separation architecture:
   * WEBHOOK REMOVAL COMPLETE: Eliminated all client-side webhook handling - webhooks only go to backend, not browser clients
   * POLLING IMPLEMENTATION: Client now polls GET /api/applications/:id/signature-status for optional real-time feedback
   * ARCHITECTURE CORRECTED: SignNow integration follows proper client-server separation with backend handling all webhooks
-  * SIGNATURE POLLING COMPLETE: Implemented 10-second polling checking for 'invite_signed' status with auto-redirect to Step 7
+  * SIGNATURE POLLING COMPLETE: Implemented 5-second polling checking for 'invite_signed' status with auto-redirect to Step 7
   * CLIENT IMPLEMENTATION READY: Polls GET /api/applications/:id/signature-status endpoint for real-time signature feedback
   * SIGNNOW CLIENT COMPLETE: All client-side features implemented - iframe embedding, 10s polling, auto-redirect, debug logging
   * PRODUCTION READY: No further client-side action needed, ready for staff backend integration and end-to-end testing
