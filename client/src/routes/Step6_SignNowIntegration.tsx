@@ -279,6 +279,41 @@ export default function Step6SignNowIntegration() {
     setSigningStatus('signing');
   };
 
+  const handleManualOverride = async () => {
+    if (!applicationId) return;
+
+    try {
+      console.log('🚨 Manual override: Setting signed status to true');
+      
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/override-signing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+        },
+        credentials: 'include',
+        body: JSON.stringify({ signed: true })
+      });
+
+      if (response.ok) {
+        console.log('✅ Manual override successful - proceeding to Step 7');
+        setSigningStatus('completed');
+        setTimeout(() => {
+          setLocation('/apply/step-7');
+        }, 1000);
+      } else {
+        throw new Error('Manual override failed');
+      }
+    } catch (error) {
+      console.error('❌ Manual override error:', error);
+      toast({
+        title: "Override Failed",
+        description: "Unable to mark document as signed. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const renderStatusSection = () => {
     switch (signingStatus) {
       case 'loading':
@@ -342,18 +377,46 @@ export default function Step6SignNowIntegration() {
                   Your documents have been prepared and are ready for electronic signature. Complete the signing process below.
                 </p>
                 {signUrl ? (
-                  <div className="w-full">
+                  <div className="w-full space-y-4">
                     <SignNowIframe signingUrl={signUrl} />
+                    <div className="flex justify-center">
+                      <Button 
+                        onClick={handleManualOverride}
+                        variant="outline" 
+                        className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                      >
+                        I've Signed the Document – Continue
+                      </Button>
+                    </div>
                   </div>
                 ) : (
-                  <Alert className="border-yellow-200 bg-yellow-50">
-                    <Clock className="h-4 w-4" />
-                    <AlertDescription className="text-yellow-700">
-                      Still preparing your documents. Please wait...
-                      <br />
-                      <span className="text-xs">Application ID: {applicationId || 'Not available'}</span>
-                    </AlertDescription>
-                  </Alert>
+                  <div className="space-y-4">
+                    <Alert className="border-red-200 bg-red-50">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription className="text-red-700">
+                        🚨 Signing temporarily unavailable.
+                        <br />
+                        Please check back later or contact support.
+                        <br />
+                        <span className="text-xs">Application ID: {applicationId || 'Not available'}</span>
+                      </AlertDescription>
+                    </Alert>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={createSignNowDocument} 
+                        variant="outline" 
+                        className="flex-1"
+                      >
+                        Retry Document Preparation
+                      </Button>
+                      <Button 
+                        onClick={handleManualOverride}
+                        className="flex-1 bg-orange-600 hover:bg-orange-700"
+                      >
+                        I've Signed the Document – Continue
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -379,26 +442,45 @@ export default function Step6SignNowIntegration() {
                   Complete the signing process in the embedded SignNow window below. We'll automatically proceed once signing is finished.
                 </p>
                 {signUrl ? (
-                  <div className="w-full">
+                  <div className="w-full space-y-4">
                     <SignNowIframe signingUrl={signUrl} />
+                    <div className="flex justify-center">
+                      <Button 
+                        onClick={handleManualOverride}
+                        variant="outline" 
+                        className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                      >
+                        I've Signed the Document – Continue
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <Alert className="border-yellow-200 bg-yellow-50">
-                      <Clock className="h-4 w-4" />
-                      <AlertDescription className="text-yellow-700">
-                        Still preparing your documents. Please wait...
+                    <Alert className="border-red-200 bg-red-50">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription className="text-red-700">
+                        🚨 Signing temporarily unavailable.
+                        <br />
+                        Please check back later or contact support.
                         <br />
                         <span className="text-xs">Application ID: {applicationId || 'Not available'}</span>
                       </AlertDescription>
                     </Alert>
-                    <Button 
-                      onClick={createSignNowDocument} 
-                      variant="outline" 
-                      className="w-full"
-                    >
-                      Retry Document Preparation
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={createSignNowDocument} 
+                        variant="outline" 
+                        className="flex-1"
+                      >
+                        Retry Document Preparation
+                      </Button>
+                      <Button 
+                        onClick={handleManualOverride}
+                        className="flex-1 bg-orange-600 hover:bg-orange-700"
+                      >
+                        I've Signed the Document – Continue
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>

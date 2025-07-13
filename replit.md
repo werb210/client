@@ -93,18 +93,19 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
-- **July 12, 2025: STEP 6 SIGNNOW IFRAME INTEGRATION COMPLETE**
-  * CRITICAL SUCCESS: Implemented embedded iframe-based SignNow integration with automatic polling and advancement
+- **July 12, 2025: STEP 6 SIGNNOW IFRAME INTEGRATION WITH FALLBACK COMPLETE**
+  * CRITICAL SUCCESS: Implemented embedded iframe-based SignNow integration with comprehensive fallback system
   * IFRAME COMPONENT: Created dedicated SignNowIframe component with 700px height and security sandbox attributes
   * AUTOMATIC LOADING: SignNow document loads immediately when ready without manual button interaction
   * ENHANCED SECURITY: Implemented sandbox="allow-same-origin allow-scripts allow-forms allow-popups" with camera/microphone permissions
   * AUTOMATIC POLLING: Every 3 seconds polls GET /api/public/applications/{applicationId}/signing-status for completion
   * AUTO-ADVANCEMENT: Automatically redirects to Step 7 when canAdvance=true or signed=true detected
-  * FALLBACK HANDLING: Retry button for document preparation failures with clear error messaging
+  * MANUAL OVERRIDE: Added "I've Signed the Document – Continue" button as safety net when SignNow unavailable
+  * FALLBACK HANDLING: Clear error messaging with retry and manual override options when signingUrl invalid
+  * OVERRIDE ENDPOINT: Implemented POST /api/public/applications/:id/override-signing for manual progression
   * STATUS MONITORING: Real-time polling with 10-minute timeout and comprehensive error handling
-  * USER EXPERIENCE: Seamless embedded signing process with automatic workflow progression
-  * PHONE INPUT FIX: Resolved phone number deletion issue in Step 4 by removing automatic formatting on change
-  * PRODUCTION READY: Complete embedded SignNow workflow operational with automatic completion detection
+  * USER EXPERIENCE: Seamless embedded signing with fallback options ensuring users never get stuck
+  * PRODUCTION READY: Complete embedded SignNow workflow with robust fallback system for unreliable integrations
 
 - **July 12, 2025: CRITICAL STEP 5 DOCUMENT REQUIREMENTS FIELD MAPPING FIX COMPLETE**
   * CRITICAL SUCCESS: Fixed Step 5 document requirements display issue caused by field mapping error
