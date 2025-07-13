@@ -70,6 +70,33 @@ export default function Step6SignNowIntegration() {
   useEffect(() => {
     if (applicationId && applicationId !== 'null' && applicationId.length > 10) {
       // ✅ A. Log the outgoing application payload with actual form data
+      console.log("🔍 Checking application state before submission:");
+      console.log("Sending application payload", {
+        step1: state.step1,
+        step3: state.step3,
+        step4: state.step4,
+      });
+      
+      // Check for undefined blocks and rehydrate if needed
+      if (!state.step1 || !state.step3 || !state.step4) {
+        console.warn("⚠️ Missing step data blocks - attempting rehydration from localStorage");
+        
+        // Attempt to rehydrate from localStorage
+        const savedState = localStorage.getItem('formData');
+        if (savedState) {
+          try {
+            const parsedState = JSON.parse(savedState);
+            console.log("🔄 Rehydrated state from localStorage:", {
+              step1: parsedState.step1,
+              step3: parsedState.step3,
+              step4: parsedState.step4,
+            });
+          } catch (e) {
+            console.error("❌ Failed to parse saved state from localStorage");
+          }
+        }
+      }
+      
       const applicationPayload = {
         applicationId,
         // Map actual form fields for SignNow
@@ -91,7 +118,7 @@ export default function Step6SignNowIntegration() {
           rawState: Object.keys(state).length + " fields available"
         }
       };
-      console.log("📤 Submitting Application:", applicationPayload);
+      console.log("📤 Final Application Payload:", applicationPayload);
       
       console.log('🔄 Fetching signing URL for application:', applicationId);
       fetch(`/api/public/applications/${applicationId}/signing-status`)
