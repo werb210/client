@@ -37,6 +37,8 @@ export default function Step6SignNowIntegration() {
   const [error, setError] = useState<string>('');
   const [isPolling, setIsPolling] = useState(false);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [timeoutWarning, setTimeoutWarning] = useState<string>('');
+  const [startTime, setStartTime] = useState<number>(Date.now());
 
   // Get applicationId from localStorage (always use stored value)
   const applicationId = localStorage.getItem("applicationId");
@@ -53,6 +55,7 @@ export default function Step6SignNowIntegration() {
             console.log('🔗 Setting signing URL:', data.data.signingUrl);
             setSignUrl(data.data.signingUrl);
             setSigningStatus('ready');
+            setStartTime(Date.now()); // Track when signing started
             
             // Check if this is a fallback URL
             if (data.data.signingUrl.includes('temp_') || data.data.fallback) {
@@ -77,7 +80,7 @@ export default function Step6SignNowIntegration() {
 
 
 
-  // Poll for signature status every 5 seconds
+  // Poll for signature status every 5 seconds with timeout warnings
   const checkSignatureStatus = async () => {
     if (!applicationId) return;
     
@@ -90,7 +93,20 @@ export default function Step6SignNowIntegration() {
       if (status === 'invite_signed') {
         console.log('✅ Signature completed - redirecting to Step 7');
         setLocation('/apply/step-7');
+        return;
       }
+      
+      // Check for timeout warnings
+      const elapsedMinutes = Math.floor((Date.now() - startTime) / (1000 * 60));
+      
+      if (elapsedMinutes >= 10 && elapsedMinutes < 15) {
+        setTimeoutWarning('Document has been unsigned for 10+ minutes. Please ensure you complete the signature process.');
+      } else if (elapsedMinutes >= 15) {
+        setTimeoutWarning('Document has been unsigned for 15+ minutes. Consider using the "Continue Without Signing" option below if you\'re experiencing technical difficulties.');
+      } else if (elapsedMinutes < 10) {
+        setTimeoutWarning(''); // Clear warning if under 10 minutes
+      }
+      
     } catch (err) {
       console.error('Signature status polling error:', err);
     }
@@ -195,6 +211,16 @@ export default function Step6SignNowIntegration() {
                           The document may not load properly in the iframe.
                         </p>
                       </div>
+                    )}
+                    
+                    {/* Timeout Warning Display */}
+                    {timeoutWarning && (
+                      <Alert className="border-amber-200 bg-amber-50">
+                        <Clock className="h-4 w-4" />
+                        <AlertDescription className="text-amber-800">
+                          <strong>Signing Timeout Notice:</strong> {timeoutWarning}
+                        </AlertDescription>
+                      </Alert>
                     )}
                     
                     <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
