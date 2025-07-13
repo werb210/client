@@ -183,6 +183,14 @@ app.use((req, res, next) => {
       
       console.log(`📋 [SERVER] Staff backend response: ${response.status} ${response.statusText}`);
       
+      // Enhanced logging for user verification
+      if (response.ok) {
+        console.log('✅ [SERVER] SUCCESS: Application submitted to staff backend');
+        console.log('🎯 [SERVER] Staff backend is receiving submissions');
+      } else {
+        console.log('❌ [SERVER] FAILED: Staff backend rejected submission');
+      }
+      
       if (!response.ok) {
         const errorData = await response.text();
         console.error('❌ [SERVER] Staff backend error:', errorData);
@@ -222,6 +230,14 @@ app.use((req, res, next) => {
       });
       
       console.log(`📋 [SERVER] Staff backend submission response: ${response.status} ${response.statusText}`);
+      
+      // Enhanced logging for Step 7 verification
+      if (response.ok) {
+        console.log('✅ [SERVER] SUCCESS: Step 7 finalization completed');
+        console.log('🎯 [SERVER] Application finalized in staff backend');
+      } else {
+        console.log('❌ [SERVER] FAILED: Step 7 finalization rejected');
+      }
       
       if (!response.ok) {
         const errorData = await response.text();
