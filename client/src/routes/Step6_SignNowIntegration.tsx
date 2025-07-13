@@ -39,160 +39,59 @@ export default function Step6SignNowIntegration() {
   // Get applicationId from localStorage (always use stored value)
   const applicationId = localStorage.getItem("applicationId");
 
-  // Initial setup and signing status fetch
+  // Load real signing URL on mount
   useEffect(() => {
-    if (applicationId && !signUrl && signingStatus === 'loading') {
-      console.log('🧭 Step 6 mounted with applicationId:', applicationId);
-      fetchSigningStatus();
-    }
-  }, [applicationId, signUrl, signingStatus]);
-
-  // Fetch signing status using proper API endpoint
-  const fetchSigningStatus = async () => {
-    if (!applicationId) {
-      setError('No application ID available');
-      setSigningStatus('error');
-      return;
-    }
-
-    try {
-      setSigningStatus('polling');
-      setError(null);
-      
-      console.log(`[SIGNNOW] Fetching signing status for application: ${applicationId}`);
-      
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/signing-status`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-        },
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('[SIGNNOW] Status response received:', result);
-        
-        if (result.success && result.data?.signingUrl) {
-          setSignUrl(result.data.signingUrl);
-          setSigningStatus('ready');
-          console.log('[SIGNNOW] ✅ SignNow URL received, starting status polling');
-          startAutomaticPolling();
-        } else if (result.data?.canAdvance || result.data?.signed) {
-          console.log('[SIGNNOW] ✅ Document already signed, proceeding to Step 7');
-          setSigningStatus('completed');
-          setTimeout(() => {
-            setLocation('/apply/step-7');
-          }, 1000);
-        } else {
-          throw new Error('No signing URL available');
-        }
-      } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-    } catch (err: any) {
-      console.error('[SIGNNOW] ❌ Error fetching signing status:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch signing status');
-      setSigningStatus('error');
-    }
-  };
-
-  // Auto-poll status every 3 seconds for completion detection
-  const startAutomaticPolling = () => {
-    if (isPolling) return;
-    
-    setIsPolling(true);
-    console.log('🔄 Starting automatic signing status polling every 3 seconds...');
-    
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/signing-status`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-          },
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          console.log('📊 Polling status result:', result);
-          
-          // Check for completion using specified format
-          if (result?.data?.canAdvance || result?.data?.signed) {
-            console.log('✅ Signing completed - auto-redirecting to Step 7');
-            setSigningStatus('completed');
-            
-            // Clear polling interval
-            if (pollingInterval) {
-              clearInterval(pollingInterval);
-              setPollingInterval(null);
-            }
-            setIsPolling(false);
-            
-            // Auto-redirect to Step 7
-            setTimeout(() => {
-              setLocation('/apply/step-7');
-            }, 1000);
+    if (applicationId) {
+      fetch(`/api/public/applications/${applicationId}/signing-status`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.data?.signingUrl) {
+            setSignUrl(data.data.signingUrl);
+            setSigningStatus('ready');
           }
-        }
-      } catch (error) {
-        console.error('⚠️ Polling error (continuing):', error);
-      }
-    }, 3000); // Poll every 3 seconds as specified
+        })
+        .catch(err => {
+          console.error('Failed to load signing URL:', err);
+          setError('Failed to load signing document');
+          setSigningStatus('error');
+        });
+    }
+  }, [applicationId]);
 
-    setPollingInterval(interval);
-    
-    // Stop polling after 10 minutes
-    setTimeout(() => {
-      if (interval) {
-        clearInterval(interval);
-        setPollingInterval(null);
-      }
-      setIsPolling(false);
-      if (signingStatus !== 'completed') {
-        setError('Signing document is taking longer than expected. Please refresh the page.');
-        setSigningStatus('error');
-      }
-    }, 600000);
-  };
 
-  // Manual override using PATCH method
-  const handleManualOverride = async () => {
-    if (!applicationId) return;
 
-    try {
-      console.log('🚨 Manual override: Setting signed status to true');
+  // Poll for status every 3 seconds
+  useEffect(() => {
+    if (applicationId && signUrl) {
+      const interval = setInterval(() => {
+        fetch(`/api/public/applications/${applicationId}/signing-status`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.data?.canAdvance || data.data?.signed) {
+              setLocation('/apply/step-7');
+            }
+          })
+          .catch(err => console.error('Polling error:', err));
+      }, 3000);
       
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/override-signing`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-        },
-        credentials: 'include',
-        body: JSON.stringify({ signed: true })
-      });
+      return () => clearInterval(interval);
+    }
+  }, [applicationId, signUrl, setLocation]);
 
-      if (response.ok) {
-        console.log('✅ Manual override successful - proceeding to Step 7');
-        setSigningStatus('completed');
-        setTimeout(() => {
-          setLocation('/apply/step-7');
-        }, 1000);
-      } else {
-        throw new Error('Manual override failed');
-      }
-    } catch (error) {
-      console.error('❌ Manual override error:', error);
+  // Manual override for development
+  const handleManualOverride = () => {
+    fetch(`/api/public/applications/${applicationId}/override-signing`, { 
+      method: "PATCH" 
+    })
+    .then(() => setLocation('/apply/step-7'))
+    .catch(err => {
+      console.error('Override failed:', err);
       toast({
         title: "Override Failed",
         description: "Unable to mark document as signed. Please try again.",
         variant: "destructive"
       });
-    }
+    });
   };
 
   // Cleanup polling on unmount
@@ -291,21 +190,12 @@ export default function Step6SignNowIntegration() {
                         Please check back later or contact support.
                       </AlertDescription>
                     </Alert>
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={fetchSigningStatus} 
-                        variant="outline" 
-                        className="flex-1"
-                      >
-                        Retry Document Preparation
-                      </Button>
-                      <Button 
-                        onClick={handleManualOverride}
-                        className="flex-1 bg-orange-600 hover:bg-orange-700"
-                      >
-                        Continue Without Signing
-                      </Button>
-                    </div>
+                    <Button 
+                      onClick={handleManualOverride}
+                      className="w-full bg-orange-600 hover:bg-orange-700"
+                    >
+                      Continue Without Signing
+                    </Button>
                   </div>
                 )}
               </div>
@@ -348,21 +238,12 @@ export default function Step6SignNowIntegration() {
             <CardContent>
               <div className="space-y-4">
                 <p className="text-red-700">{error}</p>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={fetchSigningStatus} 
-                    variant="outline" 
-                    className="flex-1"
-                  >
-                    Try Again
-                  </Button>
-                  <Button 
-                    onClick={handleManualOverride}
-                    className="flex-1 bg-orange-600 hover:bg-orange-700"
-                  >
-                    Continue Without Signing
-                  </Button>
-                </div>
+                <Button 
+                  onClick={handleManualOverride}
+                  className="w-full bg-orange-600 hover:bg-orange-700"
+                >
+                  Continue Without Signing
+                </Button>
               </div>
             </CardContent>
           </Card>
