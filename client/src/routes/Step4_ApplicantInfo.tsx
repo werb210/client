@@ -179,7 +179,23 @@ export default function Step4ApplicantInfo() {
         }
       };
       
-      console.log('📝 Step 4: Application data structure:', applicationData);
+      // Add one-time console log before submit as requested
+      console.log('🟢 Final payload being sent:', applicationData);
+      
+      // Verify critical field values are non-empty
+      console.log('🔍 Critical field verification:', {
+        'step1.fundingAmount': applicationData.step1.fundingAmount,
+        'step3.operatingName (businessName)': applicationData.step3.operatingName,
+        'step4.firstName': applicationData.step4.firstName,
+        'step4.personalEmail': applicationData.step4.personalEmail,
+        allFieldsPresent: !!(
+          applicationData.step1.fundingAmount && 
+          applicationData.step3.operatingName && 
+          applicationData.step4.firstName &&
+          applicationData.step4.personalEmail
+        )
+      });
+      
       console.log('📝 Step 4: Complete payload for POST /api/public/applications:', {
         step1Fields: Object.keys(applicationData.step1).length,
         step3Fields: Object.keys(applicationData.step3).length,

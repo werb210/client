@@ -298,7 +298,24 @@ class StaffApiClient {
         productId: selectedProductId,
       };
 
-      console.log('📋 Submitting with correct payload structure:', correctPayload);
+      // Add the exact API call structure as requested
+      const API_BASE_URL = this.baseUrl;
+      const sharedToken = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN;
+      
+      console.log('🟢 Final payload being sent to API:', correctPayload);
+      console.log('🔍 API call structure verification:', {
+        url: `${API_BASE_URL}/public/applications`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sharedToken ? '[PRESENT]' : '[MISSING]'}`
+        },
+        bodyStructure: {
+          step1: Object.keys(correctPayload.step1 || {}).length + ' fields',
+          step3: Object.keys(correctPayload.step3 || {}).length + ' fields', 
+          step4: Object.keys(correctPayload.step4 || {}).length + ' fields'
+        }
+      });
 
       const response = await this.makeRequest<ApplicationSubmissionResponse>('/public/applications', {
         method: 'POST',
