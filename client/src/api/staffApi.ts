@@ -475,24 +475,31 @@ class StaffApiClient {
   async createApplication(applicationData: any): Promise<{ applicationId: string; signNowDocumentId?: string }> {
     try {
       console.log('📝 Creating new application via POST /api/public/applications');
-      console.log('📋 Payload verification - complete data included:', {
-        step1: {
-          fundingAmount: applicationData.step1?.fundingAmount,
-          lookingFor: applicationData.step1?.lookingFor,
-          fieldCount: Object.keys(applicationData.step1 || {}).length
-        },
-        step3: {
-          operatingName: applicationData.step3?.operatingName,
-          businessCity: applicationData.step3?.businessCity,
-          fieldCount: Object.keys(applicationData.step3 || {}).length
-        },
-        step4: {
-          firstName: applicationData.step4?.firstName,
-          lastName: applicationData.step4?.lastName,
-          personalEmail: applicationData.step4?.personalEmail,
-          fieldCount: Object.keys(applicationData.step4 || {}).length
-        }
+      console.log('🟢 Final payload being sent to staff backend:', applicationData);
+      
+      // Critical field verification for SignNow population
+      console.log('🔍 Critical field verification for SignNow:', {
+        'step1.fundingAmount': applicationData.step1?.fundingAmount,
+        'step3.operatingName (businessName)': applicationData.step3?.operatingName,
+        'step4.firstName': applicationData.step4?.firstName,
+        'step4.personalEmail': applicationData.step4?.personalEmail,
+        allFieldsPresent: !!(
+          applicationData.step1?.fundingAmount && 
+          applicationData.step3?.operatingName && 
+          applicationData.step4?.firstName &&
+          applicationData.step4?.personalEmail
+        )
       });
+      
+      console.log('📋 Payload structure verification:', {
+        hasStep1: !!applicationData.step1,
+        hasStep3: !!applicationData.step3,
+        hasStep4: !!applicationData.step4,
+        step1FieldCount: Object.keys(applicationData.step1 || {}).length,
+        step3FieldCount: Object.keys(applicationData.step3 || {}).length,
+        step4FieldCount: Object.keys(applicationData.step4 || {}).length
+      });
+      
       console.log('📝 Complete application payload:', JSON.stringify(applicationData, null, 2));
       
       const response = await this.makeRequest<{ applicationId: string; signNowDocumentId?: string }>('/public/applications', {
