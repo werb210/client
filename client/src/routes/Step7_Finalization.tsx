@@ -72,7 +72,7 @@ export default function Step7Finalization() {
       console.log('🏁 Step 7: Finalizing application with POST /api/public/applications/{id}/submit...');
       
       // Call the actual API endpoint
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${applicationId}/submit`, {
+      const response = await fetch(`/api/public/applications/${applicationId}/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
