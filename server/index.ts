@@ -166,7 +166,9 @@ app.use((req, res, next) => {
       });
       
       const staffApiUrl = cfg.staffApiUrl + '/api';
-      console.log(`📡 [SERVER] Forwarding to: ${staffApiUrl}/public/applications`);
+      const finalUrl = `${staffApiUrl}/public/applications`;
+      console.log(`📡 [SERVER] Forwarding to: ${finalUrl}`);
+      console.log(`🎯 [SERVER] Confirmed staff backend URL: https://staff.boreal.financial/api/public/applications`);
       console.log('🔑 [SERVER] Using auth token:', cfg.clientToken ? 'Present' : 'Missing');
       
       const response = await fetch(`${staffApiUrl}/public/applications`, {

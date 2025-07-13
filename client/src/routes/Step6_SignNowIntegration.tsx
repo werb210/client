@@ -69,12 +69,40 @@ export default function Step6SignNowIntegration() {
   // Load real signing URL on mount (only if we have a valid applicationId)
   useEffect(() => {
     if (applicationId && applicationId !== 'null' && applicationId.length > 10) {
-      // ✅ A. Log the outgoing application payload with actual form data
-      console.log("🔍 Checking application state before submission:");
-      console.log("Sending application payload", {
+      // ✅ A. Log the final POST payload exactly as specified
+      console.log("📤 Submitting full application:", {
         step1: state.step1,
         step3: state.step3,
         step4: state.step4,
+      });
+      
+      // Also log the detailed structure for verification
+      console.log("🔍 Detailed payload structure:", {
+        step1: {
+          available: !!state.step1,
+          fields: state.step1 ? Object.keys(state.step1) : [],
+          sample: state.step1 ? { 
+            requestedAmount: state.step1.requestedAmount || state.step1.fundingAmount,
+            useOfFunds: state.step1.useOfFunds || state.step1.purposeOfFunds 
+          } : null
+        },
+        step3: {
+          available: !!state.step3,
+          fields: state.step3 ? Object.keys(state.step3) : [],
+          sample: state.step3 ? {
+            businessName: state.step3.businessName || state.step3.operatingName,
+            businessType: state.step3.businessType || state.step3.businessStructure
+          } : null
+        },
+        step4: {
+          available: !!state.step4,
+          fields: state.step4 ? Object.keys(state.step4) : [],
+          sample: state.step4 ? {
+            firstName: state.step4.firstName || state.step4.applicantFirstName,
+            lastName: state.step4.lastName || state.step4.applicantLastName,
+            email: state.step4.email || state.step4.applicantEmail
+          } : null
+        }
       });
       
       // Check for undefined blocks and rehydrate if needed
@@ -121,6 +149,8 @@ export default function Step6SignNowIntegration() {
       console.log("📤 Final Application Payload:", applicationPayload);
       
       console.log('🔄 Fetching signing URL for application:', applicationId);
+      console.log('🎯 SignNow URL confirmation:', `/api/public/applications/${applicationId}/signing-status`);
+      
       fetch(`/api/public/applications/${applicationId}/signing-status`)
         .then(res => {
           if (!res.ok) {

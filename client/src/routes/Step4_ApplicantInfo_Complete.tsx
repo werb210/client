@@ -186,6 +186,13 @@ export default function Step4ApplicantInfoComplete() {
         step4: processedData
       };
       
+      // ✅ Log final POST payload exactly as specified
+      console.log("📤 Submitting full application:", {
+        step1: applicationData.step1,
+        step3: applicationData.step3,
+        step4: applicationData.step4,
+      });
+      
       console.log('📋 Application data structure:', {
         step1: Object.keys(applicationData.step1),
         step3: Object.keys(applicationData.step3), 
@@ -193,8 +200,13 @@ export default function Step4ApplicantInfoComplete() {
       });
       console.log('📋 Full payload being sent:', JSON.stringify(applicationData, null, 2));
       
+      // ✅ Confirm the POST URL
+      const postUrl = '/api/public/applications';
+      console.log('🎯 Confirmed POST URL:', postUrl);
+      console.log('🎯 Full POST endpoint:', `${window.location.origin}${postUrl}`);
+      
       // API Call: POST /api/public/applications
-      const response = await fetch('/api/public/applications', {
+      const response = await fetch(postUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
