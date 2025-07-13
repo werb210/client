@@ -97,6 +97,17 @@ export default function Step4ApplicantInfo() {
     try {
       console.log('📝 Step 4: Creating real application via POST /api/public/applications');
       
+      // ✅ DEBUG: Log the actual form data being submitted
+      console.log('🔍 FORM DATA RECEIVED IN onSubmit:', {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        personalEmail: data.personalEmail,
+        personalPhone: data.personalPhone,
+        title: data.title,
+        allFormFields: Object.keys(data).length,
+        isFormDataEmpty: Object.keys(data).every(key => !data[key as keyof Step4FormData])
+      });
+      
       const { staffApi } = await import('../api/staffApi');
       
       // Log current state to debug what data we have
@@ -188,6 +199,10 @@ export default function Step4ApplicantInfo() {
         'step3.operatingName (businessName)': applicationData.step3.operatingName,
         'step4.firstName': applicationData.step4.firstName,
         'step4.personalEmail': applicationData.step4.personalEmail,
+        'data.firstName (from form)': data.firstName,
+        'data.personalEmail (from form)': data.personalEmail,
+        'state.firstName (from context)': state.firstName,
+        'state.personalEmail (from context)': state.personalEmail,
         allFieldsPresent: !!(
           applicationData.step1.fundingAmount && 
           applicationData.step3.operatingName && 
