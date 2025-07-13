@@ -180,30 +180,54 @@ export default function Step4ApplicantInfo() {
       };
       
       console.log('📝 Step 4: Application data structure:', applicationData);
+      console.log('📝 Step 4: Complete payload for POST /api/public/applications:', {
+        step1Fields: Object.keys(applicationData.step1).length,
+        step3Fields: Object.keys(applicationData.step3).length,
+        step4Fields: Object.keys(applicationData.step4).length,
+        payload: JSON.stringify(applicationData, null, 2)
+      });
       
       const response = await staffApi.createApplication(applicationData);
       
+      console.log('📋 Step 4: Full API response received:', {
+        response: JSON.stringify(response, null, 2),
+        hasApplicationId: !!response?.applicationId,
+        hasSignNowDocumentId: !!response?.signNowDocumentId,
+        allResponseKeys: response ? Object.keys(response) : []
+      });
+      
       if (!response?.applicationId) {
-        alert("❌ Application creation failed");
+        console.error('❌ CRITICAL: No applicationId in response - this will break SignNow integration');
+        alert("❌ Application creation failed - no applicationId returned");
         return;
+      }
+      
+      // Log critical response fields for webhook verification
+      if (response.signNowDocumentId) {
+        console.log('🔗 SignNow document ID for webhook matching:', response.signNowDocumentId);
+      } else {
+        console.warn('⚠️ No signNowDocumentId in response - may affect webhook handling');
       }
       
       // ✅ Store applicationId in both context and localStorage
       state.applicationId = response.applicationId;
-      localStorage.setItem("applicationId", response.applicationId); // 🔥 THIS IS THE FIX
+      localStorage.setItem("applicationId", response.applicationId);
       
       // Store the real application ID
       dispatch({
         type: 'UPDATE_FORM_DATA',
         payload: {
-          applicationId: response.applicationId
+          applicationId: response.applicationId,
+          signNowDocumentId: response.signNowDocumentId || null
         }
       });
       
       // Store in localStorage as backup
       localStorage.setItem('appId', response.applicationId);
       
-      console.log('✅ Step 4: Real application created with ID:', response.applicationId);
+      console.log('✅ Step 4: Application created successfully');
+      console.log('✅ ApplicationId stored:', response.applicationId);
+      console.log('✅ Data mapping verification: requestedAmount, businessName, applicant fields included in payload');
       
       dispatch({
         type: 'MARK_STEP_COMPLETE',

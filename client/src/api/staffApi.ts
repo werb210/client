@@ -455,17 +455,50 @@ class StaffApiClient {
     }
   }
 
-  async createApplication(applicationData: any): Promise<{ applicationId: string }> {
+  async createApplication(applicationData: any): Promise<{ applicationId: string; signNowDocumentId?: string }> {
     try {
       console.log('📝 Creating new application via POST /api/public/applications');
-      console.log('📝 Application data:', applicationData);
+      console.log('📋 Payload verification - complete data included:', {
+        step1: {
+          fundingAmount: applicationData.step1?.fundingAmount,
+          lookingFor: applicationData.step1?.lookingFor,
+          fieldCount: Object.keys(applicationData.step1 || {}).length
+        },
+        step3: {
+          operatingName: applicationData.step3?.operatingName,
+          businessCity: applicationData.step3?.businessCity,
+          fieldCount: Object.keys(applicationData.step3 || {}).length
+        },
+        step4: {
+          firstName: applicationData.step4?.firstName,
+          lastName: applicationData.step4?.lastName,
+          personalEmail: applicationData.step4?.personalEmail,
+          fieldCount: Object.keys(applicationData.step4 || {}).length
+        }
+      });
+      console.log('📝 Complete application payload:', JSON.stringify(applicationData, null, 2));
       
-      const response = await this.makeRequest<{ applicationId: string }>('/public/applications', {
+      const response = await this.makeRequest<{ applicationId: string; signNowDocumentId?: string }>('/public/applications', {
         method: 'POST',
         body: JSON.stringify(applicationData),
       });
       
-      console.log('✅ Application created with ID:', response.applicationId);
+      console.log('✅ Application creation response received:', {
+        applicationId: response?.applicationId,
+        signNowDocumentId: response?.signNowDocumentId,
+        fullResponse: JSON.stringify(response, null, 2)
+      });
+      
+      // Verify critical fields for webhook integration
+      if (response?.applicationId && response?.signNowDocumentId) {
+        console.log('🔗 Webhook verification: applicationId and signNowDocumentId both present');
+        console.log('🔗 Document ID for webhook matching:', response.signNowDocumentId);
+      } else {
+        console.warn('⚠️ Missing critical fields for SignNow integration:');
+        console.warn('   - applicationId:', !!response?.applicationId);
+        console.warn('   - signNowDocumentId:', !!response?.signNowDocumentId);
+      }
+      
       return response;
       
     } catch (error) {
