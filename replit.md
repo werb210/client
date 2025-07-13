@@ -93,6 +93,16 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 13, 2025: STEP 4 FORM DATA CAPTURE ISSUE DIAGNOSIS COMPLETE**
+  * ROOT CAUSE IDENTIFIED: Staff backend receiving applications (HTTP 200 OK) but Step 4 form fields are undefined
+  * SERVER LOGS SHOW: fundingAmount: 40000 ✅, operatingName: '1' ✅, firstName: undefined ❌, personalEmail: undefined ❌
+  * FORM STRUCTURE: Correct - firstName and personalEmail fields properly configured with react-hook-form
+  * ISSUE CONFIRMED: Form submission not capturing field values despite correct form structure
+  * DEBUGGING ENHANCED: Added comprehensive form validation logging and unhandled promise rejection tracking
+  * VALIDATION CHECK: Added form.formState.isValid check to prevent empty form submissions
+  * PROMISE REJECTION LOGGING: Enhanced error tracking to identify root cause of repeated unhandled rejections
+  * NEXT STEP: Form validation errors or field capture mechanism needs investigation
+
 - **July 13, 2025: PRODUCTION DEPLOYMENT CONFIGURATION COMPLETE**
   * PRODUCTION MODE: Application configured to run in production mode with staff backend integration
   * ENVIRONMENT VARIABLES: Updated .env to use https://staff.boreal.financial/api for direct API calls

@@ -105,8 +105,23 @@ export default function Step4ApplicantInfo() {
         personalPhone: data.personalPhone,
         title: data.title,
         allFormFields: Object.keys(data).length,
-        isFormDataEmpty: Object.keys(data).every(key => !data[key as keyof Step4FormData])
+        isFormDataEmpty: Object.keys(data).every(key => !data[key as keyof Step4FormData]),
+        formValidationErrors: form.formState.errors
       });
+      
+      // Check if form has validation errors
+      if (!form.formState.isValid) {
+        console.error('❌ Form validation failed:', form.formState.errors);
+        alert('Please fix form validation errors before submitting');
+        return;
+      }
+      
+      // Check if critical fields are empty
+      if (!data.firstName || !data.personalEmail) {
+        console.error('❌ Critical fields missing:', { firstName: data.firstName, personalEmail: data.personalEmail });
+        alert('Please fill in your name and email before submitting');
+        return;
+      }
       
       const { staffApi } = await import('../api/staffApi');
       

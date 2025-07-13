@@ -6,6 +6,8 @@ import "./index.css";
 // SIMPLE & FOCUSED: Only suppress the specific Replit dev environment errors
 window.addEventListener('unhandledrejection', (event) => {
   const errorMessage = String(event.reason || '');
+  console.log('🚨 Unhandled Promise Rejection:', errorMessage);
+  
   if (errorMessage.includes('janeway.replit.dev') || 
       errorMessage.includes('ERR_CONNECTION_TIMED_OUT') ||
       errorMessage.includes('dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32')) {
