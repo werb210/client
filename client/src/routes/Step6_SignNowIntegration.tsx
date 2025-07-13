@@ -42,12 +42,27 @@ export default function Step6SignNowIntegration() {
   // Load real signing URL on mount
   useEffect(() => {
     if (applicationId) {
+      console.log('🔄 Fetching signing URL for application:', applicationId);
       fetch(`/api/public/applications/${applicationId}/signing-status`)
         .then(res => res.json())
         .then(data => {
+          console.log('📄 Signing status response:', data);
           if (data.data?.signingUrl) {
+            console.log('🔗 Setting signing URL:', data.data.signingUrl);
             setSignUrl(data.data.signingUrl);
             setSigningStatus('ready');
+            
+            // Check if this is a fallback URL
+            if (data.data.signingUrl.includes('temp_') || data.data.fallback) {
+              console.warn('⚠️ Using fallback SignNow URL - staff backend unavailable');
+              console.warn('🔗 Fallback URL will not load properly:', data.data.signingUrl);
+            } else {
+              console.log('✅ Using real SignNow URL from staff backend');
+            }
+          } else {
+            console.error('❌ No signing URL in response:', data);
+            setError('No signing URL available');
+            setSigningStatus('error');
           }
         })
         .catch(err => {
@@ -161,22 +176,50 @@ export default function Step6SignNowIntegration() {
                 </p>
                 {signUrl ? (
                   <div className="w-full space-y-4">
-                    <iframe
-                      src={signUrl}
-                      width="100%"
-                      height="700px"
-                      sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                      allow="camera; microphone; fullscreen"
-                      style={{ border: 'none', borderRadius: '8px' }}
-                      title="SignNow Document Signing"
-                    />
+                    {signUrl.includes('temp_') && (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                        <p className="text-sm text-amber-800">
+                          ⚠️ <strong>Development Mode:</strong> Using fallback SignNow URL because staff backend is unavailable.
+                          The document may not load properly in the iframe.
+                        </p>
+                      </div>
+                    )}
+                    
+                    <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
+                      <iframe
+                        src={signUrl}
+                        width="100%"
+                        height="700px"
+                        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                        allow="camera; microphone; fullscreen"
+                        style={{ border: 'none', borderRadius: '8px' }}
+                        title="SignNow Document Signing"
+                        onLoad={() => {
+                          console.log('📄 SignNow iframe loaded successfully');
+                          if (signUrl.includes('temp_')) {
+                            console.warn('⚠️ Iframe loaded but using fake URL - document will not work');
+                          }
+                        }}
+                        onError={(e) => {
+                          console.error('❌ SignNow iframe failed to load:', e);
+                          if (signUrl.includes('temp_')) {
+                            console.error('🔗 Expected error: Fake URL cannot load real SignNow document');
+                          }
+                        }}
+                      />
+                    </div>
+                    
+                    <div className="text-center text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                      Signing URL: {signUrl}
+                    </div>
+                    
                     <div className="flex justify-center">
                       <Button 
                         onClick={handleManualOverride}
                         variant="outline" 
                         className="border-orange-300 text-orange-700 hover:bg-orange-50"
                       >
-                        I've Signed the Document – Continue
+                        {signUrl.includes('temp_') ? 'Continue Without Signing (Dev Mode)' : "I've Signed the Document – Continue"}
                       </Button>
                     </div>
                   </div>
