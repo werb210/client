@@ -161,49 +161,58 @@ export default function Step4ApplicantInfoComplete() {
     console.log('📤 Step 4: Creating real application via POST /api/public/applications...');
     try {
       // Format data as staff backend expects: {step1, step3, step4}
-      const applicationData = {
-        step1: {
-          // Financial profile data from Steps 1 & 2
-          fundingAmount: state.fundingAmount,
-          lookingFor: state.lookingFor,
-          equipmentValue: state.equipmentValue,
-          businessLocation: state.businessLocation,
-          salesHistory: state.salesHistory,
-          lastYearRevenue: state.lastYearRevenue,
-          averageMonthlyRevenue: state.averageMonthlyRevenue,
-          accountsReceivableBalance: state.accountsReceivableBalance,
-          fixedAssetsValue: state.fixedAssetsValue,
-          purposeOfFunds: state.purposeOfFunds,
-          selectedCategory: state.selectedCategory
-        },
-        step3: {
-          // Business details from Step 3
-          operatingName: state.operatingName,
-          legalName: state.legalName,
-          businessAddress: state.businessAddress,
-          businessCity: state.businessCity,
-          businessState: state.businessState,
-          businessZip: state.businessZip,
-          businessPhone: state.businessPhone,
-          businessStructure: state.businessStructure,
-          businessStartDate: state.businessStartDate,
-          numberOfEmployees: state.numberOfEmployees,
-          annualRevenue: state.annualRevenue
-        },
-        step4: processedData
+      const step1 = {
+        // Financial profile data from Steps 1 & 2
+        fundingAmount: state.fundingAmount,
+        lookingFor: state.lookingFor,
+        equipmentValue: state.equipmentValue,
+        businessLocation: state.businessLocation,
+        salesHistory: state.salesHistory,
+        lastYearRevenue: state.lastYearRevenue,
+        averageMonthlyRevenue: state.averageMonthlyRevenue,
+        accountsReceivableBalance: state.accountsReceivableBalance,
+        fixedAssetsValue: state.fixedAssetsValue,
+        purposeOfFunds: state.purposeOfFunds,
+        selectedCategory: state.selectedCategory
       };
+
+      const step3 = {
+        // Business details from Step 3
+        operatingName: state.operatingName,
+        legalName: state.legalName,
+        businessAddress: state.businessAddress,
+        businessCity: state.businessCity,
+        businessState: state.businessState,
+        businessZip: state.businessZip,
+        businessPhone: state.businessPhone,
+        businessStructure: state.businessStructure,
+        businessStartDate: state.businessStartDate,
+        numberOfEmployees: state.numberOfEmployees,
+        annualRevenue: state.annualRevenue
+      };
+
+      const step4 = processedData;
+
+      // ✅ RUNTIME CHECK: Ensure all steps are present
+      if (!step1 || !step3 || !step4) {
+        console.error("❌ Missing step data – cannot submit application");
+        console.error("Step validation:", { 
+          step1: !!step1, 
+          step3: !!step3, 
+          step4: !!step4 
+        });
+        return;
+      }
+
+      const applicationData = { step1, step3, step4 };
       
-      // ✅ Log final POST payload exactly as specified
-      console.log("📤 Submitting full application:", {
-        step1: applicationData.step1,
-        step3: applicationData.step3,
-        step4: applicationData.step4,
-      });
+      // ✅ Log final POST payload exactly as specified  
+      console.log("📤 Submitting full application:", { step1, step3, step4 });
       
       console.log('📋 Application data structure:', {
-        step1: Object.keys(applicationData.step1),
-        step3: Object.keys(applicationData.step3), 
-        step4: Object.keys(applicationData.step4)
+        step1: Object.keys(step1),
+        step3: Object.keys(step3), 
+        step4: Object.keys(step4)
       });
       console.log('📋 Full payload being sent:', JSON.stringify(applicationData, null, 2));
       
