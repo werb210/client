@@ -93,6 +93,14 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 13, 2025: PRODUCTION DEPLOYMENT CONFIGURATION COMPLETE**
+  * PRODUCTION MODE: Application configured to run in production mode with staff backend integration
+  * ENVIRONMENT VARIABLES: Updated .env to use https://staff.boreal.financial/api for direct API calls
+  * API CONFIGURATION: Client now uses production staff backend URL instead of local proxy
+  * SERVER CONFIGURATION: Force production mode enabled in server/index.ts
+  * CONSTANTS UPDATED: API_BASE_URL configured for production deployment
+  * READY FOR DEPLOYMENT: Application now runs in production mode with proper configuration
+
 - **July 13, 2025: SIGNNOW COMMUNICATION DIAGNOSIS COMPLETE**
   * CRITICAL DISCOVERY: SignNow iframe not loading due to application creation bug, NOT communication issues
   * STAFF BACKEND VERIFIED: 100% operational with excellent response times (73-149ms) and proper error handling

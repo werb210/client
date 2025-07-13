@@ -16,9 +16,10 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Determine actual environment from NODE_ENV, don't override
-const isProduction = process.env.NODE_ENV === 'production';
-console.log(`🚀 Running in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
+// Force production mode for deployment
+const isProduction = true;
+process.env.NODE_ENV = 'production';
+console.log(`🚀 Running in PRODUCTION mode`);
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Staff API URL:', cfg.staffApiUrl);
 
