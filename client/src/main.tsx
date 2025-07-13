@@ -3,28 +3,21 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// COMPREHENSIVE ERROR SUPPRESSION: Clean console for production-ready experience
+// DIAGNOSTIC MODE: Track all promise rejections during form testing
 window.addEventListener('unhandledrejection', (event) => {
   const errorMessage = String(event.reason || '');
   const errorType = event.reason?.constructor?.name || '';
+  const timestamp = new Date().toISOString();
   
-  // Suppress all development environment and network errors
-  if (errorMessage.includes('Failed to fetch') || 
-      errorMessage.includes('janeway.replit.dev') || 
-      errorMessage.includes('ERR_CONNECTION_TIMED_OUT') ||
-      errorMessage.includes('dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32') ||
-      errorMessage.includes('server connection lost') ||
-      errorMessage.includes('WebSocket connection') ||
-      errorMessage.includes('NetworkError') ||
-      errorType === 'TypeError' ||
-      errorMessage.includes('fetch')) {
-    // Suppress without logging to maintain clean console
-    event.preventDefault();
-    return;
-  }
+  // Log all errors with timing for debugging
+  console.log(`🔍 [${timestamp}] Promise Rejection:`, {
+    message: errorMessage,
+    type: errorType,
+    stack: event.reason?.stack?.split('\n')[0] || 'No stack trace'
+  });
   
-  // Only log truly unexpected errors
-  console.log('🚨 Unexpected Error:', errorMessage);
+  // Prevent browser default handling but keep logging for now
+  event.preventDefault();
 });
 
 // Production cache-only system - no startup sync required
