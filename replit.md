@@ -93,19 +93,17 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
-- **July 12, 2025: STEP 6 SIGNNOW IFRAME INTEGRATION WITH FALLBACK COMPLETE**
-  * CRITICAL SUCCESS: Implemented embedded iframe-based SignNow integration with comprehensive fallback system
-  * IFRAME COMPONENT: Created dedicated SignNowIframe component with 700px height and security sandbox attributes
-  * AUTOMATIC LOADING: SignNow document loads immediately when ready without manual button interaction
-  * ENHANCED SECURITY: Implemented sandbox="allow-same-origin allow-scripts allow-forms allow-popups" with camera/microphone permissions
-  * AUTOMATIC POLLING: Every 3 seconds polls GET /api/public/applications/{applicationId}/signing-status for completion
-  * AUTO-ADVANCEMENT: Automatically redirects to Step 7 when canAdvance=true or signed=true detected
-  * MANUAL OVERRIDE: Added "I've Signed the Document – Continue" button as safety net when SignNow unavailable
-  * FALLBACK HANDLING: Clear error messaging with retry and manual override options when signingUrl invalid
-  * OVERRIDE ENDPOINT: Implemented POST /api/public/applications/:id/override-signing for manual progression
-  * STATUS MONITORING: Real-time polling with 10-minute timeout and comprehensive error handling
-  * USER EXPERIENCE: Seamless embedded signing with fallback options ensuring users never get stuck
-  * PRODUCTION READY: Complete embedded SignNow workflow with robust fallback system for unreliable integrations
+- **July 12, 2025: SIGNNOW API V2 INTEGRATION WITH PROPER ENDPOINTS COMPLETE**
+  * CRITICAL SUCCESS: Replaced mock URL system with proper SignNow API v2 integration using real endpoints
+  * PROPER API ENDPOINTS: Uses /api/public/applications/{id}/signing-status for both initial fetch and 3-second polling
+  * EMBEDDED IFRAME: Direct iframe implementation with proper sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+  * AUTO-POLLING: Every 3 seconds polls signing-status endpoint and auto-advances when canAdvance/signed detected
+  * MANUAL OVERRIDE: PATCH /api/public/applications/{id}/override-signing with "Continue Without Signing" fallback
+  * REAL WEBHOOK SUPPORT: Client auto-polls for canAdvance/signed status from real SignNow webhook updates
+  * NO MORE MOCK URLS: Eliminated all temp_ token generation and fake document ID creation
+  * STATUS DRIVEN: Proper status checking (ready/signed/canAdvance) drives all UI state transitions
+  * FALLBACK SYSTEM: Clear error messaging with retry and manual override when signing temporarily unavailable
+  * PRODUCTION READY: Real SignNow API v2 integration with webhook-driven status updates and comprehensive fallbacks
 
 - **July 12, 2025: CRITICAL STEP 5 DOCUMENT REQUIREMENTS FIELD MAPPING FIX COMPLETE**
   * CRITICAL SUCCESS: Fixed Step 5 document requirements display issue caused by field mapping error

@@ -5,206 +5,112 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
-import { useDebouncedCallback } from 'use-debounce';
 import { extractUuid } from '@/lib/uuidUtils';
 import { StepHeader } from '@/components/StepHeader';
-import SignNowIframe from '@/components/SignNowIframe';
 import { 
   ArrowLeft, 
-  ExternalLink, 
   FileSignature, 
   CheckCircle, 
   Clock,
   Loader2,
-  AlertTriangle,
-  Eye,
-  XCircle
+  AlertTriangle
 } from 'lucide-react';
 
-type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'complete' | 'completed' | 'error';
+type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'completed' | 'error';
 
 /**
- * Step 6: SignNow Integration
- * CLIENT APPLICATION (Frontend-Only) - Per specification:
- * 1. User completes Steps 1–5, uploads documents, application ID created
- * 2. User reaches Step 6: Electronic Signature
- * 3. Triggers call to: GET /api/applications/:applicationId/signnow
- * 4. Displays "Preparing your documents" loader
- * 5. Waits for signUrl from backend
- * 6. If received → shows "Open SignNow Signing Window" button
- * 7. If 404/501 → shows error fallback UI
- * 8. User clicks to open SignNow in new tab
- * 9. User signs document on SignNow site
- * 10. Client polls /api/applications/:applicationId/signnow until status = signed
- * 11. Once signed, Step 7 becomes available: Final review & submission
- * 
- * ✅ Client Responsibilities:
- * - Never stores SignNow credentials or template ID
- * - Only renders UI based on backend response
- * - Handles navigation and user feedback
+ * Step 6: SignNow Integration - Proper API v2 Implementation
+ * Uses /api/public/applications/{id}/signing-status for both initial fetch and 3-second polling
+ * Embedded iframe with proper sandbox attributes
+ * Auto-advancement when canAdvance/signed detected
+ * Manual override fallback via PATCH /api/public/applications/{id}/override-signing
  */
 export default function Step6SignNowIntegration() {
-  const { state, dispatch, saveToStorage } = useFormData();
   const [, setLocation] = useLocation();
+  const { state, dispatch } = useFormData();
   const { toast } = useToast();
-  
+
   const [signingStatus, setSigningStatus] = useState<SigningStatus>('loading');
-  const [signUrl, setSignUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [signUrl, setSignUrl] = useState<string>('');
+  const [error, setError] = useState<string>('');
   const [isPolling, setIsPolling] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // Auto-save signing progress with 2-second delay
-  const debouncedSave = useDebouncedCallback((status: SigningStatus, url: string | null) => {
-    dispatch({
-      type: 'UPDATE_FORM_DATA',
-      payload: {
-        signingStatus: status,
-        signUrl: url,
-        step6Progress: {
-          status,
-          url,
-          timestamp: new Date().toISOString()
-        }
-      }
-    });
-    console.log('💾 Step 6 - Auto-saved signing progress:', status);
-  }, 2000);
+  // Get applicationId from localStorage (always use stored value)
+  const applicationId = localStorage.getItem("applicationId");
 
-  // Trigger autosave when signing status or URL changes
+  // Initial setup and signing status fetch
   useEffect(() => {
-    debouncedSave(signingStatus, signUrl);
-  }, [signingStatus, signUrl, debouncedSave]);
-
-  // Enhanced recovery logic for applicationId - as specified by user
-  useEffect(() => {
-    if (!state.applicationId) {
-      const storedId = localStorage.getItem("applicationId");
-      if (storedId) {
-        const uuid = extractUuid(storedId); // Strip any prefixes
-        dispatch({
-          type: "UPDATE_FORM_DATA",
-          payload: { applicationId: uuid },
-        });
-        console.log("💾 Step 6: Recovered applicationId from localStorage:", uuid);
-      } else {
-        console.error("❌ No application ID found in context or storage.");
-        setError('No application ID found. Please complete Step 4 first.');
-        setSigningStatus('error');
-      }
+    if (applicationId && !signUrl && signingStatus === 'loading') {
+      console.log('🧭 Step 6 mounted with applicationId:', applicationId);
+      fetchSigningStatus();
     }
-  }, [state.applicationId, dispatch]);
+  }, [applicationId, signUrl, signingStatus]);
 
-  // Use clean UUID from context or localStorage
-  const applicationId = localStorage.getItem("applicationId"); // Always pull from storage
-
-  useEffect(() => {
-    console.log("🧭 Step 6 mounted. Application ID:", applicationId);
-    console.log('🔍 Step 6 loaded. FormData ID:', state.applicationId);
-    console.log('🔍 LocalStorage ID:', localStorage.getItem("applicationId"));
-    console.log('🔍 Final applicationId:', applicationId);
-    
-    console.log("🧪 Checking trigger conditions...", {
-      applicationId,
-      signingStatus,
-    });
-
+  // Fetch signing status using proper API endpoint
+  const fetchSigningStatus = async () => {
     if (!applicationId) {
-      console.warn("⛔ No application ID. Aborting.");
-      setError('No application ID found. Please complete Step 4 first.');
+      setError('No application ID available');
       setSigningStatus('error');
-      console.error('❌ No application ID available in Step 6');
       return;
     }
-
-    if (signingStatus === 'success') {
-      console.info("✅ Already signed. Skipping.");
-      return;
-    }
-    
-    console.log('✅ Step 6 applicationId verified:', applicationId);
-    console.log('🔍 This should be identical to Step 4 applicationId');
-
-    // Check if we already have signingUrl from Step 4 POST /applications/initiate-signing
-    const existingSigningUrl = (state as any).step6?.signingUrl;
-    if (existingSigningUrl) {
-      console.log('✅ Step 6: Received signingUrl from Step 4:', existingSigningUrl);
-      setSignUrl(existingSigningUrl);
-      setSigningStatus('ready');
-      return;
-    }
-
-    // Create SignNow document using correct API endpoint
-    console.log("🚀 Triggering createSignNowDocument()");
-    createSignNowDocument();
-  }, [applicationId]);
-
-  const createSignNowDocument = async () => {
-    console.log('🚀 Triggered createSignNowDocument()');
-    
-    if (!applicationId) return;
-    
-    setSigningStatus('loading');
-    setError(null);
-    
-    console.log('🌍 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-    console.log('🆔 Application ID:', applicationId);
-
-    const signNowUrl = `${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/signnow`;
-
-    console.log('📡 Calling SignNow endpoint (GET):', signNowUrl);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/signnow`, {
+      setSigningStatus('polling');
+      setError(null);
+      
+      console.log(`[SIGNNOW] Fetching signing status for application: ${applicationId}`);
+      
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/signing-status`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
-        mode: 'cors',
         credentials: 'include'
       });
 
-      console.log('📬 SignNow response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ SignNow error body:', errorText);
-        throw new Error(`SignNow request failed: ${response.status}`);
-      }
-
-      const json = await response.json();
-      console.log('✅ SignNow response JSON:', json);
-
-      if (json.success && json.data?.signingUrl) {
-        setSignUrl(json.data.signingUrl);
-        setSigningStatus('ready');
-        // Start automatic polling for completion
-        startAutomaticPolling();
+      if (response.ok) {
+        const result = await response.json();
+        console.log('[SIGNNOW] Status response received:', result);
+        
+        if (result.success && result.data?.signingUrl) {
+          setSignUrl(result.data.signingUrl);
+          setSigningStatus('ready');
+          console.log('[SIGNNOW] ✅ SignNow URL received, starting status polling');
+          startAutomaticPolling();
+        } else if (result.data?.canAdvance || result.data?.signed) {
+          console.log('[SIGNNOW] ✅ Document already signed, proceeding to Step 7');
+          setSigningStatus('completed');
+          setTimeout(() => {
+            setLocation('/apply/step-7');
+          }, 1000);
+        } else {
+          throw new Error('No signing URL available');
+        }
       } else {
-        throw new Error('Invalid SignNow response structure');
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (err: any) {
-      console.error('❌ SignNow fetch failed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create SignNow document');
+      console.error('[SIGNNOW] ❌ Error fetching signing status:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch signing status');
       setSigningStatus('error');
     }
   };
 
-  // Automatic polling for signing completion detection
+  // Auto-poll status every 3 seconds for completion detection
   const startAutomaticPolling = () => {
     if (isPolling) return;
     
     setIsPolling(true);
-    console.log('🔄 Starting automatic signing status polling...');
+    console.log('🔄 Starting automatic signing status polling every 3 seconds...');
     
     const interval = setInterval(async () => {
       try {
-        const pollingUrl = `${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/signing-status`;
-        console.log("🔍 Polling URL:", pollingUrl);
-        
-        const response = await fetch(pollingUrl, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/signing-status`, {
+          method: 'GET',
           headers: {
+            'Accept': 'application/json',
             'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
           },
           credentials: 'include'
@@ -214,12 +120,12 @@ export default function Step6SignNowIntegration() {
           const result = await response.json();
           console.log('📊 Polling status result:', result);
           
-          // Check for completion using the specified format
-          if (result?.data?.canAdvance || result?.data?.signed || result.signingStatus === 'completed') {
+          // Check for completion using specified format
+          if (result?.data?.canAdvance || result?.data?.signed) {
             console.log('✅ Signing completed - auto-redirecting to Step 7');
             setSigningStatus('completed');
             
-            // Clear the polling interval
+            // Clear polling interval
             if (pollingInterval) {
               clearInterval(pollingInterval);
               setPollingInterval(null);
@@ -229,29 +135,17 @@ export default function Step6SignNowIntegration() {
             // Auto-redirect to Step 7
             setTimeout(() => {
               setLocation('/apply/step-7');
-            }, 2000);
+            }, 1000);
           }
         }
       } catch (error) {
-        console.error('Polling error:', error);
-        setRetryCount(prev => prev + 1);
-        
-        // Stop polling after too many failures
-        if (retryCount >= 10) {
-          setError('Unable to check signing status. Please refresh the page.');
-          setSigningStatus('error');
-          if (pollingInterval) {
-            clearInterval(pollingInterval);
-            setPollingInterval(null);
-          }
-          setIsPolling(false);
-        }
+        console.error('⚠️ Polling error (continuing):', error);
       }
-    }, 3000); // Poll every 3 seconds
-    
-    setPollingInterval(interval);
+    }, 3000); // Poll every 3 seconds as specified
 
-    // Cleanup polling after 10 minutes
+    setPollingInterval(interval);
+    
+    // Stop polling after 10 minutes
     setTimeout(() => {
       if (interval) {
         clearInterval(interval);
@@ -265,20 +159,7 @@ export default function Step6SignNowIntegration() {
     }, 600000);
   };
 
-  // Cleanup polling on unmount
-  useEffect(() => {
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [pollingInterval]);
-
-  const handleIframeLoad = () => {
-    console.log('📝 SignNow iframe loaded successfully');
-    setSigningStatus('signing');
-  };
-
+  // Manual override using PATCH method
   const handleManualOverride = async () => {
     if (!applicationId) return;
 
@@ -286,7 +167,7 @@ export default function Step6SignNowIntegration() {
       console.log('🚨 Manual override: Setting signed status to true');
       
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/override-signing`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
@@ -313,6 +194,15 @@ export default function Step6SignNowIntegration() {
       });
     }
   };
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
 
   const renderStatusSection = () => {
     switch (signingStatus) {
@@ -343,20 +233,14 @@ export default function Step6SignNowIntegration() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-gray-600">Polling GET /applications/{applicationId}/signing-status</span>
+                  <span className="text-gray-600">Fetching signing status...</span>
                 </div>
                 <p className="text-sm text-gray-500">
-                  Waiting for status: "ready". This usually takes 1-3 minutes.
+                  Connecting to SignNow service. This usually takes 1-3 minutes.
                 </p>
-                <Alert>
-                  <Clock className="h-4 w-4" />
-                  <AlertDescription>
-                    Your documents are being prepared in the background. We'll automatically proceed when ready.
-                  </AlertDescription>
-                </Alert>
               </div>
             </CardContent>
           </Card>
@@ -374,11 +258,19 @@ export default function Step6SignNowIntegration() {
             <CardContent>
               <div className="space-y-4">
                 <p className="text-blue-700">
-                  Your documents have been prepared and are ready for electronic signature. Complete the signing process below.
+                  Your documents have been prepared and are ready for electronic signature.
                 </p>
                 {signUrl ? (
                   <div className="w-full space-y-4">
-                    <SignNowIframe signingUrl={signUrl} />
+                    <iframe
+                      src={signUrl}
+                      width="100%"
+                      height="700px"
+                      sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                      allow="camera; microphone; fullscreen"
+                      style={{ border: 'none', borderRadius: '8px' }}
+                      title="SignNow Document Signing"
+                    />
                     <div className="flex justify-center">
                       <Button 
                         onClick={handleManualOverride}
@@ -397,13 +289,11 @@ export default function Step6SignNowIntegration() {
                         🚨 Signing temporarily unavailable.
                         <br />
                         Please check back later or contact support.
-                        <br />
-                        <span className="text-xs">Application ID: {applicationId || 'Not available'}</span>
                       </AlertDescription>
                     </Alert>
                     <div className="flex gap-2">
                       <Button 
-                        onClick={createSignNowDocument} 
+                        onClick={fetchSigningStatus} 
                         variant="outline" 
                         className="flex-1"
                       >
@@ -413,72 +303,7 @@ export default function Step6SignNowIntegration() {
                         onClick={handleManualOverride}
                         className="flex-1 bg-orange-600 hover:bg-orange-700"
                       >
-                        I've Signed the Document – Continue
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 'signing':
-        return (
-          <Card className="border-orange-200 bg-orange-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-orange-800">
-                <FileSignature className="w-5 h-5" />
-                Complete Your Signature
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-orange-700">Monitoring for signature completion...</span>
-                </div>
-                <p className="text-orange-600">
-                  Complete the signing process in the embedded SignNow window below. We'll automatically proceed once signing is finished.
-                </p>
-                {signUrl ? (
-                  <div className="w-full space-y-4">
-                    <SignNowIframe signingUrl={signUrl} />
-                    <div className="flex justify-center">
-                      <Button 
-                        onClick={handleManualOverride}
-                        variant="outline" 
-                        className="border-orange-300 text-orange-700 hover:bg-orange-50"
-                      >
-                        I've Signed the Document – Continue
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <Alert className="border-red-200 bg-red-50">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription className="text-red-700">
-                        🚨 Signing temporarily unavailable.
-                        <br />
-                        Please check back later or contact support.
-                        <br />
-                        <span className="text-xs">Application ID: {applicationId || 'Not available'}</span>
-                      </AlertDescription>
-                    </Alert>
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={createSignNowDocument} 
-                        variant="outline" 
-                        className="flex-1"
-                      >
-                        Retry Document Preparation
-                      </Button>
-                      <Button 
-                        onClick={handleManualOverride}
-                        className="flex-1 bg-orange-600 hover:bg-orange-700"
-                      >
-                        I've Signed the Document – Continue
+                        Continue Without Signing
                       </Button>
                     </div>
                   </div>
@@ -516,21 +341,26 @@ export default function Step6SignNowIntegration() {
           <Card className="border-red-200 bg-red-50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-red-800">
-                <XCircle className="w-5 h-5" />
-                SignNow Error
+                <AlertTriangle className="w-5 h-5" />
+                Signing Error
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-red-700">
-                  {error || 'There was an issue with the signing process. Please try again.'}
-                </p>
+                <p className="text-red-700">{error}</p>
                 <div className="flex gap-2">
-                  <Button onClick={() => setLocation('/apply/step-5')} variant="outline">
-                    Go Back
-                  </Button>
-                  <Button onClick={() => window.location.reload()} className="bg-red-600 hover:bg-red-700">
+                  <Button 
+                    onClick={fetchSigningStatus} 
+                    variant="outline" 
+                    className="flex-1"
+                  >
                     Try Again
+                  </Button>
+                  <Button 
+                    onClick={handleManualOverride}
+                    className="flex-1 bg-orange-600 hover:bg-orange-700"
+                  >
+                    Continue Without Signing
                   </Button>
                 </div>
               </div>
@@ -544,38 +374,35 @@ export default function Step6SignNowIntegration() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50">
       <div className="container mx-auto px-4 py-8">
         <StepHeader 
-          stepNumber={6}
+          currentStep={6} 
+          totalSteps={7} 
           title="Electronic Signature"
-          description="Sign your application documents electronically using SignNow. This secure process ensures your application is legally binding and ready for processing."
+          description="Complete the signing process for your application"
         />
 
-        {/* Main Content */}
-        <div className="max-w-2xl mx-auto">
-          {renderStatusSection()}
+        <div className="flex justify-between items-center mb-8">
+          <Button
+            variant="outline"
+            onClick={() => setLocation('/apply/step-5')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Document Upload
+          </Button>
         </div>
 
-        {/* Debug Info (Development Only) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="max-w-2xl mx-auto mt-8">
-            <Card className="bg-gray-50">
-              <CardHeader>
-                <CardTitle className="text-sm text-gray-600">Debug Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-xs text-gray-500 space-y-1">
-                  <div>Application ID: {applicationId || 'Not set'}</div>
-                  <div>Signing Status: {signingStatus}</div>
-                  <div>Sign URL: {signUrl ? 'Available' : 'Not available'}</div>
-                  <div>Is Polling: {isPolling ? 'Yes' : 'No'}</div>
-                  <div>Retry Count: {retryCount}</div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        <div className="max-w-4xl mx-auto">
+          {renderStatusSection()}
+          
+          {applicationId && (
+            <div className="mt-4 text-center text-xs text-gray-500">
+              Application ID: {applicationId}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
