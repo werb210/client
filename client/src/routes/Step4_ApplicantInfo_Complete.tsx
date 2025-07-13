@@ -151,9 +151,47 @@ export default function Step4ApplicantInfoComplete() {
       payload: processedData,
     });
 
-    console.log('📤 Step 1: Creating real application via POST /api/public/applications...');
+    console.log('📤 Step 4: Creating real application via POST /api/public/applications...');
     try {
-      const applicationData = { ...state, ...processedData };
+      // Format data as staff backend expects: {step1, step3, step4}
+      const applicationData = {
+        step1: {
+          // Financial profile data from Steps 1 & 2
+          fundingAmount: state.fundingAmount,
+          lookingFor: state.lookingFor,
+          equipmentValue: state.equipmentValue,
+          businessLocation: state.businessLocation,
+          salesHistory: state.salesHistory,
+          lastYearRevenue: state.lastYearRevenue,
+          averageMonthlyRevenue: state.averageMonthlyRevenue,
+          accountsReceivableBalance: state.accountsReceivableBalance,
+          fixedAssetsValue: state.fixedAssetsValue,
+          purposeOfFunds: state.purposeOfFunds,
+          selectedCategory: state.selectedCategory
+        },
+        step3: {
+          // Business details from Step 3
+          operatingName: state.operatingName,
+          legalName: state.legalName,
+          businessAddress: state.businessAddress,
+          businessCity: state.businessCity,
+          businessState: state.businessState,
+          businessZip: state.businessZip,
+          businessPhone: state.businessPhone,
+          businessStructure: state.businessStructure,
+          businessStartDate: state.businessStartDate,
+          numberOfEmployees: state.numberOfEmployees,
+          annualRevenue: state.annualRevenue
+        },
+        step4: processedData
+      };
+      
+      console.log('📋 Application data structure:', {
+        step1: Object.keys(applicationData.step1),
+        step3: Object.keys(applicationData.step3), 
+        step4: Object.keys(applicationData.step4)
+      });
+      console.log('📋 Full payload being sent:', JSON.stringify(applicationData, null, 2));
       
       // API Call: POST /api/public/applications
       const response = await fetch('/api/public/applications', {
@@ -203,23 +241,18 @@ export default function Step4ApplicantInfoComplete() {
         }
       } else {
         const errorText = await response.text();
-        console.error('❌ API call FAILED - Status:', response.status, 'Error:', errorText);
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        console.error('❌ API call FAILED - Status:', response.status);
+        console.error('❌ Backend rejected Step 4 data:', errorText);
+        console.error('❌ Request payload was:', JSON.stringify(applicationData, null, 2));
+        throw new Error(`API returned ${response.status}: ${response.statusText}\nError: ${errorText}`);
       }
     } catch (error) {
       console.error('❌ Step 4 Failed: Error creating application:', error);
+      console.error('❌ This means SignNow will not work - application must be created successfully');
       
-      // Generate fallback UUID for development/testing
-      const { v4: uuidv4 } = await import('uuid');
-      const fallbackId = uuidv4();
-      const uuid = extractUuid(fallbackId);
-      console.log('⚠️ Using fallback applicationId:', uuid);
-      
-      dispatch({
-        type: "UPDATE_FORM_DATA",
-        payload: { applicationId: uuid },
-      });
-      localStorage.setItem('applicationId', uuid);
+      // Show user the actual error instead of generating fallback
+      alert(`❌ Application creation failed: ${error.message}\n\nPlease check the form data and try again. SignNow requires a valid application ID.`);
+      return; // Don't proceed to Step 5 if application creation fails
     }
 
     // Mark step as complete and proceed
