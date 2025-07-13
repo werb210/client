@@ -46,14 +46,15 @@ export default function Step6SignNowIntegration() {
   // Load real signing URL on mount
   useEffect(() => {
     if (applicationId) {
-      // ✅ Add logging before submission as requested for Step 6
-      console.log("📤 Step 6: About to fetch SignNow URL for application:", {
+      // ✅ A. Log the outgoing application payload
+      const applicationPayload = {
         applicationId,
         step1: state.step1 || "Not available",
         step3: state.step3 || "Not available", 
         step4: state.step4 || "Not available",
         allFormData: Object.keys(state)
-      });
+      };
+      console.log("📤 Submitting Application:", applicationPayload);
       
       console.log('🔄 Fetching signing URL for application:', applicationId);
       fetch(`/api/public/applications/${applicationId}/signing-status`)
@@ -94,12 +95,19 @@ export default function Step6SignNowIntegration() {
     if (!applicationId) return;
     
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/applications/${applicationId}/signature-status`);
+      // ✅ B. Confirm polling hits correct endpoint (using public API path)
+      const pollingEndpoint = `/api/public/applications/${applicationId}/signature-status`;
+      console.log('📡 Polling endpoint:', pollingEndpoint);
+      
+      const res = await fetch(pollingEndpoint);
       const { status } = await res.json();
       
+      // ✅ B. Log polling results
+      console.log("📡 Polling: Received signature status", status);
       console.log('📄 Signature status check:', { applicationId, status });
       
-      if (status === 'invite_signed') {
+      // ✅ B. Ensure exact status check
+      if (status === "invite_signed") {
         console.log('✅ Signature completed - redirecting to Step 7');
         setLocation('/apply/step-7');
         return;
