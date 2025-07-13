@@ -53,7 +53,7 @@ export function SignatureStep({ onNext, onBack }: SignatureStepProps) {
       // TODO: Integrate with SignNow API
       // 1. Create document from application data
       // 2. Send for signature
-      // 3. Handle callback/webhook
+      // 3. Poll signature status (webhooks only go to backend, not browser clients)
       
       // Simulated delay for signing process
       await new Promise(resolve => setTimeout(resolve, 2000)).catch(error => {

@@ -19,11 +19,12 @@ import {
 type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'completed' | 'error';
 
 /**
- * Step 6: SignNow Integration - Proper API v2 Implementation
- * Uses /api/public/applications/{id}/signing-status for both initial fetch and 3-second polling
- * Embedded iframe with proper sandbox attributes
- * Auto-advancement when canAdvance/signed detected
- * Manual override fallback via PATCH /api/public/applications/{id}/override-signing
+ * Step 6: SignNow Integration - API v2 Implementation
+ * - Uses /api/public/applications/{id}/signing-status for initial fetch
+ * - Embedded iframe with proper sandbox attributes
+ * - Optional polling of GET /api/applications/{id}/signature-status for real-time feedback
+ * - Manual override fallback via PATCH /api/public/applications/{id}/override-signing
+ * - No webhook handling (webhooks only go to backend, not browser clients)
  */
 export default function Step6SignNowIntegration() {
   const [, setLocation] = useLocation();
@@ -75,18 +76,23 @@ export default function Step6SignNowIntegration() {
 
 
 
-  // Poll for status every 3 seconds
+  // Optional: Poll for signature status to provide real-time feedback
+  // GET /api/applications/:id/signature-status → { status: "signed" }
   useEffect(() => {
     if (applicationId && signUrl) {
+      console.log('🔄 Starting signature status polling for application:', applicationId);
+      
       const interval = setInterval(() => {
-        fetch(`/api/public/applications/${applicationId}/signing-status`)
+        fetch(`/api/applications/${applicationId}/signature-status`)
           .then(res => res.json())
           .then(data => {
-            if (data.data?.canAdvance || data.data?.signed) {
+            console.log('📄 Signature status:', data);
+            if (data.status === 'signed' || data.data?.canAdvance || data.data?.signed) {
+              console.log('✅ Signature completed - redirecting to Step 7');
               setLocation('/apply/step-7');
             }
           })
-          .catch(err => console.error('Polling error:', err));
+          .catch(err => console.error('Signature status polling error:', err));
       }, 3000);
       
       return () => clearInterval(interval);

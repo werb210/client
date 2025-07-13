@@ -32,18 +32,8 @@ export const Step6SignNow: React.FC = () => {
       return;
     }
 
-    // Listen for SignNow completion events
-    const handleMessage = (event: MessageEvent) => {
-      // SignNow posts completion messages to parent window
-      if (event.origin.includes('signnow.com')) {
-        if (event.data?.type === 'SIGNING_COMPLETE') {
-          setSigningComplete(true);
-        }
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    // Note: Removed webhook message handling - SignNow only delivers webhooks to backend, not browser clients
+    // Signature completion is now detected via polling in Step6_SignNowIntegration.tsx
   }, [signUrl]);
 
   const handleIframeLoad = () => {

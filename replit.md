@@ -107,6 +107,9 @@ The application follows a client-staff separation architecture:
   * FALLBACK REMOVAL: Eliminated UUID fallback generation that was creating fake application IDs when API calls failed
   * ERROR HANDLING: Enhanced logging shows exact backend rejection reasons and prevents progression with invalid data
   * READY FOR TESTING: SignNow integration should now work with authentic application IDs from successful Step 4 creation
+  * WEBHOOK REMOVAL COMPLETE: Eliminated all client-side webhook handling - webhooks only go to backend, not browser clients
+  * POLLING IMPLEMENTATION: Client now polls GET /api/applications/:id/signature-status for optional real-time feedback
+  * ARCHITECTURE CORRECTED: SignNow integration follows proper client-server separation with backend handling all webhooks
 
 - **July 12, 2025: SIGNNOW API V2 INTEGRATION WITH PROPER ENDPOINTS COMPLETE**
   * CRITICAL SUCCESS: Replaced mock URL system with proper SignNow API v2 integration using real endpoints
