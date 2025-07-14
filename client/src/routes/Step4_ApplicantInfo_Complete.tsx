@@ -12,10 +12,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { formatPhoneNumber, formatPostalCode as formatPostalCodeHelper, formatSSN as formatSSNHelper, isCanadianBusiness, getStateProvinceOptions } from "@/lib/regionalFormatting";
 import { normalizePhone, formatPhoneDisplay, isValidPhone, getCountryFromBusinessLocation } from "@/lib/phoneUtils";
 import { extractUuid } from "@/lib/uuidUtils";
-import { staffApi } from "@/api/staffApi";
+import { staffApi, validateApplicationPayload } from "@/api/staffApi";
 import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { StepHeader } from "@/components/StepHeader";
+import { ValidationErrorModal } from "@/components/ValidationErrorModal";
 
 // FIXED: Unified Step 4 Schema - matches shared/schema.ts exactly
 const step4Schema = z.object({
@@ -55,6 +56,7 @@ export default function Step4ApplicantInfoComplete() {
   const [isCanadian, setIsCanadian] = useState(false);
   const [applicantPhoneDisplay, setApplicantPhoneDisplay] = useState('');
   const [partnerPhoneDisplay, setPartnerPhoneDisplay] = useState('');
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]> | null>(null);
 
   // Detect region from Step 1 business location
   useEffect(() => {
@@ -292,6 +294,17 @@ export default function Step4ApplicantInfoComplete() {
         email: applicationData.step4.email,
         hasEmail: !!applicationData.step4.email
       });
+      
+      // ✅ Validate Application Payload Before Submission
+      console.log("📋 Step-based payload:", JSON.stringify(applicationData, null, 2));
+      
+      const validation = validateApplicationPayload(applicationData);
+      if (!validation.isValid) {
+        console.error("❌ VALIDATION FAILED - Missing required fields:", validation.missingFields);
+        setValidationErrors(validation.missingFields);
+        return;
+      }
+      console.log("✅ VALIDATION PASSED - All required fields present");
       
       // ✅ Confirm the POST URL and VITE_API_BASE_URL
       const postUrl = '/api/public/applications';
@@ -822,6 +835,13 @@ export default function Step4ApplicantInfoComplete() {
           </div>
         </form>
       </Form>
+      
+      {/* Validation Error Modal */}
+      <ValidationErrorModal
+        isOpen={!!validationErrors}
+        onClose={() => setValidationErrors(null)}
+        missingFields={validationErrors || {}}
+      />
     </div>
   );
 }

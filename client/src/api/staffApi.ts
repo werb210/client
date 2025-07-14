@@ -2,6 +2,74 @@
 
 const STAFF_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://app.boreal.financial/api/public';
 
+// ✅ Required Fields Validation Configuration
+const REQUIRED_FIELDS = {
+  step1: ["requestedAmount", "use_of_funds"],
+  step3: ["legalName", "businessName", "businessPhone", "businessState"],
+  step4: ["firstName", "lastName", "email", "phone", "ownershipPercentage", "dob", "sin"]
+} as const;
+
+// Field mapping for alternative field names
+const FIELD_ALIASES = {
+  step4: {
+    firstName: ["applicantFirstName"],
+    lastName: ["applicantLastName"], 
+    email: ["applicantEmail"],
+    phone: ["applicantPhone"],
+    dob: ["applicantDateOfBirth", "dateOfBirth"],
+    sin: ["applicantSSN", "socialSecurityNumber"]
+  }
+} as const;
+
+// ✅ Validate Application Payload Helper
+export function validateApplicationPayload(payload: any): { isValid: boolean; missingFields: Record<string, string[]> } {
+  const missingFields: Record<string, string[]> = {};
+  let isValid = true;
+
+  // Check each step for required fields
+  Object.entries(REQUIRED_FIELDS).forEach(([stepKey, requiredFields]) => {
+    const stepData = payload[stepKey];
+    if (!stepData) {
+      missingFields[stepKey] = requiredFields;
+      isValid = false;
+      return;
+    }
+
+    const stepMissing: string[] = [];
+    requiredFields.forEach(field => {
+      let fieldFound = false;
+      
+      // Check primary field name
+      if (stepData[field] !== undefined && stepData[field] !== null && stepData[field] !== "") {
+        fieldFound = true;
+      }
+      
+      // Check aliases if primary field not found
+      if (!fieldFound && FIELD_ALIASES[stepKey as keyof typeof FIELD_ALIASES]) {
+        const aliases = FIELD_ALIASES[stepKey as keyof typeof FIELD_ALIASES][field as keyof typeof FIELD_ALIASES[keyof typeof FIELD_ALIASES]];
+        if (aliases) {
+          aliases.forEach(alias => {
+            if (stepData[alias] !== undefined && stepData[alias] !== null && stepData[alias] !== "") {
+              fieldFound = true;
+            }
+          });
+        }
+      }
+      
+      if (!fieldFound) {
+        stepMissing.push(field);
+      }
+    });
+
+    if (stepMissing.length > 0) {
+      missingFields[stepKey] = stepMissing;
+      isValid = false;
+    }
+  });
+
+  return { isValid, missingFields };
+}
+
 export interface ApplicationSubmissionData {
   formFields: {
     // Step 1 Financial Profile
