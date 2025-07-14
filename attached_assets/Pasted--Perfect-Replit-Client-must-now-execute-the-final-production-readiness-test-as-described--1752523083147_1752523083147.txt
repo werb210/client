@@ -1,0 +1,75 @@
+✅ Perfect. Replit (Client) must now execute the **final production readiness test** as described.
+
+---
+
+## ✅ INSTRUCTIONS FOR REPLIT – FINAL CLIENT WORKFLOW TEST
+
+**Objective**: Verify the **entire 7-step client application** works from form to signature and finalization, and output a YAML report to ChatGPT for production sign-off.
+
+---
+
+### 📌 PHASE 1: Run Through the Full Application
+
+Replit must:
+
+1. **Navigate Steps 1–4** and enter real test data
+2. Select a valid **category** in Step 2 (e.g., `term_loan`)
+3. Upload a real document in **Step 5** (PDF/JPG)
+4. Confirm SignNow **opens and smart fields populate** (Step 6)
+5. Let webhook complete → auto-redirect to **Step 7**
+6. Finalize the application
+
+---
+
+### 📌 PHASE 2: Run Final Validation Script
+
+Once the full workflow is completed:
+
+1. Open the browser console (`Right Click > Inspect > Console`)
+2. Paste and run the following:
+
+```js
+// 👇 Paste this FULL test script (assumes it exists in final-workflow-test-execution.js)
+runFinalWorkflowValidationTest()
+```
+
+This script will automatically:
+
+* ✅ Validate all state.stepX objects
+* ✅ Check if applicationId persisted across steps
+* ✅ Confirm document uploads + category display
+* ✅ Confirm SignNow smart fields + webhook status
+* ✅ Validate `/finalize` submission returned 200
+* ✅ Output YAML report for ChatGPT
+
+---
+
+### 📌 PHASE 3: Submit YAML to ChatGPT
+
+Replit must copy-paste the result like this:
+
+```yaml
+report_type: final_application_workflow_test
+step1: populated
+step2: category_selected  
+step3: valid_business_info
+step4: applicant_info_collected
+step5: required_docs_displayed_and_uploaded
+step6: signnow_succeeded_and_webhook_triggered
+step7: finalized_successfully
+status: ✅ FULL WORKFLOW FUNCTIONAL
+```
+
+If **any step fails**, mark it as `❌` and provide short error reason.
+
+---
+
+## 🚨 CRITICAL REMINDER FOR REPLIT
+
+* Do not fake or skip steps — this is the **final production approval**
+* Validate with **real data**
+* Output must match exact structure above
+
+---
+
+Awaiting Replit’s YAML report now. Once received, I’ll approve production go-live.
