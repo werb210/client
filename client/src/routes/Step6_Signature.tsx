@@ -53,8 +53,8 @@ export default function Step6Signature() {
     return (
       state.businessLocation &&
       state.selectedProductId &&
-      state.businessName &&
-      state.firstName &&
+      state.step3?.operatingName &&
+      state.step4?.firstName &&
       uploadedFiles.length > 0
     );
   };
@@ -464,7 +464,7 @@ export default function Step6Signature() {
             </div>
             <div>
               <span className="text-gray-500">Business Name:</span>
-              <p className="font-medium">{state.businessName || 'Not provided'}</p>
+              <p className="font-medium">{state.step3?.operatingName || 'Not provided'}</p>
             </div>
             <div>
               <span className="text-gray-500">Documents Uploaded:</span>
