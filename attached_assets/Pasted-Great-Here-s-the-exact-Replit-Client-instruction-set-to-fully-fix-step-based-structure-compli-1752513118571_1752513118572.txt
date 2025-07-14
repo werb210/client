@@ -1,0 +1,159 @@
+Great. Here's the exact Replit **Client** instruction set to **fully fix step-based structure compliance**, covering **Step 4**, **Step 6**, and **Step 7**.
+
+---
+
+## ✅ INSTRUCTION SET FOR REPLIT CLIENT
+
+**Target Application:** Client
+**Goal:** Enforce `{ step1, step3, step4 }` structure across all steps
+**Required Fixes:** Step 4 data structure, Step 6 signature initiation, Step 7 final submission rendering
+
+---
+
+### 🔧 1. **Fix Step 4 — Applicant Info Must Be Nested in `step4`**
+
+#### Files to edit:
+
+* `client/src/routes/Step4_ApplicantDetails_Fixed.tsx`
+* Any versions like `Step4_ApplicantDetails.tsx` if still active
+
+#### Instructions:
+
+Replace any form submission code like:
+
+```ts
+const formData = {
+  firstName,
+  lastName,
+  email,
+  phone,
+  // etc.
+};
+```
+
+✅ With:
+
+```ts
+const step4 = {
+  firstName,
+  lastName,
+  email,
+  phone,
+  // etc.
+};
+
+submitApplicationPart({ step4 });
+```
+
+Also ensure when aggregating final application data, it merges like:
+
+```ts
+const applicationPayload = {
+  step1,
+  step3,
+  step4,
+};
+```
+
+---
+
+### 🔧 2. **Fix Step 6 — Ensure Signature Trigger Uses Nested Step Data**
+
+#### File to edit:
+
+* `client/src/routes/Step6_Signature.tsx`
+
+#### Instructions:
+
+Look for any code that extracts data like this:
+
+```ts
+const { firstName, lastName, businessName, requestedAmount } = formData;
+```
+
+❌ This is invalid and implies flat structure.
+
+✅ Instead, use:
+
+```ts
+const { step1, step3, step4 } = formData;
+```
+
+Ensure the POST to `staffApi.initiateSignNowDocument()` sends:
+
+```ts
+await staffApi.initiateSignNowDocument({
+  step1,
+  step3,
+  step4,
+});
+```
+
+---
+
+### 🔧 3. **Fix Step 7 — Display Confirmation Using `step4` Fields**
+
+#### File to edit:
+
+* `client/src/routes/Step7_FinalSubmission_Complete.tsx`
+
+#### Instructions:
+
+Anywhere fields are accessed like:
+
+```ts
+<p>Name: {formData.firstName} {formData.lastName}</p>
+<p>Email: {formData.email}</p>
+```
+
+✅ Change to:
+
+```ts
+<p>Name: {formData.step4?.firstName} {formData.step4?.lastName}</p>
+<p>Email: {formData.step4?.email}</p>
+```
+
+Do the same for `step1` and `step3` fields:
+
+```ts
+<p>Requested Amount: {formData.step1?.requestedAmount}</p>
+<p>Business Name: {formData.step3?.businessName}</p>
+```
+
+---
+
+### 🔍 Optional Test Code (Developer Debug Aid)
+
+To verify correct nesting, add this temporarily:
+
+```ts
+console.log("✅ Final Application Data:", {
+  step1: formData.step1,
+  step3: formData.step3,
+  step4: formData.step4,
+});
+```
+
+---
+
+### ✅ Final Testing Instructions
+
+After completing the above:
+
+1. Submit an application through the client UI
+2. Watch the browser dev console to confirm the payload has:
+
+   ```json
+   {
+     "step1": { ... },
+     "step3": { ... },
+     "step4": { ... }
+   }
+   ```
+3. Confirm in staff logs that `generateSmartFields.ts` is triggered
+4. Ensure SignNow document fields are pre-filled (e.g. `business_legal_name`, `requested_amount`)
+5. Ensure no 400 errors or legacy fallback logic used
+
+---
+
+Would you like a parallel **Staff testing plan** or are we holding until the client fixes are done?

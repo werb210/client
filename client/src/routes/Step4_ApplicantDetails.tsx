@@ -34,10 +34,10 @@ export default function Step4ApplicantDetails() {
   const form = useForm<Step4FormData>({
     resolver: zodResolver(step4Schema.partial()),
     defaultValues: {
-      title: state.title || '',
-      firstName: state.firstName || '',
-      lastName: state.lastName || '',
-      personalEmail: state.personalEmail || '',
+      title: state.step4?.title || '',
+      firstName: state.step4?.firstName || '',
+      lastName: state.step4?.lastName || '',
+      personalEmail: state.step4?.personalEmail || '',
       personalPhone: state.personalPhone || '',
       dateOfBirth: state.dateOfBirth || '',
       socialSecurityNumber: state.socialSecurityNumber || '',
@@ -113,13 +113,16 @@ export default function Step4ApplicantDetails() {
   const onSubmit = (data: Step4FormData) => {
     console.log('Step 4 submit data:', data);
 
-    // Mark step as completed and save data
+    // ✅ CHATGPT FIX: Use step-based structure for Step 4 data
+    const step4 = {
+      ...data,
+      completed: true,
+    };
+
+    // Mark step as completed and save data using step-based structure
     dispatch({
       type: 'UPDATE_STEP4',
-      payload: {
-        ...data,
-        completed: true,
-      },
+      payload: { step4 },
     });
 
     toast({

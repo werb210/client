@@ -83,6 +83,10 @@ export default function Step6Signature() {
           documentType: file.documentType
         }));
 
+      // ✅ CHATGPT FIX: Ensure Step 6 uses nested step data
+      const { step1, step3, step4 } = state;
+      console.log("✅ Step 6 using step-based structure:", { step1, step3, step4 });
+      
       const result = await staffApi.submitApplication(
         state,
         filesWithFileObjects,

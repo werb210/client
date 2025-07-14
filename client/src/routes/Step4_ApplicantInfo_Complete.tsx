@@ -178,7 +178,7 @@ export default function Step4ApplicantInfoComplete() {
 
       const step3 = {
         // Business details from Step 3
-        operatingName: state.operatingName,
+        operatingName: state.step3?.operatingName,
         legalName: state.legalName,
         businessAddress: state.businessAddress,
         businessCity: state.businessCity,
@@ -248,6 +248,13 @@ export default function Step4ApplicantInfoComplete() {
       
       // ✅ Log final POST payload exactly as specified  
       console.log("📤 Submitting full application:", { step1, step3, step4 });
+      
+      // ✅ CHATGPT DEBUG VERIFICATION: Final Application Data
+      console.log("✅ Final Application Data:", {
+        step1: applicationData.step1,
+        step3: applicationData.step3,
+        step4: applicationData.step4,
+      });
       
       // ✅ Log SignNow field mapping for verification
       console.log("📋 SignNow field mapping included:", {
