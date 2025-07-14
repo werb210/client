@@ -12,6 +12,20 @@ export interface RecommendationFormData {
   fundsPurpose: string;
 }
 
+// Helper function to get amount value with multiple field name support - MOVED TO TOP
+const getAmountValue = (product: any, field: 'min' | 'max'): number => {
+  let amount: any;
+  if (field === 'min') {
+    amount = product.minAmount ?? product.amountMin ?? product.amount_min ?? product.min_amount ?? product.fundingMin ?? 0;
+  } else {
+    amount = product.maxAmount ?? product.amountMax ?? product.amount_max ?? product.max_amount ?? product.fundingMax ?? Infinity;
+  }
+  
+  if (typeof amount === 'number') return amount;
+  if (typeof amount === 'string') return parseFloat(amount.replace(/[^0-9.-]/g, '')) || (field === 'min' ? 0 : Infinity);
+  return field === 'min' ? 0 : Infinity;
+};
+
 /**
  * Apply your business rules to filter staff database products
  * Based on Step 1 user answers to recommend best product categories
@@ -91,19 +105,7 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     console.log(`[DEBUG] Revolver product: ${p.name} - Category: ${p.category}, Country: ${p.country}, Min: ${p.min_amount}, Max: ${p.max_amount}`);
   });
 
-  // Helper function to get amount value with multiple field name support
-  const getAmountValue = (product: any, field: 'min' | 'max'): number => {
-    let amount: any;
-    if (field === 'min') {
-      amount = product.minAmount ?? product.amountMin ?? product.amount_min ?? product.min_amount ?? product.fundingMin ?? 0;
-    } else {
-      amount = product.maxAmount ?? product.amountMax ?? product.amount_max ?? product.max_amount ?? product.fundingMax ?? Infinity;
-    }
-    
-    if (typeof amount === 'number') return amount;
-    if (typeof amount === 'string') return parseFloat(amount.replace(/[^0-9.-]/g, '')) || (field === 'min' ? 0 : Infinity);
-    return field === 'min' ? 0 : Infinity;
-  };
+  // Function moved to top of file to fix initialization error
 
   // Helper function to get geography/country with multiple field name support
   const getGeography = (product: any): string[] => {
@@ -332,19 +334,7 @@ export function calculateRecommendationScore(
   return Math.min(score, 100); // Cap at 100%
 }
 
-// Helper functions to be accessible from the module
-function getAmountValue(product: any, field: 'min' | 'max'): number {
-  let amount: any;
-  if (field === 'min') {
-    amount = product.minAmount ?? product.amountMin ?? product.amount_min ?? product.fundingMin ?? 0;
-  } else {
-    amount = product.maxAmount ?? product.amountMax ?? product.amount_max ?? product.fundingMax ?? Infinity;
-  }
-  
-  if (typeof amount === 'number') return amount;
-  if (typeof amount === 'string') return parseFloat(amount.replace(/[^0-9.-]/g, '')) || (field === 'min' ? 0 : Infinity);
-  return field === 'min' ? 0 : Infinity;
-}
+// Helper functions to be accessible from the module - getAmountValue moved to top
 
 function getGeography(product: any): string[] {
   const geography = product.geography ?? product.countries ?? product.markets ?? product.country;
