@@ -184,15 +184,23 @@ function UnifiedDocumentUploadCard({
         console.log(`   - Document Type: ${category}`);
         console.log(`   - Files: ${files.map(f => f.name).join(', ')}`);
         
-        const form = new FormData();
-        files.forEach((file) => form.append('file', file));
-        form.append('documentType', category);
+        const formData = new FormData();
+        files.forEach((file) => formData.append('document', file));
+        formData.append('documentType', category);
         
-        const response = await fetch(`/api/public/applications/${applicationId}/documents`, {
+        // ✅ Updated endpoint to match staff backend specification
+        const endpoint = `/api/public/documents/${applicationId}`;
+        console.log('📤 [DYNAMIC] ApplicationId:', applicationId);
+        console.log('📤 [DYNAMIC] DocumentType:', category);
+        console.log('📤 [DYNAMIC] Endpoint:', endpoint);
+        
+        const response = await fetch(endpoint, {
           method: 'POST',
-          body: form,
+          body: formData,
           // ⚠️ No Authorization headers for public upload!
         });
+        
+        console.log('📤 [DYNAMIC] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');
         
         if (!response.ok) {
           const errorText = await response.text();

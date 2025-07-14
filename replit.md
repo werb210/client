@@ -93,6 +93,15 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 14, 2025: ✅ STEP 5 ENDPOINT COMPLIANCE & FORM DATA STRUCTURE UPDATE COMPLETED**
+  * **ENDPOINT UPDATE**: Changed all Step 5 upload endpoints from `/api/public/upload/${applicationId}` to `/api/public/documents/${applicationId}`
+  * **FORM DATA STANDARDIZATION**: Ensured all uploads use correct formData structure: `formData.append("document", file)` and `formData.append("documentType", category)`
+  * **CONSOLE LOGGING**: Added comprehensive console logging for applicationId, documentType, endpoint, and network response status
+  * **FILES UPDATED**: Modified lib/api.ts, api/applicationHooks.ts, and components/DynamicDocumentRequirements.tsx
+  * **AUTHORIZATION CLEANUP**: Removed Authorization headers from public upload endpoints as specified
+  * **BACKEND COMPATIBILITY**: All Step 5 uploads now match staff backend enum requirements and endpoint specifications
+  * **PRODUCTION READY**: Step 5 document upload workflow fully compliant with staff backend API specification
+
 - **July 14, 2025: ✅ STEP 6 NULL SAFETY & ERROR HANDLING ENHANCEMENT COMPLETED**
   * **NULL SAFETY CHECK**: Added null check for redirect_url before iframe loading: `if (!data.signingUrl && !data.redirect_url)`
   * **ERROR STATUS HANDLING**: Added server error detection for `{ status: "error" }` responses with appropriate error messages

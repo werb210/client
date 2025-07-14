@@ -40,13 +40,19 @@ export const useUploadDocument = (applicationId: string) => {
       payload.files.forEach((file) => form.append('files', file));
       form.append('category', payload.category);
       
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/upload/${applicationId}`, {
+      // ✅ Update endpoint to match staff backend: /api/public/documents/${applicationId}
+      const endpoint = `/api/public/documents/${applicationId}`;
+      console.log('📤 [HOOK] ApplicationId:', applicationId);
+      console.log('📤 [HOOK] DocumentType:', payload.category);
+      console.log('📤 [HOOK] Endpoint:', endpoint);
+
+      const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-        },
         body: form,
+        // Remove Authorization headers for public endpoint
       });
+      
+      console.log('📤 [HOOK] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');
       
       if (!response.ok) {
         const errorText = await response.text();

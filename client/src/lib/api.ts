@@ -173,18 +173,31 @@ export async function uploadDocumentPublic(
   formData.append('document', file);
   formData.append('documentType', documentType);
 
+  // ✅ Update endpoint to match staff backend: /api/public/documents/${applicationId}
+  const endpoint = `/api/public/documents/${applicationId}`;
+  console.log('📤 [UPLOAD] ApplicationId:', applicationId);
+  console.log('📤 [UPLOAD] DocumentType:', documentType);
+  console.log('📤 [UPLOAD] Endpoint:', endpoint);
+
   // Use direct fetch without Authorization headers
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/upload/${applicationId}`, {
+  const response = await fetch(endpoint, {
     method: 'POST',
     body: formData,
     // ⚠️ No headers like Authorization!
   });
 
+  console.log('📤 [UPLOAD] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');
+
   if (!response.ok) {
-    throw new Error(`Upload failed: ${response.status}`);
+    const errorText = await response.text().catch(() => 'Unknown error');
+    console.error('📤 [UPLOAD] Upload failed:', response.status, errorText);
+    throw new Error(`Upload failed: ${response.status} - ${errorText}`);
   }
 
-  return await response.json();
+  const result = await response.json();
+  console.log('📤 [UPLOAD] Success response:', result);
+  
+  return result;
 }
 
 // Fetch required documents for a specific category/product
