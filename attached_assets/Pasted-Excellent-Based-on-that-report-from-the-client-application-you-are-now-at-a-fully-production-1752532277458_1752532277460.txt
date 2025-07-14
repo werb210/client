@@ -1,0 +1,117 @@
+Excellent. Based on that report from the **client application**, you are now at a **fully production-ready state** — with one final validation step pending:
+
+---
+
+## ✅ Final Validation Checklist – SignNow Document Field Population
+
+Please follow this to **confirm the full end-to-end workflow** now works with smart fields filled:
+
+### 1. **Create a Test Application**
+
+Use the client app UI or API directly:
+
+```bash
+curl -s -X POST https://staff.boreal.financial/api/public/applications \
+  -H "Content-Type: application/json" \
+  -d @test-application.json
+```
+
+Or fill out Step 1–4 in the client form.
+
+---
+
+### 2. **Upload Documents (Step 5)**
+
+Via form or API:
+
+```bash
+curl -X POST https://staff.boreal.financial/api/public/applications/<appId>/documents \
+  -F "document=@test.pdf" \
+  -F "documentType=bank_statement"
+```
+
+---
+
+### 3. **Initiate SignNow Signing (Step 6)**
+
+Confirm this returns a valid embedded signing URL:
+
+```bash
+curl -X POST https://staff.boreal.financial/api/public/signnow/initiate/<appId>
+```
+
+Expected response:
+
+```json
+{
+  "success": true,
+  "redirect_url": "https://app.signnow.com/webapp/document/..."
+}
+```
+
+Open the `redirect_url` in browser to **visually confirm smart fields are populated**.
+
+---
+
+### 4. **Sign the Document**
+
+Use the live SignNow interface to sign.
+
+---
+
+### 5. **Poll for Completion**
+
+Client already does this, or check manually:
+
+```bash
+curl https://staff.boreal.financial/api/public/signnow/status/<appId>
+```
+
+Expected:
+
+```json
+{
+  "signing_status": "invite_signed"
+}
+```
+
+---
+
+### 6. **Finalize Application (Step 7)**
+
+Call:
+
+```bash
+curl -X POST https://staff.boreal.financial/api/public/applications/<appId>/finalize
+```
+
+Expected:
+
+```json
+{
+  "success": true,
+  "status": "submitted"
+}
+```
+
+---
+
+## 🔍 Optional: Automated End-to-End Test Script
+
+Would you like me to write a full script that automates this from:
+
+* creating the application
+* uploading docs
+* initiating SignNow
+* checking smart fields
+* finalizing submission
+
+This can help reduce manual work going forward.
+
+Let me know if you want:
+
+* 🖥 CLI Bash/cURL version
+* 🧪 Cypress or Puppeteer browser test
+* 🛠 JS-based internal test runner inside your Replit repo
+
+You're right at the finish line now.
