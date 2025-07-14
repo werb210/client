@@ -90,11 +90,11 @@ export default function SideBySideApplication() {
       case 1:
         return state.step1Completed ? 'completed' : 'current';
       case 2:
-        return state.selectedCategory ? 'completed' : 
+        return state.step2?.selectedCategory ? 'completed' : 
                state.step1Completed ? 'current' : 'pending';
       case 3:
         return state.step3Completed ? 'completed' :
-               state.selectedCategory ? 'current' : 'pending';
+               state.step2?.selectedCategory ? 'current' : 'pending';
       case 4:
         return state.step4Completed ? 'completed' :
                state.step3Completed ? 'current' : 'pending';
@@ -122,7 +122,7 @@ export default function SideBySideApplication() {
   const getCurrentStepIndex = () => {
     // Determine current step based on form completion state (0-indexed for StageMonitor)
     if (!state.step1Completed) return 0; // Step 1 - Financial Profile
-    if (!state.selectedCategory) return 1; // Step 2 - Recommendations
+    if (!state.step2?.selectedCategory) return 1; // Step 2 - Recommendations
     if (!state.step3Completed) return 2; // Step 3 - Business Details  
     if (!state.step4Completed) return 3; // Step 4 - Financial Info
     if (!state.step5Completed) return 4; // Step 5 - Document Upload

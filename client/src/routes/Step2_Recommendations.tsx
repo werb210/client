@@ -44,10 +44,14 @@ export default function Step2Recommendations() {
 
   const handleProductSelect = (product: string) => {
     setSelectedProduct(product);
+    // STEP-BASED COMPLIANCE: Store selection in step2 object
     dispatch({
       type: 'UPDATE_FORM_DATA',
       payload: {
-        selectedCategory: product
+        step2: {
+          selectedCategory: product,
+          selectedCategoryName: product
+        }
       }
     });
   };
@@ -55,13 +59,18 @@ export default function Step2Recommendations() {
   // Auto-save selected product with 2-second delay
   const debouncedSave = useDebouncedCallback((product: string) => {
     if (product) {
+      // STEP-BASED COMPLIANCE: Store selection in step2 object
       dispatch({
         type: 'UPDATE_FORM_DATA',
         payload: {
-          selectedCategory: product
+          step2: {
+            selectedCategory: product,
+            selectedCategoryName: product,
+            completed: true
+          }
         }
       });
-      console.log('💾 Step 2 - Auto-saved product selection:', product);
+      console.log('💾 Step 2 - Auto-saved product selection to step2 object:', product);
     }
   }, 2000);
 

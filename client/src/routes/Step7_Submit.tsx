@@ -253,7 +253,7 @@ export default function Step7Submit() {
                 <div className="space-y-1 text-sm text-gray-600">
                   <p><strong>Amount:</strong> {state.step1?.fundingAmount || 'Not provided'}</p>
                   <p><strong>Purpose:</strong> {state.step1?.fundsPurpose || 'Not provided'}</p>
-                  <p><strong>Product Type:</strong> {state.selectedCategory || 'Not selected'}</p>
+                  <p><strong>Product Type:</strong> {state.step2?.selectedCategory || 'Not selected'}</p>
                   <p><strong>Revenue:</strong> {state.step1?.revenueLastYear || 'Not provided'}</p>
                 </div>
               </div>

@@ -61,22 +61,19 @@ export default function Step5DocumentUpload() {
   // Calculate document requirements on component mount
   useEffect(() => {
     const calculateDocumentRequirements = async () => {
-      // A. Use the form state to access required fields - map from unified schema
-      const { selectedCategory } = state;
-      
-      // Use step-based structure only
-      const productCategory = selectedCategory || state.step1?.lookingFor || '';
+      // A. Use step-based structure exclusively - STEP-BASED COMPLIANCE
+      const productCategory = state.step2?.selectedCategory || state.step1?.lookingFor || '';
       const location = state.step1?.businessLocation || '';
       const amount = state.step1?.fundingAmount || '';
       
-      console.log(`🔧 [STEP5] selectedCategory from state: "${selectedCategory}"`);
+      console.log(`🔧 [STEP5] selectedCategory from step2: "${state.step2?.selectedCategory}"`);
       console.log(`🔧 [STEP5] businessLocation from step1: "${state.step1?.businessLocation}"`);
       console.log(`🔧 [STEP5] fundingAmount from step1: "${state.step1?.fundingAmount}"`);
       console.log(`🔧 [STEP5] lookingFor from step1: "${state.step1?.lookingFor}"`);
       console.log(`🔧 [STEP5] Derived values: category="${productCategory}", location="${location}", amount="${amount}"`);
       console.log(`🔧 [STEP5] Full state keys:`, Object.keys(state));
       
-      // Use selectedCategory directly - no conversion needed since we updated intersection logic
+      // Use step2.selectedCategory - STEP-BASED COMPLIANCE
       const apiCategory = productCategory || '';
       
       // Convert business location to API format (CA -> canada, US -> united_states)
@@ -182,7 +179,7 @@ export default function Step5DocumentUpload() {
     };
 
     calculateDocumentRequirements();
-  }, [state.step1?.selectedCategory || state.selectedCategory, state.step1?.businessLocation, state.step1?.fundingAmount, toast]);
+  }, [state.step2?.selectedCategory, state.step1?.businessLocation, state.step1?.fundingAmount, toast]);
 
   // Auto-save uploaded documents with 2-second delay
   const debouncedSave = useDebouncedCallback((files: UploadedFile[]) => {

@@ -175,7 +175,7 @@ export default function Step4ApplicantInfoComplete() {
         accountsReceivableBalance: state.step1?.accountsReceivableBalance,
         fixedAssetsValue: state.step1?.fixedAssetsValue,
         purposeOfFunds: state.step1?.purposeOfFunds,
-        selectedCategory: state.step1?.selectedCategory
+        selectedCategory: state.step2?.selectedCategory
       };
 
       const step3 = {
