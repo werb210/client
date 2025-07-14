@@ -22,6 +22,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { submitApplication } from '@/lib/api';
+import { ApplicationStatusModal } from '@/components/ApplicationStatusModal';
+import { canSubmitApplication } from '@/lib/applicationStatus';
 
 interface ApplicationSummary {
   businessInfo: {
@@ -68,6 +70,8 @@ export default function Step7FinalSubmission() {
   const { state, dispatch } = useFormData();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [applicationStatus, setApplicationStatus] = useState<string>('');
 
   // Auto-save submission progress with 2-second delay
   const debouncedSave = useDebouncedCallback((submissionStatus: boolean) => {
@@ -133,6 +137,24 @@ export default function Step7FinalSubmission() {
   // Submit application mutation
   const submitMutation = useMutation({
     mutationFn: async () => {
+      // ✅ Check application status before submission
+      const applicationId = state.applicationId;
+      if (!applicationId) {
+        throw new Error('No application ID found. Cannot check status.');
+      }
+
+      console.log('📋 Checking application status before final submission...');
+      const statusCheck = await canSubmitApplication(applicationId);
+
+      if (!statusCheck.canSubmit) {
+        console.log(`🚫 Final submission blocked - Application status: ${statusCheck.status}`);
+        setApplicationStatus(statusCheck.status || 'unknown');
+        setStatusModalOpen(true);
+        throw new Error(`Application cannot be submitted. Status: ${statusCheck.status}`);
+      }
+
+      console.log('✅ Application status check passed - proceeding with final submission');
+
       // ✅ CRITICAL FIX: Use existing step-based structure from state
       if (!state.step1 || !state.step3 || !state.step4) {
         throw new Error('Missing step-based structure in state. Cannot submit application.');
@@ -559,6 +581,13 @@ export default function Step7FinalSubmission() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Application Status Modal */}
+      <ApplicationStatusModal
+        isOpen={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        applicationStatus={applicationStatus}
+      />
     </div>
   );
 }

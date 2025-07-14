@@ -18,6 +18,8 @@ import {
   Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ApplicationStatusModal } from '@/components/ApplicationStatusModal';
+import { canSubmitApplication } from '@/lib/applicationStatus';
 
 /**
  * Step 7: Final Application Submission
@@ -32,6 +34,8 @@ export default function Step7Submit() {
   
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [applicationStatus, setApplicationStatus] = useState<string>('');
 
   // Checkbox handlers
   const handleTermsChange = (checked: CheckedState) => {
@@ -70,6 +74,26 @@ export default function Step7Submit() {
     setIsSubmitting(true);
 
     try {
+      // ✅ Check application status before submission
+      const applicationId = state.applicationId;
+      if (!applicationId) {
+        throw new Error('No application ID found. Cannot check status.');
+      }
+
+      console.log('📋 Checking application status before submission...');
+      const statusCheck = await canSubmitApplication(applicationId);
+
+      if (!statusCheck.canSubmit) {
+        console.log(`🚫 Submission blocked - Application status: ${statusCheck.status}`);
+        setApplicationStatus(statusCheck.status || 'unknown');
+        setStatusModalOpen(true);
+        setIsSubmitting(false);
+        return;
+      }
+
+      console.log('✅ Application status check passed - proceeding with submission');
+
+      // Continue with submission logic
       // Create FormData for multipart upload with actual files
       const formData = new FormData();
       
@@ -373,6 +397,13 @@ export default function Step7Submit() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Application Status Modal */}
+      <ApplicationStatusModal
+        isOpen={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        applicationStatus={applicationStatus}
+      />
     </div>
   );
 }
