@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 14, 2025: ✅ STEP 6 AUTO-REDIRECT AFTER SIGNING IMPLEMENTATION COMPLETE**
+  * **AUTO-REDIRECT FUNCTIONALITY**: Fixed Step 6 polling to automatically redirect to Step 7 when document is signed
+  * **USEQUERY POLLING**: Implemented React Query polling with 5-second intervals checking signing status via staffApi.checkSigningStatus()
+  * **STATUS DETECTION**: Added detection for both 'signed' and 'completed' status values from webhook updates
+  * **CONSOLE LOGGING**: Enhanced debugging with "🎉 Document signed! Redirecting to Step 7..." message as requested
+  * **TOAST NOTIFICATIONS**: Added success toast notification before redirect with 1.5-second delay
+  * **APPLICATION ID RECOVERY**: Fixed applicationId initialization from state and localStorage for proper polling
+  * **ENHANCED DEBUGGING**: Added comprehensive status logging showing timestamp and polling results
+  * **WEBHOOK INTEGRATION**: System now properly detects backend status changes from SignNow webhook to "lender_match"
+  * **AUTOMATIC NAVIGATION**: Users are automatically redirected from Step 6 to Step 7 without manual intervention
+  * **PRODUCTION READY**: Complete webhook → polling → redirect workflow operational for seamless user experience
+
 - **July 14, 2025: ✅ COMPREHENSIVE FIELD VALIDATION SYSTEM IMPLEMENTATION COMPLETE**
   * **VALIDATION FRAMEWORK**: Created comprehensive validateApplicationPayload() function in staffApi.ts with required fields configuration
   * **REQUIRED FIELDS SYSTEM**: Defined exact field requirements for each step: step1 (requestedAmount, use_of_funds), step3 (legalName, businessName, businessPhone, businessState), step4 (firstName, lastName, email, phone, ownershipPercentage, dob, sin)

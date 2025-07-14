@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
 import { staffApi } from '../api/staffApi';
 import { 
   ArrowLeft, 
@@ -34,6 +35,67 @@ export default function Step6Signature() {
   // Get uploaded files from Step 5
   const uploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
   const selectedProduct = state.selectedProductId;
+
+  // ✅ Add useQuery for polling signing status
+  const { data: signingStatusData, refetch } = useQuery({
+    queryKey: ['signingStatus', applicationId],
+    queryFn: () => staffApi.checkSigningStatus(applicationId!),
+    refetchInterval: 5000, // Poll every 5 seconds
+    enabled: !!applicationId && submissionStatus === 'submitted',
+    retry: false,
+  });
+
+  // ✅ Auto-redirect logic when document is signed
+  useEffect(() => {
+    // Enhanced logging for debugging
+    if (signingStatusData) {
+      console.log('🔍 Step 6 Polling Status Update:', {
+        status: signingStatusData.status,
+        applicationId: applicationId,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    if (signingStatusData?.status === 'signed') {
+      console.log("🎉 Document signed! Redirecting to Step 7...");
+      toast({
+        title: "Document Signed!",
+        description: "Redirecting to final submission...",
+        variant: "default",
+      });
+      
+      // Update signing status
+      setSigningStatus('completed');
+      
+      // Redirect to Step 7
+      setTimeout(() => {
+        setLocation('/apply/step-7');
+      }, 1500);
+    } else if (signingStatusData?.status === 'completed') {
+      // Handle 'completed' status as well (alternative status name)
+      console.log("🎉 Document completed! Redirecting to Step 7...");
+      toast({
+        title: "Document Signed!",
+        description: "Redirecting to final submission...",
+        variant: "default",
+      });
+      
+      setSigningStatus('completed');
+      
+      setTimeout(() => {
+        setLocation('/apply/step-7');
+      }, 1500);
+    }
+  }, [signingStatusData?.status, applicationId, toast, setLocation]);
+
+  // ✅ Initialize applicationId from state or localStorage
+  useEffect(() => {
+    const appId = state.applicationId || localStorage.getItem('applicationId');
+    if (appId && !applicationId) {
+      setApplicationId(appId);
+      console.log('🔑 Recovered applicationId for Step 6 polling:', appId);
+    }
+  }, [state.applicationId]);
 
   useEffect(() => {
     // Auto-submit if not already submitted and we have all required data
@@ -242,15 +304,17 @@ export default function Step6Signature() {
     
     saveToStorage();
     
+    console.log("🎉 Document signed! Redirecting to Step 7...");
     toast({
-      title: "Signature Complete!",
-      description: "Proceeding to final application submission...",
+      title: "Document Signed!",
+      description: "Redirecting to final submission...",
+      variant: "default",
     });
     
     // Redirect to Step 7 for final submission
     setTimeout(() => {
       setLocation('/apply/step-7');
-    }, 2000);
+    }, 1500);
   };
 
   const handlePrevious = () => {
