@@ -28,6 +28,14 @@ export default function Step5DocumentUpload() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
+  // Debug: Check applicationId availability
+  const applicationId = state.applicationId || localStorage.getItem('applicationId');
+  console.log('🔍 [STEP5] Application ID check:', {
+    fromState: state.applicationId,
+    fromLocalStorage: localStorage.getItem('applicationId'),
+    finalId: applicationId
+  });
+  
   // State for tracking uploaded files and requirements completion
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
     (state.uploadedDocuments || []).map(doc => ({
@@ -326,7 +334,7 @@ export default function Step5DocumentUpload() {
         uploadedFiles={uploadedFiles}
         onFilesUploaded={handleFilesUploaded}
         onRequirementsChange={handleRequirementsChange}
-        applicationId={state.step4?.applicationId || 'test-app-123'}
+        applicationId={applicationId || 'test-app-123'}
       />
 
       {/* Progress Summary */}

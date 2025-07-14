@@ -155,18 +155,7 @@ app.use((req, res, next) => {
       
       // Verify critical fields are present in the payload
       const payload = req.body;
-      console.log('🔍 [SERVER] Critical field verification:', {
-        'step1.fundingAmount': payload?.step1?.fundingAmount,
-        'step3.operatingName': payload?.step3?.operatingName,
-        'step4.firstName': payload?.step4?.firstName,
-        'step4.personalEmail': payload?.step4?.personalEmail,
-        allFieldsPresent: !!(
-          payload?.step1?.fundingAmount && 
-          payload?.step3?.operatingName && 
-          payload?.step4?.firstName &&
-          payload?.step4?.personalEmail
-        )
-      });
+      console.log('📋 [SERVER] Application payload received with step-based structure');
       
       const staffApiUrl = cfg.staffApiUrl + '/api';
       const finalUrl = `${staffApiUrl}/public/applications`;
