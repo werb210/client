@@ -456,7 +456,13 @@ app.use((req, res, next) => {
       const data = await response.json();
       console.log('📡 [SERVER] Staff backend signature polling success:', data);
       
-      res.json(data);
+      // Normalize the response for client compatibility
+      const normalizedResponse = {
+        ...data,
+        status: data.status || data.signature_status || 'pending'
+      };
+      
+      res.json(normalizedResponse);
     } catch (error) {
       console.warn('⚠️ [SERVER] Signature status polling failed:', error);
       

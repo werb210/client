@@ -307,14 +307,16 @@ export default function Step6SignNowIntegration() {
         return; // Do NOT navigate away — just keep polling
       }
       
-      const { status } = data;
+      // Extract status from either 'status' or 'signature_status' field
+      const status = data.status || data.signature_status;
       
       // ✅ B. Log polling results
       console.log("📡 Polling: Received signature status", status);
       console.log('📄 Signature status check:', { applicationId, status });
+      console.log('📄 Full response data:', data);
       
-      // ✅ B. Ensure exact status check
-      if (status === "invite_signed") {
+      // ✅ B. Check for multiple signed status variations
+      if (status === "invite_signed" || status === "signed" || status === "completed") {
         console.log('✅ Signature completed - redirecting to Step 7');
         console.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
         console.log('🧭 This is the ONLY legitimate redirect from Step 6');
