@@ -1,0 +1,86 @@
+Thanks — now that the **webhook worked**, we can isolate the issue with **Step 6 not redirecting to Step 7 after signing**.
+
+---
+
+## 🧩 Root Cause Analysis: Step 6 Did Not Redirect After Signing
+
+### ✅ What Worked:
+
+* ✅ Webhook was triggered from SignNow
+* ✅ Application status was updated to `"lender_match"` by the backend
+* ✅ Step 6 shows **"Signed"** status in the UI
+
+---
+
+## ❌ What Likely Failed:
+
+### 🔁 Step 6 **Polling Logic or Webhook Sync** is Broken
+
+Step 6 is supposed to:
+
+1. **Poll** `/signing-status` or listen for a signal
+2. Detect the status change from `not_initiated` → `invite_sent` → `signed`
+3. Automatically advance the user to **Step 7**
+
+But currently:
+
+* There is no real-time **webhook → client sync** mechanism
+* **Polling either stopped too soon or didn’t detect the final `"signed"` state**
+* No redirect or `navigate('/step7')` was triggered
+
+---
+
+## 🧠 Fix Instructions for Replit (Client)
+
+### 🔧 Fix: Add Reliable Polling with `signed` Redirect
+
+#### File:
+
+`client/src/routes/Step6_Signature.tsx`
+
+### ✅ Replit Must Do the Following:
+
+1. **Locate the polling code** that checks signing status:
+
+   ```ts
+   const { data, refetch } = useQuery(
+     ['signingStatus', applicationId],
+     () => staffApi.getSigningStatus(applicationId),
+     { refetchInterval: 3000 } // or 5000ms
+   );
+   ```
+
+2. **Add logic to auto-advance to Step 7 once status is "signed"**:
+
+   ```ts
+   useEffect(() => {
+     if (data?.status === 'signed') {
+       console.log("🎉 Document signed! Redirecting to Step 7...");
+       navigate('/step7');
+     }
+   }, [data?.status]);
+   ```
+
+3. **Ensure the polling continues long enough**, and doesn't stop early:
+
+   * If using `enabled: false`, fix that.
+   * Avoid `refetchInterval: false` or timeouts that cancel early.
+
+4. **Optional**: Add success animation or confirmation toast before redirecting:
+
+   ```ts
+   toast.success("Document signed! Redirecting...");
+   ```
+
+---
+
+## 🧾 Replit Must Report Back to ChatGPT:
+
+* ✅ Confirm that `navigate('/step7')` is triggered when status is `signed`
+* ✅ Confirm polling continues until signing is detected
+* ✅ Confirm this works in both dev and production environments
+* ✅ Show logs: “🎉 Document signed! Redirecting to Step 7…”
+
+---
+
+Would you like me to generate the complete `Step6_Signature.tsx` patch now?
