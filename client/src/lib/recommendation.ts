@@ -25,7 +25,7 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     fundsPurpose,
   } = form;
 
-  // Enhanced debug logging to diagnose Canadian product filtering issue
+  // Enhanced debug logging to diagnose product filtering issue
   console.log('[DEBUG] filterProducts - Input parameters:', {
     productCount: products.length,
     headquarters,
@@ -34,6 +34,27 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     accountsReceivableBalance,
     fundsPurpose
   });
+
+  // Check for products that should match the user's criteria
+  const potentialMatches = products.filter(p => {
+    const minAmount = getAmountValue(p, 'min');
+    const maxAmount = getAmountValue(p, 'max');
+    const amountInRange = fundingAmount >= minAmount && fundingAmount <= maxAmount;
+    const countryMatch = p.country === headquarters;
+    
+    return amountInRange && countryMatch;
+  });
+  
+  console.log('[DEBUG] Potential matches (amount + country):', potentialMatches.length);
+  if (potentialMatches.length > 0) {
+    console.log('[DEBUG] Sample potential match:', {
+      name: potentialMatches[0].name,
+      country: potentialMatches[0].country,
+      category: potentialMatches[0].category,
+      minAmount: getAmountValue(potentialMatches[0], 'min'),
+      maxAmount: getAmountValue(potentialMatches[0], 'max')
+    });
+  }
 
   // Count products by country to understand the distribution
   const countryStats = products.reduce((acc, p) => {

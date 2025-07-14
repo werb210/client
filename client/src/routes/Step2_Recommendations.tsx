@@ -11,10 +11,14 @@ export default function Step2Recommendations() {
   const [selectedProduct, setSelectedProduct] = useState<string>('');
 
   // Get user's Step 1 data for matching from unified schema
+  const normalizeHeadquarters = (location: string): string => {
+    if (location === 'united-states' || location === 'United States' || location === 'US') return 'US';
+    if (location === 'canada' || location === 'Canada' || location === 'CA') return 'CA';
+    return location || 'US';
+  };
+
   const formData = {
-    headquarters: state.step1?.businessLocation === 'united-states' ? 'US' : 
-                  state.step1?.businessLocation === 'canada' ? 'CA' : 
-                  state.step1?.businessLocation,
+    headquarters: normalizeHeadquarters(state.step1?.businessLocation || state.step1?.headquarters || 'US'),
     industry: state.step1?.industry,
     lookingFor: state.step1?.lookingFor,
     fundingAmount: state.step1?.fundingAmount,
@@ -24,6 +28,16 @@ export default function Step2Recommendations() {
     salesHistory: state.step1?.salesHistory,
     averageMonthlyRevenue: state.step1?.averageMonthlyRevenue,
   };
+
+  // Debug the exact data being passed to filtering
+  console.log('[STEP2] Form data passed to filtering:', formData);
+  console.log('[STEP2] Raw Step 1 data:', {
+    businessLocation: state.step1?.businessLocation,
+    headquarters: state.step1?.headquarters,
+    lookingFor: state.step1?.lookingFor,
+    fundingAmount: state.step1?.fundingAmount,
+    accountsReceivableBalance: state.step1?.accountsReceivableBalance
+  });
 
   // Debug logging disabled for production
   // All form data passed to filtering algorithm
