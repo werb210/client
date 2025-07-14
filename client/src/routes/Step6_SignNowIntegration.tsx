@@ -307,15 +307,15 @@ export default function Step6SignNowIntegration() {
         return; // Do NOT navigate away — just keep polling
       }
       
-      // ✅ Fixed status field parsing - only check data.status
-      const status = data?.status;
+      // ✅ Fixed status field parsing - check signing_status field as specified
+      const signingStatus = data?.signing_status;
       
       // ✅ Add logging for debugging as requested
-      console.log("📡 Polling SignNow status:", status);
+      console.log("📡 Polling SignNow status:", signingStatus);
       console.log('📄 Status check for application:', applicationId);
       
-      // ✅ Fixed status check - only check for "invite_signed" as specified
-      if (data?.status === "invite_signed") {
+      // ✅ Fixed status check - check signing_status === "invite_signed" as specified
+      if (data?.signing_status === "invite_signed") {
         console.log('✅ Signature completed - redirecting to Step 7');
         console.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
         setLocation('/apply/step-7');
