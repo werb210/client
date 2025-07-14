@@ -163,9 +163,9 @@ export default function Step4ApplicantInfoComplete() {
       // Format data as staff backend expects: {step1, step3, step4}
       const step1 = {
         // Financial profile data from Steps 1 & 2
-        fundingAmount: state.fundingAmount,
-        lookingFor: state.lookingFor,
-        equipmentValue: state.equipmentValue,
+        requestedAmount: state.fundingAmount, // ✅ correct field
+        use_of_funds: state.lookingFor, // ✅ correct field
+        equipment_value: state.equipmentValue, // ✅ correct field
         businessLocation: state.businessLocation,
         salesHistory: state.salesHistory,
         lastYearRevenue: state.lastYearRevenue,
