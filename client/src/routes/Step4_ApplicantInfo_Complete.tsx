@@ -57,6 +57,7 @@ export default function Step4ApplicantInfoComplete() {
   const [applicantPhoneDisplay, setApplicantPhoneDisplay] = useState('');
   const [partnerPhoneDisplay, setPartnerPhoneDisplay] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]> | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Detect region from Step 1 business location
   useEffect(() => {
@@ -129,6 +130,13 @@ export default function Step4ApplicantInfoComplete() {
   }, [ownershipPercentage, hasPartner, form]);
 
   const onSubmit = async (data: Step4FormData) => {
+    // Double-click prevention: Exit if already submitting
+    if (submitting) {
+      console.log('⚠️ DOUBLE-CLICK PREVENTION: Submission already in progress');
+      return;
+    }
+    
+    setSubmitting(true);
     console.log('🚀 STEP 4 SUBMIT TRIGGERED - onSubmit function called');
     console.log('📝 Form data received:', data);
     console.log('✅ Form validation state:', form.formState.isValid);
@@ -203,6 +211,7 @@ export default function Step4ApplicantInfoComplete() {
           step3: !!step3, 
           step4: !!step4 
         });
+        setSubmitting(false);
         return;
       }
 
@@ -302,6 +311,7 @@ export default function Step4ApplicantInfoComplete() {
       if (!validation.isValid) {
         console.error("❌ VALIDATION FAILED - Missing required fields:", validation.missingFields);
         setValidationErrors(validation.missingFields);
+        setSubmitting(false);
         return;
       }
       console.log("✅ VALIDATION PASSED - All required fields present");
@@ -372,6 +382,8 @@ export default function Step4ApplicantInfoComplete() {
       // Show user the actual error instead of generating fallback
       alert(`❌ Application creation failed: ${error.message}\n\nPlease check the form data and try again. SignNow requires a valid application ID.`);
       return; // Don't proceed to Step 5 if application creation fails
+    } finally {
+      setSubmitting(false);
     }
 
     // Mark step as complete and proceed
@@ -816,7 +828,8 @@ export default function Step4ApplicantInfoComplete() {
             </Button>
             <Button
               type="submit"
-              className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white"
+              disabled={submitting}
+              className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
               onClick={(e) => {
                 console.log('🖱️ CONTINUE BUTTON CLICKED');
                 console.log('📝 Form valid?', form.formState.isValid);
@@ -830,7 +843,7 @@ export default function Step4ApplicantInfoComplete() {
                 // Let the form submission proceed normally
               }}
             >
-              Continue to Documents →
+              {submitting ? "Submitting..." : "Continue to Documents →"}
             </Button>
           </div>
         </form>
