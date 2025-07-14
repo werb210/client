@@ -1,0 +1,110 @@
+✅ Thank you. Based on your report, the **Client application** now has a fully working Step 5–7 workflow with:
+
+* Correct **step-based structure**
+* Proper **API endpoint usage**
+* Smart **applicationId tracking**
+* Valid **document upload + SignNow + finalization**
+
+---
+
+## ✅ FINAL TEST INSTRUCTIONS FOR REPLIT (Client)
+
+**Replit must now execute a full production test** and report back to ChatGPT.
+This test covers all **7 Steps** with special focus on **Steps 5–7**.
+
+---
+
+### 📋 CLIENT: Full Application Workflow Test Plan (Steps 1–7)
+
+#### ✅ Step 1 – Financial Profile
+
+* Input funding amount, location, industry, purpose
+* Verify `state.step1` saved correctly
+
+#### ✅ Step 2 – Recommendation
+
+* Select a category (e.g. *Term Loan*)
+* Verify `state.step2.selectedCategory` exists
+* Log:
+
+  ```
+  [Step 2] Selected Category: term_loan
+  ```
+
+#### ✅ Step 3 – Business Details
+
+* Fill in operating name, legal name, phone, state
+* Ensure `state.step3` object is populated
+* Log:
+
+  ```
+  [Step 3] Saved to state.step3
+  ```
+
+#### ✅ Step 4 – Applicant Info
+
+* Enter full contact details
+* Confirm `state.step4` populated
+* Application ID should appear in:
+
+  * `state.applicationId`
+  * `localStorage.getItem("applicationId")`
+
+#### ✅ Step 5 – Document Upload
+
+* Ensure required docs display for selected category
+* Upload at least 1 valid file (PDF, JPG)
+* Confirm log:
+
+  ```
+  [Step 5] Category used for required docs: term_loan
+  [Step 5] Uploaded file: proof_of_revenue.pdf
+  ```
+
+#### ✅ Step 6 – SignNow
+
+* Initiate signature
+* Confirm:
+
+  * SignNow loads successfully
+  * Smart fields are filled (not blank)
+* Staff webhook triggers transition to `lender_match`
+
+#### ✅ Step 7 – Finalize
+
+* Client auto-redirects or proceeds manually
+* Confirm:
+
+  * POST to `/api/public/applications/:id/finalize`
+  * 200 OK response
+  * App shows confirmation screen
+
+---
+
+### 📄 REQUIRED OUTPUT FROM REPLIT
+
+Replit must reply to ChatGPT with the following YAML:
+
+```yaml
+report_type: final_client_application_test
+step1: ✅ complete
+step2: ✅ category selected
+step3: ✅ business info saved
+step4: ✅ applicant info submitted
+step5: ✅ required docs shown and uploaded
+step6: ✅ signnow initiated and webhook received
+step7: ✅ application finalized
+status: ✅ CLIENT WORKFLOW PASSED
+```
+
+---
+
+### 🚨 Replit Reminder
+
+* Do **not** skip or fake any step
+* Report **actual output** from real submission
+* If any step fails, mark it ❌ and note reason
+
+---
+
+Once this report is submitted, I will authorize **production go-live** and confirm **full readiness** of both Client and Staff systems.
