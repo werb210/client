@@ -133,34 +133,69 @@ export default function Step7FinalSubmission() {
   // Submit application mutation
   const submitMutation = useMutation({
     mutationFn: async () => {
+      // ✅ ENFORCE STEP-BASED STRUCTURE: {step1, step3, step4}
+      const step1 = {
+        // Financial profile data from Steps 1 & 2
+        fundingAmount: state.fundingAmount,
+        lookingFor: state.lookingFor,
+        equipmentValue: state.equipmentValue,
+        businessLocation: state.businessLocation,
+        salesHistory: state.salesHistory,
+        revenueLastYear: state.revenueLastYear,
+        averageMonthlyRevenue: state.averageMonthlyRevenue,
+        accountsReceivableBalance: state.accountsReceivableBalance,
+        fixedAssetsValue: state.fixedAssetsValue,
+        purposeOfFunds: state.fundsPurpose,
+        selectedCategory: applicationSummary.businessInfo.selectedCategory,
+        industry: state.industry
+      };
+
+      const step3 = {
+        // Business details from Step 3
+        operatingName: state.businessName,
+        legalName: state.businessName,
+        businessAddress: state.businessAddress,
+        businessCity: state.businessCity,
+        businessState: state.businessState,
+        businessZip: state.businessZipCode,
+        businessPhone: state.businessPhone,
+        businessStructure: state.businessStructure,
+        businessStartDate: state.businessStartDate,
+        numberOfEmployees: state.numberOfEmployees,
+        annualRevenue: state.annualRevenue,
+        businessWebsite: state.businessWebsite
+      };
+
+      const step4 = {
+        // Applicant information from Step 4
+        firstName: state.firstName,
+        lastName: state.lastName,
+        personalEmail: state.personalEmail,
+        personalPhone: state.personalPhone,
+        dateOfBirth: state.dateOfBirth,
+        socialSecurityNumber: state.socialSecurityNumber,
+        applicantAddress: state.applicantAddress,
+        applicantCity: state.applicantCity,
+        applicantState: state.applicantState,
+        applicantPostalCode: state.applicantPostalCode,
+        ownershipPercentage: state.ownershipPercentage,
+        creditScore: state.creditScore,
+        yearsWithBusiness: state.yearsWithBusiness
+      };
+
       const applicationData = {
-        businessInfo: {
-          legalName: `${applicationSummary.businessInfo.location} Business`,
-          industry: applicationSummary.businessInfo.industry,
-          headquarters: applicationSummary.businessInfo.location,
-          revenue: applicationSummary.businessInfo.monthlyRevenue,
-          useOfFunds: applicationSummary.businessInfo.useOfFunds,
-          loanAmount: parseInt(applicationSummary.financialInfo.annualRevenue.replace(/\D/g, '')) / 12 || 50000,
-        },
-        personalDetails: {
-          name: 'Business Owner', // Would come from user profile
-          email: 'owner@business.com',
-          phone: '+1-555-0123',
-        },
-        productQuestions: {
-          selectedProduct: applicationSummary.businessInfo.selectedCategory,
-          productName: applicationSummary.businessInfo.selectedCategoryName,
-        },
-        selectedProduct: applicationSummary.businessInfo.selectedCategory,
+        step1,
+        step3,
+        step4,
         signature: {
           termsAccepted: true,
           signed: applicationSummary.signatureStatus.completed,
           signedAt: applicationSummary.signatureStatus.signedAt,
         },
-        businessDetails: applicationSummary.businessDetails,
-        financialInfo: applicationSummary.financialInfo,
         documents: applicationSummary.documents,
       };
+      
+      console.log("📤 Step 7: Using step-based structure:", { step1, step3, step4 });
 
       // Production mode: Direct submission to staff backend - no fallback simulation
       return await submitApplication(applicationData);

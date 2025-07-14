@@ -93,6 +93,17 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 14, 2025: STEP-BASED STRUCTURE COMPLIANCE COMPLETE**
+  * CRITICAL SUCCESS: Enforced step-based structure {step1, step3, step4} across ALL submission and retry flows as required
+  * STEP 7 COMPLIANCE: Fixed Step7_FinalSubmission_Complete.tsx, Step7_Submit.tsx, and Step7_FinalSubmission.tsx to use step-based structure instead of flat fields
+  * LEGACY FORMAT ELIMINATED: Removed all flat field submissions (businessLocation, firstName, lastName at top level) 
+  * FINALIZATION ENDPOINT: Updated Step7_Finalization.tsx to include step1, step3, step4 data in POST /api/public/applications/{id}/submit
+  * STAFF API VERIFIED: staffApi.ts already implements correct step-based structure in correctPayload object
+  * RETRY FLOWS CONFIRMED: RetryFailedUploads component only handles document uploads, not full application submissions
+  * COMPREHENSIVE LOGGING: Added console verification showing step-based payload structure in all Step 7 components
+  * ZERO FLAT FIELD FALLBACKS: Ensured no legacy flat field formats remain in any submission or resume workflows
+  * PRODUCTION READY: All submissions now follow strict {step1, step3, step4} format with no exceptions
+
 - **July 14, 2025: SIGNNOW TEMPLATE FIELD POPULATION FIX COMPLETE**
   * CRITICAL SUCCESS: Fixed SignNow template fields not being populated by implementing correct endpoint and smart fields transmission
   * ROOT CAUSE RESOLVED: Step 6 was calling wrong endpoint `/api/public/applications/{id}/signing-status` (POST) instead of `/api/signnow/create`

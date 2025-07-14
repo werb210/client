@@ -101,51 +101,67 @@ export default function Step7FinalSubmissionComplete() {
       // Create form data with all application information
       const formData = new FormData();
       
-      // Add all form fields as JSON
-      const applicationData = {
-        // Business Information
-        businessLocation: state.businessLocation,
-        industry: state.industry,
+      // ✅ ENFORCE STEP-BASED STRUCTURE: {step1, step3, step4}
+      const step1 = {
+        // Financial profile data from Steps 1 & 2
         fundingAmount: state.fundingAmount,
-        fundsPurpose: state.fundsPurpose,
-        selectedProductId: state.selectedProductId,
-        
-        // Business Details
-        businessName: state.businessName,
-        businessStructure: state.businessStructure,
-        businessPhone: state.businessPhone,
-        businessEmail: state.businessEmail,
+        lookingFor: state.lookingFor,
+        equipmentValue: state.equipmentValue,
+        businessLocation: state.businessLocation,
+        salesHistory: state.salesHistory,
+        lastYearRevenue: state.lastYearRevenue,
+        averageMonthlyRevenue: state.averageMonthlyRevenue,
+        accountsReceivableBalance: state.accountsReceivableBalance,
+        fixedAssetsValue: state.fixedAssetsValue,
+        purposeOfFunds: state.purposeOfFunds,
+        selectedCategory: state.selectedCategory,
+        industry: state.industry
+      };
+
+      const step3 = {
+        // Business details from Step 3
+        operatingName: state.operatingName,
+        legalName: state.legalName,
         businessAddress: state.businessAddress,
         businessCity: state.businessCity,
         businessState: state.businessState,
-        businessZipCode: state.businessZipCode,
-        
-        // Applicant Information
+        businessZip: state.businessZip,
+        businessPhone: state.businessPhone,
+        businessStructure: state.businessStructure,
+        businessStartDate: state.businessStartDate,
+        numberOfEmployees: state.numberOfEmployees,
+        annualRevenue: state.annualRevenue,
+        businessWebsite: state.businessWebsite
+      };
+
+      const step4 = {
+        // Applicant information from Step 4
         firstName: state.firstName,
         lastName: state.lastName,
-        email: state.email,
-        phone: state.phone,
+        personalEmail: state.personalEmail,
+        personalPhone: state.personalPhone,
         dateOfBirth: state.dateOfBirth,
         socialSecurityNumber: state.socialSecurityNumber,
+        applicantAddress: state.applicantAddress,
+        applicantCity: state.applicantCity,
+        applicantState: state.applicantState,
+        applicantPostalCode: state.applicantPostalCode,
         ownershipPercentage: state.ownershipPercentage,
-        
-        // Partner Information (if applicable)
-        partnerFirstName: state.partnerFirstName,
-        partnerLastName: state.partnerLastName,
-        partnerEmail: state.partnerEmail,
-        partnerPhone: state.partnerPhone,
-        partnerOwnershipPercentage: state.partnerOwnershipPercentage,
-        
-        // Financial Information
-        annualRevenue: state.annualRevenue,
-        monthlyRevenue: state.monthlyRevenue,
-        accountsReceivableBalance: state.accountsReceivableBalance,
-        
+        creditScore: state.creditScore,
+        yearsWithBusiness: state.yearsWithBusiness
+      };
+
+      const applicationData = {
+        step1,
+        step3,
+        step4,
         // Terms acceptance
         termsAccepted,
         privacyAccepted,
         submittedAt: new Date().toISOString(),
       };
+      
+      console.log("📤 Step 7: Using step-based structure:", { step1, step3, step4 });
       
       formData.append('applicationData', JSON.stringify(applicationData));
       

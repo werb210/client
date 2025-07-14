@@ -73,72 +73,60 @@ export default function Step7Submit() {
       // Create FormData for multipart upload with actual files
       const formData = new FormData();
       
-      // Add all application data as JSON
+      // ✅ ENFORCE STEP-BASED STRUCTURE: {step1, step3, step4}
+      const step1 = {
+        // Financial profile data from Steps 1 & 2
+        fundingAmount: state.fundingAmount,
+        lookingFor: state.lookingFor,
+        equipmentValue: state.equipmentValue,
+        businessLocation: state.businessLocation,
+        salesHistory: state.salesHistory,
+        revenueLastYear: state.revenueLastYear,
+        averageMonthlyRevenue: state.averageMonthlyRevenue,
+        accountsReceivableBalance: state.accountsReceivableBalance,
+        fixedAssetsValue: state.fixedAssetsValue,
+        fundsPurpose: state.fundsPurpose,
+        selectedCategory: state.selectedCategory,
+        industry: state.industry
+      };
+
+      const step3 = {
+        // Business details from Step 3
+        operatingName: state.businessName,
+        legalName: state.businessName,
+        businessAddress: state.businessAddress,
+        businessCity: state.businessCity,
+        businessState: state.businessState,
+        businessZip: state.businessZipCode,
+        businessPhone: state.businessPhone,
+        businessStructure: state.businessStructure,
+        businessStartDate: state.businessStartDate,
+        numberOfEmployees: state.employeeCount,
+        annualRevenue: state.estimatedYearlyRevenue,
+        businessWebsite: state.businessWebsite
+      };
+
+      const step4 = {
+        // Applicant information from Step 4
+        firstName: state.firstName,
+        lastName: state.lastName,
+        personalEmail: state.personalEmail,
+        personalPhone: state.personalPhone,
+        dateOfBirth: state.dateOfBirth,
+        socialSecurityNumber: state.socialSecurityNumber,
+        applicantAddress: state.applicantAddress,
+        applicantCity: state.applicantCity,
+        applicantState: state.applicantState,
+        applicantPostalCode: state.applicantPostalCode,
+        ownershipPercentage: state.ownershipPercentage,
+        creditScore: state.creditScore,
+        yearsWithBusiness: state.yearsWithBusiness
+      };
+
       const applicationData = {
-        // Step 1: Financial Profile
-        businessLocation: state.businessLocation || '',
-        industry: state.industry || '',
-        lookingFor: state.lookingFor || '',
-        fundingAmount: state.fundingAmount || '',
-        fundsPurpose: state.fundsPurpose || '',
-        salesHistory: state.salesHistory || '',
-        revenueLastYear: state.revenueLastYear || '',
-        averageMonthlyRevenue: state.averageMonthlyRevenue || '',
-        accountsReceivableBalance: state.accountsReceivableBalance || '',
-        fixedAssetsValue: state.fixedAssetsValue || '',
-        equipmentValue: state.equipmentValue || '',
-        
-        // Step 2: Selected Product
-        selectedCategory: state.selectedCategory || '',
-        
-        // Step 3: Business Details
-        businessName: state.businessName || '',
-        businessAddress: state.businessAddress || '',
-        businessCity: state.businessCity || '',
-        businessState: state.businessState || '',
-        businessZipCode: state.businessZipCode || '',
-        businessPhone: state.businessPhone || '',
-        businessEmail: state.businessEmail || '',
-        businessWebsite: state.businessWebsite || '',
-        businessStructure: state.businessStructure || '',
-        businessStartDate: state.businessStartDate || '',
-        employeeCount: state.employeeCount || '',
-        estimatedYearlyRevenue: state.estimatedYearlyRevenue || '',
-        
-        // Step 4: Applicant Information
-        title: state.title || '',
-        firstName: state.firstName || '',
-        lastName: state.lastName || '',
-        personalEmail: state.personalEmail || '',
-        personalPhone: state.personalPhone || '',
-        dateOfBirth: state.dateOfBirth || '',
-        socialSecurityNumber: state.socialSecurityNumber || '',
-        ownershipPercentage: state.ownershipPercentage || '',
-        creditScore: state.creditScore || '',
-        personalAnnualIncome: state.personalAnnualIncome || '',
-        applicantAddress: state.applicantAddress || '',
-        applicantCity: state.applicantCity || '',
-        applicantState: state.applicantState || '',
-        applicantPostalCode: state.applicantPostalCode || '',
-        yearsWithBusiness: state.yearsWithBusiness || '',
-        previousLoans: state.previousLoans || '',
-        bankruptcyHistory: state.bankruptcyHistory || '',
-        
-        // Partner information (if applicable)
-        partnerFirstName: state.partnerFirstName || '',
-        partnerLastName: state.partnerLastName || '',
-        partnerEmail: state.partnerEmail || '',
-        partnerPhone: state.partnerPhone || '',
-        partnerDateOfBirth: state.partnerDateOfBirth || '',
-        partnerSinSsn: state.partnerSinSsn || '',
-        partnerOwnershipPercentage: state.partnerOwnershipPercentage || '',
-        partnerCreditScore: state.partnerCreditScore || '',
-        partnerPersonalAnnualIncome: state.partnerPersonalAnnualIncome || '',
-        partnerAddress: state.partnerAddress || '',
-        partnerCity: state.partnerCity || '',
-        partnerState: state.partnerState || '',
-        partnerPostalCode: state.partnerPostalCode || '',
-        
+        step1,
+        step3,
+        step4,
         // Step 6: Signature Status
         signatureComplete: !!state.step6Signature?.signedAt,
         signatureTimestamp: state.step6Signature?.signedAt || '',

@@ -80,6 +80,10 @@ export default function Step7Finalization() {
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
         body: JSON.stringify({
+          // ✅ STEP-BASED STRUCTURE ENFORCEMENT: Include complete application data
+          step1: state.step1 || {},
+          step3: state.step3 || {},
+          step4: state.step4 || {},
           termsAccepted,
           privacyAccepted,
           finalizedAt: new Date().toISOString()
