@@ -431,7 +431,7 @@ export default function Step4ApplicantInfoComplete() {
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-12" />
+                        <Input {...field} className="h-12" autoCapitalize="words" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -444,7 +444,7 @@ export default function Step4ApplicantInfoComplete() {
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-12" />
+                        <Input {...field} className="h-12" autoCapitalize="words" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -461,7 +461,7 @@ export default function Step4ApplicantInfoComplete() {
                     <FormItem>
                       <FormLabel>Email Address</FormLabel>
                       <FormControl>
-                        <Input {...field} type="email" className="h-12" />
+                        <Input {...field} type="email" className="h-12" autoCapitalize="none" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -512,7 +512,7 @@ export default function Step4ApplicantInfoComplete() {
                     <FormItem>
                       <FormLabel>Street Address</FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-12" />
+                        <Input {...field} className="h-12" autoCapitalize="words" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -526,7 +526,7 @@ export default function Step4ApplicantInfoComplete() {
                       <FormItem>
                         <FormLabel>City</FormLabel>
                         <FormControl>
-                          <Input {...field} className="h-12" />
+                          <Input {...field} className="h-12" autoCapitalize="words" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -683,7 +683,7 @@ export default function Step4ApplicantInfoComplete() {
                       <FormItem>
                         <FormLabel>Partner First Name</FormLabel>
                         <FormControl>
-                          <Input {...field} className="h-12" />
+                          <Input {...field} className="h-12" autoCapitalize="words" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -696,7 +696,7 @@ export default function Step4ApplicantInfoComplete() {
                       <FormItem>
                         <FormLabel>Partner Last Name</FormLabel>
                         <FormControl>
-                          <Input {...field} className="h-12" />
+                          <Input {...field} className="h-12" autoCapitalize="words" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -713,7 +713,7 @@ export default function Step4ApplicantInfoComplete() {
                       <FormItem>
                         <FormLabel>Partner Email</FormLabel>
                         <FormControl>
-                          <Input {...field} type="email" className="h-12" />
+                          <Input {...field} type="email" className="h-12" autoCapitalize="none" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

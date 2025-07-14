@@ -188,6 +188,7 @@ export default function Step3BusinessDetailsComplete() {
                             placeholder="Enter your business operating name"
                             {...field}
                             className="h-12"
+                            autoCapitalize="words"
                           />
                         </FormControl>
                         <FormMessage />
@@ -207,6 +208,7 @@ export default function Step3BusinessDetailsComplete() {
                             placeholder="Enter your legal entity name"
                             {...field}
                             className="h-12"
+                            autoCapitalize="words"
                           />
                         </FormControl>
                         <FormMessage />
@@ -253,6 +255,7 @@ export default function Step3BusinessDetailsComplete() {
                             placeholder="Enter business street address"
                             {...field}
                             className="h-12"
+                            autoCapitalize="words"
                           />
                         </FormControl>
                         <FormMessage />
@@ -272,6 +275,7 @@ export default function Step3BusinessDetailsComplete() {
                             placeholder="Enter city"
                             {...field}
                             className="h-12"
+                            autoCapitalize="words"
                           />
                         </FormControl>
                         <FormMessage />
@@ -385,6 +389,7 @@ export default function Step3BusinessDetailsComplete() {
                             placeholder="https://www.example.com"
                             {...field}
                             className="h-12"
+                            autoCapitalize="none"
                           />
                         </FormControl>
                         <FormMessage />
