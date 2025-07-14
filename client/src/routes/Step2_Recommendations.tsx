@@ -29,7 +29,9 @@ export default function Step2Recommendations() {
     averageMonthlyRevenue: state.step1?.averageMonthlyRevenue,
   };
 
-  // Debug the exact data being passed to filtering
+  // ✅ STEP 1: REVIEW STATE STRUCTURE (ChatGPT Instructions)
+  console.log("Step 1 Data:", state.step1);
+  console.log("Step 3 Data:", state.step3);
   console.log('[STEP2] Form data passed to filtering:', formData);
   console.log('[STEP2] Raw Step 1 data:', {
     businessLocation: state.step1?.businessLocation,
@@ -44,7 +46,7 @@ export default function Step2Recommendations() {
 
   const handleProductSelect = (product: string) => {
     setSelectedProduct(product);
-    // STEP-BASED COMPLIANCE: Store selection in step2 object
+    // ✅ STEP 4: STORE SELECTED CATEGORY PROPERLY (ChatGPT Instructions)
     dispatch({
       type: 'UPDATE_FORM_DATA',
       payload: {
@@ -54,6 +56,9 @@ export default function Step2Recommendations() {
         }
       }
     });
+    // ✅ STEP 5: DEBUG DISPLAY (ChatGPT Instructions)
+    console.log("Selected Category:", product);
+    console.log("Updated state.step2?.selectedCategory:", product);
   };
 
   // Auto-save selected product with 2-second delay
@@ -71,6 +76,8 @@ export default function Step2Recommendations() {
         }
       });
       console.log('💾 Step 2 - Auto-saved product selection to step2 object:', product);
+      console.log("Final state.step2?.selectedCategory:", product);
+      console.log("Context state after auto-save:", state.step2);
     }
   }, 2000);
 

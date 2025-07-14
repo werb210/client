@@ -44,7 +44,7 @@ export function Step2RecommendationEngine({
   
   const headquarters = normalizeLocation(formData.headquarters || formData.businessLocation);
   
-  // Get all lender products for debug overlay
+  // ✅ STEP 3: FIX MAPPING TO PRODUCT CATEGORIES (ChatGPT Instructions)
   const { data: allLenderProducts, isLoading: rawLoading, error: rawError } = usePublicLenders();
   const { data: productCategories, isLoading, error } = useProductCategories({
     headquarters: headquarters,
@@ -53,6 +53,22 @@ export function Step2RecommendationEngine({
     accountsReceivableBalance: formData.accountsReceivableBalance || 0,
     fundsPurpose: formData.fundsPurpose
   });
+  
+  // ✅ DEBUG: Log fetched lender products and categories
+  console.log("Fetched lender products count:", allLenderProducts?.length || 0);
+  console.log("Product categories generated:", productCategories?.length || 0);
+  if (productCategories?.length > 0) {
+    console.log("Available categories:", productCategories.map(c => c.category));
+    console.log("First category details:", productCategories[0]);
+  }
+  
+  // ✅ CHATGPT VERIFICATION: Log API responses
+  if (rawError) {
+    console.error("Raw lender products API error:", rawError);
+  }
+  if (error) {
+    console.error("Product categories hook error:", error);
+  }
 
   // Production mode: Console logging disabled
   
