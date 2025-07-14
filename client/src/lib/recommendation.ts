@@ -89,13 +89,22 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     // Try different field names for geography/country
     const geography = product.geography ?? product.countries ?? product.markets ?? product.country;
     
-    if (Array.isArray(geography)) return geography;
+    if (Array.isArray(geography)) {
+      return geography.map(g => {
+        // Handle stringified arrays like "{CA}" or similar formats
+        if (typeof g === 'string') {
+          return g.replace(/[{}[\]"]/g, '').trim().toUpperCase();
+        }
+        return String(g).toUpperCase();
+      }).filter(g => g.length > 0);
+    }
     if (typeof geography === 'string') {
-      // Handle multi-country strings like "US/CA"
-      if (geography.includes('/')) {
-        return geography.split('/').map(c => c.trim());
+      // Handle multi-country strings like "US/CA" and clean curly braces
+      const cleaned = geography.replace(/[{}[\]"]/g, '').trim();
+      if (cleaned.includes('/')) {
+        return cleaned.split('/').map(c => c.trim().toUpperCase());
       }
-      return [geography];
+      return [cleaned.toUpperCase()];
     }
     return [];
   };
@@ -120,8 +129,8 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
                           geography.includes(normalizedHQ) || 
                           geography.includes('US/CA') || 
                           geography.includes('CA/US') ||
-                          (normalizedHQ === 'US' && geography.includes('United States')) ||
-                          (normalizedHQ === 'CA' && geography.includes('Canada')) ||
+                          (normalizedHQ === 'US' && geography.includes('UNITED STATES')) ||
+                          (normalizedHQ === 'CA' && geography.includes('CANADA')) ||
                           // CRITICAL: Check the direct country field that most products use
                           product.country === normalizedHQ ||
                           (normalizedHQ === 'CA' && product.country?.includes('CA')) ||
@@ -196,8 +205,8 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
                           geography.includes(normalizedHQ) || 
                           geography.includes('US/CA') || 
                           geography.includes('CA/US') ||
-                          (normalizedHQ === 'US' && geography.includes('United States')) ||
-                          (normalizedHQ === 'CA' && geography.includes('Canada')) ||
+                          (normalizedHQ === 'US' && geography.includes('UNITED STATES')) ||
+                          (normalizedHQ === 'CA' && geography.includes('CANADA')) ||
                           // CRITICAL: Check the direct country field that most products use
                           product.country === normalizedHQ ||
                           (normalizedHQ === 'CA' && product.country?.includes('CA')) ||
