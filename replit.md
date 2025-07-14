@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 14, 2025: SIGNNOW TEMPLATE FIELD POPULATION FIX COMPLETE**
+  * CRITICAL SUCCESS: Fixed SignNow template fields not being populated by implementing correct endpoint and smart fields transmission
+  * ROOT CAUSE RESOLVED: Step 6 was calling wrong endpoint `/api/public/applications/{id}/signing-status` (POST) instead of `/api/signnow/create`
+  * SMART FIELDS IMPLEMENTATION: Created comprehensive 28-field mapping in Step 6 (contact_first_name, business_dba_name, requested_amount, etc.)
+  * CORRECT API FLOW: POST /api/signnow/create with applicationId, templateId, and smartFields payload for template population
+  * FIELD MAPPING STRUCTURE: Smart fields use snake_case format matching SignNow template field names exactly
+  * COMPREHENSIVE LOGGING: Added verification logging showing field population rates and smart field transmission
+  * TEMPLATE INTEGRATION: Uses template ID e7ba8b894c644999a7b38037ea66f4cc9cc524f5 with proper field mapping
+  * FALLBACK DETECTION: Distinguishes between real SignNow URLs with populated fields vs fallback temporary URLs
+  * ENDPOINT SEPARATION: POST /api/signnow/create for document creation with fields, GET /api/public/applications/:id/signature-status for polling
+  * PRODUCTION READY: Smart fields now transmitted to staff backend for proper template pre-population
+
 - **July 13, 2025: COMPLETE APPLICATION WORKFLOW IMPLEMENTATION - PRODUCTION READY**
   * CRITICAL SUCCESS: User confirmed multiple successful submissions via Step 7 - staff backend integration FULLY OPERATIONAL
   * SUBMISSION VERIFICATION: User has completed Step 4 and reached Step 7 "many" times, confirming all API endpoints working

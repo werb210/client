@@ -173,19 +173,23 @@ export default function Step6SignNowIntegration() {
       });
       
       console.log('🔄 Fetching signing URL for application:', applicationId);
-      console.log('🎯 SignNow URL confirmation:', `/api/public/applications/${applicationId}/signing-status`);
+      console.log('🎯 SignNow document creation endpoint:', '/api/signnow/create');
+      console.log('📋 Smart fields being sent to staff backend:', Object.keys(smartFields).length, 'fields');
       
       // ✅ Task 3: Log SignNow redirect URL configuration
       const redirectUrl = import.meta.env.VITE_SIGNNOW_REDIRECT_URL || 'https://clientportal.boreal.financial/#/step7-finalization';
       console.log("🧭 Configuring redirect URL for SignNow:", redirectUrl);
       
       // ✅ SEND SMART FIELDS TO STAFF BACKEND FOR TEMPLATE POPULATION
-      fetch(`/api/public/applications/${applicationId}/signing-status`, {
+      // Use the correct endpoint: POST /api/signnow/create
+      fetch('/api/signnow/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          applicationId,
+          templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5',
           smartFields,
           redirectUrl: 'https://clientportal.boreal.financial/#/step7-finalization'
         })
@@ -206,9 +210,11 @@ export default function Step6SignNowIntegration() {
         .then(data => {
           if (!data) return; // Skip if fetch failed
           
-          console.log('📄 Signing status response:', data);
+          console.log('📄 SignNow document creation response:', data);
+          console.log('📋 Smart fields submitted successfully to staff backend');
+          
           if (data.data?.signingUrl) {
-            console.log('🔗 Setting signing URL:', data.data.signingUrl);
+            console.log('🔗 Setting signing URL from POST /api/signnow/create:', data.data.signingUrl);
             setSignUrl(data.data.signingUrl);
             setSigningStatus('ready');
             setStartTime(Date.now()); // Track when signing started
@@ -216,10 +222,16 @@ export default function Step6SignNowIntegration() {
             // Check if this is a fallback URL
             if (data.data.signingUrl.includes('temp_') || data.data.fallback) {
               console.warn('⚠️ Using fallback SignNow URL - staff backend unavailable');
-              console.warn('🔗 Fallback URL will not load properly:', data.data.signingUrl);
+              console.warn('🔗 Fallback URL will not populate template fields:', data.data.signingUrl);
             } else {
-              console.log('✅ Using real SignNow URL from staff backend');
+              console.log('✅ Using real SignNow URL with populated template fields from staff backend');
             }
+          } else if (data.signingUrl) {
+            // Handle direct signingUrl response (alternative response format)
+            console.log('🔗 Setting signing URL (direct format):', data.signingUrl);
+            setSignUrl(data.signingUrl);
+            setSigningStatus('ready');
+            setStartTime(Date.now());
           } else {
             console.error('❌ No signing URL in response:', data);
             setError('No signing URL available');
