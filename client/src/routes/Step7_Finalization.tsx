@@ -39,8 +39,8 @@ export default function Step7Finalization() {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get application ID from previous steps - NO FALLBACK
-  const applicationId = state.step4?.applicationId;
+  // Get application ID from previous steps
+  const applicationId = state.applicationId || localStorage.getItem('applicationId');
 
   const handleFinalize = async () => {
     console.log('🚀 handleFinalize called!', { termsAccepted, privacyAccepted, applicationId });
@@ -69,11 +69,11 @@ export default function Step7Finalization() {
     setError(null);
 
     try {
-      console.log('🏁 Step 7: Finalizing application with POST /api/public/applications/{id}/submit...');
-      console.log('🎯 Step 7 Final URL verification:', `/api/public/applications/${applicationId}/submit`);
+      console.log('🏁 Step 7: Finalizing application with POST /api/public/applications/{id}/finalize...');
+      console.log('🎯 Step 7 Final URL verification:', `/api/public/applications/${applicationId}/finalize`);
       
       // Call the actual API endpoint
-      const response = await fetch(`/api/public/applications/${applicationId}/submit`, {
+      const response = await fetch(`/api/public/applications/${applicationId}/finalize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

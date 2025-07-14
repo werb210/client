@@ -176,10 +176,10 @@ function UnifiedDocumentUploadCard({
       onFilesUploaded([...uploadedFiles, ...uploadingFiles]);
       
       try {
-        // Step 2: Upload Required Documents (Step 5) - Using Public Endpoint
-        // API Call: POST /api/public/upload/{applicationId}
+        // Step 5: Upload Required Documents - Using Public Endpoint
+        // API Call: POST /api/public/applications/:id/documents
         // Payload: File data and document type (NO Authorization headers)
-        console.log('📤 Step 2: Uploading documents via POST /api/public/upload...');
+        console.log('📤 Step 5: Uploading documents via POST /api/public/applications/:id/documents...');
         console.log(`   - ApplicationId: ${applicationId}`);
         console.log(`   - Document Type: ${category}`);
         console.log(`   - Files: ${files.map(f => f.name).join(', ')}`);
@@ -188,7 +188,7 @@ function UnifiedDocumentUploadCard({
         files.forEach((file) => form.append('file', file));
         form.append('documentType', category);
         
-        const response = await fetch(`/api/public/upload/${applicationId}`, {
+        const response = await fetch(`/api/public/applications/${applicationId}/documents`, {
           method: 'POST',
           body: form,
           // ⚠️ No Authorization headers for public upload!

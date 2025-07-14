@@ -174,7 +174,7 @@ export default function Step6SignNowIntegration() {
       });
       
       console.log('🔄 Fetching signing URL for application:', applicationId);
-      console.log('🎯 SignNow document creation endpoint:', '/api/signnow/create');
+      console.log('🎯 SignNow document creation endpoint:', `/api/public/signnow/initiate/${applicationId}`);
       console.log('📋 Smart fields being sent to staff backend:', Object.keys(smartFields).length, 'fields');
       
       // ✅ Task 3: Log SignNow redirect URL configuration
@@ -182,14 +182,13 @@ export default function Step6SignNowIntegration() {
       console.log("🧭 Configuring redirect URL for SignNow:", redirectUrl);
       
       // ✅ SEND SMART FIELDS TO STAFF BACKEND FOR TEMPLATE POPULATION
-      // Use the correct endpoint: POST /api/signnow/create
-      fetch('/api/signnow/create', {
+      // Use the correct endpoint: POST /api/public/signnow/initiate/:applicationId
+      fetch(`/api/public/signnow/initiate/${applicationId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          applicationId,
           templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5',
           smartFields,
           redirectUrl: 'https://clientportal.boreal.financial/#/step7-finalization'
@@ -214,14 +213,14 @@ export default function Step6SignNowIntegration() {
           console.log('📄 SignNow document creation response:', data);
           console.log('📋 Smart fields submitted successfully to staff backend');
           
-          if (data.data?.signingUrl) {
-            console.log('🔗 Setting signing URL from POST /api/signnow/create:', data.data.signingUrl);
-            setSignUrl(data.data.signingUrl);
+          if (data.signingUrl) {
+            console.log('🔗 Setting signing URL from POST /api/public/signnow/initiate:', data.signingUrl);
+            setSignUrl(data.signingUrl);
             setSigningStatus('ready');
             setStartTime(Date.now()); // Track when signing started
             
             // Check if this is a fallback URL
-            if (data.data.signingUrl.includes('temp_') || data.data.fallback) {
+            if (data.signingUrl.includes('temp_') || data.fallback) {
               console.warn('⚠️ Using fallback SignNow URL - staff backend unavailable');
               console.warn('🔗 Fallback URL will not populate template fields:', data.data.signingUrl);
             } else {
