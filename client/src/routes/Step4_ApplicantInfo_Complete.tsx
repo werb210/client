@@ -241,7 +241,10 @@ export default function Step4ApplicantInfoComplete() {
 
       const applicationData = { 
         step1, 
-        step3, 
+        step3: {
+          ...step3,
+          businessName: step3.legalName || state.legalName, // ✅ Add required businessName field
+        }, 
         step4,
         signNowFields: signNowFields
       };
@@ -272,6 +275,13 @@ export default function Step4ApplicantInfoComplete() {
         step4: Object.keys(step4)
       });
       console.log('📋 Full payload being sent:', JSON.stringify(applicationData, null, 2));
+      
+      // ✅ Runtime Debug - Verify step3 has both legalName and businessName
+      console.log('🔍 Step 3 Debug - Required fields check:', {
+        legalName: applicationData.step3.legalName,
+        businessName: applicationData.step3.businessName,
+        hasBusinessName: !!applicationData.step3.businessName
+      });
       
       // ✅ Confirm the POST URL and VITE_API_BASE_URL
       const postUrl = '/api/public/applications';
