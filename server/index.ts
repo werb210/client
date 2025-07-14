@@ -426,12 +426,13 @@ app.use((req, res, next) => {
   });
 
   // SignNow signature status polling endpoint
-  app.get('/api/public/applications/:id/signature-status', async (req, res) => {
+  // Fixed SignNow polling endpoint as specified
+  app.get('/api/public/signnow/status/:applicationId', async (req, res) => {
     try {
-      const { id } = req.params;
-      console.log(`📡 [SERVER] Polling signature status for application ${id}`);
+      const { applicationId } = req.params;
+      console.log(`📡 [SERVER] Polling SignNow status for application ${applicationId}`);
       
-      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${id}/signature-status`, {
+      const response = await fetch(`${cfg.staffApiUrl}/api/public/signnow/status/${applicationId}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -439,37 +440,48 @@ app.use((req, res, next) => {
         }
       });
       
-      console.log(`📡 [SERVER] Staff backend signature polling response: ${response.status} ${response.statusText}`);
+      console.log(`📡 [SERVER] Staff backend SignNow polling response: ${response.status} ${response.statusText}`);
       
       if (!response.ok) {
         const errorData = await response.text();
-        console.warn('⚠️ [SERVER] Staff backend signature polling error:', errorData);
+        console.warn('⚠️ [SERVER] Staff backend SignNow polling error:', errorData);
         
-        // Return "pending" status when staff backend unavailable
+        // Return fallback status for dev testing
         res.json({
-          status: 'pending',
-          timestamp: new Date().toISOString()
+          status: 'invite_sent',
+          document_id: '790c256323bd4a7abbc6c9b5f91ca547c900084b',
+          signed_at: null,
+          application_id: applicationId,
+          timestamp: new Date().toISOString(),
+          fallback: true
         });
         return;
       }
       
       const data = await response.json();
-      console.log('📡 [SERVER] Staff backend signature polling success:', data);
+      console.log('📡 [SERVER] Staff backend SignNow polling success:', data);
       
-      // Normalize the response for client compatibility
-      const normalizedResponse = {
+      // Return response with guaranteed status field
+      const responseData = {
         ...data,
-        status: data.status || data.signature_status || 'pending'
+        status: data.status || 'invite_sent',
+        application_id: applicationId,
+        timestamp: new Date().toISOString()
       };
       
-      res.json(normalizedResponse);
+      res.json(responseData);
     } catch (error) {
-      console.warn('⚠️ [SERVER] Signature status polling failed:', error);
+      console.warn('⚠️ [SERVER] SignNow status polling failed:', error);
       
-      // Return "pending" status with fallback
+      // Return fallback status
       res.json({
-        status: 'pending',
-        timestamp: new Date().toISOString()
+        status: 'invite_sent',
+        document_id: '790c256323bd4a7abbc6c9b5f91ca547c900084b',
+        signed_at: null,
+        application_id: applicationId,
+        timestamp: new Date().toISOString(),
+        fallback: true,
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });

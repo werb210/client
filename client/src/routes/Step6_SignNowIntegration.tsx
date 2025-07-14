@@ -274,16 +274,16 @@ export default function Step6SignNowIntegration() {
     }
     
     try {
-      // ✅ B. Confirm polling hits correct endpoint (using public API path)
-      const pollingEndpoint = `/api/public/applications/${applicationId}/signature-status`;
-      console.log('📡 Polling signature status for:', applicationId);
-      console.log('📡 Using GET method for polling (not POST like signing-status)');
+      // ✅ Fixed polling endpoint as specified
+      const pollingEndpoint = `/api/public/signnow/status/${applicationId}`;
+      console.log('📡 Polling SignNow status for:', applicationId);
+      console.log('📡 Endpoint:', pollingEndpoint);
       
       const res = await fetch(pollingEndpoint, {
-        method: 'GET'  // Explicitly use GET for polling (different from POST for signing-status)
+        method: 'GET'
       }).catch(fetchError => {
         // Handle fetch errors silently to prevent unhandled promise rejections
-        console.warn('📡 Signature status fetch failed:', fetchError.message);
+        console.warn('📡 SignNow status fetch failed:', fetchError.message);
         return null;
       });
       
@@ -307,35 +307,23 @@ export default function Step6SignNowIntegration() {
         return; // Do NOT navigate away — just keep polling
       }
       
-      // Extract status from either 'status' or 'signature_status' field
-      const status = data.status || data.signature_status;
+      // ✅ Fixed status field parsing - only check data.status
+      const status = data?.status;
       
-      // ✅ B. Log polling results
-      console.log("📡 Polling: Received signature status", status);
-      console.log('📄 Signature status check:', { applicationId, status });
-      console.log('📄 Full response data:', data);
+      // ✅ Add logging for debugging as requested
+      console.log("📡 Polling SignNow status:", status);
+      console.log('📄 Status check for application:', applicationId);
       
-      // ✅ B. Check for multiple signed status variations + webhook delay handling
-      if (status === "invite_signed" || status === "signed" || status === "completed") {
+      // ✅ Fixed status check - only check for "invite_signed" as specified
+      if (data?.status === "invite_signed") {
         console.log('✅ Signature completed - redirecting to Step 7');
         console.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
-        console.log('🧭 This is the ONLY legitimate redirect from Step 6');
         setLocation('/apply/step-7');
         return;
       }
       
-      // ✅ WORKAROUND: If user manually confirms signing but webhook failed
-      // Check if iframe indicates completion but status hasn't updated
-      const elapsedMinutes = Math.floor((Date.now() - startTime) / (1000 * 60));
-      if (elapsedMinutes >= 3 && status === "invite_sent") {
-        console.log('⚠️ Document has been in "invite_sent" status for 3+ minutes');
-        console.log('⚠️ This may indicate webhook processing delay or failure');
-        console.log('⚠️ Consider using "Continue Without Signing" if you have signed the document');
-      }
-      
       // Check for timeout warnings
       const elapsedMinutes = Math.floor((Date.now() - startTime) / (1000 * 60));
-      
       if (elapsedMinutes >= 10 && elapsedMinutes < 15) {
         setTimeoutWarning('Document has been unsigned for 10+ minutes. Please ensure you complete the signature process.');
       } else if (elapsedMinutes >= 15) {
@@ -353,8 +341,9 @@ export default function Step6SignNowIntegration() {
 
   useEffect(() => {
     if (applicationId && signUrl && signingStatus === 'ready') {
-      console.log('🔄 Starting signature status polling every 5s for application:', applicationId);
-      console.log('🧭 Polling will NOT redirect on errors - only on successful signature completion');
+      console.log('🔄 Starting SignNow status polling every 5s for application:', applicationId);
+      console.log('🔄 Polling endpoint: /api/public/signnow/status/' + applicationId);
+      console.log('🧭 Polling will redirect ONLY when status === "invite_signed"');
       
       const interval = setInterval(checkSignatureStatus, 5000);
       return () => clearInterval(interval);
