@@ -22,7 +22,7 @@ type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'completed' |
  * Step 6: SignNow Integration - API v2 Implementation
  * - Uses /api/public/applications/{id}/signing-status for initial fetch
  * - Embedded iframe with proper sandbox attributes
- * - Polls GET /api/applications/{id}/signature-status every 5s for 'invite_signed' status
+ * - Polls GET /api/applications/{id}/signature-status every 5s for 'user.document.fieldinvite.signed' status
  * - Auto-redirects to Step 7 when signature detected
  * - Manual override fallback via PATCH /api/public/applications/{id}/override-signing
  * - No webhook handling (webhooks only go to backend, not browser clients)
@@ -315,9 +315,8 @@ export default function Step6SignNowIntegration() {
       console.log('📄 Full response data:', data);
       console.log('📄 Status check for application:', applicationId);
       
-      // ✅ CRITICAL FIX: Check both possible status fields and values
-      if (data?.signing_status === "invite_signed" || data?.status === "invite_signed" || 
-          data?.signing_status === "signed" || data?.status === "signed") {
+      // ✅ CRITICAL FIX: Check for actual SignNow signed status
+      if (data?.status === "user.document.fieldinvite.signed") {
         console.log('🎉 Document signed! Redirecting to Step 7...');
         console.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
         
@@ -356,7 +355,7 @@ export default function Step6SignNowIntegration() {
     if (applicationId && signUrl && signingStatus === 'ready') {
       console.log('🔄 Starting SignNow status polling every 5s for application:', applicationId);
       console.log('🔄 Polling endpoint: /api/public/signnow/status/' + applicationId);
-      console.log('🧭 Polling will redirect ONLY when status === "invite_signed"');
+      console.log('🧭 Polling will redirect ONLY when status === "user.document.fieldinvite.signed"');
       
       const interval = setInterval(checkSignatureStatus, 5000);
       return () => clearInterval(interval);

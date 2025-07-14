@@ -95,8 +95,8 @@ The application follows a client-staff separation architecture:
 
 - **July 14, 2025: ✅ SIGNNOW FIELD POPULATION & STATUS POLLING FIXES COMPLETE**
   * **CRITICAL FIX**: Fixed SignNow field population by correcting smart fields mapping to use actual form field names
-  * **STATUS POLLING FIX**: Fixed status polling to check both `status` and `signing_status` fields from server response
-  * **REDIRECT LOGIC**: Fixed auto-redirect to Step 7 to check for both `invite_signed` and `signed` status values
+  * **STATUS POLLING FIX**: Fixed status polling to check for `user.document.fieldinvite.signed` instead of `invite_sent`
+  * **REDIRECT LOGIC**: Fixed auto-redirect to Step 7 to wait for actual signed status, not just invite sent
   * **FIELD MAPPING CORRECTED**: Updated smart fields to use `applicantFirstName`, `applicantLastName`, `businessStreetAddress`, etc.
   * **COMPREHENSIVE LOGGING**: Added detailed logging of full response data and field population verification
   * **TOAST NOTIFICATIONS**: Added success notification before redirect with 1.5-second delay
