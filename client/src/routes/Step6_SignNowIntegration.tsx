@@ -22,7 +22,7 @@ type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'completed' |
  * Step 6: SignNow Integration - API v2 Implementation
  * - Uses /api/public/applications/{id}/signing-status for initial fetch
  * - Embedded iframe with proper sandbox attributes
- * - Polls GET /api/applications/{id}/signature-status every 5s for 'user.document.fieldinvite.signed' status
+ * - Polls GET /api/applications/{id}/signature-status every 5s for multiple signed status formats
  * - Auto-redirects to Step 7 when signature detected
  * - Manual override fallback via PATCH /api/public/applications/{id}/override-signing
  * - No webhook handling (webhooks only go to backend, not browser clients)
@@ -315,10 +315,23 @@ export default function Step6SignNowIntegration() {
       console.log('📄 Full response data:', data);
       console.log('📄 Status check for application:', applicationId);
       
-      // ✅ CRITICAL FIX: Check for actual SignNow signed status
-      if (data?.status === "user.document.fieldinvite.signed") {
+      // ✅ CRITICAL FIX: Check for actual SignNow signed status - multiple possible formats
+      const isDocumentSigned = (
+        data?.status === "user.document.fieldinvite.signed" ||
+        data?.signing_status === "invite_signed" ||
+        data?.user?.document?.fieldinvite === "signed" ||
+        signingStatus === "invite_signed"
+      );
+      
+      if (isDocumentSigned) {
         console.log('🎉 Document signed! Redirecting to Step 7...');
         console.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
+        console.log('📋 Signing confirmation details:', {
+          status: data?.status,
+          signing_status: data?.signing_status,
+          nested_path: data?.user?.document?.fieldinvite,
+          extracted_status: signingStatus
+        });
         
         // Add success toast notification
         toast({
@@ -355,7 +368,10 @@ export default function Step6SignNowIntegration() {
     if (applicationId && signUrl && signingStatus === 'ready') {
       console.log('🔄 Starting SignNow status polling every 5s for application:', applicationId);
       console.log('🔄 Polling endpoint: /api/public/signnow/status/' + applicationId);
-      console.log('🧭 Polling will redirect ONLY when status === "user.document.fieldinvite.signed"');
+      console.log('🧭 Polling will redirect when ANY of these conditions are met:');
+      console.log('   - status === "user.document.fieldinvite.signed"');
+      console.log('   - signing_status === "invite_signed"');
+      console.log('   - user.document.fieldinvite === "signed"');
       
       const interval = setInterval(checkSignatureStatus, 5000);
       return () => clearInterval(interval);

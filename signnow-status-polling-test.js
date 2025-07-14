@@ -15,8 +15,23 @@ function testSignNowStatusPolling() {
       expected: false
     },
     {
-      name: 'Document signed (should redirect)',
+      name: 'Document signed - main path (should redirect)',
       response: { status: 'user.document.fieldinvite.signed' },
+      expected: true
+    },
+    {
+      name: 'Document signed - signing_status field (should redirect)',
+      response: { signing_status: 'invite_signed' },
+      expected: true
+    },
+    {
+      name: 'Document signed - nested path (should redirect)',
+      response: { user: { document: { fieldinvite: 'signed' } } },
+      expected: true
+    },
+    {
+      name: 'Document signed - both fields (should redirect)',
+      response: { status: 'user.document.fieldinvite.signed', signing_status: 'invite_signed' },
       expected: true
     },
     {
@@ -36,22 +51,31 @@ function testSignNowStatusPolling() {
     }
   ];
 
-  console.log('\n📋 Testing Status Polling Logic:');
-  console.log('Expected status for redirect: "user.document.fieldinvite.signed"');
+  console.log('\n📋 Testing Enhanced Status Polling Logic:');
+  console.log('Expected statuses for redirect:');
+  console.log('  - status === "user.document.fieldinvite.signed"');
+  console.log('  - signing_status === "invite_signed"');
+  console.log('  - user.document.fieldinvite === "signed"');
   console.log('────────────────────────────────────────────────────────────────────────────');
 
   let passed = 0;
   let failed = 0;
 
   testCases.forEach(({ name, response, expected }) => {
-    // Test the actual polling logic from Step6_SignNowIntegration.tsx
-    const shouldRedirect = response?.status === "user.document.fieldinvite.signed";
+    // Test the enhanced polling logic from Step6_SignNowIntegration.tsx
+    const signingStatus = response?.signing_status || response?.status;
+    const isDocumentSigned = (
+      response?.status === "user.document.fieldinvite.signed" ||
+      response?.signing_status === "invite_signed" ||
+      response?.user?.document?.fieldinvite === "signed" ||
+      signingStatus === "invite_signed"
+    );
     
-    if (shouldRedirect === expected) {
-      console.log(`✅ ${name}: ${shouldRedirect ? 'REDIRECTS' : 'STAYS'} (correct)`);
+    if (isDocumentSigned === expected) {
+      console.log(`✅ ${name}: ${isDocumentSigned ? 'REDIRECTS' : 'STAYS'} (correct)`);
       passed++;
     } else {
-      console.log(`❌ ${name}: Expected ${expected}, got ${shouldRedirect}`);
+      console.log(`❌ ${name}: Expected ${expected}, got ${isDocumentSigned}`);
       failed++;
     }
   });
@@ -80,8 +104,21 @@ function testSignNowStatusPolling() {
         console.log('📄 Current server response:', data);
         console.log('📄 Status value:', data?.status);
         
-        if (data?.status === "user.document.fieldinvite.signed") {
+        const signingStatus = data?.signing_status || data?.status;
+        const isDocumentSigned = (
+          data?.status === "user.document.fieldinvite.signed" ||
+          data?.signing_status === "invite_signed" ||
+          data?.user?.document?.fieldinvite === "signed" ||
+          signingStatus === "invite_signed"
+        );
+        
+        if (isDocumentSigned) {
           console.log('🎉 Document is signed! Should redirect to Step 7');
+          console.log('📋 Matched signing condition:', {
+            status: data?.status,
+            signing_status: data?.signing_status,
+            nested_path: data?.user?.document?.fieldinvite
+          });
         } else if (data?.status === "invite_sent") {
           console.log('📤 Invite sent but not signed yet');
         } else {
