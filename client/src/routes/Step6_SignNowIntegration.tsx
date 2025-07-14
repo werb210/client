@@ -127,34 +127,34 @@ export default function Step6SignNowIntegration() {
       
       // ✅ CREATE SIGNNOW SMART FIELDS MAPPING
       // This is the critical missing piece - smart fields must be sent to staff backend
-      // ✅ CRITICAL FIX: Only use step-based structure - no flat field fallbacks
+      // ✅ CRITICAL FIX: Use correct field names from the actual form schema
       const smartFields = {
-        // Personal Information (from step4 only)
-        contact_first_name: state.step4?.firstName || '',
-        contact_last_name: state.step4?.lastName || '',
-        contact_email: state.step4?.personalEmail || '',
-        contact_phone: state.step4?.personalPhone || '',
-        contact_date_of_birth: state.step4?.dateOfBirth || '',
-        contact_ssn: state.step4?.socialSecurityNumber || '',
+        // Personal Information (from step4 - use actual field names)
+        contact_first_name: state.step4?.applicantFirstName || '',
+        contact_last_name: state.step4?.applicantLastName || '',
+        contact_email: state.step4?.applicantEmail || '',
+        contact_phone: state.step4?.applicantPhone || '',
+        contact_date_of_birth: state.step4?.applicantDateOfBirth || '',
+        contact_ssn: state.step4?.applicantSSN || '',
         contact_address: state.step4?.applicantAddress || '',
         contact_city: state.step4?.applicantCity || '',
         contact_state: state.step4?.applicantState || '',
-        contact_zip: state.step4?.applicantPostalCode || '',
+        contact_zip: state.step4?.applicantZipCode || '',
         
-        // Business Information (from step3 only)
+        // Business Information (from step3 - use actual field names)
         legal_business_name: state.step3?.legalName || '',
         business_dba_name: state.step3?.operatingName || '',
-        business_address: state.step3?.businessAddress || '',
+        business_address: state.step3?.businessStreetAddress || '',
         business_city: state.step3?.businessCity || '',
         business_state: state.step3?.businessState || '',
-        business_zip: state.step3?.businessZip || '',
+        business_zip: state.step3?.businessZipCode || '',
         business_phone: state.step3?.businessPhone || '',
         business_website: state.step3?.businessWebsite || '',
         business_structure: state.step3?.businessStructure || '',
         business_start_date: state.step3?.businessStartDate || '',
         
         // Financial Information (from step1 only)
-        requested_amount: state.step1?.fundingAmount || '',
+        requested_amount: state.step1?.requestedAmount || '',
         purpose_of_funds: state.step1?.purposeOfFunds || '',
         annual_revenue: state.step1?.lastYearRevenue || '',
         monthly_revenue: state.step1?.averageMonthlyRevenue || '',
@@ -307,18 +307,31 @@ export default function Step6SignNowIntegration() {
         return; // Do NOT navigate away — just keep polling
       }
       
-      // ✅ Fixed status field parsing - check signing_status field as specified
-      const signingStatus = data?.signing_status;
+      // ✅ Fixed status field parsing - check the actual field the server returns
+      const signingStatus = data?.signing_status || data?.status;
       
       // ✅ Add logging for debugging as requested
       console.log("📡 Polling SignNow status:", signingStatus);
+      console.log('📄 Full response data:', data);
       console.log('📄 Status check for application:', applicationId);
       
-      // ✅ Fixed status check - check signing_status === "invite_signed" as specified
-      if (data?.signing_status === "invite_signed") {
-        console.log('✅ Signature completed - redirecting to Step 7');
+      // ✅ CRITICAL FIX: Check both possible status fields and values
+      if (data?.signing_status === "invite_signed" || data?.status === "invite_signed" || 
+          data?.signing_status === "signed" || data?.status === "signed") {
+        console.log('🎉 Document signed! Redirecting to Step 7...');
         console.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
-        setLocation('/apply/step-7');
+        
+        // Add success toast notification
+        toast({
+          title: "Document Signed Successfully!",
+          description: "Proceeding to final application submission.",
+          variant: "default"
+        });
+        
+        // Redirect after brief delay
+        setTimeout(() => {
+          setLocation('/apply/step-7');
+        }, 1500);
         return;
       }
       

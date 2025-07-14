@@ -93,6 +93,16 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 14, 2025: ✅ SIGNNOW FIELD POPULATION & STATUS POLLING FIXES COMPLETE**
+  * **CRITICAL FIX**: Fixed SignNow field population by correcting smart fields mapping to use actual form field names
+  * **STATUS POLLING FIX**: Fixed status polling to check both `status` and `signing_status` fields from server response
+  * **REDIRECT LOGIC**: Fixed auto-redirect to Step 7 to check for both `invite_signed` and `signed` status values
+  * **FIELD MAPPING CORRECTED**: Updated smart fields to use `applicantFirstName`, `applicantLastName`, `businessStreetAddress`, etc.
+  * **COMPREHENSIVE LOGGING**: Added detailed logging of full response data and field population verification
+  * **TOAST NOTIFICATIONS**: Added success notification before redirect with 1.5-second delay
+  * **ENHANCED TESTING**: Created comprehensive test suite validating field mapping and status polling logic
+  * **PRODUCTION READY**: SignNow integration now properly populates template fields and detects signed status
+
 - **July 14, 2025: ✅ AUTOCAPITALIZATION IMPLEMENTATION COMPLETE**
   * **UI ENHANCEMENT**: Implemented autocapitalization for all text input fields in Steps 3 and 4
   * **STEP 3 FIELDS**: Added `autoCapitalize="words"` to operatingName, legalName, businessStreetAddress, businessCity
