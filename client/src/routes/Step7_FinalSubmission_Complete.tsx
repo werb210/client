@@ -61,26 +61,26 @@ export default function Step7FinalSubmissionComplete() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
-  // Compile application summary from unified schema
+  // ✅ CRITICAL FIX: Use step-based structure for summary display
   const applicationSummary: ApplicationSummary = {
     businessInfo: {
-      location: state.businessLocation || '',
-      industry: state.industry || '',
-      fundingAmount: state.fundingAmount ? `$${state.fundingAmount.toLocaleString()}` : '',
-      fundsPurpose: state.fundsPurpose || '',
+      location: state.step1?.businessLocation || state.step1?.headquarters || '',
+      industry: state.step1?.industry || '',
+      fundingAmount: state.step1?.fundingAmount ? `$${state.step1.fundingAmount.toLocaleString()}` : '',
+      fundsPurpose: state.step1?.purposeOfFunds || '',
       selectedCategory: state.selectedProductId || '',
     },
     businessDetails: {
-      businessName: state.businessName || '',
-      businessStructure: state.businessStructure || '',
-      businessPhone: state.businessPhone || '',
-      businessEmail: state.businessEmail || '',
+      businessName: state.step3?.operatingName || '',
+      businessStructure: state.step3?.businessStructure || '',
+      businessPhone: state.step3?.businessPhone || '',
+      businessEmail: state.step3?.businessEmail || '',
     },
     applicantInfo: {
-      firstName: state.firstName || '',
-      lastName: state.lastName || '',
-      email: state.email || '',
-      phone: state.phone || '',
+      firstName: state.step4?.firstName || '',
+      lastName: state.step4?.lastName || '',
+      email: state.step4?.personalEmail || '',
+      phone: state.step4?.personalPhone || '',
     },
     documents: {
       totalUploaded: state.uploadedDocuments?.length || 0,
@@ -101,67 +101,31 @@ export default function Step7FinalSubmissionComplete() {
       // Create form data with all application information
       const formData = new FormData();
       
-      // ✅ ENFORCE STEP-BASED STRUCTURE: {step1, step3, step4}
-      const step1 = {
-        // Financial profile data from Steps 1 & 2
-        fundingAmount: state.fundingAmount,
-        lookingFor: state.lookingFor,
-        equipmentValue: state.equipmentValue,
-        businessLocation: state.businessLocation,
-        salesHistory: state.salesHistory,
-        lastYearRevenue: state.lastYearRevenue,
-        averageMonthlyRevenue: state.averageMonthlyRevenue,
-        accountsReceivableBalance: state.accountsReceivableBalance,
-        fixedAssetsValue: state.fixedAssetsValue,
-        purposeOfFunds: state.purposeOfFunds,
-        selectedCategory: state.selectedCategory,
-        industry: state.industry
-      };
+      // ✅ CRITICAL FIX: Use existing step-based structure directly from state
+      if (!state.step1 || !state.step3 || !state.step4) {
+        throw new Error('Missing step-based structure in state. Cannot submit application.');
+      }
 
-      const step3 = {
-        // Business details from Step 3
-        operatingName: state.operatingName,
-        legalName: state.legalName,
-        businessAddress: state.businessAddress,
-        businessCity: state.businessCity,
-        businessState: state.businessState,
-        businessZip: state.businessZip,
-        businessPhone: state.businessPhone,
-        businessStructure: state.businessStructure,
-        businessStartDate: state.businessStartDate,
-        numberOfEmployees: state.numberOfEmployees,
-        annualRevenue: state.annualRevenue,
-        businessWebsite: state.businessWebsite
-      };
-
-      const step4 = {
-        // Applicant information from Step 4
-        firstName: state.firstName,
-        lastName: state.lastName,
-        personalEmail: state.personalEmail,
-        personalPhone: state.personalPhone,
-        dateOfBirth: state.dateOfBirth,
-        socialSecurityNumber: state.socialSecurityNumber,
-        applicantAddress: state.applicantAddress,
-        applicantCity: state.applicantCity,
-        applicantState: state.applicantState,
-        applicantPostalCode: state.applicantPostalCode,
-        ownershipPercentage: state.ownershipPercentage,
-        creditScore: state.creditScore,
-        yearsWithBusiness: state.yearsWithBusiness
-      };
+      console.log('📤 Final submission using step-based structure:', {
+        step1: state.step1,
+        step3: state.step3,
+        step4: state.step4
+      });
 
       const applicationData = {
-        step1,
-        step3,
-        step4,
+        step1: state.step1,
+        step3: state.step3,
+        step4: state.step4,
         // Terms acceptance
         termsAccepted,
         privacyAccepted,
         submittedAt: new Date().toISOString(),
       };
       
-      console.log("📤 Step 7: Using step-based structure:", { step1, step3, step4 });
+      console.log("📤 Step 7: Final payload structure verification:");
+      console.log("  step1 fields:", Object.keys(state.step1 || {}));
+      console.log("  step3 fields:", Object.keys(state.step3 || {})); 
+      console.log("  step4 fields:", Object.keys(state.step4 || {}));
       
       formData.append('applicationData', JSON.stringify(applicationData));
       

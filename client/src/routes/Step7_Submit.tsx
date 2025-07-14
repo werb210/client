@@ -73,60 +73,21 @@ export default function Step7Submit() {
       // Create FormData for multipart upload with actual files
       const formData = new FormData();
       
-      // ✅ ENFORCE STEP-BASED STRUCTURE: {step1, step3, step4}
-      const step1 = {
-        // Financial profile data from Steps 1 & 2
-        fundingAmount: state.fundingAmount,
-        lookingFor: state.lookingFor,
-        equipmentValue: state.equipmentValue,
-        businessLocation: state.businessLocation,
-        salesHistory: state.salesHistory,
-        revenueLastYear: state.revenueLastYear,
-        averageMonthlyRevenue: state.averageMonthlyRevenue,
-        accountsReceivableBalance: state.accountsReceivableBalance,
-        fixedAssetsValue: state.fixedAssetsValue,
-        fundsPurpose: state.fundsPurpose,
-        selectedCategory: state.selectedCategory,
-        industry: state.industry
-      };
+      // ✅ CRITICAL FIX: Use existing step-based structure from state
+      if (!state.step1 || !state.step3 || !state.step4) {
+        throw new Error('Missing step-based structure in state. Cannot submit application.');
+      }
 
-      const step3 = {
-        // Business details from Step 3
-        operatingName: state.businessName,
-        legalName: state.businessName,
-        businessAddress: state.businessAddress,
-        businessCity: state.businessCity,
-        businessState: state.businessState,
-        businessZip: state.businessZipCode,
-        businessPhone: state.businessPhone,
-        businessStructure: state.businessStructure,
-        businessStartDate: state.businessStartDate,
-        numberOfEmployees: state.employeeCount,
-        annualRevenue: state.estimatedYearlyRevenue,
-        businessWebsite: state.businessWebsite
-      };
-
-      const step4 = {
-        // Applicant information from Step 4
-        firstName: state.firstName,
-        lastName: state.lastName,
-        personalEmail: state.personalEmail,
-        personalPhone: state.personalPhone,
-        dateOfBirth: state.dateOfBirth,
-        socialSecurityNumber: state.socialSecurityNumber,
-        applicantAddress: state.applicantAddress,
-        applicantCity: state.applicantCity,
-        applicantState: state.applicantState,
-        applicantPostalCode: state.applicantPostalCode,
-        ownershipPercentage: state.ownershipPercentage,
-        creditScore: state.creditScore,
-        yearsWithBusiness: state.yearsWithBusiness
-      };
+      console.log('📤 Step7_Submit: Using step-based structure from state:', {
+        step1: state.step1,
+        step3: state.step3,
+        step4: state.step4
+      });
 
       const applicationData = {
-        step1,
-        step3,
-        step4,
+        step1: state.step1,
+        step3: state.step3,
+        step4: state.step4,
         // Step 6: Signature Status
         signatureComplete: !!state.step6Signature?.signedAt,
         signatureTimestamp: state.step6Signature?.signedAt || '',
@@ -256,7 +217,7 @@ export default function Step7Submit() {
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Business Information</h4>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p><strong>Business:</strong> {state.businessName || 'Not provided'}</p>
+                  <p><strong>Business:</strong> {state.step3?.operatingName || 'Not provided'}</p>
                   <p><strong>Industry:</strong> {state.industry || 'Not provided'}</p>
                   <p><strong>Location:</strong> {state.businessLocation || 'Not provided'}</p>
                   <p><strong>Structure:</strong> {state.businessStructure || 'Not provided'}</p>
