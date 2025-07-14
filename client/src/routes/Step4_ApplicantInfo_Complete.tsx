@@ -245,7 +245,10 @@ export default function Step4ApplicantInfoComplete() {
           ...step3,
           businessName: step3.legalName || state.legalName, // ✅ Add required businessName field
         }, 
-        step4,
+        step4: {
+          ...step4,
+          email: step4.applicantEmail || processedData.applicantEmail || state.applicantEmail // ✅ Add required email field
+        },
         signNowFields: signNowFields
       };
       
@@ -281,6 +284,13 @@ export default function Step4ApplicantInfoComplete() {
         legalName: applicationData.step3.legalName,
         businessName: applicationData.step3.businessName,
         hasBusinessName: !!applicationData.step3.businessName
+      });
+      
+      // ✅ Runtime Debug - Verify step4 has email field
+      console.log('🔍 Step 4 Debug - Required fields check:', {
+        applicantEmail: applicationData.step4.applicantEmail,
+        email: applicationData.step4.email,
+        hasEmail: !!applicationData.step4.email
       });
       
       // ✅ Confirm the POST URL and VITE_API_BASE_URL
