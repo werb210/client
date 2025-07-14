@@ -75,7 +75,7 @@ export default function Step7Submit() {
 
     try {
       // ✅ Check application status before submission
-      const applicationId = state.applicationId;
+      const applicationId = state.step4?.applicationId || state.applicationId;
       if (!applicationId) {
         throw new Error('No application ID found. Cannot check status.');
       }
@@ -121,7 +121,7 @@ export default function Step7Submit() {
         submissionTimestamp: new Date().toISOString(),
         termsAccepted: true,
         privacyAccepted: true,
-        applicationId: state.applicationId || '',
+        applicationId: state.step4?.applicationId || state.applicationId || '',
         
         // Document metadata
         documentCount: uploadedFiles.length,
@@ -141,7 +141,7 @@ export default function Step7Submit() {
       });
       
       // Submit to staff API with multipart/form-data
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${state.applicationId}/submit`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${state.step4?.applicationId || state.applicationId}/submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`

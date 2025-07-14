@@ -12,17 +12,17 @@ export default function Step2Recommendations() {
 
   // Get user's Step 1 data for matching from unified schema
   const formData = {
-    headquarters: state.businessLocation === 'united-states' ? 'US' : 
-                  state.businessLocation === 'canada' ? 'CA' : 
-                  state.businessLocation,
-    industry: state.industry,
-    lookingFor: state.lookingFor,
-    fundingAmount: state.fundingAmount,
-    fundsPurpose: state.fundsPurpose,
-    accountsReceivableBalance: state.accountsReceivableBalance || 0,
+    headquarters: (state.step1?.businessLocation || state.businessLocation) === 'united-states' ? 'US' : 
+                  (state.step1?.businessLocation || state.businessLocation) === 'canada' ? 'CA' : 
+                  (state.step1?.businessLocation || state.businessLocation),
+    industry: state.step1?.industry || state.industry,
+    lookingFor: state.step1?.lookingFor || state.lookingFor,
+    fundingAmount: state.step1?.fundingAmount || state.fundingAmount,
+    fundsPurpose: state.step1?.fundsPurpose || state.fundsPurpose,
+    accountsReceivableBalance: state.step1?.accountsReceivableBalance || state.accountsReceivableBalance || 0,
     // Additional fields for context
-    salesHistory: state.salesHistory,
-    averageMonthlyRevenue: state.averageMonthlyRevenue,
+    salesHistory: state.step1?.salesHistory || state.salesHistory,
+    averageMonthlyRevenue: state.step1?.averageMonthlyRevenue || state.averageMonthlyRevenue,
   };
 
   // Debug logging disabled for production

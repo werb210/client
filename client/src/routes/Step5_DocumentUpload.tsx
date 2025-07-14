@@ -67,7 +67,7 @@ export default function Step5DocumentUpload() {
       // Try multiple field mappings since the schema has evolved
       const productCategory = selectedCategory || lookingFor || '';
       const location = businessLocation || headquarters || '';
-      const amount = fundingAmount || state.fundingAmount || '';
+      const amount = fundingAmount || state.step1?.fundingAmount || state.fundingAmount || '';
       
       console.log(`🔧 [STEP5] selectedCategory from state: "${selectedCategory}"`);
       console.log(`🔧 [STEP5] businessLocation from state: "${businessLocation}"`);
@@ -183,7 +183,7 @@ export default function Step5DocumentUpload() {
     };
 
     calculateDocumentRequirements();
-  }, [state.selectedCategory, state.businessLocation, state.fundingAmount, toast]);
+  }, [state.step1?.selectedCategory || state.selectedCategory, state.step1?.businessLocation || state.businessLocation, state.step1?.fundingAmount || state.fundingAmount, toast]);
 
   // Auto-save uploaded documents with 2-second delay
   const debouncedSave = useDebouncedCallback((files: UploadedFile[]) => {
@@ -223,7 +223,7 @@ export default function Step5DocumentUpload() {
   };
 
   // Get selected product from previous steps for document categorization
-  const selectedProduct = state.selectedProductId || '';
+  const selectedProduct = state.step1?.selectedProductId || state.selectedProductId || '';
   
   // Navigation handlers
   const handlePrevious = () => {
@@ -276,8 +276,8 @@ export default function Step5DocumentUpload() {
       });
 
       // Make API call to mark documents as bypassed
-      if (state.applicationId) {
-        await fetch(`/api/applications/${state.applicationId}/nudge-documents`, {
+      if (state.step4?.applicationId || state.applicationId) {
+        await fetch(`/api/applications/${state.step4?.applicationId || state.applicationId}/nudge-documents`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -330,7 +330,7 @@ export default function Step5DocumentUpload() {
         uploadedFiles={uploadedFiles}
         onFilesUploaded={handleFilesUploaded}
         onRequirementsChange={handleRequirementsChange}
-        applicationId={state.applicationId || 'test-app-123'}
+        applicationId={state.step4?.applicationId || state.applicationId || 'test-app-123'}
       />
 
       {/* Progress Summary */}

@@ -3,7 +3,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Step3BusinessDetails } from '@/components/Step3BusinessDetails';
-import { Step4ApplicantInfo } from '@/components/Step4ApplicantInfo';
+// Removed Step4ApplicantInfo - component cleaned up during duplicate system removal
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -201,11 +201,14 @@ export default function Steps34Test() {
                 />
               )}
               {currentStep === 4 && (
-                <Step4ApplicantInfo
-                  onNext={handleNext}
-                  onBack={handleBack}
-                  isCanadian={isCanadian}
-                />
+                <div className="text-center p-8">
+                  <p className="text-gray-500">Step 4 component removed during duplicate system cleanup</p>
+                  <p className="text-sm text-gray-400 mt-2">Use Step4_ApplicantInfo_Complete.tsx for production</p>
+                  <div className="mt-4 space-x-4">
+                    <Button variant="outline" onClick={handleBack}>Previous</Button>
+                    <Button onClick={handleNext}>Next</Button>
+                  </div>
+                </div>
               )}
             </form>
           </FormProvider>

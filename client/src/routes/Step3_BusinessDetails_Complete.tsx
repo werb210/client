@@ -53,11 +53,11 @@ export default function Step3BusinessDetailsComplete() {
   const [, setLocation] = useLocation();
 
   // Get business location from unified state to determine regional formatting
-  const businessLocation = state.businessLocation || 'US';
+  const businessLocation = state.step1?.businessLocation || state.businessLocation || 'US';
   const isCanadian = isCanadianBusiness(businessLocation);
   const countryCode = getCountryFromBusinessLocation(businessLocation);
   
-  console.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`, { state: state.businessLocation, detected: isCanadian });
+  console.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`, { state: state.step1?.businessLocation || state.businessLocation, detected: isCanadian });
   
   const regionalLabels = getRegionalLabels(isCanadian);
   const stateProvinceOptions = getStateProvinceOptions(isCanadian);
@@ -67,33 +67,34 @@ export default function Step3BusinessDetailsComplete() {
   
   // Date state for business start date
   const [businessStartDate, setBusinessStartDate] = useState<Date | null>(
-    state.businessStartDate ? new Date(state.businessStartDate) : null
+    (state.step3?.businessStartDate || state.businessStartDate) ? new Date(state.step3?.businessStartDate || state.businessStartDate) : null
   );
 
   const form = useForm<BusinessDetailsFormData>({
     resolver: zodResolver(step3Schema),
     defaultValues: {
-      operatingName: state.operatingName || '',
-      legalName: state.legalName || '',
-      businessStreetAddress: state.businessStreetAddress || '',
-      businessCity: state.businessCity || '',
-      businessState: state.businessState || '',
-      businessPostalCode: state.businessPostalCode || '',
-      businessPhone: state.businessPhone || '',
-      businessWebsite: state.businessWebsite || '',
-      businessStartDate: state.businessStartDate || '',
-      businessStructure: state.businessStructure || undefined,
-      employeeCount: state.employeeCount || undefined,
-      estimatedYearlyRevenue: state.estimatedYearlyRevenue || undefined,
+      operatingName: state.step3?.operatingName || state.operatingName || '',
+      legalName: state.step3?.legalName || state.legalName || '',
+      businessStreetAddress: state.step3?.businessStreetAddress || state.businessStreetAddress || '',
+      businessCity: state.step3?.businessCity || state.businessCity || '',
+      businessState: state.step3?.businessState || state.businessState || '',
+      businessPostalCode: state.step3?.businessPostalCode || state.businessPostalCode || '',
+      businessPhone: state.step3?.businessPhone || state.businessPhone || '',
+      businessWebsite: state.step3?.businessWebsite || state.businessWebsite || '',
+      businessStartDate: state.step3?.businessStartDate || state.businessStartDate || '',
+      businessStructure: state.step3?.businessStructure || state.businessStructure || undefined,
+      employeeCount: state.step3?.employeeCount || state.employeeCount || undefined,
+      estimatedYearlyRevenue: state.step3?.estimatedYearlyRevenue || state.estimatedYearlyRevenue || undefined,
     },
   });
 
   // Initialize phone display state
   useEffect(() => {
-    if (state.businessPhone && !phoneDisplay) {
-      setPhoneDisplay(formatPhoneDisplay(state.businessPhone, countryCode));
+    const businessPhone = state.step3?.businessPhone || state.businessPhone;
+    if (businessPhone && !phoneDisplay) {
+      setPhoneDisplay(formatPhoneDisplay(businessPhone, countryCode));
     }
-  }, [state.businessPhone, phoneDisplay, countryCode]);
+  }, [state.step3?.businessPhone, state.businessPhone, phoneDisplay, countryCode]);
 
   // Auto-save functionality
   useEffect(() => {

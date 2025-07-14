@@ -34,7 +34,7 @@ export default function Step6Signature() {
 
   // Get uploaded files from Step 5
   const uploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
-  const selectedProduct = state.selectedProductId;
+  const selectedProduct = state.step1?.selectedProductId || state.selectedProductId;
 
   // ✅ Add useQuery for polling signing status
   const { data: signingStatusData, refetch } = useQuery({
@@ -90,12 +90,12 @@ export default function Step6Signature() {
 
   // ✅ Initialize applicationId from state or localStorage
   useEffect(() => {
-    const appId = state.applicationId || localStorage.getItem('applicationId');
+    const appId = state.step4?.applicationId || state.applicationId || localStorage.getItem('applicationId');
     if (appId && !applicationId) {
       setApplicationId(appId);
       console.log('🔑 Recovered applicationId for Step 6 polling:', appId);
     }
-  }, [state.applicationId]);
+  }, [state.step4?.applicationId, state.applicationId]);
 
   useEffect(() => {
     // Auto-submit if not already submitted and we have all required data
@@ -113,8 +113,8 @@ export default function Step6Signature() {
 
   const hasRequiredData = () => {
     return (
-      state.businessLocation &&
-      state.selectedProductId &&
+      (state.step1?.businessLocation || state.businessLocation) &&
+      (state.step1?.selectedProductId || state.selectedProductId) &&
       state.step3?.operatingName &&
       state.step4?.firstName &&
       uploadedFiles.length > 0
@@ -527,7 +527,7 @@ export default function Step6Signature() {
             <div>
               <span className="text-gray-500">Funding Amount:</span>
               <p className="font-medium">
-                ${state.fundingAmount?.toLocaleString() || 'Not specified'}
+                ${(state.step1?.fundingAmount || state.fundingAmount)?.toLocaleString() || 'Not specified'}
               </p>
             </div>
             <div>
