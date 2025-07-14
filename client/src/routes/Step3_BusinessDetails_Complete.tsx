@@ -99,25 +99,27 @@ export default function Step3BusinessDetailsComplete() {
   // Auto-save functionality
   useEffect(() => {
     const subscription = form.watch((data) => {
-      // Convert form data to unified schema format
-      const updatedData: Partial<typeof state> = {};
+      // Auto-save to step3 object structure
+      const stepData: Partial<BusinessDetailsFormData> = {};
       
-      if (data.operatingName !== undefined) updatedData.operatingName = data.operatingName;
-      if (data.legalName !== undefined) updatedData.legalName = data.legalName;
-      if (data.businessStreetAddress !== undefined) updatedData.businessStreetAddress = data.businessStreetAddress;
-      if (data.businessCity !== undefined) updatedData.businessCity = data.businessCity;
-      if (data.businessState !== undefined) updatedData.businessState = data.businessState;
-      if (data.businessPostalCode !== undefined) updatedData.businessPostalCode = data.businessPostalCode;
-      if (data.businessPhone !== undefined) updatedData.businessPhone = data.businessPhone;
-      if (data.businessWebsite !== undefined) updatedData.businessWebsite = data.businessWebsite;
-      if (data.businessStartDate !== undefined) updatedData.businessStartDate = data.businessStartDate;
-      if (data.businessStructure !== undefined) updatedData.businessStructure = data.businessStructure;
-      if (data.employeeCount !== undefined) updatedData.employeeCount = data.employeeCount;
-      if (data.estimatedYearlyRevenue !== undefined) updatedData.estimatedYearlyRevenue = data.estimatedYearlyRevenue;
+      if (data.operatingName !== undefined) stepData.operatingName = data.operatingName;
+      if (data.legalName !== undefined) stepData.legalName = data.legalName;
+      if (data.businessStreetAddress !== undefined) stepData.businessStreetAddress = data.businessStreetAddress;
+      if (data.businessCity !== undefined) stepData.businessCity = data.businessCity;
+      if (data.businessState !== undefined) stepData.businessState = data.businessState;
+      if (data.businessPostalCode !== undefined) stepData.businessPostalCode = data.businessPostalCode;
+      if (data.businessPhone !== undefined) stepData.businessPhone = data.businessPhone;
+      if (data.businessWebsite !== undefined) stepData.businessWebsite = data.businessWebsite;
+      if (data.businessStartDate !== undefined) stepData.businessStartDate = data.businessStartDate;
+      if (data.businessStructure !== undefined) stepData.businessStructure = data.businessStructure;
+      if (data.employeeCount !== undefined) stepData.employeeCount = data.employeeCount;
+      if (data.estimatedYearlyRevenue !== undefined) stepData.estimatedYearlyRevenue = data.estimatedYearlyRevenue;
+
+      console.log('[STEP3] Auto-save triggered with data:', stepData);
 
       dispatch({
-        type: 'UPDATE_FORM_DATA',
-        payload: updatedData
+        type: 'UPDATE_STEP3',
+        payload: stepData
       });
     });
 
@@ -126,21 +128,22 @@ export default function Step3BusinessDetailsComplete() {
 
   const onSubmit = (data: BusinessDetailsFormData) => {
     console.log('[STEP3] Form submitted with data:', data);
+    console.log('Step 3 Save Triggered:', data);
     
-    // Update context with unified field names
+    // Update context with step3 object structure for validation
     dispatch({
-      type: 'UPDATE_FORM_DATA',
-      payload: {
-        ...data,
-        completed: true
-      }
+      type: 'UPDATE_STEP3',
+      payload: data
     });
 
     dispatch({
       type: 'MARK_STEP_COMPLETE',
-      payload: { step: 3 }
+      payload: 3
     });
 
+    console.log('[STEP3] Data saved to step3 object for validation');
+    console.log('[STEP3] Payload structure - step3 block should be present:', { step3: data });
+    
     // Navigate to Step 4
     setLocation('/apply/step-4');
   };

@@ -1,0 +1,112 @@
+✅ Confirmed — the client application is incorrectly reporting required fields as missing in Step 4 **despite the UI clearly showing they are filled in**. From the screenshot and logs, we now have conclusive evidence of a **schema mapping mismatch or improper field aliasing**.
+
+---
+
+## 🧠 DIAGNOSIS SUMMARY
+
+### 🛑 UI FIELDS FILLED:
+
+* Legal Business Name: ✅ present in form
+* Business Name: ✅ likely same
+* Business Phone: ✅ filled
+* Business State/Province: ✅ selected
+
+### ❌ BACKEND PAYLOAD FAILURE:
+
+```
+VALIDATION FAILED – Missing required fields:
+step3: ["Legal Business Name", "Business Name", "Business Phone", "Business State/Province"]
+```
+
+### 🔍 Evidence from console log:
+
+```json
+"step3": {}
+```
+
+Step 3 is showing as **completely empty**, meaning none of the business info is flowing through — despite the user entering it.
+
+---
+
+## ✅ REPLIT FIX INSTRUCTIONS (CLIENT)
+
+### 🔧 Goal
+
+Ensure Step 3 data is saved properly into `state.step3` and passed along with the submission payload.
+
+---
+
+### 📁 FILE TO FIX
+
+```
+client/src/routes/Step3_BusinessDetails_Complete.tsx
+```
+
+---
+
+### 🧪 TEST CASES TO RUN
+
+1. Add `console.log("Step 3 Save Triggered:", formData);` inside the save function.
+2. Check if the `useApplicationContext().save()` call is happening with `step3` structure.
+3. Confirm form data is merged under `step3` correctly like:
+
+```ts
+save({
+  step3: {
+    legalName,
+    businessName,
+    businessPhone,
+    businessState,
+    ...
+  }
+})
+```
+
+---
+
+### 🛠️ FIX TO IMPLEMENT
+
+If you find something like:
+
+```ts
+save({ legalName, businessPhone, ... }) // ❌
+```
+
+Change it to:
+
+```ts
+save({ step3: { legalName, businessPhone, ... } }) // ✅
+```
+
+Also verify:
+
+* `initialValues` are being pulled from `state.step3`
+* `debouncedSave()` or `onChange` handlers are writing to the correct step
+
+---
+
+### ✅ AFTER FIX
+
+Replit must verify:
+
+* [ ] Console log: `"Step 3 Save Triggered:"` appears with correct values
+* [ ] `state.step3` shows populated fields in DevTools
+* [ ] Submission passes Step 4 validation
+
+---
+
+### 📩 REPORT BACK TO CHATGPT
+
+```yaml
+report_type: step3_mapping_fix
+step3_data_captured: true
+step3_saved_to_context: true
+validation_modal_passed: true
+fields_verified: [legalName, businessName, businessPhone, businessState]
+console_logs: confirmed
+payload_check: step3 block present
+```
+
+---
+
+Let me know when you’re ready to test Step 5 or finalize the entire 7-step flow.

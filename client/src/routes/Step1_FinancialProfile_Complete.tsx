@@ -164,25 +164,23 @@ export default function Step1FinancialProfile() {
 
   // Auto-save with 2-second delay
   const debouncedSave = useDebouncedCallback((data: FinancialProfileFormData) => {
-    // CRITICAL FIX: Store data in step1 object for step-based structure compliance
+    // Store data in step1 object structure for validation
     dispatch({
-      type: 'UPDATE_FORM_DATA',
+      type: 'UPDATE_STEP1',
       payload: {
-        step1: {
-          businessLocation: data.businessLocation || 'US',
-          headquarters: data.headquarters || 'US',
-          headquartersState: data.headquartersState || '',
-          industry: data.industry || 'other',
-          lookingFor: data.lookingFor || 'capital',
-          fundingAmount: data.fundingAmount || 0,
-          fundsPurpose: data.fundsPurpose || 'working_capital',
-          salesHistory: data.salesHistory || '<1yr',
-          revenueLastYear: data.revenueLastYear || 0,
-          averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
-          accountsReceivableBalance: data.accountsReceivableBalance || 0,
-          fixedAssetsValue: data.fixedAssetsValue || 0,
-          equipmentValue: data.equipmentValue || 0,
-        }
+        businessLocation: data.businessLocation || 'US',
+        headquarters: data.headquarters || 'US',
+        headquartersState: data.headquartersState || '',
+        industry: data.industry || 'other',
+        lookingFor: data.lookingFor || 'capital',
+        fundingAmount: data.fundingAmount || 0,
+        fundsPurpose: data.fundsPurpose || 'working_capital',
+        salesHistory: data.salesHistory || '<1yr',
+        revenueLastYear: data.revenueLastYear || 0,
+        averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
+        accountsReceivableBalance: data.accountsReceivableBalance || 0,
+        fixedAssetsValue: data.fixedAssetsValue || 0,
+        equipmentValue: data.equipmentValue || 0,
       },
     });
     console.log('💾 Step 1 - Auto-saved form data to step1 object');
@@ -198,25 +196,23 @@ export default function Step1FinancialProfile() {
     console.log('Form Data:', data);
     
     try {
-      // CRITICAL FIX: Store data in step1 object for step-based structure compliance
+      // Store data in step1 object structure for validation
       dispatch({
-        type: 'UPDATE_FORM_DATA',
+        type: 'UPDATE_STEP1',
         payload: {
-          step1: {
-            businessLocation: data.businessLocation || 'US',
-            headquarters: data.headquarters || 'US',
-            headquartersState: data.headquartersState || '',
-            industry: data.industry || 'other',
-            lookingFor: data.lookingFor || 'capital',
-            fundingAmount: data.fundingAmount || 50000,
-            fundsPurpose: data.fundsPurpose || 'working_capital',
-            salesHistory: data.salesHistory || '<1yr',
-            revenueLastYear: data.revenueLastYear || 0,
-            averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
-            accountsReceivableBalance: data.accountsReceivableBalance || 0,
-            fixedAssetsValue: data.fixedAssetsValue || 0,
-            equipmentValue: data.equipmentValue || 0,
-          }
+          businessLocation: data.businessLocation || 'US',
+          headquarters: data.headquarters || 'US',
+          headquartersState: data.headquartersState || '',
+          industry: data.industry || 'other',
+          lookingFor: data.lookingFor || 'capital',
+          fundingAmount: data.fundingAmount || 50000,
+          fundsPurpose: data.fundsPurpose || 'working_capital',
+          salesHistory: data.salesHistory || '<1yr',
+          revenueLastYear: data.revenueLastYear || 0,
+          averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
+          accountsReceivableBalance: data.accountsReceivableBalance || 0,
+          fixedAssetsValue: data.fixedAssetsValue || 0,
+          equipmentValue: data.equipmentValue || 0,
         },
       });
 

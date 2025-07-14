@@ -34,6 +34,11 @@ export interface DocumentUploadData {
 }
 
 export interface FormDataState extends Partial<ApplicationForm> {
+  // Step-based data structure for validation
+  step1?: Partial<ApplicationForm>;
+  step3?: Partial<ApplicationForm>;
+  step4?: Partial<ApplicationForm>;
+  
   // Step-specific completion tracking
   step1Completed?: boolean;
   step2Completed?: boolean;
@@ -79,6 +84,11 @@ type FormDataAction =
   | { type: 'LOAD_FROM_STORAGE'; payload: FormDataState };
 
 const initialState: FormDataState = {
+  // Step-based data structure
+  step1: {},
+  step3: {},
+  step4: {},
+  
   // Application flow state
   currentStep: 1,
   isComplete: false,
@@ -105,13 +115,41 @@ const initialState: FormDataState = {
 function formDataReducer(state: FormDataState, action: FormDataAction): FormDataState {
   switch (action.type) {
     case 'UPDATE_FORM_DATA':
-    case 'UPDATE_STEP1':
-    case 'UPDATE_STEP2':
-    case 'UPDATE_STEP3':
-    case 'UPDATE_STEP4':
       return {
         ...state,
         ...action.payload,
+      };
+    case 'UPDATE_STEP1':
+      return {
+        ...state,
+        step1: {
+          ...state.step1,
+          ...action.payload,
+        },
+        ...action.payload, // Also store at root level for backward compatibility
+      };
+    case 'UPDATE_STEP2':
+      return {
+        ...state,
+        ...action.payload,
+      };
+    case 'UPDATE_STEP3':
+      return {
+        ...state,
+        step3: {
+          ...state.step3,
+          ...action.payload,
+        },
+        ...action.payload, // Also store at root level for backward compatibility
+      };
+    case 'UPDATE_STEP4':
+      return {
+        ...state,
+        step4: {
+          ...state.step4,
+          ...action.payload,
+        },
+        ...action.payload, // Also store at root level for backward compatibility
       };
     case 'UPDATE_STEP5':
       return {
