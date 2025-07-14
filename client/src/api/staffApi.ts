@@ -5,19 +5,25 @@ const STAFF_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://app.boreal.f
 // ✅ Required Fields Validation Configuration
 const REQUIRED_FIELDS = {
   step1: ["requestedAmount", "use_of_funds"],
-  step3: ["legalName", "businessName", "businessPhone", "businessState"],
-  step4: ["firstName", "lastName", "email", "phone", "ownershipPercentage", "dob", "sin"]
+  step3: ["operatingName", "legalName", "businessPhone", "businessState"], // Updated to match Step 3 form
+  step4: ["applicantFirstName", "applicantLastName", "applicantEmail", "applicantPhone", "ownershipPercentage", "applicantDateOfBirth", "applicantSSN"] // Updated to match Step 4 form
 } as const;
 
 // Field mapping for alternative field names
 const FIELD_ALIASES = {
+  step3: {
+    operatingName: ["businessName"],
+    legalName: ["businessLegalName"],
+    businessPhone: ["phone"],
+    businessState: ["state"]
+  },
   step4: {
-    firstName: ["applicantFirstName"],
-    lastName: ["applicantLastName"], 
-    email: ["applicantEmail"],
-    phone: ["applicantPhone"],
-    dob: ["applicantDateOfBirth", "dateOfBirth"],
-    sin: ["applicantSSN", "socialSecurityNumber"]
+    applicantFirstName: ["firstName"],
+    applicantLastName: ["lastName"], 
+    applicantEmail: ["email", "personalEmail"],
+    applicantPhone: ["phone", "personalPhone"],
+    applicantDateOfBirth: ["dob", "dateOfBirth"],
+    applicantSSN: ["sin", "socialSecurityNumber"]
   }
 } as const;
 
