@@ -436,7 +436,7 @@ export function DynamicDocumentRequirements({
           />
         )) : (
           <div className="col-span-full text-center py-8">
-            <p className="text-gray-500">No document requirements loaded yet.</p>
+            <p className="text-gray-500">No document requirements available for this category.</p>
           </div>
         )}
       </div>
