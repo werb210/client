@@ -3,21 +3,39 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// CLEAN CONSOLE: Suppress network errors, log only unexpected issues
+// COMPREHENSIVE ERROR HANDLING: Production-ready promise rejection management
 window.addEventListener('unhandledrejection', (event) => {
   const errorMessage = String(event.reason || '');
   const errorType = event.reason?.constructor?.name || '';
   
-  // Suppress common development/network errors
-  if (errorMessage.includes('Failed to fetch') || 
-      errorMessage.includes('TypeError') ||
-      errorType === 'TypeError') {
+  // Development environment errors to suppress
+  const suppressedErrors = [
+    'Failed to fetch',
+    'TypeError: Failed to fetch',
+    'NetworkError',
+    'AbortError',
+    'DOMException',
+    'TypeError: Load failed',
+    'TypeError: cancelled',
+    'TypeError: The user aborted a request'
+  ];
+  
+  // Check if error should be suppressed
+  const shouldSuppress = suppressedErrors.some(pattern => 
+    errorMessage.includes(pattern) || errorType.includes(pattern)
+  );
+  
+  if (shouldSuppress) {
     event.preventDefault();
     return;
   }
   
-  // Log only unexpected errors
-  console.log('🚨 Unexpected Promise Rejection:', errorMessage);
+  // Log only critical unexpected errors for debugging
+  console.error('🚨 Critical Promise Rejection:', {
+    message: errorMessage,
+    type: errorType,
+    timestamp: new Date().toISOString()
+  });
   event.preventDefault();
 });
 
