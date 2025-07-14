@@ -1,0 +1,119 @@
+Thanks — this is now a **blocking issue**, since Step 5 is critical. Based on your client’s report that:
+
+> Step 5 still does not load required documents even though selectedCategory and Step 2 are set…
+
+We need to **isolate and fix** this.
+
+---
+
+## ✅ INSTRUCTIONS FOR REPLIT (CLIENT APP)
+
+### 🧩 GOAL:
+
+Ensure that **Step 5 properly loads required documents** based on the selected lender product category from `state.step2?.selectedCategory`.
+
+---
+
+### 🛠️ STEP-BY-STEP FIX INSTRUCTIONS
+
+### 1. **Open File:**
+
+```bash
+client/src/routes/Step5_DocumentUpload.tsx
+```
+
+---
+
+### 2. **Verify `selectedCategory` Logic**
+
+Inside the component:
+
+* Add this debug log at the top of the component:
+
+```ts
+console.log("[Step 5] Category used for required docs:", state.step2?.selectedCategory);
+```
+
+* Confirm that the value is **not undefined** and matches one of the expected document requirement categories from the staff backend (e.g., `line_of_credit`, `term_loan`, etc.)
+
+---
+
+### 3. **Fix Document Requirements Mapping**
+
+Locate this line:
+
+```ts
+const requiredDocs = REQUIRED_DOCUMENTS[state.step2?.selectedCategory || ''];
+```
+
+Ensure:
+
+* `REQUIRED_DOCUMENTS` is properly imported and contains mappings for **all valid categories** (example: `line_of_credit`, `equipment_financing`, etc.)
+* The category keys must match **exactly** what was selected in Step 2
+
+If needed, add fallback logging:
+
+```ts
+if (!requiredDocs) {
+  console.warn("[Step 5] No required documents found for category:", state.step2?.selectedCategory);
+}
+```
+
+---
+
+### 4. **Test Display Rendering**
+
+Ensure this section exists and renders:
+
+```tsx
+{requiredDocs?.map((doc) => (
+  <DocumentUploadField key={doc} documentType={doc} />
+))}
+```
+
+---
+
+### 5. **Fix Context Dispatching (If Step2 Is Missing)**
+
+Open:
+
+```bash
+client/src/routes/Step2_Recommendations.tsx
+```
+
+Check that on category selection, the following is dispatched:
+
+```ts
+dispatch({ type: 'UPDATE_STEP2', payload: { selectedCategory: product } });
+```
+
+---
+
+### 6. **Run Test Script**
+
+In browser console:
+
+```js
+console.log("Step 2 category:", state.step2?.selectedCategory);
+console.log("Step 5 required docs:", REQUIRED_DOCUMENTS[state.step2?.selectedCategory || '']);
+```
+
+Expected output:
+
+* `Step 2 category` should be something like `"line_of_credit"`
+* `Step 5 required docs` should be an array like `["Voided Cheque", "Bank Statements", "Business License"]`
+
+---
+
+### ✅ WHEN FIXED — Replit must report back:
+
+1. The actual `state.step2?.selectedCategory` at Step 5
+2. The mapped document array from `REQUIRED_DOCUMENTS`
+3. Confirmation that `<DocumentUploadField>` components render
+4. Confirm that uploads route to `/api/public/applications/:id/documents` successfully
+
+---
+
+Once the document list renders properly, you can continue testing the Step 5 → 6 → 7 flow and regenerate the YAML report.
+
+Let me know when Step 5 loads correctly.

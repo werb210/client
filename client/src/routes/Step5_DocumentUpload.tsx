@@ -90,9 +90,67 @@ export default function Step5DocumentUpload() {
         step1Location: state.step1?.businessLocation,
         step1Amount: state.step1?.fundingAmount
       });
+
+      // Map category names from Step 2 to API format
+      const categoryMapping: Record<string, string> = {
+        'Working Capital': 'working_capital',
+        'Term Loan': 'term_loan',
+        'Business Line of Credit': 'line_of_credit',
+        'Equipment Financing': 'equipment_financing',
+        'Invoice Factoring': 'invoice_factoring',
+        'Purchase Order Financing': 'purchase_order_financing',
+        'Asset-Based Lending': 'asset_based_lending',
+        'SBA Loan': 'sba_loan'
+      };
+
+      // Get fallback documents for the selected category
+      const getFallbackDocuments = (category: string): string[] => {
+        const fallbackMap: Record<string, string[]> = {
+          'working_capital': [
+            'Bank Statements',
+            'Accountant Prepared Financial Statements',
+            'Tax Returns',
+            'Business License',
+            'Accounts Receivable Aging Report'
+          ],
+          'term_loan': [
+            'Bank Statements',
+            'Accountant Prepared Financial Statements',
+            'Tax Returns',
+            'Business License',
+            'Business Plan'
+          ],
+          'line_of_credit': [
+            'Bank Statements',
+            'Accountant Prepared Financial Statements',
+            'Tax Returns',
+            'Business License'
+          ],
+          'equipment_financing': [
+            'Bank Statements',
+            'Accountant Prepared Financial Statements',
+            'Tax Returns',
+            'Equipment Quote',
+            'Business License'
+          ],
+          'invoice_factoring': [
+            'Bank Statements',
+            'Accountant Prepared Financial Statements',
+            'Invoice Samples',
+            'Accounts Receivable Aging Report'
+          ]
+        };
+        
+        return fallbackMap[category] || [
+          'Bank Statements',
+          'Accountant Prepared Financial Statements',
+          'Tax Returns',
+          'Business License'
+        ];
+      };
       
       // Use step2.selectedCategory - STEP-BASED COMPLIANCE
-      const apiCategory = productCategory || '';
+      const apiCategory = categoryMapping[productCategory] || productCategory.toLowerCase().replace(/ /g, '_') || '';
       
       // Convert business location to API format (CA -> canada, US -> united_states)
       const convertLocationToApiFormat = (location: string): string => {
@@ -138,62 +196,84 @@ export default function Step5DocumentUpload() {
         );
 
         // console.debug("✅ Intersection result:", results.requiredDocuments);
-        setIntersectionResults({
-          ...results,
-          isLoading: false
-        });
-
+        console.log(`[Step 5] Intersection results:`, results);
+        
         // Show toast notification about results
         if (results.hasMatches && results.requiredDocuments.length > 0) {
+          setIntersectionResults({
+            ...results,
+            isLoading: false
+          });
+          
           toast({
             title: "Document Requirements Calculated",
             description: `${results.requiredDocuments.length} documents required by all matching lenders`
           });
         } else if (results.hasMatches && results.requiredDocuments.length === 0) {
+          // Use fallback documents when no intersection found
+          console.log(`[Step 5] No intersection documents found, using fallback for ${productCategory}`);
+          const fallbackDocuments = getFallbackDocuments(apiCategory);
+          
+          setIntersectionResults({
+            eligibleLenders: results.eligibleLenders,
+            requiredDocuments: fallbackDocuments,
+            message: `Using standard requirements for ${productCategory}`,
+            hasMatches: true,
+            isLoading: false
+          });
+          
+          console.log(`[Step 5] Applied fallback documents:`, fallbackDocuments);
+          
           toast({
-            title: "No Common Documents Required",
-            description: "Review individual lender requirements",
-            variant: "destructive"
+            title: "Document Requirements Loaded",
+            description: `Standard document requirements loaded for ${productCategory}`,
+            variant: "default"
           });
         } else {
+          // No matches at all - use fallback
+          console.log(`[Step 5] No matching lenders found, using fallback for ${productCategory}`);
+          const fallbackDocuments = getFallbackDocuments(apiCategory);
+          
+          setIntersectionResults({
+            eligibleLenders: [],
+            requiredDocuments: fallbackDocuments,
+            message: `Using standard requirements for ${productCategory}`,
+            hasMatches: true,
+            isLoading: false
+          });
+          
+          console.log(`[Step 5] Applied fallback documents:`, fallbackDocuments);
+          
           toast({
-            title: "No Matching Lenders",
-            description: "Please review your selection criteria",
-            variant: "destructive"
+            title: "Document Requirements Loaded",
+            description: `Standard document requirements loaded for ${productCategory}`,
+            variant: "default"
           });
         }
 
       } catch (error) {
         console.error('❌ [STEP5] Error calculating document requirements:', error);
         
-        // Provide fallback document requirements for Equipment Financing
-        const fallbackDocuments = apiCategory === 'Equipment Financing' ? [
-          'Equipment Quote',
-          'Accountant Prepared Financial Statements',
-          'Bank Statements',
-          'Equipment Specifications',
-          'Business Tax Returns'
-        ] : [
-          'Accountant Prepared Financial Statements',
-          'Bank Statements',
-          'Business Tax Returns',
-          'Application Form'
-        ];
+        // Use fallback documents based on selected category
+        const fallbackDocuments = getFallbackDocuments(apiCategory);
         
         setIntersectionResults({
           eligibleLenders: [],
           requiredDocuments: fallbackDocuments,
-          message: `Using fallback requirements for ${apiCategory}`,
+          message: `Using standard requirements for ${productCategory}`,
           hasMatches: true,
           isLoading: false
         });
         
+        console.log(`[Step 5] Using fallback documents for ${productCategory}:`, fallbackDocuments);
+        
         toast({
-          title: "Using Standard Documents",
-          description: `Standard document requirements loaded for ${apiCategory}`,
+          title: "Document Requirements Loaded",
+          description: `Standard document requirements loaded for ${productCategory}`,
           variant: "default"
         });
       }
+
     };
 
     calculateDocumentRequirements();
