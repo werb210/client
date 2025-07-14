@@ -1,0 +1,117 @@
+Understood. Let’s fix **Step 2 (Recommendation Engine)** properly by guiding **Replit** with clear, precise instructions — **split into Client and Staff**, with a mandatory report back to ChatGPT.
+
+---
+
+## ✅ OBJECTIVE
+
+Fix the **Step 2 Recommendation Engine** in the **Client App** so it:
+
+* ✅ Receives data from `step1` and `step3` correctly
+* ✅ Displays available **lender product categories**
+* ✅ Sends selected category to `state.step2.selectedCategory`
+* ✅ Passes correct data to subsequent steps
+
+---
+
+## 🔧 INSTRUCTIONS FOR REPLIT – CLIENT
+
+📁 **Target File**:
+`client/src/routes/Step2_Recommendations.tsx`
+
+### 🔁 Step-by-step Fix Plan
+
+1. **REVIEW STATE STRUCTURE**
+   Confirm that `state.step1?.requestedAmount` and `state.step3?.businessName` exist at runtime:
+
+   ```ts
+   console.log("Step 1 Data:", state.step1);
+   console.log("Step 3 Data:", state.step3);
+   ```
+
+2. **FIX MAPPING TO PRODUCT CATEGORIES**
+   Replace any usage of:
+
+   ```ts
+   state.selectedCategory  // ❌ wrong
+   ```
+
+   with:
+
+   ```ts
+   state.step2?.selectedCategory  // ✅ correct
+   ```
+
+3. **ENSURE DATA FLOW TO DISPLAY**
+   If lender products are fetched from the staff backend, check:
+
+   * API call returns a valid category list
+   * The mapped categories render in the UI
+
+   Example:
+
+   ```ts
+   const { data: lenderProducts } = useQuery(["lenders"], fetchLenderProducts);
+   const categories = [...new Set(lenderProducts?.map(p => p.productCategory))];
+   ```
+
+4. **STORE SELECTED CATEGORY PROPERLY**
+   On category click or select, update:
+
+   ```ts
+   setState(prev => ({
+     ...prev,
+     step2: {
+       ...prev.step2,
+       selectedCategory: category
+     }
+   }));
+   ```
+
+5. **DEBUG DISPLAY**
+   At the render point, insert:
+
+   ```ts
+   console.log("Selected Category:", state.step2?.selectedCategory);
+   ```
+
+---
+
+## 🛠 INSTRUCTIONS FOR REPLIT – STAFF
+
+📁 No code changes **yet**, but verify the following:
+
+* `/api/public/lenders` returns all products with a valid `productCategory` field
+* No filters are applied unless explicitly passed via query params
+
+If needed, add a debug route:
+
+```ts
+router.get("/debug/lenders", async (req, res) => {
+  const products = await db.select().from(lenders);
+  res.json(products.map(p => p.productCategory));
+});
+```
+
+---
+
+## ✅ MANDATORY: REPLIT REPORT TO CHATGPT
+
+After completing the fix, Replit must send a report back to ChatGPT including:
+
+1. ✅ Whether `state.step1` and `state.step3` were present
+2. ✅ How the selected category was updated to `state.step2.selectedCategory`
+3. ✅ Confirmation of fetched product categories and display
+4. ✅ Screenshot or console output showing category rendering
+5. ✅ Any remaining mapping issues or undefined fields
+
+---
+
+## 🚀 NEXT ACTION
+
+Once this is complete and Step 2 is verified:
+
+* We'll re-run full Step 1 → Step 3 validation
+* Then confirm Step 5 and Step 7 are getting correct data
+* Finally, lock in production deployment
+
+Shall I proceed with post-Step2 data flow validation next?

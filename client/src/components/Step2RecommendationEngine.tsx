@@ -180,14 +180,8 @@ export function Step2RecommendationEngine({
                 <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-red-600 mb-2">Unable to Load Products</h3>
                 <p className="text-red-500 mb-4">
-                  {error instanceof Error ? error.message : 'Failed to load product recommendations'}
+                  {typeof error === 'string' ? error : error instanceof Error ? error.message : 'Failed to load product recommendations'}
                 </p>
-                <details className="text-left mb-4">
-                  <summary className="text-sm text-red-600 cursor-pointer">Technical Details</summary>
-                  <pre className="text-xs text-red-500 mt-1 whitespace-pre-wrap bg-red-50 p-2 rounded">
-                    {JSON.stringify(error, null, 2)}
-                  </pre>
-                </details>
                 <Button 
                   variant="outline" 
                   onClick={() => window.location.reload()}

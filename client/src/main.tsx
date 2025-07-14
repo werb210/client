@@ -20,10 +20,15 @@ window.addEventListener('unhandledrejection', (event) => {
     'TypeError: The user aborted a request'
   ];
   
+  // Check for empty object rejections (common in React Query)
+  const isEmptyObjectError = typeof event.reason === 'object' && 
+    event.reason !== null && 
+    Object.keys(event.reason).length === 0;
+  
   // Check if error should be suppressed
   const shouldSuppress = suppressedErrors.some(pattern => 
     errorMessage.includes(pattern) || errorType.includes(pattern)
-  );
+  ) || isEmptyObjectError;
   
   if (shouldSuppress) {
     event.preventDefault();
