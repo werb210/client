@@ -164,26 +164,28 @@ export default function Step1FinancialProfile() {
 
   // Auto-save with 2-second delay
   const debouncedSave = useDebouncedCallback((data: FinancialProfileFormData) => {
-    // Convert form data to unified schema format and dispatch to context
+    // CRITICAL FIX: Store data in step1 object for step-based structure compliance
     dispatch({
       type: 'UPDATE_FORM_DATA',
       payload: {
-        businessLocation: data.businessLocation || 'US',
-        headquarters: data.headquarters || 'US',
-        headquartersState: data.headquartersState || '',
-        industry: data.industry || 'other',
-        lookingFor: data.lookingFor || 'capital',
-        fundingAmount: data.fundingAmount || 0,
-        fundsPurpose: data.fundsPurpose || 'working_capital',
-        salesHistory: data.salesHistory || '<1yr',
-        revenueLastYear: data.revenueLastYear || 0,
-        averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
-        accountsReceivableBalance: data.accountsReceivableBalance || 0,
-        fixedAssetsValue: data.fixedAssetsValue || 0,
-        equipmentValue: data.equipmentValue || 0,
+        step1: {
+          businessLocation: data.businessLocation || 'US',
+          headquarters: data.headquarters || 'US',
+          headquartersState: data.headquartersState || '',
+          industry: data.industry || 'other',
+          lookingFor: data.lookingFor || 'capital',
+          fundingAmount: data.fundingAmount || 0,
+          fundsPurpose: data.fundsPurpose || 'working_capital',
+          salesHistory: data.salesHistory || '<1yr',
+          revenueLastYear: data.revenueLastYear || 0,
+          averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
+          accountsReceivableBalance: data.accountsReceivableBalance || 0,
+          fixedAssetsValue: data.fixedAssetsValue || 0,
+          equipmentValue: data.equipmentValue || 0,
+        }
       },
     });
-    console.log('💾 Step 1 - Auto-saved form data');
+    console.log('💾 Step 1 - Auto-saved form data to step1 object');
   }, 2000);
 
   // Trigger autosave when form values change
@@ -196,22 +198,25 @@ export default function Step1FinancialProfile() {
     console.log('Form Data:', data);
     
     try {
+      // CRITICAL FIX: Store data in step1 object for step-based structure compliance
       dispatch({
         type: 'UPDATE_FORM_DATA',
         payload: {
-          businessLocation: data.businessLocation || 'US',
-          headquarters: data.headquarters || 'US',
-          headquartersState: data.headquartersState || '',
-          industry: data.industry || 'other',
-          lookingFor: data.lookingFor || 'capital',
-          fundingAmount: data.fundingAmount || 50000,
-          fundsPurpose: data.fundsPurpose || 'working_capital',
-          salesHistory: data.salesHistory || '<1yr',
-          revenueLastYear: data.revenueLastYear || 0,
-          averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
-          accountsReceivableBalance: data.accountsReceivableBalance || 0,
-          fixedAssetsValue: data.fixedAssetsValue || 0,
-          equipmentValue: data.equipmentValue || 0,
+          step1: {
+            businessLocation: data.businessLocation || 'US',
+            headquarters: data.headquarters || 'US',
+            headquartersState: data.headquartersState || '',
+            industry: data.industry || 'other',
+            lookingFor: data.lookingFor || 'capital',
+            fundingAmount: data.fundingAmount || 50000,
+            fundsPurpose: data.fundsPurpose || 'working_capital',
+            salesHistory: data.salesHistory || '<1yr',
+            revenueLastYear: data.revenueLastYear || 0,
+            averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
+            accountsReceivableBalance: data.accountsReceivableBalance || 0,
+            fixedAssetsValue: data.fixedAssetsValue || 0,
+            equipmentValue: data.equipmentValue || 0,
+          }
         },
       });
 
