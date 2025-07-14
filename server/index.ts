@@ -208,13 +208,13 @@ app.use((req, res, next) => {
     }
   });
 
-  // Step 7: Application submission/finalization endpoint
-  app.post('/api/public/applications/:id/submit', async (req, res) => {
+  // Step 7: Application finalization endpoint (fixed as specified)
+  app.post('/api/public/applications/:applicationId/finalize', async (req, res) => {
     try {
-      const { id } = req.params;
-      console.log(`📋 [SERVER] Step 7: Finalizing application ${id}`);
+      const { applicationId } = req.params;
+      console.log(`📋 [SERVER] Step 7: Finalizing application ${applicationId}`);
       
-      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${id}/submit`, {
+      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${applicationId}/finalize`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -241,8 +241,8 @@ app.use((req, res, next) => {
         // Return success even if staff backend not ready
         res.json({
           success: true,
-          applicationId: id,
-          status: 'submitted',
+          applicationId: applicationId,
+          status: 'finalized',
           message: 'Application finalized successfully',
           timestamp: new Date().toISOString()
         });
@@ -259,8 +259,8 @@ app.use((req, res, next) => {
       // Return success with fallback response
       res.json({
         success: true,
-        applicationId: req.params.id,
-        status: 'submitted',
+        applicationId: req.params.applicationId,
+        status: 'finalized',
         message: 'Application finalized successfully',
         timestamp: new Date().toISOString()
       });

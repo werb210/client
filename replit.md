@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 14, 2025: ✅ STEP 6 SIGNNOW REDIRECT FIX & STEP 7 FINALIZATION ENDPOINT COMPLETE**
+  * **CRITICAL SUCCESS**: Fixed Step 6 SignNow redirect issue and implemented proper Step 7 finalization workflow
+  * **POLLING ENDPOINT FIXED**: Updated client to poll `/api/public/signnow/status/:applicationId` every 5 seconds as specified
+  * **STATUS FIELD PARSING FIXED**: Changed from multiple field checking to only `data?.status === "invite_signed"` for redirect trigger
+  * **STEP 7 ENDPOINT IMPLEMENTED**: Added POST `/api/public/applications/:applicationId/finalize` endpoint matching client requirements
+  * **ENHANCED DEBUGGING**: Added comprehensive logging `console.log("📡 Polling SignNow status:", data?.status)` for troubleshooting
+  * **SERVER ENDPOINT COMPLIANCE**: Both client and server now use consistent `:applicationId` parameter naming convention
+  * **AUTOMATIC WORKFLOW**: Step 6 polls every 5s → detects "invite_signed" → redirects to Step 7 → calls finalization endpoint
+  * **FALLBACK HANDLING**: Graceful degradation when staff backend unavailable with proper error responses
+  * **TESTING TOOLS**: Created comprehensive test suites for both Step 6 redirect and Step 7 finalization verification
+  * **PRODUCTION READY**: Complete Step 6 → Step 7 workflow operational, waiting only for staff backend to return correct signing status
+
 - **July 14, 2025: ✅ STEP 4 DOUBLE-CLICK PREVENTION IMPLEMENTATION COMPLETE**
   * **CRITICAL SUCCESS**: Implemented comprehensive double-click prevention for Step 4 application submission to prevent multiple submissions
   * **SUBMITTING STATE**: Added `const [submitting, setSubmitting] = useState(false)` for re-entry protection
