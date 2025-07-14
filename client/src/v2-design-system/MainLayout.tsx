@@ -87,6 +87,7 @@ import ClientVerificationDiagnostic from "@/pages/ClientVerificationDiagnostic";
 import { FetchWindowTest } from "@/pages/FetchWindowTest";
 import FetchWindowDebugRoute from "@/pages/FetchWindowDebugRoute";
 import DocumentNormalizationTest from "@/pages/DocumentNormalizationTest";
+import E2ETestRunner from "@/pages/E2ETestRunner";
 
 
 /**
@@ -192,6 +193,7 @@ export function MainLayout() {
       <Route path="/workflow-test" component={WorkflowTest} />
       <Route path="/application-id-flow-test" component={ApplicationIdFlowTest} />
       <Route path="/critical-fixes-validation" component={CriticalFixesValidation} />
+      <Route path="/e2e-test-runner" component={E2ETestRunner} />
       
       {/* Diagnostic Pages */}
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
