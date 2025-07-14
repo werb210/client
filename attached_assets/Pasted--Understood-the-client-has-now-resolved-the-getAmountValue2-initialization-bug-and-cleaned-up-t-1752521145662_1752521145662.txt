@@ -1,0 +1,92 @@
+✅ Understood — the client has now resolved the `getAmountValue2` initialization bug and cleaned up the `recommendation.ts` logic. Let’s issue **clear instructions for Replit** to **validate that Step 2 now properly loads and displays lender product categories**.
+
+---
+
+## ✅ MANDATORY REPLIT INSTRUCTION SET
+
+### 📱 CLIENT APPLICATION — STEP 2 RECOMMENDATION FIX VALIDATION
+
+### 🔧 CONTEXT
+
+The error:
+
+```
+Cannot access 'getAmountValue2' before initialization
+```
+
+was caused by a function being used before its declaration. This broke filtering logic in `useProductCategories.ts` → **0 product categories were shown**, despite 41 lender products being cached.
+
+### 🛠️ FIXES APPLIED
+
+* ✅ `getAmountValue` function moved to top of `recommendation.ts` file
+* ✅ Duplicate function definitions removed
+* ✅ Step 1 → Step 2 data transfer verified via logs
+* ✅ Product filtering logic confirmed functioning locally
+
+---
+
+## ✅ REPLIT TEST INSTRUCTIONS
+
+### 🔁 Step-by-Step Manual Verification
+
+1. **Start the Client Application**
+   From the Replit workspace, click **“Run”** to launch the app.
+
+2. **Complete Step 1**
+   Fill out:
+
+   * Funding Amount (e.g., `$45,000`)
+   * Location (e.g., `CA`)
+   * Purpose (e.g., `Working Capital`)
+
+3. **Proceed to Step 2 (Recommendation)**
+   ✅ Replit must confirm:
+
+   * [ ] Product categories **are displayed**
+   * [ ] Categories include: “Line of Credit”, “Term Loan”, etc.
+   * [ ] Console shows:
+
+     ```
+     [CACHE] 📦 Loaded 41 products from IndexedDB
+     Fetched lender products count: 41
+     Product categories generated: X
+     ```
+   * [ ] Selecting a category stores it in: `state.step2?.selectedCategory`
+
+4. **Continue to Step 3**
+
+   * Confirm Step 2 data flows forward (debug console will show `state.step2` object)
+
+---
+
+### 🔬 Optional Console Commands (In Browser Dev Tools)
+
+Paste the following in browser DevTools > Console to check step data:
+
+```js
+console.log("Step 1:", window.__APP_STATE__.step1);
+console.log("Step 2:", window.__APP_STATE__.step2);
+console.log("Filtered Products:", window.__RECOMMENDATION_DATA__);
+```
+
+---
+
+### 🧾 REPORT BACK TO CHATGPT
+
+Once the test is complete, Replit must return this YAML:
+
+```yaml
+report_type: step2_verification
+product_categories_visible: true
+cached_products_count: 41
+selected_category_saved: true
+error_logs: none
+console_output_confirmed: true
+navigation_to_step3_successful: true
+```
+
+---
+
+## 🚀 NEXT ACTION
+
+Once this step passes, we'll do a final test of **Step 5 document uploads** and **Step 6 → Step 7 SignNow flow**. Let me know if you'd like to begin prepping those steps now.
