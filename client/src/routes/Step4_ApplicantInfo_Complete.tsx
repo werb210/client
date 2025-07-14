@@ -249,6 +249,16 @@ export default function Step4ApplicantInfoComplete() {
       // ✅ Log final POST payload exactly as specified  
       console.log("📤 Submitting full application:", { step1, step3, step4 });
       
+      // ✅ Log SignNow field mapping for verification
+      console.log("📋 SignNow field mapping included:", {
+        totalFields: Object.keys(signNowFields).length,
+        sampleFields: {
+          'First Name': signNowFields['First Name'],
+          'Business Name': signNowFields['Business Name'],
+          'Funding Amount': signNowFields['Funding Amount']
+        }
+      });
+      
       console.log('📋 Application data structure:', {
         step1: Object.keys(step1),
         step3: Object.keys(step3), 

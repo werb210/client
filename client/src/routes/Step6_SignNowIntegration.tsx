@@ -125,28 +125,52 @@ export default function Step6SignNowIntegration() {
         }
       }
       
-      const applicationPayload = {
-        applicationId,
-        // Map actual form fields for SignNow
-        firstName: state.applicantFirstName,
-        lastName: state.applicantLastName,
-        email: state.applicantEmail,
-        phone: state.applicantPhone,
-        businessName: state.operatingName || state.legalName,
-        fundingAmount: state.fundingAmount,
-        businessAddress: state.businessStreetAddress,
-        businessCity: state.businessCity,
-        businessState: state.businessState,
-        businessPostalCode: state.businessPostalCode,
-        // Include complete form state
-        fullFormData: {
-          step1: state.step1 || "Not in step format",
-          step3: state.step3 || "Not in step format", 
-          step4: state.step4 || "Not in step format",
-          rawState: Object.keys(state).length + " fields available"
-        }
+      // ✅ CREATE SIGNNOW SMART FIELDS MAPPING
+      // This is the critical missing piece - smart fields must be sent to staff backend
+      const smartFields = {
+        // Personal Information (from step4)
+        contact_first_name: state.step4?.firstName || state.applicantFirstName || '',
+        contact_last_name: state.step4?.lastName || state.applicantLastName || '',
+        contact_email: state.step4?.personalEmail || state.applicantEmail || '',
+        contact_phone: state.step4?.personalPhone || state.applicantPhone || '',
+        contact_date_of_birth: state.step4?.dateOfBirth || state.applicantDateOfBirth || '',
+        contact_ssn: state.step4?.socialSecurityNumber || state.applicantSSN || '',
+        contact_address: state.step4?.applicantAddress || state.applicantAddress || '',
+        contact_city: state.step4?.applicantCity || state.applicantCity || '',
+        contact_state: state.step4?.applicantState || state.applicantState || '',
+        contact_zip: state.step4?.applicantPostalCode || state.applicantZipCode || '',
+        
+        // Business Information (from step3)
+        legal_business_name: state.step3?.legalName || state.legalName || '',
+        business_dba_name: state.step3?.operatingName || state.operatingName || '',
+        business_address: state.step3?.businessAddress || state.businessStreetAddress || '',
+        business_city: state.step3?.businessCity || state.businessCity || '',
+        business_state: state.step3?.businessState || state.businessState || '',
+        business_zip: state.step3?.businessZip || state.businessPostalCode || '',
+        business_phone: state.step3?.businessPhone || state.businessPhone || '',
+        business_website: state.step3?.businessWebsite || state.businessWebsite || '',
+        business_structure: state.step3?.businessStructure || state.businessStructure || '',
+        business_start_date: state.step3?.businessStartDate || state.businessStartDate || '',
+        
+        // Financial Information (from step1)
+        requested_amount: state.step1?.fundingAmount || state.fundingAmount || '',
+        purpose_of_funds: state.step1?.purposeOfFunds || state.purposeOfFunds || '',
+        annual_revenue: state.step1?.lastYearRevenue || state.lastYearRevenue || '',
+        monthly_revenue: state.step1?.averageMonthlyRevenue || state.averageMonthlyRevenue || '',
+        industry: state.step1?.industry || state.step1?.businessLocation || state.industry || '',
+        
+        // Additional Fields (from step4)
+        ownership_percentage: state.step4?.ownershipPercentage || state.ownershipPercentage || '100',
+        credit_score: state.step4?.creditScore || state.creditScore || '',
+        years_with_business: state.step4?.yearsWithBusiness || state.yearsWithBusiness || ''
       };
-      console.log("📤 Final Application Payload:", applicationPayload);
+
+      console.log("📋 Smart Fields for SignNow Template:", smartFields);
+      console.log("🔍 Smart Fields Verification:", {
+        totalFields: Object.keys(smartFields).length,
+        populatedFields: Object.values(smartFields).filter(v => v && v !== '').length,
+        emptyFields: Object.entries(smartFields).filter(([k,v]) => !v || v === '').map(([k]) => k)
+      });
       
       console.log('🔄 Fetching signing URL for application:', applicationId);
       console.log('🎯 SignNow URL confirmation:', `/api/public/applications/${applicationId}/signing-status`);
@@ -155,7 +179,17 @@ export default function Step6SignNowIntegration() {
       const redirectUrl = import.meta.env.VITE_SIGNNOW_REDIRECT_URL || 'https://clientportal.boreal.financial/#/step7-finalization';
       console.log("🧭 Configuring redirect URL for SignNow:", redirectUrl);
       
-      fetch(`/api/public/applications/${applicationId}/signing-status`)
+      // ✅ SEND SMART FIELDS TO STAFF BACKEND FOR TEMPLATE POPULATION
+      fetch(`/api/public/applications/${applicationId}/signing-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          smartFields,
+          redirectUrl: 'https://clientportal.boreal.financial/#/step7-finalization'
+        })
+      })
         .then(res => {
           if (!res.ok) {
             throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -218,8 +252,11 @@ export default function Step6SignNowIntegration() {
       // ✅ B. Confirm polling hits correct endpoint (using public API path)
       const pollingEndpoint = `/api/public/applications/${applicationId}/signature-status`;
       console.log('📡 Polling signature status for:', applicationId);
+      console.log('📡 Using GET method for polling (not POST like signing-status)');
       
-      const res = await fetch(pollingEndpoint).catch(fetchError => {
+      const res = await fetch(pollingEndpoint, {
+        method: 'GET'  // Explicitly use GET for polling (different from POST for signing-status)
+      }).catch(fetchError => {
         // Handle fetch errors silently to prevent unhandled promise rejections
         console.warn('📡 Signature status fetch failed:', fetchError.message);
         return null;
