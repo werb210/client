@@ -213,28 +213,41 @@ export default function Step6SignNowIntegration() {
           console.log('📄 SignNow document creation response:', data);
           console.log('📋 Smart fields submitted successfully to staff backend');
           
-          if (data.signingUrl) {
-            console.log('🔗 Setting signing URL from POST /api/public/signnow/initiate:', data.signingUrl);
-            setSignUrl(data.signingUrl);
+          // ✅ NULL SAFETY CHECK: Check for redirect_url before loading iframe
+          if (!data.signingUrl && !data.redirect_url) {
+            console.error('❌ No signing URL in response:', data);
+            setError("Failed to retrieve signing URL. Please try again.");
+            setSigningStatus('error');
+            return;
+          }
+          
+          // ✅ CHECK FOR ERROR STATUS: Show retry button if server returns { status: "error" }
+          if (data.status === "error") {
+            console.error('❌ Server returned error status:', data);
+            setError(data.message || "SignNow service temporarily unavailable. Please try again.");
+            setSigningStatus('error');
+            return;
+          }
+          
+          // Use signing URL from response (check multiple possible field names)
+          const signingUrl = data.signingUrl || data.redirect_url || data.signnow_url;
+          
+          if (signingUrl) {
+            console.log('🔗 Setting signing URL from POST /api/public/signnow/initiate:', signingUrl);
+            setSignUrl(signingUrl);
             setSigningStatus('ready');
             setStartTime(Date.now()); // Track when signing started
             
             // Check if this is a fallback URL
-            if (data.signingUrl.includes('temp_') || data.fallback) {
+            if (signingUrl.includes('temp_') || data.fallback) {
               console.warn('⚠️ Using fallback SignNow URL - staff backend unavailable');
-              console.warn('🔗 Fallback URL will not populate template fields:', data.data.signingUrl);
+              console.warn('🔗 Fallback URL will not populate template fields:', signingUrl);
             } else {
               console.log('✅ Using real SignNow URL with populated template fields from staff backend');
             }
-          } else if (data.signingUrl) {
-            // Handle direct signingUrl response (alternative response format)
-            console.log('🔗 Setting signing URL (direct format):', data.signingUrl);
-            setSignUrl(data.signingUrl);
-            setSigningStatus('ready');
-            setStartTime(Date.now());
           } else {
             console.error('❌ No signing URL in response:', data);
-            setError('No signing URL available');
+            setError("Failed to retrieve signing URL. Please try again.");
             setSigningStatus('error');
           }
         })
@@ -537,12 +550,30 @@ export default function Step6SignNowIntegration() {
             <CardContent>
               <div className="space-y-4">
                 <p className="text-red-700">{error}</p>
-                <Button 
-                  onClick={handleManualOverride}
-                  className="w-full bg-orange-600 hover:bg-orange-700"
-                >
-                  Continue Without Signing
-                </Button>
+                
+                {/* ✅ RETRY BUTTON: Show retry button for server errors */}
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => {
+                      setError('');
+                      setSigningStatus('loading');
+                      // Trigger re-fetch of signing URL
+                      window.location.reload();
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <Loader2 className="w-4 h-4 mr-2" />
+                    Retry Signing
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleManualOverride}
+                    className="flex-1 bg-orange-600 hover:bg-orange-700"
+                  >
+                    Continue Without Signing
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

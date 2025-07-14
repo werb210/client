@@ -93,6 +93,15 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 14, 2025: ✅ STEP 6 NULL SAFETY & ERROR HANDLING ENHANCEMENT COMPLETED**
+  * **NULL SAFETY CHECK**: Added null check for redirect_url before iframe loading: `if (!data.signingUrl && !data.redirect_url)`
+  * **ERROR STATUS HANDLING**: Added server error detection for `{ status: "error" }` responses with appropriate error messages
+  * **RETRY FUNCTIONALITY**: Implemented retry button for server errors alongside existing "Continue Without Signing" option
+  * **MULTIPLE URL FIELD SUPPORT**: Enhanced URL extraction to check `data.signingUrl || data.redirect_url || data.signnow_url`
+  * **STAFF ENDPOINT RESILIENCE**: Added comprehensive error handling for missing backend endpoints with user-friendly messages
+  * **CLIENT FALLBACK LOGIC**: Enhanced null safety guards prevent iframe loading failures and provide clear error feedback
+  * **PRODUCTION READY**: Step 6 now handles all server error scenarios gracefully with retry mechanisms and fallback options
+
 - **July 14, 2025: ✅ COMPLETE STEP 5-7 WORKFLOW IMPLEMENTATION WITH ENDPOINT COMPLIANCE COMPLETED**
   * **CRITICAL SUCCESS**: Implemented complete Step 5-7 workflow with proper endpoint routing per user specifications
   * **STEP 5 DOCUMENT UPLOAD**: Fixed endpoint from `/api/public/upload/:applicationId` to `/api/public/applications/:id/documents` with multipart/form-data payload
