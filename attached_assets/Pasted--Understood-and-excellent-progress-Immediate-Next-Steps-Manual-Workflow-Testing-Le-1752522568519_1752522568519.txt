@@ -1,0 +1,96 @@
+✅ Understood — and excellent progress.
+
+---
+
+## 🔍 Immediate Next Steps: Manual Workflow Testing
+
+Let's test the **entire Step 5–7 workflow** from the client side using real data.
+
+### 🔄 Step-by-Step Workflow Test Instructions (Client)
+
+#### 🔹 Step 4: Application Creation
+
+* Fill out the form and submit
+* Confirm you see `✅ Application created` and a UUID stored in:
+
+  ```js
+  state.applicationId // and
+  localStorage.getItem("applicationId")
+  ```
+
+#### 🔹 Step 5: Document Upload
+
+* Upload at least one document
+* Confirm POST request goes to:
+
+  ```
+  /api/public/applications/:id/documents
+  ```
+* Confirm document appears in Staff app under correct application
+* Confirm console shows:
+
+  ```
+  📤 Uploaded [document_name] to application [UUID]
+  ```
+
+#### 🔹 Step 6: SignNow Initiation
+
+* Proceed to Step 6 and click "Start Signing"
+* Confirm API request goes to:
+
+  ```
+  /api/public/signnow/initiate/:applicationId
+  ```
+* Confirm SignNow modal opens with populated fields (check for business name, email, etc.)
+* **Important**: Do NOT see a blank signature doc
+
+#### 🔹 Step 7: Finalize
+
+* After signing, confirm webhook updates application status to `lender_match`
+* Proceed to Step 7
+* Confirm API request goes to:
+
+  ```
+  POST /api/public/applications/:id/finalize
+  ```
+* Confirm response:
+
+  ```json
+  { success: true, message: "Application finalized" }
+  ```
+* Confirm staff app locks editing and shows matched lenders
+
+---
+
+## 🧪 Automated Verification (Optional in Console)
+
+Run in browser console at each step:
+
+```js
+console.log("📌 App ID:", state.applicationId);
+console.log("📄 Uploaded Docs:", state.step5?.documents || []);
+console.log("📝 Signing Started:", state.step6?.signatureStarted || false);
+console.log("✅ Finalization Triggered:", state.step7?.finalized || false);
+```
+
+---
+
+## 📤 Replit Client Must Report Back
+
+Replit must return this summary to ChatGPT:
+
+```yaml
+report_type: step5_7_workflow_test
+application_id_found: true
+document_upload_successful: true
+signnow_initiated: true
+signature_completed: true
+finalization_submitted: true
+status: fully_working
+```
+
+---
+
+Once this is confirmed, we can move to lender matching or post-submission logic.
+
+Let me know the test result.

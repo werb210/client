@@ -81,6 +81,16 @@ export default function Step5DocumentUpload() {
       console.log(`🔧 [STEP5] Derived values: category="${productCategory}", location="${location}", amount="${amount}"`);
       console.log(`🔧 [STEP5] Full state keys:`, Object.keys(state));
       
+      // Add validation logging for step-based structure compliance
+      console.log("[Step 5] Category used for required docs:", state.step2?.selectedCategory);
+      console.log("[Step 5] Step-based validation:", {
+        step1Available: !!state.step1,
+        step2Available: !!state.step2,
+        step2Category: state.step2?.selectedCategory,
+        step1Location: state.step1?.businessLocation,
+        step1Amount: state.step1?.fundingAmount
+      });
+      
       // Use step2.selectedCategory - STEP-BASED COMPLIANCE
       const apiCategory = productCategory || '';
       
@@ -111,7 +121,7 @@ export default function Step5DocumentUpload() {
       }
 
       console.log('🔍 [STEP5] Calculating document requirements with intersection logic...');
-      console.log('Form data:', { selectedCategory, apiCategory, businessLocation, apiLocation, fundingAmount: amount });
+      console.log('Form data:', { productCategory, apiCategory, location, apiLocation, fundingAmount: amount });
 
       // Parse funding amount if it's a string
       const parsedFundingAmount = typeof amount === 'string' 
