@@ -75,7 +75,7 @@ export default function Step7Submit() {
 
     try {
       // ✅ Check application status before submission
-      const applicationId = state.step4?.applicationId || state.applicationId;
+      const applicationId = state.step4?.applicationId;
       if (!applicationId) {
         throw new Error('No application ID found. Cannot check status.');
       }
@@ -121,7 +121,7 @@ export default function Step7Submit() {
         submissionTimestamp: new Date().toISOString(),
         termsAccepted: true,
         privacyAccepted: true,
-        applicationId: state.step4?.applicationId || state.applicationId || '',
+        applicationId: state.step4?.applicationId || '',
         
         // Document metadata
         documentCount: uploadedFiles.length,
@@ -141,7 +141,7 @@ export default function Step7Submit() {
       });
       
       // Submit to staff API with multipart/form-data
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${state.step4?.applicationId || state.applicationId}/submit`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${state.step4?.applicationId}/submit`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
@@ -242,19 +242,19 @@ export default function Step7Submit() {
                 <h4 className="font-medium text-gray-900 mb-2">Business Information</h4>
                 <div className="space-y-1 text-sm text-gray-600">
                   <p><strong>Business:</strong> {state.step3?.operatingName || 'Not provided'}</p>
-                  <p><strong>Industry:</strong> {state.industry || 'Not provided'}</p>
-                  <p><strong>Location:</strong> {state.businessLocation || 'Not provided'}</p>
-                  <p><strong>Structure:</strong> {state.businessStructure || 'Not provided'}</p>
+                  <p><strong>Industry:</strong> {state.step1?.industry || 'Not provided'}</p>
+                  <p><strong>Location:</strong> {state.step1?.businessLocation || 'Not provided'}</p>
+                  <p><strong>Structure:</strong> {state.step3?.businessStructure || 'Not provided'}</p>
                 </div>
               </div>
               
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Funding Request</h4>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p><strong>Amount:</strong> {state.fundingAmount || 'Not provided'}</p>
-                  <p><strong>Purpose:</strong> {state.fundsPurpose || 'Not provided'}</p>
+                  <p><strong>Amount:</strong> {state.step1?.fundingAmount || 'Not provided'}</p>
+                  <p><strong>Purpose:</strong> {state.step1?.fundsPurpose || 'Not provided'}</p>
                   <p><strong>Product Type:</strong> {state.selectedCategory || 'Not selected'}</p>
-                  <p><strong>Revenue:</strong> {state.revenueLastYear || 'Not provided'}</p>
+                  <p><strong>Revenue:</strong> {state.step1?.revenueLastYear || 'Not provided'}</p>
                 </div>
               </div>
             </div>

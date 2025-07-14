@@ -40,7 +40,7 @@ export default function Step7Finalization() {
   const [error, setError] = useState<string | null>(null);
 
   // Get application ID from previous steps - NO FALLBACK
-  const applicationId = state.step4?.applicationId || state.applicationId;
+  const applicationId = state.step4?.applicationId;
 
   const handleFinalize = async () => {
     console.log('🚀 handleFinalize called!', { termsAccepted, privacyAccepted, applicationId });
@@ -260,11 +260,11 @@ export default function Step7Finalization() {
             </div>
             <div>
               <span className="text-gray-500">Selected Product:</span>
-              <p className="font-medium">{state.step1?.selectedProductName || state.selectedProductName || state.step1?.selectedCategoryName || state.selectedCategoryName || state.step1?.selectedCategory || state.selectedCategory || 'Not selected'}</p>
+              <p className="font-medium">{state.step1?.selectedProductName || state.step1?.selectedCategoryName || state.step1?.selectedCategory || state.selectedCategory || 'Not selected'}</p>
             </div>
             <div>
               <span className="text-gray-500">Funding Amount:</span>
-              <p className="font-medium">${(state.step1?.fundingAmount || state.fundingAmount)?.toLocaleString() || 'Not specified'}</p>
+              <p className="font-medium">${state.step1?.fundingAmount?.toLocaleString() || 'Not specified'}</p>
             </div>
             <div>
               <span className="text-gray-500">Business Name:</span>

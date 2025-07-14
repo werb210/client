@@ -60,49 +60,49 @@ export default function Step4ApplicantInfoComplete() {
 
   // Detect region from Step 1 business location
   useEffect(() => {
-    setIsCanadian(state.businessLocation === "CA");
-  }, [state.businessLocation]);
+    setIsCanadian(state.step1?.businessLocation === "CA");
+  }, [state.step1?.businessLocation]);
 
-  const countryCode = getCountryFromBusinessLocation(state.businessLocation);
+  const countryCode = getCountryFromBusinessLocation(state.step1?.businessLocation || 'US');
 
   const form = useForm<Step4FormData>({
     resolver: zodResolver(step4Schema),
     defaultValues: {
-      applicantFirstName: state.applicantFirstName || "",
-      applicantLastName: state.applicantLastName || "",
-      applicantEmail: state.applicantEmail || "",
-      applicantPhone: state.applicantPhone || "",
-      applicantAddress: state.applicantAddress || "",
-      applicantCity: state.applicantCity || "",
-      applicantState: state.applicantState || "",
-      applicantZipCode: state.applicantZipCode || "",
-      applicantDateOfBirth: state.applicantDateOfBirth || "",
-      applicantSSN: state.applicantSSN || "",
-      ownershipPercentage: state.ownershipPercentage || 100,
-      hasPartner: state.hasPartner || false,
-      partnerFirstName: state.partnerFirstName || "",
-      partnerLastName: state.partnerLastName || "",
-      partnerEmail: state.partnerEmail || "",
-      partnerPhone: state.partnerPhone || "",
-      partnerAddress: state.partnerAddress || "",
-      partnerCity: state.partnerCity || "",
-      partnerState: state.partnerState || "",
-      partnerZipCode: state.partnerZipCode || "",
-      partnerDateOfBirth: state.partnerDateOfBirth || "",
-      partnerSSN: state.partnerSSN || "",
-      partnerOwnershipPercentage: state.partnerOwnershipPercentage || 0,
+      applicantFirstName: state.step4?.applicantFirstName || "",
+      applicantLastName: state.step4?.applicantLastName || "",
+      applicantEmail: state.step4?.applicantEmail || "",
+      applicantPhone: state.step4?.applicantPhone || "",
+      applicantAddress: state.step4?.applicantAddress || "",
+      applicantCity: state.step4?.applicantCity || "",
+      applicantState: state.step4?.applicantState || "",
+      applicantZipCode: state.step4?.applicantZipCode || "",
+      applicantDateOfBirth: state.step4?.applicantDateOfBirth || "",
+      applicantSSN: state.step4?.applicantSSN || "",
+      ownershipPercentage: state.step4?.ownershipPercentage || 100,
+      hasPartner: state.step4?.hasPartner || false,
+      partnerFirstName: state.step4?.partnerFirstName || "",
+      partnerLastName: state.step4?.partnerLastName || "",
+      partnerEmail: state.step4?.partnerEmail || "",
+      partnerPhone: state.step4?.partnerPhone || "",
+      partnerAddress: state.step4?.partnerAddress || "",
+      partnerCity: state.step4?.partnerCity || "",
+      partnerState: state.step4?.partnerState || "",
+      partnerZipCode: state.step4?.partnerZipCode || "",
+      partnerDateOfBirth: state.step4?.partnerDateOfBirth || "",
+      partnerSSN: state.step4?.partnerSSN || "",
+      partnerOwnershipPercentage: state.step4?.partnerOwnershipPercentage || 0,
     },
   });
 
   // Initialize phone display states
   useEffect(() => {
-    if (state.applicantPhone && !applicantPhoneDisplay) {
-      setApplicantPhoneDisplay(formatPhoneDisplay(state.applicantPhone, countryCode));
+    if (state.step4?.applicantPhone && !applicantPhoneDisplay) {
+      setApplicantPhoneDisplay(formatPhoneDisplay(state.step4.applicantPhone, countryCode));
     }
-    if (state.partnerPhone && !partnerPhoneDisplay) {
-      setPartnerPhoneDisplay(formatPhoneDisplay(state.partnerPhone, countryCode));
+    if (state.step4?.partnerPhone && !partnerPhoneDisplay) {
+      setPartnerPhoneDisplay(formatPhoneDisplay(state.step4.partnerPhone, countryCode));
     }
-  }, [state.applicantPhone, state.partnerPhone, applicantPhoneDisplay, partnerPhoneDisplay, countryCode]);
+  }, [state.step4?.applicantPhone, state.step4?.partnerPhone, applicantPhoneDisplay, partnerPhoneDisplay, countryCode]);
 
   const watchedValues = form.watch();
   const hasPartner = form.watch("hasPartner");
@@ -165,32 +165,32 @@ export default function Step4ApplicantInfoComplete() {
       // Format data as staff backend expects: {step1, step3, step4}
       const step1 = {
         // Financial profile data from Steps 1 & 2
-        requestedAmount: state.step1?.requestedAmount || state.fundingAmount, // ✅ step-based access
-        use_of_funds: state.step1?.use_of_funds || state.lookingFor, // ✅ step-based access
-        equipment_value: state.step1?.equipment_value || state.equipmentValue, // ✅ step-based access
-        businessLocation: state.step1?.businessLocation || state.businessLocation,
-        salesHistory: state.step1?.salesHistory || state.salesHistory,
-        lastYearRevenue: state.step1?.lastYearRevenue || state.lastYearRevenue,
-        averageMonthlyRevenue: state.step1?.averageMonthlyRevenue || state.averageMonthlyRevenue,
-        accountsReceivableBalance: state.step1?.accountsReceivableBalance || state.accountsReceivableBalance,
-        fixedAssetsValue: state.step1?.fixedAssetsValue || state.fixedAssetsValue,
-        purposeOfFunds: state.step1?.purposeOfFunds || state.purposeOfFunds,
-        selectedCategory: state.step1?.selectedCategory || state.selectedCategory
+        requestedAmount: state.step1?.requestedAmount || state.step1?.fundingAmount, // ✅ step-based access
+        use_of_funds: state.step1?.use_of_funds || state.step1?.lookingFor, // ✅ step-based access
+        equipment_value: state.step1?.equipment_value || state.step1?.equipmentValue, // ✅ step-based access
+        businessLocation: state.step1?.businessLocation,
+        salesHistory: state.step1?.salesHistory,
+        lastYearRevenue: state.step1?.lastYearRevenue,
+        averageMonthlyRevenue: state.step1?.averageMonthlyRevenue,
+        accountsReceivableBalance: state.step1?.accountsReceivableBalance,
+        fixedAssetsValue: state.step1?.fixedAssetsValue,
+        purposeOfFunds: state.step1?.purposeOfFunds,
+        selectedCategory: state.step1?.selectedCategory
       };
 
       const step3 = {
         // Business details from Step 3
         operatingName: state.step3?.operatingName,
-        legalName: state.step3?.legalName || state.legalName,
-        businessAddress: state.step3?.businessAddress || state.businessAddress,
-        businessCity: state.step3?.businessCity || state.businessCity,
-        businessState: state.step3?.businessState || state.businessState,
-        businessZip: state.step3?.businessZip || state.businessZip,
-        businessPhone: state.step3?.businessPhone || state.businessPhone,
-        businessStructure: state.step3?.businessStructure || state.businessStructure,
-        businessStartDate: state.step3?.businessStartDate || state.businessStartDate,
-        numberOfEmployees: state.step3?.numberOfEmployees || state.numberOfEmployees,
-        annualRevenue: state.step3?.annualRevenue || state.annualRevenue
+        legalName: state.step3?.legalName,
+        businessAddress: state.step3?.businessAddress,
+        businessCity: state.step3?.businessCity,
+        businessState: state.step3?.businessState,
+        businessZip: state.step3?.businessZip,
+        businessPhone: state.step3?.businessPhone,
+        businessStructure: state.step3?.businessStructure,
+        businessStartDate: state.step3?.businessStartDate,
+        numberOfEmployees: state.step3?.numberOfEmployees,
+        annualRevenue: state.step3?.annualRevenue
       };
 
       const step4 = processedData;
@@ -245,11 +245,11 @@ export default function Step4ApplicantInfoComplete() {
         step1, 
         step3: {
           ...step3,
-          businessName: step3.legalName || state.legalName, // ✅ Add required businessName field
+          businessName: step3.legalName, // ✅ Add required businessName field
         }, 
         step4: {
           ...step4,
-          email: step4.applicantEmail || processedData.applicantEmail || state.applicantEmail // ✅ Add required email field
+          email: step4.applicantEmail || processedData.applicantEmail // ✅ Add required email field
         },
         signNowFields: signNowFields
       };

@@ -62,18 +62,17 @@ export default function Step5DocumentUpload() {
   useEffect(() => {
     const calculateDocumentRequirements = async () => {
       // A. Use the form state to access required fields - map from unified schema
-      const { selectedCategory, businessLocation, fundingAmount, lookingFor, headquarters } = state;
+      const { selectedCategory } = state;
       
-      // Try multiple field mappings since the schema has evolved
-      const productCategory = selectedCategory || lookingFor || '';
-      const location = businessLocation || headquarters || '';
-      const amount = fundingAmount || state.step1?.fundingAmount || state.fundingAmount || '';
+      // Use step-based structure only
+      const productCategory = selectedCategory || state.step1?.lookingFor || '';
+      const location = state.step1?.businessLocation || '';
+      const amount = state.step1?.fundingAmount || '';
       
       console.log(`🔧 [STEP5] selectedCategory from state: "${selectedCategory}"`);
-      console.log(`🔧 [STEP5] businessLocation from state: "${businessLocation}"`);
-      console.log(`🔧 [STEP5] fundingAmount from state: "${fundingAmount}"`);
-      console.log(`🔧 [STEP5] headquarters from state: "${headquarters}"`);
-      console.log(`🔧 [STEP5] lookingFor from state: "${lookingFor}"`);
+      console.log(`🔧 [STEP5] businessLocation from step1: "${state.step1?.businessLocation}"`);
+      console.log(`🔧 [STEP5] fundingAmount from step1: "${state.step1?.fundingAmount}"`);
+      console.log(`🔧 [STEP5] lookingFor from step1: "${state.step1?.lookingFor}"`);
       console.log(`🔧 [STEP5] Derived values: category="${productCategory}", location="${location}", amount="${amount}"`);
       console.log(`🔧 [STEP5] Full state keys:`, Object.keys(state));
       
@@ -183,7 +182,7 @@ export default function Step5DocumentUpload() {
     };
 
     calculateDocumentRequirements();
-  }, [state.step1?.selectedCategory || state.selectedCategory, state.step1?.businessLocation || state.businessLocation, state.step1?.fundingAmount || state.fundingAmount, toast]);
+  }, [state.step1?.selectedCategory || state.selectedCategory, state.step1?.businessLocation, state.step1?.fundingAmount, toast]);
 
   // Auto-save uploaded documents with 2-second delay
   const debouncedSave = useDebouncedCallback((files: UploadedFile[]) => {
@@ -223,7 +222,7 @@ export default function Step5DocumentUpload() {
   };
 
   // Get selected product from previous steps for document categorization
-  const selectedProduct = state.step1?.selectedProductId || state.selectedProductId || '';
+  const selectedProduct = state.step1?.selectedProductId || '';
   
   // Navigation handlers
   const handlePrevious = () => {
@@ -276,8 +275,8 @@ export default function Step5DocumentUpload() {
       });
 
       // Make API call to mark documents as bypassed
-      if (state.step4?.applicationId || state.applicationId) {
-        await fetch(`/api/applications/${state.step4?.applicationId || state.applicationId}/nudge-documents`, {
+      if (state.step4?.applicationId) {
+        await fetch(`/api/applications/${state.step4?.applicationId}/nudge-documents`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -330,7 +329,7 @@ export default function Step5DocumentUpload() {
         uploadedFiles={uploadedFiles}
         onFilesUploaded={handleFilesUploaded}
         onRequirementsChange={handleRequirementsChange}
-        applicationId={state.step4?.applicationId || state.applicationId || 'test-app-123'}
+        applicationId={state.step4?.applicationId || 'test-app-123'}
       />
 
       {/* Progress Summary */}

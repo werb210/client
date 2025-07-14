@@ -136,19 +136,19 @@ export default function Step1FinancialProfile() {
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
-      businessLocation: state.step1?.businessLocation || state.businessLocation || 'US',
-      headquarters: state.step1?.headquarters || state.headquarters || 'US',
-      headquartersState: state.step1?.headquartersState || state.headquartersState || '',
-      industry: state.step1?.industry || state.industry || '',
-      lookingFor: state.step1?.lookingFor || state.lookingFor || 'capital',
-      fundingAmount: state.step1?.fundingAmount || state.fundingAmount || 0,
-      fundsPurpose: state.step1?.fundsPurpose || state.fundsPurpose || 'working_capital',
-      salesHistory: state.step1?.salesHistory || state.salesHistory || '<1yr',
-      revenueLastYear: state.step1?.revenueLastYear || state.revenueLastYear || 0,
-      averageMonthlyRevenue: state.step1?.averageMonthlyRevenue || state.averageMonthlyRevenue || 0,
-      accountsReceivableBalance: state.step1?.accountsReceivableBalance || state.accountsReceivableBalance || 0,
-      fixedAssetsValue: state.step1?.fixedAssetsValue || state.fixedAssetsValue || 0,
-      equipmentValue: state.step1?.equipmentValue || state.equipmentValue || 0,
+      businessLocation: state.step1?.businessLocation || 'US',
+      headquarters: state.step1?.headquarters || 'US',
+      headquartersState: state.step1?.headquartersState || '',
+      industry: state.step1?.industry || '',
+      lookingFor: state.step1?.lookingFor || 'capital',
+      fundingAmount: state.step1?.fundingAmount || 0,
+      fundsPurpose: state.step1?.fundsPurpose || 'working_capital',
+      salesHistory: state.step1?.salesHistory || '<1yr',
+      revenueLastYear: state.step1?.revenueLastYear || 0,
+      averageMonthlyRevenue: state.step1?.averageMonthlyRevenue || 0,
+      accountsReceivableBalance: state.step1?.accountsReceivableBalance || 0,
+      fixedAssetsValue: state.step1?.fixedAssetsValue || 0,
+      equipmentValue: state.step1?.equipmentValue || 0,
     },
   });
 
@@ -239,7 +239,7 @@ export default function Step1FinancialProfile() {
     markApplicationStarted();
     
     // Auto-detect user's country if not already set
-    if (!state.businessLocation || !state.headquarters) {
+    if (!state.step1?.businessLocation || !state.step1?.headquarters) {
       fetchUserCountry().then(countryCode => {
         if (countryCode) {
           const businessLocation = countryCodeToBusinessLocation(countryCode);
@@ -249,10 +249,10 @@ export default function Step1FinancialProfile() {
             console.log(`🌍 Auto-detected country: ${countryCode} (${businessLocation})`);
             
             // Update form values
-            if (!state.businessLocation) {
+            if (!state.step1?.businessLocation) {
               form.setValue('businessLocation', headquarters);
             }
-            if (!state.headquarters) {
+            if (!state.step1?.headquarters) {
               form.setValue('headquarters', headquarters);
             }
             
@@ -268,25 +268,25 @@ export default function Step1FinancialProfile() {
         } else {
           // Default to US when location detection fails
           console.log('🇺🇸 Location detection failed, defaulting to US');
-          if (!state.businessLocation) {
+          if (!state.step1?.businessLocation) {
             form.setValue('businessLocation', 'US');
           }
-          if (!state.headquarters) {
+          if (!state.step1?.headquarters) {
             form.setValue('headquarters', 'US');
           }
         }
       }).catch(error => {
         console.log('Country detection failed, defaulting to US:', error?.message || 'Unknown error');
         // Default to US when location detection fails
-        if (!state.businessLocation) {
+        if (!state.step1?.businessLocation) {
           form.setValue('businessLocation', 'US');
         }
-        if (!state.headquarters) {
+        if (!state.step1?.headquarters) {
           form.setValue('headquarters', 'US');
         }
       });
     }
-  }, [state.businessLocation, state.headquarters, form, dispatch]);
+  }, [state.step1?.businessLocation, state.step1?.headquarters, form, dispatch]);
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
