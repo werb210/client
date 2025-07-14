@@ -204,7 +204,47 @@ export default function Step4ApplicantInfoComplete() {
         return;
       }
 
-      const applicationData = { step1, step3, step4 };
+      // Create SignNow field mapping for template pre-population
+      const signNowFields = {
+        // Personal Information
+        'First Name': step4.firstName,
+        'Last Name': step4.lastName,
+        'Email': step4.personalEmail,
+        'Phone': step4.personalPhone,
+        'Date of Birth': step4.dateOfBirth,
+        'SSN': step4.socialSecurityNumber,
+        'Personal Address': step4.applicantAddress,
+        'Personal City': step4.applicantCity,
+        'Personal State': step4.applicantState,
+        'Personal Zip': step4.applicantPostalCode,
+        
+        // Business Information
+        'Business Name': step3.operatingName,
+        'Legal Business Name': step3.legalName,
+        'Business Address': step3.businessAddress,
+        'Business City': step3.businessCity,
+        'Business State': step3.businessState,
+        'Business Zip': step3.businessZip,
+        'Business Phone': step3.businessPhone,
+        'Business Website': step3.businessWebsite,
+        
+        // Loan Information
+        'Funding Amount': step1.fundingAmount,
+        'Purpose of Funds': step1.purposeOfFunds,
+        'Industry': step1.industry || step1.businessLocation,
+        
+        // Additional
+        'Ownership Percentage': step4.ownershipPercentage,
+        'Credit Score': step4.creditScore,
+        'Years with Business': step4.yearsWithBusiness
+      };
+
+      const applicationData = { 
+        step1, 
+        step3, 
+        step4,
+        signNowFields: signNowFields
+      };
       
       // ✅ Log final POST payload exactly as specified  
       console.log("📤 Submitting full application:", { step1, step3, step4 });
