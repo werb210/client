@@ -98,9 +98,9 @@ export default function Step6SignNowIntegration() {
           available: !!state.step4,
           fields: state.step4 ? Object.keys(state.step4) : [],
           sample: state.step4 ? {
-            firstName: state.step4.firstName || state.step4.applicantFirstName,
-            lastName: state.step4.lastName || state.step4.applicantLastName,
-            email: state.step4.email || state.step4.applicantEmail
+            firstName: state.step4.firstName,
+            lastName: state.step4.lastName,
+            email: state.step4.personalEmail
           } : null
         }
       });
@@ -127,42 +127,43 @@ export default function Step6SignNowIntegration() {
       
       // ✅ CREATE SIGNNOW SMART FIELDS MAPPING
       // This is the critical missing piece - smart fields must be sent to staff backend
+      // ✅ CRITICAL FIX: Only use step-based structure - no flat field fallbacks
       const smartFields = {
-        // Personal Information (from step4)
-        contact_first_name: state.step4?.firstName || state.applicantFirstName || '',
-        contact_last_name: state.step4?.lastName || state.applicantLastName || '',
-        contact_email: state.step4?.personalEmail || state.applicantEmail || '',
-        contact_phone: state.step4?.personalPhone || state.applicantPhone || '',
-        contact_date_of_birth: state.step4?.dateOfBirth || state.applicantDateOfBirth || '',
-        contact_ssn: state.step4?.socialSecurityNumber || state.applicantSSN || '',
-        contact_address: state.step4?.applicantAddress || state.applicantAddress || '',
-        contact_city: state.step4?.applicantCity || state.applicantCity || '',
-        contact_state: state.step4?.applicantState || state.applicantState || '',
-        contact_zip: state.step4?.applicantPostalCode || state.applicantZipCode || '',
+        // Personal Information (from step4 only)
+        contact_first_name: state.step4?.firstName || '',
+        contact_last_name: state.step4?.lastName || '',
+        contact_email: state.step4?.personalEmail || '',
+        contact_phone: state.step4?.personalPhone || '',
+        contact_date_of_birth: state.step4?.dateOfBirth || '',
+        contact_ssn: state.step4?.socialSecurityNumber || '',
+        contact_address: state.step4?.applicantAddress || '',
+        contact_city: state.step4?.applicantCity || '',
+        contact_state: state.step4?.applicantState || '',
+        contact_zip: state.step4?.applicantPostalCode || '',
         
-        // Business Information (from step3)
-        legal_business_name: state.step3?.legalName || state.legalName || '',
-        business_dba_name: state.step3?.operatingName || state.operatingName || '',
-        business_address: state.step3?.businessAddress || state.businessStreetAddress || '',
-        business_city: state.step3?.businessCity || state.businessCity || '',
-        business_state: state.step3?.businessState || state.businessState || '',
-        business_zip: state.step3?.businessZip || state.businessPostalCode || '',
-        business_phone: state.step3?.businessPhone || state.businessPhone || '',
-        business_website: state.step3?.businessWebsite || state.businessWebsite || '',
-        business_structure: state.step3?.businessStructure || state.businessStructure || '',
-        business_start_date: state.step3?.businessStartDate || state.businessStartDate || '',
+        // Business Information (from step3 only)
+        legal_business_name: state.step3?.legalName || '',
+        business_dba_name: state.step3?.operatingName || '',
+        business_address: state.step3?.businessAddress || '',
+        business_city: state.step3?.businessCity || '',
+        business_state: state.step3?.businessState || '',
+        business_zip: state.step3?.businessZip || '',
+        business_phone: state.step3?.businessPhone || '',
+        business_website: state.step3?.businessWebsite || '',
+        business_structure: state.step3?.businessStructure || '',
+        business_start_date: state.step3?.businessStartDate || '',
         
-        // Financial Information (from step1)
-        requested_amount: state.step1?.fundingAmount || state.fundingAmount || '',
-        purpose_of_funds: state.step1?.purposeOfFunds || state.purposeOfFunds || '',
-        annual_revenue: state.step1?.lastYearRevenue || state.lastYearRevenue || '',
-        monthly_revenue: state.step1?.averageMonthlyRevenue || state.averageMonthlyRevenue || '',
-        industry: state.step1?.industry || state.step1?.businessLocation || state.industry || '',
+        // Financial Information (from step1 only)
+        requested_amount: state.step1?.fundingAmount || '',
+        purpose_of_funds: state.step1?.purposeOfFunds || '',
+        annual_revenue: state.step1?.lastYearRevenue || '',
+        monthly_revenue: state.step1?.averageMonthlyRevenue || '',
+        industry: state.step1?.industry || state.step1?.businessLocation || '',
         
-        // Additional Fields (from step4)
-        ownership_percentage: state.step4?.ownershipPercentage || state.ownershipPercentage || '100',
-        credit_score: state.step4?.creditScore || state.creditScore || '',
-        years_with_business: state.step4?.yearsWithBusiness || state.yearsWithBusiness || ''
+        // Additional Fields (from step4 only)
+        ownership_percentage: state.step4?.ownershipPercentage || '100',
+        credit_score: state.step4?.creditScore || '',
+        years_with_business: state.step4?.yearsWithBusiness || ''
       };
 
       console.log("📋 Smart Fields for SignNow Template:", smartFields);

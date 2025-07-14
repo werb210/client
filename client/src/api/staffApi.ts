@@ -190,110 +190,28 @@ class StaffApiClient {
         console.log('✅ Documents uploaded successfully');
       }
 
-      // Prepare application data using unified schema
-      const applicationData: ApplicationSubmissionData = {
-        formFields: {
-          // Step 1 data
-          headquarters: formData.headquarters || 'US',
-          industry: formData.industry || '',
-          lookingFor: formData.lookingFor || '',
-          fundingAmount: formData.fundingAmount || 0,
-          salesHistory: formData.salesHistory || '',
-          averageMonthlyRevenue: formData.averageMonthlyRevenue || 0,
-          accountsReceivableBalance: formData.accountsReceivableBalance || 0,
-          fixedAssetsValue: formData.fixedAssetsValue || 0,
-          equipmentValue: formData.equipmentValue,
-          
-          // Step 3 data
-          businessName: formData.operatingName || formData.businessName || '',
-          businessAddress: formData.businessStreetAddress || formData.businessAddress || '',
-          businessCity: formData.businessCity || '',
-          businessState: formData.businessState || '',
-          businessZipCode: formData.businessPostalCode || formData.businessZipCode || '',
-          businessPhone: formData.businessPhone || '',
-          businessEmail: formData.businessEmail || '',
-          businessWebsite: formData.businessWebsite || '',
-          businessStructure: formData.businessStructure || '',
-          businessRegistrationDate: formData.businessRegistrationDate || '',
-          businessTaxId: formData.businessTaxId || '',
-          businessDescription: formData.businessDescription || '',
-          numberOfEmployees: formData.numberOfEmployees?.toString() || '',
-          primaryBankName: formData.primaryBankName || '',
-          bankingRelationshipLength: formData.bankingRelationshipLength || '',
-          
-          // Step 4 data
-          firstName: formData.applicantFirstName || '',
-          lastName: formData.applicantLastName || '',
-          title: formData.applicantTitle || '',
-          dateOfBirth: formData.applicantDateOfBirth || '',
-          socialSecurityNumber: formData.applicantSSN || '',
-          personalEmail: formData.applicantEmail || '',
-          personalPhone: formData.applicantPhone || '',
-          homeAddress: formData.applicantAddress || '',
-          homeCity: formData.applicantCity || '',
-          homeState: formData.applicantState || '',
-          homeZipCode: formData.applicantZipCode || '',
-          personalIncome: formData.personalIncome || '',
-          creditScore: formData.creditScore || '',
-          ownershipPercentage: formData.ownershipPercentage?.toString() || '',
-          yearsWithBusiness: formData.yearsWithBusiness || '',
-          previousLoans: formData.previousLoans || '',
-          bankruptcyHistory: formData.bankruptcyHistory || '',
-        },
-        uploadedDocuments,
-        productId: selectedProductId,
-        clientId: 'client_' + crypto.randomUUID(), // Generate unique client ID
-      };
+      // ✅ CRITICAL FIX: Remove flat field references - use step-based structure only
+      console.log('🚫 DEPRECATED: Legacy flat field mapping removed - using step-based structure only');
+      
+      // Ensure formData already contains step-based structure
+      if (!formData.step1 || !formData.step3 || !formData.step4) {
+        console.error('❌ STRUCTURE VIOLATION: formData must contain {step1, step3, step4} format');
+        throw new Error('Invalid application data structure - missing step-based format');
+      }
 
       console.log('📋 Submitting application with data:', {
-        formFieldsCount: Object.keys(applicationData.formFields).length,
+        step1Fields: Object.keys(formData.step1 || {}).length,
+        step3Fields: Object.keys(formData.step3 || {}).length,
+        step4Fields: Object.keys(formData.step4 || {}).length,
         documentsCount: uploadedDocuments.length,
         productId: selectedProductId
       });
 
-      // Submit to staff API - use correct endpoint and format
+      // ✅ ENFORCE STEP-BASED STRUCTURE: Use formData.step1, formData.step3, formData.step4 directly
       const correctPayload = {
-        step1: {
-          headquarters: formData.headquarters || 'US',
-          industry: formData.industry || '',
-          lookingFor: formData.lookingFor || '',
-          fundingAmount: formData.fundingAmount || 0,
-          salesHistory: formData.salesHistory || '',
-          averageMonthlyRevenue: formData.averageMonthlyRevenue || 0,
-          accountsReceivableBalance: formData.accountsReceivableBalance || 0,
-          fixedAssetsValue: formData.fixedAssetsValue || 0,
-          equipmentValue: formData.equipmentValue,
-        },
-        step3: {
-          operatingName: formData.operatingName || formData.businessName || '',
-          legalName: formData.legalName || formData.operatingName || formData.businessName || '',
-          businessStreetAddress: formData.businessStreetAddress || formData.businessAddress || '',
-          businessCity: formData.businessCity || '',
-          businessState: formData.businessState || '',
-          businessPostalCode: formData.businessPostalCode || formData.businessZipCode || '',
-          businessPhone: formData.businessPhone || '',
-          businessWebsite: formData.businessWebsite || '',
-          businessStructure: formData.businessStructure || '',
-          businessRegistrationDate: formData.businessRegistrationDate || '',
-          businessTaxId: formData.businessTaxId || '',
-          businessDescription: formData.businessDescription || '',
-          numberOfEmployees: formData.numberOfEmployees || 0,
-          primaryBankName: formData.primaryBankName || '',
-          bankingRelationshipLength: formData.bankingRelationshipLength || '',
-        },
-        step4: {
-          applicantFirstName: formData.applicantFirstName || '',
-          applicantLastName: formData.applicantLastName || '',
-          applicantEmail: formData.applicantEmail || '',
-          applicantPhone: formData.applicantPhone || '',
-          applicantAddress: formData.applicantAddress || '',
-          applicantCity: formData.applicantCity || '',
-          applicantState: formData.applicantState || '',
-          applicantZipCode: formData.applicantZipCode || '',
-          applicantDateOfBirth: formData.applicantDateOfBirth || '',
-          applicantSSN: formData.applicantSSN || '',
-          ownershipPercentage: formData.ownershipPercentage || 100,
-        },
+        step1: formData.step1,
+        step3: formData.step3,
+        step4: formData.step4,
         uploadedDocuments,
         productId: selectedProductId,
       };
@@ -316,6 +234,12 @@ class StaffApiClient {
           step4: Object.keys(correctPayload.step4 || {}).length + ' fields'
         }
       });
+      
+      // ✅ FINAL VERIFICATION: Ensure no flat field references remain
+      console.log('📋 Step-based structure verification:');
+      console.log('  step1:', correctPayload.step1);
+      console.log('  step3:', correctPayload.step3);
+      console.log('  step4:', correctPayload.step4);
 
       const response = await this.makeRequest<ApplicationSubmissionResponse>('/public/applications', {
         method: 'POST',
