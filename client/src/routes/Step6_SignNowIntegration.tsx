@@ -315,13 +315,22 @@ export default function Step6SignNowIntegration() {
       console.log('📄 Signature status check:', { applicationId, status });
       console.log('📄 Full response data:', data);
       
-      // ✅ B. Check for multiple signed status variations
+      // ✅ B. Check for multiple signed status variations + webhook delay handling
       if (status === "invite_signed" || status === "signed" || status === "completed") {
         console.log('✅ Signature completed - redirecting to Step 7');
         console.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
         console.log('🧭 This is the ONLY legitimate redirect from Step 6');
         setLocation('/apply/step-7');
         return;
+      }
+      
+      // ✅ WORKAROUND: If user manually confirms signing but webhook failed
+      // Check if iframe indicates completion but status hasn't updated
+      const elapsedMinutes = Math.floor((Date.now() - startTime) / (1000 * 60));
+      if (elapsedMinutes >= 3 && status === "invite_sent") {
+        console.log('⚠️ Document has been in "invite_sent" status for 3+ minutes');
+        console.log('⚠️ This may indicate webhook processing delay or failure');
+        console.log('⚠️ Consider using "Continue Without Signing" if you have signed the document');
       }
       
       // Check for timeout warnings
