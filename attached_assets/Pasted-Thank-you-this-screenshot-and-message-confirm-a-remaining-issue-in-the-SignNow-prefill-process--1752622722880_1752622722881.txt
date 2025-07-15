@@ -1,0 +1,94 @@
+Thank you — this screenshot and message **confirm a remaining issue in the SignNow prefill process**, and it’s **not due to recent SignNow API fixes** — this predates them.
+
+---
+
+## 🔍 Root Issue: `Missing fields: first_name, amount_requested`
+
+### ✅ Meaning:
+
+This is not a **backend (staff)** or **SignNow API** issue directly.
+Instead, this is caused by **missing or mismapped client-side field names** ***before*** the SignNow request is even made.
+
+---
+
+## 🔎 Field Mismatch Diagnosis
+
+| 🔴 Missing Fields  | ✅ Correct Mapping                             |
+| ------------------ | --------------------------------------------- |
+| `first_name`       | ✅ `contact_first_name` (as per Smart Fields)  |
+| `amount_requested` | ✅ `requested_amount` (actual field name used) |
+
+### 🔧 Problem:
+
+The SignNow modal is incorrectly expecting:
+
+* `first_name` instead of `contact_first_name`
+* `amount_requested` instead of `requested_amount`
+
+---
+
+## ✅ Why We Know It's Client-Side:
+
+* Your client debug console says:
+
+  ```ts
+  console.log("📤 Step 4 submission payload", { contact_first_name: "Todd", requested_amount: 30000, ... })
+  ```
+* This means the correct values **are being captured**
+* But the embedded modal **still fails** — so it's expecting the **wrong field names**
+
+---
+
+## ✅ FIX: Map Field Names in SignNow Modal Renderer (Step 6)
+
+Have Replit **update the field mapping logic** used in the SignNow modal trigger code (likely Step 6 or Step 7 transition):
+
+### Required Fix:
+
+In the SignNow `signNowFields` generation logic:
+
+```ts
+signNowFields = {
+  first_name: state.step4.contact_first_name, // ❌ should be contact_first_name in payload
+  amount_requested: state.step3.requested_amount, // ❌ should be requested_amount
+  ...
+}
+```
+
+### Replace With:
+
+```ts
+signNowFields = {
+  contact_first_name: state.step4.contact_first_name,
+  requested_amount: state.step3.requested_amount,
+  ...
+}
+```
+
+---
+
+## ✅ What To Tell Replit:
+
+> ⚠️ **INSTRUCTION FOR CLIENT APP (Replit Agent)**
+> Please review the SignNow field mapping logic used when building the `signNowFields` object.
+> Remove incorrect legacy aliases like `first_name` and `amount_requested`.
+> Ensure all keys use the official Smart Field names:
+>
+> * `contact_first_name` (not `first_name`)
+> * `requested_amount` (not `amount_requested`)
+> * `legal_business_name`, `dba_name`, etc.
+
+---
+
+## 🧪 After the Fix
+
+After Replit makes that correction:
+
+1. Redo a Step 4 submission
+2. Proceed to Step 5 and click "Continue to Signature"
+3. Confirm **modal no longer errors**
+4. Signature should launch with all fields correctly prefilled
+
+---
+
+Would you like me to generate the **exact instruction payload** for Replit to apply this fix now?

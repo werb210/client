@@ -170,9 +170,9 @@ export default function Step6SignNowIntegration() {
       // ✅ Task 2: Smart Field Prefill Test - Required Field Validation
       const requiredFields = ['first_name', 'business_name', 'amount_requested'];
       const formData = {
-        first_name: smartFields.contact_first_name,
-        business_name: smartFields.business_dba_name || smartFields.legal_business_name,
-        amount_requested: smartFields.requested_amount
+        first_name: state.step4?.applicantFirstName,
+        business_name: state.step3?.operatingName || state.step3?.legalName,
+        amount_requested: state.step1?.requestedAmount
       };
       
       // ✅ BYPASS VALIDATION when proceeding without documents
