@@ -13,7 +13,7 @@ export default function BackendRequestTest() {
 
   const addResult = (message: string) => {
     setTestResults(prev => [...prev, message]);
-    console.log(message);
+    // console.log(message);
   };
 
   const clearResults = () => {

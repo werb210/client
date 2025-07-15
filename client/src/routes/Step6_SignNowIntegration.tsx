@@ -7,6 +7,7 @@ import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
 import { extractUuid } from '@/lib/uuidUtils';
 import { StepHeader } from '@/components/StepHeader';
+import { logger } from '@/lib/utils';
 import { 
   ArrowLeft, 
   FileSignature, 
@@ -44,17 +45,17 @@ export default function Step6SignNowIntegration() {
   const applicationId = localStorage.getItem("applicationId");
   
   // Navigation tracking to debug redirect issue
-  console.log('🧭 Step 6 mounted with applicationId:', applicationId);
+  logger.log('🧭 Step 6 mounted with applicationId:', applicationId);
   
   // Override setLocation to track any navigation attempts
   useEffect(() => {
     const originalSetLocation = setLocation;
-    console.log('🧭 Step 6 setLocation function type:', typeof setLocation);
+    logger.log('🧭 Step 6 setLocation function type:', typeof setLocation);
     
     // Log any error that might trigger navigation
     const handleError = (error: any) => {
-      console.log('🚨 Step 6 error detected:', error);
-      console.log('🚨 This error might cause unwanted navigation');
+      logger.log('🚨 Step 6 error detected:', error);
+      logger.log('🚨 This error might cause unwanted navigation');
     };
     
     window.addEventListener('error', handleError);
@@ -70,14 +71,14 @@ export default function Step6SignNowIntegration() {
   useEffect(() => {
     if (applicationId && applicationId !== 'null' && applicationId.length > 10) {
       // ✅ A. Log the final POST payload exactly as specified
-      console.log("📤 Submitting full application:", {
+      logger.log("📤 Submitting full application:", {
         step1: state.step1,
         step3: state.step3,
         step4: state.step4,
       });
       
       // Also log the detailed structure for verification
-      console.log("🔍 Detailed payload structure:", {
+      logger.log("🔍 Detailed payload structure:", {
         step1: {
           available: !!state.step1,
           fields: state.step1 ? Object.keys(state.step1) : [],
@@ -107,20 +108,20 @@ export default function Step6SignNowIntegration() {
       
       // Check for undefined blocks and rehydrate if needed
       if (!state.step1 || !state.step3 || !state.step4) {
-        console.warn("⚠️ Missing step data blocks - attempting rehydration from localStorage");
+        logger.warn("⚠️ Missing step data blocks - attempting rehydration from localStorage");
         
         // Attempt to rehydrate from localStorage
         const savedState = localStorage.getItem('formData');
         if (savedState) {
           try {
             const parsedState = JSON.parse(savedState);
-            console.log("🔄 Rehydrated state from localStorage:", {
+            logger.log("🔄 Rehydrated state from localStorage:", {
               step1: parsedState.step1,
               step3: parsedState.step3,
               step4: parsedState.step4,
             });
           } catch (e) {
-            console.error("❌ Failed to parse saved state from localStorage");
+            logger.error("❌ Failed to parse saved state from localStorage");
           }
         }
       }
@@ -166,20 +167,20 @@ export default function Step6SignNowIntegration() {
         years_with_business: state.step4?.yearsWithBusiness || ''
       };
 
-      console.log("📋 Smart Fields for SignNow Template:", smartFields);
-      console.log("🔍 Smart Fields Verification:", {
+      logger.log("📋 Smart Fields for SignNow Template:", smartFields);
+      logger.log("🔍 Smart Fields Verification:", {
         totalFields: Object.keys(smartFields).length,
         populatedFields: Object.values(smartFields).filter(v => v && v !== '').length,
         emptyFields: Object.entries(smartFields).filter(([k,v]) => !v || v === '').map(([k]) => k)
       });
       
-      console.log('🔄 Fetching signing URL for application:', applicationId);
-      console.log('🎯 SignNow document creation endpoint:', `/api/public/signnow/initiate/${applicationId}`);
-      console.log('📋 Smart fields being sent to staff backend:', Object.keys(smartFields).length, 'fields');
+      logger.log('🔄 Fetching signing URL for application:', applicationId);
+      logger.log('🎯 SignNow document creation endpoint:', `/api/public/signnow/initiate/${applicationId}`);
+      logger.log('📋 Smart fields being sent to staff backend:', Object.keys(smartFields).length, 'fields');
       
       // ✅ Task 3: Log SignNow redirect URL configuration
       const redirectUrl = import.meta.env.VITE_SIGNNOW_REDIRECT_URL || 'https://clientportal.boreal.financial/#/step7-finalization';
-      console.log("🧭 Configuring redirect URL for SignNow:", redirectUrl);
+      logger.log("🧭 Configuring redirect URL for SignNow:", redirectUrl);
       
       // ✅ SEND SMART FIELDS TO STAFF BACKEND FOR TEMPLATE POPULATION
       // Use the correct endpoint: POST /api/public/signnow/initiate/:applicationId
@@ -201,7 +202,7 @@ export default function Step6SignNowIntegration() {
           return res.json();
         })
         .catch(fetchError => {
-          console.warn('📡 Signature status fetch failed with status:', fetchError.message);
+          logger.warn('📡 Signature status fetch failed with status:', fetchError.message);
           setError('Application not found or signing not available');
           setSigningStatus('error');
           // DO NOT redirect on error - stay on Step 6
@@ -210,12 +211,12 @@ export default function Step6SignNowIntegration() {
         .then(data => {
           if (!data) return; // Skip if fetch failed
           
-          console.log('📄 SignNow document creation response:', data);
-          console.log('📋 Smart fields submitted successfully to staff backend');
+          logger.log('📄 SignNow document creation response:', data);
+          logger.log('📋 Smart fields submitted successfully to staff backend');
           
           // ✅ NULL SAFETY CHECK: Check for redirect_url before loading iframe
           if (!data.signingUrl && !data.redirect_url) {
-            console.error('❌ No signing URL in response:', data);
+            logger.error('❌ No signing URL in response:', data);
             setError("Failed to retrieve signing URL. Please try again.");
             setSigningStatus('error');
             return;
@@ -223,7 +224,7 @@ export default function Step6SignNowIntegration() {
           
           // ✅ CHECK FOR ERROR STATUS: Show retry button if server returns { status: "error" }
           if (data.status === "error") {
-            console.error('❌ Server returned error status:', data);
+            logger.error('❌ Server returned error status:', data);
             setError(data.message || "SignNow service temporarily unavailable. Please try again.");
             setSigningStatus('error');
             return;
@@ -233,31 +234,31 @@ export default function Step6SignNowIntegration() {
           const signingUrl = data.signingUrl || data.redirect_url || data.signnow_url;
           
           if (signingUrl) {
-            console.log('🔗 Setting signing URL from POST /api/public/signnow/initiate:', signingUrl);
+            logger.log('🔗 Setting signing URL from POST /api/public/signnow/initiate:', signingUrl);
             setSignUrl(signingUrl);
             setSigningStatus('ready');
             setStartTime(Date.now()); // Track when signing started
             
             // Check if this is a fallback URL
             if (signingUrl.includes('temp_') || data.fallback) {
-              console.warn('⚠️ Using fallback SignNow URL - staff backend unavailable');
-              console.warn('🔗 Fallback URL will not populate template fields:', signingUrl);
+              logger.warn('⚠️ Using fallback SignNow URL - staff backend unavailable');
+              logger.warn('🔗 Fallback URL will not populate template fields:', signingUrl);
             } else {
-              console.log('✅ Using real SignNow URL with populated template fields from staff backend');
+              logger.log('✅ Using real SignNow URL with populated template fields from staff backend');
             }
           } else {
-            console.error('❌ No signing URL in response:', data);
+            logger.error('❌ No signing URL in response:', data);
             setError("Failed to retrieve signing URL. Please try again.");
             setSigningStatus('error');
           }
         })
         .catch(err => {
-          console.error('Failed to load signing URL:', err);
+          logger.error('Failed to load signing URL:', err);
           setError('Failed to load signing document');
           setSigningStatus('error');
         });
     } else {
-      console.log('⚠️ No valid applicationId found, skipping SignNow URL fetch');
+      logger.log('⚠️ No valid applicationId found, skipping SignNow URL fetch');
       setError('No application ID available - please restart the application process');
       setSigningStatus('error');
       // DO NOT redirect - show error message instead
@@ -269,41 +270,41 @@ export default function Step6SignNowIntegration() {
   // Poll for signature status every 5 seconds with timeout warnings
   const checkSignatureStatus = async () => {
     if (!applicationId) {
-      console.warn('📡 No applicationId available for polling');
+      logger.warn('📡 No applicationId available for polling');
       return;
     }
     
     try {
       // ✅ Fixed polling endpoint as specified
       const pollingEndpoint = `/api/public/signnow/status/${applicationId}`;
-      console.log('📡 Polling SignNow status for:', applicationId);
-      console.log('📡 Endpoint:', pollingEndpoint);
+      logger.log('📡 Polling SignNow status for:', applicationId);
+      logger.log('📡 Endpoint:', pollingEndpoint);
       
       const res = await fetch(pollingEndpoint, {
         method: 'GET'
       }).catch(fetchError => {
         // Handle fetch errors silently to prevent unhandled promise rejections
-        console.warn('📡 SignNow status fetch failed:', fetchError.message);
+        logger.warn('📡 SignNow status fetch failed:', fetchError.message);
         return null;
       });
       
       if (!res) {
-        console.warn('📡 No response from signature status endpoint');
+        logger.warn('📡 No response from signature status endpoint');
         return; // Do NOT navigate away — just keep polling
       }
       
       if (!res.ok) {
-        console.warn('📡 Signature status fetch failed with status:', res.status, res.statusText);
+        logger.warn('📡 Signature status fetch failed with status:', res.status, res.statusText);
         return; // Do NOT navigate away — just keep polling
       }
       
       const data = await res.json().catch(jsonError => {
-        console.warn('📡 Polling JSON parse failed:', jsonError.message);
+        logger.warn('📡 Polling JSON parse failed:', jsonError.message);
         return null;
       });
       
       if (!data) {
-        console.warn('📡 No data in signature status response');
+        logger.warn('📡 No data in signature status response');
         return; // Do NOT navigate away — just keep polling
       }
       
@@ -311,9 +312,9 @@ export default function Step6SignNowIntegration() {
       const signingStatus = data?.signing_status || data?.status;
       
       // ✅ Add logging for debugging as requested
-      console.log("📡 Polling SignNow status:", signingStatus);
-      console.log('📄 Full response data:', data);
-      console.log('📄 Status check for application:', applicationId);
+      logger.log("📡 Polling SignNow status:", signingStatus);
+      logger.log('📄 Full response data:', data);
+      logger.log('📄 Status check for application:', applicationId);
       
       // ✅ CRITICAL FIX: Check for actual SignNow signed status - only redirect when truly signed
       const isDocumentSigned = (
@@ -323,9 +324,9 @@ export default function Step6SignNowIntegration() {
       );
       
       if (isDocumentSigned) {
-        console.log('🎉 Document signed! Redirecting to Step 7...');
-        console.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
-        console.log('📋 Signature verified - redirecting details:', {
+        logger.log('🎉 Document signed! Redirecting to Step 7...');
+        logger.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
+        logger.log('📋 Signature verified - redirecting details:', {
           status: data?.status,
           signing_status: data?.signing_status,
           nested_signed: data?.user?.document?.fieldinvite?.signed,
@@ -358,20 +359,20 @@ export default function Step6SignNowIntegration() {
       
     } catch (err) {
       // Handle polling errors without redirecting - suppress unhandled rejections
-      console.warn('📡 Polling error caught (will NOT redirect):', err.message);
+      logger.warn('📡 Polling error caught (will NOT redirect):', err.message);
       // Stay on Step 6, keep polling
     }
   };
 
   useEffect(() => {
     if (applicationId && signUrl && signingStatus === 'ready') {
-      console.log('🔄 Starting SignNow status polling every 5s for application:', applicationId);
-      console.log('🔄 Polling endpoint: /api/public/signnow/status/' + applicationId);
-      console.log('🧭 Polling will redirect ONLY when signature is complete:');
-      console.log('   - status === "invite_signed"');
-      console.log('   - signing_status === "signed"');
-      console.log('   - user.document.fieldinvite.signed === true');
-      console.log('🚫 Will NOT redirect on "invite_sent" status');
+      logger.log('🔄 Starting SignNow status polling every 5s for application:', applicationId);
+      logger.log('🔄 Polling endpoint: /api/public/signnow/status/' + applicationId);
+      logger.log('🧭 Polling will redirect ONLY when signature is complete:');
+      logger.log('   - status === "invite_signed"');
+      logger.log('   - signing_status === "signed"');
+      logger.log('   - user.document.fieldinvite.signed === true');
+      logger.log('🚫 Will NOT redirect on "invite_sent" status');
       
       const interval = setInterval(checkSignatureStatus, 5000);
       return () => clearInterval(interval);
@@ -385,7 +386,7 @@ export default function Step6SignNowIntegration() {
     })
     .then(() => setLocation('/apply/step-7'))
     .catch(err => {
-      console.error('Override failed:', err);
+      logger.error('Override failed:', err);
       toast({
         title: "Override Failed",
         description: "Unable to mark document as signed. Please try again.",
@@ -492,15 +493,15 @@ export default function Step6SignNowIntegration() {
                         style={{ border: 'none', borderRadius: '8px' }}
                         title="SignNow Document Signing"
                         onLoad={() => {
-                          console.log('📄 SignNow iframe loaded successfully');
+                          logger.log('📄 SignNow iframe loaded successfully');
                           if (signUrl.includes('temp_')) {
-                            console.warn('⚠️ Iframe loaded but using fake URL - document will not work');
+                            logger.warn('⚠️ Iframe loaded but using fake URL - document will not work');
                           }
                         }}
                         onError={(e) => {
-                          console.error('❌ SignNow iframe failed to load:', e);
+                          logger.error('❌ SignNow iframe failed to load:', e);
                           if (signUrl.includes('temp_')) {
-                            console.error('🔗 Expected error: Fake URL cannot load real SignNow document');
+                            logger.error('🔗 Expected error: Fake URL cannot load real SignNow document');
                           }
                         }}
                       />

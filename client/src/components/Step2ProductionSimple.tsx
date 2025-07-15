@@ -30,10 +30,10 @@ export function Step2ProductionSimple({
   // Debug cache status and field validation
   React.useEffect(() => {
     if (!isLoading) {
-      console.log(`[STEP2] Cache status: ${allProducts.length} products, error:`, error?.message || 'none');
+      // console.log(`[STEP2] Cache status: ${allProducts.length} products, error:`, error?.message || 'none');
       if (allProducts.length > 0) {
         const sample = allProducts[0];
-        console.log('[STEP2] Sample product:', sample);
+        // console.log('[STEP2] Sample product:', sample);
         
         // Detailed field analysis
         const fieldCheck = {
@@ -48,12 +48,12 @@ export function Step2ProductionSimple({
           isMaxAmountNaN: isNaN(sample?.maxAmount),
           allFields: Object.keys(sample || {})
         };
-        console.log('[STEP2] Field validation:', fieldCheck);
+        // console.log('[STEP2] Field validation:', fieldCheck);
         
         // Additional field mapping check
         const hasAPIFields = !!(sample?.amountMin && sample?.amountMax);
         const hasSchemaFields = !!(sample?.minAmount && sample?.maxAmount);
-        console.log('[STEP2] Field mapping check:', { hasAPIFields, hasSchemaFields });
+        // console.log('[STEP2] Field mapping check:', { hasAPIFields, hasSchemaFields });
         
         // Check for field name variations and problematic products
         const fieldAnalysis = allProducts.map(p => ({
@@ -70,10 +70,10 @@ export function Step2ProductionSimple({
         const withSchemaFields = fieldAnalysis.filter(p => p.hasMinAmount && p.hasMaxAmount).length;
         const withAPIFields = fieldAnalysis.filter(p => p.hasAmountMin && p.hasAmountMax).length;
         
-        console.log(`[STEP2] Field analysis - Schema format: ${withSchemaFields}, API format: ${withAPIFields}, Total: ${allProducts.length}`);
+        // console.log(`[STEP2] Field analysis - Schema format: ${withSchemaFields}, API format: ${withAPIFields}, Total: ${allProducts.length}`);
         
         if (fieldAnalysis.length > 0) {
-          console.log('[STEP2] Field structure sample:', fieldAnalysis[0]);
+          // console.log('[STEP2] Field structure sample:', fieldAnalysis[0]);
         }
       }
     }

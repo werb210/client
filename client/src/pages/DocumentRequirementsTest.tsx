@@ -82,12 +82,12 @@ export default function DocumentRequirementsTest() {
         accountsReceivableBalance: formData.accountsReceivableBalance !== 'none' ? formData.accountsReceivableBalance : undefined
       };
 
-      console.log('📋 Calculating documents for:', wizardData);
+      // console.log('📋 Calculating documents for:', wizardData);
       
       const requiredDocs = await buildRequiredDocList(wizardData);
       setDocuments(requiredDocs);
       
-      console.log('📄 Found documents:', requiredDocs.map((d: RequiredDoc) => d.label));
+      // console.log('📄 Found documents:', requiredDocs.map((d: RequiredDoc) => d.label));
       
     } catch (err) {
       console.error('Error calculating documents:', err);

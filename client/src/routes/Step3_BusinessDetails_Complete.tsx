@@ -1,17 +1,31 @@
 import { useForm } from 'react-hook-form';
+import { logger } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
+
 import { z } from 'zod';
+
 import { useEffect, useState } from 'react';
+
 import { Button } from '@/components/ui/button';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+
 import { Input } from '@/components/ui/input';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { useFormData } from '@/context/FormDataContext';
+
 import { useLocation } from 'wouter';
+
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+
 import { ApplicationFormSchema } from '../../../shared/schema';
+
 import DatePicker from 'react-datepicker';
+
 import 'react-datepicker/dist/react-datepicker.css';
 import {
   formatPhoneNumber,
@@ -27,6 +41,7 @@ import {
   getCountryFromBusinessLocation
 } from '@/lib/phoneUtils';
 import { StepHeader } from '@/components/StepHeader';
+
 
 // Step 3 Schema - Use unified schema fields for business details
 const step3Schema = ApplicationFormSchema.pick({
@@ -57,7 +72,7 @@ export default function Step3BusinessDetailsComplete() {
   const isCanadian = isCanadianBusiness(businessLocation);
   const countryCode = getCountryFromBusinessLocation(businessLocation);
   
-  console.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`, { state: state.step1?.businessLocation, detected: isCanadian });
+  logger.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`, { state: state.step1?.businessLocation, detected: isCanadian });
   
   const regionalLabels = getRegionalLabels(isCanadian);
   const stateProvinceOptions = getStateProvinceOptions(isCanadian);
@@ -115,7 +130,7 @@ export default function Step3BusinessDetailsComplete() {
       if (data.employeeCount !== undefined) stepData.employeeCount = data.employeeCount;
       if (data.estimatedYearlyRevenue !== undefined) stepData.estimatedYearlyRevenue = data.estimatedYearlyRevenue;
 
-      console.log('[STEP3] Auto-save triggered with data:', stepData);
+      logger.log('[STEP3] Auto-save triggered with data:', stepData);
 
       dispatch({
         type: 'UPDATE_STEP3',
@@ -127,8 +142,8 @@ export default function Step3BusinessDetailsComplete() {
   }, [form, dispatch]);
 
   const onSubmit = (data: BusinessDetailsFormData) => {
-    console.log('[STEP3] Form submitted with data:', data);
-    console.log('Step 3 Save Triggered:', data);
+    logger.log('[STEP3] Form submitted with data:', data);
+    logger.log('Step 3 Save Triggered:', data);
     
     // Update context with step3 object structure for validation
     dispatch({
@@ -141,8 +156,8 @@ export default function Step3BusinessDetailsComplete() {
       payload: 3
     });
 
-    console.log('[STEP3] Data saved to step3 object for validation');
-    console.log('[STEP3] Payload structure - step3 block should be present:', { step3: data });
+    logger.log('[STEP3] Data saved to step3 object for validation');
+    logger.log('[STEP3] Payload structure - step3 block should be present:', { step3: data });
     
     // Navigate to Step 4
     setLocation('/apply/step-4');
@@ -363,10 +378,10 @@ export default function Step3BusinessDetailsComplete() {
                                 // Store normalized phone number
                                 field.onChange(normalized);
                                 setPhoneDisplay(formatPhoneDisplay(normalized, countryCode));
-                                console.log(`📞 Phone normalized: ${input} → ${normalized}`);
+                                logger.log(`📞 Phone normalized: ${input} → ${normalized}`);
                               } else if (input.trim()) {
                                 // Show validation error for invalid phone
-                                console.warn(`❌ Invalid phone number: ${input}`);
+                                logger.warn(`❌ Invalid phone number: ${input}`);
                               }
                             }}
                             className="h-12"

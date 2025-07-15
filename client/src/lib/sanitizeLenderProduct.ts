@@ -122,7 +122,7 @@ export function sanitizeLenderProducts(products: any[]): { sanitized: any[]; all
   const sanitized: any[] = [];
   const allLogs: SanitizationLog[] = [];
   
-  console.log(`[SANITIZER] Starting sanitization of ${products.length} products`);
+  // console.log(`[SANITIZER] Starting sanitization of ${products.length} products`);
   
   products.forEach((product, index) => {
     const { sanitized: sanitizedProduct, logs } = sanitizeLenderProduct(product);
@@ -130,14 +130,14 @@ export function sanitizeLenderProducts(products: any[]): { sanitized: any[]; all
     allLogs.push(...logs);
     
     if (logs.length > 0) {
-      console.log(`[SANITIZER] Product ${index + 1} (${product.name || 'Unknown'}): ${logs.length} fixes applied`);
+      // console.log(`[SANITIZER] Product ${index + 1} (${product.name || 'Unknown'}): ${logs.length} fixes applied`);
       logs.forEach(log => {
-        console.log(`  ✅ ${log.action}: ${log.field} (${log.originalValue} → ${log.sanitizedValue})`);
+        // console.log(`  ✅ ${log.action}: ${log.field} (${log.originalValue} → ${log.sanitizedValue})`);
       });
     }
   });
   
-  console.log(`[SANITIZER] Completed: ${allLogs.length} total fixes across ${products.length} products`);
+  // console.log(`[SANITIZER] Completed: ${allLogs.length} total fixes across ${products.length} products`);
   
   return { sanitized, allLogs };
 }

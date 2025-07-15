@@ -119,7 +119,7 @@ export default function Step3ApplicantInfoCombined() {
   });
 
   const onSubmit = (data: Step3FormData) => {
-    console.log('📋 Step 3: Submitting combined business + applicant data:', data);
+    // console.log('📋 Step 3: Submitting combined business + applicant data:', data);
     
     // Split the data into business and applicant sections
     const businessData = {

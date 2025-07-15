@@ -79,10 +79,10 @@ export function CookieConsentTest() {
 
   const simulateAnalyticsLoad = () => {
     if (canUseAnalytics()) {
-      console.log("[TEST] Loading analytics script simulation");
+      // console.log("[TEST] Loading analytics script simulation");
       addTestResult("Analytics Script Load", true, "Script would be loaded (simulated)");
     } else {
-      console.log("[TEST] Analytics blocked");
+      // console.log("[TEST] Analytics blocked");
       addTestResult("Analytics Script Load", false, "Script blocked by consent preferences");
     }
   };

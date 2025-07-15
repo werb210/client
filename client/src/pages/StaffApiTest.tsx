@@ -26,7 +26,7 @@ export default function StaffApiTest() {
     const url = 'https://staffportal.replit.app/api/public/lenders';
 
     try {
-      console.log(`Testing canonical endpoint: ${url}`);
+      // console.log(`Testing canonical endpoint: ${url}`);
       
       const response = await fetch(url, {
         method: 'GET',
@@ -38,12 +38,12 @@ export default function StaffApiTest() {
         credentials: 'omit'
       });
 
-      console.log(`Status: ${response.status} ${response.statusText}`);
-      console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
+      // console.log(`Status: ${response.status} ${response.statusText}`);
+      // console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Staff API Success:', result);
+        // console.log('Staff API Success:', result);
         
         setData({
           ...result,

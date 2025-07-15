@@ -14,7 +14,7 @@ export default function ApplicationCreationTest() {
     setResult(null);
 
     try {
-      console.log('🧪 Testing application creation...');
+      // console.log('🧪 Testing application creation...');
       
       // Sample application data matching the required structure
       const applicationData = {
@@ -82,12 +82,12 @@ export default function ApplicationCreationTest() {
         }
       };
 
-      console.log('📝 Test application data:', applicationData);
+      // console.log('📝 Test application data:', applicationData);
 
       const response = await staffApi.createApplication(applicationData);
       
       setResult(response);
-      console.log('✅ Test application created:', response);
+      // console.log('✅ Test application created:', response);
 
     } catch (error) {
       console.error('❌ Test application creation failed:', error);
@@ -107,12 +107,12 @@ export default function ApplicationCreationTest() {
     setError('');
 
     try {
-      console.log('🧪 Testing SignNow document creation...');
+      // console.log('🧪 Testing SignNow document creation...');
       
       const signNowResponse = await staffApi.createSignNowDocument(result.applicationId);
       
       setResult(prev => ({ ...prev, signNow: signNowResponse }));
-      console.log('✅ Test SignNow document created:', signNowResponse);
+      // console.log('✅ Test SignNow document created:', signNowResponse);
 
     } catch (error) {
       console.error('❌ Test SignNow creation failed:', error);

@@ -16,12 +16,12 @@ export default function Step6ConsoleDemo() {
     // Store in localStorage (simulating Step 4)
     localStorage.setItem('applicationId', testApplicationId);
     
-    console.log('🚀 Triggered createSignNowDocument()');
-    console.log('🌍 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-    console.log('🆔 Application ID:', testApplicationId);
+    // console.log('🚀 Triggered createSignNowDocument()');
+    // console.log('🌍 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+    // console.log('🆔 Application ID:', testApplicationId);
     
     const signNowUrl = `${import.meta.env.VITE_API_BASE_URL}/applications/${testApplicationId}/signnow`;
-    console.log('📡 Calling SignNow endpoint:', signNowUrl);
+    // console.log('📡 Calling SignNow endpoint:', signNowUrl);
     
     try {
       const response = await fetch(signNowUrl, {
@@ -32,7 +32,7 @@ export default function Step6ConsoleDemo() {
         credentials: 'include',
       });
 
-      console.log('📬 SignNow response status:', response.status);
+      // console.log('📬 SignNow response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -40,7 +40,7 @@ export default function Step6ConsoleDemo() {
         setTestResult(`Response: ${response.status} - ${errorText}`);
       } else {
         const json = await response.json();
-        console.log('✅ SignNow response JSON:', json);
+        // console.log('✅ SignNow response JSON:', json);
         setTestResult(`Success: ${JSON.stringify(json, null, 2)}`);
       }
     } catch (err: any) {

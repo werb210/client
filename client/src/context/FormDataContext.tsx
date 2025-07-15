@@ -226,7 +226,7 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
   const saveToStorage = () => {
     try {
       localStorage.setItem('financialFormData', JSON.stringify(state));
-      console.log('Form data saved to localStorage');
+      // console.log('Form data saved to localStorage');
     } catch (error) {
       console.error('Failed to save form data:', error);
     }
@@ -238,7 +238,7 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         dispatch({ type: 'LOAD_FROM_STORAGE', payload: parsedData });
-        console.log('Form data loaded from localStorage');
+        // console.log('Form data loaded from localStorage');
       }
     } catch (error) {
       console.error('Failed to load form data:', error);

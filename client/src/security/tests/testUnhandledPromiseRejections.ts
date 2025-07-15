@@ -78,7 +78,7 @@ export async function testFetchErrorHandling(): Promise<TestResult> {
     try {
       await fetch(testUrl).catch(error => {
         errorCaught = true;
-        console.log('[SECURITY_TEST] Fetch error properly caught:', error.message);
+        // console.log('[SECURITY_TEST] Fetch error properly caught:', error.message);
         throw error; // Re-throw to maintain error flow
       });
     } catch (error) {

@@ -36,7 +36,7 @@ function calculateProductHash(products: any[]): string {
  */
 async function fetchFromStaffAPI(): Promise<{ data: any[]; hash: string } | null> {
   try {
-    console.log('[SYNC] Fetching from staff API: GET /api/public/lenders');
+    // console.log('[SYNC] Fetching from staff API: GET /api/public/lenders');
     
     const response = await fetch('/api/public/lenders', {
       method: 'GET',
@@ -73,7 +73,7 @@ async function fetchFromStaffAPI(): Promise<{ data: any[]; hash: string } | null
     const products = Array.isArray(data) ? data : data.products;
     const hash = calculateProductHash(products);
     
-    console.log(`[SYNC] ✅ Fetched ${products.length} products from staff API`);
+    // console.log(`[SYNC] ✅ Fetched ${products.length} products from staff API`);
     return { data: products, hash };
     
   } catch (error) {
@@ -92,7 +92,7 @@ async function storeProducts(products: any[], hash: string): Promise<void> {
     await set(HASH_KEY, hash);
     await set(RETRY_COUNT_KEY, 0); // Reset retry count on successful sync
     
-    console.log(`[SYNC] ✅ Stored ${products.length} products in IndexedDB`);
+    // console.log(`[SYNC] ✅ Stored ${products.length} products in IndexedDB`);
   } catch (error) {
     console.error('[SYNC] Failed to store products:', error);
   }
@@ -121,7 +121,7 @@ async function getCachedProducts(): Promise<{ data: any[]; timestamp: string; ha
  * Main sync function with retry logic
  */
 export async function syncLenderProducts(): Promise<SyncResult> {
-  console.log('[SYNC] Starting lender product sync...');
+  // console.log('[SYNC] Starting lender product sync...');
   
   // Get current cache state
   const cached = await getCachedProducts();
@@ -135,7 +135,7 @@ export async function syncLenderProducts(): Promise<SyncResult> {
     
     // Check if data has changed
     if (cached && cached.hash === newHash) {
-      console.log('[SYNC] ✅ No changes detected - using cached data');
+      // console.log('[SYNC] ✅ No changes detected - using cached data');
       return {
         success: true,
         data: cached.data,
@@ -201,7 +201,7 @@ class SyncScheduler {
     if (this.isRunning) return;
     
     this.isRunning = true;
-    console.log('[SYNC] Background retry scheduler started (30-minute intervals)');
+    // console.log('[SYNC] Background retry scheduler started (30-minute intervals)');
     
     // Initial sync
     this.performSync();
@@ -218,7 +218,7 @@ class SyncScheduler {
       this.intervalId = null;
     }
     this.isRunning = false;
-    console.log('[SYNC] Background retry scheduler stopped');
+    // console.log('[SYNC] Background retry scheduler stopped');
   }
 
   private async performSync() {
@@ -226,9 +226,9 @@ class SyncScheduler {
       const result = await syncLenderProducts();
       
       if (result.success && !result.needsRetry) {
-        console.log('[SYNC] ✅ Background sync successful');
+        // console.log('[SYNC] ✅ Background sync successful');
       } else if (result.needsRetry) {
-        console.log('[SYNC] ⏳ Background sync scheduled for retry');
+        // console.log('[SYNC] ⏳ Background sync scheduled for retry');
       }
       
       // Broadcast update to React Query
@@ -251,7 +251,7 @@ export const syncScheduler = new SyncScheduler();
  * Initialize sync system on app start
  */
 export async function initializeSyncSystem(): Promise<SyncResult> {
-  console.log('[SYNC] Initializing lender product sync system...');
+  // console.log('[SYNC] Initializing lender product sync system...');
   
   // Start background scheduler
   syncScheduler.start();
@@ -264,7 +264,7 @@ export async function initializeSyncSystem(): Promise<SyncResult> {
  * Manual sync trigger for user-initiated refresh
  */
 export async function forceSyncLenderProducts(): Promise<SyncResult> {
-  console.log('[SYNC] Manual sync triggered...');
+  // console.log('[SYNC] Manual sync triggered...');
   return await syncLenderProducts();
 }
 

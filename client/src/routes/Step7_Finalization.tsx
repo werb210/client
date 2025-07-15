@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
+import { logger } from '@/lib/utils';
 import { useLocation } from 'wouter';
+
 import { Button } from '@/components/ui/button';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
+
 import { Checkbox } from '@/components/ui/checkbox';
+
 import { useFormData } from '@/context/FormDataContext';
+
 import { useToast } from '@/hooks/use-toast';
+
 import { staffApi } from '../api/staffApi';
+
 import { StepHeader } from '@/components/StepHeader';
+
 import { 
   ArrowLeft, 
   Send, 
@@ -43,10 +53,10 @@ export default function Step7Finalization() {
   const applicationId = state.applicationId || localStorage.getItem('applicationId');
 
   const handleFinalize = async () => {
-    console.log('🚀 handleFinalize called!', { termsAccepted, privacyAccepted, applicationId });
+    logger.log('🚀 handleFinalize called!', { termsAccepted, privacyAccepted, applicationId });
     
     if (!applicationId) {
-      console.log('❌ Missing application ID');
+      logger.log('❌ Missing application ID');
       toast({
         title: "Missing Application ID",
         description: "Please complete the previous steps first.",
@@ -56,7 +66,7 @@ export default function Step7Finalization() {
     }
 
     if (!termsAccepted || !privacyAccepted) {
-      console.log('❌ Terms not accepted', { termsAccepted, privacyAccepted });
+      logger.log('❌ Terms not accepted', { termsAccepted, privacyAccepted });
       toast({
         title: "Terms Required",
         description: "Please accept both Terms & Conditions and Privacy Policy to continue.",
@@ -69,8 +79,8 @@ export default function Step7Finalization() {
     setError(null);
 
     try {
-      console.log('🏁 Step 7: Finalizing application with POST /api/public/applications/{id}/finalize...');
-      console.log('🎯 Step 7 Final URL verification:', `/api/public/applications/${applicationId}/finalize`);
+      logger.log('🏁 Step 7: Finalizing application with POST /api/public/applications/{id}/finalize...');
+      logger.log('🎯 Step 7 Final URL verification:', `/api/public/applications/${applicationId}/finalize`);
       
       // Call the actual API endpoint
       const response = await fetch(`/api/public/applications/${applicationId}/finalize`, {
@@ -90,7 +100,7 @@ export default function Step7Finalization() {
         })
       });
       
-      console.log('Step 7 API Response:', response.status, response.statusText);
+      logger.log('Step 7 API Response:', response.status, response.statusText);
       
       const finalResult = {
         status: 'finalized',
@@ -112,10 +122,10 @@ export default function Step7Finalization() {
         description: `Application ${applicationId} has been completed and submitted.`,
       });
 
-      console.log('✅ Application finalized:', finalResult);
+      logger.log('✅ Application finalized:', finalResult);
       
     } catch (error) {
-      console.error('❌ Finalization failed:', error);
+      logger.error('❌ Finalization failed:', error);
       setFinalizationStatus('error');
       setError(error instanceof Error ? error.message : 'Finalization failed');
       
@@ -138,7 +148,7 @@ export default function Step7Finalization() {
   const canFinalize = termsAccepted && privacyAccepted && applicationId;
   
   // Debug logging
-  console.log('Step 7 Debug:', {
+  logger.log('Step 7 Debug:', {
     termsAccepted,
     privacyAccepted,
     applicationId,

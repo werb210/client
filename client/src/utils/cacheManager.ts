@@ -49,7 +49,7 @@ export class CacheManager {
   static clearLocalStorage(): void {
     const keys = Object.keys(localStorage);
     localStorage.clear();
-    console.log(`🗑️ Cleared ${keys.length} localStorage items:`, keys);
+    // console.log(`🗑️ Cleared ${keys.length} localStorage items:`, keys);
   }
 
   /**
@@ -58,7 +58,7 @@ export class CacheManager {
   static clearSessionStorage(): void {
     const keys = Object.keys(sessionStorage);
     sessionStorage.clear();
-    console.log(`🗑️ Cleared ${keys.length} sessionStorage items:`, keys);
+    // console.log(`🗑️ Cleared ${keys.length} sessionStorage items:`, keys);
   }
 
   /**
@@ -76,7 +76,7 @@ export class CacheManager {
         document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.boreal.financial`;
       }
     });
-    console.log(`🗑️ Cleared ${cookies.length} cookies`);
+    // console.log(`🗑️ Cleared ${cookies.length} cookies`);
   }
 
   /**
@@ -97,7 +97,7 @@ export class CacheManager {
       });
 
       await Promise.all(deletePromises);
-      console.log(`🗑️ Cleared ${databases.length} IndexedDB databases:`, databases.map(db => db.name));
+      // console.log(`🗑️ Cleared ${databases.length} IndexedDB databases:`, databases.map(db => db.name));
     } catch (error) {
       console.warn('Could not clear IndexedDB:', error);
     }
@@ -107,11 +107,11 @@ export class CacheManager {
    * Comprehensive cache clear
    */
   static async clearAllCache(): Promise<void> {
-    console.log('🧹 COMPREHENSIVE CACHE CLEARING');
-    console.log('================================');
+    // console.log('🧹 COMPREHENSIVE CACHE CLEARING');
+    // console.log('================================');
 
     const beforeStatus = await this.getCacheStatus();
-    console.log('📊 Before clearing:', beforeStatus);
+    // console.log('📊 Before clearing:', beforeStatus);
 
     // Clear all storage types
     this.clearLocalStorage();
@@ -124,15 +124,15 @@ export class CacheManager {
       try {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map(name => caches.delete(name)));
-        console.log(`🗑️ Cleared ${cacheNames.length} service worker caches`);
+        // console.log(`🗑️ Cleared ${cacheNames.length} service worker caches`);
       } catch (error) {
         console.warn('Could not clear service worker caches:', error);
       }
     }
 
     const afterStatus = await this.getCacheStatus();
-    console.log('📊 After clearing:', afterStatus);
-    console.log('✅ Cache clearing complete');
+    // console.log('📊 After clearing:', afterStatus);
+    // console.log('✅ Cache clearing complete');
   }
 
   /**
@@ -147,9 +147,9 @@ export class CacheManager {
                    status.applicationId === null &&
                    status.tokens.length === 0;
 
-    console.log('🔍 Clean state verification:', isClean ? '✅ CLEAN' : '❌ DIRTY');
+    // console.log('🔍 Clean state verification:', isClean ? '✅ CLEAN' : '❌ DIRTY');
     if (!isClean) {
-      console.log('💡 Remaining items:', status);
+      // console.log('💡 Remaining items:', status);
     }
 
     return isClean;
@@ -171,13 +171,13 @@ export class IntegrationVerifier {
         credentials: 'include'
       });
 
-      console.log('🔐 Staff API connectivity test:', response.status, response.statusText);
+      // console.log('🔐 Staff API connectivity test:', response.status, response.statusText);
       
       if (response.status === 200) {
-        console.log('✅ Staff API accessible - Connection working');
+        // console.log('✅ Staff API accessible - Connection working');
         return true;
       } else {
-        console.log('❌ Staff API returned:', response.status);
+        // console.log('❌ Staff API returned:', response.status);
         return false;
       }
     } catch (error) {
@@ -194,7 +194,7 @@ export class IntegrationVerifier {
       // Check if React app is properly initialized
       const reactRoot = document.getElementById('root');
       if (!reactRoot || !reactRoot.innerHTML) {
-        console.log('❌ React app not initialized');
+        // console.log('❌ React app not initialized');
         return false;
       }
 
@@ -203,15 +203,15 @@ export class IntegrationVerifier {
       const areCookiesEmpty = document.cookie.length === 0;
 
       if (isStorageEmpty && areCookiesEmpty) {
-        console.log('✅ CACHE BYPASS - Clean state detected');
-        console.log('✅ localStorage: empty');
-        console.log('✅ sessionStorage: empty');
-        console.log('✅ cookies: empty');
+        // console.log('✅ CACHE BYPASS - Clean state detected');
+        // console.log('✅ localStorage: empty');
+        // console.log('✅ sessionStorage: empty');
+        // console.log('✅ cookies: empty');
       } else {
-        console.log('⚠️ Storage not empty - cached data present');
+        // console.log('⚠️ Storage not empty - cached data present');
       }
 
-      console.log('✅ Client app initialized successfully');
+      // console.log('✅ Client app initialized successfully');
       return true;
     } catch (error) {
       console.error('❌ Client init test failed:', error);
@@ -223,22 +223,22 @@ export class IntegrationVerifier {
    * Comprehensive integration check
    */
   static async runIntegrationCheck(): Promise<void> {
-    console.log('🔍 INTEGRATION VERIFICATION');
-    console.log('===========================');
+    // console.log('🔍 INTEGRATION VERIFICATION');
+    // console.log('===========================');
 
     const cleanState = await CacheManager.verifyCleanState();
     const staffConnectivity = await this.testStaffAuth();
     const clientInit = await this.testClientInit();
 
-    console.log('📊 Integration Results:');
-    console.log(`   Clean State: ${cleanState ? '✅' : '❌'}`);
-    console.log(`   Staff API: ${staffConnectivity ? '✅' : '❌'}`);
-    console.log(`   Client Init: ${clientInit ? '✅' : '❌'}`);
+    // console.log('📊 Integration Results:');
+    // console.log(`   Clean State: ${cleanState ? '✅' : '❌'}`);
+    // console.log(`   Staff API: ${staffConnectivity ? '✅' : '❌'}`);
+    // console.log(`   Client Init: ${clientInit ? '✅' : '❌'}`);
 
     if (cleanState && staffConnectivity && clientInit) {
-      console.log('🎉 All integration checks passed!');
+      // console.log('🎉 All integration checks passed!');
     } else {
-      console.log('⚠️ Some integration checks failed - review above');
+      // console.log('⚠️ Some integration checks failed - review above');
     }
   }
 }

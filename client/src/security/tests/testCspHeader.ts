@@ -104,7 +104,7 @@ export async function testCspViolation(): Promise<TestResult> {
     try {
       // Attempt to create an inline script (should be blocked by CSP)
       const script = document.createElement('script');
-      script.textContent = 'console.log("CSP test script");';
+      script.textContent = '// console.log("CSP test script");';
       document.head.appendChild(script);
       
       // Wait a bit for CSP violation to be reported

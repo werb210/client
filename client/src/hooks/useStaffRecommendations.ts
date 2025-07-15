@@ -24,7 +24,7 @@ async function fetchStaffProducts(): Promise<StaffLenderProduct[]> {
     const data = await response.json();
     const products = data.products || [];
 
-    console.log(`[STAFF RECOMMENDATIONS] Fetched ${products.length} products from staff database`);
+    // console.log(`[STAFF RECOMMENDATIONS] Fetched ${products.length} products from staff database`);
 
     return products;
   } catch (error) {
@@ -40,17 +40,17 @@ export function useStaffRecommendations(formData: RecommendationFormData, monthl
   const query = useQuery({
     queryKey: ['staff-recommendations', formData],
     queryFn: async () => {
-      console.log('[STAFF RECOMMENDATIONS] Fetching products from staff database...');
+      // console.log('[STAFF RECOMMENDATIONS] Fetching products from staff database...');
       
       // Fetch all products from staff database (43+ products)  
       const allProducts = await fetchStaffProducts();
       
-      console.log(`[STAFF RECOMMENDATIONS] Found ${allProducts.length} products in staff database`);
+      // console.log(`[STAFF RECOMMENDATIONS] Found ${allProducts.length} products in staff database`);
 
       // Apply your business rules to filter products
       const filteredProducts = filterProducts(allProducts, formData);
       
-      console.log(`[STAFF RECOMMENDATIONS] Filtered to ${filteredProducts.length} matching products`);
+      // console.log(`[STAFF RECOMMENDATIONS] Filtered to ${filteredProducts.length} matching products`);
 
       // Calculate scores for each filtered product
       const productsWithScores = filteredProducts.map(product => ({
@@ -71,7 +71,7 @@ export function useStaffRecommendations(formData: RecommendationFormData, monthl
         return acc;
       }, {} as Record<string, typeof sortedProducts>);
 
-      console.log('[STAFF RECOMMENDATIONS] Categories found:', Object.keys(productsByCategory));
+      // console.log('[STAFF RECOMMENDATIONS] Categories found:', Object.keys(productsByCategory));
 
       return {
         allFilteredProducts: sortedProducts,

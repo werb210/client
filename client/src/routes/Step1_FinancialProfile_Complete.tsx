@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { logger } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useEffect } from 'react';
@@ -183,7 +184,7 @@ export default function Step1FinancialProfile() {
         equipmentValue: data.equipmentValue || 0,
       },
     });
-    console.log('💾 Step 1 - Auto-saved form data to step1 object');
+    logger.log('💾 Step 1 - Auto-saved form data to step1 object');
   }, 2000);
 
   // Trigger autosave when form values change
@@ -192,8 +193,8 @@ export default function Step1FinancialProfile() {
   }, [watchedValues, debouncedSave]);
 
   const onSubmit = (data: FinancialProfileFormData) => {
-    console.log('✅ Step 1 - Form submitted successfully!');
-    console.log('Form Data:', data);
+    logger.log('✅ Step 1 - Form submitted successfully!');
+    logger.log('Form Data:', data);
     
     try {
       // Store data in step1 object structure for validation
@@ -216,19 +217,19 @@ export default function Step1FinancialProfile() {
         },
       });
 
-      console.log('✅ Form data dispatched to context');
+      logger.log('✅ Form data dispatched to context');
 
       // Auto-save functionality with 2-second delay
       setTimeout(() => {
-        console.log('Auto-saving Step 1 data to localStorage');
+        logger.log('Auto-saving Step 1 data to localStorage');
         localStorage.setItem('step1FormData', JSON.stringify(data));
       }, 2000);
 
       // Navigate to Step 2
-      console.log('✅ Navigating to Step 2...');
+      logger.log('✅ Navigating to Step 2...');
       setLocation('/apply/step-2');
     } catch (error) {
-      console.error('❌ Error submitting form:', error);
+      logger.error('❌ Error submitting form:', error);
     }
   };
 
@@ -247,7 +248,7 @@ export default function Step1FinancialProfile() {
           const headquarters = countryCode; // CA or US
           
           if (businessLocation && headquarters) {
-            console.log(`🌍 Auto-detected country: ${countryCode} (${businessLocation})`);
+            logger.log(`🌍 Auto-detected country: ${countryCode} (${businessLocation})`);
             
             // Update form values
             if (!state.step1?.businessLocation) {
@@ -268,7 +269,7 @@ export default function Step1FinancialProfile() {
           }
         } else {
           // Default to US when location detection fails
-          console.log('🇺🇸 Location detection failed, defaulting to US');
+          logger.log('🇺🇸 Location detection failed, defaulting to US');
           if (!state.step1?.businessLocation) {
             form.setValue('businessLocation', 'US');
           }
@@ -277,7 +278,7 @@ export default function Step1FinancialProfile() {
           }
         }
       }).catch(error => {
-        console.log('Country detection failed, defaulting to US:', error?.message || 'Unknown error');
+        logger.log('Country detection failed, defaulting to US:', error?.message || 'Unknown error');
         // Default to US when location detection fails
         if (!state.step1?.businessLocation) {
           form.setValue('businessLocation', 'US');
@@ -615,7 +616,7 @@ export default function Step1FinancialProfile() {
                   className="bg-[#FF8C00] hover:bg-[#E07B00] text-white px-8 py-3 h-auto"
                   onClick={(e) => {
                     e.preventDefault();
-                    console.log('🔘 Button clicked - submitting form manually');
+                    logger.log('🔘 Button clicked - submitting form manually');
                     const formData = form.getValues();
                     onSubmit(formData);
                   }}

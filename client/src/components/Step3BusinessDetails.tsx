@@ -1,12 +1,21 @@
 import React from 'react';
+import { logger } from '@/lib/utils';
 import { useFormContext } from 'react-hook-form';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+
 import { Input } from '@/components/ui/input';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Button } from '@/components/ui/button';
+
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+
 import { useFormData } from '@/context/FormDataContext';
+
 import {
   formatPhoneNumber,
   formatPostalCode,
@@ -29,7 +38,7 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
   const businessLocation = state.step1FinancialProfile?.businessLocation || 'united-states';
   const isCanadian = isCanadianBusiness(businessLocation);
   
-  console.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`);
+  logger.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`);
   
   const regionalLabels = getRegionalLabels(isCanadian);
   const stateProvinceOptions = getStateProvinceOptions(isCanadian);

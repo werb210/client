@@ -24,8 +24,8 @@ export default function EquipmentFinancingFixTest() {
 
   const runTest = async () => {
     setIsLoading(true);
-    console.log("🔧 TESTING EQUIPMENT FINANCING FIX");
-    console.log("=".repeat(50));
+    // console.log("🔧 TESTING EQUIPMENT FINANCING FIX");
+    // console.log("=".repeat(50));
     
     try {
       const testScenario = {
@@ -35,7 +35,7 @@ export default function EquipmentFinancingFixTest() {
         accountsReceivable: "50k-to-100k"
       };
       
-      console.log("📋 Test Scenario:", testScenario);
+      // console.log("📋 Test Scenario:", testScenario);
       
       // Get all lender products from API
       const response = await fetch('/api/public/lenders');
@@ -47,14 +47,14 @@ export default function EquipmentFinancingFixTest() {
       }
       
       const products = data.products;
-      console.log(`✅ API returned ${products.length} total products`);
+      // console.log(`✅ API returned ${products.length} total products`);
       
       // Find Equipment Financing products
       const equipmentProducts = products.filter((p: any) => p.category === 'Equipment Financing');
-      console.log(`🏗️ Equipment Financing products found: ${equipmentProducts.length}`);
+      // console.log(`🏗️ Equipment Financing products found: ${equipmentProducts.length}`);
       
       const canadianEquipmentProducts = equipmentProducts.filter((p: any) => p.country === 'CA');
-      console.log(`🇨🇦 Canadian Equipment Financing products: ${canadianEquipmentProducts.length}`);
+      // console.log(`🇨🇦 Canadian Equipment Financing products: ${canadianEquipmentProducts.length}`);
       
       // Test if $40,000 fits in range
       const fundingAmount = 40000;
@@ -101,7 +101,7 @@ export default function EquipmentFinancingFixTest() {
         return true;
       });
       
-      console.log(`🎯 FINAL RESULT: ${filteredProducts.length} products match Canadian equipment financing criteria`);
+      // console.log(`🎯 FINAL RESULT: ${filteredProducts.length} products match Canadian equipment financing criteria`);
       
       setTestResults({
         totalProducts: products.length,
@@ -117,12 +117,12 @@ export default function EquipmentFinancingFixTest() {
       });
       
       if (filteredProducts.length > 0) {
-        console.log("✅ SUCCESS: Equipment financing filtering is working!");
+        // console.log("✅ SUCCESS: Equipment financing filtering is working!");
         filteredProducts.forEach((product: any, index: number) => {
-          console.log(`   ${index + 1}. ${product.name || product.lender} (${product.category})`);
+          // console.log(`   ${index + 1}. ${product.name || product.lender} (${product.category})`);
         });
       } else {
-        console.log("❌ STILL BROKEN: No products returned for equipment financing");
+        // console.log("❌ STILL BROKEN: No products returned for equipment financing");
       }
       
     } catch (error) {

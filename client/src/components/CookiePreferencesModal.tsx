@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
+import { logger } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 import { Button } from "@/components/ui/button";
+
 import { Switch } from "@/components/ui/switch";
+
 import { Link } from "wouter";
+
 import Cookies from "js-cookie";
+
 
 interface CookiePreferences {
   necessary: boolean;
@@ -42,7 +48,7 @@ export const CookiePreferencesModal = ({ isOpen, onClose }: CookiePreferencesMod
           });
         }
       } catch (error) {
-        console.warn("[COOKIES] Failed to load stored preferences:", error);
+        logger.warn("[COOKIES] Failed to load stored preferences:", error);
       }
     }
   }, [isOpen]);
@@ -58,9 +64,9 @@ export const CookiePreferencesModal = ({ isOpen, onClose }: CookiePreferencesMod
       // Set consent cookie
       Cookies.set("borealCookieConsent", "true", { expires: 180 });
 
-      console.log("[COOKIES] User saved preferences:", preferences);
+      logger.log("[COOKIES] User saved preferences:", preferences);
     } catch (error) {
-      console.warn("[COOKIES] Failed to save preferences:", error);
+      logger.warn("[COOKIES] Failed to save preferences:", error);
     }
     onClose();
   };
@@ -80,9 +86,9 @@ export const CookiePreferencesModal = ({ isOpen, onClose }: CookiePreferencesMod
       }));
       
       Cookies.set("borealCookieConsent", "true", { expires: 180 });
-      console.log("[COOKIES] User accepted all cookies");
+      logger.log("[COOKIES] User accepted all cookies");
     } catch (error) {
-      console.warn("[COOKIES] Failed to accept all cookies:", error);
+      logger.warn("[COOKIES] Failed to accept all cookies:", error);
     }
     onClose();
   };
@@ -102,9 +108,9 @@ export const CookiePreferencesModal = ({ isOpen, onClose }: CookiePreferencesMod
       }));
       
       Cookies.set("borealCookieConsent", "true", { expires: 180 });
-      console.log("[COOKIES] User rejected optional cookies");
+      logger.log("[COOKIES] User rejected optional cookies");
     } catch (error) {
-      console.warn("[COOKIES] Failed to reject optional cookies:", error);
+      logger.warn("[COOKIES] Failed to reject optional cookies:", error);
     }
     onClose();
   };

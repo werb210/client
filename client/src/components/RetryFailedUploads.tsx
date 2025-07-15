@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { logger } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
+
 import { Progress } from '@/components/ui/progress';
+
 import { Badge } from '@/components/ui/badge';
+
 import { useToast } from '@/hooks/use-toast';
+
 import { 
   RefreshCw, 
   Upload, 
@@ -14,6 +21,7 @@ import {
   FileText
 } from 'lucide-react';
 import { uploadDocumentPublic } from '@/lib/api';
+
 
 interface FailedUpload {
   id: string;
@@ -44,7 +52,7 @@ export function RetryFailedUploads() {
           // Note: File objects can't be serialized, so we'll need to handle this differently in production
         })));
       } catch (error) {
-        console.error('Failed to load failed uploads:', error);
+        logger.error('Failed to load failed uploads:', error);
       }
     }
   }, []);
@@ -54,7 +62,7 @@ export function RetryFailedUploads() {
     try {
       localStorage.setItem('failedUploads', JSON.stringify(uploads));
     } catch (error) {
-      console.error('Failed to save failed uploads:', error);
+      logger.error('Failed to save failed uploads:', error);
     }
   };
 

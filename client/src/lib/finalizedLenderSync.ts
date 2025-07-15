@@ -42,7 +42,7 @@ export async function syncLenderProducts(): Promise<ProductSyncResult> {
   const errors: string[] = [];
   
   try {
-    console.log(`[SYNC] Fetching from Staff API: ${LENDERS_ENDPOINT}`);
+    // console.log(`[SYNC] Fetching from Staff API: ${LENDERS_ENDPOINT}`);
     
     // C-2: Guard API errors gracefully with try/catch + C-6: Mobile network resilience
     const response = await fetch(LENDERS_ENDPOINT, {
@@ -80,7 +80,7 @@ export async function syncLenderProducts(): Promise<ProductSyncResult> {
     await set(CACHE_KEY, products);
     await set(CACHE_TIMESTAMP_KEY, syncTimestamp);
     
-    console.log(`[SYNC] ✅ Synced ${products.length} products from Staff API`);
+    // console.log(`[SYNC] ✅ Synced ${products.length} products from Staff API`);
     
     return {
       success: true,
@@ -96,7 +96,7 @@ export async function syncLenderProducts(): Promise<ProductSyncResult> {
     errors.push(errorMessage);
     
     console.warn(`[SYNC] ❌ Staff API failed: ${errorMessage}`);
-    console.log('[SYNC] Attempting fallback to IndexedDB cache...');
+    // console.log('[SYNC] Attempting fallback to IndexedDB cache...');
     
     // Fallback to cache
     try {
@@ -106,7 +106,7 @@ export async function syncLenderProducts(): Promise<ProductSyncResult> {
       if (cachedProducts && Array.isArray(cachedProducts) && cachedProducts.length >= MIN_PRODUCT_COUNT) {
         const categories: string[] = Array.from(new Set(cachedProducts.map((p: any) => p.category).filter(Boolean)));
         
-        console.log(`[SYNC] 📦 Using cached data: ${cachedProducts.length} products`);
+        // console.log(`[SYNC] 📦 Using cached data: ${cachedProducts.length} products`);
         
         return {
           success: true,
@@ -156,7 +156,7 @@ export async function forceFreshSync(): Promise<ProductSyncResult> {
   try {
     // Clear existing cache
     await clear();
-    console.log('[SYNC] Cache cleared, forcing fresh sync...');
+    // console.log('[SYNC] Cache cleared, forcing fresh sync...');
     
     // Perform fresh sync
     return await syncLenderProducts();

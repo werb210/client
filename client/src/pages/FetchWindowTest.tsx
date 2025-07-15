@@ -49,7 +49,7 @@ export function FetchWindowTest() {
       await clearLenderCache();
       setProducts([]);
       setRefreshTrigger(prev => prev + 1);
-      console.log('[TEST] Cache cleared successfully');
+      // console.log('[TEST] Cache cleared successfully');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to clear cache');
     } finally {

@@ -1,5 +1,7 @@
 import CookieConsent from "react-cookie-consent";
+import { logger } from '@/lib/utils';
 import { Link } from "wouter";
+
 
 /**
  * GDPR/CCPA-compliant cookie consent banner
@@ -46,7 +48,7 @@ export const CookieNotice = () => {
       }}
       expires={180} // 180 days
       onAccept={() => {
-        console.log("[COOKIES] User accepted all cookies");
+        logger.log("[COOKIES] User accepted all cookies");
         // Store consent choices in localStorage for detailed tracking
         localStorage.setItem("borealCookiePreferences", JSON.stringify({
           necessary: true,
@@ -56,7 +58,7 @@ export const CookieNotice = () => {
         }));
       }}
       onDecline={() => {
-        console.log("[COOKIES] User declined optional cookies");
+        logger.log("[COOKIES] User declined optional cookies");
         // Store minimal consent (necessary only)
         localStorage.setItem("borealCookiePreferences", JSON.stringify({
           necessary: true,

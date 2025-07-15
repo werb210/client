@@ -19,7 +19,7 @@ export default function UUIDTestPage() {
     
     try {
       // Test 1: UUID Package Availability
-      console.log('🧪 Testing UUID package...');
+      // console.log('🧪 Testing UUID package...');
       const { v4: uuidv4 } = await import('uuid');
       const testUuid = uuidv4();
       addResult('UUID Package Test', `Generated: ${testUuid}`, 'success');
@@ -30,7 +30,7 @@ export default function UUIDTestPage() {
       addResult('UUID Format Validation', `Valid: ${isValidUuid}`, isValidUuid ? 'success' : 'error');
       
       // Test 3: Simulate Step 4 Application Creation
-      console.log('🧪 Testing Step 4 application creation...');
+      // console.log('🧪 Testing Step 4 application creation...');
       
       // Simulate the exact logic from Step4_ApplicantInfo_New.tsx
       const mockApiResponse = { 
@@ -47,7 +47,7 @@ export default function UUIDTestPage() {
       addResult('SignNow Endpoint', signNowEndpoint, 'success');
       
       // Test 5: Test fallback scenario
-      console.log('🧪 Testing fallback scenario...');
+      // console.log('🧪 Testing fallback scenario...');
       const emptyApiResponse = { status: 'created' }; // No ID fields
       const fallbackId = emptyApiResponse.id || emptyApiResponse.applicationId || uuidv4();
       const isFallbackValid = uuidRegex.test(fallbackId);
@@ -58,7 +58,7 @@ export default function UUIDTestPage() {
       const isOldFormat = /^app_\d+_[a-z0-9]+$/.test(oldTimestampFormat);
       addResult('Old Timestamp Format (Should NOT be used)', `${oldTimestampFormat} (Is old format: ${isOldFormat})`, isOldFormat ? 'error' : 'success');
       
-      console.log('✅ UUID Test Complete');
+      // console.log('✅ UUID Test Complete');
       
     } catch (error) {
       addResult('UUID Test Error', error instanceof Error ? error.message : 'Unknown error', 'error');

@@ -76,7 +76,7 @@ export default function CriticalFixesValidation() {
     updateValidation('C-1', 'testing');
     
     try {
-      console.log('🧪 C-1: Testing API schema fix...');
+      // console.log('🧪 C-1: Testing API schema fix...');
       
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/lenders`, {
         method: 'GET',
@@ -110,7 +110,7 @@ export default function CriticalFixesValidation() {
     updateValidation('C-2', 'testing');
     
     try {
-      console.log('🧪 C-2: Testing graceful error handling...');
+      // console.log('🧪 C-2: Testing graceful error handling...');
       
       // Test with invalid endpoint to trigger error handling
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/invalid-endpoint`, {
@@ -134,7 +134,7 @@ export default function CriticalFixesValidation() {
     updateValidation('C-3', 'testing');
     
     try {
-      console.log('🧪 C-3: Testing application ID persistence...');
+      // console.log('🧪 C-3: Testing application ID persistence...');
       
       // Simulate Step 4 success with mock application ID
       const mockApplicationId = `app_test_${crypto.randomUUID()}`;
@@ -163,7 +163,7 @@ export default function CriticalFixesValidation() {
     updateValidation('C-4', 'testing');
     
     try {
-      console.log('🧪 C-4: Testing single source of truth...');
+      // console.log('🧪 C-4: Testing single source of truth...');
       
       // Test that Step 6 component logic works correctly
       const contextId = state.applicationId;
@@ -184,7 +184,7 @@ export default function CriticalFixesValidation() {
     updateValidation('C-5', 'testing');
     
     try {
-      console.log('🧪 C-5: Testing retry logic implementation...');
+      // console.log('🧪 C-5: Testing retry logic implementation...');
       
       // This validates the retry logic exists in Step 6 component
       // In a real scenario, this would test actual retry behavior
@@ -204,7 +204,7 @@ export default function CriticalFixesValidation() {
     updateValidation('C-6', 'testing');
     
     try {
-      console.log('🧪 C-6: Testing mobile network resilience...');
+      // console.log('🧪 C-6: Testing mobile network resilience...');
       
       const startTime = Date.now();
       
@@ -238,7 +238,7 @@ export default function CriticalFixesValidation() {
     updateValidation('C-7', 'testing');
     
     try {
-      console.log('🧪 C-7: Testing full 7-step workflow readiness...');
+      // console.log('🧪 C-7: Testing full 7-step workflow readiness...');
       
       // Check if all steps are properly routed and functional
       const steps = [
@@ -265,7 +265,7 @@ export default function CriticalFixesValidation() {
   };
 
   const runAllValidations = async () => {
-    console.log('🚀 Running Critical Fixes Validation...');
+    // console.log('🚀 Running Critical Fixes Validation...');
     
     // Reset all to pending
     setValidations(prev => prev.map(item => ({ ...item, status: 'pending' })));

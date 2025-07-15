@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useApplication } from '@/context/ApplicationContext';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/utils';
 import * as api from '@/lib/api';
 
 import { CheckCircle, AlertCircle } from 'lucide-react';
@@ -48,7 +49,7 @@ export function ReviewStep({ onBack, onComplete, applicationId }: ReviewStepProp
 
       // Submit application to staff backend
       const result = await api.submitApplication(applicationData).catch(error => {
-        console.error('[REVIEW_STEP] Application submission failed:', error);
+        logger.error('[REVIEW_STEP] Application submission failed:', error);
         throw error;
       });
       return result;
@@ -65,7 +66,7 @@ export function ReviewStep({ onBack, onComplete, applicationId }: ReviewStepProp
       // Generate SignNow URL for signature
       try {
         const signResponse = await api.getSignNowUrl(data.applicationId).catch(error => {
-          console.error('[REVIEW_STEP] SignNow URL generation failed:', error);
+          logger.error('[REVIEW_STEP] SignNow URL generation failed:', error);
           throw error;
         });
         

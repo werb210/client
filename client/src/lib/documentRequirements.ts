@@ -190,7 +190,7 @@ export async function buildRequiredDocList(input: WizardData): Promise<RequiredD
   // Determine all document categories needed
   const categories = getDocCategories(input.lookingFor, input.selectedProducts);
   
-  console.log('📋 Document categories determined:', categories);
+  // console.log('📋 Document categories determined:', categories);
   
   if (categories.length === 0) {
     console.warn('⚠️ No document categories found, using fallback documents');
@@ -233,8 +233,8 @@ export async function buildRequiredDocList(input: WizardData): Promise<RequiredD
 
   const finalDocuments = Array.from(docMap.values());
   
-  console.log(`📄 Final document list: ${finalDocuments.length} unique documents`);
-  console.log('📄 Documents:', finalDocuments.map(d => d.label));
+  // console.log(`📄 Final document list: ${finalDocuments.length} unique documents`);
+  // console.log('📄 Documents:', finalDocuments.map(d => d.label));
   
   return finalDocuments;
 }

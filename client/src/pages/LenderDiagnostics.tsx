@@ -45,11 +45,11 @@ export default function LenderDiagnostics() {
   // Manual sync with comprehensive logging
   const handleManualSync = async () => {
     setIsManualSyncing(true);
-    console.log('🔄 Manual sync triggered from diagnostics page');
+    // console.log('🔄 Manual sync triggered from diagnostics page');
     
     try {
       await forceSync();
-      console.log('✅ Manual sync completed successfully');
+      // console.log('✅ Manual sync completed successfully');
     } catch (error) {
       console.error('❌ Manual sync failed:', error);
     } finally {
@@ -59,7 +59,7 @@ export default function LenderDiagnostics() {
 
   // Manual fetch test (as requested in CLIENT FIX INSTRUCTIONS Step 3)
   const handleManualFetch = async () => {
-    console.log('🧪 Running manual fetch test...');
+    // console.log('🧪 Running manual fetch test...');
     try {
       const response = await fetch('https://staffportal.replit.app/api/public/lenders');
       const data = await response.json();
@@ -68,7 +68,7 @@ export default function LenderDiagnostics() {
       const productArray = Array.isArray(data) ? data : (data.products || []);
       const productCount = productArray.length;
       
-      console.log('Live Products:', productCount, data);
+      // console.log('Live Products:', productCount, data);
       setManualFetchResult({ success: true, count: productCount, data });
     } catch (error) {
       console.error('❌ Error fetching live products', error);
@@ -80,7 +80,7 @@ export default function LenderDiagnostics() {
   const checkIndexedDB = async () => {
     try {
       const cachedProducts = await get('lender_products_cache');
-      console.log('🗃️ IndexedDB products:', cachedProducts?.length || 0, cachedProducts);
+      // console.log('🗃️ IndexedDB products:', cachedProducts?.length || 0, cachedProducts);
       setIndexedDBProducts(cachedProducts || []);
     } catch (error) {
       console.error('❌ Error checking IndexedDB:', error);

@@ -38,7 +38,7 @@ export default function SyncedProductsTest() {
           throw new Error(`Invalid JSON response: ${jsonError.message}`);
         });
         
-        console.log("🎯 SYNCED PRODUCTS TEST - Raw Data:", data);
+        // console.log("🎯 SYNCED PRODUCTS TEST - Raw Data:", data);
         return data.products || data || [];
       } catch (error) {
         console.warn('[SYNCED_PRODUCTS_TEST] Query failed:', error instanceof Error ? error.message : error);
@@ -57,7 +57,7 @@ export default function SyncedProductsTest() {
       );
       if (!response.ok) return [];
       const data = await response.json();
-      console.log("📋 DOCUMENT REQUIREMENTS TEST:", data);
+      // console.log("📋 DOCUMENT REQUIREMENTS TEST:", data);
       return data.documents || data || [];
     },
     staleTime: 1000 * 60 * 5,

@@ -25,14 +25,14 @@ export default function Step2Test() {
       params.append('accountsReceivableBalance', testData.accountsReceivableBalance.toString());
       params.append('fundsPurpose', testData.fundsPurpose);
 
-      console.log('🔍 Testing API with params:', params.toString());
+      // console.log('🔍 Testing API with params:', params.toString());
       
       const response = await fetch(`/api/loan-products/categories?${params.toString()}`);
       if (!response.ok) {
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
       const data = await response.json();
-      console.log('✅ API Response:', data);
+      // console.log('✅ API Response:', data);
       return data;
     },
     refetchOnWindowFocus: false,

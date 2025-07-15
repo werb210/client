@@ -42,9 +42,9 @@ export const useUploadDocument = (applicationId: string) => {
       
       // ✅ Update endpoint to match staff backend: /api/public/documents/${applicationId}
       const endpoint = `/api/public/documents/${applicationId}`;
-      console.log('📤 [HOOK] ApplicationId:', applicationId);
-      console.log('📤 [HOOK] DocumentType:', payload.category);
-      console.log('📤 [HOOK] Endpoint:', endpoint);
+      // console.log('📤 [HOOK] ApplicationId:', applicationId);
+      // console.log('📤 [HOOK] DocumentType:', payload.category);
+      // console.log('📤 [HOOK] Endpoint:', endpoint);
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -52,7 +52,7 @@ export const useUploadDocument = (applicationId: string) => {
         // Remove Authorization headers for public endpoint
       });
       
-      console.log('📤 [HOOK] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');
+      // console.log('📤 [HOOK] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');
       
       if (!response.ok) {
         const errorText = await response.text();

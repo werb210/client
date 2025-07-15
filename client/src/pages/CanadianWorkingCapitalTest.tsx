@@ -20,15 +20,15 @@ export default function CanadianWorkingCapitalTest() {
 
   useEffect(() => {
     if (lenderProducts && lenderProducts.length > 0) {
-      console.log('🇨🇦 Testing Canadian Working Capital Scenario');
-      console.log('📊 Total products available:', lenderProducts.length);
+      // console.log('🇨🇦 Testing Canadian Working Capital Scenario');
+      // console.log('📊 Total products available:', lenderProducts.length);
       
       const filtered = filterProducts(lenderProducts, testScenario);
       setFilteredProducts(filtered);
       setFilterCount(filtered.length);
       
-      console.log('🎯 Filtered products for Canadian $40K working capital:', filtered.length);
-      console.log('💼 Products breakdown:');
+      // console.log('🎯 Filtered products for Canadian $40K working capital:', filtered.length);
+      // console.log('💼 Products breakdown:');
       
       // Group by product category
       const categoryBreakdown = filtered.reduce((acc, product) => {
@@ -38,29 +38,29 @@ export default function CanadianWorkingCapitalTest() {
       }, {});
       
       Object.entries(categoryBreakdown).forEach(([category, count]) => {
-        console.log(`  • ${category}: ${count} products`);
+        // console.log(`  • ${category}: ${count} products`);
       });
       
       // Show specific products
-      console.log('\n📋 Available products:');
+      // console.log('\n📋 Available products:');
       filtered.forEach((product, index) => {
-        console.log(`${index + 1}. ${product.name || product.lender} - ${product.productCategory}`);
-        console.log(`   Amount: $${product.amountMin?.toLocaleString()} - $${product.amountMax?.toLocaleString()}`);
-        console.log(`   Geography: ${product.geography}`);
+        // console.log(`${index + 1}. ${product.name || product.lender} - ${product.productCategory}`);
+        // console.log(`   Amount: $${product.amountMin?.toLocaleString()} - $${product.amountMax?.toLocaleString()}`);
+        // console.log(`   Geography: ${product.geography}`);
       });
     }
   }, [lenderProducts]);
 
   const runManualFilter = () => {
     if (lenderProducts) {
-      console.log('\n🔄 Running manual filter test...');
+      // console.log('\n🔄 Running manual filter test...');
       
       // Step 1: Filter by geography (Canada)
       const canadianProducts = lenderProducts.filter(product => {
         const geo = product.geography || '';
         return geo.toLowerCase().includes('ca') || geo.toLowerCase().includes('canada');
       });
-      console.log(`🇨🇦 Canadian products: ${canadianProducts.length}`);
+      // console.log(`🇨🇦 Canadian products: ${canadianProducts.length}`);
       
       // Step 2: Filter by amount ($40,000)
       const amountFiltered = canadianProducts.filter(product => {
@@ -68,7 +68,7 @@ export default function CanadianWorkingCapitalTest() {
         const max = product.amountMax || Infinity;
         return 40000 >= min && 40000 <= max;
       });
-      console.log(`💰 Amount-eligible products: ${amountFiltered.length}`);
+      // console.log(`💰 Amount-eligible products: ${amountFiltered.length}`);
       
       // Step 3: Filter by product type (working capital)
       const capitalProducts = amountFiltered.filter(product => {
@@ -78,14 +78,14 @@ export default function CanadianWorkingCapitalTest() {
                category.includes('line_of_credit') ||
                category.includes('term_loan');
       });
-      console.log(`💼 Working capital products: ${capitalProducts.length}`);
+      // console.log(`💼 Working capital products: ${capitalProducts.length}`);
       
       // Step 4: Exclude invoice factoring (no AR balance)
       const finalProducts = capitalProducts.filter(product => {
         const category = (product.productCategory || product.product || '').toLowerCase();
         return !category.includes('invoice') || testScenario.accountsReceivableBalance > 0;
       });
-      console.log(`✅ Final filtered products: ${finalProducts.length}`);
+      // console.log(`✅ Final filtered products: ${finalProducts.length}`);
     }
   };
 

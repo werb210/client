@@ -1,13 +1,23 @@
 import { useState, useCallback } from 'react';
+import { logger } from '@/lib/utils';
 import { useDropzone } from 'react-dropzone';
+
 import { Button } from '@/components/ui/button';
+
 import { Progress } from '@/components/ui/progress';
+
 import { Card, CardContent } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
+
 import { useToast } from '@/hooks/use-toast';
+
 import { Upload, File, X, Check, AlertCircle } from 'lucide-react';
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 import * as api from '@/lib/api';
+
 
 
 interface DocumentUploadProps {
@@ -38,7 +48,7 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
 
       // Upload actual file using public endpoint (no Authorization required)
       const result = await api.uploadDocumentPublic(applicationId.toString(), file, 'general').catch(error => {
-        console.error('[DOCUMENT_UPLOAD] Upload failed:', error);
+        logger.error('[DOCUMENT_UPLOAD] Upload failed:', error);
         throw error;
       });
       return { ...result, fileId };

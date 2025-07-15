@@ -19,7 +19,7 @@ export async function verifyStaffDatabaseIntegration(): Promise<VerificationResu
   const timestamp = new Date().toISOString();
   
   try {
-    console.log('[VERIFICATION] Testing staff database integration...');
+    // console.log('[VERIFICATION] Testing staff database integration...');
     
     const products = await fetchLenderProducts().catch(fetchError => {
       console.warn('[VERIFICATION] Staff database test failed:', fetchError.message);
@@ -28,7 +28,7 @@ export async function verifyStaffDatabaseIntegration(): Promise<VerificationResu
     
     const productCount = products.length;
     
-    console.log(`[VERIFICATION] Fetched ${productCount} products from staff database`);
+    // console.log(`[VERIFICATION] Fetched ${productCount} products from staff database`);
     
     // Verify minimum expected product count (43+)
     if (productCount < 40) {
@@ -64,9 +64,9 @@ export async function verifyStaffDatabaseIntegration(): Promise<VerificationResu
     }
     
     // Note: Staff API may not provide geography data, so defaulting to US is acceptable
-    console.log(`[VERIFICATION] Geographic coverage: ${Array.from(geographies).join(', ')}`);
-    console.log(`[VERIFICATION] Product categories: ${Array.from(productTypes).join(', ')}`);
-    console.log(`[VERIFICATION] Successfully validated ${productCount} products across ${productTypes.size} types`);
+    // console.log(`[VERIFICATION] Geographic coverage: ${Array.from(geographies).join(', ')}`);
+    // console.log(`[VERIFICATION] Product categories: ${Array.from(productTypes).join(', ')}`);
+    // console.log(`[VERIFICATION] Successfully validated ${productCount} products across ${productTypes.size} types`);
     
     // Warn but don't fail if only US is available (staff API doesn't provide geography)
     if (!geographies.has('CA') && geographies.has('US')) {
@@ -96,12 +96,12 @@ export async function verifyStaffDatabaseIntegration(): Promise<VerificationResu
  * Run verification on application startup
  */
 export async function runStartupVerification(): Promise<void> {
-  console.log('[STARTUP] Running staff database verification...');
+  // console.log('[STARTUP] Running staff database verification...');
   
   const result = await verifyStaffDatabaseIntegration();
   
   if (result.success) {
-    console.log(`[STARTUP] ✅ ${result.message}`);
+    // console.log(`[STARTUP] ✅ ${result.message}`);
   } else {
     console.error(`[STARTUP] ❌ ${result.message}`);
     

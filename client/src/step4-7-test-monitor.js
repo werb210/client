@@ -21,7 +21,7 @@ class Step47TestMonitor {
     this.testEvents.push(event);
     
     const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue';
-    console.log(`%c[${timestamp}] ${message}`, `color: ${color}`);
+    // console.log(`%c[${timestamp}] ${message}`, `color: ${color}`);
   }
 
   setupMonitoring() {
@@ -342,57 +342,57 @@ class Step47TestMonitor {
     const durationMins = Math.floor(duration / 60000);
     const durationSecs = Math.floor((duration % 60000) / 1000);
     
-    console.log('\n📊 STEP 4-7 TEST REPORT');
-    console.log(`⏱️  Duration: ${durationMins}m ${durationSecs}s`);
-    console.log(`📊 Events logged: ${this.testEvents.length}`);
-    console.log(`📊 Network calls: ${this.networkCalls.length}`);
-    console.log(`🆔 Application ID: ${this.applicationId || 'None'}`);
+    // console.log('\n📊 STEP 4-7 TEST REPORT');
+    // console.log(`⏱️  Duration: ${durationMins}m ${durationSecs}s`);
+    // console.log(`📊 Events logged: ${this.testEvents.length}`);
+    // console.log(`📊 Network calls: ${this.networkCalls.length}`);
+    // console.log(`🆔 Application ID: ${this.applicationId || 'None'}`);
     
-    console.log('\n--- STEP 4 ANALYSIS ---');
+    // console.log('\n--- STEP 4 ANALYSIS ---');
     const step4Calls = this.networkCalls.filter(call => 
       call.url.includes('/api/public/applications') && call.method === 'POST'
     );
     
     if (step4Calls.length > 0) {
       const call = step4Calls[0];
-      console.log(`Status: ${call.status} ${call.ok ? '✅' : '❌'}`);
-      console.log(`Duration: ${call.duration}ms`);
+      // console.log(`Status: ${call.status} ${call.ok ? '✅' : '❌'}`);
+      // console.log(`Duration: ${call.duration}ms`);
       if (call.body) {
-        console.log('Payload structure:', JSON.parse(call.body));
+        // console.log('Payload structure:', JSON.parse(call.body));
       }
     }
     
-    console.log('\n--- STEP 6 ANALYSIS ---');
+    // console.log('\n--- STEP 6 ANALYSIS ---');
     const signNowCalls = this.networkCalls.filter(call => 
       call.url.includes('signnow')
     );
     
-    console.log(`SignNow calls: ${signNowCalls.length}`);
+    // console.log(`SignNow calls: ${signNowCalls.length}`);
     signNowCalls.forEach((call, index) => {
-      console.log(`${index + 1}. ${call.method} ${call.url} - ${call.status}`);
+      // console.log(`${index + 1}. ${call.method} ${call.url} - ${call.status}`);
     });
     
-    console.log('\n--- SIGNATURE POLLING ---');
+    // console.log('\n--- SIGNATURE POLLING ---');
     const pollingCalls = this.networkCalls.filter(call => 
       call.url.includes('signature-status')
     );
     
-    console.log(`Polling calls: ${pollingCalls.length}`);
+    // console.log(`Polling calls: ${pollingCalls.length}`);
     
-    console.log('\n--- ERRORS ---');
+    // console.log('\n--- ERRORS ---');
     const errors = this.testEvents.filter(event => event.type === 'error');
-    console.log(`Total errors: ${errors.length}`);
+    // console.log(`Total errors: ${errors.length}`);
     errors.forEach((error, index) => {
-      console.log(`${index + 1}. ${error.message}`);
+      // console.log(`${index + 1}. ${error.message}`);
     });
   }
 }
 
 // Initialize the test monitor
-console.log('🔍 Step 4-7 Test Monitor Ready');
-console.log('💡 Usage:');
-console.log('  - window.testMonitor.testStep4ApplicationCreation()');
-console.log('  - window.testMonitor.testStep6SignNowIntegration()');
-console.log('  - window.testMonitor.generateTestReport()');
+// console.log('🔍 Step 4-7 Test Monitor Ready');
+// console.log('💡 Usage:');
+// console.log('  - window.testMonitor.testStep4ApplicationCreation()');
+// console.log('  - window.testMonitor.testStep6SignNowIntegration()');
+// console.log('  - window.testMonitor.generateTestReport()');
 
 window.testMonitor = new Step47TestMonitor();

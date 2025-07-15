@@ -32,7 +32,7 @@ export function FieldMappingDebugOverlay({
 
   useEffect(() => {
     if (products && products.length > 0) {
-      // console.log('[DEBUG_OVERLAY] Running field mapping diagnostics...');
+      // // console.log('[DEBUG_OVERLAY] Running field mapping diagnostics...');
       
       // Run diagnostics on all products
       const productDiagnostics = products.map(product => validateLenderProduct(product));

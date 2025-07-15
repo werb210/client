@@ -51,7 +51,7 @@ export default function CorsTest() {
 
     // Test 1: Simple fetch
     try {
-      console.log('=== CORS Test 1: Simple Fetch ===');
+      // console.log('=== CORS Test 1: Simple Fetch ===');
       const response = await fetch('https://staffportal.replit.app/api/public/lenders', {
         method: 'GET',
         mode: 'cors',
@@ -78,7 +78,7 @@ export default function CorsTest() {
 
     // Test 2: Check for CORS preflight
     try {
-      console.log('=== CORS Test 2: Preflight Check ===');
+      // console.log('=== CORS Test 2: Preflight Check ===');
       const response = await fetch('https://staffportal.replit.app/api/public/lenders', {
         method: 'OPTIONS',
         headers: {
@@ -112,7 +112,7 @@ export default function CorsTest() {
 
     // Test 3: Response Headers Analysis
     try {
-      console.log('=== CORS Test 3: Response Headers ===');
+      // console.log('=== CORS Test 3: Response Headers ===');
       const response = await fetch('https://staffportal.replit.app/api/public/lenders', {
         method: 'HEAD', // Just get headers
         mode: 'no-cors' // Bypass CORS to see what server returns
@@ -138,7 +138,7 @@ export default function CorsTest() {
 
     // Test 4: Network Connectivity (using no-cors to bypass CORS completely)
     try {
-      console.log('=== CORS Test 4: Network Connectivity ===');
+      // console.log('=== CORS Test 4: Network Connectivity ===');
       const response = await fetch('https://staffportal.replit.app', {
         method: 'GET',
         mode: 'no-cors'

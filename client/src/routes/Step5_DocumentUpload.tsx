@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import { logger } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
+
 import { useFormDataContext } from '@/context/FormDataContext';
+
 import { useLocation } from 'wouter';
+
 import { useToast } from '@/hooks/use-toast';
+
 import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequirements';
+
 import { ProceedBypassBanner } from '@/components/ProceedBypassBanner';
+
 import { StepHeader } from '@/components/StepHeader';
+
 import { getDocumentRequirementsIntersection } from '@/lib/documentIntersection';
+
 import { useDebouncedCallback } from 'use-debounce';
+
 import { 
   ArrowRight, 
   ArrowLeft, 
@@ -23,6 +36,7 @@ import {
 
 import type { UploadedFile } from '../components/DynamicDocumentRequirements';
 
+
 export default function Step5DocumentUpload() {
   const { state, dispatch } = useFormDataContext();
   const [, setLocation] = useLocation();
@@ -30,7 +44,7 @@ export default function Step5DocumentUpload() {
   
   // Debug: Check applicationId availability
   const applicationId = state.applicationId || localStorage.getItem('applicationId');
-  console.log('🔍 [STEP5] Application ID check:', {
+  logger.log('🔍 [STEP5] Application ID check:', {
     fromState: state.applicationId,
     fromLocalStorage: localStorage.getItem('applicationId'),
     finalId: applicationId
@@ -74,16 +88,16 @@ export default function Step5DocumentUpload() {
       const location = state.step1?.businessLocation || '';
       const amount = state.step1?.fundingAmount || '';
       
-      console.log(`🔧 [STEP5] selectedCategory from step2: "${state.step2?.selectedCategory}"`);
-      console.log(`🔧 [STEP5] businessLocation from step1: "${state.step1?.businessLocation}"`);
-      console.log(`🔧 [STEP5] fundingAmount from step1: "${state.step1?.fundingAmount}"`);
-      console.log(`🔧 [STEP5] lookingFor from step1: "${state.step1?.lookingFor}"`);
-      console.log(`🔧 [STEP5] Derived values: category="${productCategory}", location="${location}", amount="${amount}"`);
-      console.log(`🔧 [STEP5] Full state keys:`, Object.keys(state));
+      logger.log(`🔧 [STEP5] selectedCategory from step2: "${state.step2?.selectedCategory}"`);
+      logger.log(`🔧 [STEP5] businessLocation from step1: "${state.step1?.businessLocation}"`);
+      logger.log(`🔧 [STEP5] fundingAmount from step1: "${state.step1?.fundingAmount}"`);
+      logger.log(`🔧 [STEP5] lookingFor from step1: "${state.step1?.lookingFor}"`);
+      logger.log(`🔧 [STEP5] Derived values: category="${productCategory}", location="${location}", amount="${amount}"`);
+      logger.log(`🔧 [STEP5] Full state keys:`, Object.keys(state));
       
       // Add validation logging for step-based structure compliance
-      console.log("[Step 5] Category used for required docs:", state.step2?.selectedCategory);
-      console.log("[Step 5] Step-based validation:", {
+      logger.log("[Step 5] Category used for required docs:", state.step2?.selectedCategory);
+      logger.log("[Step 5] Step-based validation:", {
         step1Available: !!state.step1,
         step2Available: !!state.step2,
         step2Category: state.step2?.selectedCategory,
@@ -167,7 +181,7 @@ export default function Step5DocumentUpload() {
       
       // Validate required fields - use more flexible validation since intersection logic handles missing data better
       if (!apiLocation) {
-        console.log(`🔧 [STEP5] Missing required location data: location="${apiLocation}"`);
+        logger.log(`🔧 [STEP5] Missing required location data: location="${apiLocation}"`);
         setIntersectionResults({
           eligibleLenders: [],
           requiredDocuments: [],
@@ -178,15 +192,15 @@ export default function Step5DocumentUpload() {
         return;
       }
 
-      console.log('🔍 [STEP5] Calculating document requirements with intersection logic...');
-      console.log('Form data:', { productCategory, apiCategory, location, apiLocation, fundingAmount: amount });
+      logger.log('🔍 [STEP5] Calculating document requirements with intersection logic...');
+      logger.log('Form data:', { productCategory, apiCategory, location, apiLocation, fundingAmount: amount });
 
       // Parse funding amount if it's a string
       const parsedFundingAmount = typeof amount === 'string' 
         ? parseFloat(amount.replace(/[^0-9.-]+/g, '')) 
         : amount;
         
-      console.log(`🔧 [STEP5] Parsed funding amount: ${parsedFundingAmount} (from "${amount}")`);
+      logger.log(`🔧 [STEP5] Parsed funding amount: ${parsedFundingAmount} (from "${amount}")`);
 
       try {
         const results = await getDocumentRequirementsIntersection(
@@ -196,7 +210,7 @@ export default function Step5DocumentUpload() {
         );
 
         // console.debug("✅ Intersection result:", results.requiredDocuments);
-        console.log(`[Step 5] Intersection results:`, results);
+        logger.log(`[Step 5] Intersection results:`, results);
         
         // Show toast notification about results
         if (results.hasMatches && results.requiredDocuments.length > 0) {
@@ -211,7 +225,7 @@ export default function Step5DocumentUpload() {
           });
         } else if (results.hasMatches && results.requiredDocuments.length === 0) {
           // Use fallback documents when no intersection found
-          console.log(`[Step 5] No intersection documents found, using fallback for ${productCategory}`);
+          logger.log(`[Step 5] No intersection documents found, using fallback for ${productCategory}`);
           const fallbackDocuments = getFallbackDocuments(apiCategory);
           
           setIntersectionResults({
@@ -222,7 +236,7 @@ export default function Step5DocumentUpload() {
             isLoading: false
           });
           
-          console.log(`[Step 5] Applied fallback documents:`, fallbackDocuments);
+          logger.log(`[Step 5] Applied fallback documents:`, fallbackDocuments);
           
           toast({
             title: "Document Requirements Loaded",
@@ -231,7 +245,7 @@ export default function Step5DocumentUpload() {
           });
         } else {
           // No matches at all - use fallback
-          console.log(`[Step 5] No matching lenders found, using fallback for ${productCategory}`);
+          logger.log(`[Step 5] No matching lenders found, using fallback for ${productCategory}`);
           const fallbackDocuments = getFallbackDocuments(apiCategory);
           
           setIntersectionResults({
@@ -242,7 +256,7 @@ export default function Step5DocumentUpload() {
             isLoading: false
           });
           
-          console.log(`[Step 5] Applied fallback documents:`, fallbackDocuments);
+          logger.log(`[Step 5] Applied fallback documents:`, fallbackDocuments);
           
           toast({
             title: "Document Requirements Loaded",
@@ -252,7 +266,7 @@ export default function Step5DocumentUpload() {
         }
 
       } catch (error) {
-        console.error('❌ [STEP5] Error calculating document requirements:', error);
+        logger.error('❌ [STEP5] Error calculating document requirements:', error);
         
         // Use fallback documents based on selected category
         const fallbackDocuments = getFallbackDocuments(apiCategory);
@@ -265,7 +279,7 @@ export default function Step5DocumentUpload() {
           isLoading: false
         });
         
-        console.log(`[Step 5] Using fallback documents for ${productCategory}:`, fallbackDocuments);
+        logger.log(`[Step 5] Using fallback documents for ${productCategory}:`, fallbackDocuments);
         
         toast({
           title: "Document Requirements Loaded",
@@ -287,7 +301,7 @@ export default function Step5DocumentUpload() {
         uploadedDocuments: files,
       }
     });
-    console.log('💾 Step 5 - Auto-saved document uploads:', files.length, 'files');
+    logger.log('💾 Step 5 - Auto-saved document uploads:', files.length, 'files');
   }, 2000);
 
   // Handle file upload from DynamicDocumentRequirements component
@@ -382,7 +396,7 @@ export default function Step5DocumentUpload() {
 
       setLocation('/apply/step-6');
     } catch (error) {
-      console.error('Failed to bypass documents:', error);
+      logger.error('Failed to bypass documents:', error);
       toast({
         title: "Error",
         description: "Failed to proceed without documents. Please try again.",

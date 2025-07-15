@@ -19,7 +19,7 @@ export default function ApplicationFlowTest() {
       timestamp: new Date().toISOString()
     };
     setTestResults(prev => [...prev, result]);
-    console.log(`🧪 [TEST] ${step}: ${status}`, data);
+    // console.log(`🧪 [TEST] ${step}: ${status}`, data);
   };
 
   const testCompleteApplicationFlow = async () => {

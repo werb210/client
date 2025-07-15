@@ -11,7 +11,7 @@ function logNavigation(source, path, reason = '') {
   const timestamp = new Date().toISOString();
   const entry = { timestamp, source, path, reason };
   navigationLog.push(entry);
-  console.log(`🧭 [${timestamp}] ${source}: ${path} ${reason ? `(${reason})` : ''}`);
+  // console.log(`🧭 [${timestamp}] ${source}: ${path} ${reason ? `(${reason})` : ''}`);
 }
 
 // Override setLocation function if it exists
@@ -60,8 +60,8 @@ window.addEventListener('unhandledrejection', (event) => {
   logNavigation('unhandled rejection', window.location.pathname, `Promise rejection: ${event.reason}`);
 });
 
-console.log('🧭 Navigation tracker initialized');
-console.log('🧭 Use window.getNavigationLog() to see all navigation events');
+// console.log('🧭 Navigation tracker initialized');
+// console.log('🧭 Use window.getNavigationLog() to see all navigation events');
 
 // Expose navigation log
 window.getNavigationLog = () => {
@@ -72,7 +72,7 @@ window.getNavigationLog = () => {
 // Clear log function
 window.clearNavigationLog = () => {
   navigationLog = [];
-  console.log('🧭 Navigation log cleared');
+  // console.log('🧭 Navigation log cleared');
 };
 
 export { logNavigation, navigationLog };

@@ -12,7 +12,7 @@ export default function Step4Step6Test() {
 
   const addResult = (message: string) => {
     setTestResults(prev => [...prev, message]);
-    console.log(message);
+    // console.log(message);
   };
 
   const clearResults = () => {

@@ -18,7 +18,7 @@ export default function IndexedDBTest() {
 
   // DISABLED: Load sync status on component mount - no polling for cache-only system
   React.useEffect(() => {
-    console.log('[IndexedDBTest] Legacy polling disabled - using cache-only system');
+    // console.log('[IndexedDBTest] Legacy polling disabled - using cache-only system');
     // DISABLED: const interval = setInterval(refreshStatus, 5000); // Refresh every 5 seconds
     // DISABLED: return () => clearInterval(interval);
   }, [refreshStatus]);
@@ -26,7 +26,7 @@ export default function IndexedDBTest() {
   const handleForceSync = async () => {
     try {
       const result = await forceSync();
-      console.log('[TEST] Force sync result:', result);
+      // console.log('[TEST] Force sync result:', result);
     } catch (error) {
       console.error('[TEST] Force sync failed:', error);
     }
@@ -37,10 +37,10 @@ export default function IndexedDBTest() {
     const cachedProducts = await get('lender_products_cache');
     const cachedTimestamp = await get('lender_products_cache_ts');
     
-    console.log('[TEST] Data Preservation Check:');
-    console.log('- Cached products:', cachedProducts?.length || 0);
-    console.log('- Last sync:', cachedTimestamp);
-    console.log('- Current retry count:', await get('lender_products_retry_count') || 0);
+    // console.log('[TEST] Data Preservation Check:');
+    // console.log('- Cached products:', cachedProducts?.length || 0);
+    // console.log('- Last sync:', cachedTimestamp);
+    // console.log('- Current retry count:', await get('lender_products_retry_count') || 0);
   };
 
   const handleTestWebSocket = () => {
@@ -51,11 +51,11 @@ export default function IndexedDBTest() {
     const ws = new WebSocket(wsUrl);
     
     ws.onopen = () => {
-      console.log('[Test] WebSocket connected successfully');
+      // console.log('[Test] WebSocket connected successfully');
     };
     
     ws.onmessage = (event) => {
-      console.log('[Test] WebSocket message received:', event.data);
+      // console.log('[Test] WebSocket message received:', event.data);
     };
     
     ws.onerror = (error) => {

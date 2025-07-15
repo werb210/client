@@ -1,22 +1,41 @@
 import { useForm } from "react-hook-form";
+import { logger } from '@/lib/utils';
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import { z } from "zod";
+
 import { useLocation } from "wouter";
+
 import { useFormDataContext } from "@/context/FormDataContext";
+
 import { Button } from "@/components/ui/button";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
 import { Input } from "@/components/ui/input";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { Checkbox } from "@/components/ui/checkbox";
+
 import { formatPhoneNumber, formatPostalCode as formatPostalCodeHelper, formatSSN as formatSSNHelper, isCanadianBusiness, getStateProvinceOptions } from "@/lib/regionalFormatting";
+
 import { normalizePhone, formatPhoneDisplay, isValidPhone, getCountryFromBusinessLocation } from "@/lib/phoneUtils";
+
 import { extractUuid } from "@/lib/uuidUtils";
+
 import { staffApi, validateApplicationPayload } from "@/api/staffApi";
+
 import { useState, useEffect } from "react";
+
 import { useDebouncedCallback } from "use-debounce";
+
 import { StepHeader } from "@/components/StepHeader";
+
 import { ValidationErrorModal } from "@/components/ValidationErrorModal";
+
 
 // FIXED: Unified Step 4 Schema - matches shared/schema.ts exactly
 const step4Schema = z.object({
@@ -132,15 +151,15 @@ export default function Step4ApplicantInfoComplete() {
   const onSubmit = async (data: Step4FormData) => {
     // Double-click prevention: Exit if already submitting
     if (submitting) {
-      console.log('⚠️ DOUBLE-CLICK PREVENTION: Submission already in progress');
+      logger.log('⚠️ DOUBLE-CLICK PREVENTION: Submission already in progress');
       return;
     }
     
     setSubmitting(true);
-    console.log('🚀 STEP 4 SUBMIT TRIGGERED - onSubmit function called');
-    console.log('📝 Form data received:', data);
-    console.log('✅ Form validation state:', form.formState.isValid);
-    console.log('❌ Form errors:', form.formState.errors);
+    logger.log('🚀 STEP 4 SUBMIT TRIGGERED - onSubmit function called');
+    logger.log('📝 Form data received:', data);
+    logger.log('✅ Form validation state:', form.formState.isValid);
+    logger.log('❌ Form errors:', form.formState.errors);
     
     // REMOVED early exit validation check - let the submission proceed even if form reports invalid
     // This fixes the issue where form validation fails but shows no actual errors
@@ -158,9 +177,9 @@ export default function Step4ApplicantInfoComplete() {
       partnerPhone: data.partnerPhone ? normalizePhone(data.partnerPhone, countryCode) || data.partnerPhone : '',
     };
 
-    console.log('📞 Phone conversion results:');
-    console.log(`   Applicant: ${data.applicantPhone} → ${processedData.applicantPhone}`);
-    console.log(`   Partner: ${data.partnerPhone} → ${processedData.partnerPhone}`);
+    logger.log('📞 Phone conversion results:');
+    logger.log(`   Applicant: ${data.applicantPhone} → ${processedData.applicantPhone}`);
+    logger.log(`   Partner: ${data.partnerPhone} → ${processedData.partnerPhone}`);
 
     // Save form data to context
     dispatch({
@@ -168,7 +187,7 @@ export default function Step4ApplicantInfoComplete() {
       payload: processedData,
     });
 
-    console.log('📤 Step 4: Creating real application via POST /api/public/applications...');
+    logger.log('📤 Step 4: Creating real application via POST /api/public/applications...');
     try {
       // Format data as staff backend expects: {step1, step3, step4}
       const step1 = {
@@ -205,8 +224,8 @@ export default function Step4ApplicantInfoComplete() {
 
       // ✅ RUNTIME CHECK: Ensure all steps are present
       if (!step1 || !step3 || !step4) {
-        console.error("❌ Missing step data – cannot submit application");
-        console.error("Step validation:", { 
+        logger.error("❌ Missing step data – cannot submit application");
+        logger.error("Step validation:", { 
           step1: !!step1, 
           step3: !!step3, 
           step4: !!step4 
@@ -264,17 +283,17 @@ export default function Step4ApplicantInfoComplete() {
       };
       
       // ✅ Log final POST payload exactly as specified  
-      console.log("📤 Submitting full application:", { step1, step3, step4 });
+      logger.log("📤 Submitting full application:", { step1, step3, step4 });
       
       // ✅ CHATGPT DEBUG VERIFICATION: Final Application Data
-      console.log("✅ Final Application Data:", {
+      logger.log("✅ Final Application Data:", {
         step1: applicationData.step1,
         step3: applicationData.step3,
         step4: applicationData.step4,
       });
       
       // ✅ Log SignNow field mapping for verification
-      console.log("📋 SignNow field mapping included:", {
+      logger.log("📋 SignNow field mapping included:", {
         totalFields: Object.keys(signNowFields).length,
         sampleFields: {
           'First Name': signNowFields['First Name'],
@@ -283,44 +302,44 @@ export default function Step4ApplicantInfoComplete() {
         }
       });
       
-      console.log('📋 Application data structure:', {
+      logger.log('📋 Application data structure:', {
         step1: Object.keys(step1),
         step3: Object.keys(step3), 
         step4: Object.keys(step4)
       });
-      console.log('📋 Full payload being sent:', JSON.stringify(applicationData, null, 2));
+      logger.log('📋 Full payload being sent:', JSON.stringify(applicationData, null, 2));
       
       // ✅ Runtime Debug - Verify step3 has both legalName and businessName
-      console.log('🔍 Step 3 Debug - Required fields check:', {
+      logger.log('🔍 Step 3 Debug - Required fields check:', {
         legalName: applicationData.step3.legalName,
         businessName: applicationData.step3.businessName,
         hasBusinessName: !!applicationData.step3.businessName
       });
       
       // ✅ Runtime Debug - Verify step4 has email field
-      console.log('🔍 Step 4 Debug - Required fields check:', {
+      logger.log('🔍 Step 4 Debug - Required fields check:', {
         applicantEmail: applicationData.step4.applicantEmail,
         email: applicationData.step4.email,
         hasEmail: !!applicationData.step4.email
       });
       
       // ✅ Validate Application Payload Before Submission
-      console.log("📋 Step-based payload:", JSON.stringify(applicationData, null, 2));
+      logger.log("📋 Step-based payload:", JSON.stringify(applicationData, null, 2));
       
       const validation = validateApplicationPayload(applicationData);
       if (!validation.isValid) {
-        console.error("❌ VALIDATION FAILED - Missing required fields:", validation.missingFields);
+        logger.error("❌ VALIDATION FAILED - Missing required fields:", validation.missingFields);
         setValidationErrors(validation.missingFields);
         setSubmitting(false);
         return;
       }
-      console.log("✅ VALIDATION PASSED - All required fields present");
+      logger.log("✅ VALIDATION PASSED - All required fields present");
       
       // ✅ Confirm the POST URL and VITE_API_BASE_URL
       const postUrl = '/api/public/applications';
-      console.log('🎯 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-      console.log('🎯 Confirmed POST URL:', postUrl);
-      console.log('🎯 Full POST endpoint:', `${window.location.origin}${postUrl}`);
+      logger.log('🎯 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+      logger.log('🎯 Confirmed POST URL:', postUrl);
+      logger.log('🎯 Full POST endpoint:', `${window.location.origin}${postUrl}`);
       
       // API Call: POST /api/public/applications
       const response = await fetch(postUrl, {
@@ -332,28 +351,28 @@ export default function Step4ApplicantInfoComplete() {
         body: JSON.stringify(applicationData)
       });
 
-      console.log('🔍 API Response Status:', response.status, response.ok ? 'OK' : 'FAILED');
+      logger.log('🔍 API Response Status:', response.status, response.ok ? 'OK' : 'FAILED');
       
       if (response.ok) {
         const result = await response.json();
-        console.log('📋 Application created:', result);
-        console.log('📋 Full API response data:', JSON.stringify(result, null, 2));
+        logger.log('📋 Application created:', result);
+        logger.log('📋 Full API response data:', JSON.stringify(result, null, 2));
         
         const rawId = result.applicationId || result.id || result.uuid;
-        console.log('🔑 Raw applicationId from response:', rawId);
+        logger.log('🔑 Raw applicationId from response:', rawId);
         
         // FAILSAFE CHECK - User requested verification
         if (!result?.data?.applicationId && !result?.applicationId) {
           alert("❌ Application creation failed. Cannot continue.");
-          console.error('❌ FAILSAFE TRIGGERED: No applicationId in response');
+          logger.error('❌ FAILSAFE TRIGGERED: No applicationId in response');
           return;
         }
         
         if (rawId) {
           const uuid = extractUuid(rawId); // strips app_prod_ prefix if needed
-          console.log('✅ Application created successfully');
-          console.log('🔑 Full applicationId from response:', rawId);
-          console.log('🔑 Clean UUID extracted:', uuid);
+          logger.log('✅ Application created successfully');
+          logger.log('🔑 Full applicationId from response:', rawId);
+          logger.log('🔑 Clean UUID extracted:', uuid);
           
           // Save to Context
           dispatch({ type: 'UPDATE_FORM_DATA', payload: { applicationId: uuid } });
@@ -361,23 +380,23 @@ export default function Step4ApplicantInfoComplete() {
           // Save to localStorage
           localStorage.setItem('applicationId', uuid);
           
-          console.log('💾 Stored applicationId in context and localStorage:', uuid);
-          console.log('✅ Step 4 API call SUCCESSFUL - Status 200');
+          logger.log('💾 Stored applicationId in context and localStorage:', uuid);
+          logger.log('✅ Step 4 API call SUCCESSFUL - Status 200');
         } else {
-          console.error('❌ Failed to get applicationId from response:', result);
+          logger.error('❌ Failed to get applicationId from response:', result);
           alert("❌ Application creation failed. No ID returned. Cannot continue.");
           throw new Error('No applicationId returned from API');
         }
       } else {
         const errorText = await response.text();
-        console.error('❌ API call FAILED - Status:', response.status);
-        console.error('❌ Backend rejected Step 4 data:', errorText);
-        console.error('❌ Request payload was:', JSON.stringify(applicationData, null, 2));
+        logger.error('❌ API call FAILED - Status:', response.status);
+        logger.error('❌ Backend rejected Step 4 data:', errorText);
+        logger.error('❌ Request payload was:', JSON.stringify(applicationData, null, 2));
         throw new Error(`API returned ${response.status}: ${response.statusText}\nError: ${errorText}`);
       }
     } catch (error) {
-      console.error('❌ Step 4 Failed: Error creating application:', error);
-      console.error('❌ This means SignNow will not work - application must be created successfully');
+      logger.error('❌ Step 4 Failed: Error creating application:', error);
+      logger.error('❌ This means SignNow will not work - application must be created successfully');
       
       // Show user the actual error instead of generating fallback
       alert(`❌ Application creation failed: ${error.message}\n\nPlease check the form data and try again. SignNow requires a valid application ID.`);
@@ -489,9 +508,9 @@ export default function Step4ApplicantInfoComplete() {
                             if (normalized) {
                               field.onChange(normalized);
                               setApplicantPhoneDisplay(formatPhoneDisplay(normalized, countryCode));
-                              console.log(`📞 Applicant phone normalized: ${input} → ${normalized}`);
+                              logger.log(`📞 Applicant phone normalized: ${input} → ${normalized}`);
                             } else if (input.trim()) {
-                              console.warn(`❌ Invalid applicant phone: ${input}`);
+                              logger.warn(`❌ Invalid applicant phone: ${input}`);
                             }
                           }}
                           className="h-12"
@@ -741,9 +760,9 @@ export default function Step4ApplicantInfoComplete() {
                               if (normalized) {
                                 field.onChange(normalized);
                                 setPartnerPhoneDisplay(formatPhoneDisplay(normalized, countryCode));
-                                console.log(`📞 Partner phone normalized: ${input} → ${normalized}`);
+                                logger.log(`📞 Partner phone normalized: ${input} → ${normalized}`);
                               } else if (input.trim()) {
-                                console.warn(`❌ Invalid partner phone: ${input}`);
+                                logger.warn(`❌ Invalid partner phone: ${input}`);
                               }
                             }}
                             className="h-12"
@@ -831,10 +850,10 @@ export default function Step4ApplicantInfoComplete() {
               disabled={submitting}
               className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
               onClick={(e) => {
-                console.log('🖱️ CONTINUE BUTTON CLICKED');
-                console.log('📝 Form valid?', form.formState.isValid);
-                console.log('❌ Form errors:', form.formState.errors);
-                console.log('🔍 Required field values:', {
+                logger.log('🖱️ CONTINUE BUTTON CLICKED');
+                logger.log('📝 Form valid?', form.formState.isValid);
+                logger.log('❌ Form errors:', form.formState.errors);
+                logger.log('🔍 Required field values:', {
                   firstName: form.getValues('applicantFirstName'),
                   lastName: form.getValues('applicantLastName'),
                   email: form.getValues('applicantEmail'),

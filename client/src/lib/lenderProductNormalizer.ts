@@ -11,7 +11,7 @@ import {
  * Fails fast on invalid data to surface issues immediately
  */
 export function normalizeProducts(rawData: unknown): LenderProduct[] {
-  console.log('[NORMALIZER] Starting product normalization...');
+  // console.log('[NORMALIZER] Starting product normalization...');
   
   // First validate the API response structure
   const apiResponseValidation = StaffAPIResponseSchema.safeParse(rawData);
@@ -21,7 +21,7 @@ export function normalizeProducts(rawData: unknown): LenderProduct[] {
   }
 
   const { products } = apiResponseValidation.data;
-  console.log(`[NORMALIZER] Processing ${products.length} raw products from staff API`);
+  // console.log(`[NORMALIZER] Processing ${products.length} raw products from staff API`);
 
   const normalizedProducts: LenderProduct[] = [];
   const errors: Array<{ index: number; productName?: string; issues: string[] }> = [];
@@ -94,7 +94,7 @@ export function normalizeProducts(rawData: unknown): LenderProduct[] {
   });
 
   // Report results
-  console.log(`✅ [NORMALIZER] Successfully normalized ${normalizedProducts.length}/${products.length} products`);
+  // console.log(`✅ [NORMALIZER] Successfully normalized ${normalizedProducts.length}/${products.length} products`);
   
   if (errors.length > 0) {
     console.error(`❌ [NORMALIZER] ${errors.length} products failed validation:`);
@@ -152,7 +152,7 @@ function parseTermFromDescription(description?: string): { min: number; max: num
  */
 function normalizeGeographyFromCountry(country?: string): ("US" | "CA")[] {
   if (!country) {
-    // console.log('[NORMALIZER] No country provided, defaulting to US');
+    // // console.log('[NORMALIZER] No country provided, defaulting to US');
     return ['US'];
   }
   
@@ -171,7 +171,7 @@ function normalizeGeographyFromCountry(country?: string): ("US" | "CA")[] {
   }
   
   // Fallback for unknown country codes
-  // console.log(`[NORMALIZER] Unknown country code: ${country}, defaulting to US`);
+  // // console.log(`[NORMALIZER] Unknown country code: ${country}, defaulting to US`);
   return ['US'];
 }
 
@@ -192,7 +192,7 @@ function normalizeGeography(geography?: string[], lenderName?: string, productId
     
     // Check if lender name suggests Canadian origin
     if (lenderName && canadianLenders.some(ca => lenderName.includes(ca))) {
-      // console.log(`[NORMALIZER] Assigning ${lenderName} to CA based on lender name`);
+      // // console.log(`[NORMALIZER] Assigning ${lenderName} to CA based on lender name`);
       return ['CA'];
     }
     
@@ -200,13 +200,13 @@ function normalizeGeography(geography?: string[], lenderName?: string, productId
     if (productId) {
       const idHash = productId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
       if (idHash % 3 === 0) {
-        console.log(`[NORMALIZER] Assigning product ${productId} to CA for geographic diversity`);
+        // console.log(`[NORMALIZER] Assigning product ${productId} to CA for geographic diversity`);
         return ['CA'];
       }
     }
     
     // Default to US
-    console.log('[NORMALIZER] Geography missing, defaulting to US');
+    // console.log('[NORMALIZER] Geography missing, defaulting to US');
     return ['US'];
   }
   
@@ -217,7 +217,7 @@ function normalizeGeography(geography?: string[], lenderName?: string, productId
   }
   
   // If geography provided but not US/CA, default to US
-  console.log(`[NORMALIZER] Unsupported geography ${geography.join(', ')}, defaulting to US`);
+  // console.log(`[NORMALIZER] Unsupported geography ${geography.join(', ')}, defaulting to US`);
   return ['US'];
 }
 

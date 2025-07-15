@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { logger } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
+
 import { CheckCircle, FileText, AlertCircle, RefreshCcw, Upload, X } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { useToast } from '@/hooks/use-toast';
+
 import { type RequiredDoc } from '@/lib/documentRequirements';
+
 import { normalizeDocumentName } from '@/utils/documentNormalization';
+
 
 // TypeScript Interfaces - Export for use in other components
 export interface UploadedFile {
@@ -179,10 +187,10 @@ function UnifiedDocumentUploadCard({
         // Step 5: Upload Required Documents - Using Public Endpoint
         // API Call: POST /api/public/applications/:id/documents
         // Payload: File data and document type (NO Authorization headers)
-        console.log('📤 Step 5: Uploading documents via POST /api/public/applications/:id/documents...');
-        console.log(`   - ApplicationId: ${applicationId}`);
-        console.log(`   - Document Type: ${category}`);
-        console.log(`   - Files: ${files.map(f => f.name).join(', ')}`);
+        logger.log('📤 Step 5: Uploading documents via POST /api/public/applications/:id/documents...');
+        logger.log(`   - ApplicationId: ${applicationId}`);
+        logger.log(`   - Document Type: ${category}`);
+        logger.log(`   - Files: ${files.map(f => f.name).join(', ')}`);
         
         const formData = new FormData();
         files.forEach((file) => formData.append('document', file));
@@ -190,9 +198,9 @@ function UnifiedDocumentUploadCard({
         
         // ✅ Updated endpoint to match staff backend specification
         const endpoint = `/api/public/documents/${applicationId}`;
-        console.log('📤 [DYNAMIC] ApplicationId:', applicationId);
-        console.log('📤 [DYNAMIC] DocumentType:', category);
-        console.log('📤 [DYNAMIC] Endpoint:', endpoint);
+        logger.log('📤 [DYNAMIC] ApplicationId:', applicationId);
+        logger.log('📤 [DYNAMIC] DocumentType:', category);
+        logger.log('📤 [DYNAMIC] Endpoint:', endpoint);
         
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -200,7 +208,7 @@ function UnifiedDocumentUploadCard({
           // ⚠️ No Authorization headers for public upload!
         });
         
-        console.log('📤 [DYNAMIC] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');
+        logger.log('📤 [DYNAMIC] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');
         
         if (!response.ok) {
           const errorText = await response.text();
@@ -227,7 +235,7 @@ function UnifiedDocumentUploadCard({
           variant: "destructive",
         });
         
-        console.error('Upload error:', error);
+        logger.error('Upload error:', error);
       }
     }
   };
@@ -402,12 +410,12 @@ export function DynamicDocumentRequirements({
                  documentTypeLower === doc.label.toLowerCase().replace(/\s+/g, '_');
         });
         
-        console.log(`📊 Document "${doc.label}" files found: ${documentFiles.length}/${doc.quantity || 1}`);
+        logger.log(`📊 Document "${doc.label}" files found: ${documentFiles.length}/${doc.quantity || 1}`);
         return documentFiles.length >= (doc.quantity || 1);
       });
       
       const allComplete = completedDocs.length === documentRequirements.length;
-      console.log(`📋 Document completion: ${completedDocs.length}/${documentRequirements.length} complete`);
+      logger.log(`📋 Document completion: ${completedDocs.length}/${documentRequirements.length} complete`);
       onRequirementsChange?.(allComplete, documentRequirements.length);
     }
   }, [uploadedFiles, documentRequirements, onRequirementsChange]);

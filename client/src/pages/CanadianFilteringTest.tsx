@@ -15,11 +15,11 @@ export default function CanadianFilteringTest() {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
       const data = await response.json();
       setRawData(data);
-      console.log('Raw API Data:', data);
+      // console.log('Raw API Data:', data);
       
       // Check for any geography information in raw data
       const hasGeography = data.products?.some((p: any) => p.geography?.length > 0);
-      console.log('Raw data has geography?', hasGeography);
+      // console.log('Raw data has geography?', hasGeography);
       
     } catch (error) {
       console.error('Error fetching raw data:', error);
@@ -34,7 +34,7 @@ export default function CanadianFilteringTest() {
       const { fetchLenderProducts } = await import('@/api/lenderProducts');
       const normalized = await fetchLenderProducts();
       setNormalizedData(normalized);
-      console.log('Normalized Data:', normalized);
+      // console.log('Normalized Data:', normalized);
       
       // Filter Canadian products
       const canadianFiltered = normalized.filter((p: any) => 
@@ -42,8 +42,8 @@ export default function CanadianFilteringTest() {
       );
       setCanadianProducts(canadianFiltered);
       
-      console.log('Canadian Products Found:', canadianFiltered.length);
-      console.log('Canadian Products:', canadianFiltered);
+      // console.log('Canadian Products Found:', canadianFiltered.length);
+      // console.log('Canadian Products:', canadianFiltered);
       
     } catch (error) {
       console.error('Error fetching normalized data:', error);
@@ -52,10 +52,10 @@ export default function CanadianFilteringTest() {
   };
 
   const testStep2Logic = () => {
-    console.log('=== TESTING STEP 2 LOGIC ===');
+    // console.log('=== TESTING STEP 2 LOGIC ===');
     
     if (!normalizedData) {
-      console.log('No normalized data available');
+      // console.log('No normalized data available');
       return;
     }
 
@@ -76,7 +76,7 @@ export default function CanadianFilteringTest() {
     ];
 
     scenarios.forEach(scenario => {
-      console.log(`\n--- Testing ${scenario.name} ---`);
+      // console.log(`\n--- Testing ${scenario.name} ---`);
       
       const matches = normalizedData.filter((p: any) => {
         // Geography check - exact match or multi-country
@@ -92,22 +92,22 @@ export default function CanadianFilteringTest() {
         return true;
       });
 
-      console.log(`Found ${matches.length} matches for ${scenario.name}`);
-      console.log('Sample products:', matches.slice(0, 3).map((p: any) => ({
-        name: p.name,
-        lenderName: p.lenderName,
-        geography: p.geography,
-        minAmount: p.minAmount,
-        maxAmount: p.maxAmount,
-        category: p.category
-      })));
+      // console.log(`Found ${matches.length} matches for ${scenario.name}`);
+      // console.log('Sample products:', matches.slice(0, 3).map((p: any) => ({
+      //   name: p.name,
+      //   lenderName: p.lenderName,
+      //   geography: p.geography,
+      //   minAmount: p.minAmount,
+      //   maxAmount: p.maxAmount,
+      //   category: p.category
+      // })));
     });
   };
 
   const runDirectApiTest = async () => {
     setLoading(true);
     try {
-      console.log('=== DIRECT API TEST ===');
+      // console.log('=== DIRECT API TEST ===');
       
       const response = await fetch('https://staffportal.replit.app/api/public/lenders');
       const data = await response.json();
@@ -125,8 +125,8 @@ export default function CanadianFilteringTest() {
       
       setDirectApiTest(testResult);
       
-      console.log('Direct API Test Results:', testResult);
-      console.log('Expected: Total: 42, CA: 22, US: 20');
+      // console.log('Direct API Test Results:', testResult);
+      // console.log('Expected: Total: 42, CA: 22, US: 20');
       
     } catch (error) {
       console.error('Direct API test failed:', error);
@@ -141,13 +141,13 @@ export default function CanadianFilteringTest() {
       if (typeof window !== 'undefined' && 'indexedDB' in window) {
         const deleteRequest = indexedDB.deleteDatabase('lenderProducts');
         deleteRequest.onsuccess = () => {
-          console.log('✅ IndexedDB cleared');
+          // console.log('✅ IndexedDB cleared');
           
           // Clear other caches
           const keys = Object.keys(localStorage);
           keys.filter(k => k.includes('lender')).forEach(k => localStorage.removeItem(k));
           
-          console.log('✅ All caches cleared, refreshing page...');
+          // console.log('✅ All caches cleared, refreshing page...');
           window.location.reload();
         };
       }

@@ -12,10 +12,10 @@ export function FallbackTest() {
     setError(null);
     
     try {
-      console.log('🧪 [FALLBACK_TEST] Testing fallback system...');
+      // console.log('🧪 [FALLBACK_TEST] Testing fallback system...');
       const data = await fetchLenderProducts();
       setProducts(data);
-      console.log(`✅ [FALLBACK_TEST] Success! Got ${data.length} products`);
+      // console.log(`✅ [FALLBACK_TEST] Success! Got ${data.length} products`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);
@@ -30,7 +30,7 @@ export function FallbackTest() {
     setError(null);
     
     try {
-      console.log('📦 [FALLBACK_TEST] Testing direct fallback file...');
+      // console.log('📦 [FALLBACK_TEST] Testing direct fallback file...');
       const response = await fetch('/fallback/lenders.json');
       if (!response.ok) {
         throw new Error(`Fallback fetch failed: ${response.statusText}`);
@@ -38,7 +38,7 @@ export function FallbackTest() {
       
       const data = await response.json();
       setProducts(data.data);
-      console.log(`✅ [FALLBACK_TEST] Direct fallback success! Got ${data.data.length} products`);
+      // console.log(`✅ [FALLBACK_TEST] Direct fallback success! Got ${data.data.length} products`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);

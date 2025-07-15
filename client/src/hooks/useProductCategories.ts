@@ -29,7 +29,7 @@ export function useProductCategories(formData: RecommendationFormData) {
       
         // Apply filtering logic to get relevant products
         const filteredProducts = filterProducts(products, formData);
-        console.log('[useProductCategories] Filtered products:', filteredProducts.length);
+        // console.log('[useProductCategories] Filtered products:', filteredProducts.length);
       
         // Group products by category
         const categoryGroups: Record<string, StaffLenderProduct[]> = {};
@@ -41,7 +41,7 @@ export function useProductCategories(formData: RecommendationFormData) {
           categoryGroups[category].push(product);
         });
 
-        console.log('[useProductCategories] Category groups:', Object.keys(categoryGroups));
+        // console.log('[useProductCategories] Category groups:', Object.keys(categoryGroups));
 
         // Calculate statistics for each category
         const totalProducts = filteredProducts.length;
@@ -54,7 +54,7 @@ export function useProductCategories(formData: RecommendationFormData) {
           }))
           .sort((a, b) => b.count - a.count); // Sort by count descending
 
-        console.log('[useProductCategories] Final categories:', categories.length);
+        // console.log('[useProductCategories] Final categories:', categories.length);
         return categories;
       } catch (error) {
         console.error('[useProductCategories] Error in queryFn:', error);

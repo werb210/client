@@ -150,7 +150,7 @@ export default function BankingDocumentTest() {
           // Fetch the actual PDF file from attached assets
           const fileResponse = await fetch(doc.path);
           if (!fileResponse.ok) {
-            console.log(`Failed to fetch ${doc.name}: ${fileResponse.status}`);
+            // console.log(`Failed to fetch ${doc.name}: ${fileResponse.status}`);
             continue;
           }
           
@@ -176,7 +176,7 @@ export default function BankingDocumentTest() {
             });
           } else {
             const errorText = await uploadResponse.text();
-            console.log(`Upload failed for ${doc.name}: ${uploadResponse.status} - ${errorText}`);
+            // console.log(`Upload failed for ${doc.name}: ${uploadResponse.status} - ${errorText}`);
             toast({
               title: "Upload failed",
               description: `${doc.name}: ${uploadResponse.status} ${errorText}`,
@@ -184,7 +184,7 @@ export default function BankingDocumentTest() {
             });
           }
         } catch (error) {
-          console.log(`Error uploading ${doc.name}:`, error);
+          // console.log(`Error uploading ${doc.name}:`, error);
           toast({
             title: "Upload error",
             description: `Failed to process ${doc.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,

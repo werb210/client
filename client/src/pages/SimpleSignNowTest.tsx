@@ -19,26 +19,26 @@ export default function SimpleSignNowTest() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async () => {
-    console.log('🔍 SignNow Direct Test - Making API call to staff backend');
-    console.log('📋 VERIFICATION STEP 1: Application ID Details');
-    console.log('  → Application ID being sent:', testUUID);
-    console.log('  → Application ID type:', typeof testUUID);
-    console.log('  → Application ID length:', testUUID.length);
-    console.log('  → Is valid UUID format:', /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(testUUID));
-    console.log('  → Is undefined/null:', testUUID === undefined || testUUID === null);
+    // console.log('🔍 SignNow Direct Test - Making API call to staff backend');
+    // console.log('📋 VERIFICATION STEP 1: Application ID Details');
+    // console.log('  → Application ID being sent:', testUUID);
+    // console.log('  → Application ID type:', typeof testUUID);
+    // console.log('  → Application ID length:', testUUID.length);
+    // console.log('  → Is valid UUID format:', /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(testUUID));
+    // console.log('  → Is undefined/null:', testUUID === undefined || testUUID === null);
     
-    console.log('📋 VERIFICATION STEP 2: Endpoint Details');
+    // console.log('📋 VERIFICATION STEP 2: Endpoint Details');
     const endpoint = `https://staff.boreal.financial/api/applications/${testUUID}/signnow`;
-    console.log('  → Full endpoint URL:', endpoint);
-    console.log('  → Method: POST');
-    console.log('  → Content-Type: application/json');
+    // console.log('  → Full endpoint URL:', endpoint);
+    // console.log('  → Method: POST');
+    // console.log('  → Content-Type: application/json');
     
     setIsLoading(true);
     setStatus('Making SignNow API request...');
     
     try {
-      console.log('📋 VERIFICATION STEP 3: Making Request');
-      console.log('  → Sending SignNow request for Application ID:', testUUID);
+      // console.log('📋 VERIFICATION STEP 3: Making Request');
+      // console.log('  → Sending SignNow request for Application ID:', testUUID);
       
       const response = await fetch(endpoint, {
         method: "POST",
@@ -47,36 +47,36 @@ export default function SimpleSignNowTest() {
         }
       });
       
-      console.log('📋 VERIFICATION STEP 4: Response Analysis');
-      console.log('  → Response status:', response.status);
-      console.log('  → Response status text:', response.statusText);
-      console.log('  → Response headers:', Object.fromEntries(response.headers.entries()));
-      console.log('  → Response OK:', response.ok);
+      // console.log('📋 VERIFICATION STEP 4: Response Analysis');
+      // console.log('  → Response status:', response.status);
+      // console.log('  → Response status text:', response.statusText);
+      // console.log('  → Response headers:', Object.fromEntries(response.headers.entries()));
+      // console.log('  → Response OK:', response.ok);
       
       const responseText = await response.text();
-      console.log('  → Raw response text:', responseText);
+      // console.log('  → Raw response text:', responseText);
       
       let data: SignNowResponse;
       try {
         data = JSON.parse(responseText);
-        console.log('  → Parsed JSON response:', data);
+        // console.log('  → Parsed JSON response:', data);
       } catch (parseError) {
-        console.log('  → JSON parse error:', parseError);
-        console.log('  → Response is not valid JSON, likely HTML/CORS error');
+        // console.log('  → JSON parse error:', parseError);
+        // console.log('  → Response is not valid JSON, likely HTML/CORS error');
         throw new Error(`Invalid JSON response: ${responseText.substring(0, 200)}`);
       }
       
-      console.log('📋 VERIFICATION STEP 5: Response Content Analysis');
-      console.log('  → Response structure:', Object.keys(data));
-      console.log('  → Has status field:', 'status' in data);
-      console.log('  → Has signnow_url field:', 'signnow_url' in data);
-      console.log('  → Has error field:', 'error' in data);
+      // console.log('📋 VERIFICATION STEP 5: Response Content Analysis');
+      // console.log('  → Response structure:', Object.keys(data));
+      // console.log('  → Has status field:', 'status' in data);
+      // console.log('  → Has signnow_url field:', 'signnow_url' in data);
+      // console.log('  → Has error field:', 'error' in data);
       
       // Handle successful signing creation
       if (data.status === 'signing_created' && data.signnow_url) {
         setSigningUrl(data.signnow_url);
         setStatus('✅ SignNow URL received - Iframe loaded below');
-        console.log('✅ SignNow URL received:', data.signnow_url);
+        // console.log('✅ SignNow URL received:', data.signnow_url);
       } 
       // Handle other success cases
       else if (response.ok) {
@@ -90,10 +90,10 @@ export default function SimpleSignNowTest() {
       }
       
     } catch (error) {
-      console.log('📋 VERIFICATION STEP 6: Error Analysis');
-      console.log('  → Error type:', error?.constructor?.name);
-      console.log('  → Error message:', error instanceof Error ? error.message : 'Unknown error');
-      console.log('  → Full error object:', error);
+      // console.log('📋 VERIFICATION STEP 6: Error Analysis');
+      // console.log('  → Error type:', error?.constructor?.name);
+      // console.log('  → Error message:', error instanceof Error ? error.message : 'Unknown error');
+      // console.log('  → Full error object:', error);
       
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error('❌ SignNow API Error:', error);
@@ -175,7 +175,7 @@ export default function SimpleSignNowTest() {
             className="w-full h-[600px] border rounded"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
             onLoad={() => {
-              console.log('🎉 SignNow iframe loaded successfully');
+              // console.log('🎉 SignNow iframe loaded successfully');
             }}
             onError={() => {
               console.error('SignNow iframe failed to load');

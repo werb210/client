@@ -27,7 +27,7 @@ const ComprehensiveE2ETestPage: React.FC = () => {
     const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
     const logMessage = `[${timestamp}] ${prefix} ${message}`;
     setLogs(prev => [...prev, logMessage]);
-    console.log(logMessage);
+    // console.log(logMessage);
   };
 
   const runE2ETests = async () => {

@@ -28,7 +28,7 @@ export default function ComprehensiveE2ETest() {
   };
 
   const logTest = (message: string) => {
-    console.log(`[E2E TEST] ${message}`);
+    // console.log(`[E2E TEST] ${message}`);
     setCurrentTest(message);
   };
 
@@ -42,7 +42,7 @@ export default function ComprehensiveE2ETest() {
       if (response.ok && data.success && data.products) {
         const productCount = data.products.length;
         addResult('Lender Products API', true, `${productCount} products loaded`);
-        console.log(`✅ API returned ${productCount} products`);
+        // console.log(`✅ API returned ${productCount} products`);
         return data.products;
       } else {
         addResult('Lender Products API', false, 'API request failed');
@@ -68,11 +68,11 @@ export default function ComprehensiveE2ETest() {
         (p.productCategory?.includes('equipment') || p.product?.toLowerCase().includes('equipment'))
       );
 
-      console.log(`Found ${canadianEquipmentProducts.length} Canadian equipment financing products`);
+      // console.log(`Found ${canadianEquipmentProducts.length} Canadian equipment financing products`);
       
       if (canadianEquipmentProducts.length > 0) {
         addResult('Canadian Equipment Products', true, `${canadianEquipmentProducts.length} products found`);
-        console.log(`✅ Canadian equipment financing products available`);
+        // console.log(`✅ Canadian equipment financing products available`);
         
         // Check for Equipment Quote in required documents
         const productsWithEquipmentQuote = canadianEquipmentProducts.filter((p: any) => {
@@ -116,7 +116,7 @@ export default function ComprehensiveE2ETest() {
         return common.filter(doc => docs.includes(doc));
       }, allRequiredDocs[0] || []);
 
-      console.log(`Intersection found ${intersection.length} common documents`);
+      // console.log(`Intersection found ${intersection.length} common documents`);
       
       const hasEquipmentQuote = intersection.some((doc: string) => 
         doc.toLowerCase().includes('equipment') && doc.toLowerCase().includes('quote')
@@ -129,8 +129,8 @@ export default function ComprehensiveE2ETest() {
         hasEquipmentQuote ? 'Equipment Quote in intersection' : 'Equipment Quote not in intersection');
 
       if (intersection.length > 0) {
-        console.log('✅ Document intersection working correctly');
-        console.log(`Common documents: ${intersection.join(', ')}`);
+        // console.log('✅ Document intersection working correctly');
+        // console.log(`Common documents: ${intersection.join(', ')}`);
       } else {
         console.warn('❌ Document intersection returned empty results');
       }
@@ -172,7 +172,7 @@ export default function ComprehensiveE2ETest() {
         dataMatches ? 'Form data saves and retrieves correctly' : 'Form data persistence failed');
 
       if (dataMatches) {
-        console.log('✅ Form data persistence working correctly');
+        // console.log('✅ Form data persistence working correctly');
       } else {
         console.error('❌ Form data persistence failed');
       }
@@ -193,7 +193,7 @@ export default function ComprehensiveE2ETest() {
     
     try {
       const currentPath = window.location.pathname;
-      console.log(`Current path: ${currentPath}`);
+      // console.log(`Current path: ${currentPath}`);
       
       // Test navigation capability
       const hasHistory = typeof window.history.pushState === 'function';
@@ -203,7 +203,7 @@ export default function ComprehensiveE2ETest() {
         hasHistory && hasLocation ? 'Navigation APIs available' : 'Navigation APIs missing');
       
       if (hasHistory && hasLocation) {
-        console.log('✅ Navigation flow working correctly');
+        // console.log('✅ Navigation flow working correctly');
       } else {
         console.error('❌ Navigation flow unavailable');
       }
@@ -252,7 +252,7 @@ export default function ComprehensiveE2ETest() {
         hasExpectedDocs ? '14 documents as expected' : `${sampleRequirements.length} documents (expected 14)`);
 
       if (hasEquipmentQuote && hasMinimumDocs) {
-        console.log('✅ DynamicDocumentRequirements component test passed');
+        // console.log('✅ DynamicDocumentRequirements component test passed');
       } else {
         console.warn('❌ DynamicDocumentRequirements component test failed');
       }
@@ -284,7 +284,7 @@ export default function ComprehensiveE2ETest() {
         handlesInvalid ? 'Invalid data handled' : 'Invalid data not handled');
 
       if (errorHandled && handlesInvalid) {
-        console.log('✅ Error handling working correctly');
+        // console.log('✅ Error handling working correctly');
       } else {
         console.warn('❌ Error handling needs improvement');
       }
@@ -298,8 +298,8 @@ export default function ComprehensiveE2ETest() {
   };
 
   const runAllTests = async () => {
-    console.log("🚀 Starting Comprehensive End-to-End Test Suite");
-    console.log("Testing Document Requirements System Fix");
+    // console.log("🚀 Starting Comprehensive End-to-End Test Suite");
+    // console.log("Testing Document Requirements System Fix");
     
     setIsRunning(true);
     setTestResults([]);

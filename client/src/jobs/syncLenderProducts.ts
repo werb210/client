@@ -9,16 +9,16 @@ export async function syncLenderProducts(): Promise<{
   error?: string;
 }> {
   const startTime = new Date();
-  console.log(`[SYNC] Starting lender products sync at ${startTime.toISOString()}`);
+  // console.log(`[SYNC] Starting lender products sync at ${startTime.toISOString()}`);
 
   try {
     // Fetch from staff API (with fallback to local server API)
     const remoteProducts = await fetchLenderProducts();
-    console.log(`[SYNC] Fetched ${remoteProducts.length} products from remote`);
+    // console.log(`[SYNC] Fetched ${remoteProducts.length} products from remote`);
 
     // Get current local products
     const localProducts = await getAllLocalProducts();
-    console.log(`[SYNC] Found ${localProducts.length} products in local storage`);
+    // console.log(`[SYNC] Found ${localProducts.length} products in local storage`);
 
     // Create map for efficient comparison
     const localMap = new Map(localProducts.map(p => [p.id, p]));
@@ -46,14 +46,14 @@ export async function syncLenderProducts(): Promise<{
       if (isNew || isChanged) {
         productsToUpdate.push(remoteProduct);
         changes++;
-        console.log(`[SYNC] ${isNew ? 'NEW' : 'UPDATED'}: ${remoteProduct.productName} (${remoteProduct.lenderName})`);
+        // console.log(`[SYNC] ${isNew ? 'NEW' : 'UPDATED'}: ${remoteProduct.productName} (${remoteProduct.lenderName})`);
       }
     }
 
     // Batch update changed/new products
     if (productsToUpdate.length > 0) {
       await upsertProducts(productsToUpdate);
-      console.log(`[SYNC] Successfully updated ${productsToUpdate.length} products`);
+      // console.log(`[SYNC] Successfully updated ${productsToUpdate.length} products`);
     }
 
     // Determine data source
@@ -62,8 +62,8 @@ export async function syncLenderProducts(): Promise<{
     const endTime = new Date();
     const duration = endTime.getTime() - startTime.getTime();
     
-    console.log(`[SYNC] Completed in ${duration}ms: ${changes} products ${changes === 1 ? 'was' : 'were'} added or updated`);
-    console.log(`[SYNC] Data source: ${source} (${remoteProducts.length} total products)`);
+    // console.log(`[SYNC] Completed in ${duration}ms: ${changes} products ${changes === 1 ? 'was' : 'were'} added or updated`);
+    // console.log(`[SYNC] Data source: ${source} (${remoteProducts.length} total products)`);
 
     return {
       success: true,
@@ -88,14 +88,14 @@ export async function syncLenderProducts(): Promise<{
 
 // Manual sync function for testing/debugging
 export async function forceSyncLenderProducts(): Promise<void> {
-  console.log('[SYNC] Force sync initiated - clearing local storage first');
+  // console.log('[SYNC] Force sync initiated - clearing local storage first');
   
   try {
     await clearLocalProducts();
-    console.log('[SYNC] Local storage cleared');
+    // console.log('[SYNC] Local storage cleared');
     
     const result = await syncLenderProducts();
-    console.log('[SYNC] Force sync completed:', result);
+    // console.log('[SYNC] Force sync completed:', result);
   } catch (error) {
     console.error('[SYNC] Force sync failed:', error);
   }

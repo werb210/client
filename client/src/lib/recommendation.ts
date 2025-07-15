@@ -40,14 +40,14 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
   } = form;
 
   // Enhanced debug logging to diagnose product filtering issue
-  console.log('[DEBUG] filterProducts - Input parameters:', {
-    productCount: products.length,
-    headquarters,
-    fundingAmount,
-    lookingFor,
-    accountsReceivableBalance,
-    fundsPurpose
-  });
+  // console.log('[DEBUG] filterProducts - Input parameters:', {
+  //   productCount: products.length,
+  //   headquarters,
+  //   fundingAmount,
+  //   lookingFor,
+  //   accountsReceivableBalance,
+  //   fundsPurpose
+  // });
 
   // Check for products that should match the user's criteria
   const potentialMatches = products.filter(p => {
@@ -59,15 +59,15 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     return amountInRange && countryMatch;
   });
   
-  console.log('[DEBUG] Potential matches (amount + country):', potentialMatches.length);
+  // console.log('[DEBUG] Potential matches (amount + country):', potentialMatches.length);
   if (potentialMatches.length > 0) {
-    console.log('[DEBUG] Sample potential match:', {
-      name: potentialMatches[0].name,
-      country: potentialMatches[0].country,
-      category: potentialMatches[0].category,
-      minAmount: getAmountValue(potentialMatches[0], 'min'),
-      maxAmount: getAmountValue(potentialMatches[0], 'max')
-    });
+    // console.log('[DEBUG] Sample potential match:', {
+    //   name: potentialMatches[0].name,
+    //   country: potentialMatches[0].country,
+    //   category: potentialMatches[0].category,
+    //   minAmount: getAmountValue(potentialMatches[0], 'min'),
+    //   maxAmount: getAmountValue(potentialMatches[0], 'max')
+    // });
   }
 
   // Count products by country to understand the distribution
@@ -77,12 +77,12 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     return acc;
   }, {} as Record<string, number>);
   
-  console.log('[DEBUG] Products by country:', countryStats);
+  // console.log('[DEBUG] Products by country:', countryStats);
 
   // Show all available field names in first product
   if (products.length > 0) {
-    console.log('[DEBUG] Available fields in products:', Object.keys(products[0]));
-    console.log('[DEBUG] Sample product:', products[0]);
+    // console.log('[DEBUG] Available fields in products:', Object.keys(products[0]));
+    // console.log('[DEBUG] Sample product:', products[0]);
   }
 
   // Check for specific missing products (Accord and Small Business Revolver)
@@ -91,18 +91,18 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     p.lender_name?.toLowerCase().includes('accord') ||
     p.product_name?.toLowerCase().includes('accord')
   );
-  console.log(`[DEBUG] Accord products found: ${accordProducts.length}`);
+  // console.log(`[DEBUG] Accord products found: ${accordProducts.length}`);
   accordProducts.forEach(p => {
-    console.log(`[DEBUG] Accord product: ${p.name} - Category: ${p.category}, Country: ${p.country}, Min: ${p.min_amount}, Max: ${p.max_amount}`);
+    // console.log(`[DEBUG] Accord product: ${p.name} - Category: ${p.category}, Country: ${p.country}, Min: ${p.min_amount}, Max: ${p.max_amount}`);
   });
 
   const revolverProducts = products.filter(p => 
     p.name?.toLowerCase().includes('revolver') ||
     p.name?.toLowerCase().includes('small business')
   );
-  console.log(`[DEBUG] Small Business Revolver products found: ${revolverProducts.length}`);
+  // console.log(`[DEBUG] Small Business Revolver products found: ${revolverProducts.length}`);
   revolverProducts.forEach(p => {
-    console.log(`[DEBUG] Revolver product: ${p.name} - Category: ${p.category}, Country: ${p.country}, Min: ${p.min_amount}, Max: ${p.max_amount}`);
+    // console.log(`[DEBUG] Revolver product: ${p.name} - Category: ${p.category}, Country: ${p.country}, Min: ${p.min_amount}, Max: ${p.max_amount}`);
   });
 
   // Function moved to top of file to fix initialization error
@@ -176,42 +176,42 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     
     // Log specific products for debugging
     if (product.name?.includes('Small Business Revolver') || product.name?.includes('Accord')) {
-      console.log(`[DEBUG] Product ${product.name}:`, {
-        originalGeography: geography,
-        normalizedGeography: geography,
-        requestedHQ: normalizedHQ,
-        geographyMatch,
-        amountRange: `${minAmount}-${maxAmount}`,
-        requestedAmount: fundingAmount,
-        amountMatch,
-        category: product.category,
-        lookingFor,
-        typeMatch,
-        accountsReceivableBalance,
-        factorExclusion,
-        passes
-      });
+      // console.log(`[DEBUG] Product ${product.name}:`, {
+      //   originalGeography: geography,
+      //   normalizedGeography: geography,
+      //   requestedHQ: normalizedHQ,
+      //   geographyMatch,
+      //   amountRange: `${minAmount}-${maxAmount}`,
+      //   requestedAmount: fundingAmount,
+      //   amountMatch,
+      //   category: product.category,
+      //   lookingFor,
+      //   typeMatch,
+      //   accountsReceivableBalance,
+      //   factorExclusion,
+      //   passes
+      // });
     }
     if (products.indexOf(product) < 3) {
       const categoryLower = product.category?.toLowerCase() || '';
       const factorExclusion = accountsReceivableBalance === 0 && 
                              (categoryLower.includes("factoring") || categoryLower.includes("invoice"));
       
-      console.log(`[DEBUG] Product ${product.name || product.lender}:`, {
-        originalGeography: product.geography || product.country,
-        normalizedGeography: geography,
-        requestedHQ: normalizedHQ,
-        geographyMatch,
-        amountRange: `${minAmount}-${maxAmount}`,
-        requestedAmount: fundingAmount,
-        amountMatch,
-        category: product.category,
-        lookingFor,
-        typeMatch,
-        accountsReceivableBalance,
-        factorExclusion,
-        passes: geographyMatch && amountMatch && typeMatch && !factorExclusion
-      });
+      // console.log(`[DEBUG] Product ${product.name || product.lender}:`, {
+      //   originalGeography: product.geography || product.country,
+      //   normalizedGeography: geography,
+      //   requestedHQ: normalizedHQ,
+      //   geographyMatch,
+      //   amountRange: `${minAmount}-${maxAmount}`,
+      //   requestedAmount: fundingAmount,
+      //   amountMatch,
+      //   category: product.category,
+      //   lookingFor,
+      //   typeMatch,
+      //   accountsReceivableBalance,
+      //   factorExclusion,
+      //   passes: geographyMatch && amountMatch && typeMatch && !factorExclusion
+      // });
     }
     
     return passes;
@@ -256,14 +256,14 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
   const finalResults = Array.from(byId.values());
   
   // Enhanced debug logging to show results
-  console.log('[DEBUG] filterProducts - Results:', {
-    coreMatches: matchesCore.length,
-    extras: extras.length,
-    finalResults: finalResults.length,
-    categories: [...new Set(finalResults.map(p => p.category))],
-    accountsReceivableBalance,
-    shouldExcludeFactoring: accountsReceivableBalance === 0
-  });
+  // console.log('[DEBUG] filterProducts - Results:', {
+  //   coreMatches: matchesCore.length,
+  //   extras: extras.length,
+  //   finalResults: finalResults.length,
+  //   categories: [...new Set(finalResults.map(p => p.category))],
+  //   accountsReceivableBalance,
+  //   shouldExcludeFactoring: accountsReceivableBalance === 0
+  // });
   
   return finalResults;
 }

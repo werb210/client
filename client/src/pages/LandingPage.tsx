@@ -31,11 +31,11 @@ export default function LandingPage() {
 
   // Calculate maximum funding amount from live data
   const getMaxFunding = () => {
-    console.log('[LANDING] getMaxFunding called - products:', products?.length || 0, 'isLoading:', isLoading, 'error:', error?.message);
+    // console.log('[LANDING] getMaxFunding called - products:', products?.length || 0, 'isLoading:', isLoading, 'error:', error?.message);
     
     // If API failed, return the known maximum from our verification
     if (error) {
-      console.log('[LANDING] API failed, using verified maximum: $30M+');
+      // console.log('[LANDING] API failed, using verified maximum: $30M+');
       return "$30M+";
     }
     
@@ -44,7 +44,7 @@ export default function LandingPage() {
     }
     
     if (!products || products.length === 0) {
-      console.log('[LANDING] No products available, returning verified maximum');
+      // console.log('[LANDING] No products available, returning verified maximum');
       return "$30M+";
     }
     
@@ -52,37 +52,37 @@ export default function LandingPage() {
       // Extract maximum amounts from products - try multiple field names
       const amounts = products
         .map((p: any) => {
-          console.log('[LANDING] Product fields:', p.name, {
-            maxAmount: p.maxAmount,
-            max_amount: p.max_amount,
-            amountMax: p.amountMax,
-            amount_max: p.amount_max
-          });
+          // console.log('[LANDING] Product fields:', p.name, {
+          //   maxAmount: p.maxAmount,
+          //   max_amount: p.max_amount,
+          //   amountMax: p.amountMax,
+          //   amount_max: p.amount_max
+          // });
           // Try various possible field names for maximum amount
           const maxAmount = p.maxAmount || p.max_amount || p.amountMax || p.amount_max;
           return typeof maxAmount === 'number' ? maxAmount : (typeof maxAmount === 'string' ? parseFloat(maxAmount) : 0);
         })
         .filter((amount: any) => amount > 0);
       
-      console.log('[LANDING] All amounts found:', amounts);
+      // console.log('[LANDING] All amounts found:', amounts);
       
       if (amounts.length === 0) {
-        console.log('[LANDING] No valid amounts found, returning verified maximum $30M+');
+        // console.log('[LANDING] No valid amounts found, returning verified maximum $30M+');
         return "$30M+";
       }
       
       const maxAmount = Math.max(...amounts);
-      console.log(`[LANDING] Calculated maximum funding amount: $${maxAmount.toLocaleString()}`);
+      // console.log(`[LANDING] Calculated maximum funding amount: $${maxAmount.toLocaleString()}`);
       
       if (maxAmount >= 1000000) {
         const millions = maxAmount / 1000000;
         if (millions >= 10) {
           const result = `$${Math.floor(millions)}M+`;
-          console.log('[LANDING] Returning formatted result:', result);
+          // console.log('[LANDING] Returning formatted result:', result);
           return result;
         } else {
           const result = `$${millions.toFixed(1)}M+`;
-          console.log('[LANDING] Returning formatted result:', result);
+          // console.log('[LANDING] Returning formatted result:', result);
           return result;
         }
       } else if (maxAmount >= 1000) {

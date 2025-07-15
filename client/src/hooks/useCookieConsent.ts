@@ -50,13 +50,13 @@ export const useCookieConsent = () => {
   // Function to load analytics scripts conditionally
   const loadAnalyticsScript = (scriptId: string, src: string, onLoad?: () => void) => {
     if (!canUseAnalytics()) {
-      console.log(`[COOKIES] Analytics blocked - not loading ${scriptId}`);
+      // console.log(`[COOKIES] Analytics blocked - not loading ${scriptId}`);
       return;
     }
 
     // Check if script already exists
     if (document.getElementById(scriptId)) {
-      console.log(`[COOKIES] Script ${scriptId} already loaded`);
+      // console.log(`[COOKIES] Script ${scriptId} already loaded`);
       return;
     }
 
@@ -65,7 +65,7 @@ export const useCookieConsent = () => {
     script.src = src;
     script.async = true;
     script.onload = () => {
-      console.log(`[COOKIES] Loaded analytics script: ${scriptId}`);
+      // console.log(`[COOKIES] Loaded analytics script: ${scriptId}`);
       onLoad?.();
     };
     script.onerror = () => {
@@ -78,13 +78,13 @@ export const useCookieConsent = () => {
   // Function to load marketing scripts conditionally
   const loadMarketingScript = (scriptId: string, src: string, onLoad?: () => void) => {
     if (!canUseMarketing()) {
-      console.log(`[COOKIES] Marketing blocked - not loading ${scriptId}`);
+      // console.log(`[COOKIES] Marketing blocked - not loading ${scriptId}`);
       return;
     }
 
     // Check if script already exists
     if (document.getElementById(scriptId)) {
-      console.log(`[COOKIES] Script ${scriptId} already loaded`);
+      // console.log(`[COOKIES] Script ${scriptId} already loaded`);
       return;
     }
 
@@ -93,7 +93,7 @@ export const useCookieConsent = () => {
     script.src = src;
     script.async = true;
     script.onload = () => {
-      console.log(`[COOKIES] Loaded marketing script: ${scriptId}`);
+      // console.log(`[COOKIES] Loaded marketing script: ${scriptId}`);
       onLoad?.();
     };
     script.onerror = () => {
@@ -106,7 +106,7 @@ export const useCookieConsent = () => {
   // Function to initialize Google Analytics
   const initGoogleAnalytics = (measurementId: string) => {
     if (!canUseAnalytics()) {
-      console.log("[COOKIES] Analytics consent not given - skipping Google Analytics");
+      // console.log("[COOKIES] Analytics consent not given - skipping Google Analytics");
       return;
     }
 
@@ -127,7 +127,7 @@ export const useCookieConsent = () => {
           cookie_flags: 'SameSite=Lax;Secure'
         });
 
-        console.log(`[COOKIES] Google Analytics initialized: ${measurementId}`);
+        // console.log(`[COOKIES] Google Analytics initialized: ${measurementId}`);
       }
     );
   };

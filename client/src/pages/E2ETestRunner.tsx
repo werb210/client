@@ -72,7 +72,7 @@ export default function E2ETestRunner() {
               setApplicationId(responseData.applicationId);
             }
           } catch (e) {
-            console.log('Could not parse application response');
+            // console.log('Could not parse application response');
           }
         }
         

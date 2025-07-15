@@ -3,7 +3,7 @@
  * This ensures we never fall back to the old 8-product dataset
  */
 export function clearLegacyCache(): void {
-  console.log('[CACHE CLEANUP] Checking for legacy cached data...');
+  // console.log('[CACHE CLEANUP] Checking for legacy cached data...');
 
   // Clear localStorage items that might contain old product data
   const legacyKeys = [
@@ -19,7 +19,7 @@ export function clearLegacyCache(): void {
     if (localStorage.getItem(key)) {
       localStorage.removeItem(key);
       clearedItems++;
-      console.log(`[CACHE CLEANUP] Removed localStorage: ${key}`);
+      // console.log(`[CACHE CLEANUP] Removed localStorage: ${key}`);
     }
   });
 
@@ -35,7 +35,7 @@ export function clearLegacyCache(): void {
     try {
       const deleteRequest = indexedDB.deleteDatabase(dbName);
       deleteRequest.onsuccess = () => {
-        console.log(`[CACHE CLEANUP] Deleted IndexedDB: ${dbName}`);
+        // console.log(`[CACHE CLEANUP] Deleted IndexedDB: ${dbName}`);
       };
       deleteRequest.onerror = () => {
         console.warn(`[CACHE CLEANUP] Failed to delete IndexedDB: ${dbName}`);
@@ -50,16 +50,16 @@ export function clearLegacyCache(): void {
     const queryClient = (window as any).queryClient;
     queryClient.removeQueries({ queryKey: ['local-lenders'] });
     queryClient.removeQueries({ queryKey: ['lenders'] });
-    console.log('[CACHE CLEANUP] Cleared React Query cache');
+    // console.log('[CACHE CLEANUP] Cleared React Query cache');
   }
 
   // Mark cache cleanup as completed
   localStorage.setItem('cacheCleanupCompleted', new Date().toISOString());
   
   if (clearedItems > 0) {
-    console.log(`[CACHE CLEANUP] Completed: ${clearedItems} legacy items removed`);
+    // console.log(`[CACHE CLEANUP] Completed: ${clearedItems} legacy items removed`);
   } else {
-    console.log('[CACHE CLEANUP] No legacy cache found');
+    // console.log('[CACHE CLEANUP] No legacy cache found');
   }
 }
 

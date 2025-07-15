@@ -191,7 +191,7 @@ class OfflineStorage {
           const api = await import('./api');
           const result = await api.uploadDocumentPublic(doc.applicationId.toString(), doc.file, 'general');
           await this.markDocumentUploaded(doc.id);
-          console.log(`Document ${doc.id} synced to staff backend:`, result);
+          // console.log(`Document ${doc.id} synced to staff backend:`, result);
         } catch (error) {
           console.error(`Failed to sync document ${doc.id}:`, error);
           // Continue with other documents even if one fails
@@ -207,7 +207,7 @@ class OfflineStorage {
     try {
       const api = await import('./api');
       await api.submitApplication(applicationData);
-      console.log('Application data synced to staff backend');
+      // console.log('Application data synced to staff backend');
     } catch (error) {
       console.error('Failed to sync application data:', error);
       // Don't throw - handle gracefully to prevent unhandled promise rejection

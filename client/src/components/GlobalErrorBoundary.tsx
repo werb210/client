@@ -1,4 +1,5 @@
 import React from 'react';
+import { logger } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
@@ -24,8 +25,8 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('🚨 Global Error Boundary caught an error:', error);
-    console.error('Error Info:', errorInfo);
+    logger.error('🚨 Global Error Boundary caught an error:', error);
+    logger.error('Error Info:', errorInfo);
     
     this.setState({
       error,
@@ -34,8 +35,8 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
 
     // In development, provide more debugging info
     if (import.meta.env.DEV) {
-      console.error('[DEV] Component Stack:', errorInfo.componentStack);
-      console.error('[DEV] Error Stack:', error.stack);
+      logger.error('[DEV] Component Stack:', errorInfo.componentStack);
+      logger.error('[DEV] Error Stack:', error.stack);
     }
   }
 

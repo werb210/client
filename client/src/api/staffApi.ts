@@ -246,7 +246,7 @@ class StaffApiClient {
     selectedProductId: string
   ): Promise<ApplicationSubmissionResponse> {
     try {
-      console.log('📤 Starting application submission to staff API...');
+      // console.log('📤 Starting application submission to staff API...');
       
       // Upload documents first
       const files = uploadedFiles.map(uf => uf.file);
@@ -259,13 +259,13 @@ class StaffApiClient {
       }> = [];
       
       if (files.length > 0) {
-        console.log(`📁 Uploading ${files.length} documents...`);
+        // console.log(`📁 Uploading ${files.length} documents...`);
         uploadedDocuments = await this.uploadFiles(files);
-        console.log('✅ Documents uploaded successfully');
+        // console.log('✅ Documents uploaded successfully');
       }
 
       // ✅ CRITICAL FIX: Remove flat field references - use step-based structure only
-      console.log('🚫 DEPRECATED: Legacy flat field mapping removed - using step-based structure only');
+      // console.log('🚫 DEPRECATED: Legacy flat field mapping removed - using step-based structure only');
       
       // Ensure formData already contains step-based structure
       if (!formData.step1 || !formData.step3 || !formData.step4) {
@@ -273,13 +273,13 @@ class StaffApiClient {
         throw new Error('Invalid application data structure - missing step-based format');
       }
 
-      console.log('📋 Submitting application with data:', {
-        step1Fields: Object.keys(formData.step1 || {}).length,
-        step3Fields: Object.keys(formData.step3 || {}).length,
-        step4Fields: Object.keys(formData.step4 || {}).length,
-        documentsCount: uploadedDocuments.length,
-        productId: selectedProductId
-      });
+      // console.log('📋 Submitting application with data:', {
+      //   step1Fields: Object.keys(formData.step1 || {}).length,
+      //   step3Fields: Object.keys(formData.step3 || {}).length,
+      //   step4Fields: Object.keys(formData.step4 || {}).length,
+      //   documentsCount: uploadedDocuments.length,
+      //   productId: selectedProductId
+      // });
 
       // ✅ ENFORCE STEP-BASED STRUCTURE: Use formData.step1, formData.step3, formData.step4 directly
       const correctPayload = {
@@ -294,33 +294,33 @@ class StaffApiClient {
       const API_BASE_URL = this.baseUrl;
       const sharedToken = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN;
       
-      console.log('🟢 Final payload being sent to API:', correctPayload);
-      console.log('🔍 API call structure verification:', {
-        url: `${API_BASE_URL}/public/applications`,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sharedToken ? '[PRESENT]' : '[MISSING]'}`
-        },
-        bodyStructure: {
-          step1: Object.keys(correctPayload.step1 || {}).length + ' fields',
-          step3: Object.keys(correctPayload.step3 || {}).length + ' fields', 
-          step4: Object.keys(correctPayload.step4 || {}).length + ' fields'
-        }
-      });
+      // console.log('🟢 Final payload being sent to API:', correctPayload);
+      // console.log('🔍 API call structure verification:', {
+      //   url: `${API_BASE_URL}/public/applications`,
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `Bearer ${sharedToken ? '[PRESENT]' : '[MISSING]'}`
+      //   },
+      //   bodyStructure: {
+      //     step1: Object.keys(correctPayload.step1 || {}).length + ' fields',
+      //     step3: Object.keys(correctPayload.step3 || {}).length + ' fields', 
+      //     step4: Object.keys(correctPayload.step4 || {}).length + ' fields'
+      //   }
+      // });
       
       // ✅ FINAL VERIFICATION: Ensure no flat field references remain
-      console.log('📋 Step-based structure verification:');
-      console.log('  step1:', correctPayload.step1);
-      console.log('  step3:', correctPayload.step3);
-      console.log('  step4:', correctPayload.step4);
+      // console.log('📋 Step-based structure verification:');
+      // console.log('  step1:', correctPayload.step1);
+      // console.log('  step3:', correctPayload.step3);
+      // console.log('  step4:', correctPayload.step4);
 
       const response = await this.makeRequest<ApplicationSubmissionResponse>('/public/applications', {
         method: 'POST',
         body: JSON.stringify(correctPayload),
       });
 
-      console.log('✅ Application submitted successfully:', response);
+      // console.log('✅ Application submitted successfully:', response);
       return response;
 
     } catch (error) {
@@ -332,11 +332,11 @@ class StaffApiClient {
 
   async checkSigningStatus(applicationId: string): Promise<SigningStatusResponse> {
     try {
-      console.log(`🔍 Checking signing status for application: ${applicationId}`);
+      // console.log(`🔍 Checking signing status for application: ${applicationId}`);
       
       const response = await this.makeRequest<SigningStatusResponse>(`/applications/${applicationId}/signing-status`);
       
-      console.log('📋 Signing status:', response);
+      // console.log('📋 Signing status:', response);
       return response;
       
     } catch (error) {
@@ -353,7 +353,7 @@ class StaffApiClient {
     step4ApplicantInfo?: any;
   }): Promise<SigningStatusResponse> {
     try {
-      console.log(`🖊️ Initiating signing for application: ${applicationId}`);
+      // console.log(`🖊️ Initiating signing for application: ${applicationId}`);
       
       // Prepare pre-fill data payload
       const payload = prefilData ? {
@@ -395,7 +395,7 @@ class StaffApiClient {
         }
       } : undefined;
 
-      console.log('📋 Pre-fill data for SignNow:', payload);
+      // console.log('📋 Pre-fill data for SignNow:', payload);
       
       const response = await this.makeRequest<SigningStatusResponse>(`/applications/${applicationId}/initiate-signing`, {
         method: 'POST',
@@ -405,7 +405,7 @@ class StaffApiClient {
         } : undefined
       });
       
-      console.log('📝 Signing initiated:', response);
+      // console.log('📝 Signing initiated:', response);
       return response;
       
     } catch (error) {
@@ -419,13 +419,13 @@ class StaffApiClient {
 
   async finalizeApplication(applicationId: string): Promise<FinalizationResponse> {
     try {
-      console.log(`🏁 Finalizing application: ${applicationId}`);
+      // console.log(`🏁 Finalizing application: ${applicationId}`);
       
       const response = await this.makeRequest<FinalizationResponse>(`/applications/${applicationId}/finalize`, {
         method: 'POST',
       });
       
-      console.log('✅ Application finalized:', response);
+      // console.log('✅ Application finalized:', response);
       return response;
       
     } catch (error) {
@@ -439,7 +439,7 @@ class StaffApiClient {
 
   async createSignNowDocument(applicationId: string): Promise<SigningStatusResponse> {
     try {
-      console.log(`📝 Creating SignNow document for application: ${applicationId}`);
+      // console.log(`📝 Creating SignNow document for application: ${applicationId}`);
       
       const response = await this.makeRequest<SigningStatusResponse>(`/applications/${applicationId}/signnow`, {
         method: 'POST',
@@ -449,7 +449,7 @@ class StaffApiClient {
         }),
       });
       
-      console.log('✅ SignNow document created:', response);
+      // console.log('✅ SignNow document created:', response);
       return response;
       
     } catch (error) {
@@ -472,50 +472,50 @@ class StaffApiClient {
 
   async createApplication(applicationData: any): Promise<{ applicationId: string; signNowDocumentId?: string }> {
     try {
-      console.log('📝 Creating new application via POST /api/public/applications');
-      console.log('🟢 Final payload being sent to staff backend:', applicationData);
+      // console.log('📝 Creating new application via POST /api/public/applications');
+      // console.log('🟢 Final payload being sent to staff backend:', applicationData);
       
       // Critical field verification for SignNow population
-      console.log('🔍 Critical field verification for SignNow:', {
-        'step1.fundingAmount': applicationData.step1?.fundingAmount,
-        'step3.operatingName (businessName)': applicationData.step3?.operatingName,
-        'step4.firstName': applicationData.step4?.firstName,
-        'step4.personalEmail': applicationData.step4?.personalEmail,
-        allFieldsPresent: !!(
-          applicationData.step1?.fundingAmount && 
-          applicationData.step3?.operatingName && 
-          applicationData.step4?.firstName &&
-          applicationData.step4?.personalEmail
-        )
-      });
+      // console.log('🔍 Critical field verification for SignNow:', {
+      //   'step1.fundingAmount': applicationData.step1?.fundingAmount,
+      //   'step3.operatingName (businessName)': applicationData.step3?.operatingName,
+      //   'step4.firstName': applicationData.step4?.firstName,
+      //   'step4.personalEmail': applicationData.step4?.personalEmail,
+      //   allFieldsPresent: !!(
+      //     applicationData.step1?.fundingAmount && 
+      //     applicationData.step3?.operatingName && 
+      //     applicationData.step4?.firstName &&
+      //     applicationData.step4?.personalEmail
+      //   )
+      // });
       
-      console.log('📋 Payload structure verification:', {
-        hasStep1: !!applicationData.step1,
-        hasStep3: !!applicationData.step3,
-        hasStep4: !!applicationData.step4,
-        step1FieldCount: Object.keys(applicationData.step1 || {}).length,
-        step3FieldCount: Object.keys(applicationData.step3 || {}).length,
-        step4FieldCount: Object.keys(applicationData.step4 || {}).length
-      });
+      // console.log('📋 Payload structure verification:', {
+      //   hasStep1: !!applicationData.step1,
+      //   hasStep3: !!applicationData.step3,
+      //   hasStep4: !!applicationData.step4,
+      //   step1FieldCount: Object.keys(applicationData.step1 || {}).length,
+      //   step3FieldCount: Object.keys(applicationData.step3 || {}).length,
+      //   step4FieldCount: Object.keys(applicationData.step4 || {}).length
+      // });
       
-      console.log('🟢 Final payload being sent to staff backend:', applicationData);
-      console.log('📝 Complete application payload:', JSON.stringify(applicationData, null, 2));
+      // console.log('🟢 Final payload being sent to staff backend:', applicationData);
+      // console.log('📝 Complete application payload:', JSON.stringify(applicationData, null, 2));
       
       const response = await this.makeRequest<{ applicationId: string; signNowDocumentId?: string }>('/public/applications', {
         method: 'POST',
         body: JSON.stringify(applicationData),
       });
       
-      console.log('✅ Application creation response received:', {
-        applicationId: response?.applicationId,
-        signNowDocumentId: response?.signNowDocumentId,
-        fullResponse: JSON.stringify(response, null, 2)
-      });
+      // console.log('✅ Application creation response received:', {
+      //   applicationId: response?.applicationId,
+      //   signNowDocumentId: response?.signNowDocumentId,
+      //   fullResponse: JSON.stringify(response, null, 2)
+      // });
       
       // Verify critical fields for webhook integration
       if (response?.applicationId && response?.signNowDocumentId) {
-        console.log('🔗 Webhook verification: applicationId and signNowDocumentId both present');
-        console.log('🔗 Document ID for webhook matching:', response.signNowDocumentId);
+        // console.log('🔗 Webhook verification: applicationId and signNowDocumentId both present');
+        // console.log('🔗 Document ID for webhook matching:', response.signNowDocumentId);
       } else {
         console.warn('⚠️ Missing critical fields for SignNow integration:');
         console.warn('   - applicationId:', !!response?.applicationId);

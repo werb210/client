@@ -105,9 +105,9 @@ function ApiDiagnosticOriginal() {
         const isTargetMet = productCount === 42;
         
         // Log the critical verification to console
-        console.log(`🎯 CRITICAL VERIFICATION: products.length === ${productCount}`);
-        console.log(`✅ Expected: 42, Actual: ${productCount}`);
-        console.log(`📋 Products:`, directData);
+        // console.log(`🎯 CRITICAL VERIFICATION: products.length === ${productCount}`);
+        // console.log(`✅ Expected: 42, Actual: ${productCount}`);
+        // console.log(`📋 Products:`, directData);
         
         addResult({
           test: `Product Count Verification - ${isTargetMet ? 'SUCCESS: 42 Products!' : 'Partial Data'}`,
@@ -265,7 +265,7 @@ function ApiDiagnosticOriginal() {
                   Open DevTools Console and run this command manually:
                 </p>
                 <code className="block bg-gray-800 text-green-400 p-2 rounded text-sm">
-                  fetch('https://staffportal.replit.app/api/public/lenders').then(r =&gt; r.json()).then(console.log).catch(console.error);
+                  fetch('https://staffportal.replit.app/api/public/lenders').then(r =&gt; r.json()).then(// console.log).catch(console.error);
                 </code>
               </div>
 

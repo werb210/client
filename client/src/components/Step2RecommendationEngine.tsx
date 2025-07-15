@@ -55,11 +55,11 @@ export function Step2RecommendationEngine({
   });
   
   // ✅ DEBUG: Log fetched lender products and categories
-  console.log("Fetched lender products count:", allLenderProducts?.length || 0);
-  console.log("Product categories generated:", productCategories?.length || 0);
+  // console.log("Fetched lender products count:", allLenderProducts?.length || 0);
+  // console.log("Product categories generated:", productCategories?.length || 0);
   if (productCategories?.length > 0) {
-    console.log("Available categories:", productCategories.map(c => c.category));
-    console.log("First category details:", productCategories[0]);
+    // console.log("Available categories:", productCategories.map(c => c.category));
+    // console.log("First category details:", productCategories[0]);
   }
   
   // ✅ CHATGPT VERIFICATION: Log API responses

@@ -71,7 +71,7 @@ export async function cleanupLegacyDocumentNames(): Promise<{ updated: boolean; 
         
         if (JSON.stringify(originalReqs) !== JSON.stringify(normalizedReqs)) {
           hasUpdates = true;
-          console.log(`[NORMALIZE] Updated ${product.name}: ${originalReqs.join(', ')} → ${normalizedReqs.join(', ')}`);
+          // console.log(`[NORMALIZE] Updated ${product.name}: ${originalReqs.join(', ')} → ${normalizedReqs.join(', ')}`);
           return { ...product, doc_requirements: normalizedReqs };
         }
       }
@@ -87,7 +87,7 @@ export async function cleanupLegacyDocumentNames(): Promise<{ updated: boolean; 
       };
       
       await set('lender_products_cache', updatedCache);
-      console.log(`[NORMALIZE] ✅ Updated ${cached.products.length} products in IndexedDB cache`);
+      // console.log(`[NORMALIZE] ✅ Updated ${cached.products.length} products in IndexedDB cache`);
     }
     
     return { updated: hasUpdates, productCount: cached.products.length };

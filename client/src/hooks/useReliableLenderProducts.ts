@@ -36,7 +36,7 @@ export function useReliableLenderProducts(): UseReliableLenderProductsResult {
   } = useQuery({
     queryKey: ['reliable-lender-products'],
     queryFn: async () => {
-      console.log('[HOOK] Fetching lender products using reliable sync...');
+      // console.log('[HOOK] Fetching lender products using reliable sync...');
       
       const result = await pullLiveData();
       
@@ -73,7 +73,7 @@ export function useReliableLenderProducts(): UseReliableLenderProductsResult {
   // Force sync function for manual refresh
   const handleForceSync = async () => {
     try {
-      console.log('[HOOK] Force sync triggered');
+      // console.log('[HOOK] Force sync triggered');
       const result = await reliableLenderSync.forcSync();
       
       setWarning(result.warning);

@@ -1,4 +1,5 @@
 import { API_BASE_URL, APP_CONFIG } from '@/constants';
+import { logger } from '@/lib/utils';
 
 // Production console management handled by global configuration
 // Console output is controlled in main.tsx through productionConsole.ts
@@ -50,7 +51,7 @@ export const apiFetch = async (path: string, opts: RequestInit = {}): Promise<Re
     return response;
   } catch (error) {
     // Handle network/CORS errors that cause empty error objects
-    console.warn('Network request failed:', error);
+    logger.warn('Network request failed:', error);
     throw new ApiError(
       'Network connection failed - staff backend unreachable',
       0,
@@ -72,7 +73,7 @@ export async function apiRequest<T>(
   
   // Handle staff backend unavailable
   if (!response.ok && response.status >= 500) {
-    console.warn('Staff backend temporarily unavailable:', response.status);
+    logger.warn('Staff backend temporarily unavailable:', response.status);
     throw new ApiError(`Staff backend error: ${response.statusText}`, response.status, response);
   }
   
@@ -175,9 +176,9 @@ export async function uploadDocumentPublic(
 
   // ✅ Update endpoint to match staff backend: /api/public/documents/${applicationId}
   const endpoint = `/api/public/documents/${applicationId}`;
-  console.log('📤 [UPLOAD] ApplicationId:', applicationId);
-  console.log('📤 [UPLOAD] DocumentType:', documentType);
-  console.log('📤 [UPLOAD] Endpoint:', endpoint);
+  // console.log('📤 [UPLOAD] ApplicationId:', applicationId);
+  // console.log('📤 [UPLOAD] DocumentType:', documentType);
+  // console.log('📤 [UPLOAD] Endpoint:', endpoint);
 
   // Use direct fetch without Authorization headers
   const response = await fetch(endpoint, {
@@ -186,7 +187,7 @@ export async function uploadDocumentPublic(
     // ⚠️ No headers like Authorization!
   });
 
-  console.log('📤 [UPLOAD] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');
+  // console.log('📤 [UPLOAD] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => 'Unknown error');
@@ -195,7 +196,7 @@ export async function uploadDocumentPublic(
   }
 
   const result = await response.json();
-  console.log('📤 [UPLOAD] Success response:', result);
+  // console.log('📤 [UPLOAD] Success response:', result);
   
   return result;
 }

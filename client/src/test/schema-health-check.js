@@ -5,13 +5,13 @@
 
 (async () => {
   // ------------- helpers -----------------
-  const ok   = msg => console.log(`%c✔ ${msg}`,'color:lime');
+  const ok   = msg => // console.log(`%c✔ ${msg}`,'color:lime');
   const fail = msg => console.error(`✖ ${msg}`);
-  const info = msg => console.log(`%c📊 ${msg}`,'color:cyan');
+  const info = msg => // console.log(`%c📊 ${msg}`,'color:cyan');
 
   info('🔍 BOREAL FINANCIAL - SCHEMA HEALTH CHECK');
   info('Testing: Category mapping, Country codes, Amount filtering, Document intersection');
-  console.log('═══════════════════════════════════════════════════════════════\n');
+  // console.log('═══════════════════════════════════════════════════════════════\n');
 
   try {
     // Fetch live data from staff API
@@ -42,13 +42,13 @@
     ];
 
     // ---------- CATEGORY AUDIT ----------
-    console.log('\n🏷️  CATEGORY MAPPING AUDIT');
+    // console.log('\n🏷️  CATEGORY MAPPING AUDIT');
     const badCats = products.filter(p => !schemaCategories.includes(p.category));
     const uniqueCategories = [...new Set(products.map(p => p.category))];
     
     if (badCats.length) {
       fail(`Bad categories found: ${badCats.map(p => `"${p.category}"`).join(', ')}`);
-      console.log('Products with bad categories:', badCats.map(p => `${p.name} (${p.lenderName})`));
+      // console.log('Products with bad categories:', badCats.map(p => `${p.name} (${p.lenderName})`));
     } else {
       ok('All products use canonical categories');
     }
@@ -56,7 +56,7 @@
     info(`Categories in use: ${uniqueCategories.join(', ')}`);
 
     // ---------- COUNTRY AUDIT ----------
-    console.log('\n🌍 COUNTRY CODE AUDIT');
+    // console.log('\n🌍 COUNTRY CODE AUDIT');
     const validCountries = ['US', 'CA'];
     const badCountry = products.filter(p => !validCountries.includes(p.country));
     const countryStats = {};
@@ -67,7 +67,7 @@
 
     if (badCountry.length) {
       fail(`Bad country codes on ${badCountry.length} products`);
-      console.log('Invalid countries:', badCountry.map(p => `${p.name}: "${p.country}"`));
+      // console.log('Invalid countries:', badCountry.map(p => `${p.name}: "${p.country}"`));
     } else {
       ok('All products use canonical country codes (US/CA)');
     }
@@ -75,7 +75,7 @@
     info(`Country distribution: ${Object.entries(countryStats).map(([k,v]) => `${k}: ${v}`).join(', ')}`);
 
     // ---------- AMOUNT FILTER SANITY CHECK ----------
-    console.log('\n💰 AMOUNT RANGE AUDIT');
+    // console.log('\n💰 AMOUNT RANGE AUDIT');
     
     // Test scenarios
     const testScenarios = [
@@ -96,14 +96,14 @@
       
       if (matches.length > 0) {
         ok(`${scenario.category} ${scenario.location} $${scenario.amount.toLocaleString()}: ${matches.length} matches`);
-        matches.forEach(m => console.log(`   - ${m.name} (${m.lenderName}): $${m.amountMin?.toLocaleString()}-$${m.amountMax?.toLocaleString()}`));
+        matches.forEach(m => // console.log(`   - ${m.name} (${m.lenderName}): $${m.amountMin?.toLocaleString()}-$${m.amountMax?.toLocaleString()}`));
       } else {
         fail(`${scenario.category} ${scenario.location} $${scenario.amount.toLocaleString()}: 0 matches`);
       }
     }
 
     // ---------- DOCUMENT INTERSECTION CHECK ----------
-    console.log('\n📋 DOCUMENT REQUIREMENTS AUDIT');
+    // console.log('\n📋 DOCUMENT REQUIREMENTS AUDIT');
     
     // Test AccordAccess specific scenario
     const canadianWorkingCapital = products.filter(p => 
@@ -117,9 +117,9 @@
       ok(`Canadian Working Capital $40K: ${canadianWorkingCapital.length} matches`);
       
       canadianWorkingCapital.forEach(p => {
-        console.log(`   - ${p.name} (${p.lenderName})`);
-        console.log(`     Documents: ${p.requiredDocuments?.join(', ') || 'None specified'}`);
-        console.log(`     Amount range: $${p.amountMin?.toLocaleString()}-$${p.amountMax?.toLocaleString()}`);
+        // console.log(`   - ${p.name} (${p.lenderName})`);
+        // console.log(`     Documents: ${p.requiredDocuments?.join(', ') || 'None specified'}`);
+        // console.log(`     Amount range: $${p.amountMin?.toLocaleString()}-$${p.amountMax?.toLocaleString()}`);
       });
 
       // Document intersection
@@ -141,7 +141,7 @@
     }
 
     // ---------- INDIVIDUAL PRODUCT VALIDATION ----------
-    console.log('\n🎯 INDIVIDUAL PRODUCT VALIDATION');
+    // console.log('\n🎯 INDIVIDUAL PRODUCT VALIDATION');
     
     // Check for missing fields
     const missingFields = products.filter(p => 
@@ -152,8 +152,8 @@
     if (missingFields.length > 0) {
       fail(`${missingFields.length} products missing required fields`);
       missingFields.forEach(p => {
-        console.log(`   - ${p.name || 'UNNAMED'} (${p.lenderName || 'UNKNOWN LENDER'})`);
-        console.log(`     Missing: ${!p.name ? 'name ' : ''}${!p.category ? 'category ' : ''}${!p.country ? 'country ' : ''}${typeof p.amountMin !== 'number' ? 'amountMin ' : ''}${typeof p.amountMax !== 'number' ? 'amountMax' : ''}`);
+        // console.log(`   - ${p.name || 'UNNAMED'} (${p.lenderName || 'UNKNOWN LENDER'})`);
+        // console.log(`     Missing: ${!p.name ? 'name ' : ''}${!p.category ? 'category ' : ''}${!p.country ? 'country ' : ''}${typeof p.amountMin !== 'number' ? 'amountMin ' : ''}${typeof p.amountMax !== 'number' ? 'amountMax' : ''}`);
       });
     } else {
       ok('All products have required fields (name, lenderName, category, country, amountMin, amountMax)');
@@ -163,17 +163,17 @@
     const accordAccess = products.find(p => p.name === 'AccordAccess');
     if (accordAccess) {
       ok('AccordAccess product found');
-      console.log('   AccordAccess details:');
-      console.log(`     Category: "${accordAccess.category}"`);
-      console.log(`     Country: "${accordAccess.country}"`);
-      console.log(`     Amount: $${accordAccess.amountMin?.toLocaleString()}-$${accordAccess.amountMax?.toLocaleString()}`);
-      console.log(`     Documents: ${accordAccess.requiredDocuments?.join(', ')}`);
+      // console.log('   AccordAccess details:');
+      // console.log(`     Category: "${accordAccess.category}"`);
+      // console.log(`     Country: "${accordAccess.country}"`);
+      // console.log(`     Amount: $${accordAccess.amountMin?.toLocaleString()}-$${accordAccess.amountMax?.toLocaleString()}`);
+      // console.log(`     Documents: ${accordAccess.requiredDocuments?.join(', ')}`);
     } else {
       fail('AccordAccess product NOT FOUND - this is the primary test case!');
     }
 
     // ---------- SUMMARY ----------
-    console.log('\n📊 HEALTH CHECK SUMMARY');
+    // console.log('\n📊 HEALTH CHECK SUMMARY');
     const totalIssues = badCats.length + badCountry.length + missingFields.length + (accordAccess ? 0 : 1);
     
     if (totalIssues === 0) {
@@ -182,7 +182,7 @@
       fail(`❌ ${totalIssues} issues found - see details above`);
     }
 
-    console.log('\n═══════════════════════════════════════════════════════════════');
+    // console.log('\n═══════════════════════════════════════════════════════════════');
     info('Health check complete. Review any ✖ failures above.');
 
   } catch (error) {

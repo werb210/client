@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/utils';
 import { useFormData } from '@/context/FormDataContext';
+
 import { useLocation } from 'wouter';
+
 import { Step2RecommendationEngine } from '@/components/Step2RecommendationEngine';
+
 import { StepHeader } from '@/components/StepHeader';
+
 import { useDebouncedCallback } from 'use-debounce';
+
 
 export default function Step2Recommendations() {
   const { state, dispatch } = useFormData();
@@ -30,10 +36,10 @@ export default function Step2Recommendations() {
   };
 
   // ✅ STEP 1: REVIEW STATE STRUCTURE (ChatGPT Instructions)
-  console.log("Step 1 Data:", state.step1);
-  console.log("Step 3 Data:", state.step3);
-  console.log('[STEP2] Form data passed to filtering:', formData);
-  console.log('[STEP2] Raw Step 1 data:', {
+  logger.log("Step 1 Data:", state.step1);
+  logger.log("Step 3 Data:", state.step3);
+  logger.log('[STEP2] Form data passed to filtering:', formData);
+  logger.log('[STEP2] Raw Step 1 data:', {
     businessLocation: state.step1?.businessLocation,
     headquarters: state.step1?.headquarters,
     lookingFor: state.step1?.lookingFor,
@@ -57,8 +63,8 @@ export default function Step2Recommendations() {
       }
     });
     // ✅ STEP 5: DEBUG DISPLAY (ChatGPT Instructions)
-    console.log("Selected Category:", product);
-    console.log("Updated state.step2?.selectedCategory:", product);
+    logger.log("Selected Category:", product);
+    logger.log("Updated state.step2?.selectedCategory:", product);
   };
 
   // Auto-save selected product with 2-second delay
@@ -75,9 +81,9 @@ export default function Step2Recommendations() {
           }
         }
       });
-      console.log('💾 Step 2 - Auto-saved product selection to step2 object:', product);
-      console.log("Final state.step2?.selectedCategory:", product);
-      console.log("Context state after auto-save:", state.step2);
+      logger.log('💾 Step 2 - Auto-saved product selection to step2 object:', product);
+      logger.log("Final state.step2?.selectedCategory:", product);
+      logger.log("Context state after auto-save:", state.step2);
     }
   }, 2000);
 

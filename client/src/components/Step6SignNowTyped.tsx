@@ -54,7 +54,7 @@ export default function Step6SignNowTyped({ onNext, onBack }: Step6SignNowTypedP
         }
       };
 
-      console.log('🔄 Generating SignNow document with payload:', payload);
+      // console.log('🔄 Generating SignNow document with payload:', payload);
 
       const response = await fetch("/api/signnow/generate", {
         method: "POST",
@@ -83,7 +83,7 @@ export default function Step6SignNowTyped({ onNext, onBack }: Step6SignNowTypedP
       }
 
       setSignData(result);
-      console.log('✅ SignNow document generated:', result);
+      // console.log('✅ SignNow document generated:', result);
 
     } catch (error) {
       console.error('❌ SignNow generation error:', error);
@@ -104,7 +104,7 @@ export default function Step6SignNowTyped({ onNext, onBack }: Step6SignNowTypedP
           if (signWindow?.closed) {
             clearInterval(pollTimer);
             setIsSigned(true);
-            console.log('✅ SignNow window closed - document likely signed');
+            // console.log('✅ SignNow window closed - document likely signed');
           }
         } catch (error) {
           // Silently ignore polling errors

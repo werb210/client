@@ -49,15 +49,15 @@ export default function Step6Signature() {
   useEffect(() => {
     // Enhanced logging for debugging
     if (signingStatusData) {
-      console.log('🔍 Step 6 Polling Status Update:', {
-        status: signingStatusData.status,
-        applicationId: applicationId,
-        timestamp: new Date().toISOString()
-      });
+      // console.log('🔍 Step 6 Polling Status Update:', {
+      //   status: signingStatusData.status,
+      //   applicationId: applicationId,
+      //   timestamp: new Date().toISOString()
+      // });
     }
 
     if (signingStatusData?.status === 'signed') {
-      console.log("🎉 Document signed! Redirecting to Step 7...");
+      // console.log("🎉 Document signed! Redirecting to Step 7...");
       toast({
         title: "Document Signed!",
         description: "Redirecting to final submission...",
@@ -73,7 +73,7 @@ export default function Step6Signature() {
       }, 1500);
     } else if (signingStatusData?.status === 'completed') {
       // Handle 'completed' status as well (alternative status name)
-      console.log("🎉 Document completed! Redirecting to Step 7...");
+      // console.log("🎉 Document completed! Redirecting to Step 7...");
       toast({
         title: "Document Signed!",
         description: "Redirecting to final submission...",
@@ -93,7 +93,7 @@ export default function Step6Signature() {
     const appId = state.step4?.applicationId || localStorage.getItem('applicationId');
     if (appId && !applicationId) {
       setApplicationId(appId);
-      console.log('🔑 Recovered applicationId for Step 6 polling:', appId);
+      // console.log('🔑 Recovered applicationId for Step 6 polling:', appId);
     }
   }, [state.step4?.applicationId]);
 
@@ -135,7 +135,7 @@ export default function Step6Signature() {
     setSubmissionError(null);
 
     try {
-      console.log('🚀 Starting application submission...');
+      // console.log('🚀 Starting application submission...');
       
       // Prepare uploaded files with File objects
       const filesWithFileObjects = uploadedFiles
@@ -147,7 +147,7 @@ export default function Step6Signature() {
 
       // ✅ CHATGPT FIX: Ensure Step 6 uses nested step data
       const { step1, step3, step4 } = state;
-      console.log("✅ Step 6 using step-based structure:", { step1, step3, step4 });
+      // console.log("✅ Step 6 using step-based structure:", { step1, step3, step4 });
       
       const result = await staffApi.submitApplication(
         state,
@@ -199,7 +199,7 @@ export default function Step6Signature() {
     if (!applicationId || isPolling) return;
     
     setIsPolling(true);
-    console.log('🔄 Starting signing status polling...');
+    // console.log('🔄 Starting signing status polling...');
     
     const maxAttempts = 30; // 5 minutes with 10-second intervals
     let attempts = 0;
@@ -304,7 +304,7 @@ export default function Step6Signature() {
     
     saveToStorage();
     
-    console.log("🎉 Document signed! Redirecting to Step 7...");
+    // console.log("🎉 Document signed! Redirecting to Step 7...");
     toast({
       title: "Document Signed!",
       description: "Redirecting to final submission...",

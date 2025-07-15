@@ -16,7 +16,7 @@ class FullE2ETest {
   log(message, type = 'info') {
     const timestamp = new Date().toLocaleTimeString();
     const logEntry = `[${timestamp}] ${message}`;
-    console.log(logEntry);
+    // console.log(logEntry);
     
     if (type === 'error') {
       this.errors.push({ timestamp, message });
@@ -443,46 +443,46 @@ class FullE2ETest {
     const durationMins = Math.floor(duration / 60000);
     const durationSecs = Math.floor((duration % 60000) / 1000);
     
-    console.log('\n🎉 FULL E2E TEST COMPLETE 🎉');
-    console.log(`⏱️  Duration: ${durationMins}m ${durationSecs}s`);
-    console.log(`📊 Network Calls: ${this.networkCalls.length}`);
-    console.log(`❌ Errors: ${this.errors.length}`);
+    // console.log('\n🎉 FULL E2E TEST COMPLETE 🎉');
+    // console.log(`⏱️  Duration: ${durationMins}m ${durationSecs}s`);
+    // console.log(`📊 Network Calls: ${this.networkCalls.length}`);
+    // console.log(`❌ Errors: ${this.errors.length}`);
     
     if (this.errors.length > 0) {
-      console.log('\n--- ERRORS ---');
+      // console.log('\n--- ERRORS ---');
       this.errors.forEach((error, index) => {
-        console.log(`${index + 1}. ${error.message}`);
+        // console.log(`${index + 1}. ${error.message}`);
       });
     }
     
-    console.log('\n--- NETWORK SUMMARY ---');
+    // console.log('\n--- NETWORK SUMMARY ---');
     const successfulCalls = this.networkCalls.filter(call => call.ok);
     const failedCalls = this.networkCalls.filter(call => !call.ok);
     
-    console.log(`✅ Successful: ${successfulCalls.length}`);
-    console.log(`❌ Failed: ${failedCalls.length}`);
+    // console.log(`✅ Successful: ${successfulCalls.length}`);
+    // console.log(`❌ Failed: ${failedCalls.length}`);
     
     if (failedCalls.length > 0) {
-      console.log('\n--- FAILED REQUESTS ---');
+      // console.log('\n--- FAILED REQUESTS ---');
       failedCalls.forEach((call, index) => {
-        console.log(`${index + 1}. ${call.method} ${call.url} - Status: ${call.status}`);
+        // console.log(`${index + 1}. ${call.method} ${call.url} - Status: ${call.status}`);
       });
     }
     
-    console.log('\n✅ Full E2E test completed successfully!');
+    // console.log('\n✅ Full E2E test completed successfully!');
   }
 
   generateFailureReport(error) {
-    console.log('\n❌ E2E TEST FAILED');
-    console.log(`Error: ${error.message}`);
-    console.log(`Total errors: ${this.errors.length}`);
-    console.log(`Network calls made: ${this.networkCalls.length}`);
+    // console.log('\n❌ E2E TEST FAILED');
+    // console.log(`Error: ${error.message}`);
+    // console.log(`Total errors: ${this.errors.length}`);
+    // console.log(`Network calls made: ${this.networkCalls.length}`);
   }
 }
 
 // Initialize and run the test
-console.log('🔬 Full E2E Test Ready');
-console.log('💡 Run: window.e2eTest.runFullE2ETest()');
-console.log('📊 Monitor: window.e2eTest.networkCalls');
+// console.log('🔬 Full E2E Test Ready');
+// console.log('💡 Run: window.e2eTest.runFullE2ETest()');
+// console.log('📊 Monitor: window.e2eTest.networkCalls');
 
 window.e2eTest = new FullE2ETest();

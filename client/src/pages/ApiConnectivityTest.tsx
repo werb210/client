@@ -5,13 +5,13 @@ export default function ApiConnectivityTest() {
   const [testResults, setTestResults] = useState<any[]>([]);
 
   const runConnectivityTest = async () => {
-    console.log('[TEST] Starting comprehensive API connectivity test');
+    // console.log('[TEST] Starting comprehensive API connectivity test');
     const results: any[] = [];
     
     // Test 1: Direct fetch to /api/public/lenders
     try {
-      console.log('[TEST] Testing direct fetch to /api/public/lenders');
-      console.log('[TEST] About to make direct fetch call...');
+      // console.log('[TEST] Testing direct fetch to /api/public/lenders');
+      // console.log('[TEST] About to make direct fetch call...');
       const response = await fetch('/api/public/lenders', {
         method: 'GET',
         headers: {
@@ -20,12 +20,12 @@ export default function ApiConnectivityTest() {
         }
       });
       
-      console.log('[TEST] Response status:', response.status);
-      console.log('[TEST] Response ok:', response.ok);
+      // console.log('[TEST] Response status:', response.status);
+      // console.log('[TEST] Response ok:', response.ok);
       
       if (response.ok) {
         const data = await response.json();
-        console.log('[TEST] ✅ Direct fetch success:', data);
+        // console.log('[TEST] ✅ Direct fetch success:', data);
         results.push({
           test: 'Direct fetch to /api/public/lenders',
           status: 'SUCCESS',
@@ -51,11 +51,11 @@ export default function ApiConnectivityTest() {
 
     // Test 2: Using lenderDataFetcher
     try {
-      console.log('[TEST] Testing lenderDataFetcher');
+      // console.log('[TEST] Testing lenderDataFetcher');
       const { fetchLenderProducts } = await import('@/api/lenderDataFetcher');
       const result = await fetchLenderProducts();
       
-      console.log('[TEST] ✅ lenderDataFetcher success:', result);
+      // console.log('[TEST] ✅ lenderDataFetcher success:', result);
       results.push({
         test: 'lenderDataFetcher.fetchLenderProducts()',
         status: 'SUCCESS',
@@ -72,11 +72,11 @@ export default function ApiConnectivityTest() {
 
     // Test 3: Using usePublicLenders query
     try {
-      console.log('[TEST] Testing fetchLenderProducts from API');
+      // console.log('[TEST] Testing fetchLenderProducts from API');
       const { fetchLenderProducts } = await import('@/api/lenderProducts');
       const products = await fetchLenderProducts();
       
-      console.log('[TEST] ✅ fetchLenderProducts success:', products);
+      // console.log('[TEST] ✅ fetchLenderProducts success:', products);
       results.push({
         test: 'api/lenderProducts.fetchLenderProducts()',
         status: 'SUCCESS',
@@ -92,7 +92,7 @@ export default function ApiConnectivityTest() {
     }
 
     setTestResults(results);
-    console.log('[TEST] All tests completed:', results);
+    // console.log('[TEST] All tests completed:', results);
   };
 
   return (

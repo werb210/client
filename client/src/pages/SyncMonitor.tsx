@@ -33,7 +33,7 @@ export default function SyncMonitor() {
   const handleManualSync = async () => {
     setSyncing(true);
     try {
-      console.log('Triggering manual sync...');
+      // console.log('Triggering manual sync...');
       const result = await triggerManualSync();
       setLastManualSync(result);
       await loadStats(); // Refresh stats after sync

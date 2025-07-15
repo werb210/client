@@ -36,11 +36,13 @@ window.addEventListener('unhandledrejection', (event) => {
   }
   
   // Log only critical unexpected errors for debugging
-  console.error('🚨 Critical Promise Rejection:', {
-    message: errorMessage,
-    type: errorType,
-    timestamp: new Date().toISOString()
-  });
+  if (import.meta.env.DEV) {
+    console.error('🚨 Critical Promise Rejection:', {
+      message: errorMessage,
+      type: errorType,
+      timestamp: new Date().toISOString()
+    });
+  }
   event.preventDefault();
 });
 
@@ -49,7 +51,9 @@ const root = document.getElementById("root");
 if (root) {
   try {
     createRoot(root).render(<App />);
-    console.log("✅ Application started successfully");
+    if (import.meta.env.DEV) {
+      // console.log("✅ Application started successfully");
+    }
   } catch (error) {
     console.error("Failed to start application:", error);
   }

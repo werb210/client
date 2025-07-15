@@ -12,8 +12,8 @@ export default function DebugCanadianEquipmentAPI() {
     setIsRunning(true);
     setDebugResults(null);
     
-    console.log("🔍 DEBUGGING CANADIAN EQUIPMENT FINANCING API DATA");
-    console.log("=".repeat(60));
+    // console.log("🔍 DEBUGGING CANADIAN EQUIPMENT FINANCING API DATA");
+    // console.log("=".repeat(60));
     
     try {
       // Fetch all products from API
@@ -27,11 +27,11 @@ export default function DebugCanadianEquipmentAPI() {
       }
       
       const products = data.products;
-      console.log(`✅ API returned ${products.length} total products`);
+      // console.log(`✅ API returned ${products.length} total products`);
       
       // Debug: Log the structure of first few products
-      console.log("\n📋 SAMPLE PRODUCT STRUCTURE:");
-      console.log("=".repeat(40));
+      // console.log("\n📋 SAMPLE PRODUCT STRUCTURE:");
+      // console.log("=".repeat(40));
       const sampleProducts = products.slice(0, 3).map((product: any, index: number) => {
         const sample = {
           id: product.id,
@@ -45,13 +45,13 @@ export default function DebugCanadianEquipmentAPI() {
           maxAmount: product.maxAmount || product.maxAmountUsd,
           requiredDocuments: product.requiredDocuments?.length || 0
         };
-        console.log(`Product ${index + 1}:`, sample);
+        // console.log(`Product ${index + 1}:`, sample);
         return sample;
       });
       
       // Look for Canadian products (any field that might indicate Canada)
-      console.log("\n🇨🇦 SEARCHING FOR CANADIAN PRODUCTS:");
-      console.log("=".repeat(40));
+      // console.log("\n🇨🇦 SEARCHING FOR CANADIAN PRODUCTS:");
+      // console.log("=".repeat(40));
       
       const canadianProducts = products.filter((p: any) => {
         const hasCanada = 
@@ -61,21 +61,21 @@ export default function DebugCanadianEquipmentAPI() {
           (Array.isArray(p.geography) && p.geography.includes('Canada'));
         
         if (hasCanada) {
-          console.log(`Found Canadian product: ${p.name || p.lender}`, {
-            geography: p.geography,
-            country: p.country,
-            productType: p.productCategory || p.product || p.type
-          });
+          // console.log(`Found Canadian product: ${p.name || p.lender}`, {
+          //   geography: p.geography,
+          //   country: p.country,
+          //   productType: p.productCategory || p.product || p.type
+          // });
         }
         
         return hasCanada;
       });
       
-      console.log(`\n📊 Found ${canadianProducts.length} Canadian products total`);
+      // console.log(`\n📊 Found ${canadianProducts.length} Canadian products total`);
       
       // Look for Equipment Financing products
-      console.log("\n🏗️ SEARCHING FOR EQUIPMENT FINANCING PRODUCTS:");
-      console.log("=".repeat(50));
+      // console.log("\n🏗️ SEARCHING FOR EQUIPMENT FINANCING PRODUCTS:");
+      // console.log("=".repeat(50));
       
       const equipmentProducts = products.filter((p: any) => {
         const hasEquipment = 
@@ -84,23 +84,23 @@ export default function DebugCanadianEquipmentAPI() {
           (p.type && p.type.toLowerCase().includes('equipment'));
         
         if (hasEquipment) {
-          console.log(`Found equipment product: ${p.name || p.lender}`, {
-            productCategory: p.productCategory,
-            product: p.product,
-            type: p.type,
-            geography: p.geography,
-            country: p.country
-          });
+          // console.log(`Found equipment product: ${p.name || p.lender}`, {
+          //   productCategory: p.productCategory,
+          //   product: p.product,
+          //   type: p.type,
+          //   geography: p.geography,
+          //   country: p.country
+          // });
         }
         
         return hasEquipment;
       });
       
-      console.log(`\n📊 Found ${equipmentProducts.length} equipment financing products total`);
+      // console.log(`\n📊 Found ${equipmentProducts.length} equipment financing products total`);
       
       // Look for the intersection: Canadian + Equipment
-      console.log("\n🎯 SEARCHING FOR CANADIAN EQUIPMENT FINANCING:");
-      console.log("=".repeat(50));
+      // console.log("\n🎯 SEARCHING FOR CANADIAN EQUIPMENT FINANCING:");
+      // console.log("=".repeat(50));
       
       const canadianEquipmentProducts = products.filter((p: any) => {
         const hasCanada = 
@@ -117,26 +117,26 @@ export default function DebugCanadianEquipmentAPI() {
         const matches = hasCanada && hasEquipment;
         
         if (matches) {
-          console.log(`✅ MATCH: ${p.name || p.lender}`, {
-            geography: p.geography,
-            country: p.country,
-            productCategory: p.productCategory,
-            product: p.product,
-            type: p.type,
-            minAmount: p.minAmount || p.minAmountUsd,
-            maxAmount: p.maxAmount || p.maxAmountUsd,
-            requiredDocuments: p.requiredDocuments?.slice(0, 3) || []
-          });
+          // console.log(`✅ MATCH: ${p.name || p.lender}`, {
+          //   geography: p.geography,
+          //   country: p.country,
+          //   productCategory: p.productCategory,
+          //   product: p.product,
+          //   type: p.type,
+          //   minAmount: p.minAmount || p.minAmountUsd,
+          //   maxAmount: p.maxAmount || p.maxAmountUsd,
+          //   requiredDocuments: p.requiredDocuments?.slice(0, 3) || []
+          // });
         }
         
         return matches;
       });
       
-      console.log(`\n🎯 FINAL RESULT: ${canadianEquipmentProducts.length} Canadian Equipment Financing products found`);
+      // console.log(`\n🎯 FINAL RESULT: ${canadianEquipmentProducts.length} Canadian Equipment Financing products found`);
       
       // Check for the expected 4 lenders
-      console.log("\n🔍 SEARCHING FOR EXPECTED LENDERS:");
-      console.log("=".repeat(40));
+      // console.log("\n🔍 SEARCHING FOR EXPECTED LENDERS:");
+      // console.log("=".repeat(40));
       
       const expectedLenders = [
         'Stride Capital Corp',
@@ -152,15 +152,15 @@ export default function DebugCanadianEquipmentAPI() {
         );
         
         if (found) {
-          console.log(`✅ Found: ${expectedName}`, {
-            actualName: found.name || found.lender,
-            geography: found.geography,
-            country: found.country,
-            productType: found.productCategory || found.product || found.type
-          });
+          // console.log(`✅ Found: ${expectedName}`, {
+          //   actualName: found.name || found.lender,
+          //   geography: found.geography,
+          //   country: found.country,
+          //   productType: found.productCategory || found.product || found.type
+          // });
           return { expected: expectedName, found: found, status: 'found' };
         } else {
-          console.log(`❌ Missing: ${expectedName}`);
+          // console.log(`❌ Missing: ${expectedName}`);
           return { expected: expectedName, found: null, status: 'missing' };
         }
       });
@@ -172,12 +172,12 @@ export default function DebugCanadianEquipmentAPI() {
       const productValues = [...new Set(products.map((p: any) => p.product).filter(Boolean))];
       const typeValues = [...new Set(products.map((p: any) => p.type).filter(Boolean))];
       
-      console.log("\n📊 FIELD ANALYSIS:");
-      console.log("Geography field values:", geographyValues.slice(0, 5));
-      console.log("Country field values:", countryValues.slice(0, 5));
-      console.log("ProductCategory values:", productCategoryValues.slice(0, 5));
-      console.log("Product values:", productValues.slice(0, 5));
-      console.log("Type values:", typeValues.slice(0, 5));
+      // console.log("\n📊 FIELD ANALYSIS:");
+      // console.log("Geography field values:", geographyValues.slice(0, 5));
+      // console.log("Country field values:", countryValues.slice(0, 5));
+      // console.log("ProductCategory values:", productCategoryValues.slice(0, 5));
+      // console.log("Product values:", productValues.slice(0, 5));
+      // console.log("Type values:", typeValues.slice(0, 5));
       
       // Set results for UI display
       setDebugResults({

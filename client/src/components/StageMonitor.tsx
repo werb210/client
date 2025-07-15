@@ -36,7 +36,7 @@ export function StageMonitor({ currentStep }: StageMonitorProps) {
   useEffect(() => {
     const savedData = loadData();
     if (savedData?.restoredFromAutoSave) {
-      console.log('📋 Restored form data from auto-save');
+      // console.log('📋 Restored form data from auto-save');
       // Note: Form data restoration would be handled by FormDataProvider
       // This is just for monitoring and user feedback
     }
@@ -49,7 +49,7 @@ export function StageMonitor({ currentStep }: StageMonitorProps) {
       const timer = setTimeout(() => {
         try {
           clearData();
-          console.log('🎉 Application submitted - auto-save data cleared');
+          // console.log('🎉 Application submitted - auto-save data cleared');
         } catch (error) {
           // Silently ignore auto-save cleanup errors
         }

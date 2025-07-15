@@ -90,7 +90,7 @@ export default function ApplicationIdFlowTest() {
         metadata: { submittedAt: new Date().toISOString(), submittedFromStep: 4 }
       };
       
-      console.log('🧪 C-1: Testing POST /api/public/applications...');
+      // console.log('🧪 C-1: Testing POST /api/public/applications...');
       
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications`, {
         method: 'POST',
@@ -102,7 +102,7 @@ export default function ApplicationIdFlowTest() {
         body: JSON.stringify(testApplicationData)
       });
       
-      console.log(`📊 C-1 Response: ${response.status} ${response.statusText}`);
+      // console.log(`📊 C-1 Response: ${response.status} ${response.statusText}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -139,9 +139,9 @@ export default function ApplicationIdFlowTest() {
       const contextId = state.applicationId;
       const localStorageId = localStorage.getItem('appId');
       
-      console.log('🧪 C-2: Checking state storage...');
-      console.log('   - Context applicationId:', contextId);
-      console.log('   - localStorage appId:', localStorageId);
+      // console.log('🧪 C-2: Checking state storage...');
+      // console.log('   - Context applicationId:', contextId);
+      // console.log('   - localStorage appId:', localStorageId);
       
       if (contextId && localStorageId) {
         updateChecklistItem('C-2', 'success', `✅ Context: ${contextId}, localStorage: ${localStorageId}`);
@@ -164,7 +164,7 @@ export default function ApplicationIdFlowTest() {
       const applicationId = state.applicationId || localStorage.getItem('appId');
       
       if (applicationId) {
-        console.log('🧪 C-3: Testing router navigation with state...');
+        // console.log('🧪 C-3: Testing router navigation with state...');
         
         // Navigate to Step 6 with state
         setLocation('/apply/step-6', { 
@@ -191,8 +191,8 @@ export default function ApplicationIdFlowTest() {
       // Test that Step 6 component can access the ID
       const applicationId = state.applicationId || localStorage.getItem('appId');
       
-      console.log('🧪 C-4: Testing Step 6 component ID access...');
-      console.log('   - Available applicationId:', applicationId);
+      // console.log('🧪 C-4: Testing Step 6 component ID access...');
+      // console.log('   - Available applicationId:', applicationId);
       
       if (applicationId) {
         updateChecklistItem('C-4', 'success', `✅ Step 6 can access applicationId: ${applicationId}`);
@@ -218,7 +218,7 @@ export default function ApplicationIdFlowTest() {
         return false;
       }
       
-      console.log('🧪 C-5: Testing polling endpoint...');
+      // console.log('🧪 C-5: Testing polling endpoint...');
       
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${applicationId}/signing-status`, {
         method: 'GET',
@@ -228,7 +228,7 @@ export default function ApplicationIdFlowTest() {
         credentials: 'include'
       });
       
-      console.log(`📊 C-5 Response: ${response.status} ${response.statusText}`);
+      // console.log(`📊 C-5 Response: ${response.status} ${response.statusText}`);
       
       if (response.status === 200 || response.status === 202) {
         updateChecklistItem('C-5', 'success', `✅ HTTP ${response.status} - Endpoint accessible`);
@@ -252,8 +252,8 @@ export default function ApplicationIdFlowTest() {
     try {
       const beforeId = state.applicationId;
       
-      console.log('🧪 C-6: Testing state persistence...');
-      console.log('   - ID before navigation:', beforeId);
+      // console.log('🧪 C-6: Testing state persistence...');
+      // console.log('   - ID before navigation:', beforeId);
       
       // Simulate back/next navigation
       setLocation('/apply/step-5');
@@ -262,7 +262,7 @@ export default function ApplicationIdFlowTest() {
         setLocation('/apply/step-6');
         
         const afterId = state.applicationId;
-        console.log('   - ID after navigation:', afterId);
+        // console.log('   - ID after navigation:', afterId);
         
         if (beforeId && afterId && beforeId === afterId) {
           updateChecklistItem('C-6', 'success', `✅ State persisted: ${afterId}`);
@@ -279,7 +279,7 @@ export default function ApplicationIdFlowTest() {
   };
 
   const runAllTests = async () => {
-    console.log('🚀 Running Application ID Flow Tests...');
+    // console.log('🚀 Running Application ID Flow Tests...');
     
     // Reset all to pending
     setChecklist(prev => prev.map(item => ({ ...item, status: 'pending' })));
@@ -381,9 +381,9 @@ export default function ApplicationIdFlowTest() {
             </Button>
             <Button 
               onClick={() => {
-                console.log('📋 Opening browser console diagnostic...');
-                console.log('Copy and run this script in the browser console:');
-                console.log('https://github.com/your-repo/client-side-diagnostic.js');
+                // console.log('📋 Opening browser console diagnostic...');
+                // console.log('Copy and run this script in the browser console:');
+                // console.log('https://github.com/your-repo/client-side-diagnostic.js');
               }} 
               variant="secondary"
             >

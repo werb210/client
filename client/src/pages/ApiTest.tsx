@@ -17,16 +17,16 @@ export default function ApiTest() {
     
     try {
       // Diagnostic 1: Check environment variables
-      console.log('=== DIAGNOSTIC 1: Environment Variables ===');
-      console.log('VITE_STAFF_API_URL:', import.meta.env.VITE_STAFF_API_URL);
-      console.log('All env vars:', import.meta.env);
-      console.log('Expected URL: https://staffportal.replit.app');
-      console.log('Actual STAFF_API_BASE will be:', import.meta.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app');
+      // console.log('=== DIAGNOSTIC 1: Environment Variables ===');
+      // console.log('VITE_STAFF_API_URL:', import.meta.env.VITE_STAFF_API_URL);
+      // console.log('All env vars:', import.meta.env);
+      // console.log('Expected URL: https://staffportal.replit.app');
+      // console.log('Actual STAFF_API_BASE will be:', import.meta.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app');
       
       // Diagnostic 2: Direct fetch test
-      console.log('=== DIAGNOSTIC 2: Direct Fetch Test ===');
+      // console.log('=== DIAGNOSTIC 2: Direct Fetch Test ===');
       const directUrl = 'https://staffportal.replit.app/api/public/lenders';
-      console.log('Testing direct fetch to:', directUrl);
+      // console.log('Testing direct fetch to:', directUrl);
       
       try {
         const directResponse = await fetch(directUrl, {
@@ -36,44 +36,44 @@ export default function ApiTest() {
           },
         });
         
-        console.log('Direct fetch status:', directResponse.status);
-        console.log('Direct fetch ok:', directResponse.ok);
-        console.log('Response headers:', Object.fromEntries(directResponse.headers.entries()));
+        // console.log('Direct fetch status:', directResponse.status);
+        // console.log('Direct fetch ok:', directResponse.ok);
+        // console.log('Response headers:', Object.fromEntries(directResponse.headers.entries()));
         
         if (directResponse.ok) {
           const directData = await directResponse.json();
-          console.log('✅ Direct fetch success! Product count:', directData.length);
-          console.log('🎉 CORS RESOLVED! Staff API is accessible!');
+          // console.log('✅ Direct fetch success! Product count:', directData.length);
+          // console.log('🎉 CORS RESOLVED! Staff API is accessible!');
         } else {
-          console.log('❌ Direct fetch failed with status:', directResponse.status);
-          console.log('Response text:', await directResponse.text());
+          // console.log('❌ Direct fetch failed with status:', directResponse.status);
+          // console.log('Response text:', await directResponse.text());
         }
       } catch (directError) {
         const error = directError as Error;
-        console.log('❌ Direct fetch error details:', error.message || error);
-        console.log('Error type:', error.name);
-        console.log('Full error object:', error);
+        // console.log('❌ Direct fetch error details:', error.message || error);
+        // console.log('Error type:', error.name);
+        // console.log('Full error object:', error);
         
         if (error.message && error.message.includes('CORS')) {
-          console.log('🚫 CONFIRMED: CORS policy blocking request');
+          // console.log('🚫 CONFIRMED: CORS policy blocking request');
         } else if (error.message && error.message.includes('network')) {
-          console.log('🌐 NETWORK: Connection issue to staff backend');
+          // console.log('🌐 NETWORK: Connection issue to staff backend');
         } else {
-          console.log('❓ UNKNOWN: Error type not identified');
+          // console.log('❓ UNKNOWN: Error type not identified');
         }
       }
       
       // Diagnostic 3: Use existing API function
-      console.log('=== DIAGNOSTIC 3: Using API Function ===');
-      console.log('Testing lender products API...');
+      // console.log('=== DIAGNOSTIC 3: Using API Function ===');
+      // console.log('Testing lender products API...');
       const result = await fetchLenderProducts();
       setProducts(result);
       setApiSource(result.length > 8 ? 'Staff API (43+ products)' : 'Local Fallback (8 products)');
-      console.log(`API Test Success: ${result.length} products loaded`);
+      // console.log(`API Test Success: ${result.length} products loaded`);
       
       // Diagnostic 4: Definitive Browser Console Test
-      console.log('=== DIAGNOSTIC 4: Definitive Browser CORS Test ===');
-      console.log('Running exact test as requested...');
+      // console.log('=== DIAGNOSTIC 4: Definitive Browser CORS Test ===');
+      // console.log('Running exact test as requested...');
       
       try {
         const definitiveResponse = await fetch("https://staffportal.replit.app/api/public/lenders", {
@@ -83,31 +83,31 @@ export default function ApiTest() {
           }
         });
         
-        console.log("Status:", definitiveResponse.status);
+        // console.log("Status:", definitiveResponse.status);
         if (definitiveResponse.ok) {
           const definitiveData = await definitiveResponse.json();
-          console.log("✅ Product count:", definitiveData.length);
+          // console.log("✅ Product count:", definitiveData.length);
           if (definitiveData.length >= 43) {
-            console.log("🎉 CORS RESOLVED! Full 43+ product dataset accessible!");
+            // console.log("🎉 CORS RESOLVED! Full 43+ product dataset accessible!");
           } else {
-            console.log("⚠️ API accessible but returning limited products:", definitiveData.length);
+            // console.log("⚠️ API accessible but returning limited products:", definitiveData.length);
           }
         } else {
-          console.log("❌ API returned error status:", definitiveResponse.status);
+          // console.log("❌ API returned error status:", definitiveResponse.status);
         }
       } catch (definitiveError) {
         console.error("❌ Fetch error:", definitiveError);
         if (definitiveError.name === 'TypeError' && definitiveError.message === 'Failed to fetch') {
-          console.log("🚫 CONFIRMED: This is 100% a CORS preflight block");
+          // console.log("🚫 CONFIRMED: This is 100% a CORS preflight block");
         }
       }
       
       // Diagnostic 5: Final Status Summary
-      console.log('=== DIAGNOSTIC 5: Final Status ===');
+      // console.log('=== DIAGNOSTIC 5: Final Status ===');
       if (result.length > 8) {
-        console.log('🎉 CORS RESOLVED! Staff API accessible with 43+ products');
+        // console.log('🎉 CORS RESOLVED! Staff API accessible with 43+ products');
       } else {
-        console.log('⚠️ CORS still blocked - using 8-product local fallback');
+        // console.log('⚠️ CORS still blocked - using 8-product local fallback');
       }
       
     } catch (err) {

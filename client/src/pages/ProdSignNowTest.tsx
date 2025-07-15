@@ -18,12 +18,12 @@ export default function ProdSignNowTest() {
     setLoading(true);
     setResponse(null);
     
-    console.log("🌍 VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
-    console.log("🧾 Application ID:", testId);
+    // console.log("🌍 VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
+    // console.log("🧾 Application ID:", testId);
 
     const signNowUrl = `${import.meta.env.VITE_API_BASE_URL}/applications/${testId}/signnow`;
 
-    console.log('📡 Now calling SignNow endpoint:', signNowUrl);
+    // console.log('📡 Now calling SignNow endpoint:', signNowUrl);
 
     try {
       const response = await fetch(signNowUrl, {
@@ -34,7 +34,7 @@ export default function ProdSignNowTest() {
         credentials: 'include',
       });
 
-      console.log('📬 SignNow response status:', response.status);
+      // console.log('📬 SignNow response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -44,7 +44,7 @@ export default function ProdSignNowTest() {
       }
 
       const json = await response.json();
-      console.log('✅ SignNow response JSON:', json);
+      // console.log('✅ SignNow response JSON:', json);
 
       if (json.success && json.data?.signingUrl) {
         setResponse({ 

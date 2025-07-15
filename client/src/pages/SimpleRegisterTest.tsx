@@ -25,7 +25,7 @@ export default function SimpleRegisterTest() {
         password
       };
 
-      console.log('Testing registration with:', requestData);
+      // console.log('Testing registration with:', requestData);
       
       const fetchResponse = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
@@ -37,11 +37,11 @@ export default function SimpleRegisterTest() {
         body: JSON.stringify(requestData)
       });
 
-      console.log('Response status:', fetchResponse.status);
-      console.log('Response headers:', Object.fromEntries(fetchResponse.headers.entries()));
+      // console.log('Response status:', fetchResponse.status);
+      // console.log('Response headers:', Object.fromEntries(fetchResponse.headers.entries()));
 
       const responseText = await fetchResponse.text();
-      console.log('Response body:', responseText);
+      // console.log('Response body:', responseText);
 
       setResponse(`
 Status: ${fetchResponse.status} ${fetchResponse.statusText}

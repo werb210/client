@@ -76,7 +76,7 @@ export default function SignNowDebugTest() {
 
   // Simple test button as requested by user
   const handleClick = async () => {
-    console.log('🔍 SignNow Direct Test - Making API call to staff backend');
+    // console.log('🔍 SignNow Direct Test - Making API call to staff backend');
     
     try {
       const response = await fetch(`https://staff.boreal.financial/api/applications/${applicationId}/signnow`, {
@@ -87,7 +87,7 @@ export default function SignNowDebugTest() {
       });
       
       const data = await response.json();
-      console.log('SignNow API Response:', data);
+      // console.log('SignNow API Response:', data);
       alert(JSON.stringify(data, null, 2));
       
     } catch (error) {
@@ -102,8 +102,8 @@ export default function SignNowDebugTest() {
     setDebugResults([]);
     
     console.group('🔍 SignNow Debug Test - Network Tab Verification');
-    console.log('User Instructions: Open browser dev tools → Network tab');
-    console.log('Expected API Call: POST https://staff.boreal.financial/api/applications/[UUID]/signnow');
+    // console.log('User Instructions: Open browser dev tools → Network tab');
+    // console.log('Expected API Call: POST https://staff.boreal.financial/api/applications/[UUID]/signnow');
     
     try {
       // Test 1: Verify UUID Format
@@ -119,7 +119,7 @@ export default function SignNowDebugTest() {
           format: 'UUID v4',
           pattern: '550e8400-e29b-41d4-a716-446655440000'
         });
-        console.log('✅ UUID Format Check:', applicationId, 'VALID');
+        // console.log('✅ UUID Format Check:', applicationId, 'VALID');
       } else {
         updateResult('UUID Format Verification', 'error', `❌ Invalid UUID format: ${applicationId}`, {
           applicationId,
@@ -133,10 +133,10 @@ export default function SignNowDebugTest() {
       setCurrentStep('Making direct SignNow API request...');
       updateResult('Direct SignNow API Test', 'testing', 'Testing direct staff backend API call...');
       
-      console.log('📤 Making direct SignNow API call...');
-      console.log('   Method: POST');
-      console.log('   URL:', `https://staff.boreal.financial/api/applications/${applicationId}/signnow`);
-      console.log('   Headers: Content-Type: application/json');
+      // console.log('📤 Making direct SignNow API call...');
+      // console.log('   Method: POST');
+      // console.log('   URL:', `https://staff.boreal.financial/api/applications/${applicationId}/signnow`);
+      // console.log('   Headers: Content-Type: application/json');
       
       const response = await fetch(`https://staff.boreal.financial/api/applications/${applicationId}/signnow`, {
         method: "POST",
@@ -145,7 +145,7 @@ export default function SignNowDebugTest() {
         }
       });
 
-      console.log('📥 Response Status:', response.status, response.statusText);
+      // console.log('📥 Response Status:', response.status, response.statusText);
       
       const responseData = await response.json();
 
@@ -156,7 +156,7 @@ export default function SignNowDebugTest() {
           response: responseData,
           endpoint: `https://staff.boreal.financial/api/applications/${applicationId}/signnow`
         });
-        console.log('✅ SignNow API Success:', responseData);
+        // console.log('✅ SignNow API Success:', responseData);
         
         toast({
           title: "Direct SignNow API Success",

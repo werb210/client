@@ -80,7 +80,7 @@ export default function UnifiedDocumentTest() {
   };
 
   const handleRequirementsChange = (allComplete: boolean, totalRequirements: number) => {
-    console.log(`📋 Requirements status: ${allComplete ? 'Complete' : 'Incomplete'} (${totalRequirements} total)`);
+    // console.log(`📋 Requirements status: ${allComplete ? 'Complete' : 'Incomplete'} (${totalRequirements} total)`);
   };
 
   return (

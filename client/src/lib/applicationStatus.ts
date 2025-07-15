@@ -20,7 +20,7 @@ export interface ApplicationStatusResponse {
  */
 export async function fetchApplicationStatus(applicationId: string): Promise<ApplicationStatusResponse> {
   try {
-    console.log(`📋 Checking application status for: ${applicationId}`);
+    // console.log(`📋 Checking application status for: ${applicationId}`);
     
     const response = await fetch(`${API_BASE_URL}/public/applications/${applicationId}`, {
       method: 'GET',
@@ -34,7 +34,7 @@ export async function fetchApplicationStatus(applicationId: string): Promise<App
     }
 
     const data = await response.json();
-    console.log(`📋 Application status response:`, data);
+    // console.log(`📋 Application status response:`, data);
     
     return data;
   } catch (error) {
@@ -68,7 +68,7 @@ export async function canSubmitApplication(applicationId: string): Promise<{
   const applicationStatus = statusResponse.application?.status;
   const canSubmit = applicationStatus === 'draft';
   
-  console.log(`📋 Application ${applicationId} status: ${applicationStatus}, can submit: ${canSubmit}`);
+  // console.log(`📋 Application ${applicationId} status: ${applicationStatus}, can submit: ${canSubmit}`);
   
   return {
     canSubmit,

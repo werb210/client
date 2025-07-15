@@ -60,8 +60,8 @@ class ReliableLenderSync {
    * LEGACY SYNC DISABLED - Replaced by IndexedDB cache-only system
    */
   async pullLenderProducts(): Promise<SyncResult> {
-    console.log('[RELIABLE_SYNC] LEGACY SYNC DISABLED - Using cache-only system');
-    console.log('[RELIABLE_SYNC] Cache should be populated manually at /cache-setup');
+    // console.log('[RELIABLE_SYNC] LEGACY SYNC DISABLED - Using cache-only system');
+    // console.log('[RELIABLE_SYNC] Cache should be populated manually at /cache-setup');
     
     // Return cached data only, no network operations
     try {
@@ -89,7 +89,7 @@ class ReliableLenderSync {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const data = JSON.parse(cached);
-        console.log(`[RELIABLE_SYNC] Loaded ${data.length} products from fallback cache`);
+        // console.log(`[RELIABLE_SYNC] Loaded ${data.length} products from fallback cache`);
         return {
           success: true,
           data: data,
@@ -147,6 +147,6 @@ export async function getSyncStatus(): Promise<SyncStatus> {
 
 // Export legacy function name for compatibility
 export async function pullLiveData(): Promise<SyncResult> {
-  console.log('[RELIABLE_SYNC] Legacy pullLiveData() called - redirecting to cache-only system');
+  // console.log('[RELIABLE_SYNC] Legacy pullLiveData() called - redirecting to cache-only system');
   return await reliableLenderSync.pullLenderProducts();
 }

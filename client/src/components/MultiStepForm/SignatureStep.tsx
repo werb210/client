@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logger } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -57,7 +58,7 @@ export function SignatureStep({ onNext, onBack }: SignatureStepProps) {
       
       // Simulated delay for signing process
       await new Promise(resolve => setTimeout(resolve, 2000)).catch(error => {
-        console.error('[SIGNATURE_STEP] Delay failed:', error);
+        logger.error('[SIGNATURE_STEP] Delay failed:', error);
       });
       
       dispatch({
@@ -74,7 +75,7 @@ export function SignatureStep({ onNext, onBack }: SignatureStepProps) {
 
       setIsSigningInProgress(false);
     } catch (error) {
-      console.error('Signing failed:', error);
+      logger.error('Signing failed:', error);
       setIsSigningInProgress(false);
     }
   };

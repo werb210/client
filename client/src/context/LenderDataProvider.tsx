@@ -20,11 +20,11 @@ export function LenderDataProvider({ children }: { children: React.ReactNode }) 
     try {
       setIsLoading(true);
       setError(null);
-      console.log('[LENDER_CONTEXT] Fetching lender products...');
+      // console.log('[LENDER_CONTEXT] Fetching lender products...');
       
       const data = await fetchLenderProducts();
       setProducts(data);
-      console.log(`[LENDER_CONTEXT] ✅ Loaded ${data.length} products successfully`);
+      // console.log(`[LENDER_CONTEXT] ✅ Loaded ${data.length} products successfully`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);

@@ -27,7 +27,7 @@ export function WebSocketListener() {
         ws = new WebSocket(wsUrl);
         
         ws.onopen = () => {
-          // console.log('[WebSocket] Connected to lender products updates'); // Suppressed for clean console
+          // // console.log('[WebSocket] Connected to lender products updates'); // Suppressed for clean console
         };
         
         ws.onmessage = (event) => {
@@ -35,7 +35,7 @@ export function WebSocketListener() {
             const message = JSON.parse(event.data);
             
             if (message.type === 'lender_products.updated') {
-              console.log('[WebSocket] Lender products updated - invalidating cache');
+              // console.log('[WebSocket] Lender products updated - invalidating cache');
               
               // Invalidate React Query cache as per specification
               queryClient.invalidateQueries({ queryKey: ['lender-products'] }).catch(() => {
@@ -63,7 +63,7 @@ export function WebSocketListener() {
         
         ws.onclose = (event) => {
           try {
-            console.log('[WebSocket] Connection closed, code:', event.code);
+            // console.log('[WebSocket] Connection closed, code:', event.code);
           } catch (e) {
             // Silently ignore WebSocket close logging failures
           }
@@ -71,7 +71,7 @@ export function WebSocketListener() {
           // DISABLED: Auto-reconnect for cache-only system
           // if (event.code !== 1000) {
           //   setTimeout(() => {
-          //     console.log('[WebSocket] Attempting to reconnect...');
+          //     // console.log('[WebSocket] Attempting to reconnect...');
           //     setupWebSocketListener();
           //   }, 5000);
           // }

@@ -41,7 +41,7 @@ export async function saveLenderProducts(
       set(METADATA_KEY, metadata)
     ]);
     
-    console.log(`[CACHE] 💾 Saved ${products.length} products to IndexedDB from ${source}`);
+    // console.log(`[CACHE] 💾 Saved ${products.length} products to IndexedDB from ${source}`);
   } catch (error) {
     console.error('[CACHE] ❌ Failed to save to IndexedDB:', error);
     throw error;
@@ -55,7 +55,7 @@ export async function loadLenderProducts(): Promise<LenderProduct[] | null> {
   try {
     const products = await get(CACHE_KEY);
     if (products && Array.isArray(products) && products.length > 0) {
-      console.log(`[CACHE] 📦 Loaded ${products.length} products from IndexedDB`);
+      // console.log(`[CACHE] 📦 Loaded ${products.length} products from IndexedDB`);
       return products;
     }
     return null;
@@ -124,7 +124,7 @@ export async function clearLenderCache(): Promise<void> {
       set(SOURCE_KEY, null),
       set(METADATA_KEY, null)
     ]);
-    console.log('[CACHE] 🗑️ Cleared all cached lender product data');
+    // console.log('[CACHE] 🗑️ Cleared all cached lender product data');
   } catch (error) {
     console.error('[CACHE] ❌ Failed to clear cache:', error);
     throw error;

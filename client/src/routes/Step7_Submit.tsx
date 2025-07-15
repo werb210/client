@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
+import { logger } from '@/lib/utils';
 import { useLocation } from 'wouter';
+
 import { useFormData } from '@/context/FormDataContext';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
+
 import { Checkbox } from '@/components/ui/checkbox';
+
 import type { CheckedState } from '@radix-ui/react-checkbox';
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
+
 import { Badge } from '@/components/ui/badge';
+
 import { 
   CheckCircle, 
   AlertTriangle, 
@@ -18,8 +27,11 @@ import {
   Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
 import { ApplicationStatusModal } from '@/components/ApplicationStatusModal';
+
 import { canSubmitApplication } from '@/lib/applicationStatus';
+
 
 /**
  * Step 7: Final Application Submission
@@ -80,18 +92,18 @@ export default function Step7Submit() {
         throw new Error('No application ID found. Cannot check status.');
       }
 
-      console.log('📋 Checking application status before submission...');
+      logger.log('📋 Checking application status before submission...');
       const statusCheck = await canSubmitApplication(applicationId);
 
       if (!statusCheck.canSubmit) {
-        console.log(`🚫 Submission blocked - Application status: ${statusCheck.status}`);
+        logger.log(`🚫 Submission blocked - Application status: ${statusCheck.status}`);
         setApplicationStatus(statusCheck.status || 'unknown');
         setStatusModalOpen(true);
         setIsSubmitting(false);
         return;
       }
 
-      console.log('✅ Application status check passed - proceeding with submission');
+      logger.log('✅ Application status check passed - proceeding with submission');
 
       // Continue with submission logic
       // Create FormData for multipart upload with actual files
@@ -102,7 +114,7 @@ export default function Step7Submit() {
         throw new Error('Missing step-based structure in state. Cannot submit application.');
       }
 
-      console.log('📤 Step7_Submit: Using step-based structure from state:', {
+      logger.log('📤 Step7_Submit: Using step-based structure from state:', {
         step1: state.step1,
         step3: state.step3,
         step4: state.step4
@@ -176,7 +188,7 @@ export default function Step7Submit() {
       }, 2000);
       
     } catch (error) {
-      console.error('Submission error:', error);
+      logger.error('Submission error:', error);
       toast({
         title: "Submission Failed",
         description: error instanceof Error ? error.message : "Please try again or contact support.",

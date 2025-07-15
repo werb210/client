@@ -120,7 +120,7 @@ export default function Steps34Test() {
   };
 
   const onSubmit = (data: ApplicationFormData) => {
-    console.log('Form submitted:', data);
+    // console.log('Form submitted:', data);
   };
 
   return (

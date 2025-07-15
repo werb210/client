@@ -8,17 +8,17 @@ let schedulerInterval: NodeJS.Timeout | null = null;
 // LEGACY SCHEDULER DISABLED - Replaced by IndexedDB cache-only system
 export function initializeScheduler() {
   if (isSchedulerRunning) {
-    console.log('[SCHEDULER] LEGACY SYNC DISABLED - Already marked as running');
+    // console.log('[SCHEDULER] LEGACY SYNC DISABLED - Already marked as running');
     return;
   }
 
-  console.log('[SCHEDULER] LEGACY SYNC DISABLED - Using new IndexedDB cache-only system');
-  console.log('[SCHEDULER] NO BACKGROUND SYNC JOBS - Cache populated manually at /cache-setup');
+  // console.log('[SCHEDULER] LEGACY SYNC DISABLED - Using new IndexedDB cache-only system');
+  // console.log('[SCHEDULER] NO BACKGROUND SYNC JOBS - Cache populated manually at /cache-setup');
 
   // DISABLED: Check every hour if it's time to sync
   // schedulerInterval = setInterval(async () => {
   //   if (isTimeToSync()) {
-  //     console.log('[SCHEDULER] Scheduled sync job triggered');
+  //     // console.log('[SCHEDULER] Scheduled sync job triggered');
   //     await runScheduledSync();
   //   }
   // }, 60 * 60 * 1000); // Check every hour
@@ -27,7 +27,7 @@ export function initializeScheduler() {
   // checkInitialSync();
 
   isSchedulerRunning = true;
-  console.log('[SCHEDULER] Legacy scheduler marked as disabled - no background jobs');
+  // console.log('[SCHEDULER] Legacy scheduler marked as disabled - no background jobs');
 }
 
 // Check if it's time to sync (12 PM or 12 AM MST)
@@ -59,8 +59,8 @@ function isTimeToSync(): boolean {
 
 // DISABLED: Run the scheduled sync
 async function runScheduledSync() {
-  console.log('[SCHEDULER] LEGACY SYNC DISABLED - No background sync operations');
-  console.log('[SCHEDULER] Cache should be populated manually using /cache-setup page');
+  // console.log('[SCHEDULER] LEGACY SYNC DISABLED - No background sync operations');
+  // console.log('[SCHEDULER] Cache should be populated manually using /cache-setup page');
   
   // Return success result without any network operations
   lastSyncResult = {
@@ -77,7 +77,7 @@ async function checkInitialSync() {
   const lastSyncTime = localStorage.getItem('lastSyncTime');
   
   if (!lastSyncTime) {
-    console.log('[SCHEDULER] No previous sync found, running initial sync');
+    // console.log('[SCHEDULER] No previous sync found, running initial sync');
     await runScheduledSync();
     return;
   }
@@ -87,7 +87,7 @@ async function checkInitialSync() {
   
   // If more than 12 hours since last sync, run one now
   if (hoursSinceSync > 12) {
-    console.log('[SCHEDULER] Last sync was more than 12 hours ago, running sync now');
+    // console.log('[SCHEDULER] Last sync was more than 12 hours ago, running sync now');
     await runScheduledSync();
   }
 }
@@ -141,5 +141,5 @@ function getNextScheduledRun(): string {
 // Stop scheduler (for cleanup)
 export function stopScheduler() {
   isSchedulerRunning = false;
-  console.log('[SCHEDULER] Scheduler stopped');
+  // console.log('[SCHEDULER] Scheduler stopped');
 }

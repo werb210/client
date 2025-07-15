@@ -11,8 +11,8 @@ export default function ListLenderCategories() {
   const loadCategories = async () => {
     setIsLoading(true);
     
-    console.log("📋 LISTING ALL LENDER PRODUCT CATEGORIES");
-    console.log("=".repeat(50));
+    // console.log("📋 LISTING ALL LENDER PRODUCT CATEGORIES");
+    // console.log("=".repeat(50));
     
     try {
       const response = await fetch('/api/public/lenders');
@@ -24,14 +24,14 @@ export default function ListLenderCategories() {
       }
       
       const products = data.products;
-      console.log(`✅ API returned ${products.length} total products`);
+      // console.log(`✅ API returned ${products.length} total products`);
       
       // Extract all unique categories
       const uniqueCategories = [...new Set(products.map((p: any) => p.category).filter(Boolean))];
       const countries = [...new Set(products.map((p: any) => p.country).filter(Boolean))];
       
-      console.log("\n📊 AVAILABLE CATEGORIES:");
-      console.log("=".repeat(30));
+      // console.log("\n📊 AVAILABLE CATEGORIES:");
+      // console.log("=".repeat(30));
       
       const categoryDetails = uniqueCategories.map(category => {
         const count = products.filter((p: any) => p.category === category).length;
@@ -39,8 +39,8 @@ export default function ListLenderCategories() {
         const usCount = products.filter((p: any) => p.category === category && p.country === 'US').length;
         const categoryProducts = products.filter((p: any) => p.category === category);
         
-        console.log(`- ${category}`);
-        console.log(`  Total: ${count} products (CA: ${canadianCount}, US: ${usCount})`);
+        // console.log(`- ${category}`);
+        // console.log(`  Total: ${count} products (CA: ${canadianCount}, US: ${usCount})`);
         
         return {
           name: category,
@@ -51,11 +51,11 @@ export default function ListLenderCategories() {
         };
       });
       
-      console.log("\n🌍 AVAILABLE COUNTRIES:");
-      console.log("=".repeat(25));
+      // console.log("\n🌍 AVAILABLE COUNTRIES:");
+      // console.log("=".repeat(25));
       countries.forEach(country => {
         const count = products.filter((p: any) => p.country === country).length;
-        console.log(`- ${country}: ${count} products`);
+        // console.log(`- ${country}: ${count} products`);
       });
       
       // Check for equipment financing
@@ -65,16 +65,18 @@ export default function ListLenderCategories() {
         cat.toLowerCase().includes('machinery')
       );
       
-      console.log("\n🔍 EQUIPMENT FINANCING CHECK:");
-      console.log("=".repeat(35));
+      // console.log("\n🔍 EQUIPMENT FINANCING CHECK:");
+      // console.log("=".repeat(35));
       
       if (equipmentCategories.length === 0) {
-        console.log("❌ NO EQUIPMENT FINANCING CATEGORIES FOUND");
-        console.log("   Expected: 'Equipment Financing' category");
-        console.log("   Available: " + uniqueCategories.join(', '));
+        // console.log("❌ NO EQUIPMENT FINANCING CATEGORIES FOUND");
+        // console.log("   Expected: 'Equipment Financing' category");
+        // console.log("   Available: " + uniqueCategories.join(', '));
       } else {
-        console.log("✅ Equipment-related categories found:");
-        equipmentCategories.forEach(cat => console.log(`   - ${cat}`));
+        // console.log("✅ Equipment-related categories found:");
+        equipmentCategories.forEach(cat => {
+          // console.log(`   - ${cat}`);
+        });
       }
       
       // Check for missing expected categories
@@ -90,14 +92,16 @@ export default function ListLenderCategories() {
         !uniqueCategories.some(actual => actual.toLowerCase() === expected.toLowerCase())
       );
       
-      console.log("\n⚠️  MISSING EXPECTED CATEGORIES:");
-      console.log("=".repeat(40));
+      // console.log("\n⚠️  MISSING EXPECTED CATEGORIES:");
+      // console.log("=".repeat(40));
       
       if (missingCategories.length > 0) {
-        console.log("❌ Missing categories:");
-        missingCategories.forEach(missing => console.log(`   - ${missing}`));
+        // console.log("❌ Missing categories:");
+        missingCategories.forEach(missing => {
+          // console.log(`   - ${missing}`);
+        });
       } else {
-        console.log("✅ All expected categories present");
+        // console.log("✅ All expected categories present");
       }
       
       setCategories({

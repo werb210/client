@@ -13,8 +13,8 @@ class ScheduledSyncService {
   initialize() {
     if (this.isInitialized) return;
     
-    console.log('[SCHEDULER] LEGACY SYNC DISABLED - Using new IndexedDB caching system');
-    console.log('[SCHEDULER] New system: Fetch windows at 12:00 PM and 12:00 AM MST with persistent cache');
+    // console.log('[SCHEDULER] LEGACY SYNC DISABLED - Using new IndexedDB caching system');
+    // console.log('[SCHEDULER] New system: Fetch windows at 12:00 PM and 12:00 AM MST with persistent cache');
     
     // DISABLED: Run immediately on startup with error handling
     // this.runSync().catch(error => {
@@ -31,7 +31,7 @@ class ScheduledSyncService {
     // }, 60 * 60 * 1000); // Check every hour
     
     this.isInitialized = true;
-    console.log('[SCHEDULER] Lender product sync scheduler started successfully');
+    // console.log('[SCHEDULER] Lender product sync scheduler started successfully');
   }
 
   private checkAndRunSync() {
@@ -45,7 +45,7 @@ class ScheduledSyncService {
         const minutes = now.getMinutes();
         // Only run during the first 5 minutes of the hour to avoid multiple triggers
         if (minutes < 5) {
-          console.log(`[SCHEDULER] LEGACY SYNC DISABLED - Would have triggered at ${currentMSTHour === 12 ? '12:00 PM' : '12:00 AM'} MST`);
+          // console.log(`[SCHEDULER] LEGACY SYNC DISABLED - Would have triggered at ${currentMSTHour === 12 ? '12:00 PM' : '12:00 AM'} MST`);
           // this.runSync().catch(error => {
           //   console.warn('[SCHEDULER] Scheduled sync failed:', error?.message || error);
           // });
@@ -58,8 +58,8 @@ class ScheduledSyncService {
 
   async runSync(): Promise<void> {
     // DISABLED: Legacy sync system replaced by new IndexedDB caching
-    console.log('[SCHEDULER] LEGACY SYNC DISABLED - No action taken');
-    console.log('[SCHEDULER] Use new IndexedDB caching system with fetchLenderProducts()');
+    // console.log('[SCHEDULER] LEGACY SYNC DISABLED - No action taken');
+    // console.log('[SCHEDULER] Use new IndexedDB caching system with fetchLenderProducts()');
     
     // No network calls, no sync operations
     return Promise.resolve();
@@ -85,8 +85,8 @@ class ScheduledSyncService {
 
   async manualSync(): Promise<{ success: boolean; productCount: number; message: string }> {
     // DISABLED: Legacy manual sync replaced by new IndexedDB caching
-    console.log('[SCHEDULER] LEGACY MANUAL SYNC DISABLED');
-    console.log('[SCHEDULER] Use new IndexedDB caching system with fetch window controls');
+    // console.log('[SCHEDULER] LEGACY MANUAL SYNC DISABLED');
+    // console.log('[SCHEDULER] Use new IndexedDB caching system with fetch window controls');
     
     this.showToast('Legacy sync disabled - using new IndexedDB caching system', 'success');
     
@@ -103,7 +103,7 @@ class ScheduledSyncService {
       this.intervalId = null;
     }
     this.isInitialized = false;
-    console.log('[SCHEDULER] Sync scheduler stopped');
+    // console.log('[SCHEDULER] Sync scheduler stopped');
   }
 
   getStatus() {

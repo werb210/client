@@ -54,6 +54,8 @@
     "@types/react-datepicker": "^6.2.0",
     "@types/react-input-mask": "^3.0.6",
     "@types/uuid": "^10.0.0",
+    "browserslist": "^4.25.1",
+    "caniuse-lite": "^1.0.30001727",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

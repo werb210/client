@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 
 export default function EnvTest() {
   useEffect(() => {
-    console.log('🔍 Environment Variable Test:');
-    console.log('VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-    console.log('All import.meta.env:', import.meta.env);
-    console.log('Current endpoint would be:', `${import.meta.env.VITE_API_BASE_URL}/applications/test/signnow`);
+    // console.log('🔍 Environment Variable Test:');
+    // console.log('VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+    // console.log('All import.meta.env:', import.meta.env);
+    // console.log('Current endpoint would be:', `${import.meta.env.VITE_API_BASE_URL}/applications/test/signnow`);
   }, []);
 
   return (

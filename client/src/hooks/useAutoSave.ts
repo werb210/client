@@ -30,7 +30,7 @@ export function useAutoSave({
       localStorage.setItem(key, JSON.stringify(saveData));
       setStatus('saved');
       setLastSaveTime(new Date().toLocaleTimeString());
-      console.log('💾 Auto-saved form data:', { step: data.currentStep || 0, timestamp: saveData.lastSaved });
+      // console.log('💾 Auto-saved form data:', { step: data.currentStep || 0, timestamp: saveData.lastSaved });
     } catch (error) {
       setStatus('error');
       console.error('Auto save failed:', error);
@@ -53,7 +53,7 @@ export function useAutoSave({
       if (hoursDiff < maxAge) {
         // Security check: don't restore to sensitive steps
         if (currentStep !== undefined && securitySteps.includes(currentStep)) {
-          console.log('🔒 SECURITY: Blocked auto-save restoration to sensitive step', currentStep);
+          // console.log('🔒 SECURITY: Blocked auto-save restoration to sensitive step', currentStep);
           // Return data but reset to safe step
           return {
             ...formValues,
@@ -78,7 +78,7 @@ export function useAutoSave({
     localStorage.removeItem(key);
     setStatus(null);
     setLastSaveTime("");
-    console.log('🗑️ Cleared auto-save data');
+    // console.log('🗑️ Cleared auto-save data');
   }, [key]);
 
   // Auto save on interval - wrapped for error safety

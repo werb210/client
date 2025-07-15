@@ -26,7 +26,7 @@ export default function SecurityTestRunner() {
   };
 
   const testUnhandledPromiseRejections = async () => {
-    console.log('🔍 Testing Unhandled Promise Rejections...');
+    // console.log('🔍 Testing Unhandled Promise Rejections...');
     
     let rejectionCaught = false;
     const originalHandler = window.onunhandledrejection;
@@ -73,7 +73,7 @@ export default function SecurityTestRunner() {
   };
 
   const testZodSchemaErrors = () => {
-    console.log('🔍 Testing Zod Schema Validation...');
+    // console.log('🔍 Testing Zod Schema Validation...');
     
     try {
       // Import zod and test schema validation
@@ -129,7 +129,7 @@ export default function SecurityTestRunner() {
   };
 
   const testInvalidFileTypeUpload = () => {
-    console.log('🔍 Testing File Upload Validation...');
+    // console.log('🔍 Testing File Upload Validation...');
     
     try {
       // Create a fake file with invalid extension
@@ -173,7 +173,7 @@ export default function SecurityTestRunner() {
   };
 
   const testCspHeader = async () => {
-    console.log('🔍 Testing Content Security Policy...');
+    // console.log('🔍 Testing Content Security Policy...');
     
     try {
       // Check for CSP in meta tag or test with fetch
@@ -236,7 +236,7 @@ export default function SecurityTestRunner() {
   };
 
   const testStrictTransportSecurity = async () => {
-    console.log('🔍 Testing Strict Transport Security...');
+    // console.log('🔍 Testing Strict Transport Security...');
     
     try {
       const isHttps = window.location.protocol === 'https:';
@@ -298,7 +298,7 @@ export default function SecurityTestRunner() {
   };
 
   const testReactErrorBoundary = () => {
-    console.log('🔍 Testing React Error Boundary...');
+    // console.log('🔍 Testing React Error Boundary...');
     
     try {
       // Check if GlobalErrorBoundary is in the component tree
@@ -340,7 +340,7 @@ export default function SecurityTestRunner() {
   };
 
   const testLocalRateLimit = async () => {
-    console.log('🔍 Testing Local Rate Limiting...');
+    // console.log('🔍 Testing Local Rate Limiting...');
     
     try {
       const testKey = 'security-test-rate-limit';
@@ -390,7 +390,7 @@ export default function SecurityTestRunner() {
     setIsRunning(true);
     setTestResults([]);
     
-    console.log('🔒 Starting Security Test Suite...');
+    // console.log('🔒 Starting Security Test Suite...');
     
     try {
       await testUnhandledPromiseRejections();
@@ -401,7 +401,7 @@ export default function SecurityTestRunner() {
       testReactErrorBoundary();
       await testLocalRateLimit();
       
-      console.log('✅ Security Test Suite Complete');
+      // console.log('✅ Security Test Suite Complete');
     } catch (error) {
       console.error('❌ Security Test Suite Failed:', error);
       addResult({
