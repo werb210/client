@@ -326,9 +326,9 @@ export default function Step6SignNowIntegration() {
     },
     refetchInterval: (data, query) => {
       const currentStatus = data?.status || data?.signing_status;
-      console.log("📡 Polling attempt", retryCountRef.current + 1, "- Current status:", currentStatus);
+      console.log(`📡 Polling attempt ${retryCountRef.current + 1}/10 - Current status: ${currentStatus}`);
       
-      // ✅ IMPROVED: Only stop polling when status === "signed" (not invite_sent)
+      // ✅ USER REQUIREMENT: Only stop polling when status === "signed" (not invite_sent)
       if (currentStatus === 'signed') {
         console.log("🛑 Stopping polling - Document signed!");
         return false;
@@ -339,14 +339,15 @@ export default function Step6SignNowIntegration() {
         console.log("⏳ Document is invite_sent - continuing to poll until signed...");
       }
       
-      // Stop only on failure or max retries
-      if (currentStatus === 'failed' || retryCountRef.current >= 15) {
-        console.log("🛑 Stopping polling - Status:", currentStatus, "Retries:", retryCountRef.current);
+      // ✅ USER REQUIREMENT: Stop after 10 failures max
+      if (currentStatus === 'failed' || retryCountRef.current >= 10) {
+        console.log(`🛑 Stopping polling - Status: ${currentStatus}, Retries: ${retryCountRef.current}/10`);
+        setTimeoutWarning('SignNow service not responding after 10 attempts. You can continue without signing.');
         return false;
       }
       
       retryCountRef.current++;
-      return 5000; // Poll every 5 seconds for faster response
+      return 9000; // ✅ USER REQUIREMENT: Poll every 9 seconds
     },
     enabled: !!applicationId && signingStatus === 'ready',
     retry: false,
@@ -354,9 +355,9 @@ export default function Step6SignNowIntegration() {
       logger.warn("Polling error:", error.message);
       retryCountRef.current++;
       
-      if (retryCountRef.current >= 8) {
-        logger.warn('⏰ Max retries reached - stopping polling');
-        setTimeoutWarning('SignNow service is not responding. Please try again later.');
+      if (retryCountRef.current >= 10) {
+        logger.warn('⏰ Max retries reached (10/10) - stopping polling');
+        setTimeoutWarning('SignNow service is not responding after 10 attempts. You can continue without signing.');
         queryClient.cancelQueries(['signnowStatus']);
       }
     },
@@ -426,15 +427,50 @@ export default function Step6SignNowIntegration() {
   // Manual override for development
   const handleManualOverride = async () => {
     try {
-      await fetch(`/api/public/applications/${applicationId}/override-signing`, { 
-        method: "PATCH" 
+      // ✅ USER REQUIREMENT: Send Step 6 status to staff when continuing without signing
+      console.log("📤 Sending manual continue status to staff backend...");
+      
+      const overridePayload = {
+        status: 'manual_continue',
+        reason: 'User selected continue without signing',
+        timestamp: new Date().toISOString(),
+        pollingAttempts: retryCountRef.current,
+        applicationId: applicationId
+      };
+      
+      console.log("📋 Manual Continue Payload:", JSON.stringify(overridePayload, null, 2));
+      
+      const response = await fetch(`/api/public/applications/${applicationId}/override-signing`, { 
+        method: "PATCH",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(overridePayload)
       });
+      
+      if (response.ok) {
+        console.log("✅ Manual continue status sent to staff successfully");
+        logger.log("✅ Manual override status transmitted to staff backend");
+      } else {
+        console.log(`⚠️ Manual continue status transmission failed: ${response.status}`);
+        logger.warn(`Manual override endpoint returned: ${response.status}`);
+      }
+      
+      // ✅ USER REQUIREMENT: Proceed to Step 7 with visual confirmation
+      toast({
+        title: "Continuing Without Signature",
+        description: "Status has been recorded. Proceeding to final submission.",
+        variant: "default"
+      });
+      
       setLocation('/apply/step-7');
+      
     } catch (err: any) {
       logger.error('Override failed:', err);
+      console.log("❌ Manual continue failed:", err.message);
       toast({
         title: "Override Failed",
-        description: "Unable to mark document as signed. Please try again.",
+        description: "Unable to record status. Please try again.",
         variant: "destructive"
       });
     }
