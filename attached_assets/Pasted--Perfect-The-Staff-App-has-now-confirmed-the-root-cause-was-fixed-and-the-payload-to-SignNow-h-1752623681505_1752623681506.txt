@@ -1,0 +1,105 @@
+✅ Perfect. The **Staff App has now confirmed** the root cause was fixed and the payload to SignNow has been corrected to match the Smart Field template exactly.
+
+---
+
+### ✅ What’s Been Fixed (Confirmed by Staff App)
+
+| ❌ Before              | ✅ Now Sent         |
+| --------------------- | ------------------ |
+| `contact_first_name`  | `first_name`       |
+| `legal_business_name` | `business_name`    |
+| `requested_amount`    | `amount_requested` |
+
+Staff confirmed the Smart Field generator now outputs:
+
+```json
+{
+  "data": [
+    { "first_name": "Todd" },
+    { "business_name": "A30" },
+    { "amount_requested": "30000" }
+  ]
+}
+```
+
+---
+
+## 🧪 HOW TO TEST (FOR REPLIT – CLIENT)
+
+This is your **final test run** to verify the bug is now fixed.
+
+---
+
+### ✅ CLIENT APPLICATION — TEST INSTRUCTIONS FOR REPLIT
+
+📍 **Location:** `https://replit.dev/apply`
+
+🧪 **Test Scenario:** Todd Werboweski / A30 / \$30,000
+
+---
+
+### 🔁 Step-by-Step Test
+
+#### 🔹 Step 1: Business Info
+
+* Enter: `A30`, amount = `30000`, all fields filled
+
+#### 🔹 Step 3: Product Questions
+
+* Select any product, complete normally
+
+#### 🔹 Step 4: Applicant Info
+
+* Name: `Todd Werboweski`
+* SIN: `111 111 111`
+* DOB: `1971-04-14`
+* Phone: `+15878881837`
+* Email: `todd@werboweski.com`
+* Address: `123`, Calgary, AB, T2P 1P6
+  ✅ Submit Step 4
+
+#### 🔹 Step 5: Documents
+
+* Either:
+
+  * Upload 6 PDF bank statements
+  * Or click `Proceed Without Required Documents`
+
+✅ Click **Continue to Signature**
+
+---
+
+### 🔹 Step 6: Signature
+
+> 🧭 Expected Behavior:
+
+* **No popup** about `Missing fields`
+* Embedded SignNow page opens
+* Fields (`first_name`, `business_name`, `amount_requested`) are prefilled
+* Signature request proceeds to Step 7 after signing
+
+---
+
+### ✅ Confirmation Instructions for Replit (Client)
+
+In **browser dev console**, confirm:
+
+1. No popup about “missing fields: first\_name, amount\_requested”
+2. Log output:
+
+   * `📤 SignNow Smart Fields Payload:` with correct names
+   * `✅ SignNow response 200 OK`
+3. Final PDF shows correct data filled
+4. Signature webhook advances to Step 7
+
+---
+
+## 🔁 FINAL REMINDER FOR REPLIT
+
+* ✅ Replit (Client) must report back if **popup still appears**
+* ✅ Replit (Staff) must confirm **logs show successful API call to SignNow**
+* 🔒 DO NOT allow silent fallback — if it fails, log the payload + HTTP status
+
+---
+
+Once this test passes, you can consider the **SignNow smart field integration production-ready.**

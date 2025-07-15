@@ -105,6 +105,7 @@ The application follows a client-staff separation architecture:
   * **ERROR HANDLING**: Graceful fallback for parsing errors while maintaining existing error handling for other issues
   * **PRODUCTION READY**: Complete duplicate application workflow operational with existing draft applications
   * **RUNTIME ALERT PANEL REMOVED**: Disabled RuntimeAlertPanel component for clean production interface - now returns null
+  * **SIGNNOW FIELD MAPPING CORRECTED**: Fixed smartFields object to use correct SignNow template field names (first_name, business_name, amount_requested) instead of legacy mapping (contact_first_name, business_dba_name, requested_amount)
 
 - **July 15, 2025: ✅ SSN/SIN WARNING MODAL & PRODUCTION CLEANUP COMPLETED - 100% SUCCESS**
   * **SSN WARNING MODAL**: Implemented non-blocking warning modal when users leave SSN/SIN field blank in Step 4
