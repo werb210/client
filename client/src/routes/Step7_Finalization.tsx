@@ -73,6 +73,39 @@ export default function Step7Finalization() {
       return;
     }
 
+    // ✅ Task 4: Check signing status before final submission
+    try {
+      console.log("🔍 Checking signing status before final submission...");
+      const signingStatusResponse = await fetch(`/api/public/signnow/status/${applicationId}`);
+      
+      if (signingStatusResponse.ok) {
+        const signingData = await signingStatusResponse.json();
+        console.log("📊 Current signing status:", signingData);
+        
+        if (signingData?.status === 'invite_sent' || signingData?.signing_status === 'invite_sent') {
+          console.log("❌ Document is still invite_sent - cannot finalize");
+          alert("Document must be signed to complete submission.");
+          toast({
+            title: "Document Not Signed",
+            description: "Please return to Step 6 and complete the document signing process.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        if (signingData?.status !== 'signed' && signingData?.signing_status !== 'signed' && signingData?.status !== 'invite_signed') {
+          console.log("⚠️ Document signing status unclear:", signingData?.status, signingData?.signing_status);
+          const proceedAnyway = confirm("Document signing status is unclear. Proceed with submission anyway?");
+          if (!proceedAnyway) {
+            return;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error checking signing status:", error);
+      // Continue with submission if status check fails
+    }
+
     setFinalizationStatus('finalizing');
     setError(null);
 

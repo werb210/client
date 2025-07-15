@@ -201,30 +201,46 @@ function UnifiedDocumentUploadCard({
         files.forEach((file) => formData.append('document', file));
         formData.append('documentType', category);
         
-        // ✅ Updated endpoint to match staff backend specification
-        const endpoint = `/api/public/documents/${applicationId}`;
-        logger.log('📤 [DYNAMIC] ApplicationId:', applicationId);
-        logger.log('📤 [DYNAMIC] DocumentType:', category);
-        logger.log('📤 [DYNAMIC] Endpoint:', endpoint);
-        
-        let response;
-        try {
-          response = await fetch(endpoint, {
-            method: 'POST',
-            body: formData,
-            // ⚠️ No Authorization headers for public upload!
-          });
-        } catch (fetchError) {
-          // Silently handle fetch errors to prevent unhandled rejections
-          console.error('Network error (suppressed):', fetchError);
-          throw new Error(`Network error: ${fetchError.message}`);
-        }
-        
-        logger.log('📤 [DYNAMIC] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Upload failed: ${response.status} ${response.statusText} - ${errorText}`);
+        // ✅ Task 1: Enhanced Document Upload with Comprehensive Logging
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const formData = new FormData();
+          formData.append('document', file);
+          formData.append('documentType', category);
+          
+          // Use corrected endpoint format
+          const uploadUrl = `/api/public/upload/${applicationId}`;
+          
+          // ✅ TEMPORARY DEBUG LOGGING (as requested)
+          console.log("Uploading:", file.name, "→", uploadUrl);
+          console.log("File size:", file.size, "bytes");
+          console.log("File type:", file.type);
+          console.log("Document category:", category);
+          
+          let response;
+          try {
+            response = await fetch(uploadUrl, {
+              method: 'POST',
+              body: formData,
+              // ⚠️ No Authorization headers for public upload!
+            });
+          } catch (fetchError) {
+            console.error('Network error for file:', file.name, fetchError);
+            throw new Error(`Network error uploading ${file.name}: ${fetchError.message}`);
+          }
+          
+          // ✅ TEMPORARY DEBUG LOGGING (as requested)
+          const responseText = await response.text();
+          console.log("Response:", response.status, responseText);
+          
+          if (!response.ok) {
+            // ✅ Show Visual Error to User and Prevent Advancing
+            const errorMessage = `Upload failed for ${file.name}: ${response.status} ${response.statusText} - ${responseText}`;
+            console.error("❌ UPLOAD FAILED:", errorMessage);
+            throw new Error(errorMessage);
+          }
+          
+          console.log("✅ Successfully uploaded:", file.name);
         }
         
         // Update status to completed

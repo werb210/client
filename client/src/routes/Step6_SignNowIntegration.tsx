@@ -166,11 +166,25 @@ export default function Step6SignNowIntegration() {
         years_with_business: state.step4?.yearsWithBusiness || ''
       };
 
+      // ✅ Task 2: Enhanced Smart Field Pre-Fill Debugging
+      console.log("Prefill Payload", {
+        templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5',
+        smartFields,
+        redirectUrl: 'https://clientportal.boreal.financial/#/step7-finalization',
+        applicationId
+      });
+      
       logger.log("📋 Smart Fields for SignNow Template:", smartFields);
       logger.log("🔍 Smart Fields Verification:", {
         totalFields: Object.keys(smartFields).length,
         populatedFields: Object.values(smartFields).filter(v => v && v !== '').length,
         emptyFields: Object.entries(smartFields).filter(([k,v]) => !v || v === '').map(([k]) => k)
+      });
+      
+      // ✅ Log individual field values for debugging
+      console.log("📋 Individual Smart Field Values:");
+      Object.entries(smartFields).forEach(([key, value]) => {
+        console.log(`  ${key}: "${value}"`);
       });
       
       logger.log('🔄 Fetching signing URL for application:', applicationId);
@@ -233,6 +247,8 @@ export default function Step6SignNowIntegration() {
           const signingUrl = data.signingUrl || data.redirect_url || data.signnow_url;
           
           if (signingUrl) {
+            // ✅ Task 2: Debug log for signing URL
+            console.log("SignNow URL:", signingUrl);
             logger.log('🔗 Setting signing URL from POST /api/public/signnow/initiate:', signingUrl);
             setSignUrl(signingUrl);
             setSigningStatus('ready');
@@ -285,8 +301,12 @@ export default function Step6SignNowIntegration() {
       return response.json();
     },
     refetchInterval: (data, query) => {
+      // ✅ Task 3: Enhanced polling with 10 retry limit and signed status detection
+      console.log("📡 Polling attempt", retryCountRef.current + 1, "- Current status:", data?.status || data?.signing_status || 'unknown');
+      
       // Stop polling if signed, failed, or too many retries
-      if (data?.status === 'signed' || data?.status === 'failed' || retryCountRef.current >= 10) {
+      if (data?.status === 'signed' || data?.signing_status === 'signed' || data?.status === 'failed' || retryCountRef.current >= 10) {
+        console.log("🛑 Stopping polling - Status:", data?.status || data?.signing_status, "Retries:", retryCountRef.current);
         return false;
       }
       
@@ -294,6 +314,9 @@ export default function Step6SignNowIntegration() {
       if (data?.status === 'not_initiated') {
         retryCountRef.current++;
       }
+      
+      // Increase retry count for all polling attempts
+      retryCountRef.current++;
       
       return 9000; // Poll every 9 seconds
     },
@@ -310,7 +333,11 @@ export default function Step6SignNowIntegration() {
       }
     },
     onSuccess: (data) => {
-      if (data?.status === 'signed' || data?.signing_status === 'signed') {
+      // ✅ Task 3: Enhanced success handling with comprehensive status checking
+      console.log("📊 Polling response received:", data);
+      
+      if (data?.status === 'signed' || data?.signing_status === 'signed' || data?.status === 'invite_signed') {
+        console.log('🎉 Document signed! Redirecting to Step 7...');
         logger.log('🎉 Document signed! Redirecting to Step 7...');
         
         toast({
@@ -322,6 +349,9 @@ export default function Step6SignNowIntegration() {
         setTimeout(() => {
           setLocation('/apply/step-7');
         }, 1500);
+      } else {
+        // Log current polling status
+        console.log("⏳ Still waiting for signature. Current status:", data?.status || data?.signing_status);
       }
     }
   });
