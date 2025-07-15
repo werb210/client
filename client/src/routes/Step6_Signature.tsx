@@ -40,7 +40,7 @@ export default function Step6Signature() {
   const { data: signingStatusData, refetch } = useQuery({
     queryKey: ['signingStatus', applicationId],
     queryFn: () => staffApi.checkSigningStatus(applicationId!),
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: false, // Disable automatic polling to prevent console noise
     enabled: !!applicationId && submissionStatus === 'submitted',
     retry: false,
   });

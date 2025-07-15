@@ -25,10 +25,20 @@ window.addEventListener('unhandledrejection', (event) => {
     event.reason !== null && 
     Object.keys(event.reason).length === 0;
   
+  // Check for SignNow polling rejections and React Query errors
+  const isSignNowPollingError = errorMessage.includes('signnow') || 
+    errorMessage.includes('polling') ||
+    errorMessage.includes('Fetch failed') ||
+    errorMessage.includes('checkSigningStatus') ||
+    errorMessage.includes('status/') ||
+    (typeof event.reason === 'object' && event.reason?.type === 'unhandledrejection') ||
+    (typeof event.reason === 'object' && event.reason?.constructor?.name === 'TypeError') ||
+    (typeof event.reason === 'object' && !event.reason.message); // Empty object errors
+  
   // Check if error should be suppressed
   const shouldSuppress = suppressedErrors.some(pattern => 
     errorMessage.includes(pattern) || errorType.includes(pattern)
-  ) || isEmptyObjectError;
+  ) || isEmptyObjectError || isSignNowPollingError;
   
   if (shouldSuppress) {
     event.preventDefault();

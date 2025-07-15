@@ -285,7 +285,7 @@ export default function Step6SignNowIntegration() {
       }).catch(fetchError => {
         // Handle fetch errors silently to prevent unhandled promise rejections
         logger.warn('📡 SignNow status fetch failed:', fetchError.message);
-        return null;
+        return null; // Return null instead of throwing to prevent unhandled rejections
       });
       
       if (!res) {
@@ -357,10 +357,11 @@ export default function Step6SignNowIntegration() {
         setTimeoutWarning(''); // Clear warning if under 10 minutes
       }
       
-    } catch (err) {
+    } catch (err: any) {
       // Handle polling errors without redirecting - suppress unhandled rejections
-      logger.warn('📡 Polling error caught (will NOT redirect):', err.message);
+      logger.warn('📡 Polling error caught (will NOT redirect):', err?.message || 'Unknown error');
       // Stay on Step 6, keep polling
+      // Do not throw error to prevent unhandled promise rejection
     }
   };
 
@@ -374,8 +375,37 @@ export default function Step6SignNowIntegration() {
       logger.log('   - user.document.fieldinvite.signed === true');
       logger.log('🚫 Will NOT redirect on "invite_sent" status');
       
-      const interval = setInterval(checkSignatureStatus, 5000);
-      return () => clearInterval(interval);
+      let pollCount = 0;
+      const maxPolls = 60; // 5 minutes maximum (60 polls * 5 seconds = 5 minutes)
+      
+      const interval = setInterval(async () => {
+        pollCount++;
+        
+        // Stop polling after 5 minutes to prevent endless loops
+        if (pollCount >= maxPolls) {
+          logger.warn('⏰ Polling timeout reached - stopping automatic status checks');
+          setTimeoutWarning('Signature polling timeout reached. You may continue manually.');
+          clearInterval(interval);
+          setIsPolling(false);
+          return;
+        }
+        
+        try {
+          await checkSignatureStatus();
+        } catch (error) {
+          // Silently handle polling errors to prevent unhandled rejections
+          logger.warn('📡 Polling error caught and handled:', error?.message || 'Unknown error');
+        }
+      }, 5000);
+      
+      setPollingInterval(interval);
+      setIsPolling(true);
+      
+      return () => {
+        clearInterval(interval);
+        setIsPolling(false);
+        setPollingInterval(null);
+      };
     }
   }, [applicationId, signUrl, signingStatus, setLocation]);
 
