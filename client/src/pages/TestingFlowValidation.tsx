@@ -4,15 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Play, 
-  Settings, 
-  TestTube2, 
-  ArrowRight,
-  AlertTriangle
-} from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import Play from 'lucide-react/dist/esm/icons/play';
+import Settings from 'lucide-react/dist/esm/icons/settings';
+import TestTube2 from 'lucide-react/dist/esm/icons/test-tube-2';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 
 /**
  * Testing Flow Validation Page

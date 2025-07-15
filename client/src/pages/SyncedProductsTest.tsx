@@ -2,7 +2,9 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
 
 interface Product {
   id: string;

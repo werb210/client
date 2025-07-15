@@ -8,7 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, FileText, ExternalLink, CheckCircle, AlertTriangle } from 'lucide-react';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 import { paths } from '@/types/api';
 import { useFormDataContext } from '@/context/FormDataContext';
 

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ArrowRight } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
 
 interface Step2Props {
   formData: any;

@@ -1,4 +1,9 @@
-import { TrendingUp, Building, Cog, CreditCard, FileText, ShoppingCart } from 'lucide-react';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
+import Building from 'lucide-react/dist/esm/icons/building';
+import Cog from 'lucide-react/dist/esm/icons/cog';
+import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import ShoppingCart from 'lucide-react/dist/esm/icons/shopping-cart';
 
 interface Props {
   title: string;

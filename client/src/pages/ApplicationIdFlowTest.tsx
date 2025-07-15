@@ -4,15 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Loader2, 
-  Settings, 
-  Database,
-  ArrowRight,
-  RefreshCw
-} from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import Settings from 'lucide-react/dist/esm/icons/settings';
+import Database from 'lucide-react/dist/esm/icons/database';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
 
 interface ChecklistItem {
   id: string;

@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Wrench, CheckCircle, XCircle, Target } from 'lucide-react';
+import Wrench from 'lucide-react/dist/esm/icons/wrench';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import Target from 'lucide-react/dist/esm/icons/target';
 
 export default function EquipmentFinancingFixTest() {
   const [testResults, setTestResults] = useState<any>(null);

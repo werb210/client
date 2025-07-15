@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
 import { getDocumentRequirementsIntersection } from '@/lib/documentIntersection';
 
 interface TestScenario {

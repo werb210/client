@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { logger } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 
-import { CheckCircle, FileText, AlertCircle, RefreshCcw, Upload, X } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import RefreshCcw from 'lucide-react/dist/esm/icons/refresh-ccw';
+import Upload from 'lucide-react/dist/esm/icons/upload';
+import X from 'lucide-react/dist/esm/icons/x';
 
 import { Button } from '@/components/ui/button';
 

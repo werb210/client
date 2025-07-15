@@ -3,7 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Building2, DollarSign, FileText, CheckCircle } from 'lucide-react';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import Building2 from 'lucide-react/dist/esm/icons/building-2';
+import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
 import { fetchLenderProducts, type LenderProduct } from '@/api/lenderProducts';
 
 interface MatchedProduct extends LenderProduct {

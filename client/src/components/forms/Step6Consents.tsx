@@ -5,7 +5,10 @@ import { Button } from '@/components/ui/button';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Shield, FileText, MessageCircle, Lock } from 'lucide-react';
+import Shield from 'lucide-react/dist/esm/icons/shield';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import MessageCircle from 'lucide-react/dist/esm/icons/message-circle';
+import Lock from 'lucide-react/dist/esm/icons/lock';
 
 interface Step6Props {
   defaultValues?: Partial<ApplicationForm>;

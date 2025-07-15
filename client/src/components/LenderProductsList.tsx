@@ -17,7 +17,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Play } from 'lucide-react';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import Play from 'lucide-react/dist/esm/icons/play';
 
 interface ProductsByCountry {
   [country: string]: {

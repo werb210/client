@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { List, Database, AlertTriangle } from 'lucide-react';
+import List from 'lucide-react/dist/esm/icons/list';
+import Database from 'lucide-react/dist/esm/icons/database';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 
 export default function ListLenderCategories() {
   const [categories, setCategories] = useState<any>(null);

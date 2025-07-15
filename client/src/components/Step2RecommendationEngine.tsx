@@ -3,7 +3,11 @@ import { useProductCategories } from '@/hooks/useProductCategories';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Target, CheckCircle, ArrowRight, AlertTriangle, Bug } from 'lucide-react';
+import Target from 'lucide-react/dist/esm/icons/target';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import Bug from 'lucide-react/dist/esm/icons/bug';
 import { formatCategoryName } from '../utils/formatters';
 // import { FieldMappingDebugOverlay } from './FieldMappingDebugOverlay'; // Disabled for production
 

@@ -10,16 +10,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  RefreshCw, 
-  Database, 
-  Wifi, 
-  WifiOff, 
-  HardDrive,
-  AlertCircle,
-  CheckCircle,
-  Info
-} from 'lucide-react';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Database from 'lucide-react/dist/esm/icons/database';
+import Wifi from 'lucide-react/dist/esm/icons/wifi';
+import WifiOff from 'lucide-react/dist/esm/icons/wifi-off';
+import HardDrive from 'lucide-react/dist/esm/icons/hard-drive';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Info from 'lucide-react/dist/esm/icons/info';
 
 export default function LenderDiagnostics() {
   const { 

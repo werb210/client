@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
 
 interface TestResult {
   test: string;

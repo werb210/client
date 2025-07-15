@@ -18,17 +18,15 @@ import { staffApi } from '../api/staffApi';
 
 import { StepHeader } from '@/components/StepHeader';
 
-import { 
-  ArrowLeft, 
-  Send, 
-  CheckCircle, 
-  FileText, 
-  Shield,
-  Clock,
-  Loader2,
-  AlertTriangle,
-  ExternalLink
-} from 'lucide-react';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Send from 'lucide-react/dist/esm/icons/send';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import Shield from 'lucide-react/dist/esm/icons/shield';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
 
 type FinalizationStatus = 'idle' | 'finalizing' | 'complete' | 'error';
 

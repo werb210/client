@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, CheckCircle, XCircle, Database } from 'lucide-react';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import Database from 'lucide-react/dist/esm/icons/database';
 
 interface ApiResponse {
   products?: any[];

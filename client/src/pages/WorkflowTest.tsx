@@ -4,17 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useFormData } from '@/context/FormDataContext';
-import { 
-  Play,
-  CheckCircle,
-  ArrowRight,
-  FileText,
-  Send,
-  FileSignature,
-  Clock,
-  Building,
-  User
-} from 'lucide-react';
+import Play from 'lucide-react/dist/esm/icons/play';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import Send from 'lucide-react/dist/esm/icons/send';
+import FileSignature from 'lucide-react/dist/esm/icons/file-signature';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import Building from 'lucide-react/dist/esm/icons/building';
+import User from 'lucide-react/dist/esm/icons/user';
 
 /**
  * Workflow Test Page - Verify new Step 4 → Step 6 → Step 7 flow

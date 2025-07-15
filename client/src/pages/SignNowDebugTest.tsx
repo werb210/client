@@ -13,17 +13,15 @@ import { Badge } from '@/components/ui/badge';
 import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
 import { extractUuid } from '@/lib/uuidUtils';
-import { 
-  Play,
-  CheckCircle, 
-  XCircle,
-  AlertTriangle,
-  Loader2,
-  Eye,
-  ExternalLink,
-  FileText,
-  Copy
-} from 'lucide-react';
+import Play from 'lucide-react/dist/esm/icons/play';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import Eye from 'lucide-react/dist/esm/icons/eye';
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import Copy from 'lucide-react/dist/esm/icons/copy';
 
 interface DebugResult {
   test: string;

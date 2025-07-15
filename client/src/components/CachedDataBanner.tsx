@@ -5,7 +5,8 @@
 
 import React from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
 import { Button } from '@/components/ui/button';
 
 interface CachedDataBannerProps {

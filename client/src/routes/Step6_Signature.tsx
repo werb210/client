@@ -6,16 +6,14 @@ import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { staffApi } from '../api/staffApi';
-import { 
-  ArrowLeft, 
-  Send, 
-  FileSignature, 
-  CheckCircle, 
-  ExternalLink, 
-  Loader2,
-  AlertTriangle,
-  Clock
-} from 'lucide-react';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Send from 'lucide-react/dist/esm/icons/send';
+import FileSignature from 'lucide-react/dist/esm/icons/file-signature';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import Clock from 'lucide-react/dist/esm/icons/clock';
 
 type SubmissionStatus = 'idle' | 'submitting' | 'submitted' | 'error';
 type SigningStatus = 'pending' | 'ready' | 'completed' | 'error';

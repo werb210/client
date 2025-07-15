@@ -5,16 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Building2, 
-  MapPin, 
-  DollarSign, 
-  TrendingUp, 
-  FileText,
-  Search,
-  Filter,
-  Globe
-} from 'lucide-react';
+import Building2 from 'lucide-react/dist/esm/icons/building-2';
+import MapPin from 'lucide-react/dist/esm/icons/map-pin';
+import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import Search from 'lucide-react/dist/esm/icons/search';
+import Filter from 'lucide-react/dist/esm/icons/filter';
+import Globe from 'lucide-react/dist/esm/icons/globe';
 
 interface LenderProduct {
   id: string;

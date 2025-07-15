@@ -4,18 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useLocation } from 'wouter';
-import { 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle, 
-  FileText, 
-  User, 
-  Building, 
-  CreditCard,
-  Upload,
-  FileSignature,
-  ExternalLink
-} from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import User from 'lucide-react/dist/esm/icons/user';
+import Building from 'lucide-react/dist/esm/icons/building';
+import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
+import Upload from 'lucide-react/dist/esm/icons/upload';
+import FileSignature from 'lucide-react/dist/esm/icons/file-signature';
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
 
 interface WorkflowStep {
   id: string;

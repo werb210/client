@@ -7,7 +7,11 @@ import { Progress } from '@/components/ui/progress';
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight, ArrowLeft, Play, CheckCircle, Loader2 } from 'lucide-react';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Play from 'lucide-react/dist/esm/icons/play';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
 import { apiRequest } from '@/lib/api';
 
 interface LenderRecommendation {

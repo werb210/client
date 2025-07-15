@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFormDataContext } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
-import { ArrowRight } from 'lucide-react';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
 import { markApplicationStarted } from '@/lib/visitFlags';
 import { ApplicationFormSchema } from '../../../shared/schema';
 import { fetchUserCountry, countryCodeToBusinessLocation } from '@/lib/location';

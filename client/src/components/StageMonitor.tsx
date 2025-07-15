@@ -1,5 +1,10 @@
 import React, { useEffect } from 'react';
-import { Building, Target, User, FileText, Upload, FileSignature } from 'lucide-react';
+import Building from 'lucide-react/dist/esm/icons/building';
+import Target from 'lucide-react/dist/esm/icons/target';
+import User from 'lucide-react/dist/esm/icons/user';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import Upload from 'lucide-react/dist/esm/icons/upload';
+import FileSignature from 'lucide-react/dist/esm/icons/file-signature';
 import { useFormData } from '@/context/FormDataContext';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { ProgressMonitor } from './ProgressMonitor';

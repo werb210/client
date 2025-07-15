@@ -12,7 +12,11 @@ import { Badge } from '@/components/ui/badge';
 
 import { useToast } from '@/hooks/use-toast';
 
-import { Upload, File, X, Check, AlertCircle } from 'lucide-react';
+import Upload from 'lucide-react/dist/esm/icons/upload';
+import File from 'lucide-react/dist/esm/icons/file';
+import X from 'lucide-react/dist/esm/icons/x';
+import Check from 'lucide-react/dist/esm/icons/check';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 

@@ -11,7 +11,8 @@ interface Document {
   fileSize: number;
   uploadedAt: string;
 }
-import { File, Trash2 } from 'lucide-react';
+import File from 'lucide-react/dist/esm/icons/file';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
 
 interface DocumentStepProps {
   onNext: () => void;

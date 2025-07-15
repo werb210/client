@@ -1,4 +1,4 @@
-import { CheckCircle } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
 
 export default function UploadComplete() {
   return (

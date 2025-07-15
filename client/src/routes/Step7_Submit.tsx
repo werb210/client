@@ -16,16 +16,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { Badge } from '@/components/ui/badge';
 
-import { 
-  CheckCircle, 
-  AlertTriangle, 
-  FileText, 
-  Send, 
-  ArrowLeft,
-  Clock,
-  Shield,
-  Users
-} from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import Send from 'lucide-react/dist/esm/icons/send';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import Shield from 'lucide-react/dist/esm/icons/shield';
+import Users from 'lucide-react/dist/esm/icons/users';
 import { useToast } from '@/hooks/use-toast';
 
 import { ApplicationStatusModal } from '@/components/ApplicationStatusModal';

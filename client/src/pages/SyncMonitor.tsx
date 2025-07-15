@@ -3,7 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { triggerManualSync, getSchedulerStatus } from '@/jobs/scheduler';
 import { getSyncStats } from '@/db/lenderProducts';
-import { RefreshCw, Clock, Database, CheckCircle, XCircle } from 'lucide-react';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import Database from 'lucide-react/dist/esm/icons/database';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
 
 export default function SyncMonitor() {
   const [syncStats, setSyncStats] = useState<any>(null);

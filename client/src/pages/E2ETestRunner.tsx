@@ -3,16 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Play, 
-  Square, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  FileText,
-  Network,
-  AlertTriangle
-} from 'lucide-react';
+import Play from 'lucide-react/dist/esm/icons/play';
+import Square from 'lucide-react/dist/esm/icons/square';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import Network from 'lucide-react/dist/esm/icons/network';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 
 interface TestResult {
   step: string;

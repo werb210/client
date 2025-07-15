@@ -12,14 +12,12 @@ import { Badge } from '@/components/ui/badge';
 
 import { useToast } from '@/hooks/use-toast';
 
-import { 
-  RefreshCw, 
-  Upload, 
-  AlertCircle, 
-  CheckCircle, 
-  X,
-  FileText
-} from 'lucide-react';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Upload from 'lucide-react/dist/esm/icons/upload';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import X from 'lucide-react/dist/esm/icons/x';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
 import { uploadDocumentPublic } from '@/lib/api';
 
 

@@ -9,14 +9,12 @@ import { extractUuid } from '@/lib/uuidUtils';
 import { StepHeader } from '@/components/StepHeader';
 import { logger } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { 
-  ArrowLeft, 
-  FileSignature, 
-  CheckCircle, 
-  Clock,
-  Loader2,
-  AlertTriangle
-} from 'lucide-react';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import FileSignature from 'lucide-react/dist/esm/icons/file-signature';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 
 type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'completed' | 'error';
 

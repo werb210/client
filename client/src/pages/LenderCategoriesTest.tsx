@@ -2,7 +2,11 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Building2, DollarSign, MapPin, Calendar } from 'lucide-react';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import Building2 from 'lucide-react/dist/esm/icons/building-2';
+import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
+import MapPin from 'lucide-react/dist/esm/icons/map-pin';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
 import { fetchLenderProducts, type LenderProduct } from '@/api/lenderProducts';
 
 // Extract unique categories and count products per category

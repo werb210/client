@@ -20,7 +20,8 @@ import { useFormData } from '@/context/FormDataContext';
 
 import { useLocation } from 'wouter';
 
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
 
 import { ApplicationFormSchema } from '../../../shared/schema';
 

@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Search, Database } from 'lucide-react';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import Search from 'lucide-react/dist/esm/icons/search';
+import Database from 'lucide-react/dist/esm/icons/database';
 
 export default function DebugCanadianEquipmentAPI() {
   const [debugResults, setDebugResults] = useState<any>(null);

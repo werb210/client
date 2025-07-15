@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
 import { ProductCategory } from '@/hooks/useProductCategories';
 import { formatCategoryName } from '@/lib/industryInsights';
 

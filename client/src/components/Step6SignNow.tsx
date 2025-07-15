@@ -3,14 +3,12 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  FileSignature, 
-  CheckCircle, 
-  AlertCircle, 
-  ExternalLink,
-  ArrowLeft,
-  Loader2
-} from 'lucide-react';
+import FileSignature from 'lucide-react/dist/esm/icons/file-signature';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
 
 interface LocationState {
   signUrl?: string;

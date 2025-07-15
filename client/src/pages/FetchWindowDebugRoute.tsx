@@ -9,7 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { get, clear } from 'idb-keyval';
-import { RefreshCw, Database, Clock, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Database from 'lucide-react/dist/esm/icons/database';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
 import { isAllowedToFetchNow, getFetchWindowInfo } from '@/utils/fetchWindow';
 import { getCacheStats, clearLenderCache } from '@/utils/lenderCache';
 

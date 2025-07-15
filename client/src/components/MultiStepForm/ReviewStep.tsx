@@ -8,7 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/utils';
 import * as api from '@/lib/api';
 
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
 
 interface ReviewStepProps {
   onBack: () => void;

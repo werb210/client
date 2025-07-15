@@ -3,15 +3,13 @@ import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CheckCircle, 
-  Clock, 
-  Mail, 
-  Phone, 
-  FileText,
-  Home,
-  Calendar
-} from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import Mail from 'lucide-react/dist/esm/icons/mail';
+import Phone from 'lucide-react/dist/esm/icons/phone';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import Home from 'lucide-react/dist/esm/icons/home';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
 
 /**
  * Application Success Page

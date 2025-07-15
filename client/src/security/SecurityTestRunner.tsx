@@ -3,7 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, XCircle, AlertTriangle, Play, Shield } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import Play from 'lucide-react/dist/esm/icons/play';
+import Shield from 'lucide-react/dist/esm/icons/shield';
 
 interface SecurityTestResult {
   testName: string;

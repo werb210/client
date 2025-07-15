@@ -24,15 +24,13 @@ import { getDocumentRequirementsIntersection } from '@/lib/documentIntersection'
 
 import { useDebouncedCallback } from 'use-debounce';
 
-import { 
-  ArrowRight, 
-  ArrowLeft, 
-  Save,
-  FileText,
-  CheckCircle,
-  AlertTriangle,
-  Info
-} from 'lucide-react';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Save from 'lucide-react/dist/esm/icons/save';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import Info from 'lucide-react/dist/esm/icons/info';
 
 import type { UploadedFile } from '../components/DynamicDocumentRequirements';
 

@@ -8,7 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, Code, FileText, ExternalLink } from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Code from 'lucide-react/dist/esm/icons/code';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
 import { useTypedLenderProducts, formatFundingAmount, formatInterestRate, getProductDetails } from '@/hooks/useTypedLenderProducts';
 import { paths } from '@/types/api';
 

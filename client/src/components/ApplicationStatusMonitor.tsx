@@ -5,16 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { 
-  CheckCircle, 
-  Clock, 
-  AlertCircle, 
-  RefreshCw,
-  FileText,
-  PenTool,
-  Send,
-  Eye
-} from 'lucide-react';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import PenTool from 'lucide-react/dist/esm/icons/pen-tool';
+import Send from 'lucide-react/dist/esm/icons/send';
+import Eye from 'lucide-react/dist/esm/icons/eye';
 import { getUserApplications } from '@/lib/api';
 
 interface ApplicationStatus {

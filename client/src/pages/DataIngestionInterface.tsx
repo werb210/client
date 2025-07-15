@@ -4,7 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Database, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import Upload from 'lucide-react/dist/esm/icons/upload';
+import Database from 'lucide-react/dist/esm/icons/database';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 
 interface IngestionResult {
   success: number;
