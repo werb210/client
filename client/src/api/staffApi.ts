@@ -6,7 +6,7 @@ const STAFF_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://app.boreal.f
 const REQUIRED_FIELDS = {
   step1: ["requestedAmount", "use_of_funds"],
   step3: ["operatingName", "legalName", "businessPhone", "businessState"], // Updated to match Step 3 form
-  step4: ["applicantFirstName", "applicantLastName", "applicantEmail", "applicantPhone", "ownershipPercentage", "applicantDateOfBirth", "applicantSSN"] // Updated to match Step 4 form
+  step4: ["applicantFirstName", "applicantLastName", "applicantEmail", "applicantPhone", "ownershipPercentage", "applicantDateOfBirth"] // SSN/SIN is optional as requested
 } as const;
 
 // Field mapping for alternative field names
