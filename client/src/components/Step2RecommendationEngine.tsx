@@ -348,6 +348,24 @@ export function Step2RecommendationEngine({
                     ✅ Found authentic lender products across {productCategories.length} categories using 41-product database
                   </div>
                 )}
+
+                {/* Continue Button - Positioned near recommendations */}
+                {productCategories.length > 0 && (
+                  <div className="flex justify-center pt-6">
+                    <Button 
+                      onClick={onContinue}
+                      disabled={!selectedProduct}
+                      className={`${selectedProduct 
+                        ? 'bg-teal-600 hover:bg-teal-700 text-white' 
+                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      } transition-colors px-8 py-3`}
+                      data-cy="next"
+                    >
+                      {selectedProduct ? 'Continue to Business Details' : 'Select a Product First'}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -355,25 +373,13 @@ export function Step2RecommendationEngine({
       </Card>
 
       {/* Navigation */}
-      <div className="flex justify-between pt-6">
+      <div className="flex justify-start pt-6">
         <Button 
           variant="outline" 
           onClick={onPrevious}
           className="border-gray-300 text-gray-700 hover:bg-gray-50"
         >
           Previous
-        </Button>
-        <Button 
-          onClick={onContinue}
-          disabled={!selectedProduct}
-          className={`${selectedProduct 
-            ? 'bg-teal-600 hover:bg-teal-700 text-white' 
-            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-          } transition-colors`}
-          data-cy="next"
-        >
-          {selectedProduct ? 'Continue to Business Details' : 'Select a Product First'}
-          <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
 
