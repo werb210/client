@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { extractUuid } from '@/lib/uuidUtils';
 import { StepHeader } from '@/components/StepHeader';
 import { logger } from '@/lib/utils';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   ArrowLeft, 
   FileSignature, 
@@ -32,14 +33,14 @@ export default function Step6SignNowIntegration() {
   const [, setLocation] = useLocation();
   const { state, dispatch } = useFormData();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [signingStatus, setSigningStatus] = useState<SigningStatus>('loading');
   const [signUrl, setSignUrl] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const [isPolling, setIsPolling] = useState(false);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const [timeoutWarning, setTimeoutWarning] = useState<string>('');
   const [startTime, setStartTime] = useState<number>(Date.now());
+  const retryCountRef = useRef(0);
 
   // Get applicationId from localStorage (always use stored value)
   const applicationId = localStorage.getItem("applicationId");
@@ -267,183 +268,89 @@ export default function Step6SignNowIntegration() {
 
 
 
-  // Poll for signature status every 5 seconds with timeout warnings
-  const checkSignatureStatus = async () => {
-    if (!applicationId) {
-      logger.warn('📡 No applicationId available for polling');
-      return;
-    }
-    
-    try {
-      // ✅ Fixed polling endpoint as specified
-      const pollingEndpoint = `/api/public/signnow/status/${applicationId}`;
-      // logger.log('📡 Polling SignNow status for:', applicationId); // Reduced logging
-      // logger.log('📡 Endpoint:', pollingEndpoint); // Reduced logging
+  // Legacy polling function - now replaced by React Query above
+
+  // React Query for SignNow status polling with smart retry logic
+  const { data: signingData, error: signingError } = useQuery({
+    queryKey: ['signnowStatus', applicationId],
+    queryFn: async () => {
+      if (!applicationId) throw new Error('No application ID');
       
-      const res = await fetch(pollingEndpoint, {
+      const response = await fetch(`/api/public/signnow/status/${applicationId}`, {
         method: 'GET'
-      }).catch(fetchError => {
-        // Handle fetch errors silently to prevent unhandled promise rejections
-        // logger.warn('📡 SignNow status fetch failed:', fetchError.message); // Reduced logging
-        return null; // Return null instead of throwing to prevent unhandled rejections
       });
       
-      if (!res) {
-        // logger.warn('📡 No response from signature status endpoint'); // Reduced logging
-        return; // Do NOT navigate away — just keep polling
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
-      if (!res.ok) {
-        // logger.warn('📡 Signature status fetch failed with status:', res.status, res.statusText); // Reduced logging
-        return; // Do NOT navigate away — just keep polling
+      return response.json();
+    },
+    refetchInterval: (data, query) => {
+      // Stop polling if signed, failed, or too many retries
+      if (data?.status === 'signed' || data?.status === 'failed' || retryCountRef.current >= 10) {
+        return false;
       }
       
-      const data = await res.json().catch(jsonError => {
-        // logger.warn('📡 Polling JSON parse failed:', jsonError.message); // Reduced logging
-        return null;
-      });
-      
-      if (!data) {
-        // logger.warn('📡 No data in signature status response'); // Reduced logging
-        return; // Do NOT navigate away — just keep polling
+      // Increase retry count for "not_initiated" status
+      if (data?.status === 'not_initiated') {
+        retryCountRef.current++;
       }
       
-      // ✅ Fixed status field parsing - check the actual field the server returns
-      const signingStatus = data?.signing_status || data?.status;
+      return 9000; // Poll every 9 seconds
+    },
+    enabled: !!applicationId && signingStatus === 'ready',
+    retry: false,
+    onError: (error: any) => {
+      logger.warn("Polling error:", error.message);
+      retryCountRef.current++;
       
-      // ✅ Add logging for debugging as requested (reduced for production)
-      // logger.log("📡 Polling SignNow status:", signingStatus); // Reduced logging
-      // logger.log('📄 Full response data:', data); // Reduced logging
-      // logger.log('📄 Status check for application:', applicationId); // Reduced logging
-      
-      // ✅ CRITICAL FIX: Check for actual SignNow signed status - only redirect when truly signed
-      const isDocumentSigned = (
-        data?.status === "invite_signed" ||
-        data?.signing_status === "signed" ||
-        data?.user?.document?.fieldinvite?.signed === true
-      );
-      
-      if (isDocumentSigned) {
+      if (retryCountRef.current >= 5) {
+        logger.warn('⏰ Max retries reached - stopping polling');
+        setTimeoutWarning('SignNow service is not responding. Please try again later.');
+        queryClient.cancelQueries(['signnowStatus']);
+      }
+    },
+    onSuccess: (data) => {
+      if (data?.status === 'signed' || data?.signing_status === 'signed') {
         logger.log('🎉 Document signed! Redirecting to Step 7...');
-        logger.log('🧭 INTENTIONAL NAVIGATION: Moving to Step 7 after signature completion');
-        logger.log('📋 Signature verified - redirecting details:', {
-          status: data?.status,
-          signing_status: data?.signing_status,
-          nested_signed: data?.user?.document?.fieldinvite?.signed,
-          full_response: data
-        });
         
-        // Add success toast notification
         toast({
           title: "Document Signed Successfully!",
           description: "Proceeding to final application submission.",
           variant: "default"
         });
         
-        // Redirect after brief delay
         setTimeout(() => {
           setLocation('/apply/step-7');
         }, 1500);
-        return;
       }
-      
-      // Check for timeout warnings
-      const elapsedMinutes = Math.floor((Date.now() - startTime) / (1000 * 60));
-      if (elapsedMinutes >= 10 && elapsedMinutes < 15) {
-        setTimeoutWarning('Document has been unsigned for 10+ minutes. Please ensure you complete the signature process.');
-      } else if (elapsedMinutes >= 15) {
-        setTimeoutWarning('Document has been unsigned for 15+ minutes. Consider using the "Continue Without Signing" option below if you\'re experiencing technical difficulties.');
-      } else if (elapsedMinutes < 10) {
-        setTimeoutWarning(''); // Clear warning if under 10 minutes
-      }
-      
-    } catch (err: any) {
-      // Handle polling errors without redirecting - suppress unhandled rejections
-      // logger.warn('📡 Polling error caught (will NOT redirect):', err?.message || 'Unknown error'); // Reduced logging
-      // Stay on Step 6, keep polling
-      // Do not throw error to prevent unhandled promise rejection
     }
-  };
+  });
 
+  // Cancel queries on unmount to prevent memory leaks
   useEffect(() => {
-    if (applicationId && signUrl && signingStatus === 'ready') {
-      logger.log('🔄 Starting SignNow status polling every 5s for application:', applicationId);
-      logger.log('🔄 Polling endpoint: /api/public/signnow/status/' + applicationId);
-      logger.log('🧭 Polling will redirect ONLY when signature is complete:');
-      logger.log('   - status === "invite_signed"');
-      logger.log('   - signing_status === "signed"');
-      logger.log('   - user.document.fieldinvite.signed === true');
-      logger.log('🚫 Will NOT redirect on "invite_sent" status');
-      
-      let pollCount = 0;
-      const maxPolls = 60; // 5 minutes maximum (60 polls * 5 seconds = 5 minutes)
-      
-      const interval = setInterval(async () => {
-        pollCount++;
-        
-        // Stop polling after 5 minutes to prevent endless loops
-        if (pollCount >= maxPolls) {
-          logger.warn('⏰ Polling timeout reached - stopping automatic status checks');
-          setTimeoutWarning('Signature polling timeout reached. You may continue manually.');
-          clearInterval(interval);
-          setIsPolling(false);
-          return;
-        }
-        
-        // Stop polling if status remains "not_initiated" for too long
-        if (pollCount > 10 && signingStatus === 'not_initiated') {
-          logger.warn('⏰ SignNow service not responding - stopping polling');
-          setTimeoutWarning('SignNow service is not responding. Please try again later.');
-          clearInterval(interval);
-          setIsPolling(false);
-          return;
-        }
-        
-        try {
-          await checkSignatureStatus();
-        } catch (error) {
-          // Silently handle polling errors to prevent unhandled rejections
-          logger.warn('📡 Polling error caught and handled:', error?.message || 'Unknown error');
-        }
-      }, 5000);
-      
-      setPollingInterval(interval);
-      setIsPolling(true);
-      
-      return () => {
-        clearInterval(interval);
-        setIsPolling(false);
-        setPollingInterval(null);
-      };
-    }
-  }, [applicationId, signUrl, signingStatus, setLocation]);
+    return () => {
+      queryClient.cancelQueries(['signnowStatus']);
+    };
+  }, [queryClient]);
 
   // Manual override for development
-  const handleManualOverride = () => {
-    fetch(`/api/public/applications/${applicationId}/override-signing`, { 
-      method: "PATCH" 
-    })
-    .then(() => setLocation('/apply/step-7'))
-    .catch(err => {
+  const handleManualOverride = async () => {
+    try {
+      await fetch(`/api/public/applications/${applicationId}/override-signing`, { 
+        method: "PATCH" 
+      });
+      setLocation('/apply/step-7');
+    } catch (err: any) {
       logger.error('Override failed:', err);
       toast({
         title: "Override Failed",
         description: "Unable to mark document as signed. Please try again.",
         variant: "destructive"
       });
-      // Don't throw unhandled promise rejection for override errors
-      return;
-    });
+    }
   };
-
-  // Cleanup polling on unmount
-  useEffect(() => {
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [pollingInterval]);
 
   const renderStatusSection = () => {
     switch (signingStatus) {

@@ -8,6 +8,11 @@ window.addEventListener('unhandledrejection', (event) => {
   const errorMessage = String(event.reason || '');
   const errorType = event.reason?.constructor?.name || '';
   
+  // Log for debugging (can be removed in production)
+  if (import.meta.env.DEV) {
+    console.warn("Unhandled Promise Rejection:", errorMessage, event.reason);
+  }
+  
   // Development environment errors to suppress
   const suppressedErrors = [
     'Failed to fetch',
