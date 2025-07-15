@@ -484,43 +484,69 @@ export default function Step4ApplicantInfoComplete() {
         if (response.status === 409 || response.status === 502) {
           try {
             const errorData = JSON.parse(errorText);
+            console.log('🔍 PARSING DUPLICATE ERROR:', errorData);
             
-            // Check if it's a duplicate application error with existing ID
-            if (errorData.details && errorData.details.includes('duplicate')) {
-              const detailsMatch = errorData.details.match(/applicationId":"([^"]+)"/);
-              if (detailsMatch) {
-                const existingId = detailsMatch[1];
-                console.log('✅ DUPLICATE DETECTED - Using existing application ID:', existingId);
-                
-                // Store the existing application ID and continue workflow
-                localStorage.setItem('applicationId', existingId);
-                
-                dispatch({
-                  type: "UPDATE_FORM_DATA",
-                  payload: { 
-                    applicationId: existingId,
-                    isExistingApplication: true,
-                    existingStatus: 'draft'
-                  },
-                });
-                
-                toast({
-                  title: "Using Existing Application", 
-                  description: `Found existing draft application. Continuing with ID: ${existingId.substring(0, 8)}...`,
-                  variant: "default",
-                });
-                
-                console.log('✅ WORKFLOW CONTINUES - ApplicationId stored:', existingId);
-                
-                // Mark step as complete and proceed to Step 5
-                dispatch({
-                  type: "MARK_STEP_COMPLETE",
-                  payload: { step: 4 },
-                });
-                
-                setLocation('/apply/step-5');
-                return;
+            let existingId = null;
+            
+            // Method 1: Check if details contains the nested JSON with applicationId
+            if (errorData.details && typeof errorData.details === 'string') {
+              try {
+                const nestedDetails = JSON.parse(errorData.details.replace('Staff API returned 409: ', ''));
+                existingId = nestedDetails.applicationId;
+                console.log('📦 Method 1 - Extracted from nested details:', existingId);
+              } catch (e) {
+                console.log('❌ Method 1 failed, trying regex...');
               }
+            }
+            
+            // Method 2: Regex fallback for applicationId anywhere in the error text
+            if (!existingId) {
+              const match = errorText.match(/applicationId['":]+'?([a-f0-9-]{36})/i);
+              if (match) {
+                existingId = match[1];
+                console.log('📦 Method 2 - Extracted via regex:', existingId);
+              }
+            }
+            
+            // Method 3: Direct access if it's a top-level field
+            if (!existingId && errorData.applicationId) {
+              existingId = errorData.applicationId;
+              console.log('📦 Method 3 - Direct access:', existingId);
+            }
+            
+            if (existingId) {
+              console.log('✅ DUPLICATE DETECTED - Using existing application ID:', existingId);
+              
+              // Store the existing application ID and continue workflow
+              localStorage.setItem('applicationId', existingId);
+              
+              dispatch({
+                type: "UPDATE_FORM_DATA",
+                payload: { 
+                  applicationId: existingId,
+                  isExistingApplication: true,
+                  existingStatus: 'draft'
+                },
+              });
+              
+              toast({
+                title: "Using Existing Application", 
+                description: `Found existing draft application. Continuing with ID: ${existingId.substring(0, 8)}...`,
+                variant: "default",
+              });
+              
+              console.log('✅ WORKFLOW CONTINUES - ApplicationId stored:', existingId);
+              
+              // Mark step as complete and proceed to Step 5
+              dispatch({
+                type: "MARK_STEP_COMPLETE",
+                payload: { step: 4 },
+              });
+              
+              setLocation('/apply/step-5');
+              return;
+            } else {
+              console.log('❌ Could not extract applicationId from duplicate error');
             }
           } catch (parseError) {
             console.error('Failed to parse duplicate error details:', parseError);
