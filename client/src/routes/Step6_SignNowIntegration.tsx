@@ -178,6 +178,20 @@ export default function Step6SignNowIntegration() {
       // ✅ BYPASS VALIDATION when proceeding without documents
       const bypassedDocuments = state.bypassedDocuments;
       
+      // ✅ CRITICAL DEBUG: Log exact field values being checked
+      console.log("🔍 =================================");
+      console.log("🔍 STEP 6 SIGNNOW FIELD DEBUGGING");
+      console.log("🔍 =================================");
+      console.log("🔍 State data available:");
+      console.log("   step1:", !!state.step1 ? Object.keys(state.step1) : "MISSING");
+      console.log("   step3:", !!state.step3 ? Object.keys(state.step3) : "MISSING");
+      console.log("   step4:", !!state.step4 ? Object.keys(state.step4) : "MISSING");
+      
+      console.log("🔍 Smart fields mapping check:");
+      console.log("   contact_first_name:", `"${smartFields.contact_first_name}" (from step4.applicantFirstName)`);
+      console.log("   business_dba_name:", `"${smartFields.business_dba_name}" (from step3.operatingName)`);
+      console.log("   requested_amount:", `"${smartFields.requested_amount}" (from step1.requestedAmount)`);
+      
       console.log("📋 Prefill validation check:", {
         bypassedDocuments,
         requiredFields,

@@ -281,6 +281,14 @@ export default function Step4ApplicantInfoComplete() {
         'years_with_business': step4.yearsWithBusiness
       };
       
+      // ✅ PAYLOAD LOGGING FOR DEBUGGING
+      console.log("📤 Step 4 submission payload", {
+        step1,
+        step3,
+        step4,
+        signNowFields
+      });
+      
       // ✅ SignNow Field Verification Report
       console.log("🖊️ =================================");
       console.log("🖊️ SIGNNOW FIELDS VERIFICATION");
