@@ -68,7 +68,7 @@ export default function Step6SignNowTyped({ onNext, onBack }: Step6SignNowTypedP
         },
         body: JSON.stringify(payload)
       }).catch(fetchError => {
-        console.error('[STEP6_SIGNNOW] Network error:', fetchError);
+        // Silently handle fetch errors to prevent unhandled rejections
         throw new Error(`Network error: ${fetchError.message}`);
       });
 

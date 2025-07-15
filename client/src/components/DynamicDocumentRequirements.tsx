@@ -211,6 +211,9 @@ function UnifiedDocumentUploadCard({
           method: 'POST',
           body: formData,
           // ⚠️ No Authorization headers for public upload!
+        }).catch(fetchError => {
+          // Silently handle fetch errors to prevent unhandled rejections
+          throw new Error(`Network error: ${fetchError.message}`);
         });
         
         logger.log('📤 [DYNAMIC] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');

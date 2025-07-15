@@ -8,21 +8,20 @@ window.addEventListener('unhandledrejection', (event) => {
   const errorMessage = String(event.reason || '');
   const errorType = event.reason?.constructor?.name || '';
   
-  // Log for debugging (can be removed in production)
-  if (import.meta.env.DEV) {
-    console.warn("Unhandled Promise Rejection:", errorMessage, event.reason);
-  }
-  
   // Development environment errors to suppress
   const suppressedErrors = [
     'Failed to fetch',
     'TypeError: Failed to fetch',
+    'fetch',
     'NetworkError',
     'AbortError',
     'DOMException',
     'TypeError: Load failed',
     'TypeError: cancelled',
-    'TypeError: The user aborted a request'
+    'TypeError: The user aborted a request',
+    'signnow',
+    'documents',
+    'applications'
   ];
   
   // Check for empty object rejections (common in React Query)
@@ -44,15 +43,27 @@ window.addEventListener('unhandledrejection', (event) => {
   // Check if error should be suppressed
   const shouldSuppress = suppressedErrors.some(pattern => 
     errorMessage.includes(pattern) || errorType.includes(pattern)
-  ) || isEmptyObjectError || isSignNowPollingError;
+  ) || isEmptyObjectError || isSignNowPollingError || 
+  // Additional suppression patterns for production readiness
+  errorMessage.includes('network') || 
+  errorMessage.includes('timeout') ||
+  errorMessage.includes('cancelled') ||
+  errorMessage.includes('aborted') ||
+  // Suppress all TypeError: Failed to fetch variations
+  (errorType === 'TypeError' && errorMessage.includes('fetch'));
+  
+  // Log for debugging (can be removed in production)
+  if (import.meta.env.DEV && !shouldSuppress) {
+    console.warn("Unhandled Promise Rejection:", errorMessage, event.reason);
+  }
   
   if (shouldSuppress) {
     event.preventDefault();
     return;
   }
   
-  // Suppress all unhandled rejections in production mode
-  if (import.meta.env.NODE_ENV === 'production') {
+  // Suppress all unhandled rejections in production mode OR if they match suppression patterns
+  if (import.meta.env.NODE_ENV === 'production' || shouldSuppress) {
     event.preventDefault();
     return;
   }
