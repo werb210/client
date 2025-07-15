@@ -145,10 +145,10 @@ export default function Step6SignNowIntegration() {
         // Business Information (from step3 - use actual field names)
         legal_business_name: state.step3?.legalName || '',
         business_dba_name: state.step3?.operatingName || '',
-        business_address: state.step3?.businessStreetAddress || '',
+        business_address: state.step3?.businessAddress || state.step3?.businessStreetAddress || '',
         business_city: state.step3?.businessCity || '',
         business_state: state.step3?.businessState || '',
-        business_zip: state.step3?.businessZipCode || '',
+        business_zip: state.step3?.businessZip || state.step3?.businessZipCode || '',
         business_phone: state.step3?.businessPhone || '',
         business_website: state.step3?.businessWebsite || '',
         business_structure: state.step3?.businessStructure || '',
@@ -156,7 +156,7 @@ export default function Step6SignNowIntegration() {
         
         // Financial Information (from step1 only)
         requested_amount: state.step1?.requestedAmount || '',
-        purpose_of_funds: state.step1?.purposeOfFunds || '',
+        purpose_of_funds: state.step1?.use_of_funds || state.step1?.purposeOfFunds || '',
         annual_revenue: state.step1?.lastYearRevenue || '',
         monthly_revenue: state.step1?.averageMonthlyRevenue || '',
         industry: state.step1?.industry || state.step1?.businessLocation || '',
@@ -175,14 +175,29 @@ export default function Step6SignNowIntegration() {
         amount_requested: smartFields.requested_amount
       };
       
+      // ✅ BYPASS VALIDATION when proceeding without documents
+      const bypassedDocuments = state.bypassedDocuments;
+      
+      console.log("📋 Prefill validation check:", {
+        bypassedDocuments,
+        requiredFields,
+        formData,
+        hasAllRequiredFields: requiredFields.every(field => formData[field])
+      });
+      
       const missing = requiredFields.filter(field => !formData[field]);
-      if (missing.length > 0) {
+      if (missing.length > 0 && !bypassedDocuments) {
         const missingFieldsMessage = `❌ Missing fields: ${missing.join(', ')}. Please go back and complete all required information.`;
         console.log("❌ PREFILL VALIDATION FAILED:", missingFieldsMessage);
+        console.log("⚠️ If you used 'Proceed without Documents', this validation should be bypassed");
         alert(missingFieldsMessage);
         setError('Required fields missing for SignNow prefill');
         setSigningStatus('error');
         return;
+      }
+      
+      if (bypassedDocuments) {
+        console.log("✅ BYPASSED: Proceeding without documents - skipping prefill validation");
       }
       
       console.log("✅ Required fields validation passed:", formData);
