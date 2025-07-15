@@ -37,19 +37,19 @@ import { StepHeader } from "@/components/StepHeader";
 import { ValidationErrorModal } from "@/components/ValidationErrorModal";
 
 
-// FIXED: Unified Step 4 Schema - matches shared/schema.ts exactly
+// Step 4 Schema - All fields required except SSN/SIN
 const step4Schema = z.object({
-  // Primary Applicant Information - using shared schema field names
-  applicantFirstName: z.string().min(1, "First name is required"),
-  applicantLastName: z.string().min(1, "Last name is required"), 
+  // Primary Applicant Information - all required except SSN
+  applicantFirstName: z.string().min(1, "First Name is required"),
+  applicantLastName: z.string().min(1, "Last Name is required"), 
   applicantEmail: z.string().email("Valid email is required"),
   applicantPhone: z.string().min(1, "Phone is required"),
   applicantAddress: z.string().min(1, "Address is required"),
   applicantCity: z.string().min(1, "City is required"),
   applicantState: z.string().min(1, "State is required"),
-  applicantZipCode: z.string().min(1, "Postal code is required"),
-  applicantDateOfBirth: z.string().min(1, "Date of birth is required"),
-  applicantSSN: z.string().min(1, "SSN/SIN is required"),
+  applicantZipCode: z.string().min(1, "Postal Code is required"),
+  applicantDateOfBirth: z.string().min(1, "Date Of Birth is required"),
+  applicantSSN: z.string().optional(), // SSN/SIN is optional as requested
   ownershipPercentage: z.number().min(0).max(100),
   
   // Partner Information (conditional)
@@ -97,7 +97,7 @@ export default function Step4ApplicantInfoComplete() {
       applicantState: state.step4?.applicantState || "",
       applicantZipCode: state.step4?.applicantZipCode || "",
       applicantDateOfBirth: state.step4?.applicantDateOfBirth || "",
-      applicantSSN: state.step4?.applicantSSN || "",
+      applicantSSN: state.step4?.applicantSSN || "", // Optional field
       ownershipPercentage: state.step4?.ownershipPercentage || 100,
       hasPartner: state.step4?.hasPartner || false,
       partnerFirstName: state.step4?.partnerFirstName || "",
@@ -519,9 +519,20 @@ export default function Step4ApplicantInfoComplete() {
                   name="applicantFirstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First Name</FormLabel>
+                      <FormLabel>First Name *</FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-12" autoCapitalize="words" />
+                        <Input 
+                          {...field} 
+                          className="h-12" 
+                          autoCapitalize="words"
+                          onChange={(e) => {
+                            const capitalizedValue = e.target.value
+                              .split(' ')
+                              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                              .join(' ');
+                            field.onChange(capitalizedValue);
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -532,9 +543,20 @@ export default function Step4ApplicantInfoComplete() {
                   name="applicantLastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Last Name</FormLabel>
+                      <FormLabel>Last Name *</FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-12" autoCapitalize="words" />
+                        <Input 
+                          {...field} 
+                          className="h-12" 
+                          autoCapitalize="words"
+                          onChange={(e) => {
+                            const capitalizedValue = e.target.value
+                              .split(' ')
+                              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                              .join(' ');
+                            field.onChange(capitalizedValue);
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -549,7 +571,7 @@ export default function Step4ApplicantInfoComplete() {
                   name="applicantEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Address</FormLabel>
+                      <FormLabel>Email Address *</FormLabel>
                       <FormControl>
                         <Input {...field} type="email" className="h-12" autoCapitalize="none" />
                       </FormControl>
@@ -562,7 +584,7 @@ export default function Step4ApplicantInfoComplete() {
                   name="applicantPhone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>Phone Number *</FormLabel>
                       <FormControl>
                         <Input
                           placeholder={isCanadian ? "+1 (XXX) XXX-XXXX" : "(XXX) XXX-XXXX"}
@@ -600,7 +622,7 @@ export default function Step4ApplicantInfoComplete() {
                   name="applicantAddress"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Street Address</FormLabel>
+                      <FormLabel>Street Address *</FormLabel>
                       <FormControl>
                         <Input {...field} className="h-12" autoCapitalize="words" />
                       </FormControl>
@@ -614,7 +636,7 @@ export default function Step4ApplicantInfoComplete() {
                     name="applicantCity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>City</FormLabel>
+                        <FormLabel>City *</FormLabel>
                         <FormControl>
                           <Input 
                             {...field} 
@@ -638,7 +660,7 @@ export default function Step4ApplicantInfoComplete() {
                     name="applicantState"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{isCanadian ? "Province" : "State"}</FormLabel>
+                        <FormLabel>{isCanadian ? "Province" : "State"} *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="h-12">
@@ -662,7 +684,7 @@ export default function Step4ApplicantInfoComplete() {
                     name="applicantZipCode"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{getPostalLabel()}</FormLabel>
+                        <FormLabel>{getPostalLabel()} *</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -687,7 +709,7 @@ export default function Step4ApplicantInfoComplete() {
                   name="applicantDateOfBirth"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date of Birth</FormLabel>
+                      <FormLabel>Date Of Birth *</FormLabel>
                       <FormControl>
                         <Input {...field} type="date" className="h-12" />
                       </FormControl>
@@ -720,7 +742,7 @@ export default function Step4ApplicantInfoComplete() {
                   name="ownershipPercentage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Ownership Percentage</FormLabel>
+                      <FormLabel>Ownership Percentage *</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
