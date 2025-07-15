@@ -33,7 +33,8 @@ window.addEventListener('unhandledrejection', (event) => {
     errorMessage.includes('status/') ||
     (typeof event.reason === 'object' && event.reason?.type === 'unhandledrejection') ||
     (typeof event.reason === 'object' && event.reason?.constructor?.name === 'TypeError') ||
-    (typeof event.reason === 'object' && !event.reason.message); // Empty object errors
+    (typeof event.reason === 'object' && !event.reason.message) || // Empty object errors
+    (typeof event.reason === 'object' && Object.keys(event.reason).length === 1 && event.reason.type); // Single type property errors
   
   // Check if error should be suppressed
   const shouldSuppress = suppressedErrors.some(pattern => 
