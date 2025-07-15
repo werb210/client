@@ -268,6 +268,30 @@ export default function Step4ApplicantInfoComplete() {
         'Credit Score': step4.creditScore,
         'Years with Business': step4.yearsWithBusiness
       };
+      
+      // ✅ SignNow Field Verification Report
+      console.log("🖊️ =================================");
+      console.log("🖊️ SIGNNOW FIELDS VERIFICATION");
+      console.log("🖊️ =================================");
+      console.log("🖊️ Total SignNow Fields:", Object.keys(signNowFields).length);
+      
+      const missingSignNowFields = Object.entries(signNowFields).filter(([key, value]) => !value || value === '');
+      if (missingSignNowFields.length > 0) {
+        console.log("⚠️ MISSING SIGNNOW FIELDS:");
+        missingSignNowFields.forEach(([key, value]) => {
+          console.log(`❌ ${key}: "${value}"`);
+        });
+      } else {
+        console.log("✅ All SignNow fields populated");
+      }
+      
+      console.log("🖊️ Key SignNow Fields Preview:");
+      console.log(`✅ First Name: "${signNowFields['First Name']}"`);
+      console.log(`✅ Business Name: "${signNowFields['Business Name']}"`);
+      console.log(`✅ Funding Amount: "${signNowFields['Funding Amount']}"`);
+      console.log(`✅ Email: "${signNowFields['Email']}"`);
+      console.log(`✅ Business Phone: "${signNowFields['Business Phone']}"`);
+      console.log("🖊️ =================================");
 
       const applicationData = { 
         step1, 
@@ -282,32 +306,51 @@ export default function Step4ApplicantInfoComplete() {
         signNowFields: signNowFields
       };
       
-      // ✅ Log final POST payload exactly as specified  
+      // ✅ ENHANCED PAYLOAD VERIFICATION - Report back what payload was sent
+      console.log("📤 =================================");
+      console.log("📤 STEP 4 → STAFF API PAYLOAD REPORT");
+      console.log("📤 =================================");
+      
+      // ✅ Critical field mapping verification
+      const criticalFields = {
+        // Step 1 Key Fields
+        amount_requested: step1.requestedAmount,
+        use_of_funds: step1.use_of_funds,
+        business_location: step1.businessLocation,
+        
+        // Step 3 Key Fields  
+        full_business_name: step3.legalName,
+        business_name: step3.businessName || step3.legalName,
+        business_phone: step3.businessPhone,
+        business_email: step3.businessEmail,
+        business_state: step3.businessState,
+        
+        // Step 4 Key Fields
+        full_name: `${step4.applicantFirstName} ${step4.applicantLastName}`,
+        first_name: step4.applicantFirstName,
+        last_name: step4.applicantLastName,
+        email: step4.email || step4.applicantEmail,
+        phone: step4.applicantPhone,
+        ownership_percentage: step4.ownershipPercentage
+      };
+      
+      console.log("📋 CRITICAL FIELD VERIFICATION:");
+      Object.entries(criticalFields).forEach(([key, value]) => {
+        const status = value ? '✅' : '❌';
+        console.log(`${status} ${key}: "${value}"`);
+      });
+      
+      // ✅ Complete payload structure report
+      console.log("📋 COMPLETE PAYLOAD STRUCTURE:");
+      console.log("Step 1 Fields:", Object.keys(step1));
+      console.log("Step 3 Fields:", Object.keys(step3)); 
+      console.log("Step 4 Fields:", Object.keys(step4));
+      
+      // ✅ Full JSON payload for debugging
+      console.log("📋 FULL JSON PAYLOAD BEING SENT:");
+      console.log(JSON.stringify(applicationData, null, 2));
+      
       logger.log("📤 Submitting full application:", { step1, step3, step4 });
-      
-      // ✅ CHATGPT DEBUG VERIFICATION: Final Application Data
-      logger.log("✅ Final Application Data:", {
-        step1: applicationData.step1,
-        step3: applicationData.step3,
-        step4: applicationData.step4,
-      });
-      
-      // ✅ Log SignNow field mapping for verification
-      logger.log("📋 SignNow field mapping included:", {
-        totalFields: Object.keys(signNowFields).length,
-        sampleFields: {
-          'First Name': signNowFields['First Name'],
-          'Business Name': signNowFields['Business Name'],
-          'Funding Amount': signNowFields['Funding Amount']
-        }
-      });
-      
-      logger.log('📋 Application data structure:', {
-        step1: Object.keys(step1),
-        step3: Object.keys(step3), 
-        step4: Object.keys(step4)
-      });
-      logger.log('📋 Full payload being sent:', JSON.stringify(applicationData, null, 2));
       
       // ✅ Runtime Debug - Verify step3 has both legalName and businessName
       logger.log('🔍 Step 3 Debug - Required fields check:', {
@@ -351,10 +394,20 @@ export default function Step4ApplicantInfoComplete() {
         body: JSON.stringify(applicationData)
       });
 
-      logger.log('🔍 API Response Status:', response.status, response.ok ? 'OK' : 'FAILED');
+      // ✅ ENHANCED API RESPONSE LOGGING
+      console.log("📡 =================================");
+      console.log("📡 STAFF API RESPONSE REPORT");
+      console.log("📡 =================================");
+      console.log(`📡 Response Status: ${response.status} (${response.ok ? 'SUCCESS' : 'FAILED'})`);
+      console.log(`📡 Response URL: ${response.url}`);
+      console.log(`📡 Response Headers:`, Object.fromEntries(response.headers.entries()));
       
       if (response.ok) {
         const result = await response.json();
+        console.log("✅ STAFF API ACCEPTED PAYLOAD");
+        console.log("📋 Response Data:", JSON.stringify(result, null, 2));
+        console.log("📋 Application ID:", result.applicationId || result.id || result.uuid);
+        
         logger.log('📋 Application created:', result);
         logger.log('📋 Full API response data:', JSON.stringify(result, null, 2));
         
@@ -388,7 +441,25 @@ export default function Step4ApplicantInfoComplete() {
           throw new Error('No applicationId returned from API');
         }
       } else {
+        // ✅ ENHANCED ERROR RESPONSE LOGGING
+        console.log("❌ STAFF API REJECTED PAYLOAD");
         const errorText = await response.text();
+        console.log("❌ Error Status:", response.status);
+        console.log("❌ Error Response Body:", errorText);
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          console.log("❌ Parsed Error Details:", JSON.stringify(errorJson, null, 2));
+          
+          // Check for field validation errors
+          if (errorJson.errors || errorJson.validationErrors) {
+            console.log("❌ FIELD VALIDATION ERRORS:");
+            console.log(errorJson.errors || errorJson.validationErrors);
+          }
+        } catch (e) {
+          console.log("❌ Error response is not valid JSON");
+        }
+        
         logger.error('❌ API call FAILED - Status:', response.status);
         logger.error('❌ Backend rejected Step 4 data:', errorText);
         logger.error('❌ Request payload was:', JSON.stringify(applicationData, null, 2));
