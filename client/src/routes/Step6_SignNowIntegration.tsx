@@ -128,23 +128,23 @@ export default function Step6SignNowIntegration() {
       
       // ✅ CREATE SIGNNOW SMART FIELDS MAPPING
       // This is the critical missing piece - smart fields must be sent to staff backend
-      // ✅ CRITICAL FIX: Use correct field names from the actual form schema
+      // ✅ CRITICAL FIX: Use correct SignNow template field names
       const smartFields = {
-        // Personal Information (from step4 - use actual field names)
-        contact_first_name: state.step4?.applicantFirstName || '',
-        contact_last_name: state.step4?.applicantLastName || '',
-        contact_email: state.step4?.applicantEmail || '',
-        contact_phone: state.step4?.applicantPhone || '',
-        contact_date_of_birth: state.step4?.applicantDateOfBirth || '',
-        contact_ssn: state.step4?.applicantSSN || '',
-        contact_address: state.step4?.applicantAddress || '',
-        contact_city: state.step4?.applicantCity || '',
-        contact_state: state.step4?.applicantState || '',
-        contact_zip: state.step4?.applicantZipCode || '',
+        // Personal Information (using SignNow template field names)
+        first_name: state.step4?.applicantFirstName || '',
+        last_name: state.step4?.applicantLastName || '',
+        email: state.step4?.applicantEmail || '',
+        phone: state.step4?.applicantPhone || '',
+        date_of_birth: state.step4?.applicantDateOfBirth || '',
+        ssn: state.step4?.applicantSSN || '',
+        address: state.step4?.applicantAddress || '',
+        city: state.step4?.applicantCity || '',
+        state: state.step4?.applicantState || '',
+        zip: state.step4?.applicantZipCode || '',
         
-        // Business Information (from step3 - use actual field names)
+        // Business Information (using SignNow template field names)
         legal_business_name: state.step3?.legalName || '',
-        business_dba_name: state.step3?.operatingName || '',
+        business_name: state.step3?.operatingName || '',
         business_address: state.step3?.businessAddress || state.step3?.businessStreetAddress || '',
         business_city: state.step3?.businessCity || '',
         business_state: state.step3?.businessState || '',
@@ -154,14 +154,14 @@ export default function Step6SignNowIntegration() {
         business_structure: state.step3?.businessStructure || '',
         business_start_date: state.step3?.businessStartDate || '',
         
-        // Financial Information (from step1 only)
-        requested_amount: state.step1?.requestedAmount || '',
+        // Financial Information (using SignNow template field names)
+        amount_requested: state.step1?.requestedAmount || '',
         purpose_of_funds: state.step1?.use_of_funds || state.step1?.purposeOfFunds || '',
         annual_revenue: state.step1?.lastYearRevenue || '',
         monthly_revenue: state.step1?.averageMonthlyRevenue || '',
         industry: state.step1?.industry || state.step1?.businessLocation || '',
         
-        // Additional Fields (from step4 only)
+        // Additional Fields (using SignNow template field names)
         ownership_percentage: state.step4?.ownershipPercentage || '100',
         credit_score: state.step4?.creditScore || '',
         years_with_business: state.step4?.yearsWithBusiness || ''
