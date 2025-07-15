@@ -107,7 +107,10 @@ export default function Step6SignNowIntegration() {
       });
       
       // Check for undefined blocks and rehydrate if needed
-      if (!state.step1 || !state.step3 || !state.step4) {
+      if (!state.step1 || !state.step3 || !state.step4 || 
+          Object.keys(state.step1 || {}).length === 0 ||
+          Object.keys(state.step3 || {}).length === 0 ||
+          Object.keys(state.step4 || {}).length === 0) {
         logger.warn("⚠️ Missing step data blocks - attempting rehydration from localStorage");
         
         // Attempt to rehydrate from localStorage
@@ -115,10 +118,22 @@ export default function Step6SignNowIntegration() {
         if (savedState) {
           try {
             const parsedState = JSON.parse(savedState);
+            
+            // Update the state with rehydrated data
+            if (parsedState.step1 && Object.keys(parsedState.step1).length > 0) {
+              state.step1 = parsedState.step1;
+            }
+            if (parsedState.step3 && Object.keys(parsedState.step3).length > 0) {
+              state.step3 = parsedState.step3;
+            }
+            if (parsedState.step4 && Object.keys(parsedState.step4).length > 0) {
+              state.step4 = parsedState.step4;
+            }
+            
             logger.log("🔄 Rehydrated state from localStorage:", {
-              step1: parsedState.step1,
-              step3: parsedState.step3,
-              step4: parsedState.step4,
+              step1: state.step1,
+              step3: state.step3,
+              step4: state.step4,
             });
           } catch (e) {
             logger.error("❌ Failed to parse saved state from localStorage");
@@ -188,9 +203,9 @@ export default function Step6SignNowIntegration() {
       console.log("   step4:", !!state.step4 ? Object.keys(state.step4) : "MISSING");
       
       console.log("🔍 Smart fields mapping check:");
-      console.log("   contact_first_name:", `"${smartFields.contact_first_name}" (from step4.applicantFirstName)`);
-      console.log("   business_dba_name:", `"${smartFields.business_dba_name}" (from step3.operatingName)`);
-      console.log("   requested_amount:", `"${smartFields.requested_amount}" (from step1.requestedAmount)`);
+      console.log("   first_name:", `"${smartFields.first_name}" (from step4.applicantFirstName)`);
+      console.log("   business_name:", `"${smartFields.business_name}" (from step3.operatingName)`);
+      console.log("   amount_requested:", `"${smartFields.amount_requested}" (from step1.requestedAmount)`);
       
       console.log("📋 Prefill validation check:", {
         bypassedDocuments,
