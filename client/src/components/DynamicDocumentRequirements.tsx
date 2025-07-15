@@ -207,14 +207,18 @@ function UnifiedDocumentUploadCard({
         logger.log('📤 [DYNAMIC] DocumentType:', category);
         logger.log('📤 [DYNAMIC] Endpoint:', endpoint);
         
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          body: formData,
-          // ⚠️ No Authorization headers for public upload!
-        }).catch(fetchError => {
+        let response;
+        try {
+          response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            // ⚠️ No Authorization headers for public upload!
+          });
+        } catch (fetchError) {
           // Silently handle fetch errors to prevent unhandled rejections
+          console.error('Network error (suppressed):', fetchError);
           throw new Error(`Network error: ${fetchError.message}`);
-        });
+        }
         
         logger.log('📤 [DYNAMIC] Network response status:', response.status, response.ok ? 'OK' : 'ERROR');
         

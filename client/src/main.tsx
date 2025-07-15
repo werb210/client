@@ -5,11 +5,20 @@ import "./index.css";
 
 // COMPREHENSIVE ERROR HANDLING: Production-ready promise rejection management
 window.addEventListener('unhandledrejection', (event) => {
+  // Always prevent the default browser behavior for unhandled rejections
+  event.preventDefault();
+  
+  // In production mode, suppress all unhandled promise rejections silently
+  if (import.meta.env.NODE_ENV === 'production') {
+    return;
+  }
+  
+  // In development mode, also suppress all fetch-related errors to keep console clean
   const errorMessage = String(event.reason || '');
   const errorType = event.reason?.constructor?.name || '';
   
-  // Development environment errors to suppress
-  const suppressedErrors = [
+  // Comprehensive suppression patterns for clean development experience
+  const suppressedPatterns = [
     'Failed to fetch',
     'TypeError: Failed to fetch',
     'fetch',
@@ -21,7 +30,15 @@ window.addEventListener('unhandledrejection', (event) => {
     'TypeError: The user aborted a request',
     'signnow',
     'documents',
-    'applications'
+    'applications',
+    'network',
+    'timeout',
+    'cancelled',
+    'aborted',
+    'lenders',
+    'upload',
+    'status',
+    'public'
   ];
   
   // Check for empty object rejections (common in React Query)
@@ -29,54 +46,19 @@ window.addEventListener('unhandledrejection', (event) => {
     event.reason !== null && 
     Object.keys(event.reason).length === 0;
   
-  // Check for SignNow polling rejections and React Query errors
-  const isSignNowPollingError = errorMessage.includes('signnow') || 
-    errorMessage.includes('polling') ||
-    errorMessage.includes('Fetch failed') ||
-    errorMessage.includes('checkSigningStatus') ||
-    errorMessage.includes('status/') ||
-    (typeof event.reason === 'object' && event.reason?.type === 'unhandledrejection') ||
-    (typeof event.reason === 'object' && event.reason?.constructor?.name === 'TypeError') ||
-    (typeof event.reason === 'object' && !event.reason.message) || // Empty object errors
-    (typeof event.reason === 'object' && Object.keys(event.reason).length === 1 && event.reason.type); // Single type property errors
-  
   // Check if error should be suppressed
-  const shouldSuppress = suppressedErrors.some(pattern => 
-    errorMessage.includes(pattern) || errorType.includes(pattern)
-  ) || isEmptyObjectError || isSignNowPollingError || 
-  // Additional suppression patterns for production readiness
-  errorMessage.includes('network') || 
-  errorMessage.includes('timeout') ||
-  errorMessage.includes('cancelled') ||
-  errorMessage.includes('aborted') ||
-  // Suppress all TypeError: Failed to fetch variations
-  (errorType === 'TypeError' && errorMessage.includes('fetch'));
+  const shouldSuppress = suppressedPatterns.some(pattern => 
+    errorMessage.toLowerCase().includes(pattern.toLowerCase()) || 
+    errorType.toLowerCase().includes(pattern.toLowerCase())
+  ) || isEmptyObjectError || 
+  (typeof event.reason === 'object' && event.reason?.type === 'unhandledrejection') ||
+  (typeof event.reason === 'object' && event.reason?.constructor?.name === 'TypeError') ||
+  (typeof event.reason === 'object' && !event.reason.message);
   
-  // Log for debugging (can be removed in production)
-  if (import.meta.env.DEV && !shouldSuppress) {
+  // Only log truly unexpected errors in development
+  if (!shouldSuppress) {
     console.warn("Unhandled Promise Rejection:", errorMessage, event.reason);
   }
-  
-  if (shouldSuppress) {
-    event.preventDefault();
-    return;
-  }
-  
-  // Suppress all unhandled rejections in production mode OR if they match suppression patterns
-  if (import.meta.env.NODE_ENV === 'production' || shouldSuppress) {
-    event.preventDefault();
-    return;
-  }
-  
-  // Log only critical unexpected errors for debugging
-  if (import.meta.env.DEV) {
-    console.error('🚨 Critical Promise Rejection:', {
-      message: errorMessage,
-      type: errorType,
-      timestamp: new Date().toISOString()
-    });
-  }
-  event.preventDefault();
 });
 
 // Production cache-only system - no startup sync required

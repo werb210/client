@@ -60,17 +60,21 @@ export default function Step6SignNowTyped({ onNext, onBack }: Step6SignNowTypedP
 
       // console.log('🔄 Generating SignNow document with payload:', payload);
 
-      const response = await fetch("/api/signnow/generate", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify(payload)
-      }).catch(fetchError => {
+      let response;
+      try {
+        response = await fetch("/api/signnow/generate", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+      } catch (fetchError) {
         // Silently handle fetch errors to prevent unhandled rejections
+        console.error('SignNow generation error (suppressed):', fetchError);
         throw new Error(`Network error: ${fetchError.message}`);
-      });
+      }
 
       if (!response.ok) {
         const errorData = await response.text().catch(() => 'Unknown error');
