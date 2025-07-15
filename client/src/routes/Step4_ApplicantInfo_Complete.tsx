@@ -616,7 +616,18 @@ export default function Step4ApplicantInfoComplete() {
                       <FormItem>
                         <FormLabel>City</FormLabel>
                         <FormControl>
-                          <Input {...field} className="h-12" autoCapitalize="words" />
+                          <Input 
+                            {...field} 
+                            className="h-12" 
+                            autoCapitalize="words"
+                            onChange={(e) => {
+                              const capitalizedValue = e.target.value
+                                .split(' ')
+                                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                .join(' ');
+                              field.onChange(capitalizedValue);
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
