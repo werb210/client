@@ -234,39 +234,39 @@ export default function Step4ApplicantInfoComplete() {
         return;
       }
 
-      // Create SignNow field mapping for template pre-population
+      // ✅ CORRECTED: SignNow field mapping using snake_case format expected by staff backend
       const signNowFields = {
-        // Personal Information
-        'First Name': step4.firstName,
-        'Last Name': step4.lastName,
-        'Email': step4.personalEmail,
-        'Phone': step4.personalPhone,
-        'Date of Birth': step4.dateOfBirth,
-        'SSN': step4.socialSecurityNumber,
-        'Personal Address': step4.applicantAddress,
-        'Personal City': step4.applicantCity,
-        'Personal State': step4.applicantState,
-        'Personal Zip': step4.applicantPostalCode,
+        // Personal Information - CORRECTED FIELD NAMES
+        'first_name': step4.applicantFirstName,
+        'last_name': step4.applicantLastName,
+        'email': step4.applicantEmail,
+        'phone': step4.applicantPhone,
+        'date_of_birth': step4.applicantDateOfBirth,
+        'ssn': step4.applicantSSN,
+        'personal_address': step4.applicantAddress,
+        'personal_city': step4.applicantCity,
+        'personal_state': step4.applicantState,
+        'personal_zip': step4.applicantZipCode,
         
-        // Business Information
-        'Business Name': step3.operatingName,
-        'Legal Business Name': step3.legalName,
-        'Business Address': step3.businessAddress,
-        'Business City': step3.businessCity,
-        'Business State': step3.businessState,
-        'Business Zip': step3.businessZip,
-        'Business Phone': step3.businessPhone,
-        'Business Website': step3.businessWebsite,
+        // Business Information - CORRECTED FIELD NAMES
+        'business_name': step3.operatingName,
+        'legal_business_name': step3.legalName,
+        'business_address': step3.businessAddress,
+        'business_city': step3.businessCity,
+        'business_state': step3.businessState,
+        'business_zip': step3.businessZip,
+        'business_phone': step3.businessPhone,
+        'business_website': step3.businessWebsite,
         
-        // Loan Information
-        'Funding Amount': step1.fundingAmount,
-        'Purpose of Funds': step1.purposeOfFunds,
-        'Industry': step1.industry || step1.businessLocation,
+        // Loan Information - CORRECTED FIELD NAMES
+        'amount_requested': step1.requestedAmount,
+        'purpose_of_funds': step1.use_of_funds,
+        'industry': step1.businessLocation,
         
-        // Additional
-        'Ownership Percentage': step4.ownershipPercentage,
-        'Credit Score': step4.creditScore,
-        'Years with Business': step4.yearsWithBusiness
+        // Additional - CORRECTED FIELD NAMES
+        'ownership_percentage': step4.ownershipPercentage,
+        'credit_score': step4.creditScore,
+        'years_with_business': step4.yearsWithBusiness
       };
       
       // ✅ SignNow Field Verification Report
@@ -286,11 +286,11 @@ export default function Step4ApplicantInfoComplete() {
       }
       
       console.log("🖊️ Key SignNow Fields Preview:");
-      console.log(`✅ First Name: "${signNowFields['First Name']}"`);
-      console.log(`✅ Business Name: "${signNowFields['Business Name']}"`);
-      console.log(`✅ Funding Amount: "${signNowFields['Funding Amount']}"`);
-      console.log(`✅ Email: "${signNowFields['Email']}"`);
-      console.log(`✅ Business Phone: "${signNowFields['Business Phone']}"`);
+      console.log(`✅ first_name: "${signNowFields['first_name']}"`);
+      console.log(`✅ business_name: "${signNowFields['business_name']}"`);
+      console.log(`✅ amount_requested: "${signNowFields['amount_requested']}"`);
+      console.log(`✅ email: "${signNowFields['email']}"`);
+      console.log(`✅ business_phone: "${signNowFields['business_phone']}"`);
       console.log("🖊️ =================================");
 
       const applicationData = { 

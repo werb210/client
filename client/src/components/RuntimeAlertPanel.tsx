@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFormDataContext } from '@/context/FormDataContext';
 import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
@@ -134,29 +133,49 @@ export function RuntimeAlertPanel({ currentStep }: RuntimeAlertPanelProps) {
             </Button>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {alerts.map((alert, index) => (
-              <Alert key={index} variant={alert.type === 'error' ? 'destructive' : 'default'}>
+              <div key={index} className={`p-3 rounded-lg border ${
+                alert.type === 'error' ? 'bg-red-50 border-red-200' : 
+                alert.type === 'warning' ? 'bg-amber-50 border-amber-200' : 
+                'bg-blue-50 border-blue-200'
+              }`}>
                 <div className="flex items-start gap-2">
-                  {alert.icon}
+                  <div className={`mt-0.5 ${
+                    alert.type === 'error' ? 'text-red-600' : 
+                    alert.type === 'warning' ? 'text-amber-600' : 
+                    'text-blue-600'
+                  }`}>
+                    {alert.icon}
+                  </div>
                   <div className="flex-1">
-                    <AlertDescription className="text-sm">
-                      <div className="font-medium mb-1">{alert.title}</div>
-                      <div className="text-xs opacity-90">{alert.description}</div>
-                      {alert.action && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={alert.action.onClick}
-                          className="mt-2 h-6 px-2 text-xs"
-                        >
-                          {alert.action.label}
-                        </Button>
-                      )}
-                    </AlertDescription>
+                    <div className={`font-medium text-sm mb-1 ${
+                      alert.type === 'error' ? 'text-red-800' : 
+                      alert.type === 'warning' ? 'text-amber-800' : 
+                      'text-blue-800'
+                    }`}>
+                      {alert.title}
+                    </div>
+                    <div className={`text-xs opacity-90 ${
+                      alert.type === 'error' ? 'text-red-700' : 
+                      alert.type === 'warning' ? 'text-amber-700' : 
+                      'text-blue-700'
+                    }`}>
+                      {alert.description}
+                    </div>
+                    {alert.action && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={alert.action.onClick}
+                        className="mt-2 h-6 px-2 text-xs"
+                      >
+                        {alert.action.label}
+                      </Button>
+                    )}
                   </div>
                 </div>
-              </Alert>
+              </div>
             ))}
           </div>
 

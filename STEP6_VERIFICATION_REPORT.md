@@ -80,11 +80,18 @@
 - **Manual continue:** User can bypass signing with status recorded to staff backend
 - **Visual confirmation:** Toast notifications confirm both pathways
 
-### 🔁 No missing fields detected in network payload
-- **All 28 SignNow template fields** are mapped and verified before submission
-- **Critical business fields** (business_name, contact_first_name, requested_amount) validated
+### 🔁 CRITICAL FIX: SignNow field mapping corrected to snake_case format
+- **FIXED:** Changed from `'First Name'` to `'first_name'` for staff backend compatibility
+- **FIXED:** Changed from `'Funding Amount'` to `'amount_requested'` matching validation requirements
+- **FIXED:** All 25+ SignNow fields now use snake_case format expected by staff backend
 - **Enhanced logging** shows exact payload structure sent to staff API
 - **Field verification report** identifies any missing data before SignNow initiation
+
+### 🎨 OPTIMIZATION: RuntimeAlertPanel UI improved
+- **Removed redundant Alert components** nested within CardContent
+- **Simplified structure** using direct div elements with proper styling
+- **Enhanced visual hierarchy** with color-coded alert types (red/amber/blue)
+- **Maintained functionality** while reducing component nesting complexity
 
 ## 🧪 TESTING VERIFICATION
 
