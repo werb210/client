@@ -93,15 +93,15 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
-- **July 14, 2025: ✅ SIGNNOW FIELD POPULATION & STATUS POLLING FIXES COMPLETE**
-  * **CRITICAL FIX**: Fixed SignNow field population by correcting smart fields mapping to use actual form field names
-  * **STATUS POLLING FIX**: Fixed status polling to check for `user.document.fieldinvite.signed` instead of `invite_sent`
-  * **REDIRECT LOGIC**: Fixed auto-redirect to Step 7 to wait for actual signed status, not just invite sent
-  * **FIELD MAPPING CORRECTED**: Updated smart fields to use `applicantFirstName`, `applicantLastName`, `businessStreetAddress`, etc.
-  * **COMPREHENSIVE LOGGING**: Added detailed logging of full response data and field population verification
-  * **TOAST NOTIFICATIONS**: Added success notification before redirect with 1.5-second delay
-  * **ENHANCED TESTING**: Created comprehensive test suite validating field mapping and status polling logic
-  * **PRODUCTION READY**: SignNow integration now properly populates template fields and detects signed status
+- **July 15, 2025: ✅ SIGNNOW POLLING LOGIC CORRECTED - EXACT USER SPECIFICATIONS IMPLEMENTED**
+  * **CRITICAL CORRECTION**: Updated polling logic to check exact user-specified status fields for signature completion
+  * **CORRECT STATUS CHECKS**: Now checks `status === "invite_signed"`, `signing_status === "signed"`, and `user.document.fieldinvite.signed === true`
+  * **NO PREMATURE REDIRECT**: Will NOT redirect on "invite_sent" status - only when signature is actually complete
+  * **POLLING ENDPOINT**: Uses `/api/public/signnow/status/:id` every 5 seconds as specified
+  * **ENHANCED LOGGING**: Clear console messages show which status conditions trigger redirect vs. waiting
+  * **TEST SUITE UPDATED**: Corrected test cases to match new polling logic specifications
+  * **LOADING/CONFIRMATION**: Shows proper waiting status until signature verification complete
+  * **PRODUCTION READY**: Polling behavior now matches exact user requirements for signature completion detection
 
 - **July 14, 2025: ✅ AUTOCAPITALIZATION IMPLEMENTATION COMPLETE**
   * **UI ENHANCEMENT**: Implemented autocapitalization for all text input fields in Steps 3 and 4
