@@ -14,6 +14,9 @@ interface RuntimeAlertPanelProps {
 }
 
 export function RuntimeAlertPanel({ currentStep }: RuntimeAlertPanelProps) {
+  // Only show in development mode
+  const isDevelopment = import.meta.env.DEV || import.meta.env.NODE_ENV === 'development';
+  
   const { state } = useFormDataContext();
   const [, setLocation] = useLocation();
   const [isVisible, setIsVisible] = useState(true);
@@ -110,7 +113,8 @@ export function RuntimeAlertPanel({ currentStep }: RuntimeAlertPanelProps) {
   }
 
   // Don't show panel if no alerts or user dismissed it
-  if (alerts.length === 0 || !isVisible) {
+  // Don't show in production
+  if (!isDevelopment || alerts.length === 0 || !isVisible) {
     return null;
   }
 
