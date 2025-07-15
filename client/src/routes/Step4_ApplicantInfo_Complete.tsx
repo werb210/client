@@ -480,6 +480,53 @@ export default function Step4ApplicantInfoComplete() {
           console.log("❌ Error response is not valid JSON");
         }
         
+        // ✅ HANDLE DUPLICATE APPLICATION - Extract existing ID and continue
+        if (response.status === 409 || response.status === 502) {
+          try {
+            const errorData = JSON.parse(errorText);
+            
+            // Check if it's a duplicate application error with existing ID
+            if (errorData.details && errorData.details.includes('duplicate')) {
+              const detailsMatch = errorData.details.match(/applicationId":"([^"]+)"/);
+              if (detailsMatch) {
+                const existingId = detailsMatch[1];
+                console.log('✅ DUPLICATE DETECTED - Using existing application ID:', existingId);
+                
+                // Store the existing application ID and continue workflow
+                localStorage.setItem('applicationId', existingId);
+                
+                dispatch({
+                  type: "UPDATE_FORM_DATA",
+                  payload: { 
+                    applicationId: existingId,
+                    isExistingApplication: true,
+                    existingStatus: 'draft'
+                  },
+                });
+                
+                toast({
+                  title: "Using Existing Application", 
+                  description: `Found existing draft application. Continuing with ID: ${existingId.substring(0, 8)}...`,
+                  variant: "default",
+                });
+                
+                console.log('✅ WORKFLOW CONTINUES - ApplicationId stored:', existingId);
+                
+                // Mark step as complete and proceed to Step 5
+                dispatch({
+                  type: "MARK_STEP_COMPLETE",
+                  payload: { step: 4 },
+                });
+                
+                setLocation('/apply/step-5');
+                return;
+              }
+            }
+          } catch (parseError) {
+            console.error('Failed to parse duplicate error details:', parseError);
+          }
+        }
+        
         logger.error('❌ API call FAILED - Status:', response.status);
         logger.error('❌ Backend rejected Step 4 data:', errorText);
         logger.error('❌ Request payload was:', JSON.stringify(applicationData, null, 2));
