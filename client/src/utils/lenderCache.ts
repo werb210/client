@@ -4,7 +4,7 @@
  */
 
 import { get, set, clear } from 'idb-keyval';
-import type { LenderProduct } from '../../../shared/lenderProductSchema';
+import type { LenderProduct } from '../types/lenderProduct';
 
 // Cache keys
 const CACHE_KEY = 'lenderProducts';

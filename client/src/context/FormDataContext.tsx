@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, ReactNode } from 'react';
-import { ApplicationForm } from '../../../shared/schema';
+import { ApplicationForm } from '../types/applicationForm';
 
 // All step data interfaces now directly use the unified ApplicationForm
 export interface FinancialProfileData extends Partial<ApplicationForm> {

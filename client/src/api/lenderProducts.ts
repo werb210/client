@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../constants';
-import { LenderProduct } from '../../../shared/lenderProductSchema';
+import { LenderProduct } from '../types/lenderProduct';
 import { normalizeProducts } from '../lib/lenderProductNormalizer';
 import { isAllowedToFetchNow, getFetchWindowInfo, formatMSTTime } from '../utils/fetchWindow';
 import {

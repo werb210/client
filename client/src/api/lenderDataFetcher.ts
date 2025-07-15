@@ -3,7 +3,7 @@
  * Ensures products are only retrieved from local cache
  */
 
-import { LenderProduct, LenderProductSchema } from '../../../shared/lenderProductSchema';
+import { LenderProduct } from '../types/lenderProduct';
 
 interface LenderDataResponse {
   success: boolean;

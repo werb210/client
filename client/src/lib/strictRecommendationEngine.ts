@@ -1,4 +1,4 @@
-import { LenderProduct } from '../../../shared/lenderProductSchema';
+import { LenderProduct } from '../types/lenderProduct';
 
 /**
  * Strict recommendation engine that only operates on validated LenderProduct data

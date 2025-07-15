@@ -1,10 +1,4 @@
-import { 
-  LenderProduct, 
-  LenderProductSchema, 
-  StaffAPIResponse, 
-  StaffAPIResponseSchema,
-  DOCUMENT_REQUIREMENTS_MAP 
-} from '@/../../shared/lenderProductSchema';
+import { LenderProduct } from '../types/lenderProduct';
 
 /**
  * Normalizes raw staff API data into strict validated LenderProduct model
@@ -13,14 +7,13 @@ import {
 export function normalizeProducts(rawData: unknown): LenderProduct[] {
   // console.log('[NORMALIZER] Starting product normalization...');
   
-  // First validate the API response structure
-  const apiResponseValidation = StaffAPIResponseSchema.safeParse(rawData);
-  if (!apiResponseValidation.success) {
-    console.error('❌ [NORMALIZER] Invalid API response structure:', apiResponseValidation.error.issues);
+  // Simplified validation without Zod schema dependency
+  if (!rawData || typeof rawData !== 'object' || !Array.isArray((rawData as any).products)) {
+    console.error('❌ [NORMALIZER] Invalid API response structure');
     throw new Error('Staff API returned invalid response structure');
   }
 
-  const { products } = apiResponseValidation.data;
+  const { products } = rawData as { products: any[] };
   // console.log(`[NORMALIZER] Processing ${products.length} raw products from staff API`);
 
   const normalizedProducts: LenderProduct[] = [];

@@ -1,8 +1,5 @@
-// Import and use the official LenderProduct type from schema
-import { LenderProduct } from '../../../shared/lenderProductSchema';
-
-// Use the normalized LenderProduct type from schema
-export type StaffLenderProduct = LenderProduct;
+// Import local type definitions to avoid deep import chains
+import { LenderProduct, StaffLenderProduct } from '../types/lenderProduct';
 
 export interface RecommendationFormData {
   headquarters: string; // 'US' or 'CA'
