@@ -711,7 +711,41 @@ export default function Step4ApplicantInfoComplete() {
                     <FormItem>
                       <FormLabel>Date Of Birth *</FormLabel>
                       <FormControl>
-                        <Input {...field} type="date" className="h-12" />
+                        <Input 
+                          {...field} 
+                          type="date" 
+                          className="h-12"
+                          onKeyDown={(e) => {
+                            const input = e.currentTarget;
+                            const value = input.value;
+                            
+                            // Auto-advance when year is complete (4 digits)
+                            if (e.key >= '0' && e.key <= '9') {
+                              const cursorPos = input.selectionStart || 0;
+                              
+                              // If typing in year position and year will be 4 digits
+                              if (cursorPos <= 4 && value.length >= 3) {
+                                setTimeout(() => {
+                                  // Move cursor to month position after year is complete
+                                  input.setSelectionRange(5, 7);
+                                }, 0);
+                              }
+                            }
+                          }}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value);
+                            
+                            // Auto-advance when sections are complete
+                            if (value.length === 4 && !value.includes('-')) {
+                              // Year complete, move to month
+                              setTimeout(() => {
+                                const input = e.target;
+                                input.setSelectionRange(5, 7);
+                              }, 0);
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -887,7 +921,41 @@ export default function Step4ApplicantInfoComplete() {
                       <FormItem>
                         <FormLabel>Partner Date of Birth</FormLabel>
                         <FormControl>
-                          <Input {...field} type="date" className="h-12" />
+                          <Input 
+                            {...field} 
+                            type="date" 
+                            className="h-12"
+                            onKeyDown={(e) => {
+                              const input = e.currentTarget;
+                              const value = input.value;
+                              
+                              // Auto-advance when year is complete (4 digits)
+                              if (e.key >= '0' && e.key <= '9') {
+                                const cursorPos = input.selectionStart || 0;
+                                
+                                // If typing in year position and year will be 4 digits
+                                if (cursorPos <= 4 && value.length >= 3) {
+                                  setTimeout(() => {
+                                    // Move cursor to month position after year is complete
+                                    input.setSelectionRange(5, 7);
+                                  }, 0);
+                                }
+                              }
+                            }}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value);
+                              
+                              // Auto-advance when sections are complete
+                              if (value.length === 4 && !value.includes('-')) {
+                                // Year complete, move to month
+                                setTimeout(() => {
+                                  const input = e.target;
+                                  input.setSelectionRange(5, 7);
+                                }, 0);
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
