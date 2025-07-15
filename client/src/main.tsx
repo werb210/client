@@ -46,6 +46,12 @@ window.addEventListener('unhandledrejection', (event) => {
     return;
   }
   
+  // Suppress all unhandled rejections in production mode
+  if (import.meta.env.NODE_ENV === 'production') {
+    event.preventDefault();
+    return;
+  }
+  
   // Log only critical unexpected errors for debugging
   if (import.meta.env.DEV) {
     console.error('🚨 Critical Promise Rejection:', {

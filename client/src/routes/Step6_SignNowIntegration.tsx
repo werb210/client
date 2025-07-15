@@ -277,44 +277,44 @@ export default function Step6SignNowIntegration() {
     try {
       // ✅ Fixed polling endpoint as specified
       const pollingEndpoint = `/api/public/signnow/status/${applicationId}`;
-      logger.log('📡 Polling SignNow status for:', applicationId);
-      logger.log('📡 Endpoint:', pollingEndpoint);
+      // logger.log('📡 Polling SignNow status for:', applicationId); // Reduced logging
+      // logger.log('📡 Endpoint:', pollingEndpoint); // Reduced logging
       
       const res = await fetch(pollingEndpoint, {
         method: 'GET'
       }).catch(fetchError => {
         // Handle fetch errors silently to prevent unhandled promise rejections
-        logger.warn('📡 SignNow status fetch failed:', fetchError.message);
+        // logger.warn('📡 SignNow status fetch failed:', fetchError.message); // Reduced logging
         return null; // Return null instead of throwing to prevent unhandled rejections
       });
       
       if (!res) {
-        logger.warn('📡 No response from signature status endpoint');
+        // logger.warn('📡 No response from signature status endpoint'); // Reduced logging
         return; // Do NOT navigate away — just keep polling
       }
       
       if (!res.ok) {
-        logger.warn('📡 Signature status fetch failed with status:', res.status, res.statusText);
+        // logger.warn('📡 Signature status fetch failed with status:', res.status, res.statusText); // Reduced logging
         return; // Do NOT navigate away — just keep polling
       }
       
       const data = await res.json().catch(jsonError => {
-        logger.warn('📡 Polling JSON parse failed:', jsonError.message);
+        // logger.warn('📡 Polling JSON parse failed:', jsonError.message); // Reduced logging
         return null;
       });
       
       if (!data) {
-        logger.warn('📡 No data in signature status response');
+        // logger.warn('📡 No data in signature status response'); // Reduced logging
         return; // Do NOT navigate away — just keep polling
       }
       
       // ✅ Fixed status field parsing - check the actual field the server returns
       const signingStatus = data?.signing_status || data?.status;
       
-      // ✅ Add logging for debugging as requested
-      logger.log("📡 Polling SignNow status:", signingStatus);
-      logger.log('📄 Full response data:', data);
-      logger.log('📄 Status check for application:', applicationId);
+      // ✅ Add logging for debugging as requested (reduced for production)
+      // logger.log("📡 Polling SignNow status:", signingStatus); // Reduced logging
+      // logger.log('📄 Full response data:', data); // Reduced logging
+      // logger.log('📄 Status check for application:', applicationId); // Reduced logging
       
       // ✅ CRITICAL FIX: Check for actual SignNow signed status - only redirect when truly signed
       const isDocumentSigned = (
@@ -359,7 +359,7 @@ export default function Step6SignNowIntegration() {
       
     } catch (err: any) {
       // Handle polling errors without redirecting - suppress unhandled rejections
-      logger.warn('📡 Polling error caught (will NOT redirect):', err?.message || 'Unknown error');
+      // logger.warn('📡 Polling error caught (will NOT redirect):', err?.message || 'Unknown error'); // Reduced logging
       // Stay on Step 6, keep polling
       // Do not throw error to prevent unhandled promise rejection
     }
@@ -385,6 +385,15 @@ export default function Step6SignNowIntegration() {
         if (pollCount >= maxPolls) {
           logger.warn('⏰ Polling timeout reached - stopping automatic status checks');
           setTimeoutWarning('Signature polling timeout reached. You may continue manually.');
+          clearInterval(interval);
+          setIsPolling(false);
+          return;
+        }
+        
+        // Stop polling if status remains "not_initiated" for too long
+        if (pollCount > 10 && signingStatus === 'not_initiated') {
+          logger.warn('⏰ SignNow service not responding - stopping polling');
+          setTimeoutWarning('SignNow service is not responding. Please try again later.');
           clearInterval(interval);
           setIsPolling(false);
           return;
