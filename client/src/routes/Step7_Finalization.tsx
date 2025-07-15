@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { staffApi } from '../api/staffApi';
 
 import { StepHeader } from '@/components/StepHeader';
+import { RuntimeAlertPanel } from '@/components/RuntimeAlertPanel';
 
 import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
 import Send from 'lucide-react/dist/esm/icons/send';
@@ -73,18 +74,44 @@ export default function Step7Finalization() {
       return;
     }
 
-    // ✅ Task 4: Check signing status before final submission
+    // ✅ Task 1: Submission Preflight Test - Document Upload Verification
     try {
-      console.log("🔍 Checking signing status before final submission...");
+      console.log("🔍 Preflight Test: Checking document uploads...");
+      const documentsResponse = await fetch(`/api/public/documents/${applicationId}`);
+      
+      if (documentsResponse.ok) {
+        const documentsData = await documentsResponse.json();
+        console.log("📊 Documents check:", documentsData);
+        
+        const documentsUploaded = documentsData?.documents || [];
+        if (!documentsUploaded || documentsUploaded.length === 0) {
+          alert("❌ No documents uploaded. Please go back to Step 5 and upload your documents.");
+          console.log("❌ PREFLIGHT FAILED: No documents uploaded");
+          return;
+        }
+        console.log("✅ Documents verified:", documentsUploaded.length, "files found");
+      } else {
+        console.warn("⚠️ Could not verify document uploads - proceeding with submission");
+      }
+    } catch (error) {
+      console.error("❌ Error checking documents:", error);
+      // Continue with submission if document check fails
+    }
+
+    // ✅ Task 1: Submission Preflight Test - Document Signing Status
+    try {
+      console.log("🔍 Preflight Test: Checking signing status...");
       const signingStatusResponse = await fetch(`/api/public/signnow/status/${applicationId}`);
       
       if (signingStatusResponse.ok) {
         const signingData = await signingStatusResponse.json();
         console.log("📊 Current signing status:", signingData);
         
-        if (signingData?.status === 'invite_sent' || signingData?.signing_status === 'invite_sent') {
+        const documentStatus = signingData?.status || signingData?.signing_status;
+        
+        if (documentStatus === 'invite_sent') {
           console.log("❌ Document is still invite_sent - cannot finalize");
-          alert("Document must be signed to complete submission.");
+          alert("❌ Document not signed. Please complete the signing step before submission.");
           toast({
             title: "Document Not Signed",
             description: "Please return to Step 6 and complete the document signing process.",
@@ -93,13 +120,15 @@ export default function Step7Finalization() {
           return;
         }
         
-        if (signingData?.status !== 'signed' && signingData?.signing_status !== 'signed' && signingData?.status !== 'invite_signed') {
-          console.log("⚠️ Document signing status unclear:", signingData?.status, signingData?.signing_status);
+        if (documentStatus !== "signed" && documentStatus !== "bypassed" && documentStatus !== "invite_signed") {
+          console.log("⚠️ Document signing status unclear:", documentStatus);
           const proceedAnyway = confirm("Document signing status is unclear. Proceed with submission anyway?");
           if (!proceedAnyway) {
             return;
           }
         }
+        
+        console.log("✅ Document status verified:", documentStatus);
       }
     } catch (error) {
       console.error("❌ Error checking signing status:", error);
@@ -282,6 +311,7 @@ export default function Step7Finalization() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <RuntimeAlertPanel currentStep={7} />
       <StepHeader 
         stepNumber={7}
         title="Final Review & Terms"

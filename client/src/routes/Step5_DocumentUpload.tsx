@@ -19,6 +19,7 @@ import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequire
 import { ProceedBypassBanner } from '@/components/ProceedBypassBanner';
 
 import { StepHeader } from '@/components/StepHeader';
+import { RuntimeAlertPanel } from '@/components/RuntimeAlertPanel';
 
 import { getDocumentRequirementsIntersection } from '@/lib/documentIntersection';
 
@@ -405,6 +406,7 @@ export default function Step5DocumentUpload() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
+      <RuntimeAlertPanel currentStep={5} />
       <StepHeader 
         stepNumber={5}
         title="Upload Documents"

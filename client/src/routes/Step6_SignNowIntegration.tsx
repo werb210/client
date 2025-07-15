@@ -7,6 +7,7 @@ import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
 import { extractUuid } from '@/lib/uuidUtils';
 import { StepHeader } from '@/components/StepHeader';
+import { RuntimeAlertPanel } from '@/components/RuntimeAlertPanel';
 import { logger } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
@@ -166,13 +167,36 @@ export default function Step6SignNowIntegration() {
         years_with_business: state.step4?.yearsWithBusiness || ''
       };
 
+      // ✅ Task 2: Smart Field Prefill Test - Required Field Validation
+      const requiredFields = ['first_name', 'business_name', 'amount_requested'];
+      const formData = {
+        first_name: smartFields.contact_first_name,
+        business_name: smartFields.business_dba_name || smartFields.legal_business_name,
+        amount_requested: smartFields.requested_amount
+      };
+      
+      const missing = requiredFields.filter(field => !formData[field]);
+      if (missing.length > 0) {
+        const missingFieldsMessage = `❌ Missing fields: ${missing.join(', ')}. Please go back and complete all required information.`;
+        console.log("❌ PREFILL VALIDATION FAILED:", missingFieldsMessage);
+        alert(missingFieldsMessage);
+        setError('Required fields missing for SignNow prefill');
+        setSigningStatus('error');
+        return;
+      }
+      
+      console.log("✅ Required fields validation passed:", formData);
+      
       // ✅ Task 2: Enhanced Smart Field Pre-Fill Debugging
-      console.log("Prefill Payload", {
+      const prefillData = {
         templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5',
         smartFields,
         redirectUrl: 'https://clientportal.boreal.financial/#/step7-finalization',
         applicationId
-      });
+      };
+      
+      console.log("🔍 Prefill Test Payload", JSON.stringify(prefillData, null, 2));
+      console.log("Prefill Payload", prefillData);
       
       logger.log("📋 Smart Fields for SignNow Template:", smartFields);
       logger.log("🔍 Smart Fields Verification:", {
@@ -589,6 +613,7 @@ export default function Step6SignNowIntegration() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50">
+      <RuntimeAlertPanel currentStep={6} />
       <div className="container mx-auto px-4 py-8">
         <StepHeader 
           currentStep={6} 

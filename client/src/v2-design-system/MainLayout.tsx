@@ -73,6 +73,7 @@ import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
 import Step4Step6Test from "@/pages/Step4Step6Test";
 import BackendRequestTest from "@/pages/BackendRequestTest";
+import ValidationTestPage from "@/pages/ValidationTestPage";
 import InitialCacheSetup from "@/pages/InitialCacheSetup";
 import CacheManagement from "@/pages/CacheManagement";
 import UUIDTestPage from "@/pages/UUIDTestPage";
@@ -141,6 +142,7 @@ export function MainLayout() {
       <Route path="/equipment-financing-fix-test" component={EquipmentFinancingFixTest} />
       <Route path="/step4-step6-test" component={Step4Step6Test} />
       <Route path="/backend-request-test" component={BackendRequestTest} />
+      <Route path="/validation-test" component={ValidationTestPage} />
       <Route path="/cache-management" component={CacheManagement} />
       <Route path="/uuid-test" component={UUIDTestPage} />
       <Route path="/fetch-window-test" component={FetchWindowTest} />
