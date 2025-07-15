@@ -35,6 +35,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { StepHeader } from "@/components/StepHeader";
 
 import { ValidationErrorModal } from "@/components/ValidationErrorModal";
+import { SsnWarningModal } from "@/components/SsnWarningModal";
 
 
 // Step 4 Schema - All fields required except SSN/SIN
@@ -77,6 +78,10 @@ export default function Step4ApplicantInfoComplete() {
   const [partnerPhoneDisplay, setPartnerPhoneDisplay] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]> | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  
+  // SSN Warning Modal states
+  const [showSsnWarning, setShowSsnWarning] = useState(false);
+  const [continuePending, setContinuePending] = useState(false);
 
   // Detect region from Step 1 business location
   useEffect(() => {
@@ -152,6 +157,13 @@ export default function Step4ApplicantInfoComplete() {
     // Double-click prevention: Exit if already submitting
     if (submitting) {
       logger.log('⚠️ DOUBLE-CLICK PREVENTION: Submission already in progress');
+      return;
+    }
+
+    // Check if SSN/SIN is blank and show warning if needed
+    if (!data.applicantSSN && !showSsnWarning && !continuePending) {
+      logger.log('⚠️ SSN/SIN is blank - showing warning modal');
+      setShowSsnWarning(true);
       return;
     }
     
@@ -474,6 +486,7 @@ export default function Step4ApplicantInfoComplete() {
       return; // Don't proceed to Step 5 if application creation fails
     } finally {
       setSubmitting(false);
+      setContinuePending(false); // Reset continuation flag
     }
 
     // Mark step as complete and proceed
@@ -1045,6 +1058,18 @@ export default function Step4ApplicantInfoComplete() {
         isOpen={!!validationErrors}
         onClose={() => setValidationErrors(null)}
         missingFields={validationErrors || {}}
+      />
+      
+      {/* SSN Warning Modal */}
+      <SsnWarningModal
+        open={showSsnWarning}
+        onContinue={() => {
+          logger.log('✅ User acknowledged SSN warning - proceeding with submission');
+          setShowSsnWarning(false);
+          setContinuePending(true);
+          // Trigger form submission again with continuePending flag
+          form.handleSubmit(onSubmit)();
+        }}
       />
     </div>
   );

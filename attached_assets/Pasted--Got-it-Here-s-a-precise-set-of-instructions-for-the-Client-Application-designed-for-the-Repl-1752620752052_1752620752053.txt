@@ -1,0 +1,128 @@
+✅ Got it. Here's a precise set of instructions for the **Client Application**, designed for the Replit agent, with the correct behavior:
+
+---
+
+## ✅ CLIENT APPLICATION – STEP 4 SSN/SIN WARNING
+
+### 🎯 Goal:
+
+If the user **leaves the SSN/SIN field blank** in Step 4 and clicks **Continue**, show a warning popup:
+
+* 🟡 It **does not block submission**
+* ✅ It **informs the user**: *"Failure to complete the application in full will result in delays or denial of funding."*
+* 🟢 If the user clicks **“I Understand”**, the app proceeds to Step 5 **and triggers SignNow**
+
+---
+
+## ✅ INSTRUCTIONS FOR REPLIT AGENT (CLIENT)
+
+> 🔧 Please modify the Step 4 form submission logic with the following behavior:
+
+### 1. **Detect if SSN/SIN Field is Blank**
+
+* Target field name: `contact_ssn` or similar (confirm actual key)
+* On “Continue” button click, check if this field is empty
+
+---
+
+### 2. **If Field Is Blank → Show Warning Modal**
+
+Add a non-blocking confirmation modal like this:
+
+```tsx
+// components/SsnWarningModal.tsx
+
+import { Dialog, DialogTitle, DialogContent, DialogFooter } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+
+export function SsnWarningModal({ open, onContinue }: { open: boolean, onContinue: () => void }) {
+  return (
+    <Dialog open={open}>
+      <DialogContent>
+        <DialogTitle>Missing Information</DialogTitle>
+        <p className="mt-2">
+          Failure to complete the application in full will result in delays or denial of funding.
+        </p>
+        <DialogFooter className="mt-4">
+          <Button onClick={onContinue}>I Understand</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+---
+
+### 3. **Update Step 4 Page to Use Modal**
+
+In the Step 4 component:
+
+```tsx
+import { SsnWarningModal } from "@/components/SsnWarningModal"
+
+const [showSsnWarning, setShowSsnWarning] = useState(false)
+const [continuePending, setContinuePending] = useState(false)
+
+const handleContinue = async () => {
+  const ssn = formData.contact_ssn
+
+  if (!ssn && !showSsnWarning) {
+    setShowSsnWarning(true)
+    return
+  }
+
+  setContinuePending(true)
+
+  // Continue to Step 5 and trigger SignNow submission here
+  await submitStep4Data()
+  await triggerSignNow()
+  navigateToStep5()
+}
+```
+
+---
+
+### 4. **When User Clicks “I Understand” in Modal**
+
+```tsx
+<SsnWarningModal
+  open={showSsnWarning}
+  onContinue={() => {
+    setShowSsnWarning(false)
+    handleContinue()
+  }}
+/>
+```
+
+---
+
+### 5. ✅ Final Behavior Summary
+
+| Case                       | Result                          |
+| -------------------------- | ------------------------------- |
+| SSN/SIN is filled          | → Proceeds to Step 5            |
+| SSN/SIN is blank           | → Shows warning modal           |
+| User clicks “I Understand” | → Proceeds to Step 5            |
+| SignNow trigger            | ✅ Always happens after continue |
+
+---
+
+### 📢 REMINDER TO REPLIT AGENT (CLIENT):
+
+> ✅ Please implement the above logic in the Step 4 page.
+>
+> * If `contact_ssn` is blank, show a **non-blocking modal**
+> * Allow the user to proceed by clicking “I Understand”
+> * After confirmation, **trigger SignNow and go to Step 5**
+>
+> **Then report back:**
+>
+> * Was the modal implemented?
+> * Does it trigger only when SSN is blank?
+> * Does the workflow continue successfully after confirmation?
+> * Is SignNow still triggered on Step 4 → Step 5 transition?
+
+---
+
+Let me know once the agent reports back — I’ll help validate it and prep for launch.
