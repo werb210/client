@@ -44,23 +44,21 @@ import {
 import { StepHeader } from '@/components/StepHeader';
 
 
-// Step 3 Schema - Use unified schema fields for business details
-const step3Schema = ApplicationFormSchema.pick({
-  operatingName: true,
-  legalName: true,
-  businessStreetAddress: true,
-  businessCity: true,
-  businessState: true,
-  businessPostalCode: true,
-  businessPhone: true,
-  businessStartDate: true,
-  businessStructure: true,
-  employeeCount: true,
-  estimatedYearlyRevenue: true,
-}).partial().extend({
-  // Make businessWebsite explicitly optional
-  businessWebsite: z.string().optional(),
-}); // Testing mode - made all optional
+// Step 3 Schema - All fields required as requested
+const step3Schema = z.object({
+  operatingName: z.string().min(1, "Business Name (DBA) is required"),
+  legalName: z.string().min(1, "Business Legal Name is required"),
+  businessStreetAddress: z.string().min(1, "Business Address is required"),
+  businessCity: z.string().min(1, "City is required"),
+  businessState: z.string().min(1, "State/Province is required"),
+  businessPostalCode: z.string().min(1, "Postal Code is required"),
+  businessPhone: z.string().min(1, "Business Phone is required"),
+  businessStartDate: z.string().min(1, "Business Start Date is required"),
+  businessStructure: z.string().min(1, "Business Structure is required"),
+  employeeCount: z.number().min(1, "Number of Employees is required"),
+  estimatedYearlyRevenue: z.number().min(1, "Estimated Yearly Revenue is required"),
+  businessWebsite: z.string().min(1, "Business Website is required"),
+});
 
 type BusinessDetailsFormData = z.infer<typeof step3Schema>;
 
@@ -98,9 +96,9 @@ export default function Step3BusinessDetailsComplete() {
       businessPhone: state.step3?.businessPhone || '',
       businessWebsite: state.step3?.businessWebsite || '',
       businessStartDate: state.step3?.businessStartDate || '',
-      businessStructure: state.step3?.businessStructure || undefined,
-      employeeCount: state.step3?.employeeCount || undefined,
-      estimatedYearlyRevenue: state.step3?.estimatedYearlyRevenue || undefined,
+      businessStructure: state.step3?.businessStructure || '',
+      employeeCount: state.step3?.employeeCount || 1,
+      estimatedYearlyRevenue: state.step3?.estimatedYearlyRevenue || 0,
     },
   });
 
@@ -420,7 +418,7 @@ export default function Step3BusinessDetailsComplete() {
                     name="businessWebsite"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Business Website</FormLabel>
+                        <FormLabel className="text-base font-semibold">Business Website *</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="https://www.example.com"
@@ -473,9 +471,10 @@ export default function Step3BusinessDetailsComplete() {
                         <FormControl>
                           <Input
                             type="number"
+                            min="1"
                             placeholder="Enter number of employees"
                             {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                             className="h-12"
                           />
                         </FormControl>
@@ -490,7 +489,7 @@ export default function Step3BusinessDetailsComplete() {
                     name="estimatedYearlyRevenue"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Estimated Yearly Revenue</FormLabel>
+                        <FormLabel className="text-base font-semibold">Estimated Yearly Revenue *</FormLabel>
                         <FormControl>
                           <Input
                             type="text"
@@ -500,7 +499,7 @@ export default function Step3BusinessDetailsComplete() {
                               // Remove all non-digits
                               const numericValue = e.target.value.replace(/[^0-9]/g, '');
                               // Convert to number and update field
-                              field.onChange(numericValue ? parseInt(numericValue) : undefined);
+                              field.onChange(numericValue ? parseInt(numericValue) : 0);
                             }}
                             className="h-12"
                           />
