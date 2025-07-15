@@ -57,7 +57,7 @@ const step3Schema = z.object({
   businessStructure: z.string().min(1, "Business Structure is required"),
   employeeCount: z.number().min(1, "Number of Employees is required"),
   estimatedYearlyRevenue: z.number().min(1, "Estimated Yearly Revenue is required"),
-  businessWebsite: z.string().min(1, "Business Website is required"),
+  businessWebsite: z.string().optional(),
 });
 
 type BusinessDetailsFormData = z.infer<typeof step3Schema>;
@@ -418,7 +418,7 @@ export default function Step3BusinessDetailsComplete() {
                     name="businessWebsite"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Business Website *</FormLabel>
+                        <FormLabel className="text-base font-semibold">Business Website</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="https://www.example.com"
