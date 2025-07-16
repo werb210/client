@@ -309,28 +309,22 @@ export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
             )}
           />
 
-          {/* Employee Count - Required Dropdown */}
+          {/* Employee Count - Required Number Input */}
           <FormField
             control={form.control}
             name="employeeCount"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Employee Count</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select employee count" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="1_to_5">1-5 employees</SelectItem>
-                    <SelectItem value="6_to_10">6-10 employees</SelectItem>
-                    <SelectItem value="11_to_25">11-25 employees</SelectItem>
-                    <SelectItem value="26_to_50">26-50 employees</SelectItem>
-                    <SelectItem value="51_to_100">51-100 employees</SelectItem>
-                    <SelectItem value="over_100">Over 100 employees</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Input 
+                    type="number"
+                    min="1"
+                    placeholder="Enter number of employees" 
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

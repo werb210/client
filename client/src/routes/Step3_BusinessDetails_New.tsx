@@ -18,7 +18,10 @@ const step3Schema = z.object({
   businessPhone: z.string().optional(),
   businessStructure: z.string().optional(),
   businessStartDate: z.string().optional(),
-  employeeCount: z.string().optional(),
+  employeeCount: z.preprocess(
+    (val) => val === '' || val === null || val === undefined ? undefined : Number(val),
+    z.number({ invalid_type_error: "Must be a number" }).int().min(1, "At least 1 employee is required").optional()
+  ),
   estimatedYearlyRevenue: z.string().optional(),
   businessWebsite: z.string().optional(),
 });
@@ -45,7 +48,7 @@ export default function Step3BusinessDetailsRoute() {
       businessPhone: state.step3BusinessDetails?.businessPhone || '',
       businessStructure: state.step3BusinessDetails?.businessStructure || '',
       businessStartDate: state.step3BusinessDetails?.businessRegistrationDate || '',
-      employeeCount: state.step3BusinessDetails?.numberOfEmployees || '',
+      employeeCount: state.step3BusinessDetails?.numberOfEmployees || 0,
       estimatedYearlyRevenue: state.step3BusinessDetails?.estimatedYearlyRevenue || '',
       businessWebsite: state.step3BusinessDetails?.businessWebsite || '',
     },

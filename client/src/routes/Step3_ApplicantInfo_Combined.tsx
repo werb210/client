@@ -36,7 +36,10 @@ const step3Schema = z.object({
   businessStartDate: z.string().min(1, 'Start date is required'),
   businessTaxId: z.string().min(9, 'Valid Tax ID is required'),
   businessDescription: z.string().min(10, 'Business description is required'),
-  numberOfEmployees: z.string().min(1, 'Number of employees is required'),
+  numberOfEmployees: z.preprocess(
+    (val) => Number(val),
+    z.number({ invalid_type_error: "Must be a number" }).int().min(1, "At least 1 employee is required")
+  ),
   
   // Applicant Details
   firstName: z.string().min(1, 'First name is required'),
@@ -104,7 +107,7 @@ export default function Step3ApplicantInfoCombined() {
       businessStartDate: businessInfo?.businessStartDate || '',
       businessTaxId: businessInfo?.businessTaxId || '',
       businessDescription: businessInfo?.businessDescription || '',
-      numberOfEmployees: businessInfo?.numberOfEmployees || '',
+      numberOfEmployees: businessInfo?.numberOfEmployees || 0,
       
       // Applicant Details defaults - using placeholder since this is combined step
       firstName: '',
@@ -376,21 +379,13 @@ export default function Step3ApplicantInfoCombined() {
               {/* Number of Employees */}
               <div className="space-y-2">
                 <Label htmlFor="numberOfEmployees">Number of Employees *</Label>
-                <Select
-                  value={form.watch('numberOfEmployees')}
-                  onValueChange={(value) => form.setValue('numberOfEmployees', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EMPLOYEE_COUNTS.map((count) => (
-                      <SelectItem key={count} value={count}>
-                        {count}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="numberOfEmployees"
+                  type="number"
+                  min="1"
+                  {...form.register('numberOfEmployees', { valueAsNumber: true })}
+                  placeholder="Enter number of employees"
+                />
                 {form.formState.errors.numberOfEmployees && (
                   <p className="text-sm text-red-600">{form.formState.errors.numberOfEmployees.message}</p>
                 )}

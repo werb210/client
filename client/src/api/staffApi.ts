@@ -102,7 +102,7 @@ export interface ApplicationSubmissionData {
     businessRegistrationDate: string;
     businessTaxId: string;
     businessDescription: string;
-    numberOfEmployees: string;
+    numberOfEmployees: number;
     primaryBankName: string;
     bankingRelationshipLength: string;
     

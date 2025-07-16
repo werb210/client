@@ -61,7 +61,10 @@ export const ApplicationFormSchema = z.object({
   // Stage 4A - Financial Information
   annualRevenue: z.string().optional(),
   monthlyExpenses: z.string().optional(),
-  numberOfEmployees: z.string().optional(),
+  numberOfEmployees: z.preprocess(
+    (val) => val === '' || val === null || val === undefined ? undefined : Number(val),
+    z.number({ invalid_type_error: "Must be a number" }).int().min(1, "At least 1 employee is required").optional()
+  ),
   totalAssets: z.string().optional(),
   totalLiabilities: z.string().optional(),
 

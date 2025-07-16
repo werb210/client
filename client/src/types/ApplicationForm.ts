@@ -18,7 +18,7 @@ export interface ApplicationForm {
   businessEmail: string;
   businessWebsite?: string;
   businessDescription: string;
-  numberOfEmployees: string;
+  numberOfEmployees: number;
   primaryBankName: string;
   bankingRelationshipLength: string;
   businessRegistrationDate: string;
