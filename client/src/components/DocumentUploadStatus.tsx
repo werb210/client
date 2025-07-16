@@ -151,11 +151,11 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           <div className="flex items-center space-x-4">
             <Badge variant="outline" className="flex items-center space-x-1">
               <FileText className="w-3 h-3" />
-              <span>{documents.length} Verified</span>
+              <span>{safeDocuments.length} Verified</span>
             </Badge>
             <Badge variant="outline" className="flex items-center space-x-1">
               <FileText className="w-3 h-3" />
-              <span>{localUploadedFiles.length} Local</span>
+              <span>{safeLocalUploadedFiles.length} Local</span>
             </Badge>
             {hasUploadedDocuments && (
               <Badge variant="default" className="flex items-center space-x-1 bg-green-600">
@@ -166,7 +166,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           </div>
 
           {/* Required Documents Status */}
-          {requiredDocuments.length > 0 && (
+          {safeRequiredDocuments.length > 0 && (
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-700">Required Documents</h4>
               {documentStatuses.map((docStatus, index) => (
