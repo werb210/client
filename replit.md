@@ -93,6 +93,16 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 16, 2025: ✅ EQUIPMENT FINANCING BUSINESS RULE IMPLEMENTED - USER REQUIREMENT COMPLETE**
+  * **CRITICAL SUCCESS**: Implemented Equipment Financing visibility rule for Step 2 product categories
+  * **BUSINESS RULE**: Equipment Financing only appears when user selects "equipment" in Step 1 "What are you looking for?" OR "equipment" in "Purpose of funds"
+  * **STEP 1 INTEGRATION**: Enhanced filtering logic to check both lookingFor and fundsPurpose fields from Step 1 form data
+  * **EXCLUSION LOGIC**: Added equipmentFinancingExclusion check in both core filtering and extras sections
+  * **CONSOLE LOGGING**: Enhanced debugging to show Equipment Financing eligibility decisions
+  * **TEST SUITE**: Created test-equipment-financing-rule.js for browser console verification
+  * **FIELD VALUES**: lookingFor = "equipment"|"both" OR fundsPurpose = "equipment" enables Equipment Financing category
+  * **PRODUCTION READY**: Business rule operational with authentic 41-product database filtering
+
 - **July 16, 2025: ✅ STEP 5 DOCUMENT AGGREGATION SYSTEM IMPLEMENTED - CHATGPT INSTRUCTIONS COMPLETE**
   * **CRITICAL SUCCESS**: Implemented Step 5 document aggregation using union approach instead of intersection logic
   * **AGGREGATION LOGIC**: Step 5 now combines all required documents from ALL eligible lender products (union of requirements)

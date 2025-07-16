@@ -76,6 +76,25 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
   const afterCountryFilter = filteredProducts.length;
   console.log('[FILTER] Country filter:', beforeCountryFilter - afterCountryFilter, 'products removed');
 
+  // ✅ NEW REQUIREMENT: EXCLUDE EQUIPMENT FINANCING IF NOT ELIGIBLE
+  console.log('[FILTER] Checking Equipment Financing eligibility:', { lookingFor, fundsPurpose });
+  const beforeEquipmentFilter = filteredProducts.length;
+  filteredProducts = filteredProducts.filter(product => {
+    // Only exclude Equipment Financing if user didn't select equipment in either field
+    const isEquipmentFinancing = product.category === 'Equipment Financing';
+    if (isEquipmentFinancing) {
+      const isEligible = lookingFor === 'equipment' || lookingFor === 'both' || fundsPurpose === 'equipment';
+      if (!isEligible) {
+        console.log('[FILTER] Excluding Equipment Financing product:', product.name, '- User not eligible');
+        return false;
+      }
+      console.log('[FILTER] Including Equipment Financing product:', product.name, '- User eligible');
+    }
+    return true;
+  });
+  const afterEquipmentFilter = filteredProducts.length;
+  console.log('[FILTER] Equipment Financing filter:', beforeEquipmentFilter - afterEquipmentFilter, 'products removed');
+
   // ✅ STEP 3: FILTER BY MINIMUM & MAXIMUM FUNDING AMOUNT
   console.log('[FILTER] Filtering by funding amount:', fundingAmount);
   const beforeAmountFilter = filteredProducts.length;
@@ -190,7 +209,13 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     const factorExclusion = accountsReceivableBalance === 0 && 
                            (categoryLower.includes("factoring") || categoryLower.includes("invoice"));
     
-    const passes = geographyMatch && amountMatch && typeMatch && !factorExclusion;
+    // NEW REQUIREMENT: Equipment Financing exclusion rule
+    const equipmentFinancingExclusion = categoryLower.includes("equipment") && 
+                                       lookingFor !== "equipment" && 
+                                       lookingFor !== "both" && 
+                                       fundsPurpose !== "equipment";
+    
+    const passes = geographyMatch && amountMatch && typeMatch && !factorExclusion && !equipmentFinancingExclusion;
     
     // Log specific products for debugging
     if (product.name?.includes('Small Business Revolver') || product.name?.includes('Accord')) {
@@ -264,11 +289,21 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     
     const categoryLower = product.category?.toLowerCase() || '';
     
+    // NEW REQUIREMENT: Equipment Financing exclusion rule for extras too
+    const equipmentFinancingExclusion = categoryLower.includes("equipment") && 
+                                       lookingFor !== "equipment" && 
+                                       lookingFor !== "both" && 
+                                       fundsPurpose !== "equipment";
+    
+    if (equipmentFinancingExclusion) return false;
+
     return (
       // AR balance rule - include invoice factoring ONLY when they have receivables
       (categoryLower.includes("factoring") && accountsReceivableBalance > 0) ||
       // Inventory purpose rule - include purchase order financing for inventory
-      (fundsPurpose === "inventory" && categoryLower.includes("purchase order"))
+      (fundsPurpose === "inventory" && categoryLower.includes("purchase order")) ||
+      // Equipment rule - include equipment financing when eligible
+      (categoryLower.includes("equipment") && (lookingFor === "equipment" || lookingFor === "both" || fundsPurpose === "equipment"))
     );
   });
 
