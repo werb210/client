@@ -31,7 +31,19 @@ export function useProductCategories(formData: RecommendationFormData) {
       
         // Apply filtering logic to get relevant products
         const filteredProducts = filterProducts(products, formData);
-        // console.log('[useProductCategories] Filtered products:', filteredProducts.length);
+        console.log('[useProductCategories] Filtered products:', filteredProducts.length);
+        
+        if (filteredProducts.length === 0) {
+          console.log('[useProductCategories] No products match filters - showing sample of raw products:');
+          console.log('[useProductCategories] First 3 products:', products.slice(0, 3).map(p => ({
+            name: p.name,
+            country: p.country,
+            category: p.category,
+            minAmount: p.minAmount || p.amountMin || p.amount_min,
+            maxAmount: p.maxAmount || p.amountMax || p.amount_max
+          })));
+          console.log('[useProductCategories] Form data filters:', formData);
+        }
       
         // Group products by category
         const categoryGroups: Record<string, StaffLenderProduct[]> = {};

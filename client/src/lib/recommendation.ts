@@ -37,14 +37,14 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
   } = form;
 
   // Enhanced debug logging to diagnose product filtering issue
-  // console.log('[DEBUG] filterProducts - Input parameters:', {
-  //   productCount: products.length,
-  //   headquarters,
-  //   fundingAmount,
-  //   lookingFor,
-  //   accountsReceivableBalance,
-  //   fundsPurpose
-  // });
+  console.log('[DEBUG] filterProducts - Input parameters:', {
+    productCount: products.length,
+    headquarters,
+    fundingAmount,
+    lookingFor,
+    accountsReceivableBalance,
+    fundsPurpose
+  });
 
   // Check for products that should match the user's criteria
   const potentialMatches = products.filter(p => {
@@ -56,15 +56,15 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     return amountInRange && countryMatch;
   });
   
-  // console.log('[DEBUG] Potential matches (amount + country):', potentialMatches.length);
+  console.log('[DEBUG] Potential matches (amount + country):', potentialMatches.length);
   if (potentialMatches.length > 0) {
-    // console.log('[DEBUG] Sample potential match:', {
-    //   name: potentialMatches[0].name,
-    //   country: potentialMatches[0].country,
-    //   category: potentialMatches[0].category,
-    //   minAmount: getAmountValue(potentialMatches[0], 'min'),
-    //   maxAmount: getAmountValue(potentialMatches[0], 'max')
-    // });
+    console.log('[DEBUG] Sample potential match:', {
+      name: potentialMatches[0].name,
+      country: potentialMatches[0].country,
+      category: potentialMatches[0].category,
+      minAmount: getAmountValue(potentialMatches[0], 'min'),
+      maxAmount: getAmountValue(potentialMatches[0], 'max')
+    });
   }
 
   // Count products by country to understand the distribution
