@@ -71,10 +71,11 @@ export const useDocumentVerification = (applicationId: string | null) => {
       }
     },
     enabled: !!applicationId,
-    staleTime: 30000, // 30 seconds
+    staleTime: 10000, // 10 seconds for frequent updates
     gcTime: 300000, // 5 minutes
-    retry: 2,
-    retryDelay: 1000
+    retry: 1,
+    retryDelay: 500,
+    refetchInterval: false // Only manual refetch
   });
 
   // Manual verification function

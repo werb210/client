@@ -59,8 +59,17 @@ export default function Step5DocumentUpload() {
     isLoading: isVerifying,
     isVerifying: isManualVerifying,
     verifyDocuments,
-    canProceedToStep6
+    canProceedToStep6,
+    refetchDocuments
   } = useDocumentVerification(applicationId);
+
+  // Auto-verify documents on Step 5 load
+  useEffect(() => {
+    if (applicationId && !isVerifying) {
+      logger.log('🔄 [STEP5] Auto-verifying documents on load');
+      refetchDocuments();
+    }
+  }, [applicationId, refetchDocuments, isVerifying]);
   
   // ✅ USER SPECIFICATION: Collect files during Step 5
   const [files, setFiles] = useState<{ file: File; type: string; category: string }[]>(
@@ -607,21 +616,35 @@ export default function Step5DocumentUpload() {
       )}
 
       {/* Dynamic Document Requirements Component */}
-      <DynamicDocumentRequirements
-        requirements={intersectionResults.requiredDocuments || []}
-        uploadedFiles={uploadedFiles}
-        onFilesUploaded={handleFilesUploaded}
-        onRequirementsChange={handleRequirementsChange}
-        applicationId={applicationId || 'test-app-123'}
-        onFileAdded={handleFileAdded}
-        onFileRemoved={handleFileRemoved}
-      />
+      <div data-document-upload>
+        <DynamicDocumentRequirements
+          requirements={intersectionResults.requiredDocuments || []}
+          uploadedFiles={uploadedFiles}
+          onFilesUploaded={handleFilesUploaded}
+          onRequirementsChange={handleRequirementsChange}
+          applicationId={applicationId || 'test-app-123'}
+          onFileAdded={handleFileAdded}
+          onFileRemoved={handleFileRemoved}
+        />
+      </div>
 
       {/* Document Upload Status */}
       <DocumentUploadStatus
         verificationResult={verificationResult}
         localUploadedFiles={uploadedFiles}
         isLoading={isVerifying || isManualVerifying}
+        onRetryUpload={(documentType) => {
+          logger.log(`🔄 [STEP5] Retry upload requested for: ${documentType}`);
+          // Scroll to upload area or trigger upload modal
+          const uploadElement = document.querySelector('[data-document-upload]');
+          if (uploadElement) {
+            uploadElement.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+        onRefreshStatus={() => {
+          logger.log('🔄 [STEP5] Manual status refresh requested');
+          refetchDocuments();
+        }}
       />
 
       {/* Progress Summary */}

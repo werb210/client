@@ -5,37 +5,83 @@ import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
 import FileText from 'lucide-react/dist/esm/icons/file-text';
 import { Badge } from './ui/badge';
 import { Card, CardContent } from './ui/card';
+import { Button } from './ui/button';
 import type { DocumentVerificationResult } from '../hooks/useDocumentVerification';
 
 interface DocumentUploadStatusProps {
   verificationResult: DocumentVerificationResult;
   localUploadedFiles: any[];
   isLoading: boolean;
+  onRetryUpload?: (documentType: string) => void;
+  onRefreshStatus?: () => void;
 }
 
 export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
   verificationResult,
   localUploadedFiles,
-  isLoading
+  isLoading,
+  onRetryUpload,
+  onRefreshStatus
 }) => {
   const { documents, requiredDocuments, missingDocuments, hasUploadedDocuments } = verificationResult;
   
-  // Combine backend and local documents for display
-  const allDocuments = [
-    ...documents.map(doc => ({
-      name: doc.fileName,
-      type: doc.documentType,
-      status: 'verified' as const,
-      source: 'backend' as const
-    })),
-    ...localUploadedFiles
-      .filter(local => !documents.some(backend => backend.fileName === local.name))
-      .map(local => ({
-        name: local.name,
-        type: local.documentType || local.category,
-        status: local.status || 'uploaded' as const,
+  // Create comprehensive status for each required document type
+  const getDocumentStatus = (requiredType: string) => {
+    // Check if this type is uploaded in backend
+    const backendDoc = documents.find(doc => 
+      doc.documentType === requiredType || 
+      doc.documentType.toLowerCase().replace(/\s+/g, '_') === requiredType.toLowerCase().replace(/\s+/g, '_')
+    );
+    
+    if (backendDoc) {
+      return {
+        type: requiredType,
+        status: 'verified' as const,
+        document: backendDoc,
+        source: 'backend' as const
+      };
+    }
+
+    // Check if this type is uploaded locally
+    const localDoc = localUploadedFiles.find(local => 
+      local.category === requiredType ||
+      local.documentType === requiredType ||
+      local.category?.toLowerCase().replace(/\s+/g, '_') === requiredType.toLowerCase().replace(/\s+/g, '_')
+    );
+    
+    if (localDoc) {
+      return {
+        type: requiredType,
+        status: 'uploaded' as const,
+        document: localDoc,
         source: 'local' as const
-      }))
+      };
+    }
+
+    // Missing document
+    return {
+      type: requiredType,
+      status: 'missing' as const,
+      document: null,
+      source: null
+    };
+  };
+
+  const documentStatuses = requiredDocuments.map(getDocumentStatus);
+  
+  // Additional uploaded documents not in requirements
+  const additionalDocuments = [
+    ...documents.filter(doc => !requiredDocuments.some(req => 
+      req.toLowerCase().replace(/\s+/g, '_') === doc.documentType.toLowerCase().replace(/\s+/g, '_')
+    )),
+    ...localUploadedFiles.filter(local => 
+      !requiredDocuments.some(req => 
+        req === local.category || 
+        req === local.documentType ||
+        req.toLowerCase().replace(/\s+/g, '_') === (local.category || local.documentType)?.toLowerCase().replace(/\s+/g, '_')
+      ) &&
+      !documents.some(backend => backend.fileName === local.name)
+    )
   ];
 
   const getStatusIcon = (status: string, source: string) => {
@@ -74,12 +120,25 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">Document Upload Status</h3>
-            {isLoading && (
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span>Verifying...</span>
-              </div>
-            )}
+            <div className="flex items-center space-x-2">
+              {isLoading && (
+                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <span>Verifying...</span>
+                </div>
+              )}
+              {onRefreshStatus && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onRefreshStatus}
+                  disabled={isLoading}
+                  className="text-xs h-6"
+                >
+                  Refresh
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Summary */}
@@ -100,31 +159,78 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
             )}
           </div>
 
-          {/* Document List */}
-          {allDocuments.length > 0 ? (
+          {/* Required Documents Status */}
+          {requiredDocuments.length > 0 && (
             <div className="space-y-2">
-              {allDocuments.map((doc, index) => (
+              <h4 className="font-medium text-sm text-gray-700">Required Documents</h4>
+              {documentStatuses.map((docStatus, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
-                    {getStatusIcon(doc.status, doc.source)}
+                    {docStatus.status === 'verified' && <CheckCircle className="w-4 h-4 text-green-600" />}
+                    {docStatus.status === 'uploaded' && <CheckCircle className="w-4 h-4 text-blue-600" />}
+                    {docStatus.status === 'missing' && <AlertCircle className="w-4 h-4 text-red-600" />}
                     <div>
-                      <div className="font-medium text-sm">{doc.name}</div>
-                      <div className="text-xs text-gray-500">{doc.type}</div>
+                      <div className="font-medium text-sm">{docStatus.type}</div>
+                      {docStatus.document && (
+                        <div className="text-xs text-gray-500">
+                          {docStatus.document.fileName || docStatus.document.name}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {getStatusBadge(doc.status, doc.source)}
-                    {doc.source === 'backend' && (
-                      <Badge variant="outline" className="text-xs">Backend Verified</Badge>
+                    {docStatus.status === 'verified' && (
+                      <Badge variant="default" className="bg-green-600">✅ Verified</Badge>
+                    )}
+                    {docStatus.status === 'uploaded' && (
+                      <Badge variant="default" className="bg-blue-600">Uploaded</Badge>
+                    )}
+                    {docStatus.status === 'missing' && (
+                      <Badge variant="destructive">Missing</Badge>
+                    )}
+                    {docStatus.source === 'backend' && (
+                      <Badge variant="outline" className="text-xs">Backend</Badge>
+                    )}
+                    {docStatus.status === 'missing' && onRetryUpload && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onRetryUpload(docStatus.type)}
+                        className="text-xs h-6"
+                      >
+                        Upload
+                      </Button>
                     )}
                   </div>
                 </div>
               ))}
             </div>
-          ) : (
+          )}
+
+          {/* Additional Documents */}
+          {additionalDocuments.length > 0 && (
+            <div className="space-y-2 mt-4">
+              <h4 className="font-medium text-sm text-gray-700">Additional Documents</h4>
+              {additionalDocuments.map((doc, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <div className="font-medium text-sm">{doc.fileName || doc.name}</div>
+                      <div className="text-xs text-gray-500">{doc.documentType || doc.category}</div>
+                    </div>
+                  </div>
+                  <Badge variant="outline">Extra</Badge>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No Documents Message */}
+          {requiredDocuments.length === 0 && additionalDocuments.length === 0 && (
             <div className="text-center py-6 text-gray-500">
               <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <div className="text-sm">No documents uploaded yet</div>
+              <div className="text-sm">No document requirements found</div>
             </div>
           )}
 
