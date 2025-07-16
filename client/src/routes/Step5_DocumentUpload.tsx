@@ -270,13 +270,31 @@ export default function Step5DocumentUpload() {
       return;
     }
 
-    // Allow proceeding even without documents for now to unblock testing
-    if (!allRequirementsComplete && uploadedFiles.length === 0) {
+    // Check if we have documents already uploaded OR files ready to upload
+    if (uploadedFiles.length > 0) {
+      // Documents have been uploaded, proceed directly to Step 6
+      logger.log(`✅ [STEP5] ${uploadedFiles.length} documents already uploaded, proceeding to Step 6`);
+      
+      dispatch({
+        type: 'UPDATE_FORM_DATA',
+        payload: {
+          uploadedDocuments: uploadedFiles,
+        }
+      });
+      
+      dispatch({
+        type: 'MARK_STEP_COMPLETE',
+        payload: 5
+      });
+
       toast({
-        title: "No Documents Uploaded",
-        description: "Consider uploading documents for faster approval, but you can proceed to signature.",
+        title: "Documents Ready",
+        description: `${uploadedFiles.length} documents uploaded successfully.`,
         variant: "default",
       });
+
+      setLocation('/apply/step-6');
+      return;
     }
 
     // Check if we have files to upload
@@ -304,9 +322,8 @@ export default function Step5DocumentUpload() {
         }));
 
         const formData = new FormData();
-        formData.append("file", doc.file);
-        formData.append("applicationId", applicationId);
-        formData.append("document_type", doc.type);
+        formData.append("document", doc.file);
+        formData.append("documentType", doc.category);
 
         logger.log(`📁 [STEP5] Uploading file ${i + 1}/${files.length}:`, {
           fileName: doc.file.name,
