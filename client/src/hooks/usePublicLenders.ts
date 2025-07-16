@@ -10,32 +10,31 @@ export function usePublicLenders() {
   // Use TanStack Query with the IndexedDB caching system
   // CACHE-ONLY SYSTEM: Return static data from IndexedDB cache only
   return useQuery({
-    queryKey: ['cache-only-lenders'],
+    queryKey: ['public-lenders'],
     queryFn: async () => {
       try {
-        const { loadLenderProducts } = await import('../utils/lenderCache');
-        const cached = await loadLenderProducts();
-        return cached || [];
+        const { fetchLenderProducts } = await import('../api/lenderProducts');
+        const products = await fetchLenderProducts();
+        console.log(`[usePublicLenders] Fetched ${products.length} products`);
+        return products;
       } catch (error) {
+        console.error('[usePublicLenders] Error fetching products:', error);
         return [];
       }
     },
-    staleTime: Infinity, // Never refetch in cache-only mode
+    staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
-    retry: false,
-    refetchInterval: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false
+    retry: 3
   });
 }
 
 export function usePublicLenderStats() {
   return useQuery({
-    queryKey: ["cache-only-lender-stats"],
+    queryKey: ["public-lender-stats"],
     queryFn: async () => {
       try {
-        const { loadLenderProducts } = await import('../utils/lenderCache');
-        const products = (await loadLenderProducts()) || [];
+        const { fetchLenderProducts } = await import('../api/lenderProducts');
+        const products = await fetchLenderProducts();
         
         const stats = {
           totalProducts: products.length,
@@ -44,8 +43,10 @@ export function usePublicLenderStats() {
           categories: Array.from(new Set(products.map(p => p.category))).length
         };
         
+        console.log(`[usePublicLenderStats] Generated stats:`, stats);
         return stats;
       } catch (error) {
+        console.error('[usePublicLenderStats] Error:', error);
         return {
           totalProducts: 0,
           maxFunding: 0,
@@ -54,11 +55,8 @@ export function usePublicLenderStats() {
         };
       }
     },
-    staleTime: Infinity, // Never refetch in cache-only mode
+    staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
-    retry: false,
-    refetchInterval: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false
+    retry: 3
   });
 }

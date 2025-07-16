@@ -10,21 +10,23 @@ export interface ProductCategory {
 }
 
 export function useProductCategories(formData: RecommendationFormData) {
-  // Production mode: Console logging disabled
+  // Use the updated usePublicLenders hook
   const { data: products = [], isLoading: productsLoading, error: productsError } = usePublicLenders();
 
   return useQuery({
-    queryKey: ['product-categories-cache-only', formData],
+    queryKey: ['product-categories', formData],
     queryFn: async () => {
       try {
+        console.log(`[useProductCategories] Starting with ${products.length} products`);
+        
         if (productsError) {
           console.warn('[useProductCategories] Products error:', productsError);
-          return []; // Return empty array instead of throwing
+          return [];
         }
         
         if (!products || products.length === 0) {
-          console.warn('[useProductCategories] No products available');
-          return []; // Return empty array instead of throwing
+          console.warn('[useProductCategories] No products available - will retry when products load');
+          return [];
         }
       
         // Apply filtering logic to get relevant products
@@ -64,12 +66,9 @@ export function useProductCategories(formData: RecommendationFormData) {
         return []; // Return empty array on any error
       }
     },
-    enabled: !productsLoading,
-    staleTime: Infinity,
+    enabled: !productsLoading && products.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
-    refetchInterval: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: false
+    retry: 3
   });
 }
