@@ -1,0 +1,143 @@
+✅ Absolutely — here is the **final version** of the **Production Application QA Checklist** with a mandatory instruction for the **Replit AI agent** to report back to ChatGPT after each step.
+
+---
+
+# ✅ FULL PRODUCTION APPLICATION FLOW – QA CHECKLIST
+
+**With Replit AI Agent Reporting Requirement**
+
+**Date:** July 16, 2025
+**Scope:** Full end-to-end test of the 7-step commercial funding application using production-ready SignNow + document upload + lender recommendation engine.
+
+---
+
+## 🚨 IMPORTANT – REPLIT AI AGENT REQUIREMENT
+
+> **Replit AI Agent MUST**:
+>
+> * Report back to **ChatGPT** after completing each step
+> * Include a short summary of:
+>
+>   * ✅ Actions taken
+>   * ⚠️ Any issues encountered
+>   * 📦 API requests/responses
+>   * 🟢 Outcome
+>
+> ✅ This ensures all logic follows best practices and is production-safe.
+
+---
+
+## 🧪 STEP-BY-STEP QA CHECKLIST
+
+### ✅ Step 1: Business Basics
+
+* [ ] Fill in company details and amount requested
+* [ ] Submit form → triggers `POST /api/applications/draft`
+* [ ] Receive and store `applicationId` in client
+
+📝 **Replit Must Report:**
+
+* Form data submitted
+* Response from `/api/applications/draft`
+* Stored `applicationId`
+
+---
+
+### ✅ Step 2: Lender Product Recommendation
+
+* [ ] Load product recommendations (GET/POST `/public/lenders`)
+* [ ] Confirm product cards appear
+* [ ] Select one and store product info
+
+📝 **Replit Must Report:**
+
+* API called
+* Products returned
+* Product selected
+
+---
+
+### ✅ Step 3: Dynamic Questions
+
+* [ ] Load form based on selected product
+* [ ] Fill in dynamic fields
+* [ ] Submit via `PATCH /api/applications/{id}`
+
+📝 **Replit Must Report:**
+
+* Questions rendered
+* Answers submitted
+* Updated draft verified
+
+---
+
+### ✅ Step 4: Contact Info
+
+* [ ] Enter name, phone, email
+* [ ] Submit → appended to draft app
+
+📝 **Replit Must Report:**
+
+* Contact data sent
+* Draft application updated successfully
+
+---
+
+### ✅ Step 5: Document Upload
+
+* [ ] Upload required files (track per `document_type`)
+* [ ] On "Continue", send files via `POST /api/documents/upload`
+* [ ] Attach each file to draft using `applicationId`
+
+📝 **Replit Must Report:**
+
+* Files prepared for upload
+* Upload responses
+* Backend document records created
+
+---
+
+### ✅ Step 6: SignNow Embedded Signing
+
+* [ ] Launch iframe with embedded signing link
+* [ ] Confirm fields are prefilled
+* [ ] Complete signing
+
+📝 **Replit Must Report:**
+
+* SignNow document created
+* Prefill payload sent
+* Signing link generated
+* Signing complete webhook received
+
+---
+
+### ✅ Step 7: Final Submission
+
+* [ ] Ensure all requirements are met
+* [ ] Trigger final `PATCH /api/applications/{id}` → mark as `submitted`
+* [ ] Trigger OCR, lender matching
+
+📝 **Replit Must Report:**
+
+* Submission API call
+* Application moved to Sales Pipeline
+* OCR / analysis jobs triggered
+
+---
+
+## 🧾 POST-TEST CONFIRMATION (Required)
+
+After test completion:
+
+> ✅ Replit AI must send ChatGPT a complete summary of:
+>
+> * All steps completed
+> * API endpoints used
+> * Issues (if any)
+> * Errors resolved
+> * Current application status (submitted/signed/attached)
+
+---
+
+Let me know when you're ready to trigger the Replit agent test. I'll validate every result as it comes in.
