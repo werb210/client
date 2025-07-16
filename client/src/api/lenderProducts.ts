@@ -26,25 +26,49 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
 
     // If no cache, try to fetch from API
     console.log('[LENDER-PRODUCTS] 📡 No cache found, attempting API fetch...');
-    const response = await fetch(`${API_BASE_URL}/api/public/lenders`, {
+    const response = await fetch('/api/public/lenders', {
+      method: 'GET',
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
       }
     });
 
+    console.log(`[LENDER-PRODUCTS] Response status: ${response.status} ${response.statusText}`);
+
     if (response.ok) {
       const data = await response.json();
-      if (data && Array.isArray(data) && data.length > 0) {
-        console.log(`[LENDER-PRODUCTS] ✅ API returned ${data.length} products, caching...`);
-        await saveLenderProducts(data, 'staff-api');
-        return data;
+      console.log(`[LENDER-PRODUCTS] Raw response:`, typeof data, Object.keys(data || {}));
+      
+      // Handle different response formats
+      let products = [];
+      if (Array.isArray(data)) {
+        products = data;
+      } else if (data && typeof data === 'object') {
+        if (data.products && Array.isArray(data.products)) {
+          products = data.products;
+        } else if (data.data && Array.isArray(data.data)) {
+          products = data.data;
+        }
       }
+      
+      if (products.length > 0) {
+        console.log(`[LENDER-PRODUCTS] ✅ API returned ${products.length} products, caching...`);
+        await saveLenderProducts(products, 'staff-api');
+        return products;
+      } else {
+        console.log(`[LENDER-PRODUCTS] ⚠️ No products found in response:`, data);
+      }
+    } else {
+      const errorText = await response.text();
+      console.error(`[LENDER-PRODUCTS] API error: ${response.status} - ${errorText}`);
     }
 
     console.log('[LENDER-PRODUCTS] ❌ No products available from cache or API');
     return [];
   } catch (error) {
     console.error('[LENDER-PRODUCTS] ❌ Error fetching products:', error);
+    console.error('[LENDER-PRODUCTS] Error details:', error.message, error.stack);
     return [];
   }
 }

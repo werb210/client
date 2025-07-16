@@ -133,7 +133,23 @@ app.use((req, res, next) => {
       if (response.ok) {
         const data = await response.json();
         console.log(`📡 [SERVER] ✅ Received ${Array.isArray(data) ? data.length : 'unknown'} products from staff backend`);
-        res.json(data);
+        console.log(`📡 [SERVER] Response type: ${typeof data}, keys: ${Object.keys(data || {})}`);
+        
+        // If staff backend returns wrapped data, extract the products array
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          if (data.products && Array.isArray(data.products)) {
+            console.log(`📡 [SERVER] Extracting products array: ${data.products.length} items`);
+            res.json(data.products);
+          } else if (data.data && Array.isArray(data.data)) {
+            console.log(`📡 [SERVER] Extracting data array: ${data.data.length} items`);
+            res.json(data.data);
+          } else {
+            console.log(`📡 [SERVER] Unknown data structure, returning as-is`);
+            res.json(data);
+          }
+        } else {
+          res.json(data);
+        }
       } else {
         const errorText = await response.text();
         console.error('❌ [SERVER] Staff backend error:', errorText);
