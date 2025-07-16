@@ -1,0 +1,95 @@
+✅ Absolutely — here are the **exact instructions** you can upload or paste into Replit to test uploading **6 bank statement documents** from the **Client application to the Staff application**, using the correct API structure and logging.
+
+---
+
+# 📤 REPLIT INSTRUCTIONS — Test Uploading 6 Bank Statements from Client to Staff Backend
+
+---
+
+## 📌 CONTEXT
+
+* This test simulates Step 5 of the client application
+* It will upload **6 PDF files** labeled as `bank_statements`
+* Each file will be sent using `POST /api/documents/upload` to the Staff backend
+* The documents must be **attached to an existing draft application ID**
+
+---
+
+## ✅ STEP-BY-STEP TASK FOR REPLIT AI AGENT
+
+### 🔹 1. Use this existing draft `applicationId` (replace if needed):
+
+```ts
+const applicationId = "123e4567-e89b-12d3-a456-426614174000";
+```
+
+---
+
+### 🔹 2. Prepare 6 test PDF files
+
+Assume these are loaded from the test suite or file system:
+
+```ts
+const testBankStatements = [
+  { file: bank1, type: "bank_statements" },
+  { file: bank2, type: "bank_statements" },
+  { file: bank3, type: "bank_statements" },
+  { file: bank4, type: "bank_statements" },
+  { file: bank5, type: "bank_statements" },
+  { file: bank6, type: "bank_statements" },
+];
+```
+
+Each `file` must be a valid `File` or Blob object (PDF format).
+
+---
+
+### 🔹 3. Upload Each File via API
+
+Use `fetch` to send a `multipart/form-data` request to the Staff API:
+
+```ts
+for (const doc of testBankStatements) {
+  const formData = new FormData();
+  formData.append("file", doc.file);
+  formData.append("applicationId", applicationId);
+  formData.append("document_type", doc.type);
+
+  const response = await fetch("https://staff.boreal.financial/api/documents/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  const result = await response.json();
+  console.log("📤 Upload result:", {
+    file: doc.file.name,
+    status: response.status,
+    body: result,
+  });
+}
+```
+
+---
+
+## ✅ REPLIT MUST REPORT BACK TO CHATGPT:
+
+For each document upload:
+
+1. 🔢 File name uploaded
+2. 📎 Application ID used
+3. 📤 API status code (200 / 201 / error)
+4. 🧾 Response body from backend
+5. ✅ Confirm document appears in Sales Pipeline under correct application
+6. ⚠️ Any errors (validation, network, response format, etc.)
+
+---
+
+Once all 6 uploads are complete, Replit must return a full summary of:
+
+* Number of successful uploads
+* Any failed uploads with reasons
+* Final status of application document tab
+
+---
+
+Would you like me to include mock PDF files or use local test files from the Replit sandbox during the test?
