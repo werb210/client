@@ -25,10 +25,16 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
 }) => {
   const { documents, requiredDocuments, missingDocuments, hasUploadedDocuments } = verificationResult;
   
+  // ✅ Safety checks to prevent .map() on undefined
+  const safeDocuments = Array.isArray(documents) ? documents : [];
+  const safeRequiredDocuments = Array.isArray(requiredDocuments) ? requiredDocuments : [];
+  const safeMissingDocuments = Array.isArray(missingDocuments) ? missingDocuments : [];
+  const safeLocalUploadedFiles = Array.isArray(localUploadedFiles) ? localUploadedFiles : [];
+  
   // Create comprehensive status for each required document type
   const getDocumentStatus = (requiredType: string) => {
     // Check if this type is uploaded in backend
-    const backendDoc = documents.find(doc => 
+    const backendDoc = safeDocuments.find(doc => 
       doc.documentType === requiredType || 
       doc.documentType.toLowerCase().replace(/\s+/g, '_') === requiredType.toLowerCase().replace(/\s+/g, '_')
     );
@@ -43,7 +49,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
     }
 
     // Check if this type is uploaded locally
-    const localDoc = localUploadedFiles.find(local => 
+    const localDoc = safeLocalUploadedFiles.find(local => 
       local.category === requiredType ||
       local.documentType === requiredType ||
       local.category?.toLowerCase().replace(/\s+/g, '_') === requiredType.toLowerCase().replace(/\s+/g, '_')
@@ -67,20 +73,20 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
     };
   };
 
-  const documentStatuses = requiredDocuments.map(getDocumentStatus);
+  const documentStatuses = safeRequiredDocuments.map(getDocumentStatus);
   
   // Additional uploaded documents not in requirements
   const additionalDocuments = [
-    ...documents.filter(doc => !requiredDocuments.some(req => 
+    ...safeDocuments.filter(doc => !safeRequiredDocuments.some(req => 
       req.toLowerCase().replace(/\s+/g, '_') === doc.documentType.toLowerCase().replace(/\s+/g, '_')
     )),
-    ...localUploadedFiles.filter(local => 
-      !requiredDocuments.some(req => 
+    ...safeLocalUploadedFiles.filter(local => 
+      !safeRequiredDocuments.some(req => 
         req === local.category || 
         req === local.documentType ||
         req.toLowerCase().replace(/\s+/g, '_') === (local.category || local.documentType)?.toLowerCase().replace(/\s+/g, '_')
       ) &&
-      !documents.some(backend => backend.fileName === local.name)
+      !safeDocuments.some(backend => backend.fileName === local.name)
     )
   ];
 
@@ -207,6 +213,15 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
             </div>
           )}
 
+          {/* Empty State Message */}
+          {documentStatuses.length === 0 && additionalDocuments.length === 0 && (
+            <div className="text-center py-6 text-gray-500">
+              <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <div className="text-sm">No documents found</div>
+              <div className="text-xs mt-1">Upload documents when requirements are available</div>
+            </div>
+          )}
+
           {/* Additional Documents */}
           {additionalDocuments.length > 0 && (
             <div className="space-y-2 mt-4">
@@ -227,7 +242,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           )}
 
           {/* No Documents Message */}
-          {requiredDocuments.length === 0 && additionalDocuments.length === 0 && (
+          {safeRequiredDocuments.length === 0 && additionalDocuments.length === 0 && (
             <div className="text-center py-6 text-gray-500">
               <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <div className="text-sm">No document requirements found</div>
@@ -235,14 +250,14 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           )}
 
           {/* Missing Documents */}
-          {missingDocuments.length > 0 && (
+          {safeMissingDocuments.length > 0 && (
             <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
               <div className="flex items-center space-x-2 mb-2">
                 <AlertCircle className="w-4 h-4 text-orange-600" />
                 <span className="font-medium text-orange-800">Missing Documents</span>
               </div>
               <ul className="text-sm text-orange-700 space-y-1">
-                {missingDocuments.map((doc, index) => (
+                {safeMissingDocuments.map((doc, index) => (
                   <li key={index}>• {doc}</li>
                 ))}
               </ul>
