@@ -32,6 +32,10 @@ import FileText from 'lucide-react/dist/esm/icons/file-text';
 import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
 import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 import Info from 'lucide-react/dist/esm/icons/info';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+
+import { DocumentUploadStatus } from '@/components/DocumentUploadStatus';
+import { useDocumentVerification } from '@/hooks/useDocumentVerification';
 
 import type { UploadedFile } from '../components/DynamicDocumentRequirements';
 
@@ -48,6 +52,15 @@ export default function Step5DocumentUpload() {
     fromLocalStorage: localStorage.getItem('applicationId'),
     finalId: applicationId
   });
+
+  // ✅ NEW: Document verification system
+  const {
+    verificationResult,
+    isLoading: isVerifying,
+    isVerifying: isManualVerifying,
+    verifyDocuments,
+    canProceedToStep6
+  } = useDocumentVerification(applicationId);
   
   // ✅ USER SPECIFICATION: Collect files during Step 5
   const [files, setFiles] = useState<{ file: File; type: string; category: string }[]>(
@@ -259,7 +272,7 @@ export default function Step5DocumentUpload() {
     setLocation('/apply/step-4');
   };
 
-  // ✅ USER SPECIFICATION: Handle file collection and sequential upload
+  // ✅ ENHANCED: Bulletproof navigation with backend verification
   const handleNext = async () => {
     if (!applicationId) {
       toast({
@@ -270,10 +283,45 @@ export default function Step5DocumentUpload() {
       return;
     }
 
-    // Check if we have documents already uploaded OR files ready to upload
-    if (uploadedFiles.length > 0) {
-      // Documents have been uploaded, proceed directly to Step 6
-      logger.log(`✅ [STEP5] ${uploadedFiles.length} documents already uploaded, proceeding to Step 6`);
+    logger.log('🚀 [STEP5] Navigation attempt - checking conditions...');
+
+    // Step 1: Backend verification check
+    try {
+      logger.log('🔍 [STEP5] Performing backend document verification...');
+      const backendVerification = await verifyDocuments();
+      
+      if (backendVerification.hasUploadedDocuments) {
+        logger.log(`✅ [STEP5] Backend confirmed ${backendVerification.documents.length} documents, proceeding to Step 6`);
+        
+        dispatch({
+          type: 'UPDATE_FORM_DATA',
+          payload: {
+            uploadedDocuments: uploadedFiles,
+            verifiedDocuments: backendVerification.documents
+          }
+        });
+        
+        dispatch({
+          type: 'MARK_STEP_COMPLETE',
+          payload: 5
+        });
+
+        toast({
+          title: "Documents Verified",
+          description: `${backendVerification.documents.length} documents verified on backend.`,
+          variant: "default",
+        });
+
+        setLocation('/apply/step-6');
+        return;
+      }
+    } catch (error) {
+      logger.warn('⚠️ [STEP5] Backend verification failed, checking local state:', error);
+    }
+
+    // Step 2: Local document check (fallback)
+    if (canProceedToStep6(uploadedFiles)) {
+      logger.log(`✅ [STEP5] Local verification: ${uploadedFiles.length} documents uploaded, proceeding to Step 6`);
       
       dispatch({
         type: 'UPDATE_FORM_DATA',
@@ -297,11 +345,14 @@ export default function Step5DocumentUpload() {
       return;
     }
 
-    // Check if we have files to upload
-    if (files.length === 0) {
+    // Step 3: Files ready to upload
+    if (files.length > 0) {
+      logger.log(`📁 [STEP5] ${files.length} files ready to upload, proceeding with upload...`);
+      // Continue with existing upload logic
+    } else {
       toast({
-        title: "No Files Selected",
-        description: "Please select files to upload before proceeding.",
+        title: "No Documents or Files",
+        description: "Please upload documents or select files before proceeding.",
         variant: "destructive",
       });
       return;
@@ -552,6 +603,13 @@ export default function Step5DocumentUpload() {
         onFileRemoved={handleFileRemoved}
       />
 
+      {/* Document Upload Status */}
+      <DocumentUploadStatus
+        verificationResult={verificationResult}
+        localUploadedFiles={uploadedFiles}
+        isLoading={isVerifying || isManualVerifying}
+      />
+
       {/* Progress Summary */}
       <Card>
         <CardContent className="pt-6">
@@ -565,6 +623,21 @@ export default function Step5DocumentUpload() {
               Step 5 of 7
             </div>
           </div>
+          {/* Manual Verification Button */}
+          {applicationId && (
+            <div className="mt-4 flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={verifyDocuments}
+                disabled={isManualVerifying}
+                className="flex items-center space-x-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${isManualVerifying ? 'animate-spin' : ''}`} />
+                <span>{isManualVerifying ? 'Verifying...' : 'Verify Documents'}</span>
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -581,13 +654,18 @@ export default function Step5DocumentUpload() {
 
         <Button
           onClick={handleNext}
-          disabled={isUploading}
+          disabled={isUploading || isManualVerifying}
           className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
         >
           {isUploading ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               <span>Uploading {Object.keys(uploadProgress).length} files...</span>
+            </>
+          ) : isManualVerifying ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <span>Verifying Documents...</span>
             </>
           ) : (
             <>

@@ -572,6 +572,52 @@ app.use((req, res, next) => {
     }
   });
 
+  // Document verification endpoint - GET documents for application
+  app.get('/api/public/applications/:id/documents', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`📋 [SERVER] Fetching documents for application ${id}`);
+      
+      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${id}/documents`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${cfg.clientToken}`
+        }
+      });
+      
+      console.log(`📋 [SERVER] Staff backend documents response: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('❌ [SERVER] Staff backend documents error:', errorData);
+        
+        res.status(503).json({
+          status: 'error',
+          error: 'Document verification unavailable',
+          message: 'Document verification service is temporarily unavailable.',
+          applicationId: id,
+          documents: []
+        });
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('✅ [SERVER] Staff backend documents success:', data);
+      
+      res.json(data);
+    } catch (error) {
+      console.error('❌ [SERVER] Document verification failed:', error);
+      
+      res.status(503).json({
+        status: 'error',
+        error: 'Document verification unavailable',
+        message: 'Document verification service is temporarily unavailable.',
+        applicationId: req.params.id,
+        documents: []
+      });
+    }
+  });
+
   // Serve static files - will be configured after httpServer is created
 
 

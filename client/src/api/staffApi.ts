@@ -529,6 +529,24 @@ class StaffApiClient {
       throw error;
     }
   }
+
+  // Document verification - check uploaded documents
+  async getUploadedDocuments(applicationId: string): Promise<{
+    documents: Array<{
+      id: string;
+      documentType: string;
+      fileName: string;
+      uploadedAt: string;
+    }>;
+    requiredDocuments: string[];
+    missingDocuments: string[];
+    isComplete: boolean;
+  }> {
+    const response = await this.makeRequest<any>(
+      `/api/public/applications/${applicationId}/documents`
+    );
+    return response;
+  }
 }
 
 export const staffApi = new StaffApiClient();
