@@ -374,7 +374,7 @@ export default function Step4ApplicantInfoComplete() {
         full_business_name: step3.legalName,
         business_name: step3.businessName || step3.legalName,
         business_phone: step3.businessPhone,
-        business_email: step3.businessEmail,
+        business_email: step4.applicantEmail || step4.email || "unknown", // Fixed: use contact_email fallback
         business_state: step3.businessState,
         
         // Step 4 Key Fields

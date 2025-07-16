@@ -183,7 +183,53 @@ export default function Step6SignNowIntegration() {
         },
         body: JSON.stringify({
           templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5',
-          redirectUrl: 'https://clientportal.boreal.financial/#/step7-finalization'
+          redirectUrl: 'https://clientportal.boreal.financial/#/step7-finalization',
+          smartFields: {
+            // Business Details (Step 3)
+            business_name: state.step3?.operatingName || state.step3?.legalName || "unknown",
+            business_dba_name: state.step3?.operatingName || "unknown", 
+            business_legal_name: state.step3?.legalName || "unknown",
+            business_phone: state.step3?.businessPhone || "unknown",
+            business_street_address: state.step3?.businessStreetAddress || "unknown",
+            business_city: state.step3?.businessCity || "unknown",
+            business_state: state.step3?.businessState || "unknown",
+            business_zip: state.step3?.businessPostalCode || state.step3?.businessZipCode || "",
+            business_website: state.step3?.businessWebsite || "N/A",
+            business_email: state.step4?.applicantEmail || state.step4?.email || "unknown", // Fixed: use contact_email fallback
+            
+            // Applicant Info (Step 4)
+            first_name: state.step4?.applicantFirstName || "unknown",
+            last_name: state.step4?.applicantLastName || "unknown", 
+            contact_first_name: state.step4?.applicantFirstName || "unknown",
+            contact_last_name: state.step4?.applicantLastName || "unknown",
+            contact_email: state.step4?.applicantEmail || state.step4?.email || "unknown",
+            phone_number: state.step4?.applicantPhone || "unknown",
+            ownership_percentage: state.step4?.ownershipPercentage || "unknown",
+            
+            // Financial Info (Step 1)
+            amount_requested: state.step1?.requestedAmount || state.step1?.fundingAmount || "unknown",
+            requested_amount: state.step1?.requestedAmount || state.step1?.fundingAmount || "unknown",
+            use_of_funds: state.step1?.fundsPurpose || state.step1?.useOfFunds || "unknown",
+            
+            // Missing field fallbacks
+            credit_score: "unknown", // no longer collected
+            years_with_business: state.step3?.businessStartDate ? 
+              (() => {
+                try {
+                  const start = new Date(state.step3.businessStartDate);
+                  const today = new Date();
+                  const years = Math.floor((today.getTime() - start.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+                  return Math.max(0, years).toString();
+                } catch {
+                  return "unknown";
+                }
+              })() : "unknown",
+            
+            // Partner info (if applicable)  
+            partner_first_name: state.step4?.partnerFirstName || "",
+            partner_last_name: state.step4?.partnerLastName || "",
+            partner_email: state.step4?.partnerEmail || ""
+          }
         })
       })
         .then(res => {

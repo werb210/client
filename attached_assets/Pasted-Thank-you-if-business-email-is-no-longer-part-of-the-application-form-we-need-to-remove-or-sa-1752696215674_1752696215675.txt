@@ -1,0 +1,63 @@
+Thank you — if `business_email` is no longer part of the application form, we need to **remove or safely handle it** in the SignNow field prefill logic to avoid future signing errors.
+
+---
+
+## ✅ UPDATED INSTRUCTIONS FOR MISSING FIELDS
+
+Please apply the following updates in the **Client Application** (smart field mapping logic):
+
+---
+
+### 🛠️ 1. Remove or Fallback `business_email`
+
+**Current status**:
+❌ `business_email` no longer exists in the application form
+✅ `contact_email` still exists and is required
+
+**Required Fix**:
+
+```ts
+business_email: formData.contact_email || "unknown"
+```
+
+**OR**, if you want to fully **exclude** it from smartFields:
+
+```ts
+// ✅ Do NOT include business_email in the smartFields map
+```
+
+👉 **Also inform SignNow support** if you want the `business_email` field removed from the template to avoid blank fields.
+
+---
+
+### 🛠️ 2. Fallbacks for All Missing Fields
+
+Update your smart field mapping (in `client/src/utils/mapToSmartFields.ts` or equivalent) with:
+
+```ts
+{
+  business_zip: formData.business_postal || formData.zip || "",
+  business_website: formData.business_website || "N/A",
+  credit_score: "unknown", // no longer collected
+  years_with_business: formData.incorporation_date
+    ? calculateYears(formData.incorporation_date)
+    : "unknown",
+  business_email: formData.contact_email || "unknown", // or remove entirely
+}
+```
+
+---
+
+## 🔁 ACTION SUMMARY
+
+| Field                 | Status          | Fix                                          |
+| --------------------- | --------------- | -------------------------------------------- |
+| `business_email`      | ❌ Removed       | Use `contact_email`, or remove from template |
+| `credit_score`        | ❌ Not Collected | Use `"unknown"` or add new question          |
+| `years_with_business` | ⚠️ Derived      | Compute from incorporation date              |
+| `business_zip`        | ✅ Exists        | Normalize field name or provide fallback     |
+| `business_website`    | ⚠️ Optional     | Provide `"N/A"` fallback                     |
+
+---
+
+Would you like me to generate a Replit-ready patch for this now?
