@@ -46,6 +46,9 @@ interface DynamicDocumentRequirementsProps {
   onFilesUploaded: (files: UploadedFile[]) => void;
   onRequirementsChange?: (allComplete: boolean, totalRequirements: number) => void;
   applicationId: string;
+  // ✅ USER SPECIFICATION: File collection callbacks
+  onFileAdded?: (file: File, documentType: string, category: string) => void;
+  onFileRemoved?: (fileName: string) => void;
 }
 
 // Individual File Item Component
@@ -98,13 +101,17 @@ function UnifiedDocumentUploadCard({
   uploadedFiles, 
   onFilesUploaded, 
   cardIndex,
-  applicationId 
+  applicationId,
+  onFileAdded,
+  onFileRemoved
 }: {
   doc: RequiredDoc;
   uploadedFiles: UploadedFile[];
   onFilesUploaded: (files: UploadedFile[]) => void;
   cardIndex: number;
   applicationId: string;
+  onFileAdded?: (file: File, documentType: string, category: string) => void;
+  onFileRemoved?: (fileName: string) => void;
 }) {
   const { toast } = useToast();
   
@@ -174,6 +181,24 @@ function UnifiedDocumentUploadCard({
         return;
       }
       
+      // ✅ USER SPECIFICATION: Use file collection callbacks instead of immediate upload
+      if (onFileAdded) {
+        files.forEach(file => {
+          onFileAdded(file, category, doc.label);
+        });
+        
+        toast({
+          title: "Files Added",
+          description: `${files.length} file(s) added to upload queue.`,
+          variant: "default",
+        });
+        
+        // Clear the input
+        e.target.value = '';
+        return;
+      }
+      
+      // Fallback to immediate upload for backward compatibility
       // Create upload entries with uploading status
       const uploadingFiles = files.map(file => ({
         id: Math.random().toString(36).substr(2, 9),
@@ -363,7 +388,9 @@ export function DynamicDocumentRequirements({
   uploadedFiles,
   onFilesUploaded,
   onRequirementsChange,
-  applicationId
+  applicationId,
+  onFileAdded,
+  onFileRemoved
 }: DynamicDocumentRequirementsProps) {
   
   // State for document requirements  
@@ -477,6 +504,8 @@ export function DynamicDocumentRequirements({
             onFilesUploaded={onFilesUploaded}
             cardIndex={index}
             applicationId={applicationId}
+            onFileAdded={onFileAdded}
+            onFileRemoved={onFileRemoved}
           />
         )) : (
           <div className="col-span-full text-center py-8">

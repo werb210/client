@@ -30,6 +30,12 @@ export interface DocumentUploadData {
     status: 'uploading' | 'completed' | 'error';
     documentType: string;
   }>;
+  // New: Track files with their categories during Step 5
+  files?: Array<{
+    file: File;
+    type: string;
+    category: string;
+  }>;
   completed?: boolean;
 }
 
@@ -73,6 +79,10 @@ type FormDataAction =
   | { type: 'UPDATE_STEP3'; payload: Partial<ApplicationForm> }
   | { type: 'UPDATE_STEP4'; payload: Partial<ApplicationForm> }
   | { type: 'UPDATE_STEP5'; payload: Partial<DocumentUploadData> }
+  | { type: 'SET_APPLICATION_ID'; payload: string }
+  | { type: 'ADD_FILE'; payload: { file: File; type: string; category: string } }
+  | { type: 'REMOVE_FILE'; payload: string }
+  | { type: 'CLEAR_FILES' }
   | { type: 'UPDATE_STEP6'; payload: Partial<FormDataState['step6Signature']> }
   | { type: 'UPDATE_STEP6_SIGNATURE'; payload: Partial<FormDataState['step6Signature']> }
   | { type: 'UPDATE_STEP4_SUBMISSION'; payload: Partial<ApplicationForm> }
@@ -189,6 +199,33 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
       return {
         ...state,
         applicationId: action.payload,
+      };
+    case 'ADD_FILE':
+      return {
+        ...state,
+        step5DocumentUpload: {
+          ...state.step5DocumentUpload,
+          files: [
+            ...(state.step5DocumentUpload?.files || []),
+            action.payload,
+          ],
+        },
+      };
+    case 'REMOVE_FILE':
+      return {
+        ...state,
+        step5DocumentUpload: {
+          ...state.step5DocumentUpload,
+          files: state.step5DocumentUpload?.files?.filter(f => f.file.name !== action.payload) || [],
+        },
+      };
+    case 'CLEAR_FILES':
+      return {
+        ...state,
+        step5DocumentUpload: {
+          ...state.step5DocumentUpload,
+          files: [],
+        },
       };
     case 'SET_SIGNING_URL':
       return {

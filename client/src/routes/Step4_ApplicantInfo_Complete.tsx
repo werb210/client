@@ -82,6 +82,11 @@ export default function Step4ApplicantInfoComplete() {
   // SSN Warning Modal states
   const [showSsnWarning, setShowSsnWarning] = useState(false);
   const [continuePending, setContinuePending] = useState(false);
+  
+  // Application ID state for persistence
+  const [applicationId, setApplicationId] = useState<string | null>(
+    state.applicationId || localStorage.getItem('applicationId')
+  );
 
   // Detect region from Step 1 business location
   useEffect(() => {
@@ -447,13 +452,14 @@ export default function Step4ApplicantInfoComplete() {
           logger.log('🔑 Full applicationId from response:', rawId);
           logger.log('🔑 Clean UUID extracted:', uuid);
           
-          // Save to Context
-          dispatch({ type: 'UPDATE_FORM_DATA', payload: { applicationId: uuid } });
+          // ✅ USER SPECIFICATION: Store applicationId in useState
+          setApplicationId(uuid);
           
-          // Save to localStorage
+          // Save to Context and localStorage
+          dispatch({ type: 'SET_APPLICATION_ID', payload: uuid });
           localStorage.setItem('applicationId', uuid);
           
-          logger.log('💾 Stored applicationId in context and localStorage:', uuid);
+          logger.log('💾 Stored applicationId in state, context and localStorage:', uuid);
           logger.log('✅ Step 4 API call SUCCESSFUL - Status 200');
         } else {
           logger.error('❌ Failed to get applicationId from response:', result);
