@@ -51,11 +51,31 @@ export async function getDocumentRequirementsAggregation(
     
     const data = await response.json();
     
-    if (!data.success || !data.products || !Array.isArray(data.products)) {
+    console.log(`🔍 [AGGREGATION] API Response structure:`, {
+      dataType: typeof data,
+      isArray: Array.isArray(data),
+      hasSuccess: 'success' in data,
+      success: data.success,
+      hasProducts: 'products' in data,
+      productsType: typeof data.products,
+      productCount: Array.isArray(data) ? data.length : data.products?.length,
+      dataKeys: Array.isArray(data) ? ['array'] : Object.keys(data)
+    });
+    
+    // Handle both direct array and wrapped response formats
+    let allProducts;
+    if (Array.isArray(data)) {
+      // Direct array response (server extracts data.products for us)
+      allProducts = data;
+      console.log(`📦 [AGGREGATION] Direct array response with ${data.length} products`);
+    } else if (data.success && Array.isArray(data.products)) {
+      // Wrapped response format
+      allProducts = data.products;
+      console.log(`📦 [AGGREGATION] Wrapped response with ${data.products.length} products`);
+    } else {
+      console.error('❌ [AGGREGATION] Invalid API response format:', data);
       throw new Error('Invalid API response format');
     }
-    
-    const allProducts = data.products;
     console.log(`📦 [AGGREGATION] Loaded ${allProducts.length} total products from staff API`);
     
     // Normalize country format
