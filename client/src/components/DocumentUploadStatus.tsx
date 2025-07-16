@@ -1,8 +1,5 @@
 import React from 'react';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import Clock from 'lucide-react/dist/esm/icons/clock';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
+import { CheckCircle, Clock, AlertCircle, FileText } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
