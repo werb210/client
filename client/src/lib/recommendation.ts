@@ -36,8 +36,7 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     fundsPurpose,
   } = form;
 
-  // Enhanced debug logging to diagnose product filtering issue
-  console.log('[DEBUG] filterProducts - Input parameters:', {
+  console.log('[FILTER] Starting with parameters:', {
     productCount: products.length,
     headquarters,
     fundingAmount,
@@ -48,45 +47,65 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
   
   // CRITICAL: Check if we have any products at all
   if (!products || products.length === 0) {
-    console.log('[DEBUG] No products provided to filter!');
+    console.log('[FILTER] No products provided to filter!');
     return [];
   }
 
-  // Check for products that should match the user's criteria
-  const potentialMatches = products.filter(p => {
-    const minAmount = getAmountValue(p, 'min');
-    const maxAmount = getAmountValue(p, 'max');
-    const amountInRange = fundingAmount >= minAmount && fundingAmount <= maxAmount;
-    const countryMatch = p.country === headquarters;
-    
-    return amountInRange && countryMatch;
+  // ✅ STEP 1: EXCLUDE INVOICE FACTORING IF NOT ELIGIBLE
+  let filteredProducts = products;
+  
+  // Check if user has accounts receivable (Step 1 answer)
+  const hasAccountsReceivable = accountsReceivableBalance > 0;
+  console.log('[FILTER] Has accounts receivable:', hasAccountsReceivable, '(balance:', accountsReceivableBalance, ')');
+  
+  if (!hasAccountsReceivable) {
+    const beforeCount = filteredProducts.length;
+    filteredProducts = filteredProducts.filter(product => product.category !== 'Invoice Factoring');
+    const afterCount = filteredProducts.length;
+    console.log('[FILTER] Excluded Invoice Factoring:', beforeCount - afterCount, 'products removed');
+  }
+
+  // ✅ STEP 2: FILTER BY COUNTRY (CA or US)
+  const normalizedHQ = headquarters === 'united-states' || headquarters === 'United States' || headquarters === 'US' ? 'US' :
+                       headquarters === 'canada' || headquarters === 'Canada' || headquarters === 'CA' ? 'CA' : 
+                       headquarters;
+  
+  console.log('[FILTER] Filtering by country:', normalizedHQ);
+  const beforeCountryFilter = filteredProducts.length;
+  filteredProducts = filteredProducts.filter(product => product.country === normalizedHQ);
+  const afterCountryFilter = filteredProducts.length;
+  console.log('[FILTER] Country filter:', beforeCountryFilter - afterCountryFilter, 'products removed');
+
+  // ✅ STEP 3: FILTER BY MINIMUM & MAXIMUM FUNDING AMOUNT
+  console.log('[FILTER] Filtering by funding amount:', fundingAmount);
+  const beforeAmountFilter = filteredProducts.length;
+  filteredProducts = filteredProducts.filter(product => {
+    const minAmount = getAmountValue(product, 'min');
+    const maxAmount = getAmountValue(product, 'max');
+    return fundingAmount >= minAmount && fundingAmount <= maxAmount;
   });
-  
-  console.log('[DEBUG] Potential matches (amount + country):', potentialMatches.length);
-  if (potentialMatches.length > 0) {
-    console.log('[DEBUG] Sample potential match:', {
-      name: potentialMatches[0].name,
-      country: potentialMatches[0].country,
-      category: potentialMatches[0].category,
-      minAmount: getAmountValue(potentialMatches[0], 'min'),
-      maxAmount: getAmountValue(potentialMatches[0], 'max')
-    });
-  }
+  const afterAmountFilter = filteredProducts.length;
+  console.log('[FILTER] Amount filter:', beforeAmountFilter - afterAmountFilter, 'products removed');
 
-  // Count products by country to understand the distribution
-  const countryStats = products.reduce((acc, p) => {
-    const country = p.country || 'Unknown';
-    acc[country] = (acc[country] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  
-  // console.log('[DEBUG] Products by country:', countryStats);
+  // ✅ STEP 4: GROUP BY CATEGORY (for display purposes)
+  const categoryGroups = filteredProducts.reduce((groups, product) => {
+    const category = product.category;
+    if (!groups[category]) {
+      groups[category] = [];
+    }
+    groups[category].push(product);
+    return groups;
+  }, {} as Record<string, StaffLenderProduct[]>);
 
-  // Show all available field names in first product
-  if (products.length > 0) {
-    // console.log('[DEBUG] Available fields in products:', Object.keys(products[0]));
-    // console.log('[DEBUG] Sample product:', products[0]);
-  }
+  console.log('[FILTER] Final results by category:', 
+    Object.entries(categoryGroups).map(([category, products]) => 
+      `${category}: ${products.length} products`
+    ).join(', ')
+  );
+
+  console.log('[FILTER] Total products after filtering:', filteredProducts.length);
+  
+  return filteredProducts;
 
   // Check for specific missing products (Accord and Small Business Revolver)
   const accordProducts = products.filter(p => 

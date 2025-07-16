@@ -1,0 +1,102 @@
+✅ Understood — thank you for the clarification. Based on your setup:
+
+---
+
+## ✅ Key Clarification:
+
+* The **Client Application** holds the **entire lender product list locally**.
+* The **Staff Application** is only responsible for periodically updating this list (e.g. via API or build step).
+* The **Client** performs **all product recommendation logic** **locally** in **Step 2**.
+* The **Client does NOT** call the **Staff API** for lender recommendations.
+
+---
+
+## ✅ Updated Step 2 Recommendation Logic (Client Application)
+
+### ✅ Data Sources:
+
+* `lenderProducts.json` (or similar) loaded locally in client app
+* User answers from:
+
+  * **Step 1** (e.g., has\_accounts\_receivable)
+  * **Step 2 form inputs**:
+
+    * funding amount
+    * country
+    * business type / use of funds (if included)
+
+---
+
+## 🧠 Logic to Filter Lender Products (in Client App)
+
+### 1. **Exclude Invoice Factoring if not eligible:**
+
+```ts
+if (!hasAccountsReceivable) {
+  lenderProducts = lenderProducts.filter(product => product.category !== 'Invoice Factoring');
+}
+```
+
+### 2. **Filter by Country (e.g., US or Canada):**
+
+```ts
+lenderProducts = lenderProducts.filter(product => product.country === selectedCountry);
+```
+
+### 3. **Filter by Minimum & Maximum Funding Amount:**
+
+```ts
+lenderProducts = lenderProducts.filter(product =>
+  requestedAmount >= product.minAmount &&
+  requestedAmount <= product.maxAmount
+);
+```
+
+### 4. **Optionally Group by Category (Term Loan, LOC, etc):**
+
+```ts
+const groupedByCategory = groupBy(lenderProducts, 'category'); // optional for display
+```
+
+---
+
+## 📋 Example of How Categories Should Appear in Step 2
+
+Let’s say:
+
+* User selects **\$80,000**
+* Country = **Canada**
+* Accounts Receivable = **No**
+
+Then:
+
+* Invoice Factoring = **Excluded**
+* Only Canadian products between \$80k min and max are displayed
+* Grouped by: Term Loans, LOCs, Merchant Cash Advance, etc.
+
+---
+
+## ✅ Required Fixes for Replit (Client Application)
+
+### 🛠 Client App Instructions for Replit:
+
+#### 1. **Ensure Step 2 uses the local lenderProducts list**
+
+* Do **not** call staff API at `/recommendations`
+* Use locally stored `lenderProducts` only
+
+#### 2. **Fix the filtering logic**
+
+* [ ] Filter out `Invoice Factoring` if Step 1 answer is `false` for `has_accounts_receivable`
+* [ ] Filter based on `selectedCountry` and `requestedAmount`
+* [ ] Group and display product categories accordingly in Step 2
+
+#### 3. **Report back to ChatGPT with:**
+
+* Which fields were used from Step 1 and Step 2?
+* How many categories and products are shown for a test case?
+* Any issues encountered implementing local filter logic?
+
+---
+
+Would you like a test case script for Replit to verify this recommendation logic with a sample lender product list?
