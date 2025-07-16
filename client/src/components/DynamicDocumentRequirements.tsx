@@ -224,26 +224,16 @@ function UnifiedDocumentUploadCard({
         
         const formData = new FormData();
         files.forEach((file) => formData.append('document', file));
-        // Convert display name to backend enum format
-        const backendEnumType = category === "Bank Statements" ? "bank_statements" : 
-                               category === "Financial Statements" ? "financial_statements" :
-                               category === "Business License" ? "business_license" :
-                               category === "Insurance Certificate" ? "insurance_certificate" :
-                               category.toLowerCase().replace(/\s+/g, '_');
-        formData.append('documentType', backendEnumType);
+        const normalizedType = doc.label.toLowerCase().replace(/\s+/g, '_'); // e.g. "Bank Statements" → "bank_statements"
+        formData.append('document_type', normalizedType);
         
         // ✅ Task 1: Enhanced Document Upload with Comprehensive Logging
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const formData = new FormData();
           formData.append('document', file);
-          // Convert display name to backend enum format  
-          const backendEnumType = category === "Bank Statements" ? "bank_statements" : 
-                                 category === "Financial Statements" ? "financial_statements" :
-                                 category === "Business License" ? "business_license" :
-                                 category === "Insurance Certificate" ? "insurance_certificate" :
-                                 category.toLowerCase().replace(/\s+/g, '_');
-          formData.append('documentType', backendEnumType);
+          const normalizedType = category.toLowerCase().replace(/\s+/g, '_'); // e.g. "Bank Statements" → "bank_statements"
+          formData.append('document_type', normalizedType);
           
           // Use corrected endpoint format
           const uploadUrl = `/api/public/applications/${applicationId}/documents`;

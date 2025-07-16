@@ -26,7 +26,7 @@ export const useDocumentVerification = (applicationId: string | null) => {
     error,
     refetch: refetchDocuments
   } = useQuery({
-    queryKey: ['document-verification', applicationId],
+    queryKey: ['documentVerification', applicationId],
     queryFn: async (): Promise<DocumentVerificationResult> => {
       if (!applicationId) {
         return {
@@ -38,42 +38,14 @@ export const useDocumentVerification = (applicationId: string | null) => {
         };
       }
 
-      console.log(`📋 [DOCUMENT-VERIFICATION] Attempting document verification for application ${applicationId}`);
-      
       try {
-        const result = await staffApi.getUploadedDocuments(applicationId);
-        
-        const hasUploadedDocuments = result.documents && result.documents.length > 0;
-        
-        console.log(`✅ [DOCUMENT-VERIFICATION] Backend verification successful:`, {
-          documentsCount: result.documents?.length || 0,
-          requiredCount: result.requiredDocuments?.length || 0,
-          missingCount: result.missingDocuments?.length || 0,
-          isComplete: result.isComplete,
-          hasUploadedDocuments
-        });
-
-        return {
-          ...result,
-          hasUploadedDocuments
-        };
-      } catch (error: any) {
-        // Silently handle 501 errors (endpoint not implemented) without logging
-        if (error?.status === 501 || error?.message?.includes('501') || error?.message?.includes('not implemented')) {
-          // Return minimal fallback state for 501 errors
-          return {
-            documents: [],
-            requiredDocuments: [],
-            missingDocuments: [],
-            isComplete: false,
-            hasUploadedDocuments: false
-          };
+        const response = await fetch(`/api/public/applications/${applicationId}/documents`);
+        const data = await response.json();
+        return data;
+      } catch (err: any) {
+        if (err?.response?.status === 501) {
+          console.warn("Document verification not implemented yet.");
         }
-        
-        // Log other errors for debugging
-        console.warn('⚠️ [DOCUMENT-VERIFICATION] Backend verification failed:', error?.message || error);
-        
-        // Return safe fallback for all other errors
         return {
           documents: [],
           requiredDocuments: [],
@@ -84,12 +56,15 @@ export const useDocumentVerification = (applicationId: string | null) => {
       }
     },
     enabled: !!applicationId,
-    staleTime: 60000, // 1 minute to reduce API calls
-    gcTime: 300000, // 5 minutes
-    retry: false, // Disable retries to prevent spam
-    refetchInterval: false, // Only manual refetch
-    refetchOnWindowFocus: false, // Prevent automatic refetch
-    refetchOnMount: false // Only refetch when explicitly requested
+    retry: false,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    onError: (err: any) => {
+      if (err?.response?.status === 501) {
+        console.warn("Document verification not implemented yet.");
+      }
+    }
   });
 
   // Manual verification function

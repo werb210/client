@@ -319,8 +319,14 @@ export default function Step5DocumentUpload() {
         setLocation('/apply/step-6');
         return;
       }
-    } catch (error) {
-      logger.warn('⚠️ [STEP5] Backend verification failed, checking local state:', error);
+    } catch (err: any) {
+      if (err?.response?.status === 501) {
+        console.warn('Skipping verification due to missing backend endpoint');
+        setLocation('/apply/step-6');
+        return;
+      } else {
+        logger.warn('⚠️ [STEP5] Backend verification failed, checking local state:', err);
+      }
     }
 
     // Step 2: Local document check (fallback)

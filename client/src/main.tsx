@@ -8,6 +8,11 @@ window.addEventListener('unhandledrejection', (event) => {
   // Always prevent the default browser behavior for unhandled rejections
   event.preventDefault();
   
+  // Suppress repeated errors for unimplemented document endpoint
+  if (event.reason?.response?.status === 501) {
+    return; // suppress noisy logs for unimplemented document endpoint
+  }
+  
   // In production mode, suppress all unhandled promise rejections silently
   if (import.meta.env.NODE_ENV === 'production') {
     return;
