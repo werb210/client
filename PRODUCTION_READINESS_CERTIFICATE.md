@@ -30,7 +30,8 @@
 
 | Check | Status | Details |
 |-------|--------|---------|
-| SignNow field mismatch errors | ✅ **RESOLVED** | No obsolete fields in smart fields payload |
+| SignNow field mismatch errors | ✅ **RESOLVED** | Template-compliant fields only: `legal_business_name`, `dba_name`, `contact_first_name`, etc. |
+| Smart fields template compliance | ✅ **VERIFIED** | Matched against actual template screenshot - obsolete fields removed |
 | Step 5 `.map()`/`.length` crashes | ✅ **FIXED** | Line 283 and all array access now safe |
 | Undefined verificationResult handling | ✅ **IMPLEMENTED** | Loading fallback prevents component crashes |
 | Document upload workflow | ✅ **OPERATIONAL** | End-to-end document collection and verification |

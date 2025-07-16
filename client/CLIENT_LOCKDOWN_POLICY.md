@@ -30,14 +30,14 @@ The following components are **LOCKED** and may **not** be modified, replaced, o
 | Component                   | Lock Rule                                                                                                              | Notes                                                               |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
 | `DocumentUploadStatus.tsx`  | ❌ No changes to `documents`, `documentStatuses`, `additionalDocuments` access without explicit `Array.isArray()` check | Prevents `.map()` and `.length` runtime crashes                     |
-| `SignNow SmartFields`       | ❌ No additions of obsolete fields (e.g., `credit_score`, `years_with_business`, `business_email`)                      | Smart field list must match template                                |
+| `SignNow SmartFields`       | ❌ Only template-compliant fields allowed: `legal_business_name`, `dba_name`, `contact_first_name`, `contact_email`, `requested_amount`, etc. | Smart field list must match template exactly                                |
 | `Client Submission Payload` | ❌ No fallback fields unless explicitly approved                                                                        | All fallback values (e.g., `"unknown"`, `"N/A"`) must be documented |
 
 #### ✅ ENFORCED RULES:
 
 * All `.map()` and `.length` calls must use **safe variables** (e.g., `safeDocuments`, `safeAdditionalDocuments`).
 * No smart field injection for fields not physically present in the SignNow template.
-* Smart field names must match the template fields (e.g., `legal_business_name`, `applicant_street_address`).
+* Smart field names must match the template fields exactly: `legal_business_name`, `dba_name`, `contact_first_name`, `contact_last_name`, `contact_email`, `business_street_address`, `business_city`, `business_state`, `business_zip`, `requested_amount`, `use_of_funds`, etc.
 * Conditional rendering must be used when `verificationResult` or documents data is undefined.
 * Promise rejections from verification API must be handled via try/catch or query error states.
 

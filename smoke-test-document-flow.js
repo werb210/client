@@ -136,18 +136,20 @@ class DocumentFlowSmokeTest {
         step4: { applicantFirstName: 'John', applicantLastName: 'Doe', applicantEmail: 'john@test.com' }
       };
 
-      // Simulate the smart fields generation
+      // ✅ TEMPLATE-COMPLIANT SMART FIELDS (based on screenshot)
       const smartFields = {
-        first_name: mockApplicationData.step4?.applicantFirstName || '',
-        last_name: mockApplicationData.step4?.applicantLastName || '',
-        email: mockApplicationData.step4?.applicantEmail || '',
-        business_name: mockApplicationData.step3?.operatingName || '',
         legal_business_name: mockApplicationData.step3?.legalName || '',
-        amount_requested: mockApplicationData.step1?.requestedAmount || 0
+        dba_name: mockApplicationData.step3?.operatingName || '',
+        contact_first_name: mockApplicationData.step4?.applicantFirstName || '',
+        contact_last_name: mockApplicationData.step4?.applicantLastName || '',
+        contact_email: mockApplicationData.step4?.applicantEmail || '',
+        business_street_address: mockApplicationData.step3?.businessStreetAddress || '',
+        requested_amount: mockApplicationData.step1?.requestedAmount || 0,
+        use_of_funds: mockApplicationData.step1?.fundsPurpose || ''
       };
 
       // Check for obsolete fields (should not be present)
-      const obsoleteFields = ['credit_score', 'years_with_business', 'business_email'];
+      const obsoleteFields = ['credit_score', 'years_with_business', 'business_email', 'first_name', 'last_name', 'business_name'];
       const hasObsoleteFields = obsoleteFields.some(field => smartFields.hasOwnProperty(field));
 
       this.addResult('SignNow Smart Fields', !hasObsoleteFields, 
