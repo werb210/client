@@ -302,19 +302,37 @@ export default function Step6SignNowIntegration() {
   const { data: signingData, error: signingError } = useQuery({
     queryKey: ['signnowStatus', applicationId],
     queryFn: async () => {
-      if (!applicationId) throw new Error('No application ID');
-      
-      const response = await fetch(`/api/public/signnow/status/${applicationId}`, {
-        method: 'GET'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (!applicationId) {
+        // ✅ FIXED: Don't throw error, return null to disable polling
+        logger.log('⚠️ No applicationId for polling - returning null');
+        return null;
       }
       
-      return response.json();
+      try {
+        const response = await fetch(`/api/public/signnow/status/${applicationId}`, {
+          method: 'GET'
+        });
+        
+        if (!response.ok) {
+          // ✅ FIXED: Handle HTTP errors gracefully without throwing
+          logger.warn(`SignNow status check failed: HTTP ${response.status}`);
+          return { status: 'error', error: `HTTP ${response.status}` };
+        }
+        
+        return await response.json();
+      } catch (fetchError) {
+        // ✅ FIXED: Catch and handle all fetch errors
+        logger.warn('SignNow status fetch error:', fetchError.message);
+        return { status: 'error', error: fetchError.message };
+      }
     },
     refetchInterval: (data, query) => {
+      // ✅ FIXED: Don't poll if no data or error response
+      if (!data || data.status === 'error') {
+        logger.log('🛑 Stopping polling - No valid data or error response');
+        return false;
+      }
+      
       const currentStatus = data?.status || data?.signing_status;
       console.log(`📡 Polling attempt ${retryCountRef.current + 1}/10 - Current status: ${currentStatus}`);
       
@@ -342,7 +360,8 @@ export default function Step6SignNowIntegration() {
     enabled: !!applicationId && signingStatus === 'ready',
     retry: false,
     onError: (error: any) => {
-      logger.warn("Polling error:", error.message);
+      // ✅ FIXED: Handle all errors silently to prevent unhandled rejections
+      logger.warn("Polling error (handled):", error?.message || 'Unknown error');
       retryCountRef.current++;
       
       if (retryCountRef.current >= 10) {
