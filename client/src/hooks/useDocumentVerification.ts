@@ -21,7 +21,13 @@ export const useDocumentVerification = (applicationId: string | null) => {
 
   // Query to get uploaded documents from backend
   const {
-    data: verificationResult,
+    data: verificationResult = {
+      documents: [],
+      requiredDocuments: [],
+      missingDocuments: [],
+      isComplete: false,
+      hasUploadedDocuments: false
+    },
     isLoading,
     error,
     refetch: refetchDocuments

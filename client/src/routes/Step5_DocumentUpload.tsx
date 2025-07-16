@@ -630,23 +630,34 @@ export default function Step5DocumentUpload() {
       </div>
 
       {/* Document Upload Status */}
-      <DocumentUploadStatus
-        verificationResult={verificationResult}
-        localUploadedFiles={uploadedFiles}
-        isLoading={isVerifying || isManualVerifying}
-        onRetryUpload={(documentType) => {
-          logger.log(`🔄 [STEP5] Retry upload requested for: ${documentType}`);
-          // Scroll to upload area or trigger upload modal
-          const uploadElement = document.querySelector('[data-document-upload]');
-          if (uploadElement) {
-            uploadElement.scrollIntoView({ behavior: 'smooth' });
-          }
-        }}
-        onRefreshStatus={() => {
-          logger.log('🔄 [STEP5] Manual status refresh requested');
-          refetchDocuments();
-        }}
-      />
+      {verificationResult ? (
+        <DocumentUploadStatus
+          verificationResult={verificationResult}
+          localUploadedFiles={uploadedFiles}
+          isLoading={isVerifying || isManualVerifying}
+          onRetryUpload={(documentType) => {
+            logger.log(`🔄 [STEP5] Retry upload requested for: ${documentType}`);
+            // Scroll to upload area or trigger upload modal
+            const uploadElement = document.querySelector('[data-document-upload]');
+            if (uploadElement) {
+              uploadElement.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
+          onRefreshStatus={() => {
+            logger.log('🔄 [STEP5] Manual status refresh requested');
+            refetchDocuments();
+          }}
+        />
+      ) : (
+        <Card>
+          <CardContent className="py-6">
+            <div className="text-center text-gray-500">
+              <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <div className="text-sm">Document verification loading...</div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Progress Summary */}
       <Card>
