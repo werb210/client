@@ -224,14 +224,26 @@ function UnifiedDocumentUploadCard({
         
         const formData = new FormData();
         files.forEach((file) => formData.append('document', file));
-        formData.append('documentType', category);
+        // Convert display name to backend enum format
+        const backendEnumType = category === "Bank Statements" ? "bank_statements" : 
+                               category === "Financial Statements" ? "financial_statements" :
+                               category === "Business License" ? "business_license" :
+                               category === "Insurance Certificate" ? "insurance_certificate" :
+                               category.toLowerCase().replace(/\s+/g, '_');
+        formData.append('documentType', backendEnumType);
         
         // ✅ Task 1: Enhanced Document Upload with Comprehensive Logging
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const formData = new FormData();
           formData.append('document', file);
-          formData.append('documentType', category);
+          // Convert display name to backend enum format  
+          const backendEnumType = category === "Bank Statements" ? "bank_statements" : 
+                                 category === "Financial Statements" ? "financial_statements" :
+                                 category === "Business License" ? "business_license" :
+                                 category === "Insurance Certificate" ? "insurance_certificate" :
+                                 category.toLowerCase().replace(/\s+/g, '_');
+          formData.append('documentType', backendEnumType);
           
           // Use corrected endpoint format
           const uploadUrl = `/api/public/applications/${applicationId}/documents`;

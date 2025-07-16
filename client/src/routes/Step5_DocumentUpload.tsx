@@ -63,13 +63,8 @@ export default function Step5DocumentUpload() {
     refetchDocuments
   } = useDocumentVerification(applicationId);
 
-  // Auto-verify documents on Step 5 load
-  useEffect(() => {
-    if (applicationId && !isVerifying) {
-      logger.log('🔄 [STEP5] Auto-verifying documents on load');
-      refetchDocuments();
-    }
-  }, [applicationId, refetchDocuments, isVerifying]);
+  // Manual verification only - no auto-loading to prevent API spam
+  // Removed auto-verification to prevent continuous 501 errors from unimplemented endpoint
   
   // ✅ USER SPECIFICATION: Collect files during Step 5
   const [files, setFiles] = useState<{ file: File; type: string; category: string }[]>(

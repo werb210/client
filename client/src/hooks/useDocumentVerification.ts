@@ -38,14 +38,14 @@ export const useDocumentVerification = (applicationId: string | null) => {
         };
       }
 
-      console.log(`📋 [DOCUMENT-VERIFICATION] Checking uploaded documents for application ${applicationId}`);
+      console.log(`📋 [DOCUMENT-VERIFICATION] Attempting document verification for application ${applicationId}`);
       
       try {
         const result = await staffApi.getUploadedDocuments(applicationId);
         
         const hasUploadedDocuments = result.documents && result.documents.length > 0;
         
-        console.log(`📋 [DOCUMENT-VERIFICATION] Verification result:`, {
+        console.log(`✅ [DOCUMENT-VERIFICATION] Backend verification successful:`, {
           documentsCount: result.documents?.length || 0,
           requiredCount: result.requiredDocuments?.length || 0,
           missingCount: result.missingDocuments?.length || 0,
@@ -57,10 +57,23 @@ export const useDocumentVerification = (applicationId: string | null) => {
           ...result,
           hasUploadedDocuments
         };
-      } catch (error) {
-        console.warn('⚠️ [DOCUMENT-VERIFICATION] Backend verification not available, using local state');
+      } catch (error: any) {
+        // Silently handle 501 errors (endpoint not implemented) without logging
+        if (error?.status === 501 || error?.message?.includes('501') || error?.message?.includes('not implemented')) {
+          // Return minimal fallback state for 501 errors
+          return {
+            documents: [],
+            requiredDocuments: [],
+            missingDocuments: [],
+            isComplete: false,
+            hasUploadedDocuments: false
+          };
+        }
         
-        // When backend verification fails, return safe fallback that allows local verification
+        // Log other errors for debugging
+        console.warn('⚠️ [DOCUMENT-VERIFICATION] Backend verification failed:', error?.message || error);
+        
+        // Return safe fallback for all other errors
         return {
           documents: [],
           requiredDocuments: [],
@@ -71,11 +84,12 @@ export const useDocumentVerification = (applicationId: string | null) => {
       }
     },
     enabled: !!applicationId,
-    staleTime: 10000, // 10 seconds for frequent updates
+    staleTime: 60000, // 1 minute to reduce API calls
     gcTime: 300000, // 5 minutes
-    retry: 1,
-    retryDelay: 500,
-    refetchInterval: false // Only manual refetch
+    retry: false, // Disable retries to prevent spam
+    refetchInterval: false, // Only manual refetch
+    refetchOnWindowFocus: false, // Prevent automatic refetch
+    refetchOnMount: false // Only refetch when explicitly requested
   });
 
   // Manual verification function
