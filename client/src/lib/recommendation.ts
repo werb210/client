@@ -45,6 +45,12 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     accountsReceivableBalance,
     fundsPurpose
   });
+  
+  // CRITICAL: Check if we have any products at all
+  if (!products || products.length === 0) {
+    console.log('[DEBUG] No products provided to filter!');
+    return [];
+  }
 
   // Check for products that should match the user's criteria
   const potentialMatches = products.filter(p => {
