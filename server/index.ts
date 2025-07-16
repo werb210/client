@@ -114,32 +114,41 @@ app.use((req, res, next) => {
     });
   });
 
-  // API Proxy to Staff Backend with Development Fallback
+  // API Proxy to Staff Backend - Enhanced logging
   app.get('/api/public/lenders', async (req, res) => {
     try {
+      console.log('📡 [SERVER] Proxying request to staff backend /api/public/lenders');
+      
       const staffApiUrl = cfg.staffApiUrl + '/api';
       const response = await fetch(`${staffApiUrl}/public/lenders`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${cfg.clientToken}`
         }
       });
       
-      if (!response.ok) {
-        throw new Error(`Staff API returned ${response.status}`);
+      console.log(`📡 [SERVER] Staff backend response: ${response.status} ${response.statusText}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`📡 [SERVER] ✅ Received ${Array.isArray(data) ? data.length : 'unknown'} products from staff backend`);
+        res.json(data);
+      } else {
+        const errorText = await response.text();
+        console.error('❌ [SERVER] Staff backend error:', errorText);
+        res.status(503).json({
+          status: 'error',
+          error: 'Lender products unavailable',
+          message: 'Lender products service is temporarily unavailable. Please try again later.'
+        });
       }
-      
-      const data = await response.json();
-      
-      res.json(data);
     } catch (error) {
-      res.status(502).json({
-        success: false,
-        error: 'Staff backend unavailable',
-        message: 'Cannot connect to live staff API',
-        details: error instanceof Error ? error.message : 'Unknown error'
+      console.error('❌ [SERVER] Failed to fetch lender products:', error);
+      res.status(503).json({
+        status: 'error',
+        error: 'Lender products unavailable',
+        message: 'Lender products service is temporarily unavailable. Please try again later.'
       });
     }
   });
@@ -509,16 +518,18 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error('❌ [SERVER] File upload failed:', error);
       
-      res.json({
-        success: true,
-        fileId: `file_${Date.now()}`,
-        message: 'File uploaded successfully',
-        timestamp: new Date().toISOString()
+      res.status(503).json({
+        status: 'error',
+        error: 'Document upload unavailable',
+        message: 'Document upload service is temporarily unavailable. Please try again later.',
+        applicationId: id
       });
     }
   });
 
   // Serve static files - will be configured after httpServer is created
+
+
 
   // Mount lender routes
   app.use('/api/lenders', lendersRouter);
@@ -870,7 +881,7 @@ app.use((req, res, next) => {
 
       // console.log(`[GEO] Client IP detected: ${ip}`);
 
-      // For development/localhost, return null to fallback to manual selection
+      // Return null for geolocation detection
       if (!ip || ip === '::1' || ip === '127.0.0.1' || ip.includes('localhost')) {
         // console.log('[GEO] Development environment detected, returning null for manual selection');
         return res.json({ country: null });
@@ -934,28 +945,14 @@ app.use((req, res, next) => {
         console.log(`[SIGNNOW] Staff backend error (${response.status}) for application ${id}`);
         console.log(`[SIGNNOW] Content-Type: ${contentType}, isJson: ${isJson}`);
         
-        // TEMPORARY WORKING SOLUTION: Generate functional SignNow response
-        if (response.status === 404 || response.status === 501 || response.status === 500 || !isJson) {
-          console.log(`[SIGNNOW] 🔧 Generating temporary SignNow document for demonstration...`);
-          
-          const templateId = 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5';
-          const signNowDocId = `doc_${id}_${Date.now()}`;
-          const signingUrl = `https://app.signnow.com/webapp/document/${signNowDocId}/invite?token=temp_${templateId.slice(0, 8)}`;
-          
-          console.log(`[SIGNNOW] ✅ Generated working SignNow URL for application ${id}`);
-          
-          res.json({
-            success: true,
-            data: {
-              signingUrl: signingUrl,
-              documentId: signNowDocId,
-              templateId: templateId,
-              status: 'ready',
-              message: 'Document ready for signing - using template ' + templateId
-            }
-          });
-          return;
-        }
+        // NO FALLBACK - Return error status
+        res.status(503).json({
+          status: 'error',
+          error: 'SignNow service unavailable',
+          message: 'Document signing service is temporarily unavailable. Please try again later.',
+          applicationId: id
+        });
+        return;
         
         res.status(response.status).json({
           error: `Staff backend returned ${response.status}`,

@@ -12,16 +12,39 @@ import {
 } from '../utils/lenderCache';
 
 /**
- * Fetch lender products with scheduled window control (12:00 PM and 12:00 AM MST only)
- * Uses persistent IndexedDB cache outside of allowed fetch windows
- * Fails fast on invalid data to surface staff API issues immediately
+ * Fetch lender products with cache-first strategy and fallback to API
+ * Priority: Cache -> API -> Empty array
  */
 export async function fetchLenderProducts(): Promise<LenderProduct[]> {
-  // CACHE-ONLY SYSTEM: Only use IndexedDB cache, no API calls
   try {
+    // First, try to load from cache
     const cached = await loadLenderProducts();
-    return cached || [];
+    if (cached && cached.length > 0) {
+      console.log(`[LENDER-PRODUCTS] ✅ Using cached data: ${cached.length} products`);
+      return cached;
+    }
+
+    // If no cache, try to fetch from API
+    console.log('[LENDER-PRODUCTS] 📡 No cache found, attempting API fetch...');
+    const response = await fetch(`${API_BASE_URL}/api/public/lenders`, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data && Array.isArray(data) && data.length > 0) {
+        console.log(`[LENDER-PRODUCTS] ✅ API returned ${data.length} products, caching...`);
+        await saveLenderProducts(data, 'staff-api');
+        return data;
+      }
+    }
+
+    console.log('[LENDER-PRODUCTS] ❌ No products available from cache or API');
+    return [];
   } catch (error) {
+    console.error('[LENDER-PRODUCTS] ❌ Error fetching products:', error);
     return [];
   }
 }
