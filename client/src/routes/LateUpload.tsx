@@ -33,7 +33,7 @@ export default function LateUpload() {
         formData.append(`documentType_${index}`, file.documentType);
       });
       
-      await apiFetch(`/api/public/upload/${id}`, {
+      await apiFetch(`/api/public/applications/${id}/documents`, {
         method: 'POST',
         body: formData,
       });

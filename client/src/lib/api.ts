@@ -175,7 +175,7 @@ export async function uploadDocumentPublic(
   formData.append('documentType', documentType);
 
   // ✅ Update endpoint to match staff backend: /api/public/documents/${applicationId}
-  const endpoint = `/api/public/documents/${applicationId}`;
+  const endpoint = `/api/public/applications/${applicationId}/documents`;
   // console.log('📤 [UPLOAD] ApplicationId:', applicationId);
   // console.log('📤 [UPLOAD] DocumentType:', documentType);
   // console.log('📤 [UPLOAD] Endpoint:', endpoint);

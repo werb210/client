@@ -41,7 +41,7 @@ export const useUploadDocument = (applicationId: string) => {
       form.append('category', payload.category);
       
       // ✅ Update endpoint to match staff backend: /api/public/documents/${applicationId}
-      const endpoint = `/api/public/documents/${applicationId}`;
+      const endpoint = `/api/public/applications/${applicationId}/documents`;
       // console.log('📤 [HOOK] ApplicationId:', applicationId);
       // console.log('📤 [HOOK] DocumentType:', payload.category);
       // console.log('📤 [HOOK] Endpoint:', endpoint);

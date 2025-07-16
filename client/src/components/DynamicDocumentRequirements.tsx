@@ -209,7 +209,7 @@ function UnifiedDocumentUploadCard({
           formData.append('documentType', category);
           
           // Use corrected endpoint format
-          const uploadUrl = `/api/public/upload/${applicationId}`;
+          const uploadUrl = `/api/public/applications/${applicationId}/documents`;
           
           // ✅ TEMPORARY DEBUG LOGGING (as requested)
           console.log("Uploading:", file.name, "→", uploadUrl);

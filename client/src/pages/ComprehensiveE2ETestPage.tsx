@@ -118,7 +118,7 @@ const ComprehensiveE2ETestPage: React.FC = () => {
         const testFile = new File(['test content'], 'test.txt', { type: 'text/plain' });
         testFormData.append('files', testFile);
         
-        const response = await fetch('/api/public/upload/test-application-id', {
+        const response = await fetch('/api/public/applications/test-application-id/documents', {
           method: 'POST',
           body: testFormData
         });

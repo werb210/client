@@ -156,7 +156,7 @@ export default function ValidationTestPage() {
               <div className="space-y-1">
                 <div>Template ID: e7ba8b894c644999a7b38037ea66f4cc9cc524f5</div>
                 <div>Application ID: {localStorage.getItem('applicationId') || 'Not set'}</div>
-                <div>Document Upload Endpoint: POST /api/public/upload/{'{applicationId}'}</div>
+                <div>Document Upload Endpoint: POST /api/public/applications/{'{applicationId}'}/documents</div>
                 <div>SignNow Status Endpoint: GET /api/public/signnow/status/{'{applicationId}'}</div>
                 <div>Document Check Endpoint: GET /api/public/documents/{'{applicationId}'}</div>
                 <div>Polling Interval: 9 seconds</div>

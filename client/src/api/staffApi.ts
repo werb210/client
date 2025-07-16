@@ -214,7 +214,7 @@ class StaffApiClient {
 
       // Use public upload endpoint without Authorization headers
       const uploadUrl = applicationId 
-        ? `${this.baseUrl}/api/public/upload/${applicationId}`
+        ? `${this.baseUrl}/api/public/applications/${applicationId}/documents`
         : `${this.baseUrl}/uploads`;
       
       const response = await fetch(uploadUrl, {
