@@ -25,6 +25,22 @@ The following components are **LOCKED** and may **not** be modified, replaced, o
 * Do not access any array length or index before verifying its definition
 * If the verificationResult is undefined or loading, show fallback or loading state — never render component logic early
 
+#### 🚫 RESTRICTED ACTIONS:
+
+| Component                   | Lock Rule                                                                                                              | Notes                                                               |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `DocumentUploadStatus.tsx`  | ❌ No changes to `documents`, `documentStatuses`, `additionalDocuments` access without explicit `Array.isArray()` check | Prevents `.map()` and `.length` runtime crashes                     |
+| `SignNow SmartFields`       | ❌ No additions of obsolete fields (e.g., `credit_score`, `years_with_business`, `business_email`)                      | Smart field list must match template                                |
+| `Client Submission Payload` | ❌ No fallback fields unless explicitly approved                                                                        | All fallback values (e.g., `"unknown"`, `"N/A"`) must be documented |
+
+#### ✅ ENFORCED RULES:
+
+* All `.map()` and `.length` calls must use **safe variables** (e.g., `safeDocuments`, `safeAdditionalDocuments`).
+* No smart field injection for fields not physically present in the SignNow template.
+* Smart field names must match the template fields (e.g., `legal_business_name`, `applicant_street_address`).
+* Conditional rendering must be used when `verificationResult` or documents data is undefined.
+* Promise rejections from verification API must be handled via try/catch or query error states.
+
 ### 3. 📝 **SignNow Integration Trigger**
 
 * Code initiating Step 6 signature flow must send:
