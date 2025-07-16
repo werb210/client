@@ -219,57 +219,32 @@ export default function Step5DocumentUpload() {
 
         logger.log(`[Step 5] Intersection results:`, results);
         
-        // Show toast notification about results
+        // CRITICAL FIX: Always use category-specific documents instead of intersection
+        // This ensures Working Capital shows Working Capital documents, not mixed results
+        const categorySpecificDocs = getFallbackDocuments(apiCategory);
+        
+        logger.log(`🔧 [STEP5 FIX] Using category-specific documents for "${productCategory}" (${apiCategory}):`, categorySpecificDocs);
+        
+        setIntersectionResults({
+          eligibleLenders: results.eligibleLenders || [],
+          requiredDocuments: categorySpecificDocs, // Use category-specific instead of intersection
+          message: `Document requirements for ${productCategory}`,
+          hasMatches: true,
+          isLoading: false
+        });
+        
+        toast({
+          title: "Document Requirements Loaded",
+          description: `Requirements for ${productCategory} (${categorySpecificDocs.length} document types)`
+        });
+        
+        // Show original intersection logic for debugging
         if (results.hasMatches && results.requiredDocuments.length > 0) {
-          setIntersectionResults({
-            ...results,
-            isLoading: false
-          });
-          
-          toast({
-            title: "Document Requirements Calculated",
-            description: `${results.requiredDocuments.length} documents required by all matching lenders`
-          });
+          logger.log(`🔍 [STEP5 DEBUG] Original intersection found ${results.requiredDocuments.length} docs:`, results.requiredDocuments);
         } else if (results.hasMatches && results.requiredDocuments.length === 0) {
-          // Use fallback documents when no intersection found
-          logger.log(`[Step 5] No intersection documents found, using fallback for ${productCategory}`);
-          const fallbackDocuments = getFallbackDocuments(apiCategory);
-          
-          setIntersectionResults({
-            eligibleLenders: results.eligibleLenders,
-            requiredDocuments: fallbackDocuments,
-            message: `Using standard requirements for ${productCategory}`,
-            hasMatches: true,
-            isLoading: false
-          });
-          
-          logger.log(`[Step 5] Applied fallback documents:`, fallbackDocuments);
-          
-          toast({
-            title: "Document Requirements Loaded",
-            description: `Standard document requirements loaded for ${productCategory}`,
-            variant: "default"
-          });
+          logger.log(`🔍 [STEP5 DEBUG] No intersection documents found for ${productCategory}`);
         } else {
-          // No matches at all - use fallback
-          logger.log(`[Step 5] No matching lenders found, using fallback for ${productCategory}`);
-          const fallbackDocuments = getFallbackDocuments(apiCategory);
-          
-          setIntersectionResults({
-            eligibleLenders: [],
-            requiredDocuments: fallbackDocuments,
-            message: `Using standard requirements for ${productCategory}`,
-            hasMatches: true,
-            isLoading: false
-          });
-          
-          logger.log(`[Step 5] Applied fallback documents:`, fallbackDocuments);
-          
-          toast({
-            title: "Document Requirements Loaded",
-            description: `Standard document requirements loaded for ${productCategory}`,
-            variant: "default"
-          });
+          logger.log(`🔍 [STEP5 DEBUG] No matching lenders found for ${productCategory}`);
         }
 
       } catch (error) {
