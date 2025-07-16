@@ -256,13 +256,12 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error('❌ [SERVER] Application submission failed:', error);
       
-      // Return success with fallback response
-      res.json({
-        success: true,
-        applicationId: req.params.applicationId,
-        status: 'finalized',
-        message: 'Application finalized successfully',
-        timestamp: new Date().toISOString()
+      // NO FALLBACK - Return error status
+      res.status(503).json({
+        status: 'error',
+        error: 'Application submission unavailable',
+        message: 'Application submission service is temporarily unavailable. Please try again later.',
+        applicationId: req.params.applicationId
       });
     }
   });
@@ -289,14 +288,12 @@ app.use((req, res, next) => {
         const errorData = await response.text();
         console.error('❌ [SERVER] Staff backend SignNow error:', errorData);
         
-        // Return fallback SignNow URL for development
-        res.json({
-          success: true,
-          signingUrl: `https://app.signnow.com/webapp/document/temp_${applicationId}/invite?token=mock_token_${Date.now()}`,
-          status: 'ready',
-          fallback: true,
-          message: 'SignNow initiated (development mode)',
-          timestamp: new Date().toISOString()
+        // NO FALLBACK - Return error status  
+        res.status(503).json({
+          status: 'error',
+          error: 'SignNow service unavailable',
+          message: 'Document signing service is temporarily unavailable. Please try again later.',
+          applicationId: applicationId
         });
         return;
       }
@@ -308,14 +305,12 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error('❌ [SERVER] SignNow initiation failed:', error);
       
-      // Return fallback response
-      res.json({
-        success: true,
-        signingUrl: `https://app.signnow.com/webapp/document/temp_${req.params.applicationId}/invite?token=mock_token_${Date.now()}`,
-        status: 'ready',
-        fallback: true,
-        message: 'SignNow initiated (development mode)',
-        timestamp: new Date().toISOString()
+      // NO FALLBACK - Return error status
+      res.status(503).json({
+        status: 'error',
+        error: 'SignNow service unavailable',
+        message: 'Document signing service is temporarily unavailable. Please try again later.',
+        applicationId: req.params.applicationId
       });
     }
   });
@@ -348,13 +343,12 @@ app.use((req, res, next) => {
         const errorData = await response.text();
         console.error('❌ [SERVER] Staff backend finalization error:', errorData);
         
-        // Return success with fallback
-        res.json({
-          success: true,
-          applicationId: id,
-          status: 'finalized',
-          message: 'Application finalized successfully',
-          timestamp: new Date().toISOString()
+        // NO FALLBACK - Return error status
+        res.status(503).json({
+          status: 'error',
+          error: 'Application finalization unavailable',
+          message: 'Application finalization service is temporarily unavailable. Please try again later.',
+          applicationId: id
         });
         return;
       }
@@ -366,12 +360,11 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error('❌ [SERVER] Application finalization failed:', error);
       
-      res.json({
-        success: true,
-        applicationId: req.params.id,
-        status: 'finalized',
-        message: 'Application finalized successfully',
-        timestamp: new Date().toISOString()
+      res.status(503).json({
+        status: 'error',
+        error: 'Application finalization unavailable',
+        message: 'Application finalization service is temporarily unavailable. Please try again later.',
+        applicationId: req.params.id
       });
     }
   });
@@ -396,13 +389,12 @@ app.use((req, res, next) => {
         const errorData = await response.text();
         console.error('❌ [SERVER] Staff backend signing status error:', errorData);
         
-        // Return mock signing URL for testing when staff backend unavailable
-        res.json({
-          data: {
-            signingUrl: `https://app.signnow.com/webapp/document/temp_${id}/invite?token=mock_token_${Date.now()}`,
-            fallback: true
-          },
-          status: 'ready'
+        // NO FALLBACK - Return error status
+        res.status(503).json({
+          status: 'error',
+          error: 'SignNow service unavailable',
+          message: 'Document signing service is temporarily unavailable. Please try again later.',
+          applicationId: id
         });
         return;
       }
@@ -414,13 +406,12 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error('❌ [SERVER] Get signing status failed:', error);
       
-      // Return mock signing URL with fallback
-      res.json({
-        data: {
-          signingUrl: `https://app.signnow.com/webapp/document/temp_${req.params.id}/invite?token=mock_token_${Date.now()}`,
-          fallback: true
-        },
-        status: 'ready'
+      // NO FALLBACK - Return error status
+      res.status(503).json({
+        status: 'error',
+        error: 'SignNow service unavailable',
+        message: 'Document signing service is temporarily unavailable. Please try again later.',
+        applicationId: req.params.id
       });
     }
   });
@@ -446,14 +437,12 @@ app.use((req, res, next) => {
         const errorData = await response.text();
         console.warn('⚠️ [SERVER] Staff backend SignNow polling error:', errorData);
         
-        // Return fallback status for dev testing
-        res.json({
-          status: 'invite_sent',
-          document_id: '790c256323bd4a7abbc6c9b5f91ca547c900084b',
-          signed_at: null,
-          application_id: applicationId,
-          timestamp: new Date().toISOString(),
-          fallback: true
+        // NO FALLBACK - Return error status
+        res.status(503).json({
+          status: 'error',
+          error: 'SignNow service unavailable',
+          message: 'Document signing service is temporarily unavailable. Please try again later.',
+          applicationId: applicationId
         });
         return;
       }
@@ -473,15 +462,12 @@ app.use((req, res, next) => {
     } catch (error) {
       console.warn('⚠️ [SERVER] SignNow status polling failed:', error);
       
-      // Return fallback status
-      res.json({
-        status: 'invite_sent',
-        document_id: '790c256323bd4a7abbc6c9b5f91ca547c900084b',
-        signed_at: null,
-        application_id: applicationId,
-        timestamp: new Date().toISOString(),
-        fallback: true,
-        error: error instanceof Error ? error.message : 'Unknown error'
+      // NO FALLBACK - Return error status
+      res.status(503).json({
+        status: 'error',
+        error: 'SignNow service unavailable',
+        message: 'Document signing service is temporarily unavailable. Please try again later.',
+        applicationId: applicationId
       });
     }
   });
@@ -506,12 +492,12 @@ app.use((req, res, next) => {
         const errorData = await response.text();
         console.error('❌ [SERVER] Staff backend upload error:', errorData);
         
-        // Return success with fallback
-        res.json({
-          success: true,
-          fileId: `file_${Date.now()}`,
-          message: 'File uploaded successfully',
-          timestamp: new Date().toISOString()
+        // NO FALLBACK - Return error status
+        res.status(503).json({
+          status: 'error',
+          error: 'Document upload unavailable',
+          message: 'Document upload service is temporarily unavailable. Please try again later.',
+          applicationId: id
         });
         return;
       }

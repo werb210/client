@@ -25,7 +25,7 @@ type SigningStatus = 'loading' | 'polling' | 'ready' | 'signing' | 'completed' |
  * - Embedded iframe with proper sandbox attributes
  * - Polls GET /api/public/signnow/status/{id} every 5s for signed status confirmation
  * - Auto-redirects to Step 7 when signature detected
- * - Manual override fallback via PATCH /api/public/applications/{id}/override-signing
+ * - NO FALLBACK LOGIC: Backend unavailable = blocking error
  * - No webhook handling (webhooks only go to backend, not browser clients)
  */
 export default function Step6SignNowIntegration() {
@@ -193,10 +193,9 @@ export default function Step6SignNowIntegration() {
           return res.json();
         })
         .catch(fetchError => {
-          logger.warn('📡 Signature status fetch failed with status:', fetchError.message);
-          setError('Application not found or signing not available');
+          logger.error('❌ Staff backend unavailable:', fetchError.message);
+          setError('Backend unavailable. Cannot continue to SignNow step.');
           setSigningStatus('error');
-          // DO NOT redirect on error - stay on Step 6
           return null;
         })
         .then(data => {
@@ -213,10 +212,10 @@ export default function Step6SignNowIntegration() {
             return;
           }
           
-          // ✅ CHECK FOR ERROR STATUS: Show retry button if server returns { status: "error" }
+          // ✅ CHECK FOR ERROR STATUS: Block if server returns { status: "error" }
           if (data.status === "error") {
-            logger.error('❌ Server returned error status:', data);
-            setError(data.message || "SignNow service temporarily unavailable. Please try again.");
+            logger.error('❌ Staff backend SignNow service unavailable:', data);
+            setError('Backend unavailable. Cannot continue to SignNow step.');
             setSigningStatus('error');
             return;
           }
@@ -225,29 +224,30 @@ export default function Step6SignNowIntegration() {
           const signingUrl = data.signingUrl || data.redirect_url || data.signnow_url;
           
           if (signingUrl) {
+            // ✅ ONLY ACCEPT REAL SIGNNOW URLS - NO FALLBACK ALLOWED
+            if (signingUrl.includes('temp_') || signingUrl.includes('mock_token') || data.fallback) {
+              logger.error('❌ Fallback URL detected - blocking access:', signingUrl);
+              setError('Backend unavailable. Cannot continue to SignNow step.');
+              setSigningStatus('error');
+              return;
+            }
+            
             // ✅ Task 2: Debug log for signing URL
             console.log("SignNow URL:", signingUrl);
             logger.log('🔗 Setting signing URL from POST /api/public/signnow/initiate:', signingUrl);
             setSignUrl(signingUrl);
             setSigningStatus('ready');
             setStartTime(Date.now()); // Track when signing started
-            
-            // Check if this is a fallback URL
-            if (signingUrl.includes('temp_') || data.fallback) {
-              logger.warn('⚠️ Using fallback SignNow URL - staff backend unavailable');
-              logger.warn('🔗 Fallback URL will not populate template fields:', signingUrl);
-            } else {
-              logger.log('✅ Using real SignNow URL with populated template fields from staff backend');
-            }
+            logger.log('✅ Using real SignNow URL with populated template fields from staff backend');
           } else {
             logger.error('❌ No signing URL in response:', data);
-            setError("Failed to retrieve signing URL. Please try again.");
+            setError('Backend unavailable. Cannot continue to SignNow step.');
             setSigningStatus('error');
           }
         })
         .catch(err => {
-          logger.error('Failed to load signing URL:', err);
-          setError('Failed to load signing document');
+          logger.error('❌ Staff backend connection failed:', err);
+          setError('Backend unavailable. Cannot continue to SignNow step.');
           setSigningStatus('error');
         });
     } else {
@@ -488,14 +488,6 @@ export default function Step6SignNowIntegration() {
                 </p>
                 {signUrl ? (
                   <div className="w-full space-y-4">
-                    {signUrl.includes('temp_') && (
-                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
-                        <p className="text-sm text-amber-800">
-                          ⚠️ <strong>Development Mode:</strong> Using fallback SignNow URL because staff backend is unavailable.
-                          The document may not load properly in the iframe.
-                        </p>
-                      </div>
-                    )}
                     
                     {/* Timeout Warning Display */}
                     {timeoutWarning && (
@@ -518,15 +510,9 @@ export default function Step6SignNowIntegration() {
                         title="SignNow Document Signing"
                         onLoad={() => {
                           logger.log('📄 SignNow iframe loaded successfully');
-                          if (signUrl.includes('temp_')) {
-                            logger.warn('⚠️ Iframe loaded but using fake URL - document will not work');
-                          }
                         }}
                         onError={(e) => {
                           logger.error('❌ SignNow iframe failed to load:', e);
-                          if (signUrl.includes('temp_')) {
-                            logger.error('🔗 Expected error: Fake URL cannot load real SignNow document');
-                          }
                         }}
                       />
                     </div>
@@ -541,7 +527,7 @@ export default function Step6SignNowIntegration() {
                         variant="outline" 
                         className="border-orange-300 text-orange-700 hover:bg-orange-50"
                       >
-                        {signUrl.includes('temp_') ? 'Continue Without Signing (Dev Mode)' : "I've Signed the Document – Continue"}
+                        I've Signed the Document – Continue
                       </Button>
                     </div>
                   </div>
