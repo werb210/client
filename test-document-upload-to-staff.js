@@ -1,0 +1,72 @@
+// ✅ Replit AI Agent Instructions: Test document upload from Client to Staff app
+// When user uploads 6 bank statements, perform the following test end-to-end
+
+/**
+ * Step 1: Confirm API endpoint exists
+ * Endpoint: POST /api/public/applications/:id/documents
+ * Method: multipart/form-data
+ * Required fields:
+ *   - document (file)
+ *   - documentType (string, e.g., 'bank_statements')
+ */
+
+// Replace with real application ID created in Step 4
+const applicationId = 'test-12345678-1234-5678-9abc-123456789012';
+
+const testFiles = [
+  'attached_assets/November 2024_1752680621312.pdf',
+  'attached_assets/December 2024_1752680621312.pdf',
+  'attached_assets/January 2025_1752680621311.pdf',
+  'attached_assets/February 2025_1752680621312.pdf',
+  'attached_assets/March 2025_1752680621311.pdf',
+  'attached_assets/April 2025_1752680621310.pdf'
+];
+
+/**
+ * Step 2: For each file, send a POST request to the correct Staff API endpoint
+ *   - Use the correct content-type
+ *   - Attach the PDF
+ *   - Set documentType = 'bank_statements'
+ */
+
+import fs from 'fs';
+import fetch from 'node-fetch';
+import FormData from 'form-data';
+
+(async () => {
+  console.log(`\n🔄 BEGIN 6-DOCUMENT UPLOAD TEST TO STAFF BACKEND`);
+
+  for (let filePath of testFiles) {
+    const filename = filePath.split('/').pop();
+    console.log(`\n📄 Uploading: ${filename}`);
+
+    if (!fs.existsSync(filePath)) {
+      console.log(`❌ File not found: ${filePath}`);
+      continue;
+    }
+
+    const form = new FormData();
+    form.append('document', fs.createReadStream(filePath), filename);
+    form.append('documentType', 'bank_statements');
+
+    const res = await fetch(`https://staff.boreal.financial/api/public/applications/${applicationId}/documents`, {
+      method: 'POST',
+      body: form
+    });
+
+    let body;
+    try {
+      body = await res.json();
+    } catch {
+      body = await res.text();
+    }
+
+    console.log(`✅ Status: ${res.status} (${res.ok ? 'SUCCESS' : 'FAILED'})`);
+    console.log(`📬 Response:`, body);
+  }
+
+  console.log(`\n✅ Please report back to ChatGPT with:`);
+  console.log(`1. Total successful uploads (HTTP 200/201)`);
+  console.log(`2. Any 404/500 errors with filenames`);
+  console.log(`3. Whether uploaded documents now appear in Staff Sales Pipeline 'Documents' tab`);
+})();
