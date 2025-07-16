@@ -4,7 +4,7 @@ import Clock from 'lucide-react/dist/esm/icons/clock';
 import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
 import FileText from 'lucide-react/dist/esm/icons/file-text';
 import { Badge } from './ui/badge';
-import { Card, CardContent } from './ui/card';
+import { Card } from './ui/card';
 import { Button } from './ui/button';
 import type { DocumentVerificationResult } from '../hooks/useDocumentVerification';
 
@@ -133,8 +133,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="space-y-4">
+      <div className="p-6 space-y-4">
           {/* Header */}
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium">Document Upload Status</h3>
@@ -275,8 +274,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
               </ul>
             </div>
           )}
-        </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };
