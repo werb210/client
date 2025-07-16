@@ -3,6 +3,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { createServer } from "http";
 import { WebSocketServer, WebSocket } from "ws";
+import multer from "multer";
 import { setupVite, serveStatic, log } from "./vite";
 import cfg from "./config";
 import lendersRouter from "./routes/lenders";
@@ -71,6 +72,14 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configure multer for document uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 25 * 1024 * 1024, // 25MB limit
+  },
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -497,18 +506,39 @@ app.use((req, res, next) => {
     }
   });
 
-  // File upload endpoint - corrected to match spec
-  app.post('/api/public/applications/:id/documents', async (req, res) => {
+  // File upload endpoint - with multer middleware
+  app.post('/api/public/applications/:id/documents', upload.single('document'), async (req, res) => {
     try {
       const { id } = req.params;
+      const { documentType } = req.body;
+      const file = req.file;
+      
       console.log(`📁 [SERVER] Document upload for application ${id}`);
+      console.log(`📁 [SERVER] Document type: ${documentType}`);
+      console.log(`📁 [SERVER] File: ${file?.originalname}, Size: ${file?.size} bytes`);
+      
+      if (!file) {
+        console.error('❌ [SERVER] No file received');
+        res.status(400).json({
+          status: 'error',
+          error: 'Document file is required',
+          message: 'No file was uploaded'
+        });
+        return;
+      }
+      
+      // Create FormData for staff backend
+      const FormData = (await import('node-fetch')).FormData;
+      const formData = new FormData();
+      formData.append('document', new Blob([file.buffer]), file.originalname);
+      formData.append('documentType', documentType);
       
       const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${id}/documents`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${cfg.clientToken}`
         },
-        body: req.body // Forward raw FormData
+        body: formData as any
       });
       
       console.log(`📁 [SERVER] Staff backend upload response: ${response.status} ${response.statusText}`);
@@ -517,7 +547,6 @@ app.use((req, res, next) => {
         const errorData = await response.text();
         console.error('❌ [SERVER] Staff backend upload error:', errorData);
         
-        // NO FALLBACK - Return error status
         res.status(503).json({
           status: 'error',
           error: 'Document upload unavailable',
@@ -538,7 +567,7 @@ app.use((req, res, next) => {
         status: 'error',
         error: 'Document upload unavailable',
         message: 'Document upload service is temporarily unavailable. Please try again later.',
-        applicationId: id
+        applicationId: req.params.id
       });
     }
   });
