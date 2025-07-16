@@ -21,7 +21,7 @@ import { ProceedBypassBanner } from '@/components/ProceedBypassBanner';
 import { StepHeader } from '@/components/StepHeader';
 import { RuntimeAlertPanel } from '@/components/RuntimeAlertPanel';
 
-import { getDocumentRequirementsIntersection } from '@/lib/documentIntersection';
+import { getDocumentRequirementsAggregation } from '@/lib/documentAggregation';
 
 import { useDebouncedCallback } from 'use-debounce';
 
@@ -88,185 +88,87 @@ export default function Step5DocumentUpload() {
     isLoading: true
   });
 
-  // Calculate document requirements on component mount
+  // Calculate document requirements on component mount using AGGREGATION logic
   useEffect(() => {
     const calculateDocumentRequirements = async () => {
-      // A. Use step-based structure exclusively - STEP-BASED COMPLIANCE
-      const productCategory = state.step2?.selectedCategory || state.step1?.lookingFor || '';
-      const location = state.step1?.businessLocation || '';
-      const amount = state.step1?.fundingAmount || '';
+      // ✅ STEP 1: Ensure Step 2 saves user selections (ChatGPT Instructions)
+      const selectedCategory = state.step2?.selectedCategory || '';
+      const selectedCountry = state.step1?.businessLocation || '';
+      const requestedAmount = state.step1?.fundingAmount || 0;
       
-      logger.log(`🔧 [STEP5] selectedCategory from step2: "${state.step2?.selectedCategory}"`);
-      logger.log(`🔧 [STEP5] businessLocation from step1: "${state.step1?.businessLocation}"`);
-      logger.log(`🔧 [STEP5] fundingAmount from step1: "${state.step1?.fundingAmount}"`);
-      logger.log(`🔧 [STEP5] lookingFor from step1: "${state.step1?.lookingFor}"`);
-      logger.log(`🔧 [STEP5] Derived values: category="${productCategory}", location="${location}", amount="${amount}"`);
-      logger.log(`🔧 [STEP5] Full state keys:`, Object.keys(state));
-      
-      // Add validation logging for step-based structure compliance
-      logger.log("[Step 5] Category used for required docs:", state.step2?.selectedCategory);
-      logger.log("[Step 5] Step-based validation:", {
-        step1Available: !!state.step1,
-        step2Available: !!state.step2,
-        step2Category: state.step2?.selectedCategory,
-        step1Location: state.step1?.businessLocation,
-        step1Amount: state.step1?.fundingAmount
+      console.log(`📋 [STEP5-AGGREGATION] Document aggregation for:`, {
+        selectedCategory,
+        selectedCountry,
+        requestedAmount
       });
-
-      // Map category names from Step 2 to API format
-      const categoryMapping: Record<string, string> = {
-        'Working Capital': 'working_capital',
-        'Term Loan': 'term_loan',
-        'Business Line of Credit': 'line_of_credit',
-        'Equipment Financing': 'equipment_financing',
-        'Invoice Factoring': 'invoice_factoring',
-        'Purchase Order Financing': 'purchase_order_financing',
-        'Asset-Based Lending': 'asset_based_lending',
-        'SBA Loan': 'sba_loan'
-      };
-
-      // Get fallback documents for the selected category
-      const getFallbackDocuments = (category: string): string[] => {
-        const fallbackMap: Record<string, string[]> = {
-          'working_capital': [
-            'Bank Statements',
-            'Accountant Prepared Financial Statements',
-            'Tax Returns',
-            'Business License',
-            'Accounts Receivable Aging Report'
-          ],
-          'term_loan': [
-            'Bank Statements',
-            'Accountant Prepared Financial Statements',
-            'Tax Returns',
-            'Business License',
-            'Business Plan'
-          ],
-          'line_of_credit': [
-            'Bank Statements',
-            'Accountant Prepared Financial Statements',
-            'Tax Returns',
-            'Business License'
-          ],
-          'equipment_financing': [
-            'Bank Statements',
-            'Accountant Prepared Financial Statements',
-            'Tax Returns',
-            'Equipment Quote',
-            'Business License'
-          ],
-          'invoice_factoring': [
-            'Bank Statements',
-            'Accountant Prepared Financial Statements',
-            'Invoice Samples',
-            'Accounts Receivable Aging Report'
-          ]
-        };
-        
-        return fallbackMap[category] || [
-          'Bank Statements',
-          'Accountant Prepared Financial Statements',
-          'Tax Returns',
-          'Business License'
-        ];
-      };
       
-      // Use step2.selectedCategory - STEP-BASED COMPLIANCE
-      const apiCategory = categoryMapping[productCategory] || productCategory.toLowerCase().replace(/ /g, '_') || '';
-      
-      // Convert business location to API format (CA -> canada, US -> united_states)
-      const convertLocationToApiFormat = (location: string): string => {
-        const mappings: { [key: string]: string } = {
-          'CA': 'canada',
-          'US': 'united_states',
-          'canada': 'canada',
-          'united_states': 'united_states'
-        };
-        return mappings[location] || location.toLowerCase();
-      };
-      
-      const apiLocation = location ? convertLocationToApiFormat(location) : '';
-      
-      // Validate required fields - use more flexible validation since intersection logic handles missing data better
-      if (!apiLocation) {
-        logger.log(`🔧 [STEP5] Missing required location data: location="${apiLocation}"`);
+      // Validate that we have all required Step 2 selections
+      if (!selectedCategory || !selectedCountry || !requestedAmount) {
+        console.log('❌ [STEP5-AGGREGATION] Missing required selections:', {
+          category: selectedCategory,
+          country: selectedCountry,
+          amount: requestedAmount
+        });
         setIntersectionResults({
           eligibleLenders: [],
           requiredDocuments: [],
-          message: 'Business location required for document requirements calculation',
+          message: 'Missing category, country, or amount selection from previous steps',
           hasMatches: false,
           isLoading: false
         });
         return;
       }
 
-      logger.log('🔍 [STEP5] Calculating document requirements with intersection logic...');
-      logger.log('Form data:', { productCategory, apiCategory, location, apiLocation, fundingAmount: amount });
-
-      // Parse funding amount if it's a string
-      const parsedFundingAmount = typeof amount === 'string' 
-        ? parseFloat(amount.replace(/[^0-9.-]+/g, '')) 
-        : amount;
-        
-      logger.log(`🔧 [STEP5] Parsed funding amount: ${parsedFundingAmount} (from "${amount}")`);
-
+      // ✅ STEP 2: Filter all local lender products (ChatGPT Instructions)
       try {
-        const results = await getDocumentRequirementsIntersection(
-          apiCategory,
-          apiLocation,
-          parsedFundingAmount
+        console.log('🔍 [STEP5-AGGREGATION] Calling document aggregation function...');
+        
+        const results = await getDocumentRequirementsAggregation(
+          selectedCategory,
+          selectedCountry, 
+          requestedAmount
         );
 
-        logger.log(`[Step 5] Intersection results:`, results);
+        console.log(`📋 [STEP5-AGGREGATION] Aggregation results:`, results);
         
-        // CRITICAL FIX: Always use category-specific documents instead of intersection
-        // This ensures Working Capital shows Working Capital documents, not mixed results
-        const categorySpecificDocs = getFallbackDocuments(apiCategory);
-        
-        logger.log(`🔧 [STEP5 FIX] Using category-specific documents for "${productCategory}" (${apiCategory}):`, categorySpecificDocs);
-        
+        // ✅ STEP 3: Aggregate and deduplicate required documents (ChatGPT Instructions)
         setIntersectionResults({
-          eligibleLenders: results.eligibleLenders || [],
-          requiredDocuments: categorySpecificDocs, // Use category-specific instead of intersection
-          message: `Document requirements for ${productCategory}`,
-          hasMatches: true,
+          eligibleLenders: results.eligibleProducts || [],
+          requiredDocuments: results.requiredDocuments || [],
+          message: results.message,
+          hasMatches: results.hasMatches,
           isLoading: false
         });
         
+        // ✅ STEP 4: Display requiredDocuments in Step 5 (ChatGPT Instructions)
         toast({
           title: "Document Requirements Loaded",
-          description: `Requirements for ${productCategory} (${categorySpecificDocs.length} document types)`
+          description: `${results.eligibleProducts?.length || 0} eligible products, ${results.requiredDocuments?.length || 0} required document types`
         });
         
-        // Show original intersection logic for debugging
-        if (results.hasMatches && results.requiredDocuments.length > 0) {
-          logger.log(`🔍 [STEP5 DEBUG] Original intersection found ${results.requiredDocuments.length} docs:`, results.requiredDocuments);
-        } else if (results.hasMatches && results.requiredDocuments.length === 0) {
-          logger.log(`🔍 [STEP5 DEBUG] No intersection documents found for ${productCategory}`);
-        } else {
-          logger.log(`🔍 [STEP5 DEBUG] No matching lenders found for ${productCategory}`);
+        // ✅ STEP 5: Report back to ChatGPT (ChatGPT Instructions)
+        console.log(`✅ [STEP5-AGGREGATION] Number of eligible products found: ${results.eligibleProducts?.length || 0}`);
+        console.log(`✅ [STEP5-AGGREGATION] Final requiredDocuments list: [${(results.requiredDocuments || []).join(', ')}]`);
+        
+        if (results.eligibleProducts?.length === 0) {
+          console.log(`❌ [STEP5-AGGREGATION] No products match criteria: ${selectedCategory} in ${selectedCountry} for $${requestedAmount.toLocaleString()}`);
         }
 
       } catch (error) {
-        logger.error('❌ [STEP5] Error calculating document requirements:', error);
-        
-        // Use fallback documents based on selected category
-        const fallbackDocuments = getFallbackDocuments(apiCategory);
+        console.error('❌ [STEP5-AGGREGATION] Error in document aggregation:', error);
         
         setIntersectionResults({
           eligibleLenders: [],
-          requiredDocuments: fallbackDocuments,
-          message: `Using standard requirements for ${productCategory}`,
-          hasMatches: true,
+          requiredDocuments: [],
+          message: `Error fetching document requirements: ${error.message}`,
+          hasMatches: false,
           isLoading: false
         });
         
-        logger.log(`[Step 5] Using fallback documents for ${productCategory}:`, fallbackDocuments);
-        
         toast({
-          title: "Document Requirements Loaded",
-          description: `Standard document requirements loaded for ${productCategory}`,
-          variant: "default"
+          title: "Error Loading Requirements",
+          description: "Failed to load document requirements. Please try again.",
+          variant: "destructive"
         });
       }
 

@@ -154,20 +154,16 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     return [];
   };
 
-  // Helper function to normalize headquarters format
-  const normalizeHeadquarters = (hq: string): string => {
-    if (hq === 'united-states' || hq === 'United States' || hq === 'US') return 'US';
-    if (hq === 'canada' || hq === 'Canada' || hq === 'CA') return 'CA';
-    return hq;
-  };
-
-  const normalizedHQ = normalizeHeadquarters(headquarters);
-
   // Core filtering logic - Fixed field mapping
   const matchesCore = products.filter(product => {
     const minAmount = getAmountValue(product, 'min');
     const maxAmount = getAmountValue(product, 'max');
     const geography = getGeography(product);
+    
+    // Normalize headquarters inline
+    const normalizedHQ = headquarters === 'united-states' || headquarters === 'United States' || headquarters === 'US' ? 'US' :
+                         headquarters === 'canada' || headquarters === 'Canada' || headquarters === 'CA' ? 'CA' : 
+                         headquarters;
     
     // Geography check - support multiple formats including direct country field
     const geographyMatch = !normalizedHQ || 
@@ -244,6 +240,11 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     const minAmount = getAmountValue(product, 'min');
     const maxAmount = getAmountValue(product, 'max');
     const geography = getGeography(product);
+    
+    // Normalize headquarters inline
+    const normalizedHQ = headquarters === 'united-states' || headquarters === 'United States' || headquarters === 'US' ? 'US' :
+                         headquarters === 'canada' || headquarters === 'Canada' || headquarters === 'CA' ? 'CA' : 
+                         headquarters;
     
     // Geography check with normalized format including direct country field
     const geographyMatch = !normalizedHQ || 
