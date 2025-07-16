@@ -21,6 +21,9 @@ The following components are **LOCKED** and may **not** be modified, replaced, o
 * `Step5_DocumentUpload.tsx`, `DocumentUploadStatus.tsx`, `useDocumentVerification.ts`
 * May not bypass, suppress, or skip document checks unless instructed
 * `.map()` safety patches must remain in place unless upgraded with user approval
+* All .map() and .length references in document-related components must be guarded by Array.isArray() or fallback arrays
+* Do not access any array length or index before verifying its definition
+* If the verificationResult is undefined or loading, show fallback or loading state — never render component logic early
 
 ### 3. 📝 **SignNow Integration Trigger**
 

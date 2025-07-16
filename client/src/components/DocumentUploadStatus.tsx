@@ -90,6 +90,18 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
     )
   ];
 
+  // ✅ Safety checks for derived arrays
+  const safeDocumentStatuses = Array.isArray(documentStatuses) ? documentStatuses : [];
+  const safeAdditionalDocuments = Array.isArray(additionalDocuments) ? additionalDocuments : [];
+
+  // 🧪 Diagnostic safety check
+  console.log('✅ Document Status Safety Check', {
+    safeDocumentsLength: safeDocuments.length,
+    safeRequiredLength: safeRequiredDocuments.length,
+    safeDocumentStatusesLength: safeDocumentStatuses.length,
+    safeAdditionalDocsLength: safeAdditionalDocuments.length
+  });
+
   const getStatusIcon = (status: string, source: string) => {
     if (source === 'backend' || status === 'verified' || status === 'completed') {
       return <CheckCircle className="w-4 h-4 text-green-600" />;
@@ -169,7 +181,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           {safeRequiredDocuments.length > 0 && (
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-gray-700">Required Documents</h4>
-              {documentStatuses.map((docStatus, index) => (
+              {safeDocumentStatuses.map((docStatus, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     {docStatus.status === 'verified' && <CheckCircle className="w-4 h-4 text-green-600" />}
@@ -214,7 +226,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           )}
 
           {/* Empty State Message */}
-          {documentStatuses.length === 0 && additionalDocuments.length === 0 && (
+          {safeDocumentStatuses.length === 0 && safeAdditionalDocuments.length === 0 && (
             <div className="text-center py-6 text-gray-500">
               <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <div className="text-sm">No documents found</div>
@@ -223,10 +235,10 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           )}
 
           {/* Additional Documents */}
-          {additionalDocuments.length > 0 && (
+          {safeAdditionalDocuments.length > 0 && (
             <div className="space-y-2 mt-4">
               <h4 className="font-medium text-sm text-gray-700">Additional Documents</h4>
-              {additionalDocuments.map((doc, index) => (
+              {safeAdditionalDocuments.map((doc, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <FileText className="w-4 h-4 text-blue-600" />
@@ -242,7 +254,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           )}
 
           {/* No Documents Message */}
-          {safeRequiredDocuments.length === 0 && additionalDocuments.length === 0 && (
+          {safeRequiredDocuments.length === 0 && safeAdditionalDocuments.length === 0 && (
             <div className="text-center py-6 text-gray-500">
               <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <div className="text-sm">No document requirements found</div>

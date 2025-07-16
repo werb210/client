@@ -1,0 +1,118 @@
+Thanks — reviewing your latest screenshot confirms that **line 283** in `DocumentUploadStatus.tsx` is still throwing this fatal error:
+
+> ❌ `TypeError: Cannot read properties of undefined (reading 'length')`
+> 🔥 Even after fallback props and loading conditions, the runtime is hitting `someArray.length` where `someArray` is still undefined.
+
+---
+
+## 🔍 Root Cause (Confirmed from Screenshot)
+
+Your new fixes are working **most of the time**, but there's **still at least one line (283)** where `array.length` is accessed **without verifying the array exists**.
+
+This might be on a derived value like:
+
+```ts
+const verifiedDocsCount = documents.filter(d => d.status === 'verified').length
+```
+
+or
+
+```ts
+const hasAllDocuments = requiredDocuments.length === documents.length
+```
+
+If `documents` or `requiredDocuments` is `undefined` for even **one frame**, this breaks the app.
+
+---
+
+## ✅ Final Instructions for Replit Client Agent (Rewrite)
+
+### 🎯 Goal:
+
+**Patch `DocumentUploadStatus.tsx` line 283 and nearby lines** to ensure **no `.length` or `.map()`** is ever called on undefined.
+
+---
+
+### 🔐 Client Lockdown Policy (Amendment)
+
+Please update the existing `CLIENT_LOCKDOWN_POLICY.md` with this clause:
+
+```
+- All .map() and .length references in document-related components must be guarded by Array.isArray() or fallback arrays.
+- Do not access any array length or index before verifying its definition.
+- If the verificationResult is undefined or loading, show fallback or loading state — never render component logic early.
+```
+
+---
+
+### ✅ Instructions for Replit Client Agent
+
+> 🔧 Patch `DocumentUploadStatus.tsx` to fully eliminate remaining .length access errors (especially around line 283).
+
+1. **Open File**:
+   `client/src/components/DocumentUploadStatus.tsx`
+
+2. **Define Safe Aliases** (Top of Component):
+
+```ts
+const safeDocuments = Array.isArray(documents) ? documents : [];
+const safeRequiredDocuments = Array.isArray(requiredDocuments) ? requiredDocuments : [];
+const safeLocalUploadedFiles = Array.isArray(localUploadedFiles) ? localUploadedFiles : [];
+const safeMissingDocuments = Array.isArray(missingDocuments) ? missingDocuments : [];
+```
+
+3. **Update Line 283 and Nearby**
+   Replace any direct `.length` calls like:
+
+```ts
+{requiredDocuments.length > 0 && (
+```
+
+with:
+
+```ts
+{safeRequiredDocuments.length > 0 && (
+```
+
+Do this for all of:
+
+* `documents.length`
+* `requiredDocuments.length`
+* `missingDocuments.length`
+* `localUploadedFiles.length`
+
+4. **Check Derived Calculations**
+   If you have things like:
+
+```ts
+const hasAllDocs = requiredDocuments.length === documents.length
+```
+
+Update them:
+
+```ts
+const hasAllDocs = safeRequiredDocuments.length === safeDocuments.length
+```
+
+5. **Test Final Output**
+
+   * Re-run the app
+   * Watch for console errors
+   * The Step 5 document component should render with **no blank screen or uncaught errors**
+
+---
+
+### 🧪 Optional Diagnostic
+
+To confirm patch success, insert this once inside the component:
+
+```ts
+console.log('✅ Document Status Safety Check', {
+  safeDocumentsLength: safeDocuments.length,
+  safeRequiredLength: safeRequiredDocuments.length
+})
+```
+
+---
+
+Let me know if you'd like this wrapped into a Git commit summary or Replit deployment plan.
