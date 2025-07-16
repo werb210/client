@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, ReactNode } from 'react';
+import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { ApplicationForm } from '../types/applicationForm';
 
 // All step data interfaces now directly use the unified ApplicationForm
@@ -260,8 +260,15 @@ const FormDataContext = createContext<{
 export function FormDataProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(formDataReducer, initialState);
 
+  // Auto-save to localStorage whenever state changes
+  useEffect(() => {
+    saveToStorage();
+  }, [state]);
+
   const saveToStorage = () => {
     try {
+      localStorage.setItem('formData', JSON.stringify(state));
+      // Also save with legacy key for compatibility
       localStorage.setItem('financialFormData', JSON.stringify(state));
       // console.log('Form data saved to localStorage');
     } catch (error) {
@@ -271,7 +278,8 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
 
   const loadFromStorage = () => {
     try {
-      const savedData = localStorage.getItem('financialFormData');
+      // Try primary key first, then fallback to legacy key
+      const savedData = localStorage.getItem('formData') || localStorage.getItem('financialFormData');
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         dispatch({ type: 'LOAD_FROM_STORAGE', payload: parsedData });

@@ -138,12 +138,39 @@ export default function Step4ApplicantInfoComplete() {
   const hasPartner = form.watch("hasPartner");
   const ownershipPercentage = form.watch("ownershipPercentage");
 
-  // Auto-save with 2-second delay
+  // Auto-save with 2-second delay - using step-based structure like Steps 1 and 3
   const debouncedSave = useDebouncedCallback((data: Step4FormData) => {
+    // Save to step4 object structure for proper validation and persistence
     dispatch({
-      type: "UPDATE_FORM_DATA",
-      payload: data,
+      type: "UPDATE_STEP4",
+      payload: {
+        applicantFirstName: data.applicantFirstName,
+        applicantLastName: data.applicantLastName,
+        applicantEmail: data.applicantEmail,
+        applicantPhone: data.applicantPhone,
+        applicantAddress: data.applicantAddress,
+        applicantCity: data.applicantCity,
+        applicantState: data.applicantState,
+        applicantZipCode: data.applicantZipCode,
+        applicantDateOfBirth: data.applicantDateOfBirth,
+        applicantSSN: data.applicantSSN,
+        ownershipPercentage: data.ownershipPercentage,
+        hasPartner: data.hasPartner,
+        partnerFirstName: data.partnerFirstName,
+        partnerLastName: data.partnerLastName,
+        partnerEmail: data.partnerEmail,
+        partnerPhone: data.partnerPhone,
+        partnerAddress: data.partnerAddress,
+        partnerCity: data.partnerCity,
+        partnerState: data.partnerState,
+        partnerZipCode: data.partnerZipCode,
+        partnerDateOfBirth: data.partnerDateOfBirth,
+        partnerSSN: data.partnerSSN,
+        partnerOwnershipPercentage: data.partnerOwnershipPercentage,
+        email: data.applicantEmail // For compatibility
+      }
     });
+    logger.log('💾 Step 4 - Auto-saved form data to step4 object');
   }, 2000);
 
   useEffect(() => {
