@@ -8,31 +8,29 @@ import { z } from 'zod';
 -------------------------------------------------------------------*/
 export const phoneSchema = z
   .string()
-  .min(10, 'Phone must have 10 digits')
-  .transform((val) => val.replace(/\D/g, ''));
+  .optional()
+  .transform((val) => val ? val.replace(/\D/g, '') : '');
 
-export const postalSchema = z.string().refine((v) => /[0-9A-Za-z]{3,10}/.test(v), {
-  message: 'Invalid postal/ZIP code',
-});
+export const postalSchema = z.string().optional();
 
 /* ------------------------------------------------------------------
    UNIFIED APPLICATION SCHEMA (ALL FIELD NAMES STANDARDIZED)
 -------------------------------------------------------------------*/
 export const ApplicationFormSchema = z.object({
   // Stage 1 - Financial Profile 
-  businessLocation: z.enum(['US', 'CA']),
-  headquarters: z.enum(['US', 'CA']),
+  businessLocation: z.enum(['US', 'CA']).optional(),
+  headquarters: z.enum(['US', 'CA']).optional(),
   headquartersState: z.string().optional(),
-  industry: z.string(),
-  lookingFor: z.enum(['capital', 'equipment', 'both']),
-  fundingAmount: z.number().positive(),
-  fundsPurpose: z.enum(['equipment', 'inventory', 'expansion', 'working_capital']),
-  salesHistory: z.enum(['<1yr', '1-3yr', '3+yr']),
-  revenueLastYear: z.number().nonnegative(),
-  averageMonthlyRevenue: z.number().nonnegative(),
-  accountsReceivableBalance: z.number().nonnegative(),
-  fixedAssetsValue: z.number().nonnegative(),
-  equipmentValue: z.number().nonnegative().optional(),
+  industry: z.string().optional(),
+  lookingFor: z.enum(['capital', 'equipment', 'both']).optional(),
+  fundingAmount: z.number().optional(),
+  fundsPurpose: z.enum(['equipment', 'inventory', 'expansion', 'working_capital']).optional(),
+  salesHistory: z.enum(['<1yr', '1-3yr', '3+yr']).optional(),
+  revenueLastYear: z.number().optional(),
+  averageMonthlyRevenue: z.number().optional(),
+  accountsReceivableBalance: z.number().optional(),
+  fixedAssetsValue: z.number().optional(),
+  equipmentValue: z.number().optional(),
 
   // Stage 2 - Product Selection
   selectedProductId: z.string().optional(),
@@ -43,17 +41,17 @@ export const ApplicationFormSchema = z.object({
   selectedCategoryName: z.string().optional(),
 
   // Stage 3 – Business Details
-  businessName: z.string(),
-  businessAddress: z.string(),
-  businessCity: z.string(),
-  businessState: z.string(),
-  businessZipCode: z.string(),
+  businessName: z.string().optional(),
+  businessAddress: z.string().optional(),
+  businessCity: z.string().optional(),
+  businessState: z.string().optional(),
+  businessZipCode: z.string().optional(),
   businessPhone: phoneSchema,
-  businessEmail: z.string().email().optional(),
-  businessWebsite: z.string().url().optional(),
-  businessStartDate: z.string(),
-  businessStructure: z.enum(['sole_proprietorship', 'partnership', 'llc', 'corporation', 's_corp', 'non_profit']),
-  employeeCount: z.number().int().positive(),
+  businessEmail: z.string().optional(),
+  businessWebsite: z.string().optional(),
+  businessStartDate: z.string().optional(),
+  businessStructure: z.enum(['sole_proprietorship', 'partnership', 'llc', 'corporation', 's_corp', 'non_profit']).optional(),
+  employeeCount: z.number().optional(),
   estimatedYearlyRevenue: z.number().optional(),
   incorporationDate: z.string().optional(),
   taxId: z.string().optional(),
@@ -63,29 +61,29 @@ export const ApplicationFormSchema = z.object({
   monthlyExpenses: z.string().optional(),
   numberOfEmployees: z.preprocess(
     (val) => val === '' || val === null || val === undefined ? undefined : Number(val),
-    z.number({ invalid_type_error: "Must be a number" }).int().min(1, "At least 1 employee is required").optional()
+    z.number().optional()
   ),
   totalAssets: z.string().optional(),
   totalLiabilities: z.string().optional(),
 
   // Stage 4B – Applicant Information
-  title: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
-  personalEmail: z.string().email(),
+  title: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  personalEmail: z.string().optional(),
   personalPhone: phoneSchema,
-  dateOfBirth: z.string(),
-  socialSecurityNumber: z.string(),
-  ownershipPercentage: z.string(),
-  creditScore: z.enum(['unknown', 'excellent_750_plus', 'good_700_749', 'fair_650_699', 'poor_600_649', 'very_poor_below_600']),
-  personalAnnualIncome: z.string(),
-  applicantAddress: z.string(),
-  applicantCity: z.string(),
-  applicantState: z.string(),
-  applicantPostalCode: z.string(),
-  yearsWithBusiness: z.string(),
-  previousLoans: z.enum(['yes', 'no']),
-  bankruptcyHistory: z.enum(['yes', 'no']),
+  dateOfBirth: z.string().optional(),
+  socialSecurityNumber: z.string().optional(),
+  ownershipPercentage: z.string().optional(),
+  creditScore: z.enum(['unknown', 'excellent_750_plus', 'good_700_749', 'fair_650_699', 'poor_600_649', 'very_poor_below_600']).optional(),
+  personalAnnualIncome: z.string().optional(),
+  applicantAddress: z.string().optional(),
+  applicantCity: z.string().optional(),
+  applicantState: z.string().optional(),
+  applicantPostalCode: z.string().optional(),
+  yearsWithBusiness: z.string().optional(),
+  previousLoans: z.enum(['yes', 'no']).optional(),
+  bankruptcyHistory: z.enum(['yes', 'no']).optional(),
 
   // Partner Information (conditional on ownership < 100%)
   partnerFirstName: z.string().optional(),

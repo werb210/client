@@ -46,17 +46,17 @@ import { StepHeader } from '@/components/StepHeader';
 
 // Step 3 Schema - All fields required as requested
 const step3Schema = z.object({
-  operatingName: z.string().min(1, "Business Name (DBA) is required"),
-  legalName: z.string().min(1, "Business Legal Name is required"),
-  businessStreetAddress: z.string().min(1, "Business Address is required"),
-  businessCity: z.string().min(1, "City is required"),
-  businessState: z.string().min(1, "State/Province is required"),
-  businessPostalCode: z.string().min(1, "Postal Code is required"),
-  businessPhone: z.string().min(1, "Business Phone is required"),
-  businessStartDate: z.string().min(1, "Business Start Date is required"),
-  businessStructure: z.string().min(1, "Business Structure is required"),
-  employeeCount: z.number().min(1, "Number of Employees is required"),
-  estimatedYearlyRevenue: z.number().min(1, "Estimated Yearly Revenue is required"),
+  operatingName: z.string().optional(),
+  legalName: z.string().optional(),
+  businessStreetAddress: z.string().optional(),
+  businessCity: z.string().optional(),
+  businessState: z.string().optional(),
+  businessPostalCode: z.string().optional(),
+  businessPhone: z.string().optional(),
+  businessStartDate: z.string().optional(),
+  businessStructure: z.string().optional(),
+  employeeCount: z.number().optional(),
+  estimatedYearlyRevenue: z.number().optional(),
   businessWebsite: z.string().optional(),
 });
 

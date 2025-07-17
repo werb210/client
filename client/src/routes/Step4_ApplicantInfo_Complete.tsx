@@ -40,18 +40,18 @@ import { SsnWarningModal } from "@/components/SsnWarningModal";
 
 // Step 4 Schema - All fields required except SSN/SIN
 const step4Schema = z.object({
-  // Primary Applicant Information - all required except SSN
-  applicantFirstName: z.string().min(1, "First Name is required"),
-  applicantLastName: z.string().min(1, "Last Name is required"), 
-  applicantEmail: z.string().email("Valid email is required"),
-  applicantPhone: z.string().min(1, "Phone is required"),
-  applicantAddress: z.string().min(1, "Address is required"),
-  applicantCity: z.string().min(1, "City is required"),
-  applicantState: z.string().min(1, "State is required"),
-  applicantZipCode: z.string().min(1, "Postal Code is required"),
-  applicantDateOfBirth: z.string().min(1, "Date Of Birth is required"),
-  applicantSSN: z.string().optional(), // SSN/SIN is optional as requested
-  ownershipPercentage: z.number().min(0).max(100),
+  // Primary Applicant Information - all optional
+  applicantFirstName: z.string().optional(),
+  applicantLastName: z.string().optional(), 
+  applicantEmail: z.string().optional(),
+  applicantPhone: z.string().optional(),
+  applicantAddress: z.string().optional(),
+  applicantCity: z.string().optional(),
+  applicantState: z.string().optional(),
+  applicantZipCode: z.string().optional(),
+  applicantDateOfBirth: z.string().optional(),
+  applicantSSN: z.string().optional(),
+  ownershipPercentage: z.number().optional(),
   
   // Partner Information (conditional)
   hasPartner: z.boolean().optional(),
@@ -65,7 +65,7 @@ const step4Schema = z.object({
   partnerZipCode: z.string().optional(),
   partnerDateOfBirth: z.string().optional(),
   partnerSSN: z.string().optional(),
-  partnerOwnershipPercentage: z.number().min(0).max(100).optional(),
+  partnerOwnershipPercentage: z.number().optional(),
 });
 
 type Step4FormData = z.infer<typeof step4Schema>;
