@@ -1,0 +1,125 @@
+✅ **Thank you — that is a crystal-clear, high-confidence report.** You're absolutely correct that the document failure is isolated to the **client-side upload process**.
+
+---
+
+## 🚨 ROOT CAUSE: CLIENT NEVER SENT THE 6 DOCUMENTS
+
+### 📌 Staff System Recap:
+
+* ✅ **Application A20** (`489c4ab3-2fa8-483c-a9a4-91fe70696f0f`) created successfully
+* ❌ No upload directory or document records were created
+* ✅ Manual `curl` upload of 1 PDF **did work**
+* ✅ Auto-trigger OCR & banking analysis **worked perfectly**
+* ✅ Other applications have documents — **backend is healthy**
+
+---
+
+## 🔎 Conclusion:
+
+The **client never triggered** `POST /api/public/applications/:id/documents`.
+
+This means the app either:
+
+1. ❌ Failed to send the request at all
+2. ❌ Attempted an incorrect endpoint or method
+3. ❌ Tried to send documents as part of `/applications` (but server only accepts uploads via separate endpoint)
+4. ❌ Lost the base64 → File conversion during Step 7
+
+---
+
+## 🛠️ NEXT STEP: CRITICAL CLIENT FIX NEEDED
+
+We now need to **patch the client app** to upload the documents **after the application is created**, using:
+
+```ts
+POST /api/public/applications/:id/documents
+```
+
+---
+
+### ✅ FIX PLAN FOR REPLIT AGENT (Client App)
+
+> 🔧 Replit Agent — please execute all steps below.
+
+---
+
+### 🔹 1. In `Step7_Finalization.tsx`:
+
+After submitting the application form data:
+
+```ts
+const res = await fetch(`${API_BASE}/public/applications`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ step1, step3, step4, termsAccepted, privacyAccepted })
+});
+
+const data = await res.json();
+const applicationId = data.applicationId;
+```
+
+---
+
+### 🔹 2. Immediately upload all documents:
+
+```ts
+for (const doc of documents) {
+  const formData = new FormData();
+  formData.append("documentType", doc.category); // e.g., 'bank_statements'
+  formData.append("document", new File([doc.blob], doc.name, { type: doc.mimeType }));
+
+  await fetch(`${API_BASE}/public/applications/${applicationId}/documents`, {
+    method: "POST",
+    body: formData
+  });
+}
+```
+
+📌 *This must run **after** application creation, one POST per document.*
+
+---
+
+### 🔹 3. Show success confirmation only **after all docs uploaded**:
+
+```ts
+await Promise.all(documentUploadPromises);
+setSubmissionComplete(true);
+```
+
+---
+
+### 🔍 ADD DEBUG LOGGING
+
+```ts
+console.log("Uploading document:", doc.name, "→", formData);
+```
+
+---
+
+## ✅ RETEST PLAN
+
+After patching, submit again with 3+ PDFs and confirm:
+
+| Step                                     | Confirm                        |
+| ---------------------------------------- | ------------------------------ |
+| ✅ `POST /applications`                   | Creates app with 200 OK        |
+| ✅ `POST /applications/:id/documents` x N | Runs once per PDF              |
+| ✅ Staff `/documents` table               | Shows new files                |
+| ✅ `/uploads/applications/:id/` dir       | Exists and populated           |
+| ✅ \[AUTO] OCR + banking triggers         | Fired in `application_log.txt` |
+
+---
+
+## 🧾 Summary: You Are One Fix Away
+
+| Area                     | Status                                             |
+| ------------------------ | -------------------------------------------------- |
+| Backend                  | ✅ Fully working                                    |
+| Document logic           | ✅ Tested via `curl`                                |
+| Client document handling | ❌ Still broken — must post docs after app creation |
+| Fix method               | 🔧 Add explicit `POST /documents` loop in Step 7   |
+| Risk                     | 🚨 Show-stopper if not fixed                       |
+
+---
+
+Please instruct Replit Agent to apply the patch above **immediately**, then re-test a live submission. Once confirmed, your app will be **fully production-ready with document intelligence re-enabled**. Let me know when it’s patched!

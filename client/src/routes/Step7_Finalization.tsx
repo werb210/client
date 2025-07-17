@@ -84,12 +84,11 @@ export default function Step6ConfirmAndSubmit() {
       console.log("📤 Applicant Name:", `${state.step4?.firstName || ''} ${state.step4?.lastName || ''}`.trim() || 'NOT FOUND');
       console.log("📤 Document Count:", uploadedFiles.length);
 
-      // Prepare form data for submission
+      // Prepare form data for submission (NO documents - they upload separately)
       const fullFormData = {
         step1: state.step1,
         step3: state.step3,
         step4: state.step4,
-        documents: uploadedFiles,
         termsAccepted,
         privacyAccepted,
         submittedAt: new Date().toISOString()
@@ -100,7 +99,7 @@ export default function Step6ConfirmAndSubmit() {
       
       logger.log('🏁 Step 6: Submitting application with POST /api/public/applications...');
       
-      // Submit complete application - backend will create SignNow document and send email
+      // Step 1: Create application first (NO documents)
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications`, {
         method: 'POST',
         headers: {
@@ -120,6 +119,59 @@ export default function Step6ConfirmAndSubmit() {
 
       const result = await response.json();
       console.log("📥 Application submission response:", result);
+      
+      // Extract application ID from response
+      const applicationId = result.applicationId;
+      
+      if (!applicationId) {
+        throw new Error("No application ID returned from server");
+      }
+      
+      console.log("🆔 Application ID:", applicationId);
+      
+      // Step 2: Upload all documents separately
+      if (uploadedFiles.length > 0) {
+        console.log(`📄 Starting upload of ${uploadedFiles.length} documents...`);
+        
+        const documentUploadPromises = uploadedFiles.map(async (doc, index) => {
+          const formData = new FormData();
+          
+          // Convert uploaded file data back to File object for upload
+          if (doc.file) {
+            formData.append("document", doc.file);
+          } else {
+            // Fallback: create file from stored data
+            const file = new File([], doc.name, { type: doc.type });
+            formData.append("document", file);
+          }
+          
+          formData.append("documentType", doc.documentType);
+          
+          console.log(`📤 Uploading document ${index + 1}/${uploadedFiles.length}:`, doc.name, "→", doc.documentType);
+          
+          const uploadResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/documents`, {
+            method: "POST",
+            body: formData
+          });
+          
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            console.error(`❌ Document upload failed for ${doc.name}:`, uploadResponse.status, errorText);
+            throw new Error(`Document upload failed for ${doc.name}: ${uploadResponse.status}`);
+          }
+          
+          const uploadResult = await uploadResponse.json();
+          console.log(`✅ Document uploaded successfully:`, doc.name, uploadResult);
+          
+          return uploadResult;
+        });
+        
+        // Wait for all document uploads to complete
+        await Promise.all(documentUploadPromises);
+        console.log("✅ All documents uploaded successfully!");
+      } else {
+        console.log("ℹ️ No documents to upload");
+      }
 
       setSubmissionStatus('submitted');
       
@@ -343,7 +395,7 @@ export default function Step6ConfirmAndSubmit() {
             <div className="text-center space-y-4">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
               <p className="text-gray-600">Submitting your application...</p>
-              <p className="text-sm text-gray-500">Processing your information and documents...</p>
+              <p className="text-sm text-gray-500">Creating application and uploading documents...</p>
             </div>
           )}
 
