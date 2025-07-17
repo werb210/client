@@ -481,32 +481,74 @@ export default function Step5DocumentUpload() {
       {files.length > 0 && (
         <Card>
           <CardContent className="pt-6">
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Files Ready for Upload</span>
-                <span className="text-sm text-gray-500">{files.length} files</span>
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="text-xs">
+                    {files.length} pending
+                  </Badge>
+                </div>
               </div>
-              <div className="space-y-1">
-                {files.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="w-4 h-4 text-blue-600" />
-                      <span className="truncate">{file.file.name}</span>
+              <div className="space-y-2">
+                {files.map((file, index) => {
+                  const uploadStatus = uploadProgress[file.file.name];
+                  const isUploading = uploadStatus && uploadStatus < 100;
+                  const isCompleted = uploadStatus === 100;
+                  
+                  return (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <div className="relative">
+                          <FileText className={`w-4 h-4 ${isCompleted ? 'text-green-600' : isUploading ? 'text-blue-600' : 'text-gray-600'}`} />
+                          {isUploading && (
+                            <div className="absolute -top-1 -right-1 w-2 h-2">
+                              <div className="animate-spin rounded-full h-2 w-2 border border-blue-600 border-t-transparent"></div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{file.file.name}</div>
+                          <div className="text-xs text-gray-500 flex items-center space-x-2">
+                            <span>{file.category}</span>
+                            <span>•</span>
+                            <span>{(file.file.size / 1024 / 1024).toFixed(1)} MB</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {isCompleted ? (
+                          <Badge variant="default" className="bg-green-600 text-xs">
+                            ✓ Uploaded
+                          </Badge>
+                        ) : isUploading ? (
+                          <Badge variant="default" className="bg-blue-600 text-xs">
+                            {uploadStatus}%
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">
+                            Ready
+                          </Badge>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleFileRemoved(file.file.name)}
+                          className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
+                          disabled={isUploading}
+                        >
+                          ×
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-500 text-xs">{file.category}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleFileRemoved(file.file.name)}
-                        className="h-6 w-6 p-0"
-                      >
-                        ×
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+              {isUploading && (
+                <div className="text-xs text-gray-500 text-center">
+                  Upload in progress...
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
