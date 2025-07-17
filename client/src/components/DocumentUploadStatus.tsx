@@ -222,24 +222,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
 
           
 
-          {/* Additional Documents */}
-          {safeAdditionalDocuments.length > 0 && (
-            <div className="space-y-2 mt-4">
-              <h4 className="font-medium text-sm text-gray-700">Additional Documents</h4>
-              {safeAdditionalDocuments.map((doc, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <FileText className="w-4 h-4 text-blue-600" />
-                    <div>
-                      <div className="font-medium text-sm">{doc.fileName || doc.name}</div>
-                      <div className="text-xs text-gray-500">{doc.documentType || doc.category}</div>
-                    </div>
-                  </div>
-                  <Badge variant="outline">Extra</Badge>
-                </div>
-              ))}
-            </div>
-          )}
+          
 
           
 
