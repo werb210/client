@@ -10,6 +10,7 @@ import lendersRouter from "./routes/lenders";
 import loanProductCategoriesRouter from "./routes/loanProductCategories";
 import documentRequirementsRouter from "./routes/documentRequirements";
 import dataIngestionRouter from "./routes/dataIngestion";
+import chatRouter from "./routes/chat.js";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -793,6 +794,9 @@ app.use((req, res, next) => {
   app.use('/api/loan-products', documentRequirementsRouter);
 
   app.use('/api/admin', dataIngestionRouter);
+  
+  // Mount chat routes for OpenAI chatbot
+  app.use('/api', chatRouter);
 
   // Remove duplicate - moved above catch-all handler
 

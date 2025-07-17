@@ -1,5 +1,7 @@
 import { Switch, Route } from "wouter";
 import { lazy } from "react";
+import { ChatBot } from "@/components/ChatBot";
+import { useChatBot } from "@/hooks/useChatBot";
 
 // V1 Route Components (Source of Truth)
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
@@ -98,8 +100,11 @@ import E2ETestRunner from "@/pages/E2ETestRunner";
  * and optimized for V2. Uses V1 route components as source of truth.
  */
 export function MainLayout() {
+  const { isOpen, currentStep, applicationData, toggleChat } = useChatBot();
+  
   return (
-    <Switch>
+    <>
+      <Switch>
       {/* Diagnostic Routes */}
       {/* Route removed with legacy auth cleanup */}
       <Route path="/lender-test" component={LenderTest} />
@@ -203,10 +208,20 @@ export function MainLayout() {
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/cookie-consent-test" component={CookieConsentTest} />
+      <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} />
       
       {/* Default Route - Landing Page */}
       <Route path="/" component={LandingPage} />
       <Route component={NotFound} />
     </Switch>
+    
+    {/* Global ChatBot - Available on all pages */}
+    <ChatBot 
+      isOpen={isOpen}
+      onToggle={toggleChat}
+      currentStep={currentStep}
+      applicationData={applicationData}
+    />
+    </>
   );
 }
