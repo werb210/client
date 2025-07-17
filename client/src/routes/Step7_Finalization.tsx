@@ -46,8 +46,8 @@ export default function Step6ConfirmAndSubmit() {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get uploaded documents
-  const uploadedFiles = state.uploadedDocuments || [];
+  // Get uploaded documents from Step 5
+  const uploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
 
   const handleSubmit = async () => {
     logger.log('🚀 handleSubmit called!', { termsAccepted, privacyAccepted });
