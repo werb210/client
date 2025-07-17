@@ -21,7 +21,6 @@ import Send from 'lucide-react/dist/esm/icons/send';
 import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
 import FileText from 'lucide-react/dist/esm/icons/file-text';
 import Shield from 'lucide-react/dist/esm/icons/shield';
-import Clock from 'lucide-react/dist/esm/icons/clock';
 import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
 import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
@@ -155,7 +154,7 @@ export default function Step6ConfirmAndSubmit() {
 
   const canSubmit = termsAccepted && privacyAccepted && state.step1 && state.step3 && state.step4;
 
-  // Show email confirmation after successful submission
+  // Show clean confirmation after successful submission
   if (submissionStatus === 'submitted') {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
@@ -165,71 +164,31 @@ export default function Step6ConfirmAndSubmit() {
             <div className="mx-auto mb-4">
               <CheckCircle className="w-16 h-16 text-green-600" />
             </div>
-            <CardTitle className="text-2xl text-green-800">You're almost done!</CardTitle>
+            <CardTitle className="text-2xl text-green-800">🎉 You're almost done!</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <div className="flex justify-center mb-4">
-              <Mail className="w-12 h-12 text-blue-600" />
-            </div>
             <p className="text-lg">
-              We've sent an email with your application for signature. Please check your inbox (and spam folder) for a message from <strong>noreply@boreal.financial</strong>.
+              Thank you for submitting your application. Our team is reviewing your information and documents.
             </p>
             <p className="text-gray-600">
-              Once you sign the document, we'll begin processing your file.
+              We'll reach out shortly if we need anything else or to discuss next steps.
             </p>
           </CardContent>
         </Card>
-        {/* Next Steps */}
+
+        {/* Support Information */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-blue-600" />
-              What Happens Next?
+              <Mail className="w-5 h-5 text-blue-600" />
+              📩 Need Help?
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
-                <div>
-                  <p className="font-medium">Check Your Email</p>
-                  <p className="text-gray-600">Look for an email from noreply@boreal.financial with your signing link</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
-                <div>
-                  <p className="font-medium">Sign Electronically</p>
-                  <p className="text-gray-600">Click the link in the email to review and sign your application</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
-                <div>
-                  <p className="font-medium">Application Processing</p>
-                  <p className="text-gray-600">Once signed, we'll begin matching you with suitable lenders</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
-                <div>
-                  <p className="font-medium">Lender Contact</p>
-                  <p className="text-gray-600">Qualified lenders may contact you directly with offers</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        {/* Contact Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Need Assistance?</CardTitle>
-          </CardHeader>
-          <CardContent>
             <div className="space-y-2 text-sm">
-              <p>If you have any questions about your application:</p>
+              <p>If you have any questions, feel free to reach out:</p>
               <ul className="list-disc list-inside text-gray-600 space-y-1">
-                <li>Email: info@boreal.finance</li>
+                <li>Email: <a href="mailto:info@boreal.financial" className="text-blue-600 underline">info@boreal.financial</a></li>
                 <li>Phone: 1-888-811-1887</li>
               </ul>
             </div>
