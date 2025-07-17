@@ -298,29 +298,29 @@ export default function Step6SignNowIntegration() {
 
   // Legacy polling function - now replaced by React Query above
 
-  // ✅ USER REQUIREMENT: Single status check on load instead of polling
+  // ✅ USER REQUIREMENT: Single status check on load - no polling
   const [isSigned, setIsSigned] = useState(false);
   
   useEffect(() => {
-    const checkSignedStatus = async () => {
+    const checkStatus = async () => {
       if (!applicationId) return;
       
       try {
         const res = await fetch(`/api/public/application/${applicationId}/signing-status`);
         const status = await res.json();
-        console.log('👀 Status check on load:', status);
+        console.log("👀 Signing status:", status);
         setIsSigned(status === "signed");
       } catch (error) {
         console.warn('Status check error:', error);
         setIsSigned(false);
       }
     };
-    
-    checkSignedStatus();
+
+    checkStatus();
   }, [applicationId]);
 
-  // ✅ Show continue button only when signed
-  const handleContinueToStep7 = () => {
+  // ✅ Continue button handler - only when document is signed
+  const handleContinue = () => {
     console.log('🎉 Document signed! Continuing to Step 7...');
     toast({
       title: "Document Signed Successfully!",
@@ -473,22 +473,32 @@ export default function Step6SignNowIntegration() {
                       Signing URL: {signUrl}
                     </div>
                     
-                    <div className="flex justify-center space-x-4">
-                      {isSigned && (
-                        <Button 
-                          onClick={handleContinueToStep7}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          Continue to Final Step
-                        </Button>
+                    <div className="space-y-4">
+                      {isSigned ? (
+                        <div className="text-center">
+                          <Button 
+                            onClick={handleContinue}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            Continue to Final Step
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="text-center space-y-3">
+                          <p className="text-gray-600 font-medium">
+                            Please complete the signature above before continuing.
+                          </p>
+                          {import.meta.env.DEV && (
+                            <Button 
+                              onClick={handleManualOverride}
+                              variant="outline" 
+                              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                            >
+                              Continue Without Signing (Dev Only)
+                            </Button>
+                          )}
+                        </div>
                       )}
-                      <Button 
-                        onClick={handleManualOverride}
-                        variant="outline" 
-                        className="border-orange-300 text-orange-700 hover:bg-orange-50"
-                      >
-                        Continue Without Signing
-                      </Button>
                     </div>
                   </div>
                 ) : (
