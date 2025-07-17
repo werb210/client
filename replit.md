@@ -93,17 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
-- **July 17, 2025: ✅ COMPLETE SIGNNOW ELIMINATION & EMAIL-BASED WORKFLOW IMPLEMENTED**
+- **July 17, 2025: ✅ COMPLETE SIGNNOW ELIMINATION & STEP RENUMBERING IMPLEMENTED**
   * **COMPLETE CLEANUP**: Eliminated ALL SignNow-related code from entire codebase including API methods, components, and test pages
-  * **STEP 6 DELETED**: Completely removed Step6_SignNowIntegration.tsx and all Step 6 routing from MainLayout.tsx
+  * **STEP RENUMBERING**: Step 7 finalization moved up to become new Step 6, maintaining same functionality
+  * **ROUTING UPDATE**: Step 5 now navigates directly to Step 6 (/apply/step-6) with Step7_Finalization.tsx component
   * **API CLEANUP**: Removed checkSigningStatus(), initiateSigning(), createSignNowDocument() methods from staffApi.ts
   * **COMPONENT REMOVAL**: Deleted SignNowIframe.tsx, Step6SignNow.tsx, Step6SignNowTyped.tsx, and all SignNow test components
   * **ROUTE CLEANUP**: Removed all SignNow test routes and broken imports from MainLayout.tsx routing configuration
-  * **RUNTIME PANEL**: Cleaned RuntimeAlertPanel.tsx removing signingStatus variables and Step 6 references
-  * **DIRECT NAVIGATION**: Step 5 now navigates directly to Step 7 (/apply/step-7) bypassing Step 6 entirely
-  * **EMAIL-BASED WORKFLOW**: Step 7 shows email confirmation messaging for manual signing via noreply@boreal.financial
-  * **INTERFACE CLEANUP**: Removed SigningStatusResponse interface and all signing-related variables from codebase
-  * **PRODUCTION READY**: Clean deployment without any SignNow dependencies or embedded iframe requirements
+  * **STEP HEADERS**: Updated StepHeader to show step 6 of 6 total steps in final submission component
+  * **EMAIL-BASED WORKFLOW**: Step 6 shows email confirmation messaging for manual signing via noreply@boreal.financial
+  * **FIELD MAPPING**: Enhanced server-side automatic field transformation (fundingAmount→requestedAmount, operatingName→businessName)
+  * **CONSOLE LOGGING**: Added comprehensive submission logging with "📤 Submitting form data:" for debugging
+  * **PRODUCTION READY**: Clean 6-step workflow without any SignNow dependencies or embedded iframe requirements
 
 - **July 17, 2025: ✅ DOCUMENT PREPARATION CHECK & COMPLETE POLLING ELIMINATION IMPLEMENTED**
   * **DOCUMENT PREPARATION STATE**: Added `isDocumentPrepared` state to wait for Smart Fields population before showing iframe

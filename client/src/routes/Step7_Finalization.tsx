@@ -37,7 +37,7 @@ type SubmissionStatus = 'idle' | 'submitting' | 'submitted' | 'error';
  * 3. Backend creates SignNow document and sends email invite
  * 4. Show email confirmation message to user
  */
-export default function Step7ConfirmAndSubmit() {
+export default function Step6ConfirmAndSubmit() {
   const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -99,7 +99,7 @@ export default function Step7ConfirmAndSubmit() {
       // ✅ USER REQUIREMENT: Add console logging before submission
       console.log("📤 Submitting form data:", fullFormData);
       
-      logger.log('🏁 Step 7: Submitting application with POST /api/public/applications...');
+      logger.log('🏁 Step 6: Submitting application with POST /api/public/applications...');
       
       // Submit complete application - backend will create SignNow document and send email
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications`, {
