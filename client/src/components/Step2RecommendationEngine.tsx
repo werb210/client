@@ -172,14 +172,7 @@ export function Step2RecommendationEngine({
               </div>
             </div>
 
-            {/* Geographic Filter Notice */}
-            {headquarters && (
-              <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                <p className="text-sm text-green-700">
-                  <strong>Geographic Filter Active:</strong> Showing loan products available in {formatHeadquarters(headquarters)}
-                </p>
-              </div>
-            )}
+            
 
             {/* Selection Requirement Notice */}
             <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
