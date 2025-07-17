@@ -557,7 +557,6 @@ export default function Step5DocumentUpload() {
 
       {/* Progress Summary */}
       <Card>
-        <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
               {allRequirementsComplete 
@@ -583,7 +582,6 @@ export default function Step5DocumentUpload() {
               </Button>
             </div>
           )}
-        </CardContent>
       </Card>
 
       {/* Navigation */}
