@@ -8,35 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useFormData, FormDataAction } from '@/context/FormDataContext';
 import { StepHeader } from '@/components/StepHeader';
-import { z } from 'zod';
-
-// Create a local schema that matches the component field names
-const localStep4Schema = z.object({
-  applicantFirstName: z.string().min(1, 'First name is required'),
-  applicantLastName: z.string().min(1, 'Last name is required'),
-  applicantEmail: z.string().email('Valid email is required'),
-  applicantPhone: z.string().min(1, 'Phone is required'),
-  applicantAddress: z.string().min(1, 'Address is required'),
-  applicantCity: z.string().min(1, 'City is required'),
-  applicantState: z.string().min(1, 'State is required'),
-  applicantZipCode: z.string().min(1, 'ZIP code is required'),
-  applicantDateOfBirth: z.string().min(1, 'Date of birth is required'),
-  applicantSSN: z.string().optional(), // SSN is optional
-  ownershipPercentage: z.string().min(1, 'Ownership percentage is required'),
-  hasPartner: z.boolean(),
-  // Partner fields (conditional)
-  partnerFirstName: z.string().optional(),
-  partnerLastName: z.string().optional(),
-  partnerEmail: z.string().email().optional().or(z.literal('')),
-  partnerPhone: z.string().optional(),
-  partnerAddress: z.string().optional(),
-  partnerCity: z.string().optional(),
-  partnerState: z.string().optional(),
-  partnerZipCode: z.string().optional(),
-  partnerDateOfBirth: z.string().optional(),
-  partnerSSN: z.string().optional(),
-  partnerOwnershipPercentage: z.string().optional(),
-});
+import { step4Schema } from '../../../shared/schema';
 import { logger } from '@/lib/utils';
 
 // Import all the form field components
@@ -56,7 +28,7 @@ type Step4FormData = {
   applicantZipCode: string;
   applicantDateOfBirth: string;
   applicantSSN: string;
-  ownershipPercentage: string;
+  ownershipPercentage: number;
   hasPartner: boolean;
   partnerFirstName?: string;
   partnerLastName?: string;
@@ -68,7 +40,7 @@ type Step4FormData = {
   partnerZipCode?: string;
   partnerDateOfBirth?: string;
   partnerSSN?: string;
-  partnerOwnershipPercentage?: string;
+  partnerOwnershipPercentage?: number;
 };
 
 export function Step4ApplicantInfoLocal() {
@@ -78,7 +50,7 @@ export function Step4ApplicantInfoLocal() {
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<Step4FormData>({
-    resolver: zodResolver(localStep4Schema),
+    resolver: zodResolver(step4Schema),
     defaultValues: {
       applicantFirstName: state.step4?.applicantFirstName || '',
       applicantLastName: state.step4?.applicantLastName || '',
@@ -90,7 +62,7 @@ export function Step4ApplicantInfoLocal() {
       applicantZipCode: state.step4?.applicantZipCode || '',
       applicantDateOfBirth: state.step4?.applicantDateOfBirth || '',
       applicantSSN: state.step4?.applicantSSN || '',
-      ownershipPercentage: state.step4?.ownershipPercentage || '100',
+      ownershipPercentage: state.step4?.ownershipPercentage || 100,
       hasPartner: state.step4?.hasPartner || false,
       partnerFirstName: state.step4?.partnerFirstName || '',
       partnerLastName: state.step4?.partnerLastName || '',
@@ -102,7 +74,7 @@ export function Step4ApplicantInfoLocal() {
       partnerZipCode: state.step4?.partnerZipCode || '',
       partnerDateOfBirth: state.step4?.partnerDateOfBirth || '',
       partnerSSN: state.step4?.partnerSSN || '',
-      partnerOwnershipPercentage: state.step4?.partnerOwnershipPercentage || '0',
+      partnerOwnershipPercentage: state.step4?.partnerOwnershipPercentage || 0,
     },
   });
 
@@ -112,8 +84,8 @@ export function Step4ApplicantInfoLocal() {
   // Auto-calculate partner ownership
   useEffect(() => {
     if (hasPartner && ownershipPercentage) {
-      const partnerOwnership = 100 - parseInt(ownershipPercentage);
-      form.setValue("partnerOwnershipPercentage", partnerOwnership.toString());
+      const partnerOwnership = 100 - ownershipPercentage;
+      form.setValue("partnerOwnershipPercentage", partnerOwnership);
     }
   }, [ownershipPercentage, hasPartner, form]);
 
@@ -271,95 +243,8 @@ export function Step4ApplicantInfoLocal() {
                     <FormItem>
                       <FormLabel>Phone Number *</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="Enter phone number" {...field} />
+                        <Input placeholder="Enter phone number" {...field} />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="applicantAddress"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Street Address *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter street address" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="applicantCity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter city" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="applicantState"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State/Province *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter state or province" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="applicantZipCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Postal Code *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter postal code" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="applicantDateOfBirth"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date of Birth *</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="applicantSSN"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>SSN/SIN (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter SSN or SIN" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Social Security Number (US) or Social Insurance Number (Canada)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -378,6 +263,7 @@ export function Step4ApplicantInfoLocal() {
                           max="100" 
                           placeholder="Enter ownership percentage"
                           {...field}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
                       <FormMessage />
@@ -446,118 +332,6 @@ export function Step4ApplicantInfoLocal() {
 
                   <FormField
                     control={form.control}
-                    name="partnerEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Partner Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="Enter partner email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="partnerPhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Partner Phone</FormLabel>
-                        <FormControl>
-                          <Input type="tel" placeholder="Enter partner phone" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="partnerAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Partner Address</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter partner address" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="partnerCity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Partner City</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter partner city" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="partnerState"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Partner State/Province</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter partner state or province" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="partnerZipCode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Partner Postal Code</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter partner postal code" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="partnerDateOfBirth"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Partner Date of Birth</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="partnerSSN"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Partner SSN/SIN (Optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter partner SSN or SIN" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
                     name="partnerOwnershipPercentage"
                     render={({ field }) => (
                       <FormItem>
@@ -569,7 +343,7 @@ export function Step4ApplicantInfoLocal() {
                             max="99" 
                             placeholder="Auto-calculated"
                             {...field}
-                            value={field.value || '0'}
+                            value={field.value || 0}
                             readOnly
                           />
                         </FormControl>

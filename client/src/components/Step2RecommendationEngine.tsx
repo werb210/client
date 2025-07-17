@@ -55,8 +55,7 @@ export function Step2RecommendationEngine({
     lookingFor: formData.lookingFor,
     fundingAmount: formData.fundingAmount,
     accountsReceivableBalance: formData.accountsReceivableBalance || 0,
-    fundsPurpose: formData.fundsPurpose,
-    industry: formData.industry // Include industry from Step 3 business details
+    fundsPurpose: formData.fundsPurpose
   });
   
   // ✅ DEBUG: Log fetched lender products and categories
@@ -68,8 +67,7 @@ export function Step2RecommendationEngine({
     lookingFor: formData.lookingFor,
     fundingAmount: formData.fundingAmount,
     accountsReceivableBalance: formData.accountsReceivableBalance,
-    fundsPurpose: formData.fundsPurpose,
-    industry: formData.industry
+    fundsPurpose: formData.fundsPurpose
   });
   
   if (productCategories?.length > 0) {
@@ -174,7 +172,14 @@ export function Step2RecommendationEngine({
               </div>
             </div>
 
-            
+            {/* Geographic Filter Notice */}
+            {headquarters && (
+              <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                <p className="text-sm text-green-700">
+                  <strong>Geographic Filter Active:</strong> Showing loan products available in {formatHeadquarters(headquarters)}
+                </p>
+              </div>
+            )}
 
             {/* Selection Requirement Notice */}
             <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">

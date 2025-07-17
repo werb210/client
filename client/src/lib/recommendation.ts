@@ -7,7 +7,6 @@ export interface RecommendationFormData {
   lookingFor: 'capital' | 'equipment' | 'both';
   accountsReceivableBalance: number;
   fundsPurpose: string;
-  industry?: string; // Business industry for Purchase Order Financing eligibility
 }
 
 // Helper function to get amount value with multiple field name support - MOVED TO TOP
@@ -35,7 +34,6 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     lookingFor,
     accountsReceivableBalance,
     fundsPurpose,
-    industry,
   } = form;
 
   console.log('[FILTER] Starting with parameters:', {
@@ -44,8 +42,7 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     fundingAmount,
     lookingFor,
     accountsReceivableBalance,
-    fundsPurpose,
-    industry
+    fundsPurpose
   });
   
   // CRITICAL: Check if we have any products at all
@@ -97,50 +94,6 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
   });
   const afterEquipmentFilter = filteredProducts.length;
   console.log('[FILTER] Equipment Financing filter:', beforeEquipmentFilter - afterEquipmentFilter, 'products removed');
-
-  // ✅ NEW REQUIREMENT: INCLUDE PURCHASE ORDER FINANCING IF MANUFACTURING INDUSTRY
-  console.log('[FILTER] Checking Purchase Order Financing eligibility:', { industry, headquarters, fundingAmount });
-  
-  // Check if Purchase Order Financing should be included for manufacturing industry
-  const shouldIncludePurchaseOrder = industry?.toLowerCase() === 'manufacturing';
-  if (shouldIncludePurchaseOrder) {
-    console.log('[FILTER] Manufacturing industry detected - including Purchase Order Financing products');
-    
-    // Find Purchase Order products that were filtered out and add them back if they match country and amount
-    const purchaseOrderProducts = products.filter(product => {
-      const isPurchaseOrder = product.category === 'Purchase Order Financing';
-      if (!isPurchaseOrder) return false;
-      
-      // Check country match
-      const countryMatches = product.country === headquarters;
-      if (!countryMatches) return false;
-      
-      // Check amount range
-      const minAmount = getAmountValue(product, 'min');
-      const maxAmount = getAmountValue(product, 'max');
-      const amountMatches = fundingAmount >= minAmount && fundingAmount <= maxAmount;
-      
-      if (countryMatches && amountMatches) {
-        console.log('[FILTER] Including Purchase Order product for manufacturing:', product.name);
-        return true;
-      }
-      
-      return false;
-    });
-    
-    // Add qualifying Purchase Order products back to filtered results
-    purchaseOrderProducts.forEach(product => {
-      const alreadyIncluded = filteredProducts.some(p => p.id === product.id);
-      if (!alreadyIncluded) {
-        filteredProducts.push(product);
-        console.log('[FILTER] Added Purchase Order product:', product.name);
-      }
-    });
-    
-    console.log('[FILTER] Purchase Order products added for manufacturing:', purchaseOrderProducts.length);
-  } else {
-    console.log('[FILTER] No manufacturing industry - excluding Purchase Order Financing');
-  }
 
   // ✅ STEP 3: FILTER BY MINIMUM & MAXIMUM FUNDING AMOUNT
   console.log('[FILTER] Filtering by funding amount:', fundingAmount);
