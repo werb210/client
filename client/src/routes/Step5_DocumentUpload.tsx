@@ -555,34 +555,7 @@ export default function Step5DocumentUpload() {
         </Card>
       )}
 
-      {/* Progress Summary */}
-      <Card>
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              {allRequirementsComplete 
-                ? `All ${totalRequirements} required documents uploaded` 
-                : `${totalRequirements} required documents needed`}
-            </div>
-            <div className="text-sm text-gray-500">
-              Step 5 of 7
-            </div>
-          </div>
-          {/* Manual Verification Button */}
-          {applicationId && (
-            <div className="mt-4 flex justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={verifyDocuments}
-                disabled={isManualVerifying}
-                className="flex items-center space-x-2"
-              >
-                <RefreshCw className={`w-4 h-4 ${isManualVerifying ? 'animate-spin' : ''}`} />
-                <span>{isManualVerifying ? 'Verifying...' : 'Verify Documents'}</span>
-              </Button>
-            </div>
-          )}
-      </Card>
+      
 
       {/* Navigation */}
       <div className="flex justify-between items-center pt-6">
