@@ -132,23 +132,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
     <Card>
           
 
-          {/* Summary */}
-          <div className="flex items-center space-x-4">
-            <Badge variant="outline" className="flex items-center space-x-1">
-              <FileText className="w-3 h-3" />
-              <span>{safeDocuments.length} Verified</span>
-            </Badge>
-            <Badge variant="outline" className="flex items-center space-x-1">
-              <FileText className="w-3 h-3" />
-              <span>{safeLocalUploadedFiles.length} Local</span>
-            </Badge>
-            {hasUploadedDocuments && (
-              <Badge variant="default" className="flex items-center space-x-1 bg-green-600">
-                <CheckCircle className="w-3 h-3" />
-                <span>Ready</span>
-              </Badge>
-            )}
-          </div>
+          
 
           {/* Required Documents Status */}
           {safeRequiredDocuments.length > 0 && (
