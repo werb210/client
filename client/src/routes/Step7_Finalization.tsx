@@ -86,7 +86,7 @@ export default function Step7ConfirmAndSubmit() {
       console.log("📤 Document Count:", uploadedFiles.length);
 
       // Prepare form data for submission
-      const formData = {
+      const fullFormData = {
         step1: state.step1,
         step3: state.step3,
         step4: state.step4,
@@ -96,7 +96,10 @@ export default function Step7ConfirmAndSubmit() {
         submittedAt: new Date().toISOString()
       };
 
-      logger.log('🏁 Step 6: Submitting application with POST /api/public/applications...');
+      // ✅ USER REQUIREMENT: Add console logging before submission
+      console.log("📤 Submitting form data:", fullFormData);
+      
+      logger.log('🏁 Step 7: Submitting application with POST /api/public/applications...');
       
       // Submit complete application - backend will create SignNow document and send email
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications`, {
@@ -105,7 +108,7 @@ export default function Step7ConfirmAndSubmit() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(fullFormData)
       });
       
       console.log("📥 Application submission response status:", response.status, response.statusText);

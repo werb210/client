@@ -185,19 +185,48 @@ app.use((req, res, next) => {
       console.log('⏰ [SERVER] Request timestamp:', new Date().toISOString());
       console.log('🔍 [SERVER] Request headers:', req.headers);
       console.log('📝 [SERVER] Request body size:', JSON.stringify(req.body).length + ' bytes');
-      console.log('🟢 [SERVER] Final payload being sent to staff backend:', req.body);
-      
       // Transform field names to match staff backend expectations
       const payload = req.body;
       
       // Map client field names to staff backend field names
+      console.log('🔍 [SERVER] Starting field mapping process...');
+      
+      // Step 1 field mappings
       if (payload.step1 && payload.step1.fundingAmount !== undefined) {
         payload.step1.requestedAmount = payload.step1.fundingAmount;
-        // Keep fundingAmount for backwards compatibility
+        console.log('🔄 [SERVER] Applied step1 mapping: fundingAmount → requestedAmount');
       }
       
+      // Step 3 field mappings
+      if (payload.step3) {
+        if (payload.step3.operatingName && !payload.step3.businessName) {
+          payload.step3.businessName = payload.step3.operatingName;
+          console.log('🔄 [SERVER] Applied step3 mapping: operatingName → businessName');
+        }
+        if (payload.step3.legalName && !payload.step3.businessLegalName) {
+          payload.step3.businessLegalName = payload.step3.legalName;
+          console.log('🔄 [SERVER] Applied step3 mapping: legalName → businessLegalName');
+        }
+      }
+      
+      // Step 4 field mappings
+      if (payload.step4) {
+        if (payload.step4.applicantFirstName && !payload.step4.firstName) {
+          payload.step4.firstName = payload.step4.applicantFirstName;
+          console.log('🔄 [SERVER] Applied step4 mapping: applicantFirstName → firstName');
+        }
+        if (payload.step4.applicantLastName && !payload.step4.lastName) {
+          payload.step4.lastName = payload.step4.applicantLastName;
+          console.log('🔄 [SERVER] Applied step4 mapping: applicantLastName → lastName');
+        }
+        if (payload.step4.applicantEmail && !payload.step4.email) {
+          payload.step4.email = payload.step4.applicantEmail;
+          console.log('🔄 [SERVER] Applied step4 mapping: applicantEmail → email');
+        }
+      }
+      
+      console.log('🟢 [SERVER] Final payload being sent to staff backend:', payload);
       console.log('📋 [SERVER] Application payload received with step-based structure');
-      console.log('🔄 [SERVER] Applied field mapping: fundingAmount → requestedAmount');
       
       const staffApiUrl = cfg.staffApiUrl + '/api';
       const finalUrl = `${staffApiUrl}/public/applications`;
