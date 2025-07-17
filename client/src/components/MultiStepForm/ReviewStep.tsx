@@ -64,19 +64,8 @@ export function ReviewStep({ onBack, onComplete, applicationId }: ReviewStepProp
         description: "Your application has been submitted successfully.",
       });
 
-      // Generate SignNow URL for signature
-      try {
-        const signResponse = await api.getSignNowUrl(data.applicationId).catch(error => {
-          logger.error('[REVIEW_STEP] SignNow URL generation failed:', error);
-          throw error;
-        });
-        
-        // Redirect to SignNow for signature (no iframe - redirect flow)
-        window.location.href = signResponse.url;
-      } catch (error) {
-        // Continue to completion even if SignNow fails
-        onComplete();
-      }
+      // Email-based signing workflow - show completion
+      onComplete();
     },
     onError: (error) => {
       // Handle network errors gracefully

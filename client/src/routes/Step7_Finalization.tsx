@@ -263,11 +263,11 @@ export default function Step7ConfirmAndSubmit() {
             </div>
             <div>
               <span className="text-gray-500">Funding Amount:</span>
-              <p className="font-medium">${state.step1?.fundingAmount?.toLocaleString() || 'Not specified'}</p>
+              <p className="font-medium">${state.step1?.requestedAmount?.toLocaleString() || state.step1?.fundingAmount?.toLocaleString() || 'Not specified'}</p>
             </div>
             <div>
               <span className="text-gray-500">Business Name:</span>
-              <p className="font-medium">{state.step3?.operatingName || 'Not provided'}</p>
+              <p className="font-medium">{state.step3?.operatingName || state.step3?.businessName || 'Not provided'}</p>
             </div>
           </div>
         </CardContent>

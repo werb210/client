@@ -17,7 +17,7 @@ import Step2Recommendations from '@/routes/Step2_Recommendations';
 import Step3BusinessDetails from '@/routes/Step3_BusinessDetails_Complete';
 import Step4ApplicantDetails from '@/routes/Step4_ApplicantInfo_Complete';
 import Step5DocumentUpload from '@/routes/Step5_DocumentUpload';
-import Step6Signature from '@/routes/Step6_Signature';
+
 
 const steps = [
   { id: 1, title: 'Financial Profile', component: Step1FinancialProfile },
@@ -25,7 +25,6 @@ const steps = [
   { id: 3, title: 'Business Details', component: Step3BusinessDetails },
   { id: 4, title: 'Applicant Details', component: Step4ApplicantDetails },
   { id: 5, title: 'Document Upload', component: Step5DocumentUpload },
-  { id: 6, title: 'Signature', component: Step6Signature },
 ];
 
 // Specific view for Steps 1, 3, and 4 side by side

@@ -9,7 +9,7 @@ import Step3BusinessDetailsComplete from "@/routes/Step3_BusinessDetails_Complet
 import Step4ApplicantInfoComplete from "@/routes/Step4_ApplicantInfo_Complete";
 
 import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
-import Step6SignNowIntegration from "@/routes/Step6_SignNowIntegration";
+
 import Step7Finalization from "@/routes/Step7_Finalization";
 
 // Core Pages (Authentication removed)
@@ -17,7 +17,7 @@ import LandingPage from "@/pages/LandingPage";
 import SimpleDashboard from "@/pages/SimpleDashboard";
 import NotFound from "@/pages/NotFound";
 import ApplicationSuccess from "@/pages/ApplicationSuccess";
-import SignComplete from "@/pages/SignComplete";
+
 import UploadDocuments from "@/pages/UploadDocuments";
 import LateUpload from "@/routes/LateUpload";
 import UploadComplete from "@/routes/UploadComplete";
@@ -71,19 +71,17 @@ import DebugCanadianEquipmentAPI from "@/pages/DebugCanadianEquipmentAPI";
 import ApiConnectivityTest from "@/pages/ApiConnectivityTest";
 import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
-import Step4Step6Test from "@/pages/Step4Step6Test";
+
 import BackendRequestTest from "@/pages/BackendRequestTest";
 import ValidationTestPage from "@/pages/ValidationTestPage";
 import InitialCacheSetup from "@/pages/InitialCacheSetup";
 import CacheManagement from "@/pages/CacheManagement";
 import UUIDTestPage from "@/pages/UUIDTestPage";
 import EnvTest from "@/pages/EnvTest";
-import SignNowNetworkTest from "@/pages/SignNowNetworkTest";
+
 import Step2ProductsAvailabilityTest from "@/pages/Step2ProductsAvailabilityTest";
 import LenderDataTest from "@/pages/LenderDataTest";
-import SignNowDebugTest from "@/pages/SignNowDebugTest";
-import SimpleSignNowTest from "@/pages/SimpleSignNowTest";
-import ProdSignNowTest from "@/pages/ProdSignNowTest";
+
 import ClientVerificationDiagnostic from "@/pages/ClientVerificationDiagnostic";
 import { FetchWindowTest } from "@/pages/FetchWindowTest";
 import FetchWindowDebugRoute from "@/pages/FetchWindowDebugRoute";
@@ -140,7 +138,7 @@ export function MainLayout() {
       <Route path="/debug-canadian-equipment-api" component={DebugCanadianEquipmentAPI} />
       <Route path="/list-lender-categories" component={ListLenderCategories} />
       <Route path="/equipment-financing-fix-test" component={EquipmentFinancingFixTest} />
-      <Route path="/step4-step6-test" component={Step4Step6Test} />
+
       <Route path="/backend-request-test" component={BackendRequestTest} />
       <Route path="/validation-test" component={ValidationTestPage} />
       <Route path="/cache-management" component={CacheManagement} />
@@ -148,10 +146,8 @@ export function MainLayout() {
       <Route path="/fetch-window-test" component={FetchWindowTest} />
       <Route path="/fetch-window-debug-route" component={FetchWindowDebugRoute} />
       <Route path="/document-normalization-test" component={DocumentNormalizationTest} />
-      <Route path="/signnow-debug-test" component={SignNowDebugTest} />
-      <Route path="/simple-signnow-test" component={SimpleSignNowTest} />
-      <Route path="/prod-signnow-test" component={ProdSignNowTest} />
-      <Route path="/step6-console-demo" component={lazy(() => import('@/pages/Step6ConsoleDemo'))} />
+
+
       <Route path="/fallback-test" component={lazy(() => import('@/pages/FallbackTest').then(m => ({ default: m.FallbackTest })))} />
       <Route path="/application-creation-test" component={lazy(() => import('@/pages/ApplicationCreationTest'))} />
       <Route path="/application-flow-test" component={lazy(() => import('@/pages/ApplicationFlowTest'))} />
@@ -177,7 +173,7 @@ export function MainLayout() {
       <Route path="/dashboard" component={SimpleDashboard} />
       
       {/* Document Management */}
-      <Route path="/sign-complete" component={SignComplete} />
+
       <Route path="/upload-documents/:applicationId?" component={UploadDocuments} />
       <Route path="/upload-documents/:id" component={LateUpload} />
       <Route path="/upload-complete" component={UploadComplete} />
@@ -189,7 +185,7 @@ export function MainLayout() {
       
       {/* Workflow Testing */}
       <Route path="/env-test" component={EnvTest} />
-      <Route path="/signnow-network-test" component={SignNowNetworkTest} />
+
       <Route path="/step2-products-test" component={Step2ProductsAvailabilityTest} />
       <Route path="/workflow-test" component={WorkflowTest} />
       <Route path="/application-id-flow-test" component={ApplicationIdFlowTest} />

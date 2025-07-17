@@ -104,7 +104,7 @@ export const useDocumentVerification = (applicationId: string | null) => {
   }, [applicationId, queryClient, refetchDocuments]);
 
   // Check if navigation to Step 6 is safe
-  const canProceedToStep6 = useCallback((localUploadedFiles: any[] = []): boolean => {
+  const canProceedToStep7 = useCallback((localUploadedFiles: any[] = []): boolean => {
     // Priority 1: Backend verified documents
     if (verificationResult?.hasUploadedDocuments) {
       console.log(`✅ [DOCUMENT-VERIFICATION] Can proceed: ${verificationResult.documents.length} documents verified on backend`);
@@ -134,7 +134,7 @@ export const useDocumentVerification = (applicationId: string | null) => {
     isVerifying,
     error,
     verifyDocuments,
-    canProceedToStep6,
+    canProceedToStep7,
     refetchDocuments
   };
 };

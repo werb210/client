@@ -216,21 +216,9 @@ export async function getApplication(applicationId: string): Promise<Application
   return apiRequest<Application>(`/applications/${applicationId}`);
 }
 
-// Generate SignNow URL for e-signature
-export async function getSignNowUrl(applicationId: string): Promise<{ url: string }> {
-  return apiRequest<{ url: string }>(`/sign/${applicationId}`, {
-    method: 'POST',
-  });
-}
 
-// Check signature status
-export async function checkSignatureStatus(applicationId: string): Promise<{
-  signed: boolean;
-  signedAt?: string;
-  documentUrl?: string;
-}> {
-  return apiRequest(`/signatures/status/${applicationId}`);
-}
+
+
 
 // Fetch lender product requirements
 export async function getLenderProducts(category?: string): Promise<any[]> {

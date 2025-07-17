@@ -143,12 +143,7 @@ export interface ApplicationSubmissionResponse {
   error?: string;
 }
 
-export interface SigningStatusResponse {
-  status: 'pending' | 'ready' | 'completed' | 'error';
-  signUrl?: string;
-  message?: string;
-  error?: string;
-}
+
 
 export interface FinalizationResponse {
   status: 'finalized' | 'error';
@@ -330,92 +325,9 @@ class StaffApiClient {
     }
   }
 
-  async checkSigningStatus(applicationId: string): Promise<SigningStatusResponse> {
-    try {
-      // console.log(`🔍 Checking signing status for application: ${applicationId}`);
-      
-      const response = await this.makeRequest<SigningStatusResponse>(`/applications/${applicationId}/signing-status`);
-      
-      // console.log('📋 Signing status:', response);
-      return response;
-      
-    } catch (error) {
-      console.error('❌ Failed to check signing status:', error);
-      return {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Failed to check signing status'
-      };
-    }
-  }
 
-  async initiateSigning(applicationId: string, prefilData?: {
-    step3BusinessDetails?: any;
-    step4ApplicantInfo?: any;
-  }): Promise<SigningStatusResponse> {
-    try {
-      // console.log(`🖊️ Initiating signing for application: ${applicationId}`);
-      
-      // Prepare pre-fill data payload
-      const payload = prefilData ? {
-        step3BusinessDetails: {
-          businessName: prefilData.step3BusinessDetails?.operatingName || prefilData.step3BusinessDetails?.legalName,
-          operatingName: prefilData.step3BusinessDetails?.operatingName,
-          legalName: prefilData.step3BusinessDetails?.legalName,
-          businessStreetAddress: prefilData.step3BusinessDetails?.businessStreetAddress,
-          businessCity: prefilData.step3BusinessDetails?.businessCity,
-          businessState: prefilData.step3BusinessDetails?.businessState || prefilData.step3BusinessDetails?.province,
-          businessZipCode: prefilData.step3BusinessDetails?.businessZipCode || prefilData.step3BusinessDetails?.businessPostalCode,
-          businessPhone: prefilData.step3BusinessDetails?.businessPhone,
-          businessStructure: prefilData.step3BusinessDetails?.businessStructure,
-          businessStartDate: prefilData.step3BusinessDetails?.businessStartDate,
-          numberOfEmployees: prefilData.step3BusinessDetails?.numberOfEmployees || prefilData.step3BusinessDetails?.employeeCount,
-          estimatedYearlyRevenue: prefilData.step3BusinessDetails?.estimatedYearlyRevenue
-        },
-        step4ApplicantInfo: {
-          firstName: prefilData.step4ApplicantInfo?.firstName,
-          lastName: prefilData.step4ApplicantInfo?.lastName,
-          email: prefilData.step4ApplicantInfo?.email,
-          phone: prefilData.step4ApplicantInfo?.personalPhone,
-          dateOfBirth: prefilData.step4ApplicantInfo?.dateOfBirth,
-          homeAddress: prefilData.step4ApplicantInfo?.homeAddress,
-          city: prefilData.step4ApplicantInfo?.city,
-          province: prefilData.step4ApplicantInfo?.province,
-          postalCode: prefilData.step4ApplicantInfo?.postalCode,
-          sin: prefilData.step4ApplicantInfo?.sin,
-          ownershipPercentage: prefilData.step4ApplicantInfo?.ownershipPercentage,
-          netWorth: prefilData.step4ApplicantInfo?.netWorth,
-          // Partner information if applicable
-          partnerFirstName: prefilData.step4ApplicantInfo?.partnerFirstName,
-          partnerLastName: prefilData.step4ApplicantInfo?.partnerLastName,
-          partnerEmail: prefilData.step4ApplicantInfo?.partnerEmail,
-          partnerPhone: prefilData.step4ApplicantInfo?.partnerPersonalPhone,
-          partnerOwnershipPercentage: prefilData.step4ApplicantInfo?.partnerOwnershipPercentage,
-          partnerSin: prefilData.step4ApplicantInfo?.partnerSin,
-          partnerNetWorth: prefilData.step4ApplicantInfo?.partnerNetWorth
-        }
-      } : undefined;
 
-      // console.log('📋 Pre-fill data for SignNow:', payload);
-      
-      const response = await this.makeRequest<SigningStatusResponse>(`/applications/${applicationId}/initiate-signing`, {
-        method: 'POST',
-        body: payload ? JSON.stringify(payload) : undefined,
-        headers: payload ? {
-          'Content-Type': 'application/json'
-        } : undefined
-      });
-      
-      // console.log('📝 Signing initiated:', response);
-      return response;
-      
-    } catch (error) {
-      console.error('❌ Failed to initiate signing:', error);
-      return {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Failed to initiate signing'
-      };
-    }
-  }
+
 
   async finalizeApplication(applicationId: string): Promise<FinalizationResponse> {
     try {
@@ -437,38 +349,7 @@ class StaffApiClient {
     }
   }
 
-  async createSignNowDocument(applicationId: string): Promise<SigningStatusResponse> {
-    try {
-      // console.log(`📝 Creating SignNow document for application: ${applicationId}`);
-      
-      const response = await this.makeRequest<SigningStatusResponse>(`/applications/${applicationId}/signnow`, {
-        method: 'POST',
-        body: JSON.stringify({
-          applicationId: applicationId,
-          templateId: 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5'
-        }),
-      });
-      
-      // console.log('✅ SignNow document created:', response);
-      return response;
-      
-    } catch (error) {
-      console.error('❌ Failed to create SignNow document:', error);
-      
-      // Handle 501/500 errors gracefully
-      if (error instanceof Error && (error.message.includes('501') || error.message.includes('500'))) {
-        return {
-          status: 'error',
-          error: 'Signature system not yet implemented. Please try again later.'
-        };
-      }
-      
-      return {
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Failed to create SignNow document'
-      };
-    }
-  }
+
 
   async createApplication(applicationData: any): Promise<{ applicationId: string; signNowDocumentId?: string }> {
     try {
