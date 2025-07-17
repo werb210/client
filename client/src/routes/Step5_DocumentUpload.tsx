@@ -77,14 +77,14 @@ export default function Step5DocumentUpload() {
   
   // State for tracking uploaded files and requirements completion
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
-    (state.uploadedDocuments || []).map(doc => ({
+    (state.step5DocumentUpload?.uploadedFiles || []).map(doc => ({
       id: doc.id,
       name: doc.name,
       size: doc.size,
       type: doc.type,
       status: (doc.status as "completed" | "uploading" | "error") || "completed",
       documentType: doc.documentType,
-      file: new File([], doc.name) // Create placeholder File object for existing documents
+      file: doc.file || new File([], doc.name) // Use existing file or create placeholder
     }))
   );
   const [allRequirementsComplete, setAllRequirementsComplete] = useState(false);
@@ -199,7 +199,10 @@ export default function Step5DocumentUpload() {
     dispatch({
       type: 'UPDATE_FORM_DATA',
       payload: {
-        uploadedDocuments: files,
+        step5DocumentUpload: {
+          uploadedFiles: files,
+          completed: files.length > 0
+        }
       }
     });
     logger.log('💾 Step 5 - Auto-saved document uploads:', files.length, 'files');
@@ -240,11 +243,14 @@ export default function Step5DocumentUpload() {
   const handleFilesUploaded = (files: UploadedFile[]) => {
     setUploadedFiles(files);
     
-    // Immediate save for uploads
+    // Save to proper step5DocumentUpload location
     dispatch({
       type: 'UPDATE_FORM_DATA',
       payload: {
-        uploadedDocuments: files,
+        step5DocumentUpload: {
+          uploadedFiles: files,
+          completed: files.length > 0
+        }
       }
     });
   };
