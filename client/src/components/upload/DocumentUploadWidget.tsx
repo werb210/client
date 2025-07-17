@@ -55,8 +55,12 @@ export function DocumentUploadWidget({
       formData.append('document', file);
       formData.append('documentType', documentType);
 
-      // Use the correct endpoint as specified
+      // ✅ VALIDATE UPLOAD PATH - Check endpoint is correct as per ChatGPT instructions
       const endpoint = `/api/public/applications/${applicationId}/documents`;
+      console.log("🔗 Upload endpoint:", endpoint);
+      
+      // ✅ REQUIRED CONSOLE LOGGING as per ChatGPT instructions
+      console.log("📤 Uploading document:", file.name, file.type, file.size);
       
       if (isDev) {
         console.log('📤 [DocumentUploadWidget] Uploading:', {
@@ -96,6 +100,9 @@ export function DocumentUploadWidget({
       }
 
       const result = await response.json();
+      
+      // ✅ REQUIRED CONSOLE LOGGING as per ChatGPT instructions
+      console.log("📥 Upload response:", result);
       
       if (!result.success) {
         throw new Error(result.message || 'Upload failed - invalid response from server');
