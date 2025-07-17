@@ -1,0 +1,73 @@
+{
+  "timestamp": "2025-07-17T23:34:56.154Z",
+  "lockStatus": "COMPROMISED",
+  "verification": {
+    "fileStatus": {
+      "client/src/components/upload/DocumentUploadWidget.tsx": "EXISTS",
+      "client/src/routes/Step5_DocumentUpload.tsx": "EXISTS",
+      "client/src/routes/Step7_Finalization.tsx": "EXISTS",
+      "client/src/lib/api.ts": "EXISTS",
+      "server/index.ts": "EXISTS",
+      "client/src/components/DynamicDocumentRequirements.tsx": "EXISTS"
+    },
+    "consoleLogging": {
+      "client/src/components/upload/DocumentUploadWidget.tsx": [
+        "console.log(\"📤 [STEP7] Finalizing application:\", applicationId)",
+        "console.log(\"📤 [STEP7] Document Count:\", uploadedFiles.length)"
+      ],
+      "client/src/routes/Step5_DocumentUpload.tsx": [
+        "console.log(\"📤 Uploading document:\", file.name, file.type, file.size)",
+        "console.log(\"📥 Upload response:\", result)",
+        "console.log(\"🔗 Upload endpoint:\", endpoint)",
+        "console.log(\"📤 [STEP7] Finalizing application:\", applicationId)",
+        "console.log(\"📤 [STEP7] Document Count:\", uploadedFiles.length)"
+      ],
+      "client/src/routes/Step7_Finalization.tsx": [
+        "console.log(\"📤 Uploading document:\", file.name, file.type, file.size)",
+        "console.log(\"📥 Upload response:\", result)",
+        "console.log(\"🔗 Upload endpoint:\", endpoint)"
+      ],
+      "client/src/lib/api.ts": [
+        "console.log(\"📤 Uploading document:\", file.name, file.type, file.size)",
+        "console.log(\"📥 Upload response:\", result)",
+        "console.log(\"🔗 Upload endpoint:\", endpoint)",
+        "console.log(\"📤 [STEP7] Finalizing application:\", applicationId)",
+        "console.log(\"📤 [STEP7] Document Count:\", uploadedFiles.length)"
+      ],
+      "server/index.ts": [
+        "console.log(\"📤 Uploading document:\", file.name, file.type, file.size)",
+        "console.log(\"📥 Upload response:\", result)",
+        "console.log(\"🔗 Upload endpoint:\", endpoint)",
+        "console.log(\"📤 [STEP7] Finalizing application:\", applicationId)",
+        "console.log(\"📤 [STEP7] Document Count:\", uploadedFiles.length)"
+      ],
+      "client/src/components/DynamicDocumentRequirements.tsx": [
+        "console.log(\"📤 Uploading document:\", file.name, file.type, file.size)",
+        "console.log(\"📥 Upload response:\", result)",
+        "console.log(\"🔗 Upload endpoint:\", endpoint)",
+        "console.log(\"📤 [STEP7] Finalizing application:\", applicationId)",
+        "console.log(\"📤 [STEP7] Document Count:\", uploadedFiles.length)"
+      ]
+    },
+    "endpoints": {
+      "client/src/lib/api.ts": [
+        "/api/public/applications/:id/documents",
+        "POST /api/public/applications/${applicationId}/documents"
+      ],
+      "server/index.ts": [
+        "POST /api/public/applications/${applicationId}/documents"
+      ]
+    },
+    "summary": {
+      "totalFiles": 6,
+      "validFiles": 0,
+      "invalidFiles": 6,
+      "missingFiles": 0
+    }
+  },
+  "recommendations": [
+    "Restore from backup",
+    "Obtain user authorization for changes",
+    "Re-verify after restoration"
+  ]
+}
