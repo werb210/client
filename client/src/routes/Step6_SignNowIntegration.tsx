@@ -308,8 +308,10 @@ export default function Step6SignNowIntegration() {
       
       try {
         const res = await fetch(`/api/public/application/${applicationId}/signing-status`);
-        const { status } = await res.json();
-        console.log("👀 Signing status:", status);
+        const data = await res.json();
+        console.log("👀 Signing status API result:", data);
+        
+        const status = data.status;
         
         // Document is prepared when SmartFields are populated and ready for signing
         if (status === 'invite_sent' || status === 'signed') {
@@ -525,6 +527,32 @@ export default function Step6SignNowIntegration() {
                         </div>
                       )}
                     </div>
+                    
+                    {import.meta.env.DEV && (
+                      <div className="mt-4 p-3 bg-gray-100 rounded border">
+                        <h4 className="font-semibold text-sm mb-2">Debug Info (Dev Only):</h4>
+                        <pre className="text-xs">{JSON.stringify({
+                          signingStatus,
+                          isSigned,
+                          isDocumentPrepared,
+                          applicationId,
+                          signUrl: signUrl ? 'URL present' : 'No URL'
+                        }, null, 2)}</pre>
+                      </div>
+                    )}
+                    
+                    {import.meta.env.DEV && (
+                      <div className="mt-4 p-3 bg-gray-100 rounded border">
+                        <h4 className="font-semibold text-sm mb-2">Debug Info (Dev Only):</h4>
+                        <pre className="text-xs">{JSON.stringify({
+                          signingStatus,
+                          isSigned,
+                          isDocumentPrepared,
+                          applicationId,
+                          signUrl: signUrl ? 'URL present' : 'No URL'
+                        }, null, 2)}</pre>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">
