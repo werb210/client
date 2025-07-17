@@ -30,7 +30,7 @@ import Mail from 'lucide-react/dist/esm/icons/mail';
 type SubmissionStatus = 'idle' | 'submitting' | 'submitted' | 'error';
 
 /**
- * Step 7: Confirm and Submit Application (Email-Based Signing)
+ * Step 6: Confirm and Submit Application (Email-Based Signing)
  * NEW WORKFLOW:
  * 1. Display terms and conditions
  * 2. On submit: POST /api/public/applications with full form data and documents
@@ -96,7 +96,7 @@ export default function Step7ConfirmAndSubmit() {
         submittedAt: new Date().toISOString()
       };
 
-      logger.log('🏁 Step 7: Submitting application with POST /api/public/applications...');
+      logger.log('🏁 Step 6: Submitting application with POST /api/public/applications...');
       
       // Submit complete application - backend will create SignNow document and send email
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications`, {
@@ -239,11 +239,12 @@ export default function Step7ConfirmAndSubmit() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <RuntimeAlertPanel currentStep={7} />
+      <RuntimeAlertPanel currentStep={6} />
       <StepHeader 
-        stepNumber={7}
+        stepNumber={6}
         title="Final Review & Terms"
         description="Review terms and finalize your application"
+        totalSteps={6}
       />
 
       {/* Application Summary */}

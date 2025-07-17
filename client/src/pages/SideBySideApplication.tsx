@@ -104,7 +104,7 @@ export default function SideBySideApplication() {
       case 5:
         return state.step5Completed ? 'completed' :
                state.step4Completed ? 'current' : 'pending';
-      case 6:
+      case 7:
         return state.step5Completed ? 'current' : 'pending';
       default:
         return 'pending';
