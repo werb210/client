@@ -48,6 +48,11 @@ export default function Step6ConfirmAndSubmit() {
 
   // Get uploaded documents from Step 5
   const uploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
+  
+  // Debug: Check document state
+  console.log("🔍 [DEBUG] Full state.step5DocumentUpload:", state.step5DocumentUpload);
+  console.log("🔍 [DEBUG] uploadedFiles array:", uploadedFiles);
+  console.log("🔍 [DEBUG] uploadedFiles.length:", uploadedFiles.length);
 
   const handleSubmit = async () => {
     logger.log('🚀 handleSubmit called!', { termsAccepted, privacyAccepted });
