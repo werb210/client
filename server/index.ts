@@ -187,9 +187,17 @@ app.use((req, res, next) => {
       console.log('📝 [SERVER] Request body size:', JSON.stringify(req.body).length + ' bytes');
       console.log('🟢 [SERVER] Final payload being sent to staff backend:', req.body);
       
-      // Verify critical fields are present in the payload
+      // Transform field names to match staff backend expectations
       const payload = req.body;
+      
+      // Map client field names to staff backend field names
+      if (payload.step1 && payload.step1.fundingAmount !== undefined) {
+        payload.step1.requestedAmount = payload.step1.fundingAmount;
+        // Keep fundingAmount for backwards compatibility
+      }
+      
       console.log('📋 [SERVER] Application payload received with step-based structure');
+      console.log('🔄 [SERVER] Applied field mapping: fundingAmount → requestedAmount');
       
       const staffApiUrl = cfg.staffApiUrl + '/api';
       const finalUrl = `${staffApiUrl}/public/applications`;
@@ -205,7 +213,7 @@ app.use((req, res, next) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${cfg.clientToken}`
         },
-        body: JSON.stringify(req.body)
+        body: JSON.stringify(payload)
       });
       
       console.log('📥 [SERVER] Staff backend responded in', Date.now() - Date.now(), 'ms');
