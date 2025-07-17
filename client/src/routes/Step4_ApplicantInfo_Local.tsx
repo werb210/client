@@ -22,7 +22,7 @@ const localStep4Schema = z.object({
   applicantZipCode: z.string().min(1, 'ZIP code is required'),
   applicantDateOfBirth: z.string().min(1, 'Date of birth is required'),
   applicantSSN: z.string().optional(), // SSN is optional
-  ownershipPercentage: z.number().min(1, 'Ownership percentage is required').max(100),
+  ownershipPercentage: z.string().min(1, 'Ownership percentage is required'),
   hasPartner: z.boolean(),
   // Partner fields (conditional)
   partnerFirstName: z.string().optional(),
@@ -35,7 +35,7 @@ const localStep4Schema = z.object({
   partnerZipCode: z.string().optional(),
   partnerDateOfBirth: z.string().optional(),
   partnerSSN: z.string().optional(),
-  partnerOwnershipPercentage: z.number().optional(),
+  partnerOwnershipPercentage: z.string().optional(),
 });
 import { logger } from '@/lib/utils';
 
@@ -56,7 +56,7 @@ type Step4FormData = {
   applicantZipCode: string;
   applicantDateOfBirth: string;
   applicantSSN: string;
-  ownershipPercentage: number;
+  ownershipPercentage: string;
   hasPartner: boolean;
   partnerFirstName?: string;
   partnerLastName?: string;
@@ -68,7 +68,7 @@ type Step4FormData = {
   partnerZipCode?: string;
   partnerDateOfBirth?: string;
   partnerSSN?: string;
-  partnerOwnershipPercentage?: number;
+  partnerOwnershipPercentage?: string;
 };
 
 export function Step4ApplicantInfoLocal() {
@@ -90,7 +90,7 @@ export function Step4ApplicantInfoLocal() {
       applicantZipCode: state.step4?.applicantZipCode || '',
       applicantDateOfBirth: state.step4?.applicantDateOfBirth || '',
       applicantSSN: state.step4?.applicantSSN || '',
-      ownershipPercentage: state.step4?.ownershipPercentage || 100,
+      ownershipPercentage: state.step4?.ownershipPercentage || '100',
       hasPartner: state.step4?.hasPartner || false,
       partnerFirstName: state.step4?.partnerFirstName || '',
       partnerLastName: state.step4?.partnerLastName || '',
@@ -102,23 +102,7 @@ export function Step4ApplicantInfoLocal() {
       partnerZipCode: state.step4?.partnerZipCode || '',
       partnerDateOfBirth: state.step4?.partnerDateOfBirth || '',
       partnerSSN: state.step4?.partnerSSN || '',
-      partnerOwnershipPercentage: state.step4?.partnerOwnershipPercentage || 0,
-      applicantZipCode: state.step4?.applicantZipCode || '',
-      applicantDateOfBirth: state.step4?.applicantDateOfBirth || '',
-      applicantSSN: state.step4?.applicantSSN || '',
-      ownershipPercentage: state.step4?.ownershipPercentage || 100,
-      hasPartner: state.step4?.hasPartner || false,
-      partnerFirstName: state.step4?.partnerFirstName || '',
-      partnerLastName: state.step4?.partnerLastName || '',
-      partnerEmail: state.step4?.partnerEmail || '',
-      partnerPhone: state.step4?.partnerPhone || '',
-      partnerAddress: state.step4?.partnerAddress || '',
-      partnerCity: state.step4?.partnerCity || '',
-      partnerState: state.step4?.partnerState || '',
-      partnerZipCode: state.step4?.partnerZipCode || '',
-      partnerDateOfBirth: state.step4?.partnerDateOfBirth || '',
-      partnerSSN: state.step4?.partnerSSN || '',
-      partnerOwnershipPercentage: state.step4?.partnerOwnershipPercentage || 0,
+      partnerOwnershipPercentage: state.step4?.partnerOwnershipPercentage || '0',
     },
   });
 
@@ -128,8 +112,8 @@ export function Step4ApplicantInfoLocal() {
   // Auto-calculate partner ownership
   useEffect(() => {
     if (hasPartner && ownershipPercentage) {
-      const partnerOwnership = 100 - ownershipPercentage;
-      form.setValue("partnerOwnershipPercentage", partnerOwnership);
+      const partnerOwnership = 100 - parseInt(ownershipPercentage);
+      form.setValue("partnerOwnershipPercentage", partnerOwnership.toString());
     }
   }, [ownershipPercentage, hasPartner, form]);
 
@@ -394,13 +378,8 @@ export function Step4ApplicantInfoLocal() {
                           max="100" 
                           placeholder="Enter ownership percentage"
                           {...field}
-                          value={field.value || ''}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
                         />
                       </FormControl>
-                      <FormDescription>
-                        What percentage of the business do you own?
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -590,7 +569,7 @@ export function Step4ApplicantInfoLocal() {
                             max="99" 
                             placeholder="Auto-calculated"
                             {...field}
-                            value={field.value || 0}
+                            value={field.value || '0'}
                             readOnly
                           />
                         </FormControl>
