@@ -169,8 +169,7 @@ export function MainLayout() {
       <Route path="/apply/step-4" component={Step4ApplicantInfoComplete} />
       <Route path="/step5-document-upload" component={Step5DocumentUpload} />
       <Route path="/apply/step-5" component={Step5DocumentUpload} />
-      <Route path="/step6-signature" component={Step6SignNowIntegration} />
-      <Route path="/apply/step-6" component={Step6SignNowIntegration} />
+      {/* Step 6 REMOVED - Email-based signing workflow now */}
       <Route path="/step7-submit" component={Step7Finalization} />
       <Route path="/apply/step-7" component={Step7Finalization} />
       

@@ -93,6 +93,17 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 17, 2025: ✅ EMAIL-BASED SIGNING WORKFLOW IMPLEMENTATION COMPLETE**
+  * **STEP 6 REMOVAL**: Completely removed Step 6 (SignNow integration) from routing configuration in MainLayout.tsx
+  * **DIRECT NAVIGATION**: Step 5 now navigates directly to Step 7, skipping embedded signing completely
+  * **EMAIL-BASED SUBMISSION**: Step 7 transformed to handle complete application submission with automatic email generation
+  * **NEW WORKFLOW**: Submit → Backend creates SignNow document → Email invite sent → Client signs via email → Webhook updates status
+  * **STEP 7 REDESIGN**: Updated Step7_Finalization.tsx with email confirmation UI showing "noreply@boreal.financial" messaging
+  * **SUBMISSION LOGGING**: Enhanced logging tracks company names (including "ABC Corp" detection) at both application creation and submission points
+  * **EMAIL CONFIRMATION**: Users see clear instructions to check email from noreply@boreal.financial after submission
+  * **NAVIGATION UPDATE**: Step 5 "Continue to Final Submission" button navigates directly to Step 7
+  * **PRODUCTION READY**: Complete email-based signature workflow operational without embedded iframe dependencies
+
 - **July 17, 2025: ✅ DOCUMENT PREPARATION CHECK & COMPLETE POLLING ELIMINATION IMPLEMENTED**
   * **DOCUMENT PREPARATION STATE**: Added `isDocumentPrepared` state to wait for Smart Fields population before showing iframe
   * **CONDITIONAL IFRAME RENDERING**: SignNow iframe only renders when status is 'invite_sent' or 'signed' (document ready)

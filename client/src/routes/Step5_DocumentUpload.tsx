@@ -295,7 +295,7 @@ export default function Step5DocumentUpload() {
       const backendVerification = await verifyDocuments();
       
       if (backendVerification.hasUploadedDocuments) {
-        logger.log(`✅ [STEP5] Backend confirmed ${backendVerification.documents.length} documents, proceeding to Step 6`);
+        logger.log(`✅ [STEP5] Backend confirmed ${backendVerification.documents.length} documents, proceeding to Step 7`);
         
         dispatch({
           type: 'UPDATE_FORM_DATA',
@@ -312,17 +312,17 @@ export default function Step5DocumentUpload() {
 
         toast({
           title: "Documents Verified",
-          description: `${backendVerification.documents.length} documents verified on backend.`,
+          description: `${backendVerification.documents.length} documents verified. Proceeding to final submission.`,
           variant: "default",
         });
 
-        setLocation('/apply/step-6');
+        setLocation('/apply/step-7');
         return;
       }
     } catch (err: any) {
       if (err?.response?.status === 501) {
         console.warn('Skipping verification due to missing backend endpoint');
-        setLocation('/apply/step-6');
+        setLocation('/apply/step-7');
         return;
       } else {
         logger.warn('⚠️ [STEP5] Backend verification failed, checking local state:', err);
@@ -331,7 +331,7 @@ export default function Step5DocumentUpload() {
 
     // Step 2: Local document check (fallback)
     if (canProceedToStep6(uploadedFiles)) {
-      logger.log(`✅ [STEP5] Local verification: ${uploadedFiles.length} documents uploaded, proceeding to Step 6`);
+      logger.log(`✅ [STEP5] Local verification: ${uploadedFiles.length} documents uploaded, proceeding to Step 7`);
       
       dispatch({
         type: 'UPDATE_FORM_DATA',
@@ -347,11 +347,11 @@ export default function Step5DocumentUpload() {
 
       toast({
         title: "Documents Ready",
-        description: `${uploadedFiles.length} documents uploaded successfully.`,
+        description: `${uploadedFiles.length} documents uploaded successfully. Proceeding to final submission.`,
         variant: "default",
       });
 
-      setLocation('/apply/step-6');
+      setLocation('/apply/step-7');
       return;
     }
 
@@ -364,12 +364,12 @@ export default function Step5DocumentUpload() {
     });
 
     toast({
-      title: "Proceeding to Signature",
-      description: "Continuing to Step 6 for signature.",
+      title: "Proceeding to Final Submission",
+      description: "Continuing to Step 7 for final submission.",
       variant: "default",
     });
 
-    setLocation('/apply/step-6');
+    setLocation('/apply/step-7');
     return;
 
     // Step 4: Files ready to upload (if needed)
@@ -455,7 +455,7 @@ export default function Step5DocumentUpload() {
         });
 
         // ✅ USER SPECIFICATION: Only proceed to Step 6 if all uploads succeed
-        setLocation('/apply/step-6');
+        setLocation('/apply/step-7');
       } else {
         toast({
           title: "Upload Failed",
@@ -718,7 +718,7 @@ export default function Step5DocumentUpload() {
             </>
           ) : (
             <>
-              <span>Continue to Signature</span>
+              <span>Continue to Final Submission</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}

@@ -14,10 +14,7 @@ import { useFormData } from '@/context/FormDataContext';
 
 import { useToast } from '@/hooks/use-toast';
 
-import { staffApi } from '../api/staffApi';
-
 import { StepHeader } from '@/components/StepHeader';
-import { RuntimeAlertPanel } from '@/components/RuntimeAlertPanel';
 
 import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
 import Send from 'lucide-react/dist/esm/icons/send';
@@ -28,216 +25,155 @@ import Clock from 'lucide-react/dist/esm/icons/clock';
 import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
 import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
+import Mail from 'lucide-react/dist/esm/icons/mail';
 
-type FinalizationStatus = 'idle' | 'finalizing' | 'complete' | 'error';
+type SubmissionStatus = 'idle' | 'submitting' | 'submitted' | 'error';
 
 /**
- * Step 7: Final Terms & Finalization
- * Per specification:
+ * Step 7: Confirm and Submit Application (Email-Based Signing)
+ * NEW WORKFLOW:
  * 1. Display terms and conditions
- * 2. On submit: POST /applications/{id}/finalize
- * 3. Mark submission in both staff + client systems
+ * 2. On submit: POST /api/public/applications with full form data and documents
+ * 3. Backend creates SignNow document and sends email invite
+ * 4. Show email confirmation message to user
  */
-export default function Step7Finalization() {
-  const { state, dispatch, saveToStorage } = useFormData();
+export default function Step7ConfirmAndSubmit() {
+  const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
-  const [finalizationStatus, setFinalizationStatus] = useState<FinalizationStatus>('idle');
+  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('idle');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get application ID from previous steps
-  const applicationId = state.applicationId || localStorage.getItem('applicationId');
+  // Get uploaded documents
+  const uploadedFiles = state.uploadedDocuments || [];
 
-  const handleFinalize = async () => {
-    logger.log('🚀 handleFinalize called!', { termsAccepted, privacyAccepted, applicationId });
+  const handleSubmit = async () => {
+    logger.log('🚀 handleSubmit called!', { termsAccepted, privacyAccepted });
     
-    if (!applicationId) {
-      logger.log('❌ Missing application ID');
-      toast({
-        title: "Missing Application ID",
-        description: "Please complete the previous steps first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!termsAccepted || !privacyAccepted) {
       logger.log('❌ Terms not accepted', { termsAccepted, privacyAccepted });
       toast({
         title: "Terms Required",
-        description: "Please accept both Terms & Conditions and Privacy Policy to continue.",
+        description: "Please accept both Terms & Conditions and Privacy Policy to proceed.",
         variant: "destructive",
       });
       return;
     }
 
-    // ✅ Task 1: Submission Preflight Test - Document Upload Verification
-    try {
-      console.log("🔍 Preflight Test: Checking document uploads...");
-      const documentsResponse = await fetch(`/api/public/documents/${applicationId}`);
-      
-      if (documentsResponse.ok) {
-        const documentsData = await documentsResponse.json();
-        console.log("📊 Documents check:", documentsData);
-        
-        const documentsUploaded = documentsData?.documents || [];
-        if (!documentsUploaded || documentsUploaded.length === 0) {
-          alert("❌ No documents uploaded. Please go back to Step 5 and upload your documents.");
-          console.log("❌ PREFLIGHT FAILED: No documents uploaded");
-          return;
-        }
-        console.log("✅ Documents verified:", documentsUploaded.length, "files found");
-      } else {
-        console.warn("⚠️ Could not verify document uploads - proceeding with submission");
-      }
-    } catch (error) {
-      console.error("❌ Error checking documents:", error);
-      // Continue with submission if document check fails
+    // Validate required form data
+    if (!state.step1 || !state.step3 || !state.step4) {
+      logger.log('❌ Missing required form data');
+      toast({
+        title: "Incomplete Application",
+        description: "Please complete all previous steps before submitting.",
+        variant: "destructive",
+      });
+      return;
     }
 
-    // ✅ Task 1: Submission Preflight Test - Document Signing Status
-    try {
-      console.log("🔍 Preflight Test: Checking signing status...");
-      const signingStatusResponse = await fetch(`/api/public/signnow/status/${applicationId}`);
-      
-      if (signingStatusResponse.ok) {
-        const signingData = await signingStatusResponse.json();
-        console.log("📊 Current signing status:", signingData);
-        
-        const documentStatus = signingData?.status || signingData?.signing_status;
-        
-        if (documentStatus === 'invite_sent') {
-          console.log("❌ Document is still invite_sent - cannot finalize");
-          alert("❌ Document not signed. Please complete the signing step before submission.");
-          toast({
-            title: "Document Not Signed",
-            description: "Please return to Step 6 and complete the document signing process.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        if (documentStatus !== "signed" && documentStatus !== "bypassed" && documentStatus !== "invite_signed") {
-          console.log("⚠️ Document signing status unclear:", documentStatus);
-          const proceedAnyway = confirm("Document signing status is unclear. Proceed with submission anyway?");
-          if (!proceedAnyway) {
-            return;
-          }
-        }
-        
-        console.log("✅ Document status verified:", documentStatus);
-      }
-    } catch (error) {
-      console.error("❌ Error checking signing status:", error);
-      // Continue with submission if status check fails
-    }
-
-    setFinalizationStatus('finalizing');
+    setSubmissionStatus('submitting');
     setError(null);
 
     try {
-      logger.log('🏁 Step 7: Finalizing application with POST /api/public/applications/{id}/finalize...');
-      logger.log('🎯 Step 7 Final URL verification:', `/api/public/applications/${applicationId}/finalize`);
+      // ✅ USER REQUIREMENT: Add comprehensive submission logging
+      console.log("📤 Submitting application:", state);
+      console.log("📤 Application Business Name:", state.step3?.businessName || state.step3?.operatingName || 'NOT FOUND');
+      console.log("📤 Application Legal Name:", state.step3?.legalName || state.step3?.businessLegalName || 'NOT FOUND');
+      console.log("📤 Applicant Name:", `${state.step4?.firstName || ''} ${state.step4?.lastName || ''}`.trim() || 'NOT FOUND');
+      console.log("📤 Document Count:", uploadedFiles.length);
+
+      // Prepare form data for submission
+      const formData = {
+        step1: state.step1,
+        step3: state.step3,
+        step4: state.step4,
+        documents: uploadedFiles,
+        termsAccepted,
+        privacyAccepted,
+        submittedAt: new Date().toISOString()
+      };
+
+      logger.log('🏁 Step 7: Submitting application with POST /api/public/applications...');
       
-      // Call the actual API endpoint
-      const response = await fetch(`/api/public/applications/${applicationId}/finalize`, {
+      // Submit complete application - backend will create SignNow document and send email
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
-        body: JSON.stringify({
-          // ✅ STEP-BASED STRUCTURE ENFORCEMENT: Include complete application data
-          step1: state.step1 || {},
-          step3: state.step3 || {},
-          step4: state.step4 || {},
-          termsAccepted,
-          privacyAccepted,
-          finalizedAt: new Date().toISOString()
-        })
+        body: JSON.stringify(formData)
       });
       
-      logger.log('Step 7 API Response:', response.status, response.statusText);
-      
-      const finalResult = {
-        status: 'finalized',
-        applicationId: applicationId,
-        finalizedAt: new Date().toISOString()
-      };
+      console.log("📥 Application submission response status:", response.status, response.statusText);
 
-      setFinalizationStatus('complete');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("❌ Error response data:", errorData);
+        throw new Error(errorData.message || `Submission failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("📥 Application submission response:", result);
+
+      setSubmissionStatus('submitted');
       
       // Mark application as complete in state
       dispatch({
         type: 'MARK_COMPLETE'
       });
       
-      saveToStorage();
-      
       toast({
-        title: "Application Finalized Successfully!",
-        description: `Application ${applicationId} has been completed and submitted.`,
+        title: "Application Submitted Successfully!",
+        description: "We've sent an email with your application for signature.",
       });
 
-      logger.log('✅ Application finalized:', finalResult);
+      logger.log('✅ Application submitted:', result);
       
     } catch (error) {
-      logger.error('❌ Finalization failed:', error);
-      setFinalizationStatus('error');
-      setError(error instanceof Error ? error.message : 'Finalization failed');
+      logger.error('❌ Submission failed:', error);
+      setSubmissionStatus('error');
+      setError(error instanceof Error ? error.message : 'Submission failed');
       
       toast({
-        title: "Finalization Failed",
-        description: error instanceof Error ? error.message : 'Failed to finalize application',
+        title: "Submission Failed",
+        description: error instanceof Error ? error.message : 'Please try again or contact support.',
         variant: "destructive",
       });
     }
   };
 
-  const handleViewDashboard = () => {
-    setLocation('/dashboard');
-  };
-
   const handleBack = () => {
-    setLocation('/apply/step-6');
+    setLocation('/apply/step-5'); // Go back to Step 5 since Step 6 is removed
   };
 
-  const canFinalize = termsAccepted && privacyAccepted && applicationId;
-  
-  // Debug logging
-  logger.log('Step 7 Debug:', {
-    termsAccepted,
-    privacyAccepted,
-    applicationId,
-    canFinalize,
-    finalizationStatus
-  });
+  const canSubmit = termsAccepted && privacyAccepted && state.step1 && state.step3 && state.step4;
 
-  if (finalizationStatus === 'complete') {
+  // Show email confirmation after successful submission
+  if (submissionStatus === 'submitted') {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Success Header */}
         <Card className="border-green-200 bg-green-50">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4">
-              <CheckCircle className="h-16 w-16 text-green-600" />
+              <CheckCircle className="w-16 h-16 text-green-600" />
             </div>
-            <CardTitle className="text-3xl text-green-800">
-              Application Successfully Submitted!
-            </CardTitle>
+            <CardTitle className="text-2xl text-green-800">You're almost done!</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-center space-y-4">
-              <p className="text-green-700 text-lg">
-                Your application has been finalized and submitted for review.
-              </p>
-              <p className="text-green-600">
-                Application ID: <span className="font-mono font-semibold">{applicationId}</span>
-              </p>
+          <CardContent className="text-center space-y-4">
+            <div className="flex justify-center mb-4">
+              <Mail className="w-12 h-12 text-blue-600" />
             </div>
+            <p className="text-lg">
+              We've sent an email with your application for signature. Please check your inbox (and spam folder) for a message from <strong>noreply@boreal.financial</strong>.
+            </p>
+            <p className="text-gray-600">
+              Once you sign the document, we'll begin processing your file.
+            </p>
           </CardContent>
         </Card>
         {/* Next Steps */}
@@ -249,33 +185,33 @@ export default function Step7Finalization() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 text-sm">
+            <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
                 <div>
-                  <p className="font-medium">Application Review</p>
-                  <p className="text-gray-600">Our team will review your application within 2-3 business days</p>
+                  <p className="font-medium">Check Your Email</p>
+                  <p className="text-gray-600">Look for an email from noreply@boreal.financial with your signing link</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
                 <div>
-                  <p className="font-medium">Lender Matching</p>
-                  <p className="text-gray-600">We'll connect you with the most suitable lenders based on your profile</p>
+                  <p className="font-medium">Sign Electronically</p>
+                  <p className="text-gray-600">Click the link in the email to review and sign your application</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
                 <div>
-                  <p className="font-medium">Direct Contact</p>
+                  <p className="font-medium">Application Processing</p>
+                  <p className="text-gray-600">Once signed, we'll begin matching you with suitable lenders</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
+                <div>
+                  <p className="font-medium">Lender Contact</p>
                   <p className="text-gray-600">Qualified lenders may contact you directly with offers</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
-                <div>
-                  <p className="font-medium">Status Updates</p>
-                  <p className="text-gray-600">You'll receive email updates throughout the process</p>
                 </div>
               </div>
             </div>
@@ -292,19 +228,11 @@ export default function Step7Finalization() {
               <ul className="list-disc list-inside text-gray-600 space-y-1">
                 <li>Email: info@boreal.finance</li>
                 <li>Phone: 1-888-811-1887</li>
-                <li>Reference your Application ID: {applicationId}</li>
               </ul>
             </div>
           </CardContent>
         </Card>
-        {/* Dashboard Button */}
-        <Card>
-          <CardContent className="pt-6">
-            <Button onClick={handleViewDashboard} className="w-full" size="lg">
-              Return to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
+
       </div>
     );
   }
@@ -326,8 +254,8 @@ export default function Step7Finalization() {
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-500">Application ID:</span>
-              <p className="font-mono">{applicationId || 'Not available'}</p>
+              <span className="text-gray-500">Document Count:</span>
+              <p className="font-medium">{uploadedFiles.length} documents uploaded</p>
             </div>
             <div>
               <span className="text-gray-500">Selected Product:</span>
@@ -425,70 +353,54 @@ export default function Step7Finalization() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {finalizationStatus === 'idle' && (
+          {submissionStatus === 'idle' && (
             <div className="space-y-4">
-              <Alert className={canFinalize ? "border-green-200 bg-green-50" : "border-yellow-200 bg-yellow-50"}>
-                <CheckCircle className={`h-4 w-4 ${canFinalize ? 'text-green-600' : 'text-yellow-600'}`} />
-                <AlertDescription className={canFinalize ? 'text-green-800' : 'text-yellow-800'}>
-                  {canFinalize 
-                    ? "Ready to finalize your application. This will submit your completed application to our lending network."
-                    : "Please accept both terms and conditions to proceed with finalization."}
+              <Alert className={canSubmit ? "border-green-200 bg-green-50" : "border-yellow-200 bg-yellow-50"}>
+                <CheckCircle className={`h-4 w-4 ${canSubmit ? 'text-green-600' : 'text-yellow-600'}`} />
+                <AlertDescription className={canSubmit ? 'text-green-800' : 'text-yellow-800'}>
+                  {canSubmit 
+                    ? "Ready to submit your application. This will create a SignNow document and send you an email for signature."
+                    : "Please accept both terms and conditions to proceed with submission."}
                 </AlertDescription>
               </Alert>
               
               <Button 
-                onClick={handleFinalize} 
-                disabled={!canFinalize}
+                onClick={handleSubmit} 
+                disabled={!canSubmit}
                 className="w-full"
                 size="lg"
               >
                 <Send className="w-4 h-4 mr-2" />
-                Finalize Application
+                Submit Application
               </Button>
-              
-              <p className="text-xs text-gray-500 text-center">
-                This action will call POST /applications/{applicationId}/finalize
-              </p>
             </div>
           )}
 
-          {finalizationStatus === 'finalizing' && (
+          {submissionStatus === 'submitting' && (
             <div className="text-center space-y-4">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
-              <p className="text-gray-600">Finalizing your application...</p>
-              <p className="text-sm text-gray-500">Calling POST /applications/{applicationId}/finalize</p>
+              <p className="text-gray-600">Submitting your application...</p>
+              <p className="text-sm text-gray-500">Creating SignNow document and sending email...</p>
             </div>
           )}
 
-          {finalizationStatus === 'error' && (
+          {submissionStatus === 'error' && (
             <div className="space-y-4">
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  {error || 'Failed to finalize application'}
+                  {error || 'Failed to submit application'}
                 </AlertDescription>
               </Alert>
-              <Button onClick={handleFinalize} variant="outline" className="w-full">
-                Retry Finalization
+              <Button onClick={handleSubmit} variant="outline" className="w-full">
+                Retry Submission
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* API Integration Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Final Integration</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-sm text-gray-600">
-            <p><strong>Endpoint:</strong> POST /applications/{applicationId}/finalize</p>
-            <p><strong>Action:</strong> Mark submission in both staff + client systems</p>
-            <p><strong>Result:</strong> Application completed and submitted to lending network</p>
-          </div>
-        </CardContent>
-      </Card>
+
 
       {/* Navigation */}
       <Card>
@@ -499,7 +411,7 @@ export default function Step7Finalization() {
               variant="outline" 
               onClick={handleBack}
               className="flex items-center gap-2"
-              disabled={finalizationStatus === 'finalizing'}
+              disabled={submissionStatus === 'submitting'}
             >
               <ArrowLeft className="w-4 h-4" />
               Previous
