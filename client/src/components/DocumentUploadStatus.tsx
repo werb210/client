@@ -220,14 +220,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
             </div>
           )}
 
-          {/* Empty State Message */}
-          {safeDocumentStatuses.length === 0 && safeAdditionalDocuments.length === 0 && (
-            <div className="text-center py-6 text-gray-500">
-              <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <div className="text-sm">No documents found</div>
-              <div className="text-xs mt-1">Upload documents when requirements are available</div>
-            </div>
-          )}
+          
 
           {/* Additional Documents */}
           {safeAdditionalDocuments.length > 0 && (
