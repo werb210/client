@@ -55,7 +55,8 @@ export function Step2RecommendationEngine({
     lookingFor: formData.lookingFor,
     fundingAmount: formData.fundingAmount,
     accountsReceivableBalance: formData.accountsReceivableBalance || 0,
-    fundsPurpose: formData.fundsPurpose
+    fundsPurpose: formData.fundsPurpose,
+    industry: formData.industry // Include industry from Step 3 business details
   });
   
   // ✅ DEBUG: Log fetched lender products and categories
@@ -67,7 +68,8 @@ export function Step2RecommendationEngine({
     lookingFor: formData.lookingFor,
     fundingAmount: formData.fundingAmount,
     accountsReceivableBalance: formData.accountsReceivableBalance,
-    fundsPurpose: formData.fundsPurpose
+    fundsPurpose: formData.fundsPurpose,
+    industry: formData.industry
   });
   
   if (productCategories?.length > 0) {
