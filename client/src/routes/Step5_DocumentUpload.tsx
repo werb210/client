@@ -241,6 +241,9 @@ export default function Step5DocumentUpload() {
 
   // Handle file upload from DynamicDocumentRequirements component
   const handleFilesUploaded = (files: UploadedFile[]) => {
+    console.log("📤 [STEP5] handleFilesUploaded called with:", files.length, "files");
+    console.log("📤 [STEP5] Files details:", files.map(f => ({ name: f.name, type: f.documentType })));
+    
     setUploadedFiles(files);
     
     // Save to proper step5DocumentUpload location
@@ -253,6 +256,8 @@ export default function Step5DocumentUpload() {
         }
       }
     });
+    
+    console.log("📤 [STEP5] Dispatched UPDATE_FORM_DATA with", files.length, "files");
   };
 
   // Trigger autosave when uploaded files change

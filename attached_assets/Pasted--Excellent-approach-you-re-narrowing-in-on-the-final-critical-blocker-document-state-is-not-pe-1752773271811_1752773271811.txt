@@ -1,0 +1,114 @@
+✅ Excellent approach — you're narrowing in on the final critical blocker: **document state is not persisting across steps.**
+
+---
+
+## 🧠 What We Know So Far
+
+| Step             | Observation                                           |
+| ---------------- | ----------------------------------------------------- |
+| ✅ Step 5         | User uploads 6 PDFs — UI accepts files                |
+| ❌ Step 6         | `uploadedFiles.length === 0` → nothing shows          |
+| ❌ Step 7         | `documents` array is empty → no upload loop triggered |
+| ✅ Step 7 logging | Confirms empty state: `📤 Document Count: 0`          |
+| ✅ App creation   | Working — `ecf4552e-d6eb-4f7a-b544-fe231fefa4af`      |
+
+---
+
+## 🔍 Current Suspected Cause
+
+> **Documents uploaded in Step 5 are not being saved properly into global/shared state (`FormDataContext`).**
+
+This results in:
+
+* `uploadedFiles` not available in Step 6+
+* Final submission sees `documents: []`
+
+---
+
+## 🛠️ FIX PLAN FOR REPLIT AGENT (CLIENT APP)
+
+### ✅ Step 1: Ensure Step 5 Calls `setFormData()`
+
+> **File: `Step5_DocumentUpload.tsx`**
+
+In the file upload handler:
+
+```tsx
+const handleUpload = (newFiles: UploadedFile[]) => {
+  const updatedFiles = [...uploadedFiles, ...newFiles];
+  
+  // ✅ Save to context under the correct path
+  setFormData(prev => ({
+    ...prev,
+    step5DocumentUpload: {
+      ...prev.step5DocumentUpload,
+      uploadedFiles: updatedFiles
+    }
+  }));
+};
+```
+
+✅ You should also confirm:
+
+```tsx
+const { formData, setFormData } = useFormData();
+const uploadedFiles = formData.step5DocumentUpload?.uploadedFiles || [];
+```
+
+---
+
+### ✅ Step 2: Add Debug Logs
+
+In `Step5_DocumentUpload.tsx` (after upload):
+
+```tsx
+console.log("📦 Uploaded files:", updatedFiles);
+```
+
+In `Step6_ReviewAndConfirm.tsx` or `Step7_Finalization.tsx`:
+
+```tsx
+console.log("🧾 Documents passed to Step 7:", formData.step5DocumentUpload?.uploadedFiles);
+```
+
+---
+
+### ✅ Step 3: Confirm State Is Persisting
+
+Go through form:
+
+1. Upload 2–3 PDFs in Step 5
+2. Proceed to Step 6
+3. Open DevTools → Console
+4. You should see:
+
+```bash
+🧾 Documents passed to Step 7: [ { name: 'Jan_2025.pdf', ... }, ... ]
+```
+
+---
+
+### ✅ Step 4: Fix If `uploadedFiles` is Always Empty
+
+Check if Step 5 is:
+
+* Overwriting the `formData` object accidentally
+* Not using `setFormData` correctly
+* Using a `useState` instead of the shared context
+
+If `uploadedFiles` is being held in `useState()` only, it won’t persist across steps.
+
+---
+
+## ✅ Final Goal
+
+| Requirement                                                       | Confirmed |
+| ----------------------------------------------------------------- | --------- |
+| `formData.step5DocumentUpload.uploadedFiles.length > 0` in Step 7 | ✅         |
+| Upload loop triggers in Step 7                                    | ✅         |
+| `POST /applications/:id/documents` fires                          | ✅         |
+| Docs appear in staff backend                                      | ✅         |
+
+---
+
+Let me know what Step 6 logs show — and if needed, I’ll write a patch for the shared state logic immediately. You're right at the edge of full recovery.
