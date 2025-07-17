@@ -8,7 +8,35 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useFormData, FormDataAction } from '@/context/FormDataContext';
 import { StepHeader } from '@/components/StepHeader';
-import { step4Schema } from '../../../shared/schema';
+import { z } from 'zod';
+
+// Create a local schema that matches the component field names
+const localStep4Schema = z.object({
+  applicantFirstName: z.string().min(1, 'First name is required'),
+  applicantLastName: z.string().min(1, 'Last name is required'),
+  applicantEmail: z.string().email('Valid email is required'),
+  applicantPhone: z.string().min(1, 'Phone is required'),
+  applicantAddress: z.string().min(1, 'Address is required'),
+  applicantCity: z.string().min(1, 'City is required'),
+  applicantState: z.string().min(1, 'State is required'),
+  applicantZipCode: z.string().min(1, 'ZIP code is required'),
+  applicantDateOfBirth: z.string().min(1, 'Date of birth is required'),
+  applicantSSN: z.string().optional(), // SSN is optional
+  ownershipPercentage: z.number().min(1, 'Ownership percentage is required').max(100),
+  hasPartner: z.boolean(),
+  // Partner fields (conditional)
+  partnerFirstName: z.string().optional(),
+  partnerLastName: z.string().optional(),
+  partnerEmail: z.string().email().optional().or(z.literal('')),
+  partnerPhone: z.string().optional(),
+  partnerAddress: z.string().optional(),
+  partnerCity: z.string().optional(),
+  partnerState: z.string().optional(),
+  partnerZipCode: z.string().optional(),
+  partnerDateOfBirth: z.string().optional(),
+  partnerSSN: z.string().optional(),
+  partnerOwnershipPercentage: z.number().optional(),
+});
 import { logger } from '@/lib/utils';
 
 // Import all the form field components
@@ -50,7 +78,7 @@ export function Step4ApplicantInfoLocal() {
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<Step4FormData>({
-    resolver: zodResolver(step4Schema),
+    resolver: zodResolver(localStep4Schema),
     defaultValues: {
       applicantFirstName: state.step4?.applicantFirstName || '',
       applicantLastName: state.step4?.applicantLastName || '',
@@ -243,6 +271,146 @@ export function Step4ApplicantInfoLocal() {
                     <FormItem>
                       <FormLabel>Phone Number *</FormLabel>
                       <FormControl>
+                        <Input type="tel" placeholder="Enter phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="applicantAddress"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Street Address *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter street address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="applicantCity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter city" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="applicantState"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State/Province *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter state or province" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="applicantZipCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Postal Code *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter postal code" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="applicantDateOfBirth"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date of Birth *</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="applicantSSN"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SSN/SIN (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter SSN or SIN" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Social Security Number (US) or Social Insurance Number (Canada)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="ownershipPercentage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ownership Percentage *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          max="100" 
+                          placeholder="Enter ownership percentage"
+                          {...field}
+                          value={field.value || ''}
+                          onChange={(e) => field.onChange(Number(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        What percentage of the business do you own?
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="applicantEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="Enter email address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="applicantPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number *</FormLabel>
+                      <FormControl>
                         <Input placeholder="Enter phone number" {...field} />
                       </FormControl>
                       <FormMessage />
@@ -324,6 +492,118 @@ export function Step4ApplicantInfoLocal() {
                         <FormLabel>Partner Last Name</FormLabel>
                         <FormControl>
                           <Input placeholder="Enter partner last name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="partnerEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="Enter partner email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="partnerPhone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Phone</FormLabel>
+                        <FormControl>
+                          <Input type="tel" placeholder="Enter partner phone" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="partnerAddress"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Address</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter partner address" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="partnerCity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner City</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter partner city" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="partnerState"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner State/Province</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter partner state or province" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="partnerZipCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Postal Code</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter partner postal code" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="partnerDateOfBirth"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Date of Birth</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="partnerSSN"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner SSN/SIN (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter partner SSN or SIN" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
