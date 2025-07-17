@@ -321,6 +321,13 @@ export default function Step4ApplicantInfoComplete() {
         signNowFields
       });
       
+      // ✅ USER REQUIREMENT: Add comprehensive application creation logging
+      console.log("📤 Creating new application:");
+      console.log("📤 Company Business Name:", step3?.operatingName || 'NOT FOUND');
+      console.log("📤 Company Legal Name:", step3?.legalName || 'NOT FOUND');  
+      console.log("📤 Applicant Name:", `${step4?.applicantFirstName || step4?.firstName || ''} ${step4?.applicantLastName || step4?.lastName || ''}`.trim() || 'NOT FOUND');
+      console.log("📤 Applicant Email:", step4?.applicantEmail || step4?.personalEmail || 'NOT FOUND');
+      
       // ✅ SignNow Field Verification Report
       console.log("🖊️ =================================");
       console.log("🖊️ SIGNNOW FIELDS VERIFICATION");
@@ -436,15 +443,28 @@ export default function Step4ApplicantInfoComplete() {
       logger.log('🎯 Confirmed POST URL:', postUrl);
       logger.log('🎯 Full POST endpoint:', `${window.location.origin}${postUrl}`);
       
-      // API Call: POST /api/public/applications
-      const response = await fetch(postUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-        },
-        body: JSON.stringify(applicationData)
-      });
+      // ✅ USER REQUIREMENT: Wrap fetch in try/catch and add comprehensive logging
+      console.log("📤 Submitting application to:", postUrl);
+      console.log("📤 Application payload:", JSON.stringify(applicationData, null, 2));
+      
+      let response;
+      try {
+        // API Call: POST /api/public/applications
+        response = await fetch(postUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+          },
+          body: JSON.stringify(applicationData)
+        });
+        
+        console.log("📥 Application creation response status:", response.status, response.statusText);
+        
+      } catch (fetchError) {
+        console.error("❌ Application creation failed:", fetchError);
+        throw fetchError;
+      }
 
       // ✅ ENHANCED API RESPONSE LOGGING
       console.log("📡 =================================");
@@ -456,6 +476,7 @@ export default function Step4ApplicantInfoComplete() {
       
       if (response.ok) {
         const result = await response.json();
+        console.log("📥 Application creation response:", result);
         console.log("✅ STAFF API ACCEPTED PAYLOAD");
         console.log("📋 Response Data:", JSON.stringify(result, null, 2));
         console.log("📋 Application ID:", result.applicationId || result.id || result.uuid);

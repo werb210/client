@@ -138,6 +138,14 @@ export default function Step7Submit() {
         documentTypes: uploadedFiles.map(f => f.documentType).join(', ')
       };
       
+      // ✅ USER REQUIREMENT: Add comprehensive submission logging
+      console.log("📤 Submitting application:", applicationData);
+      console.log("📤 Application Business Name:", applicationData.step3?.businessName || applicationData.step3?.operatingName || 'NOT FOUND');
+      console.log("📤 Application Legal Name:", applicationData.step3?.legalName || applicationData.step3?.businessLegalName || 'NOT FOUND');
+      console.log("📤 Applicant Name:", `${applicationData.step4?.firstName || ''} ${applicationData.step4?.lastName || ''}`.trim() || 'NOT FOUND');
+      console.log("📤 Application ID:", applicationData.applicationId);
+      console.log("📤 Document Count:", uploadedFiles.length);
+      
       formData.append('applicationData', JSON.stringify(applicationData));
       
       // Add actual document files (NOT placeholders)
@@ -150,22 +158,38 @@ export default function Step7Submit() {
         }
       });
       
-      // Submit to staff API with multipart/form-data
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${state.step4?.applicationId}/submit`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-        },
-        body: formData, // FormData automatically sets correct Content-Type
-        credentials: 'include'
-      });
+      const submitUrl = `${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${state.step4?.applicationId}/submit`;
+      console.log("📤 Submitting to URL:", submitUrl);
+      
+      // ✅ USER REQUIREMENT: Wrap fetch in try/catch for comprehensive error handling
+      let response;
+      try {
+        // Submit to staff API with multipart/form-data
+        response = await fetch(submitUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+          },
+          body: formData, // FormData automatically sets correct Content-Type
+          credentials: 'include'
+        });
+        
+        console.log("📥 Response status:", response.status, response.statusText);
+        
+      } catch (fetchError) {
+        console.error("❌ Fetch request failed:", fetchError);
+        throw fetchError;
+      }
       
       if (!response.ok) {
+        console.error("❌ Response not OK:", response.status, response.statusText);
         const errorData = await response.json().catch(() => ({}));
+        console.error("❌ Error response data:", errorData);
         throw new Error(errorData.message || `Submission failed: ${response.status}`);
       }
       
       const result = await response.json();
+      console.log("📥 Application submission response:", result);
       
       // Update state with submission success
       dispatch({
