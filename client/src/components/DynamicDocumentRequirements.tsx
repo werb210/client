@@ -181,41 +181,9 @@ function UnifiedDocumentUploadCard({
         return;
       }
       
-      // Create upload entries and add them to uploadedFiles
-      const newUploadedFiles = files.map(file => ({
-        id: crypto.randomUUID(),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        file,
-        status: "completed" as const,
-        documentType: category
-      }));
-      
-      // Add to uploaded files immediately
-      onFilesUploaded([...uploadedFiles, ...newUploadedFiles]);
-      
-      // Also call onFileAdded for backward compatibility if provided
-      if (onFileAdded) {
-        files.forEach(file => {
-          onFileAdded(file, category, doc.label);
-        });
-      }
-      
-      toast({
-        title: "Files Added",
-        description: `${files.length} file(s) added successfully.`,
-        variant: "default",
-      });
-      
-      // Clear the input
-      e.target.value = '';
-      return;
-      
-      // Fallback to immediate upload for backward compatibility
       // Create upload entries with uploading status
       const uploadingFiles = files.map(file => ({
-        id: Math.random().toString(36).substr(2, 9),
+        id: crypto.randomUUID(),
         name: file.name,
         size: file.size,
         type: file.type,
@@ -227,85 +195,63 @@ function UnifiedDocumentUploadCard({
       // Add uploading files to state immediately
       onFilesUploaded([...uploadedFiles, ...uploadingFiles]);
       
+      // Upload each file immediately to staff backend
       try {
-        // Step 5: Upload Required Documents - Using Public Endpoint
-        // API Call: POST /api/public/applications/:id/documents
-        // Payload: File data and document type (NO Authorization headers)
-        logger.log('📤 Step 5: Uploading documents via POST /api/public/applications/:id/documents...');
-        logger.log(`   - ApplicationId: ${applicationId}`);
-        logger.log(`   - Document Type: ${category}`);
-        logger.log(`   - Files: ${files.map(f => f.name).join(', ')}`);
+        console.log(`📤 [STEP5] Starting immediate upload of ${files.length} files for applicationId: ${applicationId}`);
         
-        const formData = new FormData();
-        files.forEach((file) => formData.append('document', file));
-        const normalizedType = doc.label.toLowerCase().replace(/\s+/g, '_'); // e.g. "Bank Statements" → "bank_statements"
-        formData.append('document_type', normalizedType);
-        
-        // ✅ Task 1: Enhanced Document Upload with Comprehensive Logging
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const formData = new FormData();
           formData.append('document', file);
-          const normalizedType = category.toLowerCase().replace(/\s+/g, '_'); // e.g. "Bank Statements" → "bank_statements"
-          formData.append('document_type', normalizedType);
+          formData.append('documentType', category.toLowerCase().replace(/\s+/g, '_'));
           
-          // Use corrected endpoint format
-          const uploadUrl = `/api/public/applications/${applicationId}/documents`;
+          console.log(`📤 [STEP5] Uploading file ${i + 1}/${files.length}: ${file.name}`);
+          console.log(`📤 [STEP5] Document type: ${category}`);
+          console.log(`📤 [STEP5] Application ID: ${applicationId}`);
           
-          // ✅ TEMPORARY DEBUG LOGGING (as requested)
-          console.log("Uploading:", file.name, "→", uploadUrl);
-          console.log("File size:", file.size, "bytes");
-          console.log("File type:", file.type);
-          console.log("Document category:", category);
+          const uploadResponse = await fetch(`/api/public/applications/${applicationId}/documents`, {
+            method: 'POST',
+            body: formData
+          });
           
-          let response;
-          try {
-            response = await fetch(uploadUrl, {
-              method: 'POST',
-              body: formData,
-              // ⚠️ No Authorization headers for public upload!
-            });
-          } catch (fetchError) {
-            console.error('Network error for file:', file.name, fetchError);
-            throw new Error(`Network error uploading ${file.name}: ${fetchError.message}`);
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            console.error(`❌ [STEP5] Upload failed for ${file.name}:`, uploadResponse.status, errorText);
+            throw new Error(`Upload failed for ${file.name}: ${uploadResponse.status}`);
           }
           
-          // ✅ TEMPORARY DEBUG LOGGING (as requested)
-          const responseText = await response.text();
-          console.log("Response:", response.status, responseText);
-          
-          if (!response.ok) {
-            // ✅ Show Visual Error to User and Prevent Advancing
-            const errorMessage = `Upload failed for ${file.name}: ${response.status} ${response.statusText} - ${responseText}`;
-            console.error("❌ UPLOAD FAILED:", errorMessage);
-            throw new Error(errorMessage);
-          }
-          
-          console.log("✅ Successfully uploaded:", file.name);
+          const uploadResult = await uploadResponse.json();
+          console.log(`✅ [STEP5] Upload successful for ${file.name}:`, uploadResult);
         }
         
         // Update status to completed
         const completedFiles = uploadingFiles.map(f => ({ ...f, status: "completed" as const }));
         onFilesUploaded([...uploadedFiles, ...completedFiles]);
         
+        console.log(`✅ [STEP5] All ${files.length} files uploaded successfully to staff backend`);
+        
         toast({
           title: "Upload Successful",
-          description: `${files.length} file(s) uploaded successfully`,
+          description: `${files.length} file(s) uploaded to staff backend successfully`,
         });
         
       } catch (error) {
+        console.error('❌ [STEP5] Upload error:', error);
+        
         // Update status to error
         const errorFiles = uploadingFiles.map(f => ({ ...f, status: "error" as const }));
         onFilesUploaded([...uploadedFiles, ...errorFiles]);
         
         toast({
           title: "Upload Failed",
-          description: error instanceof Error ? error.message : "Failed to upload files",
+          description: error instanceof Error ? error.message : "Failed to upload files to staff backend",
           variant: "destructive",
         });
-        
-        logger.error('Upload error:', error);
       }
+      
+      // Clear the input
+      e.target.value = '';
+      return;
     }
   };
 

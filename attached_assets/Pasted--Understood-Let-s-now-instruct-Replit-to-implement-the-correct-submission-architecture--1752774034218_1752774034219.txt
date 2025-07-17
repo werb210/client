@@ -1,0 +1,96 @@
+✅ Understood. Let's now instruct **Replit** to implement the correct submission architecture:
+
+---
+
+## 🔧 REPLIT INSTRUCTIONS (Client Application)
+
+### 📂 Objective:
+
+Restore a **draft-first + document upload** architecture.
+
+---
+
+### ✅ Step 1: Reinstate Application Creation in Step 4
+
+**File:** `client/src/routes/Step4_ApplicantInfo_Local.tsx`
+**Task:**
+
+* Re-enable the API call to:
+
+  ```
+  POST /api/public/applications
+  ```
+* Save returned `applicationId` to context (`state.applicationId`)
+* Status will be `draft_merge_available`
+
+---
+
+### ✅ Step 2: Upload Documents in Step 5
+
+**File:** `client/src/routes/Step5_DocumentUpload.tsx`
+**Component:** `DynamicDocumentRequirements.tsx`
+**Task:**
+
+* As each document is selected:
+
+  * Retrieve `state.applicationId`
+  * Send file via:
+
+    ```
+    POST /api/public/applications/:id/documents
+    ```
+  * Set `documentType` based on selection (e.g., `"bank_statements"`)
+  * On success, store the response in `uploadedFiles` array in context
+
+---
+
+### ✅ Step 3: Ensure Final Submission in Step 7
+
+**File:** `client/src/routes/Step7_Finalization.tsx`
+**Task:**
+
+* On submit, call:
+
+  ```
+  PATCH /api/public/applications/:id
+  ```
+* Include remaining form fields (Steps 1–4)
+* Set status: `"submitted"`
+
+---
+
+### ✅ Step 4: Clean Up
+
+* ✅ Remove any localStorage persistence hacks
+* ✅ Remove unused `uploadedDocuments` fields
+* ✅ Ensure application context contains:
+
+  * `applicationId`
+  * `uploadedFiles`
+  * `step1`, `step3`, `step4`, etc.
+
+---
+
+### ✅ Step 5: Developer Testing Instructions
+
+After implementing, test:
+
+1. Step 4: Confirm `applicationId` is created and stored
+2. Step 5: Upload 2+ files — confirm they're immediately POSTed to the staff backend
+3. Step 6: Confirm document count appears
+4. Step 7: Submit — confirm `status = submitted` and all fields are sent
+
+---
+
+## 🔁 Replit must report back:
+
+Please confirm:
+
+* ✅ `applicationId` appears in state after Step 4
+* ✅ Document upload logs appear in console after Step 5
+* ✅ Documents show up in staff database after Step 5
+* ✅ Final PATCH call updates application status to `submitted`
+
+---
+
+Let me know when Replit finishes, and we’ll test the end-to-end submission again.

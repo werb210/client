@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { Checkbox } from '@/components/ui/checkbox';
 
-import { useFormData } from '@/context/FormDataContext';
+import { useFormDataContext } from '@/context/FormDataContext';
 
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,7 +37,7 @@ type SubmissionStatus = 'idle' | 'submitting' | 'submitted' | 'error';
  * 4. Show email confirmation message to user
  */
 export default function Step6ConfirmAndSubmit() {
-  const { state, dispatch } = useFormData();
+  const { state, dispatch } = useFormDataContext();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
@@ -82,36 +82,44 @@ export default function Step6ConfirmAndSubmit() {
     setError(null);
 
     try {
-      // ✅ USER REQUIREMENT: Add comprehensive submission logging
-      console.log("📤 Submitting application:", state);
-      console.log("📤 Application Business Name:", state.step3?.businessName || state.step3?.operatingName || 'NOT FOUND');
-      console.log("📤 Application Legal Name:", state.step3?.legalName || state.step3?.businessLegalName || 'NOT FOUND');
-      console.log("📤 Applicant Name:", `${state.step4?.firstName || ''} ${state.step4?.lastName || ''}`.trim() || 'NOT FOUND');
-      console.log("📤 Document Count:", uploadedFiles.length);
+      // Get applicationId from Step 4
+      const applicationId = state.applicationId || localStorage.getItem('applicationId');
+      
+      if (!applicationId) {
+        throw new Error('No application ID found. Please go back to Step 4 and complete the application creation.');
+      }
 
-      // Prepare form data for submission (NO documents - they upload separately)
-      const fullFormData = {
+      // ✅ USER REQUIREMENT: Add comprehensive finalization logging
+      console.log("📤 [STEP7] Finalizing application:", applicationId);
+      console.log("📤 [STEP7] Application Business Name:", state.step3?.businessName || state.step3?.operatingName || 'NOT FOUND');
+      console.log("📤 [STEP7] Application Legal Name:", state.step3?.legalName || state.step3?.businessLegalName || 'NOT FOUND');
+      console.log("📤 [STEP7] Applicant Name:", `${state.step4?.firstName || ''} ${state.step4?.lastName || ''}`.trim() || 'NOT FOUND');
+      console.log("📤 [STEP7] Document Count:", uploadedFiles.length);
+
+      // Prepare finalization data with remaining form fields
+      const finalizationData = {
         step1: state.step1,
         step3: state.step3,
         step4: state.step4,
         termsAccepted,
         privacyAccepted,
-        submittedAt: new Date().toISOString()
+        submittedAt: new Date().toISOString(),
+        status: 'submitted'
       };
 
-      // ✅ USER REQUIREMENT: Add console logging before submission
-      console.log("📤 Submitting form data:", fullFormData);
+      // ✅ USER REQUIREMENT: Add console logging before finalization
+      console.log("📤 [STEP7] Finalizing application data:", finalizationData);
       
-      logger.log('🏁 Step 6: Submitting application with POST /api/public/applications...');
+      logger.log('🏁 Step 7: Finalizing application with PATCH /api/public/applications/:id...');
       
-      // Step 1: Create application first (NO documents)
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications`, {
-        method: 'POST',
+      // PATCH the existing application to finalize it
+      const response = await fetch(`/api/public/applications/${applicationId}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
-        body: JSON.stringify(fullFormData)
+        body: JSON.stringify(finalizationData)
       });
       
       console.log("📥 Application submission response status:", response.status, response.statusText);
@@ -123,60 +131,10 @@ export default function Step6ConfirmAndSubmit() {
       }
 
       const result = await response.json();
-      console.log("📥 Application submission response:", result);
-      
-      // Extract application ID from response
-      const applicationId = result.applicationId;
-      
-      if (!applicationId) {
-        throw new Error("No application ID returned from server");
-      }
-      
-      console.log("🆔 Application ID:", applicationId);
-      
-      // Step 2: Upload all documents separately
-      if (uploadedFiles.length > 0) {
-        console.log(`📄 Starting upload of ${uploadedFiles.length} documents...`);
-        
-        const documentUploadPromises = uploadedFiles.map(async (doc, index) => {
-          const formData = new FormData();
-          
-          // Convert uploaded file data back to File object for upload
-          if (doc.file) {
-            formData.append("document", doc.file);
-          } else {
-            // Fallback: create file from stored data
-            const file = new File([], doc.name, { type: doc.type });
-            formData.append("document", file);
-          }
-          
-          formData.append("documentType", doc.documentType);
-          
-          console.log(`📤 Uploading document ${index + 1}/${uploadedFiles.length}:`, doc.name, "→", doc.documentType);
-          
-          const uploadResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications/${applicationId}/documents`, {
-            method: "POST",
-            body: formData
-          });
-          
-          if (!uploadResponse.ok) {
-            const errorText = await uploadResponse.text();
-            console.error(`❌ Document upload failed for ${doc.name}:`, uploadResponse.status, errorText);
-            throw new Error(`Document upload failed for ${doc.name}: ${uploadResponse.status}`);
-          }
-          
-          const uploadResult = await uploadResponse.json();
-          console.log(`✅ Document uploaded successfully:`, doc.name, uploadResult);
-          
-          return uploadResult;
-        });
-        
-        // Wait for all document uploads to complete
-        await Promise.all(documentUploadPromises);
-        console.log("✅ All documents uploaded successfully!");
-      } else {
-        console.log("ℹ️ No documents to upload");
-      }
+      console.log("📥 [STEP7] Application finalization response:", result);
+      console.log(`✅ [STEP7] Application ${applicationId} successfully finalized with status: ${result.status || 'submitted'}`);
+      console.log(`📄 [STEP7] Documents already uploaded in Step 5: ${uploadedFiles.length} files`);
+      console.log(`🎉 [STEP7] Application submission complete!`);
 
       setSubmissionStatus('submitted');
       
