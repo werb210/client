@@ -469,14 +469,33 @@ export default function Step3BusinessDetailsComplete() {
                       <FormItem>
                         <FormLabel className="text-base font-semibold">Number of Employees *</FormLabel>
                         <FormControl>
-                          <Input
-                            type="number"
-                            min="1"
-                            placeholder="Enter number of employees"
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                            className="h-12"
-                          />
+                          <div className="flex items-center space-x-4">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="icon"
+                              onClick={() => field.onChange(Math.max(1, (field.value || 1) - 1))}
+                              className="h-12 w-12 shrink-0"
+                            >
+                              -
+                            </Button>
+                            <Input 
+                              type="number" 
+                              value={field.value || 1} 
+                              onChange={(e) => field.onChange(Math.max(1, parseInt(e.target.value) || 1))}
+                              className="h-12 text-center font-semibold text-lg"
+                              min="1"
+                            />
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="icon"
+                              onClick={() => field.onChange((field.value || 1) + 1)}
+                              className="h-12 w-12 shrink-0"
+                            >
+                              +
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
