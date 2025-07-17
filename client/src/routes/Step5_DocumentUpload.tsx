@@ -447,10 +447,20 @@ export default function Step5DocumentUpload() {
           <FileText className="w-3 h-3" />
           <span>{uploadedFiles.length} Uploaded</span>
         </Badge>
-        <Badge variant="outline" className="flex items-center space-x-1">
-          <FileText className="w-3 h-3" />
-          <span>{files.length} Ready</span>
-        </Badge>
+        {/* Only show Ready badge if there are files pending upload */}
+        {files.length > 0 && (
+          <Badge variant="outline" className="flex items-center space-x-1">
+            <FileText className="w-3 h-3" />
+            <span>{files.length} Ready</span>
+          </Badge>
+        )}
+        {/* Show uploading status if currently uploading */}
+        {isUploading && (
+          <Badge variant="outline" className="flex items-center space-x-1 bg-blue-50 text-blue-700">
+            <div className="animate-spin rounded-full h-3 w-3 border border-blue-600 border-t-transparent"></div>
+            <span>Uploading...</span>
+          </Badge>
+        )}
         {allRequirementsComplete && (
           <Badge variant="default" className="flex items-center space-x-1 bg-green-600">
             <CheckCircle className="w-3 h-3" />
@@ -494,16 +504,16 @@ export default function Step5DocumentUpload() {
 
 
 
-      {/* Files Ready for Upload */}
+      {/* Files Ready for Upload - Only show if there are actually pending files */}
       {files.length > 0 && (
-        <Card>
+        <Card className="border-blue-200 bg-blue-50">
           <CardContent className="pt-6">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Files Ready for Upload</span>
+                <span className="text-sm font-medium text-blue-800">Files Uploading</span>
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="text-xs">
-                    {files.length} pending
+                  <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700">
+                    {files.length} in progress
                   </Badge>
                 </div>
               </div>
@@ -514,10 +524,10 @@ export default function Step5DocumentUpload() {
                   const isCompleted = uploadStatus === 100;
                   
                   return (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                    <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200">
                       <div className="flex items-center space-x-3 flex-1">
                         <div className="relative">
-                          <FileText className={`w-4 h-4 ${isCompleted ? 'text-green-600' : isUploading ? 'text-blue-600' : 'text-gray-600'}`} />
+                          <FileText className={`w-4 h-4 ${isCompleted ? 'text-green-600' : isUploading ? 'text-blue-600' : 'text-blue-600'}`} />
                           {isUploading && (
                             <div className="absolute -top-1 -right-1 w-2 h-2">
                               <div className="animate-spin rounded-full h-2 w-2 border border-blue-600 border-t-transparent"></div>
@@ -543,29 +553,18 @@ export default function Step5DocumentUpload() {
                             {uploadStatus}%
                           </Badge>
                         ) : (
-                          <Badge variant="secondary" className="text-xs">
-                            Ready
+                          <Badge variant="default" className="bg-blue-600 text-xs">
+                            Uploading...
                           </Badge>
                         )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleFileRemoved(file.file.name)}
-                          className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
-                          disabled={isUploading}
-                        >
-                          ×
-                        </Button>
                       </div>
                     </div>
                   );
                 })}
               </div>
-              {isUploading && (
-                <div className="text-xs text-gray-500 text-center">
-                  Upload in progress...
-                </div>
-              )}
+              <div className="text-xs text-blue-600 text-center">
+                Files are being uploaded immediately to staff backend...
+              </div>
             </div>
           </CardContent>
         </Card>
