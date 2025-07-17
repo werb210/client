@@ -158,7 +158,7 @@ export default function Step7Submit() {
         }
       });
       
-      const submitUrl = `${import.meta.env.VITE_API_BASE_URL}/api/public/applications/${state.step4?.applicationId}/submit`;
+      const submitUrl = `${import.meta.env.VITE_API_BASE_URL}/public/applications/${state.step4?.applicationId}/submit`;
       console.log("📤 Submitting to URL:", submitUrl);
       
       // ✅ USER REQUIREMENT: Wrap fetch in try/catch for comprehensive error handling
