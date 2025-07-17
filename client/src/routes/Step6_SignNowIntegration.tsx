@@ -39,6 +39,7 @@ export default function Step6SignNowIntegration() {
   const [error, setError] = useState<string>('');
   const [timeoutWarning, setTimeoutWarning] = useState<string>('');
   const [startTime, setStartTime] = useState<number>(Date.now());
+  const [isDocumentPrepared, setIsDocumentPrepared] = useState(false);
   const retryCountRef = useRef(0);
 
   // Get applicationId from localStorage (always use stored value)
@@ -302,21 +303,29 @@ export default function Step6SignNowIntegration() {
   const [isSigned, setIsSigned] = useState(false);
   
   useEffect(() => {
-    const checkStatus = async () => {
+    const checkPrepared = async () => {
       if (!applicationId) return;
       
       try {
         const res = await fetch(`/api/public/application/${applicationId}/signing-status`);
-        const status = await res.json();
+        const { status } = await res.json();
         console.log("👀 Signing status:", status);
+        
+        // Document is prepared when SmartFields are populated and ready for signing
+        if (status === 'invite_sent' || status === 'signed') {
+          setIsDocumentPrepared(true);
+        }
+        
+        // Set signed status for continue button
         setIsSigned(status === "signed");
       } catch (error) {
         console.warn('Status check error:', error);
         setIsSigned(false);
+        setIsDocumentPrepared(false);
       }
     };
 
-    checkStatus();
+    checkPrepared();
   }, [applicationId]);
 
   // ✅ Continue button handler - only when document is signed
@@ -451,27 +460,43 @@ export default function Step6SignNowIntegration() {
                       </Alert>
                     )}
                     
-                    <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
-                      <iframe
-                        src={signUrl}
-                        width="100%"
-                        height="700px"
-                        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                        allow="camera; microphone; fullscreen"
-                        style={{ border: 'none', borderRadius: '8px' }}
-                        title="SignNow Document Signing"
-                        onLoad={() => {
-                          logger.log('📄 SignNow iframe loaded successfully');
-                        }}
-                        onError={(e) => {
-                          logger.error('❌ SignNow iframe failed to load:', e);
-                        }}
-                      />
-                    </div>
-                    
-                    <div className="text-center text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                      Signing URL: {signUrl}
-                    </div>
+                    {isDocumentPrepared ? (
+                      <>
+                        <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
+                          <iframe
+                            src={signUrl}
+                            width="100%"
+                            height="700px"
+                            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                            allow="camera; microphone; fullscreen"
+                            style={{ border: 'none', borderRadius: '8px' }}
+                            title="SignNow Document Signing"
+                            onLoad={() => {
+                              logger.log('📄 SignNow iframe loaded successfully');
+                            }}
+                            onError={(e) => {
+                              logger.error('❌ SignNow iframe failed to load:', e);
+                            }}
+                          />
+                        </div>
+                        
+                        <div className="text-center text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                          Signing URL: {signUrl}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex items-center justify-center h-[700px] bg-gray-50 rounded-lg border-2 border-gray-200">
+                        <div className="text-center space-y-4">
+                          <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+                          <p className="text-gray-600 font-medium">
+                            Preparing your document for signing...
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Smart fields are being populated with your application data
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="space-y-4">
                       {isSigned ? (

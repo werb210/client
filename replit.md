@@ -93,14 +93,16 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
-- **July 17, 2025: ✅ WEBHOOK-AWARE STEP ADVANCEMENT IMPLEMENTED**
-  * **POLLING ELIMINATED**: Removed all setInterval polling logic from Step 6 SignNow integration
-  * **SINGLE STATUS CHECK**: Replaced with useEffect-based status fetch on component load only
+- **July 17, 2025: ✅ DOCUMENT PREPARATION CHECK & COMPLETE POLLING ELIMINATION IMPLEMENTED**
+  * **DOCUMENT PREPARATION STATE**: Added `isDocumentPrepared` state to wait for Smart Fields population before showing iframe
+  * **CONDITIONAL IFRAME RENDERING**: SignNow iframe only renders when status is 'invite_sent' or 'signed' (document ready)
+  * **SMART FIELDS LOADING**: Shows "Preparing your document for signing..." message while Smart Fields are being populated
+  * **COMPLETE POLLING REMOVAL**: Eliminated ALL setInterval polling from Step6_SignNowIntegration.tsx and Step6SignNowTyped.tsx
+  * **SINGLE STATUS CHECK**: Replaced with useEffect-based status fetch on component load only using `/api/public/application/${id}/signing-status`
   * **CONDITIONAL BUTTON**: "Continue to Final Step" button only appears when status === "signed"
-  * **WEBHOOK INTEGRATION**: System now relies on backend webhook updates rather than client-side polling
-  * **PERFORMANCE IMPROVED**: Eliminated unnecessary repeated API calls every 5 seconds
-  * **MOBILE OPTIMIZED**: Single status check works better on mobile devices without constant network requests
-  * **PRODUCTION READY**: Clean implementation without polling overhead for production deployment
+  * **WEBHOOK INTEGRATION**: System now relies entirely on backend webhook updates rather than client-side polling
+  * **PERFORMANCE OPTIMIZED**: Eliminated all unnecessary repeated API calls for better mobile/desktop performance
+  * **PRODUCTION READY**: Clean implementation without polling overhead, ensures Smart Fields are populated before user interaction
 
 - **July 16, 2025: ✅ NUMBEROFEMPLOYEES FIELD CONVERSION TO TYPE="NUMBER" COMPLETED**
   * **CRITICAL SUCCESS**: Converted numberOfEmployees field from Select dropdown to numeric input across all components
