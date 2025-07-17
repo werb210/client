@@ -15,7 +15,7 @@ import { StageMonitor } from '@/components/StageMonitor';
 import Step1FinancialProfile from '@/routes/Step1_FinancialProfile_Complete';
 import Step2Recommendations from '@/routes/Step2_Recommendations';
 import Step3BusinessDetails from '@/routes/Step3_BusinessDetails_Complete';
-import Step4ApplicantDetails from '@/routes/Step4_ApplicantInfo_Complete';
+import { Step4ApplicantInfoLocal as Step4ApplicantDetails } from '@/routes/Step4_ApplicantInfo_Local';
 import Step5DocumentUpload from '@/routes/Step5_DocumentUpload';
 
 
