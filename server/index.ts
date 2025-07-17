@@ -234,14 +234,23 @@ app.use((req, res, next) => {
       console.log(`🎯 [SERVER] Confirmed staff backend URL: https://staff.boreal.financial/api/public/applications`);
       console.log('🔑 [SERVER] Using auth token:', cfg.clientToken ? 'Present' : 'Missing');
       
+      // Check for test account bypass header
+      const headers: any = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${cfg.clientToken}`
+      };
+      
+      // Add duplicate bypass header for test accounts (optional)
+      if (req.headers['x-allow-duplicate'] === 'true') {
+        headers['x-allow-duplicate'] = 'true';
+        console.log('🧪 [SERVER] Test account duplicate bypass enabled');
+      }
+      
       console.log('📤 [SERVER] Making request to staff backend...');
       const response = await fetch(`${staffApiUrl}/public/applications`, {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${cfg.clientToken}`
-        },
+        headers,
         body: JSON.stringify(payload)
       });
       
@@ -260,6 +269,30 @@ app.use((req, res, next) => {
       if (!response.ok) {
         const errorData = await response.text();
         console.error('❌ [SERVER] Staff backend error:', errorData);
+        
+        // Handle 409 duplicate responses properly
+        if (response.status === 409) {
+          console.log('🔄 [SERVER] Duplicate application detected, returning 409 to client');
+          try {
+            const duplicateData = JSON.parse(errorData);
+            return res.status(409).json({
+              success: false,
+              error: 'Duplicate application detected',
+              message: duplicateData.message || 'An application with this information already exists',
+              applicationId: duplicateData.applicationId,
+              status: duplicateData.status || 'draft',
+              details: errorData
+            });
+          } catch (parseError) {
+            return res.status(409).json({
+              success: false,
+              error: 'Duplicate application detected',
+              message: 'An application with this information already exists',
+              details: errorData
+            });
+          }
+        }
+        
         throw new Error(`Staff API returned ${response.status}: ${errorData}`);
       }
       
@@ -269,6 +302,12 @@ app.use((req, res, next) => {
       res.json(data);
     } catch (error) {
       console.error('❌ [SERVER] Application creation failed:', error);
+      
+      // Check if this is a 409 duplicate error that was already handled
+      if (error instanceof Error && error.message.includes('Staff API returned 409')) {
+        // This should have been handled above, but if it reaches here, pass through
+        return;
+      }
       
       res.status(502).json({
         success: false,

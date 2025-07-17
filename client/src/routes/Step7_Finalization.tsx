@@ -112,22 +112,56 @@ export default function Step6ConfirmAndSubmit() {
       
       logger.log('🏁 Step 7: Finalizing application with PATCH /api/public/applications/:id...');
       
+      // Prepare headers for finalization
+      const headers: any = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+      };
+      
       // PATCH the existing application to finalize it
       const response = await fetch(`/api/public/applications/${applicationId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-        },
+        headers,
         body: JSON.stringify(finalizationData)
       });
       
       console.log("📥 Application submission response status:", response.status, response.statusText);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("❌ Error response data:", errorData);
-        throw new Error(errorData.message || `Submission failed: ${response.status}`);
+        const errorText = await response.text();
+        console.error("❌ Error response data:", errorText);
+        
+        // Handle 409 duplicate responses properly
+        if (response.status === 409) {
+          try {
+            const errorData = JSON.parse(errorText);
+            const duplicateMessage = errorData.message || 'Application already submitted';
+            console.log(`❌ 409 Duplicate: ${duplicateMessage}`);
+            
+            toast({
+              title: "Application Already Submitted",
+              description: duplicateMessage,
+              variant: "destructive",
+            });
+            
+            throw new Error(`Duplicate submission: ${duplicateMessage}`);
+          } catch (parseError) {
+            toast({
+              title: "Application Already Submitted",
+              description: "This application has already been submitted",
+              variant: "destructive",
+            });
+            throw new Error('Duplicate submission detected');
+          }
+        }
+        
+        // Handle other errors
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.message || `Submission failed: ${response.status}`);
+        } catch (parseError) {
+          throw new Error(`Submission failed: ${response.status} - ${errorText}`);
+        }
       }
 
       const result = await response.json();

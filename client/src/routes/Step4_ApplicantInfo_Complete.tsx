@@ -449,13 +449,22 @@ export default function Step4ApplicantInfoComplete() {
       
       let response;
       try {
+        // Prepare headers with optional test account bypass
+        const headers: any = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+        };
+        
+        // Add test account bypass header if in development mode
+        if (import.meta.env.DEV && import.meta.env.VITE_ALLOW_DUPLICATE_TEST === 'true') {
+          headers['x-allow-duplicate'] = 'true';
+          console.log('🧪 Test account duplicate bypass enabled');
+        }
+        
         // API Call: POST /api/public/applications
         response = await fetch(postUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-          },
+          headers,
           body: JSON.stringify(applicationData)
         });
         
@@ -534,39 +543,18 @@ export default function Step4ApplicantInfoComplete() {
           console.log("❌ Error response is not valid JSON");
         }
         
-        // ✅ HANDLE DUPLICATE APPLICATION - Extract existing ID and continue
-        if (response.status === 409 || response.status === 502) {
+        // ✅ HANDLE 409 DUPLICATE RESPONSES PROPERLY
+        if (response.status === 409) {
           try {
             const errorData = JSON.parse(errorText);
-            console.log('🔍 PARSING DUPLICATE ERROR:', errorData);
+            console.log('🔍 PARSING 409 DUPLICATE ERROR:', errorData);
             
-            let existingId = null;
+            // Enhanced 409 duplicate error message
+            const duplicateMessage = errorData.message || 'A duplicate application was detected';
+            console.log(`❌ Duplicate application detected: ${duplicateMessage}`);
             
-            // Method 1: Check if details contains the nested JSON with applicationId
-            if (errorData.details && typeof errorData.details === 'string') {
-              try {
-                const nestedDetails = JSON.parse(errorData.details.replace('Staff API returned 409: ', ''));
-                existingId = nestedDetails.applicationId;
-                console.log('📦 Method 1 - Extracted from nested details:', existingId);
-              } catch (e) {
-                console.log('❌ Method 1 failed, trying regex...');
-              }
-            }
-            
-            // Method 2: Regex fallback for applicationId anywhere in the error text
-            if (!existingId) {
-              const match = errorText.match(/applicationId['":]+'?([a-f0-9-]{36})/i);
-              if (match) {
-                existingId = match[1];
-                console.log('📦 Method 2 - Extracted via regex:', existingId);
-              }
-            }
-            
-            // Method 3: Direct access if it's a top-level field
-            if (!existingId && errorData.applicationId) {
-              existingId = errorData.applicationId;
-              console.log('📦 Method 3 - Direct access:', existingId);
-            }
+            // Try to extract existing application ID
+            let existingId = errorData.applicationId;
             
             if (existingId) {
               console.log('✅ DUPLICATE DETECTED - Using existing application ID:', existingId);
@@ -579,7 +567,7 @@ export default function Step4ApplicantInfoComplete() {
                 payload: { 
                   applicationId: existingId,
                   isExistingApplication: true,
-                  existingStatus: 'draft'
+                  existingStatus: errorData.status || 'draft'
                 },
               });
               
@@ -600,11 +588,36 @@ export default function Step4ApplicantInfoComplete() {
               setLocation('/apply/step-5');
               return;
             } else {
-              console.log('❌ Could not extract applicationId from duplicate error');
+              // Show meaningful duplicate error without application ID
+              toast({
+                title: "Duplicate Application Detected",
+                description: duplicateMessage,
+                variant: "destructive",
+              });
+              console.log('❌ Duplicate detected but no applicationId provided in response');
+              throw new Error(`Duplicate application: ${duplicateMessage}`);
             }
           } catch (parseError) {
-            console.error('Failed to parse duplicate error details:', parseError);
+            console.error('Failed to parse 409 duplicate error details:', parseError);
+            // Show generic duplicate error
+            toast({
+              title: "Duplicate Application Detected",
+              description: "An application with this information already exists",
+              variant: "destructive",
+            });
+            throw new Error('Duplicate application detected');
           }
+        }
+        
+        // ✅ LEGACY 502 HANDLING (for existing behavior compatibility)
+        if (response.status === 502) {
+          // This is the old "Staff backend unavailable" error - now should be rare
+          toast({
+            title: "Service Unavailable",
+            description: "Staff backend is temporarily unavailable. Please try again later.",
+            variant: "destructive",
+          });
+          throw new Error('Staff backend unavailable');
         }
         
         logger.error('❌ API call FAILED - Status:', response.status);
