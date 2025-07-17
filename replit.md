@@ -93,6 +93,15 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 17, 2025: ✅ WEBHOOK-AWARE STEP ADVANCEMENT IMPLEMENTED**
+  * **POLLING ELIMINATED**: Removed all setInterval polling logic from Step 6 SignNow integration
+  * **SINGLE STATUS CHECK**: Replaced with useEffect-based status fetch on component load only
+  * **CONDITIONAL BUTTON**: "Continue to Final Step" button only appears when status === "signed"
+  * **WEBHOOK INTEGRATION**: System now relies on backend webhook updates rather than client-side polling
+  * **PERFORMANCE IMPROVED**: Eliminated unnecessary repeated API calls every 5 seconds
+  * **MOBILE OPTIMIZED**: Single status check works better on mobile devices without constant network requests
+  * **PRODUCTION READY**: Clean implementation without polling overhead for production deployment
+
 - **July 16, 2025: ✅ NUMBEROFEMPLOYEES FIELD CONVERSION TO TYPE="NUMBER" COMPLETED**
   * **CRITICAL SUCCESS**: Converted numberOfEmployees field from Select dropdown to numeric input across all components
   * **SCHEMA UPDATES**: Updated shared/schema.ts with z.preprocess for number conversion and min(1) validation

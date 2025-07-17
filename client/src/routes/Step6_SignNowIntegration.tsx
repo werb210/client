@@ -298,56 +298,37 @@ export default function Step6SignNowIntegration() {
 
   // Legacy polling function - now replaced by React Query above
 
-  // ✅ USER REQUIREMENT: Simple setInterval polling for signing status
-  const [readyToFinalize, setReadyToFinalize] = useState(false);
+  // ✅ USER REQUIREMENT: Single status check on load instead of polling
+  const [isSigned, setIsSigned] = useState(false);
   
   useEffect(() => {
-    if (!applicationId || signingStatus !== 'ready') {
-      return;
-    }
-
-    console.log('🚀 Starting 5-second polling for signing status...');
-    
-    const pollInterval = setInterval(() => {
-      fetch(`/api/public/application/${applicationId}/signing-status`)
-        .then(res => res.json())
-        .then(status => {
-          console.log('📡 Polling signing status:', status);
-          if (status === "signed") {
-            console.log('🎉 Document signed! Ready to finalize.');
-            setReadyToFinalize(true);
-            clearInterval(pollInterval);
-            
-            // Show success toast and redirect to Step 7
-            toast({
-              title: "Document Signed Successfully!",
-              description: "Proceeding to final application submission.",
-              variant: "default"
-            });
-            
-            setTimeout(() => {
-              setLocation('/apply/step-7');
-            }, 1500);
-          }
-        })
-        .catch(error => {
-          console.warn('Polling error:', error);
-        });
-    }, 5000);
-
-    // Cleanup interval on unmount
-    return () => {
-      console.log('🛑 Cleaning up polling interval');
-      clearInterval(pollInterval);
+    const checkSignedStatus = async () => {
+      if (!applicationId) return;
+      
+      try {
+        const res = await fetch(`/api/public/application/${applicationId}/signing-status`);
+        const status = await res.json();
+        console.log('👀 Status check on load:', status);
+        setIsSigned(status === "signed");
+      } catch (error) {
+        console.warn('Status check error:', error);
+        setIsSigned(false);
+      }
     };
-  }, [applicationId, signingStatus, setLocation, toast]);
+    
+    checkSignedStatus();
+  }, [applicationId]);
 
-  // ✅ Show readyToFinalize status in UI
-  useEffect(() => {
-    if (readyToFinalize) {
-      console.log('✅ Application ready to finalize - user can proceed to Step 7');
-    }
-  }, [readyToFinalize]);
+  // ✅ Show continue button only when signed
+  const handleContinueToStep7 = () => {
+    console.log('🎉 Document signed! Continuing to Step 7...');
+    toast({
+      title: "Document Signed Successfully!",
+      description: "Proceeding to final application submission.",
+      variant: "default"
+    });
+    setLocation('/apply/step-7');
+  };
 
   // Manual override for development
   const handleManualOverride = async () => {
@@ -492,13 +473,21 @@ export default function Step6SignNowIntegration() {
                       Signing URL: {signUrl}
                     </div>
                     
-                    <div className="flex justify-center">
+                    <div className="flex justify-center space-x-4">
+                      {isSigned && (
+                        <Button 
+                          onClick={handleContinueToStep7}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          Continue to Final Step
+                        </Button>
+                      )}
                       <Button 
                         onClick={handleManualOverride}
                         variant="outline" 
                         className="border-orange-300 text-orange-700 hover:bg-orange-50"
                       >
-                        I've Signed the Document – Continue
+                        Continue Without Signing
                       </Button>
                     </div>
                   </div>
