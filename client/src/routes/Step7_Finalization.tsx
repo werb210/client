@@ -239,7 +239,7 @@ export default function Step7ConfirmAndSubmit() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <RuntimeAlertPanel currentStep={6} />
+
       <StepHeader 
         stepNumber={6}
         title="Final Review & Terms"
