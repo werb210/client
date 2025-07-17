@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import HelpCircleIcon from 'lucide-react/dist/esm/icons/circle-help';
-import XIcon from 'lucide-react/dist/esm/icons/x';
-import SendIcon from 'lucide-react/dist/esm/icons/send';
-import UserIcon from 'lucide-react/dist/esm/icons/user';
+// Using simple text icons for reliability
+const HelpIcon = () => <span className="text-blue-600">💬</span>;
+const CloseIcon = () => <span>✕</span>;
+const SendIcon = () => <span>→</span>;
+const UserIcon = () => <span className="text-white">👤</span>;
 import { cn } from '@/lib/utils';
 
 interface Message {
@@ -139,7 +140,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 z-50"
         size="icon"
       >
-        <HelpCircleIcon className="h-6 w-6" />
+        <HelpIcon />
       </Button>
     );
   }
@@ -148,7 +149,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     <Card className="fixed bottom-6 right-6 w-96 h-[500px] shadow-xl z-50 flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <HelpCircleIcon className="h-5 w-5 text-blue-600" />
+          <HelpIcon />
           Financing Assistant
         </CardTitle>
         <Button
@@ -157,7 +158,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
           onClick={onToggle}
           className="h-8 w-8"
         >
-          <XIcon className="h-4 w-4" />
+          <CloseIcon />
         </Button>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-3 p-3">
@@ -173,7 +174,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
               >
                 {message.role === 'assistant' && (
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                    <HelpCircleIcon className="h-3 w-3 text-blue-600" />
+                    <HelpIcon />
                   </div>
                 )}
                 <div
@@ -188,7 +189,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
                 </div>
                 {message.role === 'user' && (
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
-                    <UserIcon className="h-3 w-3 text-white" />
+                    <UserIcon />
                   </div>
                 )}
               </div>
@@ -196,7 +197,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
             {isLoading && (
               <div className="flex gap-2 justify-start">
                 <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                  <HelpCircleIcon className="h-3 w-3 text-blue-600" />
+                  <HelpIcon />
                 </div>
                 <div className="bg-gray-100 rounded-lg px-3 py-2 text-sm">
                   <div className="flex gap-1">
@@ -225,7 +226,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
             disabled={!inputValue.trim() || isLoading}
             size="icon"
           >
-            <SendIcon className="h-4 w-4" />
+            <SendIcon />
           </Button>
         </div>
       </CardContent>
