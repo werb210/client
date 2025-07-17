@@ -59,7 +59,7 @@ export default function Step5DocumentUpload() {
     isLoading: isVerifying,
     isVerifying: isManualVerifying,
     verifyDocuments,
-    canProceedToStep6,
+    canProceedToStep7,
     refetchDocuments
   } = useDocumentVerification(applicationId);
 
@@ -330,7 +330,7 @@ export default function Step5DocumentUpload() {
     }
 
     // Step 2: Local document check (fallback)
-    if (canProceedToStep6(uploadedFiles)) {
+    if (canProceedToStep7(uploadedFiles)) {
       logger.log(`✅ [STEP5] Local verification: ${uploadedFiles.length} documents uploaded, proceeding to Step 7`);
       
       dispatch({
@@ -370,110 +370,6 @@ export default function Step5DocumentUpload() {
     });
 
     setLocation('/apply/step-7');
-    return;
-
-    // Step 4: Files ready to upload (if needed)
-    if (files.length > 0) {
-      logger.log(`📁 [STEP5] ${files.length} files ready to upload, proceeding with upload...`);
-      // Continue with existing upload logic below
-    }
-
-    setIsUploading(true);
-    let uploadSuccess = true;
-
-    try {
-      // ✅ USER SPECIFICATION: Sequential document upload
-      for (let i = 0; i < files.length; i++) {
-        const doc = files[i];
-        
-        // Update progress
-        setUploadProgress(prev => ({
-          ...prev,
-          [doc.file.name]: 50
-        }));
-
-        const formData = new FormData();
-        formData.append("document", doc.file);
-        // Fix: Convert display name to backend enum
-        const documentType = doc.category === "Bank Statements" ? "bank_statements" : 
-                           doc.category === "Financial Statements" ? "financial_statements" :
-                           doc.category.toLowerCase().replace(/\s+/g, '_');
-        formData.append("documentType", documentType);
-
-        logger.log(`📁 [STEP5] Uploading file ${i + 1}/${files.length}:`, {
-          fileName: doc.file.name,
-          category: doc.category,
-          type: doc.type,
-          applicationId
-        });
-
-        try {
-          const response = await fetch(`/api/public/applications/${applicationId}/documents`, {
-            method: "POST",
-            body: formData,
-          });
-
-          if (response.ok) {
-            // Update progress to complete
-            setUploadProgress(prev => ({
-              ...prev,
-              [doc.file.name]: 100
-            }));
-            
-            logger.log(`✅ [STEP5] Upload successful: ${doc.file.name}`);
-          } else {
-            const errorText = await response.text();
-            logger.error(`❌ [STEP5] Upload failed: ${doc.file.name}`, errorText);
-            uploadSuccess = false;
-            break;
-          }
-        } catch (error) {
-          logger.error(`❌ [STEP5] Upload error: ${doc.file.name}`, error);
-          uploadSuccess = false;
-          break;
-        }
-      }
-
-      if (uploadSuccess) {
-        // Save uploaded files to context
-        dispatch({
-          type: 'UPDATE_FORM_DATA',
-          payload: {
-            uploadedDocuments: uploadedFiles,
-          }
-        });
-        
-        dispatch({
-          type: 'MARK_STEP_COMPLETE',
-          payload: 5
-        });
-
-        toast({
-          title: "Documents Uploaded Successfully",
-          description: `All ${files.length} documents uploaded successfully.`,
-          variant: "default",
-        });
-
-        // ✅ USER SPECIFICATION: Only proceed to Step 6 if all uploads succeed
-        setLocation('/apply/step-7');
-      } else {
-        toast({
-          title: "Upload Failed",
-          description: "Some documents failed to upload. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      logger.error('❌ [STEP5] Upload process failed:', error);
-      toast({
-        title: "Upload Error",
-        description: "An error occurred during document upload. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-      setUploadProgress({});
-    }
   };
 
   const handleSaveAndContinueLater = () => {
@@ -508,7 +404,7 @@ export default function Step5DocumentUpload() {
         });
       }
 
-      setLocation('/apply/step-6');
+      setLocation('/apply/step-7');
     } catch (error) {
       logger.error('Failed to bypass documents:', error);
       toast({
