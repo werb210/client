@@ -181,22 +181,36 @@ function UnifiedDocumentUploadCard({
         return;
       }
       
-      // ✅ USER SPECIFICATION: Use file collection callbacks instead of immediate upload
+      // Create upload entries and add them to uploadedFiles
+      const newUploadedFiles = files.map(file => ({
+        id: crypto.randomUUID(),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        file,
+        status: "completed" as const,
+        documentType: category
+      }));
+      
+      // Add to uploaded files immediately
+      onFilesUploaded([...uploadedFiles, ...newUploadedFiles]);
+      
+      // Also call onFileAdded for backward compatibility if provided
       if (onFileAdded) {
         files.forEach(file => {
           onFileAdded(file, category, doc.label);
         });
-        
-        toast({
-          title: "Files Added",
-          description: `${files.length} file(s) added to upload queue.`,
-          variant: "default",
-        });
-        
-        // Clear the input
-        e.target.value = '';
-        return;
       }
+      
+      toast({
+        title: "Files Added",
+        description: `${files.length} file(s) added successfully.`,
+        variant: "default",
+      });
+      
+      // Clear the input
+      e.target.value = '';
+      return;
       
       // Fallback to immediate upload for backward compatibility
       // Create upload entries with uploading status

@@ -347,7 +347,10 @@ export default function Step5DocumentUpload() {
       dispatch({
         type: 'UPDATE_FORM_DATA',
         payload: {
-          uploadedDocuments: uploadedFiles,
+          step5DocumentUpload: {
+            uploadedFiles: uploadedFiles,
+            completed: uploadedFiles.length > 0
+          }
         }
       });
       
@@ -387,7 +390,10 @@ export default function Step5DocumentUpload() {
     dispatch({
       type: 'UPDATE_FORM_DATA',
       payload: {
-        uploadedDocuments: uploadedFiles,
+        step5DocumentUpload: {
+          uploadedFiles: uploadedFiles,
+          completed: uploadedFiles.length > 0
+        }
       }
     });
     
