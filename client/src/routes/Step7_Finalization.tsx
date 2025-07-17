@@ -99,7 +99,7 @@ export default function Step7ConfirmAndSubmit() {
       logger.log('🏁 Step 6: Submitting application with POST /api/public/applications...');
       
       // Submit complete application - backend will create SignNow document and send email
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/applications`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
