@@ -85,30 +85,53 @@ export default function Step6ConfirmAndSubmit() {
       console.log("📤 Applicant Name:", `${state.step4?.firstName || ''} ${state.step4?.lastName || ''}`.trim() || 'NOT FOUND');
       console.log("📤 Document Count:", uploadedFiles.length);
 
-      // Prepare form data for submission
-      const fullFormData = {
-        step1: state.step1,
-        step3: state.step3,
-        step4: state.step4,
-        documents: uploadedFiles,
-        termsAccepted,
-        privacyAccepted,
-        submittedAt: new Date().toISOString()
-      };
+      // Get documents from localStorage
+      const uploadedDocuments = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
+      console.log("📤 Retrieved documents from localStorage:", uploadedDocuments.length);
+
+      // Prepare multipart FormData for submission with documents
+      const formData = new FormData();
+      
+      // Add application data as JSON strings
+      formData.append('step1', JSON.stringify(state.step1));
+      formData.append('step3', JSON.stringify(state.step3)); 
+      formData.append('step4', JSON.stringify(state.step4));
+      formData.append('termsAccepted', termsAccepted.toString());
+      formData.append('privacyAccepted', privacyAccepted.toString());
+      formData.append('submittedAt', new Date().toISOString());
+
+      // Convert base64 documents back to File objects and add to FormData
+      for (const doc of uploadedDocuments) {
+        try {
+          if (doc.content && doc.content.startsWith('data:')) {
+            const base64Data = doc.content.split(',')[1];
+            const binaryData = atob(base64Data);
+            const uint8Array = new Uint8Array(binaryData.length);
+            for (let i = 0; i < binaryData.length; i++) {
+              uint8Array[i] = binaryData.charCodeAt(i);
+            }
+            const file = new File([uint8Array], doc.name, { type: doc.type });
+            formData.append('documents', file);
+            console.log(`📎 Added document: ${doc.name} (${doc.type})`);
+          }
+        } catch (error) {
+          console.error(`❌ Failed to convert document: ${doc.name}`, error);
+        }
+      }
 
       // ✅ USER REQUIREMENT: Add console logging before submission
-      console.log("📤 Submitting form data:", fullFormData);
+      console.log("📤 Submitting FormData with", uploadedDocuments.length, "documents");
       
-      logger.log('🏁 Step 6: Submitting application with POST /api/public/applications...');
+      logger.log('🏁 Step 7: Submitting application with multipart FormData to POST /api/public/applications...');
       
-      // Submit complete application - backend will create SignNow document and send email
+      // Submit complete application with documents as multipart FormData
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+          // Note: Don't set Content-Type for FormData - browser sets it automatically with boundary
         },
-        body: JSON.stringify(fullFormData)
+        body: formData
       });
       
       console.log("📥 Application submission response status:", response.status, response.statusText);
@@ -128,6 +151,11 @@ export default function Step6ConfirmAndSubmit() {
       dispatch({
         type: 'MARK_COMPLETE'
       });
+
+      // Clear localStorage after successful submission
+      localStorage.removeItem('uploadedFiles');
+      localStorage.removeItem('tempApplicationId');
+      console.log("🧹 Cleared localStorage after successful submission");
       
       toast({
         title: "Application Submitted Successfully!",
