@@ -450,6 +450,43 @@ app.use((req, res, next) => {
     }
   });
 
+  // ✅ USER REQUIREMENT: Simple setInterval polling endpoint 
+  app.get('/api/public/application/:id/signing-status', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log(`📡 [SERVER] Simple polling for signing status - application ${id}`);
+      
+      const response = await fetch(`${cfg.staffApiUrl}/api/public/signnow/status/${id}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
+        }
+      });
+      
+      console.log(`📡 [SERVER] Staff backend signing status response: ${response.status} ${response.statusText}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`📡 [SERVER] Staff backend signing status:`, data);
+        
+        // Return just the status string as expected by client setInterval
+        const status = data.status || data.signing_status || 'invite_sent';
+        console.log(`📡 [SERVER] Returning status: "${status}"`);
+        res.json(status);
+      } else {
+        // Staff backend unavailable - return waiting status
+        console.log('⚠️ [SERVER] Staff backend signing status unavailable - returning "invite_sent"');
+        res.json('invite_sent');
+      }
+    } catch (error) {
+      console.error('❌ [SERVER] Signing status polling error:', error);
+      
+      // Return waiting status for offline mode
+      res.json('invite_sent');
+    }
+  });
+
   // SignNow signature status polling endpoint
   // Fixed SignNow polling endpoint as specified
   app.get('/api/public/signnow/status/:applicationId', async (req, res) => {

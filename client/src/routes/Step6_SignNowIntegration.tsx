@@ -298,140 +298,56 @@ export default function Step6SignNowIntegration() {
 
   // Legacy polling function - now replaced by React Query above
 
-  // React Query for SignNow status polling with improved redirect logic
-  const { data: signingData, error: signingError } = useQuery({
-    queryKey: ['signnowStatus', applicationId],
-    queryFn: async () => {
-      if (!applicationId) {
-        // ✅ FIXED: Don't throw error, return null to disable polling
-        logger.log('⚠️ No applicationId for polling - returning null');
-        return null;
-      }
-      
-      try {
-        const response = await fetch(`/api/public/signnow/status/${applicationId}`, {
-          method: 'GET'
-        });
-        
-        if (!response.ok) {
-          // ✅ FIXED: Handle HTTP errors gracefully without throwing
-          logger.warn(`SignNow status check failed: HTTP ${response.status}`);
-          return { status: 'error', error: `HTTP ${response.status}` };
-        }
-        
-        return await response.json();
-      } catch (fetchError) {
-        // ✅ FIXED: Catch and handle all fetch errors
-        logger.warn('SignNow status fetch error:', fetchError.message);
-        return { status: 'error', error: fetchError.message };
-      }
-    },
-    refetchInterval: (data, query) => {
-      // ✅ FIXED: Don't poll if no data or error response
-      if (!data || data.status === 'error') {
-        logger.log('🛑 Stopping polling - No valid data or error response');
-        return false;
-      }
-      
-      const currentStatus = data?.status || data?.signing_status;
-      console.log(`📡 Polling attempt ${retryCountRef.current + 1}/10 - Current status: ${currentStatus}`);
-      
-      // ✅ USER REQUIREMENT: Only stop polling when status === "signed" (not invite_sent)
-      if (currentStatus === 'signed') {
-        console.log("🛑 Stopping polling - Document signed!");
-        return false;
-      }
-      
-      // Continue polling for invite_sent - do NOT stop here
-      if (currentStatus === 'invite_sent') {
-        console.log("⏳ Document is invite_sent - continuing to poll until signed...");
-      }
-      
-      // ✅ USER REQUIREMENT: Stop after 10 failures max
-      if (currentStatus === 'failed' || retryCountRef.current >= 10) {
-        console.log(`🛑 Stopping polling - Status: ${currentStatus}, Retries: ${retryCountRef.current}/10`);
-        setTimeoutWarning('SignNow service not responding after 10 attempts. You can continue without signing.');
-        return false;
-      }
-      
-      retryCountRef.current++;
-      return 9000; // ✅ USER REQUIREMENT: Poll every 9 seconds
-    },
-    enabled: !!applicationId && signingStatus === 'ready',
-    retry: false,
-    onError: (error: any) => {
-      // ✅ FIXED: Handle all errors silently to prevent unhandled rejections
-      logger.warn("Polling error (handled):", error?.message || 'Unknown error');
-      retryCountRef.current++;
-      
-      if (retryCountRef.current >= 10) {
-        logger.warn('⏰ Max retries reached (10/10) - stopping polling');
-        setTimeoutWarning('SignNow service is not responding after 10 attempts. You can continue without signing.');
-        queryClient.cancelQueries(['signnowStatus']);
-      }
-    },
-    onSuccess: (data) => {
-      const currentStatus = data?.status || data?.signing_status;
-      console.log("📊 Polling response received:", data);
-      
-      // ✅ IMPROVED: Only redirect when status === "signed"
-      if (currentStatus === 'signed') {
-        console.log('🎉 Document signed! Redirecting to Step 7...');
-        logger.log('🎉 Document signed! Redirecting to Step 7...');
-        
-        toast({
-          title: "Document Signed Successfully!",
-          description: "Proceeding to final application submission.",
-          variant: "default"
-        });
-        
-        // Immediate redirect for signed status using router.push pattern
-        setLocation('/apply/step-7');
-      } else if (currentStatus === 'invite_sent') {
-        console.log("📤 Document is invite_sent - waiting for signature completion...");
-      } else {
-        console.log("⏳ Still waiting for signature. Current status:", currentStatus);
-      }
-    }
-  });
-
-  // ✅ IMPROVED: Iframe unload fallback detection
+  // ✅ USER REQUIREMENT: Simple setInterval polling for signing status
+  const [readyToFinalize, setReadyToFinalize] = useState(false);
+  
   useEffect(() => {
-    const handleIframeUnload = () => {
-      console.log("🔄 Iframe unloaded - checking signing status...");
-      
-      // Check current signing status when iframe unloads
-      if (applicationId) {
-        fetch(`/api/public/signnow/status/${applicationId}`)
-          .then(response => response.json())
-          .then(data => {
-            const currentStatus = data?.status || data?.signing_status;
-            console.log("📋 Status check after iframe unload:", currentStatus);
-            
-            if (currentStatus === 'signed') {
-              console.log("🎉 Document signed during iframe session! Auto-advancing...");
-              toast({
-                title: "Document Signed Successfully!",
-                description: "Proceeding to final application submission.",
-                variant: "default"
-              });
-              setLocation('/apply/step-7');
-            }
-          })
-          .catch(error => {
-            console.warn("Failed to check signing status after iframe unload:", error);
-          });
-      }
-    };
+    if (!applicationId || signingStatus !== 'ready') {
+      return;
+    }
 
-    // Add event listener for iframe unload detection
-    window.addEventListener('beforeunload', handleIframeUnload);
+    console.log('🚀 Starting 5-second polling for signing status...');
     
+    const pollInterval = setInterval(() => {
+      fetch(`/api/public/application/${applicationId}/signing-status`)
+        .then(res => res.json())
+        .then(status => {
+          console.log('📡 Polling signing status:', status);
+          if (status === "signed") {
+            console.log('🎉 Document signed! Ready to finalize.');
+            setReadyToFinalize(true);
+            clearInterval(pollInterval);
+            
+            // Show success toast and redirect to Step 7
+            toast({
+              title: "Document Signed Successfully!",
+              description: "Proceeding to final application submission.",
+              variant: "default"
+            });
+            
+            setTimeout(() => {
+              setLocation('/apply/step-7');
+            }, 1500);
+          }
+        })
+        .catch(error => {
+          console.warn('Polling error:', error);
+        });
+    }, 5000);
+
+    // Cleanup interval on unmount
     return () => {
-      window.removeEventListener('beforeunload', handleIframeUnload);
-      queryClient.cancelQueries(['signnowStatus']);
+      console.log('🛑 Cleaning up polling interval');
+      clearInterval(pollInterval);
     };
-  }, [queryClient, applicationId, setLocation, toast]);
+  }, [applicationId, signingStatus, setLocation, toast]);
+
+  // ✅ Show readyToFinalize status in UI
+  useEffect(() => {
+    if (readyToFinalize) {
+      console.log('✅ Application ready to finalize - user can proceed to Step 7');
+    }
+  }, [readyToFinalize]);
 
   // Manual override for development
   const handleManualOverride = async () => {
