@@ -316,13 +316,13 @@ export default function Step5DocumentUpload() {
           variant: "default",
         });
 
-        setLocation('/apply/step-7');
+        setLocation('/apply/step-6');
         return;
       }
     } catch (err: any) {
       if (err?.response?.status === 501) {
         console.warn('Skipping verification due to missing backend endpoint');
-        setLocation('/apply/step-7');
+        setLocation('/apply/step-6');
         return;
       } else {
         logger.warn('⚠️ [STEP5] Backend verification failed, checking local state:', err);
@@ -351,7 +351,7 @@ export default function Step5DocumentUpload() {
         variant: "default",
       });
 
-      setLocation('/apply/step-7');
+      setLocation('/apply/step-6');
       return;
     }
 
@@ -365,11 +365,11 @@ export default function Step5DocumentUpload() {
 
     toast({
       title: "Proceeding to Final Submission",
-      description: "Continuing to Step 7 for final submission.",
+      description: "Continuing to Step 6 for final submission.",
       variant: "default",
     });
 
-    setLocation('/apply/step-7');
+    setLocation('/apply/step-6');
   };
 
   const handleSaveAndContinueLater = () => {
@@ -404,7 +404,7 @@ export default function Step5DocumentUpload() {
         });
       }
 
-      setLocation('/apply/step-7');
+      setLocation('/apply/step-6');
     } catch (error) {
       logger.error('Failed to bypass documents:', error);
       toast({

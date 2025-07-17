@@ -10,6 +10,7 @@ import Step4ApplicantInfoComplete from "@/routes/Step4_ApplicantInfo_Complete";
 
 import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
 
+import Step6Finalization from "@/routes/Step6_Finalization";
 import Step7Finalization from "@/routes/Step7_Finalization";
 
 // Core Pages (Authentication removed)
@@ -165,7 +166,8 @@ export function MainLayout() {
       <Route path="/apply/step-4" component={Step4ApplicantInfoComplete} />
       <Route path="/step5-document-upload" component={Step5DocumentUpload} />
       <Route path="/apply/step-5" component={Step5DocumentUpload} />
-      {/* Step 6 REMOVED - Email-based signing workflow now */}
+      <Route path="/step6-finalization" component={Step6Finalization} />
+      <Route path="/apply/step-6" component={Step6Finalization} />
       <Route path="/step7-submit" component={Step7Finalization} />
       <Route path="/apply/step-7" component={Step7Finalization} />
       
