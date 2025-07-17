@@ -80,7 +80,6 @@ type FormDataAction =
   | { type: 'UPDATE_STEP4'; payload: Partial<ApplicationForm> }
   | { type: 'UPDATE_STEP5'; payload: Partial<DocumentUploadData> }
   | { type: 'SET_APPLICATION_ID'; payload: string }
-  | { type: 'SET_APPLICATION_DATA'; payload: { step1: any; step3: any; step4: any } }
   | { type: 'ADD_FILE'; payload: { file: File; type: string; category: string } }
   | { type: 'REMOVE_FILE'; payload: string }
   | { type: 'CLEAR_FILES' }
@@ -88,10 +87,10 @@ type FormDataAction =
   | { type: 'UPDATE_STEP6_SIGNATURE'; payload: Partial<FormDataState['step6Signature']> }
   | { type: 'UPDATE_STEP4_SUBMISSION'; payload: Partial<ApplicationForm> }
   | { type: 'SET_CURRENT_STEP'; payload: number }
+  | { type: 'SET_APPLICATION_ID'; payload: string }
   | { type: 'SET_SIGNING_URL'; payload: string }
   | { type: 'MARK_STEP_COMPLETE'; payload: number }
   | { type: 'MARK_COMPLETE' }
-  | { type: 'COMPLETE_STEP'; payload: { step: string; data: any } }
   | { type: 'LOAD_FROM_STORAGE'; payload: FormDataState };
 
 const initialState: FormDataState = {
@@ -200,18 +199,6 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
       return {
         ...state,
         applicationId: action.payload,
-      };
-    case 'SET_APPLICATION_DATA':
-      return {
-        ...state,
-        step1: action.payload.step1,
-        step3: action.payload.step3,
-        step4: action.payload.step4,
-      };
-    case 'COMPLETE_STEP':
-      return {
-        ...state,
-        [`${action.payload.step}Completed`]: true,
       };
     case 'ADD_FILE':
       return {

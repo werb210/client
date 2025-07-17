@@ -43,62 +43,63 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // NEW WORKFLOW: Store files locally for Step 7 submission
-  const storeFileLocally = (file: File, fileId: string) => {
-    // Update progress
-    setUploadingFiles(prev => 
-      prev.map(f => f.id === fileId ? { ...f, progress: 50 } : f)
-    );
+  const uploadMutation = useMutation({
+    mutationFn: async ({ file, fileId }: { file: File; fileId: string }) => {
+      // Update progress
+      setUploadingFiles(prev => 
+        prev.map(f => f.id === fileId ? { ...f, progress: 50 } : f)
+      );
 
-    // Convert file to base64 for local storage
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      
-      // Store in localStorage for Step 7 submission
-      const storedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
-      const newFile = {
-        id: fileId,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        documentType: 'general',
-        base64: base64,
-        status: 'completed' as const
-      };
-      
-      storedFiles.push(newFile);
-      localStorage.setItem('uploadedFiles', JSON.stringify(storedFiles));
-      
-      // Update progress to completed
+      // Upload actual file using public endpoint (no Authorization required)
+      const result = await api.uploadDocumentPublic(applicationId.toString(), file, 'general').catch(error => {
+        logger.error('[DOCUMENT_UPLOAD] Upload failed:', error);
+        throw error;
+      });
+      return { ...result, fileId };
+    },
+    onSuccess: (data, { fileId }) => {
       setUploadingFiles(prev => 
         prev.map(f => f.id === fileId ? { ...f, progress: 100, status: 'completed' } : f)
       );
       
+      queryClient.invalidateQueries({ queryKey: [`/api/applications/${applicationId}/documents`] });
+      
       toast({
-        title: "Document prepared",
-        description: `${file.name} is ready for submission.`,
+        title: "Document uploaded",
+        description: "Your document has been uploaded successfully.",
       });
 
       // Remove completed upload after 2 seconds
       setTimeout(() => {
         setUploadingFiles(prev => prev.filter(f => f.id !== fileId));
       }, 2000);
-    };
-    
-    reader.onerror = () => {
+    },
+    onError: (error, { fileId }) => {
       setUploadingFiles(prev => 
         prev.map(f => f.id === fileId ? { 
           ...f, 
           status: 'error', 
-          error: 'Failed to prepare file' 
+          error: error.message 
         } : f)
       );
       
-    };
-    
-    reader.readAsDataURL(file);
-  };
+      // Handle network and server errors gracefully
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        toast({
+          title: "Connection Error",
+          description: "Please check your internet connection and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     acceptedFiles.forEach(file => {
@@ -122,10 +123,10 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
         status: 'uploading',
       }]);
 
-      // NEW WORKFLOW: Store file locally for Step 7 submission
-      storeFileLocally(file, fileId);
+      // Start upload
+      uploadMutation.mutate({ file, fileId });
     });
-  }, [toast]);
+  }, [applicationId, toast, uploadMutation]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

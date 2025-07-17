@@ -6,7 +6,7 @@ import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
 import Step2RecommendationsRoute from "@/routes/Step2_Recommendations";
 // NEW: Separated Step 3 & 4 Route Components (July 3, 2025)
 import Step3BusinessDetailsComplete from "@/routes/Step3_BusinessDetails_Complete";
-import { Step4ApplicantInfoLocal } from "@/routes/Step4_ApplicantInfo_Local";
+import Step4ApplicantInfoComplete from "@/routes/Step4_ApplicantInfo_Complete";
 
 import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
 
@@ -73,7 +73,6 @@ import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
 
 import BackendRequestTest from "@/pages/BackendRequestTest";
-import SingleSubmissionWorkflowTest from "@/test/SingleSubmissionWorkflowTest";
 import ValidationTestPage from "@/pages/ValidationTestPage";
 import InitialCacheSetup from "@/pages/InitialCacheSetup";
 import CacheManagement from "@/pages/CacheManagement";
@@ -141,7 +140,6 @@ export function MainLayout() {
       <Route path="/equipment-financing-fix-test" component={EquipmentFinancingFixTest} />
 
       <Route path="/backend-request-test" component={BackendRequestTest} />
-      <Route path="/single-submission-test" component={SingleSubmissionWorkflowTest} />
       <Route path="/validation-test" component={ValidationTestPage} />
       <Route path="/cache-management" component={CacheManagement} />
       <Route path="/uuid-test" component={UUIDTestPage} />
@@ -163,8 +161,8 @@ export function MainLayout() {
       <Route path="/apply/step-2" component={Step2RecommendationsRoute} />
       <Route path="/step3-business-details" component={Step3BusinessDetailsComplete} />
       <Route path="/apply/step-3" component={Step3BusinessDetailsComplete} />
-      <Route path="/step4-applicant-details" component={Step4ApplicantInfoLocal} />
-      <Route path="/apply/step-4" component={Step4ApplicantInfoLocal} />
+      <Route path="/step4-applicant-details" component={Step4ApplicantInfoComplete} />
+      <Route path="/apply/step-4" component={Step4ApplicantInfoComplete} />
       <Route path="/step5-document-upload" component={Step5DocumentUpload} />
       <Route path="/apply/step-5" component={Step5DocumentUpload} />
       <Route path="/step6-finalization" component={Step6Finalization} />

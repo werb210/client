@@ -21,21 +21,21 @@ import Send from 'lucide-react/dist/esm/icons/send';
 import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
 import FileText from 'lucide-react/dist/esm/icons/file-text';
 import Shield from 'lucide-react/dist/esm/icons/shield';
-
+import Clock from 'lucide-react/dist/esm/icons/clock';
 import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
 import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 import ExternalLink from 'lucide-react/dist/esm/icons/external-link';
-
+import Mail from 'lucide-react/dist/esm/icons/mail';
 
 type SubmissionStatus = 'idle' | 'submitting' | 'submitted' | 'error';
 
 /**
- * Step 6: Confirm and Submit Application (Final Submission)
- * WORKFLOW:
+ * Step 6: Confirm and Submit Application (Email-Based Signing)
+ * NEW WORKFLOW:
  * 1. Display terms and conditions
  * 2. On submit: POST /api/public/applications with full form data and documents
- * 3. Show simple confirmation message to user
- * 4. Manual follow-up process handled by staff
+ * 3. Backend creates SignNow document and sends email invite
+ * 4. Show email confirmation message to user
  */
 export default function Step6ConfirmAndSubmit() {
   const { state, dispatch } = useFormData();
@@ -85,53 +85,30 @@ export default function Step6ConfirmAndSubmit() {
       console.log("📤 Applicant Name:", `${state.step4?.firstName || ''} ${state.step4?.lastName || ''}`.trim() || 'NOT FOUND');
       console.log("📤 Document Count:", uploadedFiles.length);
 
-      // Get documents from localStorage
-      const uploadedDocuments = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
-      console.log("📤 Retrieved documents from localStorage:", uploadedDocuments.length);
-
-      // Prepare multipart FormData for submission with documents
-      const formData = new FormData();
-      
-      // Add application data as JSON strings
-      formData.append('step1', JSON.stringify(state.step1));
-      formData.append('step3', JSON.stringify(state.step3)); 
-      formData.append('step4', JSON.stringify(state.step4));
-      formData.append('termsAccepted', termsAccepted.toString());
-      formData.append('privacyAccepted', privacyAccepted.toString());
-      formData.append('submittedAt', new Date().toISOString());
-
-      // Convert base64 documents back to File objects and add to FormData
-      for (const doc of uploadedDocuments) {
-        try {
-          if (doc.content && doc.content.startsWith('data:')) {
-            const base64Data = doc.content.split(',')[1];
-            const binaryData = atob(base64Data);
-            const uint8Array = new Uint8Array(binaryData.length);
-            for (let i = 0; i < binaryData.length; i++) {
-              uint8Array[i] = binaryData.charCodeAt(i);
-            }
-            const file = new File([uint8Array], doc.name, { type: doc.type });
-            formData.append('documents', file);
-            console.log(`📎 Added document: ${doc.name} (${doc.type})`);
-          }
-        } catch (error) {
-          console.error(`❌ Failed to convert document: ${doc.name}`, error);
-        }
-      }
+      // Prepare form data for submission
+      const fullFormData = {
+        step1: state.step1,
+        step3: state.step3,
+        step4: state.step4,
+        documents: uploadedFiles,
+        termsAccepted,
+        privacyAccepted,
+        submittedAt: new Date().toISOString()
+      };
 
       // ✅ USER REQUIREMENT: Add console logging before submission
-      console.log("📤 Submitting FormData with", uploadedDocuments.length, "documents");
+      console.log("📤 Submitting form data:", fullFormData);
       
-      logger.log('🏁 Step 7: Submitting application with multipart FormData to POST /api/public/applications...');
+      logger.log('🏁 Step 6: Submitting application with POST /api/public/applications...');
       
-      // Submit complete application with documents as multipart FormData
+      // Submit complete application - backend will create SignNow document and send email
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/applications`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-          // Note: Don't set Content-Type for FormData - browser sets it automatically with boundary
         },
-        body: formData
+        body: JSON.stringify(fullFormData)
       });
       
       console.log("📥 Application submission response status:", response.status, response.statusText);
@@ -151,15 +128,10 @@ export default function Step6ConfirmAndSubmit() {
       dispatch({
         type: 'MARK_COMPLETE'
       });
-
-      // Clear localStorage after successful submission
-      localStorage.removeItem('uploadedFiles');
-      localStorage.removeItem('tempApplicationId');
-      console.log("🧹 Cleared localStorage after successful submission");
       
       toast({
         title: "Application Submitted Successfully!",
-        description: "Our team will review your application and reach out with next steps.",
+        description: "We've sent an email with your application for signature.",
       });
 
       logger.log('✅ Application submitted:', result);
@@ -183,7 +155,7 @@ export default function Step6ConfirmAndSubmit() {
 
   const canSubmit = termsAccepted && privacyAccepted && state.step1 && state.step3 && state.step4;
 
-  // Show simplified confirmation after successful submission
+  // Show email confirmation after successful submission
   if (submissionStatus === 'submitted') {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
@@ -196,23 +168,66 @@ export default function Step6ConfirmAndSubmit() {
             <CardTitle className="text-2xl text-green-800">You're almost done!</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
+            <div className="flex justify-center mb-4">
+              <Mail className="w-12 h-12 text-blue-600" />
+            </div>
             <p className="text-lg">
-              Thank you for submitting your application. Our team is currently reviewing your information and documents.
+              We've sent an email with your application for signature. Please check your inbox (and spam folder) for a message from <strong>noreply@boreal.financial</strong>.
             </p>
             <p className="text-gray-600">
-              We'll reach out shortly if we need anything else or to discuss next steps.
+              Once you sign the document, we'll begin processing your file.
             </p>
           </CardContent>
         </Card>
-        
+        {/* Next Steps */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-blue-600" />
+              What Happens Next?
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
+                <div>
+                  <p className="font-medium">Check Your Email</p>
+                  <p className="text-gray-600">Look for an email from noreply@boreal.financial with your signing link</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
+                <div>
+                  <p className="font-medium">Sign Electronically</p>
+                  <p className="text-gray-600">Click the link in the email to review and sign your application</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
+                <div>
+                  <p className="font-medium">Application Processing</p>
+                  <p className="text-gray-600">Once signed, we'll begin matching you with suitable lenders</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-2 h-2 rounded-full bg-blue-600 mt-2"></div>
+                <div>
+                  <p className="font-medium">Lender Contact</p>
+                  <p className="text-gray-600">Qualified lenders may contact you directly with offers</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         {/* Contact Information */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Need Help?</CardTitle>
+            <CardTitle className="text-lg">Need Assistance?</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm">
-              <p>If you have questions about your application, feel free to reach out:</p>
+              <p>If you have any questions about your application:</p>
               <ul className="list-disc list-inside text-gray-600 space-y-1">
                 <li>Email: info@boreal.finance</li>
                 <li>Phone: 1-888-811-1887</li>
