@@ -73,6 +73,7 @@ import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
 
 import BackendRequestTest from "@/pages/BackendRequestTest";
+import WorkflowTestPage from "@/routes/WorkflowTestPage";
 import ValidationTestPage from "@/pages/ValidationTestPage";
 import InitialCacheSetup from "@/pages/InitialCacheSetup";
 import CacheManagement from "@/pages/CacheManagement";
@@ -184,7 +185,7 @@ export function MainLayout() {
       
       {/* Workflow Testing */}
       <Route path="/env-test" component={EnvTest} />
-
+      <Route path="/workflow-test-page" component={WorkflowTestPage} />
       <Route path="/step2-products-test" component={Step2ProductsAvailabilityTest} />
       <Route path="/workflow-test" component={WorkflowTest} />
       <Route path="/application-id-flow-test" component={ApplicationIdFlowTest} />
