@@ -130,29 +130,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
 
   return (
     <Card>
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">Document Upload Status</h3>
-            <div className="flex items-center space-x-2">
-              {isLoading && (
-                <div className="flex items-center space-x-2 text-sm text-gray-500">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <span>Verifying...</span>
-                </div>
-              )}
-              {onRefreshStatus && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onRefreshStatus}
-                  disabled={isLoading}
-                  className="text-xs h-6"
-                >
-                  Refresh
-                </Button>
-              )}
-            </div>
-          </div>
+          
 
           {/* Summary */}
           <div className="flex items-center space-x-4">
