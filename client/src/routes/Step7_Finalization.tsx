@@ -322,7 +322,7 @@ export default function Step6ConfirmAndSubmit() {
                 <CheckCircle className={`h-4 w-4 ${canSubmit ? 'text-green-600' : 'text-yellow-600'}`} />
                 <AlertDescription className={canSubmit ? 'text-green-800' : 'text-yellow-800'}>
                   {canSubmit 
-                    ? "Ready to submit your application. This will create a SignNow document and send you an email for signature."
+                    ? "Ready to submit your application. Our team will review your information and documents."
                     : "Please accept both terms and conditions to proceed with submission."}
                 </AlertDescription>
               </Alert>
@@ -343,7 +343,7 @@ export default function Step6ConfirmAndSubmit() {
             <div className="text-center space-y-4">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600" />
               <p className="text-gray-600">Submitting your application...</p>
-              <p className="text-sm text-gray-500">Creating SignNow document and sending email...</p>
+              <p className="text-sm text-gray-500">Processing your information and documents...</p>
             </div>
           )}
 
