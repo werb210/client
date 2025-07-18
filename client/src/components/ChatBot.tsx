@@ -360,12 +360,22 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
 
     try {
-      const products = getLenderProducts();
+      // Fetch lender products from cache or API
+      const { fetchLenderProducts } = await import('../api/lenderProducts');
+      const products = await fetchLenderProducts();
+      console.log(`🤖 [CHATBOT] Fetched ${products.length} lender products for AI context`);
+      
       const contextData = {
         currentStep,
         applicationData,
         products: products.slice(0, 10) // Limit for API efficiency
       };
+      
+      if (products.length > 0) {
+        console.log('🤖 [CHATBOT] Sample products for AI:', products.slice(0, 3).map(p => p.name || p.product || 'Unknown Product'));
+      } else {
+        console.warn('🤖 [CHATBOT] WARNING: No lender products available for AI context');
+      }
 
       const response = await fetch('/api/chat', {
         method: 'POST',
