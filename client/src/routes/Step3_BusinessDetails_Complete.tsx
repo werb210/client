@@ -156,6 +156,7 @@ export default function Step3BusinessDetailsComplete() {
     console.log("🔧   business_name (operatingName):", processedData.operatingName);
     console.log("🔧   business_phone:", processedData.businessPhone);
     console.log("🔧   business_province (businessState):", processedData.businessState);
+    console.log("🔧 Step 3 saved", processedData);
     
     // Update context with step3 object structure for validation
     dispatch({

@@ -203,40 +203,48 @@ export default function Step1FinancialProfile() {
     logger.log('✅ Step 1 - Form submitted successfully!');
     logger.log('Form Data:', data);
     
+    console.log("🔧 STEP 1 SAVE DEBUG:");
+    console.log("🔧 Step 1 saved", data);
+    
     try {
+      const step1Payload = {
+        businessLocation: data.businessLocation || 'US',
+        headquarters: data.headquarters || 'US',
+        headquartersState: data.headquartersState || '',
+        industry: data.industry || 'other',
+        lookingFor: data.lookingFor || 'capital',
+        fundingAmount: data.fundingAmount || 50000,
+        requestedAmount: data.fundingAmount || 50000, // Add for compatibility
+        fundsPurpose: data.fundsPurpose || 'working_capital',
+        salesHistory: data.salesHistory || '<1yr',
+        revenueLastYear: data.revenueLastYear || 0,
+        averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
+        accountsReceivableBalance: data.accountsReceivableBalance || 0,
+        fixedAssetsValue: data.fixedAssetsValue || 0,
+        equipmentValue: data.equipmentValue || 0,
+      };
+      
+      console.log("🔧 Dispatching to context:", step1Payload);
+      
       // Store data in step1 object structure for validation
       dispatch({
         type: 'UPDATE_STEP1',
-        payload: {
-          businessLocation: data.businessLocation || 'US',
-          headquarters: data.headquarters || 'US',
-          headquartersState: data.headquartersState || '',
-          industry: data.industry || 'other',
-          lookingFor: data.lookingFor || 'capital',
-          fundingAmount: data.fundingAmount || 50000,
-          fundsPurpose: data.fundsPurpose || 'working_capital',
-          salesHistory: data.salesHistory || '<1yr',
-          revenueLastYear: data.revenueLastYear || 0,
-          averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
-          accountsReceivableBalance: data.accountsReceivableBalance || 0,
-          fixedAssetsValue: data.fixedAssetsValue || 0,
-          equipmentValue: data.equipmentValue || 0,
-        },
+        payload: step1Payload,
+      });
+
+      dispatch({
+        type: 'MARK_STEP_COMPLETE',
+        payload: 1
       });
 
       logger.log('✅ Form data dispatched to context');
-
-      // Auto-save functionality with 2-second delay
-      setTimeout(() => {
-        logger.log('Auto-saving Step 1 data to localStorage');
-        localStorage.setItem('step1FormData', JSON.stringify(data));
-      }, 2000);
 
       // Navigate to Step 2
       logger.log('✅ Navigating to Step 2...');
       setLocation('/apply/step-2');
     } catch (error) {
       logger.error('❌ Error submitting form:', error);
+      console.error('🔧 Step 1 save error:', error);
     }
   };
 
