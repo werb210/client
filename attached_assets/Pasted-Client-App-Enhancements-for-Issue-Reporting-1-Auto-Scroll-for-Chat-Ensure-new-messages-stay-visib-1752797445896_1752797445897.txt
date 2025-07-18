@@ -1,0 +1,96 @@
+Client App – Enhancements for Issue Reporting
+1. Auto‑Scroll for Chat
+Ensure new messages stay visible:
+
+js
+Copy
+Edit
+function appendMessage(who, text) {
+  append(who, text);
+  const c = document.getElementById('chat');
+  const atBottom = c.scrollTop + c.clientHeight >= c.scrollHeight - 20;
+  if (atBottom) c.scrollTop = c.scrollHeight;
+}
+Use this in place of your current append function so messages scroll correctly.
+
+2. Floating "Report Issue" Button
+Make the button obvious and accessible:
+
+html
+Copy
+Edit
+<button id="reportBtn" title="Report an issue">🐞</button>
+Add to your CSS:
+
+css
+Copy
+Edit
+#reportBtn {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  background: #d32f2f;
+  color: white;
+  font-size: 28px;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  cursor: pointer;
+  z-index: 1001;
+}
+3. Capture Full-Page Screenshot
+Use html2canvas with a scroll fix:
+
+html
+Copy
+Edit
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+In your report function:
+
+js
+Copy
+Edit
+async function captureFullPage() {
+  window.scrollTo(0, 0);
+  const canvas = await html2canvas(document.body, { scrollY: -window.scrollY });
+  return new Promise(res => canvas.toBlob(res, 'image/png'));
+}
+
+async function submitReport() {
+  const issue = document.getElementById('reportText').value;
+  const conv = document.getElementById('chat').innerText;
+  const imgBlob = await captureFullPage();
+  const form = new FormData();
+  form.append('userId', currentUser.id);
+  form.append('text', issue);
+  form.append('conversation', conv);
+  form.append('screenshot', imgBlob, 'screenshot.png');
+
+  await fetch('/api/feedback', { method:'POST', body: form });
+  alert('Issue submitted with screenshot!');
+  // close modal…
+}
+This captures your full app viewport—while avoiding html2canvas clipping—by scrolling to top first 
+github.com
++6
+developer.mozilla.org
++6
+w3.org
++6
+zenrows.com
++9
+tohlesolutions.com
++9
+bennadel.com
++9
+developer.mozilla.org
++5
+bennadel.com
++5
+forum.ionicframework.com
++5
+stackoverflow.com
+.
+

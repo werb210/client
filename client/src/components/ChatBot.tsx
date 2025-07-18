@@ -34,24 +34,55 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
   const [reportText, setReportText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const captureScreenshot = async (): Promise<Blob | null> => {
+    try {
+      // Dynamically import html2canvas
+      const html2canvas = (await import('html2canvas')).default;
+      
+      // Scroll to top for full page capture
+      window.scrollTo(0, 0);
+      
+      const canvas = await html2canvas(document.body, { 
+        scrollY: -window.scrollY,
+        useCORS: true,
+        allowTaint: true,
+        scale: 0.5 // Reduce size for faster processing
+      });
+      
+      return new Promise(resolve => {
+        canvas.toBlob(resolve, 'image/png', 0.8);
+      });
+    } catch (error) {
+      console.error('Screenshot capture failed:', error);
+      return null;
+    }
+  };
+
   const submitReport = async () => {
     if (!reportText.trim()) return;
     
     setIsSubmitting(true);
     try {
+      const screenshot = await captureScreenshot();
+      
+      const formData = new FormData();
+      formData.append('text', reportText);
+      formData.append('conversation', conversation);
+      formData.append('timestamp', new Date().toISOString());
+      formData.append('userAgent', navigator.userAgent);
+      formData.append('url', window.location.href);
+      
+      if (screenshot) {
+        formData.append('screenshot', screenshot, 'screenshot.png');
+      }
+
       const response = await fetch('/api/feedback', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          text: reportText,
-          conversation: conversation,
-          timestamp: new Date().toISOString(),
-          userAgent: navigator.userAgent
-        })
+        body: formData // Use FormData instead of JSON for file upload
       });
 
       if (response.ok) {
-        alert('Issue reported. Thanks for your feedback!');
+        alert('Issue reported with screenshot. Thanks for your feedback!');
         setReportText('');
         onClose();
       } else {
@@ -90,7 +121,7 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
             />
           </div>
           <div className="text-xs text-gray-500">
-            Your conversation history will be included to help us understand the context.
+            Your conversation history and a screenshot will be included to help us understand the context.
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
@@ -99,8 +130,9 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
             <Button 
               onClick={submitReport} 
               disabled={!reportText.trim() || isSubmitting}
+              className="bg-red-600 hover:bg-red-700 text-white"
             >
-              {isSubmitting ? 'Sending...' : 'Send Report'}
+              {isSubmitting ? 'Capturing & Sending...' : 'Send Report with Screenshot'}
             </Button>
           </div>
         </CardContent>
@@ -125,7 +157,15 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      const chatContainer = messagesEndRef.current.parentElement;
+      if (chatContainer) {
+        const atBottom = chatContainer.scrollTop + chatContainer.clientHeight >= chatContainer.scrollHeight - 20;
+        if (atBottom || messages.length <= 2) { // Always scroll for first few messages
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
   };
 
   useEffect(() => {
@@ -247,10 +287,10 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
             variant="ghost"
             size="icon"
             onClick={() => setShowFeedbackModal(true)}
-            className="h-8 w-8"
+            className="h-8 w-8 hover:bg-red-100 hover:text-red-600 transition-colors"
             title="Report an Issue"
           >
-            🐛
+            🐞
           </Button>
           <Button
             variant="ghost"

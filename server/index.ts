@@ -798,10 +798,11 @@ app.use((req, res, next) => {
   // Mount chat routes for OpenAI chatbot
   app.use('/api', chatRouter);
   
-  // Feedback endpoint for issue reporting
-  app.post('/api/feedback', async (req, res) => {
+  // Feedback endpoint for issue reporting with screenshot support
+  app.post('/api/feedback', upload.single('screenshot'), async (req, res) => {
     try {
-      const { text, conversation, timestamp, userAgent } = req.body;
+      const { text, conversation, timestamp, userAgent, url } = req.body;
+      const screenshot = req.file;
 
       if (!text) {
         return res.status(400).json({ error: 'Feedback text is required' });
@@ -814,27 +815,39 @@ app.use((req, res, next) => {
         conversation: conversation || '',
         timestamp: timestamp || new Date().toISOString(),
         userAgent: userAgent || '',
-        url: req.headers.referer || '',
-        ip: req.ip || req.connection.remoteAddress
+        url: url || req.headers.referer || '',
+        ip: req.ip || req.connection.remoteAddress,
+        hasScreenshot: !!screenshot,
+        screenshotSize: screenshot ? screenshot.size : 0
       };
 
-      // Log feedback to console for now (in production, save to database or send to support system)
+      // Enhanced logging with screenshot info
       console.log('📝 USER FEEDBACK RECEIVED:');
       console.log('ID:', feedbackData.id);
       console.log('Text:', feedbackData.text);
       console.log('Timestamp:', feedbackData.timestamp);
       console.log('User Agent:', feedbackData.userAgent);
+      console.log('URL:', feedbackData.url);
       console.log('Conversation Length:', feedbackData.conversation.length, 'characters');
+      console.log('Screenshot:', screenshot ? `Yes (${Math.round(screenshot.size / 1024)}KB)` : 'No');
+      
+      if (screenshot) {
+        console.log('Screenshot Details:');
+        console.log('- Original Name:', screenshot.originalname);
+        console.log('- MIME Type:', screenshot.mimetype);
+        console.log('- Size:', screenshot.size, 'bytes');
+      }
       console.log('---');
 
       // TODO: In production, save to database or forward to support system
-      // await saveFeedbackToDatabase(feedbackData);
-      // await sendFeedbackEmail(feedbackData);
+      // await saveFeedbackToDatabase(feedbackData, screenshot);
+      // await sendFeedbackEmail(feedbackData, screenshot);
 
       res.json({ 
         success: true, 
-        message: 'Feedback received successfully',
-        id: feedbackData.id
+        message: screenshot ? 'Feedback received with screenshot' : 'Feedback received successfully',
+        id: feedbackData.id,
+        hasScreenshot: feedbackData.hasScreenshot
       });
 
     } catch (error) {
