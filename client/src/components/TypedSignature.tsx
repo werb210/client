@@ -38,7 +38,7 @@ export default function TypedSignature({
   isLoading = false 
 }: TypedSignatureProps) {
   const [typedName, setTypedName] = useState('');
-  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(true); // Auto-enable for better UX
   const [agreements, setAgreements] = useState({
     creditCheck: false,
     dataSharing: false,
@@ -95,14 +95,6 @@ export default function TypedSignature({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {!hasScrolledToBottom && (
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="flex items-center gap-2 text-amber-800">
-                <AlertCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">Please scroll to the bottom of the terms to continue</span>
-              </div>
-            </div>
-          )}
           <ScrollArea 
             className="h-96 w-full rounded border p-4"
             onScroll={handleScroll}
