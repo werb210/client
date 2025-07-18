@@ -71,7 +71,15 @@ export default function TypedSignature({
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const element = e.currentTarget;
     const isAtBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 10;
+    console.log('🔍 [SCROLL] Scroll event:', {
+      scrollHeight: element.scrollHeight,
+      scrollTop: element.scrollTop,
+      clientHeight: element.clientHeight,
+      isAtBottom,
+      hasScrolledToBottom
+    });
     if (isAtBottom && !hasScrolledToBottom) {
+      console.log('✅ [SCROLL] User has scrolled to bottom - enabling checkboxes');
       setHasScrolledToBottom(true);
     }
   };
@@ -87,6 +95,14 @@ export default function TypedSignature({
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {!hasScrolledToBottom && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center gap-2 text-amber-800">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Please scroll to the bottom of the terms to continue</span>
+              </div>
+            </div>
+          )}
           <ScrollArea 
             className="h-96 w-full rounded border p-4"
             onScroll={handleScroll}
