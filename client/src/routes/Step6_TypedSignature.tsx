@@ -24,7 +24,7 @@ export default function Step6_TypedSignature() {
   const { state, dispatch } = useFormDataContext();
   const [isLoading, setIsLoading] = useState(false);
 
-  const applicantName = `${state.step4?.firstName || ''} ${state.step4?.lastName || ''}`.trim();
+  const applicantName = `${state.step4?.applicantFirstName || ''} ${state.step4?.applicantLastName || ''}`.trim();
   const businessName = state.step3?.operatingName || state.step3?.legalName || 'Your Business';
 
   const handleAuthorization = async (authData: AuthorizationData) => {

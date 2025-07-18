@@ -65,6 +65,22 @@ export interface FormDataState extends Partial<ApplicationForm> {
     applicationId?: string;
   };
   
+  // Authorization data (typed signature)
+  step6Authorization?: {
+    typedName: string;
+    agreements: {
+      creditCheck: boolean;
+      dataSharing: boolean;
+      termsAccepted: boolean;
+      electronicSignature: boolean;
+      accurateInformation: boolean;
+    };
+    timestamp: string;
+    ipAddress?: string;
+    userAgent: string;
+    stepCompleted: boolean;
+  };
+  
   // Application flow state
   currentStep: number;
   isComplete: boolean;
