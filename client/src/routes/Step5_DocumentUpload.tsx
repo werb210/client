@@ -288,9 +288,9 @@ export default function Step5DocumentUpload() {
       const uploadedDocs = docsByType[normalizedType] || [];
       const successfulUploads = uploadedDocs.filter(doc => doc.status === 'completed');
       
-      // Determine required count (6 for bank statements, 3 for financial statements, 1 for others)
+      // Determine required count (6 for bank statements, 3 for accountant prepared financial statements, 1 for others)
       const requiredCount = reqDoc.toLowerCase().includes('bank') && reqDoc.toLowerCase().includes('statement') ? 6 :
-                           reqDoc.toLowerCase().includes('financial') && reqDoc.toLowerCase().includes('statement') ? 3 : 1;
+                           reqDoc.toLowerCase().includes('accountant') && reqDoc.toLowerCase().includes('financial') && reqDoc.toLowerCase().includes('statement') ? 3 : 1;
       
       const isComplete = successfulUploads.length >= requiredCount;
       

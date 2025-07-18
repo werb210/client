@@ -391,8 +391,7 @@ export function DynamicDocumentRequirements({
       }
       
       // Accountant Prepared Financial Statements require 3 documents
-      if (normalizedName.includes('accountant') && normalizedName.includes('financial') ||
-          normalizedName.includes('financial') && normalizedName.includes('statement')) {
+      if (normalizedName.includes('accountant') && normalizedName.includes('financial') && normalizedName.includes('statement')) {
         return 3;
       }
       
