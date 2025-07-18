@@ -239,9 +239,10 @@ function UnifiedDocumentUploadCard({
           console.log(`✅ [STEP5] Upload successful for ${file.name}:`, uploadResult);
         }
         
-        // Update status to completed
+        // ✅ CRITICAL FIX: Replace uploading files with completed files (not add to them)
         const completedFiles = uploadingFiles.map(f => ({ ...f, status: "completed" as const }));
-        onFilesUploaded([...uploadedFiles, ...completedFiles]);
+        const otherFiles = uploadedFiles.filter(f => !uploadingFiles.some(u => u.id === f.id));
+        onFilesUploaded([...otherFiles, ...completedFiles]);
         
         console.log(`✅ [STEP5] All ${files.length} files uploaded successfully to staff backend`);
         
@@ -253,9 +254,10 @@ function UnifiedDocumentUploadCard({
       } catch (error) {
         console.error('❌ [STEP5] Upload error:', error);
         
-        // Update status to error
+        // ✅ CRITICAL FIX: Replace uploading files with error files (not add to them)
         const errorFiles = uploadingFiles.map(f => ({ ...f, status: "error" as const }));
-        onFilesUploaded([...uploadedFiles, ...errorFiles]);
+        const otherFiles = uploadedFiles.filter(f => !uploadingFiles.some(u => u.id === f.id));
+        onFilesUploaded([...otherFiles, ...errorFiles]);
         
         toast({
           title: "Upload Failed",

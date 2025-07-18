@@ -27,15 +27,69 @@ const mockUploadedFiles = [
   },
   {
     id: '3',
+    name: 'bank_statement_mar.pdf',
+    size: 1024000,
+    type: 'application/pdf',
+    status: 'completed' as const,
+    documentType: 'bank_statements',
+    file: new File([''], 'bank_statement_mar.pdf', { type: 'application/pdf' })
+  },
+  {
+    id: '4',
+    name: 'bank_statement_apr.pdf',
+    size: 1024000,
+    type: 'application/pdf',
+    status: 'completed' as const,
+    documentType: 'bank_statements',
+    file: new File([''], 'bank_statement_apr.pdf', { type: 'application/pdf' })
+  },
+  {
+    id: '5',
+    name: 'bank_statement_may.pdf',
+    size: 1024000,
+    type: 'application/pdf',
+    status: 'completed' as const,
+    documentType: 'bank_statements',
+    file: new File([''], 'bank_statement_may.pdf', { type: 'application/pdf' })
+  },
+  {
+    id: '6',
+    name: 'bank_statement_jun.pdf',
+    size: 1024000,
+    type: 'application/pdf',
+    status: 'completed' as const,
+    documentType: 'bank_statements',
+    file: new File([''], 'bank_statement_jun.pdf', { type: 'application/pdf' })
+  },
+  {
+    id: '7',
     name: 'financial_statement_2024.pdf',
     size: 2048000,
     type: 'application/pdf',
     status: 'completed' as const,
-    documentType: 'financial_statements',
+    documentType: 'accountant_prepared_financial_statements',
     file: new File([''], 'financial_statement_2024.pdf', { type: 'application/pdf' })
   },
   {
-    id: '4',
+    id: '8',
+    name: 'financial_statement_2023.pdf',
+    size: 2048000,
+    type: 'application/pdf',
+    status: 'completed' as const,
+    documentType: 'accountant_prepared_financial_statements',
+    file: new File([''], 'financial_statement_2023.pdf', { type: 'application/pdf' })
+  },
+  {
+    id: '9',
+    name: 'financial_statement_2022.pdf',
+    size: 2048000,
+    type: 'application/pdf',
+    status: 'completed' as const,
+    documentType: 'accountant_prepared_financial_statements',
+    file: new File([''], 'financial_statement_2022.pdf', { type: 'application/pdf' })
+  },
+  {
+    id: '10',
     name: 'personal_financial_statement.pdf',
     size: 1536000,
     type: 'application/pdf',
@@ -44,13 +98,13 @@ const mockUploadedFiles = [
     file: new File([''], 'personal_financial_statement.pdf', { type: 'application/pdf' })
   },
   {
-    id: '5',
-    name: 'uploading_file.pdf',
+    id: '11',
+    name: 'tax_returns_2024.pdf',
     size: 1024000,
     type: 'application/pdf',
-    status: 'uploading' as const,
+    status: 'completed' as const,
     documentType: 'tax_returns',
-    file: new File([''], 'uploading_file.pdf', { type: 'application/pdf' })
+    file: new File([''], 'tax_returns_2024.pdf', { type: 'application/pdf' })
   }
 ];
 
