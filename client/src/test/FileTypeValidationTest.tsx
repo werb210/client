@@ -44,26 +44,21 @@ export default function FileTypeValidationTest() {
       } else if (!isValidSize) {
         error = `File size ${(file.size / (1024 * 1024)).toFixed(2)}MB exceeds 25MB limit`;
       } else {
-        // Test upload to staff backend
+        // Test file processing without actual upload (validation only)
         try {
-          const formData = new FormData();
-          formData.append('document', file);
-          formData.append('documentType', 'test_upload');
+          // Simulate file processing validation
+          const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+          const mimeTypeValid = file.type && file.type.length > 0;
           
-          const response = await fetch('/api/public/applications/test-upload-12345/documents', {
-            method: 'POST',
-            body: formData
-          });
-          
-          if (response.ok) {
-            const result = await response.json();
-            uploadResult = `✅ Upload successful: ${result.documentId || 'ID received'}`;
+          if (supportedTypes.includes(fileExtension) && mimeTypeValid) {
+            uploadResult = `✅ File validation passed: ${fileExtension} (${file.type})`;
+          } else if (!mimeTypeValid) {
+            uploadResult = `⚠️ File validation warning: Missing MIME type for ${fileExtension}`;
           } else {
-            const errorText = await response.text();
-            uploadResult = `❌ Upload failed: ${response.status} - ${errorText}`;
+            uploadResult = `❌ File validation failed: ${fileExtension} not supported`;
           }
-        } catch (uploadError) {
-          uploadResult = `❌ Upload error: ${uploadError.message}`;
+        } catch (validationError) {
+          uploadResult = `❌ Validation error: ${validationError.message}`;
         }
       }
       

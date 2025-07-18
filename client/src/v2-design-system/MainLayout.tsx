@@ -95,6 +95,7 @@ import FetchWindowDebugRoute from "@/pages/FetchWindowDebugRoute";
 import DocumentNormalizationTest from "@/pages/DocumentNormalizationTest";
 import E2ETestRunner from "@/pages/E2ETestRunner";
 import FileTypeValidationTest from "@/test/FileTypeValidationTest";
+import Step5CategoryTest from "@/test/Step5CategoryTest";
 
 
 /**
@@ -204,6 +205,7 @@ export function MainLayout() {
       <Route path="/critical-fixes-validation" component={CriticalFixesValidation} />
       <Route path="/e2e-test-runner" component={E2ETestRunner} />
       <Route path="/file-type-validation-test" component={FileTypeValidationTest} />
+      <Route path="/step5-category-test" component={Step5CategoryTest} />
       
       {/* Diagnostic Pages */}
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
