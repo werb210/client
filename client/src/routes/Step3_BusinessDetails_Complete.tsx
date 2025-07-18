@@ -216,8 +216,20 @@ export default function Step3BusinessDetailsComplete() {
       payload: 3
     });
 
+    // 🔧 Enhanced debugging for Step 3→4 state persistence
     logger.log('[STEP3] Data saved to step3 object for validation');
     logger.log('[STEP3] Payload structure - step3 block should be present:', { step3: processedData });
+    logger.log('🔧 Step 3 dispatch action:', { type: 'UPDATE_STEP3', payload: processedData });
+    logger.log('🔧 Step 3 saving to localStorage:', JSON.stringify(processedData));
+    
+    // 🔧 Verify state persistence
+    setTimeout(() => {
+      const stored = localStorage.getItem('formData') || localStorage.getItem('financialFormData');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        logger.log('🔧 Step 3 localStorage verification:', parsed.step3);
+      }
+    }, 100);
     
     // Navigate to Step 4
     setLocation('/apply/step-4');

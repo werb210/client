@@ -265,20 +265,48 @@ export default function Step4ApplicantInfoComplete() {
         selectedCategory: state.step2?.selectedCategory
       };
 
+      // 🔧 Fix validation logic - Replace reliance on state.step3 if it's not hydrated
+      const storedData = loadFromLocalStorage();
+      const businessFields = state.step3 || storedData?.step3 || {};
+      
+      // 🔧 Enhanced validation check for Step 3 data
+      if (!businessFields.operatingName || !businessFields.businessPhone || !businessFields.businessState) {
+        logger.log('❌ VALIDATION ERROR: Missing Business Info from Step 3');
+        logger.log('   - Operating Name:', businessFields.operatingName);
+        logger.log('   - Business Phone:', businessFields.businessPhone);
+        logger.log('   - Business State:', businessFields.businessState);
+        logger.log('   - Full Step 3 Data:', businessFields);
+        
+        // Try to reload from localStorage one more time
+        const freshData = loadFromLocalStorage();
+        if (freshData?.step3) {
+          logger.log('🔄 Retrying with fresh localStorage data:', freshData.step3);
+          dispatch({ type: 'SET_STEP3', payload: freshData.step3 });
+        } else {
+          toast({
+            title: "Missing Business Information",
+            description: "Please complete Step 3 business details before continuing.",
+            variant: "destructive",
+          });
+          setSubmitting(false);
+          return;
+        }
+      }
+
       const step3 = {
         // Business details from Step 3 - mapping correct field names
-        operatingName: state.step3?.operatingName,
-        legalName: state.step3?.legalName,
-        businessName: state.step3?.operatingName || state.step3?.legalName, // Map operatingName to businessName
-        businessAddress: state.step3?.businessStreetAddress, // Correct field name
-        businessCity: state.step3?.businessCity,
-        businessState: state.step3?.businessState,
-        businessZip: state.step3?.businessPostalCode, // Correct field name
-        businessPhone: state.step3?.businessPhone,
-        businessStructure: state.step3?.businessStructure,
-        businessStartDate: state.step3?.businessStartDate,
-        numberOfEmployees: state.step3?.employeeCount, // Correct field name
-        annualRevenue: state.step3?.estimatedYearlyRevenue // Correct field name
+        operatingName: businessFields.operatingName,
+        legalName: businessFields.legalName,
+        businessName: businessFields.operatingName || businessFields.legalName, // Map operatingName to businessName
+        businessAddress: businessFields.businessStreetAddress, // Correct field name
+        businessCity: businessFields.businessCity,
+        businessState: businessFields.businessState,
+        businessZip: businessFields.businessPostalCode, // Correct field name
+        businessPhone: businessFields.businessPhone,
+        businessStructure: businessFields.businessStructure,
+        businessStartDate: businessFields.businessStartDate,
+        numberOfEmployees: businessFields.employeeCount, // Correct field name
+        annualRevenue: businessFields.estimatedYearlyRevenue // Correct field name
       };
 
       const step4 = processedData;

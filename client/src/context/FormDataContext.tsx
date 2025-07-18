@@ -164,6 +164,17 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
         ...action.payload,
       };
     case 'UPDATE_STEP3':
+      console.log("🔧 Step 3 dispatched:", action.payload);
+      return {
+        ...state,
+        step3: {
+          ...state.step3,
+          ...action.payload,
+        },
+        ...action.payload, // Also store at root level for backward compatibility
+      };
+    case 'SET_STEP3':
+      console.log("🔧 Step 3 dispatched:", action.payload);
       return {
         ...state,
         step3: {
@@ -281,6 +292,7 @@ const FormDataContext = createContext<{
   dispatch: React.Dispatch<FormDataAction>;
   saveToStorage: () => void;
   loadFromStorage: () => void;
+  loadFromLocalStorage: () => any;
 } | null>(null);
 
 export function FormDataProvider({ children }: { children: ReactNode }) {
@@ -288,6 +300,27 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
   
   // 🔧 DEBUG: Context initialization
   console.log("🔧 FormDataProvider initialized with state:", state);
+
+  // 🔧 Add deep inspection to window.debugApplication()
+  useEffect(() => {
+    (window as any).debugApplication = () => {
+      const raw = localStorage.getItem("formData") || localStorage.getItem("financialFormData");
+      console.log("🧠 ApplicationFormData (raw):", raw);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          console.log("🧠 Parsed:", parsed);
+          console.log("🧠 Step 3 Data:", parsed.step3);
+          console.log("🧠 Step 4 Data:", parsed.step4);
+          return parsed;
+        } catch (error) {
+          console.error("🧠 Failed to parse:", error);
+          return null;
+        }
+      }
+      return null;
+    };
+  }, []);
 
   // Load from localStorage on initialization  
   useEffect(() => {
@@ -323,13 +356,27 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         console.log('🔧 Parsed localStorage data:', parsedData);
-        dispatch({ type: 'LOAD_FROM_STORAGE', payload: parsedData });
-        console.log('🔧 Form data loaded from localStorage');
-      } else {
-        console.log('🔧 No saved data found in localStorage');
+        return parsedData;
       }
+      return null;
     } catch (error) {
       console.error('Failed to load form data:', error);
+      return null;
+    }
+  };
+
+  const loadFromLocalStorage = () => {
+    try {
+      const savedData = localStorage.getItem('formData') || localStorage.getItem('financialFormData');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        console.log('🔧 Loaded data from localStorage:', parsedData);
+        return parsedData;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to load data from localStorage:', error);
+      return null;
     }
   };
 
@@ -347,7 +394,7 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
   }, [state]);
 
   return (
-    <FormDataContext.Provider value={{ state, dispatch, saveToStorage, loadFromStorage }}>
+    <FormDataContext.Provider value={{ state, dispatch, saveToStorage, loadFromStorage, loadFromLocalStorage }}>
       {children}
     </FormDataContext.Provider>
   );
