@@ -7,7 +7,7 @@ interface StepHeaderProps {
   totalSteps?: number;
 }
 
-export function StepHeader({ stepNumber, title, description, totalSteps = 7 }: StepHeaderProps) {
+export function StepHeader({ stepNumber, title, description, totalSteps = 6 }: StepHeaderProps) {
   const progressPercentage = (stepNumber / totalSteps) * 100;
   
   return (

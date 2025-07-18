@@ -73,13 +73,9 @@ export default function Step6_TypedSignature() {
         agreementsCount: Object.values(authData.agreements).filter(Boolean).length
       });
 
-      toast({
-        title: "Application Authorized",
-        description: `Thank you, ${authData.typedName}. Your electronic signature has been recorded.`,
-      });
+      // Submit the final application
+      await submitFinalApplication();
 
-      // Navigate to final step
-      setLocation('/apply/step-7');
     } catch (error) {
       console.error('❌ [STEP6] Authorization failed:', error);
       toast({
@@ -89,6 +85,59 @@ export default function Step6_TypedSignature() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const submitFinalApplication = async () => {
+    try {
+      const applicationId = state.applicationId || localStorage.getItem('applicationId');
+      
+      if (!applicationId) {
+        throw new Error('Application ID not found');
+      }
+
+      // Prepare the final application data
+      const finalApplicationData = {
+        step1: state.step1,
+        step3: state.step3,
+        step4: state.step4,
+        step6: state.step6,
+        applicationId
+      };
+
+      console.log('📤 [STEP6] Submitting final application:', finalApplicationData);
+
+      const response = await fetch(`/api/public/applications/${applicationId}/finalize`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(finalApplicationData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ [STEP6] Application submitted successfully:', result);
+
+      toast({
+        title: "Application Submitted Successfully!",
+        description: "Your financing application has been submitted for review. You'll receive updates via email.",
+      });
+
+      // Navigate to success page
+      setLocation('/application-success');
+
+    } catch (error) {
+      console.error('❌ [STEP6] Final submission failed:', error);
+      toast({
+        title: "Submission Error",
+        description: "There was an issue submitting your application. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
     }
   };
 
@@ -109,7 +158,7 @@ export default function Step6_TypedSignature() {
         <div className="max-w-2xl mx-auto">
           <StepHeader
             stepNumber={6}
-            totalSteps={7}
+            totalSteps={6}
             title="Application Authorization"
             description="Electronic signature required"
           />
@@ -135,7 +184,7 @@ export default function Step6_TypedSignature() {
       <div className="max-w-4xl mx-auto">
         <StepHeader
           stepNumber={6}
-          totalSteps={7}
+          totalSteps={6}
           title="Application Authorization"
           description="Review terms and provide your electronic signature"
         />
