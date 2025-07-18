@@ -267,6 +267,49 @@ export default function Step5DocumentUpload() {
     }
   }, [uploadedFiles, debouncedSave]);
 
+  // ✅ FIXED DOCUMENT VALIDATION: Proper validation logic for Continue button
+  const validateDocumentUploads = () => {
+    if (!intersectionResults.requiredDocuments || intersectionResults.requiredDocuments.length === 0) {
+      return true; // No requirements = can proceed
+    }
+    
+    // Group uploaded files by document type
+    const docsByType = uploadedFiles.reduce((acc, doc) => {
+      if (doc.status === 'completed' && doc.documentType) {
+        if (!acc[doc.documentType]) acc[doc.documentType] = [];
+        acc[doc.documentType].push(doc);
+      }
+      return acc;
+    }, {} as Record<string, typeof uploadedFiles>);
+    
+    // Check each required document type
+    const validationResults = intersectionResults.requiredDocuments.map(reqDoc => {
+      const normalizedType = reqDoc.toLowerCase().replace(/\s+/g, '_');
+      const uploadedDocs = docsByType[normalizedType] || [];
+      const successfulUploads = uploadedDocs.filter(doc => doc.status === 'completed');
+      
+      // Determine required count (6 for bank statements, 3 for financial statements, 1 for others)
+      const requiredCount = reqDoc.toLowerCase().includes('bank') && reqDoc.toLowerCase().includes('statement') ? 6 :
+                           reqDoc.toLowerCase().includes('financial') && reqDoc.toLowerCase().includes('statement') ? 3 : 1;
+      
+      const isComplete = successfulUploads.length >= requiredCount;
+      
+      console.log(`📊 Document validation "${reqDoc}": ${successfulUploads.length}/${requiredCount} (${isComplete ? 'COMPLETE' : 'INCOMPLETE'})`);
+      
+      return {
+        documentType: reqDoc,
+        required: requiredCount,
+        uploaded: successfulUploads.length,
+        complete: isComplete
+      };
+    });
+    
+    const allComplete = validationResults.every(result => result.complete);
+    console.log(`📋 Overall validation: ${allComplete ? 'COMPLETE' : 'INCOMPLETE'} (${validationResults.filter(r => r.complete).length}/${validationResults.length} document types)`);
+    
+    return allComplete;
+  };
+
   // Handle requirements completion status
   const handleRequirementsChange = (allComplete: boolean, total: number) => {
     logger.log(`📋 [STEP5] Requirements status update:`, {
@@ -287,7 +330,7 @@ export default function Step5DocumentUpload() {
     setLocation('/apply/step-4');
   };
 
-  // ✅ ENHANCED: Bulletproof navigation with backend verification
+  // ✅ FIXED: Proper Continue button validation for Step 5
   const handleNext = async () => {
     if (!applicationId) {
       toast({
@@ -298,15 +341,27 @@ export default function Step5DocumentUpload() {
       return;
     }
 
-    logger.log('🚀 [STEP5] Navigation attempt - checking conditions...');
+    logger.log('🚀 [STEP5] Navigation attempt - validating document uploads...');
 
-    // Step 1: Backend verification check
+    // ✅ STEP 1: Use proper validation logic
+    const isValidated = validateDocumentUploads();
+    
+    if (!isValidated) {
+      toast({
+        title: "Documents Required",
+        description: "Please upload all required documents before continuing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // ✅ STEP 2: Backend verification check (optional)
     try {
       logger.log('🔍 [STEP5] Performing backend document verification...');
       const backendVerification = await verifyDocuments();
       
       if (backendVerification.hasUploadedDocuments) {
-        logger.log(`✅ [STEP5] Backend confirmed ${backendVerification.documents.length} documents, proceeding to Step 7`);
+        logger.log(`✅ [STEP5] Backend confirmed ${backendVerification.documents.length} documents, proceeding to Step 6`);
         
         dispatch({
           type: 'UPDATE_FORM_DATA',
@@ -323,7 +378,7 @@ export default function Step5DocumentUpload() {
 
         toast({
           title: "Documents Verified",
-          description: `${backendVerification.documents.length} documents verified. Proceeding to final submission.`,
+          description: `${backendVerification.documents.length} documents verified. Proceeding to signature.`,
           variant: "default",
         });
 
@@ -333,44 +388,23 @@ export default function Step5DocumentUpload() {
     } catch (err: any) {
       if (err?.response?.status === 501) {
         console.warn('Skipping verification due to missing backend endpoint');
-        setLocation('/apply/step-6');
-        return;
       } else {
-        logger.warn('⚠️ [STEP5] Backend verification failed, checking local state:', err);
+        logger.warn('⚠️ [STEP5] Backend verification failed, using local validation:', err);
       }
     }
 
-    // Step 2: Local document check (fallback)
-    if (canProceedToStep7(uploadedFiles)) {
-      logger.log(`✅ [STEP5] Local verification: ${uploadedFiles.length} documents uploaded, proceeding to Step 7`);
-      
-      dispatch({
-        type: 'UPDATE_FORM_DATA',
-        payload: {
-          step5DocumentUpload: {
-            uploadedFiles: uploadedFiles,
-            completed: uploadedFiles.length > 0
-          }
+    // ✅ STEP 3: Use local validation results
+    logger.log(`✅ [STEP5] Document validation passed: ${uploadedFiles.filter(f => f.status === 'completed').length} completed documents`);
+    
+    dispatch({
+      type: 'UPDATE_FORM_DATA',
+      payload: {
+        step5DocumentUpload: {
+          uploadedFiles: uploadedFiles,
+          completed: true
         }
-      });
-      
-      dispatch({
-        type: 'MARK_STEP_COMPLETE',
-        payload: 5
-      });
-
-      toast({
-        title: "Documents Ready",
-        description: `${uploadedFiles.length} documents uploaded successfully. Proceeding to final submission.`,
-        variant: "default",
-      });
-
-      setLocation('/apply/step-6');
-      return;
-    }
-
-    // Step 3: Allow progression without documents for testing
-    logger.log(`🚀 [STEP5] No documents uploaded but allowing progression for testing`);
+      }
+    });
     
     dispatch({
       type: 'MARK_STEP_COMPLETE',
@@ -378,8 +412,8 @@ export default function Step5DocumentUpload() {
     });
 
     toast({
-      title: "Proceeding to Final Submission",
-      description: "Continuing to Step 6 for final submission.",
+      title: "Documents Ready",
+      description: `All required documents uploaded. Proceeding to signature.`,
       variant: "default",
     });
 
@@ -445,7 +479,7 @@ export default function Step5DocumentUpload() {
       <div className="flex justify-center items-center space-x-4">
         <Badge variant="outline" className="flex items-center space-x-1">
           <FileText className="w-3 h-3" />
-          <span>{uploadedFiles.length} Uploaded</span>
+          <span>{uploadedFiles.filter(f => f.status === 'completed').length} Uploaded</span>
         </Badge>
         {/* Only show Ready badge if there are files pending upload */}
         {files.length > 0 && (
@@ -628,8 +662,8 @@ export default function Step5DocumentUpload() {
 
         <Button
           onClick={handleNext}
-          disabled={isUploading || isManualVerifying}
-          className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+          disabled={isUploading || isManualVerifying || !validateDocumentUploads()}
+          className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
         >
           {isUploading ? (
             <>
