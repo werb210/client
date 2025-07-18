@@ -278,47 +278,11 @@ export default function Step4ApplicantInfoComplete() {
         return;
       }
 
-      // ✅ CORRECTED: SignNow field mapping using snake_case format expected by staff backend
-      const signNowFields = {
-        // Personal Information - CORRECTED FIELD NAMES
-        'first_name': step4.applicantFirstName,
-        'last_name': step4.applicantLastName,
-        'email': step4.applicantEmail,
-        'phone': step4.applicantPhone,
-        'date_of_birth': step4.applicantDateOfBirth,
-        'ssn': step4.applicantSSN,
-        'personal_address': step4.applicantAddress,
-        'personal_city': step4.applicantCity,
-        'personal_state': step4.applicantState,
-        'personal_zip': step4.applicantZipCode,
-        
-        // Business Information - CORRECTED FIELD NAMES
-        'business_name': step3.operatingName,
-        'legal_business_name': step3.legalName,
-        'business_address': step3.businessAddress,
-        'business_city': step3.businessCity,
-        'business_state': step3.businessState,
-        'business_zip': step3.businessZip,
-        'business_phone': step3.businessPhone,
-        'business_website': step3.businessWebsite,
-        
-        // Loan Information - CORRECTED FIELD NAMES
-        'amount_requested': step1.requestedAmount,
-        'purpose_of_funds': step1.use_of_funds,
-        'industry': step1.businessLocation,
-        
-        // Additional - CORRECTED FIELD NAMES
-        'ownership_percentage': step4.ownershipPercentage,
-        'credit_score': step4.creditScore,
-        'years_with_business': step4.yearsWithBusiness
-      };
-      
       // ✅ PAYLOAD LOGGING FOR DEBUGGING
       console.log("📤 Step 4 submission payload", {
         step1,
         step3,
-        step4,
-        signNowFields
+        step4
       });
       
       // ✅ USER REQUIREMENT: Add comprehensive application creation logging
@@ -328,29 +292,18 @@ export default function Step4ApplicantInfoComplete() {
       console.log("📤 Applicant Name:", `${step4?.applicantFirstName || step4?.firstName || ''} ${step4?.applicantLastName || step4?.lastName || ''}`.trim() || 'NOT FOUND');
       console.log("📤 Applicant Email:", step4?.applicantEmail || step4?.personalEmail || 'NOT FOUND');
       
-      // ✅ SignNow Field Verification Report
-      console.log("🖊️ =================================");
-      console.log("🖊️ SIGNNOW FIELDS VERIFICATION");
-      console.log("🖊️ =================================");
-      console.log("🖊️ Total SignNow Fields:", Object.keys(signNowFields).length);
+      // ✅ Application Data Verification Report
+      console.log("📋 =================================");
+      console.log("📋 APPLICATION DATA VERIFICATION");
+      console.log("📋 =================================");
       
-      const missingSignNowFields = Object.entries(signNowFields).filter(([key, value]) => !value || value === '');
-      if (missingSignNowFields.length > 0) {
-        console.log("⚠️ MISSING SIGNNOW FIELDS:");
-        missingSignNowFields.forEach(([key, value]) => {
-          console.log(`❌ ${key}: "${value}"`);
-        });
-      } else {
-        console.log("✅ All SignNow fields populated");
-      }
-      
-      console.log("🖊️ Key SignNow Fields Preview:");
-      console.log(`✅ first_name: "${signNowFields['first_name']}"`);
-      console.log(`✅ business_name: "${signNowFields['business_name']}"`);
-      console.log(`✅ amount_requested: "${signNowFields['amount_requested']}"`);
-      console.log(`✅ email: "${signNowFields['email']}"`);
-      console.log(`✅ business_phone: "${signNowFields['business_phone']}"`);
-      console.log("🖊️ =================================");
+      console.log("📋 Key Application Fields Preview:");
+      console.log(`✅ first_name: "${step4?.applicantFirstName}"`);
+      console.log(`✅ business_name: "${step3?.businessName || step3?.legalName}"`);
+      console.log(`✅ amount_requested: "${step1?.requestedAmount}"`);
+      console.log(`✅ email: "${step4?.applicantEmail}"`);
+      console.log(`✅ business_phone: "${step3?.businessPhone}"`);
+      console.log("📋 =================================");
 
       const applicationData = { 
         step1, 
@@ -361,8 +314,7 @@ export default function Step4ApplicantInfoComplete() {
         step4: {
           ...step4,
           email: step4.applicantEmail || processedData.applicantEmail // ✅ Add required email field
-        },
-        signNowFields: signNowFields
+        }
       };
       
       // ✅ ENHANCED PAYLOAD VERIFICATION - Report back what payload was sent
@@ -627,10 +579,14 @@ export default function Step4ApplicantInfoComplete() {
       }
     } catch (error) {
       logger.error('❌ Step 4 Failed: Error creating application:', error);
-      logger.error('❌ This means SignNow will not work - application must be created successfully');
+      logger.error('❌ Application creation failed - cannot proceed to document upload');
       
-      // Show user the actual error instead of generating fallback
-      alert(`❌ Application creation failed: ${error.message}\n\nPlease check the form data and try again. SignNow requires a valid application ID.`);
+      // Show user-friendly error using toast instead of alert
+      toast({
+        title: "Application Creation Failed",
+        description: "Please check your form data and try again. If the problem continues, please contact support.",
+        variant: "destructive",
+      });
       return; // Don't proceed to Step 5 if application creation fails
     } finally {
       setSubmitting(false);
