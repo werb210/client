@@ -50,8 +50,12 @@ function sendMessage(text) {
 window.requestHuman = requestHuman;
 window.sendMessage = sendMessage;
 
-// Helper function to append messages (placeholder)
+// Helper function to append messages - integrated with React chatbot
 function appendMessage(role, message) {
   console.log(`[${role}] ${message}`);
-  // This would be implemented based on your chat UI
+  
+  // Try to integrate with React chatbot if available
+  if (window.ChatBotInstance && window.ChatBotInstance.addMessage) {
+    window.ChatBotInstance.addMessage(role, message);
+  }
 }

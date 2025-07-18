@@ -156,6 +156,8 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   const [currentLanguage, setCurrentLanguage] = useState('en');
   const [sentiment, setSentiment] = useState<string>('neutral');
   const [proactiveShown, setProactiveShown] = useState(false);
+  const [socket, setSocket] = useState<any>(null);
+  const [isConnected, setIsConnected] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const proactiveTimeoutRef = useRef<NodeJS.Timeout>();
@@ -181,6 +183,55 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  // Socket.IO integration for real-time messaging
+  useEffect(() => {
+    if (isOpen && typeof window !== 'undefined' && (window as any).io) {
+      console.log('🔌 Initializing Socket.IO connection for real-time chat');
+      const socketInstance = (window as any).io();
+      setSocket(socketInstance);
+
+      // Join the session
+      socketInstance.emit('join-session', sessionId);
+      console.log('🔗 Joined Socket.IO session:', sessionId);
+
+      // Connection status
+      socketInstance.on('connect', () => {
+        console.log('✅ Socket.IO connected');
+        setIsConnected(true);
+      });
+
+      socketInstance.on('disconnect', () => {
+        console.log('❌ Socket.IO disconnected');
+        setIsConnected(false);
+      });
+
+      // Listen for real-time messages
+      socketInstance.on('new-message', (msg: any) => {
+        console.log('📨 Received real-time message:', msg);
+        const message: Message = {
+          id: Date.now().toString(),
+          role: msg.role || 'assistant',
+          content: msg.message || msg.content,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, message]);
+      });
+
+      // Staff handoff notifications
+      socketInstance.on('staff-assigned', (data: any) => {
+        console.log('👩‍💼 Staff assigned:', data);
+        addBotMessage(`Great! A human specialist (${data.staffName}) has joined the chat to assist you.`);
+      });
+
+      return () => {
+        console.log('🔌 Cleaning up Socket.IO connection');
+        socketInstance.disconnect();
+        setSocket(null);
+        setIsConnected(false);
+      };
+    }
+  }, [isOpen, sessionId]);
 
   // Enhanced proactive messaging setup
   useEffect(() => {
@@ -332,6 +383,20 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     setInputValue('');
     setIsLoading(true);
 
+    // Send via Socket.IO for real-time messaging
+    if (socket && isConnected) {
+      console.log('📤 Sending message via Socket.IO:', messageText);
+      socket.emit('user-message', { 
+        sessionId, 
+        message: messageText,
+        context: {
+          currentStep,
+          applicationData,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+
     // Clear proactive timeout since user is engaging
     if (proactiveTimeoutRef.current) {
       clearTimeout(proactiveTimeoutRef.current);
@@ -360,6 +425,17 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
 
     try {
+      // If Socket.IO is connected, the message was already sent via Socket.IO
+      // We'll wait for the response via the 'new-message' event
+      if (socket && isConnected) {
+        console.log('✅ Message sent via Socket.IO, waiting for real-time response...');
+        setIsLoading(false);
+        return;
+      }
+
+      // Fallback to HTTP API when Socket.IO is not available
+      console.log('📡 Using HTTP fallback for chat API');
+      
       // Fetch lender products from cache or API
       const { fetchLenderProducts } = await import('../api/lenderProducts');
       const products = await fetchLenderProducts();
@@ -514,6 +590,12 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         <div className="flex items-center gap-2">
           <HelpIcon />
           <span className="font-medium">FinBot</span>
+          {isConnected && (
+            <span className="text-xs bg-green-500 px-2 py-0.5 rounded-full">Live</span>
+          )}
+          {!isConnected && socket && (
+            <span className="text-xs bg-yellow-500 px-2 py-0.5 rounded-full">Connecting...</span>
+          )}
         </div>
         <button
           onClick={onToggle}
@@ -608,13 +690,38 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
           <span>Need help?</span>
           <div className="flex gap-2">
             <button
-              onClick={() => {
+              onClick={async () => {
                 addBotMessage('Connecting you to a human agent. Please hold while we find someone to assist you...');
-                // Use Socket.IO to request human assistance
-                if (typeof window !== 'undefined' && (window as any).requestHuman) {
-                  (window as any).requestHuman();
-                } else {
-                  console.log('Socket.IO human request function not available');
+                
+                try {
+                  // Request human assistance via both Socket.IO and HTTP
+                  if (socket && isConnected) {
+                    console.log('📞 Requesting human assistance via Socket.IO');
+                    socket.emit('request-human', { 
+                      sessionId,
+                      userInfo: {
+                        currentStep,
+                        applicationData,
+                        conversationHistory: messages.slice(-10) // Last 10 messages for context
+                      }
+                    });
+                  }
+
+                  // Also make HTTP request as fallback
+                  await fetch('/api/chat/request-staff', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                      sessionId,
+                      userName: applicationData?.firstName || 'Customer',
+                      context: { currentStep, applicationData }
+                    })
+                  });
+                  
+                  console.log('✅ Human assistance request sent successfully');
+                } catch (error) {
+                  console.error('❌ Failed to request human assistance:', error);
+                  addBotMessage('Sorry, we had trouble connecting you to a human agent. Please try the Report Issue button or call us directly at 1-888-811-1887.');
                 }
               }}
               className="px-3 py-1.5 rounded border-none cursor-pointer transition-colors duration-200 text-white text-xs"
