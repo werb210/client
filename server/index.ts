@@ -520,14 +520,22 @@ app.use((req, res, next) => {
       
       if (!response.ok) {
         const errorData = await response.text();
-        console.error('❌ [SERVER] Staff backend finalization error:', errorData);
+        console.error('❌ [SERVER] Staff backend finalization error:', {
+          status: response.status,
+          statusText: response.statusText,
+          applicationId: id,
+          errorData: errorData.substring(0, 500) // Log first 500 chars
+        });
         
-        // NO FALLBACK - Return error status
-        res.status(503).json({
+        // Return appropriate error status
+        res.status(response.status >= 400 && response.status < 500 ? response.status : 503).json({
           status: 'error',
-          error: 'Application finalization unavailable',
-          message: 'Application finalization service is temporarily unavailable. Please try again later.',
-          applicationId: id
+          error: 'Application finalization failed',
+          message: response.status === 503 
+            ? 'Application finalization service is temporarily unavailable. Please try again later.'
+            : `Application finalization failed: ${response.statusText}`,
+          applicationId: id,
+          originalStatus: response.status
         });
         return;
       }

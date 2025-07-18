@@ -88,7 +88,9 @@ export default function Step6_TypedSignature() {
     }
   };
 
-  const submitFinalApplication = async () => {
+  const submitFinalApplication = async (retryCount = 0) => {
+    const maxRetries = 2;
+    
     try {
       const applicationId = state.applicationId || localStorage.getItem('applicationId');
       
@@ -105,7 +107,7 @@ export default function Step6_TypedSignature() {
         applicationId
       };
 
-      console.log('📤 [STEP6] Submitting final application:', finalApplicationData);
+      console.log(`📤 [STEP6] Submitting final application (attempt ${retryCount + 1}):`, finalApplicationData);
 
       const response = await fetch(`/api/public/applications/${applicationId}/finalize`, {
         method: 'PATCH',
@@ -116,7 +118,28 @@ export default function Step6_TypedSignature() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ [STEP6] Finalization API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          attempt: retryCount + 1
+        });
+        
+        // Retry on 503 errors if we haven't exceeded max retries
+        if (response.status === 503 && retryCount < maxRetries) {
+          console.log(`🔄 [STEP6] Retrying submission in 3 seconds... (${retryCount + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          return submitFinalApplication(retryCount + 1);
+        }
+        
+        if (response.status === 503) {
+          throw new Error('The application submission service is temporarily unavailable. Your application data has been saved and you can try submitting again later.');
+        } else if (response.status >= 500) {
+          throw new Error('Server error occurred during submission. Please try again.');
+        } else {
+          throw new Error(`Submission failed: ${response.statusText}`);
+        }
       }
 
       const result = await response.json();
@@ -132,9 +155,12 @@ export default function Step6_TypedSignature() {
 
     } catch (error) {
       console.error('❌ [STEP6] Final submission failed:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : "There was an issue submitting your application. Please try again.";
+      
       toast({
         title: "Submission Error",
-        description: "There was an issue submitting your application. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
       throw error;
