@@ -797,6 +797,54 @@ app.use((req, res, next) => {
   
   // Mount chat routes for OpenAI chatbot
   app.use('/api', chatRouter);
+  
+  // Feedback endpoint for issue reporting
+  app.post('/api/feedback', async (req, res) => {
+    try {
+      const { text, conversation, timestamp, userAgent } = req.body;
+
+      if (!text) {
+        return res.status(400).json({ error: 'Feedback text is required' });
+      }
+
+      // Create feedback report data
+      const feedbackData = {
+        id: Date.now().toString(),
+        text: text.trim(),
+        conversation: conversation || '',
+        timestamp: timestamp || new Date().toISOString(),
+        userAgent: userAgent || '',
+        url: req.headers.referer || '',
+        ip: req.ip || req.connection.remoteAddress
+      };
+
+      // Log feedback to console for now (in production, save to database or send to support system)
+      console.log('📝 USER FEEDBACK RECEIVED:');
+      console.log('ID:', feedbackData.id);
+      console.log('Text:', feedbackData.text);
+      console.log('Timestamp:', feedbackData.timestamp);
+      console.log('User Agent:', feedbackData.userAgent);
+      console.log('Conversation Length:', feedbackData.conversation.length, 'characters');
+      console.log('---');
+
+      // TODO: In production, save to database or forward to support system
+      // await saveFeedbackToDatabase(feedbackData);
+      // await sendFeedbackEmail(feedbackData);
+
+      res.json({ 
+        success: true, 
+        message: 'Feedback received successfully',
+        id: feedbackData.id
+      });
+
+    } catch (error) {
+      console.error('Feedback error:', error);
+      res.status(500).json({ 
+        error: 'Failed to submit feedback',
+        message: 'Please try again or contact support directly'
+      });
+    }
+  });
 
   // Remove duplicate - moved above catch-all handler
 

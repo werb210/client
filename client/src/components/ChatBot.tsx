@@ -24,6 +24,91 @@ interface ChatBotProps {
   applicationData?: any;
 }
 
+interface FeedbackModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  conversation: string;
+}
+
+function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
+  const [reportText, setReportText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const submitReport = async () => {
+    if (!reportText.trim()) return;
+    
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text: reportText,
+          conversation: conversation,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent
+        })
+      });
+
+      if (response.ok) {
+        alert('Issue reported. Thanks for your feedback!');
+        setReportText('');
+        onClose();
+      } else {
+        alert('Failed to submit report. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      alert('Failed to submit report. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            Report an Issue
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <CloseIcon />
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Describe the issue:</label>
+            <textarea
+              value={reportText}
+              onChange={(e) => setReportText(e.target.value)}
+              placeholder="Please describe what went wrong or what you were expecting..."
+              className="w-full h-24 mt-1 p-2 border rounded-md resize-none"
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="text-xs text-gray-500">
+            Your conversation history will be included to help us understand the context.
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={submitReport} 
+              disabled={!reportText.trim() || isSubmitting}
+            >
+              {isSubmitting ? 'Sending...' : 'Send Report'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: ChatBotProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -35,6 +120,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -126,6 +212,10 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
   };
 
+  const getConversationText = () => {
+    return messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -152,14 +242,25 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
           <HelpIcon />
           Financing Assistant
         </CardTitle>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggle}
-          className="h-8 w-8"
-        >
-          <CloseIcon />
-        </Button>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowFeedbackModal(true)}
+            className="h-8 w-8"
+            title="Report an Issue"
+          >
+            🐛
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggle}
+            className="h-8 w-8"
+          >
+            <CloseIcon />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-3 p-3">
         <ScrollArea className="flex-1 pr-3">
@@ -230,6 +331,11 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
           </Button>
         </div>
       </CardContent>
+      <FeedbackModal 
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        conversation={getConversationText()}
+      />
     </Card>
   );
 }
