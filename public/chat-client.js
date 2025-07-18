@@ -18,11 +18,19 @@ document.addEventListener('DOMContentLoaded', function() {
 // When user requests human
 async function requestHuman() {
   try {
+    console.log('Requesting human assistance via Socket.IO...');
     await fetch('/api/chat/request-staff', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ sessionId })
     });
+    
+    // Also emit via socket for real-time notification
+    if (socket) {
+      socket.emit('request-human', { sessionId });
+    }
+    
+    console.log('Human assistance request sent');
   } catch (error) {
     console.error('Failed to request human assistance:', error);
   }
@@ -37,6 +45,10 @@ function sendMessage(text) {
     console.error('Socket not initialized');
   }
 }
+
+// Make functions available globally
+window.requestHuman = requestHuman;
+window.sendMessage = sendMessage;
 
 // Helper function to append messages (placeholder)
 function appendMessage(role, message) {

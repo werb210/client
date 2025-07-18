@@ -599,7 +599,12 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
             <button
               onClick={() => {
                 addBotMessage('Connecting you to a human agent. Please hold while we find someone to assist you...');
-                setShowFeedbackModal(true);
+                // Use Socket.IO to request human assistance
+                if (typeof window !== 'undefined' && (window as any).requestHuman) {
+                  (window as any).requestHuman();
+                } else {
+                  console.log('Socket.IO human request function not available');
+                }
               }}
               className="px-3 py-1.5 rounded border-none cursor-pointer transition-colors duration-200 text-white text-xs"
               style={{
