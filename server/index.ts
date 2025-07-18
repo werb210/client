@@ -499,8 +499,10 @@ app.use((req, res, next) => {
     try {
       const { id } = req.params;
       console.log(`🏁 [SERVER] Step 7: Finalizing application ${id}`);
+      const finalUrl = `${cfg.staffApiUrl}/api/public/applications/${id}/finalize`;
+      console.log(`🧪 [SERVER] Exact finalization URL: ${finalUrl}`);
       
-      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${id}/finalize`, {
+      const response = await fetch(finalUrl, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
