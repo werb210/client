@@ -6,6 +6,8 @@ const CloseIcon = () => <span>✕</span>;
 const SendIcon = () => <span>→</span>;
 const UserIcon = () => <span className="text-white">👤</span>;
 import { cn } from '@/lib/utils';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface Message {
   id: string;

@@ -145,6 +145,14 @@ export default function Step4ApplicantInfoComplete() {
   const watchedValues = form.watch();
   const hasPartner = form.watch("hasPartner");
   const ownershipPercentage = form.watch("ownershipPercentage");
+  
+  // 🔧 DEBUG: Partner checkbox state tracking
+  useEffect(() => {
+    console.log("🔧 PARTNER CHECKBOX CHANGE:");
+    console.log("🔧   hasPartner form value:", hasPartner);
+    console.log("🔧   state.step4?.hasPartner:", state.step4?.hasPartner);
+    console.log("🔧   Form checkbox working:", hasPartner !== state.step4?.hasPartner ? "YES - form updating" : "consistent with saved state");
+  }, [hasPartner]);
 
   // Auto-save with 2-second delay - using step-based structure like Steps 1 and 3
   const debouncedSave = useDebouncedCallback((data: Step4FormData) => {
