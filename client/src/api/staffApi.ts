@@ -4,13 +4,20 @@ const STAFF_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://app.boreal.f
 
 // ✅ Required Fields Validation Configuration
 const REQUIRED_FIELDS = {
-  step1: ["requestedAmount", "use_of_funds"],
+  step1: ["requestedAmount", "use_of_funds", "businessName", "businessPhone", "businessState"], // Added missing business fields
   step3: ["operatingName", "legalName", "businessPhone", "businessState"], // Updated to match Step 3 form
   step4: ["applicantFirstName", "applicantLastName", "applicantEmail", "applicantPhone", "ownershipPercentage", "applicantDateOfBirth"] // SSN/SIN is optional as requested
 } as const;
 
 // Field mapping for alternative field names
 const FIELD_ALIASES = {
+  step1: {
+    requestedAmount: ["fundingAmount"],
+    use_of_funds: ["fundsPurpose"],
+    businessName: ["legalBusinessName"],
+    businessPhone: ["phone"],
+    businessState: ["state"]
+  },
   step3: {
     operatingName: ["businessName"],
     legalName: ["businessLegalName"],
