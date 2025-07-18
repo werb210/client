@@ -24,8 +24,34 @@ export default function Step6_TypedSignature() {
   const { state, dispatch } = useFormDataContext();
   const [isLoading, setIsLoading] = useState(false);
 
-  const applicantName = `${state.step4?.applicantFirstName || ''} ${state.step4?.applicantLastName || ''}`.trim();
-  const businessName = state.step3?.operatingName || state.step3?.legalName || 'Your Business';
+  // Try multiple field name patterns and locations
+  const applicantName = (
+    // First try step4 with new field names
+    `${state.step4?.applicantFirstName || ''} ${state.step4?.applicantLastName || ''}`.trim() ||
+    // Then try step4 with legacy field names
+    `${state.step4?.firstName || ''} ${state.step4?.lastName || ''}`.trim() ||
+    // Then try root level with new field names
+    `${(state as any).applicantFirstName || ''} ${(state as any).applicantLastName || ''}`.trim() ||
+    // Finally try root level with legacy field names
+    `${(state as any).firstName || ''} ${(state as any).lastName || ''}`.trim()
+  );
+  
+  const businessName = state.step3?.operatingName || state.step3?.legalName || (state as any).operatingName || (state as any).legalName || 'Your Business';
+
+  // Debug logging to check what's in state
+  console.log('🔍 [STEP6] Debug state check:', {
+    'state.step4': state.step4,
+    'step4.applicantFirstName': state.step4?.applicantFirstName,
+    'step4.applicantLastName': state.step4?.applicantLastName,
+    'step4.firstName': state.step4?.firstName,
+    'step4.lastName': state.step4?.lastName,
+    'root.applicantFirstName': (state as any).applicantFirstName,
+    'root.applicantLastName': (state as any).applicantLastName,
+    'root.firstName': (state as any).firstName,
+    'root.lastName': (state as any).lastName,
+    'applicantName': applicantName,
+    'businessName': businessName
+  });
 
   const handleAuthorization = async (authData: AuthorizationData) => {
     setIsLoading(true);
