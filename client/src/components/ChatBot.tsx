@@ -268,13 +268,13 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       <button
         id="chatLauncher"
         onClick={onToggle}
-        className="fixed bottom-20 right-5 text-white rounded-full px-5 py-3 flex items-center gap-2 shadow-lg cursor-pointer z-[1000] transition-colors duration-200"
+        className="fixed bottom-5 right-5 text-white rounded-full px-5 py-3 flex items-center gap-2 shadow-lg cursor-pointer z-[1000] transition-colors duration-200"
         style={{
           background: '#007A3D',
           fontSize: '16px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
         }}
-        onMouseEnter={(e) => e.currentTarget.style.background = '#006633'}
+        onMouseEnter={(e) => e.currentTarget.style.background = '#005D2E'}
         onMouseLeave={(e) => e.currentTarget.style.background = '#007A3D'}
       >
         <HelpIcon />
@@ -377,6 +377,28 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
           >
             <SendIcon />
           </Button>
+        </div>
+        
+        {/* Integrated Chat Footer with Report Option */}
+        <div 
+          className="chat-footer border-t text-white py-3 px-4 text-sm text-center"
+          style={{
+            background: '#005D2E',
+            borderTop: '1px solid rgba(255,255,255,0.2)'
+          }}
+        >
+          Do you have an issue?
+          <button
+            onClick={() => setShowFeedbackModal(true)}
+            className="ml-3 px-3 py-1.5 rounded border-none cursor-pointer transition-colors duration-200 text-white"
+            style={{
+              background: 'rgba(255,255,255,0.15)'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+          >
+            Report it
+          </button>
         </div>
       </CardContent>
       <FeedbackModal 
