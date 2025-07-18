@@ -14,8 +14,8 @@ import Step3BusinessDetailsComplete from "@/routes/Step3_BusinessDetails_Complet
 import Step4ApplicantInfoComplete from "@/routes/Step4_ApplicantInfo_Complete";
 
 import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
-
-import Step6Finalization from "@/routes/Step7_Finalization";
+import Step6TypedSignature from "@/routes/Step6_TypedSignature";
+import Step7Finalization from "@/routes/Step7_Finalization";
 
 // Core Pages (Authentication removed)
 import LandingPage from "@/pages/LandingPage";
@@ -175,8 +175,10 @@ export function MainLayout() {
       <Route path="/apply/step-4" component={Step4ApplicantInfoComplete} />
       <Route path="/step5-document-upload" component={Step5DocumentUpload} />
       <Route path="/apply/step-5" component={Step5DocumentUpload} />
-      <Route path="/step6-finalization" component={Step6Finalization} />
-      <Route path="/apply/step-6" component={Step6Finalization} />
+      <Route path="/step6-typed-signature" component={Step6TypedSignature} />
+      <Route path="/apply/step-6" component={Step6TypedSignature} />
+      <Route path="/step7-finalization" component={Step7Finalization} />
+      <Route path="/apply/step-7" component={Step7Finalization} />
       
       {/* Dashboard */}
       <Route path="/dashboard" component={SimpleDashboard} />

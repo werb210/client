@@ -85,6 +85,7 @@ type FormDataAction =
   | { type: 'CLEAR_FILES' }
   | { type: 'UPDATE_STEP6'; payload: Partial<FormDataState['step6Signature']> }
   | { type: 'UPDATE_STEP6_SIGNATURE'; payload: Partial<FormDataState['step6Signature']> }
+  | { type: 'UPDATE_STEP6_AUTHORIZATION'; payload: any }
   | { type: 'UPDATE_STEP4_SUBMISSION'; payload: Partial<ApplicationForm> }
   | { type: 'SET_CURRENT_STEP'; payload: number }
   | { type: 'SET_APPLICATION_ID'; payload: string }
@@ -119,7 +120,10 @@ const initialState: FormDataState = {
   },
   
   // Signature data
-  step6Signature: {}
+  step6Signature: {},
+  
+  // Authorization data for typed signature
+  step6Authorization: {}
 };
 
 function formDataReducer(state: FormDataState, action: FormDataAction): FormDataState {
@@ -184,6 +188,12 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
           ...state.step6Signature,
           ...action.payload,
         } as FormDataState['step6Signature'],
+      };
+    case 'UPDATE_STEP6_AUTHORIZATION':
+      return {
+        ...state,
+        step6Authorization: action.payload,
+        step6Completed: true,
       };
     case 'UPDATE_STEP4_SUBMISSION':
       return {

@@ -129,6 +129,18 @@ app.use((req, res, next) => {
     });
   });
 
+  // Client IP endpoint for authorization tracking
+  app.get('/api/client-ip', (req, res) => {
+    const forwarded = req.headers['x-forwarded-for'] as string;
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 
+               req.headers['x-real-ip'] || 
+               req.connection.remoteAddress || 
+               req.socket.remoteAddress || 
+               'Unknown';
+    
+    res.json({ ip: ip });
+  });
+
   // API Proxy to Staff Backend - Enhanced logging
   app.get('/api/public/lenders', async (req, res) => {
     try {
