@@ -93,18 +93,22 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
-- **July 18, 2025: 📱 MOBILE FULLSCREEN CHATBOT IMPLEMENTATION COMPLETED - PHONE-SPECIFIC AUTOMATIC FULLSCREEN**
-  * **CRITICAL SUCCESS**: Implemented automatic fullscreen chatbot display specifically for mobile phones (≤600px width)
+- **July 18, 2025: 📱 KEYBOARD-AWARE MOBILE FULLSCREEN CHATBOT IMPLEMENTATION COMPLETED - ADAPTIVE PHONE OPTIMIZATION**
+  * **CRITICAL SUCCESS**: Implemented comprehensive keyboard-aware mobile fullscreen chatbot with automatic viewport adjustment
   * **RESPONSIVE DETECTION**: Added CSS media query detection with `window.matchMedia('(max-width: 600px)')` for precise mobile phone targeting
-  * **FULLSCREEN TOGGLE**: Dynamic CSS class application with `fullscreen-mobile` class for complete viewport coverage
+  * **KEYBOARD AWARENESS**: Integrated VirtualKeyboard API and Visual Viewport API for dynamic height adjustment when mobile keyboard appears
+  * **VIEWPORT META TAG**: Added `interactive-widget=resizes-content` to enable browser content resizing when keyboard opens
+  * **CSS VARIABLES**: Implemented `--device-height` and `--keyboard-height` CSS variables for real-time layout adjustment
+  * **FULLSCREEN LAYOUT**: Dynamic CSS class application with `fullscreen-mobile` class using `calc(var(--device-height) - var(--keyboard-height))`
   * **BODY SCROLL PREVENTION**: Added `chatbot-fullscreen` body class to prevent background scrolling during mobile chat sessions
   * **SAFE AREA SUPPORT**: Implemented CSS safe area insets for proper display on devices with notches or home indicators
-  * **REAL-TIME DETECTION**: Added resize event listeners for dynamic detection during orientation changes
+  * **FLEXIBLE CONTAINER STRUCTURE**: Enhanced chat layout with proper flex containers for messages, input, and footer sections
+  * **REAL-TIME DETECTION**: Added resize and visualViewport event listeners for dynamic detection during orientation and keyboard changes
+  * **CROSS-BROWSER SUPPORT**: Fallback mechanisms for browsers without VirtualKeyboard API using Visual Viewport API
   * **SOCKET.IO INTEGRATION**: Enhanced real-time messaging with connection status indicators and live human assistance requests
   * **TABLET/DESKTOP PRESERVED**: Maintained standard widget behavior for tablets and desktop devices (>600px width)
-  * **CSS CUSTOMIZATION**: Added comprehensive mobile-specific styling in index.css with proper z-index and viewport handling
-  * **TEST SUITE CREATED**: Built test-mobile-fullscreen.js for comprehensive validation of mobile fullscreen functionality
-  * **PRODUCTION READY**: Complete mobile-first chatbot experience operational with automatic phone detection and fullscreen activation
+  * **COMPREHENSIVE TEST SUITE**: Enhanced test-mobile-fullscreen.js with keyboard awareness validation functions
+  * **PRODUCTION READY**: Complete adaptive mobile chatbot experience with automatic keyboard avoidance and fullscreen optimization
 
 - **July 18, 2025: 📋 COMPLETE 22 DOCUMENT TYPES INTEGRATION IMPLEMENTED - STAFF APPLICATION VERIFIED**
   * **CRITICAL SUCCESS**: Implemented complete 22 document types system verified by staff application

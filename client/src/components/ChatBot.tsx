@@ -185,7 +185,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
   }, [isOpen]);
 
-  // Mobile fullscreen detection and toggle
+  // Mobile fullscreen detection and keyboard-aware resizing
   useEffect(() => {
     const checkMobileFullscreen = () => {
       const isMobile = window.matchMedia('(max-width: 600px)').matches;
@@ -201,25 +201,52 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       }
     };
 
+    // Keyboard-aware viewport adjustment for mobile
+    const adjustForKeyboard = () => {
+      const vh = Math.max(window.visualViewport?.height || 0, window.innerHeight);
+      document.documentElement.style.setProperty('--device-height', `${vh}px`);
+    };
+
+    // VirtualKeyboard API support (Chrome on Android)
+    const setupVirtualKeyboard = () => {
+      if ("virtualKeyboard" in navigator) {
+        (navigator as any).virtualKeyboard.overlaysContent = true;
+        (navigator as any).virtualKeyboard.addEventListener("geometrychange", (e: any) => {
+          const kbHeight = e.target.boundingRect.height;
+          document.documentElement.style.setProperty('--keyboard-height', `${kbHeight}px`);
+        });
+      }
+    };
+
     // Check on mount and when chat opens
     if (isOpen) {
       checkMobileFullscreen();
+      adjustForKeyboard();
+      setupVirtualKeyboard();
     } else {
       // Always remove body class when chat closes
       document.body.classList.remove('chatbot-fullscreen');
       setIsMobileFullscreen(false);
     }
 
-    // Listen for resize events
+    // Listen for resize events and viewport changes
     const handleResize = () => {
       if (isOpen) {
         checkMobileFullscreen();
+        adjustForKeyboard();
       }
     };
 
     window.addEventListener('resize', handleResize);
+    window.visualViewport?.addEventListener('resize', adjustForKeyboard);
+
+    // Initial setup
+    adjustForKeyboard();
+    setupVirtualKeyboard();
+
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('resize', adjustForKeyboard);
       // Cleanup body class on unmount
       document.body.classList.remove('chatbot-fullscreen');
     };
@@ -655,10 +682,10 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       </div>
       {/* Chat Body */}
       <div className={cn(
-        "chat-body flex-1 overflow-y-auto p-3",
+        "chat-body flex-1 overflow-y-auto p-3 flex flex-col",
         isMobileFullscreen && "min-h-0" // Ensure proper flex behavior on mobile
       )}>
-        <div className="space-y-3" data-chat-messages>
+        <div className="chat-messages flex-1 space-y-3 overflow-y-auto" data-chat-messages>
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -708,7 +735,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       </div>
 
       {/* Input Area */}
-      <div className="flex gap-2 p-3 border-t border-gray-200">
+      <div className="chat-input-container flex gap-2 p-3 border-t border-gray-200">
         <input
           ref={inputRef}
           value={inputValue}

@@ -49,7 +49,7 @@ function testMobileFullscreen() {
   };
 }
 
-// Test device orientations
+// Test device orientations and keyboard awareness
 function testOrientationChange() {
   console.log('\n🔄 Testing orientation change handling...');
   
@@ -64,6 +64,44 @@ function testOrientationChange() {
       console.log(`📱 Fullscreen class after resize: ${hasFullscreenClass}`);
     }
   }, 100);
+}
+
+// Test keyboard awareness features
+function testKeyboardAwareness() {
+  console.log('\n⌨️ Testing keyboard awareness features...');
+  
+  // Check CSS variables
+  const deviceHeight = getComputedStyle(document.documentElement).getPropertyValue('--device-height');
+  const keyboardHeight = getComputedStyle(document.documentElement).getPropertyValue('--keyboard-height');
+  
+  console.log(`📏 Device height CSS var: ${deviceHeight}`);
+  console.log(`⌨️ Keyboard height CSS var: ${keyboardHeight}`);
+  
+  // Check VirtualKeyboard API support
+  const hasVirtualKeyboard = "virtualKeyboard" in navigator;
+  console.log(`🔧 VirtualKeyboard API support: ${hasVirtualKeyboard}`);
+  
+  // Check viewport meta tag
+  const viewportMeta = document.querySelector('meta[name="viewport"]');
+  const hasInteractiveWidget = viewportMeta?.content.includes('interactive-widget=resizes-content');
+  console.log(`📱 Interactive widget meta tag: ${hasInteractiveWidget}`);
+  
+  // Test visual viewport API
+  const hasVisualViewport = !!window.visualViewport;
+  console.log(`👁️ Visual Viewport API support: ${hasVisualViewport}`);
+  
+  if (hasVisualViewport) {
+    console.log(`📐 Current viewport height: ${window.visualViewport.height}px`);
+    console.log(`📐 Window inner height: ${window.innerHeight}px`);
+  }
+  
+  return {
+    deviceHeight,
+    keyboardHeight,
+    hasVirtualKeyboard,
+    hasInteractiveWidget,
+    hasVisualViewport
+  };
 }
 
 // Test chat launcher visibility on mobile
@@ -84,14 +122,16 @@ function testLauncherVisibility() {
 
 // Run all tests
 function runFullTestSuite() {
-  console.log('🏁 Running Full Mobile Fullscreen Test Suite\n');
+  console.log('🏁 Running Full Mobile Fullscreen & Keyboard-Aware Test Suite\n');
   
   const results = testMobileFullscreen();
+  const keyboardResults = testKeyboardAwareness();
   testOrientationChange();
   testLauncherVisibility();
   
   console.log('\n📊 Test Results Summary:');
-  console.log(results);
+  console.log('Mobile Fullscreen:', results);
+  console.log('Keyboard Awareness:', keyboardResults);
   
   // Recommendations
   console.log('\n💡 Recommendations:');
@@ -104,15 +144,23 @@ function runFullTestSuite() {
   if (!results.chatWidgetExists) {
     console.log('⚠️  Chat widget not found - ensure chatbot is rendered');
   }
+  if (!keyboardResults.hasInteractiveWidget) {
+    console.log('⚠️  Interactive widget meta tag not found - may affect keyboard behavior');
+  }
+  if (!keyboardResults.hasVisualViewport) {
+    console.log('⚠️  Visual Viewport API not supported - using fallback methods');
+  }
   
-  return results;
+  return { mobile: results, keyboard: keyboardResults };
 }
 
 // Make functions available globally for testing
 window.testMobileFullscreen = testMobileFullscreen;
+window.testKeyboardAwareness = testKeyboardAwareness;
 window.runFullTestSuite = runFullTestSuite;
 window.testOrientationChange = testOrientationChange;
 
-console.log('✅ Mobile fullscreen test script loaded');
+console.log('✅ Mobile fullscreen & keyboard-aware test script loaded');
 console.log('📱 Run: runFullTestSuite() to test all functionality');
-console.log('🧪 Run: testMobileFullscreen() for basic tests');
+console.log('🧪 Run: testMobileFullscreen() for basic mobile tests');
+console.log('⌨️ Run: testKeyboardAwareness() for keyboard awareness tests');
