@@ -1,8 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+// Removed unnecessary UI component imports for cleaner custom implementation
 // Using simple text icons for reliability
 const HelpIcon = () => <span className="text-blue-600">💬</span>;
 const CloseIcon = () => <span>✕</span>;
@@ -284,35 +281,26 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 h-[500px] shadow-xl z-50 flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+    <div className="chat-widget fixed bottom-0 right-5 w-80 max-h-[500px] bg-white flex flex-col shadow-xl z-50 rounded-t-lg">
+      {/* Professional Chat Header */}
+      <div 
+        className="chat-header flex items-center justify-between px-4 py-3 text-white rounded-t-lg"
+        style={{ background: '#007A3D' }}
+      >
+        <div className="flex items-center gap-2">
           <HelpIcon />
-          Financing Assistant
-        </CardTitle>
-        <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowFeedbackModal(true)}
-            className="h-8 w-8 hover:bg-red-100 hover:text-red-600 transition-colors"
-            title="Report an Issue"
-          >
-            🐞
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggle}
-            className="h-8 w-8"
-          >
-            <CloseIcon />
-          </Button>
+          <span className="font-medium">FinBot</span>
         </div>
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-3 p-3">
-        <ScrollArea className="flex-1 pr-3">
-          <div className="space-y-3" data-chat-messages>
+        <button
+          onClick={onToggle}
+          className="text-white hover:text-gray-200 transition-colors text-lg font-bold"
+        >
+          ✖
+        </button>
+      </div>
+      {/* Chat Body */}
+      <div className="chat-body flex-1 overflow-y-auto p-3">
+        <div className="space-y-3" data-chat-messages>
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -357,55 +345,60 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
-        <div className="flex gap-2">
-          <Input
-            ref={inputRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Ask me anything about financing..."
-            disabled={isLoading}
-            className="flex-1"
-          />
-          <Button
-            onClick={sendMessage}
-            disabled={!inputValue.trim() || isLoading}
-            size="icon"
-          >
-            <SendIcon />
-          </Button>
+          <div ref={messagesEndRef} />
         </div>
-        
-        {/* Integrated Chat Footer with Report Option */}
-        <div 
-          className="chat-footer border-t text-white py-3 px-4 text-sm text-center"
-          style={{
-            background: '#005D2E',
-            borderTop: '1px solid rgba(255,255,255,0.2)'
-          }}
+      </div>
+
+      {/* Input Area */}
+      <div className="flex gap-2 p-3 border-t border-gray-200">
+        <input
+          ref={inputRef}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Ask me anything about financing..."
+          disabled={isLoading}
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        />
+        <button
+          onClick={sendMessage}
+          disabled={!inputValue.trim() || isLoading}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          style={{ background: '#007A3D' }}
+          onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = '#005D2E')}
+          onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = '#007A3D')}
         >
-          Do you have an issue?
-          <button
-            onClick={() => setShowFeedbackModal(true)}
-            className="ml-3 px-3 py-1.5 rounded border-none cursor-pointer transition-colors duration-200 text-white"
-            style={{
-              background: 'rgba(255,255,255,0.15)'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-          >
-            Report it
-          </button>
-        </div>
-      </CardContent>
+          <SendIcon />
+        </button>
+      </div>
+      
+      {/* Integrated Chat Footer with Report Option */}
+      <div 
+        className="chat-footer text-white py-3 px-4 text-sm text-center"
+        style={{
+          background: '#005D2E',
+          borderTop: '1px solid rgba(255,255,255,0.2)'
+        }}
+      >
+        Do you have an issue?
+        <button
+          onClick={() => setShowFeedbackModal(true)}
+          className="ml-3 px-3 py-1.5 rounded border-none cursor-pointer transition-colors duration-200 text-white"
+          style={{
+            background: 'rgba(255,255,255,0.15)'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+        >
+          Report it
+        </button>
+      </div>
+      
       <FeedbackModal 
         isOpen={showFeedbackModal}
         onClose={() => setShowFeedbackModal(false)}
         conversation={getConversationText()}
       />
-    </Card>
+    </div>
   );
 }
