@@ -82,7 +82,11 @@ function UploadedFileItem({
           <CheckCircle className="w-4 h-4 text-green-500" />
         )}
         {file.status === "error" && (
-          <AlertCircle className="w-4 h-4 text-red-500" />
+          <>
+            <AlertCircle className="w-4 h-4 text-red-500" />
+            {/* 🧪 DEBUG: Log error status for debugging */}
+            {console.log(`🧪 [DEBUG] File showing error status: ${file.name}, documentType: ${file.documentType}, status: ${file.status}`)}
+          </>
         )}
       </div>
       <button
@@ -128,6 +132,22 @@ function UnifiedDocumentUploadCard({
     
     return true; // Only show files that match this exact document type
   });
+  
+  // 🧪 DEBUG: Status recovery for files that might be incorrectly marked as errors
+  React.useEffect(() => {
+    const errorFiles = documentFiles.filter(f => f.status === 'error');
+    if (errorFiles.length > 0) {
+      console.log(`🧪 [DEBUG] Found ${errorFiles.length} files with error status in ${doc.label}:`, 
+        errorFiles.map(f => ({ name: f.name, status: f.status, documentType: f.documentType })));
+      
+      // Check if these files might have been successfully uploaded but marked as errors
+      errorFiles.forEach(f => {
+        if (f.uploadedAt || f.id) {
+          console.log(`🧪 [DEBUG] File ${f.name} has error status but seems to have upload data - possible false negative`);
+        }
+      });
+    }
+  }, [documentFiles, doc.label]);
   
   const requiredQuantity = doc.quantity || 1;
   const isComplete = documentFiles.length >= requiredQuantity;
@@ -257,12 +277,27 @@ function UnifiedDocumentUploadCard({
           
           const uploadResult = await uploadResponse.json();
           console.log(`✅ [STEP5] Upload successful for ${file.name}:`, uploadResult);
+          
+          // 🧪 DEBUG: Validate upload success response
+          if (uploadResult && (uploadResult.success === true || uploadResult.documentId)) {
+            console.log(`🧪 [DEBUG] Upload SUCCESS confirmed for ${file.name} - response contains success/documentId`);
+          } else {
+            console.warn(`🧪 [DEBUG] Upload response unusual for ${file.name}:`, uploadResult);
+          }
         }
         
         // ✅ CRITICAL FIX: Replace uploading files with completed files (not add to them)
-        const completedFiles = uploadingFiles.map(f => ({ ...f, status: "completed" as const }));
+        const completedFiles = uploadingFiles.map(f => ({ 
+          ...f, 
+          status: "completed" as const,
+          uploadedAt: new Date().toISOString()
+        }));
         const otherFiles = uploadedFiles.filter(f => !uploadingFiles.some(u => u.id === f.id));
         onFilesUploaded([...otherFiles, ...completedFiles]);
+        
+        // 🧪 DEBUG: Log successful status updates
+        console.log(`🧪 [DEBUG] Status update - marked ${completedFiles.length} files as completed:`, 
+          completedFiles.map(f => ({ name: f.name, status: f.status, documentType: f.documentType })));
         
         console.log(`✅ [STEP5] All ${files.length} files uploaded successfully to staff backend`);
         
