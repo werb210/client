@@ -101,6 +101,7 @@ The application follows a client-staff separation architecture:
   * **AUDIT LOGGING INTACT**: Upload audit system continues to function correctly
   * **BACKEND URL FIXED**: Updated client to point to correct staff backend (`https://staffportal.replit.app/api`)
   * **ENVIRONMENT VARIABLES UPDATED**: Both .env and .env.production files configured with proper API URLs
+  * **DOUBLE API PATH BUG FIXED**: Resolved critical URL construction bug that was creating malformed URLs like `/api/api/public/applications`
   * **PRODUCTION READY**: Application secure, functional, and ready for deployment with all issues resolved
 
 - **July 18, 2025: 📱 KEYBOARD-AWARE MOBILE FULLSCREEN CHATBOT IMPLEMENTATION COMPLETED - ADAPTIVE PHONE OPTIMIZATION**
