@@ -144,10 +144,23 @@ export default function Step3BusinessDetailsComplete() {
     logger.log('[STEP3] Form submitted with data:', data);
     logger.log('Step 3 Save Triggered:', data);
     
+    // Process and normalize phone number
+    const processedData = {
+      ...data,
+      businessPhone: data.businessPhone ? normalizePhone(data.businessPhone, countryCode) || data.businessPhone : '',
+    };
+    
+    // 🔧 DEBUG: Enhanced Step 3 data logging
+    console.log("Step 3 Data:", processedData);
+    console.log("🔧 Saving business fields:");
+    console.log("🔧   business_name (operatingName):", processedData.operatingName);
+    console.log("🔧   business_phone:", processedData.businessPhone);
+    console.log("🔧   business_province (businessState):", processedData.businessState);
+    
     // Update context with step3 object structure for validation
     dispatch({
       type: 'UPDATE_STEP3',
-      payload: data
+      payload: processedData
     });
 
     dispatch({
@@ -156,7 +169,7 @@ export default function Step3BusinessDetailsComplete() {
     });
 
     logger.log('[STEP3] Data saved to step3 object for validation');
-    logger.log('[STEP3] Payload structure - step3 block should be present:', { step3: data });
+    logger.log('[STEP3] Payload structure - step3 block should be present:', { step3: processedData });
     
     // Navigate to Step 4
     setLocation('/apply/step-4');

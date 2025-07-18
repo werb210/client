@@ -83,6 +83,14 @@ export default function Step4ApplicantInfoComplete() {
   const [showSsnWarning, setShowSsnWarning] = useState(false);
   const [continuePending, setContinuePending] = useState(false);
   
+  // 🔧 DEBUG: Check what state data is actually available
+  console.log("🔧 STEP 4 INITIALIZATION DEBUG:");
+  console.log("🔧 Raw state object:", state);
+  console.log("🔧 state.step1:", state.step1);
+  console.log("🔧 state.step3:", state.step3);
+  console.log("🔧 state.step4:", state.step4);
+  console.log("🔧 Partner checkbox state:", state.step4?.hasPartner);
+
   // Application ID state for persistence
   const [applicationId, setApplicationId] = useState<string | null>(
     state.applicationId || localStorage.getItem('applicationId')
@@ -310,7 +318,7 @@ export default function Step4ApplicantInfoComplete() {
         step1, 
         step3: {
           ...step3,
-          businessName: step3.legalName, // ✅ Add required businessName field
+          businessName: step3.businessName || step3.operatingName || step3.legalName, // ✅ Map operatingName to businessName
         }, 
         step4: {
           ...step4,
@@ -329,7 +337,7 @@ export default function Step4ApplicantInfoComplete() {
       console.log("🔧   business_phone !== undefined:", applicationData.step3?.businessPhone !== undefined);
       console.log("🔧   business_province !== undefined:", applicationData.step3?.businessState !== undefined);
       
-      console.log("Submitting application with:", applicationData);
+      console.log("Submitting from Step 4:", applicationData);
       
       // ✅ ENHANCED PAYLOAD VERIFICATION - Report back what payload was sent
       console.log("📤 =================================");
