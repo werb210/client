@@ -49,17 +49,20 @@ const functions = [
   }
 ];
 
-// Chat endpoint
+// Chat endpoint with RAG integration
 router.post('/chat', async (req, res) => {
   try {
-    const { message, context, messages } = req.body;
+    const { message, context, messages, sessionId, sentiment, intent } = req.body;
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Build system message with context
-    const systemMessage = buildSystemMessage(context);
+    // Build system message with enhanced context
+    const systemMessage = buildSystemMessage(context, sentiment, intent);
+    
+    // RAG: Embed query and retrieve relevant documentation chunks
+    const relevantDocs = await retrieveRelevantDocs(message, context);
     
     // Convert previous messages to OpenAI format
     const conversationHistory = messages?.map((msg: any) => ({
@@ -72,12 +75,13 @@ router.post('/chat', async (req, res) => {
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemMessage },
+        ...relevantDocs.map(doc => ({ role: 'system', content: `Knowledge: ${doc}` })),
         ...conversationHistory.slice(-10), // Keep last 10 messages for context
         { role: 'user', content: message }
       ],
       functions,
       function_call: 'auto',
-      temperature: 0.7,
+      temperature: sentiment === 'negative' || sentiment === 'frustrated' ? 0.3 : 0.7,
       max_tokens: 1000
     });
 
@@ -117,7 +121,36 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-function buildSystemMessage(context: any): string {
+// RAG: Retrieve relevant documentation chunks
+async function retrieveRelevantDocs(query: string, context: any): Promise<string[]> {
+  // Knowledge base of financial terms and processes
+  const knowledgeBase = [
+    "Working Capital loans provide funding for day-to-day business operations, inventory, and short-term expenses. Typical amounts range from $10,000 to $500,000.",
+    "Equipment Financing helps businesses purchase machinery, vehicles, or technology. The equipment serves as collateral, often offering better rates.",
+    "Lines of Credit offer flexible access to funds when needed. Draw funds up to your limit and only pay interest on what you use.",
+    "Invoice Factoring converts outstanding invoices into immediate cash by selling them to a factoring company at a discount.",
+    "Term Loans provide a lump sum for major business investments with fixed monthly payments over 1-10 years.",
+    "Required documents typically include: Bank Statements (3-6 months), Tax Returns (2 years), Financial Statements, Business License, and ID.",
+    "Canadian businesses may need additional documents including GST/HST returns and CRA business registration.",
+    "DSCR (Debt Service Coverage Ratio) measures your ability to repay debt. A ratio above 1.25 is generally considered good.",
+    "Business credit scores range from 0-100, with scores above 75 considered excellent for lending purposes.",
+    "Application processing typically takes 2-5 business days, with funding available within 1-2 weeks of approval."
+  ];
+
+  // Simple keyword matching for RAG (in production, use vector embeddings)
+  const queryLower = query.toLowerCase();
+  const relevantDocs = knowledgeBase.filter(doc => {
+    const docLower = doc.toLowerCase();
+    return queryLower.split(' ').some(word => 
+      word.length > 3 && docLower.includes(word)
+    );
+  });
+
+  // Return top 3 most relevant documents
+  return relevantDocs.slice(0, 3);
+}
+
+function buildSystemMessage(context: any, sentiment?: string, intent?: string): string {
   const { currentStep, applicationData, products } = context || {};
   
   let systemMessage = `You are a helpful financing assistant for Boreal Financial. You help users understand our lending products, guide them through the application process, and answer questions about required documents.
@@ -138,6 +171,17 @@ Available Products: ${JSON.stringify(products?.slice(0, 5) || [])}`;
 
   if (applicationData) {
     systemMessage += `\n\nApplication Data: ${JSON.stringify(applicationData)}`;
+  }
+
+  // Add sentiment and intent awareness
+  if (sentiment || intent) {
+    systemMessage += `\n\nUser Context:
+- Sentiment: ${sentiment || 'neutral'}
+- Intent: ${intent || 'general'}`;
+    
+    if (sentiment === 'negative' || sentiment === 'frustrated') {
+      systemMessage += `\n\nIMPORTANT: User seems frustrated. Be extra empathetic, offer human assistance, and focus on solving their specific problem quickly.`;
+    }
   }
 
   systemMessage += `\n\nGuidelines:

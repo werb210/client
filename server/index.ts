@@ -11,6 +11,9 @@ import loanProductCategoriesRouter from "./routes/loanProductCategories";
 import documentRequirementsRouter from "./routes/documentRequirements";
 import dataIngestionRouter from "./routes/dataIngestion";
 import chatRouter from "./routes/chat.js";
+import analyzeRouter from "./routes/analyze.js";
+import translateRouter from "./routes/translate.js";
+import statusRouter from "./routes/status.js";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -795,8 +798,11 @@ app.use((req, res, next) => {
 
   app.use('/api/admin', dataIngestionRouter);
   
-  // Mount chat routes for OpenAI chatbot
+  // Mount chat and advanced AI routes
   app.use('/api', chatRouter);
+  app.use('/api', analyzeRouter);
+  app.use('/api', translateRouter);
+  app.use('/api', statusRouter);
   
   // Feedback endpoint for issue reporting with screenshot support
   app.post('/api/feedback', upload.single('screenshot'), async (req, res) => {

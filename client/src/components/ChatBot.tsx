@@ -150,8 +150,13 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+  const [currentLanguage, setCurrentLanguage] = useState('en');
+  const [sentiment, setSentiment] = useState<string>('neutral');
+  const [proactiveShown, setProactiveShown] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const proactiveTimeoutRef = useRef<NodeJS.Timeout>();
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -175,6 +180,38 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
   }, [isOpen]);
 
+  // Proactive messaging setup
+  useEffect(() => {
+    if (isOpen && !proactiveShown) {
+      // Show proactive help message after 30 seconds of inactivity
+      proactiveTimeoutRef.current = setTimeout(() => {
+        if (!proactiveShown) {
+          addBotMessage('Need help choosing a loan product? I can recommend the best financing options based on your business needs!');
+          setProactiveShown(true);
+        }
+      }, 30000);
+    }
+
+    // Mouse leave detection for exit intent
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (e.clientY < 10 && isOpen && !proactiveShown) {
+        addBotMessage('Leaving? Can I assist you with anything about our financing options before you go?');
+        setProactiveShown(true);
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (proactiveTimeoutRef.current) {
+        clearTimeout(proactiveTimeoutRef.current);
+      }
+      window.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [isOpen, proactiveShown]);
+
   const getLenderProducts = () => {
     try {
       const cached = localStorage.getItem('lender-products-cache');
@@ -188,6 +225,94 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
   };
 
+  // Advanced features implementation
+  const glossary: Record<string, string> = {
+    DSCR: 'Debt Service Coverage Ratio: A measure of a company\'s ability to use its operating income to repay all its debt obligations.',
+    'WORKING CAPITAL': 'Working Capital: The capital of a business used in its day-to-day trading operations, calculated as current assets minus current liabilities.',
+    'EQUIPMENT FINANCING': 'Equipment Financing: A loan secured by the equipment being purchased, typically used for business machinery and vehicles.',
+    'LINE OF CREDIT': 'Line of Credit: A flexible borrowing option that allows you to access funds up to a pre-approved limit when needed.',
+    'INVOICE FACTORING': 'Invoice Factoring: Selling your accounts receivable to a third party at a discount to get immediate cash flow.',
+    'TERM LOAN': 'Term Loan: A traditional loan with fixed monthly payments over a set period, typically for larger business investments.'
+  };
+
+  const analyzeMessage = async (text: string) => {
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, sessionId })
+      });
+      const analysis = await response.json();
+      setSentiment(analysis.sentiment || 'neutral');
+      
+      // Show handoff UI if needed
+      if (analysis.requires_handoff) {
+        addBotMessage('I understand this is important to you. Let me connect you with a human specialist who can provide more detailed assistance. Please use the "Report it" button below to describe your specific needs.');
+      }
+      
+      return analysis;
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      return { sentiment: 'neutral', intent: 'general' };
+    }
+  };
+
+  const translateMessage = async (text: string, fromLang: string, toLang: string) => {
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, fromLang, toLang, sessionId })
+      });
+      const result = await response.json();
+      return result.translatedText || text;
+    } catch (error) {
+      console.error('Translation failed:', error);
+      return text;
+    }
+  };
+
+  const checkApplicationStatus = async () => {
+    try {
+      const applicationId = applicationData?.applicationId || localStorage.getItem('applicationId');
+      const response = await fetch(`/api/status/${applicationId || ''}`);
+      const status = await response.json();
+      
+      const statusMessage = `Your application status: ${status.status}. ${status.message}`;
+      if (status.missing && status.missing.length > 0) {
+        addBotMessage(`${statusMessage}\n\nMissing documents: ${status.missing.join(', ')}`);
+      } else {
+        addBotMessage(statusMessage);
+      }
+      
+      return status;
+    } catch (error) {
+      console.error('Status check failed:', error);
+      addBotMessage('Unable to retrieve your application status. Please contact support at info@boreal.financial');
+    }
+  };
+
+  const checkGlossary = (text: string) => {
+    const upperText = text.toUpperCase();
+    for (const [term, definition] of Object.entries(glossary)) {
+      if (upperText.includes(term) || upperText.includes(`WHAT IS ${term}`) || upperText.includes(`DEFINE ${term}`)) {
+        addBotMessage(`📚 **${term}**: ${definition}`);
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const addBotMessage = (content: string) => {
+    const botMessage: Message = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, botMessage]);
+  };
+
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
@@ -199,8 +324,36 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const messageText = inputValue.trim();
     setInputValue('');
     setIsLoading(true);
+
+    // Clear proactive timeout since user is engaging
+    if (proactiveTimeoutRef.current) {
+      clearTimeout(proactiveTimeoutRef.current);
+    }
+
+    // Check for glossary terms
+    if (checkGlossary(messageText)) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Check for status inquiry
+    if (messageText.toLowerCase().includes('status') || messageText.toLowerCase().includes('application')) {
+      await checkApplicationStatus();
+      setIsLoading(false);
+      return;
+    }
+
+    // Analyze sentiment and intent
+    const analysis = await analyzeMessage(messageText);
+
+    // Handle non-English languages
+    let processedMessage = messageText;
+    if (currentLanguage !== 'en') {
+      processedMessage = await translateMessage(messageText, currentLanguage, 'en');
+    }
 
     try {
       const products = getLenderProducts();
@@ -214,8 +367,13 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: userMessage.content,
-          context: contextData,
+          message: processedMessage,
+          sessionId,
+          context: {
+            ...contextData,
+            sentiment: analysis.sentiment,
+            intent: analysis.intent
+          },
           messages: messages.slice(-5) // Last 5 messages for context
         })
       });
@@ -233,7 +391,19 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         timestamp: new Date()
       };
 
+      // Translate response back if needed
+      let finalResponse = data.reply || 'I apologize, but I encountered an issue. Please try asking your question again.';
+      if (currentLanguage !== 'en') {
+        finalResponse = await translateMessage(finalResponse, 'en', currentLanguage);
+      }
+
+      assistantMessage.content = finalResponse;
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Check for handoff indication in response
+      if (data.handoff) {
+        addBotMessage('I understand this is important to you. Let me connect you with a human specialist who can provide more detailed assistance. Please use the "Report it" button below to describe your specific needs.');
+      }
 
     } catch (error) {
       console.error('Chat error:', error);
