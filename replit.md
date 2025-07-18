@@ -93,12 +93,12 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
-- **July 18, 2025: 📱 MOBILE UI OPTIMIZATION COMPLETED - IPHONE SE COMPATIBILITY ENHANCED**
-  * **CHATBOT HEIGHT ADJUSTMENT**: Updated chatbot window height from 720px to 1334px for iPhone SE full-screen compatibility
-  * **MOBILE OPTIMIZATION**: Enhanced mobile user experience with proper screen height utilization on iPhone SE devices
-  * **RESPONSIVE DESIGN**: Maintained responsive design while optimizing for specific mobile device constraints
-  * **USER REQUESTED**: Implemented specific user requirement for 1334 pixel height optimization
-  * **PRODUCTION READY**: Chatbot now provides optimal mobile experience across all device sizes
+- **July 18, 2025: 📱 CHATBOT HEIGHT OPTIMIZATION COMPLETED - 750PX BALANCED DESIGN**
+  * **FINAL HEIGHT ADJUSTMENT**: Updated chatbot window height to 750px for optimal desktop and mobile balance
+  * **USER PREFERENCES**: Implemented user-requested height reduction from 1334px to 750px for better screen utilization
+  * **BALANCED DESIGN**: Maintained good conversation visibility while avoiding excessive screen coverage
+  * **RESPONSIVE OPTIMIZATION**: Ensured chatbot works well across various device sizes with moderate height
+  * **PRODUCTION READY**: Chatbot now provides optimal user experience with 750px height constraint
 
 - **July 18, 2025: 🔧 FIELD MAPPING INVESTIGATION RESOLVED - NORMAL APPLICATION WORKFLOW CONFIRMED**
   * **INVESTIGATION COMPLETED**: Analyzed suspected field mapping bug between Step 3 and Step 4 validation systems

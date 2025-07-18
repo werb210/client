@@ -504,7 +504,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   }
 
   return (
-    <div className="chat-widget fixed bottom-0 right-5 w-80 max-h-[1334px] bg-white flex flex-col shadow-xl z-50 rounded-t-lg">
+    <div className="chat-widget fixed bottom-0 right-5 w-80 max-h-[750px] bg-white flex flex-col shadow-xl z-50 rounded-t-lg">
       {/* Professional Chat Header */}
       <div 
         className="chat-header flex items-center justify-between px-4 py-3 text-white rounded-t-lg"
