@@ -59,7 +59,7 @@ export default function Step5DocumentUpload() {
     isLoading: isVerifying,
     isVerifying: isManualVerifying,
     verifyDocuments,
-    canProceedToStep7,
+    canProceedToStep6,
     refetchDocuments
   } = useDocumentVerification(applicationId);
 
