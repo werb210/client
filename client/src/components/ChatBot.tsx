@@ -304,7 +304,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-3 p-3">
         <ScrollArea className="flex-1 pr-3">
-          <div className="space-y-3">
+          <div className="space-y-3" data-chat-messages>
             {messages.map((message) => (
               <div
                 key={message.id}

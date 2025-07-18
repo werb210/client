@@ -1,6 +1,7 @@
 import { Switch, Route } from "wouter";
 import { lazy } from "react";
 import { ChatBot } from "@/components/ChatBot";
+import { FloatingReportButton } from "@/components/FloatingReportButton";
 import { useChatBot } from "@/hooks/useChatBot";
 
 // V1 Route Components (Source of Truth)
@@ -222,6 +223,9 @@ export function MainLayout() {
       currentStep={currentStep}
       applicationData={applicationData}
     />
+
+    {/* Global Floating Report Button */}
+    <FloatingReportButton />
     </>
   );
 }
