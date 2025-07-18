@@ -115,59 +115,18 @@ function UnifiedDocumentUploadCard({
 }) {
   const { toast } = useToast();
   
-  // Filter files for this document type using precise matching to prevent cross-contamination
+  // ✅ CORRECT DOCUMENT CLASSIFICATION: Ensure files appear in correct documentType section
+  const normalizedDocType = doc.label.toLowerCase().replace(/\s+/g, '_');
   const documentFiles = uploadedFiles.filter(f => {
-    const docLabelLower = doc.label.toLowerCase();
-    const fileNameLower = f.name.toLowerCase();
-    const documentTypeLower = f.documentType?.toLowerCase() || '';
+    // ✅ Ensure files stay bound to correct category based on document_type field from server
+    const fileDocType = f.documentType?.toLowerCase() || '';
     
-    // Create normalized document type for comparison
-    const normalizedDocType = doc.label.toLowerCase().replace(/\s+/g, '_');
-    
-    // EXACT MATCH: Match by exact document type to prevent cross-contamination
-    if (documentTypeLower === normalizedDocType) {
-      return true;
+    // If uploaded file's document_type doesn't match current upload type, block it
+    if (fileDocType !== normalizedDocType) {
+      return false; // Block misassigned category
     }
     
-    // SPECIFIC PATTERNS: Only match specific document types to prevent duplicates
-    
-    // Bank statements - must match exact pattern
-    if (docLabelLower.includes('bank') && docLabelLower.includes('statement')) {
-      return documentTypeLower === 'bank_statements' ||
-             documentTypeLower === 'bank_statement' ||
-             (documentTypeLower.includes('bank') && documentTypeLower.includes('statement'));
-    }
-    
-    // Accountant Prepared Financial Statements - must match specific pattern, NOT generic financial
-    if (docLabelLower.includes('accountant') && docLabelLower.includes('prepared') && docLabelLower.includes('financial')) {
-      return documentTypeLower === 'financial_statements' ||
-             documentTypeLower === 'accountant_prepared_financial_statements' ||
-             (documentTypeLower.includes('accountant') && documentTypeLower.includes('financial'));
-    }
-    
-    // Personal Financial Statement - must match exact pattern to prevent overlap
-    if (docLabelLower.includes('personal') && docLabelLower.includes('financial') && docLabelLower.includes('statement')) {
-      return documentTypeLower === 'personal_financial_statement' ||
-             documentTypeLower === 'personal_financial_statements' ||
-             (documentTypeLower.includes('personal') && documentTypeLower.includes('financial'));
-    }
-    
-    // Tax Returns - specific pattern
-    if (docLabelLower.includes('tax') && docLabelLower.includes('return')) {
-      return documentTypeLower === 'tax_returns' ||
-             documentTypeLower === 'tax_return' ||
-             (documentTypeLower.includes('tax') && documentTypeLower.includes('return'));
-    }
-    
-    // Equipment Quotes - specific pattern
-    if (docLabelLower.includes('equipment') && docLabelLower.includes('quote')) {
-      return documentTypeLower === 'equipment_quotes' ||
-             documentTypeLower === 'equipment_quote' ||
-             (documentTypeLower.includes('equipment') && documentTypeLower.includes('quote'));
-    }
-    
-    // Fallback: exact label match only
-    return documentTypeLower === normalizedDocType;
+    return true; // Only show files that match this exact document type
   });
   
   const requiredQuantity = doc.quantity || 1;
@@ -414,8 +373,13 @@ export function DynamicDocumentRequirements({
   // State for document requirements  
   const [documentRequirements, setDocumentRequirements] = useState<RequiredDoc[]>([]);
 
-  // Always accept whatever the parent sends with proper quantity mapping
+  // ✅ DEDUPLICATION LOGIC: Ensure unique documentType rendering
   useEffect(() => {
+    if (!requirements || requirements.length === 0) {
+      setDocumentRequirements([]);
+      return;
+    }
+    
     const getDocumentQuantity = (docName: string): number => {
       const normalizedName = docName.toLowerCase();
       
@@ -439,81 +403,59 @@ export function DynamicDocumentRequirements({
       return normalizeDocumentName(docName);
     };
     
-    const docRequirements = requirements.map((docName: string, index: number) => ({
-      id: `requirement-${index}`,
-      label: getDocumentLabel(docName),
-      description: `Required document for your loan application`,
-      quantity: getDocumentQuantity(docName),
-      category: 'required',
-      priority: 'high'
-    }));
+    // ✅ Ensure unique documentType rendering
+    const renderedTypes = new Set<string>();
+    const deduplicatedRequirements: RequiredDoc[] = [];
     
-    setDocumentRequirements(docRequirements);
-    // console.debug("📄 Final visible doc list:", requirements);
-    // console.debug("📄 Equipment Quote in list?", requirements.find(doc => doc.includes('Equipment')));
+    for (const docName of requirements) {
+      const normalizedType = getDocumentLabel(docName).toLowerCase().replace(/\s+/g, '_');
+      
+      // Skip if this document type has already been rendered
+      if (renderedTypes.has(normalizedType)) {
+        console.log(`🔄 Skipping duplicate document type: ${normalizedType}`);
+        continue;
+      }
+      
+      renderedTypes.add(normalizedType);
+      deduplicatedRequirements.push({
+        id: `requirement-${normalizedType}`,
+        label: getDocumentLabel(docName),
+        description: `Required document for your loan application`,
+        quantity: getDocumentQuantity(docName),
+        category: 'required',
+        priority: 'high'
+      });
+    }
+    
+    setDocumentRequirements(deduplicatedRequirements);
+    console.log(`📄 Unique document types after deduplication: ${deduplicatedRequirements.length} (from ${requirements.length} original)`);
   }, [requirements]);
 
-  // Check completion status using unified requirements with improved matching
+  // ✅ DOCUMENT CLASSIFICATION: Ensure correct document-to-category mapping
   useEffect(() => {
     if (documentRequirements.length > 0) {
+      // ✅ Ensure correct document classification based on document_type field from server
+      const docsByType = uploadedFiles.reduce((acc, doc) => {
+        if (doc.status === "completed" && doc.documentType) {
+          if (!acc[doc.documentType]) acc[doc.documentType] = [];
+          acc[doc.documentType].push(doc);
+        }
+        return acc;
+      }, {} as Record<string, typeof uploadedFiles>);
+      
       const completedDocs = documentRequirements.filter(doc => {
+        const normalizedDocType = doc.label.toLowerCase().replace(/\s+/g, '_');
+        
+        // ✅ Fix UploadCount logic: only count successfully uploaded files
+        const uploadedCount = docsByType[normalizedDocType]?.filter(d => d.status === 'completed')?.length || 0;
+        
+        // ✅ Ensure files stay bound to correct category
         const documentFiles = uploadedFiles.filter(f => {
-          const docLabelLower = doc.label.toLowerCase();
-          const fileNameLower = f.name.toLowerCase();
-          const documentTypeLower = f.documentType?.toLowerCase() || '';
+          if (f.status !== "completed") return false;
           
-          // Only count files that have been successfully uploaded (status: "completed")
-          if (f.status !== "completed") {
-            return false;
-          }
-          
-          // Create normalized document type for comparison
-          const normalizedDocType = doc.label.toLowerCase().replace(/\s+/g, '_');
-          
-          // EXACT MATCH: Match by exact document type to prevent cross-contamination
-          if (documentTypeLower === normalizedDocType) {
-            return true;
-          }
-          
-          // SPECIFIC PATTERNS: Only match specific document types to prevent duplicates
-          
-          // Bank statements - must match exact pattern
-          if (docLabelLower.includes('bank') && docLabelLower.includes('statement')) {
-            return documentTypeLower === 'bank_statements' ||
-                   documentTypeLower === 'bank_statement' ||
-                   (documentTypeLower.includes('bank') && documentTypeLower.includes('statement'));
-          }
-          
-          // Accountant Prepared Financial Statements - must match specific pattern
-          if (docLabelLower.includes('accountant') && docLabelLower.includes('prepared') && docLabelLower.includes('financial')) {
-            return documentTypeLower === 'financial_statements' ||
-                   documentTypeLower === 'accountant_prepared_financial_statements' ||
-                   (documentTypeLower.includes('accountant') && documentTypeLower.includes('financial'));
-          }
-          
-          // Personal Financial Statement - must match exact pattern
-          if (docLabelLower.includes('personal') && docLabelLower.includes('financial') && docLabelLower.includes('statement')) {
-            return documentTypeLower === 'personal_financial_statement' ||
-                   documentTypeLower === 'personal_financial_statements' ||
-                   (documentTypeLower.includes('personal') && documentTypeLower.includes('financial'));
-          }
-          
-          // Tax Returns - specific pattern
-          if (docLabelLower.includes('tax') && docLabelLower.includes('return')) {
-            return documentTypeLower === 'tax_returns' ||
-                   documentTypeLower === 'tax_return' ||
-                   (documentTypeLower.includes('tax') && documentTypeLower.includes('return'));
-          }
-          
-          // Equipment Quotes - specific pattern
-          if (docLabelLower.includes('equipment') && docLabelLower.includes('quote')) {
-            return documentTypeLower === 'equipment_quotes' ||
-                   documentTypeLower === 'equipment_quote' ||
-                   (documentTypeLower.includes('equipment') && documentTypeLower.includes('quote'));
-          }
-          
-          // Fallback: exact label match only
-          return documentTypeLower === normalizedDocType;
+          // Block misassigned category - ensure exact match to prevent cross-contamination
+          const fileDocType = f.documentType?.toLowerCase() || '';
+          return fileDocType === normalizedDocType;
         });
         
         logger.log(`📊 Document "${doc.label}" files found: ${documentFiles.length}/${doc.quantity || 1} (completed uploads only)`);
