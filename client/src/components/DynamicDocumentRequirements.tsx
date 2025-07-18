@@ -115,32 +115,59 @@ function UnifiedDocumentUploadCard({
 }) {
   const { toast } = useToast();
   
-  // Filter files for this document type using more flexible matching
+  // Filter files for this document type using precise matching to prevent cross-contamination
   const documentFiles = uploadedFiles.filter(f => {
     const docLabelLower = doc.label.toLowerCase();
     const fileNameLower = f.name.toLowerCase();
     const documentTypeLower = f.documentType?.toLowerCase() || '';
     
-    // Match bank statements (most important - files are uploaded with documentType: 'bank_statements')
+    // Create normalized document type for comparison
+    const normalizedDocType = doc.label.toLowerCase().replace(/\s+/g, '_');
+    
+    // EXACT MATCH: Match by exact document type to prevent cross-contamination
+    if (documentTypeLower === normalizedDocType) {
+      return true;
+    }
+    
+    // SPECIFIC PATTERNS: Only match specific document types to prevent duplicates
+    
+    // Bank statements - must match exact pattern
     if (docLabelLower.includes('bank') && docLabelLower.includes('statement')) {
       return documentTypeLower === 'bank_statements' ||
-             documentTypeLower.includes('bank') || 
-             fileNameLower.includes('bank');
+             documentTypeLower === 'bank_statement' ||
+             (documentTypeLower.includes('bank') && documentTypeLower.includes('statement'));
     }
     
-    // Match Accountant Prepared Financial Statements
-    if (docLabelLower.includes('accountant') && docLabelLower.includes('financial') ||
-        docLabelLower.includes('financial') && docLabelLower.includes('statement')) {
-      return documentTypeLower.includes('financial') || 
-             fileNameLower.includes('financial') ||
-             documentTypeLower === 'financial_statements';
+    // Accountant Prepared Financial Statements - must match specific pattern, NOT generic financial
+    if (docLabelLower.includes('accountant') && docLabelLower.includes('prepared') && docLabelLower.includes('financial')) {
+      return documentTypeLower === 'financial_statements' ||
+             documentTypeLower === 'accountant_prepared_financial_statements' ||
+             (documentTypeLower.includes('accountant') && documentTypeLower.includes('financial'));
     }
     
-    // Generic matching for other document types
-    const firstWord = docLabelLower.split(' ')[0];
-    return documentTypeLower.includes(firstWord) ||
-           fileNameLower.includes(firstWord) ||
-           documentTypeLower === doc.label.toLowerCase().replace(/\s+/g, '_');
+    // Personal Financial Statement - must match exact pattern to prevent overlap
+    if (docLabelLower.includes('personal') && docLabelLower.includes('financial') && docLabelLower.includes('statement')) {
+      return documentTypeLower === 'personal_financial_statement' ||
+             documentTypeLower === 'personal_financial_statements' ||
+             (documentTypeLower.includes('personal') && documentTypeLower.includes('financial'));
+    }
+    
+    // Tax Returns - specific pattern
+    if (docLabelLower.includes('tax') && docLabelLower.includes('return')) {
+      return documentTypeLower === 'tax_returns' ||
+             documentTypeLower === 'tax_return' ||
+             (documentTypeLower.includes('tax') && documentTypeLower.includes('return'));
+    }
+    
+    // Equipment Quotes - specific pattern
+    if (docLabelLower.includes('equipment') && docLabelLower.includes('quote')) {
+      return documentTypeLower === 'equipment_quotes' ||
+             documentTypeLower === 'equipment_quote' ||
+             (documentTypeLower.includes('equipment') && documentTypeLower.includes('quote'));
+    }
+    
+    // Fallback: exact label match only
+    return documentTypeLower === normalizedDocType;
   });
   
   const requiredQuantity = doc.quantity || 1;
@@ -149,22 +176,51 @@ function UnifiedDocumentUploadCard({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      // Map document labels to API categories
+      // Map document labels to API categories with precise matching
       const getApiCategory = (label: string): string => {
         const labelLower = label.toLowerCase();
+        
+        // Bank statements - exact match
         if (labelLower.includes('bank') && labelLower.includes('statement')) {
           return 'bank_statements';
         }
-        if (labelLower.includes('accountant') && labelLower.includes('financial') ||
-            labelLower.includes('financial') && labelLower.includes('statement')) {
+        
+        // Accountant Prepared Financial Statements - must include "accountant" AND "prepared"
+        if (labelLower.includes('accountant') && labelLower.includes('prepared') && labelLower.includes('financial')) {
           return 'financial_statements';
         }
-        if (labelLower.includes('tax')) {
+        
+        // Personal Financial Statement - must include "personal" 
+        if (labelLower.includes('personal') && labelLower.includes('financial') && labelLower.includes('statement')) {
+          return 'personal_financial_statement';
+        }
+        
+        // Tax Returns - specific pattern
+        if (labelLower.includes('tax') && labelLower.includes('return')) {
           return 'tax_returns';
         }
-        if (labelLower.includes('equipment')) {
+        
+        // Equipment Quotes - specific pattern
+        if (labelLower.includes('equipment') && labelLower.includes('quote')) {
           return 'equipment_quotes';
         }
+        
+        // Business License - specific pattern
+        if (labelLower.includes('business') && labelLower.includes('license')) {
+          return 'business_license';
+        }
+        
+        // Articles of Incorporation - specific pattern
+        if (labelLower.includes('articles') && labelLower.includes('incorporation')) {
+          return 'articles_of_incorporation';
+        }
+        
+        // Debt Schedule - specific pattern
+        if (labelLower.includes('debt') && labelLower.includes('schedule')) {
+          return 'debt_schedule';
+        }
+        
+        // Default: normalize to underscore format
         return label.toLowerCase().replace(/\s+/g, '_');
       };
       
@@ -397,7 +453,7 @@ export function DynamicDocumentRequirements({
     // console.debug("📄 Equipment Quote in list?", requirements.find(doc => doc.includes('Equipment')));
   }, [requirements]);
 
-  // Check completion status using unified requirements
+  // Check completion status using unified requirements with improved matching
   useEffect(() => {
     if (documentRequirements.length > 0) {
       const completedDocs = documentRequirements.filter(doc => {
@@ -406,28 +462,61 @@ export function DynamicDocumentRequirements({
           const fileNameLower = f.name.toLowerCase();
           const documentTypeLower = f.documentType?.toLowerCase() || '';
           
-          // Match bank statements (primary match by documentType)
+          // Only count files that have been successfully uploaded (status: "completed")
+          if (f.status !== "completed") {
+            return false;
+          }
+          
+          // Create normalized document type for comparison
+          const normalizedDocType = doc.label.toLowerCase().replace(/\s+/g, '_');
+          
+          // EXACT MATCH: Match by exact document type to prevent cross-contamination
+          if (documentTypeLower === normalizedDocType) {
+            return true;
+          }
+          
+          // SPECIFIC PATTERNS: Only match specific document types to prevent duplicates
+          
+          // Bank statements - must match exact pattern
           if (docLabelLower.includes('bank') && docLabelLower.includes('statement')) {
             return documentTypeLower === 'bank_statements' ||
-                   documentTypeLower.includes('bank') || 
-                   fileNameLower.includes('bank');
+                   documentTypeLower === 'bank_statement' ||
+                   (documentTypeLower.includes('bank') && documentTypeLower.includes('statement'));
           }
           
-          // Match financial statements 
-          if (docLabelLower.includes('financial') && docLabelLower.includes('statement')) {
-            return documentTypeLower.includes('financial') || 
-                   fileNameLower.includes('financial') ||
-                   documentTypeLower === 'financial_statements';
+          // Accountant Prepared Financial Statements - must match specific pattern
+          if (docLabelLower.includes('accountant') && docLabelLower.includes('prepared') && docLabelLower.includes('financial')) {
+            return documentTypeLower === 'financial_statements' ||
+                   documentTypeLower === 'accountant_prepared_financial_statements' ||
+                   (documentTypeLower.includes('accountant') && documentTypeLower.includes('financial'));
           }
           
-          // Generic matching for other document types
-          const firstWord = docLabelLower.split(' ')[0];
-          return documentTypeLower.includes(firstWord) ||
-                 fileNameLower.includes(firstWord) ||
-                 documentTypeLower === doc.label.toLowerCase().replace(/\s+/g, '_');
+          // Personal Financial Statement - must match exact pattern
+          if (docLabelLower.includes('personal') && docLabelLower.includes('financial') && docLabelLower.includes('statement')) {
+            return documentTypeLower === 'personal_financial_statement' ||
+                   documentTypeLower === 'personal_financial_statements' ||
+                   (documentTypeLower.includes('personal') && documentTypeLower.includes('financial'));
+          }
+          
+          // Tax Returns - specific pattern
+          if (docLabelLower.includes('tax') && docLabelLower.includes('return')) {
+            return documentTypeLower === 'tax_returns' ||
+                   documentTypeLower === 'tax_return' ||
+                   (documentTypeLower.includes('tax') && documentTypeLower.includes('return'));
+          }
+          
+          // Equipment Quotes - specific pattern
+          if (docLabelLower.includes('equipment') && docLabelLower.includes('quote')) {
+            return documentTypeLower === 'equipment_quotes' ||
+                   documentTypeLower === 'equipment_quote' ||
+                   (documentTypeLower.includes('equipment') && documentTypeLower.includes('quote'));
+          }
+          
+          // Fallback: exact label match only
+          return documentTypeLower === normalizedDocType;
         });
         
-        logger.log(`📊 Document "${doc.label}" files found: ${documentFiles.length}/${doc.quantity || 1}`);
+        logger.log(`📊 Document "${doc.label}" files found: ${documentFiles.length}/${doc.quantity || 1} (completed uploads only)`);
         return documentFiles.length >= (doc.quantity || 1);
       });
       
