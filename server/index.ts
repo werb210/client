@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { createServer } from "http";
-import { WebSocketServer, WebSocket } from "ws";
+import { Server as SocketIOServer } from "socket.io";
 import multer from "multer";
 import { setupVite, serveStatic, log } from "./vite";
 import cfg from "./config";
@@ -822,6 +822,51 @@ app.use((req, res, next) => {
 
   app.use('/api/admin', dataIngestionRouter);
   
+  // Chat request-staff endpoint for Socket.IO integration
+  app.post('/api/chat/request-staff', async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({ error: 'Session ID is required' });
+      }
+      
+      console.log(`🤝 [SERVER] Human assistance requested for session: ${sessionId}`);
+      
+      // Forward request to staff application chat system
+      const response = await fetch(`${cfg.staffApiUrl}/api/chat/request-staff`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
+        },
+        body: JSON.stringify({ sessionId })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ [SERVER] Human assistance request forwarded to staff');
+        res.json({ 
+          success: true, 
+          message: 'Human assistance request sent to staff',
+          ...data 
+        });
+      } else {
+        console.error('❌ [SERVER] Staff backend human request failed:', response.statusText);
+        res.status(503).json({
+          error: 'Staff chat system unavailable',
+          message: 'Unable to connect with staff chat system. Please try again later.'
+        });
+      }
+    } catch (error) {
+      console.error('❌ [SERVER] Human assistance request failed:', error);
+      res.status(500).json({
+        error: 'Human assistance request failed',
+        message: 'Internal server error while requesting human assistance'
+      });
+    }
+  });
+
   // Mount chat and advanced AI routes
   app.use('/api', chatRouter);
   app.use('/api', analyzeRouter);
@@ -1593,45 +1638,86 @@ app.use((req, res, next) => {
     await setupVite(app);
   }
   
-  // Add WebSocket server for real-time updates
-  const wss = new WebSocketServer({ 
-    server: httpServer, 
-    path: '/ws' 
+  // Add Socket.IO server for real-time chat
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"]
+    }
   });
   
-  wss.on('connection', (ws) => {
-    log('WebSocket client connected');
+  io.on('connection', (socket) => {
+    log('Socket.IO client connected:', socket.id);
     
-    // Send welcome message
-    ws.send(JSON.stringify({
-      type: 'connection.established',
-      message: 'Connected to lender products updates'
-    }));
-    
-    ws.on('close', () => {
-      log('WebSocket client disconnected');
+    // Handle user joining session
+    socket.on('join-session', (sessionId) => {
+      socket.join(sessionId);
+      log('User joined session:', sessionId);
     });
     
-    ws.on('error', (error) => {
-      log('WebSocket error:', String(error));
-    });
-  });
-  
-  // Function to broadcast lender product updates
-  const broadcastLenderUpdate = () => {
-    const message = JSON.stringify({
-      type: 'lender_products.updated',
-      timestamp: new Date().toISOString()
-    });
-    
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
+    // Handle user messages
+    socket.on('user-message', async (data) => {
+      const { sessionId, message } = data;
+      log('User message:', message);
+      
+      // Forward to staff application chat system
+      try {
+        const response = await fetch(`${cfg.staffApiUrl}/api/chat/user-message`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${cfg.clientToken}`
+          },
+          body: JSON.stringify({ sessionId, message })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          // Broadcast response back to session
+          io.to(sessionId).emit('new-message', {
+            role: 'assistant',
+            message: data.reply || 'Message received by staff.'
+          });
+        }
+      } catch (error) {
+        log('Error forwarding message to staff:', error);
       }
     });
     
-    log(`Broadcasted lender products update to ${wss.clients.size} clients`);
-  };
+    // Handle human assistance requests
+    socket.on('request-human', async (data) => {
+      const { sessionId } = data;
+      log('Human assistance requested for session:', sessionId);
+      
+      // Forward request to staff application
+      try {
+        await fetch(`${cfg.staffApiUrl}/api/chat/request-staff`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${cfg.clientToken}`
+          },
+          body: JSON.stringify({ sessionId })
+        });
+        
+        // Notify user that request was sent
+        io.to(sessionId).emit('new-message', {
+          role: 'system',
+          message: 'Your request for human assistance has been forwarded to our team. A staff member will join the chat shortly.'
+        });
+      } catch (error) {
+        log('Error requesting human assistance:', error);
+        io.to(sessionId).emit('new-message', {
+          role: 'system',
+          message: 'Unable to connect with staff at the moment. Please try again or contact us directly.'
+        });
+      }
+    });
+    
+    socket.on('disconnect', () => {
+      log('Socket.IO client disconnected:', socket.id);
+    });
+  });
 
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
@@ -1643,6 +1729,6 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`Client app serving on port ${port} - API calls will route to staff backend`);
-    log(`WebSocket server available at ws://localhost:${port}/ws`);
+    log(`Socket.IO server available for real-time chat`);
   });
 })();
