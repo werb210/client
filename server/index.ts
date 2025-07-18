@@ -708,6 +708,15 @@ app.use((req, res, next) => {
     console.log(`📁 [SERVER] Document type: ${documentType}`);
     console.log(`📁 [SERVER] File: ${file?.originalname}, Size: ${file?.size} bytes`);
     
+    // 🧪 EQUIPMENT_QUOTE DEBUG LOGGING
+    if (documentType?.includes('equipment')) {
+      console.log(`🧪 [DEBUG] Equipment document upload detected:`);
+      console.log(`   - Document Type: "${documentType}"`);
+      console.log(`   - File Name: "${file?.originalname}"`);
+      console.log(`   - File Size: ${file?.size} bytes`);
+      console.log(`   - Application ID: ${id}`);
+    }
+    
     // 📊 AUDIT: Track upload attempt
     auditUploadAttempt(id, file?.originalname || 'unknown', file?.size || 0, 'started');
     
@@ -743,6 +752,14 @@ app.use((req, res, next) => {
       const errorData = await response.text();
       console.error('❌ [SERVER] Staff backend upload error:', errorData);
       
+      // 🧪 EQUIPMENT_QUOTE DEBUG: Enhanced error logging
+      if (documentType?.includes('equipment')) {
+        console.log(`🧪 [DEBUG] Equipment quote upload FAILED at staff backend:`);
+        console.log(`   - HTTP Status: ${response.status}`);
+        console.log(`   - Error Response: ${errorData}`);
+        console.log(`   - Document Type Sent: "${documentType}"`);
+      }
+      
       // 📊 AUDIT: Track upload failure
       auditUploadAttempt(id, file.originalname, file.size, 'failed', errorData);
       
@@ -756,6 +773,14 @@ app.use((req, res, next) => {
     
     const data = await response.json();
     console.log('✅ [SERVER] Staff backend upload success:', data);
+    
+    // 🧪 EQUIPMENT_QUOTE DEBUG: Enhanced success logging
+    if (documentType?.includes('equipment')) {
+      console.log(`🧪 [DEBUG] Equipment quote upload SUCCESS at staff backend:`);
+      console.log(`   - HTTP Status: ${response.status}`);
+      console.log(`   - Response Data:`, JSON.stringify(data, null, 2));
+      console.log(`   - Document Type Sent: "${documentType}"`);
+    }
     
     // 📊 AUDIT: Track successful completion
     auditUploadAttempt(id, file.originalname, file.size, 'completed');

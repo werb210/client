@@ -139,6 +139,11 @@ function UnifiedDocumentUploadCard({
       const getApiCategory = (label: string): string => {
         const labelLower = label.toLowerCase();
         
+        // 🧪 DEBUG: Log label for equipment quote debugging
+        if (labelLower.includes('equipment')) {
+          console.log(`🧪 [DEBUG] Equipment document label: "${label}" → lowercase: "${labelLower}"`);
+        }
+        
         // Bank statements - exact match
         if (labelLower.includes('bank') && labelLower.includes('statement')) {
           return 'bank_statements';
@@ -159,9 +164,10 @@ function UnifiedDocumentUploadCard({
           return 'tax_returns';
         }
         
-        // Equipment Quotes - specific pattern
+        // Equipment Quotes - specific pattern with debug logging
         if (labelLower.includes('equipment') && labelLower.includes('quote')) {
-          return 'equipment_quotes';
+          console.log(`🧪 [DEBUG] Equipment quote matched: "${label}" → "equipment_quote"`);
+          return 'equipment_quote';
         }
         
         // Business License - specific pattern
@@ -180,10 +186,17 @@ function UnifiedDocumentUploadCard({
         }
         
         // Default: normalize to underscore format
-        return label.toLowerCase().replace(/\s+/g, '_');
+        const defaultCategory = label.toLowerCase().replace(/\s+/g, '_');
+        console.log(`🧪 [DEBUG] Default category mapping: "${label}" → "${defaultCategory}"`);
+        return defaultCategory;
       };
       
       const category = getApiCategory(doc.label);
+      
+      // 🧪 DEBUG: Enhanced logging for equipment quote debugging
+      console.log(`🧪 [DEBUG] Document label: "${doc.label}"`);
+      console.log(`🧪 [DEBUG] Mapped category: "${category}"`);
+      console.log(`🧪 [DEBUG] Files to upload: ${files.length}`);
       
       // Validate file sizes (25MB limit)
       const oversizedFiles = files.filter(file => file.size > 25 * 1024 * 1024);
@@ -220,9 +233,16 @@ function UnifiedDocumentUploadCard({
           formData.append('document', file);
           formData.append('documentType', category.toLowerCase().replace(/\s+/g, '_'));
           
+          // 🧪 REQUIRED DEBUG LOGGING as per user instructions
+          console.log("Uploading file:", file.name, "→", category);
           console.log(`📤 [STEP5] Uploading file ${i + 1}/${files.length}: ${file.name}`);
           console.log(`📤 [STEP5] Document type: ${category}`);
           console.log(`📤 [STEP5] Application ID: ${applicationId}`);
+          console.log(`📤 [STEP5] FormData payload:`, {
+            document: file.name,
+            documentType: category.toLowerCase().replace(/\s+/g, '_'),
+            endpoint: `/api/public/applications/${applicationId}/documents`
+          });
           
           const uploadResponse = await fetch(`/api/public/applications/${applicationId}/documents`, {
             method: 'POST',
