@@ -180,22 +180,24 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
   }, [isOpen]);
 
-  // Proactive messaging setup
+  // Enhanced proactive messaging setup
   useEffect(() => {
     if (isOpen && !proactiveShown) {
-      // Show proactive help message after 30 seconds of inactivity
+      // Contextual proactive message after 15 seconds (optimized timing)
       proactiveTimeoutRef.current = setTimeout(() => {
         if (!proactiveShown) {
-          addBotMessage('Need help choosing a loan product? I can recommend the best financing options based on your business needs!');
+          const contextualMessage = getContextualProactiveMessage();
+          addBotMessage(contextualMessage);
           setProactiveShown(true);
         }
-      }, 30000);
+      }, 15000);
     }
 
-    // Mouse leave detection for exit intent
+    // Enhanced exit intent detection
     const handleMouseLeave = (e: MouseEvent) => {
       if (e.clientY < 10 && isOpen && !proactiveShown) {
-        addBotMessage('Leaving? Can I assist you with anything about our financing options before you go?');
+        const exitMessage = getExitIntentMessage();
+        addBotMessage(exitMessage);
         setProactiveShown(true);
       }
     };
@@ -400,9 +402,13 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       assistantMessage.content = finalResponse;
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Check for handoff indication in response
-      if (data.handoff) {
-        addBotMessage('I understand this is important to you. Let me connect you with a human specialist who can provide more detailed assistance. Please use the "Report it" button below to describe your specific needs.');
+      // Enhanced handoff logic with proactive triggers
+      if (data.handoff || shouldTriggerHandoff(userMessage.content, analysis.sentiment)) {
+        addBotMessage('I understand this is important to you. Let me connect you with a human specialist who can provide personalized assistance. Please use the "Talk to Human" button below or click "Report it" to describe your specific needs.');
+        // Add "Talk to Human" button option
+        setTimeout(() => {
+          addBotMessage('You can also click here for immediate human assistance: [Request Human Agent]');
+        }, 1000);
       }
 
     } catch (error) {
@@ -421,6 +427,41 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
   const getConversationText = () => {
     return messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
+  };
+
+  // Enhanced contextual messaging
+  const getContextualProactiveMessage = () => {
+    if (currentStep === 1) {
+      return "I see you're starting your financing application! I can help explain our loan products and guide you through each step.";
+    } else if (currentStep === 2) {
+      return "Need help choosing the right financing product? I can recommend options based on your business type and needs.";
+    } else if (currentStep >= 5) {
+      return "Working on document upload? I can explain what documents are needed and help with any questions about the process.";
+    }
+    return "Hi there! I'm here to help with any questions about our financing options or application process.";
+  };
+
+  const getExitIntentMessage = () => {
+    if (currentStep > 1) {
+      return "Before you go - I can help save your progress or answer any questions about completing your application!";
+    }
+    return "Wait! I can quickly explain our financing options and help you find the perfect loan for your business needs.";
+  };
+
+  // Enhanced handoff logic with context
+  const shouldTriggerHandoff = (userMessage: string, sentiment: string) => {
+    const frustratedPhrases = ['frustrated', 'angry', 'terrible', 'awful', 'hate', 'horrible', 'useless'];
+    const complexPhrases = ['speak to someone', 'human agent', 'representative', 'manager', 'complicated'];
+    
+    const hasFrustratedWords = frustratedPhrases.some(phrase => 
+      userMessage.toLowerCase().includes(phrase)
+    );
+    const hasComplexRequest = complexPhrases.some(phrase => 
+      userMessage.toLowerCase().includes(phrase)
+    );
+    
+    return (sentiment === 'negative' || sentiment === 'frustrated') || 
+           hasFrustratedWords || hasComplexRequest;
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -542,26 +583,44 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         </button>
       </div>
       
-      {/* Integrated Chat Footer with Report Option */}
+      {/* Enhanced Chat Footer with Multiple Options */}
       <div 
-        className="chat-footer text-white py-3 px-4 text-sm text-center"
+        className="chat-footer text-white py-3 px-4 text-sm"
         style={{
           background: '#005D2E',
           borderTop: '1px solid rgba(255,255,255,0.2)'
         }}
       >
-        Do you have an issue?
-        <button
-          onClick={() => setShowFeedbackModal(true)}
-          className="ml-3 px-3 py-1.5 rounded border-none cursor-pointer transition-colors duration-200 text-white"
-          style={{
-            background: 'rgba(255,255,255,0.15)'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
-          onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-        >
-          Report it
-        </button>
+        <div className="flex justify-between items-center">
+          <span>Need help?</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                addBotMessage('Connecting you to a human agent. Please hold while we find someone to assist you...');
+                setShowFeedbackModal(true);
+              }}
+              className="px-3 py-1.5 rounded border-none cursor-pointer transition-colors duration-200 text-white text-xs"
+              style={{
+                background: 'rgba(255,255,255,0.15)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+            >
+              Talk to Human
+            </button>
+            <button
+              onClick={() => setShowFeedbackModal(true)}
+              className="px-3 py-1.5 rounded border-none cursor-pointer transition-colors duration-200 text-white text-xs"
+              style={{
+                background: 'rgba(255,255,255,0.15)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+            >
+              Report Issue
+            </button>
+          </div>
+        </div>
       </div>
       
       <FeedbackModal 

@@ -2,6 +2,7 @@ import { Switch, Route } from "wouter";
 import { lazy } from "react";
 import { ChatBot } from "@/components/ChatBot";
 import { ChatBotTest } from "@/components/ChatBotTest";
+import { ChatBotDashboard } from "@/components/ChatBotDashboard";
 
 import { useChatBot } from "@/hooks/useChatBot";
 
@@ -212,6 +213,7 @@ export function MainLayout() {
       <Route path="/cookie-consent-test" component={CookieConsentTest} />
       <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} />
       <Route path="/advanced-chatbot-test" component={() => <ChatBotTest />} />
+      <Route path="/chatbot-dashboard" component={() => <ChatBotDashboard />} />
       
       {/* Default Route - Landing Page */}
       <Route path="/" component={LandingPage} />

@@ -14,6 +14,7 @@ import chatRouter from "./routes/chat.js";
 import analyzeRouter from "./routes/analyze.js";
 import translateRouter from "./routes/translate.js";
 import statusRouter from "./routes/status.js";
+import handoffRouter from "./routes/handoff.js";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -803,6 +804,7 @@ app.use((req, res, next) => {
   app.use('/api', analyzeRouter);
   app.use('/api', translateRouter);
   app.use('/api', statusRouter);
+  app.use('/api', handoffRouter);
   
   // Feedback endpoint for issue reporting with screenshot support
   app.post('/api/feedback', upload.single('screenshot'), async (req, res) => {
