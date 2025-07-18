@@ -4,10 +4,10 @@
  * Centralized configuration for API endpoints and other constants
  */
 
-// API Configuration - Development uses direct server connection, production uses relative path
+// API Configuration - Development uses direct server connection, production uses staff backend
 export const API_BASE_URL = import.meta.env.DEV 
   ? 'http://localhost:5000/api'  // Direct to Express server in development (Vite proxy workaround)
-  : (import.meta.env.VITE_API_BASE_URL || '/api'); // Production uses environment variable or relative path
+  : (import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app/api'); // Production uses staff backend
 
 // Staff API Configuration
 export const STAFF_API_BASE_URL = API_BASE_URL;
