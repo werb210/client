@@ -158,6 +158,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   const [proactiveShown, setProactiveShown] = useState(false);
   const [socket, setSocket] = useState<any>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isMobileFullscreen, setIsMobileFullscreen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const proactiveTimeoutRef = useRef<NodeJS.Timeout>();
@@ -182,6 +183,46 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
     }
+  }, [isOpen]);
+
+  // Mobile fullscreen detection and toggle
+  useEffect(() => {
+    const checkMobileFullscreen = () => {
+      const isMobile = window.matchMedia('(max-width: 600px)').matches;
+      const shouldBeFullscreen = isOpen && isMobile;
+      setIsMobileFullscreen(shouldBeFullscreen);
+
+      // Toggle body scroll prevention on mobile
+      if (shouldBeFullscreen) {
+        document.body.classList.add('chatbot-fullscreen');
+        console.log('📱 Mobile fullscreen chatbot activated');
+      } else {
+        document.body.classList.remove('chatbot-fullscreen');
+      }
+    };
+
+    // Check on mount and when chat opens
+    if (isOpen) {
+      checkMobileFullscreen();
+    } else {
+      // Always remove body class when chat closes
+      document.body.classList.remove('chatbot-fullscreen');
+      setIsMobileFullscreen(false);
+    }
+
+    // Listen for resize events
+    const handleResize = () => {
+      if (isOpen) {
+        checkMobileFullscreen();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      // Cleanup body class on unmount
+      document.body.classList.remove('chatbot-fullscreen');
+    };
   }, [isOpen]);
 
   // Socket.IO integration for real-time messaging
@@ -581,10 +622,18 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   }
 
   return (
-    <div className="chat-widget fixed bottom-0 right-5 w-80 max-h-[750px] bg-white flex flex-col shadow-xl z-50 rounded-t-lg">
+    <div className={cn(
+      "chat-widget bg-white flex flex-col shadow-xl z-50",
+      isMobileFullscreen 
+        ? "fullscreen-mobile fixed inset-0 w-full h-full max-h-none rounded-none" 
+        : "fixed bottom-0 right-5 w-80 max-h-[750px] rounded-t-lg"
+    )}>
       {/* Professional Chat Header */}
       <div 
-        className="chat-header flex items-center justify-between px-4 py-3 text-white rounded-t-lg"
+        className={cn(
+          "chat-header flex items-center justify-between px-4 py-3 text-white",
+          isMobileFullscreen ? "rounded-none" : "rounded-t-lg"
+        )}
         style={{ background: '#007A3D' }}
       >
         <div className="flex items-center gap-2">
@@ -605,7 +654,10 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         </button>
       </div>
       {/* Chat Body */}
-      <div className="chat-body flex-1 overflow-y-auto p-3">
+      <div className={cn(
+        "chat-body flex-1 overflow-y-auto p-3",
+        isMobileFullscreen && "min-h-0" // Ensure proper flex behavior on mobile
+      )}>
         <div className="space-y-3" data-chat-messages>
             {messages.map((message) => (
               <div
