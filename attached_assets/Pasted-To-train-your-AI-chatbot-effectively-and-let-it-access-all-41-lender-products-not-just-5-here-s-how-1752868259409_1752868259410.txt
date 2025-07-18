@@ -1,0 +1,76 @@
+To train your AI chatbot effectively and let it access all 41+ lender products—not just 5—here’s how it works and what you need to do:
+
+---
+
+## 🧠 1. You **can’t** just tell it things in chat to “teach” it permanently
+
+* What you say in chat is ephemeral—used only to form that one response.
+* To make the chatbot *learn* content, you must upload it into your **RAG knowledge base** (docs, databases, FAQs). This is how it's permanently available.
+
+### ✅ Required steps:
+
+1. Extract your product data (PDFs, spreadsheets, etc.).
+2. **Chunk** the data into bite-sized pieces.
+3. **Embed** them into a vector database.
+4. At query time, **retrieve** relevant chunks.
+5. Include those in the prompt for the AI’s response.
+   ([Medium][1], [Rapid Innovation][2], [Medium][3])
+
+---
+
+## 📦 2. Why it only sees 5 products instead of 41+
+
+This is likely caused by your **`top_k` limit** in the retrieval settings:
+
+* Vector DB returns only the top *k* chunks (e.g. k = 5).
+* That means only those 5 products ever get passed to the AI, making it “see” just 5.
+* You can increase `k` (e.g. to 20 or 40), but be careful not to exceed your LLM context limit—this can degrade performance.
+  ([Medium][4], [Nate's Newsletter][5])
+
+---
+
+## ⚙️ 3. How to fix product visibility
+
+Here’s what to adjust in your **ingestion and retrieval pipeline**:
+
+```js
+// After embedding your products...
+const k = 20;  // adjust higher if context allows
+const retriever = vectorDB.asRetriever({ k });
+
+const chain = RetrievalQA({
+  retriever,
+  llm: new ChatOpenAI({ model: 'gpt-4o-mini' })
+});
+```
+
+This change ensures more products are considered when responding, while still managing context window limits.
+([Pinecone][6])
+
+---
+
+## 🔄 4. Bottom Line — What You Should Do
+
+| Action                                                          | Description                                            |
+| --------------------------------------------------------------- | ------------------------------------------------------ |
+| ✅ Upload all lender product info to your RAG knowledge base     | Make every product available                           |
+| ✅ Adjust `chunk_size` and `k` in retriever to include more data | Increase `k` to cover all products                     |
+| ✅ Avoid context overflow                                        | Too many chunks can overwhelm LLM; monitor performance |
+| ✅ Re-run ingestion after adding/editing products                | Keeps knowledge base up-to-date                        |
+
+---
+
+## ✅ TL;DR:
+
+* Chat alone doesn't teach the model—it’s transient.
+* The LLM only “sees” what you’ve embedded and retrieved.
+* Increase `top_k` (up to 41+) to let it access all product data, but balance against prompt size limits.
+
+Let me know if you’d like sample ingestion code, chunking strategy adjustments, or help optimizing your `k` value!
+
+[1]: https://medium.com/nerd-for-tech/advanced-retrieval-augmented-generation-rag-and-fine-tuning-techniques-for-llms-lora-qlora-dbc3153866cb?utm_source=chatgpt.com "Advanced Retrieval-Augmented Generation (RAG) and Fine-Tuning ..."
+[2]: https://www.rapidinnovation.io/post/retrieval-augmented-generation-using-your-data-with-llms?ref=chitika.com&utm_source=chatgpt.com "Retrieval-Augmented Generation (RAG) for LLMs in 2025 Guide"
+[3]: https://medium.com/%40adnanmasood/optimizing-chunking-embedding-and-vectorization-for-retrieval-augmented-generation-ea3b083b68f7?utm_source=chatgpt.com "Optimizing Chunking, Embedding, and Vectorization for Retrieval ..."
+[4]: https://medium.com/intel-tech/optimize-vector-databases-enhance-rag-driven-generative-ai-90c10416cb9c?utm_source=chatgpt.com "Optimize Vector Databases, Enhance RAG-Driven Generative AI"
+[5]: https://natesnewsletter.substack.com/p/rag-the-complete-guide-to-retrieval?utm_source=chatgpt.com "RAG: The Complete Guide to Retrieval-Augmented Generation for AI"
+[6]: https://www.pinecone.io/learn/series/rag/rerankers/?utm_source=chatgpt.com "Rerankers and Two-Stage Retrieval - Pinecone"

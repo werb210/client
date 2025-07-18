@@ -121,8 +121,11 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-// RAG: Retrieve relevant documentation chunks
+// Enhanced RAG: Retrieve relevant documentation chunks with product database access
 async function retrieveRelevantDocs(query: string, context: any): Promise<string[]> {
+  const relevantDocs = [];
+  const queryLower = query.toLowerCase();
+  
   // Knowledge base of financial terms and processes
   const knowledgeBase = [
     "Working Capital loans provide funding for day-to-day business operations, inventory, and short-term expenses. Typical amounts range from $10,000 to $500,000.",
@@ -137,17 +140,93 @@ async function retrieveRelevantDocs(query: string, context: any): Promise<string
     "Application processing typically takes 2-5 business days, with funding available within 1-2 weeks of approval."
   ];
 
-  // Simple keyword matching for RAG (in production, use vector embeddings)
-  const queryLower = query.toLowerCase();
-  const relevantDocs = knowledgeBase.filter(doc => {
+  // Add relevant knowledge base entries
+  const relevantKnowledge = knowledgeBase.filter(doc => {
     const docLower = doc.toLowerCase();
     return queryLower.split(' ').some(word => 
       word.length > 3 && docLower.includes(word)
     );
   });
+  
+  relevantDocs.push(...relevantKnowledge.slice(0, 3));
+  
+  // Enhanced product retrieval with higher k value (up to 20 products)
+  const { products } = context || {};
+  if (products && products.length > 0) {
+    console.log(`🤖 [RAG] Processing ${products.length} total products for query: "${query}"`);
+    
+    // Product-specific keyword matching with expanded retrieval
+    const productKeywords = [
+      'rate', 'rates', 'lowest', 'best', 'cheap', 'expensive', 'cost', 'price', 'pricing',
+      'working capital', 'equipment', 'line of credit', 'loc', 'term loan', 'factoring',
+      'invoice', 'business loan', 'financing', 'credit', 'loan', 'amount', 'maximum',
+      'minimum', 'canada', 'canadian', 'us', 'american', 'requirements', 'documents'
+    ];
+    
+    const hasProductQuery = productKeywords.some(keyword => 
+      queryLower.includes(keyword)
+    );
+    
+    if (hasProductQuery) {
+      // Retrieve up to 20 relevant products (increased from 5)
+      const k = 20;
+      
+      // Enhanced product filtering with multiple criteria
+      const relevantProducts = products.filter((product: any) => {
+        const productText = JSON.stringify(product).toLowerCase();
+        const productName = (product.name || product.product || '').toLowerCase();
+        const productCategory = (product.category || '').toLowerCase();
+        
+        // Check if query matches product content
+        const matchesQuery = queryLower.split(' ').some(word => {
+          if (word.length < 3) return false;
+          return productText.includes(word) || productName.includes(word) || productCategory.includes(word);
+        });
+        
+        // Priority matching for specific product types
+        const isSpecificProductType = (
+          (queryLower.includes('working capital') && productCategory.includes('working')) ||
+          (queryLower.includes('equipment') && productCategory.includes('equipment')) ||
+          (queryLower.includes('line of credit') && productCategory.includes('line')) ||
+          (queryLower.includes('loc') && productCategory.includes('line')) ||
+          (queryLower.includes('factoring') && productCategory.includes('factoring')) ||
+          (queryLower.includes('term loan') && productCategory.includes('term'))
+        );
+        
+        return matchesQuery || isSpecificProductType;
+      }).slice(0, k);
+      
+      console.log(`🤖 [RAG] Found ${relevantProducts.length} relevant products out of ${products.length} total`);
+      
+      // Create product documentation chunks
+      relevantProducts.forEach((product: any, index: number) => {
+        const productDoc = `Product ${index + 1}: ${product.name || product.product || 'Unknown'} - ` +
+          `Category: ${product.category || 'N/A'}, ` +
+          `Rate: ${product.rate || 'Contact for rates'}, ` +
+          `Amount: $${product.min_amount?.toLocaleString() || '0'} - $${product.max_amount?.toLocaleString() || 'Contact for max'}, ` +
+          `Geography: ${product.geography || product.country || 'N/A'}, ` +
+          `Requirements: ${product.doc_requirements || product.documentRequirements || 'Standard business docs'}`;
+        
+        relevantDocs.push(productDoc);
+      });
+      
+      // Add comprehensive product summary
+      if (relevantProducts.length > 0) {
+        const productSummary = `Product Database Access: Successfully retrieved ${relevantProducts.length} products from ${products.length} total available products. ` +
+          `Categories include: ${[...new Set(relevantProducts.map((p: any) => p.category).filter(Boolean))].join(', ')}`;
+        relevantDocs.push(productSummary);
+      }
+    } else {
+      // For non-product queries, still include basic product overview
+      const productOverview = `Product Database: ${products.length} total financing products available including Working Capital, Equipment Financing, Lines of Credit, Term Loans, and Invoice Factoring across Canadian and US markets.`;
+      relevantDocs.push(productOverview);
+    }
+  } else {
+    console.warn('🤖 [RAG] WARNING: No products available in context for enhanced retrieval');
+  }
 
-  // Return top 3 most relevant documents
-  return relevantDocs.slice(0, 3);
+  console.log(`🤖 [RAG] Final retrieval: ${relevantDocs.length} documentation chunks for AI context`);
+  return relevantDocs;
 }
 
 function buildSystemMessage(context: any, sentiment?: string, intent?: string): string {
@@ -168,7 +247,7 @@ Communication Style:
 - Offer specific next steps when possible
 - Proactively suggest human handoff for complex situations
 
-Available Products: ${JSON.stringify(products?.slice(0, 5) || [])}`;
+Product Database Access: ${products?.length || 0} total financing products available across all categories and markets. You have full access to product details including rates, amounts, requirements, and geographic availability through the RAG system.`;
 
   if (currentStep) {
     systemMessage += `\n\nCurrent Context:
@@ -248,31 +327,51 @@ function handleProductRecommendations(args: any, context: any): string {
     return 'I don\'t have access to current product information. Please check our Step 2 recommendations page for available financing options.';
   }
 
-  // Filter products based on criteria
+  console.log(`🤖 [FUNCTION_CALL] Processing product recommendations with ${products.length} total products available`);
+
+  // Enhanced filtering with more flexible criteria
   let recommendations = products.filter((product: any) => {
-    if (fundingAmount && product.max_amount && fundingAmount > product.max_amount) return false;
-    if (fundingAmount && product.min_amount && fundingAmount < product.min_amount) return false;
-    if (location && product.geography && !product.geography.includes(location.toLowerCase())) return false;
+    // More flexible amount matching
+    if (fundingAmount && product.max_amount && fundingAmount > product.max_amount * 1.2) return false;
+    if (fundingAmount && product.min_amount && fundingAmount < product.min_amount * 0.8) return false;
+    
+    // Geography matching with variations
+    if (location) {
+      const locationLower = location.toLowerCase();
+      const productGeo = (product.geography || product.country || '').toLowerCase();
+      const isCanada = locationLower.includes('ca') || locationLower.includes('canada');
+      const isUS = locationLower.includes('us') || locationLower.includes('united states');
+      
+      if (isCanada && !productGeo.includes('ca') && !productGeo.includes('canada')) return false;
+      if (isUS && !productGeo.includes('us') && !productGeo.includes('united states')) return false;
+    }
+    
     return true;
   });
 
   if (recommendations.length === 0) {
-    return `Based on your funding amount of $${fundingAmount?.toLocaleString()}, I recommend reviewing our full product catalog in Step 2. Our recommendation engine will provide personalized matches based on your specific needs.`;
+    return `I searched through all ${products.length} available products. Based on your funding amount of $${fundingAmount?.toLocaleString()}, I recommend reviewing our full product catalog in Step 2. Our recommendation engine will provide personalized matches based on your specific needs.`;
   }
 
-  const topProducts = recommendations.slice(0, 3);
-  let response = `Based on your requirements (${fundingAmount ? `$${fundingAmount.toLocaleString()} funding` : 'your funding needs'}), here are my top recommendations:\n\n`;
+  // Show more products when available (up to 5)
+  const topProducts = recommendations.slice(0, 5);
+  let response = `I found ${recommendations.length} products from our database of ${products.length} total options. Here are the top matches for your ${fundingAmount ? `$${fundingAmount.toLocaleString()} funding` : 'funding needs'}:\n\n`;
   
   topProducts.forEach((product: any, index: number) => {
-    response += `${index + 1}. **${product.name}**\n`;
+    response += `${index + 1}. **${product.name || product.product || 'Product Name'}**\n`;
     if (product.rate) response += `   • Rate: ${product.rate}\n`;
     if (product.min_amount && product.max_amount) {
       response += `   • Amount: $${product.min_amount?.toLocaleString()} - $${product.max_amount?.toLocaleString()}\n`;
     }
     if (product.category) response += `   • Type: ${product.category}\n`;
+    if (product.geography || product.country) response += `   • Available in: ${product.geography || product.country}\n`;
     response += '\n';
   });
 
+  if (recommendations.length > 5) {
+    response += `Plus ${recommendations.length - 5} more products available. `;
+  }
+  
   response += 'Would you like me to help you start an application for any of these products?';
   return response;
 }
