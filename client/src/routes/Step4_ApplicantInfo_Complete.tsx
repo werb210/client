@@ -250,18 +250,19 @@ export default function Step4ApplicantInfoComplete() {
       };
 
       const step3 = {
-        // Business details from Step 3
+        // Business details from Step 3 - mapping correct field names
         operatingName: state.step3?.operatingName,
         legalName: state.step3?.legalName,
-        businessAddress: state.step3?.businessAddress,
+        businessName: state.step3?.operatingName || state.step3?.legalName, // Map operatingName to businessName
+        businessAddress: state.step3?.businessStreetAddress, // Correct field name
         businessCity: state.step3?.businessCity,
         businessState: state.step3?.businessState,
-        businessZip: state.step3?.businessZip,
+        businessZip: state.step3?.businessPostalCode, // Correct field name
         businessPhone: state.step3?.businessPhone,
         businessStructure: state.step3?.businessStructure,
         businessStartDate: state.step3?.businessStartDate,
-        numberOfEmployees: state.step3?.numberOfEmployees,
-        annualRevenue: state.step3?.annualRevenue
+        numberOfEmployees: state.step3?.employeeCount, // Correct field name
+        annualRevenue: state.step3?.estimatedYearlyRevenue // Correct field name
       };
 
       const step4 = processedData;
@@ -316,6 +317,19 @@ export default function Step4ApplicantInfoComplete() {
           email: step4.applicantEmail || processedData.applicantEmail // ✅ Add required email field
         }
       };
+      
+      // 🔧 USER REQUESTED DEBUG: State persistence verification for Step 3 fields
+      console.log("🔧 STATE PERSISTENCE CHECK:");
+      console.log("🔧 Raw Step 3 state:", state.step3);
+      console.log("🔧 applicationData.business_name:", applicationData.step3?.businessName);
+      console.log("🔧 applicationData.business_phone:", applicationData.step3?.businessPhone);
+      console.log("🔧 applicationData.business_province:", applicationData.step3?.businessState);
+      console.log("🔧 Step 3 fields validation:");
+      console.log("🔧   business_name !== undefined:", applicationData.step3?.businessName !== undefined);
+      console.log("🔧   business_phone !== undefined:", applicationData.step3?.businessPhone !== undefined);
+      console.log("🔧   business_province !== undefined:", applicationData.step3?.businessState !== undefined);
+      
+      console.log("Submitting application with:", applicationData);
       
       // ✅ ENHANCED PAYLOAD VERIFICATION - Report back what payload was sent
       console.log("📤 =================================");
