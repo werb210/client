@@ -42,8 +42,9 @@ export default function Step6ConfirmAndSubmit() {
   const { toast } = useToast();
   
   const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('idle');
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  // Terms already accepted in Step 6 typed signature - no additional acceptance needed
+  const [termsAccepted, setTermsAccepted] = useState(true);
+  const [privacyAccepted, setPrivacyAccepted] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Get uploaded documents from Step 5
@@ -201,7 +202,8 @@ export default function Step6ConfirmAndSubmit() {
     setLocation('/apply/step-5'); // Go back to Step 5 since Step 6 is removed
   };
 
-  const canSubmit = termsAccepted && privacyAccepted && state.step1 && state.step3 && state.step4;
+  // Terms already accepted in Step 6 - just check required form data
+  const canSubmit = state.step1 && state.step3 && state.step4;
 
   // Show clean confirmation after successful submission
   if (submissionStatus === 'submitted') {
@@ -285,73 +287,23 @@ export default function Step6ConfirmAndSubmit() {
         </CardContent>
       </Card>
 
-      {/* Terms & Conditions */}
+      {/* Authorization Confirmation */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-green-600" />
-            Terms & Conditions
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            Authorization Complete
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Terms of Service */}
-          <div className="border rounded-lg p-4 max-h-64 overflow-y-auto bg-gray-50">
-            <h4 className="font-semibold mb-3">Boreal Financial Terms of Service</h4>
-            <div className="text-sm text-gray-700 space-y-2">
-              <p><strong>1. Application Processing:</strong> By submitting this application, you authorize Boreal Financial to share your information with potential lenders in our network.</p>
-              
-              <p><strong>2. Credit Authorization:</strong> You authorize lenders to perform credit checks and verify the information provided in this application.</p>
-              
-              <p><strong>3. Information Accuracy:</strong> You certify that all information provided is true, complete, and accurate to the best of your knowledge.</p>
-              
-              <p><strong>4. No Guarantee:</strong> Submission of this application does not guarantee loan approval. Final lending decisions are made by individual lenders.</p>
-              
-              <p><strong>5. Service Fees:</strong> Boreal Financial does not charge fees for application submission or lender matching services.</p>
-              
-              <p><strong>6. Communication:</strong> You consent to receive communications from Boreal Financial and our lending partners via phone, email, and text message.</p>
-              
-              <p><strong>7. Data Retention:</strong> Your application data will be retained according to our privacy policy and applicable regulations.</p>
-            </div>
-          </div>
-          
-          <div className="flex items-start space-x-2">
-            <Checkbox 
-              id="terms" 
-              checked={termsAccepted}
-              onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-            />
-            <label htmlFor="terms" className="text-sm leading-relaxed">
-              I have read and agree to the <a href="#" className="text-blue-600 underline">Terms of Service</a> and understand that my application will be shared with potential lenders.
-            </label>
-          </div>
-
-          {/* Privacy Policy */}
-          <div className="border rounded-lg p-4 max-h-64 overflow-y-auto bg-gray-50">
-            <h4 className="font-semibold mb-3">Privacy Policy Summary</h4>
-            <div className="text-sm text-gray-700 space-y-2">
-              <p><strong>Information Collection:</strong> We collect business and personal information necessary to process your loan application.</p>
-              
-              <p><strong>Information Sharing:</strong> Your information is shared with qualified lenders in our network for loan matching purposes.</p>
-              
-              <p><strong>Data Security:</strong> We employ industry-standard security measures to protect your personal and business information.</p>
-              
-              <p><strong>Third-Party Services:</strong> We may use third-party services for credit verification, identity verification, and application processing.</p>
-              
-              <p><strong>Communication Preferences:</strong> You can update your communication preferences at any time through your account dashboard.</p>
-              
-              <p><strong>Data Rights:</strong> You have the right to access, update, or request deletion of your personal information subject to regulatory requirements.</p>
-            </div>
-          </div>
-          
-          <div className="flex items-start space-x-2">
-            <Checkbox 
-              id="privacy" 
-              checked={privacyAccepted}
-              onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
-            />
-            <label htmlFor="privacy" className="text-sm leading-relaxed">
-              I acknowledge that I have read and understand the <a href="#" className="text-blue-600 underline">Privacy Policy</a> and consent to the collection and use of my information as described.
-            </label>
+        <CardContent>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <p className="text-green-800 mb-2">
+              ✅ <strong>Electronic Signature Completed</strong>
+            </p>
+            <p className="text-sm text-green-700">
+              Your electronic signature and all required agreements have been completed in Step 6. 
+              You are now ready to submit your application for review.
+            </p>
           </div>
         </CardContent>
       </Card>
