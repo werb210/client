@@ -48,7 +48,7 @@ export default function TypedSignature({
   });
 
   const allAgreementsChecked = Object.values(agreements).every(Boolean);
-  const nameMatches = typedName.trim().toLowerCase() === applicantName.toLowerCase();
+  const nameMatches = typedName.trim().toLowerCase() === applicantName.trim().toLowerCase();
   const canAuthorize = allAgreementsChecked && nameMatches && hasScrolledToBottom;
 
   const handleAgreementChange = (key: keyof typeof agreements, checked: boolean) => {
