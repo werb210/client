@@ -27,7 +27,8 @@ const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 console.log(`🚀 Running in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
 console.log('Environment:', process.env.NODE_ENV);
-console.log('Staff API URL:', cfg.staffApiUrl);
+console.log('🧪 STAFF_API_URL at runtime:', cfg.staffApiUrl);
+console.log('🧪 Environment VITE_STAFF_API_URL:', process.env.VITE_STAFF_API_URL);
 
 // Production-ready CORS configuration
 app.use((req, res, next) => {
@@ -343,8 +344,7 @@ app.use((req, res, next) => {
       console.log(`📋 [SERVER] PATCH /api/public/applications/${applicationId} - Finalizing application`);
       console.log('📝 [SERVER] Finalization data:', req.body);
       
-      const staffApiUrl = cfg.staffApiUrl + '/api';
-      const response = await fetch(`${staffApiUrl}/public/applications/${applicationId}`, {
+      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${applicationId}`, {
         method: 'PATCH',
         headers: {
           'Accept': 'application/json',
