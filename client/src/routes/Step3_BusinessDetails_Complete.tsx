@@ -110,31 +110,78 @@ export default function Step3BusinessDetailsComplete() {
     }
   }, [state.step3?.businessPhone, phoneDisplay, countryCode]);
 
-  // Auto-save functionality
+  // Auto-save functionality with enhanced debugging
   useEffect(() => {
     const subscription = form.watch((data) => {
-      // Auto-save to step3 object structure
+      // 🔧 DEBUG: Log all form values being watched
+      console.log("🔧 STEP 3 AUTO-SAVE TRIGGERED:");
+      console.log("🔧   Full form data:", data);
+      
+      // Auto-save to step3 object structure - only save non-empty values
       const stepData: Partial<BusinessDetailsFormData> = {};
       
-      if (data.operatingName !== undefined) stepData.operatingName = data.operatingName;
-      if (data.legalName !== undefined) stepData.legalName = data.legalName;
-      if (data.businessStreetAddress !== undefined) stepData.businessStreetAddress = data.businessStreetAddress;
-      if (data.businessCity !== undefined) stepData.businessCity = data.businessCity;
-      if (data.businessState !== undefined) stepData.businessState = data.businessState;
-      if (data.businessPostalCode !== undefined) stepData.businessPostalCode = data.businessPostalCode;
-      if (data.businessPhone !== undefined) stepData.businessPhone = data.businessPhone;
-      if (data.businessWebsite !== undefined) stepData.businessWebsite = data.businessWebsite;
-      if (data.businessStartDate !== undefined) stepData.businessStartDate = data.businessStartDate;
-      if (data.businessStructure !== undefined) stepData.businessStructure = data.businessStructure;
-      if (data.employeeCount !== undefined) stepData.employeeCount = data.employeeCount;
-      if (data.estimatedYearlyRevenue !== undefined) stepData.estimatedYearlyRevenue = data.estimatedYearlyRevenue;
+      if (data.operatingName !== undefined && data.operatingName !== '') {
+        stepData.operatingName = data.operatingName;
+        console.log("🔧   Saving operatingName:", data.operatingName);
+      }
+      if (data.legalName !== undefined && data.legalName !== '') {
+        stepData.legalName = data.legalName;
+        console.log("🔧   Saving legalName:", data.legalName);
+      }
+      if (data.businessStreetAddress !== undefined && data.businessStreetAddress !== '') {
+        stepData.businessStreetAddress = data.businessStreetAddress;
+        console.log("🔧   Saving businessStreetAddress:", data.businessStreetAddress);
+      }
+      if (data.businessCity !== undefined && data.businessCity !== '') {
+        stepData.businessCity = data.businessCity;
+        console.log("🔧   Saving businessCity:", data.businessCity);
+      }
+      if (data.businessState !== undefined && data.businessState !== '') {
+        stepData.businessState = data.businessState;
+        console.log("🔧   Saving businessState:", data.businessState);
+      }
+      if (data.businessPostalCode !== undefined && data.businessPostalCode !== '') {
+        stepData.businessPostalCode = data.businessPostalCode;
+        console.log("🔧   Saving businessPostalCode:", data.businessPostalCode);
+      }
+      if (data.businessPhone !== undefined && data.businessPhone !== '') {
+        stepData.businessPhone = data.businessPhone;
+        console.log("🔧   Saving businessPhone:", data.businessPhone);
+      }
+      if (data.businessWebsite !== undefined && data.businessWebsite !== '') {
+        stepData.businessWebsite = data.businessWebsite;
+        console.log("🔧   Saving businessWebsite:", data.businessWebsite);
+      }
+      if (data.businessStartDate !== undefined && data.businessStartDate !== '') {
+        stepData.businessStartDate = data.businessStartDate;
+        console.log("🔧   Saving businessStartDate:", data.businessStartDate);
+      }
+      if (data.businessStructure !== undefined && data.businessStructure !== '') {
+        stepData.businessStructure = data.businessStructure;
+        console.log("🔧   Saving businessStructure:", data.businessStructure);
+      }
+      if (data.employeeCount !== undefined && data.employeeCount > 0) {
+        stepData.employeeCount = data.employeeCount;
+        console.log("🔧   Saving employeeCount:", data.employeeCount);
+      }
+      if (data.estimatedYearlyRevenue !== undefined && data.estimatedYearlyRevenue >= 0) {
+        stepData.estimatedYearlyRevenue = data.estimatedYearlyRevenue;
+        console.log("🔧   Saving estimatedYearlyRevenue:", data.estimatedYearlyRevenue);
+      }
 
+      console.log("🔧   Final stepData being saved:", stepData);
       logger.log('[STEP3] Auto-save triggered with data:', stepData);
 
-      dispatch({
-        type: 'UPDATE_STEP3',
-        payload: stepData
-      });
+      // Only dispatch if we have actual data to save
+      if (Object.keys(stepData).length > 0) {
+        dispatch({
+          type: 'UPDATE_STEP3',
+          payload: stepData
+        });
+        console.log("🔧   Data dispatched to FormDataContext");
+      } else {
+        console.log("🔧   No non-empty data to save, skipping dispatch");
+      }
     });
 
     return () => subscription.unsubscribe();
