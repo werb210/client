@@ -34,7 +34,7 @@ const parseCurrencyString = (value: string): number => {
   return numbers === '' ? 0 : parseInt(numbers);
 };
 
-// Step 1 Schema - Use unified schema fields
+// Step 1 Schema - Only financial profile fields (no business details)
 const step1Schema = ApplicationFormSchema.pick({
   businessLocation: true,
   headquarters: true,
@@ -49,10 +49,6 @@ const step1Schema = ApplicationFormSchema.pick({
   accountsReceivableBalance: true,
   fixedAssetsValue: true,
   equipmentValue: true,
-  // Business details fields
-  businessName: true,
-  businessPhone: true,
-  businessState: true,
 }).partial(); // Keep fields optional for flexible workflow
 
 type FinancialProfileFormData = z.infer<typeof step1Schema>;
@@ -134,73 +130,7 @@ const fixedAssetsOptions = [
   { value: 1000001, label: 'Over $1,000,000' },
 ];
 
-const STATE_PROVINCE_OPTIONS = [
-  // US States
-  { value: 'AL', label: 'Alabama' },
-  { value: 'AK', label: 'Alaska' },
-  { value: 'AZ', label: 'Arizona' },
-  { value: 'AR', label: 'Arkansas' },
-  { value: 'CA', label: 'California' },
-  { value: 'CO', label: 'Colorado' },
-  { value: 'CT', label: 'Connecticut' },
-  { value: 'DE', label: 'Delaware' },
-  { value: 'FL', label: 'Florida' },
-  { value: 'GA', label: 'Georgia' },
-  { value: 'HI', label: 'Hawaii' },
-  { value: 'ID', label: 'Idaho' },
-  { value: 'IL', label: 'Illinois' },
-  { value: 'IN', label: 'Indiana' },
-  { value: 'IA', label: 'Iowa' },
-  { value: 'KS', label: 'Kansas' },
-  { value: 'KY', label: 'Kentucky' },
-  { value: 'LA', label: 'Louisiana' },
-  { value: 'ME', label: 'Maine' },
-  { value: 'MD', label: 'Maryland' },
-  { value: 'MA', label: 'Massachusetts' },
-  { value: 'MI', label: 'Michigan' },
-  { value: 'MN', label: 'Minnesota' },
-  { value: 'MS', label: 'Mississippi' },
-  { value: 'MO', label: 'Missouri' },
-  { value: 'MT', label: 'Montana' },
-  { value: 'NE', label: 'Nebraska' },
-  { value: 'NV', label: 'Nevada' },
-  { value: 'NH', label: 'New Hampshire' },
-  { value: 'NJ', label: 'New Jersey' },
-  { value: 'NM', label: 'New Mexico' },
-  { value: 'NY', label: 'New York' },
-  { value: 'NC', label: 'North Carolina' },
-  { value: 'ND', label: 'North Dakota' },
-  { value: 'OH', label: 'Ohio' },
-  { value: 'OK', label: 'Oklahoma' },
-  { value: 'OR', label: 'Oregon' },
-  { value: 'PA', label: 'Pennsylvania' },
-  { value: 'RI', label: 'Rhode Island' },
-  { value: 'SC', label: 'South Carolina' },
-  { value: 'SD', label: 'South Dakota' },
-  { value: 'TN', label: 'Tennessee' },
-  { value: 'TX', label: 'Texas' },
-  { value: 'UT', label: 'Utah' },
-  { value: 'VT', label: 'Vermont' },
-  { value: 'VA', label: 'Virginia' },
-  { value: 'WA', label: 'Washington' },
-  { value: 'WV', label: 'West Virginia' },
-  { value: 'WI', label: 'Wisconsin' },
-  { value: 'WY', label: 'Wyoming' },
-  // Canadian Provinces
-  { value: 'AB', label: 'Alberta' },
-  { value: 'BC', label: 'British Columbia' },
-  { value: 'MB', label: 'Manitoba' },
-  { value: 'NB', label: 'New Brunswick' },
-  { value: 'NL', label: 'Newfoundland and Labrador' },
-  { value: 'NT', label: 'Northwest Territories' },
-  { value: 'NS', label: 'Nova Scotia' },
-  { value: 'NU', label: 'Nunavut' },
-  { value: 'ON', label: 'Ontario' },
-  { value: 'PE', label: 'Prince Edward Island' },
-  { value: 'QC', label: 'Quebec' },
-  { value: 'SK', label: 'Saskatchewan' },
-  { value: 'YT', label: 'Yukon' },
-];
+
 
 export default function Step1FinancialProfile() {
   const { state, dispatch } = useFormDataContext();
@@ -222,10 +152,6 @@ export default function Step1FinancialProfile() {
       accountsReceivableBalance: state.step1?.accountsReceivableBalance ?? 0,
       fixedAssetsValue: state.step1?.fixedAssetsValue ?? 0,
       equipmentValue: state.step1?.equipmentValue ?? 0,
-      // Business details fields
-      businessName: state.step1?.businessName ?? '',
-      businessPhone: state.step1?.businessPhone ?? '',
-      businessState: state.step1?.businessState ?? '',
     },
     mode: 'onChange',
   });
@@ -295,10 +221,6 @@ export default function Step1FinancialProfile() {
           accountsReceivableBalance: data.accountsReceivableBalance || 0,
           fixedAssetsValue: data.fixedAssetsValue || 0,
           equipmentValue: data.equipmentValue || 0,
-          // Business details fields
-          businessName: data.businessName || '',
-          businessPhone: data.businessPhone || '',
-          businessState: data.businessState || '',
         },
       });
 
@@ -692,71 +614,6 @@ export default function Step1FinancialProfile() {
                   )}
                 />
 
-                {/* Legal Business Name */}
-                <FormField
-                  control={form.control}
-                  name="businessName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Legal Business Name *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter legal business name"
-                          {...field}
-                          className="h-12"
-                          autoCapitalize="words"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Business Phone */}
-                <FormField
-                  control={form.control}
-                  name="businessPhone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Business Phone *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter business phone number"
-                          {...field}
-                          className="h-12"
-                          type="tel"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Business State / Province */}
-                <FormField
-                  control={form.control}
-                  name="businessState"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Business State / Province *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="h-12">
-                            <SelectValue placeholder="Select state/province" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {STATE_PROVINCE_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
 
               {/* Continue button */}
