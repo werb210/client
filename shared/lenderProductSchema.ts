@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SUPPORTED_DOCUMENT_TYPES, DocumentType } from "./documentTypes";
 
 // Strict schema for validated lender products
 export const LenderProductSchema = z.object({

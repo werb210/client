@@ -18,6 +18,17 @@ import { useToast } from '@/hooks/use-toast';
 import { type RequiredDoc } from '@/lib/documentRequirements';
 
 import { normalizeDocumentName } from '@/utils/documentNormalization';
+import { 
+  DocumentType, 
+  SUPPORTED_DOCUMENT_TYPES, 
+  getDocumentLabel,
+  getDocumentDescription,
+  getDocumentQuantity
+} from '@/shared/documentTypes';
+import { 
+  normalizeDocumentName as normalizeDocumentNameEnhanced,
+  getDocumentRequirements 
+} from '@/shared/documentMapping';
 
 
 // TypeScript Interfaces - Export for use in other components

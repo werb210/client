@@ -58,14 +58,42 @@ export interface FinalizeResponse {
   status: 'signing_sent';
 }
 
-// Document categories that match staff backend expectations
+// Complete List of 22 Supported Document Types from Staff Application
+export const SUPPORTED_DOCUMENT_TYPES = [
+  'accounts_payable',
+  'accounts_receivable',
+  'articles_of_incorporation',
+  'balance_sheet',
+  'bank_statements',
+  'business_license',
+  'business_plan',
+  'cash_flow_statement',
+  'collateral_docs',
+  'drivers_license_front_back',
+  'equipment_quote',
+  'financial_statements',
+  'invoice_samples',
+  'other',
+  'personal_financial_statement',
+  'personal_guarantee',
+  'profit_loss_statement',
+  'proof_of_identity',
+  'signed_application',
+  'supplier_agreement',
+  'tax_returns',
+  'void_pad'
+] as const;
+
+export type DocumentType = typeof SUPPORTED_DOCUMENT_TYPES[number];
+
+// Legacy document categories for backward compatibility
 export const REQUIRED_DOC_CATEGORIES = [
   'bank_statements',
   'tax_returns',
   'financial_statements',
   'business_license',
   'articles_of_incorporation',
-  'voided_check'
+  'void_pad'
 ] as const;
 
 export type DocumentCategory = typeof REQUIRED_DOC_CATEGORIES[number];
