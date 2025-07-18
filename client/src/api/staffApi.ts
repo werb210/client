@@ -4,9 +4,9 @@ const STAFF_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://app.boreal.f
 
 // ✅ Required Fields Validation Configuration
 const REQUIRED_FIELDS = {
-  step1: ["requestedAmount", "use_of_funds", "businessName", "businessPhone", "businessState"], // Added missing business fields
+  step1: ["requestedAmount", "use_of_funds"], // Simplified - just core financial fields
   step3: ["operatingName", "legalName", "businessPhone", "businessState"], // Updated to match Step 3 form
-  step4: ["applicantFirstName", "applicantLastName", "applicantEmail", "applicantPhone", "ownershipPercentage", "applicantDateOfBirth"] // SSN/SIN is optional as requested
+  step4: ["applicantFirstName", "applicantLastName", "applicantEmail", "applicantPhone", "ownershipPercentage"] // SSN/SIN and DOB are optional
 } as const;
 
 // Field mapping for alternative field names
@@ -14,15 +14,15 @@ const FIELD_ALIASES = {
   step1: {
     requestedAmount: ["fundingAmount"],
     use_of_funds: ["fundsPurpose"],
-    businessName: ["legalBusinessName"],
+    businessName: ["legalBusinessName", "operatingName"],
     businessPhone: ["phone"],
     businessState: ["state"]
   },
   step3: {
-    operatingName: ["businessName"],
-    legalName: ["businessLegalName"],
+    operatingName: ["businessName", "businessDBAName"],
+    legalName: ["businessLegalName", "legalBusinessName"],
     businessPhone: ["phone"],
-    businessState: ["state"]
+    businessState: ["state", "province"]
   },
   step4: {
     applicantFirstName: ["firstName"],
@@ -36,17 +36,26 @@ const FIELD_ALIASES = {
 
 // ✅ Validate Application Payload Helper
 export function validateApplicationPayload(payload: any): { isValid: boolean; missingFields: Record<string, string[]> } {
+  console.log("🔍 VALIDATION DEBUG: Starting payload validation...");
+  console.log("🔍 VALIDATION DEBUG: Full payload:", payload);
+  
   const missingFields: Record<string, string[]> = {};
   let isValid = true;
 
   // Check each step for required fields
   Object.entries(REQUIRED_FIELDS).forEach(([stepKey, requiredFields]) => {
+    console.log(`🔍 VALIDATION DEBUG: Checking ${stepKey} for fields:`, requiredFields);
+    
     const stepData = payload[stepKey];
     if (!stepData) {
+      console.log(`🔍 VALIDATION DEBUG: ${stepKey} data is missing entirely`);
       missingFields[stepKey] = requiredFields;
       isValid = false;
       return;
     }
+
+    console.log(`🔍 VALIDATION DEBUG: ${stepKey} data found:`, stepData);
+    console.log(`🔍 VALIDATION DEBUG: ${stepKey} available fields:`, Object.keys(stepData));
 
     const stepMissing: string[] = [];
     requiredFields.forEach(field => {
@@ -55,6 +64,7 @@ export function validateApplicationPayload(payload: any): { isValid: boolean; mi
       // Check primary field name
       if (stepData[field] !== undefined && stepData[field] !== null && stepData[field] !== "") {
         fieldFound = true;
+        console.log(`🔍 VALIDATION DEBUG: ✅ ${stepKey}.${field} = "${stepData[field]}"`);
       }
       
       // Check aliases if primary field not found
@@ -64,12 +74,14 @@ export function validateApplicationPayload(payload: any): { isValid: boolean; mi
           aliases.forEach(alias => {
             if (stepData[alias] !== undefined && stepData[alias] !== null && stepData[alias] !== "") {
               fieldFound = true;
+              console.log(`🔍 VALIDATION DEBUG: ✅ ${stepKey}.${field} found via alias ${alias} = "${stepData[alias]}"`);
             }
           });
         }
       }
       
       if (!fieldFound) {
+        console.log(`🔍 VALIDATION DEBUG: ❌ ${stepKey}.${field} is missing or empty`);
         stepMissing.push(field);
       }
     });
@@ -80,6 +92,7 @@ export function validateApplicationPayload(payload: any): { isValid: boolean; mi
     }
   });
 
+  console.log("🔍 VALIDATION DEBUG: Final result:", { isValid, missingFields });
   return { isValid, missingFields };
 }
 
