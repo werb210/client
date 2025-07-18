@@ -36,22 +36,23 @@ import { StepHeader } from "@/components/StepHeader";
 
 import { ValidationErrorModal } from "@/components/ValidationErrorModal";
 import { SsnWarningModal } from "@/components/SsnWarningModal";
+import { useToast } from "@/hooks/use-toast";
 
 
-// Step 4 Schema - All fields required except SSN/SIN
+// Step 4 Schema - Required fields for form validation
 const step4Schema = z.object({
-  // Primary Applicant Information - all optional
-  applicantFirstName: z.string().optional(),
-  applicantLastName: z.string().optional(), 
-  applicantEmail: z.string().optional(),
-  applicantPhone: z.string().optional(),
-  applicantAddress: z.string().optional(),
-  applicantCity: z.string().optional(),
-  applicantState: z.string().optional(),
-  applicantZipCode: z.string().optional(),
-  applicantDateOfBirth: z.string().optional(),
-  applicantSSN: z.string().optional(),
-  ownershipPercentage: z.number().optional(),
+  // Primary Applicant Information - REQUIRED fields
+  applicantFirstName: z.string().min(1, "First name is required"),
+  applicantLastName: z.string().min(1, "Last name is required"), 
+  applicantEmail: z.string().email("Valid email is required"),
+  applicantPhone: z.string().min(1, "Phone number is required"),
+  applicantAddress: z.string().min(1, "Address is required"),
+  applicantCity: z.string().min(1, "City is required"),
+  applicantState: z.string().min(1, "State/Province is required"),
+  applicantZipCode: z.string().min(1, "Postal/ZIP code is required"),
+  applicantDateOfBirth: z.string().min(1, "Date of birth is required"),
+  applicantSSN: z.string().optional(), // SSN/SIN is optional as specified
+  ownershipPercentage: z.number().min(1, "Ownership percentage is required"),
   
   // Partner Information (conditional)
   hasPartner: z.boolean().optional(),
@@ -70,9 +71,23 @@ const step4Schema = z.object({
 
 type Step4FormData = z.infer<typeof step4Schema>;
 
+// Utility function to load from localStorage
+const loadFromLocalStorage = () => {
+  try {
+    const storedData = localStorage.getItem('formData') || localStorage.getItem('financialFormData');
+    if (storedData) {
+      return JSON.parse(storedData);
+    }
+  } catch (error) {
+    console.error('Error loading from localStorage:', error);
+  }
+  return null;
+};
+
 export default function Step4ApplicantInfoComplete() {
   const [, setLocation] = useLocation();
   const { state, dispatch } = useFormDataContext();
+  const { toast } = useToast();
   const [isCanadian, setIsCanadian] = useState(false);
   const [applicantPhoneDisplay, setApplicantPhoneDisplay] = useState('');
   const [partnerPhoneDisplay, setPartnerPhoneDisplay] = useState('');
@@ -207,6 +222,22 @@ export default function Step4ApplicantInfoComplete() {
       logger.log('⚠️ DOUBLE-CLICK PREVENTION: Submission already in progress');
       return;
     }
+
+    // ✅ COMPREHENSIVE FORM SUBMISSION LOGGING
+    console.log("📤 Submitting Step 4", form.getValues());
+    console.log("📝 Form validation state:", {
+      isValid: form.formState.isValid,
+      errors: form.formState.errors,
+      isDirty: form.formState.isDirty,
+      isSubmitting: form.formState.isSubmitting
+    });
+    console.log("🔍 Required field values:", {
+      firstName: data.applicantFirstName,
+      lastName: data.applicantLastName,
+      email: data.applicantEmail,
+      phone: data.applicantPhone,
+      ownershipPercentage: data.ownershipPercentage
+    });
 
     // Check if SSN/SIN is blank and show warning if needed
     if (!data.applicantSSN && !showSsnWarning && !continuePending) {
@@ -1196,23 +1227,28 @@ export default function Step4ApplicantInfoComplete() {
               type="submit"
               disabled={submitting}
               className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
-              onClick={(e) => {
-                logger.log('🖱️ CONTINUE BUTTON CLICKED');
-                logger.log('📝 Form valid?', form.formState.isValid);
-                logger.log('❌ Form errors:', form.formState.errors);
-                logger.log('🔍 Required field values:', {
-                  firstName: form.getValues('applicantFirstName'),
-                  lastName: form.getValues('applicantLastName'),
-                  email: form.getValues('applicantEmail'),
-                  phone: form.getValues('applicantPhone')
-                });
-                // Let the form submission proceed normally
-              }}
             >
               {submitting ? "Submitting..." : "Continue to Documents →"}
             </Button>
           </div>
         </form>
+
+        {/* Frontend Error Alert */}
+        {form.formState.errors && Object.keys(form.formState.errors).length > 0 && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="text-red-800 font-semibold mb-2">
+              Please complete all required fields before continuing:
+            </div>
+            <ul className="text-red-700 text-sm space-y-1">
+              {Object.entries(form.formState.errors).map(([field, error]) => (
+                <li key={field} className="flex items-center">
+                  <span className="text-red-500 mr-2">•</span>
+                  {typeof error === 'object' && error?.message ? error.message : `${field} is required`}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </Form>
       
       {/* Validation Error Modal */}
@@ -1232,6 +1268,7 @@ export default function Step4ApplicantInfoComplete() {
           // Trigger form submission again with continuePending flag
           form.handleSubmit(onSubmit)();
         }}
+        onClose={() => setShowSsnWarning(false)}
       />
     </div>
   );
