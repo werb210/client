@@ -153,7 +153,7 @@ export function FloatingReportButton({ className = '' }: FloatingReportButtonPro
         id="reportBtn"
         title="Report an issue"
         onClick={() => setShowModal(true)}
-        className={`fixed bottom-20 right-5 bg-red-700 text-white text-3xl border-none rounded-full w-15 h-15 shadow-lg cursor-pointer z-[1001] hover:bg-red-800 transition-colors ${className}`}
+        className={`fixed bottom-24 right-5 bg-red-700 text-white text-3xl border-none rounded-full w-15 h-15 shadow-lg cursor-pointer z-[1001] hover:bg-red-800 transition-colors ${className}`}
         style={{
           width: '60px',
           height: '60px',

@@ -1,0 +1,114 @@
+[![7 Best Chatbot UI Design Examples for Website \[+ Templates\]](https://tse3.mm.bing.net/th/id/OIP.EeJ7zmk5zrZLOndOXXTW2wHaGN?pid=Api)](https://www.tidio.com/blog/chatbot-ui/)
+
+Here are some polished, modern chatbot UI designs you might prefer. Let’s adapt one of these into your green theme with a clear “Do you have an issue?” footer.
+
+---
+
+## 🎨 Style Guide: Green-Themed Pill Launcher + Footer
+
+**Widget Colors & Layout:**
+
+```css
+#chatLauncher {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #007A3D; /* your brand green */
+  color: white;
+  border-radius: 9999px;
+  padding: 12px 18px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  cursor: pointer;
+  z-index: 1001;
+}
+#chatLauncher:hover {
+  background: #006633;
+}
+#chatLauncher img {
+  margin-right: 8px;
+  height: 20px;
+}
+```
+
+**HTML Button:**
+
+```html
+<button id="chatLauncher">
+  <img src="/icons/chatbot-white.svg" alt="">
+  Chat with FinBot
+</button>
+```
+
+> ✅ **Why it works**: Clear visual cue, high contrast, consistent with brand—much like modern examples such as HelpCrunch and Tidio widgets ([docs.helpcrunch.com][1]).
+
+---
+
+## 👇 Sticky Footer Bar for Reporting
+
+Add a subtle footer prompt:
+
+```css
+#reportFooter {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  background: #005D2E;
+  color: white;
+  padding: 12px;
+  font-size: 14px;
+  text-align: center;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+#reportFooter button {
+  margin-left: 12px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border:none; padding:6px 12px;
+  border-radius:4px; cursor:pointer;
+}
+#reportFooter button:hover {
+  background: rgba(255,255,255,0.25);
+}
+```
+
+**HTML Structure:**
+
+```html
+<div id="reportFooter">
+  Do you have an issue?
+  <button id="openReport">Report it</button>
+</div>
+```
+
+This mirrors design best practices by providing a **discrete yet accessible reporting option** at the bottom of the screen (PatternFly-style footer cues) ([help.crisp.chat][2]).
+
+---
+
+## ✅ Next Steps to Implement
+
+1. **Add the styled launcher and footer elements** to your HTML + CSS.
+2. **Bind click events**:
+
+   * `#chatLauncher.onclick = …` → opens chat widget.
+   * `#openReport.onclick = …` → opens report modal/form.
+3. **Ensure responsiveness** (mobile first—stack footer and launcher with media queries).
+4. **Test accessibility** (use ARIA labels, tab focus, color contrast).
+
+---
+
+## ✨ Visual Alignment with Mockups
+
+You mentioned liking the sample designs. This setup now delivers the same:
+
+* **Clean, pill-style launcher** with icon and text
+* **Integrated status footer** (“Do you have an issue?”), not just detached icons
+* **Consistent green branding**, compact and sleek
+
+Once you’re happy with placement and styling, I can help generate the full HTML/CSS/JS snippet and integrate it into your current extension. Let me know!
+
+[1]: https://docs.helpcrunch.com/pl/widget/custom-css?utm_source=chatgpt.com "How to customize your chat widget with custom CSS - HelpCrunch"
+[2]: https://help.crisp.chat/en/article/how-can-i-customize-my-knowledge-base-layout-1mc38as/?utm_source=chatgpt.com "How can I customize my Knowledge Base layout? - Crisp Helpdesk"

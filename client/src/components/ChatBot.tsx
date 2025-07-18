@@ -265,13 +265,21 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
   if (!isOpen) {
     return (
-      <Button
+      <button
+        id="chatLauncher"
         onClick={onToggle}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 z-50"
-        size="icon"
+        className="fixed bottom-20 right-5 text-white rounded-full px-5 py-3 flex items-center gap-2 shadow-lg cursor-pointer z-[1000] transition-colors duration-200"
+        style={{
+          background: '#007A3D',
+          fontSize: '16px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.background = '#006633'}
+        onMouseLeave={(e) => e.currentTarget.style.background = '#007A3D'}
       >
         <HelpIcon />
-      </Button>
+        <span>Chat with FinBot</span>
+      </button>
     );
   }
 
