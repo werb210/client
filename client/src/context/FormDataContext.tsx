@@ -298,8 +298,7 @@ const FormDataContext = createContext<{
 export function FormDataProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(formDataReducer, initialState);
   
-  // 🔧 DEBUG: Context initialization
-  console.log("🔧 FormDataProvider initialized with state:", state);
+  // Context initialization (logging disabled for production)
 
   // 🔧 Add deep inspection to window.debugApplication()
   useEffect(() => {
@@ -332,7 +331,7 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
     if (state.step1 && Object.keys(state.step1).length > 0 || 
         state.step3 && Object.keys(state.step3).length > 0 || 
         state.step4 && Object.keys(state.step4).length > 0) {
-      console.log("🔧 Saving state to localStorage:", state);
+      // Auto-save to localStorage (logging disabled)
       saveToStorage();
     }
   }, [state]);
@@ -342,7 +341,7 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('formData', JSON.stringify(state));
       // Also save with legacy key for compatibility
       localStorage.setItem('financialFormData', JSON.stringify(state));
-      console.log('🔧 Form data saved to localStorage');
+      // Form data saved to localStorage
     } catch (error) {
       console.error('Failed to save form data:', error);
     }
@@ -352,10 +351,8 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
     try {
       // Try primary key first, then fallback to legacy key
       const savedData = localStorage.getItem('formData') || localStorage.getItem('financialFormData');
-      console.log('🔧 Loading from localStorage:', savedData);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        console.log('🔧 Parsed localStorage data:', parsedData);
         return parsedData;
       }
       return null;
@@ -370,7 +367,7 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
       const savedData = localStorage.getItem('formData') || localStorage.getItem('financialFormData');
       if (savedData) {
         const parsedData = JSON.parse(savedData);
-        console.log('🔧 Loaded data from localStorage:', parsedData);
+        // Data loaded from localStorage
         return parsedData;
       }
       return null;
@@ -380,15 +377,17 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // 🔧 DEBUG: Global debug function for application state inspection  
+  // Global debug function for application state inspection (dev only)
   useEffect(() => {
     (window as any).debugApplication = () => {
-      console.log("🔧 GLOBAL APPLICATION STATE DEBUG:");
-      console.log("🔧 Current state:", state);
-      console.log("🔧 Step 1 data:", state.step1);
-      console.log("🔧 Step 3 data:", state.step3);
-      console.log("🔧 Step 4 data:", state.step4);
-      console.log("🔧 localStorage formData:", localStorage.getItem('formData'));
+      if (import.meta.env.DEV) {
+        console.log("🔧 GLOBAL APPLICATION STATE DEBUG:");
+        console.log("🔧 Current state:", state);
+        console.log("🔧 Step 1 data:", state.step1);
+        console.log("🔧 Step 3 data:", state.step3);
+        console.log("🔧 Step 4 data:", state.step4);
+        console.log("🔧 localStorage formData:", localStorage.getItem('formData'));
+      }
       return state;
     };
   }, [state]);

@@ -36,18 +36,10 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     fundsPurpose,
   } = form;
 
-  console.log('[FILTER] Starting with parameters:', {
-    productCount: products.length,
-    headquarters,
-    fundingAmount,
-    lookingFor,
-    accountsReceivableBalance,
-    fundsPurpose
-  });
+  // Filter starting parameters (logging disabled)
   
-  // CRITICAL: Check if we have any products at all
+  // Check if we have any products at all
   if (!products || products.length === 0) {
-    console.log('[FILTER] No products provided to filter!');
     return [];
   }
 
@@ -56,13 +48,9 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
   
   // Check if user has accounts receivable (Step 1 answer)
   const hasAccountsReceivable = accountsReceivableBalance > 0;
-  console.log('[FILTER] Has accounts receivable:', hasAccountsReceivable, '(balance:', accountsReceivableBalance, ')');
   
   if (!hasAccountsReceivable) {
-    const beforeCount = filteredProducts.length;
     filteredProducts = filteredProducts.filter(product => product.category !== 'Invoice Factoring');
-    const afterCount = filteredProducts.length;
-    console.log('[FILTER] Excluded Invoice Factoring:', beforeCount - afterCount, 'products removed');
   }
 
   // ✅ STEP 2: FILTER BY COUNTRY (CA or US)
@@ -70,41 +58,26 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
                        headquarters === 'canada' || headquarters === 'Canada' || headquarters === 'CA' ? 'CA' : 
                        headquarters;
   
-  console.log('[FILTER] Filtering by country:', normalizedHQ);
-  const beforeCountryFilter = filteredProducts.length;
   filteredProducts = filteredProducts.filter(product => product.country === normalizedHQ);
-  const afterCountryFilter = filteredProducts.length;
-  console.log('[FILTER] Country filter:', beforeCountryFilter - afterCountryFilter, 'products removed');
 
-  // ✅ NEW REQUIREMENT: EXCLUDE EQUIPMENT FINANCING IF NOT ELIGIBLE
-  console.log('[FILTER] Checking Equipment Financing eligibility:', { lookingFor, fundsPurpose });
-  const beforeEquipmentFilter = filteredProducts.length;
+  // ✅ EXCLUDE EQUIPMENT FINANCING IF NOT ELIGIBLE
   filteredProducts = filteredProducts.filter(product => {
     // Only exclude Equipment Financing if user didn't select equipment in either field
     const isEquipmentFinancing = product.category === 'Equipment Financing';
     if (isEquipmentFinancing) {
       const isEligible = lookingFor === 'equipment' || lookingFor === 'both' || fundsPurpose === 'equipment';
       if (!isEligible) {
-        console.log('[FILTER] Excluding Equipment Financing product:', product.name, '- User not eligible');
         return false;
       }
-      console.log('[FILTER] Including Equipment Financing product:', product.name, '- User eligible');
     }
     return true;
   });
-  const afterEquipmentFilter = filteredProducts.length;
-  console.log('[FILTER] Equipment Financing filter:', beforeEquipmentFilter - afterEquipmentFilter, 'products removed');
-
   // ✅ STEP 3: FILTER BY MINIMUM & MAXIMUM FUNDING AMOUNT
-  console.log('[FILTER] Filtering by funding amount:', fundingAmount);
-  const beforeAmountFilter = filteredProducts.length;
   filteredProducts = filteredProducts.filter(product => {
     const minAmount = getAmountValue(product, 'min');
     const maxAmount = getAmountValue(product, 'max');
     return fundingAmount >= minAmount && fundingAmount <= maxAmount;
   });
-  const afterAmountFilter = filteredProducts.length;
-  console.log('[FILTER] Amount filter:', beforeAmountFilter - afterAmountFilter, 'products removed');
 
   // ✅ STEP 4: GROUP BY CATEGORY (for display purposes)
   const categoryGroups = filteredProducts.reduce((groups, product) => {
@@ -116,13 +89,7 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     return groups;
   }, {} as Record<string, StaffLenderProduct[]>);
 
-  console.log('[FILTER] Final results by category:', 
-    Object.entries(categoryGroups).map(([category, products]) => 
-      `${category}: ${products.length} products`
-    ).join(', ')
-  );
-
-  console.log('[FILTER] Total products after filtering:', filteredProducts.length);
+  // Final filtering complete
   
   return filteredProducts;
 

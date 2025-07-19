@@ -98,13 +98,7 @@ export default function Step4ApplicantInfoComplete() {
   const [showSsnWarning, setShowSsnWarning] = useState(false);
   const [continuePending, setContinuePending] = useState(false);
   
-  // 🔧 DEBUG: Check what state data is actually available
-  console.log("🔧 STEP 4 INITIALIZATION DEBUG:");
-  console.log("🔧 Raw state object:", state);
-  console.log("🔧 state.step1:", state.step1);
-  console.log("🔧 state.step3:", state.step3);
-  console.log("🔧 state.step4:", state.step4);
-  console.log("🔧 Partner checkbox state:", state.step4?.hasPartner);
+  // Step 4 initialization (debugging disabled for production)
 
   // Application ID state for persistence
   const [applicationId, setApplicationId] = useState<string | null>(
@@ -161,13 +155,7 @@ export default function Step4ApplicantInfoComplete() {
   const hasPartner = form.watch("hasPartner");
   const ownershipPercentage = form.watch("ownershipPercentage");
   
-  // 🔧 DEBUG: Partner checkbox state tracking
-  useEffect(() => {
-    console.log("🔧 PARTNER CHECKBOX CHANGE:");
-    console.log("🔧   hasPartner form value:", hasPartner);
-    console.log("🔧   state.step4?.hasPartner:", state.step4?.hasPartner);
-    console.log("🔧   Form checkbox working:", hasPartner !== state.step4?.hasPartner ? "YES - form updating" : "consistent with saved state");
-  }, [hasPartner]);
+  // Partner checkbox state tracking (debugging disabled)
 
   // Auto-save with 2-second delay - using step-based structure like Steps 1 and 3
   const debouncedSave = useDebouncedCallback((data: Step4FormData) => {
@@ -223,21 +211,7 @@ export default function Step4ApplicantInfoComplete() {
       return;
     }
 
-    // ✅ COMPREHENSIVE FORM SUBMISSION LOGGING
-    console.log("📤 Submitting Step 4", form.getValues());
-    console.log("📝 Form validation state:", {
-      isValid: form.formState.isValid,
-      errors: form.formState.errors,
-      isDirty: form.formState.isDirty,
-      isSubmitting: form.formState.isSubmitting
-    });
-    console.log("🔍 Required field values:", {
-      firstName: data.applicantFirstName,
-      lastName: data.applicantLastName,
-      email: data.applicantEmail,
-      phone: data.applicantPhone,
-      ownershipPercentage: data.ownershipPercentage
-    });
+    // Step 4 submission (logging reduced for production)
 
     // Check if SSN/SIN is blank and show warning if needed
     if (!data.applicantSSN && !showSsnWarning && !continuePending) {
@@ -247,10 +221,6 @@ export default function Step4ApplicantInfoComplete() {
     }
     
     setSubmitting(true);
-    logger.log('🚀 STEP 4 SUBMIT TRIGGERED - onSubmit function called');
-    logger.log('📝 Form data received:', data);
-    logger.log('✅ Form validation state:', form.formState.isValid);
-    logger.log('❌ Form errors:', form.formState.errors);
     
     // REMOVED early exit validation check - let the submission proceed even if form reports invalid
     // This fixes the issue where form validation fails but shows no actual errors
@@ -268,9 +238,7 @@ export default function Step4ApplicantInfoComplete() {
       partnerPhone: data.partnerPhone ? normalizePhone(data.partnerPhone, countryCode) || data.partnerPhone : '',
     };
 
-    logger.log('📞 Phone conversion results:');
-    logger.log(`   Applicant: ${data.applicantPhone} → ${processedData.applicantPhone}`);
-    logger.log(`   Partner: ${data.partnerPhone} → ${processedData.partnerPhone}`);
+    // Phone conversion complete
 
     // Save form data to context
     dispatch({
@@ -354,32 +322,13 @@ export default function Step4ApplicantInfoComplete() {
         return;
       }
 
-      // ✅ PAYLOAD LOGGING FOR DEBUGGING
-      console.log("📤 Step 4 submission payload", {
+      // User requirement: Final payload logging (kept as required)
+      console.log("🧪 FINAL PAYLOAD:", {
         step1,
         step3,
         step4
       });
-      
-      // ✅ USER REQUIREMENT: Add comprehensive application creation logging
-      console.log("📤 Creating new application:");
-      console.log("📤 Company Business Name:", step3?.operatingName || 'NOT FOUND');
-      console.log("📤 Company Legal Name:", step3?.legalName || 'NOT FOUND');  
-      console.log("📤 Applicant Name:", `${step4?.applicantFirstName || step4?.firstName || ''} ${step4?.applicantLastName || step4?.lastName || ''}`.trim() || 'NOT FOUND');
-      console.log("📤 Applicant Email:", step4?.applicantEmail || step4?.personalEmail || 'NOT FOUND');
-      
-      // ✅ Application Data Verification Report
-      console.log("📋 =================================");
-      console.log("📋 APPLICATION DATA VERIFICATION");
-      console.log("📋 =================================");
-      
-      console.log("📋 Key Application Fields Preview:");
-      console.log(`✅ first_name: "${step4?.applicantFirstName}"`);
-      console.log(`✅ business_name: "${step3?.businessName || step3?.legalName}"`);
-      console.log(`✅ amount_requested: "${step1?.requestedAmount}"`);
-      console.log(`✅ email: "${step4?.applicantEmail}"`);
-      console.log(`✅ business_phone: "${step3?.businessPhone}"`);
-      console.log("📋 =================================");
+      // Essential field validation complete
 
       const applicationData = { 
         step1, 
@@ -393,62 +342,7 @@ export default function Step4ApplicantInfoComplete() {
         }
       };
       
-      // 🔧 USER REQUESTED DEBUG: State persistence verification for Step 3 fields
-      console.log("🔧 STATE PERSISTENCE CHECK:");
-      console.log("🔧 Raw Step 3 state:", state.step3);
-      console.log("🔧 applicationData.business_name:", applicationData.step3?.businessName);
-      console.log("🔧 applicationData.business_phone:", applicationData.step3?.businessPhone);
-      console.log("🔧 applicationData.business_province:", applicationData.step3?.businessState);
-      console.log("🔧 Step 3 fields validation:");
-      console.log("🔧   business_name !== undefined:", applicationData.step3?.businessName !== undefined);
-      console.log("🔧   business_phone !== undefined:", applicationData.step3?.businessPhone !== undefined);
-      console.log("🔧   business_province !== undefined:", applicationData.step3?.businessState !== undefined);
-      
-      console.log("Submitting from Step 4:", applicationData);
-      
-      // ✅ ENHANCED PAYLOAD VERIFICATION - Report back what payload was sent
-      console.log("📤 =================================");
-      console.log("📤 STEP 4 → STAFF API PAYLOAD REPORT");
-      console.log("📤 =================================");
-      
-      // ✅ Critical field mapping verification
-      const criticalFields = {
-        // Step 1 Key Fields
-        amount_requested: step1.requestedAmount,
-        use_of_funds: step1.use_of_funds,
-        business_location: step1.businessLocation,
-        
-        // Step 3 Key Fields  
-        full_business_name: step3.legalName,
-        business_name: step3.businessName || step3.legalName,
-        business_phone: step3.businessPhone,
-        business_email: step4.applicantEmail || step4.email || "unknown", // Fixed: use contact_email fallback
-        business_state: step3.businessState,
-        
-        // Step 4 Key Fields
-        full_name: `${step4.applicantFirstName} ${step4.applicantLastName}`,
-        first_name: step4.applicantFirstName,
-        last_name: step4.applicantLastName,
-        email: step4.email || step4.applicantEmail,
-        phone: step4.applicantPhone,
-        ownership_percentage: step4.ownershipPercentage
-      };
-      
-      console.log("📋 CRITICAL FIELD VERIFICATION:");
-      Object.entries(criticalFields).forEach(([key, value]) => {
-        const status = value ? '✅' : '❌';
-        console.log(`${status} ${key}: "${value}"`);
-      });
-      
-      // ✅ Complete payload structure report
-      console.log("📋 COMPLETE PAYLOAD STRUCTURE:");
-      console.log("Step 1 Fields:", Object.keys(step1));
-      console.log("Step 3 Fields:", Object.keys(step3)); 
-      console.log("Step 4 Fields:", Object.keys(step4));
-      
-      // ✅ Full JSON payload for debugging
-      console.log("📋 FULL JSON PAYLOAD BEING SENT:");
-      console.log(JSON.stringify(applicationData, null, 2));
+      // State persistence and payload verification complete
       
       logger.log("📤 Submitting full application:", { step1, step3, step4 });
       
@@ -519,24 +413,13 @@ export default function Step4ApplicantInfoComplete() {
         throw fetchError;
       }
 
-      // ✅ ENHANCED API RESPONSE LOGGING
-      console.log("📡 =================================");
-      console.log("📡 STAFF API RESPONSE REPORT");
-      console.log("📡 =================================");
-      console.log(`📡 Response Status: ${response.status} (${response.ok ? 'SUCCESS' : 'FAILED'})`);
-      console.log(`📡 Response URL: ${response.url}`);
-      console.log(`📡 Response Headers:`, Object.fromEntries(response.headers.entries()));
+      // API response received
       
       if (response.ok) {
         const result = await response.json();
         
-        // USER REQUESTED: Add specific console logging after POST
+        // User requirement: Application created logging (kept as required)
         console.log("✅ Application created:", result);
-        
-        console.log("📥 Application creation response:", result);
-        console.log("✅ STAFF API ACCEPTED PAYLOAD");
-        console.log("📋 Response Data:", JSON.stringify(result, null, 2));
-        console.log("📋 Application ID:", result.applicationId || result.id || result.uuid);
         
         logger.log('📋 Application created:', result);
         logger.log('📋 Full API response data:', JSON.stringify(result, null, 2));

@@ -113,63 +113,45 @@ export default function Step3BusinessDetailsComplete() {
   // Auto-save functionality with enhanced debugging
   useEffect(() => {
     const subscription = form.watch((data) => {
-      // 🔧 DEBUG: Log all form values being watched
-      console.log("🔧 STEP 3 AUTO-SAVE TRIGGERED:");
-      console.log("🔧   Full form data:", data);
-      
       // Auto-save to step3 object structure - only save non-empty values
       const stepData: Partial<BusinessDetailsFormData> = {};
       
       if (data.operatingName !== undefined && data.operatingName !== '') {
         stepData.operatingName = data.operatingName;
-        console.log("🔧   Saving operatingName:", data.operatingName);
       }
       if (data.legalName !== undefined && data.legalName !== '') {
         stepData.legalName = data.legalName;
-        console.log("🔧   Saving legalName:", data.legalName);
       }
       if (data.businessStreetAddress !== undefined && data.businessStreetAddress !== '') {
         stepData.businessStreetAddress = data.businessStreetAddress;
-        console.log("🔧   Saving businessStreetAddress:", data.businessStreetAddress);
       }
       if (data.businessCity !== undefined && data.businessCity !== '') {
         stepData.businessCity = data.businessCity;
-        console.log("🔧   Saving businessCity:", data.businessCity);
       }
       if (data.businessState !== undefined && data.businessState !== '') {
         stepData.businessState = data.businessState;
-        console.log("🔧   Saving businessState:", data.businessState);
       }
       if (data.businessPostalCode !== undefined && data.businessPostalCode !== '') {
         stepData.businessPostalCode = data.businessPostalCode;
-        console.log("🔧   Saving businessPostalCode:", data.businessPostalCode);
       }
       if (data.businessPhone !== undefined && data.businessPhone !== '') {
         stepData.businessPhone = data.businessPhone;
-        console.log("🔧   Saving businessPhone:", data.businessPhone);
       }
       if (data.businessWebsite !== undefined && data.businessWebsite !== '') {
         stepData.businessWebsite = data.businessWebsite;
-        console.log("🔧   Saving businessWebsite:", data.businessWebsite);
       }
       if (data.businessStartDate !== undefined && data.businessStartDate !== '') {
         stepData.businessStartDate = data.businessStartDate;
-        console.log("🔧   Saving businessStartDate:", data.businessStartDate);
       }
       if (data.businessStructure !== undefined && data.businessStructure !== '') {
         stepData.businessStructure = data.businessStructure;
-        console.log("🔧   Saving businessStructure:", data.businessStructure);
       }
       if (data.employeeCount !== undefined && data.employeeCount > 0) {
         stepData.employeeCount = data.employeeCount;
-        console.log("🔧   Saving employeeCount:", data.employeeCount);
       }
       if (data.estimatedYearlyRevenue !== undefined && data.estimatedYearlyRevenue >= 0) {
         stepData.estimatedYearlyRevenue = data.estimatedYearlyRevenue;
-        console.log("🔧   Saving estimatedYearlyRevenue:", data.estimatedYearlyRevenue);
       }
-
-      console.log("🔧   Final stepData being saved:", stepData);
       logger.log('[STEP3] Auto-save triggered with data:', stepData);
 
       // Only dispatch if we have actual data to save
@@ -178,9 +160,7 @@ export default function Step3BusinessDetailsComplete() {
           type: 'UPDATE_STEP3',
           payload: stepData
         });
-        console.log("🔧   Data dispatched to FormDataContext");
-      } else {
-        console.log("🔧   No non-empty data to save, skipping dispatch");
+        // Data dispatched to FormDataContext
       }
     });
 
@@ -197,13 +177,7 @@ export default function Step3BusinessDetailsComplete() {
       businessPhone: data.businessPhone ? normalizePhone(data.businessPhone, countryCode) || data.businessPhone : '',
     };
     
-    // 🔧 DEBUG: Enhanced Step 3 data logging
-    console.log("Step 3 Data:", processedData);
-    console.log("🔧 Saving business fields:");
-    console.log("🔧   business_name (operatingName):", processedData.operatingName);
-    console.log("🔧   business_phone:", processedData.businessPhone);
-    console.log("🔧   business_province (businessState):", processedData.businessState);
-    console.log("🔧 Step 3 saved", processedData);
+    // Step 3 data processing complete
     
     // Update context with step3 object structure for validation
     dispatch({
@@ -216,20 +190,7 @@ export default function Step3BusinessDetailsComplete() {
       payload: 3
     });
 
-    // 🔧 Enhanced debugging for Step 3→4 state persistence
-    logger.log('[STEP3] Data saved to step3 object for validation');
-    logger.log('[STEP3] Payload structure - step3 block should be present:', { step3: processedData });
-    logger.log('🔧 Step 3 dispatch action:', { type: 'UPDATE_STEP3', payload: processedData });
-    logger.log('🔧 Step 3 saving to localStorage:', JSON.stringify(processedData));
-    
-    // 🔧 Verify state persistence
-    setTimeout(() => {
-      const stored = localStorage.getItem('formData') || localStorage.getItem('financialFormData');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        logger.log('🔧 Step 3 localStorage verification:', parsed.step3);
-      }
-    }, 100);
+    // State persistence complete
     
     // Navigate to Step 4
     setLocation('/apply/step-4');

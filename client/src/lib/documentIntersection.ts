@@ -30,27 +30,12 @@ export async function getDocumentRequirementsIntersection(
   fundingAmount: number
 ): Promise<DocumentIntersectionResult> {
   
-  // console.log(`🔧 [INTERSECTION] ===== STARTING NEW TEST =====`);
-  // console.log(`🔧 [INTERSECTION] Called with:`, {
-  //   selectedProductType,
-  //   businessLocation,
-  //   fundingAmount
-  // });
-  // console.log(`🔧 [INTERSECTION] Parameter types:`, {
-  //   selectedProductType: typeof selectedProductType,
-  //   businessLocation: typeof businessLocation,
-  //   fundingAmount: typeof fundingAmount
-  // });
-  
   try {
-    // console.log('🔍 [INTERSECTION] Starting document requirements calculation...');
-    // console.log('Parameters:', { selectedProductType, businessLocation, fundingAmount });
 
     // B. Use local cached lender products (as designed - no API calls needed)
     let allLenders: LenderProduct[] = [];
     
     try {
-      // console.log(`📦 [INTERSECTION] Loading from staff API...`);
       const response = await fetch('/api/public/lenders');
       
       if (!response.ok) {
@@ -61,37 +46,21 @@ export async function getDocumentRequirementsIntersection(
       
       if (data.success && data.products && Array.isArray(data.products)) {
         allLenders = data.products;
-        // console.log(`✅ [INTERSECTION] Loaded ${allLenders.length} products from staff API`);
-        
-        // Check for equipment financing products specifically
-        const equipmentProducts = allLenders.filter(p => 
-          p.category === 'Equipment Financing' || 
-          p.category === 'Equipment Finance'
-        );
-        // console.log(`🏗️ [INTERSECTION] Equipment financing products found: ${equipmentProducts.length}`);
-        
-        const canadianEquipment = equipmentProducts.filter(p => p.country === 'CA');
-        // console.log(`🇨🇦 [INTERSECTION] Canadian equipment products: ${canadianEquipment.length}`);
       } else {
-        // console.log(`❌ [INTERSECTION] Invalid API response format:`, data);
         throw new Error('Invalid API response format');
       }
     } catch (apiError) {
-      // console.log(`❌ [INTERSECTION] API access failed:`, apiError);
       throw new Error(`Staff API unavailable: ${apiError.message}`);
     }
     
     if (allLenders.length === 0) {
       throw new Error('No lender products available');
     }
-    // console.log(`📦 [INTERSECTION] Fetched ${allLenders.length} total products`);
 
     // Map business location to country code
     const countryCode = businessLocation === 'united-states' ? 'US' : 
                        businessLocation === 'canada' ? 'CA' : 
                        businessLocation;
-
-    // console.log(`🌍 [INTERSECTION] Mapping location: ${businessLocation} → ${countryCode}`);
 
     // C. Filter matching products
     const eligibleLenders = allLenders.filter(product => {
@@ -119,20 +88,12 @@ export async function getDocumentRequirementsIntersection(
       const maxAmount = product.amountMax || Number.MAX_SAFE_INTEGER;
       const amountMatch = minAmount <= fundingAmount && maxAmount >= fundingAmount;
 
-      // console.log(`🔍 [INTERSECTION] ${product.name} (${product.lenderName}): category="${product.category}"→"${productCategory}" vs "${searchCategory}" (titleCase: "${titleCaseSearch}") = ${categoryMatch}, country="${product.country}" vs "${countryCode}" = ${countryMatch}, amount=${minAmount}-${maxAmount} vs ${fundingAmount} = ${amountMatch}`);
+      // Product filtering logic applied
       
       return categoryMatch && countryMatch && amountMatch;
     });
 
-    // console.log(`✅ [INTERSECTION] Found ${eligibleLenders.length} eligible lenders:`);
-    eligibleLenders.forEach(lender => {
-      const docs = lender.doc_requirements || 
-                   lender.documentRequirements || 
-                   lender.requiredDocuments || 
-                   lender.required_documents || 
-                   [];
-      // console.log(`   - ${lender.lender_name || lender.lenderName}: ${lender.name} (${docs.length} docs)`);
-    });
+    // Eligible lenders identified
 
     // Handle no matches
     if (eligibleLenders.length === 0) {
@@ -163,10 +124,7 @@ export async function getDocumentRequirementsIntersection(
       return docs.map(transformDocumentName);
     });
     
-    // console.log('📋 [INTERSECTION] Document lists from each lender:');
-    allRequiredDocs.forEach((docs, index) => {
-      // console.log(`   ${eligibleLenders[index].lenderName}: [${docs.join(', ')}]`);
-    });
+    // Document lists extracted from each lender
 
     // Compute intersection of all sets
     if (allRequiredDocs.length === 0) {
@@ -187,12 +145,12 @@ export async function getDocumentRequirementsIntersection(
       );
     }
 
-    // console.log(`🎯 [INTERSECTION] Final document intersection: [${requiredDocuments.join(', ')}]`);
+    // Document intersection calculation complete
 
     // Handle case where no documents are common to all lenders
     if (requiredDocuments.length === 0) {
       // Provide fallback documents for Business Line of Credit if no intersection found
-      // console.log('🔄 [INTERSECTION] No intersection found, using fallback documents for Business Line of Credit');
+      // No intersection found, using fallback documents
       const fallbackDocuments = [
         'Bank Statements',
         'Tax Returns', 

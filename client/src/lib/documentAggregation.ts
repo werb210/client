@@ -35,11 +35,7 @@ export async function getDocumentRequirementsAggregation(
   requestedAmount: number
 ): Promise<DocumentAggregationResult> {
   
-  console.log(`📋 [AGGREGATION] Starting document aggregation for:`, {
-    selectedCategory,
-    selectedCountry,
-    requestedAmount
-  });
+  // Starting document aggregation (logging disabled)
   
   try {
     // Fetch all lender products from staff API
@@ -51,39 +47,28 @@ export async function getDocumentRequirementsAggregation(
     
     const data = await response.json();
     
-    console.log(`🔍 [AGGREGATION] API Response structure:`, {
-      dataType: typeof data,
-      isArray: Array.isArray(data),
-      hasSuccess: 'success' in data,
-      success: data.success,
-      hasProducts: 'products' in data,
-      productsType: typeof data.products,
-      productCount: Array.isArray(data) ? data.length : data.products?.length,
-      dataKeys: Array.isArray(data) ? ['array'] : Object.keys(data)
-    });
+    // API response received (logging disabled)
     
     // Handle both direct array and wrapped response formats
     let allProducts;
     if (Array.isArray(data)) {
       // Direct array response (server extracts data.products for us)
       allProducts = data;
-      console.log(`📦 [AGGREGATION] Direct array response with ${data.length} products`);
+      // Direct array response received
     } else if (data.success && Array.isArray(data.products)) {
       // Wrapped response format
       allProducts = data.products;
-      console.log(`📦 [AGGREGATION] Wrapped response with ${data.products.length} products`);
+      // Wrapped response received
     } else {
       console.error('❌ [AGGREGATION] Invalid API response format:', data);
       throw new Error('Invalid API response format');
     }
-    console.log(`📦 [AGGREGATION] Loaded ${allProducts.length} total products from staff API`);
+    // Products loaded from staff API
     
     // Normalize country format
     const normalizedCountry = selectedCountry === 'canada' || selectedCountry === 'Canada' ? 'CA' :
                              selectedCountry === 'united-states' || selectedCountry === 'United States' ? 'US' :
                              selectedCountry;
-    
-    console.log(`🌍 [AGGREGATION] Normalized country: ${selectedCountry} → ${normalizedCountry}`);
     
     // ✅ STEP 1: Filter all local lender products that match criteria
     const eligibleProducts = allProducts.filter(product => {
@@ -100,15 +85,12 @@ export async function getDocumentRequirementsAggregation(
       
       const isEligible = categoryMatch && countryMatch && amountMatch;
       
-      if (isEligible) {
-        console.log(`✅ [AGGREGATION] Eligible: ${product.name} (${product.lender_name})`);
-        console.log(`   Category: ${product.category}, Country: ${product.country}, Range: $${minAmount.toLocaleString()}-$${maxAmount.toLocaleString()}`);
-      }
+      // Product eligibility check complete
       
       return isEligible;
     });
     
-    console.log(`🎯 [AGGREGATION] Found ${eligibleProducts.length} eligible products`);
+    // Eligible products filtering complete
     
     if (eligibleProducts.length === 0) {
       return {
@@ -128,7 +110,7 @@ export async function getDocumentRequirementsAggregation(
                    product.required_documents || 
                    [];
       
-      console.log(`📝 [AGGREGATION] ${product.name}: [${docs.join(', ')}]`);
+      // Document requirements extracted
       return docs;
     });
     
@@ -137,7 +119,7 @@ export async function getDocumentRequirementsAggregation(
       new Set(allDocumentLists.flatMap(docs => docs))
     );
     
-    console.log(`🎯 [AGGREGATION] Final aggregated documents (${requiredDocuments.length}): [${requiredDocuments.join(', ')}]`);
+    // Document aggregation complete
     
     // Document name transformation for consistency
     const transformedDocuments = requiredDocuments.map(docName => {
