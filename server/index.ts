@@ -356,86 +356,29 @@ app.use((req, res, next) => {
         const errorData = await response.text();
         console.error('❌ [SERVER] Staff backend PATCH error:', errorData);
         
-        // Return success fallback for development
-        res.json({
-          success: true,
+        // Return proper error status - no fallback
+        res.status(response.status >= 400 && response.status < 500 ? response.status : 503).json({
+          status: 'error',
+          error: 'Application finalization failed',
+          message: `Application finalization failed: ${response.statusText}`,
           applicationId: applicationId,
-          status: 'submitted',
-          message: 'Application finalized successfully',
-          timestamp: new Date().toISOString()
+          originalStatus: response.status
         });
       }
     } catch (error) {
       console.error('❌ [SERVER] Application finalization failed:', error);
       
-      // Return success fallback for development
-      res.json({
-        success: true,
-        applicationId: req.params.applicationId,
-        status: 'submitted',
-        message: 'Application finalized successfully',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
-
-  // Step 7: Application finalization endpoint (fixed as specified)
-  app.post('/api/public/applications/:applicationId/finalize', async (req, res) => {
-    try {
-      const { applicationId } = req.params;
-      console.log(`📋 [SERVER] Step 7: Finalizing application ${applicationId}`);
-      
-      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${applicationId}/finalize`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${cfg.clientToken}`
-        },
-        body: JSON.stringify(req.body)
-      });
-      
-      console.log(`📋 [SERVER] Staff backend submission response: ${response.status} ${response.statusText}`);
-      
-      // Enhanced logging for Step 7 verification
-      if (response.ok) {
-        console.log('✅ [SERVER] SUCCESS: Step 7 finalization completed');
-        console.log('🎯 [SERVER] Application finalized in staff backend');
-      } else {
-        console.log('❌ [SERVER] FAILED: Step 7 finalization rejected');
-      }
-      
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('❌ [SERVER] Staff backend submission error:', errorData);
-        
-        // Return success even if staff backend not ready
-        res.json({
-          success: true,
-          applicationId: applicationId,
-          status: 'finalized',
-          message: 'Application finalized successfully',
-          timestamp: new Date().toISOString()
-        });
-        return;
-      }
-      
-      const data = await response.json();
-      console.log('✅ [SERVER] Staff backend submission success:', data);
-      
-      res.json(data);
-    } catch (error) {
-      console.error('❌ [SERVER] Application submission failed:', error);
-      
-      // NO FALLBACK - Return error status
+      // Return proper error status - no fallback
       res.status(503).json({
         status: 'error',
-        error: 'Application submission unavailable',
-        message: 'Application submission service is temporarily unavailable. Please try again later.',
+        error: 'Application finalization failed',
+        message: 'Application finalization service is temporarily unavailable. Please try again later.',
         applicationId: req.params.applicationId
       });
     }
   });
+
+  // REMOVED: Duplicate finalization endpoint - using the one at line 489 instead
 
   // Step 6: SignNow Initiation endpoint
   app.post('/api/public/signnow/initiate/:applicationId', async (req, res) => {
@@ -486,69 +429,7 @@ app.use((req, res, next) => {
     }
   });
 
-  // Step 7: Application finalization endpoint
-  app.post('/api/public/applications/:id/finalize', async (req, res) => {
-    try {
-      const { id } = req.params;
-      console.log(`🏁 [SERVER] Step 7: Finalizing application ${id}`);
-      const finalUrl = `${cfg.staffApiUrl}/public/applications/${id}/finalize`;
-      console.log(`🧪 [SERVER] Exact finalization URL: ${finalUrl}`);
-      
-      const response = await fetch(finalUrl, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${cfg.clientToken}`
-        },
-        body: JSON.stringify(req.body)
-      });
-      
-      console.log(`🏁 [SERVER] Staff backend finalization response: ${response.status} ${response.statusText}`);
-      
-      if (response.ok) {
-        console.log('✅ [SERVER] SUCCESS: Application finalized');
-      } else {
-        console.log('❌ [SERVER] FAILED: Application finalization rejected');
-      }
-      
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('❌ [SERVER] Staff backend finalization error:', {
-          status: response.status,
-          statusText: response.statusText,
-          applicationId: id,
-          errorData: errorData.substring(0, 500) // Log first 500 chars
-        });
-        
-        // Return appropriate error status
-        res.status(response.status >= 400 && response.status < 500 ? response.status : 503).json({
-          status: 'error',
-          error: 'Application finalization failed',
-          message: response.status === 503 
-            ? 'Application finalization service is temporarily unavailable. Please try again later.'
-            : `Application finalization failed: ${response.statusText}`,
-          applicationId: id,
-          originalStatus: response.status
-        });
-        return;
-      }
-      
-      const data = await response.json();
-      console.log('✅ [SERVER] Staff backend finalization success:', data);
-      
-      res.json(data);
-    } catch (error) {
-      console.error('❌ [SERVER] Application finalization failed:', error);
-      
-      res.status(503).json({
-        status: 'error',
-        error: 'Application finalization unavailable',
-        message: 'Application finalization service is temporarily unavailable. Please try again later.',
-        applicationId: req.params.id
-      });
-    }
-  });
+  // REMOVED: Unused finalization endpoint - client now uses PATCH /api/public/applications/:applicationId
 
   // SignNow signing status endpoint for Step 6
   app.get('/api/public/applications/:id/signing-status', async (req, res) => {

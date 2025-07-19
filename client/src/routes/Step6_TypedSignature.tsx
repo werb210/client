@@ -109,8 +109,8 @@ export default function Step6_TypedSignature() {
 
       console.log(`📤 [STEP6] Submitting final application (attempt ${retryCount + 1}):`, finalApplicationData);
 
-      const response = await fetch(`/api/public/applications/${applicationId}/finalize`, {
-        method: 'POST',
+      const response = await fetch(`/api/public/applications/${applicationId}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
