@@ -9,7 +9,8 @@
  */
 import { AppShell } from "@/v2-design-system/AppShell";
 import { MainLayout } from "@/v2-design-system/MainLayout";
-import { WebSocketListener } from "@/components/WebSocketListener";
+// DISABLED: WebSocketListener causing connection errors - using Socket.IO instead
+// import { WebSocketListener } from "@/components/WebSocketListener";
 
 // Add global unhandled promise rejection handler for cleaner console output
 window.addEventListener('unhandledrejection', (event) => {
@@ -27,7 +28,6 @@ function App() {
   
   return (
     <AppShell>
-      <WebSocketListener />
       <MainLayout />
     </AppShell>
   );

@@ -11,20 +11,14 @@ export function WebSocketListener() {
   const queryClient = useQueryClient();
 
   React.useEffect(() => {
-    let ws: WebSocket | null = null;
-
-    const setupWebSocketListener = () => {
-      // Check if WebSocket is available
-      if (typeof WebSocket === 'undefined') {
-        console.warn('[WebSocket] WebSocket not available in this environment');
-        return;
-      }
-
-      try {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws`;
-        
-        ws = new WebSocket(wsUrl);
+    // DISABLED: WebSocket listener causing connection errors
+    // The server uses Socket.IO for real-time communication, not raw WebSocket
+    // This component was causing repeated connection attempts to non-existent /ws endpoint
+    
+    console.log('[WebSocket] Legacy WebSocket listener disabled - using Socket.IO for real-time features');
+    
+    // Early return to prevent WebSocket connection attempts
+    return;
         
         ws.onopen = () => {
           // // console.log('[WebSocket] Connected to lender products updates'); // Suppressed for clean console

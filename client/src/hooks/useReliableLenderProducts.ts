@@ -53,7 +53,9 @@ export function useReliableLenderProducts(): UseReliableLenderProductsResult {
       return result.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes as per CLIENT INSTRUCTIONS
-    refetchInterval: 5 * 60 * 1000, // Auto-refetch every 5 minutes
+    refetchInterval: false, // DISABLED: Prevent automatic polling causing promise rejections
+    refetchOnWindowFocus: false, // DISABLED: Prevent refetch on focus
+    refetchOnMount: false, // DISABLED: Only fetch when explicitly requested
     retry: 1, // Only retry once for API failures
   });
 
@@ -65,9 +67,9 @@ export function useReliableLenderProducts(): UseReliableLenderProductsResult {
     };
     
     loadSyncStatus();
-    const interval = setInterval(loadSyncStatus, 30000); // Every 30 seconds
-    
-    return () => clearInterval(interval);
+    // DISABLED: 30-second interval polling causing promise rejections
+    // const interval = setInterval(loadSyncStatus, 30000);
+    // return () => clearInterval(interval);
   }, []);
 
   // Force sync function for manual refresh

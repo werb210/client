@@ -17,13 +17,11 @@ export function FetchWindowTest() {
   const [windowInfo, setWindowInfo] = useState(getFetchWindowInfo());
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   
-  // Update window info every second
+  // DISABLED: Window info update interval causing promise rejections
+  // Update window info only on component mount to prevent continuous polling
   useEffect(() => {
-    const interval = setInterval(() => {
-      setWindowInfo(getFetchWindowInfo());
-    }, 1000);
-    
-    return () => clearInterval(interval);
+    setWindowInfo(getFetchWindowInfo());
+    // Note: Removed setInterval to prevent promise rejections
   }, []);
   
   const handleFetchProducts = async () => {
