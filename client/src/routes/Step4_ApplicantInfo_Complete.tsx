@@ -246,6 +246,9 @@ export default function Step4ApplicantInfoComplete() {
       payload: processedData,
     });
 
+    // Verify VITE_API_BASE_URL injection
+    console.log("🔧 STAFF API:", import.meta.env.VITE_API_BASE_URL);
+    
     logger.log('📤 Step 4: Creating real application via POST /api/public/applications...');
     try {
       // Format data as staff backend expects: {step1, step3, step4}

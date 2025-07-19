@@ -12,6 +12,9 @@ import { MainLayout } from "@/v2-design-system/MainLayout";
 import { WebSocketListener } from "@/components/WebSocketListener";
 
 function App() {
+  // Verify VITE_API_BASE_URL injection
+  console.log("🔧 STAFF API:", import.meta.env.VITE_API_BASE_URL);
+  
   return (
     <AppShell>
       <WebSocketListener />
