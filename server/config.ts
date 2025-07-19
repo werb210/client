@@ -18,7 +18,7 @@ export const cfg = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   
   // API Configuration - Use production staff backend
-  staffApiUrl: process.env.STAFF_API_URL || process.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app',
+  staffApiUrl: process.env.STAFF_API_URL || process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial/api',
   
   // Authentication Tokens
   clientToken: process.env.VITE_CLIENT_APP_SHARED_TOKEN || process.env.CLIENT_APP_SHARED_TOKEN!,

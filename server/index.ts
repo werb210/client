@@ -734,7 +734,11 @@ app.use((req, res, next) => {
       formData.append('document', new Blob([file.buffer]), file.originalname);
       formData.append('documentType', documentType);
       
-      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${applicationId}/documents`, {
+      const uploadUrl = `${cfg.staffApiUrl}/public/applications/${applicationId}/documents`;
+      console.log(`🧪 [DEBUG] Upload URL: ${uploadUrl}`);
+      console.log(`🧪 [DEBUG] cfg.staffApiUrl: ${cfg.staffApiUrl}`);
+      
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${cfg.clientToken}`
@@ -815,7 +819,7 @@ app.use((req, res, next) => {
     formData.append('document', new Blob([file.buffer]), file.originalname);
     formData.append('documentType', documentType);
     
-    const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${id}/documents`, {
+    const response = await fetch(`${cfg.staffApiUrl}/public/applications/${id}/documents`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${cfg.clientToken}`
@@ -872,7 +876,7 @@ app.use((req, res, next) => {
       const { id } = req.params;
       console.log(`📋 [SERVER] Fetching documents for application ${id}`);
       
-      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${id}/documents`, {
+      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${id}/documents`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${cfg.clientToken}`
