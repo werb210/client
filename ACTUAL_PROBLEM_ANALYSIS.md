@@ -12,6 +12,7 @@
 **Issue**: Server was concatenating `cfg.staffApiUrl + '/api'` creating malformed URLs
 **Evidence**: Response showed `"staffBackend":"https://staff.boreal.financial/api/api"`
 **Fix Applied**: ✅ Removed duplicate '/api' concatenation in error responses
+**Verification**: Current response shows `"staffBackend":"https://staff.boreal.financial/api"` (CORRECT)
 
 ### **Problem 3: TypeScript Execution Issues** 
 **Issue**: `ERR_UNKNOWN_FILE_EXTENSION` when testing server TypeScript files
