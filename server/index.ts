@@ -147,8 +147,7 @@ app.use((req, res, next) => {
     try {
       console.log('📡 [SERVER] Proxying request to staff backend /api/public/lenders');
       
-      const staffApiUrl = cfg.staffApiUrl + '/api';
-      const response = await fetch(`${staffApiUrl}/public/lenders`, {
+      const response = await fetch(`${cfg.staffApiUrl}/public/lenders`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -241,8 +240,7 @@ app.use((req, res, next) => {
       console.log('🟢 [SERVER] Final payload being sent to staff backend:', payload);
       console.log('📋 [SERVER] Application payload received with step-based structure');
       
-      const staffApiUrl = cfg.staffApiUrl + '/api';
-      const finalUrl = `${staffApiUrl}/public/applications`;
+      const finalUrl = `${cfg.staffApiUrl}/public/applications`;
       console.log(`📡 [SERVER] Forwarding to: ${finalUrl}`);
       console.log(`🎯 [SERVER] Direct staff backend endpoint: ${finalUrl}`);
       console.log('🔑 [SERVER] Using auth token:', cfg.clientToken ? 'Present' : 'Missing');
@@ -338,7 +336,7 @@ app.use((req, res, next) => {
       console.log(`📋 [SERVER] PATCH /api/public/applications/${applicationId} - Finalizing application`);
       console.log('📝 [SERVER] Finalization data:', req.body);
       
-      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${applicationId}`, {
+      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${applicationId}`, {
         method: 'PATCH',
         headers: {
           'Accept': 'application/json',
@@ -387,7 +385,7 @@ app.use((req, res, next) => {
       const { applicationId } = req.params;
       console.log(`📋 [SERVER] Step 7: Finalizing application ${applicationId}`);
       
-      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${applicationId}/finalize`, {
+      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${applicationId}/finalize`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -493,7 +491,7 @@ app.use((req, res, next) => {
     try {
       const { id } = req.params;
       console.log(`🏁 [SERVER] Step 7: Finalizing application ${id}`);
-      const finalUrl = `${cfg.staffApiUrl}/api/public/applications/${id}/finalize`;
+      const finalUrl = `${cfg.staffApiUrl}/public/applications/${id}/finalize`;
       console.log(`🧪 [SERVER] Exact finalization URL: ${finalUrl}`);
       
       const response = await fetch(finalUrl, {
@@ -558,7 +556,7 @@ app.use((req, res, next) => {
       const { id } = req.params;
       console.log(`📋 [SERVER] Step 6: Getting signing status for application ${id}`);
       
-      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${id}/signing-status`, {
+      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${id}/signing-status`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -605,7 +603,7 @@ app.use((req, res, next) => {
       const { id } = req.params;
       console.log(`📡 [SERVER] Simple polling for signing status - application ${id}`);
       
-      const response = await fetch(`${cfg.staffApiUrl}/api/public/signnow/status/${id}`, {
+      const response = await fetch(`${cfg.staffApiUrl}/public/signnow/status/${id}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -643,7 +641,7 @@ app.use((req, res, next) => {
       const { applicationId } = req.params;
       console.log(`📡 [SERVER] Polling SignNow status for application ${applicationId}`);
       
-      const response = await fetch(`${cfg.staffApiUrl}/api/public/signnow/status/${applicationId}`, {
+      const response = await fetch(`${cfg.staffApiUrl}/public/signnow/status/${applicationId}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
