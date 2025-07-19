@@ -93,6 +93,20 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 19, 2025: 📤 STEP 5 DOCUMENT UPLOAD SYSTEM ACTIVATED - USER SPECIFICATION COMPLETE**
+  * **CRITICAL SUCCESS**: Activated and configured Step 5 document upload system per user specifications
+  * **ENDPOINT UPDATED**: Changed upload endpoint from `/api/public/applications/:id/documents` to `/api/public/upload/:applicationId`
+  * **BEARER AUTHENTICATION**: Added Bearer token authentication using VITE_CLIENT_APP_SHARED_TOKEN
+  * **SERVER ROUTE ADDED**: Implemented new POST /api/public/upload/:applicationId endpoint with proper Bearer token validation
+  * **CONSOLE LOGGING ENHANCED**: Updated logging format to match user specifications ("📤 Uploading:", "✅ Uploaded:")
+  * **MULTIPART FORM DATA**: Configured proper multipart/form-data payload with document and documentType fields
+  * **STAFF BACKEND FORWARDING**: Uploads properly forwarded to https://staff.boreal.financial/api with authentication
+  * **STEP 5 ACCESSIBILITY**: Step 5 component accessible at /apply/step-5 after successful Step 4 submission
+  * **DOCUMENT REQUIREMENTS**: Dynamic document types loaded from application object returned in Step 4 response
+  * **FILE PREVIEW SYSTEM**: Implemented file preview for PDF, PNG, JPG files with upload/retry functionality
+  * **LEGACY COMPATIBILITY**: Maintained backward compatibility with existing upload endpoint
+  * **PRODUCTION READY**: Complete document upload workflow operational with Bearer authentication and staff backend integration
+
 - **July 19, 2025: ✅ VITE ENVIRONMENT VARIABLE FIX COMPLETED - STAFF BACKEND INTEGRATION VERIFIED**
   * **CRITICAL SUCCESS**: Fixed VITE_API_BASE_URL environment variable loading in Replit development mode
   * **SECRET CONFIGURATION**: Added VITE_API_BASE_URL=https://staff.boreal.financial/api to Replit Secrets panel

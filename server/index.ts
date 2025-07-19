@@ -697,6 +697,79 @@ app.use((req, res, next) => {
   // Any future connection monitoring must be approved via ChatGPT review.
   // PERMANENT STABILIZATION: No req.aborted, req.on('close'), or req.on('aborted') patterns allowed
   
+  // NEW USER SPECIFICATION FORMAT - POST /api/public/upload/:applicationId with Bearer auth
+  app.post('/api/public/upload/:applicationId', upload.single('document'), async (req, res) => {
+    const { applicationId } = req.params;
+    const { documentType } = req.body;
+    const file = req.file;
+    
+    // Validate Bearer token
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.split(' ')[1] !== cfg.clientToken) {
+      console.error('❌ [SERVER] Invalid or missing Bearer token for upload');
+      return res.status(401).json({
+        status: 'error',
+        error: 'Unauthorized',
+        message: 'Valid Bearer token required'
+      });
+    }
+    
+    console.log(`📤 [SERVER] Document upload for application ${applicationId}`);
+    console.log(`📤 [SERVER] Document type: ${documentType}`);
+    console.log(`📤 [SERVER] File: ${file?.originalname}, Size: ${file?.size} bytes`);
+    
+    if (!file) {
+      console.error('❌ [SERVER] No file received');
+      return res.status(400).json({
+        status: 'error',
+        error: 'Document file is required',
+        message: 'No file was uploaded'
+      });
+    }
+    
+    try {
+      // Create FormData for staff backend
+      const FormData = (await import('node-fetch')).FormData;
+      const formData = new FormData();
+      formData.append('document', new Blob([file.buffer]), file.originalname);
+      formData.append('documentType', documentType);
+      
+      const response = await fetch(`${cfg.staffApiUrl}/api/public/applications/${applicationId}/documents`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${cfg.clientToken}`
+        },
+        body: formData as any
+      });
+      
+      console.log(`📤 [SERVER] Staff backend upload response: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('❌ [SERVER] Staff backend upload error:', errorData);
+        return res.status(503).json({
+          status: 'error',
+          error: 'Staff backend unavailable',
+          message: `Upload failed: ${response.status}`
+        });
+      }
+      
+      const data = await response.json();
+      console.log('✅ [SERVER] Upload successful:', data);
+      
+      res.json(data);
+      
+    } catch (error) {
+      console.error('❌ [SERVER] Upload error:', error);
+      res.status(500).json({
+        status: 'error',
+        error: 'Upload failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // LEGACY ENDPOINT - maintains backward compatibility
   // File upload endpoint - ROCK SOLID IMPLEMENTATION
   app.post('/api/public/applications/:id/documents', upload.single('document'), async (req, res) => {
     const { id } = req.params;

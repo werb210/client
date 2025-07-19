@@ -265,18 +265,21 @@ function UnifiedDocumentUploadCard({
           formData.append('documentType', category.toLowerCase().replace(/\s+/g, '_'));
           
           // 🧪 REQUIRED DEBUG LOGGING as per user instructions
-          console.log("Uploading file:", file.name, "→", category);
+          console.log("📤 Uploading:", file.name, category.toLowerCase().replace(/\s+/g, '_'));
           console.log(`📤 [STEP5] Uploading file ${i + 1}/${files.length}: ${file.name}`);
           console.log(`📤 [STEP5] Document type: ${category}`);
           console.log(`📤 [STEP5] Application ID: ${applicationId}`);
           console.log(`📤 [STEP5] FormData payload:`, {
             document: file.name,
             documentType: category.toLowerCase().replace(/\s+/g, '_'),
-            endpoint: `/api/public/applications/${applicationId}/documents`
+            endpoint: `/api/public/upload/${applicationId}`
           });
           
-          const uploadResponse = await fetch(`/api/public/applications/${applicationId}/documents`, {
+          const uploadResponse = await fetch(`/api/public/upload/${applicationId}`, {
             method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+            },
             body: formData
           });
           
@@ -287,7 +290,7 @@ function UnifiedDocumentUploadCard({
           }
           
           const uploadResult = await uploadResponse.json();
-          console.log(`✅ [STEP5] Upload successful for ${file.name}:`, uploadResult);
+          console.log("✅ Uploaded:", uploadResult);
           
           // 🧪 DEBUG: Validate upload success response
           if (uploadResult && (uploadResult.success === true || uploadResult.documentId)) {
