@@ -1622,14 +1622,14 @@ app.use((req, res, next) => {
       res.status(503).json({ 
         error: 'Authentication service configuration required',
         message: 'This client app is configured to route authentication to staff backend',
-        staffBackend: cfg.staffApiUrl + '/api',
+        staffBackend: cfg.staffApiUrl, // FIXED: Removed duplicate /api
         endpoint: req.path,
         suggestion: 'Configure CLIENT_APP_SHARED_TOKEN in Replit Secrets'
       });
     } else {
       res.status(501).json({ 
         message: 'This client app routes API calls to staff backend.',
-        staffBackend: cfg.staffApiUrl + '/api',
+        staffBackend: cfg.staffApiUrl, // FIXED: Removed duplicate /api
         endpoint: req.path,
         note: 'Endpoint not implemented on staff backend'
       });

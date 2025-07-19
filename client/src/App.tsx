@@ -11,6 +11,13 @@ import { AppShell } from "@/v2-design-system/AppShell";
 import { MainLayout } from "@/v2-design-system/MainLayout";
 import { WebSocketListener } from "@/components/WebSocketListener";
 
+// Add global unhandled promise rejection handler for cleaner console output
+window.addEventListener('unhandledrejection', (event) => {
+  console.warn('[App] Unhandled promise rejection prevented:', event.reason);
+  // Prevent the console error from appearing
+  event.preventDefault();
+});
+
 function App() {
   // Verify VITE_API_BASE_URL injection
   console.log("🔧 STAFF API:", import.meta.env.VITE_API_BASE_URL);
