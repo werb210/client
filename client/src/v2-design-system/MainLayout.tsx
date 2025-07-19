@@ -185,6 +185,9 @@ export function MainLayout() {
       {/* Dashboard */}
       <Route path="/dashboard" component={SimpleDashboard} />
       
+      {/* Success Page */}
+      <Route path="/application-success" component={ApplicationSuccess} />
+      
       {/* Document Management */}
 
       <Route path="/upload-documents/:applicationId?" component={UploadDocuments} />
