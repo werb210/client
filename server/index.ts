@@ -241,8 +241,8 @@ app.use((req, res, next) => {
       console.log('🟢 [SERVER] Final payload being sent to staff backend:', payload);
       console.log('📋 [SERVER] Application payload received with step-based structure');
       
-      const staffApiUrl = cfg.staffApiUrl;
-      const finalUrl = `${staffApiUrl}/api/public/applications`;
+      const staffApiUrl = cfg.staffApiUrl + '/api';
+      const finalUrl = `${staffApiUrl}/public/applications`;
       console.log(`📡 [SERVER] Forwarding to: ${finalUrl}`);
       console.log(`🎯 [SERVER] Direct staff backend endpoint: ${finalUrl}`);
       console.log('🔑 [SERVER] Using auth token:', cfg.clientToken ? 'Present' : 'Missing');
