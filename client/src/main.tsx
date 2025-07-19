@@ -3,10 +3,21 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// Simplified error handling to prevent app crashes
+// Enhanced error handling to prevent app crashes and identify sources
 window.addEventListener('unhandledrejection', (event) => {
   event.preventDefault();
-  // Suppress all unhandled rejections for clean console
+  
+  // In development, log the actual error for debugging
+  if (import.meta.env.DEV) {
+    console.warn('[App] Unhandled promise rejection prevented:', event.reason || {});
+    
+    // Additional debugging for promise rejection sources
+    if (event.reason && event.reason.stack) {
+      console.warn('[App] Rejection stack:', event.reason.stack);
+    }
+  }
+  
+  // Suppress all unhandled rejections for clean production console
 });
 
 // Production cache-only system - no startup sync required

@@ -91,7 +91,12 @@ export async function apiRequest<T>(
     return null as T;
   }
   
-  return await response.json();
+  try {
+    return await response.json();
+  } catch (jsonError) {
+    console.warn('JSON parsing failed:', jsonError);
+    throw new ApiError('Invalid response format', response.status, response);
+  }
 }
 
 // Application-related API functions

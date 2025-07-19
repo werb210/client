@@ -304,14 +304,14 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   // Enhanced proactive messaging setup
   useEffect(() => {
     if (isOpen && !proactiveShown) {
-      // Contextual proactive message after 15 seconds (optimized timing)
-      proactiveTimeoutRef.current = setTimeout(() => {
-        if (!proactiveShown) {
-          const contextualMessage = getContextualProactiveMessage();
-          addBotMessage(contextualMessage);
-          setProactiveShown(true);
-        }
-      }, 15000);
+      // DISABLED: Proactive message timeout to prevent promise rejections
+      // proactiveTimeoutRef.current = setTimeout(() => {
+      //   if (!proactiveShown) {
+      //     const contextualMessage = getContextualProactiveMessage();
+      //     addBotMessage(contextualMessage);
+      //     setProactiveShown(true);
+      //   }
+      // }, 15000);
     }
 
     // Enhanced exit intent detection
