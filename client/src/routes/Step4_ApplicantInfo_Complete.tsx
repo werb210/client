@@ -502,6 +502,9 @@ export default function Step4ApplicantInfoComplete() {
           console.log('🧪 Test account duplicate bypass enabled');
         }
         
+        // USER REQUESTED: Add specific console logging before POST
+        console.log("🧪 FINAL PAYLOAD:", applicationData);
+
         // API Call: POST /api/public/applications
         response = await fetch(postUrl, {
           method: 'POST',
@@ -526,6 +529,10 @@ export default function Step4ApplicantInfoComplete() {
       
       if (response.ok) {
         const result = await response.json();
+        
+        // USER REQUESTED: Add specific console logging after POST
+        console.log("✅ Application created:", result);
+        
         console.log("📥 Application creation response:", result);
         console.log("✅ STAFF API ACCEPTED PAYLOAD");
         console.log("📋 Response Data:", JSON.stringify(result, null, 2));
