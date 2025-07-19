@@ -21,7 +21,7 @@ export const cfg = {
   staffApiUrl: process.env.STAFF_API_URL || process.env.VITE_STAFF_API_URL || 'https://staffportal.replit.app',
   
   // Authentication Tokens
-  clientToken: process.env.CLIENT_APP_SHARED_TOKEN!,
+  clientToken: process.env.VITE_CLIENT_APP_SHARED_TOKEN || process.env.CLIENT_APP_SHARED_TOKEN!,
   signNowToken: process.env.SIGNNOW_API_KEY!,
   
   // SignNow Configuration  
