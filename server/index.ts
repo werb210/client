@@ -204,53 +204,47 @@ app.use((req, res, next) => {
       console.log('⏰ [SERVER] Request timestamp:', new Date().toISOString());
       console.log('🔍 [SERVER] Request headers:', req.headers);
       console.log('📝 [SERVER] Request body size:', JSON.stringify(req.body).length + ' bytes');
-      // Transform field names to match staff backend expectations
-      const payload = req.body;
+      // Transform payload to match exact staff backend expectations
+      console.log('🔍 [SERVER] Creating staff backend compliant payload...');
       
-      // Map client field names to staff backend field names
-      console.log('🔍 [SERVER] Starting field mapping process...');
+      const originalPayload = req.body;
       
-      // Step 1 field mappings
-      if (payload.step1 && payload.step1.fundingAmount !== undefined) {
-        payload.step1.requestedAmount = payload.step1.fundingAmount;
-        console.log('🔄 [SERVER] Applied step1 mapping: fundingAmount → requestedAmount');
-      }
+      // Create the exact payload structure required by staff backend
+      const payload = {
+        step1: {
+          requestedAmount: String(originalPayload.step1?.fundingAmount || originalPayload.step1?.requestedAmount || "0"),
+          useOfFunds: originalPayload.step1?.fundsPurpose === "working_capital" ? "Working capital" : 
+                     originalPayload.step1?.fundsPurpose || "Working capital"
+        },
+        step3: {
+          businessName: originalPayload.step3?.operatingName || originalPayload.step3?.businessName || "",
+          legalBusinessName: originalPayload.step3?.legalName || originalPayload.step3?.legalBusinessName || 
+                           originalPayload.step3?.operatingName || "",
+          businessType: originalPayload.step3?.businessStructure === "corporation" ? "Corporation" :
+                       originalPayload.step3?.businessStructure || "Corporation",
+          businessEmail: originalPayload.step4?.applicantEmail || originalPayload.step4?.email || "",
+          businessPhone: originalPayload.step3?.businessPhone || originalPayload.step4?.applicantPhone || ""
+        },
+        step4: {
+          firstName: originalPayload.step4?.applicantFirstName || originalPayload.step4?.firstName || "",
+          lastName: originalPayload.step4?.applicantLastName || originalPayload.step4?.lastName || "",
+          email: originalPayload.step4?.applicantEmail || originalPayload.step4?.email || "",
+          phone: originalPayload.step4?.applicantPhone || originalPayload.step4?.phone || "",
+          dob: originalPayload.step4?.applicantDateOfBirth || originalPayload.step4?.dob || "",
+          sin: (originalPayload.step4?.applicantSSN || originalPayload.step4?.sin || "").replace(/\s+/g, ""),
+          ownershipPercentage: originalPayload.step4?.ownershipPercentage || 100
+        }
+      };
       
-      // Step 3 field mappings
-      if (payload.step3) {
-        if (payload.step3.operatingName && !payload.step3.businessName) {
-          payload.step3.businessName = payload.step3.operatingName;
-          console.log('🔄 [SERVER] Applied step3 mapping: operatingName → businessName');
-        }
-        if (payload.step3.legalName && !payload.step3.businessLegalName) {
-          payload.step3.businessLegalName = payload.step3.legalName;
-          console.log('🔄 [SERVER] Applied step3 mapping: legalName → businessLegalName');
-        }
-      }
-      
-      // Step 4 field mappings
-      if (payload.step4) {
-        if (payload.step4.applicantFirstName && !payload.step4.firstName) {
-          payload.step4.firstName = payload.step4.applicantFirstName;
-          console.log('🔄 [SERVER] Applied step4 mapping: applicantFirstName → firstName');
-        }
-        if (payload.step4.applicantLastName && !payload.step4.lastName) {
-          payload.step4.lastName = payload.step4.applicantLastName;
-          console.log('🔄 [SERVER] Applied step4 mapping: applicantLastName → lastName');
-        }
-        if (payload.step4.applicantEmail && !payload.step4.email) {
-          payload.step4.email = payload.step4.applicantEmail;
-          console.log('🔄 [SERVER] Applied step4 mapping: applicantEmail → email');
-        }
-      }
+      console.log('🔄 [SERVER] Transformed payload to staff backend format');
       
       console.log('🟢 [SERVER] Final payload being sent to staff backend:', payload);
       console.log('📋 [SERVER] Application payload received with step-based structure');
       
-      const staffApiUrl = cfg.staffApiUrl + '/api';
-      const finalUrl = `${staffApiUrl}/public/applications`;
+      const staffApiUrl = cfg.staffApiUrl;
+      const finalUrl = `${staffApiUrl}/api/public/applications`;
       console.log(`📡 [SERVER] Forwarding to: ${finalUrl}`);
-      console.log(`🎯 [SERVER] Confirmed staff backend URL: https://staff.boreal.financial/api/public/applications`);
+      console.log(`🎯 [SERVER] Direct staff backend endpoint: ${finalUrl}`);
       console.log('🔑 [SERVER] Using auth token:', cfg.clientToken ? 'Present' : 'Missing');
       
       // Check for test account bypass header
@@ -267,7 +261,7 @@ app.use((req, res, next) => {
       }
       
       console.log('📤 [SERVER] Making request to staff backend...');
-      const response = await fetch(`${staffApiUrl}/public/applications`, {
+      const response = await fetch(finalUrl, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)
