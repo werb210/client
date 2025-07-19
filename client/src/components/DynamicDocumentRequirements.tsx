@@ -78,10 +78,50 @@ function UploadedFileItem({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // Generate preview URL for documents if not already present
+  const getPreviewUrl = (file: UploadedFile) => {
+    if (file.preview) return file.preview;
+    
+    // For PDF and image files, create object URL for preview
+    if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
+      return URL.createObjectURL(file.file);
+    }
+    
+    return null;
+  };
+
+  const previewUrl = getPreviewUrl(file);
+
   return (
     <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded border">
       <div className="flex items-center space-x-3">
-        <FileText className="w-4 h-4 text-gray-500" />
+        {previewUrl ? (
+          <div className="relative group">
+            <FileText className="w-4 h-4 text-blue-500 cursor-pointer" />
+            {/* Preview tooltip/modal on hover */}
+            <div className="absolute left-0 bottom-6 z-50 hidden group-hover:block">
+              <div className="bg-black bg-opacity-75 rounded p-2 max-w-xs">
+                {file.type === 'application/pdf' ? (
+                  <iframe 
+                    src={previewUrl} 
+                    className="w-48 h-32 border-0"
+                    title={`Preview of ${file.name}`}
+                  />
+                ) : (
+                  <img 
+                    src={previewUrl}
+                    alt={`Preview of ${file.name}`}
+                    className="max-w-48 max-h-32 object-contain"
+                    onError={() => console.warn('Preview failed for', file.name)}
+                  />
+                )}
+                <div className="text-white text-xs mt-1 text-center">Preview</div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <FileText className="w-4 h-4 text-gray-500" />
+        )}
         <span className="text-sm font-medium text-gray-900">{file.name}</span>
         <span className="text-xs text-gray-500">({formatFileSize(file.size)})</span>
         {file.status === "uploading" && (
