@@ -251,7 +251,79 @@ function UnifiedDocumentUploadCard({
           return 'articles_of_incorporation';
         }
         
-        // Debt Schedule - specific pattern
+        // Profit & Loss Statement
+        if (labelLower.includes('profit') && (labelLower.includes('loss') || labelLower.includes('&'))) {
+          return 'profit_loss_statement';
+        }
+        
+        // Balance Sheet
+        if (labelLower.includes('balance') && labelLower.includes('sheet')) {
+          return 'balance_sheet';
+        }
+        
+        // Cash Flow Statement
+        if (labelLower.includes('cash') && labelLower.includes('flow')) {
+          return 'cash_flow_statement';
+        }
+        
+        // Accounts Receivable (A/R)
+        if ((labelLower.includes('accounts') && labelLower.includes('receivable')) || 
+            (labelLower.includes('a/r') || labelLower.includes('ar '))) {
+          return 'accounts_receivable';
+        }
+        
+        // Accounts Payable (A/P)
+        if ((labelLower.includes('accounts') && labelLower.includes('payable')) || 
+            (labelLower.includes('a/p') || labelLower.includes('ap '))) {
+          return 'accounts_payable';
+        }
+        
+        // Driver's License (Front & Back)
+        if (labelLower.includes('driver') && labelLower.includes('license')) {
+          return 'drivers_license_front_back';
+        }
+        
+        // VOID/PAD or Voided Check
+        if (labelLower.includes('void') || labelLower.includes('pad')) {
+          return 'void_pad';
+        }
+        
+        // Business Plan
+        if (labelLower.includes('business') && labelLower.includes('plan')) {
+          return 'business_plan';
+        }
+        
+        // Personal Guarantee
+        if (labelLower.includes('personal') && labelLower.includes('guarantee')) {
+          return 'personal_guarantee';
+        }
+        
+        // Invoice Samples
+        if (labelLower.includes('invoice') && labelLower.includes('sample')) {
+          return 'invoice_samples';
+        }
+        
+        // Collateral Documents
+        if (labelLower.includes('collateral')) {
+          return 'collateral_docs';
+        }
+        
+        // Supplier Agreement
+        if (labelLower.includes('supplier') && labelLower.includes('agreement')) {
+          return 'supplier_agreement';
+        }
+        
+        // Proof of Identity
+        if (labelLower.includes('proof') && labelLower.includes('identity')) {
+          return 'proof_of_identity';
+        }
+        
+        // Signed Application
+        if (labelLower.includes('signed') && labelLower.includes('application')) {
+          return 'signed_application';
+        }
+        
+        // Debt Schedule
         if (labelLower.includes('debt') && labelLower.includes('schedule')) {
           return 'debt_schedule';
         }
@@ -556,18 +628,120 @@ export function DynamicDocumentRequirements({
       const completedDocs = documentRequirements.filter(doc => {
         const normalizedDocType = doc.label.toLowerCase().replace(/\s+/g, '_');
         
-        // ✅ CRITICAL FIX: Map display names to API document types
+        // ✅ COMPREHENSIVE FIX: Map ALL display names to API document types
         const getApiDocumentType = (displayLabel: string): string => {
           const labelLower = displayLabel.toLowerCase();
           
-          // Map "Accountant Prepared Financial Statements" to "financial_statements"
+          // Bank statements
+          if (labelLower.includes('bank') && labelLower.includes('statement')) {
+            return 'bank_statements';
+          }
+          
+          // Accountant Prepared Financial Statements → financial_statements
           if (labelLower.includes('accountant') && labelLower.includes('prepared') && labelLower.includes('financial')) {
             return 'financial_statements';
           }
           
-          // Map "Bank Statements" to "bank_statements"
-          if (labelLower.includes('bank') && labelLower.includes('statement')) {
-            return 'bank_statements';
+          // Personal Financial Statement
+          if (labelLower.includes('personal') && labelLower.includes('financial') && labelLower.includes('statement')) {
+            return 'personal_financial_statement';
+          }
+          
+          // Tax Returns
+          if (labelLower.includes('tax') && labelLower.includes('return')) {
+            return 'tax_returns';
+          }
+          
+          // Equipment Quote
+          if (labelLower.includes('equipment') && labelLower.includes('quote')) {
+            return 'equipment_quote';
+          }
+          
+          // Business License
+          if (labelLower.includes('business') && labelLower.includes('license')) {
+            return 'business_license';
+          }
+          
+          // Articles of Incorporation
+          if (labelLower.includes('articles') && labelLower.includes('incorporation')) {
+            return 'articles_of_incorporation';
+          }
+          
+          // Profit & Loss Statement
+          if (labelLower.includes('profit') && (labelLower.includes('loss') || labelLower.includes('&'))) {
+            return 'profit_loss_statement';
+          }
+          
+          // Balance Sheet
+          if (labelLower.includes('balance') && labelLower.includes('sheet')) {
+            return 'balance_sheet';
+          }
+          
+          // Cash Flow Statement
+          if (labelLower.includes('cash') && labelLower.includes('flow')) {
+            return 'cash_flow_statement';
+          }
+          
+          // Accounts Receivable (A/R)
+          if ((labelLower.includes('accounts') && labelLower.includes('receivable')) || 
+              (labelLower.includes('a/r') || labelLower.includes('ar '))) {
+            return 'accounts_receivable';
+          }
+          
+          // Accounts Payable (A/P)
+          if ((labelLower.includes('accounts') && labelLower.includes('payable')) || 
+              (labelLower.includes('a/p') || labelLower.includes('ap '))) {
+            return 'accounts_payable';
+          }
+          
+          // Driver's License (Front & Back)
+          if (labelLower.includes('driver') && labelLower.includes('license')) {
+            return 'drivers_license_front_back';
+          }
+          
+          // VOID/PAD or Voided Check
+          if (labelLower.includes('void') || labelLower.includes('pad')) {
+            return 'void_pad';
+          }
+          
+          // Business Plan
+          if (labelLower.includes('business') && labelLower.includes('plan')) {
+            return 'business_plan';
+          }
+          
+          // Personal Guarantee
+          if (labelLower.includes('personal') && labelLower.includes('guarantee')) {
+            return 'personal_guarantee';
+          }
+          
+          // Invoice Samples
+          if (labelLower.includes('invoice') && labelLower.includes('sample')) {
+            return 'invoice_samples';
+          }
+          
+          // Collateral Documents
+          if (labelLower.includes('collateral')) {
+            return 'collateral_docs';
+          }
+          
+          // Supplier Agreement
+          if (labelLower.includes('supplier') && labelLower.includes('agreement')) {
+            return 'supplier_agreement';
+          }
+          
+          // Proof of Identity
+          if (labelLower.includes('proof') && labelLower.includes('identity')) {
+            return 'proof_of_identity';
+          }
+          
+          // Signed Application
+          if (labelLower.includes('signed') && labelLower.includes('application')) {
+            return 'signed_application';
+          }
+          
+          // Debt Schedule
+          if (labelLower.includes('debt') && labelLower.includes('schedule')) {
+            return 'debt_schedule';
           }
           
           // Default: convert to underscore format
