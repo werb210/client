@@ -2,12 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { logger } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import RefreshCcw from 'lucide-react/dist/esm/icons/refresh-ccw';
-import Upload from 'lucide-react/dist/esm/icons/upload';
-import X from 'lucide-react/dist/esm/icons/x';
+import { CheckCircle, FileText, AlertCircle, RefreshCcw, Upload, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { getDocumentLabel as getDocumentTypeLabel } from '../../../shared/documentTypes';
@@ -28,7 +23,7 @@ import {
 } from '../../../shared/documentTypes';
 import { 
   getDocumentRequirements 
-} from '@/shared/documentMapping';
+} from '../../../shared/documentMapping';
 
 
 // TypeScript Interfaces - Export for use in other components
@@ -192,7 +187,7 @@ function UnifiedDocumentUploadCard({
       
       // Check if these files might have been successfully uploaded but marked as errors
       errorFiles.forEach(f => {
-        if (f.uploadedAt || f.id) {
+        if ((f as any).uploadedAt || f.id) {
           console.log(`🧪 [DEBUG] File ${f.name} has error status but seems to have upload data - possible false negative`);
         }
       });
@@ -599,7 +594,7 @@ export function DynamicDocumentRequirements({
       }
       
       // Now get the display label for this document type
-      const displayLabel = getDocumentTypeLabel(documentType);
+      const displayLabel = getDocumentTypeLabel(documentType as any);
       console.log(`🔍 [DEBUG] Document type "${documentType}" → display label: "${displayLabel}"`);
       
       renderedDocumentTypes.add(documentType);
@@ -608,8 +603,7 @@ export function DynamicDocumentRequirements({
         label: displayLabel,
         description: `Required document for your loan application`,
         quantity: getDocumentQuantity(docName),
-        category: 'required',
-        priority: 'high'
+        category: 'required'
       });
     }
     

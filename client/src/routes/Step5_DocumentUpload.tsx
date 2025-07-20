@@ -26,14 +26,7 @@ import { normalizeDocumentName } from '../../../shared/documentTypes';
 
 import { useDebouncedCallback } from 'use-debounce';
 
-import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
-import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
-import Save from 'lucide-react/dist/esm/icons/save';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
-import Info from 'lucide-react/dist/esm/icons/info';
-import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import { ArrowRight, ArrowLeft, Save, FileText, CheckCircle, AlertTriangle, Info, RefreshCw } from 'lucide-react';
 
 import { DocumentUploadStatus } from '@/components/DocumentUploadStatus';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
@@ -105,6 +98,58 @@ export default function Step5DocumentUpload() {
     hasMatches: false,
     isLoading: true
   });
+
+  // FIX #5: Reload uploaded documents on component mount
+  useEffect(() => {
+    const reloadUploadedDocuments = async () => {
+      if (!applicationId) {
+        console.log('⚠️ [STEP5-RELOAD] No application ID available for document reload');
+        return;
+      }
+
+      try {
+        console.log(`📂 [STEP5-RELOAD] Fetching uploaded documents for application ${applicationId}`);
+        const response = await fetch(`/api/public/applications/${applicationId}/documents`);
+        
+        if (response.ok) {
+          const uploadedDocs = await response.json();
+          console.log(`✅ [STEP5-RELOAD] Loaded ${uploadedDocs.length} documents:`, uploadedDocs);
+          
+          // Convert server response to UploadedFile format
+          const reloadedFiles: UploadedFile[] = uploadedDocs.map((doc: any) => ({
+            id: doc.documentId || doc.id,
+            name: doc.fileName || doc.name,
+            size: doc.fileSize || doc.size,
+            type: doc.mimeType || 'application/pdf',
+            status: (doc.status === 'uploaded' ? 'completed' : doc.status) as "completed" | "uploading" | "error",
+            documentType: doc.documentType,
+            file: new File([], doc.fileName || doc.name), // Placeholder file for display
+            uploadedAt: doc.uploadedAt
+          }));
+          
+          setUploadedFiles(reloadedFiles);
+          
+          // Update context state
+          dispatch({
+            type: 'UPDATE_FORM_DATA',
+            payload: {
+              step5DocumentUpload: {
+                ...state.step5DocumentUpload,
+                uploadedFiles: reloadedFiles
+              }
+            }
+          });
+          
+        } else {
+          console.log(`⚠️ [STEP5-RELOAD] Failed to fetch documents: ${response.status}`);
+        }
+      } catch (error) {
+        console.log('❌ [STEP5-RELOAD] Error loading documents:', String(error));
+      }
+    };
+
+    reloadUploadedDocuments();
+  }, [applicationId, dispatch]); // Reload when applicationId changes
 
   // Calculate document requirements on component mount using AGGREGATION logic
   useEffect(() => {
@@ -193,7 +238,85 @@ export default function Step5DocumentUpload() {
     };
 
     calculateDocumentRequirements();
+
+  // FIX #4: Enhanced document validation function
+  const validateDocumentUploads = (requirements: string[], files: UploadedFile[]) => {
+    if (!requirements || requirements.length === 0) {
+      return { allComplete: true, validationResults: [] };
+    }
+    
+    console.log(`🧪 [VALIDATION] Validating ${files.length} files against ${requirements.length} requirements`);
+    
+    // Group uploaded files by normalized document type
+    const filesByType = files.reduce((acc, file) => {
+      if (file.status === 'completed' && file.documentType) {
+        const normalizedType = normalizeDocumentName(file.documentType);
+        if (!acc[normalizedType]) acc[normalizedType] = [];
+        acc[normalizedType].push(file);
+      }
+      return acc;
+    }, {} as Record<string, UploadedFile[]>);
+    
+    console.log(`🧪 [VALIDATION] Files grouped by type:`, Object.keys(filesByType).map(type => 
+      `${type}: ${filesByType[type].length} files`
+    ));
+    
+    // Validate each requirement
+    const validationResults = requirements.map(requirement => {
+      const normalizedRequirement = normalizeDocumentName(requirement);
+      const uploadedFiles = filesByType[normalizedRequirement] || [];
+      
+      // Determine required quantity using same logic as deduplication
+      const requiredCount = requirement.toLowerCase().includes('bank') && requirement.toLowerCase().includes('statement') ? 6 :
+                           requirement.toLowerCase().includes('accountant') && requirement.toLowerCase().includes('financial') && requirement.toLowerCase().includes('statement') ? 3 : 1;
+      
+      const isComplete = uploadedFiles.length >= requiredCount;
+      
+      console.log(`📊 [VALIDATION] "${requirement}" (${normalizedRequirement}): ${uploadedFiles.length}/${requiredCount} - ${isComplete ? 'COMPLETE' : 'INCOMPLETE'}`);
+      
+      return {
+        documentType: requirement,
+        normalizedType: normalizedRequirement,
+        required: requiredCount,
+        uploaded: uploadedFiles.length,
+        complete: isComplete
+      };
+    });
+    
+    const allComplete = validationResults.every(result => result.complete);
+    const completedCount = validationResults.filter(r => r.complete).length;
+    
+    console.log(`🎯 [VALIDATION] Overall: ${allComplete ? 'ALL COMPLETE' : 'INCOMPLETE'} (${completedCount}/${validationResults.length})`);
+    
+    return { allComplete, validationResults };
+  };
+
+  calculateDocumentRequirements();
   }, [state.step2?.selectedCategory, state.step1?.businessLocation, state.step1?.fundingAmount, toast]);
+
+  // FIX #6: Clear Step 5 state when navigating back
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    
+    // If user navigated back to Step 4 or earlier, clear Step 5 state
+    if (currentPath.includes('/step-4') || currentPath.includes('/step-3') || currentPath.includes('/step-2') || currentPath.includes('/step-1')) {
+      console.log('🔄 [STEP5-CLEAR] User navigated back, clearing Step 5 state');
+      
+      dispatch({
+        type: 'UPDATE_FORM_DATA',
+        payload: {
+          step5DocumentUpload: { 
+            uploadedFiles: [],
+            completed: false
+          }
+        }
+      });
+      
+      // Also clear local state
+      setUploadedFiles([]);
+      setFiles([]);
+    }
+  }, [dispatch]); // React to navigation changes
 
   // Auto-save uploaded documents with 2-second delay
   const debouncedSave = useDebouncedCallback((files: UploadedFile[]) => {
@@ -268,60 +391,20 @@ export default function Step5DocumentUpload() {
     }
   }, [uploadedFiles, debouncedSave]);
 
-  // ✅ PATCH 3: Filter validation logic to use unique normalized document types
-  const validateDocumentUploads = () => {
-    if (!intersectionResults.requiredDocuments || intersectionResults.requiredDocuments.length === 0) {
-      return true; // No requirements = can proceed
+  // ✅ ENHANCED VALIDATION: Use new validation function
+  const validateDocumentCompleteness = () => {
+    const result = validateDocumentUploads(intersectionResults.requiredDocuments, uploadedFiles);
+    return result.allComplete;
+  };
+
+  const canProceed = () => {
+    if (!intersectionResults.hasMatches || !intersectionResults.requiredDocuments.length) {
+      // No matches or empty requirements = allow bypass
+      return true; 
     }
     
-    // ✅ PATCH 3.1: Deduplicate requirements by documentType
-    const uniqueRequirements = Array.from(
-      new Map(intersectionResults.requiredDocuments.map(req => [
-        normalizeDocumentName(req),
-        req
-      ])).values()
-    );
-    
-    console.log(`📋 [VALIDATION] Deduplicated requirements: ${intersectionResults.requiredDocuments.length} → ${uniqueRequirements.length}`, {
-      original: intersectionResults.requiredDocuments,
-      unique: uniqueRequirements
-    });
-    
-    // Group uploaded files by document type
-    const docsByType = uploadedFiles.reduce((acc, doc) => {
-      if (doc.status === 'completed' && doc.documentType) {
-        if (!acc[doc.documentType]) acc[doc.documentType] = [];
-        acc[doc.documentType].push(doc);
-      }
-      return acc;
-    }, {} as Record<string, typeof uploadedFiles>);
-    
-    // ✅ PATCH 3.2: Perform validation based on uniqueRequirements, not raw list
-    const validationResults = uniqueRequirements.map(reqDoc => {
-      const normalizedType = normalizeDocumentName(reqDoc);
-      const uploadedDocs = docsByType[normalizedType] || [];
-      const successfulUploads = uploadedDocs.filter(doc => doc.status === 'completed');
-      
-      // Determine required count (6 for bank statements, 3 for accountant prepared financial statements, 1 for others)
-      const requiredCount = reqDoc.toLowerCase().includes('bank') && reqDoc.toLowerCase().includes('statement') ? 6 :
-                           reqDoc.toLowerCase().includes('accountant') && reqDoc.toLowerCase().includes('financial') && reqDoc.toLowerCase().includes('statement') ? 3 : 1;
-      
-      const isComplete = successfulUploads.length >= requiredCount;
-      
-      console.log(`📊 Document validation "${reqDoc}": ${successfulUploads.length}/${requiredCount} (${isComplete ? 'COMPLETE' : 'INCOMPLETE'})`);
-      
-      return {
-        documentType: reqDoc,
-        required: requiredCount,
-        uploaded: successfulUploads.length,
-        complete: isComplete
-      };
-    });
-    
-    const allComplete = validationResults.every(result => result.complete);
-    console.log(`📋 Overall validation: ${allComplete ? 'COMPLETE' : 'INCOMPLETE'} (${validationResults.filter(r => r.complete).length}/${validationResults.length} document types)`);
-    
-    return allComplete;
+    // Use enhanced validation function
+    return validateDocumentCompleteness();
   };
 
   // Handle requirements completion status
@@ -358,7 +441,7 @@ export default function Step5DocumentUpload() {
     logger.log('🚀 [STEP5] Navigation attempt - validating document uploads...');
 
     // ✅ STEP 1: Use proper validation logic
-    const isValidated = validateDocumentUploads();
+    const isValidated = validateDocumentCompleteness();
     
     if (!isValidated) {
       toast({
