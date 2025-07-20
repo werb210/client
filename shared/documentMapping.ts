@@ -95,11 +95,14 @@ export const DOCUMENT_NAME_MAPPING: Record<string, DocumentType> = {
   "business tax returns (2-3 years)": "tax_returns",
   "corporate tax returns": "tax_returns",
   
-  // Financial Statements variations
-  "accountant prepared financial statements": "financial_statements",
+  // Accountant Prepared Financial Statements variations - use unique category
+  "accountant prepared financial statements": "accountant_prepared_statements",
+  "accountant prepared financial statements (p&l and balance sheet)": "accountant_prepared_statements",
+  "audited financial statements": "accountant_prepared_statements",
+  
+  // General Financial Statements variations
   "financial statements (p&l and balance sheet)": "financial_statements",
-  "accountant prepared financial statements (p&l and balance sheet)": "financial_statements",
-  "audited financial statements": "financial_statements",
+  "financial statements": "financial_statements",
   
   // Business License variations
   "business license": "business_license",

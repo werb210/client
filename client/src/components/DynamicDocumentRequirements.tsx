@@ -220,9 +220,9 @@ function UnifiedDocumentUploadCard({
           return 'bank_statements';
         }
         
-        // Accountant Prepared Financial Statements - must include "accountant" AND "prepared"
+        // Accountant Prepared Financial Statements - unique category to prevent confusion with general financial statements
         if (labelLower.includes('accountant') && labelLower.includes('prepared') && labelLower.includes('financial')) {
-          return 'financial_statements';
+          return 'accountant_prepared_statements';
         }
         
         // Personal Financial Statement - must include "personal" 

@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 20, 2025: 🎯 CRITICAL DOCUMENT TYPE MAPPING BUG RESOLVED - DUPLICATE FINANCIAL STATEMENTS UPLOAD AREAS FIXED**
+  * **CRITICAL BUG ELIMINATED**: Fixed document type mapping disconnect causing "Accountant Prepared Financial Statements" uploads to incorrectly display in "Financial Statements" section
+  * **ROOT CAUSE IDENTIFIED**: DynamicDocumentRequirements.tsx getApiCategory() function mapped both upload areas to same `financial_statements` API type, causing user confusion
+  * **COMPREHENSIVE SOLUTION**: Created unique `accountant_prepared_statements` document type with separate API category, labels, descriptions, and quantity requirements
+  * **COMPLETE TYPE SYSTEM UPDATE**: Enhanced shared/documentTypes.ts with new supported type, updated DOCUMENT_TYPE_LABELS, DOCUMENT_TYPE_DESCRIPTIONS, and DOCUMENT_QUANTITIES
+  * **MAPPING CONSISTENCY**: Updated shared/documentMapping.ts DOCUMENT_NAME_MAPPING to correctly route "Accountant Prepared Financial Statements" to unique category
+  * **LUCIDE REACT IMPORT FIX**: Resolved ApplicationSuccess.tsx TypeScript diagnostics by converting individual icon imports to single import from 'lucide-react'
+  * **VALIDATION COMPLETE**: Created comprehensive test suite (test-all-document-mappings.js) to verify bug fix and prevent future regressions
+  * **USER EXPERIENCE ENHANCED**: Upload areas now function correctly - files uploaded to "Accountant Prepared" section stay in correct category instead of appearing under general "Financial Statements"
+  * **PRODUCTION IMPACT**: Resolves critical user-reported issue where document uploads appeared in wrong upload section causing application confusion
+  * **CONSOLE VERIFICATION**: Enhanced logging shows document validation status - "Accountant Prepared Financial Statements": 0/3 (INCOMPLETE) correctly separated from other financial document types
+
 - **July 20, 2025: 🎯 COMPREHENSIVE DOCUMENT TYPE MAPPING SYSTEM IMPLEMENTED - ALL 22+ TYPES SUPPORTED**
   * **CRITICAL BUG FIXED**: Resolved document type mapping disconnect causing "Accountant Prepared Financial Statements" validation failures
   * **ROOT CAUSE IDENTIFIED**: Upload function used `financial_statements` API type but validation expected display name format, causing 0/3 INCOMPLETE status

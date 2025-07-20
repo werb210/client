@@ -1,0 +1,94 @@
+Thanks for the screenshot — I can clearly see the issue:
+
+---
+
+## 🐛 **Bug Summary: Duplicate Financial Statements Upload Area**
+
+### ✅ What You Expected:
+
+* You wanted to upload **Accountant Prepared Financial Statements** (top right)
+* That upload zone is marked `Required: 3 files`
+* You uploaded 3 PDFs into that top zone
+
+### ❌ What Happened:
+
+* Files were stored under the **financial\_statements** category (bottom left)
+* The **top section** (Accountant Prepared) still shows `Uploaded: 0`
+* The **bottom section** shows the 3 uploaded files instead — causing confusion
+
+---
+
+## 🔍 Root Cause
+
+The upload handler on the **Client Application – Step 5 (Documents Upload Page)** is likely reusing the same internal `documentType` (`financial_statements`) for **two different UI sections**:
+
+| Upload Zone Label                            | Expected `documentType`                          |
+| -------------------------------------------- | ------------------------------------------------ |
+| ✅ `Accountant Prepared Financial Statements` | `accountant_financials` or `prepared_statements` |
+| ❌ `financial_statements` (bottom box)        | Already using `financial_statements`             |
+
+Since both are mapped to the same `documentType`, all uploads end up under the lower section — even if you dropped them in the top box.
+
+---
+
+## ✅ Fix Instructions
+
+### 🧠 Goal:
+
+Make each upload section correspond to a **unique** and correct `documentType`.
+
+---
+
+### 🔧 Client App Fix (Replit Instructions)
+
+1. **Go to:**
+
+   ```
+   client/src/pages/apply/step-5/index.tsx
+   ```
+
+2. **Find the upload box component for:**
+
+   ```tsx
+   Accountant Prepared Financial Statements
+   ```
+
+3. **Update the `documentType` prop:**
+
+   ```tsx
+   documentType="accountant_prepared_statements"
+   ```
+
+4. **Ensure the backend (staff app) accepts this new documentType.**
+   If it doesn’t yet exist in the enum:
+
+---
+
+### 🧱 Staff App Enum Fix
+
+1. **Go to:**
+
+   ```
+   server/database/schema.ts
+   ```
+
+2. **Locate the `document_type` enum**
+
+3. **Add:**
+
+   ```ts
+   'accountant_prepared_statements'
+   ```
+
+4. **Restart the backend**
+
+---
+
+### ✅ After Fix:
+
+* Documents dropped in the **Accountant Prepared** box will go to the correct backend category
+* They will no longer show under the general `financial_statements` box
+
+---
+
+Would you like me to write this as a Replit commit for both apps?
