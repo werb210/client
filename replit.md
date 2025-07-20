@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 20, 2025: 🎯 STEP 2 PRODUCT FILTERING FIXED - ADVANCE FUNDS NETWORK WORKING CAPITAL NOW VISIBLE**
+  * **CRITICAL SUCCESS**: Fixed Step 2 product filtering logic to properly display Advance Funds Network "Working Capital" product for Canadian applications
+  * **ROOT CAUSE IDENTIFIED**: Form data was using incorrect `headquarters: "US"` field instead of properly normalized `businessLocation: "CA"` value
+  * **FILTERING LOGIC CORRECTED**: Step2_Recommendations.tsx now correctly normalizes businessLocation field for product filtering
+  * **PRODUCT VISIBILITY RESTORED**: Canadian $40,000 working capital applications now show both categories:
+    - Business Line of Credit (2 Accord Financial products)
+    - Working Capital (1 Advance Funds Network product)
+  * **DATABASE VERIFICATION**: Confirmed 42 products in database including Advance Funds Network "Working Capital Loan" ($15,000-$800,000, CA)
+  * **CONSOLE LOGGING ENHANCED**: Added comprehensive debugging to track product filtering and category generation
+  * **USER EXPERIENCE IMPROVED**: Step 2 now properly displays all eligible Canadian working capital products
+  * **PRODUCTION IMPACT**: Resolves missing product options issue ensuring users see all available financing categories
+
 - **July 20, 2025: 🎯 CRITICAL DOCUMENT DEDUPLICATION BUG RESOLVED - DUPLICATE UPLOAD AREAS ELIMINATED**
   * **CRITICAL BUG ELIMINATED**: Fixed document deduplication logic causing duplicate upload areas for same document type ("Financial Statements" vs "Accountant Prepared Financial Statements")
   * **ROOT CAUSE IDENTIFIED**: Deduplication was happening at display label level instead of document type level, allowing multiple upload areas for semantically identical document types
