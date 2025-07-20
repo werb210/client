@@ -10,6 +10,7 @@ import Upload from 'lucide-react/dist/esm/icons/upload';
 import X from 'lucide-react/dist/esm/icons/x';
 
 import { Button } from '@/components/ui/button';
+import { getDocumentLabel as getDocumentTypeLabel } from '../../../shared/documentTypes';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -220,9 +221,9 @@ function UnifiedDocumentUploadCard({
           return 'bank_statements';
         }
         
-        // Accountant Prepared Financial Statements - unique category to prevent confusion with general financial statements
+        // Accountant Prepared Financial Statements - same as financial_statements
         if (labelLower.includes('accountant') && labelLower.includes('prepared') && labelLower.includes('financial')) {
-          return 'accountant_prepared_statements';
+          return 'financial_statements';
         }
         
         // Personal Financial Statement - must include "personal" 
@@ -582,19 +583,29 @@ export function DynamicDocumentRequirements({
     
     const getDocumentLabel = (docName: string): string => {
       // Use centralized normalization utility
-      return normalizeDocumentName(docName);
+      const normalized = normalizeDocumentName(docName);
+      
+      // Convert document type to display label
+      const displayLabel = getDocumentTypeLabel(normalized);
+      console.log(`🔍 [DEBUG] Document label mapping: "${docName}" → type: "${normalized}" → display: "${displayLabel}"`);
+      return displayLabel;
     };
     
     // ✅ Ensure unique documentType rendering
     const renderedTypes = new Set<string>();
     const deduplicatedRequirements: RequiredDoc[] = [];
     
+    console.log(`🔍 [DEBUG] Processing ${requirements.length} document requirements:`, requirements);
+    
     for (const docName of requirements) {
-      const normalizedType = getDocumentLabel(docName).toLowerCase().replace(/\s+/g, '_');
+      const documentLabel = getDocumentLabel(docName);
+      const normalizedType = documentLabel.toLowerCase().replace(/\s+/g, '_');
+      
+      console.log(`🔍 [DEBUG] Processing "${docName}" → label: "${documentLabel}" → normalized: "${normalizedType}"`);
       
       // Skip if this document type has already been rendered
       if (renderedTypes.has(normalizedType)) {
-        console.log(`🔄 Skipping duplicate document type: ${normalizedType}`);
+        console.log(`🔄 [DUPLICATE] Skipping duplicate document type: "${normalizedType}" (original: "${docName}")`);
         continue;
       }
       

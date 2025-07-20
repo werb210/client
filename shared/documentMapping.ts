@@ -95,13 +95,11 @@ export const DOCUMENT_NAME_MAPPING: Record<string, DocumentType> = {
   "business tax returns (2-3 years)": "tax_returns",
   "corporate tax returns": "tax_returns",
   
-  // Accountant Prepared Financial Statements variations - use unique category
-  "accountant prepared financial statements": "accountant_prepared_statements",
-  "accountant prepared financial statements (p&l and balance sheet)": "accountant_prepared_statements",
-  "audited financial statements": "accountant_prepared_statements",
-  
-  // General Financial Statements variations
+  // Financial Statements variations - all map to financial_statements
+  "accountant prepared financial statements": "financial_statements",
   "financial statements (p&l and balance sheet)": "financial_statements",
+  "accountant prepared financial statements (p&l and balance sheet)": "financial_statements",
+  "audited financial statements": "financial_statements",
   "financial statements": "financial_statements",
   
   // Business License variations
@@ -210,9 +208,13 @@ export const DOCUMENT_NAME_MAPPING: Record<string, DocumentType> = {
 export const normalizeDocumentName = (docName: string): DocumentType => {
   const normalized = docName.toLowerCase().trim();
   
+  console.log(`🔍 [NORMALIZE] Input: "${docName}" → normalized: "${normalized}"`);
+  
   // Check direct mapping first
   if (DOCUMENT_NAME_MAPPING[normalized]) {
-    return DOCUMENT_NAME_MAPPING[normalized];
+    const mapped = DOCUMENT_NAME_MAPPING[normalized];
+    console.log(`🔍 [NORMALIZE] Direct mapping found: "${normalized}" → "${mapped}"`);
+    return mapped;
   }
   
   // Check if it's already a valid document type
@@ -228,6 +230,7 @@ export const normalizeDocumentName = (docName: string): DocumentType => {
     return 'tax_returns';
   }
   if (normalized.includes('financial') && normalized.includes('statement')) {
+    console.log(`🔍 [NORMALIZE] Fallback pattern matched for financial statements: "${normalized}" → "financial_statements"`);
     return 'financial_statements';
   }
   if (normalized.includes('business') && normalized.includes('license')) {
@@ -286,6 +289,7 @@ export const normalizeDocumentName = (docName: string): DocumentType => {
   }
   
   // Default to 'other' if no match found
+  console.log(`🔍 [NORMALIZE] No pattern matched, defaulting to 'other': "${normalized}"`);
   return 'other';
 };
 

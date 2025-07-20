@@ -4,7 +4,6 @@
 export const SUPPORTED_DOCUMENT_TYPES = [
   'accounts_payable',
   'accounts_receivable', 
-  'accountant_prepared_statements',
   'articles_of_incorporation',
   'balance_sheet',
   'bank_statements',
@@ -33,7 +32,6 @@ export type DocumentType = typeof SUPPORTED_DOCUMENT_TYPES[number];
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   'accounts_payable': 'Accounts Payable',
   'accounts_receivable': 'Accounts Receivable',
-  'accountant_prepared_statements': 'Accountant Prepared Financial Statements',
   'articles_of_incorporation': 'Articles of Incorporation',
   'balance_sheet': 'Balance Sheet',
   'bank_statements': 'Bank Statements',
@@ -43,7 +41,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   'collateral_docs': 'Collateral Documents',
   'drivers_license_front_back': 'Driver\'s License (Front & Back)',
   'equipment_quote': 'Equipment Quote',
-  'financial_statements': 'Financial Statements',
+  'financial_statements': 'Accountant Prepared Financial Statements',
   'invoice_samples': 'Invoice Samples',
   'other': 'Other Documents',
   'personal_financial_statement': 'Personal Financial Statement',
@@ -60,7 +58,6 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
 export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
   'accounts_payable': 'Outstanding bills and invoices owed to suppliers',
   'accounts_receivable': 'Outstanding invoices from customers',
-  'accountant_prepared_statements': 'Professional financial statements prepared by a certified accountant (P&L, Balance Sheet, Cash Flow)',
   'articles_of_incorporation': 'Legal documents forming your corporation',
   'balance_sheet': 'Statement of assets, liabilities, and equity',
   'bank_statements': 'Recent bank account statements (typically 6 months)',
@@ -70,7 +67,7 @@ export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
   'collateral_docs': 'Documentation for assets securing the loan',
   'drivers_license_front_back': 'Government-issued photo identification',
   'equipment_quote': 'Quote or invoice for equipment financing',
-  'financial_statements': 'Comprehensive financial reports (P&L, Balance Sheet)',
+  'financial_statements': 'Professional financial statements prepared by a certified accountant (P&L, Balance Sheet, Cash Flow)',
   'invoice_samples': 'Sample invoices showing billing patterns',
   'other': 'Additional documents as requested',
   'personal_financial_statement': 'Personal assets and liabilities statement',
@@ -87,7 +84,6 @@ export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
 export const DOCUMENT_QUANTITIES: Record<DocumentType, number> = {
   'accounts_payable': 1,
   'accounts_receivable': 1,
-  'accountant_prepared_statements': 3, // P&L, Balance Sheet, Cash Flow
   'articles_of_incorporation': 1,
   'balance_sheet': 1,
   'bank_statements': 6, // Typically 6 months
