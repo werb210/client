@@ -556,19 +556,39 @@ export function DynamicDocumentRequirements({
       const completedDocs = documentRequirements.filter(doc => {
         const normalizedDocType = doc.label.toLowerCase().replace(/\s+/g, '_');
         
-        // ✅ Fix UploadCount logic: only count successfully uploaded files
-        const uploadedCount = docsByType[normalizedDocType]?.filter(d => d.status === 'completed')?.length || 0;
+        // ✅ CRITICAL FIX: Map display names to API document types
+        const getApiDocumentType = (displayLabel: string): string => {
+          const labelLower = displayLabel.toLowerCase();
+          
+          // Map "Accountant Prepared Financial Statements" to "financial_statements"
+          if (labelLower.includes('accountant') && labelLower.includes('prepared') && labelLower.includes('financial')) {
+            return 'financial_statements';
+          }
+          
+          // Map "Bank Statements" to "bank_statements"
+          if (labelLower.includes('bank') && labelLower.includes('statement')) {
+            return 'bank_statements';
+          }
+          
+          // Default: convert to underscore format
+          return labelLower.replace(/\s+/g, '_');
+        };
         
-        // ✅ Ensure files stay bound to correct category
+        const apiDocumentType = getApiDocumentType(doc.label);
+        
+        // ✅ Fix UploadCount logic: only count successfully uploaded files
+        const uploadedCount = docsByType[apiDocumentType]?.filter(d => d.status === 'completed')?.length || 0;
+        
+        // ✅ Ensure files stay bound to correct category using API document type
         const documentFiles = uploadedFiles.filter(f => {
           if (f.status !== "completed") return false;
           
-          // Block misassigned category - ensure exact match to prevent cross-contamination
+          // Use API document type for matching uploaded files
           const fileDocType = f.documentType?.toLowerCase() || '';
-          return fileDocType === normalizedDocType;
+          return fileDocType === apiDocumentType;
         });
         
-        logger.log(`📊 Document "${doc.label}" files found: ${documentFiles.length}/${doc.quantity || 1} (completed uploads only)`);
+        logger.log(`📊 Document validation "${doc.label}": ${documentFiles.length}/${doc.quantity || 1} (${documentFiles.length >= (doc.quantity || 1) ? 'COMPLETE' : 'INCOMPLETE'})`);
         return documentFiles.length >= (doc.quantity || 1);
       });
       
