@@ -171,18 +171,42 @@ function UnifiedDocumentUploadCard({
 }) {
   const { toast } = useToast();
   
-  // ✅ CORRECT DOCUMENT CLASSIFICATION: Ensure files appear in correct documentType section
-  const normalizedDocType = doc.label.toLowerCase().replace(/\s+/g, '_');
+  // ✅ CORRECT DOCUMENT CLASSIFICATION: Use same API mapping as validation logic
+  const getApiDocumentType = (displayLabel: string): string => {
+    const labelLower = displayLabel.toLowerCase();
+    
+    // Bank statements
+    if (labelLower.includes('bank') && labelLower.includes('statement')) {
+      return 'bank_statements';
+    }
+    
+    // Accountant Prepared Financial Statements → financial_statements
+    if (labelLower.includes('accountant') && labelLower.includes('prepared') && labelLower.includes('financial')) {
+      return 'financial_statements';
+    }
+    
+    // General Financial Statements → financial_statements  
+    if (labelLower.includes('financial') && labelLower.includes('statement')) {
+      return 'financial_statements';
+    }
+    
+    // Tax Returns
+    if (labelLower.includes('tax') && labelLower.includes('return')) {
+      return 'tax_returns';
+    }
+    
+    // Default: convert to underscore format
+    return labelLower.replace(/\s+/g, '_');
+  };
+  
+  const apiDocumentType = getApiDocumentType(doc.label);
   const documentFiles = uploadedFiles.filter(f => {
     // ✅ Ensure files stay bound to correct category based on document_type field from server
     const fileDocType = f.documentType?.toLowerCase() || '';
+    const isMatch = f.status === "completed" && fileDocType === apiDocumentType;
     
-    // If uploaded file's document_type doesn't match current upload type, block it
-    if (fileDocType !== normalizedDocType) {
-      return false; // Block misassigned category
-    }
-    
-    return true; // Only show files that match this exact document type
+    console.log(`🔍 [CARD] File "${f.name}" (type: "${fileDocType}") vs requirement "${doc.label}" (api: "${apiDocumentType}") → match: ${isMatch}`);
+    return isMatch;
   });
   
   // 🧪 DEBUG: Status recovery for files that might be incorrectly marked as errors
@@ -775,8 +799,10 @@ export function DynamicDocumentRequirements({
           return isMatch;
         });
         
-        logger.log(`📊 Document validation "${doc.label}": ${documentFiles.length}/${doc.quantity || 1} (${documentFiles.length >= (doc.quantity || 1) ? 'COMPLETE' : 'INCOMPLETE'})`);
-        return documentFiles.length >= (doc.quantity || 1);
+        const isComplete = documentFiles.length >= (doc.quantity || 1);
+        console.log(`📊 Document validation "${doc.label}": ${documentFiles.length}/${doc.quantity || 1} (${isComplete ? 'COMPLETE' : 'INCOMPLETE'})`);
+        logger.log(`📊 Document validation "${doc.label}": ${documentFiles.length}/${doc.quantity || 1} (${isComplete ? 'COMPLETE' : 'INCOMPLETE'})`);
+        return isComplete;
       });
       
       const allComplete = completedDocs.length === documentRequirements.length;
