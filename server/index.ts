@@ -796,49 +796,7 @@ app.use((req, res, next) => {
     res.json(data);
   });
 
-  // MOVED BEFORE CATCH-ALL: Admin monitoring endpoint must be registered BEFORE app.use('/api')
-  app.get('/api/admin/zero-documents-check', async (req, res) => {
-    try {
-      // This endpoint helps identify applications that may have upload issues
-      console.log('🔍 [ADMIN] Running zero-documents diagnostic query...');
-      
-      const response = await fetch(`${cfg.staffApiUrl}/admin/zero-documents-check`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${cfg.clientToken}`
-        }
-      });
-      
-      if (!response.ok) {
-        console.warn('⚠️ [ADMIN] Zero-documents check unavailable from staff backend');
-        return res.status(503).json({
-          status: 'error',
-          error: 'Admin service unavailable',
-          message: 'Zero-documents monitoring service is temporarily unavailable.',
-          query: ZERO_DOCUMENTS_QUERY
-        });
-      }
-      
-      const data = await response.json();
-      console.log('✅ [ADMIN] Zero-documents check completed');
-      
-      res.json({
-        status: 'success',
-        data,
-        query: ZERO_DOCUMENTS_QUERY,
-        timestamp: new Date().toISOString()
-      });
-      
-    } catch (error) {
-      console.error('❌ [ADMIN] Zero-documents check failed:', error);
-      res.status(500).json({
-        status: 'error',
-        error: 'Admin monitoring failed',
-        message: 'Unable to perform zero-documents check',
-        query: ZERO_DOCUMENTS_QUERY
-      });
-    }
-  });
+  // MOVED BEFORE CATCH-ALL: This admin endpoint was moved here to avoid catch-all route interception
 
   // Document verification endpoint - GET documents for application
   app.get('/api/public/applications/:id/documents', async (req, res) => {
@@ -1655,6 +1613,50 @@ app.use((req, res, next) => {
         error: 'Staff backend connection failed',
         details: error instanceof Error ? error.message : 'Connection failed',
         endpoint: 'SignNow API proxy'
+      });
+    }
+  });
+
+  // 🔍 ADMIN MONITORING ENDPOINT - Zero Documents Query (BEFORE catch-all route)
+  app.get('/api/admin/zero-documents-check', async (req, res) => {
+    try {
+      // This endpoint helps identify applications that may have upload issues
+      console.log('🔍 [ADMIN] Running zero-documents diagnostic query...');
+      
+      const response = await fetch(`${cfg.staffApiUrl}/admin/zero-documents-check`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${cfg.clientToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        console.warn('⚠️ [ADMIN] Zero-documents check unavailable from staff backend');
+        return res.status(503).json({
+          status: 'error',
+          error: 'Admin service unavailable',
+          message: 'Zero-documents monitoring service is temporarily unavailable.',
+          query: ZERO_DOCUMENTS_QUERY
+        });
+      }
+      
+      const data = await response.json();
+      console.log('✅ [ADMIN] Zero-documents check completed');
+      
+      res.json({
+        status: 'success',
+        data,
+        query: ZERO_DOCUMENTS_QUERY,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('❌ [ADMIN] Zero-documents check failed:', error);
+      res.status(500).json({
+        status: 'error',
+        error: 'Admin monitoring failed',
+        message: 'Unable to perform zero-documents check',
+        query: ZERO_DOCUMENTS_QUERY
       });
     }
   });
