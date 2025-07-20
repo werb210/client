@@ -1716,7 +1716,7 @@ app.use((req, res, next) => {
   } else {
     // Development: use Vite dev server
     console.log('[VITE] Setting up Vite dev server for development');
-    await setupVite(app);
+    await setupVite(app, httpServer);
   }
   
   // Add Socket.IO server for real-time chat
@@ -1761,7 +1761,7 @@ app.use((req, res, next) => {
           });
         }
       } catch (error) {
-        log('Error forwarding message to staff:', error);
+        log('Error forwarding message to staff:', String((error as Error).message || error));
       }
     });
     
@@ -1787,7 +1787,7 @@ app.use((req, res, next) => {
           message: 'Your request for human assistance has been forwarded to our team. A staff member will join the chat shortly.'
         });
       } catch (error) {
-        log('Error requesting human assistance:', error);
+        log('Error requesting human assistance:', String((error as Error).message || error));
         io.to(sessionId).emit('new-message', {
           role: 'system',
           message: 'Unable to connect with staff at the moment. Please try again or contact us directly.'
