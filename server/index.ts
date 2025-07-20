@@ -15,7 +15,7 @@ import analyzeRouter from "./routes/analyze.js";
 import translateRouter from "./routes/translate.js";
 import statusRouter from "./routes/status.js";
 import handoffRouter from "./routes/handoff.js";
-import { logUploadEvent, auditUploadAttempt } from "./utils/uploadStabilization.js";
+import { logUploadEvent, auditUploadAttempt, ZERO_DOCUMENTS_QUERY } from "./utils/uploadStabilization.js";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -706,10 +706,10 @@ app.use((req, res, next) => {
     const { documentType } = req.body;
     const file = req.file;
     
-    // 🔍 SAFE LOGGING ONLY - No logic or cleanup
-    req.on('close', () => {
-      console.log(`🟡 Upload connection closed (for ${id})`);
-    });
+    // 🔍 SAFE LOGGING ONLY - No logic or cleanup (COMMENTED OUT FOR FINAL STABILIZATION)
+    // req.on('close', () => {
+    //   console.log(`🟡 Upload connection closed (for ${id})`);
+    // });
     
     console.log(`📁 [SERVER] Document upload for application ${id}`);
     console.log(`📁 [SERVER] Document type: ${documentType}`);
@@ -794,6 +794,50 @@ app.use((req, res, next) => {
     
     // 🎯 GUARANTEED SUCCESS RESPONSE
     res.json(data);
+  });
+
+  // MOVED BEFORE CATCH-ALL: Admin monitoring endpoint must be registered BEFORE app.use('/api')
+  app.get('/api/admin/zero-documents-check', async (req, res) => {
+    try {
+      // This endpoint helps identify applications that may have upload issues
+      console.log('🔍 [ADMIN] Running zero-documents diagnostic query...');
+      
+      const response = await fetch(`${cfg.staffApiUrl}/admin/zero-documents-check`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${cfg.clientToken}`
+        }
+      });
+      
+      if (!response.ok) {
+        console.warn('⚠️ [ADMIN] Zero-documents check unavailable from staff backend');
+        return res.status(503).json({
+          status: 'error',
+          error: 'Admin service unavailable',
+          message: 'Zero-documents monitoring service is temporarily unavailable.',
+          query: ZERO_DOCUMENTS_QUERY
+        });
+      }
+      
+      const data = await response.json();
+      console.log('✅ [ADMIN] Zero-documents check completed');
+      
+      res.json({
+        status: 'success',
+        data,
+        query: ZERO_DOCUMENTS_QUERY,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('❌ [ADMIN] Zero-documents check failed:', error);
+      res.status(500).json({
+        status: 'error',
+        error: 'Admin monitoring failed',
+        message: 'Unable to perform zero-documents check',
+        query: ZERO_DOCUMENTS_QUERY
+      });
+    }
   });
 
   // Document verification endpoint - GET documents for application
@@ -1614,6 +1658,9 @@ app.use((req, res, next) => {
       });
     }
   });
+
+  // CRITICAL FIX: Move ALL specific API endpoints BEFORE the catch-all route
+  // The catch-all route below was intercepting these endpoints causing 501 errors
 
   // All other API routes inform about staff backend configuration
   app.use('/api', (req, res) => {
