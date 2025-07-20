@@ -184,13 +184,16 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     
     const passes = geographyMatch && amountMatch && typeMatch && !factorExclusion && !equipmentFinancingExclusion;
     
-    // Log specific products for debugging
-    if (product.name?.includes('Small Business Revolver') || product.name?.includes('Accord') || product.lender_name?.includes('Revenued')) {
-      console.log(`[FILTER DEBUG] ${product.name} (${product.lender_name}):`, {
+    // Log specific products for debugging - ALWAYS show Revenued and Accord products
+    if (product.name?.includes('Small Business Revolver') || 
+        product.name?.includes('Accord') || 
+        product.lender_name?.includes('Revenued') ||
+        product.name?.includes('Flex Line')) {
+      console.log(`🔍 [FILTER DEBUG] ${product.name} (${product.lender_name}):`, {
         category: product.category,
         country: product.country,
-        amount: `${minAmount}-${maxAmount}`,
-        requestedAmount: fundingAmount,
+        amount: `$${minAmount?.toLocaleString()}-$${maxAmount?.toLocaleString()}`,
+        requestedAmount: `$${fundingAmount?.toLocaleString()}`,
         passes,
         geographyMatch,
         amountMatch,
