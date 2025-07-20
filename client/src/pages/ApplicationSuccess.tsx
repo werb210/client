@@ -187,7 +187,7 @@ export default function ApplicationSuccess() {
                 </h4>
                 <div className="space-y-2 text-sm">
                   <p><strong>General:</strong> support@borealfinance.com</p>
-                  <p><strong>Applications:</strong> applications@borealfinance.com</p>
+                  
                   <p><strong>Response Time:</strong> Within 4 hours</p>
                 </div>
               </div>
