@@ -648,6 +648,11 @@ export function DynamicDocumentRequirements({
             return 'financial_statements';
           }
           
+          // General Financial Statements → financial_statements  
+          if (labelLower.includes('financial') && labelLower.includes('statement')) {
+            return 'financial_statements';
+          }
+          
           // Personal Financial Statement
           if (labelLower.includes('personal') && labelLower.includes('financial') && labelLower.includes('statement')) {
             return 'personal_financial_statement';
@@ -765,7 +770,9 @@ export function DynamicDocumentRequirements({
           
           // Use API document type for matching uploaded files
           const fileDocType = f.documentType?.toLowerCase() || '';
-          return fileDocType === apiDocumentType;
+          const isMatch = fileDocType === apiDocumentType;
+          console.log(`🔍 [VALIDATION] Checking file "${f.name}" (type: "${fileDocType}") against requirement "${doc.label}" (api type: "${apiDocumentType}") → match: ${isMatch}`);
+          return isMatch;
         });
         
         logger.log(`📊 Document validation "${doc.label}": ${documentFiles.length}/${doc.quantity || 1} (${documentFiles.length >= (doc.quantity || 1) ? 'COMPLETE' : 'INCOMPLETE'})`);
