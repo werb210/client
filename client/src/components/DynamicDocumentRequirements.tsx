@@ -18,16 +18,15 @@ import { useToast } from '@/hooks/use-toast';
 
 import { type RequiredDoc } from '@/lib/documentRequirements';
 
-import { normalizeDocumentName } from '@/utils/documentNormalization';
 import { 
   DocumentType, 
   SUPPORTED_DOCUMENT_TYPES, 
   getDocumentLabel,
   getDocumentDescription,
-  getDocumentQuantity
-} from '@/shared/documentTypes';
+  getDocumentQuantity,
+  normalizeDocumentName
+} from '../../../shared/documentTypes';
 import { 
-  normalizeDocumentName as normalizeDocumentNameEnhanced,
   getDocumentRequirements 
 } from '@/shared/documentMapping';
 
@@ -171,33 +170,8 @@ function UnifiedDocumentUploadCard({
 }) {
   const { toast } = useToast();
   
-  // ✅ CORRECT DOCUMENT CLASSIFICATION: Use same API mapping as validation logic
-  const getApiDocumentType = (displayLabel: string): string => {
-    const labelLower = displayLabel.toLowerCase();
-    
-    // Bank statements
-    if (labelLower.includes('bank') && labelLower.includes('statement')) {
-      return 'bank_statements';
-    }
-    
-    // Accountant Prepared Financial Statements → financial_statements
-    if (labelLower.includes('accountant') && labelLower.includes('prepared') && labelLower.includes('financial')) {
-      return 'financial_statements';
-    }
-    
-    // General Financial Statements → financial_statements  
-    if (labelLower.includes('financial') && labelLower.includes('statement')) {
-      return 'financial_statements';
-    }
-    
-    // Tax Returns
-    if (labelLower.includes('tax') && labelLower.includes('return')) {
-      return 'tax_returns';
-    }
-    
-    // Default: convert to underscore format
-    return labelLower.replace(/\s+/g, '_');
-  };
+  // ✅ PATCH 2: Use shared normalizeDocumentName function for consistent mapping
+  const getApiDocumentType = normalizeDocumentName;
   
   const apiDocumentType = getApiDocumentType(doc.label);
   const documentFiles = uploadedFiles.filter(f => {
@@ -399,10 +373,10 @@ function UnifiedDocumentUploadCard({
           const file = files[i];
           const formData = new FormData();
           formData.append('document', file);
-          formData.append('documentType', category.toLowerCase().replace(/\s+/g, '_'));
+          formData.append('documentType', normalizeDocumentName(doc.label));
           
           // 🧪 REQUIRED DEBUG LOGGING as per user instructions
-          console.log("📤 Uploading:", file.name, category.toLowerCase().replace(/\s+/g, '_'));
+          console.log("📤 Uploading:", file.name, normalizeDocumentName(doc.label));
           console.log(`📤 [STEP5] Uploading file ${i + 1}/${files.length}: ${file.name}`);
           console.log(`📤 [STEP5] Document type: ${category}`);
           console.log(`📤 [STEP5] Application ID: ${applicationId}`);

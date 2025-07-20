@@ -1,6 +1,10 @@
 // Complete List of 22 Supported Document Types from Staff Application
 // Updated July 18, 2025 - Staff Application Verified
 
+export function normalizeDocumentName(label: string): string {
+  return label.trim().toLowerCase().replace(/\s+/g, '_');
+}
+
 export const SUPPORTED_DOCUMENT_TYPES = [
   'accounts_payable',
   'accounts_receivable', 

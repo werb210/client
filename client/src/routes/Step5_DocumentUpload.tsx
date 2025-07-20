@@ -22,6 +22,7 @@ import { StepHeader } from '@/components/StepHeader';
 
 
 import { getDocumentRequirementsAggregation } from '@/lib/documentAggregation';
+import { normalizeDocumentName } from '../../../shared/documentTypes';
 
 import { useDebouncedCallback } from 'use-debounce';
 
@@ -267,11 +268,24 @@ export default function Step5DocumentUpload() {
     }
   }, [uploadedFiles, debouncedSave]);
 
-  // ✅ FIXED DOCUMENT VALIDATION: Proper validation logic for Continue button
+  // ✅ PATCH 3: Filter validation logic to use unique normalized document types
   const validateDocumentUploads = () => {
     if (!intersectionResults.requiredDocuments || intersectionResults.requiredDocuments.length === 0) {
       return true; // No requirements = can proceed
     }
+    
+    // ✅ PATCH 3.1: Deduplicate requirements by documentType
+    const uniqueRequirements = Array.from(
+      new Map(intersectionResults.requiredDocuments.map(req => [
+        normalizeDocumentName(req),
+        req
+      ])).values()
+    );
+    
+    console.log(`📋 [VALIDATION] Deduplicated requirements: ${intersectionResults.requiredDocuments.length} → ${uniqueRequirements.length}`, {
+      original: intersectionResults.requiredDocuments,
+      unique: uniqueRequirements
+    });
     
     // Group uploaded files by document type
     const docsByType = uploadedFiles.reduce((acc, doc) => {
@@ -282,9 +296,9 @@ export default function Step5DocumentUpload() {
       return acc;
     }, {} as Record<string, typeof uploadedFiles>);
     
-    // Check each required document type
-    const validationResults = intersectionResults.requiredDocuments.map(reqDoc => {
-      const normalizedType = reqDoc.toLowerCase().replace(/\s+/g, '_');
+    // ✅ PATCH 3.2: Perform validation based on uniqueRequirements, not raw list
+    const validationResults = uniqueRequirements.map(reqDoc => {
+      const normalizedType = normalizeDocumentName(reqDoc);
       const uploadedDocs = docsByType[normalizedType] || [];
       const successfulUploads = uploadedDocs.filter(doc => doc.status === 'completed');
       
