@@ -613,7 +613,7 @@ app.use((req, res, next) => {
         status: 'error',
         error: 'SignNow service unavailable',
         message: 'Document signing service is temporarily unavailable. Please try again later.',
-        applicationId: applicationId
+        applicationId: req.params.id
       });
     }
   });
@@ -1470,7 +1470,7 @@ app.use((req, res, next) => {
         });
       }
     } catch (error) {
-      console.error(`[SIGNING-STATUS] Network error for application ${req.params.id}:`, error.message);
+      console.error(`[SIGNING-STATUS] Network error for application ${req.params.id}:`, (error as Error).message);
       console.error(`[SIGNING-STATUS] Full error:`, error);
       
       // Always provide fallback response for development
@@ -1530,7 +1530,7 @@ app.use((req, res, next) => {
         });
       }
     } catch (error) {
-      console.error(`[OVERRIDE] Error for application ${req.params.id}:`, error.message);
+      console.error(`[OVERRIDE] Error for application ${req.params.id}:`, (error as Error).message);
       
       // Always provide fallback success for development
       res.json({
