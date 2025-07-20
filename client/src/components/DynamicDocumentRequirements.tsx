@@ -581,38 +581,33 @@ export function DynamicDocumentRequirements({
       return 1;
     };
     
-    const getDocumentLabel = (docName: string): string => {
-      // Use centralized normalization utility
-      const normalized = normalizeDocumentName(docName);
-      
-      // Convert document type to display label
-      const displayLabel = getDocumentTypeLabel(normalized);
-      console.log(`🔍 [DEBUG] Document label mapping: "${docName}" → type: "${normalized}" → display: "${displayLabel}"`);
-      return displayLabel;
-    };
+    // This function is no longer needed since we handle normalization in the main loop
     
-    // ✅ Ensure unique documentType rendering
-    const renderedTypes = new Set<string>();
+    // ✅ FIXED DEDUPLICATION: Work at document type level, not display label level
+    const renderedDocumentTypes = new Set<string>();
     const deduplicatedRequirements: RequiredDoc[] = [];
     
     console.log(`🔍 [DEBUG] Processing ${requirements.length} document requirements:`, requirements);
     
     for (const docName of requirements) {
-      const documentLabel = getDocumentLabel(docName);
-      const normalizedType = documentLabel.toLowerCase().replace(/\s+/g, '_');
+      // First normalize to get the document type (this is the key for deduplication)
+      const documentType = normalizeDocumentName(docName);
+      console.log(`🔍 [DEBUG] Processing "${docName}" → documentType: "${documentType}"`);
       
-      console.log(`🔍 [DEBUG] Processing "${docName}" → label: "${documentLabel}" → normalized: "${normalizedType}"`);
-      
-      // Skip if this document type has already been rendered
-      if (renderedTypes.has(normalizedType)) {
-        console.log(`🔄 [DUPLICATE] Skipping duplicate document type: "${normalizedType}" (original: "${docName}")`);
+      // Skip if this document TYPE has already been rendered (not display label)
+      if (renderedDocumentTypes.has(documentType)) {
+        console.log(`🔄 [DUPLICATE] Skipping duplicate document type: "${documentType}" (original: "${docName}")`);
         continue;
       }
       
-      renderedTypes.add(normalizedType);
+      // Now get the display label for this document type
+      const displayLabel = getDocumentTypeLabel(documentType);
+      console.log(`🔍 [DEBUG] Document type "${documentType}" → display label: "${displayLabel}"`);
+      
+      renderedDocumentTypes.add(documentType);
       deduplicatedRequirements.push({
-        id: `requirement-${normalizedType}`,
-        label: getDocumentLabel(docName),
+        id: `requirement-${documentType}`,
+        label: displayLabel,
         description: `Required document for your loan application`,
         quantity: getDocumentQuantity(docName),
         category: 'required',

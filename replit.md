@@ -93,6 +93,16 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 20, 2025: 🎯 CRITICAL DOCUMENT DEDUPLICATION BUG RESOLVED - DUPLICATE UPLOAD AREAS ELIMINATED**
+  * **CRITICAL BUG ELIMINATED**: Fixed document deduplication logic causing duplicate upload areas for same document type ("Financial Statements" vs "Accountant Prepared Financial Statements")
+  * **ROOT CAUSE IDENTIFIED**: Deduplication was happening at display label level instead of document type level, allowing multiple upload areas for semantically identical document types
+  * **COMPREHENSIVE SOLUTION**: Refactored deduplication logic to work at document type level - both "Financial Statements" and "Accountant Prepared Financial Statements" now normalize to `financial_statements` and create single upload area
+  * **DEDUPLICATION FIXED**: Changed from `renderedTypes` Set tracking display labels to `renderedDocumentTypes` Set tracking actual document types for proper uniqueness validation
+  * **UPLOAD FUNCTIONALITY RESTORED**: Single "Accountant Prepared Financial Statements" upload area now accepts all financial statement uploads correctly
+  * **CONSOLE DEBUGGING ENHANCED**: Added comprehensive logging to track document type normalization and deduplication process
+  * **PRODUCTION IMPACT**: Resolves critical user-reported issue where one upload area worked while duplicate didn't accept files
+  * **USER EXPERIENCE ENHANCED**: No more confusion from non-functional duplicate upload sections
+
 - **July 20, 2025: 🎯 CRITICAL DOCUMENT TYPE MAPPING BUG RESOLVED - DUPLICATE FINANCIAL STATEMENTS UPLOAD AREAS FIXED**
   * **CRITICAL BUG ELIMINATED**: Fixed document type mapping disconnect causing "Accountant Prepared Financial Statements" uploads to incorrectly display in "Financial Statements" section
   * **ROOT CAUSE IDENTIFIED**: DynamicDocumentRequirements.tsx getApiCategory() function mapped both upload areas to same `financial_statements` API type, causing user confusion
