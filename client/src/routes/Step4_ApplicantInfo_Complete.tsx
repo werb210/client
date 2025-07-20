@@ -815,21 +815,7 @@ export default function Step4ApplicantInfoComplete() {
                           type="date" 
                           className="h-12"
                           onKeyDown={(e) => {
-                            const input = e.currentTarget;
-                            const value = input.value;
-                            
-                            // Auto-advance when year is complete (4 digits)
-                            if (e.key >= '0' && e.key <= '9') {
-                              const cursorPos = input.selectionStart || 0;
-                              
-                              // If typing in year position and year will be 4 digits
-                              if (cursorPos <= 4 && value.length >= 3) {
-                                setTimeout(() => {
-                                  // Move cursor to month position after year is complete
-                                  input.setSelectionRange(5, 7);
-                                }, 0);
-                              }
-                            }
+                            // Date inputs use native HTML5 navigation - no custom handling needed
                           }}
                           onChange={(e) => {
                             const value = e.target.value;
