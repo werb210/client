@@ -23,8 +23,9 @@ export default function Step2Recommendations() {
     return location || 'US';
   };
 
+  // CRITICAL FIX: Use businessLocation field directly since it's already normalized as CA/US in Step 1
   const formData = {
-    headquarters: normalizeHeadquarters(state.step1?.businessLocation || state.step1?.headquarters || 'US'),
+    headquarters: state.step1?.businessLocation || 'US', // Use businessLocation directly, it's already CA/US format
     industry: state.step1?.industry,
     lookingFor: state.step1?.lookingFor,
     fundingAmount: state.step1?.fundingAmount,
