@@ -142,6 +142,10 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
 
   // Core filtering logic - Fixed field mapping
   const matchesCore = products.filter(product => {
+    // Pre-filter debugging for specific products
+    if (product.lender_name?.includes('Revenued') || product.name?.includes('Flex Line')) {
+      console.log(`🚨 [PRE-FILTER] Found ${product.name} (${product.lender_name}) - Country: ${product.country}, Category: ${product.category}, Active: ${product.is_active}`);
+    }
     const minAmount = getAmountValue(product, 'min');
     const maxAmount = getAmountValue(product, 'max');
     const geography = getGeography(product);
