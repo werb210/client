@@ -176,7 +176,6 @@ export default function ApplicationSuccess() {
                 </h4>
                 <div className="space-y-2 text-sm">
                   <p><strong>Main Line:</strong> 1-800-BOREAL-1</p>
-                  <p><strong>Direct:</strong> (555) 123-4567</p>
                   <p><strong>Hours:</strong> Mon-Fri 8AM-6PM EST</p>
                 </div>
               </div>
