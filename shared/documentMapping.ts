@@ -217,8 +217,9 @@ export const normalizeDocumentName = (docName: string): DocumentType => {
     return mapped;
   }
   
-  // Check if it's already a valid document type
+  // Check if it's already a valid document type (handle pre-normalized inputs)
   if (SUPPORTED_DOCUMENT_TYPES.includes(normalized as DocumentType)) {
+    console.log(`🔍 [NORMALIZE] Already valid document type: "${normalized}"`);
     return normalized as DocumentType;
   }
   

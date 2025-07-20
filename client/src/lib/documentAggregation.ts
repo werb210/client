@@ -4,6 +4,11 @@
  * Based on ChatGPT team specifications
  */
 
+import { fetchLenderProducts } from './api';
+import { logger } from '@/lib/logger';
+import { normalizeDocumentName } from '../../../shared/documentMapping';
+import { getDocumentLabel } from '../../../shared/documentTypes';
+
 interface LenderProduct {
   id: string;
   name: string;
@@ -114,20 +119,31 @@ export async function getDocumentRequirementsAggregation(
       return docs;
     });
     
-    // Create union of all required documents (deduplicated)
-    const requiredDocuments = Array.from(
-      new Set(allDocumentLists.flatMap(docs => docs))
-    );
+    // ✅ CRITICAL FIX: Normalize ALL documents BEFORE deduplication to prevent mixed original/normalized data
     
-    // Document aggregation complete
+    const allRawDocuments = allDocumentLists.flatMap(docs => docs);
+    console.log(`🔍 [AGGREGATION] Raw documents before normalization:`, allRawDocuments);
     
-    // Document name transformation for consistency
-    const transformedDocuments = requiredDocuments.map(docName => {
-      if (docName === 'Financial Statements') {
-        return 'Accountant Prepared Financial Statements';
+    // Normalize all documents to their standard types, then deduplicate by document type
+    const normalizedDocumentTypes = new Set<string>();
+    const deduplicatedDocuments: string[] = [];
+    
+    for (const docName of allRawDocuments) {
+      const normalizedType = normalizeDocumentName(docName);
+      console.log(`🔍 [AGGREGATION] Normalizing "${docName}" → "${normalizedType}"`);
+      
+      if (!normalizedDocumentTypes.has(normalizedType)) {
+        normalizedDocumentTypes.add(normalizedType);
+        // Use the display label for the final output
+        const displayLabel = getDocumentLabel(normalizedType);
+        deduplicatedDocuments.push(displayLabel);
+        console.log(`✅ [AGGREGATION] Added unique document type: "${normalizedType}" → display: "${displayLabel}"`);
+      } else {
+        console.log(`🔄 [AGGREGATION] Skipping duplicate document type: "${normalizedType}" (from "${docName}")`);
       }
-      return docName;
-    });
+    }
+    
+    const transformedDocuments = deduplicatedDocuments;
     
     return {
       eligibleProducts,
