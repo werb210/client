@@ -283,7 +283,7 @@ export default function Step4ApplicantInfoComplete() {
         const freshData = loadFromLocalStorage();
         if (freshData?.step3) {
           logger.log('🔄 Retrying with fresh localStorage data:', freshData.step3);
-          dispatch({ type: 'SET_STEP3', payload: freshData.step3 });
+          dispatch({ type: 'UPDATE_STEP3', payload: freshData.step3 });
         } else {
           toast({
             title: "Missing Business Information",
@@ -516,7 +516,7 @@ export default function Step4ApplicantInfoComplete() {
               // Mark step as complete and proceed to Step 5
               dispatch({
                 type: "MARK_STEP_COMPLETE",
-                payload: { step: 4 },
+                payload: 4,
               });
               
               setLocation('/apply/step-5');
@@ -578,7 +578,7 @@ export default function Step4ApplicantInfoComplete() {
     // Mark step as complete and proceed
     dispatch({
       type: "MARK_STEP_COMPLETE",
-      payload: { step: 4 },
+      payload: 4,
     });
 
     setLocation("/apply/step-5");
@@ -835,14 +835,7 @@ export default function Step4ApplicantInfoComplete() {
                             const value = e.target.value;
                             field.onChange(value);
                             
-                            // Auto-advance when sections are complete
-                            if (value.length === 4 && !value.includes('-')) {
-                              // Year complete, move to month
-                              setTimeout(() => {
-                                const input = e.target;
-                                input.setSelectionRange(5, 7);
-                              }, 0);
-                            }
+                            // Auto-advance removed for date inputs - HTML5 date picker handles navigation
                           }}
                         />
                       </FormControl>
@@ -1035,8 +1028,8 @@ export default function Step4ApplicantInfoComplete() {
                                 // If typing in year position and year will be 4 digits
                                 if (cursorPos <= 4 && value.length >= 3) {
                                   setTimeout(() => {
-                                    // Move cursor to month position after year is complete
-                                    input.setSelectionRange(5, 7);
+                                    // Date inputs don't support setSelectionRange - skip cursor positioning
+                                    // This is expected behavior for HTML5 date input types
                                   }, 0);
                                 }
                               }
@@ -1161,7 +1154,6 @@ export default function Step4ApplicantInfoComplete() {
           // Trigger form submission again with continuePending flag
           form.handleSubmit(onSubmit)();
         }}
-        onClose={() => setShowSsnWarning(false)}
       />
     </div>
   );
