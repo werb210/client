@@ -53,6 +53,11 @@ export function useProductCategories(formData: RecommendationFormData) {
             categoryGroups[category] = [];
           }
           categoryGroups[category].push(product);
+          
+          // Debug: Log product categorization for Accord products
+          if (product.name?.includes('Accord') || product.lender_name?.includes('Accord')) {
+            console.log(`🔍 [CATEGORIZATION] ${product.name} → Category: "${product.category}"`);
+          }
         });
 
         // console.log('[useProductCategories] Category groups:', Object.keys(categoryGroups));
