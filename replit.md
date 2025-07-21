@@ -10,7 +10,7 @@ The application follows a client-staff separation architecture:
 
 - **Client**: Frontend-only React 18 + Vite + TypeScript application (this repository)
 - **Staff Backend**: Separate application managing shared database and business logic
-- **API Communication**: Centralized via `/lib/api.ts` to staff backend at `https://staff.borealfinance.app/api`
+- **API Communication**: Centralized via `/lib/api.ts` to staff backend at `https://staff.boreal.financial/api`
 - **No Local Database**: All data operations route through staff backend API
 
 ### Technology Stack
