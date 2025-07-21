@@ -1,4 +1,12 @@
-import { StaffLenderProduct } from '../types/staffApi';
+import { LenderProduct } from '../types/lenderProduct';
+import { 
+  getAmountRange, 
+  getGeography, 
+  getProductCategory,
+  matchesCategory,
+  hasAmountFields,
+  normalizeCountryCode
+} from './fieldAccess';
 
 export interface RecommendationFormData {
   headquarters: string; // 'US' or 'CA'
@@ -8,47 +16,17 @@ export interface RecommendationFormData {
   fundsPurpose: string;
 }
 
-// Helper function to get amount value with multiple field name support
+// Legacy helper for backward compatibility - use fieldAccess.ts functions instead
 const getAmountValue = (product: any, field: 'min' | 'max'): number => {
-  let amount: any;
-  if (field === 'min') {
-    amount = product.minAmount ?? product.amountMin ?? product.amount_min ?? product.min_amount ?? product.fundingMin ?? 0;
-  } else {
-    amount = product.maxAmount ?? product.amountMax ?? product.amount_max ?? product.max_amount ?? product.fundingMax ?? Infinity;
-  }
-  
-  if (typeof amount === 'number') return amount;
-  if (typeof amount === 'string') return parseFloat(amount.replace(/[^0-9.-]/g, '')) || (field === 'min' ? 0 : Infinity);
-  return field === 'min' ? 0 : Infinity;
-};
-
-// Helper function to get geography/country with multiple field name support
-const getGeography = (product: any): string[] => {
-  const geography = product.geography ?? product.countries ?? product.markets ?? product.country;
-  
-  if (Array.isArray(geography)) {
-    return geography.map(g => {
-      if (typeof g === 'string') {
-        return g.replace(/[{}[\]"]/g, '').trim().toUpperCase();
-      }
-      return String(g).toUpperCase();
-    }).filter(g => g.length > 0);
-  }
-  if (typeof geography === 'string') {
-    const cleaned = geography.replace(/[{}[\]"]/g, '').trim();
-    if (cleaned.includes('/')) {
-      return cleaned.split('/').map(c => c.trim().toUpperCase());
-    }
-    return [cleaned.toUpperCase()];
-  }
-  return [];
+  const range = getAmountRange(product);
+  return field === 'min' ? range.min : range.max;
 };
 
 /**
  * Apply your business rules to filter staff database products
  * Based on Step 1 user answers to recommend best product categories
  */
-export function filterProducts(products: StaffLenderProduct[], form: RecommendationFormData): StaffLenderProduct[] {
+export function filterProducts(products: LenderProduct[], form: RecommendationFormData): LenderProduct[] {
   const {
     headquarters,
     fundingAmount,
@@ -72,47 +50,48 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
 
   console.log(`🔍 [FILTER] Starting with ${products.length} products for ${normalizedHQ} market`);
 
-  // CONSOLIDATED SINGLE FILTERING LOGIC
+  // CONSOLIDATED SINGLE FILTERING LOGIC - UPDATED WITH UNIFIED FIELD ACCESS
   const filteredProducts = products.filter(product => {
-    // 1. COUNTRY/GEOGRAPHY MATCH
-    const countryMatch = product.country === normalizedHQ || 
-                        product.country === 'Both' ||
-                        product.geography?.includes(normalizedHQ) ||
-                        (normalizedHQ === 'CA' && product.country?.includes('CA')) ||
-                        (normalizedHQ === 'US' && product.country?.includes('US'));
+    // 1. COUNTRY/GEOGRAPHY MATCH - Using unified geography access
+    const geographies = getGeography(product);
+    const countryMatch = geographies.some(geo => {
+      const normalizedGeo = normalizeCountryCode(geo);
+      return normalizedGeo === normalizedHQ || 
+             normalizedGeo === 'BOTH' ||
+             (normalizedHQ === 'CA' && normalizedGeo === 'CA') ||
+             (normalizedHQ === 'US' && normalizedGeo === 'US');
+    });
     
-    // 2. FUNDING AMOUNT RANGE
-    const minAmount = getAmountValue(product, 'min');
-    const maxAmount = getAmountValue(product, 'max');
-    const amountMatch = fundingAmount >= minAmount && fundingAmount <= maxAmount;
+    // 2. FUNDING AMOUNT RANGE - Using unified amount access
+    const amountRange = getAmountRange(product);
+    const amountMatch = fundingAmount >= amountRange.min && fundingAmount <= amountRange.max;
     
-    // 3. INVOICE FACTORING BUSINESS RULE
-    const isInvoiceFactoring = product.category?.toLowerCase().includes('factoring') || 
-                              product.category?.toLowerCase().includes('invoice');
+    // 3. INVOICE FACTORING BUSINESS RULE - Using category helper
+    const productCategory = getProductCategory(product);
+    const isInvoiceFactoring = matchesCategory('factoring', productCategory);
     const factorExclusion = isInvoiceFactoring && accountsReceivableBalance === 0;
     
-    // 4. EQUIPMENT FINANCING BUSINESS RULE (RELAXED)
-    const isEquipmentFinancing = product.category?.toLowerCase().includes('equipment');
+    // 4. EQUIPMENT FINANCING BUSINESS RULE (RELAXED) - Using category helper
+    const isEquipmentFinancing = matchesCategory('equipment', productCategory);
     const equipmentExclusion = isEquipmentFinancing && 
                               lookingFor === 'capital' && 
                               fundsPurpose !== 'equipment' &&
                               !fundsPurpose?.includes('equipment');
     
-    // 5. PRODUCT TYPE MATCHING
-    const categoryLower = product.category?.toLowerCase() || '';
+    // 5. PRODUCT TYPE MATCHING - Using fuzzy category matching
     const typeMatch = lookingFor === 'both' ||
-                     (lookingFor === 'capital' && !categoryLower.includes('equipment')) ||
-                     (lookingFor === 'equipment' && categoryLower.includes('equipment')) ||
-                     (fundsPurpose === 'equipment' && categoryLower.includes('equipment'));
+                     (lookingFor === 'capital' && !isEquipmentFinancing) ||
+                     (lookingFor === 'equipment' && isEquipmentFinancing) ||
+                     (fundsPurpose === 'equipment' && isEquipmentFinancing);
 
     const passes = countryMatch && amountMatch && !factorExclusion && !equipmentExclusion && typeMatch;
     
     // Debug logging for key products
     if (product.name?.includes('Accord') || product.name?.includes('Advance') || !passes) {
-      console.log(`🔍 [FILTER] ${product.name} (${product.category}):`, {
-        country: product.country,
+      console.log(`🔍 [FILTER] ${product.name} (${productCategory}):`, {
+        geographies: geographies.join(','),
         countryMatch,
-        amount: `$${minAmount?.toLocaleString()}-$${maxAmount?.toLocaleString()}`,
+        amount: `$${amountRange.min?.toLocaleString()}-$${amountRange.max?.toLocaleString()}`,
         amountMatch,
         typeMatch,
         factorExclusion,

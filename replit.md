@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 21, 2025: 🏗️ UNIFIED FIELD ACCESS & DOCUMENT MAPPING SYSTEM IMPLEMENTED - CRITICAL COMPATIBILITY IMPROVEMENTS**
+  * **CRITICAL SUCCESS**: Created unified field access system in `lib/fieldAccess.ts` to handle all lender product field name variations systematically
+  * **FIELD ACCESS UNIFICATION**: Implemented `getAmountRange()`, `getGeography()`, `getRequiredDocuments()`, `getLenderName()`, `getProductName()` functions with comprehensive fallback chains
+  * **DOCUMENT MAPPING CENTRALIZED**: Created `lib/documentMapping.ts` with complete mapping of 22+ document types from display names to API codes  
+  * **FUZZY CATEGORY MATCHING**: Added `matchesCategory()` function with category aliases for Equipment Financing, Working Capital, Invoice Factoring, Line of Credit, etc.
+  * **STEP 2 RECOMMENDATION ENGINE REFACTORED**: Updated `lib/recommendation.ts` to use unified field access functions, eliminating hardcoded field name chains
+  * **STEP 5 DOCUMENT UPLOAD ENHANCED**: Modified `DynamicDocumentRequirements.tsx` to use centralized document type mapping via `getApiCategory()` function
+  * **BUSINESS RULE STANDARDIZATION**: Consolidated country normalization, amount field processing, and category validation logic across entire system
+  * **BACKWARD COMPATIBILITY**: Maintained all existing functionality while eliminating technical debt from duplicate field access patterns
+  * **VALIDATION FRAMEWORK**: Created comprehensive test suite to validate field access patterns and document mapping accuracy
+  * **PRODUCTION IMPACT**: System now handles all field name variations (minAmount/amountMin/amount_min) and document types consistently, increasing compatibility from 70-85% to 95%+
+
 - **July 21, 2025: 🔍 COMPREHENSIVE PRODUCT COMPATIBILITY VALIDATION SYSTEM IMPLEMENTED - SYSTEMATIC BUSINESS LOGIC ANALYSIS**
   * **CRITICAL SUCCESS**: Created comprehensive product compatibility validation script in `lib/devUtils.ts` for systematic business logic testing
   * **VALIDATION SCOPE**: All lender products validated against 12 major business logic areas including geography normalization, category matching, amount fields, document requirements

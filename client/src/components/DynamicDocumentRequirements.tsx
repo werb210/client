@@ -24,6 +24,13 @@ import {
 import { 
   getDocumentRequirements 
 } from '../../../shared/documentMapping';
+import { 
+  DOCUMENT_TYPE_MAP,
+  getApiCategory,
+  getDisplayName,
+  isValidDocumentType,
+  normalizeDocumentName as normalizeDocName
+} from '../lib/documentMapping';
 
 
 // TypeScript Interfaces - Export for use in other components
@@ -200,134 +207,8 @@ function UnifiedDocumentUploadCard({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      // Map document labels to API categories with precise matching
-      const getApiCategory = (label: string): string => {
-        const labelLower = label.toLowerCase();
-        
-        // 🧪 DEBUG: Log label for equipment quote debugging
-        if (labelLower.includes('equipment')) {
-          console.log(`🧪 [DEBUG] Equipment document label: "${label}" → lowercase: "${labelLower}"`);
-        }
-        
-        // Bank statements - exact match
-        if (labelLower.includes('bank') && labelLower.includes('statement')) {
-          return 'bank_statements';
-        }
-        
-        // Accountant Prepared Financial Statements - same as financial_statements
-        if (labelLower.includes('accountant') && labelLower.includes('prepared') && labelLower.includes('financial')) {
-          return 'financial_statements';
-        }
-        
-        // Personal Financial Statement - must include "personal" 
-        if (labelLower.includes('personal') && labelLower.includes('financial') && labelLower.includes('statement')) {
-          return 'personal_financial_statement';
-        }
-        
-        // Tax Returns - specific pattern
-        if (labelLower.includes('tax') && labelLower.includes('return')) {
-          return 'tax_returns';
-        }
-        
-        // Equipment Quotes - specific pattern with debug logging
-        if (labelLower.includes('equipment') && labelLower.includes('quote')) {
-          console.log(`🧪 [DEBUG] Equipment quote matched: "${label}" → "equipment_quote"`);
-          return 'equipment_quote';
-        }
-        
-        // Business License - specific pattern
-        if (labelLower.includes('business') && labelLower.includes('license')) {
-          return 'business_license';
-        }
-        
-        // Articles of Incorporation - specific pattern
-        if (labelLower.includes('articles') && labelLower.includes('incorporation')) {
-          return 'articles_of_incorporation';
-        }
-        
-        // Profit & Loss Statement
-        if (labelLower.includes('profit') && (labelLower.includes('loss') || labelLower.includes('&'))) {
-          return 'profit_loss_statement';
-        }
-        
-        // Balance Sheet
-        if (labelLower.includes('balance') && labelLower.includes('sheet')) {
-          return 'balance_sheet';
-        }
-        
-        // Cash Flow Statement
-        if (labelLower.includes('cash') && labelLower.includes('flow')) {
-          return 'cash_flow_statement';
-        }
-        
-        // Accounts Receivable (A/R)
-        if ((labelLower.includes('accounts') && labelLower.includes('receivable')) || 
-            (labelLower.includes('a/r') || labelLower.includes('ar '))) {
-          return 'accounts_receivable';
-        }
-        
-        // Accounts Payable (A/P)
-        if ((labelLower.includes('accounts') && labelLower.includes('payable')) || 
-            (labelLower.includes('a/p') || labelLower.includes('ap '))) {
-          return 'accounts_payable';
-        }
-        
-        // Driver's License (Front & Back)
-        if (labelLower.includes('driver') && labelLower.includes('license')) {
-          return 'drivers_license_front_back';
-        }
-        
-        // VOID/PAD or Voided Check
-        if (labelLower.includes('void') || labelLower.includes('pad')) {
-          return 'void_pad';
-        }
-        
-        // Business Plan
-        if (labelLower.includes('business') && labelLower.includes('plan')) {
-          return 'business_plan';
-        }
-        
-        // Personal Guarantee
-        if (labelLower.includes('personal') && labelLower.includes('guarantee')) {
-          return 'personal_guarantee';
-        }
-        
-        // Invoice Samples
-        if (labelLower.includes('invoice') && labelLower.includes('sample')) {
-          return 'invoice_samples';
-        }
-        
-        // Collateral Documents
-        if (labelLower.includes('collateral')) {
-          return 'collateral_docs';
-        }
-        
-        // Supplier Agreement
-        if (labelLower.includes('supplier') && labelLower.includes('agreement')) {
-          return 'supplier_agreement';
-        }
-        
-        // Proof of Identity
-        if (labelLower.includes('proof') && labelLower.includes('identity')) {
-          return 'proof_of_identity';
-        }
-        
-        // Signed Application
-        if (labelLower.includes('signed') && labelLower.includes('application')) {
-          return 'signed_application';
-        }
-        
-        // Debt Schedule
-        if (labelLower.includes('debt') && labelLower.includes('schedule')) {
-          return 'debt_schedule';
-        }
-        
-        // Default: normalize to underscore format
-        const defaultCategory = label.toLowerCase().replace(/\s+/g, '_');
-        console.log(`🧪 [DEBUG] Default category mapping: "${label}" → "${defaultCategory}"`);
-        return defaultCategory;
-      };
       
+      // Use unified document mapping system
       const category = getApiCategory(doc.label);
       
       // 🧪 DEBUG: Enhanced logging for equipment quote debugging

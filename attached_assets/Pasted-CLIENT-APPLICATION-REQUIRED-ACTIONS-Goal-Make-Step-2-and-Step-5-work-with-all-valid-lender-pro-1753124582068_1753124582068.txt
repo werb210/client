@@ -1,0 +1,115 @@
+CLIENT APPLICATION – REQUIRED ACTIONS
+🎯 Goal: Make Step 2 and Step 5 work with all valid lender products regardless of naming variations.
+
+✅ Step 1: Create fieldAccess.ts
+This helper module unifies all access logic:
+
+ts
+Copy
+Edit
+export function getAmountRange(product) {
+  return {
+    min: product.amount_min ?? product.amountMin ?? product.fundingMin ?? 0,
+    max: product.amount_max ?? product.amountMax ?? product.fundingMax ?? Infinity,
+  }
+}
+
+export function getGeography(product) {
+  return product.geography?.length ? product.geography : [product.country ?? "CA"]
+}
+
+export function getRequiredDocuments(product) {
+  return (
+    product.required_documents ??
+    product.requiredDocuments ??
+    product.documentRequirements ??
+    product.doc_requirements ??
+    []
+  )
+}
+✅ Step 2: Refactor Step 2 Recommendation Engine
+File: Step2RecommendationEngine.tsx
+
+Fixes Required:
+
+ Replace all field access with helpers from fieldAccess.ts
+
+ Implement fuzzy matching for product.category:
+
+ts
+Copy
+Edit
+const CATEGORY_MAP = {
+  equipment: ["Equipment Financing", "equipment_financing"],
+  working_capital: ["Working Capital", "Term Loan", "Loan"],
+  invoice_factoring: ["Invoice Factoring", "AR Factoring", "Factor+"]
+}
+ts
+Copy
+Edit
+function matchesCategory(userSelection: string, productCategory: string): boolean {
+  const aliases = CATEGORY_MAP[userSelection.toLowerCase()] || []
+  return aliases.some(alias => productCategory.toLowerCase().includes(alias.toLowerCase()))
+}
+✅ Step 3: Refactor Step 5 Document Upload System
+File: Step5Upload.tsx or DynamicDocumentRequirements.tsx
+
+Fixes Required:
+
+ Create a single documentMapping.ts that maps user-friendly names to API codes:
+
+ts
+Copy
+Edit
+export const DOCUMENT_TYPE_MAP = {
+  "Bank Statements": "bank_statements",
+  "Financial Statements": "financial_statements",
+  "Personal Financial Statement": "personal_financial_statement",
+  "Equipment Quote": "equipment_quote",
+  // ... up to 22 types
+}
+ Before upload, convert selected type to API-safe format using:
+
+ts
+Copy
+Edit
+function getApiCategory(displayName: string): string {
+  return DOCUMENT_TYPE_MAP[displayName] || displayName.toLowerCase().replace(/ /g, "_")
+}
+ Only send valid document types to the API (/api/documents/upload)
+
+🧪 OPTIONAL: Add Compatibility Validator
+If you'd like, I can provide a validation script that runs in CI/CD to compare:
+
+Client app expectations
+
+Staff product API shape
+
+This will catch future mismatches before they reach production.
+
+✅ FINAL VERDICT
+Task	Staff App	Client App
+Normalize product fields	✅	—
+Validate country/geography	✅	✅
+Centralize field access	—	✅
+Fix Step 2 category logic	—	✅
+Fix Step 5 doc mapping	—	✅
+Add validator (optional)	✅	✅
+
+Would you like me to now:
+
+Generate the exact files (fieldAccess.ts, documentMapping.ts, etc.)?
+
+Send step-by-step test instructions for QA?
+
+Or proceed to fixing Step 5’s document logic directly inside Replit?
+
+Let me know and I’ll prepare the next block.
+
+
+
+
+
+
+
+
