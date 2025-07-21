@@ -6,8 +6,8 @@
 // Only load dotenv for local development
 if (process.env.NODE_ENV !== 'production') {
   try {
-    // Dynamic import for development environments
-    await import('dotenv/config');
+    // Use require for dotenv to avoid top-level await issues
+    require('dotenv/config');
   } catch (error) {
     // dotenv not available - using environment variables directly
     console.log('Using environment variables directly (production mode)');
