@@ -528,7 +528,7 @@ app.use((req, res, next) => {
         console.error(`❌ [S3] ${action} URL failed:`, staffResponse.status, errorText);
         return res.status(503).json({
           success: false,
-          error: `${action} temporarily unavailable. Please try again later.`
+          error: `Document URL temporarily unavailable. Please try again later.`
         });
       }
 
@@ -537,10 +537,10 @@ app.use((req, res, next) => {
       
       res.json(result);
     } catch (error) {
-      console.error(`❌ [S3] ${action} URL request error:`, error);
+      console.error(`❌ [S3] Document URL request error:`, error);
       res.status(500).json({
         success: false,
-        error: `${action} temporarily unavailable. Please try again later.`
+        error: `Document URL temporarily unavailable. Please try again later.`
       });
     }
   });
@@ -788,9 +788,9 @@ app.use((req, res, next) => {
   // Any future connection monitoring must be approved via ChatGPT review.
   // PERMANENT STABILIZATION: No req.aborted, req.on('close'), or req.on('aborted') patterns allowed
   
-  // NEW USER SPECIFICATION FORMAT - POST /api/public/upload/:applicationId with Bearer auth
   // ❌ REMOVED: Legacy Replit upload fallback - S3 migration complete
-  // app.post('/api/public/upload/:applicationId', upload.single('document'), async (req, res) => {
+  /*
+  app.post('/api/public/upload/:applicationId', upload.single('document'), async (req, res) => {
     const { applicationId } = req.params;
     const { documentType } = req.body;
     const file = req.file;
@@ -864,7 +864,10 @@ app.use((req, res, next) => {
       });
     }
   });
+  */
 
+  // ❌ REMOVED: Legacy Replit upload fallback - S3 migration complete
+  /*
   // LEGACY ENDPOINT - maintains backward compatibility
   // File upload endpoint - ROCK SOLID IMPLEMENTATION
   app.post('/api/public/applications/:id/documents', upload.single('document'), async (req, res) => {
@@ -1009,6 +1012,7 @@ app.use((req, res, next) => {
       });
     }
   });
+  */
 
   // Serve static files - will be configured after httpServer is created
 
