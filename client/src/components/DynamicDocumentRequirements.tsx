@@ -31,6 +31,12 @@ import {
   isValidDocumentType,
   normalizeDocumentName as normalizeDocName
 } from '../lib/documentMapping';
+import { 
+  normalizeDocRequirement,
+  getCanonicalDocumentInfo,
+  CANONICAL_DOCUMENT_LABELS,
+  type CanonicalDocumentType
+} from '../lib/docNormalization';
 
 
 // TypeScript Interfaces - Export for use in other components
@@ -208,8 +214,9 @@ function UnifiedDocumentUploadCard({
     if (e.target.files) {
       const files = Array.from(e.target.files);
       
-      // Use unified document mapping system
-      const category = getApiCategory(doc.label);
+      // Use canonical document normalization for API mapping
+      const normalizedType = normalizeDocRequirement(doc.label);
+      const category = normalizedType || getApiCategory(doc.label);
       
       // 🧪 DEBUG: Enhanced logging for equipment quote debugging
       console.log(`🧪 [DEBUG] Document label: "${doc.label}"`);

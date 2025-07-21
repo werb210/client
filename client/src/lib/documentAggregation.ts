@@ -4,8 +4,7 @@
  * Based on ChatGPT team specifications
  */
 
-import { fetchLenderProducts } from './api';
-import { logger } from '@/lib/logger';
+// Document aggregation with normalization support
 import { normalizeDocumentName } from '../../../shared/documentMapping';
 import { getDocumentLabel } from '../../../shared/documentTypes';
 
@@ -76,7 +75,7 @@ export async function getDocumentRequirementsAggregation(
                              selectedCountry;
     
     // ✅ STEP 1: Filter all local lender products that match criteria
-    const eligibleProducts = allProducts.filter(product => {
+    const eligibleProducts = allProducts.filter((product: any) => {
       // Category match
       const categoryMatch = product.category === selectedCategory;
       
@@ -106,44 +105,19 @@ export async function getDocumentRequirementsAggregation(
       };
     }
     
-    // ✅ STEP 2: Aggregate and deduplicate required documents (UNION)
-    const allDocumentLists = eligibleProducts.map(product => {
-      // Try multiple field names for document requirements
-      const docs = product.doc_requirements || 
-                   product.documentRequirements || 
-                   product.requiredDocuments || 
-                   product.required_documents || 
-                   [];
-      
-      // Document requirements extracted
-      return docs;
+    // ✅ STEP 2: Aggregate and deduplicate required documents (UNION) - ENHANCED WITH NORMALIZATION
+    // Following user specifications for canonical document type normalization
+    const { extractDocRequirements, getCanonicalDocumentInfo } = await import('./docNormalization');
+    const canonicalDocTypes = extractDocRequirements(eligibleProducts);
+    
+    console.log(`🔍 [AGGREGATION] Normalized to ${canonicalDocTypes.length} canonical document types:`, canonicalDocTypes);
+    
+    // Convert canonical types to display labels for UI
+    const transformedDocuments = canonicalDocTypes.map(docType => {
+      const info = getCanonicalDocumentInfo(docType);
+      console.log(`✅ [AGGREGATION] Canonical document: ${docType} → "${info.label}"`);
+      return info.label;
     });
-    
-    // ✅ CRITICAL FIX: Normalize ALL documents BEFORE deduplication to prevent mixed original/normalized data
-    
-    const allRawDocuments = allDocumentLists.flatMap(docs => docs);
-    console.log(`🔍 [AGGREGATION] Raw documents before normalization:`, allRawDocuments);
-    
-    // Normalize all documents to their standard types, then deduplicate by document type
-    const normalizedDocumentTypes = new Set<string>();
-    const deduplicatedDocuments: string[] = [];
-    
-    for (const docName of allRawDocuments) {
-      const normalizedType = normalizeDocumentName(docName);
-      console.log(`🔍 [AGGREGATION] Normalizing "${docName}" → "${normalizedType}"`);
-      
-      if (!normalizedDocumentTypes.has(normalizedType)) {
-        normalizedDocumentTypes.add(normalizedType);
-        // Use the display label for the final output
-        const displayLabel = getDocumentLabel(normalizedType);
-        deduplicatedDocuments.push(displayLabel);
-        console.log(`✅ [AGGREGATION] Added unique document type: "${normalizedType}" → display: "${displayLabel}"`);
-      } else {
-        console.log(`🔄 [AGGREGATION] Skipping duplicate document type: "${normalizedType}" (from "${docName}")`);
-      }
-    }
-    
-    const transformedDocuments = deduplicatedDocuments;
     
     return {
       eligibleProducts,
@@ -157,7 +131,7 @@ export async function getDocumentRequirementsAggregation(
     return {
       eligibleProducts: [],
       requiredDocuments: [],
-      message: `Error fetching document requirements: ${error.message}`,
+      message: `Error fetching document requirements: ${error instanceof Error ? error.message : 'Unknown error'}`,
       hasMatches: false
     };
   }
