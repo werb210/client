@@ -817,9 +817,9 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         isMobileFullscreen && "min-h-0" // Ensure proper flex behavior on mobile
       )}>
         <div className="chat-messages flex-1 space-y-3 overflow-y-auto" data-chat-messages>
-            {messages.map((message) => (
+            {messages.map((message, index) => (
               <div
-                key={message.id}
+                key={`${message.id}-${index}` || `msg-${index}-${message.timestamp.getTime()}`}
                 className={cn(
                   "flex gap-2 text-sm",
                   message.role === 'user' ? 'justify-end' : 'justify-start'
@@ -907,14 +907,12 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
                   // Request human assistance via both Socket.IO and HTTP
                   if (socket && isConnected) {
                     console.log('📞 Requesting human assistance via Socket.IO');
-                    socket.emit('request-human', { 
+                    // Use the correct event name and simple data structure
+                    socket.emit('user-request-human', { 
                       sessionId,
-                      userInfo: {
-                        currentStep,
-                        applicationData,
-                        conversationHistory: messages.slice(-10) // Last 10 messages for context
-                      }
+                      userName: sessionStorage.getItem('userName') || applicationData?.firstName || 'Customer'
                     });
+                    console.log('Client emitted user-request-human via footer button');
                   }
 
                   // Also make HTTP request as fallback

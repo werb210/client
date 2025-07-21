@@ -1810,10 +1810,16 @@ app.use((req, res, next) => {
       }
     });
     
-    // Handle human assistance requests
-    socket.on('request-human', async (data) => {
-      const { sessionId } = data;
-      log('Human assistance requested for session:', sessionId);
+    // Handle human assistance requests - CORRECT EVENT NAME
+    socket.on('user-request-human', async (data) => {
+      const { sessionId, userName } = data;
+      console.log('Server received ask-human:', data);
+      
+      // Must use io.emit to broadcast to all staff sockets
+      io.emit('user-request-human', data);
+      console.log('Server broadcast ask-human event');
+      
+      log('Human assistance requested for session:', sessionId, 'by user:', userName);
       
       // Forward request to staff application
       try {
@@ -1823,7 +1829,7 @@ app.use((req, res, next) => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${cfg.clientToken}`
           },
-          body: JSON.stringify({ sessionId })
+          body: JSON.stringify({ sessionId, userName })
         });
         
         // Notify user that request was sent
