@@ -300,21 +300,32 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   useEffect(() => {
     if (isOpen && typeof window !== 'undefined' && (window as any).io) {
       console.log('🔌 Initializing Socket.IO connection for real-time chat');
-      const socketInstance = (window as any).io();
+      
+      // Use global socket if available, or create new one
+      const socketInstance = (window as any).globalSocket || (window as any).io();
       setSocket(socketInstance);
 
-      // Join the session
-      socketInstance.emit('join-session', sessionId);
-      console.log('🔗 Joined Socket.IO session:', sessionId);
+      // Join the session with proper error handling
+      try {
+        socketInstance.emit('join-session', sessionId);
+        console.log('🔗 Emitted join-session for sessionId:', sessionId);
+      } catch (error) {
+        console.error('❌ Failed to join session:', error);
+      }
 
-      // Connection status
+      // Connection status with enhanced logging
       socketInstance.on('connect', () => {
-        console.log('✅ Socket.IO connected');
+        console.log('✅ Socket.IO connected, client ID:', socketInstance.id);
         setIsConnected(true);
       });
 
-      socketInstance.on('disconnect', () => {
-        console.log('❌ Socket.IO disconnected');
+      socketInstance.on('disconnect', (reason: any) => {
+        console.log('❌ Socket.IO disconnected, reason:', reason);
+        setIsConnected(false);
+      });
+
+      socketInstance.on('connect_error', (error: any) => {
+        console.error('❌ Socket.IO connection error:', error);
         setIsConnected(false);
       });
 
@@ -637,14 +648,14 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       return "I see you're starting your financing application! I can help explain our loan products and guide you through each step.";
     } else if (currentStep === 2) {
       return "Need help choosing the right financing product? I can recommend options based on your business type and needs.";
-    } else if (currentStep >= 5) {
+    } else if (currentStep && currentStep >= 5) {
       return "Working on document upload? I can explain what documents are needed and help with any questions about the process.";
     }
     return "Hi there! I'm here to help with any questions about our financing options or application process.";
   };
 
   const getExitIntentMessage = () => {
-    if (currentStep > 1) {
+    if (currentStep && currentStep > 1) {
       return "Before you go - I can help save your progress or answer any questions about completing your application!";
     }
     return "Wait! I can quickly explain our financing options and help you find the perfect loan for your business needs.";
@@ -670,6 +681,52 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  // Request human chat function
+  const requestHumanChat = async () => {
+    console.log('🤝 Requesting human chat for session:', sessionId);
+    
+    addBotMessage('Connecting you to a human agent. Please hold while we find someone to assist you...');
+    
+    try {
+      // Socket.IO request
+      if (socket && isConnected) {
+        console.log('📞 Requesting human assistance via Socket.IO');
+        socket.emit('request-human', { 
+          sessionId,
+          userInfo: {
+            currentStep,
+            applicationData,
+            conversationHistory: messages.slice(-10)
+          }
+        });
+      }
+
+      // HTTP fallback request
+      const response = await fetch('/api/chat/request-staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          sessionId,
+          userName: applicationData?.applicantFirstName || 'Customer',
+          context: { currentStep, applicationData }
+        })
+      });
+
+      const data = await response.json();
+      console.log('📤 HTTP human request response:', data);
+      
+      if (response.ok) {
+        addBotMessage('Request sent successfully. A human agent will join the chat shortly.');
+      } else {
+        throw new Error(data.error || 'Request failed');
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to request human assistance:', error);
+      addBotMessage('Sorry, we had trouble connecting you to a human agent. Please try the Report Issue button or call us directly at 1-888-811-1887.');
     }
   };
 
