@@ -902,6 +902,48 @@ app.use((req, res, next) => {
     }
   });
 
+  // Contact logging endpoint for welcome flow
+  app.post('/api/chat/log-contact', async (req, res) => {
+    try {
+      const { sessionId, name, email } = req.body;
+      
+      console.log(`👤 [SERVER] Contact logged: ${name} (${email}) for session: ${sessionId}`);
+      
+      // Forward to staff backend for CRM integration
+      try {
+        const response = await fetch(`${cfg.staffApiUrl}/api/chat/log-contact`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${cfg.clientToken}`
+          },
+          body: JSON.stringify({ sessionId, name, email, timestamp: new Date().toISOString() })
+        });
+        
+        if (!response.ok) {
+          console.log('Staff backend contact logging unavailable, continuing locally');
+        }
+      } catch (error) {
+        console.log('Staff backend contact logging failed, continuing locally:', error.message);
+      }
+      
+      res.json({
+        success: true,
+        message: 'Contact information logged successfully',
+        sessionId,
+        name
+      });
+      
+    } catch (error) {
+      console.error('❌ [SERVER] Contact logging failed:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to log contact information',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Mount chat and advanced AI routes
   app.use('/api', chatRouter);
   app.use('/api', analyzeRouter);

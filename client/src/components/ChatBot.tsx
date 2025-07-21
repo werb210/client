@@ -151,14 +151,8 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
 }
 
 export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: ChatBotProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: 'Hello! I\'m your financing assistant. I can help you understand our products, guide you through the application process, and answer any questions you have about required documents. How can I assist you today?',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [hasGreeted, setHasGreeted] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -189,6 +183,33 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Initial greeting with contact collection
+  useEffect(() => {
+    if (isOpen && messages.length === 0 && !hasGreeted) {
+      setHasGreeted(true);
+      
+      // Make chat instance available globally for chat-client.js
+      (window as any).chatBotInstance = {
+        addMessage: (role: string, content: string) => {
+          const message: Message = {
+            id: Date.now().toString(),
+            role: role === 'assistant' ? 'assistant' : 'user',
+            content,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, message]);
+        }
+      };
+      
+      // Start welcome flow with contact collection after a brief delay
+      setTimeout(() => {
+        if ((window as any).startChat) {
+          (window as any).startChat();
+        }
+      }, 800); // Allow time for chat-client.js to load
+    }
+  }, [isOpen, messages.length, hasGreeted]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -501,15 +522,30 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   const sendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
+    const messageText = inputValue.trim();
+    
+    // Check if chat is awaiting user input for contact collection
+    if ((window as any).processUserInput && (window as any).processUserInput(messageText)) {
+      // Add user message and let contact flow handle it
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: messageText,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, userMessage]);
+      setInputValue('');
+      return; // Exit early, contact flow will continue
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: inputValue.trim(),
+      content: messageText,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    const messageText = inputValue.trim();
     setInputValue('');
     setIsLoading(true);
 

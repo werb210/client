@@ -73,8 +73,84 @@ document.addEventListener('DOMContentLoaded', function() {
     // Message appending function for integration
     window.appendMessage = function(role, message) {
       console.log('Appending message:', role, message);
-      // This could integrate with your React chat component
-      // For now, just log the message
+      // This integrates with the React chat component
+      if (window.chatBotInstance && window.chatBotInstance.addMessage) {
+        window.chatBotInstance.addMessage(role, message);
+      }
+    };
+
+    // Bot message helper
+    window.appendBot = function(message) {
+      window.appendMessage('assistant', message);
+    };
+
+    // User input state management
+    window.chatState = {
+      awaitingUserInput: false,
+      awaitingInputType: null,
+      awaitingInputCallback: null,
+      userContactInfo: {
+        name: sessionStorage.getItem('userName') || null,
+        email: sessionStorage.getItem('userEmail') || null
+      }
+    };
+
+    // Wait for user input function
+    window.waitForUser = function() {
+      return new Promise((resolve) => {
+        window.chatState.awaitingUserInput = true;
+        window.chatState.awaitingInputCallback = resolve;
+      });
+    };
+
+    // Process user input for contact collection
+    window.processUserInput = function(message) {
+      if (window.chatState.awaitingUserInput && window.chatState.awaitingInputCallback) {
+        window.chatState.awaitingUserInput = false;
+        const callback = window.chatState.awaitingInputCallback;
+        window.chatState.awaitingInputCallback = null;
+        callback(message);
+        return true;
+      }
+      return false;
+    };
+
+    // Welcome flow with contact collection
+    window.startChat = async function() {
+      const savedName = sessionStorage.getItem('userName');
+      const savedEmail = sessionStorage.getItem('userEmail');
+      
+      if (savedName && savedEmail) {
+        window.appendBot(`Welcome back, ${savedName}! How can I help you today?`);
+        return;
+      }
+      
+      try {
+        window.appendBot("Hi, I'm FinBot! I help with business financing questions. Can I get your name to get started?");
+        
+        const name = await window.waitForUser();
+        window.appendBot(`Thanks, ${name}! And what's your email address?`);
+        
+        const email = await window.waitForUser();
+        
+        // Store contact info
+        sessionStorage.setItem('userName', name);
+        sessionStorage.setItem('userEmail', email);
+        window.chatState.userContactInfo = { name, email };
+        
+        // Log contact to server
+        await fetch('/api/chat/log-contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, name, email })
+        }).catch(err => console.log('Contact logging failed:', err));
+        
+        window.appendBot(`Perfect, ${name}! I'm here to help with business financing, loan products, and application questions. What would you like to know?`);
+        
+      } catch (error) {
+        console.error('Welcome flow error:', error);
+        window.appendBot("Welcome! How can I help with your business financing needs today?");
+      }
     };
 
     // Make socket available globally for React components
