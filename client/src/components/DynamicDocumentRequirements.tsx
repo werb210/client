@@ -368,10 +368,10 @@ function UnifiedDocumentUploadCard({
           const file = files[i];
           const formData = new FormData();
           formData.append('document', file);
-          formData.append('documentType', normalizeDocumentName(doc.label));
+          formData.append('documentType', category);
           
           // 🧪 REQUIRED DEBUG LOGGING as per user instructions
-          console.log("📤 Uploading:", file.name, normalizeDocumentName(doc.label));
+          console.log("📤 Uploading:", file.name, category);
           console.log(`📤 [STEP5] Uploading file ${i + 1}/${files.length}: ${file.name}`);
           console.log(`📤 [STEP5] Document type: ${category}`);
           console.log(`📤 [STEP5] Application ID: ${applicationId}`);
