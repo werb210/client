@@ -1,5 +1,4 @@
-// Import local type definitions to avoid deep import chains
-import { LenderProduct, StaffLenderProduct } from '../types/lenderProduct';
+import { StaffLenderProduct } from '../types/staffApi';
 
 export interface RecommendationFormData {
   headquarters: string; // 'US' or 'CA'
@@ -9,7 +8,7 @@ export interface RecommendationFormData {
   fundsPurpose: string;
 }
 
-// Helper function to get amount value with multiple field name support - MOVED TO TOP
+// Helper function to get amount value with multiple field name support
 const getAmountValue = (product: any, field: 'min' | 'max'): number => {
   let amount: any;
   if (field === 'min') {
@@ -21,6 +20,28 @@ const getAmountValue = (product: any, field: 'min' | 'max'): number => {
   if (typeof amount === 'number') return amount;
   if (typeof amount === 'string') return parseFloat(amount.replace(/[^0-9.-]/g, '')) || (field === 'min' ? 0 : Infinity);
   return field === 'min' ? 0 : Infinity;
+};
+
+// Helper function to get geography/country with multiple field name support
+const getGeography = (product: any): string[] => {
+  const geography = product.geography ?? product.countries ?? product.markets ?? product.country;
+  
+  if (Array.isArray(geography)) {
+    return geography.map(g => {
+      if (typeof g === 'string') {
+        return g.replace(/[{}[\]"]/g, '').trim().toUpperCase();
+      }
+      return String(g).toUpperCase();
+    }).filter(g => g.length > 0);
+  }
+  if (typeof geography === 'string') {
+    const cleaned = geography.replace(/[{}[\]"]/g, '').trim();
+    if (cleaned.includes('/')) {
+      return cleaned.split('/').map(c => c.trim().toUpperCase());
+    }
+    return [cleaned.toUpperCase()];
+  }
+  return [];
 };
 
 /**
@@ -36,279 +57,76 @@ export function filterProducts(products: StaffLenderProduct[], form: Recommendat
     fundsPurpose,
   } = form;
 
-  // Filter starting parameters (logging disabled)
-  
   // Check if we have any products at all
   if (!products || products.length === 0) {
     return [];
   }
 
-  // ✅ STEP 1: EXCLUDE INVOICE FACTORING IF NOT ELIGIBLE
-  let filteredProducts = products;
-  
-  // Check if user has accounts receivable (Step 1 answer)
-  const hasAccountsReceivable = accountsReceivableBalance > 0;
-  
-  if (!hasAccountsReceivable) {
-    filteredProducts = filteredProducts.filter(product => product.category !== 'Invoice Factoring');
-  }
+  // Normalize headquarters/country consistently
+  const normalizedHQ = (headquarters?.toLowerCase() === 'united-states' || 
+                       headquarters?.toLowerCase() === 'united states' || 
+                       headquarters === 'US') ? 'US' :
+                      (headquarters?.toLowerCase() === 'canada' || 
+                       headquarters === 'CA') ? 'CA' : 
+                       (headquarters || 'CA'); // Default to CA if not specified
 
-  // ✅ STEP 2: FILTER BY COUNTRY (CA or US)
-  const normalizedHQ = headquarters === 'united-states' || headquarters === 'United States' || headquarters === 'US' ? 'US' :
-                       headquarters === 'canada' || headquarters === 'Canada' || headquarters === 'CA' ? 'CA' : 
-                       headquarters;
-  
-  filteredProducts = filteredProducts.filter(product => product.country === normalizedHQ);
+  console.log(`🔍 [FILTER] Starting with ${products.length} products for ${normalizedHQ} market`);
 
-  // ✅ EXCLUDE EQUIPMENT FINANCING IF NOT ELIGIBLE
-  filteredProducts = filteredProducts.filter(product => {
-    // Only exclude Equipment Financing if user didn't select equipment in either field
-    const isEquipmentFinancing = product.category === 'Equipment Financing';
-    if (isEquipmentFinancing) {
-      const isEligible = lookingFor === 'equipment' || lookingFor === 'both' || fundsPurpose === 'equipment';
-      if (!isEligible) {
-        return false;
-      }
-    }
-    return true;
-  });
-  // ✅ STEP 3: FILTER BY MINIMUM & MAXIMUM FUNDING AMOUNT
-  filteredProducts = filteredProducts.filter(product => {
+  // CONSOLIDATED SINGLE FILTERING LOGIC
+  const filteredProducts = products.filter(product => {
+    // 1. COUNTRY/GEOGRAPHY MATCH
+    const countryMatch = product.country === normalizedHQ || 
+                        product.country === 'Both' ||
+                        product.geography?.includes(normalizedHQ) ||
+                        (normalizedHQ === 'CA' && product.country?.includes('CA')) ||
+                        (normalizedHQ === 'US' && product.country?.includes('US'));
+    
+    // 2. FUNDING AMOUNT RANGE
     const minAmount = getAmountValue(product, 'min');
     const maxAmount = getAmountValue(product, 'max');
-    return fundingAmount >= minAmount && fundingAmount <= maxAmount;
-  });
-
-  // ✅ STEP 4: GROUP BY CATEGORY (for display purposes)
-  const categoryGroups = filteredProducts.reduce((groups, product) => {
-    const category = product.category;
-    if (!groups[category]) {
-      groups[category] = [];
-    }
-    groups[category].push(product);
-    return groups;
-  }, {} as Record<string, StaffLenderProduct[]>);
-
-  // Final filtering complete
-  
-  return filteredProducts;
-
-  // Check for specific missing products (Accord and Small Business Revolver)
-  const accordProducts = products.filter(p => 
-    p.name?.toLowerCase().includes('accord') ||
-    p.lender_name?.toLowerCase().includes('accord') ||
-    p.product_name?.toLowerCase().includes('accord')
-  );
-  // console.log(`[DEBUG] Accord products found: ${accordProducts.length}`);
-  accordProducts.forEach(p => {
-    // console.log(`[DEBUG] Accord product: ${p.name} - Category: ${p.category}, Country: ${p.country}, Min: ${p.min_amount}, Max: ${p.max_amount}`);
-  });
-
-  const revolverProducts = products.filter(p => 
-    p.name?.toLowerCase().includes('revolver') ||
-    p.name?.toLowerCase().includes('small business')
-  );
-  // console.log(`[DEBUG] Small Business Revolver products found: ${revolverProducts.length}`);
-  revolverProducts.forEach(p => {
-    // console.log(`[DEBUG] Revolver product: ${p.name} - Category: ${p.category}, Country: ${p.country}, Min: ${p.min_amount}, Max: ${p.max_amount}`);
-  });
-
-  // Function moved to top of file to fix initialization error
-
-  // Helper function to get geography/country with multiple field name support
-  const getGeography = (product: any): string[] => {
-    // Try different field names for geography/country
-    const geography = product.geography ?? product.countries ?? product.markets ?? product.country;
-    
-    if (Array.isArray(geography)) {
-      return geography.map(g => {
-        // Handle stringified arrays like "{CA}" or similar formats
-        if (typeof g === 'string') {
-          return g.replace(/[{}[\]"]/g, '').trim().toUpperCase();
-        }
-        return String(g).toUpperCase();
-      }).filter(g => g.length > 0);
-    }
-    if (typeof geography === 'string') {
-      // Handle multi-country strings like "US/CA" and clean curly braces
-      const cleaned = geography.replace(/[{}[\]"]/g, '').trim();
-      if (cleaned.includes('/')) {
-        return cleaned.split('/').map(c => c.trim().toUpperCase());
-      }
-      return [cleaned.toUpperCase()];
-    }
-    return [];
-  };
-
-  // Core filtering logic - Fixed field mapping
-  const matchesCore = products.filter(product => {
-    // Pre-filter debugging for specific products
-    if (product.lender_name?.includes('Revenued') || product.name?.includes('Flex Line')) {
-      console.log(`🚨 [PRE-FILTER] Found ${product.name} (${product.lender_name}) - Country: ${product.country}, Category: ${product.category}, Active: ${product.is_active}`);
-    }
-    const minAmount = getAmountValue(product, 'min');
-    const maxAmount = getAmountValue(product, 'max');
-    const geography = getGeography(product);
-    
-    // Normalize headquarters inline
-    const normalizedHQ = headquarters === 'united-states' || headquarters === 'United States' || headquarters === 'US' ? 'US' :
-                         headquarters === 'canada' || headquarters === 'Canada' || headquarters === 'CA' ? 'CA' : 
-                         headquarters;
-    
-    // Geography check - support multiple formats including direct country field
-    const geographyMatch = !normalizedHQ || 
-                          geography.includes(normalizedHQ) || 
-                          geography.includes('US/CA') || 
-                          geography.includes('CA/US') ||
-                          (normalizedHQ === 'US' && geography.includes('UNITED STATES')) ||
-                          (normalizedHQ === 'CA' && geography.includes('CANADA')) ||
-                          // CRITICAL: Check the direct country field that most products use
-                          product.country === normalizedHQ ||
-                          (normalizedHQ === 'CA' && product.country?.includes('CA')) ||
-                          (normalizedHQ === 'US' && product.country?.includes('US'));
-    
-    // Amount check - ensure fundingAmount is within range
     const amountMatch = fundingAmount >= minAmount && fundingAmount <= maxAmount;
     
-    // Type check - improved category matching
+    // 3. INVOICE FACTORING BUSINESS RULE
+    const isInvoiceFactoring = product.category?.toLowerCase().includes('factoring') || 
+                              product.category?.toLowerCase().includes('invoice');
+    const factorExclusion = isInvoiceFactoring && accountsReceivableBalance === 0;
+    
+    // 4. EQUIPMENT FINANCING BUSINESS RULE (RELAXED)
+    const isEquipmentFinancing = product.category?.toLowerCase().includes('equipment');
+    const equipmentExclusion = isEquipmentFinancing && 
+                              lookingFor === 'capital' && 
+                              fundsPurpose !== 'equipment' &&
+                              !fundsPurpose?.includes('equipment');
+    
+    // 5. PRODUCT TYPE MATCHING
     const categoryLower = product.category?.toLowerCase() || '';
-    const typeMatch = lookingFor === "both" ||
-      (lookingFor === "capital" && !categoryLower.includes("equipment")) ||
-      (lookingFor === "equipment" && categoryLower.includes("equipment"));
+    const typeMatch = lookingFor === 'both' ||
+                     (lookingFor === 'capital' && !categoryLower.includes('equipment')) ||
+                     (lookingFor === 'equipment' && categoryLower.includes('equipment')) ||
+                     (fundsPurpose === 'equipment' && categoryLower.includes('equipment'));
+
+    const passes = countryMatch && amountMatch && !factorExclusion && !equipmentExclusion && typeMatch;
     
-    // CRITICAL: Exclude Invoice Factoring when accountsReceivableBalance = 0
-    const factorExclusion = accountsReceivableBalance === 0 && 
-                           (categoryLower.includes("factoring") || categoryLower.includes("invoice"));
-    
-    // NEW REQUIREMENT: Equipment Financing exclusion rule
-    const equipmentFinancingExclusion = categoryLower.includes("equipment") && 
-                                       lookingFor !== "equipment" && 
-                                       lookingFor !== "both" && 
-                                       fundsPurpose !== "equipment";
-    
-    const passes = geographyMatch && amountMatch && typeMatch && !factorExclusion && !equipmentFinancingExclusion;
-    
-    // Log specific products for debugging - ALWAYS show Revenued and Accord products
-    if (product.name?.includes('Small Business Revolver') || 
-        product.name?.includes('Accord') || 
-        product.lender_name?.includes('Revenued') ||
-        product.name?.includes('Flex Line')) {
-      console.log(`🔍 [FILTER DEBUG] ${product.name} (${product.lender_name}):`, {
-        category: product.category,
+    // Debug logging for key products
+    if (product.name?.includes('Accord') || product.name?.includes('Advance') || !passes) {
+      console.log(`🔍 [FILTER] ${product.name} (${product.category}):`, {
         country: product.country,
+        countryMatch,
         amount: `$${minAmount?.toLocaleString()}-$${maxAmount?.toLocaleString()}`,
-        requestedAmount: `$${fundingAmount?.toLocaleString()}`,
-        passes,
-        geographyMatch,
         amountMatch,
         typeMatch,
         factorExclusion,
-        equipmentFinancingExclusion
+        equipmentExclusion,
+        passes
       });
-      //   originalGeography: geography,
-      //   normalizedGeography: geography,
-      //   requestedHQ: normalizedHQ,
-      //   geographyMatch,
-      //   amountRange: `${minAmount}-${maxAmount}`,
-      //   requestedAmount: fundingAmount,
-      //   amountMatch,
-      //   category: product.category,
-      //   lookingFor,
-      //   typeMatch,
-      //   accountsReceivableBalance,
-      //   factorExclusion,
-      //   passes
-      // });
-    }
-    if (products.indexOf(product) < 3) {
-      const categoryLower = product.category?.toLowerCase() || '';
-      const factorExclusion = accountsReceivableBalance === 0 && 
-                             (categoryLower.includes("factoring") || categoryLower.includes("invoice"));
-      
-      // console.log(`[DEBUG] Product ${product.name || product.lender}:`, {
-      //   originalGeography: product.geography || product.country,
-      //   normalizedGeography: geography,
-      //   requestedHQ: normalizedHQ,
-      //   geographyMatch,
-      //   amountRange: `${minAmount}-${maxAmount}`,
-      //   requestedAmount: fundingAmount,
-      //   amountMatch,
-      //   category: product.category,
-      //   lookingFor,
-      //   typeMatch,
-      //   accountsReceivableBalance,
-      //   factorExclusion,
-      //   passes: geographyMatch && amountMatch && typeMatch && !factorExclusion
-      // });
     }
     
     return passes;
   });
 
-  // Extra inclusions based on special rules - Fixed field mapping
-  const extras = products.filter(product => {
-    const minAmount = getAmountValue(product, 'min');
-    const maxAmount = getAmountValue(product, 'max');
-    const geography = getGeography(product);
-    
-    // Normalize headquarters inline
-    const normalizedHQ = headquarters === 'united-states' || headquarters === 'United States' || headquarters === 'US' ? 'US' :
-                         headquarters === 'canada' || headquarters === 'Canada' || headquarters === 'CA' ? 'CA' : 
-                         headquarters;
-    
-    // Geography check with normalized format including direct country field
-    const geographyMatch = !normalizedHQ || 
-                          geography.includes(normalizedHQ) || 
-                          geography.includes('US/CA') || 
-                          geography.includes('CA/US') ||
-                          (normalizedHQ === 'US' && geography.includes('UNITED STATES')) ||
-                          (normalizedHQ === 'CA' && geography.includes('CANADA')) ||
-                          // CRITICAL: Check the direct country field that most products use
-                          product.country === normalizedHQ ||
-                          (normalizedHQ === 'CA' && product.country?.includes('CA')) ||
-                          (normalizedHQ === 'US' && product.country?.includes('US'));
-    
-    const amountMatch = fundingAmount >= minAmount && fundingAmount <= maxAmount;
-    
-    if (!geographyMatch || !amountMatch) return false;
-    
-    const categoryLower = product.category?.toLowerCase() || '';
-    
-    // NEW REQUIREMENT: Equipment Financing exclusion rule for extras too
-    const equipmentFinancingExclusion = categoryLower.includes("equipment") && 
-                                       lookingFor !== "equipment" && 
-                                       lookingFor !== "both" && 
-                                       fundsPurpose !== "equipment";
-    
-    if (equipmentFinancingExclusion) return false;
-
-    return (
-      // AR balance rule - include invoice factoring ONLY when they have receivables
-      (categoryLower.includes("factoring") && accountsReceivableBalance > 0) ||
-      // Inventory purpose rule - include purchase order financing for inventory
-      (fundsPurpose === "inventory" && categoryLower.includes("purchase order")) ||
-      // Equipment rule - include equipment financing when eligible
-      (categoryLower.includes("equipment") && (lookingFor === "equipment" || lookingFor === "both" || fundsPurpose === "equipment"))
-    );
-  });
-
-  // Merge and deduplicate by id
-  const byId = new Map<string, StaffLenderProduct>();
-  [...matchesCore, ...extras].forEach(p => byId.set(p.id, p));
+  console.log(`🔍 [FILTER] Result: ${filteredProducts.length} products match filters`);
   
-  const finalResults = Array.from(byId.values());
-  
-  // Enhanced debug logging to show results
-  // console.log('[DEBUG] filterProducts - Results:', {
-  //   coreMatches: matchesCore.length,
-  //   extras: extras.length,
-  //   finalResults: finalResults.length,
-  //   categories: [...new Set(finalResults.map(p => p.category))],
-  //   accountsReceivableBalance,
-  //   shouldExcludeFactoring: accountsReceivableBalance === 0
-  // });
-  
-  return finalResults;
+  return filteredProducts;
 }
 
 /**
@@ -334,13 +152,12 @@ export function calculateRecommendationScore(
   const geography = getGeography(product);
   const normalizedHQ = normalizeHeadquarters(headquarters);
 
-  // Geography match (25 points) - Fixed geography check including direct country field
+  // Geography match (25 points)
   if (geography.includes(normalizedHQ) || 
       geography.includes('US/CA') || 
       geography.includes('CA/US') ||
-      (normalizedHQ === 'US' && geography.includes('United States')) ||
-      (normalizedHQ === 'CA' && geography.includes('Canada')) ||
-      // CRITICAL: Check the direct country field that most products use
+      (normalizedHQ === 'US' && geography.includes('UNITED STATES')) ||
+      (normalizedHQ === 'CA' && geography.includes('CANADA')) ||
       product.country === normalizedHQ ||
       (normalizedHQ === 'CA' && product.country?.includes('CA')) ||
       (normalizedHQ === 'US' && product.country?.includes('US'))) {
@@ -375,16 +192,6 @@ export function calculateRecommendationScore(
   }
 
   return Math.min(score, 100); // Cap at 100%
-}
-
-// Helper functions to be accessible from the module - getAmountValue moved to top
-
-function getGeography(product: any): string[] {
-  const geography = product.geography ?? product.countries ?? product.markets ?? product.country;
-  
-  if (Array.isArray(geography)) return geography;
-  if (typeof geography === 'string') return [geography];
-  return [];
 }
 
 function normalizeHeadquarters(hq: string): string {

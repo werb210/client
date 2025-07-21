@@ -3,11 +3,7 @@ import { useProductCategories } from '@/hooks/useProductCategories';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import Target from 'lucide-react/dist/esm/icons/target';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
-import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
-import Bug from 'lucide-react/dist/esm/icons/bug';
+import { Target, CheckCircle, ArrowRight, AlertTriangle, Bug } from 'lucide-react';
 import { formatCategoryName } from '../utils/formatters';
 // import { FieldMappingDebugOverlay } from './FieldMappingDebugOverlay'; // Disabled for production
 
@@ -41,9 +37,11 @@ export function Step2RecommendationEngine({
   // Use client-side authentic 41-product database for filtering
   // FIX: Map businessLocation to headquarters for backward compatibility
   const normalizeLocation = (location: string): string => {
-    if (location === 'united-states' || location === 'United States') return 'US';
-    if (location === 'canada' || location === 'Canada') return 'CA';
-    return location || 'US';
+    if (!location) return 'CA'; // Default to Canada
+    const lower = location.toLowerCase();
+    if (lower === 'united-states' || lower === 'united states' || lower === 'us') return 'US';
+    if (lower === 'canada' || lower === 'ca') return 'CA';
+    return location;
   };
   
   const headquarters = normalizeLocation(formData.headquarters || formData.businessLocation);
@@ -52,10 +50,10 @@ export function Step2RecommendationEngine({
   const { data: allLenderProducts, isLoading: rawLoading, error: rawError } = usePublicLenders();
   const { data: productCategories, isLoading, error } = useProductCategories({
     headquarters: headquarters,
-    lookingFor: formData.lookingFor,
-    fundingAmount: formData.fundingAmount,
-    accountsReceivableBalance: formData.accountsReceivableBalance || 0,
-    fundsPurpose: formData.fundsPurpose
+    lookingFor: formData.lookingFor || 'capital',
+    fundingAmount: Number(formData.fundingAmount) || 50000,
+    accountsReceivableBalance: Number(formData.accountsReceivableBalance) || 0,
+    fundsPurpose: formData.fundsPurpose || 'working capital'
   });
   
   // ✅ DEBUG: Log fetched lender products and categories
@@ -70,7 +68,7 @@ export function Step2RecommendationEngine({
     fundsPurpose: formData.fundsPurpose
   });
   
-  if (productCategories?.length > 0) {
+  if (productCategories && productCategories.length > 0) {
     console.log("Available categories:", productCategories.map(c => c.category));
     console.log("First category details:", productCategories[0]);
   }

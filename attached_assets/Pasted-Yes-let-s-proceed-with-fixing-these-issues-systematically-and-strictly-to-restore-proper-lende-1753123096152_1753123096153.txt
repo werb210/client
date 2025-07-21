@@ -1,0 +1,128 @@
+Yes — let’s proceed with fixing these issues **systematically and strictly** to restore proper lender category recommendations in the **client application – Step 2**.
+
+---
+
+## 🟦 CLIENT APPLICATION — TASK 2.1: Fix Step 2 Lender Recommendation Engine
+
+### 🎯 Objective
+
+Restore accurate, rules-based lender product recommendations based on user input from Step 1.
+
+---
+
+### ✅ Replit Must Execute These Fixes in Order
+
+---
+
+### 🔧 Step 1: Fix TypeScript Errors in `Step2RecommendationEngine.tsx`
+
+* ✅ Locate and fix all 8 LSP/TypeScript errors
+* Most common issues:
+
+  * Type mismatch between form data and filtering functions
+  * `undefined` checks on `formData`
+  * Incorrect usage of `.includes()` or `.map()` on optional arrays
+* Ensure types are aligned with the output of Step 1's `useFormContext` or data prop
+
+---
+
+### 🔧 Step 2: Clean Up Double Filtering Logic
+
+* ✅ Identify the two sections applying `filter()` to lender products
+* Consolidate into a **single filtering function** to prevent overwriting or premature exclusion
+* Avoid logic like this:
+
+```ts
+const filtered1 = allProducts.filter(...);
+const filtered2 = filtered1.filter(...); // This compounds incorrectly
+```
+
+Instead:
+
+```ts
+const recommendedProducts = allProducts.filter((product) => {
+  return meetsCountry(product) && supportsBusinessType(product) && ...;
+});
+```
+
+---
+
+### 🔧 Step 3: Fix Geography/Country Logic
+
+* ✅ Ensure Canadian and US users are not excluded
+* Normalize user country input from Step 1:
+
+  * `'CA'`, `'Canada'`, `'canada'`, `'CAN'` → standardized to `'CA'`
+* Normalize lender product targeting:
+
+  ```ts
+  product.country === 'CA' || product.country === 'Both'
+  ```
+
+---
+
+### 🔧 Step 4: Re-Evaluate Business Rule: Equipment Financing
+
+* ✅ Ensure Equipment Financing shows up **when user selects mixed use of funds**
+
+* Allow logic like:
+
+  ```ts
+  if (formData.useOfFunds.includes("Equipment") || formData.businessType === 'Transport') {
+    includeEquipmentFinancing = true;
+  }
+  ```
+
+* Remove overly strict exclusions like:
+
+  ```ts
+  if (!formData.useOfFunds.includes("Equipment")) return false;
+  ```
+
+---
+
+### 🔧 Step 5: Standardize Field Mapping from Step 1
+
+* ✅ Ensure form fields from Step 1 are used consistently:
+
+  * `formData.country`
+  * `formData.useOfFunds`
+  * `formData.businessType`
+  * `formData.industry`
+  * `formData.fundingAmount`
+* Add safe defaults:
+
+  ```ts
+  const country = formData.country?.toUpperCase() ?? 'CA';
+  ```
+
+---
+
+### 🔧 Step 6: Race Condition Fix
+
+* ✅ Confirm that lender product data is fully loaded before applying filters
+
+Use React Query loading state guard:
+
+```ts
+if (isLoading || !products) return <Loading />;
+```
+
+Then only call `filter()` after data is present.
+
+---
+
+### ✅ Replit Must Report Back With:
+
+* ✅ Number of TypeScript errors fixed
+* ✅ Before/after of filtering logic
+* ✅ Screenshot or console of working product recommendations for:
+
+  * 🇨🇦 Canadian working capital
+  * 🏗️ Equipment financing
+  * 📄 Invoice factoring
+* ✅ Confirmation that filtering runs **once** and all categories appear
+
+---
+
+Please proceed with **CLIENT TASK 2.1** and report back after completion.
