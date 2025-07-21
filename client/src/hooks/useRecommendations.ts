@@ -47,6 +47,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   console.log(`🔍 [STEP2] Filter criteria:`, { 
     headquarters, 
     fundingAmount, 
+    revenueLastYear,
     lookingFor: formStep1Data.lookingFor,
     accountsReceivableBalance: formStep1Data.accountsReceivableBalance 
   });
@@ -73,10 +74,16 @@ export function useRecommendations(formStep1Data: Step1FormData) {
 
       // Revenue requirement check - NEW: Add revenue filtering
       const revenueMin = getRevenueMin(p);
-      const revenueMatch = (revenueLastYear || 0) >= revenueMin;
+      const applicantRevenue = revenueLastYear || 0;
+      const revenueMatch = applicantRevenue >= revenueMin;
       if (!revenueMatch) {
-        failedProducts.push({product: p, reason: `Revenue too low: requires $${revenueMin?.toLocaleString()} vs $${(revenueLastYear || 0).toLocaleString()}`});
+        failedProducts.push({product: p, reason: `Revenue too low: requires $${revenueMin?.toLocaleString()} vs $${applicantRevenue.toLocaleString()}`});
         return false;
+      }
+      
+      // Enhanced debug logging for revenue filtering
+      if (revenueMin > 0) {
+        console.log(`🔍 [REVENUE] ${p.name}: Required $${revenueMin.toLocaleString()}, User has $${applicantRevenue.toLocaleString()} → ${revenueMatch ? '✅' : '❌'}`);
       }
       
       // Product type check based on what user is looking for
