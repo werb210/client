@@ -223,7 +223,7 @@ export default function Step5DocumentUpload() {
         setIntersectionResults({
           eligibleLenders: [],
           requiredDocuments: [],
-          message: `Error fetching document requirements: ${error.message}`,
+          message: `Error fetching document requirements: ${error instanceof Error ? error.message : 'Unknown error'}`,
           hasMatches: false,
           isLoading: false
         });
@@ -238,60 +238,6 @@ export default function Step5DocumentUpload() {
     };
 
     calculateDocumentRequirements();
-
-  // FIX #4: Enhanced document validation function
-  const validateDocumentUploads = (requirements: string[], files: UploadedFile[]) => {
-    if (!requirements || requirements.length === 0) {
-      return { allComplete: true, validationResults: [] };
-    }
-    
-    console.log(`🧪 [VALIDATION] Validating ${files.length} files against ${requirements.length} requirements`);
-    
-    // Group uploaded files by normalized document type
-    const filesByType = files.reduce((acc, file) => {
-      if (file.status === 'completed' && file.documentType) {
-        const normalizedType = normalizeDocumentName(file.documentType);
-        if (!acc[normalizedType]) acc[normalizedType] = [];
-        acc[normalizedType].push(file);
-      }
-      return acc;
-    }, {} as Record<string, UploadedFile[]>);
-    
-    console.log(`🧪 [VALIDATION] Files grouped by type:`, Object.keys(filesByType).map(type => 
-      `${type}: ${filesByType[type].length} files`
-    ));
-    
-    // Validate each requirement
-    const validationResults = requirements.map(requirement => {
-      const normalizedRequirement = normalizeDocumentName(requirement);
-      const uploadedFiles = filesByType[normalizedRequirement] || [];
-      
-      // Determine required quantity using same logic as deduplication
-      const requiredCount = requirement.toLowerCase().includes('bank') && requirement.toLowerCase().includes('statement') ? 6 :
-                           requirement.toLowerCase().includes('accountant') && requirement.toLowerCase().includes('financial') && requirement.toLowerCase().includes('statement') ? 3 : 1;
-      
-      const isComplete = uploadedFiles.length >= requiredCount;
-      
-      console.log(`📊 [VALIDATION] "${requirement}" (${normalizedRequirement}): ${uploadedFiles.length}/${requiredCount} - ${isComplete ? 'COMPLETE' : 'INCOMPLETE'}`);
-      
-      return {
-        documentType: requirement,
-        normalizedType: normalizedRequirement,
-        required: requiredCount,
-        uploaded: uploadedFiles.length,
-        complete: isComplete
-      };
-    });
-    
-    const allComplete = validationResults.every(result => result.complete);
-    const completedCount = validationResults.filter(r => r.complete).length;
-    
-    console.log(`🎯 [VALIDATION] Overall: ${allComplete ? 'ALL COMPLETE' : 'INCOMPLETE'} (${completedCount}/${validationResults.length})`);
-    
-    return { allComplete, validationResults };
-  };
-
-  calculateDocumentRequirements();
   }, [state.step2?.selectedCategory, state.step1?.businessLocation, state.step1?.fundingAmount, toast]);
 
   // FIX #6: Clear Step 5 state when navigating back
@@ -390,6 +336,58 @@ export default function Step5DocumentUpload() {
       debouncedSave(uploadedFiles);
     }
   }, [uploadedFiles, debouncedSave]);
+
+  // FIX #4: Enhanced document validation function
+  const validateDocumentUploads = (requirements: string[], files: UploadedFile[]) => {
+    if (!requirements || requirements.length === 0) {
+      return { allComplete: true, validationResults: [] };
+    }
+    
+    console.log(`🧪 [VALIDATION] Validating ${files.length} files against ${requirements.length} requirements`);
+    
+    // Group uploaded files by normalized document type
+    const filesByType = files.reduce((acc, file) => {
+      if (file.status === 'completed' && file.documentType) {
+        const normalizedType = normalizeDocumentName(file.documentType);
+        if (!acc[normalizedType]) acc[normalizedType] = [];
+        acc[normalizedType].push(file);
+      }
+      return acc;
+    }, {} as Record<string, UploadedFile[]>);
+    
+    console.log(`🧪 [VALIDATION] Files grouped by type:`, Object.keys(filesByType).map(type => 
+      `${type}: ${filesByType[type].length} files`
+    ));
+    
+    // Validate each requirement
+    const validationResults = requirements.map(requirement => {
+      const normalizedRequirement = normalizeDocumentName(requirement);
+      const uploadedFiles = filesByType[normalizedRequirement] || [];
+      
+      // Determine required quantity using same logic as deduplication
+      const requiredCount = requirement.toLowerCase().includes('bank') && requirement.toLowerCase().includes('statement') ? 6 :
+                           requirement.toLowerCase().includes('accountant') && requirement.toLowerCase().includes('financial') && requirement.toLowerCase().includes('statement') ? 3 : 1;
+      
+      const isComplete = uploadedFiles.length >= requiredCount;
+      
+      console.log(`📊 [VALIDATION] "${requirement}" (${normalizedRequirement}): ${uploadedFiles.length}/${requiredCount} - ${isComplete ? 'COMPLETE' : 'INCOMPLETE'}`);
+      
+      return {
+        documentType: requirement,
+        normalizedType: normalizedRequirement,
+        required: requiredCount,
+        uploaded: uploadedFiles.length,
+        complete: isComplete
+      };
+    });
+    
+    const allComplete = validationResults.every(result => result.complete);
+    const completedCount = validationResults.filter(r => r.complete).length;
+    
+    console.log(`🎯 [VALIDATION] Overall: ${allComplete ? 'ALL COMPLETE' : 'INCOMPLETE'} (${completedCount}/${validationResults.length})`);
+    
+    return { allComplete, validationResults };
+  };
 
   // ✅ ENHANCED VALIDATION: Use new validation function
   const validateDocumentCompleteness = () => {
