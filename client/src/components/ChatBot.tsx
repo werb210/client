@@ -299,7 +299,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   // Socket.IO integration for real-time messaging
   useEffect(() => {
     if (isOpen && typeof window !== 'undefined' && (window as any).io) {
-      console.log('🔌 Initializing Socket.IO connection for real-time chat');
+      console.log('Initializing Socket.IO connection for real-time chat');
       
       // Use global socket if available, or create new one
       const socketInstance = (window as any).globalSocket || (window as any).io();
@@ -307,31 +307,36 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
       // Join the session with proper error handling
       try {
-        socketInstance.emit('join-session', sessionId);
-        console.log('🔗 Emitted join-session for sessionId:', sessionId);
+        if (socketInstance && !socketInstance.connected) {
+          socketInstance.emit('join-session', sessionId);
+          console.log('Emitted join-session for sessionId:', sessionId);
+        }
       } catch (error) {
-        console.error('❌ Failed to join session:', error);
+        console.error('Failed to join session:', error);
       }
 
       // Connection status with enhanced logging
       socketInstance.on('connect', () => {
-        console.log('✅ Socket.IO connected, client ID:', socketInstance.id);
+        console.log('Socket.IO connected, client ID:', socketInstance.id);
         setIsConnected(true);
+        // Re-join session on reconnect
+        socketInstance.emit('join-session', sessionId);
+        console.log('Re-joined session after reconnect:', sessionId);
       });
 
       socketInstance.on('disconnect', (reason: any) => {
-        console.log('❌ Socket.IO disconnected, reason:', reason);
+        console.log('Socket.IO disconnected, reason:', reason);
         setIsConnected(false);
       });
 
       socketInstance.on('connect_error', (error: any) => {
-        console.error('❌ Socket.IO connection error:', error);
+        console.error('Socket.IO connection error:', error);
         setIsConnected(false);
       });
 
       // Listen for real-time messages
       socketInstance.on('new-message', (msg: any) => {
-        console.log('📨 Received real-time message:', msg);
+        console.log('Received real-time message:', msg);
         const message: Message = {
           id: Date.now().toString(),
           role: msg.role || 'assistant',
@@ -343,13 +348,15 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
       // Staff handoff notifications
       socketInstance.on('staff-assigned', (data: any) => {
-        console.log('👩‍💼 Staff assigned:', data);
+        console.log('Staff assigned:', data);
         addBotMessage(`Great! A human specialist (${data.staffName}) has joined the chat to assist you.`);
       });
 
       return () => {
-        console.log('🔌 Cleaning up Socket.IO connection');
-        socketInstance.disconnect();
+        console.log('Cleaning up Socket.IO connection');
+        if (socketInstance && socketInstance.connected) {
+          socketInstance.disconnect();
+        }
         setSocket(null);
         setIsConnected(false);
       };
@@ -548,10 +555,20 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
 
     try {
-      // If Socket.IO is connected, the message was already sent via Socket.IO
-      // We'll wait for the response via the 'new-message' event
+      // If Socket.IO is connected, send via Socket.IO and wait for real-time response
       if (socket && isConnected) {
-        console.log('✅ Message sent via Socket.IO, waiting for real-time response...');
+        console.log('Sending message via Socket.IO...');
+        socket.emit('user-message', { 
+          sessionId, 
+          message: processedMessage,
+          context: {
+            currentStep,
+            applicationData,
+            sentiment: analysis.sentiment,
+            intent: analysis.intent
+          }
+        });
+        console.log('Message sent via Socket.IO, waiting for real-time response...');
         setIsLoading(false);
         return;
       }
@@ -686,25 +703,18 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
   // Request human chat function
   const requestHumanChat = async () => {
-    console.log('🤝 Requesting human chat for session:', sessionId);
+    console.log('Requesting human chat for session:', sessionId);
     
     addBotMessage('Connecting you to a human agent. Please hold while we find someone to assist you...');
     
     try {
-      // Socket.IO request
-      if (socket && isConnected) {
-        console.log('📞 Requesting human assistance via Socket.IO');
-        socket.emit('request-human', { 
-          sessionId,
-          userInfo: {
-            currentStep,
-            applicationData,
-            conversationHistory: messages.slice(-10)
-          }
-        });
+      // Use global requestHuman function if available (from chat-client.js)
+      if ((window as any).requestHuman) {
+        (window as any).requestHuman();
+        console.log('Client requested human chat via global function');
       }
-
-      // HTTP fallback request
+      
+      // Also send HTTP request as backup
       const response = await fetch('/api/chat/request-staff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -716,7 +726,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       });
 
       const data = await response.json();
-      console.log('📤 HTTP human request response:', data);
+      console.log('HTTP human request response:', data);
       
       if (response.ok) {
         addBotMessage('Request sent successfully. A human agent will join the chat shortly.');
@@ -725,7 +735,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       }
       
     } catch (error) {
-      console.error('❌ Failed to request human assistance:', error);
+      console.error('Failed to request human assistance:', error);
       addBotMessage('Sorry, we had trouble connecting you to a human agent. Please try the Report Issue button or call us directly at 1-888-811-1887.');
     }
   };
