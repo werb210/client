@@ -112,7 +112,7 @@ export function filterProducts(products: LenderProduct[], form: RecommendationFo
  * Calculate recommendation score based on Step 1 form data
  */
 export function calculateRecommendationScore(
-  product: StaffLenderProduct, 
+  product: LenderProduct, 
   form: RecommendationFormData,
   monthlyRevenue: number
 ): number {

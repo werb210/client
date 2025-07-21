@@ -41,16 +41,32 @@ export function useRecommendations(formStep1Data: Step1FormData) {
 
   // Production mode: Console logging disabled
 
+  // Debug logging: Track filtering logic
+  console.log(`🔍 [STEP2] Starting with ${products.length} products for filtering`);
+  console.log(`🔍 [STEP2] Filter criteria:`, { 
+    headquarters, 
+    fundingAmount, 
+    lookingFor: formStep1Data.lookingFor,
+    accountsReceivableBalance: formStep1Data.accountsReceivableBalance 
+  });
+
+  const failedProducts: Array<{product: any, reason: string}> = [];
+  
   const matches = products
-    .filter((p: LenderProduct) => {
+    .filter((p: any) => {
       // Country check - exact match or multi-country (US/CA)
       const selectedCountryCode = headquarters === "United States" ? "US" : "CA";
-      if (!(p.country === selectedCountryCode || p.country === 'US/CA')) {
+      const countryMatch = p.country === selectedCountryCode || p.country === 'US/CA';
+      if (!countryMatch) {
+        failedProducts.push({product: p, reason: `Country mismatch: ${p.country} vs ${selectedCountryCode}`});
         return false;
       }
       
-      // Amount range check
-      if (fundingAmount < p.minAmount || fundingAmount > p.maxAmount) {
+      // Amount range check - EXACT LOGIC YOU REQUESTED
+      const amountMatch = p.minAmount <= fundingAmount && 
+                         (p.maxAmount === null || p.maxAmount >= fundingAmount);
+      if (!amountMatch) {
+        failedProducts.push({product: p, reason: `Amount out of range: $${p.minAmount?.toLocaleString()}-$${p.maxAmount?.toLocaleString()} vs $${fundingAmount.toLocaleString()}`});
         return false;
       }
       
@@ -58,11 +74,13 @@ export function useRecommendations(formStep1Data: Step1FormData) {
       if (formStep1Data.lookingFor === "capital") {
         const isCapitalProduct = isBusinessCapitalProduct(p.category);
         if (!isCapitalProduct) {
+          failedProducts.push({product: p, reason: `Not capital product: category=${p.category}`});
           return false;
         }
       } else if (formStep1Data.lookingFor === "equipment") {
         const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
         if (!isEquipmentProduct) {
+          failedProducts.push({product: p, reason: `Not equipment product: category=${p.category}`});
           return false;
         }
       } else if (formStep1Data.lookingFor === "both") {
@@ -70,6 +88,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
         const isCapitalProduct = isBusinessCapitalProduct(p.category);
         const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
         if (!isCapitalProduct && !isEquipmentProduct) {
+          failedProducts.push({product: p, reason: `Neither capital nor equipment: category=${p.category}`});
           return false;
         }
       }
@@ -78,20 +97,21 @@ export function useRecommendations(formStep1Data: Step1FormData) {
       // Fix: Use accountsReceivableBalance (numeric) instead of accountsReceivable (string)
       if (formStep1Data.accountsReceivableBalance === 0 && 
           (p.category.toLowerCase().includes('invoice') || p.category.toLowerCase().includes('factoring'))) {
+        failedProducts.push({product: p, reason: `Invoice factoring excluded: no A/R balance`});
         return false;
       }
       
       return true;
     })
-    .map(p => ({
+    .map((p: any) => ({
       product: p,
       score: calculateScore(p, formStep1Data, headquarters, fundingAmount, revenueLastYear),
     }))
-    .sort((a, b) => b.score - a.score);
+    .sort((a: any, b: any) => b.score - a.score);
 
   /** 3 — aggregate to category rows */
   const categories = matches.reduce<Record<string, { score: number; count: number; products: typeof matches }>>(
-    (acc, m) => {
+    (acc: any, m: any) => {
       const key = m.product.category;
       if (!acc[key]) {
         acc[key] = { score: m.score, count: 0, products: [] };
@@ -104,7 +124,19 @@ export function useRecommendations(formStep1Data: Step1FormData) {
     {}
   );
 
-  // Production mode: Console logging disabled
+  // Debug output as requested
+  console.log(`🔍 [STEP2] FINAL RESULTS:`, {
+    totalProducts: products.length,
+    matchedProducts: matches.length,
+    categories: Object.keys(categories).length,
+    categoriesFound: Object.keys(categories)
+  });
+  
+  console.log("🔍 [STEP2] Working Capital products that passed:", 
+    matches.filter((m: any) => m.product.category?.toLowerCase().includes('working')).length
+  );
+  
+  console.log("🔍 [STEP2] Filtered out:", failedProducts.map(f => `${f.product.name}: ${f.reason}`));
 
   return { products: matches, categories, isLoading, error };
 }
