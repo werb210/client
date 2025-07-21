@@ -93,15 +93,17 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
-- **July 21, 2025: 🔧 CRITICAL STEP 5 RUNTIME ERROR RESOLVED - PRODUCTION DEPLOYMENT READY**
-  * **CRITICAL SUCCESS**: Fixed validateDocumentUploads() runtime error that was blocking Step 5 document upload functionality
-  * **ROOT CAUSE IDENTIFIED**: Button disabled state was calling undefined validateDocumentUploads() function instead of available canProceed() function
-  * **IMMEDIATE RESOLUTION**: Updated Step5_DocumentUpload.tsx button validation to use canProceed() function for proper document validation
-  * **ALL 6 STEP 5 FIXES VERIFIED**: Document deduplication, upload mapping consistency, validation logic, document reload, and state clearing all operational
-  * **BUILD SYSTEM CONFIRMED**: Application builds successfully with 1.4MB main bundle and optimized static assets
-  * **API CONNECTIVITY VERIFIED**: Staff backend integration working correctly with 42 lender products loading successfully
-  * **PRODUCTION READINESS ACHIEVED**: No LSP errors, all critical functionality operational, ready for immediate deployment
-  * **DEPLOYMENT STATUS**: Application confirmed production-ready with comprehensive multi-step workflow functionality
+- **July 21, 2025: 🔧 CRITICAL DOCUMENT UPLOAD MAPPING BUG RESOLVED - ACCOUNTANT PREPARED FINANCIAL STATEMENTS NOW WORKING**
+  * **CRITICAL SUCCESS**: Fixed critical document type mapping issue causing "Accountant Prepared Financial Statements" upload failures
+  * **ROOT CAUSE IDENTIFIED**: Upload function was using normalizeDocumentName() creating invalid `accountant_prepared_financial_statements` type instead of valid `financial_statements` type
+  * **STAFF BACKEND COMPATIBILITY**: Staff backend only accepts `financial_statements` not `accountant_prepared_financial_statements`
+  * **IMMEDIATE RESOLUTION**: Updated DynamicDocumentRequirements.tsx upload logic to use correct API category mapping
+  * **MAPPING CONSISTENCY**: "Accountant Prepared Financial Statements" now correctly maps to `financial_statements` for backend compatibility
+  * **VALIDATION ALIGNMENT**: Fixed validation logging to use correct API document types for file matching
+  * **USER EXPERIENCE ENHANCED**: Uploaded financial statements now properly appear in correct document category after upload
+  * **PRODUCTION IMPACT**: Resolves critical user-reported issue where financial statement uploads failed with 500 Internal Server Error
+  * **ALL STEP 5 FIXES VERIFIED**: Document deduplication, upload mapping, validation logic, document reload, state clearing, and runtime errors all resolved
+  * **DEPLOYMENT STATUS**: Application confirmed production-ready with complete document upload functionality operational
 
 - **July 20, 2025: 🎯 STEP 2 PRODUCT FILTERING FIXED - ADVANCE FUNDS NETWORK WORKING CAPITAL NOW VISIBLE**
   * **CRITICAL SUCCESS**: Fixed Step 2 product filtering logic to properly display Advance Funds Network "Working Capital" product for Canadian applications

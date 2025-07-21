@@ -763,7 +763,7 @@ export function DynamicDocumentRequirements({
           // Use API document type for matching uploaded files
           const fileDocType = f.documentType?.toLowerCase() || '';
           const isMatch = fileDocType === apiDocumentType;
-          console.log(`🔍 [VALIDATION] Checking file "${f.name}" (type: "${fileDocType}") against requirement "${doc.label}" (api type: "${apiDocumentType}") → match: ${isMatch}`);
+          console.log(`🔍 [CARD] File "${f.name}" (type: "${fileDocType}") vs requirement "${doc.label}" (api: "${apiDocumentType}") → match: ${isMatch}`);
           return isMatch;
         });
         
