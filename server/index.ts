@@ -778,7 +778,7 @@ app.use((req, res, next) => {
         status: 'error',
         error: 'SignNow service unavailable',
         message: 'Document signing service is temporarily unavailable. Please try again later.',
-        applicationId: req.params.id
+        applicationId: req.params.applicationId
       });
     }
   });
@@ -1093,7 +1093,7 @@ app.use((req, res, next) => {
           console.log('Staff backend contact logging unavailable, continuing locally');
         }
       } catch (error) {
-        console.log('Staff backend contact logging failed, continuing locally:', error.message);
+        console.log('Staff backend contact logging failed, continuing locally:', (error as Error).message);
       }
       
       res.json({
@@ -1988,7 +1988,7 @@ app.use((req, res, next) => {
       io.emit('user-request-human', data);
       console.log('Server broadcast ask-human event');
       
-      log('Human assistance requested for session:', sessionId, 'by user:', userName);
+      log(`Human assistance requested for session: ${sessionId} by user: ${userName}`);
       
       // Forward request to staff application
       try {
