@@ -381,10 +381,10 @@ app.use((req, res, next) => {
 
   // REMOVED: Duplicate finalization endpoint - using the one at line 489 instead
 
-  // ✅ S3 MIGRATION: S3 pre-signed URL request endpoint
-  app.post('/api/public/s3/upload-url', async (req, res) => {
+  // ✅ S3 MIGRATION: S3 pre-signed URL request endpoint  
+  app.post('/api/s3-documents-new/upload', async (req, res) => {
     try {
-      const { applicationId, documentType, fileName, fileSize, mimeType } = req.body;
+      const { applicationId, documentType, fileName, fileSize, mimeType, sha256Hash } = req.body;
       
       console.log('📤 [S3] Pre-signed URL request:', { applicationId, documentType, fileName });
       
@@ -410,7 +410,8 @@ app.use((req, res, next) => {
           documentType,
           fileName,
           fileSize,
-          mimeType
+          mimeType,
+          sha256Hash
         })
       });
 
@@ -437,7 +438,7 @@ app.use((req, res, next) => {
   });
 
   // ✅ S3 MIGRATION: S3 upload confirmation endpoint
-  app.post('/api/public/s3/upload-confirm', async (req, res) => {
+  app.post('/api/s3-documents-new/upload-confirm', async (req, res) => {
     try {
       const { documentId, applicationId, documentType, fileName, fileSize } = req.body;
       
@@ -492,7 +493,7 @@ app.use((req, res, next) => {
   });
 
   // ✅ S3 MIGRATION: Document view/download URL endpoint
-  app.post('/api/public/s3/document-url', async (req, res) => {
+  app.post('/api/s3-documents-new/document-url', async (req, res) => {
     try {
       const { applicationId, documentId, action } = req.body;
       
@@ -788,7 +789,8 @@ app.use((req, res, next) => {
   // PERMANENT STABILIZATION: No req.aborted, req.on('close'), or req.on('aborted') patterns allowed
   
   // NEW USER SPECIFICATION FORMAT - POST /api/public/upload/:applicationId with Bearer auth
-  app.post('/api/public/upload/:applicationId', upload.single('document'), async (req, res) => {
+  // ❌ REMOVED: Legacy Replit upload fallback - S3 migration complete
+  // app.post('/api/public/upload/:applicationId', upload.single('document'), async (req, res) => {
     const { applicationId } = req.params;
     const { documentType } = req.body;
     const file = req.file;

@@ -9,6 +9,7 @@ export interface S3UploadRequest {
   fileName: string;
   fileSize: number;
   mimeType: string;
+  sha256Hash?: string;
 }
 
 export interface S3UploadResponse {
@@ -26,13 +27,30 @@ export interface S3UploadProgress {
 }
 
 /**
+ * Calculate SHA256 hash of file for integrity validation
+ */
+export async function calculateFileSHA256(file: File): Promise<string> {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    console.log('🔒 [S3] SHA256 calculated:', hashHex.substring(0, 16) + '...');
+    return hashHex;
+  } catch (error) {
+    console.error('❌ [S3] SHA256 calculation failed:', error);
+    return '';
+  }
+}
+
+/**
  * Request pre-signed URL from staff backend
  */
 export async function requestS3PresignedUrl(request: S3UploadRequest): Promise<S3UploadResponse> {
   try {
     console.log('📤 [S3] Requesting pre-signed URL:', request);
     
-    const response = await fetch('/api/public/s3/upload-url', {
+    const response = await fetch('/api/s3-documents-new/upload', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -148,13 +166,17 @@ export async function uploadDocumentToS3(
   onProgress?: (progress: S3UploadProgress) => void
 ): Promise<{ success: boolean; documentId?: string; error?: string }> {
   try {
-    // Step 1: Request pre-signed URL
+    // Step 1: Calculate SHA256 hash for integrity validation
+    const sha256Hash = await calculateFileSHA256(file);
+    
+    // Step 2: Request pre-signed URL
     const urlRequest: S3UploadRequest = {
       applicationId,
       documentType,
       fileName: file.name,
       fileSize: file.size,
-      mimeType: file.type
+      mimeType: file.type,
+      sha256Hash
     };
 
     const urlResponse = await requestS3PresignedUrl(urlRequest);
@@ -166,7 +188,7 @@ export async function uploadDocumentToS3(
       };
     }
 
-    // Step 2: Upload directly to S3
+    // Step 3: Upload directly to S3
     const uploadResult = await uploadFileToS3(file, urlResponse.presignedUrl, onProgress);
     
     if (!uploadResult.success) {
@@ -176,9 +198,9 @@ export async function uploadDocumentToS3(
       };
     }
 
-    // Step 3: Confirm upload with staff backend
+    // Step 4: Confirm upload with staff backend
     try {
-      const confirmResponse = await fetch('/api/public/s3/upload-confirm', {
+      const confirmResponse = await fetch('/api/s3-documents-new/upload-confirm', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -227,7 +249,7 @@ export async function getS3DocumentUrl(
   try {
     console.log(`📥 [S3] Requesting ${action} URL for document:`, documentId);
 
-    const response = await fetch(`/api/public/s3/document-url`, {
+    const response = await fetch('/api/s3-documents-new/document-url', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -146,23 +146,12 @@ export function DocumentUploadWidget({
         } : f)
       );
 
-      // Show S3-specific fallback message for failures
-      if (errorMessage.includes('Failed to fetch') || 
-          errorMessage.includes('NetworkError') ||
-          errorMessage.includes('S3') ||
-          errorMessage.includes('temporarily unavailable')) {
-        toast({
-          title: "Upload failed",
-          description: "Upload temporarily unavailable. Please try again later.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Upload failed", 
-          description: errorMessage,
-          variant: "destructive"
-        });
-      }
+      // S3-specific user-friendly fallback UI
+      toast({
+        title: "Upload unavailable",
+        description: "Upload unavailable. Please try again shortly.",
+        variant: "destructive"
+      });
 
       // Call error callback
       onUploadError?.(file, errorMessage);
