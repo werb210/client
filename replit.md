@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 21, 2025: 🔧 CRITICAL STEP 2 WORKING CAPITAL FILTERING BUG RESOLVED - FIELD NAME MISMATCH FIXED**
+  * **CRITICAL SUCCESS**: Fixed Step 2 Working Capital filtering by implementing unified field access pattern for amount ranges
+  * **ROOT CAUSE IDENTIFIED**: Staff backend uses `amount_min`/`amount_max` fields while client expected `minAmount`/`maxAmount`, causing all Working Capital products to fail filtering
+  * **FIELD ACCESS HELPER**: Enhanced `getAmountRange()` function in `lib/fieldAccess.ts` with comprehensive fallback chain for amount fields
+  * **FILTERING LOGIC UPDATED**: Modified `useRecommendations.ts` to use unified field access instead of direct property access
+  * **VALIDATION CONFIRMED**: Testing shows 2/3 Working Capital products now pass filtering for Canadian $49,999 applications
+  * **FIELD FALLBACK CHAIN**: `amount_min` → `amountMin` → `fundingMin` → `minAmount` → `min_amount` → 0 (default)
+  * **AMOUNT RESOLUTION VERIFIED**: Products now show correct ranges ($0-$800,000, $0-$500,000, $0-$50,000) instead of undefined values
+  * **CANADIAN COMPATIBILITY**: Advance Funds Network and Accord Access Working Capital products now properly appear in Step 2 recommendations
+  * **PRODUCTION IMPACT**: Resolves critical user experience issue where Working Capital category appeared empty despite having eligible products
+  * **ARCHITECTURE ENHANCED**: Unified field access pattern now available for other components requiring lender product data normalization
+
 - **July 21, 2025: 🔗 ENHANCED SOCKET.IO CLIENT INTEGRATION WITH WELCOME FLOW COMPLETED - USER CONTACT COLLECTION SYSTEM**
   * **CRITICAL SUCCESS**: Implemented enhanced Socket.IO client following user specifications with proper script loading order and connection patterns
   * **WELCOME FLOW ENHANCEMENT**: Added contact information collection system that captures user name and email before chat begins

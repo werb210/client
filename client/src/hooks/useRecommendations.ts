@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { LenderProduct } from '@shared/lenderProductSchema';
+import { getAmountRange } from "@/lib/fieldAccess";
 
 export interface Step1FormData {
   businessLocation?: "united-states" | "canada";
@@ -62,11 +63,11 @@ export function useRecommendations(formStep1Data: Step1FormData) {
         return false;
       }
       
-      // Amount range check - EXACT LOGIC YOU REQUESTED
-      const amountMatch = p.minAmount <= fundingAmount && 
-                         (p.maxAmount === null || p.maxAmount >= fundingAmount);
+      // Amount range check - FIXED: Use unified field access helper
+      const { min, max } = getAmountRange(p);
+      const amountMatch = fundingAmount >= min && fundingAmount <= max;
       if (!amountMatch) {
-        failedProducts.push({product: p, reason: `Amount out of range: $${p.minAmount?.toLocaleString()}-$${p.maxAmount?.toLocaleString()} vs $${fundingAmount.toLocaleString()}`});
+        failedProducts.push({product: p, reason: `Amount out of range: $${min?.toLocaleString()}-$${max === Infinity ? 'unlimited' : max?.toLocaleString()} vs $${fundingAmount.toLocaleString()}`});
         return false;
       }
       
