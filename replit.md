@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 21, 2025: 🔍 COMPREHENSIVE PRODUCT COMPATIBILITY VALIDATION SYSTEM IMPLEMENTED - SYSTEMATIC BUSINESS LOGIC ANALYSIS**
+  * **CRITICAL SUCCESS**: Created comprehensive product compatibility validation script in `lib/devUtils.ts` for systematic business logic testing
+  * **VALIDATION SCOPE**: All lender products validated against 12 major business logic areas including geography normalization, category matching, amount fields, document requirements
+  * **BUSINESS LOGIC EXTRACTION**: Complete read-only logic extraction documented in BUSINESS_LOGIC_EXTRACTION_REPORT.md covering Step 2 recommendation engine and Step 5 document system
+  * **COMPATIBILITY CHECKS**: Country compatibility with normalizeLocation(), category validity, amount field presence, required document fields, document type recognition via getApiCategory()
+  * **SYSTEMATIC SCORING**: 100-point compatibility scoring system (20 points each for country, category, amounts, documents, recognition)
+  * **STEP INTEGRATION VALIDATION**: Determines which products can appear in Step 2 recommendations and supply documents to Step 5 upload system
+  * **HARDCODED WORKAROUNDS IDENTIFIED**: Multiple field name support for inconsistent staff backend APIs, geographic mapping compatibility, equipment financing relaxed rules
+  * **TEST PAGE CREATED**: ProductValidationTest component accessible at `/product-validation-test` for comprehensive product analysis
+  * **BROWSER CONSOLE HELPERS**: Added `window.validateProducts()` and `window.quickValidation()` functions for developer debugging
+  * **PRODUCTION INSIGHTS**: Validation reveals complex business rule conflicts, staff backend dependencies, and document mapping inconsistencies requiring systematic review
+
 - **July 21, 2025: 🔧 CRITICAL DOCUMENT UPLOAD MAPPING BUG RESOLVED - ACCOUNTANT PREPARED FINANCIAL STATEMENTS NOW WORKING**
   * **CRITICAL SUCCESS**: Fixed critical document type mapping issue causing "Accountant Prepared Financial Statements" upload failures
   * **ROOT CAUSE IDENTIFIED**: Upload function was using normalizeDocumentName() creating invalid `accountant_prepared_financial_statements` type instead of valid `financial_statements` type

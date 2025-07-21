@@ -97,6 +97,7 @@ import E2ETestRunner from "@/pages/E2ETestRunner";
 import FileTypeValidationTest from "@/test/FileTypeValidationTest";
 import Step5CategoryTest from "@/test/Step5CategoryTest";
 import DocumentValidationTest from "@/test/DocumentValidationTest";
+import ProductValidationTest from "@/routes/ProductValidationTest";
 
 
 /**
@@ -211,6 +212,7 @@ export function MainLayout() {
       <Route path="/file-type-validation-test" component={FileTypeValidationTest} />
       <Route path="/step5-category-test" component={Step5CategoryTest} />
       <Route path="/document-validation-test" component={DocumentValidationTest} />
+      <Route path="/product-validation-test" component={ProductValidationTest} />
       
       {/* Diagnostic Pages */}
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
