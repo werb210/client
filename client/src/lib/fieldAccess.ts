@@ -71,6 +71,17 @@ export function getLenderName(product: LenderProduct): string {
 }
 
 /**
+ * Gets minimum revenue requirement with fallback handling
+ */
+export function getRevenueMin(product: LenderProduct): number {
+  return product.revenue_min ?? 
+         product.revenueMin ?? 
+         product.minimumRevenue ?? 
+         product.min_revenue ?? 
+         0;
+}
+
+/**
  * Gets product name with fallback handling
  */
 export function getProductName(product: LenderProduct): string {

@@ -1,20 +1,32 @@
-// Step 2 Filtering Logic Validation Script
-// CLIENT APPLICATION - Inspect /step-2 filtering logic as requested
+// Step 2 Comprehensive Category & Revenue Filtering Validation
+// CLIENT APPLICATION - Audit all categories and revenue filtering
 
-console.log('🔍 CLIENT APPLICATION - Step 2 Filtering Logic Validation');
+console.log('🔍 COMPREHENSIVE STEP 2 CATEGORY & REVENUE AUDIT');
+
+// Enhanced field access helpers with fallback chains
+function getAmountRange(product) {
+  return {
+    min: product.amount_min ?? product.amountMin ?? product.fundingMin ?? product.minAmount ?? product.min_amount ?? 0,
+    max: product.amount_max ?? product.amountMax ?? product.fundingMax ?? product.maxAmount ?? product.max_amount ?? Infinity,
+  };
+}
+
+function getRevenueMin(product) {
+  return product.revenue_min ?? product.revenueMin ?? product.minimumRevenue ?? product.min_revenue ?? 0;
+}
 
 window.validateProducts = function() {
-  console.log('=== STEP 2 PRODUCT VALIDATION ===');
+  console.log('=== COMPREHENSIVE STEP 2 CATEGORY AUDIT ===');
   
-  // Test Working Capital filtering with Canadian business
-  const testData = {
-    businessLocation: "canada",
-    fundingAmount: 49999,
-    lookingFor: "capital", 
-    accountsReceivableBalance: 0
-  };
+  // Test scenarios with multiple amounts and countries
+  const testScenarios = [
+    { businessLocation: "canada", fundingAmount: 25000, applicantRevenue: 100000, lookingFor: "capital" },
+    { businessLocation: "canada", fundingAmount: 50000, applicantRevenue: 250000, lookingFor: "capital" },
+    { businessLocation: "canada", fundingAmount: 250000, applicantRevenue: 500000, lookingFor: "capital" },
+    { businessLocation: "united-states", fundingAmount: 50000, applicantRevenue: 200000, lookingFor: "capital" }
+  ];
   
-  console.log('🧪 Test scenario:', testData);
+  console.log('🧪 Test scenarios:', testScenarios.length);
   
   // Access cached products
   const products = window.cachedProducts || [];
@@ -24,92 +36,167 @@ window.validateProducts = function() {
     console.log('❌ No products found - check if lender cache is loaded');
     return;
   }
-  
-  // Filter logic validation - EXACT match engine logic
-  const workingCapitalProducts = [];
-  const filteredOutProducts = [];
+
+  // Group products by category for comprehensive analysis
+  const categoryGroups = {};
+  const categoryStats = {};
   
   products.forEach(product => {
-    const selectedCountryCode = "CA"; // Canada
-    const fundingAmount = 49999;
-    
-    // 1. Country check
-    const countryMatch = product.country === selectedCountryCode || product.country === 'US/CA';
-    
-    // 2. Amount range check - EXACT LOGIC AS REQUESTED
-    const amountMatch = product.minAmount <= fundingAmount && 
-                       (product.maxAmount === null || product.maxAmount >= fundingAmount);
-    
-    // 3. Working Capital category check
-    const isWorkingCapital = product.category?.toLowerCase().includes('working');
-    
-    // 4. Business capital product check (excludes equipment)
-    const isCapitalProduct = !product.category?.toLowerCase().includes('equipment');
-    
-    // 5. Invoice factoring exclusion (A/R = 0)
-    const isInvoiceFactoring = product.category?.toLowerCase().includes('invoice') || 
-                              product.category?.toLowerCase().includes('factoring');
-    const factorExclusion = isInvoiceFactoring && testData.accountsReceivableBalance === 0;
-    
-    const passes = countryMatch && amountMatch && isCapitalProduct && !factorExclusion;
-    
-    if (isWorkingCapital) {
-      workingCapitalProducts.push({
-        name: product.name,
-        lender: product.lender_name,
-        country: product.country,
-        minAmount: product.minAmount,
-        maxAmount: product.maxAmount,
-        category: product.category,
-        countryMatch,
-        amountMatch,
-        isCapitalProduct,
-        factorExclusion,
-        passes
-      });
+    const category = product.category || 'unknown';
+    if (!categoryGroups[category]) {
+      categoryGroups[category] = [];
+      categoryStats[category] = { total: 0, hasAmountFields: 0, hasRevenueFields: 0, missingFields: [] };
     }
+    categoryGroups[category].push(product);
+    categoryStats[category].total++;
     
-    if (!passes && (isWorkingCapital || product.name?.includes('Advance') || product.name?.includes('Accord'))) {
-      filteredOutProducts.push({
-        name: product.name,
-        reason: !countryMatch ? 'Country mismatch' :
-                !amountMatch ? `Amount out of range: $${product.minAmount?.toLocaleString()}-$${product.maxAmount?.toLocaleString()} vs $${fundingAmount.toLocaleString()}` :
-                !isCapitalProduct ? 'Equipment product excluded' :
-                factorExclusion ? 'Invoice factoring excluded (no A/R)' : 'Unknown'
-      });
+    // Check field availability
+    const { min, max } = getAmountRange(product);
+    const revenueMin = getRevenueMin(product);
+    
+    if (min !== 0 || max !== Infinity) categoryStats[category].hasAmountFields++;
+    if (revenueMin > 0) categoryStats[category].hasRevenueFields++;
+    
+    // Track missing/undefined fields
+    const missingFields = [];
+    if (product.minAmount === undefined && product.amount_min === undefined) missingFields.push('amount_min');
+    if (product.maxAmount === undefined && product.amount_max === undefined) missingFields.push('amount_max');
+    if (revenueMin === 0 && product.revenue_min === undefined) missingFields.push('revenue_min');
+    
+    if (missingFields.length > 0) {
+      categoryStats[category].missingFields.push(`${product.name}: ${missingFields.join(', ')}`);
     }
   });
+
+  console.log('\n📋 CATEGORY BREAKDOWN:');
+  Object.entries(categoryStats).forEach(([category, stats]) => {
+    console.log(`\n${category.toUpperCase()}:`);
+    console.log(`  Total products: ${stats.total}`);
+    console.log(`  With amount fields: ${stats.hasAmountFields}/${stats.total}`);
+    console.log(`  With revenue requirements: ${stats.hasRevenueFields}/${stats.total}`);
+    if (stats.missingFields.length > 0) {
+      console.log(`  Missing fields: ${stats.missingFields.length} products`);
+      stats.missingFields.slice(0, 3).forEach(issue => console.log(`    • ${issue}`));
+    }
+  });
+
+  // Test filtering for each scenario
+  let totalResults = { passed: 0, failed: 0, categories: new Set() };
   
-  console.log('\n📈 WORKING CAPITAL ANALYSIS:');
-  console.log(`Found ${workingCapitalProducts.length} Working Capital products total`);
-  console.log(`Passed filtering: ${workingCapitalProducts.filter(p => p.passes).length}`);
-  
-  workingCapitalProducts.forEach(product => {
-    console.log(`${product.passes ? '✅' : '❌'} ${product.name} (${product.lender}):`, {
-      country: product.country,
-      amount: `$${product.minAmount?.toLocaleString()}-$${product.maxAmount?.toLocaleString()}`,
-      countryMatch: product.countryMatch,
-      amountMatch: product.amountMatch,
-      passes: product.passes
+  testScenarios.forEach((scenario, index) => {
+    console.log(`\n🧪 SCENARIO ${index + 1}: ${scenario.businessLocation.toUpperCase()} $${scenario.fundingAmount.toLocaleString()} (Revenue: $${scenario.applicantRevenue.toLocaleString()})`);
+    
+    const selectedCountryCode = scenario.businessLocation === "united-states" ? "US" : "CA";
+    let scenarioPassed = 0;
+    const scenarioResults = {};
+    
+    Object.entries(categoryGroups).forEach(([category, categoryProducts]) => {
+      let categoryPassed = 0;
+      
+      categoryProducts.forEach(product => {
+        // Apply filtering logic
+        const countryMatch = product.country === selectedCountryCode || product.country === 'US/CA';
+        const { min, max } = getAmountRange(product);
+        const amountMatch = scenario.fundingAmount >= min && scenario.fundingAmount <= max;
+        const revenueMin = getRevenueMin(product);
+        const revenueMatch = scenario.applicantRevenue >= revenueMin;
+        
+        const passes = countryMatch && amountMatch && revenueMatch;
+        
+        if (passes) {
+          categoryPassed++;
+          scenarioPassed++;
+          totalResults.passed++;
+          totalResults.categories.add(category);
+        } else {
+          totalResults.failed++;
+        }
+      });
+      
+      if (categoryPassed > 0) {
+        scenarioResults[category] = categoryPassed;
+      }
+    });
+    
+    console.log(`  ✅ Passed: ${scenarioPassed} products across ${Object.keys(scenarioResults).length} categories`);
+    Object.entries(scenarioResults).forEach(([cat, count]) => {
+      console.log(`    • ${cat}: ${count} products`);
     });
   });
+
+  console.log('\n📊 COMPREHENSIVE AUDIT SUMMARY:');
+  console.log(`Total products tested: ${products.length}`);
+  console.log(`Categories found: ${Object.keys(categoryGroups).length}`);
+  console.log(`Categories with passing products: ${totalResults.categories.size}`);
+  console.log(`Total filter passes: ${totalResults.passed}`);
+  console.log(`Total filter failures: ${totalResults.failed}`);
   
-  console.log('\n🚫 FILTERED OUT PRODUCTS:');
-  filteredOutProducts.forEach(product => {
-    console.log(`❌ ${product.name}: ${product.reason}`);
-  });
-  
-  // Summary for user validation
-  const summary = {
+  return {
     totalProducts: products.length,
-    workingCapitalFound: workingCapitalProducts.length,
-    workingCapitalPassed: workingCapitalProducts.filter(p => p.passes).length,
-    filteredOut: filteredOutProducts.length
+    categories: Object.keys(categoryGroups).length,
+    categoryStats,
+    totalPassed: totalResults.passed,
+    totalFailed: totalResults.failed,
+    categoriesWithResults: totalResults.categories.size
   };
+};
+
+// Enhanced console helper function for manual testing
+window.manualTestFiltering = function() {
+  console.log('🧪 MANUAL FILTERING TEST');
   
-  console.log('\n📊 VALIDATION SUMMARY:', summary);
+  const testScenarios = [
+    { country: 'CA', amount: 40000, revenue: 200000, category: 'Working Capital', expected: 2 },
+    { country: 'CA', amount: 100000, revenue: 300000, category: 'Term Loan', expected: 'multiple' },
+    { country: 'US', amount: 50000, revenue: 100000, category: 'MCA', expected: 1 }
+  ];
   
-  return summary;
+  const products = window.cachedProducts || [];
+  
+  testScenarios.forEach((scenario, index) => {
+    console.log(`\n🧪 TEST ${index + 1}: ${scenario.country} $${scenario.amount.toLocaleString()} - ${scenario.category}`);
+    
+    const selectedCountryCode = scenario.country;
+    let matching = 0;
+    const matchingProducts = [];
+    
+    products.forEach(product => {
+      // Filter by category if specified
+      const categoryMatch = scenario.category === 'Working Capital' ? 
+        product.category?.toLowerCase().includes('working') :
+        scenario.category === 'Term Loan' ?
+        product.category?.toLowerCase().includes('term') :
+        scenario.category === 'MCA' ?
+        product.category?.toLowerCase().includes('merchant') || product.category?.toLowerCase().includes('cash') :
+        true;
+      
+      if (!categoryMatch) return;
+      
+      // Apply filtering logic
+      const countryMatch = product.country === selectedCountryCode || product.country === 'US/CA';
+      const { min, max } = getAmountRange(product);
+      const amountMatch = scenario.amount >= min && scenario.amount <= max;
+      const revenueMin = getRevenueMin(product);
+      const revenueMatch = scenario.revenue >= revenueMin;
+      
+      const passes = countryMatch && amountMatch && revenueMatch;
+      
+      if (passes) {
+        matching++;
+        matchingProducts.push(product.name);
+      }
+    });
+    
+    console.log(`  ✅ Found: ${matching} products`);
+    console.log(`  Expected: ${scenario.expected}`);
+    console.log(`  Products: ${matchingProducts.join(', ')}`);
+    
+    const success = typeof scenario.expected === 'number' ? 
+      matching === scenario.expected : 
+      matching >= 1;
+    
+    console.log(`  Result: ${success ? '✅ PASS' : '❌ FAIL'}`);
+  });
 };
 
 // Quick validation function

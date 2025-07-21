@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { LenderProduct } from '@shared/lenderProductSchema';
-import { getAmountRange } from "@/lib/fieldAccess";
+import { getAmountRange, getRevenueMin } from "@/lib/fieldAccess";
 
 export interface Step1FormData {
   businessLocation?: "united-states" | "canada";
@@ -68,6 +68,14 @@ export function useRecommendations(formStep1Data: Step1FormData) {
       const amountMatch = fundingAmount >= min && fundingAmount <= max;
       if (!amountMatch) {
         failedProducts.push({product: p, reason: `Amount out of range: $${min?.toLocaleString()}-$${max === Infinity ? 'unlimited' : max?.toLocaleString()} vs $${fundingAmount.toLocaleString()}`});
+        return false;
+      }
+
+      // Revenue requirement check - NEW: Add revenue filtering
+      const revenueMin = getRevenueMin(p);
+      const revenueMatch = (revenueLastYear || 0) >= revenueMin;
+      if (!revenueMatch) {
+        failedProducts.push({product: p, reason: `Revenue too low: requires $${revenueMin?.toLocaleString()} vs $${(revenueLastYear || 0).toLocaleString()}`});
         return false;
       }
       
