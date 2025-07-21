@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { logger } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 
@@ -430,6 +430,94 @@ export function DynamicDocumentRequirements({
   
   // State for document requirements  
   const [documentRequirements, setDocumentRequirements] = useState<RequiredDoc[]>([]);
+  
+  // 📱 MOBILE RESPONSIVENESS: Keyboard detection state
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // 📱 MOBILE RESPONSIVENESS: Keyboard detection with viewport/keyboard monitoring
+  useEffect(() => {
+    const detectMobile = () => {
+      const isMobileDevice = window.innerWidth <= 768 || /iPhone|iPad|Android/i.test(navigator.userAgent);
+      setIsMobile(isMobileDevice);
+      return isMobileDevice;
+    };
+
+    const handleResize = () => {
+      const currentIsMobile = detectMobile();
+      
+      if (currentIsMobile) {
+        // Keyboard detection: if screen height is significantly reduced, keyboard is likely open
+        const isKeyboardOpen = window.innerHeight < 600;
+        setKeyboardOpen(isKeyboardOpen);
+        
+        console.log(`📱 [MOBILE] Viewport: ${window.innerWidth}x${window.innerHeight}, Keyboard: ${isKeyboardOpen ? 'OPEN' : 'CLOSED'}`);
+        
+        // Auto-scroll into view when keyboard opens
+        if (isKeyboardOpen && containerRef.current) {
+          setTimeout(() => {
+            containerRef.current?.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center'
+            });
+          }, 100);
+        }
+      }
+    };
+
+    const handleFocusIn = (event: FocusEvent) => {
+      if (isMobile && event.target instanceof HTMLInputElement) {
+        // Input field focused on mobile - ensure visibility
+        setTimeout(() => {
+          event.target.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }, 300); // Delay to allow keyboard animation
+      }
+    };
+
+    // Initialize mobile detection
+    detectMobile();
+    handleResize();
+
+    // Add event listeners
+    window.addEventListener('resize', handleResize);
+    document.addEventListener('focusin', handleFocusIn);
+    
+    // Visual Viewport API support for better keyboard detection
+    if ('visualViewport' in window && window.visualViewport) {
+      const visualViewport = window.visualViewport;
+      
+      const handleViewportChange = () => {
+        if (isMobile) {
+          const keyboardHeight = window.innerHeight - visualViewport.height;
+          const isKeyboardVisible = keyboardHeight > 150; // Threshold for keyboard detection
+          setKeyboardOpen(isKeyboardVisible);
+          
+          console.log(`📱 [VISUAL VIEWPORT] Height: ${visualViewport.height}, Keyboard height: ${keyboardHeight}, Visible: ${isKeyboardVisible}`);
+          
+          // Update CSS custom properties for dynamic styling
+          document.documentElement.style.setProperty('--device-height', `${window.innerHeight}px`);
+          document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+        }
+      };
+      
+      visualViewport.addEventListener('resize', handleViewportChange);
+      
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        document.removeEventListener('focusin', handleFocusIn);
+        visualViewport.removeEventListener('resize', handleViewportChange);
+      };
+    }
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('focusin', handleFocusIn);
+    };
+  }, [isMobile]);
 
   // ✅ DEDUPLICATION LOGIC: Ensure unique documentType rendering
   useEffect(() => {
@@ -663,7 +751,28 @@ export function DynamicDocumentRequirements({
   // No loading or error states needed - we always have the requirements from props
 
   return (
-    <div className="space-y-6">
+    <div 
+      ref={containerRef}
+      className={`space-y-6 transition-all duration-300 ${
+        isMobile && keyboardOpen 
+          ? 'pb-4' // Reduced padding when keyboard open
+          : 'pb-8' // Normal padding
+      }`}
+      style={{
+        // Dynamic height adjustment for mobile keyboard
+        ...(isMobile && keyboardOpen && {
+          maxHeight: 'calc(var(--device-height, 100vh) - var(--keyboard-height, 0px) - 100px)',
+          overflowY: 'auto'
+        })
+      }}
+    >
+      {/* 📱 MOBILE KEYBOARD INDICATOR */}
+      {isMobile && keyboardOpen && (
+        <div className="bg-blue-100 border border-blue-300 rounded-lg p-3 text-sm text-blue-800">
+          📱 Mobile keyboard detected - interface optimized for easier use
+        </div>
+      )}
+      
       {/* Header Section with authentic intersection info */}
       <Card className="bg-green-50 border-green-200">
         <CardContent className="p-4">
@@ -679,8 +788,12 @@ export function DynamicDocumentRequirements({
         </CardContent>
       </Card>
 
-      {/* Document Requirements Grid using new structure */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Document Requirements Grid using new structure with mobile-optimized layout */}
+      <div className={`grid gap-6 ${
+        isMobile && keyboardOpen
+          ? 'grid-cols-1' // Single column when keyboard open on mobile
+          : 'grid-cols-1 md:grid-cols-2' // Responsive grid normally
+      }`}>
         {documentRequirements.length > 0 ? documentRequirements.map((doc: RequiredDoc, index: number) => (
           <UnifiedDocumentUploadCard
             key={doc.id || index}

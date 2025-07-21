@@ -15,6 +15,7 @@ import analyzeRouter from "./routes/analyze.js";
 import translateRouter from "./routes/translate.js";
 import statusRouter from "./routes/status.js";
 import handoffRouter from "./routes/handoff.js";
+import chatbotTrainingRouter from "./routes/chatbotTraining";
 import { logUploadEvent, auditUploadAttempt, ZERO_DOCUMENTS_QUERY } from "./utils/uploadStabilization.js";
 
 // ES module path resolution
@@ -907,6 +908,8 @@ app.use((req, res, next) => {
   app.use('/api', translateRouter);
   app.use('/api', statusRouter);
   app.use('/api', handoffRouter);
+  app.use('/api', chatbotTrainingRouter);
+  app.use('/debug', chatbotTrainingRouter);
   
   // Feedback endpoint for issue reporting with screenshot support
   app.post('/api/feedback', upload.single('screenshot'), async (req, res) => {

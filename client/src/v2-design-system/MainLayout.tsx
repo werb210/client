@@ -98,6 +98,7 @@ import FileTypeValidationTest from "@/test/FileTypeValidationTest";
 import Step5CategoryTest from "@/test/Step5CategoryTest";
 import DocumentValidationTest from "@/test/DocumentValidationTest";
 import ProductValidationTest from "@/routes/ProductValidationTest";
+import TrainChatbot from "@/routes/TrainChatbot";
 
 
 /**
@@ -213,6 +214,7 @@ export function MainLayout() {
       <Route path="/step5-category-test" component={Step5CategoryTest} />
       <Route path="/document-validation-test" component={DocumentValidationTest} />
       <Route path="/product-validation-test" component={ProductValidationTest} />
+      <Route path="/train-chatbot" component={TrainChatbot} />
       
       {/* Diagnostic Pages */}
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
@@ -226,6 +228,8 @@ export function MainLayout() {
       <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} />
       <Route path="/advanced-chatbot-test" component={() => <ChatBotTest />} />
       <Route path="/chatbot-dashboard" component={() => <ChatBotDashboard />} />
+      <Route path="/train-chatbot" component={lazy(() => import('@/routes/TrainChatbot'))} />
+      <Route path="/debug/train" component={lazy(() => import('@/routes/TrainChatbot'))} />
       
       {/* Default Route - Landing Page */}
       <Route path="/" component={LandingPage} />

@@ -23,6 +23,16 @@ interface ChatBotProps {
   applicationData?: any;
 }
 
+interface TrainingExample {
+  user: string;
+  bot: string;
+  metadata: {
+    category: string;
+    country: string;
+    context: string;
+  };
+}
+
 interface FeedbackModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -159,6 +169,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   const [socket, setSocket] = useState<any>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isMobileFullscreen, setIsMobileFullscreen] = useState(false);
+  const [trainingData, setTrainingData] = useState<TrainingExample[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const proactiveTimeoutRef = useRef<NodeJS.Timeout>();
@@ -184,6 +195,39 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  // 🤖 TRAINING DATA PRELOADING: Load chatbot training data on initialization
+  useEffect(() => {
+    const loadTrainingData = async () => {
+      try {
+        console.log('🤖 [CHATBOT] Loading training data...');
+        const response = await fetch('/api/training-data');
+        
+        if (response.ok) {
+          const data = await response.json();
+          setTrainingData(data.examples || []);
+          console.log(`🤖 [CHATBOT] Loaded ${data.totalExamples} training examples across ${data.categories?.length || 0} categories`);
+          console.log('🤖 [CHATBOT] Available categories:', data.categories);
+        } else {
+          console.log('🤖 [CHATBOT] No pre-generated training data found');
+          // Optionally trigger training data generation
+          const generateResponse = await fetch('/api/generate-training', { method: 'POST' });
+          if (generateResponse.ok) {
+            const generatedData = await generateResponse.json();
+            setTrainingData(generatedData.data?.examples || []);
+            console.log('🤖 [CHATBOT] Generated and loaded new training data');
+          }
+        }
+      } catch (error) {
+        console.warn('🤖 [CHATBOT] Training data loading failed:', error);
+        // Continue without training data - chatbot will still work
+      }
+    };
+
+    if (isOpen && trainingData.length === 0) {
+      loadTrainingData();
+    }
+  }, [isOpen, trainingData.length]);
 
   // Mobile fullscreen detection and keyboard-aware resizing
   useEffect(() => {
@@ -533,7 +577,8 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
             sentiment: analysis.sentiment,
             intent: analysis.intent
           },
-          messages: messages.slice(-5) // Last 5 messages for context
+          messages: messages.slice(-5), // Last 5 messages for context
+          trainingData: trainingData.slice(0, 50) // Include training examples for enhanced context
         })
       });
 
