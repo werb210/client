@@ -16,7 +16,7 @@ export interface Step1FormData {
 
 export function useRecommendations(formStep1Data: Step1FormData) {
   /** 1 — pull products from normalized data source */
-  const { data: products = [], isLoading, error } = useQuery<LenderProduct[]>({
+  const { data: products = [], isLoading, error } = useQuery<any[]>({
     queryKey: ["normalized-lenders-cache-only"],
     queryFn: async () => {
       try {
@@ -43,7 +43,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   // Production mode: Console logging disabled
 
   // Debug logging: Track filtering logic
-  console.log(`🔍 [STEP2] Starting with ${products.length} products for filtering`);
+  console.log(`🔍 [STEP2] Starting with ${(products as any[]).length} products for filtering`);
   console.log(`🔍 [STEP2] Filter criteria:`, { 
     headquarters, 
     fundingAmount, 
@@ -53,7 +53,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
 
   const failedProducts: Array<{product: any, reason: string}> = [];
   
-  const matches = products
+  const matches = (products as any[])
     .filter((p: any) => {
       // Country check - exact match or multi-country (US/CA)
       const selectedCountryCode = headquarters === "United States" ? "US" : "CA";
@@ -134,7 +134,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   });
   
   console.log("🔍 [STEP2] Working Capital products that passed:", 
-    matches.filter((m: any) => m.product.category?.toLowerCase().includes('working')).length
+    (matches as any[]).filter((m: any) => m.product.category?.toLowerCase().includes('working')).length
   );
   
   console.log("🔍 [STEP2] Filtered out:", failedProducts.map(f => `${f.product.name}: ${f.reason}`));
