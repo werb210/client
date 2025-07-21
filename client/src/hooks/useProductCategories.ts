@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
-import { filterProducts, RecommendationFormData, StaffLenderProduct } from '@/lib/recommendation';
+import { filterProducts, RecommendationFormData } from '@/lib/recommendation';
+import { StaffLenderProduct } from '@/types/lenderProduct';
 
 export interface ProductCategory {
   category: string;
@@ -75,9 +76,9 @@ export function useProductCategories(formData: RecommendationFormData) {
 
         // console.log('[useProductCategories] Final categories:', categories.length);
         return categories;
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('[useProductCategories] Error in queryFn:', error);
-        console.error('[useProductCategories] Error details:', error.message || error);
+        console.error('[useProductCategories] Error details:', error instanceof Error ? error.message : String(error));
         console.error('[useProductCategories] Form data causing error:', formData);
         console.error('[useProductCategories] Products causing error:', products?.length || 0);
         return []; // Return empty array on any error
