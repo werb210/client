@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 21, 2025: 🔗 ENHANCED SOCKET.IO CLIENT INTEGRATION WITH WELCOME FLOW COMPLETED - USER CONTACT COLLECTION SYSTEM**
+  * **CRITICAL SUCCESS**: Implemented enhanced Socket.IO client following user specifications with proper script loading order and connection patterns
+  * **WELCOME FLOW ENHANCEMENT**: Added contact information collection system that captures user name and email before chat begins
+  * **CHAT-CLIENT.JS UPDATES**: Enhanced with waitForUser(), processUserInput(), startChat(), appendBot() functions for structured user onboarding
+  * **CONTACT PERSISTENCE**: User contact information stored in sessionStorage and sent to server via /api/chat/log-contact endpoint
+  * **SOCKET.IO HUMAN REQUESTS**: Updated requestHuman() to use 'user-request-human' event exclusively, removed REST fallback per specifications
+  * **CHATBOT INTEGRATION**: React ChatBot component now integrates with global functions from chat-client.js for seamless welcome flow
+  * **RETURNING USER SUPPORT**: System recognizes returning users by stored contact info and provides personalized welcome messages
+  * **SERVER ENDPOINT**: Added /api/chat/log-contact with staff backend forwarding for CRM integration and contact management
+  * **CONNECTION VERIFICATION**: Enhanced Socket.IO connection logging with proper event emission and session management
+  * **PRODUCTION READY**: Complete welcome flow operational with contact collection, Socket.IO real-time communication, and user preference persistence
+
 - **July 21, 2025: 🤖 COMPREHENSIVE CHATBOT TRAINING SYSTEM COMPLETED - AI ENHANCEMENT WITH SCHEMA-BASED LEARNING**
   * **CRITICAL SUCCESS**: Implemented complete chatbot training system generating AI training data from live lender product schema
   * **TRAINING API ENDPOINTS**: Created `/api/training-data`, `/api/generate-training` endpoints for comprehensive training data management

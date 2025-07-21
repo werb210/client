@@ -744,35 +744,18 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     addBotMessage('Connecting you to a human agent. Please hold while we find someone to assist you...');
     
     try {
-      // Use global requestHuman function if available (from chat-client.js)
+      // Use global requestHuman function (Socket.IO only - no REST fallback)
       if ((window as any).requestHuman) {
         (window as any).requestHuman();
-        console.log('Client requested human chat via global function');
-      }
-      
-      // Also send HTTP request as backup
-      const response = await fetch('/api/chat/request-staff', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          sessionId,
-          userName: applicationData?.applicantFirstName || 'Customer',
-          context: { currentStep, applicationData }
-        })
-      });
-
-      const data = await response.json();
-      console.log('HTTP human request response:', data);
-      
-      if (response.ok) {
+        console.log('Client requested human chat via Socket.IO');
         addBotMessage('Request sent successfully. A human agent will join the chat shortly.');
       } else {
-        throw new Error(data.error || 'Request failed');
+        throw new Error('Socket.IO connection not available');
       }
       
     } catch (error) {
       console.error('Failed to request human assistance:', error);
-      addBotMessage('Sorry, we had trouble connecting you to a human agent. Please try the Report Issue button or call us directly at 1-888-811-1887.');
+      addBotMessage('Sorry, we had trouble connecting you to a human agent. Please try refreshing the page or call us directly at 1-888-811-1887.');
     }
   };
 

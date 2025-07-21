@@ -49,16 +49,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Human chat request function
-    window.requestHuman = async function() {
-      try {
-        await fetch('/api/chat/request-staff', {
-          method: 'POST', 
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ sessionId, userName })
-        });
-        console.log('Client requested human chat');
-      } catch (error) {
-        console.error('Human request failed:', error);
+    window.requestHuman = function() {
+      const userName = sessionStorage.getItem('userName') || 'Customer';
+      if (socket && socket.connected) {
+        socket.emit('user-request-human', { sessionId, userName });
+        console.log('Client emitted requestHuman');
+        console.log('Client emitted user-request-human:', { sessionId, userName });
+      } else {
+        console.log('Socket not connected, cannot request human');
       }
     };
 
