@@ -93,6 +93,20 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 21, 2025: 🗄️ S3 MIGRATION IMPLEMENTATION COMPLETED - DOCUMENT STORAGE MIGRATED FROM LOCAL FILESYSTEM TO AMAZON S3**
+  * **CRITICAL SUCCESS**: Successfully migrated all document storage, viewing, and download functions from Replit's local filesystem to Amazon S3 using pre-signed URLs
+  * **S3 UPLOAD SYSTEM**: Implemented complete S3 upload workflow with pre-signed URL generation, direct S3 upload, and confirmation system
+  * **SECURITY COMPLIANT**: Never exposes raw S3 keys in client code - only uses pre-signed URLs from staff backend as required
+  * **UPLOAD PROGRESS TRACKING**: Enhanced DocumentUploadWidget.tsx with real-time S3 upload progress using XMLHttpRequest and onUploadProgress callbacks
+  * **DOCUMENT PREVIEW/DOWNLOAD**: Created DocumentPreview.tsx component for S3-based document viewing and downloading with pre-signed URLs
+  * **FALLBACK HANDLING**: Implemented proper fallback UI showing "Upload temporarily unavailable. Please try again later." for S3 failures
+  * **SERVER ENDPOINTS**: Added three new S3 endpoints: `/api/public/s3/upload-url`, `/api/public/s3/upload-confirm`, `/api/public/s3/document-url`
+  * **BEARER AUTHENTICATION**: All S3 endpoints secured with Bearer token validation forwarding to staff backend
+  * **STAFF BACKEND INTEGRATION**: Complete integration with staff backend S3 system ensuring proper documentType and applicationId linking
+  * **ERROR HANDLING**: Enhanced error messages for S3-specific failures with clear user feedback and fallback states
+  * **PRODUCTION READY**: S3 migration maintains all existing document normalization, deduplication, and canonical type restrictions
+  * **LEGACY COMPATIBILITY**: Maintained existing upload endpoints for backward compatibility during transition period
+
 - **July 21, 2025: 🔍 COMPREHENSIVE STEP 2 FILTERING AUDIT COMPLETED - ALL CATEGORIES & REVENUE VALIDATION**
   * **COMPREHENSIVE SUCCESS**: Completed full audit of Step 2 filtering logic across all 7 product categories with revenue-based filtering implementation
   * **CATEGORY AUDIT RESULTS**: Validated 42 products across Working Capital (3), Purchase Order Financing (3), Asset-Based Lending (1), Equipment Financing (5), Business Line of Credit (16), Invoice Factoring (4), Term Loan (10)

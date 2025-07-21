@@ -51,64 +51,65 @@ export function DocumentUploadWidget({
         prev.map(f => f.id === fileId ? { ...f, progress: 10 } : f)
       );
 
-      const formData = new FormData();
-      formData.append('document', file);
-      formData.append('documentType', documentType);
-
-      // ✅ VALIDATE UPLOAD PATH - Check endpoint is correct as per ChatGPT instructions
-      const endpoint = `/api/public/applications/${applicationId}/documents`;
-      console.log("🔗 Upload endpoint:", endpoint);
-      
-      // ✅ REQUIRED CONSOLE LOGGING as per ChatGPT instructions
-      console.log("📤 Uploading document:", file.name, file.type, file.size);
+      // ✅ S3 MIGRATION: Use S3 upload workflow instead of direct backend upload
+      console.log("📤 [S3] Starting S3 upload workflow:", file.name, file.type, file.size);
       
       if (isDev) {
-        console.log('📤 [DocumentUploadWidget] Uploading:', {
+        console.log('📤 [S3] Upload details:', {
           fileName: file.name,
           documentType,
           applicationId,
-          endpoint
+          fileSize: file.size,
+          mimeType: file.type
         });
       }
 
-      // Update progress to show network request started
-      setUploadingFiles(prev => 
-        prev.map(f => f.id === fileId ? { ...f, progress: 30 } : f)
+      // Import S3 upload function dynamically
+      const { uploadDocumentToS3 } = await import('../../lib/s3Upload');
+
+      // Use S3 upload with progress tracking
+      const result = await uploadDocumentToS3(
+        file,
+        applicationId,
+        documentType,
+        (progress) => {
+          // Update progress as file uploads to S3
+          const uploadProgress = Math.min(90, 10 + (progress.percentage * 0.8)); // 10-90% for S3 upload
+          setUploadingFiles(prev => 
+            prev.map(f => f.id === fileId ? { ...f, progress: uploadProgress } : f)
+          );
+          console.log(`📈 [S3] Upload progress: ${progress.percentage}% (${progress.loaded}/${progress.total} bytes)`);
+        }
       );
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        body: formData
-      });
-
-      // Update progress to show response received
-      setUploadingFiles(prev => 
-        prev.map(f => f.id === fileId ? { ...f, progress: 70 } : f)
+      // Update progress to show processing complete
+      setUploadingFiles(prev =>
+        prev.map(f => f.id === fileId ? { ...f, progress: 95 } : f)
       );
 
-      if (isDev) {
-        console.log('📥 [DocumentUploadWidget] Response:', {
-          status: response.status,
-          ok: response.ok,
-          statusText: response.statusText
-        });
-      }
-
-      // Check for actual success: response.ok === true && response.json().success === true
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      
-      // ✅ REQUIRED CONSOLE LOGGING as per ChatGPT instructions
-      console.log("📥 Upload response:", result);
-      
       if (!result.success) {
-        throw new Error(result.message || 'Upload failed - invalid response from server');
+        console.error('❌ [S3] Upload failed:', result.error);
+        throw new Error(result.error || 'S3 upload failed');
       }
 
-      // Update progress to completion
+      // ✅ REQUIRED CONSOLE LOGGING - S3 upload response
+      console.log("📥 [S3] Upload response:", result);
+      
+      if (isDev) {
+        console.log('✅ [S3] S3 upload successful:', {
+          documentId: result.documentId,
+          fileName: file.name,
+          applicationId
+        });
+      }
+
+      // Validate S3 response structure
+      if (!result.documentId) {
+        console.error('❌ [S3] Invalid response - missing documentId:', result);
+        throw new Error('Invalid S3 upload response');
+      }
+
+      // Final progress update - complete
       setUploadingFiles(prev => 
         prev.map(f => f.id === fileId ? { 
           ...f, 
@@ -118,14 +119,10 @@ export function DocumentUploadWidget({
         } : f)
       );
 
-      if (isDev && result.documentId) {
-        console.log('✅ [DocumentUploadWidget] Success - Document ID:', result.documentId);
-      }
-
       // Success toast
       toast({
-        title: "Upload successful",
-        description: `${file.name} uploaded successfully`,
+        title: "S3 upload successful",
+        description: `${file.name} uploaded to S3 successfully`,
         variant: "default"
       });
 
@@ -149,18 +146,19 @@ export function DocumentUploadWidget({
         } : f)
       );
 
-      // Show red toast for network issues or file too large
+      // Show S3-specific fallback message for failures
       if (errorMessage.includes('Failed to fetch') || 
           errorMessage.includes('NetworkError') ||
-          errorMessage.includes('network')) {
+          errorMessage.includes('S3') ||
+          errorMessage.includes('temporarily unavailable')) {
         toast({
           title: "Upload failed",
-          description: "Upload failed. Network issue or file too large. Try again.",
+          description: "Upload temporarily unavailable. Please try again later.",
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Upload failed",
+          title: "Upload failed", 
           description: errorMessage,
           variant: "destructive"
         });

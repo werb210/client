@@ -381,6 +381,169 @@ app.use((req, res, next) => {
 
   // REMOVED: Duplicate finalization endpoint - using the one at line 489 instead
 
+  // ✅ S3 MIGRATION: S3 pre-signed URL request endpoint
+  app.post('/api/public/s3/upload-url', async (req, res) => {
+    try {
+      const { applicationId, documentType, fileName, fileSize, mimeType } = req.body;
+      
+      console.log('📤 [S3] Pre-signed URL request:', { applicationId, documentType, fileName });
+      
+      // Validate Bearer token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.split(' ')[1] !== cfg.clientToken) {
+        console.error('❌ [S3] Invalid or missing Bearer token');
+        return res.status(401).json({
+          success: false,
+          error: 'Unauthorized'
+        });
+      }
+      
+      // Forward S3 upload request to staff backend
+      const staffResponse = await fetch(`${cfg.staffApiUrl}/public/s3/upload-url`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': req.headers.authorization || ''
+        },
+        body: JSON.stringify({
+          applicationId,
+          documentType,
+          fileName,
+          fileSize,
+          mimeType
+        })
+      });
+
+      if (!staffResponse.ok) {
+        const errorText = await staffResponse.text();
+        console.error('❌ [S3] Staff backend pre-signed URL failed:', staffResponse.status, errorText);
+        return res.status(503).json({
+          success: false,
+          error: 'Upload temporarily unavailable. Please try again later.'
+        });
+      }
+
+      const result = await staffResponse.json();
+      console.log('✅ [S3] Pre-signed URL received from staff backend');
+      
+      res.json(result);
+    } catch (error) {
+      console.error('❌ [S3] Pre-signed URL request error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Upload temporarily unavailable. Please try again later.'
+      });
+    }
+  });
+
+  // ✅ S3 MIGRATION: S3 upload confirmation endpoint
+  app.post('/api/public/s3/upload-confirm', async (req, res) => {
+    try {
+      const { documentId, applicationId, documentType, fileName, fileSize } = req.body;
+      
+      console.log('✅ [S3] Upload confirmation:', { documentId, applicationId, fileName });
+      
+      // Validate Bearer token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.split(' ')[1] !== cfg.clientToken) {
+        console.error('❌ [S3] Invalid or missing Bearer token for confirmation');
+        return res.status(401).json({
+          success: false,
+          error: 'Unauthorized'
+        });
+      }
+      
+      // Forward confirmation to staff backend
+      const staffResponse = await fetch(`${cfg.staffApiUrl}/public/s3/upload-confirm`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': req.headers.authorization || ''
+        },
+        body: JSON.stringify({
+          documentId,
+          applicationId,
+          documentType,
+          fileName,
+          fileSize
+        })
+      });
+
+      if (!staffResponse.ok) {
+        const errorText = await staffResponse.text();
+        console.error('❌ [S3] Upload confirmation failed:', staffResponse.status, errorText);
+        return res.status(staffResponse.status).json({
+          success: false,
+          error: 'Upload confirmation failed'
+        });
+      }
+
+      const result = await staffResponse.json();
+      console.log('✅ [S3] Upload confirmed with staff backend');
+      
+      res.json(result);
+    } catch (error) {
+      console.error('❌ [S3] Upload confirmation error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Upload confirmation failed'
+      });
+    }
+  });
+
+  // ✅ S3 MIGRATION: Document view/download URL endpoint
+  app.post('/api/public/s3/document-url', async (req, res) => {
+    try {
+      const { applicationId, documentId, action } = req.body;
+      
+      console.log(`📥 [S3] ${action} URL request:`, { applicationId, documentId });
+      
+      // Validate Bearer token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.split(' ')[1] !== cfg.clientToken) {
+        console.error(`❌ [S3] Invalid or missing Bearer token for ${action}`);
+        return res.status(401).json({
+          success: false,
+          error: 'Unauthorized'
+        });
+      }
+      
+      // Forward URL request to staff backend
+      const staffResponse = await fetch(`${cfg.staffApiUrl}/public/s3/document-url`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': req.headers.authorization || ''
+        },
+        body: JSON.stringify({
+          applicationId,
+          documentId,
+          action
+        })
+      });
+
+      if (!staffResponse.ok) {
+        const errorText = await staffResponse.text();
+        console.error(`❌ [S3] ${action} URL failed:`, staffResponse.status, errorText);
+        return res.status(503).json({
+          success: false,
+          error: `${action} temporarily unavailable. Please try again later.`
+        });
+      }
+
+      const result = await staffResponse.json();
+      console.log(`✅ [S3] ${action} URL received from staff backend`);
+      
+      res.json(result);
+    } catch (error) {
+      console.error(`❌ [S3] ${action} URL request error:`, error);
+      res.status(500).json({
+        success: false,
+        error: `${action} temporarily unavailable. Please try again later.`
+      });
+    }
+  });
+
   // Step 6: SignNow Initiation endpoint
   app.post('/api/public/signnow/initiate/:applicationId', async (req, res) => {
     try {
