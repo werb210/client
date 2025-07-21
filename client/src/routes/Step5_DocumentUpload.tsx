@@ -759,7 +759,7 @@ export default function Step5DocumentUpload() {
 
         <Button
           onClick={handleNext}
-          disabled={isUploading || isManualVerifying || !validateDocumentUploads()}
+          disabled={isUploading || isManualVerifying || !canProceed()}
           className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
         >
           {isUploading ? (
