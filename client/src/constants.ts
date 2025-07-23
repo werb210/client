@@ -8,7 +8,7 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
   (import.meta.env.DEV 
     ? 'http://localhost:5000/api'  // Direct to Express server in development
-    : 'https://staff.boreal.financial/api'); // Production fallback
+    : 'https://staffportal.replit.app/api'); // Working staff backend fallback
 
 // Staff API Configuration
 export const STAFF_API_BASE_URL = API_BASE_URL;
