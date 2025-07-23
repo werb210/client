@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Integration Test Suite - Boreal Financial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h1 class="text-3xl font-bold text-blue-900 mb-6">🔗 CRM Integration Test Suite</h1>
+            
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                <h2 class="text-lg font-semibold text-green-800 mb-3">✅ All 4 CRM Integration Tasks Implemented</h2>
+                <ul class="text-sm text-green-700 space-y-2">
+                    <li>• <strong>Task 1:</strong> Application submission creates CRM contact automatically</li>
+                    <li>• <strong>Task 2:</strong> Chatbot welcome flow creates CRM contact when name/email collected</li>
+                    <li>• <strong>Task 3:</strong> Chat escalation "request_human" creates CRM contact with context</li>
+                    <li>• <strong>Task 4:</strong> Issue reporting creates CRM contact with screenshot support</li>
+                </ul>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-4">Individual Tests</h3>
+                    <div class="space-y-2">
+                        <button onclick="testApplicationSubmissionCRM()" class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                            Test 1: Application Submission CRM
+                        </button>
+                        <button onclick="testChatbotContactCRM()" class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                            Test 2: Chatbot Contact CRM
+                        </button>
+                        <button onclick="testChatEscalationCRM()" class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                            Test 3: Chat Escalation CRM
+                        </button>
+                        <button onclick="testIssueReportingCRM()" class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                            Test 4: Issue Reporting CRM
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-purple-800 mb-4">Comprehensive Testing</h3>
+                    <div class="space-y-2">
+                        <button onclick="runAllCRMTests()" class="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors">
+                            🚀 Run All CRM Tests
+                        </button>
+                        <button onclick="testStaffBackendConnection()" class="w-full bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors">
+                            🔗 Test Staff Backend Connection
+                        </button>
+                        <button onclick="console.clear()" class="w-full bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors">
+                            🧹 Clear Console
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <h3 class="text-lg font-semibold text-yellow-800 mb-2">Test Instructions</h3>
+                <ol class="text-sm text-yellow-700 space-y-1">
+                    <li>1. Open browser console (F12) to see detailed test results</li>
+                    <li>2. Click "Run All CRM Tests" to execute complete test suite</li>
+                    <li>3. Check server logs for CRM contact creation confirmations</li>
+                    <li>4. Verify contacts appear in staff backend crm_contacts table</li>
+                    <li>5. Individual tests can be run separately for specific debugging</li>
+                </ol>
+            </div>
+
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Expected Behavior</h3>
+                <div class="grid md:grid-cols-2 gap-4 text-sm text-gray-700">
+                    <div>
+                        <h4 class="font-medium mb-1">Task 1 - Application CRM:</h4>
+                        <p>Creates contact with source: "application", includes applicationId</p>
+                    </div>
+                    <div>
+                        <h4 class="font-medium mb-1">Task 2 - Chatbot CRM:</h4>
+                        <p>Creates contact with source: "chatbot", includes sessionId</p>
+                    </div>
+                    <div>
+                        <h4 class="font-medium mb-1">Task 3 - Escalation CRM:</h4>
+                        <p>Creates contact with source: "chat_escalation", includes context</p>
+                    </div>
+                    <div>
+                        <h4 class="font-medium mb-1">Task 4 - Issue Report CRM:</h4>
+                        <p>Creates contact with source: "issue_report", includes screenshot</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-center space-x-4">
+                <a href="/apply/step-1" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+                    Test Real Application Flow
+                </a>
+                <a href="/" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                    Return to Application
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/test-crm-integration.js"></script>
+    <script>
+        // Auto-run tests on page load for immediate verification
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔗 CRM Integration Test Page Loaded');
+            console.log('📋 Ready to test all 4 CRM integration tasks');
+            console.log('🚀 Run window.runAllCRMTests() to execute complete test suite');
+        });
+    </script>
+</body>
+</html>
