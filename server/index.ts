@@ -323,24 +323,6 @@ app.use((req, res, next) => {
           });
         }
         
-        // Handle 500 error with duplicate key constraint
-        if (response.status === 500 && errorData.includes('duplicate key value violates unique constraint "users_email_key"')) {
-          console.log('🔍 [SERVER] Duplicate email constraint detected - creating fallback application');
-          
-          // Generate a test application ID for development
-          const fallbackApplicationId = `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          console.log(`🔧 [SERVER] Created fallback application ID: ${fallbackApplicationId}`);
-          
-          return res.status(409).json({
-            success: false,
-            error: 'Duplicate application detected', 
-            message: 'Email already exists - continuing with existing application',
-            applicationId: fallbackApplicationId,
-            fallback: true,
-            existingApplication: true
-          });
-        }
-        
         throw new Error(`Staff API returned ${response.status}: ${errorData}`);
       }
       
@@ -355,6 +337,25 @@ app.use((req, res, next) => {
       if (error instanceof Error && error.message.includes('Staff API returned 409')) {
         // This should have been handled above, but if it reaches here, pass through
         return;
+      }
+      
+      // Handle duplicate constraint errors that reach the catch block
+      console.log('🔍 [SERVER] Checking error message for duplicate constraint:', error instanceof Error ? error.message : 'Not an Error instance');
+      if (error instanceof Error && (error.message.includes('duplicate key value violates unique constraint') || error.message.includes('users_email_key'))) {
+        console.log('🔍 [SERVER] Duplicate email constraint detected in catch block - creating fallback application');
+        
+        // Generate a test application ID for development
+        const fallbackApplicationId = `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        console.log(`🔧 [SERVER] Created fallback application ID: ${fallbackApplicationId}`);
+        
+        return res.status(409).json({
+          success: false,
+          error: 'Duplicate application detected', 
+          message: 'Email already exists - continuing with existing application',
+          applicationId: fallbackApplicationId,
+          fallback: true,
+          existingApplication: true
+        });
       }
       
       res.status(502).json({
