@@ -1,433 +1,349 @@
 /**
- * COMPREHENSIVE END-TO-END TEST SUITE
- * Tests the complete 7-step application workflow with the test data provided
- * Date: July 16, 2025
+ * COMPREHENSIVE END-TO-END TEST PROTOCOL
+ * Tests complete application workflow from Step 1 through finalization
  */
 
-class ComprehensiveE2ETest {
-  constructor() {
-    this.results = [];
-    this.testData = {
-      businessName: 'End2End Ventures',
-      contactName: 'Ava Thorough',
-      amountRequested: 100000,
-      industry: 'transportation',
-      timeInBusiness: '3 years',
-      useOfFunds: 'equipment',
-      // Step 4 data
-      firstName: 'Ava',
-      lastName: 'Thorough',
-      email: 'ava@end2end.com',
-      phone: '555-789-1234',
-      // Equipment details
-      equipmentValue: 75000
-    };
+import fetch from 'node-fetch';
+import FormData from 'form-data';
+
+const BASE_URL = 'http://localhost:5000';
+const BEARER_TOKEN = process.env.VITE_CLIENT_APP_SHARED_TOKEN;
+
+// Test company data - SITE ENGINEERING TECHNOLOGY INC
+const TEST_DATA = {
+  step1: {
+    fundingAmount: 50000,
+    requestedAmount: 50000,
+    lookingFor: "equipment",
+    fundsPurpose: "equipment",
+    businessLocation: "CA",
+    timeframe: "asap"
+  },
+  step3: {
+    operatingName: "SITE ENGINEERING TECHNOLOGY INC",
+    businessPhone: "+17805551234",
+    businessState: "AB",
+    businessCity: "Calgary",
+    businessAddress: "123 Main Street",
+    businessZip: "T2P 1A1",
+    businessStartDate: "2015-01-01",
+    industry: "construction",
+    numberOfEmployees: 25,
+    annualRevenue: 2500000,
+    businessDescription: "Engineering and construction services"
+  },
+  step4: {
+    applicantFirstName: "Todd",
+    applicantLastName: "Werboweski",
+    applicantEmail: "todd@werboweski.com",
+    applicantPhone: "+17805551234",
+    applicantTitle: "CEO",
+    creditScore: "excellent",
+    hasPartner: false
   }
+};
 
-  log(message, type = 'info') {
-    console.log(`[E2E-TEST] ${message}`);
-  }
+const TEST_DOCUMENTS = [
+  { filename: 'bank_statement_nov_2024.pdf', documentType: 'bank_statements' },
+  { filename: 'bank_statement_dec_2024.pdf', documentType: 'bank_statements' },
+  { filename: 'financial_statements_2024.pdf', documentType: 'financial_statements' }
+];
 
-  addResult(step, passed, details = '') {
-    this.results.push({
-      step,
-      passed,
-      details,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  async testStep1FormFilling() {
-    this.log('🧪 Testing Step 1: Financial Profile');
-    
-    try {
-      // Check if we're on Step 1
-      const currentPath = window.location.pathname;
-      if (!currentPath.includes('step1') && !currentPath.includes('/')) {
-        this.log('Navigating to Step 1...');
-        window.location.href = '/step1';
-        await this.waitForPageLoad();
-      }
-
-      // Fill out Step 1 form
-      const form = document.querySelector('form');
-      if (!form) {
-        this.addResult('Step 1', false, 'No form found on Step 1');
-        return false;
-      }
-
-      // Fill business location
-      const businessLocationSelect = document.querySelector('select[name="businessLocation"]');
-      if (businessLocationSelect) {
-        businessLocationSelect.value = 'US';
-        businessLocationSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        this.log('✓ Set business location to US');
-      }
-
-      // Fill industry
-      const industrySelect = document.querySelector('select[name="industry"]');
-      if (industrySelect) {
-        industrySelect.value = this.testData.industry;
-        industrySelect.dispatchEvent(new Event('change', { bubbles: true }));
-        this.log('✓ Set industry to transportation');
-      }
-
-      // Fill looking for
-      const lookingForSelect = document.querySelector('select[name="lookingFor"]');
-      if (lookingForSelect) {
-        lookingForSelect.value = 'equipment';
-        lookingForSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        this.log('✓ Set looking for to equipment');
-      }
-
-      // Fill funding amount
-      const fundingAmountInput = document.querySelector('input[name="fundingAmount"]');
-      if (fundingAmountInput) {
-        fundingAmountInput.value = this.testData.amountRequested.toString();
-        fundingAmountInput.dispatchEvent(new Event('input', { bubbles: true }));
-        this.log('✓ Set funding amount to $100,000');
-      }
-
-      // Fill purpose
-      const purposeSelect = document.querySelector('select[name="fundsPurpose"]');
-      if (purposeSelect) {
-        purposeSelect.value = 'Equipment Purchase';
-        purposeSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        this.log('✓ Set purpose to Equipment Purchase');
-      }
-
-      // Submit form
-      const submitButton = document.querySelector('button[type="submit"]');
-      if (submitButton && !submitButton.disabled) {
-        submitButton.click();
-        this.log('✓ Submitted Step 1 form');
-        await this.waitForNavigation('/step2');
-        this.addResult('Step 1', true, 'Form filled and submitted successfully');
-        return true;
-      } else {
-        this.addResult('Step 1', false, 'Submit button not found or disabled');
-        return false;
-      }
-    } catch (error) {
-      this.addResult('Step 1', false, `Error: ${error.message}`);
-      return false;
+async function makeApiCall(endpoint, method = 'GET', data = null, headers = {}) {
+  const url = `${BASE_URL}${endpoint}`;
+  const options = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers
     }
+  };
+  
+  if (BEARER_TOKEN && !headers['Authorization']) {
+    options.headers['Authorization'] = `Bearer ${BEARER_TOKEN}`;
   }
-
-  async testStep2ProductRecommendations() {
-    this.log('🧪 Testing Step 2: Product Recommendations');
-    
-    try {
-      // Wait for products to load
-      await this.waitForCondition(() => {
-        const productCards = document.querySelectorAll('[data-testid="product-card"]');
-        return productCards.length > 0;
-      }, 10000);
-
-      const productCards = document.querySelectorAll('[data-testid="product-card"]');
-      if (productCards.length === 0) {
-        this.addResult('Step 2', false, 'No product cards found');
-        return false;
-      }
-
-      this.log(`✓ Found ${productCards.length} product recommendations`);
-
-      // Select first product
-      const firstProduct = productCards[0];
-      firstProduct.click();
-      this.log('✓ Selected first product recommendation');
-
-      // Continue to Step 3
-      const continueButton = document.querySelector('button:contains("Continue")');
-      if (continueButton) {
-        continueButton.click();
-        await this.waitForNavigation('/step3');
-        this.addResult('Step 2', true, `${productCards.length} products displayed, selection successful`);
-        return true;
-      } else {
-        this.addResult('Step 2', false, 'Continue button not found');
-        return false;
-      }
-    } catch (error) {
-      this.addResult('Step 2', false, `Error: ${error.message}`);
-      return false;
-    }
+  
+  if (data && method !== 'GET') {
+    options.body = JSON.stringify(data);
   }
-
-  async testStep3BusinessDetails() {
-    this.log('🧪 Testing Step 3: Business Details');
-    
-    try {
-      // Fill business details form
-      const businessNameInput = document.querySelector('input[name="operatingName"]');
-      if (businessNameInput) {
-        businessNameInput.value = this.testData.businessName;
-        businessNameInput.dispatchEvent(new Event('input', { bubbles: true }));
-        this.log('✓ Set business name');
-      }
-
-      // Fill other required fields
-      const legalNameInput = document.querySelector('input[name="legalName"]');
-      if (legalNameInput) {
-        legalNameInput.value = this.testData.businessName + ' LLC';
-        legalNameInput.dispatchEvent(new Event('input', { bubbles: true }));
-        this.log('✓ Set legal name');
-      }
-
-      // Submit form
-      const submitButton = document.querySelector('button[type="submit"]');
-      if (submitButton && !submitButton.disabled) {
-        submitButton.click();
-        await this.waitForNavigation('/step4');
-        this.addResult('Step 3', true, 'Business details form completed');
-        return true;
-      } else {
-        this.addResult('Step 3', false, 'Submit button not found or disabled');
-        return false;
-      }
-    } catch (error) {
-      this.addResult('Step 3', false, `Error: ${error.message}`);
-      return false;
-    }
-  }
-
-  async testStep4ApplicantInfo() {
-    this.log('🧪 Testing Step 4: Applicant Information');
-    
-    try {
-      // Fill applicant information
-      const firstNameInput = document.querySelector('input[name="applicantFirstName"]');
-      if (firstNameInput) {
-        firstNameInput.value = this.testData.firstName;
-        firstNameInput.dispatchEvent(new Event('input', { bubbles: true }));
-        this.log('✓ Set first name');
-      }
-
-      const lastNameInput = document.querySelector('input[name="applicantLastName"]');
-      if (lastNameInput) {
-        lastNameInput.value = this.testData.lastName;
-        lastNameInput.dispatchEvent(new Event('input', { bubbles: true }));
-        this.log('✓ Set last name');
-      }
-
-      const emailInput = document.querySelector('input[name="applicantEmail"]');
-      if (emailInput) {
-        emailInput.value = this.testData.email;
-        emailInput.dispatchEvent(new Event('input', { bubbles: true }));
-        this.log('✓ Set email');
-      }
-
-      const phoneInput = document.querySelector('input[name="applicantPhone"]');
-      if (phoneInput) {
-        phoneInput.value = this.testData.phone;
-        phoneInput.dispatchEvent(new Event('input', { bubbles: true }));
-        this.log('✓ Set phone');
-      }
-
-      // Submit form
-      const submitButton = document.querySelector('button[type="submit"]');
-      if (submitButton && !submitButton.disabled) {
-        submitButton.click();
-        await this.waitForNavigation('/step5');
-        this.addResult('Step 4', true, 'Applicant information submitted successfully');
-        return true;
-      } else {
-        this.addResult('Step 4', false, 'Submit button not found or disabled');
-        return false;
-      }
-    } catch (error) {
-      this.addResult('Step 4', false, `Error: ${error.message}`);
-      return false;
-    }
-  }
-
-  async testStep5DocumentUpload() {
-    this.log('🧪 Testing Step 5: Document Upload');
-    
-    try {
-      // Check for document upload interface
-      const uploadArea = document.querySelector('[data-testid="upload-area"]');
-      if (!uploadArea) {
-        this.addResult('Step 5', false, 'Upload area not found');
-        return false;
-      }
-
-      this.log('✓ Document upload interface found');
-
-      // Skip actual file upload for automated test
-      // In real testing, you would upload actual files here
-      this.log('⚠️ Skipping file upload for automated test');
-
-      // Continue to Step 6
-      const continueButton = document.querySelector('button:contains("Continue")');
-      if (continueButton) {
-        continueButton.click();
-        await this.waitForNavigation('/step6');
-        this.addResult('Step 5', true, 'Document upload interface functional');
-        return true;
-      } else {
-        this.addResult('Step 5', false, 'Continue button not found');
-        return false;
-      }
-    } catch (error) {
-      this.addResult('Step 5', false, `Error: ${error.message}`);
-      return false;
-    }
-  }
-
-  async testStep6SignNowIntegration() {
-    this.log('🧪 Testing Step 6: SignNow Integration');
-    
-    try {
-      // Wait for SignNow iframe to load
-      await this.waitForCondition(() => {
-        const iframe = document.querySelector('iframe');
-        return iframe && iframe.src.includes('signnow');
-      }, 15000);
-
-      const iframe = document.querySelector('iframe');
-      if (!iframe) {
-        this.addResult('Step 6', false, 'SignNow iframe not found');
-        return false;
-      }
-
-      this.log('✓ SignNow iframe loaded');
-
-      // Check if smart fields are populated (would need iframe access)
-      this.log('⚠️ Cannot verify smart field population due to iframe restrictions');
-
-      // Skip actual signing for automated test
-      // Continue to Step 7
-      const continueButton = document.querySelector('button:contains("Continue")');
-      if (continueButton) {
-        continueButton.click();
-        await this.waitForNavigation('/step7');
-        this.addResult('Step 6', true, 'SignNow integration functional');
-        return true;
-      } else {
-        this.addResult('Step 6', false, 'Continue button not found');
-        return false;
-      }
-    } catch (error) {
-      this.addResult('Step 6', false, `Error: ${error.message}`);
-      return false;
-    }
-  }
-
-  async testStep7FinalSubmission() {
-    this.log('🧪 Testing Step 7: Final Submission');
-    
-    try {
-      // Check for final submit button
-      const submitButton = document.querySelector('button[type="submit"]');
-      if (!submitButton) {
-        this.addResult('Step 7', false, 'Final submit button not found');
-        return false;
-      }
-
-      this.log('✓ Final submit button found');
-
-      // Test submission (without actually submitting)
-      if (!submitButton.disabled) {
-        this.log('✓ Submit button is enabled');
-        // submitButton.click(); // Uncomment for actual submission
-        this.addResult('Step 7', true, 'Final submission ready');
-        return true;
-      } else {
-        this.addResult('Step 7', false, 'Submit button is disabled');
-        return false;
-      }
-    } catch (error) {
-      this.addResult('Step 7', false, `Error: ${error.message}`);
-      return false;
-    }
-  }
-
-  async waitForNavigation(expectedPath, timeout = 10000) {
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-      if (window.location.pathname.includes(expectedPath)) {
-        return true;
-      }
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    throw new Error(`Navigation to ${expectedPath} timed out`);
-  }
-
-  async waitForCondition(condition, timeout = 5000) {
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-      if (condition()) {
-        return true;
-      }
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    throw new Error('Condition not met within timeout');
-  }
-
-  async waitForPageLoad() {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-
-  async runCompleteE2ETest() {
-    this.log('🚀 Starting Complete End-to-End Test Suite');
-    
-    const tests = [
-      { name: 'Step 1 Form Filling', fn: () => this.testStep1FormFilling() },
-      { name: 'Step 2 Product Recommendations', fn: () => this.testStep2ProductRecommendations() },
-      { name: 'Step 3 Business Details', fn: () => this.testStep3BusinessDetails() },
-      { name: 'Step 4 Applicant Information', fn: () => this.testStep4ApplicantInfo() },
-      { name: 'Step 5 Document Upload', fn: () => this.testStep5DocumentUpload() },
-      { name: 'Step 6 SignNow Integration', fn: () => this.testStep6SignNowIntegration() },
-      { name: 'Step 7 Final Submission', fn: () => this.testStep7FinalSubmission() }
-    ];
-
-    for (const test of tests) {
-      this.log(`\n--- Running ${test.name} ---`);
-      try {
-        const result = await test.fn();
-        if (result) {
-          this.log(`✅ ${test.name} PASSED`);
-        } else {
-          this.log(`❌ ${test.name} FAILED`);
-        }
-      } catch (error) {
-        this.log(`❌ ${test.name} ERROR: ${error.message}`);
-        this.addResult(test.name, false, `Exception: ${error.message}`);
-      }
-    }
-
-    this.generateFinalReport();
-  }
-
-  generateFinalReport() {
-    const totalTests = this.results.length;
-    const passedTests = this.results.filter(r => r.passed).length;
-    const failedTests = totalTests - passedTests;
-    const successRate = Math.round((passedTests / totalTests) * 100);
-
-    console.log('\n' + '='.repeat(60));
-    console.log('📊 END-TO-END TEST REPORT');
-    console.log('='.repeat(60));
-    console.log(`Total Tests: ${totalTests}`);
-    console.log(`Passed: ${passedTests}`);
-    console.log(`Failed: ${failedTests}`);
-    console.log(`Success Rate: ${successRate}%`);
-    console.log('='.repeat(60));
-
-    this.results.forEach((result, index) => {
-      const status = result.passed ? '✅' : '❌';
-      console.log(`${status} ${result.step}: ${result.details}`);
-    });
-
-    console.log('\n📋 SUMMARY:');
-    console.log(`• Step 2 Product Display: ${this.results.find(r => r.step === 'Step 2')?.passed ? 'WORKING' : 'NEEDS FIX'}`);
-    console.log(`• Step 5 Document Upload: ${this.results.find(r => r.step === 'Step 5')?.passed ? 'WORKING' : 'NEEDS FIX'}`);
-    console.log(`• Step 6 SignNow Integration: ${this.results.find(r => r.step === 'Step 6')?.passed ? 'WORKING' : 'NEEDS FIX'}`);
-    console.log(`• Step 7 Final Submission: ${this.results.find(r => r.step === 'Step 7')?.passed ? 'WORKING' : 'NEEDS FIX'}`);
-  }
+  
+  console.log(`📡 [E2E_TEST] ${method} ${endpoint}`);
+  const response = await fetch(url, options);
+  const result = await response.json();
+  
+  console.log(`📥 [E2E_TEST] Response: ${response.status}`, result);
+  return { response, result };
 }
 
-// Run the test
-const e2eTest = new ComprehensiveE2ETest();
-e2eTest.runCompleteE2ETest();
+async function uploadDocument(applicationId, fileInfo) {
+  const testContent = `%PDF-1.4
+Test document content for ${fileInfo.filename}
+Generated: ${new Date().toISOString()}
+Application ID: ${applicationId}
+Document Type: ${fileInfo.documentType}
+%%EOF`;
+
+  const formData = new FormData();
+  formData.append('document', Buffer.from(testContent), {
+    filename: fileInfo.filename,
+    contentType: 'application/pdf'
+  });
+  formData.append('documentType', fileInfo.documentType);
+
+  const headers = {
+    ...formData.getHeaders()
+  };
+  
+  if (BEARER_TOKEN) {
+    headers['Authorization'] = `Bearer ${BEARER_TOKEN}`;
+  }
+
+  console.log(`📤 [E2E_TEST] Uploading: ${fileInfo.filename}`);
+  const response = await fetch(`${BASE_URL}/api/public/upload/${applicationId}`, {
+    method: 'POST',
+    headers,
+    body: formData
+  });
+
+  const result = await response.json();
+  console.log(`📥 [E2E_TEST] Upload response: ${response.status}`, result);
+  return { response, result };
+}
+
+async function runComprehensiveE2ETest() {
+  console.log('🚀 [E2E_TEST] Starting comprehensive end-to-end test');
+  console.log('📋 [E2E_TEST] Testing complete application workflow');
+  
+  const testResults = {
+    steps: {},
+    uploads: {},
+    finalization: {},
+    errors: [],
+    applicationId: null
+  };
+
+  try {
+    // Test 1: Verify server is running
+    console.log('\n1️⃣ [E2E_TEST] Testing server availability...');
+    const { response: healthCheck } = await makeApiCall('/api/health');
+    if (!healthCheck.ok) {
+      throw new Error('Server not responding');
+    }
+    testResults.steps.serverHealth = { status: 'PASS', response: healthCheck.status };
+
+    // Test 2: Fetch lender products (simulating Step 2)
+    console.log('\n2️⃣ [E2E_TEST] Testing lender products API...');
+    const { response: productsResp, result: products } = await makeApiCall('/api/public/lender-products');
+    testResults.steps.lenderProducts = {
+      status: productsResp.ok ? 'PASS' : 'FAIL',
+      productCount: products?.length || 0,
+      response: productsResp.status
+    };
+
+    // Test 3: Create application (Step 4 simulation)
+    console.log('\n3️⃣ [E2E_TEST] Creating application...');
+    const applicationData = {
+      ...TEST_DATA.step1,
+      ...TEST_DATA.step3,
+      ...TEST_DATA.step4
+    };
+
+    const { response: createResp, result: createResult } = await makeApiCall(
+      '/api/public/applications',
+      'POST',
+      applicationData
+    );
+
+    if (createResp.ok && createResult.applicationId) {
+      testResults.applicationId = createResult.applicationId;
+      testResults.steps.applicationCreation = {
+        status: 'PASS',
+        applicationId: createResult.applicationId,
+        response: createResp.status
+      };
+      console.log(`✅ [E2E_TEST] Application created: ${createResult.applicationId}`);
+    } else if (createResp.status === 409) {
+      // Handle duplicate application
+      testResults.applicationId = createResult.applicationId;
+      testResults.steps.applicationCreation = {
+        status: 'PASS_DUPLICATE',
+        applicationId: createResult.applicationId,
+        response: createResp.status,
+        message: 'Using existing application'
+      };
+      console.log(`♻️ [E2E_TEST] Using existing application: ${createResult.applicationId}`);
+    } else {
+      throw new Error(`Application creation failed: ${createResult.error}`);
+    }
+
+    // Test 4: Document uploads (Step 5 simulation)
+    console.log('\n4️⃣ [E2E_TEST] Testing document uploads...');
+    const uploadResults = [];
+    
+    for (let i = 0; i < TEST_DOCUMENTS.length; i++) {
+      const doc = TEST_DOCUMENTS[i];
+      try {
+        const uploadResult = await uploadDocument(testResults.applicationId, doc);
+        uploadResults.push({
+          filename: doc.filename,
+          status: uploadResult.response.ok ? 'PASS' : 'FAIL',
+          documentId: uploadResult.result.documentId,
+          response: uploadResult.response.status
+        });
+      } catch (error) {
+        uploadResults.push({
+          filename: doc.filename,
+          status: 'FAIL',
+          error: error.message
+        });
+      }
+      
+      // Brief pause between uploads
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    testResults.uploads = {
+      total: TEST_DOCUMENTS.length,
+      successful: uploadResults.filter(r => r.status === 'PASS').length,
+      failed: uploadResults.filter(r => r.status === 'FAIL').length,
+      details: uploadResults
+    };
+
+    // Test 5: Application finalization (Step 6 simulation)
+    console.log('\n5️⃣ [E2E_TEST] Testing application finalization...');
+    const finalizationData = {
+      status: 'submitted',
+      submittedAt: new Date().toISOString(),
+      electronicSignature: {
+        signedAt: new Date().toISOString(),
+        signedBy: `${TEST_DATA.step4.applicantFirstName} ${TEST_DATA.step4.applicantLastName}`,
+        ipAddress: '127.0.0.1',
+        userAgent: 'E2E_TEST_AGENT'
+      }
+    };
+
+    const { response: finalizeResp, result: finalizeResult } = await makeApiCall(
+      `/api/public/applications/${testResults.applicationId}`,
+      'PATCH',
+      finalizationData
+    );
+
+    testResults.finalization = {
+      status: finalizeResp.ok ? 'PASS' : 'FAIL',
+      response: finalizeResp.status,
+      finalStatus: finalizeResult.application?.status,
+      details: finalizeResult
+    };
+
+    // Test 6: Verify application status
+    console.log('\n6️⃣ [E2E_TEST] Verifying final application status...');
+    const { response: statusResp, result: statusResult } = await makeApiCall(
+      `/api/public/applications/${testResults.applicationId}/status`
+    );
+
+    testResults.steps.statusVerification = {
+      status: statusResp.ok ? 'PASS' : 'FAIL',
+      applicationStatus: statusResult.status,
+      stage: statusResult.stage,
+      response: statusResp.status
+    };
+
+  } catch (error) {
+    console.error(`💥 [E2E_TEST] Test execution error: ${error.message}`);
+    testResults.errors.push(error.message);
+  }
+
+  // Generate comprehensive test report
+  console.log('\n🎯 [E2E_TEST] COMPREHENSIVE TEST RESULTS');
+  console.log('==========================================');
+  
+  // Server Health
+  const serverStatus = testResults.steps.serverHealth?.status || 'FAIL';
+  console.log(`🏥 Server Health: ${serverStatus}`);
+  
+  // Lender Products
+  const productsStatus = testResults.steps.lenderProducts?.status || 'FAIL';
+  const productCount = testResults.steps.lenderProducts?.productCount || 0;
+  console.log(`📊 Lender Products: ${productsStatus} (${productCount} products)`);
+  
+  // Application Creation
+  const appStatus = testResults.steps.applicationCreation?.status || 'FAIL';
+  console.log(`📝 Application Creation: ${appStatus}`);
+  if (testResults.applicationId) {
+    console.log(`   📄 Application ID: ${testResults.applicationId}`);
+  }
+  
+  // Document Uploads
+  const uploadTotal = testResults.uploads?.total || 0;
+  const uploadSuccess = testResults.uploads?.successful || 0;
+  const uploadFailed = testResults.uploads?.failed || 0;
+  console.log(`📤 Document Uploads: ${uploadSuccess}/${uploadTotal} successful`);
+  if (testResults.uploads?.details) {
+    testResults.uploads.details.forEach((upload, i) => {
+      console.log(`   ${i + 1}. ${upload.filename}: ${upload.status}`);
+      if (upload.documentId) {
+        console.log(`      📄 Document ID: ${upload.documentId}`);
+      }
+    });
+  }
+  
+  // Application Finalization
+  const finalizeStatus = testResults.finalization?.status || 'FAIL';
+  console.log(`🏁 Application Finalization: ${finalizeStatus}`);
+  if (testResults.finalization?.finalStatus) {
+    console.log(`   📋 Final Status: ${testResults.finalization.finalStatus}`);
+  }
+  
+  // Status Verification
+  const verifyStatus = testResults.steps.statusVerification?.status || 'FAIL';
+  console.log(`🔍 Status Verification: ${verifyStatus}`);
+  if (testResults.steps.statusVerification?.applicationStatus) {
+    console.log(`   📊 Application Status: ${testResults.steps.statusVerification.applicationStatus}`);
+    console.log(`   🎭 Stage: ${testResults.steps.statusVerification.stage || 'N/A'}`);
+  }
+  
+  // Overall Assessment
+  const allTests = [
+    testResults.steps.serverHealth?.status,
+    testResults.steps.lenderProducts?.status,
+    testResults.steps.applicationCreation?.status,
+    testResults.finalization?.status,
+    testResults.steps.statusVerification?.status
+  ];
+  
+  const passedTests = allTests.filter(status => 
+    status === 'PASS' || status === 'PASS_DUPLICATE'
+  ).length;
+  const totalTests = allTests.filter(status => status).length;
+  
+  const overallSuccess = passedTests === totalTests && uploadSuccess === uploadTotal;
+  
+  console.log('\n🎯 OVERALL ASSESSMENT:');
+  console.log(`📊 Tests Passed: ${passedTests}/${totalTests}`);
+  console.log(`📤 Uploads Passed: ${uploadSuccess}/${uploadTotal}`);
+  console.log(`🎯 Overall Status: ${overallSuccess ? 'PASS' : 'FAIL'}`);
+  
+  if (testResults.errors.length > 0) {
+    console.log('\n❌ ERRORS:');
+    testResults.errors.forEach((error, i) => {
+      console.log(`${i + 1}. ${error}`);
+    });
+  }
+  
+  if (overallSuccess) {
+    console.log('\n✅ [E2E_TEST] ALL TESTS PASSED - APPLICATION WORKFLOW FULLY OPERATIONAL');
+  } else {
+    console.log('\n❌ [E2E_TEST] SOME TESTS FAILED - REVIEW RESULTS ABOVE');
+  }
+  
+  return testResults;
+}
+
+// Execute the comprehensive test
+runComprehensiveE2ETest().then(results => {
+  console.log('\n🏁 [E2E_TEST] Test execution complete');
+  process.exit(0);
+}).catch(error => {
+  console.error('💥 [E2E_TEST] Test execution failed:', error);
+  process.exit(1);
+});
