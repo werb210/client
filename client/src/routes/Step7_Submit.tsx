@@ -16,14 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { Badge } from '@/components/ui/badge';
 
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import Send from 'lucide-react/dist/esm/icons/send';
-import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
-import Clock from 'lucide-react/dist/esm/icons/clock';
-import Shield from 'lucide-react/dist/esm/icons/shield';
-import Users from 'lucide-react/dist/esm/icons/users';
+import { CheckCircle, AlertTriangle, FileText, Send, ArrowLeft, Clock, Shield, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 import { ApplicationStatusModal } from '@/components/ApplicationStatusModal';
@@ -194,7 +187,7 @@ export default function Step7Submit() {
       // 🔧 Task 1: CRM Contact Creation on Application Submit
       try {
         console.log("🔗 Creating CRM contact for application submission...");
-        const crmResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/crm/contacts/auto-create`, {
+        const crmResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/crm/contacts/auto-create`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",

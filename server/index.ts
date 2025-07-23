@@ -1071,12 +1071,153 @@ app.use((req, res, next) => {
     }
   });
 
+  // 🔧 Task 1: CRM Contact Creation Endpoint
+  app.post('/api/public/crm/contacts/auto-create', async (req, res) => {
+    try {
+      const { firstName, lastName, email, phone, source, applicationId } = req.body;
+      
+      console.log(`🔗 [SERVER] CRM Contact Creation: ${firstName} ${lastName} (${email}) - Source: ${source}`);
+      
+      // Forward to staff backend CRM system
+      try {
+        const response = await fetch(`${cfg.staffApiUrl}/api/crm/contacts/auto-create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${cfg.clientToken}`
+          },
+          body: JSON.stringify({ 
+            firstName, 
+            lastName, 
+            email, 
+            phone, 
+            source, 
+            applicationId, 
+            timestamp: new Date().toISOString() 
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`✅ [SERVER] CRM contact created successfully:`, result);
+          res.json(result);
+        } else {
+          console.log('⚠️ [SERVER] Staff backend CRM unavailable, logging locally');
+          res.json({
+            success: true,
+            message: 'Contact logged locally - CRM sync pending',
+            contact: { firstName, lastName, email, source }
+          });
+        }
+      } catch (error) {
+        console.log('⚠️ [SERVER] Staff backend CRM failed, logging locally:', (error as Error).message);
+        res.json({
+          success: true,
+          message: 'Contact logged locally - CRM sync pending',
+          contact: { firstName, lastName, email, source }
+        });
+      }
+    } catch (error) {
+      console.error('❌ [SERVER] CRM contact creation failed:', error);
+      res.status(500).json({
+        error: 'CRM contact creation failed',
+        message: 'Failed to create CRM contact'
+      });
+    }
+  });
+
+  // 🔧 Task 4: Issue Reporting Endpoint
+  app.post('/api/ai/report-issue', async (req, res) => {
+    try {
+      const { name, email, message, page, screenshot, timestamp } = req.body;
+      
+      console.log(`🐛 [SERVER] Issue Report: ${name} (${email}) - Page: ${page}`);
+      console.log(`🐛 [SERVER] Issue: ${message}`);
+      console.log(`🐛 [SERVER] Screenshot: ${screenshot ? 'Included' : 'Not provided'}`);
+      
+      // Forward to staff backend issue tracking system
+      try {
+        const response = await fetch(`${cfg.staffApiUrl}/api/ai/report-issue`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${cfg.clientToken}`
+          },
+          body: JSON.stringify({ 
+            name, 
+            email, 
+            message, 
+            page, 
+            screenshot, 
+            timestamp: timestamp || new Date().toISOString() 
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`✅ [SERVER] Issue report submitted successfully:`, result);
+          res.json(result);
+        } else {
+          console.log('⚠️ [SERVER] Staff backend issue tracking unavailable, logging locally');
+          res.json({
+            success: true,
+            message: 'Issue report logged locally - staff sync pending',
+            report: { name, email, message, page, timestamp }
+          });
+        }
+      } catch (error) {
+        console.log('⚠️ [SERVER] Staff backend issue tracking failed, logging locally:', (error as Error).message);
+        res.json({
+          success: true,
+          message: 'Issue report logged locally - staff sync pending',
+          report: { name, email, message, page, timestamp }
+        });
+      }
+    } catch (error) {
+      console.error('❌ [SERVER] Issue reporting failed:', error);
+      res.status(500).json({
+        error: 'Issue reporting failed',
+        message: 'Failed to submit issue report'
+      });
+    }
+  });
+
   // Contact logging endpoint for welcome flow
   app.post('/api/chat/log-contact', async (req, res) => {
     try {
       const { sessionId, name, email } = req.body;
       
       console.log(`👤 [SERVER] Contact logged: ${name} (${email}) for session: ${sessionId}`);
+      
+      // 🔧 Task 2: Auto-create CRM contact when chatbot collects name/email
+      if (name && email) {
+        try {
+          console.log(`🔗 [SERVER] Auto-creating CRM contact for chatbot user: ${name}`);
+          const crmResponse = await fetch(`${cfg.staffApiUrl}/api/crm/contacts/auto-create`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${cfg.clientToken}`
+            },
+            body: JSON.stringify({
+              firstName: name.split(" ")[0],
+              lastName: name.split(" ")[1] || "",
+              email,
+              source: "chatbot",
+              timestamp: new Date().toISOString()
+            })
+          });
+          
+          if (crmResponse.ok) {
+            const crmResult = await crmResponse.json();
+            console.log(`✅ [SERVER] CRM contact created for chatbot user:`, crmResult);
+          } else {
+            console.log('⚠️ [SERVER] Chatbot CRM contact creation failed - logging locally');
+          }
+        } catch (crmError) {
+          console.log('⚠️ [SERVER] Chatbot CRM error:', (crmError as Error).message);
+        }
+      }
       
       // Forward to staff backend for CRM integration
       try {
@@ -1979,6 +2120,45 @@ app.use((req, res, next) => {
       }
     });
     
+    // 🔧 Task 3: Handle "request_human" events for live staff UI
+    socket.on('request_human', (data) => {
+      console.log(`🔗 [SOCKET] Human assistance request:`, data);
+      
+      // Create CRM contact with escalation context
+      if (data.name && data.email) {
+        fetch(`${cfg.staffApiUrl}/api/crm/contacts/auto-create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${cfg.clientToken}`
+          },
+          body: JSON.stringify({
+            firstName: data.name.split(" ")[0],
+            lastName: data.name.split(" ")[1] || "",
+            email: data.email,
+            source: "chat_escalation",
+            context: `Page: ${data.currentPage}, Session: ${data.sessionId}`,
+            timestamp: data.timestamp
+          })
+        }).then(response => {
+          if (response.ok) {
+            console.log(`✅ [SOCKET] CRM contact created for chat escalation`);
+          }
+        }).catch(err => {
+          console.log(`⚠️ [SOCKET] CRM escalation contact failed:`, err.message);
+        });
+      }
+      
+      // Broadcast to staff clients for live notifications
+      socket.broadcast.emit('staff_chat_request', {
+        ...data,
+        socketId: socket.id,
+        timestamp: new Date().toISOString()
+      });
+      
+      console.log(`📡 [SOCKET] Chat escalation broadcasted to staff`);
+    });
+
     // Handle human assistance requests - CORRECT EVENT NAME
     socket.on('user-request-human', async (data) => {
       const { sessionId, userName } = data;

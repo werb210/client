@@ -72,30 +72,44 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
     
     setIsSubmitting(true);
     try {
+      // 🔧 Task 4: Implement issue reporting with screenshot
+      const userContact = JSON.parse(sessionStorage.getItem('chatbotContact') || '{}');
       const screenshot = await captureScreenshot();
+      let screenshotBase64 = '';
       
-      const formData = new FormData();
-      formData.append('text', reportText);
-      formData.append('conversation', conversation);
-      formData.append('timestamp', new Date().toISOString());
-      formData.append('userAgent', navigator.userAgent);
-      formData.append('url', window.location.href);
-      
+      // Convert screenshot to base64 if available
       if (screenshot) {
-        formData.append('screenshot', screenshot, 'screenshot.png');
+        screenshotBase64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(screenshot);
+        });
       }
-
-      const response = await fetch('/api/feedback', {
+      
+      console.log('🐛 [CLIENT] Submitting issue report with screenshot');
+      
+      const reportResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai/report-issue`, {
         method: 'POST',
-        body: formData // Use FormData instead of JSON for file upload
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: userContact.name || 'Anonymous',
+          email: userContact.email || '',
+          message: reportText.trim(),
+          page: window.location.pathname,
+          screenshot: screenshotBase64,
+          timestamp: new Date().toISOString(),
+        }),
       });
-
-      if (response.ok) {
-        alert('Issue reported with screenshot. Thanks for your feedback!');
-        setReportText('');
-        onClose();
+      
+      if (reportResponse.ok) {
+        const result = await reportResponse.json();
+        console.log('✅ [CLIENT] Issue report submitted successfully:', result);
+        alert('Issue report submitted successfully! Our team will review it.');
       } else {
-        alert('Failed to submit report. Please try again.');
+        console.error('❌ [CLIENT] Issue report failed:', reportResponse.status);
+        alert('Failed to submit issue report. Please try again.');
       }
     } catch (error) {
       console.error('Error submitting feedback:', error);

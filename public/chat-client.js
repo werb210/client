@@ -19,16 +19,30 @@ document.addEventListener('DOMContentLoaded', function() {
 async function requestHuman() {
   try {
     console.log('Requesting human assistance via Socket.IO...');
+    
+    // 🔧 Task 3: Emit "request_human" with user context for live UI
+    const userContact = JSON.parse(sessionStorage.getItem('chatbotContact') || '{}');
+    const contextData = {
+      sessionId,
+      name: userContact.name || '',
+      email: userContact.email || '',
+      currentPage: window.location.pathname,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('🔗 [CLIENT] Sending human request with context:', contextData);
+    
+    // Emit request_human event for real-time staff notifications
+    if (socket) {
+      socket.emit('request_human', contextData);
+    }
+    
+    // HTTP fallback
     await fetch('/api/chat/request-staff', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ sessionId })
+      body: JSON.stringify(contextData)
     });
-    
-    // Also emit via socket for real-time notification
-    if (socket) {
-      socket.emit('request-human', { sessionId });
-    }
     
     console.log('Human assistance request sent');
   } catch (error) {
