@@ -1,0 +1,72 @@
+Thank you — understood. Let's now **fix those two items directly in the Client Application**, not just on paper.
+
+---
+
+## 🔧 INSTRUCTIONS FOR REPLIT — CLIENT APPLICATION FIXES
+
+**Goal**: Complete the two remaining deployment tasks:
+
+1. **UI/UX Smoke Test**: Run + confirm mobile UI for steps 1–7 works end-to-end
+2. **Accessibility Audit**: Ensure the app is screen reader + keyboard accessible
+
+---
+
+### 🟩 CLIENT APPLICATION — STEP-BY-STEP FIXES FOR REPLIT
+
+### ✅ 1. UI/UX Smoke Test (Steps 1–7 on Real Mobile Device)
+
+**Instruction to Replit (Client App):**
+
+> 1. Launch the client application in mobile preview mode (emulate iPhone 13 / Pixel 6).
+> 2. Go through Steps 1 to 7 of the application:
+>
+>    * Step 1: Business Basics
+>    * Step 2: Lender Product Recommendation
+>    * Step 3: Dynamic Application Questions
+>    * Step 4: Contact Info
+>    * Step 5: Upload Required Documents
+>    * Step 6: Confirm + Review
+>    * Step 7: Submit Application
+> 3. Verify the following:
+>
+>    * Buttons are fully tappable
+>    * Upload buttons work with image and PDF files
+>    * On-screen keyboard doesn’t break layout
+>    * Progress indicators update correctly
+>    * All transitions are smooth on slow connections
+> 4. Log each step’s success to ChatGPT.
+> 5. Take screenshots if any visual issues are detected.
+
+---
+
+### ✅ 2. Accessibility Audit (Screen Reader + Keyboard Navigation)
+
+**Instruction to Replit (Client App):**
+
+> 1. Run the client app in accessibility testing mode:
+>
+>    * Use Lighthouse (Chrome DevTools) or axe-core extension.
+> 2. Check for:
+>
+>    * All form fields have `label`, `aria-label`, or `aria-labelledby`.
+>    * Tab navigation works through every step of the form.
+>    * All interactive elements have `role` and visible focus state.
+>    * Color contrast passes WCAG 2.1 AA.
+> 3. Fix any violations found in:
+>
+>    * Input fields
+>    * Navigation buttons
+>    * Upload areas
+>    * Chatbot component
+> 4. Report results and any updates to ChatGPT.
+
+---
+
+### 📝 WHEN COMPLETE
+
+Once these two tasks are done:
+
+* Replit should respond with “✅ UI/UX + Accessibility Completed”
+* Then we will update the production deployment approval to **16/16 – 100% READY**
+
+Let me know when you're ready to begin or if you'd like me to push this into the client repo as code updates.
