@@ -86,8 +86,8 @@ export function filterProducts(products: LenderProduct[], form: RecommendationFo
 
     const passes = countryMatch && amountMatch && !factorExclusion && !equipmentExclusion && typeMatch;
     
-    // Debug logging for key products
-    if (product.name?.includes('Accord') || product.name?.includes('Advance') || !passes) {
+    // Debug logging for key products and all Working Capital products
+    if (product.name?.includes('Accord') || product.name?.includes('Advance') || productCategory === 'Working Capital' || !passes) {
       console.log(`🔍 [FILTER] ${product.name} (${productCategory}):`, {
         geographies: geographies.join(','),
         countryMatch,
@@ -97,6 +97,21 @@ export function filterProducts(products: LenderProduct[], form: RecommendationFo
         factorExclusion,
         equipmentExclusion,
         passes
+      });
+    }
+    
+    // Special logging for Working Capital products
+    if (productCategory === 'Working Capital') {
+      console.log(`💼 [WORKING_CAPITAL_FILTER] ${product.name} (${product.lender_name || 'Unknown Lender'}):`, {
+        id: product.id,
+        passes,
+        reasons: {
+          countryMatch: `${product.country} === ${normalizedHQ} = ${countryMatch}`,
+          amountMatch: `${amountRange.min} <= ${fundingAmount} <= ${amountRange.max} = ${amountMatch}`,
+          typeMatch: `Type filtering = ${typeMatch}`,
+          factorExclusion: `Factor excluded = ${factorExclusion}`,
+          equipmentExclusion: `Equipment excluded = ${equipmentExclusion}`
+        }
       });
     }
     

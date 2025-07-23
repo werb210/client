@@ -71,6 +71,17 @@ export function Step2RecommendationEngine({
   if (productCategories && productCategories.length > 0) {
     console.log("Available categories:", productCategories.map(c => c.category));
     console.log("First category details:", productCategories[0]);
+    
+    // Debug: Check Working Capital category specifically
+    const workingCapitalCategory = productCategories.find(c => c.category === 'Working Capital');
+    if (workingCapitalCategory) {
+      console.log(`💼 [STEP2] Working Capital category found with ${workingCapitalCategory.count} products:`);
+      workingCapitalCategory.products?.forEach((p, i) => {
+        console.log(`   ${i+1}. ${p.name} (${p.lender_name})`);
+      });
+    } else {
+      console.log("❌ [STEP2] Working Capital category not found in productCategories");
+    }
   }
   
   // ✅ CHATGPT VERIFICATION: Log API responses

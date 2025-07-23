@@ -59,7 +59,20 @@ export function useProductCategories(formData: RecommendationFormData) {
           if (product.name?.includes('Accord') || product.lender_name?.includes('Accord')) {
             console.log(`🔍 [CATEGORIZATION] ${product.name} → Category: "${product.category}"`);
           }
+          
+          // Debug: Log all Working Capital products being categorized
+          if (product.category === 'Working Capital') {
+            console.log(`💼 [WORKING_CAPITAL] Adding product: ${product.name} (${product.lender_name}) - ID: ${product.id}`);
+          }
         });
+
+        // Debug: Log final Working Capital category details
+        if (categoryGroups['Working Capital']) {
+          console.log(`💼 [WORKING_CAPITAL] Final group has ${categoryGroups['Working Capital'].length} products:`);
+          categoryGroups['Working Capital'].forEach((p, i) => {
+            console.log(`   ${i+1}. ${p.name} (${p.lender_name}) - ID: ${p.id}`);
+          });
+        }
 
         // console.log('[useProductCategories] Category groups:', Object.keys(categoryGroups));
 
