@@ -1,0 +1,76 @@
+Thanks — that’s a valuable clue.
+
+### 🧪 Interpretation of Client Logs:
+
+```
+ALL ENV VARS: (7) ['BASE_URL', 'DEV', 'MODE', 'PROD', 'SSR', 'VITE_API_BASE_URL', 'VITE_CLIENT_APP_SHARED_TOKEN']
+```
+
+This output shows which environment variables are available **in the Vite client bundle at runtime**.
+
+---
+
+### ✅ What This Confirms
+
+1. **✅ `VITE_API_BASE_URL` is available**, meaning the client is correctly set up to fetch data from the backend staff API.
+2. **✅ `VITE_CLIENT_APP_SHARED_TOKEN` is also present**, meaning the shared secret is available for authentication to the staff app.
+3. **❌ If the client is still failing to submit applications or upload documents**, the issue is likely not an environment config problem — it's likely one of:
+
+   * Incorrect **base URL** being used
+   * Improper CORS handling on the staff API
+   * The client is **sending the token incorrectly** (e.g., missing headers)
+   * The staff app **doesn’t recognize the shared token** properly
+   * The staff backend upload or submit routes are returning 403/500 due to recent changes
+
+---
+
+### ✅ Next Recommended Action
+
+To help fix this and verify stability, I suggest the following:
+
+#### ✅ 1. Confirm `VITE_API_BASE_URL` is being used in fetches
+
+Check that in your client app (e.g. in `api.ts` or wherever fetches occur), you're referencing `import.meta.env.VITE_API_BASE_URL` directly.
+
+#### ✅ 2. Confirm token is being passed in headers
+
+Ensure this header is set in all API calls:
+
+```ts
+Authorization: `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+```
+
+#### ✅ 3. Add logging to the client before making requests:
+
+```ts
+console.log("POSTING to:", `${import.meta.env.VITE_API_BASE_URL}/api/public/application`);
+console.log("Auth token:", import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN);
+```
+
+#### ✅ 4. Re-enable full logging on the **staff backend**
+
+You can enable middleware in Express to log requests like:
+
+```ts
+app.use((req, res, next) => {
+  console.log(`[API] ${req.method} ${req.url} - Headers:`, req.headers);
+  next();
+});
+```
+
+---
+
+### 🧪 Optional: Run a test payload manually
+
+To test if your backend is accepting submissions:
+
+```bash
+curl -X POST https://staff.boreal.financial/api/public/application \
+  -H "Authorization: Bearer YOUR_SHARED_TOKEN_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{"business_name":"TestCo","use_of_funds":"Expansion","amount":50000}'
+```
+
+---
+
+Would you like me to write a diagnostic script you can run from the browser console to confirm all API endpoints and token usage from the client side?
