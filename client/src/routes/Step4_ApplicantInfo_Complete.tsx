@@ -485,7 +485,7 @@ export default function Step4ApplicantInfoComplete() {
             
             // Enhanced 409 duplicate error message
             const duplicateMessage = errorData.message || 'A duplicate application was detected';
-            console.log(`❌ Duplicate application detected: ${duplicateMessage}`);
+            console.log(`✅ Using Existing Application: ${duplicateMessage}`);
             
             // Try to extract existing application ID
             let existingId = errorData.applicationId;
@@ -494,7 +494,13 @@ export default function Step4ApplicantInfoComplete() {
               console.log('✅ DUPLICATE DETECTED - Using existing application ID:', existingId);
               
               // Store the existing application ID and continue workflow
+              setApplicationId(existingId);
               localStorage.setItem('applicationId', existingId);
+              
+              dispatch({
+                type: "SET_APPLICATION_ID",
+                payload: existingId
+              });
               
               dispatch({
                 type: "UPDATE_FORM_DATA",
