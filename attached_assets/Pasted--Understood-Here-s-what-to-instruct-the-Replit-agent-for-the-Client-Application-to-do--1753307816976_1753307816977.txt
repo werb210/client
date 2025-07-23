@@ -1,0 +1,65 @@
+✅ Understood. Here's what to instruct the **Replit agent for the *Client Application*** to do:
+
+---
+
+## 🟦 CLIENT APPLICATION – FULL APPLICATION FLOW TEST (with document upload)
+
+**Instruction for Replit Agent:**
+
+> 🧠 **Do ONLY the following. Report back to ChatGPT with all logs and screenshots.**
+
+---
+
+### 🔹 Step-by-Step Instructions:
+
+1. **Open the Client App homepage**
+   Navigate to `/` and click the **"Apply"** button to begin the loan application.
+
+2. **Proceed through the full application flow**:
+
+   * **Step 1:** Business Details – fill all fields with test data
+   * **Step 2:** Use of Funds – enter a test scenario
+   * **Step 3:** Lender Recommendation – choose a recommended lender/product
+   * **Step 4:** Additional Questions – answer based on selected product
+   * **Step 5:** Upload all required documents – upload test PDFs or images I will provide
+   * **Step 6:** Review – confirm all submitted data
+   * **Step 7:** Final submission – complete application and trigger backend API call
+
+3. **During Step 5 – Upload These Files (I will provide):**
+
+   * Bank Statements
+   * Financial Statements
+   * A/R Report
+   * A/P Report
+   * Government ID
+   * Voided Cheque
+
+4. **Verify the following behaviors:**
+
+   * Documents are uploaded successfully and stored in S3
+   * Each document preview appears correctly after upload
+   * After Step 7, the app shows “Application Submitted” screen
+
+5. **Monitor Client Logs**
+
+   * Log all console messages
+   * Log all API responses and errors during submission
+   * Capture any S3 upload errors, validation messages, or CORS issues
+
+6. **Confirm backend response**
+
+   * Confirm the server returns a valid `applicationId` and `status: success`
+   * Log the final API payload sent to the staff backend
+
+---
+
+Once the above is complete, the Replit agent must report back to **this ChatGPT thread** with:
+
+* ✅ Step-by-step screenshots (or confirmations)
+* 📄 Final payload sent to the backend
+* 🪵 Full logs of upload, S3 storage, and final application creation
+* ❌ Any errors encountered (CORS, 500s, etc.)
+
+---
+
+🟩 Proceed with this now. I will wait for the Replit client app agent to confirm completion. Let me know when you’re ready to provide the documents for Step 5.
