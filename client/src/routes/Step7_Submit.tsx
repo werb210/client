@@ -191,6 +191,36 @@ export default function Step7Submit() {
       const result = await response.json();
       console.log("📥 Application submission response:", result);
       
+      // 🔧 Task 1: CRM Contact Creation on Application Submit
+      try {
+        console.log("🔗 Creating CRM contact for application submission...");
+        const crmResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/crm/contacts/auto-create`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+          },
+          body: JSON.stringify({
+            firstName: state.step4?.firstName || "",
+            lastName: state.step4?.lastName || "",
+            email: state.step4?.email || "",
+            phone: state.step4?.phone || "",
+            source: "application",
+            applicationId: state.step4?.applicationId || "",
+          }),
+        });
+        
+        if (crmResponse.ok) {
+          const crmResult = await crmResponse.json();
+          console.log("✅ CRM contact created for application:", crmResult);
+        } else {
+          console.warn("⚠️ CRM contact creation failed:", crmResponse.status, crmResponse.statusText);
+        }
+      } catch (crmError) {
+        console.warn("⚠️ CRM contact creation error:", crmError);
+        // Don't fail the main submission for CRM issues
+      }
+      
       // Update state with submission success
       dispatch({
         type: 'MARK_COMPLETE'
