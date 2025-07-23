@@ -104,8 +104,9 @@ function runManualVerification() {
   // Test 9: Heading structure
   const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
   const h1Count = document.querySelectorAll('h1').length;
-  console.log(`Headings: ${headings.length}, H1 tags: ${h1Count}`);
-  results.accessibility.headings = headings.length > 0;
+  const stepHeaderH1 = document.querySelectorAll('h1.bg-gradient-to-r');
+  console.log(`Headings: ${headings.length}, H1 tags: ${h1Count}, StepHeader H1: ${stepHeaderH1.length}`);
+  results.accessibility.headings = h1Count > 0 || stepHeaderH1.length > 0;
   
   // Test 10: Image accessibility
   const images = document.querySelectorAll('img, svg, [role="img"]');
