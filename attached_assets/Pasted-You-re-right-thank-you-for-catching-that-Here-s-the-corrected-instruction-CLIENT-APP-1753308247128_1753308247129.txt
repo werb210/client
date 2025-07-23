@@ -1,0 +1,116 @@
+You're right — thank you for catching that. Here's the corrected instruction:
+
+---
+
+## 🟦 CLIENT APPLICATION – FULL AUTOMATED APPLICATION SUBMISSION TEST
+
+**WITH USER-PROVIDED DOCUMENTS** (Replit Agent)
+
+### 🔐 Instruction for Replit Agent:
+
+> 🧠 **Execute this test immediately from start to finish without waiting for user input. Wait only for the user to provide the six documents before Step 5. Once the documents are provided, complete the rest of the workflow automatically. Then report back to ChatGPT with all logs and results. Do not wait between steps.**
+
+---
+
+### 🧾 FULL APPLICATION TEST FLOW
+
+#### ✅ Step 1: Business Details
+
+* Fill in with test data:
+
+  * Business Name: `TestCo Inc`
+  * Entity Type: `Corporation`
+  * Industry: `Construction`
+  * Time in Business: `3 years`
+  * Revenue: `$800,000`
+
+#### ✅ Step 2: Use of Funds
+
+* Purpose: `Equipment Purchase`
+* Amount Requested: `$150,000`
+
+#### ✅ Step 3: Lender Product Recommendation
+
+* Wait for AI to load
+* Select the **first recommended lender/product**
+* Proceed
+
+#### ✅ Step 4: Additional Product Questions
+
+* Enter placeholder answers
+* Proceed
+
+#### ⏸️ Step 5: Document Upload – **WAIT for user**
+
+> Replit Agent: Pause here and wait for the user to upload **6 real documents**:
+
+* `bank_statements.pdf`
+* `financials.pdf`
+* `ar_report.pdf`
+* `ap_report.pdf`
+* `government_id.png`
+* `voided_cheque.png`
+
+🟨 **Do not continue until all 6 files are uploaded and attached.**
+
+Once files are uploaded:
+
+* Upload each to `/api/public/upload/:applicationId`
+* Confirm:
+
+  * ✅ No 403/500 errors
+  * ✅ Preview and download links are working
+
+#### ✅ Step 6: Review
+
+* Ensure all data is correctly rendered
+* Proceed
+
+#### ✅ Step 7: Submit
+
+* Complete final submission
+* Log the response payload
+* Ensure the application ID is returned and status is successful
+
+---
+
+### 🧪 MONITORING & LOGGING
+
+* Track **all API responses**:
+
+  * `/api/public/application`
+  * `/api/public/upload/:applicationId`
+* Confirm:
+
+  * Documents were uploaded
+  * Application was accepted and recorded
+* Log:
+
+  * Status for each step
+  * Any backend or frontend errors
+  * Final `applicationId`
+  * Timestamp of submission
+
+---
+
+### 📦 DELIVERABLE REPORT
+
+After test completion, Replit must report back to ChatGPT:
+
+1. ✅ Step-by-step status
+2. 🪵 Logs of API calls and responses
+3. 🗂️ Confirmation of uploaded files
+4. 🔐 Final application payload
+5. ❌ Any errors encountered
+6. 📄 S3 object keys or filenames if available
+
+---
+
+🟩 **Replit Agent Instruction Recap**:
+
+* Begin test immediately
+* Pause only at Step 5 for document input
+* After user upload, complete test without stopping
+* Return all logs and report to ChatGPT
+
+Let me know when you’re ready with the documents, and I’ll instruct Replit to proceed.
