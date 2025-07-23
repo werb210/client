@@ -631,15 +631,15 @@ app.use((req, res, next) => {
     }
   });
 
-  // Step 6: Application finalization endpoint using POST method
-  app.post('/api/public/applications/:applicationId/finalize', async (req, res) => {
+  // Step 6: Application finalization endpoint using PATCH method
+  app.patch('/api/public/applications/:applicationId/finalize', async (req, res) => {
     try {
       const { applicationId } = req.params;
-      console.log(`🏁 [SERVER] POST /api/public/applications/${applicationId}/finalize - Finalizing application`);
+      console.log(`🏁 [SERVER] PATCH /api/public/applications/${applicationId}/finalize - Finalizing application`);
       console.log('📝 [SERVER] Finalization data:', req.body);
       
-      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${applicationId}/finalize`, {
-        method: 'POST',
+      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${applicationId}`, {
+        method: 'PATCH',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -648,7 +648,7 @@ app.use((req, res, next) => {
         body: JSON.stringify(req.body)
       });
       
-      console.log(`🏁 [SERVER] Staff backend POST finalize response: ${response.status} ${response.statusText}`);
+      console.log(`🏁 [SERVER] Staff backend PATCH finalize response: ${response.status} ${response.statusText}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -656,7 +656,7 @@ app.use((req, res, next) => {
         res.json(data);
       } else {
         const errorData = await response.text();
-        console.error('❌ [SERVER] Staff backend POST finalize error:', errorData);
+        console.error('❌ [SERVER] Staff backend PATCH finalize error:', errorData);
         
         // Return proper error status - no fallback
         res.status(response.status >= 400 && response.status < 500 ? response.status : 503).json({
