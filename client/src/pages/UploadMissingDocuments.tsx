@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { CloudUpload, CheckCircle, AlertTriangle, ArrowLeft, FileText } from 'lucide-react';
+import { CloudUpload, CheckCircle, AlertTriangle, ArrowLeft, FileText, Info } from 'lucide-react';
 import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequirements';
 import { ENHANCED_DOCUMENT_REQUIREMENTS } from '../../../shared/documentMapping';
 
@@ -260,6 +260,17 @@ export default function UploadMissingDocuments() {
           </Alert>
         )}
 
+        {/* Real File Enforcement Banner */}
+        <Alert className="mb-6 border-orange-200 bg-orange-50">
+          <Info className="h-4 w-4 text-orange-600" />
+          <AlertTitle className="text-orange-800">Upload Real Documents Only</AlertTitle>
+          <AlertDescription className="text-orange-700">
+            Please upload actual documents in PDF, Word, Excel, or image format. 
+            Fake, empty, or placeholder files will be rejected and your application may not proceed.
+            All documents are encrypted and securely stored.
+          </AlertDescription>
+        </Alert>
+
         {/* Submission Status Banner */}
         {!isLoading && (
           <Alert className="mb-6 border-blue-200 bg-blue-50">
@@ -332,14 +343,20 @@ export default function UploadMissingDocuments() {
               Upload Instructions
             </h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li>• Upload documents in PDF, PNG, or JPG format</li>
-              <li>• Maximum file size: 10MB per document</li>
-              <li>• Ensure all documents are clear and readable</li>
-              <li>• You can upload multiple files for each document type</li>
-              <li>• Documents are securely stored and processed immediately</li>
+              <li>• <strong>Upload real documents only</strong> - PDF, Word, Excel, or image files</li>
+              <li>• Maximum file size: 25MB per document</li>
+              <li>• Documents must be valid and readable (not empty or corrupted)</li>
+              <li>• Fake or placeholder files will be automatically rejected</li>
+              <li>• All uploads are validated for file integrity and format</li>
+              <li>• Documents are encrypted and securely stored</li>
               <li>• Upload progress shows your completion status</li>
-              <li>• Use the exact same Dropzone components as Step 5</li>
             </ul>
+            
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-700 font-medium">
+                ⚠️ Important: Do not upload blank, placeholder, or fake files. Your application will be rejected if invalid documents are detected.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

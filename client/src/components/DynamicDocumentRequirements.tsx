@@ -210,6 +210,49 @@ function UnifiedDocumentUploadCard({
   const requiredQuantity = doc.quantity || 1;
   const isComplete = documentFiles.length >= requiredQuantity;
 
+  const validateFile = (file: File): { isValid: boolean; error?: string } => {
+    // Check file size (non-zero and under 25MB)
+    if (file.size === 0) {
+      return { isValid: false, error: "File is empty. Please upload a valid document." };
+    }
+    
+    if (file.size > 25 * 1024 * 1024) {
+      return { isValid: false, error: "File must be under 25MB. Please reduce file size and try again." };
+    }
+
+    // Check valid file types and MIME types
+    const validExtensions = ['.pdf', '.docx', '.xlsx', '.xls', '.png', '.jpg', '.jpeg', '.doc'];
+    const validMimeTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'application/msword',
+      'image/png',
+      'image/jpeg',
+      'image/jpg'
+    ];
+
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+    const isValidExtension = validExtensions.includes(fileExtension);
+    const isValidMimeType = validMimeTypes.includes(file.type);
+
+    if (!isValidExtension) {
+      return { isValid: false, error: "Invalid file type. Please upload PDF, Word, Excel, or image files only." };
+    }
+
+    if (!isValidMimeType && file.type !== 'application/octet-stream') {
+      return { isValid: false, error: "Invalid file format. Please upload a valid document file." };
+    }
+
+    // Reject obvious fake or placeholder files
+    if (file.type === 'application/octet-stream' && !fileExtension.match(/\.(pdf|docx|xlsx|xls|png|jpg|jpeg|doc)$/)) {
+      return { isValid: false, error: "Unrecognized file format. Please upload a proper document file." };
+    }
+
+    return { isValid: true };
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
@@ -223,16 +266,25 @@ function UnifiedDocumentUploadCard({
       console.log(`🧪 [DEBUG] Mapped category: "${category}"`);
       console.log(`🧪 [DEBUG] Files to upload: ${files.length}`);
       
-      // Validate file sizes (25MB limit)
-      const oversizedFiles = files.filter(file => file.size > 25 * 1024 * 1024);
-      if (oversizedFiles.length > 0) {
-        toast({
-          title: "File Too Large",
-          description: `Files must be under 25MB. Please reduce file size and try again.`,
-          variant: "destructive",
-        });
-        return;
+      // Validate all files before proceeding
+      for (const file of files) {
+        const validation = validateFile(file);
+        if (!validation.isValid) {
+          toast({
+            title: "Invalid File",
+            description: validation.error,
+            variant: "destructive",
+          });
+          return;
+        }
       }
+
+      console.log(`✅ [VALIDATION] All ${files.length} files passed validation checks`);
+      
+      // Additional file integrity logging
+      files.forEach(file => {
+        console.log(`📄 [FILE-INFO] ${file.name}: ${file.size} bytes, type: ${file.type}`);
+      });
       
       // Create upload entries with uploading status
       const uploadingFiles = files.map(file => ({
