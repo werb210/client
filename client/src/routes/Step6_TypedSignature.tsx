@@ -270,12 +270,27 @@ export default function Step6_TypedSignature() {
   // Helper function to check for local upload evidence
   const checkLocalUploadEvidence = (): boolean => {
     try {
-      // Check if we have uploaded files in the current context/state
-      const uploadedFiles = state.uploadedFiles || [];
-      const hasUploads = uploadedFiles.length > 0;
+      // Check multiple sources for upload evidence
+      const contextFiles = state.step5DocumentUpload?.files || [];
+      const localStorageData = localStorage.getItem('formData') || localStorage.getItem('financialFormData');
+      let localStorageFiles = [];
+      
+      if (localStorageData) {
+        try {
+          const parsed = JSON.parse(localStorageData);
+          localStorageFiles = parsed.step5DocumentUpload?.files || [];
+        } catch (e) {
+          console.log('⚠️ [STEP6] Could not parse localStorage data');
+        }
+      }
+      
+      const totalFiles = Math.max(contextFiles.length, localStorageFiles.length);
+      const hasUploads = totalFiles > 0;
       
       console.log('🔍 [STEP6] Checking local upload evidence:', {
-        uploadedFilesCount: uploadedFiles.length,
+        contextFilesCount: contextFiles.length,
+        localStorageFilesCount: localStorageFiles.length,
+        totalFiles,
         hasUploads
       });
       
