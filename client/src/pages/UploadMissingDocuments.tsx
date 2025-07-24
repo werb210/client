@@ -318,7 +318,7 @@ export default function UploadMissingDocuments() {
                 applicationId={applicationId}
                 onUploadSuccess={handleFileUploadSuccess}
                 requiredDocumentTypes={requiredDocTypes}
-                uploadEndpoint={`/api/public/upload/${applicationId}`}
+                uploadEndpoint={`/api/public/s3-upload/${applicationId}`}
               />
             </CardContent>
           </Card>

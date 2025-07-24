@@ -95,7 +95,7 @@ export default function SimpleDashboard() {
           </Card>
 
           <DashboardCard
-            title="Upload Missing Documents"
+            title="Upload Required Documents"
             description="Complete your application by uploading required documents"
             cta="Upload Documents"
             href="/upload-documents"
