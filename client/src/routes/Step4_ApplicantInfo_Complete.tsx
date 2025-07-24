@@ -480,58 +480,12 @@ export default function Step4ApplicantInfoComplete() {
           console.log("❌ Error response is not valid JSON");
         }
         
-        // ✅ FIX 1: Handle 409 duplicate email by proceeding with existing account
+        // ✅ REMOVED: 409 duplicate email blocking - let backend handle properly
+        // Don't block — let the backend create a new app with reused user
         if (response.status === 409) {
-          console.log('🔄 Duplicate email detected - continuing with existing account');
-          
-          try {
-            const errorJson = JSON.parse(await response.text());
-            if (errorJson.applicationId) {
-              // Use existing applicationId from server response
-              const existingAppId = errorJson.applicationId;
-              console.log(`✅ Using existing application ID: ${existingAppId}`);
-              
-              setApplicationId(existingAppId);
-              dispatch({ type: 'SET_APPLICATION_ID', payload: existingAppId });
-              localStorage.setItem('applicationId', existingAppId);
-              
-              toast({
-                title: "Continuing with existing account",
-                description: "You already have an application with this email — we'll continue your submission using your existing account.",
-                variant: "default",
-              });
-              
-              // Mark step as complete and proceed
-              dispatch({
-                type: "MARK_STEP_COMPLETE",
-                payload: 4,
-              });
-              setLocation("/apply/step-5");
-              return;
-            }
-          } catch (e) {
-            console.log('❌ Could not parse 409 response, proceeding silently');
-          }
-          
-          toast({
-            title: "Continuing with existing account",
-            description: "You already have an application with this email — we'll continue your submission using your existing account.",
-            variant: "default",
-          });
-          
-          // Generate temporary UUID and proceed (backend should handle properly)
-          const tempAppId = crypto.randomUUID();
-          setApplicationId(tempAppId);
-          dispatch({ type: 'SET_APPLICATION_ID', payload: tempAppId });
-          localStorage.setItem('applicationId', tempAppId);
-          
-          // Mark step as complete and proceed
-          dispatch({
-            type: "MARK_STEP_COMPLETE",
-            payload: 4,
-          });
-          setLocation("/apply/step-5");
-          return;
+          console.log('🔄 Duplicate email detected - backend should handle properly, no client blocking');
+          // Remove any existing toasts and let the normal flow continue
+          // The backend should have already handled the duplicate case
         }
         
         // If not 409, show general error
