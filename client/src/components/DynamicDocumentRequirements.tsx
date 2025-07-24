@@ -676,13 +676,15 @@ export function DynamicDocumentRequirements({
     };
 
     const handleFocusIn = (event: FocusEvent) => {
-      if (isMobile && event.target instanceof HTMLInputElement) {
+      if (isMobile && event.target && event.target instanceof HTMLInputElement) {
         // Input field focused on mobile - ensure visibility
         setTimeout(() => {
-          event.target.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
-          });
+          if (event.target && 'scrollIntoView' in event.target) {
+            (event.target as HTMLElement).scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center' 
+            });
+          }
         }, 300); // Delay to allow keyboard animation
       }
     };
@@ -781,7 +783,8 @@ export function DynamicDocumentRequirements({
         label: displayLabel,
         description: `Required document for your loan application`,
         quantity: getDocumentQuantity(docName),
-        category: 'required'
+        category: documentType,
+        required: true
       });
     }
     
