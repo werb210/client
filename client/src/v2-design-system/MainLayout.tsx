@@ -24,6 +24,7 @@ import NotFound from "@/pages/NotFound";
 import ApplicationSuccess from "@/pages/ApplicationSuccess";
 
 import UploadDocuments from "@/pages/UploadDocuments";
+import UploadMissingDocuments from "@/pages/UploadMissingDocuments";
 import LateUpload from "@/routes/LateUpload";
 import UploadComplete from "@/routes/UploadComplete";
 import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
@@ -191,7 +192,7 @@ export function MainLayout() {
       <Route path="/application-success" component={ApplicationSuccess} />
       
       {/* Document Management */}
-
+      <Route path="/upload-documents" component={UploadMissingDocuments} />
       <Route path="/upload-documents/:applicationId?" component={UploadDocuments} />
       <Route path="/upload-documents/:id" component={LateUpload} />
       <Route path="/upload-complete" component={UploadComplete} />

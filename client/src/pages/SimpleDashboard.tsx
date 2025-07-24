@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Plus from 'lucide-react/dist/esm/icons/plus';
 import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
 import FileText from 'lucide-react/dist/esm/icons/file-text';
-import Building from 'lucide-react/dist/esm/icons/building';
+import CloudUpload from 'lucide-react/dist/esm/icons/cloud-upload';
 
 export default function SimpleDashboard() {
   const [, setLocation] = useLocation();
@@ -64,19 +64,19 @@ export default function SimpleDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation('/apply/step-1')}>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation('/upload-documents')}>
             <CardContent className="p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Building className="text-purple-600 text-xl w-6 h-6" />
+                  <CloudUpload className="text-purple-600 text-xl w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Multi-Step View</h3>
-                  <p className="text-sm text-gray-500">View all steps simultaneously</p>
+                  <h3 className="font-semibold text-gray-900">Upload Missing Documents</h3>
+                  <p className="text-sm text-gray-500">Securely upload your required documents</p>
                 </div>
               </div>
               <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                Side-by-Side Application
+                Upload Documents
               </Button>
             </CardContent>
           </Card>
