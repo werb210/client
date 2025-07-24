@@ -108,8 +108,22 @@ export default function Step6_TypedSignature() {
       return false;
     }
 
+    // ✅ TASK 2: Check bypass flag from Step 5 first
+    const bypassDocuments = state.bypassDocuments || false;
+    console.log('🔍 [STEP6] Checking bypass status from Step 5:', { bypassDocuments });
+    
+    if (bypassDocuments) {
+      console.log('✅ [STEP6] Document validation bypassed - allowing finalization based on Step 5 bypass flag');
+      toast({
+        title: "Documents Bypassed",
+        description: "Proceeding with application finalization as requested in Step 5.",
+      });
+      return true;
+    }
+
+    // ✅ TASK 2: Apply strict validation when NOT bypassed
     try {
-      console.log('📋 [STEP6] Validating document uploads via staff backend S3...');
+      console.log('📋 [STEP6] Strict validation mode: Validating document uploads via staff backend S3...');
       
       const response = await fetch(`/api/public/applications/${applicationId}/documents`);
       
@@ -148,7 +162,7 @@ export default function Step6_TypedSignature() {
         }))
       });
 
-      // Strict validation: must have at least 1 document from staff backend (mandatory regardless of environment)
+      // Strict validation: must have at least 1 document from staff backend (mandatory for non-bypassed applications)
       if (!uploadedDocuments || uploadedDocuments.length === 0) {
         console.error('❌ [STEP6] Document verification failed: No documents returned from staff server');
         toast({

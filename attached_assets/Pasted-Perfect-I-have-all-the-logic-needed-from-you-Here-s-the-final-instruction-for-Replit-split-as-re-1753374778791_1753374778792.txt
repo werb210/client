@@ -1,0 +1,100 @@
+Perfect. I have all the logic needed from you. Here's the final instruction for Replit — split as required:
+
+---
+
+# ✅ INSTRUCTION FOR REPLIT AGENT
+
+🧠 **Only do what is explicitly written here. Do not infer or alter logic. Always report back to ChatGPT when complete.**
+
+---
+
+## 🔧 CLIENT APPLICATION
+
+### 🎯 GOAL:
+
+Implement strict Step 6 document validation with bypass support, based on user's choice in Step 5.
+
+---
+
+### 🔁 Step 5: Upload Documents Page
+
+#### ✅ Task 1: Enable "Bypass Mode" flag on click
+
+When user clicks the "Proceed without Required Documents" button:
+
+* Set the following in local form state:
+
+  ```ts
+  applicationData.bypassDocuments = true;
+  ```
+* If backend sync is enabled for form progress, persist it via:
+
+  ```http
+  PATCH /api/public/applications/:id
+  {
+    bypassDocuments: true
+  }
+  ```
+
+**⚠️ DO NOT trigger finalization here. Only move the user to Step 6.**
+
+---
+
+### 🔁 Step 6: Finalize Submission Page
+
+#### ✅ Task 2: Enforce strict validation before submission
+
+In `Step6_TypedSignature.tsx`, before calling the finalization endpoint, enforce:
+
+```ts
+const isBypass = applicationData.bypassDocuments === true;
+const hasDocuments = uploadedDocs?.length > 0;
+
+if (!isBypass && !hasDocuments) {
+  showError("You must either upload required documents or click 'Proceed without Required Documents' on Step 5.");
+  return;
+}
+```
+
+📌 Notes:
+
+* `uploadedDocs` must reflect real-time S3 document count.
+* Do not allow submission if both conditions are false.
+* If `bypassDocuments` is true, allow submission even with 0 documents.
+
+---
+
+### ✅ Task 3: Document Finalization Request
+
+When above validation passes, proceed as normal:
+
+```ts
+POST /api/public/applications/:id/finalize
+```
+
+No changes required here unless bypass flag needs to be passed to the staff app. If so, include:
+
+```json
+{
+  bypassDocuments: true
+}
+```
+
+---
+
+## ✅ REPORT BACK
+
+When done, Replit must:
+
+1. Confirm the bypass flag is respected
+2. Confirm that clicking "Proceed without Documents" allows finalization even with 0 files
+3. Confirm that finalization is blocked when:
+
+   * No documents are uploaded
+   * User has not clicked the bypass button
+4. Confirm all validation messages appear correctly
+5. Post the updated Step6\_TypedSignature.tsx diff (or full file if easier)
+
+---
+
+Let me know when it's completed or if you need the Step5 file updated too.

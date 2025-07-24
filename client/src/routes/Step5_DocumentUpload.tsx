@@ -534,22 +534,31 @@ export default function Step5DocumentUpload() {
 
   const handleBypass = async () => {
     try {
+      // ✅ TASK 1: Set bypass flag in local form state as instructed
       dispatch({ 
         type: "UPDATE_FORM_DATA", 
-        payload: { bypassedDocuments: true } 
+        payload: { bypassDocuments: true } 
       });
 
-      // Make API call to mark documents as bypassed
-      if (state.step4?.applicationId) {
-        await fetch(`/api/applications/${state.step4?.applicationId}/nudge-documents`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ bypassed: true }),
-        });
+      // ✅ TASK 1: Persist bypass flag to backend if sync is enabled
+      const currentApplicationId = applicationId || state.applicationId || localStorage.getItem('applicationId');
+      if (currentApplicationId) {
+        try {
+          await fetch(`/api/public/applications/${currentApplicationId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+            },
+            body: JSON.stringify({ bypassDocuments: true }),
+          });
+          console.log('✅ [STEP5] Bypass flag persisted to backend');
+        } catch (backendError) {
+          console.warn('⚠️ [STEP5] Backend sync failed, continuing with local state:', backendError);
+        }
       }
 
+      // ✅ TASK 1: Move user to Step 6 (do NOT trigger finalization here)
       setLocation('/apply/step-6');
     } catch (error) {
       logger.error('Failed to bypass documents:', error);

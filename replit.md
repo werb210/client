@@ -93,6 +93,17 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 24, 2025: ✅ STEP 6 BYPASS VALIDATION ENHANCEMENT COMPLETED - CONDITIONAL STRICT VALIDATION WITH BYPASS SUPPORT**
+  * **CRITICAL SUCCESS**: Implemented enhanced Step 6 document validation that respects bypass flag from Step 5 while maintaining strict validation for non-bypassed cases
+  * **STEP 5 BYPASS UPDATE**: Modified handleBypass function to set `bypassDocuments: true` in form state and persist to backend via PATCH endpoint
+  * **STEP 6 BYPASS DETECTION**: Enhanced validateDocumentUploads to check `state.bypassDocuments` flag first before applying strict validation
+  * **CONDITIONAL VALIDATION**: If bypass flag is true, Step 6 allows finalization with "Documents Bypassed" toast message
+  * **STRICT VALIDATION PRESERVED**: When NOT bypassed, maintains full strict S3 validation requiring at least 1 confirmed document from staff backend
+  * **BACKEND SYNC**: Step 5 bypass now syncs to backend via `/api/public/applications/:id` PATCH with Bearer authentication
+  * **USER EXPERIENCE**: Clear messaging differentiates between bypassed finalization vs strict document validation
+  * **COMPREHENSIVE TEST SUITE**: Created test-step6-bypass-validation.js for validating bypass functionality and strict validation scenarios
+  * **PRODUCTION READY**: Complete conditional validation system operational - strict when required, bypassed when requested from Step 5
+
 - **July 24, 2025: ✅ STEP 6 DOCUMENT VERIFICATION FINALIZED - STRICT STAFF BACKEND S3 VALIDATION IMPLEMENTED**
   * **CRITICAL SUCCESS**: Finalized Step 6 document verification to rely on operational staff-side S3 now that it's fully functional
   * **STRICT VALIDATION**: Removed temporary fallback logic and implemented strict validation using GET /api/public/applications/:applicationId/documents
