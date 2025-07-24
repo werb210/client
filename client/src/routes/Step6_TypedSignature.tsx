@@ -270,44 +270,85 @@ export default function Step6_TypedSignature() {
   // Helper function to check for local upload evidence
   const checkLocalUploadEvidence = (): boolean => {
     try {
+      // COMPREHENSIVE DEBUG: Log the entire state structure
+      console.log('🧪 [STEP6] COMPREHENSIVE STATE DEBUG:', {
+        fullState: state,
+        step5DocumentUpload: state.step5DocumentUpload,
+        hasStep5: !!state.step5DocumentUpload,
+        step5Keys: state.step5DocumentUpload ? Object.keys(state.step5DocumentUpload) : []
+      });
+      
       // Check multiple sources and arrays for upload evidence
       const contextFiles = state.step5DocumentUpload?.files || [];
       const contextUploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
       
+      // Also check any other possible locations where files might be stored
+      const rootUploadedFiles = (state as any).uploadedFiles || [];
+      const rootFiles = (state as any).files || [];
+      
       const localStorageData = localStorage.getItem('formData') || localStorage.getItem('financialFormData');
       let localStorageFiles = [];
       let localStorageUploadedFiles = [];
+      let localStorageRaw = null;
       
       if (localStorageData) {
         try {
           const parsed = JSON.parse(localStorageData);
+          localStorageRaw = parsed;
           localStorageFiles = parsed.step5DocumentUpload?.files || [];
           localStorageUploadedFiles = parsed.step5DocumentUpload?.uploadedFiles || [];
+          
+          console.log('💾 [STEP6] localStorage structure:', {
+            hasStep5DocumentUpload: !!parsed.step5DocumentUpload,
+            step5Keys: parsed.step5DocumentUpload ? Object.keys(parsed.step5DocumentUpload) : [],
+            allTopLevelKeys: Object.keys(parsed)
+          });
         } catch (e) {
-          console.log('⚠️ [STEP6] Could not parse localStorage data');
+          console.log('⚠️ [STEP6] Could not parse localStorage data:', e);
         }
       }
       
       const totalFiles = Math.max(
         contextFiles.length, 
         contextUploadedFiles.length,
+        rootUploadedFiles.length,
+        rootFiles.length,
         localStorageFiles.length, 
         localStorageUploadedFiles.length
       );
       const hasUploads = totalFiles > 0;
       
-      console.log('🔍 [STEP6] Checking local upload evidence:', {
+      console.log('🔍 [STEP6] COMPLETE UPLOAD EVIDENCE CHECK:', {
         contextFilesCount: contextFiles.length,
         contextUploadedFilesCount: contextUploadedFiles.length,
+        rootUploadedFilesCount: rootUploadedFiles.length,
+        rootFilesCount: rootFiles.length,
         localStorageFilesCount: localStorageFiles.length,
         localStorageUploadedFilesCount: localStorageUploadedFiles.length,
         totalFiles,
-        hasUploads
+        hasUploads,
+        decision: hasUploads ? 'ALLOW_FINALIZATION' : 'BLOCK_FINALIZATION'
       });
+      
+      // If we have evidence, show success; if not, show the full debug info
+      if (hasUploads) {
+        console.log('✅ [STEP6] Local upload evidence found - allowing finalization');
+      } else {
+        console.log('❌ [STEP6] No local upload evidence found');
+        console.log('🔍 [STEP6] Full debug data:', {
+          contextState: state,
+          localStorageData: localStorageRaw
+        });
+      }
       
       return hasUploads;
     } catch (error) {
       console.error('❌ [STEP6] Error checking local upload evidence:', error);
+      console.error('❌ [STEP6] Full error details:', {
+        errorMessage: error.message,
+        errorStack: error.stack,
+        currentState: state
+      });
       return false;
     }
   };
