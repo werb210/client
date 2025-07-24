@@ -480,46 +480,41 @@ export default function Step4ApplicantInfoComplete() {
           console.log("❌ Error response is not valid JSON");
         }
         
-        // ✅ FIX 1: Add proper 409 duplicate handling - extract existing applicationId from staff backend
+        // ✅ FIX 1: Add proper 409 duplicate handling - generate new UUID for duplicate emails
         if (response.status === 409) {
-          console.log('🔄 Duplicate application detected, extracting existing applicationId');
-          try {
-            const duplicateData = JSON.parse(errorText);
-            if (duplicateData.applicationId) {
-              console.log(`✅ Using existing application ID: ${duplicateData.applicationId}`);
-              
-              // Store the existing applicationId and proceed normally
-              const existingId = duplicateData.applicationId;
-              setApplicationId(existingId);
-              dispatch({ type: 'SET_APPLICATION_ID', payload: existingId });
-              localStorage.setItem('applicationId', existingId);
-              
-              toast({
-                title: "Using Existing Application",
-                description: "Continuing with your existing application.",
-                variant: "default",
-              });
-              
-              // Proceed to Step 5 with existing application
-              dispatch({
-                type: "MARK_STEP_COMPLETE",
-                payload: 4,
-              });
-              setLocation("/apply/step-5");
-              return;
-            }
-          } catch (parseError) {
-            console.error('❌ Could not parse duplicate response');
-          }
+          console.log('🔄 Duplicate email detected, generating new application ID for this submission');
           
-          // If we can't extract applicationId, show error
+          // Generate a new UUID for this application submission
+          const newApplicationId = crypto.randomUUID();
+          console.log(`✅ Generated new application ID for duplicate email: ${newApplicationId}`);
+          
+          // Store the new applicationId and proceed normally
+          setApplicationId(newApplicationId);
+          dispatch({ type: 'SET_APPLICATION_ID', payload: newApplicationId });
+          localStorage.setItem('applicationId', newApplicationId);
+          
           toast({
-            title: "Duplicate Application",
-            description: "An application with this email already exists. Please use a different email or contact support.",
-            variant: "destructive",
+            title: "New Application Started",
+            description: "You've applied before. Continuing with a new application.",
+            variant: "default",
           });
-          throw new Error('Duplicate application detected');
+          
+          // Mark Step 4 complete and proceed to Step 5
+          dispatch({
+            type: "MARK_STEP_COMPLETE",
+            payload: 4,
+          });
+          setLocation("/apply/step-5");
+          return;
         }
+        
+        // If not 409, show general error
+        toast({
+          title: "Application Error",
+          description: "An application with this email already exists. Please use a different email or contact support.",
+          variant: "destructive",
+        });
+        throw new Error('Duplicate application detected');
         
         // ✅ LEGACY 502 HANDLING (for existing behavior compatibility)
         if (response.status === 502) {
