@@ -114,17 +114,7 @@ export default function Step6_TypedSignature() {
       const response = await fetch(`/api/public/applications/${applicationId}/documents`);
       
       if (response.status === 404) {
-        console.warn('⚠️ [STEP6] Application not found in staff backend');
-        
-        // Only allow fallback in development mode with local evidence
-        if (import.meta.env.DEV) {
-          const localUploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
-          if (localUploadedFiles.length > 0) {
-            console.log('🔧 [STEP6] Development mode: allowing finalization with local upload evidence');
-            return true;
-          }
-        }
-        
+        console.error('❌ [STEP6] Application not found in staff backend');
         toast({
           title: "Application Not Found",
           description: "We're having trouble verifying your documents. Please wait a moment or try re-uploading.",
@@ -146,39 +136,21 @@ export default function Step6_TypedSignature() {
       const documentData = await response.json();
       const uploadedDocuments = documentData.documents || [];
       
-      // Enhanced dev mode logging for document validation
-      if (import.meta.env.DEV) {
-        console.log('🔧 [STEP6] Development mode: Enhanced document validation logging');
-        console.log('📄 [STEP6] Staff backend document validation result:', {
-          applicationId,
-          documentsFound: uploadedDocuments.length,
-          responseStatus: response.status,
-          responseHeaders: Object.fromEntries(response.headers.entries()),
-          documents: uploadedDocuments.map((doc: any) => ({
-            id: doc.id || doc.documentId,
-            type: doc.documentType || doc.type,
-            name: doc.fileName || doc.name,
-            status: doc.status,
-            uploadConfirmed: doc.uploadConfirmed,
-            createdAt: doc.createdAt,
-            s3Key: doc.s3Key || doc.storageKey
-          }))
-        });
-      } else {
-        console.log('📄 [STEP6] Staff backend document validation result:', {
-          documentsFound: uploadedDocuments.length,
-          documents: uploadedDocuments.map((doc: any) => ({
-            type: doc.documentType || doc.type,
-            name: doc.fileName || doc.name,
-            status: doc.status,
-            uploadConfirmed: doc.uploadConfirmed
-          }))
-        });
-      }
+      console.log('📄 [STEP6] Staff backend document validation result:', {
+        applicationId,
+        documentsFound: uploadedDocuments.length,
+        documents: uploadedDocuments.map((doc: any) => ({
+          id: doc.id || doc.documentId,
+          type: doc.documentType || doc.type,
+          name: doc.fileName || doc.name,
+          status: doc.status,
+          uploadConfirmed: doc.uploadConfirmed
+        }))
+      });
 
-      // Strict validation: must have at least 1 document from staff backend
-      if (uploadedDocuments.length === 0) {
-        console.warn('⚠️ [STEP6] No documents found in staff backend - blocking finalization');
+      // Strict validation: must have at least 1 document from staff backend (mandatory regardless of environment)
+      if (!uploadedDocuments || uploadedDocuments.length === 0) {
+        console.error('❌ [STEP6] Document verification failed: No documents returned from staff server');
         toast({
           title: "Documents Required",
           description: "Please upload all required documents before finalizing your application.",
