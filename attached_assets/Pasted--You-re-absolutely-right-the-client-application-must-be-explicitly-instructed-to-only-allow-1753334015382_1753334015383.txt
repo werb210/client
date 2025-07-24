@@ -1,0 +1,100 @@
+✅ You’re absolutely right — the **client application** must be explicitly instructed to **only allow upload of real files** (correct types and formats), especially since we’re now testing the **entire live pipeline** with document integrity enforcement and S3-backed storage.
+
+Let me now **revise the client-side instructions and enforcement mechanisms** accordingly.
+
+---
+
+## 🔒 CLIENT APPLICATION — REAL FILE ENFORCEMENT & INSTRUCTIONS
+
+### ✅ What the Client App Must Do
+
+#### 1. **Accept Only Valid File Types**
+
+Update all `<input type="file">` or Dropzone configurations in `DynamicDocumentRequirements.tsx` to restrict uploads to:
+
+```tsx
+accept=".pdf,.docx,.xlsx,.png,.jpg,.jpeg"
+```
+
+#### 2. **Reject Fake or Invalid Files**
+
+Add a check before upload to ensure file has:
+
+* Non-zero file size
+* Real MIME type (no `application/octet-stream`)
+* Valid extension (`.pdf`, `.xlsx`, etc.)
+
+```ts
+if (
+  file.size === 0 ||
+  !['application/pdf', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/png', 'image/jpeg'].includes(file.type)
+) {
+  toast.error("Invalid file. Please upload a valid document (PDF, XLSX, JPG, etc).");
+  return;
+}
+```
+
+#### 3. **Add Help Text / Instructions**
+
+At the top of `/upload-documents`, insert a banner:
+
+```tsx
+<Alert variant="info">
+  <AlertTitle>Upload Real Documents</AlertTitle>
+  <AlertDescription>
+    Please upload actual documents in PDF, Excel, Word, or image format. Fake or empty files will be rejected and your application may not proceed.
+  </AlertDescription>
+</Alert>
+```
+
+#### 4. **Disable Submit if Invalid Files Present**
+
+Use internal validation before triggering finalization:
+
+```ts
+const hasInvalidFiles = uploadedFiles.some(f => f.status === 'error' || f.invalidType === true);
+if (hasInvalidFiles) {
+  toast.error("Please remove invalid documents before submitting.");
+  return;
+}
+```
+
+#### 5. **Auto-Preview Validation**
+
+For image and PDF files, show a preview thumbnail. If preview fails (e.g., corrupted file), mark as invalid.
+
+---
+
+### 🧪 Test Inputs That Must Work
+
+All of the following must be accepted and visible in staff portal:
+
+| Type                 | Required Format         |
+| -------------------- | ----------------------- |
+| Bank Statements      | `.pdf` or `.xlsx`       |
+| Financial Statements | `.pdf` or `.docx`       |
+| Tax Returns          | `.pdf` only             |
+| Balance Sheet        | `.xlsx` preferred       |
+| A/P or A/R Sheets    | `.xlsx` or `.csv`       |
+| Image Attachments    | `.png`, `.jpg`, `.jpeg` |
+
+---
+
+## ✅ Final Reminder in Client UI
+
+At bottom of Upload Page:
+
+```tsx
+<p className="text-sm text-muted-foreground mt-4">
+  Note: Uploaded documents are encrypted and securely stored. Do not upload blank, placeholder, or fake files — your application will be rejected.
+</p>
+```
+
+---
+
+Would you like me to:
+
+* Push these client enforcement changes now in `DynamicDocumentRequirements.tsx` and `UploadMissingDocuments.tsx`?
+* Or should we first generate real test files for upload validation?
+
+Standing by.
