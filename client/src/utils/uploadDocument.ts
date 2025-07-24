@@ -38,7 +38,7 @@ export async function uploadDocument(
   try {
     // Create FormData for file upload
     const formData = new FormData();
-    formData.append('file', file);  // user-selected file
+    formData.append('document', file);  // user-selected file (server expects 'document' field)
     formData.append('documentType', documentType); // e.g. 'bank_statements'
     
     console.log(`📋 [UPLOAD] FormData prepared:`, {

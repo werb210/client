@@ -156,7 +156,7 @@ export async function uploadDocument(
   applicationId: string
 ): Promise<{ documentId: string; storage_key: string; fileName: string }> {
   const formData = new FormData();
-  formData.append('file', file);  // user-selected file
+  formData.append('document', file);  // user-selected file (server expects 'document' field)
   formData.append('documentType', documentType); // e.g. 'bank_statements'
   
   console.log(`📤 [API] Uploading to staff backend: ${file.name} (${documentType})`);

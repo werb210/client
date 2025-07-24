@@ -15,10 +15,10 @@ Successfully implemented **Option A - Client App Integration with AWS S3** as sp
 
 ### Implementation Details:
 
-**FormData Structure (Exact as specified):**
+**FormData Structure (Server Compatible):**
 ```typescript
 const formData = new FormData();
-formData.append('file', file);  // user-selected file
+formData.append('document', file);  // user-selected file (server expects 'document' field)
 formData.append('documentType', selectedDocumentType); // e.g. 'bank_statements'
 
 await fetch(`/api/public/upload/${applicationId}`, {

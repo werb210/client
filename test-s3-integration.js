@@ -15,7 +15,7 @@ const S3_INTEGRATION_TESTS = {
     
     try {
       const formData = new FormData();
-      formData.append('file', testFile);  // user-selected file
+      formData.append('document', testFile);  // user-selected file (server expects 'document' field)
       formData.append('documentType', 'bank_statements'); // e.g. 'bank_statements'
       
       console.log('📤 [S3-TEST] Uploading to staff backend...', {

@@ -428,7 +428,7 @@ function UnifiedDocumentUploadCard({
           
           // Create FormData for staff backend upload
           const formData = new FormData();
-          formData.append('file', file);  // user-selected file
+          formData.append('document', file);  // user-selected file (server expects 'document' field)
           formData.append('documentType', category); // e.g. 'bank_statements'
           
           console.log(`📋 [S3-BACKEND] FormData:`, {
