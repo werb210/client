@@ -1,0 +1,71 @@
+Perfect. Here’s how to **test the changes step by step** to verify full S3 integration in the Staff + Client apps:
+
+---
+
+## ✅ Step-by-Step Test Plan
+
+### 🧪 1. **Restart Staff Backend (Replit)**
+
+Make sure Replit restarted the staff backend after the S3 changes. The new AWS credentials and region must be active.
+
+> ✅ Replit should confirm: "Server restarted with AWS S3 credentials loaded."
+
+---
+
+### 🧪 2. **Upload Document via Client App**
+
+Go to **Step 5** of any application in the Client App and upload a document (e.g., PDF or JPG).
+
+* Use an application with status `draft` or start a new one.
+* Upload any supported document type (financials, bank statement, etc.)
+
+✅ Expected behavior:
+
+* Upload returns HTTP 200
+* No `storage_key` or `404` warnings in staff backend logs
+* Filename is returned
+* Document appears instantly in Staff portal under “Documents” tab
+
+---
+
+### 🧪 3. **Check Staff Portal for Document**
+
+* Open the matching application in the Staff app.
+* Go to **Sales Pipeline > Application > Documents Tab**
+* Confirm the uploaded file:
+
+  * Appears with preview/download options
+  * Can be accepted or rejected
+  * Shows no “missing file” warning
+
+---
+
+### 🧪 4. **Verify on AWS Console**
+
+* Visit **S3 → boreal-production-uploads**
+* Search for the uploaded filename or open today's folder (if date structured)
+* Confirm:
+
+  * ✅ File is present
+  * ✅ Size > 0
+  * ✅ Server-Side Encryption = AES256 (check under file properties)
+
+---
+
+### 🧪 5. **Fallback Verification**
+
+To confirm fallback was truly disabled:
+
+* Try uploading again with AWS credentials temporarily removed (for simulation only)
+* Upload should fail (no fallback disk write)
+* ✅ If it does not fallback to local `uploads/`, the integration is correct
+
+---
+
+## ✅ Production Readiness Indicator
+
+If **all 5 tests pass**, S3 is fully integrated and the system is ready for full production rollout with secure cloud storage.
+
+---
+
+Would you like me to wait for the test results or proceed with logging any file-level upload metrics?
