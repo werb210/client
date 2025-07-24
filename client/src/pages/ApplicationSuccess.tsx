@@ -169,7 +169,7 @@ export default function ApplicationSuccess() {
                   Phone Support
                 </h4>
                 <div className="space-y-2 text-sm">
-                  <p><strong>Main Line:</strong> 1-800-BOREAL-1</p>
+                  <p><strong>Main Line:</strong> +1 (825) 451-1768</p>
                   <p><strong>Hours:</strong> Mon-Fri 8AM-6PM EST</p>
                 </div>
               </div>
