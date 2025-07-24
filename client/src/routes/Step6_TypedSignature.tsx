@@ -73,6 +73,18 @@ export default function Step6_TypedSignature() {
         agreementsCount: Object.values(authData.agreements).filter(Boolean).length
       });
 
+      // Check document upload status before finalization
+      const documentCheckPassed = await validateDocumentUploads();
+      if (!documentCheckPassed) {
+        toast({
+          title: "Documents Required",
+          description: "Please upload all required documents before finalizing your application.",
+          variant: "destructive"
+        });
+        setLocation('/apply/step-5');
+        return;
+      }
+
       // Submit the final application
       await submitFinalApplication();
 
@@ -85,6 +97,87 @@ export default function Step6_TypedSignature() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const validateDocumentUploads = async (): Promise<boolean> => {
+    const applicationId = state.applicationId || localStorage.getItem('applicationId');
+    
+    if (!applicationId) {
+      console.warn('⚠️ [STEP6] No application ID found for document validation');
+      return false;
+    }
+
+    try {
+      console.log('📋 [STEP6] Validating document uploads before finalization...');
+      
+      const response = await fetch(`/api/public/applications/${applicationId}/documents`);
+      
+      if (!response.ok) {
+        console.warn('⚠️ [STEP6] Could not fetch document status, proceeding with finalization');
+        return true; // Allow finalization if we can't check documents
+      }
+
+      const documentData = await response.json();
+      const uploadedDocuments = documentData.documents || [];
+      
+      console.log('📄 [STEP6] Document validation result:', {
+        documentsFound: uploadedDocuments.length,
+        documents: uploadedDocuments.map((doc: any) => ({
+          type: doc.documentType || doc.type,
+          name: doc.fileName || doc.name,
+          status: doc.status
+        }))
+      });
+
+      // Check if we have any uploaded documents
+      if (uploadedDocuments.length === 0) {
+        console.warn('⚠️ [STEP6] No documents found - user should upload documents first');
+        return false;
+      }
+
+      console.log('✅ [STEP6] Document validation passed - proceeding with finalization');
+      return true;
+    } catch (error) {
+      console.error('❌ [STEP6] Document validation error:', error);
+      return true; // Allow finalization on validation error
+    }
+  };
+
+  const resubmitApplicationData = async (applicationId: string) => {
+    console.log('🔄 [STEP6] Resubmitting application form_data via PATCH...');
+
+    const formDataPayload = {
+      step1: state.step1,
+      step3: state.step3,
+      step4: state.step4,
+      step6: state.step6Authorization
+    };
+
+    console.log('📋 [STEP6] Form data resubmission payload:', JSON.stringify(formDataPayload, null, 2));
+
+    try {
+      const response = await fetch(`/api/public/applications/${applicationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+        },
+        body: JSON.stringify(formDataPayload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('❌ [STEP6] Form data resubmission failed:', errorData);
+        throw new Error(`Form data resubmission failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ [STEP6] Form data resubmitted successfully:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ [STEP6] Form data resubmission error:', error);
+      throw error;
     }
   };
 
@@ -103,7 +196,7 @@ export default function Step6_TypedSignature() {
         step1: state.step1,
         step3: state.step3,
         step4: state.step4,
-        step6: state.step6,
+        step6: state.step6Authorization,
         applicationId
       };
 
@@ -113,6 +206,7 @@ export default function Step6_TypedSignature() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         },
         body: JSON.stringify(finalApplicationData)
       });
@@ -125,6 +219,43 @@ export default function Step6_TypedSignature() {
           errorText,
           attempt: retryCount + 1
         });
+        
+        // Check if this is a form_data empty error - need to resubmit form data
+        if (response.status === 400 && errorText.includes('form_data')) {
+          console.log('🔄 [STEP6] Empty form_data detected - resubmitting application data');
+          await resubmitApplicationData(applicationId);
+          
+          // Retry finalization after resubmitting form data
+          const retryResponse = await fetch(`/api/public/applications/${applicationId}/finalize`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+            },
+            body: JSON.stringify(finalApplicationData)
+          });
+          
+          if (!retryResponse.ok) {
+            const retryError = await retryResponse.text();
+            throw new Error(`Finalization retry failed: ${retryResponse.statusText} - ${retryError}`);
+          }
+          
+          const retryResult = await retryResponse.json();
+          console.log('✅ [STEP6] Application finalized successfully after form_data resubmission:', retryResult);
+          
+          // Show success and navigate
+          toast({
+            title: "Application Submitted Successfully!",
+            description: "Your financing application has been submitted for review. You'll receive updates via email."
+          });
+          
+          // Ensure applicationId is stored in localStorage for future document uploads
+          localStorage.setItem('applicationId', applicationId);
+          console.log('💾 [STEP6] ApplicationId stored for future document uploads:', applicationId);
+          
+          setLocation('/application-success');
+          return retryResult;
+        }
         
         // Retry on 503 errors if we haven't exceeded max retries
         if (response.status === 503 && retryCount < maxRetries) {
