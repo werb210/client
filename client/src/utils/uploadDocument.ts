@@ -41,13 +41,28 @@ export async function uploadDocument(
     formData.append('document', file);  // user-selected file (server expects 'document' field)
     formData.append('documentType', documentType); // e.g. 'bank_statements'
     
-    console.log(`📋 [UPLOAD] FormData prepared:`, {
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type,
-      documentType: documentType,
-      endpoint: `${API_BASE_URL}/api/public/upload/${applicationId}`
-    });
+    // Enhanced dev mode logging
+    if (import.meta.env.DEV) {
+      console.log('🔧 [UPLOAD] Development mode: Enhanced upload logging');
+      console.log(`📋 [UPLOAD] FormData prepared:`, {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        documentType: documentType,
+        endpoint: `${API_BASE_URL}/api/public/upload/${applicationId}`,
+        bearerToken: import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ? '✅ Present' : '❌ Missing',
+        apiBaseUrl: API_BASE_URL,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.log(`📋 [UPLOAD] FormData prepared:`, {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        documentType: documentType,
+        endpoint: `${API_BASE_URL}/api/public/upload/${applicationId}`
+      });
+    }
 
     // Upload to staff backend
     const response = await fetch(`${API_BASE_URL}/api/public/upload/${applicationId}`, {
@@ -58,16 +73,47 @@ export async function uploadDocument(
       }
     });
 
-    console.log(`📊 [UPLOAD] Response status: ${response.status} ${response.statusText}`);
+    if (import.meta.env.DEV) {
+      console.log(`🔧 [UPLOAD] Development mode: Enhanced response logging`);
+      console.log(`📊 [UPLOAD] Response status: ${response.status} ${response.statusText}`, {
+        responseHeaders: Object.fromEntries(response.headers.entries()),
+        url: response.url,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.log(`📊 [UPLOAD] Response status: ${response.status} ${response.statusText}`);
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`❌ [UPLOAD] Upload failed:`, errorText);
+      if (import.meta.env.DEV) {
+        console.error(`❌ [UPLOAD] Upload failed - Enhanced error details:`, {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          url: response.url,
+          headers: Object.fromEntries(response.headers.entries()),
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        console.error(`❌ [UPLOAD] Upload failed:`, errorText);
+      }
       throw new Error(`Upload failed: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
-    console.log(`✅ [UPLOAD] Upload successful:`, result);
+    if (import.meta.env.DEV) {
+      console.log(`✅ [UPLOAD] Upload successful - Enhanced response details:`, {
+        ...result,
+        responseMetadata: {
+          status: response.status,
+          headers: Object.fromEntries(response.headers.entries()),
+          timestamp: new Date().toISOString()
+        }
+      });
+    } else {
+      console.log(`✅ [UPLOAD] Upload successful:`, result);
+    }
 
     // Validate response contains required fields
     if (!result.storage_key) {

@@ -159,7 +159,21 @@ export async function uploadDocument(
   formData.append('document', file);  // user-selected file (server expects 'document' field)
   formData.append('documentType', documentType); // e.g. 'bank_statements'
   
-  console.log(`📤 [API] Uploading to staff backend: ${file.name} (${documentType})`);
+  if (import.meta.env.DEV) {
+    console.log('🔧 [API] Development mode: Enhanced upload API logging');
+    console.log(`📤 [API] Uploading to staff backend:`, {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      documentType,
+      applicationId,
+      endpoint: `/api/public/upload/${applicationId}`,
+      bearerToken: import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ? '✅ Present' : '❌ Missing',
+      timestamp: new Date().toISOString()
+    });
+  } else {
+    console.log(`📤 [API] Uploading to staff backend: ${file.name} (${documentType})`);
+  }
 
   const response = await fetch(`/api/public/upload/${applicationId}`, {
     method: 'POST',
@@ -171,12 +185,34 @@ export async function uploadDocument(
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`❌ [API] Upload failed:`, errorText);
+    if (import.meta.env.DEV) {
+      console.error(`❌ [API] Upload failed - Enhanced error details:`, {
+        status: response.status,
+        statusText: response.statusText,
+        errorText,
+        url: response.url,
+        headers: Object.fromEntries(response.headers.entries()),
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.error(`❌ [API] Upload failed:`, errorText);
+    }
     throw new Error(`Upload failed: ${response.status} - ${errorText}`);
   }
 
   const result = await response.json();
-  console.log(`✅ [API] Upload response:`, result);
+  if (import.meta.env.DEV) {
+    console.log(`✅ [API] Upload response - Enhanced details:`, {
+      ...result,
+      responseMetadata: {
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+        timestamp: new Date().toISOString()
+      }
+    });
+  } else {
+    console.log(`✅ [API] Upload response:`, result);
+  }
   
   return {
     documentId: result.documentId || result.id,

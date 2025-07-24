@@ -109,63 +109,111 @@ export default function Step6_TypedSignature() {
     }
 
     try {
-      console.log('📋 [STEP6] Validating document uploads before finalization...');
+      console.log('📋 [STEP6] Validating document uploads via staff backend S3...');
       
       const response = await fetch(`/api/public/applications/${applicationId}/documents`);
       
-      if (!response.ok) {
-        console.warn('⚠️ [STEP6] Could not fetch document status, proceeding with finalization');
-        return true; // Allow finalization if we can't check documents
-      }
-
-      const documentData = await response.json();
-      const uploadedDocuments = documentData.documents || [];
-      
-      console.log('📄 [STEP6] Document validation result:', {
-        documentsFound: uploadedDocuments.length,
-        documents: uploadedDocuments.map((doc: any) => ({
-          type: doc.documentType || doc.type,
-          name: doc.fileName || doc.name,
-          status: doc.status
-        }))
-      });
-
-      // Check if we have any uploaded documents
-      if (uploadedDocuments.length === 0) {
-        console.warn('⚠️ [STEP6] No documents found in staff backend response');
+      if (response.status === 404) {
+        console.warn('⚠️ [STEP6] Application not found in staff backend');
         
-        // During S3 transition, check if we have local evidence of uploads
-        const localUploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
-        if (localUploadedFiles.length > 0) {
-          console.log('✅ [STEP6] Found local upload evidence - allowing finalization during S3 transition');
-          return true;
+        // Only allow fallback in development mode with local evidence
+        if (import.meta.env.DEV) {
+          const localUploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
+          if (localUploadedFiles.length > 0) {
+            console.log('🔧 [STEP6] Development mode: allowing finalization with local upload evidence');
+            return true;
+          }
         }
         
-        console.warn('⚠️ [STEP6] No documents found locally or remotely - user should upload documents first');
-        return false;
-      }
-
-      // ✅ FINALIZATION ONLY AFTER ALL REQUIRED DOCS UPLOADED
-      // Check if all documents are properly confirmed (not just uploaded)
-      const confirmedDocuments = uploadedDocuments.filter((doc: any) => 
-        doc.status === 'confirmed' || doc.status === 'processed' || doc.uploadConfirmed
-      );
-      
-      if (confirmedDocuments.length < uploadedDocuments.length) {
-        console.log('⚠️ [STEP6] Some documents not yet confirmed - blocking finalization');
         toast({
-          title: "Documents Processing",
-          description: `${uploadedDocuments.length - confirmedDocuments.length} documents still processing. Please wait a moment and try again.`,
+          title: "Application Not Found",
+          description: "We're having trouble verifying your documents. Please wait a moment or try re-uploading.",
           variant: "destructive"
         });
         return false;
       }
       
-      console.log('✅ [STEP6] All documents validated and confirmed - finalization allowed');
+      if (!response.ok) {
+        console.error('❌ [STEP6] Staff backend error:', response.status, response.statusText);
+        toast({
+          title: "Document Verification Error",
+          description: "We're having trouble verifying your documents. Please wait a moment or try re-uploading.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      const documentData = await response.json();
+      const uploadedDocuments = documentData.documents || [];
+      
+      // Enhanced dev mode logging for document validation
+      if (import.meta.env.DEV) {
+        console.log('🔧 [STEP6] Development mode: Enhanced document validation logging');
+        console.log('📄 [STEP6] Staff backend document validation result:', {
+          applicationId,
+          documentsFound: uploadedDocuments.length,
+          responseStatus: response.status,
+          responseHeaders: Object.fromEntries(response.headers.entries()),
+          documents: uploadedDocuments.map((doc: any) => ({
+            id: doc.id || doc.documentId,
+            type: doc.documentType || doc.type,
+            name: doc.fileName || doc.name,
+            status: doc.status,
+            uploadConfirmed: doc.uploadConfirmed,
+            createdAt: doc.createdAt,
+            s3Key: doc.s3Key || doc.storageKey
+          }))
+        });
+      } else {
+        console.log('📄 [STEP6] Staff backend document validation result:', {
+          documentsFound: uploadedDocuments.length,
+          documents: uploadedDocuments.map((doc: any) => ({
+            type: doc.documentType || doc.type,
+            name: doc.fileName || doc.name,
+            status: doc.status,
+            uploadConfirmed: doc.uploadConfirmed
+          }))
+        });
+      }
+
+      // Strict validation: must have at least 1 document from staff backend
+      if (uploadedDocuments.length === 0) {
+        console.warn('⚠️ [STEP6] No documents found in staff backend - blocking finalization');
+        toast({
+          title: "Documents Required",
+          description: "Please upload all required documents before finalizing your application.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Check if all documents are properly confirmed (not just uploaded)
+      const confirmedDocuments = uploadedDocuments.filter((doc: any) => 
+        doc.status === 'confirmed' || doc.status === 'processed' || doc.uploadConfirmed === true
+      );
+      
+      if (confirmedDocuments.length < uploadedDocuments.length) {
+        console.log('⚠️ [STEP6] Some documents not yet confirmed - blocking finalization');
+        const unconfirmedCount = uploadedDocuments.length - confirmedDocuments.length;
+        toast({
+          title: "Documents Processing",
+          description: `${unconfirmedCount} document${unconfirmedCount > 1 ? 's' : ''} still processing. Please wait a moment and try again.`,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      console.log('✅ [STEP6] All documents validated and confirmed via staff backend - finalization allowed');
       return true;
+      
     } catch (error) {
-      console.error('❌ [STEP6] Document validation error:', error);
-      return true; // Allow finalization on validation error
+      console.error('❌ [STEP6] Document validation network error:', error);
+      toast({
+        title: "Network Error",
+        description: "We're having trouble verifying your documents. Please wait a moment or try re-uploading.",
+        variant: "destructive"
+      });
+      return false;
     }
   };
 
