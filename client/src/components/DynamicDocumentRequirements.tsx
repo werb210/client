@@ -416,21 +416,51 @@ function UnifiedDocumentUploadCard({
       // Add uploading files to state immediately
       onFilesUploaded([...uploadedFiles, ...uploadingFiles]);
       
-      // Upload each file with comprehensive S3 validation
+      // Upload each file directly to staff backend for S3 storage
       try {
-        console.log(`📤 [S3-UPLOAD] Starting S3 upload validation for ${files.length} files, applicationId: ${applicationId}`);
+        console.log(`📤 [S3-BACKEND] Starting S3 backend upload for ${files.length} files, applicationId: ${applicationId}`);
         
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const uploadingFile = uploadingFiles[i];
           
-          console.log(`📤 [S3-UPLOAD] Processing file ${i + 1}/${files.length}: ${file.name}`);
+          console.log(`📤 [S3-BACKEND] Processing file ${i + 1}/${files.length}: ${file.name}`);
           
-          // ✅ STEP 1: Pre-Signed URL Request Validation
-          const success = await uploadFileWithS3Validation(file, category, applicationId, uploadingFile.id);
+          // Create FormData for staff backend upload
+          const formData = new FormData();
+          formData.append('file', file);  // user-selected file
+          formData.append('documentType', category); // e.g. 'bank_statements'
           
-          if (!success) {
-            throw new Error(`S3 upload validation failed for ${file.name}`);
+          console.log(`📋 [S3-BACKEND] FormData:`, {
+            fileName: file.name,
+            fileSize: file.size,
+            documentType: category,
+            endpoint: `/api/public/upload/${applicationId}`
+          });
+
+          // Upload to staff backend
+          const uploadResponse = await fetch(`/api/public/upload/${applicationId}`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+            }
+          });
+
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            console.error(`❌ [S3-BACKEND] Upload failed for ${file.name}:`, uploadResponse.status, errorText);
+            throw new Error(`Upload failed for ${file.name}: ${uploadResponse.status}`);
+          }
+
+          const uploadResult = await uploadResponse.json();
+          console.log(`✅ [S3-BACKEND] Upload successful:`, uploadResult);
+          
+          // Log storage_key for verification
+          if (uploadResult.storage_key) {
+            console.log(`🔑 [S3-BACKEND] Storage key saved: ${uploadResult.storage_key}`);
+          } else {
+            console.warn(`⚠️ [S3-BACKEND] No storage_key in response for ${file.name}`);
           }
         }
         

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { CloudUpload, CheckCircle, AlertTriangle, ArrowLeft, FileText, Info } from 'lucide-react';
 import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequirements';
+import { UploadedDocumentList, type DocumentItem } from '@/components/UploadedDocumentList';
 import { ENHANCED_DOCUMENT_REQUIREMENTS } from '../../../shared/documentMapping';
 
 interface ApplicationData {
@@ -183,10 +184,36 @@ export default function UploadMissingDocuments() {
 
   const handleFileUploadSuccess = (files: any[]) => {
     console.log('📤 [UPLOAD-DOCS] Files uploaded successfully:', files);
-    setUploadedFiles(prev => [...prev, ...files]);
+    
+    // Convert to DocumentItem format for UploadedDocumentList
+    const documentItems: DocumentItem[] = files.map(file => ({
+      id: file.id || crypto.randomUUID(),
+      documentId: file.documentId || file.id || crypto.randomUUID(),
+      fileName: file.fileName || file.name,
+      fileSize: file.fileSize || file.size,
+      documentType: file.documentType || 'unknown',
+      storage_key: file.storage_key,
+      uploadedAt: file.uploadedAt || new Date().toISOString(),
+      status: file.status || 'completed'
+    }));
+    
+    setUploadedFiles(prev => [...prev, ...documentItems]);
     
     // Check if all required documents are now uploaded
     checkAllDocumentsUploaded();
+  };
+
+  const handleRemoveDocument = (documentId: string) => {
+    console.log('🗑️ [UPLOAD-DOCS] Removing document:', documentId);
+    setUploadedFiles(prev => prev.filter(doc => doc.documentId !== documentId));
+    
+    // Update completion status
+    checkAllDocumentsUploaded();
+    
+    toast({
+      title: "Document Removed",
+      description: "Document has been removed from your application",
+    });
   };
 
   const checkAllDocumentsUploaded = () => {
@@ -378,6 +405,17 @@ export default function UploadMissingDocuments() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Uploaded Documents List */}
+        {uploadedFiles.length > 0 && (
+          <div className="mt-6">
+            <UploadedDocumentList 
+              documents={uploadedFiles}
+              onRemoveDocument={handleRemoveDocument}
+              showActions={true}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

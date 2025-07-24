@@ -152,21 +152,37 @@ export async function submitApplication(data: ApplicationPayload): Promise<{ app
 // Upload document file to staff backend (authenticated)
 export async function uploadDocument(
   file: File, 
-  category: string, 
-  applicationId?: string
-): Promise<{ documentId: string; url: string }> {
+  documentType: string, 
+  applicationId: string
+): Promise<{ documentId: string; storage_key: string; fileName: string }> {
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('category', category);
-  if (applicationId) {
-    formData.append('applicationId', applicationId);
+  formData.append('file', file);  // user-selected file
+  formData.append('documentType', documentType); // e.g. 'bank_statements'
+  
+  console.log(`📤 [API] Uploading to staff backend: ${file.name} (${documentType})`);
+
+  const response = await fetch(`/api/public/upload/${applicationId}`, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`❌ [API] Upload failed:`, errorText);
+    throw new Error(`Upload failed: ${response.status} - ${errorText}`);
   }
 
-  return apiRequest<{ documentId: string; url: string }>('/documents/upload', {
-    method: 'POST',
-    headers: {}, // Remove Content-Type to let browser set multipart boundary
-    body: formData,
-  });
+  const result = await response.json();
+  console.log(`✅ [API] Upload response:`, result);
+  
+  return {
+    documentId: result.documentId || result.id,
+    storage_key: result.storage_key || result.storageKey,
+    fileName: result.fileName || file.name
+  };
 }
 
 // Upload document to public endpoint (NO Authorization required - Step 5 specific)
