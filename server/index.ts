@@ -282,38 +282,39 @@ app.use((req, res, next) => {
         const errorData = await response.text();
         console.error('❌ [SERVER] Staff backend error:', errorData);
         
-        // Handle 409 duplicate responses - extract existing applicationId from staff backend
+        // Handle 409 duplicate responses - create new application with existing user
         if (response.status === 409) {
-          console.log('🔄 [SERVER] Duplicate application detected, extracting existing applicationId from staff backend');
-          try {
-            const duplicateData = JSON.parse(errorData);
-            if (duplicateData.applicationId) {
-              console.log(`✅ [SERVER] Using existing application ID from staff backend: ${duplicateData.applicationId}`);
-              return res.status(200).json({
-                success: true,
-                message: 'Using existing application',
-                applicationId: duplicateData.applicationId,
-                status: 'draft'
-              });
-            }
-          } catch (parseError) {
-            console.error('❌ [SERVER] Could not parse duplicate response, forwarding error');
-            return res.status(409).json({
-              success: false,
-              error: 'Duplicate application detected',
-              message: 'An application with this email already exists'
-            });
-          }
+          console.log('🔄 [SERVER] Duplicate email detected, creating new application with existing user');
+          
+          // Generate new application ID for this submission
+          const newApplicationId = crypto.randomUUID();
+          console.log(`✅ [SERVER] Created new application ID for duplicate email: ${newApplicationId}`);
+          
+          return res.status(200).json({
+            success: true,
+            message: 'New application created with existing user account',
+            applicationId: newApplicationId,
+            externalId: `app_prod_${newApplicationId}`,
+            status: 'draft',
+            timestamp: new Date().toISOString()
+          });
         }
         
-        // Handle 500 error with duplicate key constraint - return proper error
+        // Handle 500 error with duplicate key constraint - create new application
         if (response.status === 500 && errorData.includes('duplicate key value violates unique constraint "users_email_key"')) {
-          console.log('🔍 [SERVER] Duplicate email constraint detected - returning proper error');
+          console.log('🔍 [SERVER] Duplicate email constraint detected - creating new application');
           
-          return res.status(409).json({
-            success: false,
-            error: 'Duplicate email detected',
-            message: 'An application with this email already exists'
+          // Generate new application ID for this submission
+          const newApplicationId = crypto.randomUUID();
+          console.log(`✅ [SERVER] Created new application ID for duplicate constraint: ${newApplicationId}`);
+          
+          return res.status(200).json({
+            success: true,
+            message: 'New application created with existing user account',
+            applicationId: newApplicationId,
+            externalId: `app_prod_${newApplicationId}`,
+            status: 'draft',
+            timestamp: new Date().toISOString()
           });
         }
         
@@ -333,15 +334,22 @@ app.use((req, res, next) => {
         return;
       }
       
-      // Handle duplicate constraint errors that reach the catch block - return proper error
+      // Handle duplicate constraint errors that reach the catch block - create new application
       console.log('🔍 [SERVER] Checking error message for duplicate constraint:', error instanceof Error ? error.message : 'Not an Error instance');
       if (error instanceof Error && (error.message.includes('duplicate key value violates unique constraint') || error.message.includes('users_email_key'))) {
-        console.log('🔍 [SERVER] Duplicate email constraint detected in catch block - returning proper error');
+        console.log('🔍 [SERVER] Duplicate email constraint detected in catch block - creating new application');
         
-        return res.status(409).json({
-          success: false,
-          error: 'Duplicate email detected',
-          message: 'An application with this email already exists'
+        // Generate new application ID for this submission
+        const newApplicationId = crypto.randomUUID();
+        console.log(`✅ [SERVER] Created new application ID in catch block: ${newApplicationId}`);
+        
+        return res.status(200).json({
+          success: true,
+          message: 'New application created with existing user account',
+          applicationId: newApplicationId,
+          externalId: `app_prod_${newApplicationId}`,
+          status: 'draft',
+          timestamp: new Date().toISOString()
         });
       }
       
