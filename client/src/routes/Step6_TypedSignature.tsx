@@ -132,7 +132,16 @@ export default function Step6_TypedSignature() {
 
       // Check if we have any uploaded documents
       if (uploadedDocuments.length === 0) {
-        console.warn('⚠️ [STEP6] No documents found - user should upload documents first');
+        console.warn('⚠️ [STEP6] No documents found in staff backend response');
+        
+        // During S3 transition, check if we have local evidence of uploads
+        const localUploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
+        if (localUploadedFiles.length > 0) {
+          console.log('✅ [STEP6] Found local upload evidence - allowing finalization during S3 transition');
+          return true;
+        }
+        
+        console.warn('⚠️ [STEP6] No documents found locally or remotely - user should upload documents first');
         return false;
       }
 
