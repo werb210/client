@@ -1,0 +1,99 @@
+✅ Understood — here is the **Final Client Submission Smoke Test** to validate full S3-enabled application flow from Step 1 to completion.
+
+---
+
+## ✅ FINAL CLIENT APPLICATION SUBMISSION SMOKE TEST (S3-Enabled)
+
+> 🧪 **Purpose**: Confirm that users can successfully upload documents and finalize their applications using S3-backed endpoints.
+
+---
+
+### 🔧 Replit Instructions — CLIENT APPLICATION
+
+> ⚠️ Replit agent must **only do what is written below** and **report back to ChatGPT when complete.**
+> Do not skip any step. Do not assume behavior.
+
+---
+
+### 🔁 STEP-BY-STEP TEST FLOW:
+
+#### ✅ 1. Start a New Application
+
+* Navigate to the homepage
+* Click **Apply Now**
+* Proceed to Step 1 and enter basic business info
+* Press **Next** and verify transition to Step 2
+
+#### ✅ 2. Lender Recommendation Engine (Step 2)
+
+* Select a product category and scroll to view recommendations
+* Click **Next** to proceed to Step 3
+
+#### ✅ 3. Product-Specific Questions (Step 3)
+
+* Fill in any dynamic fields (required by lender)
+* Continue to Step 4
+
+#### ✅ 4. Applicant Info (Step 4)
+
+* Fill in name, email, phone, etc.
+* Use a previously used email address (e.g. `test@example.com`)
+* Ensure no validation errors occur due to duplication
+* Click **Next**
+
+#### ✅ 5. Upload Required Documents (Step 5)
+
+* Upload 1+ documents (PDF, JPG, DOCX, etc.)
+* Confirm each upload returns **200 OK**
+* Check for local preview or UI confirmation (e.g. ✅ symbol)
+* Click **Next**
+
+#### ✅ 6. Step 6 Finalization (Signature & Submit)
+
+* Enter name for signature
+* Click **Submit Application**
+* The system should:
+
+  * ✅ Call `GET /api/public/applications/:id/documents`
+  * ✅ Detect at least one valid `storage_key`
+  * ✅ Proceed to **Success Page**
+* Ensure no redirects back to Step 5
+* Confirm final screen shows success message
+
+---
+
+### 📊 What to Log (Replit Staff Agent)
+
+Log the following and report to ChatGPT:
+
+| Action                | Expected Result                                             |
+| --------------------- | ----------------------------------------------------------- |
+| Upload Response       | `200 OK`, valid `documentId`, and `storage_key`             |
+| Document Verification | `GET /documents` returns `200` and at least one document    |
+| Submit Application    | `PATCH /api/public/applications/:id/finalize` returns `200` |
+| Final State           | Redirect to success page with confirmation                  |
+
+---
+
+### 🧪 Additional Validations:
+
+* Confirm that `/api/public/applications/:id/documents` now contains proper `storage_key` values
+* Confirm that Step 6 no longer uses fallback logic
+* Confirm client upload logs contain no errors
+* Confirm no "Missing documents" warning appears in console
+
+---
+
+### ✅ Success Criteria:
+
+* All six steps complete without errors
+* No blocking due to email reuse
+* Documents upload to S3 and are verified by backend
+* Finalization API call completes
+* User sees final success screen
+
+---
+
+### ✅ Replit Agent — BEGIN THIS TEST NOW
+
+Once complete, report all results and API responses back to ChatGPT.
