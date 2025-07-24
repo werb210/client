@@ -345,8 +345,8 @@ export default function Step6_TypedSignature() {
     } catch (error) {
       console.error('❌ [STEP6] Error checking local upload evidence:', error);
       console.error('❌ [STEP6] Full error details:', {
-        errorMessage: error.message,
-        errorStack: error.stack,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        errorStack: error instanceof Error ? error.stack : 'No stack trace',
         currentState: state
       });
       return false;
