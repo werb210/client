@@ -409,6 +409,9 @@ export default function Step6_TypedSignature() {
         applicationId
       };
 
+      // 🟨 STEP 3: Confirm finalize is called - REPLIT MUST DO
+      console.log("🟨 STEP 3: /api/public/applications/:id/finalize IS BEING CALLED");
+      console.log("Finalizing application ID:", applicationId);
       console.log(`📤 [STEP6] Submitting final application (attempt ${retryCount + 1}):`, finalApplicationData);
 
       const response = await fetch(`/api/public/applications/${applicationId}/finalize`, {

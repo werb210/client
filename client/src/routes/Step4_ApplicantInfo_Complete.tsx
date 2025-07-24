@@ -385,7 +385,30 @@ export default function Step4ApplicantInfoComplete() {
         return;
       }
 
-      // 🚨 CRITICAL: Enhanced payload logging for debugging
+      // 🟨 STEP 4: Validate payload - REPLIT MUST DO
+      console.log("🟨 STEP 4: VALIDATING PAYLOAD STRUCTURE");
+      console.table({
+        business: step3,
+        contact: step4,
+        funding: step1
+      });
+      
+      // Individual table logs for detailed inspection
+      console.log("🟨 BUSINESS DATA (formData.business):");
+      console.table(step3);
+      
+      console.log("🟨 CONTACT DATA (formData.contact):");
+      console.table(step4);
+      
+      console.log("🟨 FUNDING DATA (formData.funding):");
+      console.table(step1);
+      
+      // 🟨 STEP 1: Confirm POST is firing - REPLIT MUST DO
+      console.log("🟨 STEP 1: POST /api/public/applications IS FIRING");
+      console.log("Step 4 payload:", { step1, step3, step4 });
+      console.log("Posting to:", "/api/public/applications");
+      
+      // Enhanced payload logging for debugging
       console.log("🧪 FINAL PAYLOAD - COMPREHENSIVE STRUCTURE:");
       console.log("📊 Step 1 (business/funding_request):", {
         fundingAmount: step1.fundingAmount,
@@ -492,10 +515,28 @@ export default function Step4ApplicantInfoComplete() {
 
       // API response received
       
+      // 🟨 STEP 2: Add full error logging - REPLIT MUST DO
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("🟨 FAILED TO SUBMIT:", errorText);
+        console.error("Response status:", response.status, response.statusText);
+        console.error("Response headers:", Object.fromEntries(response.headers.entries()));
+        
+        toast({
+          title: "Application failed to submit",
+          description: `Server error: ${response.status} ${response.statusText}`,
+          variant: "destructive"
+        });
+        
+        setSubmitting(false);
+        return;
+      }
+
       if (response.ok) {
         const result = await response.json();
         
-        // User requirement: Application created logging (kept as required)
+        // 🟨 STEP 1: Ensure server returns applicationId - REPLIT MUST DO
+        console.log("🟨 SERVER RETURNED applicationId:", result.applicationId || result.id);
         console.log("✅ Application created:", result);
         
         logger.log('📋 Application created:', result);
