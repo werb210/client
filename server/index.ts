@@ -2131,9 +2131,17 @@ app.use((req, res, next) => {
         const result = await response.json();
         console.log(`✅ [SERVER] Documents retrieved: ${result.documents?.length || 0} documents`);
         res.json(result);
+      } else if (response.status === 404) {
+        console.log(`⚠️ [SERVER] Document retrieval failed: ${response.status}`);
+        // For 404 errors, forward the status to client (needed for duplicate email handling)
+        res.status(404).json({
+          success: false,
+          error: 'Application not found',
+          message: 'Application not found in staff backend'
+        });
       } else {
         console.log(`⚠️ [SERVER] Document retrieval failed: ${response.status}`);
-        // Fallback: Return empty documents list
+        // For other errors, return empty documents list as fallback
         res.json({
           success: true,
           documents: [],
