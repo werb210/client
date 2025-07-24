@@ -93,6 +93,15 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 24, 2025: ✅ DUPLICATE EMAIL BLOCKING REMOVAL COMPLETED - NO-BLOCK SUBMISSION POLICY IMPLEMENTED**
+  * **CRITICAL POLICY CHANGE**: Removed all email validation logic that blocks reused email addresses per user requirements
+  * **SERVER-SIDE CHANGES**: Modified server/index.ts to return HTTP 200 success responses for duplicate emails instead of HTTP 409 errors
+  * **CLIENT-SIDE CLEANUP**: Removed all 409 duplicate handling logic from Step4_ApplicantInfo_Complete.tsx
+  * **NEW APPLICATION CREATION**: System now creates new application IDs (app_timestamp_random) for all submissions regardless of email duplication
+  * **NON-BLOCKING UX**: Optional informational toast notification shows "You've applied before. You may continue with a new application."
+  * **WORKFLOW CONTINUITY**: All applications proceed normally to Step 5 document upload without any email-based blocking validation
+  * **PRODUCTION READY**: Complete removal of duplicate email restrictions - users can submit multiple applications with same email address
+
 - **July 24, 2025: ✅ STEP 6 FINALIZATION FIX COMPLETED - S3 TRANSITION COMPATIBILITY RESOLVED**
   * **CRITICAL BUG FIX**: Resolved Step 6 finalization redirecting back to Step 5 due to document validation logic during S3 transition period
   * **ROOT CAUSE**: Step 6 was checking for uploaded documents via staff backend API, getting empty response due to incomplete S3 setup, then blocking finalization

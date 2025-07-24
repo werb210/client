@@ -387,17 +387,11 @@ export default function Step4ApplicantInfoComplete() {
       
       let response;
       try {
-        // Prepare headers with optional test account bypass
+        // Prepare headers for application submission
         const headers: any = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
         };
-        
-        // Add test account bypass header if in development mode
-        if (import.meta.env.DEV && import.meta.env.VITE_ALLOW_DUPLICATE_TEST === 'true') {
-          headers['x-allow-duplicate'] = 'true';
-          console.log('🧪 Test account duplicate bypass enabled');
-        }
         
         // USER REQUESTED: Add specific console logging before POST
         console.log("🧪 FINAL PAYLOAD:", applicationData);
@@ -429,6 +423,15 @@ export default function Step4ApplicantInfoComplete() {
         
         const rawId = result.applicationId || result.id || result.uuid;
         logger.log('🔑 Raw applicationId from response:', rawId);
+        
+        // Optional: Show informational toast for duplicate emails (non-blocking)
+        if (rawId && rawId.startsWith('app_')) {
+          toast({
+            title: "Application Created",
+            description: "You've applied before. You may continue with a new application.",
+            variant: "default",
+          });
+        }
         
         // FAILSAFE CHECK - User requested verification
         if (!result?.data?.applicationId && !result?.applicationId) {
@@ -477,77 +480,7 @@ export default function Step4ApplicantInfoComplete() {
           console.log("❌ Error response is not valid JSON");
         }
         
-        // ✅ HANDLE 409 DUPLICATE RESPONSES PROPERLY
-        if (response.status === 409) {
-          try {
-            const errorData = JSON.parse(errorText);
-            console.log('🔍 PARSING 409 DUPLICATE ERROR:', errorData);
-            
-            // Enhanced 409 duplicate error message
-            const duplicateMessage = errorData.message || 'A duplicate application was detected';
-            console.log(`✅ Using Existing Application: ${duplicateMessage}`);
-            
-            // Try to extract existing application ID
-            let existingId = errorData.applicationId;
-            
-            if (existingId) {
-              console.log('✅ DUPLICATE DETECTED - Using existing application ID:', existingId);
-              
-              // Store the existing application ID and continue workflow
-              setApplicationId(existingId);
-              localStorage.setItem('applicationId', existingId);
-              
-              dispatch({
-                type: "SET_APPLICATION_ID",
-                payload: existingId
-              });
-              
-              dispatch({
-                type: "UPDATE_FORM_DATA",
-                payload: { 
-                  applicationId: existingId,
-                  isExistingApplication: true,
-                  existingStatus: errorData.status || 'draft'
-                },
-              });
-              
-              toast({
-                title: "Using Existing Application", 
-                description: `Found existing draft application. Continuing with ID: ${existingId.substring(0, 8)}...`,
-                variant: "default",
-              });
-              
-              console.log('✅ WORKFLOW CONTINUES - ApplicationId stored:', existingId);
-              
-              // Mark step as complete and proceed to Step 5
-              dispatch({
-                type: "MARK_STEP_COMPLETE",
-                payload: 4,
-              });
-              
-              setLocation('/apply/step-5');
-              return;
-            } else {
-              // Show meaningful duplicate error without application ID
-              toast({
-                title: "Duplicate Application Detected",
-                description: duplicateMessage,
-                variant: "destructive",
-              });
-              console.log('❌ Duplicate detected but no applicationId provided in response');
-              throw new Error(`Duplicate application: ${duplicateMessage}`);
-            }
-          } catch (parseError) {
-            console.error('Failed to parse 409 duplicate error details:', parseError);
-            // Show generic duplicate error
-            toast({
-              title: "Duplicate Application Detected",
-              description: "An application with this information already exists",
-              variant: "destructive",
-            });
-            throw new Error('Duplicate application detected');
-          }
-        }
+        // Removed 409 duplicate handling - applications now proceed normally regardless of duplicate emails
         
         // ✅ LEGACY 502 HANDLING (for existing behavior compatibility)
         if (response.status === 502) {
