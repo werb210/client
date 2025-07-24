@@ -4,11 +4,17 @@
  * Centralized configuration for API endpoints and other constants
  */
 
-// API Configuration - Always use VITE_API_BASE_URL if set, otherwise fallback to correct staff backend
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  (import.meta.env.DEV 
-    ? 'http://localhost:5000/api'  // Direct to Express server in development
-    : 'https://staff.boreal.financial/api'); // Correct staff backend
+// API Configuration - ALWAYS use VITE_API_BASE_URL when available (Replit Secrets priority)
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL 
+  ? import.meta.env.VITE_API_BASE_URL  // Replit Secret takes absolute priority
+  : (import.meta.env.DEV 
+    ? 'http://localhost:5000/api'  // Local development fallback
+    : 'https://staff.boreal.financial/api'); // Production fallback
+
+// Debug logging for verification
+console.log('🔧 [CONSTANTS] API_BASE_URL resolved to:', API_BASE_URL);
+console.log('🔧 [CONSTANTS] VITE_API_BASE_URL from env:', import.meta.env.VITE_API_BASE_URL);
+console.log('🔧 [CONSTANTS] DEV mode:', import.meta.env.DEV);
 
 // Staff API Configuration
 export const STAFF_API_BASE_URL = API_BASE_URL;
