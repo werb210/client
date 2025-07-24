@@ -93,6 +93,20 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 24, 2025: 📤 UPLOAD MISSING DOCUMENTS FEATURE IMPLEMENTED - COMPLETE POST-SUBMISSION DOCUMENT MANAGEMENT**
+  * **COMPLETE SUCCESS**: Implemented comprehensive "Upload Missing Documents" feature for post-submission document management
+  * **DASHBOARD TILE REPLACEMENT**: Replaced "Multi-Step View" tile with "Upload Missing Documents" tile featuring purple cloud upload icon
+  * **APPLICATION ID PERSISTENCE**: Enhanced Step 4 and Step 6 to ensure applicationId is stored in localStorage for future document uploads
+  * **UPLOAD DOCUMENTS PAGE**: Created complete UploadMissingDocuments component with application data fetching and document requirements detection
+  * **DOCUMENT REQUIREMENTS SYSTEM**: Integrated with existing document mapping system to show category-specific requirements based on financing type
+  * **S3 UPLOAD INTEGRATION**: Configured to use S3 upload endpoint `/api/public/s3-upload/:applicationId` with proper Bearer authentication
+  * **ROUTE CONFIGURATION**: Added `/upload-documents` route in MainLayout with proper component integration
+  * **ERROR HANDLING**: Implemented fallback to redirect to `/apply/step-1` when no applicationId is found in localStorage
+  * **USER EXPERIENCE**: Added comprehensive upload instructions, progress tracking, and success/failure toast notifications
+  * **FINALIZATION FLOW**: Enhanced Step 6 to maintain applicationId persistence through finalization process
+  * **EXISTING COMPONENT REUSE**: Leveraged DynamicDocumentRequirements component for consistent upload interface
+  * **PRODUCTION READY**: Complete workflow operational from application submission → dashboard → document upload → finalization
+
 - **July 24, 2025: 🔧 CRITICAL APPLICATION FINALIZATION BUG RESOLVED - FALLBACK ID ISSUE FIXED**
   * **CRITICAL ISSUE IDENTIFIED**: Application finalization failing due to "Invalid application ID format" error with fallback IDs (`fallback_1753323165848_rnpj3uz94`)
   * **ROOT CAUSE DIAGNOSED**: Step 4 creating fallback IDs instead of proper UUIDs due to duplicate email constraint violations in staff backend database

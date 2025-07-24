@@ -145,6 +145,12 @@ export default function Step6_TypedSignature() {
       const result = await response.json();
       console.log('✅ [STEP6] Application submitted successfully:', result);
 
+      // Ensure applicationId is stored in localStorage for future document uploads
+      if (applicationId) {
+        localStorage.setItem('applicationId', applicationId);
+        console.log('💾 [STEP6] ApplicationId stored for future document uploads:', applicationId);
+      }
+
       toast({
         title: "Application Submitted Successfully!",
         description: "Your financing application has been submitted for review. You'll receive updates via email.",

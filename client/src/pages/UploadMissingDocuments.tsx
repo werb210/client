@@ -91,6 +91,9 @@ export default function UploadMissingDocuments() {
       
       console.log('📋 [UPLOAD-DOCS] Required document types:', requiredDocs);
       
+      // Load existing uploaded documents if any
+      await loadUploadedDocuments(appId);
+      
     } catch (error) {
       console.error('❌ [UPLOAD-DOCS] Error loading application:', error);
       toast({
@@ -101,6 +104,24 @@ export default function UploadMissingDocuments() {
       setLocation('/dashboard');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadUploadedDocuments = async (appId: string) => {
+    try {
+      console.log('📄 [UPLOAD-DOCS] Loading existing documents for:', appId);
+      
+      const response = await fetch(`/api/public/applications/${appId}/documents`);
+      
+      if (response.ok) {
+        const documents = await response.json();
+        console.log('✅ [UPLOAD-DOCS] Loaded existing documents:', documents);
+        setUploadedFiles(documents.documents || []);
+      } else {
+        console.log('⚠️ [UPLOAD-DOCS] No existing documents found or error loading');
+      }
+    } catch (error) {
+      console.log('⚠️ [UPLOAD-DOCS] Error loading existing documents:', error);
     }
   };
 
@@ -272,6 +293,7 @@ export default function UploadMissingDocuments() {
                 applicationId={applicationId}
                 onUploadSuccess={handleFileUploadSuccess}
                 requiredDocumentTypes={requiredDocTypes}
+                uploadEndpoint={`/api/public/s3-upload/${applicationId}`}
               />
             </CardContent>
           </Card>
@@ -289,7 +311,8 @@ export default function UploadMissingDocuments() {
               <li>• Maximum file size: 10MB per document</li>
               <li>• Ensure all documents are clear and readable</li>
               <li>• You can upload multiple files for each document type</li>
-              <li>• Documents are immediately uploaded and secured</li>
+              <li>• Documents are securely stored using S3 cloud storage</li>
+              <li>• Upload progress and status indicators will guide you</li>
             </ul>
           </CardContent>
         </Card>
