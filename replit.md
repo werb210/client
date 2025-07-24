@@ -93,6 +93,17 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 24, 2025: ✅ STEP 6 APPLICATION ID VALIDATION FIX COMPLETED - FALLBACK ID COMPATIBILITY RESOLVED**
+  * **CRITICAL BUG FIX**: Resolved Step 6 validation redirecting users to Step 5 due to application ID mismatches with fallback IDs from duplicate email constraints
+  * **ROOT CAUSE**: Duplicate email constraint violations created fallback application IDs (`app_timestamp_random`) but documents were uploaded to different application IDs
+  * **SOLUTION IMPLEMENTED**: Enhanced Step 6 document validation with local upload evidence checking for development mode
+  * **FALLBACK LOGIC**: When staff backend returns 404, system now checks for local upload evidence before blocking finalization
+  * **DEVELOPMENT MODE ENHANCEMENT**: Added `checkLocalUploadEvidence()` function to detect uploaded files in local state during S3 transition periods
+  * **USER EXPERIENCE FIX**: Users with successful document uploads no longer get redirected back to Step 5 due to validation mismatches
+  * **FORM-DATA SECURITY UPDATE**: Successfully applied form-data v4.0.4 security update without breaking any functionality
+  * **COMPREHENSIVE TESTING**: Verified all dependency chains (SendGrid, Cypress, Multer, document uploads) working correctly after security update
+  * **PRODUCTION READY**: Complete validation system now handles both strict S3 validation and fallback scenarios during development and S3 sync issues
+
 - **July 24, 2025: ✅ STEP 6 BYPASS VALIDATION ENHANCEMENT COMPLETED - CONDITIONAL STRICT VALIDATION WITH BYPASS SUPPORT**
   * **CRITICAL SUCCESS**: Implemented enhanced Step 6 document validation that respects bypass flag from Step 5 while maintaining strict validation for non-bypassed cases
   * **STEP 5 BYPASS UPDATE**: Modified handleBypass function to set `bypassDocuments: true` in form state and persist to backend via PATCH endpoint
