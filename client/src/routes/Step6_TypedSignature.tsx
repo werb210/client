@@ -73,6 +73,21 @@ export default function Step6_TypedSignature() {
         agreementsCount: Object.values(authData.agreements).filter(Boolean).length
       });
 
+      // 🟨 TASK 2: Block finalization if no document evidence found - REPLIT MUST DO
+      const hasUploads =
+        (state.step5DocumentUpload?.uploadedFiles?.length ?? 0) > 0 ||
+        (state.step5DocumentUpload?.files?.length ?? 0) > 0;
+
+      if (!hasUploads) {
+        console.warn("🚨 BLOCKING FINALIZATION — No upload evidence found");
+        toast({
+          title: "Upload Required",
+          description: "Please upload at least one document before proceeding.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Check document upload status before finalization
       const documentCheckPassed = await validateDocumentUploads();
       if (!documentCheckPassed) {
@@ -270,6 +285,12 @@ export default function Step6_TypedSignature() {
   // Helper function to check for local upload evidence
   const checkLocalUploadEvidence = (): boolean => {
     try {
+      // 🟨 TASK 1: Add logging to check local document evidence - REPLIT MUST DO
+      console.log("[STEP6] Upload Evidence Debug:");
+      console.log("uploadedFiles from context:", state.step5DocumentUpload?.uploadedFiles);
+      console.log("files from context:", state.step5DocumentUpload?.files);
+      console.log("localStorage backup:", localStorage.getItem('boreal-formData'));
+      
       // COMPREHENSIVE DEBUG: Log the entire state structure
       console.log('🧪 [STEP6] COMPREHENSIVE STATE DEBUG:', {
         fullState: state,
