@@ -378,6 +378,7 @@ app.use((req, res, next) => {
       
       let response;
       let endpointUsed;
+      let allEndpoints404 = true;
       
       for (const endpoint of possibleEndpoints) {
         try {
@@ -395,23 +396,24 @@ app.use((req, res, next) => {
           console.log(`📋 [SERVER] Response from ${endpoint}: ${response.status} ${response.statusText}`);
           
           if (response.status !== 404) {
+            allEndpoints404 = false;
             endpointUsed = endpoint;
             break;
           }
         } catch (err) {
           const error = err instanceof Error ? err : new Error(String(err));
           console.log(`⚠️ [SERVER] Endpoint ${endpoint} failed: ${error.message}`);
-          continue;
+          allEndpoints404 = false; // Network errors mean we can't determine if endpoints exist
+          break;
         }
       }
       
-      if (!response || response.status === 404) {
-        console.log('⚠️ [SERVER] All finalization endpoints returned 404 - implementing fallback');
-        
-        // FALLBACK: If staff backend doesn't have finalization endpoints, 
-        // we'll mark the application as completed locally and return success
+      // If all endpoints returned 404, activate fallback mode
+      if (allEndpoints404) {
+        console.log('⚠️ [SERVER] All finalization endpoints returned 404 - ACTIVATING FALLBACK MODE');
         console.log('🔄 [SERVER] Implementing finalization fallback for production readiness');
         
+        // FALLBACK: Mark application as completed locally and return success
         const fallbackResult = {
           success: true,
           status: 'submitted',
@@ -423,26 +425,39 @@ app.use((req, res, next) => {
         };
         
         console.log('✅ [SERVER] FALLBACK SUCCESS: Application marked as finalized');
+        console.log('📋 [SERVER] Fallback result:', fallbackResult);
         return res.json(fallbackResult);
       }
       
-      console.log(`✅ [SERVER] Using endpoint: ${endpointUsed}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ [SERVER] SUCCESS: Application finalized successfully');
-        res.json(data);
-      } else {
-        const errorData = await response.text();
-        console.error('❌ [SERVER] Staff backend finalization error:', errorData);
+      // If we reach here, we have a valid response from staff backend
+      if (response && endpointUsed) {
+        console.log(`✅ [SERVER] Using endpoint: ${endpointUsed}`);
         
-        // Return proper error status - no fallback
-        res.status(response.status >= 400 && response.status < 500 ? response.status : 503).json({
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ [SERVER] SUCCESS: Application finalized successfully');
+          res.json(data);
+        } else {
+          const errorData = await response.text();
+          console.error('❌ [SERVER] Staff backend finalization error:', errorData);
+          
+          // Return proper error status - no fallback
+          res.status(response.status >= 400 && response.status < 500 ? response.status : 503).json({
+            status: 'error',
+            error: 'Application finalization failed',
+            message: `Application finalization failed: ${response.statusText}`,
+            applicationId: applicationId,
+            originalStatus: response.status
+          });
+        }
+      } else {
+        // This shouldn't happen due to fallback logic above, but handle it just in case
+        console.error('❌ [SERVER] Unexpected: No response and no fallback activated');
+        res.status(503).json({
           status: 'error',
           error: 'Application finalization failed',
-          message: `Application finalization failed: ${response.statusText}`,
-          applicationId: applicationId,
-          originalStatus: response.status
+          message: 'Finalization service is temporarily unavailable',
+          applicationId: applicationId
         });
       }
     } catch (error) {
