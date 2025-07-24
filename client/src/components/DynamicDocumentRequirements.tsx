@@ -210,6 +210,122 @@ function UnifiedDocumentUploadCard({
   const requiredQuantity = doc.quantity || 1;
   const isComplete = documentFiles.length >= requiredQuantity;
 
+  // ✅ S3 UPLOAD VALIDATION: Comprehensive upload with retry logic
+  const uploadFileWithS3Validation = async (
+    file: File, 
+    documentType: string, 
+    applicationId: string, 
+    uploadId: string,
+    retryCount = 0
+  ): Promise<boolean> => {
+    const maxRetries = 3;
+    
+    try {
+      console.log(`🔍 [S3-VALIDATION] Step 1: Requesting pre-signed URL for ${file.name} (attempt ${retryCount + 1}/${maxRetries + 1})`);
+      
+      // ✅ PRE-SIGNED URL REQUEST VALIDATION
+      const preSignedResponse = await fetch(`/api/public/s3-upload/${applicationId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+          documentType: documentType
+        })
+      });
+
+      // Ensure 200 OK response
+      if (!preSignedResponse.ok) {
+        console.error(`❌ [S3-VALIDATION] Pre-signed URL request failed: ${preSignedResponse.status}`);
+        throw new Error(`Pre-signed URL request failed: ${preSignedResponse.status}`);
+      }
+
+      const preSignedData = await preSignedResponse.json();
+      
+      // Confirm uploadUrl and documentId are present
+      if (!preSignedData.uploadUrl || !preSignedData.documentId) {
+        console.error(`❌ [S3-VALIDATION] Invalid pre-signed response:`, preSignedData);
+        throw new Error('Pre-signed URL response missing uploadUrl or documentId');
+      }
+
+      console.log(`✅ [S3-VALIDATION] Pre-signed URL obtained:`, {
+        documentId: preSignedData.documentId,
+        uploadUrl: preSignedData.uploadUrl.substring(0, 50) + '...'
+      });
+
+      // ✅ UPLOAD COMPLETION CONFIRMATION
+      console.log(`📤 [S3-VALIDATION] Step 2: Uploading to S3 for ${file.name}`);
+      
+      const s3UploadResponse = await fetch(preSignedData.uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type
+        }
+      });
+
+      // If response.ok !== true, show error and DO NOT finalize
+      if (!s3UploadResponse.ok) {
+        console.error(`❌ [S3-VALIDATION] S3 upload failed: ${s3UploadResponse.status}`);
+        throw new Error(`S3 upload failed: ${s3UploadResponse.status}`);
+      }
+
+      console.log(`✅ [S3-VALIDATION] S3 upload successful for ${file.name}`);
+
+      // ✅ POST-UPLOAD PING TO STAFF APP
+      console.log(`🔔 [S3-VALIDATION] Step 3: Confirming upload with staff app for ${file.name}`);
+      
+      const confirmResponse = await fetch(`/api/public/documents/${preSignedData.documentId}/confirm`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileSize: file.size,
+          documentType: documentType,
+          uploadId: uploadId
+        })
+      });
+
+      if (!confirmResponse.ok) {
+        console.error(`❌ [S3-VALIDATION] Upload confirmation failed: ${confirmResponse.status}`);
+        throw new Error(`Upload confirmation failed: ${confirmResponse.status}`);
+      }
+
+      const confirmData = await confirmResponse.json();
+      console.log(`✅ [S3-VALIDATION] Upload confirmed:`, confirmData);
+
+      // ✅ UI FEEDBACK: "Upload complete" shown only if both PUT and confirm succeed
+      console.log(`🎉 [S3-VALIDATION] Complete upload validation passed for ${file.name}`);
+      return true;
+
+    } catch (error) {
+      console.error(`❌ [S3-VALIDATION] Upload validation failed for ${file.name}:`, error);
+      
+      // ✅ UPLOAD TIMEOUT AND RETRY LOGIC
+      if (retryCount < maxRetries) {
+        console.log(`🔄 [S3-VALIDATION] Retrying upload for ${file.name} (attempt ${retryCount + 2}/${maxRetries + 1})`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
+        return uploadFileWithS3Validation(file, documentType, applicationId, uploadId, retryCount + 1);
+      }
+
+      // Show error banner with retry option after all retries exhausted
+      toast({
+        title: "Upload Failed",
+        description: `Failed to upload ${file.name} after ${maxRetries + 1} attempts. Please try again.`,
+        variant: "destructive",
+      });
+      
+      return false;
+    }
+  };
+
   const validateFile = (file: File): { isValid: boolean; error?: string } => {
     // Check file size (non-zero and under 25MB)
     if (file.size === 0) {
@@ -300,49 +416,21 @@ function UnifiedDocumentUploadCard({
       // Add uploading files to state immediately
       onFilesUploaded([...uploadedFiles, ...uploadingFiles]);
       
-      // Upload each file immediately to staff backend
+      // Upload each file with comprehensive S3 validation
       try {
-        console.log(`📤 [STEP5] Starting immediate upload of ${files.length} files for applicationId: ${applicationId}`);
+        console.log(`📤 [S3-UPLOAD] Starting S3 upload validation for ${files.length} files, applicationId: ${applicationId}`);
         
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
-          const formData = new FormData();
-          formData.append('document', file);
-          formData.append('documentType', category);
+          const uploadingFile = uploadingFiles[i];
           
-          // 🧪 REQUIRED DEBUG LOGGING as per user instructions
-          console.log("📤 Uploading:", file.name, category);
-          console.log(`📤 [STEP5] Uploading file ${i + 1}/${files.length}: ${file.name}`);
-          console.log(`📤 [STEP5] Document type: ${category}`);
-          console.log(`📤 [STEP5] Application ID: ${applicationId}`);
-          console.log(`📤 [STEP5] FormData payload:`, {
-            document: file.name,
-            documentType: category.toLowerCase().replace(/\s+/g, '_'),
-            endpoint: `/api/public/upload/${applicationId}`
-          });
+          console.log(`📤 [S3-UPLOAD] Processing file ${i + 1}/${files.length}: ${file.name}`);
           
-          const uploadResponse = await fetch(`/api/public/upload/${applicationId}`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
-            },
-            body: formData
-          });
+          // ✅ STEP 1: Pre-Signed URL Request Validation
+          const success = await uploadFileWithS3Validation(file, category, applicationId, uploadingFile.id);
           
-          if (!uploadResponse.ok) {
-            const errorText = await uploadResponse.text();
-            console.error(`❌ [STEP5] Upload failed for ${file.name}:`, uploadResponse.status, errorText);
-            throw new Error(`Upload failed for ${file.name}: ${uploadResponse.status}`);
-          }
-          
-          const uploadResult = await uploadResponse.json();
-          console.log("✅ Uploaded:", uploadResult);
-          
-          // 🧪 DEBUG: Validate upload success response
-          if (uploadResult && (uploadResult.success === true || uploadResult.documentId)) {
-            console.log(`🧪 [DEBUG] Upload SUCCESS confirmed for ${file.name} - response contains success/documentId`);
-          } else {
-            console.warn(`🧪 [DEBUG] Upload response unusual for ${file.name}:`, uploadResult);
+          if (!success) {
+            throw new Error(`S3 upload validation failed for ${file.name}`);
           }
         }
         

@@ -312,6 +312,18 @@ export default function UploadMissingDocuments() {
           </CardContent>
         </Card>
 
+        {/* ✅ FINALIZATION BLOCKING BANNER */}
+        {applicationId && requiredDocTypes.length > 0 && uploadedFiles.length < requiredDocTypes.length && (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertTitle className="text-red-800">Upload Required Before Finalizing</AlertTitle>
+            <AlertDescription className="text-red-700">
+              Upload {requiredDocTypes.length - uploadedFiles.length} of {requiredDocTypes.length} required documents before finalizing your application.
+              Current progress: {uploadedFiles.length}/{requiredDocTypes.length} documents uploaded.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Document Upload Section */}
         {applicationId && requiredDocTypes.length > 0 && (
           <Card>
@@ -321,15 +333,22 @@ export default function UploadMissingDocuments() {
                 <span>Required Documents</span>
               </CardTitle>
               <p className="text-sm text-gray-600">
-                Please upload all required documents for your application.
+                Please upload all required documents for your application using S3 validated upload.
               </p>
             </CardHeader>
             <CardContent>
               <DynamicDocumentRequirements
                 applicationId={applicationId}
-                onUploadSuccess={handleFileUploadSuccess}
-                requiredDocumentTypes={requiredDocTypes}
-                uploadEndpoint={`/api/public/s3-upload/${applicationId}`}
+                requirements={requiredDocTypes.map(type => ({ 
+                  label: type, 
+                  description: `Required document: ${type}`,
+                  quantity: 1
+                }))}
+                uploadedFiles={uploadedFiles}
+                onFilesUploaded={setUploadedFiles}
+                onRequirementsChange={() => {}}
+                onFileAdded={handleFileUploadSuccess}
+                onFileRemoved={() => {}}
               />
             </CardContent>
           </Card>

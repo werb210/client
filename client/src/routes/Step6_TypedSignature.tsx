@@ -136,7 +136,23 @@ export default function Step6_TypedSignature() {
         return false;
       }
 
-      console.log('✅ [STEP6] Document validation passed - proceeding with finalization');
+      // ✅ FINALIZATION ONLY AFTER ALL REQUIRED DOCS UPLOADED
+      // Check if all documents are properly confirmed (not just uploaded)
+      const confirmedDocuments = uploadedDocuments.filter((doc: any) => 
+        doc.status === 'confirmed' || doc.status === 'processed' || doc.uploadConfirmed
+      );
+      
+      if (confirmedDocuments.length < uploadedDocuments.length) {
+        console.log('⚠️ [STEP6] Some documents not yet confirmed - blocking finalization');
+        toast({
+          title: "Documents Processing",
+          description: `${uploadedDocuments.length - confirmedDocuments.length} documents still processing. Please wait a moment and try again.`,
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      console.log('✅ [STEP6] All documents validated and confirmed - finalization allowed');
       return true;
     } catch (error) {
       console.error('❌ [STEP6] Document validation error:', error);
