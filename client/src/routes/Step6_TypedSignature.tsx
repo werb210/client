@@ -100,50 +100,25 @@ export default function Step6_TypedSignature() {
     }
   };
 
-  const checkLocalUploadEvidence = (): boolean => {
-    try {
-      // Check multiple sources for document upload evidence
-      const uploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
-      const additionalDocs = state.additionalDocuments || [];
-      const documentStatuses = state.documentStatuses || {};
-      const documents = state.documents || [];
-      
-      // Check localStorage for upload evidence
-      const localStorageApplicationId = localStorage.getItem('applicationId');
-      const localStorageUploads = localStorage.getItem('uploadedDocuments');
-      
-      console.log('🔍 [STEP6] Comprehensive local upload evidence check:', {
-        uploadedFilesCount: uploadedFiles.length,
-        additionalDocsCount: additionalDocs.length,
-        documentStatusesCount: Object.keys(documentStatuses).length,
-        documentsCount: documents.length,
-        localStorageApplicationId: localStorageApplicationId,
-        localStorageUploads: localStorageUploads ? 'present' : 'none',
-        totalLocalEvidence: uploadedFiles.length + additionalDocs.length + Object.keys(documentStatuses).length + documents.length
-      });
-      
-      // Return true if ANY evidence of document uploads exists
-      return (uploadedFiles.length > 0) || 
-             (additionalDocs.length > 0) || 
-             (Object.keys(documentStatuses).length > 0) ||
-             (documents.length > 0) ||
-             (localStorageUploads && localStorageUploads !== '[]');
-      
-    } catch (error) {
-      console.error('❌ [STEP6] Error checking local upload evidence:', error);
-      return false;
-    }
-  };
+
 
   const validateDocumentUploads = async (): Promise<boolean> => {
-    const applicationId = state.applicationId || localStorage.getItem('applicationId');
+    // ✅ FIX 2: Always use applicationId from localStorage only (no fallback IDs)
+    const applicationId = localStorage.getItem('applicationId');
     
     if (!applicationId) {
-      console.warn('⚠️ [STEP6] No application ID found for document validation');
+      console.error('❌ [STEP6] No application ID found in localStorage');
+      toast({
+        title: "Application ID Missing",
+        description: "Please restart the application process from Step 1.",
+        variant: "destructive"
+      });
       return false;
     }
 
-    // ✅ TASK 2: Check bypass flag from Step 5 first
+    console.log('🔍 [STEP6] Using applicationId for validation:', applicationId);
+
+    // ✅ Check bypass flag from Step 5 first
     const bypassDocuments = state.bypassDocuments || false;
     console.log('🔍 [STEP6] Checking bypass status from Step 5:', { bypassDocuments });
     
@@ -156,31 +131,16 @@ export default function Step6_TypedSignature() {
       return true;
     }
 
-    // ✅ TASK 2: Apply strict validation when NOT bypassed
+    // ✅ Apply strict validation when NOT bypassed
     try {
-      console.log('📋 [STEP6] Strict validation mode: Validating document uploads via staff backend S3...');
+      console.log('📋 [STEP6] Validating document uploads via staff backend for applicationId:', applicationId);
       
       const response = await fetch(`/api/public/applications/${applicationId}/documents`);
       
       if (response.status === 404) {
-        console.warn('⚠️ [STEP6] Application not found in staff backend - checking for local upload evidence');
-        
-        // Check if there's evidence of local uploads during S3 transition
-        const localUploadsExist = checkLocalUploadEvidence();
-        const isDevelopment = import.meta.env.DEV;
-        
-        if (localUploadsExist && isDevelopment) {
-          console.log('✅ [STEP6] Found local upload evidence during development - allowing finalization');
-          toast({
-            title: "Documents Verified Locally",
-            description: "Your documents have been uploaded successfully. Proceeding with application finalization.",
-          });
-          return true;
-        }
-        
-        console.error('❌ [STEP6] Application not found in staff backend and no local evidence');
+        console.error('❌ [STEP6] Application not found in staff backend');
         toast({
-          title: "Application Not Found",
+          title: "Application Not Found", 
           description: "We're having trouble verifying your documents. Please wait a moment or try re-uploading.",
           variant: "destructive"
         });

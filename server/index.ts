@@ -282,45 +282,38 @@ app.use((req, res, next) => {
         const errorData = await response.text();
         console.error('❌ [SERVER] Staff backend error:', errorData);
         
-        // Handle 409 duplicate responses - continue without blocking
+        // Handle 409 duplicate responses - extract existing applicationId from staff backend
         if (response.status === 409) {
-          console.log('🔄 [SERVER] Duplicate application detected, creating new application');
+          console.log('🔄 [SERVER] Duplicate application detected, extracting existing applicationId from staff backend');
           try {
             const duplicateData = JSON.parse(errorData);
-            // Create new application ID and continue normally
-            const newApplicationId = `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            console.log(`✅ [SERVER] Created new application ID: ${newApplicationId}`);
-            
-            return res.status(200).json({
-              success: true,
-              message: 'Application created successfully',
-              applicationId: newApplicationId,
-              status: 'draft'
-            });
+            if (duplicateData.applicationId) {
+              console.log(`✅ [SERVER] Using existing application ID from staff backend: ${duplicateData.applicationId}`);
+              return res.status(200).json({
+                success: true,
+                message: 'Using existing application',
+                applicationId: duplicateData.applicationId,
+                status: 'draft'
+              });
+            }
           } catch (parseError) {
-            const newApplicationId = `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            return res.status(200).json({
-              success: true,
-              message: 'Application created successfully',
-              applicationId: newApplicationId,
-              status: 'draft'
+            console.error('❌ [SERVER] Could not parse duplicate response, forwarding error');
+            return res.status(409).json({
+              success: false,
+              error: 'Duplicate application detected',
+              message: 'An application with this email already exists'
             });
           }
         }
         
-        // Handle 500 error with duplicate key constraint - continue without blocking
+        // Handle 500 error with duplicate key constraint - return proper error
         if (response.status === 500 && errorData.includes('duplicate key value violates unique constraint "users_email_key"')) {
-          console.log('🔍 [SERVER] Duplicate email constraint detected - creating new application');
+          console.log('🔍 [SERVER] Duplicate email constraint detected - returning proper error');
           
-          // Generate a new application ID and continue
-          const newApplicationId = `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          console.log(`✅ [SERVER] Created new application ID: ${newApplicationId}`);
-          
-          return res.status(200).json({
-            success: true,
-            message: 'Application created successfully',
-            applicationId: newApplicationId,
-            status: 'draft'
+          return res.status(409).json({
+            success: false,
+            error: 'Duplicate email detected',
+            message: 'An application with this email already exists'
           });
         }
         
@@ -340,20 +333,15 @@ app.use((req, res, next) => {
         return;
       }
       
-      // Handle duplicate constraint errors that reach the catch block - continue without blocking
+      // Handle duplicate constraint errors that reach the catch block - return proper error
       console.log('🔍 [SERVER] Checking error message for duplicate constraint:', error instanceof Error ? error.message : 'Not an Error instance');
       if (error instanceof Error && (error.message.includes('duplicate key value violates unique constraint') || error.message.includes('users_email_key'))) {
-        console.log('🔍 [SERVER] Duplicate email constraint detected in catch block - creating new application');
+        console.log('🔍 [SERVER] Duplicate email constraint detected in catch block - returning proper error');
         
-        // Generate a new application ID and continue
-        const newApplicationId = `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        console.log(`✅ [SERVER] Created new application ID: ${newApplicationId}`);
-        
-        return res.status(200).json({
-          success: true,
-          message: 'Application created successfully',
-          applicationId: newApplicationId,
-          status: 'draft'
+        return res.status(409).json({
+          success: false,
+          error: 'Duplicate email detected',
+          message: 'An application with this email already exists'
         });
       }
       

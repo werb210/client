@@ -480,7 +480,46 @@ export default function Step4ApplicantInfoComplete() {
           console.log("❌ Error response is not valid JSON");
         }
         
-        // Removed 409 duplicate handling - applications now proceed normally regardless of duplicate emails
+        // ✅ FIX 1: Add proper 409 duplicate handling - extract existing applicationId from staff backend
+        if (response.status === 409) {
+          console.log('🔄 Duplicate application detected, extracting existing applicationId');
+          try {
+            const duplicateData = JSON.parse(errorText);
+            if (duplicateData.applicationId) {
+              console.log(`✅ Using existing application ID: ${duplicateData.applicationId}`);
+              
+              // Store the existing applicationId and proceed normally
+              const existingId = duplicateData.applicationId;
+              setApplicationId(existingId);
+              dispatch({ type: 'SET_APPLICATION_ID', payload: existingId });
+              localStorage.setItem('applicationId', existingId);
+              
+              toast({
+                title: "Using Existing Application",
+                description: "Continuing with your existing application.",
+                variant: "default",
+              });
+              
+              // Proceed to Step 5 with existing application
+              dispatch({
+                type: "MARK_STEP_COMPLETE",
+                payload: 4,
+              });
+              setLocation("/apply/step-5");
+              return;
+            }
+          } catch (parseError) {
+            console.error('❌ Could not parse duplicate response');
+          }
+          
+          // If we can't extract applicationId, show error
+          toast({
+            title: "Duplicate Application",
+            description: "An application with this email already exists. Please use a different email or contact support.",
+            variant: "destructive",
+          });
+          throw new Error('Duplicate application detected');
+        }
         
         // ✅ LEGACY 502 HANDLING (for existing behavior compatibility)
         if (response.status === 502) {
