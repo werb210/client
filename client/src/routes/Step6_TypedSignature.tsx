@@ -270,26 +270,37 @@ export default function Step6_TypedSignature() {
   // Helper function to check for local upload evidence
   const checkLocalUploadEvidence = (): boolean => {
     try {
-      // Check multiple sources for upload evidence
+      // Check multiple sources and arrays for upload evidence
       const contextFiles = state.step5DocumentUpload?.files || [];
+      const contextUploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
+      
       const localStorageData = localStorage.getItem('formData') || localStorage.getItem('financialFormData');
       let localStorageFiles = [];
+      let localStorageUploadedFiles = [];
       
       if (localStorageData) {
         try {
           const parsed = JSON.parse(localStorageData);
           localStorageFiles = parsed.step5DocumentUpload?.files || [];
+          localStorageUploadedFiles = parsed.step5DocumentUpload?.uploadedFiles || [];
         } catch (e) {
           console.log('⚠️ [STEP6] Could not parse localStorage data');
         }
       }
       
-      const totalFiles = Math.max(contextFiles.length, localStorageFiles.length);
+      const totalFiles = Math.max(
+        contextFiles.length, 
+        contextUploadedFiles.length,
+        localStorageFiles.length, 
+        localStorageUploadedFiles.length
+      );
       const hasUploads = totalFiles > 0;
       
       console.log('🔍 [STEP6] Checking local upload evidence:', {
         contextFilesCount: contextFiles.length,
+        contextUploadedFilesCount: contextUploadedFiles.length,
         localStorageFilesCount: localStorageFiles.length,
+        localStorageUploadedFilesCount: localStorageUploadedFiles.length,
         totalFiles,
         hasUploads
       });
