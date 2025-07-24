@@ -102,17 +102,32 @@ export default function Step6_TypedSignature() {
 
   const checkLocalUploadEvidence = (): boolean => {
     try {
-      // Check if there's evidence of document uploads in local state
+      // Check multiple sources for document upload evidence
       const uploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
       const additionalDocs = state.additionalDocuments || [];
+      const documentStatuses = state.documentStatuses || {};
+      const documents = state.documents || [];
       
-      console.log('🔍 [STEP6] Checking local upload evidence:', {
+      // Check localStorage for upload evidence
+      const localStorageApplicationId = localStorage.getItem('applicationId');
+      const localStorageUploads = localStorage.getItem('uploadedDocuments');
+      
+      console.log('🔍 [STEP6] Comprehensive local upload evidence check:', {
         uploadedFilesCount: uploadedFiles.length,
         additionalDocsCount: additionalDocs.length,
-        totalLocalEvidence: uploadedFiles.length + additionalDocs.length
+        documentStatusesCount: Object.keys(documentStatuses).length,
+        documentsCount: documents.length,
+        localStorageApplicationId: localStorageApplicationId,
+        localStorageUploads: localStorageUploads ? 'present' : 'none',
+        totalLocalEvidence: uploadedFiles.length + additionalDocs.length + Object.keys(documentStatuses).length + documents.length
       });
       
-      return (uploadedFiles.length > 0) || (additionalDocs.length > 0);
+      // Return true if ANY evidence of document uploads exists
+      return (uploadedFiles.length > 0) || 
+             (additionalDocs.length > 0) || 
+             (Object.keys(documentStatuses).length > 0) ||
+             (documents.length > 0) ||
+             (localStorageUploads && localStorageUploads !== '[]');
       
     } catch (error) {
       console.error('❌ [STEP6] Error checking local upload evidence:', error);
