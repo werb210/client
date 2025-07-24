@@ -65,31 +65,41 @@ export default function UploadMissingDocuments() {
       setIsLoading(true);
       console.log('📋 [UPLOAD-DOCS] Loading application data for:', appId);
       
-      const response = await fetch(`/api/public/applications/${appId}`);
+      // Fetch required documents from specified endpoint
+      const requiredDocsResponse = await fetch(`/api/public/required-docs/${appId}`);
       
-      if (!response.ok) {
-        throw new Error(`Failed to load application: ${response.status}`);
+      if (requiredDocsResponse.ok) {
+        const requiredDocsData = await requiredDocsResponse.json();
+        console.log('✅ [UPLOAD-DOCS] Required documents loaded:', requiredDocsData);
+        setRequiredDocTypes(requiredDocsData.documents || []);
+      } else {
+        // Fallback: fetch application data to determine category
+        const response = await fetch(`/api/public/applications/${appId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load application: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [UPLOAD-DOCS] Application data loaded (fallback):', data);
+        
+        setApplicationData(data.application || data);
+        
+        // Determine required documents based on product category
+        const productCategory = data.application?.form_data?.step1?.productCategory || 
+                               data.form_data?.step1?.productCategory ||
+                               data.application?.form_data?.step1?.lookingFor ||
+                               data.form_data?.step1?.lookingFor ||
+                               data.application?.form_data?.step1?.fundsPurpose ||
+                               data.form_data?.step1?.fundsPurpose;
+
+        console.log('🔍 [UPLOAD-DOCS] Product category determined:', productCategory);
+        
+        const requiredDocs = getRequiredDocuments(productCategory);
+        setRequiredDocTypes(requiredDocs);
       }
-
-      const data = await response.json();
-      console.log('✅ [UPLOAD-DOCS] Application data loaded:', data);
       
-      setApplicationData(data.application || data);
-      
-      // Determine required documents based on product category
-      const productCategory = data.application?.form_data?.step1?.productCategory || 
-                             data.form_data?.step1?.productCategory ||
-                             data.application?.form_data?.step1?.lookingFor ||
-                             data.form_data?.step1?.lookingFor ||
-                             data.application?.form_data?.step1?.fundsPurpose ||
-                             data.form_data?.step1?.fundsPurpose;
-
-      console.log('🔍 [UPLOAD-DOCS] Product category determined:', productCategory);
-      
-      const requiredDocs = getRequiredDocuments(productCategory);
-      setRequiredDocTypes(requiredDocs);
-      
-      console.log('📋 [UPLOAD-DOCS] Required document types:', requiredDocs);
+      console.log('📋 [UPLOAD-DOCS] Final required document types:', requiredDocTypes);
       
       // Load existing uploaded documents if any
       await loadUploadedDocuments(appId);
@@ -250,6 +260,21 @@ export default function UploadMissingDocuments() {
           </Alert>
         )}
 
+        {/* Submission Status Banner */}
+        {!isLoading && (
+          <Alert className="mb-6 border-blue-200 bg-blue-50">
+            <AlertTriangle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              📊 Upload Progress: {uploadedFiles.length} of {requiredDocTypes.length} documents uploaded
+              {uploadedFiles.length < requiredDocTypes.length && (
+                <span className="ml-2 text-blue-600 font-medium">
+                  ({requiredDocTypes.length - uploadedFiles.length} remaining)
+                </span>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Application Info */}
         <Card className="mb-6">
           <CardHeader>
@@ -293,7 +318,7 @@ export default function UploadMissingDocuments() {
                 applicationId={applicationId}
                 onUploadSuccess={handleFileUploadSuccess}
                 requiredDocumentTypes={requiredDocTypes}
-                uploadEndpoint={`/api/public/s3-upload/${applicationId}`}
+                uploadEndpoint={`/api/public/upload/${applicationId}`}
               />
             </CardContent>
           </Card>
@@ -311,8 +336,9 @@ export default function UploadMissingDocuments() {
               <li>• Maximum file size: 10MB per document</li>
               <li>• Ensure all documents are clear and readable</li>
               <li>• You can upload multiple files for each document type</li>
-              <li>• Documents are securely stored using S3 cloud storage</li>
-              <li>• Upload progress and status indicators will guide you</li>
+              <li>• Documents are securely stored and processed immediately</li>
+              <li>• Upload progress shows your completion status</li>
+              <li>• Use the exact same Dropzone components as Step 5</li>
             </ul>
           </CardContent>
         </Card>
