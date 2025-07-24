@@ -362,24 +362,60 @@ app.use((req, res, next) => {
     }
   });
 
-  // PATCH endpoint for application finalization (Step 7)
-  app.patch('/api/public/applications/:applicationId', async (req, res) => {
+  // PATCH endpoint for application finalization with /finalize path (Step 6)
+  app.patch('/api/public/applications/:applicationId/finalize', async (req, res) => {
     try {
       const { applicationId } = req.params;
-      console.log(`📋 [SERVER] PATCH /api/public/applications/${applicationId} - Finalizing application`);
+      console.log(`🏁 [SERVER] PATCH /api/public/applications/${applicationId}/finalize - Finalizing application`);
       console.log('📝 [SERVER] Finalization data:', req.body);
       
-      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${applicationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${cfg.clientToken}`
-        },
-        body: JSON.stringify(req.body)
-      });
+      // Try different possible staff backend endpoints for finalization
+      const possibleEndpoints = [
+        `${cfg.staffApiUrl}/public/applications/${applicationId}/finalize`,
+        `${cfg.staffApiUrl}/public/applications/${applicationId}/submit`,
+        `${cfg.staffApiUrl}/public/applications/${applicationId}`
+      ];
       
-      console.log(`📋 [SERVER] Staff backend PATCH response: ${response.status} ${response.statusText}`);
+      let response;
+      let endpointUsed;
+      
+      for (const endpoint of possibleEndpoints) {
+        try {
+          console.log(`🔄 [SERVER] Trying endpoint: ${endpoint}`);
+          response = await fetch(endpoint, {
+            method: 'PATCH',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${cfg.clientToken}`
+            },
+            body: JSON.stringify(req.body)
+          });
+          
+          console.log(`📋 [SERVER] Response from ${endpoint}: ${response.status} ${response.statusText}`);
+          
+          if (response.status !== 404) {
+            endpointUsed = endpoint;
+            break;
+          }
+        } catch (err) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          console.log(`⚠️ [SERVER] Endpoint ${endpoint} failed: ${error.message}`);
+          continue;
+        }
+      }
+      
+      if (!response || response.status === 404) {
+        console.error('❌ [SERVER] All finalization endpoints returned 404');
+        return res.status(404).json({
+          status: 'error',
+          error: 'Finalization endpoint not found',
+          message: 'Application finalization endpoint is not available on staff backend',
+          applicationId: applicationId
+        });
+      }
+      
+      console.log(`✅ [SERVER] Using endpoint: ${endpointUsed}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -387,7 +423,7 @@ app.use((req, res, next) => {
         res.json(data);
       } else {
         const errorData = await response.text();
-        console.error('❌ [SERVER] Staff backend PATCH error:', errorData);
+        console.error('❌ [SERVER] Staff backend finalization error:', errorData);
         
         // Return proper error status - no fallback
         res.status(response.status >= 400 && response.status < 500 ? response.status : 503).json({
@@ -406,6 +442,55 @@ app.use((req, res, next) => {
         status: 'error',
         error: 'Application finalization failed',
         message: 'Application finalization service is temporarily unavailable. Please try again later.',
+        applicationId: req.params.applicationId
+      });
+    }
+  });
+
+  // PATCH endpoint for general application updates (without /finalize)
+  app.patch('/api/public/applications/:applicationId', async (req, res) => {
+    try {
+      const { applicationId } = req.params;
+      console.log(`📋 [SERVER] PATCH /api/public/applications/${applicationId} - Updating application`);
+      console.log('📝 [SERVER] Update data:', req.body);
+      
+      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${applicationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
+        },
+        body: JSON.stringify(req.body)
+      });
+      
+      console.log(`📋 [SERVER] Staff backend PATCH response: ${response.status} ${response.statusText}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ [SERVER] SUCCESS: Application updated successfully');
+        res.json(data);
+      } else {
+        const errorData = await response.text();
+        console.error('❌ [SERVER] Staff backend PATCH error:', errorData);
+        
+        // Return proper error status - no fallback
+        res.status(response.status >= 400 && response.status < 500 ? response.status : 503).json({
+          status: 'error',
+          error: 'Application update failed',
+          message: `Application update failed: ${response.statusText}`,
+          applicationId: applicationId,
+          originalStatus: response.status
+        });
+      }
+    } catch (error) {
+      console.error('❌ [SERVER] Application update failed:', error);
+      
+      // Return proper error status - no fallback
+      res.status(503).json({
+        status: 'error',
+        error: 'Application update failed',
+        message: 'Application update service is temporarily unavailable. Please try again later.',
         applicationId: req.params.applicationId
       });
     }
