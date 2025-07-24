@@ -117,7 +117,7 @@ export default function Step4ApplicantInfoComplete() {
     defaultValues: {
       applicantFirstName: state.step4?.applicantFirstName || "",
       applicantLastName: state.step4?.applicantLastName || "",
-      applicantEmail: state.step4?.applicantEmail || "",
+      applicantEmail: state.step4?.applicantEmail || `testuser+${Date.now()}@example.com`,
       applicantPhone: state.step4?.applicantPhone || "",
       applicantAddress: state.step4?.applicantAddress || "",
       applicantCity: state.step4?.applicantCity || "",
