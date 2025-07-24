@@ -251,20 +251,32 @@ export default function Step4ApplicantInfoComplete() {
     
     logger.log('📤 Step 4: Creating real application via POST /api/public/applications...');
     try {
-      // Format data as staff backend expects: {step1, step3, step4}
+      // 🚨 CRITICAL FIX: Complete Step 1 payload with all required fields
       const step1 = {
-        // Financial profile data from Steps 1 & 2
-        requestedAmount: state.step1?.requestedAmount || state.step1?.fundingAmount, // ✅ step-based access
-        use_of_funds: state.step1?.use_of_funds || state.step1?.lookingFor, // ✅ step-based access
-        equipment_value: state.step1?.equipment_value || state.step1?.equipmentValue, // ✅ step-based access
-        businessLocation: state.step1?.businessLocation,
-        salesHistory: state.step1?.salesHistory,
-        lastYearRevenue: state.step1?.lastYearRevenue,
-        averageMonthlyRevenue: state.step1?.averageMonthlyRevenue,
-        accountsReceivableBalance: state.step1?.accountsReceivableBalance,
-        fixedAssetsValue: state.step1?.fixedAssetsValue,
-        purposeOfFunds: state.step1?.purposeOfFunds,
-        selectedCategory: state.step2?.selectedCategory
+        // Core funding request data
+        fundingAmount: state.step1?.fundingAmount || state.step1?.requestedAmount || 0,
+        requestedAmount: state.step1?.requestedAmount || state.step1?.fundingAmount || 0,
+        use_of_funds: state.step1?.use_of_funds || state.step1?.lookingFor || state.step1?.fundsPurpose || '',
+        lookingFor: state.step1?.lookingFor || state.step1?.use_of_funds || state.step1?.fundsPurpose || '',
+        fundsPurpose: state.step1?.fundsPurpose || state.step1?.lookingFor || state.step1?.use_of_funds || '',
+        
+        // Business location and context
+        businessLocation: state.step1?.businessLocation || 'US',
+        industry: state.step1?.industry || '',
+        
+        // Financial metrics
+        salesHistory: state.step1?.salesHistory || '',
+        lastYearRevenue: state.step1?.lastYearRevenue || '',
+        averageMonthlyRevenue: state.step1?.averageMonthlyRevenue || '',
+        accountsReceivableBalance: state.step1?.accountsReceivableBalance || 0,
+        fixedAssetsValue: state.step1?.fixedAssetsValue || 0,
+        
+        // Equipment specific (if applicable)
+        equipment_value: state.step1?.equipment_value || state.step1?.equipmentValue || 0,
+        equipmentValue: state.step1?.equipmentValue || state.step1?.equipment_value || 0,
+        
+        // Step 2 integration
+        selectedCategory: state.step2?.selectedCategory || state.step2?.selectedCategoryName || ''
       };
 
       // 🔧 Fix validation logic - Replace reliance on state.step3 if it's not hydrated
@@ -295,23 +307,71 @@ export default function Step4ApplicantInfoComplete() {
         }
       }
 
+      // 🚨 CRITICAL FIX: Complete Step 3 business payload with all fields
       const step3 = {
-        // Business details from Step 3 - mapping correct field names
-        operatingName: businessFields.operatingName,
-        legalName: businessFields.legalName,
-        businessName: businessFields.operatingName || businessFields.legalName, // Map operatingName to businessName
-        businessAddress: businessFields.businessStreetAddress, // Correct field name
-        businessCity: businessFields.businessCity,
-        businessState: businessFields.businessState,
-        businessZip: businessFields.businessPostalCode, // Correct field name
-        businessPhone: businessFields.businessPhone,
-        businessStructure: businessFields.businessStructure,
-        businessStartDate: businessFields.businessStartDate,
-        numberOfEmployees: businessFields.employeeCount, // Correct field name
-        annualRevenue: businessFields.estimatedYearlyRevenue // Correct field name
+        // Core business identity
+        operatingName: businessFields.operatingName || '',
+        legalName: businessFields.legalName || businessFields.operatingName || '',
+        businessName: businessFields.operatingName || businessFields.legalName || businessFields.businessName || '',
+        
+        // Business address
+        businessAddress: businessFields.businessStreetAddress || businessFields.businessAddress || '',
+        businessStreetAddress: businessFields.businessStreetAddress || businessFields.businessAddress || '',
+        businessCity: businessFields.businessCity || '',
+        businessState: businessFields.businessState || '',
+        businessZip: businessFields.businessPostalCode || businessFields.businessZip || '',
+        businessPostalCode: businessFields.businessPostalCode || businessFields.businessZip || '',
+        
+        // Contact information
+        businessPhone: businessFields.businessPhone || '',
+        businessWebsite: businessFields.businessWebsite || '',
+        
+        // Business details
+        businessStructure: businessFields.businessStructure || '',
+        businessStartDate: businessFields.businessStartDate || '',
+        numberOfEmployees: businessFields.employeeCount || businessFields.numberOfEmployees || 0,
+        employeeCount: businessFields.employeeCount || businessFields.numberOfEmployees || 0,
+        annualRevenue: businessFields.estimatedYearlyRevenue || businessFields.annualRevenue || 0,
+        estimatedYearlyRevenue: businessFields.estimatedYearlyRevenue || businessFields.annualRevenue || 0
       };
 
-      const step4 = processedData;
+      // 🚨 CRITICAL FIX: Complete Step 4 contact payload with all fields
+      const step4 = {
+        // Primary applicant (contact) information
+        applicantFirstName: processedData.applicantFirstName || '',
+        applicantLastName: processedData.applicantLastName || '',
+        applicantEmail: processedData.applicantEmail || '',
+        applicantPhone: processedData.applicantPhone || '',
+        applicantAddress: processedData.applicantAddress || '',
+        applicantCity: processedData.applicantCity || '',
+        applicantState: processedData.applicantState || '',
+        applicantZipCode: processedData.applicantZipCode || '',
+        applicantDateOfBirth: processedData.applicantDateOfBirth || '',
+        applicantSSN: processedData.applicantSSN || '',
+        ownershipPercentage: processedData.ownershipPercentage || 100,
+        
+        // Contact mapping for backend compatibility
+        firstName: processedData.applicantFirstName || '',
+        lastName: processedData.applicantLastName || '',
+        email: processedData.applicantEmail || '',
+        phone: processedData.applicantPhone || '',
+        first_name: processedData.applicantFirstName || '',
+        last_name: processedData.applicantLastName || '',
+        
+        // Partner information (if applicable)
+        hasPartner: processedData.hasPartner || false,
+        partnerFirstName: processedData.partnerFirstName || '',
+        partnerLastName: processedData.partnerLastName || '',
+        partnerEmail: processedData.partnerEmail || '',
+        partnerPhone: processedData.partnerPhone || '',
+        partnerAddress: processedData.partnerAddress || '',
+        partnerCity: processedData.partnerCity || '',
+        partnerState: processedData.partnerState || '',
+        partnerZipCode: processedData.partnerZipCode || '',
+        partnerDateOfBirth: processedData.partnerDateOfBirth || '',
+        partnerSSN: processedData.partnerSSN || '',
+        partnerOwnershipPercentage: processedData.partnerOwnershipPercentage || 0
+      };
 
       // ✅ RUNTIME CHECK: Ensure all steps are present
       if (!step1 || !step3 || !step4) {
@@ -325,13 +385,33 @@ export default function Step4ApplicantInfoComplete() {
         return;
       }
 
-      // User requirement: Final payload logging (kept as required)
-      console.log("🧪 FINAL PAYLOAD:", {
-        step1,
-        step3,
-        step4
+      // 🚨 CRITICAL: Enhanced payload logging for debugging
+      console.log("🧪 FINAL PAYLOAD - COMPREHENSIVE STRUCTURE:");
+      console.log("📊 Step 1 (business/funding_request):", {
+        fundingAmount: step1.fundingAmount,
+        requestedAmount: step1.requestedAmount,
+        use_of_funds: step1.use_of_funds,
+        businessLocation: step1.businessLocation,
+        selectedCategory: step1.selectedCategory,
+        fieldCount: Object.keys(step1).length
       });
-      // Essential field validation complete
+      console.log("📊 Step 3 (business details):", {
+        businessName: step3.businessName,
+        operatingName: step3.operatingName,
+        legalName: step3.legalName,
+        businessPhone: step3.businessPhone,
+        businessState: step3.businessState,
+        fieldCount: Object.keys(step3).length
+      });
+      console.log("📊 Step 4 (contact info):", {
+        firstName: step4.firstName,
+        lastName: step4.lastName,
+        email: step4.email,
+        phone: step4.phone,
+        applicantEmail: step4.applicantEmail,
+        fieldCount: Object.keys(step4).length
+      });
+      console.log("🧪 COMPLETE PAYLOAD:", { step1, step3, step4 });
 
       const applicationData = { 
         step1, 
