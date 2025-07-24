@@ -476,9 +476,12 @@ export default function Step6_TypedSignature() {
           const retryResult = await retryResponse.json();
           console.log('✅ [STEP6] Application finalized successfully after form_data resubmission:', retryResult);
           
+          // ✅ C. Step 6 (Finalization) - SUBMISSION RELIABILITY CHECKLIST
+          console.log("✅ Application finalized:", applicationId);
+          
           // Show success and navigate
           toast({
-            title: "Application Submitted Successfully!",
+            title: "Application submitted!",
             description: "Your financing application has been submitted for review. You'll receive updates via email."
           });
           
@@ -509,6 +512,9 @@ export default function Step6_TypedSignature() {
       const result = await response.json();
       console.log('✅ [STEP6] Application submitted successfully:', result);
 
+      // ✅ C. Step 6 (Finalization) - SUBMISSION RELIABILITY CHECKLIST
+      console.log("✅ Application finalized:", applicationId);
+
       // Ensure applicationId is stored in localStorage for future document uploads
       if (applicationId) {
         localStorage.setItem('applicationId', applicationId);
@@ -516,7 +522,7 @@ export default function Step6_TypedSignature() {
       }
 
       toast({
-        title: "Application Submitted Successfully!",
+        title: "Application submitted!",
         description: "Your financing application has been submitted for review. You'll receive updates via email.",
       });
 

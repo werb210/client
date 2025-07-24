@@ -474,6 +474,9 @@ function UnifiedDocumentUploadCard({
           const uploadResult = await uploadResponse.json();
           console.log(`✅ [S3-BACKEND] Upload successful:`, uploadResult);
           
+          // ✅ B. Step 5 (Document Upload) - SUBMISSION RELIABILITY CHECKLIST
+          console.log("✅ File uploaded:", file.name);
+          
           // Log storage_key for verification
           if (uploadResult.storage_key) {
             console.log(`🔑 [S3-BACKEND] Storage key saved: ${uploadResult.storage_key}`);

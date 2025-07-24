@@ -540,6 +540,9 @@ export default function Step4ApplicantInfoComplete() {
         
         // 🟨 STEP 4: Log Step 4 and Step 5 IDs for matching - REPLIT MUST DO
         console.log("Step 4 ID:", result.applicationId || result.id);
+        
+        // ✅ A. Step 4 (Application Submission) - SUBMISSION RELIABILITY CHECKLIST
+        console.log("✅ Step 4 submission succeeded:", result.applicationId || result.id);
         console.log("✅ Application created:", result);
         
         logger.log('📋 Application created:', result);
@@ -547,6 +550,13 @@ export default function Step4ApplicantInfoComplete() {
         
         const rawId = result.applicationId || result.id || result.uuid;
         logger.log('🔑 Raw applicationId from response:', rawId);
+        
+        // ✅ A. Step 4 submission success toast - SUBMISSION RELIABILITY CHECKLIST
+        toast({
+          title: "Step 4 submitted!",
+          description: "Application data saved successfully. Proceeding to document upload.",
+          variant: "default",
+        });
         
         // Optional: Show informational toast for duplicate emails (non-blocking)
         if (rawId && rawId.startsWith('app_')) {
