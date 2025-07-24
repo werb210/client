@@ -480,31 +480,18 @@ export default function Step4ApplicantInfoComplete() {
           console.log("❌ Error response is not valid JSON");
         }
         
-        // ✅ FIX 1: Add proper 409 duplicate handling - generate new UUID for duplicate emails
+        // ✅ FIX 1: Handle 409 duplicate email by requiring user to use different email
         if (response.status === 409) {
-          console.log('🔄 Duplicate email detected, generating new application ID for this submission');
-          
-          // Generate a new UUID for this application submission
-          const newApplicationId = crypto.randomUUID();
-          console.log(`✅ Generated new application ID for duplicate email: ${newApplicationId}`);
-          
-          // Store the new applicationId and proceed normally
-          setApplicationId(newApplicationId);
-          dispatch({ type: 'SET_APPLICATION_ID', payload: newApplicationId });
-          localStorage.setItem('applicationId', newApplicationId);
+          console.log('❌ Duplicate email detected - user must use different email');
           
           toast({
-            title: "New Application Started",
-            description: "You've applied before. Continuing with a new application.",
-            variant: "default",
+            title: "Email Already Used",
+            description: "This email address has been used for a previous application. Please use a different email address.",
+            variant: "destructive",
           });
           
-          // Mark Step 4 complete and proceed to Step 5
-          dispatch({
-            type: "MARK_STEP_COMPLETE",
-            payload: 4,
-          });
-          setLocation("/apply/step-5");
+          // Don't proceed - user must fix the email address
+          setSubmitting(false);
           return;
         }
         
