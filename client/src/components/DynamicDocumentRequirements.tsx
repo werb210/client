@@ -459,12 +459,23 @@ function UnifiedDocumentUploadCard({
           // 🟨 STEP 2: Add console logging - REPLIT MUST DO
           if (!uploadResponse.ok) {
             const err = await uploadResponse.text();
+            
+            // Step 5 Upload Failure Logging
+            console.error("❌ STEP 5 UPLOAD FAILED:");
             console.error("Upload failed:", err);
             console.error(`❌ [S3-BACKEND] Upload failed for ${file.name}:`, uploadResponse.status, err);
+            console.error("Request URL:", uploadResponse.url);
+            console.error("API Base URL:", import.meta.env.VITE_API_BASE_URL);
+            console.error("File details:", {
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              category: category
+            });
             
             toast({
-              title: "Upload Failed",
-              description: "Upload failed: " + err,
+              title: "Step 5 Upload Failed",
+              description: `Document upload failed for ${file.name}: ${uploadResponse.status} ${uploadResponse.statusText}`,
               variant: "destructive"
             });
             

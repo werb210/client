@@ -518,13 +518,18 @@ export default function Step4ApplicantInfoComplete() {
       // 🟨 STEP 2: Add full error logging - REPLIT MUST DO
       if (!response.ok) {
         const errorText = await response.text();
+        
+        // Step 4 Submission Failure Logging
+        console.error("❌ STEP 4 SUBMISSION FAILED:");
         console.error("🟨 FAILED TO SUBMIT:", errorText);
         console.error("Response status:", response.status, response.statusText);
         console.error("Response headers:", Object.fromEntries(response.headers.entries()));
+        console.error("Request URL:", response.url);
+        console.error("API Base URL:", import.meta.env.VITE_API_BASE_URL);
         
         toast({
-          title: "Application failed to submit",
-          description: `Server error: ${response.status} ${response.statusText}`,
+          title: "Step 4 Submission Failed",
+          description: `Application submission failed: ${response.status} ${response.statusText}`,
           variant: "destructive"
         });
         

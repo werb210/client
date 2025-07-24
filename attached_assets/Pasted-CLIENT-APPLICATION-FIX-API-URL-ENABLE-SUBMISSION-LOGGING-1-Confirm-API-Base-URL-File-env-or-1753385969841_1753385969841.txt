@@ -1,0 +1,112 @@
+CLIENT APPLICATION — FIX API URL & ENABLE SUBMISSION LOGGING
+✅ 1. Confirm API Base URL
+File: .env or vite.config.ts
+
+ts
+Copy
+Edit
+VITE_API_BASE_URL=https://staff.boreal.financial/api
+🔥 Never use https://sp.replit.com or proxy endpoints — they break on live deployment!
+
+✅ 2. Step 4 — Log Submission Result (Application POST)
+File: client/src/routes/Step4_ApplicantInfo_Complete.tsx
+
+🔧 Inside the final submission handler, add:
+
+ts
+Copy
+Edit
+console.log("📤 Submitting application data:", submissionData);
+
+try {
+  const response = await fetch(`${VITE_API_BASE_URL}/public/applications`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(submissionData)
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.error("❌ Application POST failed:", text);
+    toast({
+      title: "Application Error",
+      description: "Could not save your application. Please try again.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const result = await response.json();
+  console.log("✅ Step 4 submission succeeded:", result);
+  toast({
+    title: "Step 4 submitted!",
+    description: "Application data saved successfully...",
+  });
+} catch (err) {
+  console.error("❌ Application submission error:", err);
+  toast({
+    title: "Connection Error",
+    description: "Unable to connect to the server.",
+    variant: "destructive",
+  });
+}
+✅ 3. Step 5 — Confirm File Upload Success
+File: client/src/components/DynamicDocumentRequirements.tsx
+
+🔧 Inside the upload handler, add this:
+
+ts
+Copy
+Edit
+console.log("📤 Uploading file:", file.name);
+
+const response = await fetch(`${VITE_API_BASE_URL}/public/upload/${applicationId}`, {
+  method: "POST",
+  body: formData
+});
+
+if (!response.ok) {
+  const text = await response.text();
+  console.error("❌ File upload failed:", text);
+  toast({
+    title: "Upload Error",
+    description: `Failed to upload ${file.name}`,
+    variant: "destructive"
+  });
+  return;
+}
+
+console.log("✅ File uploaded:", file.name);
+✅ 4. Step 6 — Finalize Submission Logs
+File: client/src/routes/Step6_TypedSignature.tsx
+
+Add this after the PATCH finalize call:
+
+ts
+Copy
+Edit
+console.log("📤 Finalizing application:", applicationId);
+
+const response = await fetch(`${VITE_API_BASE_URL}/public/applications/${applicationId}/finalize`, {
+  method: "PATCH"
+});
+
+if (!response.ok) {
+  const text = await response.text();
+  console.error("❌ Finalization failed:", text);
+  toast({
+    title: "Finalization Error",
+    description: "Something went wrong submitting your application.",
+    variant: "destructive"
+  });
+  return;
+}
+
+console.log("✅ Application finalized:", applicationId);
+✅ FINAL CHECKLIST
+Step	Description	Expected Log
+1	Client submits application	✅ Step 4 submission succeeded
+2	Client uploads documents	✅ File uploaded: ...
+3	Client finalizes submission	✅ Application finalized: ...
+4	Staff app receives full payload	✅ Application and documents visible
+5	Staff UI shows correct info	✅ No “Unknown Business” or empty fields

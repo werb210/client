@@ -4,11 +4,11 @@
  * Centralized configuration for API endpoints and other constants
  */
 
-// API Configuration - Always use VITE_API_BASE_URL if set, otherwise fallback to development server
+// API Configuration - Always use VITE_API_BASE_URL if set, otherwise fallback to correct staff backend
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
   (import.meta.env.DEV 
     ? 'http://localhost:5000/api'  // Direct to Express server in development
-    : 'https://staffportal.replit.app/api'); // Working staff backend fallback
+    : 'https://staff.boreal.financial/api'); // Correct staff backend
 
 // Staff API Configuration
 export const STAFF_API_BASE_URL = API_BASE_URL;

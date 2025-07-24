@@ -446,11 +446,17 @@ export default function Step6_TypedSignature() {
 
       if (!response.ok) {
         const errorText = await response.text();
+        
+        // Step 6 Finalization Failure Logging
+        console.error('❌ STEP 6 FINALIZATION FAILED:');
         console.error('❌ [STEP6] Finalization API error:', {
           status: response.status,
           statusText: response.statusText,
           errorText,
-          attempt: retryCount + 1
+          attempt: retryCount + 1,
+          requestUrl: response.url,
+          apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+          applicationId: applicationId
         });
         
         // Check if this is a form_data empty error - need to resubmit form data
@@ -500,13 +506,31 @@ export default function Step6_TypedSignature() {
           return submitFinalApplication(retryCount + 1);
         }
         
+        // Enhanced error handling with user-friendly toasts
+        let errorMessage = '';
+        let toastTitle = 'Step 6 Finalization Failed';
+        
         if (response.status === 503) {
-          throw new Error('The application submission service is temporarily unavailable. Your application data has been saved and you can try submitting again later.');
+          errorMessage = 'The application submission service is temporarily unavailable. Your application data has been saved and you can try submitting again later.';
         } else if (response.status >= 500) {
-          throw new Error('Server error occurred during submission. Please try again.');
+          errorMessage = 'Server error occurred during submission. Please try again.';
+        } else if (response.status === 400) {
+          errorMessage = `Bad request: ${errorText || response.statusText}`;
+        } else if (response.status === 401) {
+          errorMessage = 'Authentication failed. Please try again.';
+        } else if (response.status === 404) {
+          errorMessage = 'Application not found. Please start over from Step 1.';
         } else {
-          throw new Error(`Submission failed: ${response.statusText}`);
+          errorMessage = `Submission failed: ${response.statusText}`;
         }
+        
+        toast({
+          title: toastTitle,
+          description: errorMessage,
+          variant: "destructive"
+        });
+        
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
