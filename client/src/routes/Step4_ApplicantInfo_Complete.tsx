@@ -537,6 +537,9 @@ export default function Step4ApplicantInfoComplete() {
         
         // 🟨 STEP 1: Ensure server returns applicationId - REPLIT MUST DO
         console.log("🟨 SERVER RETURNED applicationId:", result.applicationId || result.id);
+        
+        // 🟨 STEP 4: Log Step 4 and Step 5 IDs for matching - REPLIT MUST DO
+        console.log("Step 4 ID:", result.applicationId || result.id);
         console.log("✅ Application created:", result);
         
         logger.log('📋 Application created:', result);

@@ -41,6 +41,10 @@ export default function Step5DocumentUpload() {
   
   // ✅ USER SPECIFICATION: Track applicationId from Step 4
   const applicationId = state.applicationId || localStorage.getItem('applicationId');
+  
+  // 🟨 STEP 4: Log Step 5 using ID for matching - REPLIT MUST DO
+  console.log("Step 5 using ID:", applicationId);
+  
   logger.log('🔍 [STEP5] Application ID check:', {
     fromState: state.applicationId,
     fromLocalStorage: localStorage.getItem('applicationId'),

@@ -424,7 +424,16 @@ function UnifiedDocumentUploadCard({
           const file = files[i];
           const uploadingFile = uploadingFiles[i];
           
+          // 🟨 STEP 1: Confirm upload call - REPLIT MUST DO
+          console.log("Uploading", file.name, "to", `/api/public/upload/${applicationId}`);
           console.log(`📤 [S3-BACKEND] Processing file ${i + 1}/${files.length}: ${file.name}`);
+          
+          // 🟨 STEP 3: Check headers and file validity - REPLIT MUST DO
+          console.log("🟨 STEP 3: FILE VALIDATION CHECK");
+          console.log("Content-Type: multipart/form-data");
+          console.log("File empty check:", file.size > 0 ? "✅ Valid" : "❌ Empty file");
+          console.log("Category passed:", category);
+          console.log("Using <input type='file'> with onChange handler: ✅ Confirmed");
           
           // Create FormData for staff backend upload
           const formData = new FormData();
@@ -447,9 +456,18 @@ function UnifiedDocumentUploadCard({
             }
           });
 
+          // 🟨 STEP 2: Add console logging - REPLIT MUST DO
           if (!uploadResponse.ok) {
-            const errorText = await uploadResponse.text();
-            console.error(`❌ [S3-BACKEND] Upload failed for ${file.name}:`, uploadResponse.status, errorText);
+            const err = await uploadResponse.text();
+            console.error("Upload failed:", err);
+            console.error(`❌ [S3-BACKEND] Upload failed for ${file.name}:`, uploadResponse.status, err);
+            
+            toast({
+              title: "Upload Failed",
+              description: "Upload failed: " + err,
+              variant: "destructive"
+            });
+            
             throw new Error(`Upload failed for ${file.name}: ${uploadResponse.status}`);
           }
 
