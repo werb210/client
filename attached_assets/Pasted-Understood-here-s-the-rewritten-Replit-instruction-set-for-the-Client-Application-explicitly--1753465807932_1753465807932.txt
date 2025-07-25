@@ -1,0 +1,114 @@
+Understood — here's the rewritten **Replit instruction set** for the Client Application, explicitly stating that **real documents must be used**, and that **you will upload them upon request if they are missing**.
+
+---
+
+## ✅ INSTRUCTIONS FOR REPLIT — CLIENT APPLICATION FULL TEST (REAL DOCUMENTS ONLY)
+
+> 🛑 **DO NOT SKIP OR SIMULATE ANY STEP. THIS IS A FULL END-TO-END PRODUCTION TEST.**
+
+---
+
+### 📌 OBJECTIVE
+
+Submit a complete, real application using the client portal and confirm it is fully received by the Staff Portal, including:
+
+* All required form fields
+* Six (6) **real banking documents**
+* Finalized application
+* Signed application PDF
+* S3 storage confirmation
+* Appearance in Staff portal under `"New"` stage
+
+---
+
+### 🧩 STEP 1: BEGIN NEW APPLICATION
+
+* Start a **new client application**.
+* Fill in **all required fields** on Steps 1–4:
+
+  * Business name: `"A10 Recovery Test"`
+  * Requested Amount: `$100,000`
+  * Use of Funds: `"Expansion"`
+  * Contact Name: `"Todd Werb"`
+  * Title: `"CEO"`
+  * Phone: `"+1-555-555-1234"`
+  * Email: `"a10test@boreal.financial"`
+
+Ensure the UUID is generated and preserved from Step 1 through submission.
+
+---
+
+### 📤 STEP 2: DOCUMENT UPLOAD (STEP 5)
+
+* Upload **exactly 6 documents** to the application:
+
+  * **November 2024.pdf**
+  * **December 2024.pdf**
+  * **January 2025.pdf**
+  * **February 2025.pdf**
+  * **March 2025.pdf**
+  * **April 2025.pdf**
+* Set document type = `bank_statements`
+
+#### ❗ IMPORTANT:
+
+If these real bank statements are **not available in your workspace**, IMMEDIATELY prompt the user **(Todd)** to upload them to Replit. Do not proceed with fake/test documents.
+
+---
+
+### ✍️ STEP 3: FINALIZE APPLICATION (STEP 6)
+
+* Complete Step 6 using:
+
+  * Name: `"Todd Werb"`
+  * Title: `"CEO"`
+  * Typed signature method
+* Submit finalization:
+
+  ```
+  PATCH /api/public/applications/:id/finalize
+  ```
+* Confirm `status = submitted` and `stage = New` in the staff database.
+
+---
+
+### 🧾 STEP 4: GENERATE SIGNED PDF
+
+* Automatically call:
+
+  ```
+  POST /api/pdf-generation/create/:applicationId
+  ```
+* Ensure the `signed_application` PDF is created, includes all field data, and is stored in S3.
+
+---
+
+### 🧪 STEP 5: VERIFY DELIVERY TO STAFF PORTAL
+
+* Confirm:
+
+  * Application appears in staff portal with correct UUID
+  * Stage = `"New"`
+  * 6 documents listed under "Documents" tab
+  * Document preview/download available
+  * PDF exists in the `Signed Application` section
+  * S3 audit shows all files present and valid
+
+---
+
+### 📋 FINAL REPORT TO RETURN
+
+Replit must report back the following:
+
+1. ✅ Application UUID
+2. 📁 List of uploaded documents with success status
+3. 🧾 PDF generation success (signed\_application present)
+4. 🔒 S3 confirmation (bucket: `boreal-staff-documents`)
+5. 🧭 Staff app view (appears in `"New"` stage with documents visible)
+6. 🐛 Any errors or missing pieces
+
+---
+
+✅ If Replit does **not** detect the real documents in the environment, it must pause and request upload from you **immediately**, then resume execution.
+
+Would you like me to now issue these exact instructions to Replit Client Application for execution?
