@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E2E Application Test Execution</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background: #f0f8ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .test-controls { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .console-output { background: #000; color: #0f0; padding: 15px; border-radius: 8px; height: 400px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧪 Comprehensive E2E Application Test</h1>
+        <p>This test executes a complete application workflow with document uploads to verify S3 integration and staff backend reception.</p>
+    </div>
+
+    <div class="test-controls">
+        <button onclick="runE2ETest()">🚀 Start E2E Test</button>
+        <button onclick="clearConsole()">🧹 Clear Console</button>
+        <button onclick="checkS3Status()">☁️ Check S3 Status</button>
+        <button onclick="verifyStaffBackend()">🔍 Verify Staff Backend</button>
+    </div>
+
+    <div class="console-output" id="console"></div>
+
+    <script>
+        // Console capture
+        const consoleDiv = document.getElementById('console');
+        const originalLog = console.log;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            const div = document.createElement('div');
+            div.innerHTML = message;
+            if (message.includes('✅')) div.className = 'success';
+            if (message.includes('❌')) div.className = 'error';
+            
+            consoleDiv.appendChild(div);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        };
+
+        function clearConsole() {
+            consoleDiv.innerHTML = '';
+        }
+
+        // Global test variables
+        let currentApplicationId = null;
+        let testResults = [];
+
+        // Test execution function
+        async function runE2ETest() {
+            console.log('🧪 COMPREHENSIVE E2E APPLICATION TEST WITH S3 UPLOAD');
+            console.log('='.repeat(80));
+
+            const timestamp = Date.now();
+            const testBusinessName = `E2E Test Corp ${timestamp}`;
+            const testEmail = `test.e2e.${timestamp}@example.com`;
+            const applicationId = crypto.randomUUID();
+            currentApplicationId = applicationId;
+
+            console.log(`🏢 Test Business: ${testBusinessName}`);
+            console.log(`📧 Test Email: ${testEmail}`);
+            console.log(`🆔 Application ID: ${applicationId}`);
+
+            try {
+                // Step 1: Create Application
+                console.log('\n📋 STEP 1: APPLICATION CREATION');
+                const appCreated = await createTestApplication(applicationId, testBusinessName, testEmail);
+                
+                if (!appCreated) {
+                    console.log('❌ Application creation failed - stopping test');
+                    return;
+                }
+
+                // Step 2: Upload Documents
+                console.log('\n📤 STEP 2: DOCUMENT UPLOAD');
+                const uploadResults = await uploadTestDocuments(applicationId);
+                
+                // Step 3: Finalize Application
+                console.log('\n🏁 STEP 3: APPLICATION FINALIZATION');
+                const finalized = await finalizeTestApplication(applicationId);
+
+                // Step 4: Verify Staff Backend
+                console.log('\n🔍 STEP 4: STAFF BACKEND VERIFICATION');
+                await verifyStaffReception(applicationId);
+
+                // Step 5: S3 Audit
+                console.log('\n☁️ STEP 5: S3 INTEGRATION AUDIT');
+                await auditS3();
+
+                // Final Results
+                console.log('\n' + '='.repeat(80));
+                console.log('📊 E2E TEST COMPLETED');
+                console.log('='.repeat(80));
+                console.log(`🆔 Final Application ID: ${applicationId}`);
+                console.log(`📤 Documents Uploaded: ${uploadResults.successful}/6`);
+                console.log(`🏁 Application Finalized: ${finalized ? 'YES' : 'NO'}`);
+
+            } catch (error) {
+                console.log(`❌ E2E Test Error: ${error.message}`);
+            }
+        }
+
+        async function createTestApplication(appId, businessName, email) {
+            const applicationData = {
+                step1: {
+                    fundingAmount: 75000,
+                    requestedAmount: 75000,
+                    productCategory: "Equipment Financing",
+                    lookingFor: "Equipment Financing",
+                    fundsPurpose: "Equipment Purchase",
+                    hasPartner: false
+                },
+                step2: {
+                    selectedProducts: ["Equipment Financing"],
+                    recommendedCategory: "Equipment Financing"
+                },
+                step3: {
+                    businessType: "Corporation",
+                    operatingName: businessName,
+                    businessPhone: "+14165551234",
+                    businessState: "ON",
+                    businessCity: "Toronto",
+                    businessAddress: "123 Test Street",
+                    businessPostalCode: "M5V 3A8",
+                    headquarters: "CA",
+                    businessLocation: "CA",
+                    industry: "Manufacturing",
+                    yearsInBusiness: 5,
+                    numberOfEmployees: 15,
+                    annualRevenue: 500000
+                },
+                step4: {
+                    applicantFirstName: "John",
+                    applicantLastName: "TestUser",
+                    applicantEmail: email,
+                    applicantPhone: "+14165559999",
+                    applicantTitle: "CEO",
+                    applicantAddress: "123 Test Street",
+                    applicantCity: "Toronto",
+                    applicantState: "ON",
+                    applicantPostalCode: "M5V 3A8"
+                }
+            };
+
+            try {
+                const response = await fetch('/api/public/applications', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test-token'
+                    },
+                    body: JSON.stringify({
+                        form_data: applicationData,
+                        applicationId: appId
+                    })
+                });
+
+                console.log(`📊 Application Creation: ${response.status}`);
+                const result = await response.text();
+
+                if (response.ok) {
+                    console.log('✅ Application created successfully');
+                    return true;
+                } else {
+                    console.log(`❌ Application creation failed: ${result}`);
+                    return false;
+                }
+            } catch (error) {
+                console.log(`❌ Application creation error: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function uploadTestDocuments(appId) {
+            const documents = [
+                { name: 'Bank_Statement_Nov_2024.pdf', type: 'bank_statements' },
+                { name: 'Bank_Statement_Dec_2024.pdf', type: 'bank_statements' },
+                { name: 'Bank_Statement_Jan_2025.pdf', type: 'bank_statements' },
+                { name: 'Equipment_Quote_2025.pdf', type: 'equipment_quote' },
+                { name: 'Financial_Statements_2024.pdf', type: 'financial_statements' },
+                { name: 'Business_License_2024.pdf', type: 'business_license' }
+            ];
+
+            let successful = 0;
+
+            for (let i = 0; i < documents.length; i++) {
+                const doc = documents[i];
+                
+                try {
+                    // Create test PDF content
+                    const pdfContent = `%PDF-1.4
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
+3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R>>endobj
+4 0 obj<</Length 44>>stream
+BT/F1 12 Tf 100 700 Td(${doc.name} - Test Document)Tj ET
+endstream endobj
+xref 0 5
+0000000000 65535 f 
+0000000010 00000 n 
+0000000053 00000 n 
+0000000125 00000 n 
+0000000185 00000 n 
+trailer<</Size 5/Root 1 0 R>>startxref 279 %%EOF`;
+
+                    const file = new Blob([pdfContent], { type: 'application/pdf' });
+                    
+                    const formData = new FormData();
+                    formData.append('document', file, doc.name);
+                    formData.append('documentType', doc.type);
+
+                    const response = await fetch(`/api/public/upload/${appId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer test-token'
+                        },
+                        body: formData
+                    });
+
+                    console.log(`📤 Upload ${i + 1}/6 (${doc.name}): ${response.status}`);
+
+                    if (response.ok) {
+                        console.log(`✅ ${doc.name} uploaded successfully`);
+                        successful++;
+                    } else {
+                        const error = await response.text();
+                        console.log(`❌ ${doc.name} upload failed: ${error}`);
+                    }
+
+                    // Delay between uploads
+                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                } catch (error) {
+                    console.log(`❌ Upload error for ${doc.name}: ${error.message}`);
+                }
+            }
+
+            return { successful, total: documents.length };
+        }
+
+        async function finalizeTestApplication(appId) {
+            try {
+                const response = await fetch(`/api/public/applications/${appId}/finalize`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test-token'
+                    },
+                    body: JSON.stringify({
+                        typedSignature: "John TestUser",
+                        agreementTimestamp: new Date().toISOString(),
+                        ipAddress: "192.168.1.1",
+                        userAgent: navigator.userAgent
+                    })
+                });
+
+                console.log(`📊 Finalization: ${response.status}`);
+
+                if (response.ok) {
+                    console.log('✅ Application finalized successfully');
+                    return true;
+                } else {
+                    const error = await response.text();
+                    console.log(`❌ Finalization failed: ${error}`);
+                    return false;
+                }
+            } catch (error) {
+                console.log(`❌ Finalization error: ${error.message}`);
+                return false;
+            }
+        }
+
+        async function verifyStaffReception(appId) {
+            try {
+                // Check application in staff backend
+                const appResponse = await fetch(`https://staff.boreal.financial/api/applications/${appId}`, {
+                    headers: {
+                        'Authorization': 'Bearer test-token'
+                    }
+                });
+
+                console.log(`📊 Staff Backend App Check: ${appResponse.status}`);
+
+                if (appResponse.ok) {
+                    const appData = await appResponse.json();
+                    console.log(`✅ Application found in staff backend - Stage: ${appData.stage || 'Unknown'}`);
+
+                    // Check documents
+                    const docsResponse = await fetch(`https://staff.boreal.financial/api/applications/${appId}/documents`, {
+                        headers: {
+                            'Authorization': 'Bearer test-token'
+                        }
+                    });
+
+                    if (docsResponse.ok) {
+                        const docsData = await docsResponse.json();
+                        const docCount = docsData.documents ? docsData.documents.length : 0;
+                        console.log(`✅ Documents in staff backend: ${docCount}`);
+                    } else {
+                        console.log(`❌ Documents check failed: ${docsResponse.status}`);
+                    }
+                } else {
+                    console.log(`❌ Application not found in staff backend: ${appResponse.status}`);
+                }
+            } catch (error) {
+                console.log(`❌ Staff backend verification error: ${error.message}`);
+            }
+        }
+
+        async function auditS3() {
+            try {
+                const response = await fetch('/api/system/test-s3-comprehensive', {
+                    headers: {
+                        'Authorization': 'Bearer test-token'
+                    }
+                });
+
+                console.log(`📊 S3 Audit: ${response.status}`);
+
+                if (response.ok) {
+                    const result = await response.text();
+                    console.log(`✅ S3 Audit Passed: ${result.substring(0, 100)}...`);
+                } else {
+                    const error = await response.text();
+                    console.log(`❌ S3 Audit Failed: ${error}`);
+                }
+            } catch (error) {
+                console.log(`❌ S3 Audit Error: ${error.message}`);
+            }
+        }
+
+        // Individual test functions
+        async function checkS3Status() {
+            console.log('☁️ Checking S3 Status...');
+            await auditS3();
+        }
+
+        async function verifyStaffBackend() {
+            if (currentApplicationId) {
+                console.log(`🔍 Verifying Staff Backend for App: ${currentApplicationId}`);
+                await verifyStaffReception(currentApplicationId);
+            } else {
+                console.log('❌ No current application ID - run E2E test first');
+            }
+        }
+
+        // Auto-start message
+        console.log('✅ E2E Test Page Ready');
+        console.log('🚀 Click "Start E2E Test" button to begin comprehensive test');
+    </script>
+</body>
+</html>
