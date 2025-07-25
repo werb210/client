@@ -4,6 +4,7 @@
  */
 
 import { validateApplicationIdForAPI, getStoredApplicationId } from '@/lib/uuidUtils';
+import { addToRetryQueue } from '@/utils/applicationRetryQueue';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://staff.boreal.financial/api';
 
@@ -110,6 +111,24 @@ export default async function uploadDocument(
       } else {
         console.error(`❌ [UPLOAD] Upload failed:`, errorText);
       }
+      
+      // Add failed upload to retry queue
+      addToRetryQueue({
+        applicationId: validatedApplicationId,
+        payload: { documentType },
+        type: 'upload',
+        fileName: file.name,
+        documentType,
+        file,
+        error: `${response.status} ${response.statusText}: ${errorText}`
+      });
+      
+      console.log(`🔄 [RETRY QUEUE] Added failed upload to retry queue:`, {
+        fileName: file.name,
+        documentType,
+        applicationId: validatedApplicationId
+      });
+      
       throw new Error(`Upload failed: ${response.status} - ${errorText}`);
     }
 
@@ -159,6 +178,27 @@ export default async function uploadDocument(
 
   } catch (error) {
     console.error(`❌ [UPLOAD] Upload error:`, error);
+    
+    // Add network/fetch errors to retry queue
+    if (error instanceof Error && !error.message.includes('Upload failed:')) {
+      addToRetryQueue({
+        applicationId: validatedApplicationId,
+        payload: { documentType },
+        type: 'upload',
+        fileName: file.name,
+        documentType,
+        file,
+        error: error.message
+      });
+      
+      console.log(`🔄 [RETRY QUEUE] Added network upload error to retry queue:`, {
+        fileName: file.name,
+        documentType,
+        applicationId: validatedApplicationId,
+        error: error.message
+      });
+    }
+    
     throw error;
   }
 }

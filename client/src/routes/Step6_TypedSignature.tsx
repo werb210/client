@@ -5,6 +5,7 @@ import { StepHeader } from '@/components/StepHeader';
 import TypedSignature from '@/components/TypedSignature';
 import { toast } from '@/hooks/use-toast';
 import { getStoredApplicationId, validateApplicationIdForAPI } from '@/lib/uuidUtils';
+import { addToRetryQueue } from '@/utils/applicationRetryQueue';
 
 interface AuthorizationData {
   typedName: string;
@@ -451,6 +452,14 @@ export default function Step6_TypedSignature() {
       if (!response.ok) {
         const errorText = await response.text();
         
+        // Add to retry queue for finalization failures
+        addToRetryQueue({
+          applicationId,
+          payload: finalApplicationData,
+          type: 'finalization',
+          error: `${response.status} ${response.statusText}: ${errorText}`
+        });
+        
         // Step 6 Finalization Failure Logging
         console.error('❌ STEP 6 FINALIZATION FAILED:');
         console.error('❌ [STEP6] Finalization API error:', {
@@ -560,12 +569,35 @@ export default function Step6_TypedSignature() {
     } catch (error) {
       console.error('❌ [STEP6] Final submission failed:', error);
       
+      // Add network/fetch errors to retry queue
+      const storedApplicationId = getStoredApplicationId();
+      if (storedApplicationId && error instanceof Error) {
+        const applicationId = validateApplicationIdForAPI(storedApplicationId);
+        addToRetryQueue({
+          applicationId,
+          payload: {
+            step1: state.step1,
+            step3: state.step3,
+            step4: state.step4,
+            step6: state.step6Authorization,
+            applicationId
+          },
+          type: 'finalization',
+          error: error.message
+        });
+        
+        console.log(`🔄 [RETRY QUEUE] Added finalization network error to retry queue:`, {
+          applicationId,
+          error: error.message
+        });
+      }
+      
       const errorMessage = error instanceof Error ? error.message : "There was an issue submitting your application. Please try again.";
       
       toast({
-        title: "Submission Error",
-        description: errorMessage,
-        variant: "destructive",
+        title: "Application Queued for Retry",
+        description: "Finalization will retry automatically when the system is available",
+        variant: "default",
       });
       throw error;
     }

@@ -1,10 +1,8 @@
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import Plus from 'lucide-react/dist/esm/icons/plus';
-import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import CloudUpload from 'lucide-react/dist/esm/icons/cloud-upload';
+import { Plus, TrendingUp, FileText, CloudUpload } from 'lucide-react';
+import { RetryStatusBadge } from '@/components/RetryStatusBadge';
 
 interface DashboardCardProps {
   title: string;
@@ -65,6 +63,11 @@ export default function SimpleDashboard() {
 
       {/* Dashboard Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Retry Status Badge */}
+        <div className="mb-6">
+          <RetryStatusBadge />
+        </div>
+
         {/* Welcome Section */}
         <div className="mb-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">

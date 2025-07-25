@@ -27,6 +27,7 @@ import { normalizePhone, formatPhoneDisplay, isValidPhone, getCountryFromBusines
 import { extractUuid } from "@/lib/uuidUtils";
 
 import { staffApi, validateApplicationPayload } from "@/api/staffApi";
+import { addToRetryQueue } from '@/utils/applicationRetryQueue';
 
 import { useState, useEffect } from "react";
 
@@ -510,7 +511,23 @@ export default function Step4ApplicantInfoComplete() {
         
       } catch (fetchError) {
         console.error("❌ Application creation failed:", fetchError);
-        throw fetchError;
+        
+        // Add to retry queue for network failures
+        addToRetryQueue({
+          applicationId: 'pending',
+          payload: applicationData,
+          type: 'application',
+          error: fetchError instanceof Error ? fetchError.message : 'Network error'
+        });
+        
+        toast({
+          title: "Application Queued for Retry",
+          description: "Network issue detected. Will retry automatically when connection is restored.",
+          variant: "default"
+        });
+        
+        setSubmitting(false);
+        return;
       }
 
       // API response received
@@ -527,10 +544,18 @@ export default function Step4ApplicantInfoComplete() {
         console.error("Request URL:", response.url);
         console.error("API Base URL:", import.meta.env.VITE_API_BASE_URL);
         
+        // Add to retry queue for future submission
+        addToRetryQueue({
+          applicationId: 'pending', // Will be set when successful
+          payload: applicationData,
+          type: 'application',
+          error: `${response.status} ${response.statusText}: ${errorText}`
+        });
+        
         toast({
-          title: "Step 4 Submission Failed",
-          description: `Application submission failed: ${response.status} ${response.statusText}`,
-          variant: "destructive"
+          title: "Application Queued for Retry",
+          description: "Submission will retry automatically when the system is available",
+          variant: "default"
         });
         
         setSubmitting(false);
