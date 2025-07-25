@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Diagnostic Test Runner</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .test-output {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            padding: 20px;
+            height: 600px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #00ff00;
+        }
+        .fail { border-left-color: #ff0000; color: #ff6666; }
+        .pass { border-left-color: #00ff00; color: #66ff66; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 CLIENT APPLICATION SUBMISSION DIAGNOSTIC</h1>
+            <p>Comprehensive test suite for UUID consistency, fallback logic, and workflow integrity</p>
+        </div>
+        
+        <div class="controls">
+            <button onclick="runDiagnosticTests()">🚀 RUN ALL TESTS</button>
+            <button onclick="clearOutput()">🧹 CLEAR OUTPUT</button>
+            <button onclick="downloadReport()">💾 DOWNLOAD REPORT</button>
+        </div>
+        
+        <div id="status" class="status">
+            Ready to run diagnostic tests...
+        </div>
+        
+        <div id="testOutput" class="test-output">
+            Waiting for test execution...
+        </div>
+    </div>
+
+    <script>
+        let diagnosticResults = null;
+        
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        function appendOutput(message) {
+            const output = document.getElementById('testOutput');
+            output.textContent += message + '\n';
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearOutput() {
+            document.getElementById('testOutput').textContent = '';
+            updateStatus('Output cleared - ready for new test run');
+        }
+        
+        async function runDiagnosticTests() {
+            updateStatus('🚀 Running diagnostic tests...', 'info');
+            clearOutput();
+            
+            try {
+                // Load and execute the diagnostic test script
+                const response = await fetch('./submission_diagnostic_test.js');
+                const scriptText = await response.text();
+                
+                // Capture console output
+                const originalLog = console.log;
+                const originalError = console.error;
+                
+                console.log = function(...args) {
+                    appendOutput(args.join(' '));
+                    originalLog.apply(console, args);
+                };
+                
+                console.error = function(...args) {
+                    appendOutput('ERROR: ' + args.join(' '));
+                    originalError.apply(console, args);
+                };
+                
+                // Execute the test script
+                eval(scriptText);
+                
+                // Wait for tests to complete
+                setTimeout(() => {
+                    if (window.submissionDiagnosticResults) {
+                        diagnosticResults = window.submissionDiagnosticResults;
+                        const { passed, total } = diagnosticResults;
+                        const success = passed === total;
+                        
+                        updateStatus(
+                            `✅ Tests completed: ${passed}/${total} passed (${Math.round((passed/total)*100)}%)`,
+                            success ? 'pass' : 'fail'
+                        );
+                    } else {
+                        updateStatus('⚠️ Tests completed but no results captured', 'fail');
+                    }
+                    
+                    // Restore console
+                    console.log = originalLog;
+                    console.error = originalError;
+                }, 2000);
+                
+            } catch (error) {
+                updateStatus(`❌ Test execution failed: ${error.message}`, 'fail');
+                appendOutput(`ERROR: ${error.message}`);
+            }
+        }
+        
+        function downloadReport() {
+            if (!diagnosticResults) {
+                updateStatus('❌ No test results available to download', 'fail');
+                return;
+            }
+            
+            try {
+                const blob = new Blob([diagnosticResults.report], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'submission_diagnostic_log.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                updateStatus('✅ Diagnostic report downloaded as submission_diagnostic_log.txt', 'pass');
+            } catch (error) {
+                updateStatus(`❌ Failed to download report: ${error.message}`, 'fail');
+            }
+        }
+        
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                runDiagnosticTests();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
