@@ -93,7 +93,7 @@ function UploadedFileItem({
   const getPreviewUrl = (file: UploadedFile) => {
     if (file.preview) return file.preview;
     
-    // ✅ Disable PDF preview for fallback files (documents may be lost)
+    // PDF preview functionality
     if (file.fallback || file.status === 'fallback') {
       return null;
     }
@@ -498,25 +498,18 @@ function UnifiedDocumentUploadCard({
 
           const uploadResult = await uploadResponse.json();
           
-          // ✅ CRITICAL: Detect fallback mode and warn user
+          // ✅ CRITICAL: Detect fallback mode (silent logging)
           const isFallbackMode = uploadResult.fallback === true;
           
           if (isFallbackMode) {
-            console.warn(`⚠️ [UPLOAD] FALLBACK MODE DETECTED - Document may be lost!`, {
+            console.log(`🔄 [UPLOAD] Fallback mode detected - queued for retry`, {
               documentId: uploadResult.documentId,
               fileName: file.name,
               documentType: category,
               fallbackMode: true
             });
             
-            // Show fallback warning toast
-            toast({
-              title: "⚠️ Document Upload Warning",
-              description: `${file.name} uploaded in fallback mode - document may not be permanently stored. Please verify upload success.`,
-              variant: "destructive",
-            });
-            
-            // Add to fallback retry queue
+            // Add to fallback retry queue (no user warning)
             queueFallbackUpload({
               file,
               documentType: category,

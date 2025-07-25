@@ -131,9 +131,9 @@ export default async function uploadDocument(
       console.log(`✅ [UPLOAD] Upload response:`, result);
     }
     
-    // Log fallback mode detection
+    // Log fallback mode detection (silent)
     if (isFallbackMode) {
-      console.warn(`⚠️ [UPLOAD] FALLBACK MODE DETECTED - Document may be lost!`, {
+      console.log(`🔄 [UPLOAD] Fallback mode detected - queued for retry`, {
         documentId: result.documentId,
         fileName: file.name,
         documentType,

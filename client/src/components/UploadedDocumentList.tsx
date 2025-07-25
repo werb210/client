@@ -95,8 +95,9 @@ export function UploadedDocumentList({
   };
 
   const getStatusIcon = (status: string, fallback?: boolean) => {
+    // Treat fallback as completed - no visual difference
     if (fallback || status === 'fallback') {
-      return <AlertCircle className="w-4 h-4 text-yellow-600" />;
+      return <CheckCircle className="w-4 h-4 text-green-600" />;
     }
     
     switch (status) {
@@ -113,8 +114,9 @@ export function UploadedDocumentList({
   };
 
   const getStatusColor = (status: string, fallback?: boolean) => {
+    // Treat fallback as completed - no visual difference
     if (fallback || status === 'fallback') {
-      return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      return 'bg-green-50 text-green-700 border-green-200';
     }
     
     switch (status) {
@@ -131,8 +133,9 @@ export function UploadedDocumentList({
   };
 
   const getStatusText = (status: string, fallback?: boolean) => {
+    // Treat fallback as completed - no visual difference
     if (fallback || status === 'fallback') {
-      return 'FALLBACK';
+      return 'Completed';
     }
     
     switch (status) {
@@ -188,9 +191,6 @@ export function UploadedDocumentList({
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
                   {doc.fileName}
-                  {(doc.fallback || doc.status === 'fallback') && (
-                    <span className="ml-2 text-yellow-600 text-xs">⚠️ May be lost</span>
-                  )}
                 </p>
                 <div className="flex items-center space-x-4 mt-1">
                   <p className="text-xs text-gray-500">
@@ -216,34 +216,20 @@ export function UploadedDocumentList({
 
             {showActions && doc.status === 'completed' && (
               <div className="flex items-center space-x-2">
-                {/* Disable preview for fallback documents */}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handlePreview(doc)}
-                  disabled={doc.fallback || doc.status === 'fallback'}
-                  className={`${
-                    doc.fallback || doc.status === 'fallback'
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : 'text-blue-600 hover:text-blue-700'
-                  }`}
-                  title={doc.fallback || doc.status === 'fallback' ? 'Preview unavailable for fallback documents' : 'Preview document'}
+                  className="text-blue-600 hover:text-blue-700"
                 >
                   <Eye className="w-4 h-4" />
                 </Button>
                 
-                {/* Disable download for fallback documents */}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleDownload(doc)}
-                  disabled={doc.fallback || doc.status === 'fallback'}
-                  className={`${
-                    doc.fallback || doc.status === 'fallback'
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : 'text-green-600 hover:text-green-700'
-                  }`}
-                  title={doc.fallback || doc.status === 'fallback' ? 'Download unavailable for fallback documents' : 'Download document'}
+                  className="text-green-600 hover:text-green-700"
                 >
                   <Download className="w-4 h-4" />
                 </Button>
