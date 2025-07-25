@@ -12,7 +12,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const API_BASE_URL = 'http://localhost:5000/api/public';
-const BEARER_TOKEN = 'VITE_CLIENT_APP_SHARED_TOKEN=ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042';
+const BEARER_TOKEN = process.env.VITE_CLIENT_APP_SHARED_TOKEN || 'MISSING_TOKEN_PLEASE_SET_ENV_VAR';
 
 console.log('🧪 [CURL TEST] Starting comprehensive S3 test with real banking documents');
 

@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 
 const API_BASE_URL = 'http://localhost:5000/api/public';
 const STAFF_API_URL = 'https://staff.boreal.financial/api/public';
-const BEARER_TOKEN = 'ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042';
+const BEARER_TOKEN = process.env.VITE_CLIENT_APP_SHARED_TOKEN || 'MISSING_TOKEN_PLEASE_SET_ENV_VAR';
 const APPLICATION_ID = 'aac71c9a-d154-4914-8982-4f1a33ef8259'; // From previous test
 
 console.log('🔄 [MANUAL RETRY] Testing window.manualRetryAll() with real banking documents');
