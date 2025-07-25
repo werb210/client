@@ -84,6 +84,12 @@ function createApplication() {
 function uploadRealDocuments(applicationId) {
   console.log('📤 [CURL TEST] Step 2: Uploading real banking documents...');
 
+  // Validate applicationId to prevent command injection
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(applicationId)) {
+    throw new Error(`Invalid applicationId format: ${applicationId}. Expected UUID format.`);
+  }
+
   const uploadResults = [];
   let s3SuccessCount = 0;
   let fallbackCount = 0;
@@ -156,6 +162,12 @@ function uploadRealDocuments(applicationId) {
 // Step 3: Finalize application
 function finalizeApplication(applicationId) {
   console.log('📤 [CURL TEST] Step 3: Finalizing application...');
+
+  // Validate applicationId to prevent command injection
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(applicationId)) {
+    throw new Error(`Invalid applicationId format: ${applicationId}. Expected UUID format.`);
+  }
 
   const finalizationData = {
     step1: {

