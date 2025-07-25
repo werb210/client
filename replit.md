@@ -93,6 +93,16 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 25, 2025: ✅ REAL FILE NAME PRESERVATION VERIFIED - UPLOAD SYSTEM INTEGRITY CONFIRMED**
+  * **CRITICAL VERIFICATION**: Confirmed that real file names (like "bank_statement_november.pdf") are preserved and transmitted correctly throughout the entire upload system
+  * **S3 UPLOAD SYSTEM VERIFIED**: S3 upload workflow correctly preserves file.name in fileName fields ensuring authentic file names reach staff backend
+  * **LEGACY UPLOAD SYSTEM VERIFIED**: uploadDocument utilities correctly preserve file.name in all upload request structures
+  * **SERVER TRANSMISSION CONFIRMED**: server/index.ts line 1057 uses file.originalname as third parameter in FormData.append() ensuring real names are sent to staff backend
+  * **NO GENERIC FILE NAMES**: System eliminates placeholder or generated file names - all uploads maintain user-provided file names
+  * **COMPREHENSIVE FILE NAME FLOW**: Client file.name → server file.originalname → staff backend preserves complete naming chain
+  * **PRODUCTION INTEGRITY**: Users uploading "equipment_quote_2024.pdf" or "tax_return_april.pdf" see exact file names preserved throughout system
+  * **DOCUMENTATION UPDATED**: Confirmed file name preservation across both S3 migration workflow and legacy upload system pathways
+
 - **July 25, 2025: ✅ COMPREHENSIVE UUID VALIDATION SYSTEM IMPLEMENTED - UPLOAD SECURITY HARDENED**
   * **CRITICAL SUCCESS**: Implemented comprehensive UUID validation system across all document upload functions preventing data corruption and orphaned uploads
   * **UPLOAD FUNCTION HARDENING**: Enhanced uploadDocument utilities in both client/src/utils/uploadDocument.ts and client/src/lib/api.ts with pre-upload UUID validation

@@ -418,11 +418,12 @@ export default function Step6_TypedSignature() {
     const maxRetries = 2;
     
     try {
-      const applicationId = state.applicationId || localStorage.getItem('applicationId');
-      
-      if (!applicationId) {
-        throw new Error('Application ID not found');
+      // Use centralized UUID validation system for consistency
+      const storedApplicationId = getStoredApplicationId();
+      if (!storedApplicationId) {
+        throw new Error('Application ID not found in localStorage');
       }
+      const applicationId = validateApplicationIdForAPI(storedApplicationId);
 
       // Prepare the final application data
       const finalApplicationData = {

@@ -23,6 +23,7 @@ import { StepHeader } from '@/components/StepHeader';
 
 import { getDocumentRequirementsAggregation } from '@/lib/documentAggregation';
 import { normalizeDocumentName } from '../../../shared/documentTypes';
+import { getStoredApplicationId, validateApplicationIdForAPI } from '@/lib/uuidUtils';
 
 import { useDebouncedCallback } from 'use-debounce';
 
@@ -39,8 +40,8 @@ export default function Step5DocumentUpload() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
-  // ✅ USER SPECIFICATION: Track applicationId from Step 4
-  const applicationId = state.applicationId || localStorage.getItem('applicationId');
+  // ✅ Use centralized UUID validation for consistent application ID management
+  const applicationId = getStoredApplicationId();
   
   // 🟨 STEP 4: Log Step 5 using ID for matching - REPLIT MUST DO
   console.log("Step 5 using ID:", applicationId);
