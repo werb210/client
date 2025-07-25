@@ -1,5 +1,6 @@
 import { API_BASE_URL, APP_CONFIG } from '@/constants';
 import { logger } from '@/lib/utils';
+import { validateApplicationIdForAPI, getStoredApplicationId } from '@/lib/uuidUtils';
 
 // Production console management handled by global configuration
 // Console output is controlled in main.tsx through productionConsole.ts
@@ -150,11 +151,19 @@ export async function submitApplication(data: ApplicationPayload): Promise<{ app
 }
 
 // Upload document file to staff backend (authenticated)
-export async function uploadDocument(
+async function uploadDocument(
   file: File, 
   documentType: string, 
   applicationId: string
 ): Promise<{ documentId: string; storage_key: string; fileName: string }> {
+  // Validate application ID before upload
+  const validatedApplicationId = validateApplicationIdForAPI(applicationId);
+  
+  // Additional check against stored ID for consistency
+  const storedApplicationId = getStoredApplicationId();
+  if (storedApplicationId && storedApplicationId !== validatedApplicationId) {
+    throw new Error('Application ID mismatch detected. Please restart the application.');
+  }
   const formData = new FormData();
   formData.append('document', file);  // user-selected file (server expects 'document' field)
   formData.append('documentType', documentType); // e.g. 'bank_statements'
@@ -166,8 +175,8 @@ export async function uploadDocument(
       fileSize: file.size,
       fileType: file.type,
       documentType,
-      applicationId,
-      endpoint: `/api/public/upload/${applicationId}`,
+      applicationId: validatedApplicationId,
+      endpoint: `/api/public/upload/${validatedApplicationId}`,
       bearerToken: import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ? '✅ Present' : '❌ Missing',
       timestamp: new Date().toISOString()
     });
@@ -175,7 +184,7 @@ export async function uploadDocument(
     console.log(`📤 [API] Uploading to staff backend: ${file.name} (${documentType})`);
   }
 
-  const response = await fetch(`/api/public/upload/${applicationId}`, {
+  const response = await fetch(`/api/public/upload/${validatedApplicationId}`, {
     method: 'POST',
     body: formData,
     headers: {

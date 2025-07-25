@@ -3,6 +3,8 @@
  * Handles file uploads to staff backend which manages S3 storage
  */
 
+import { validateApplicationIdForAPI, getStoredApplicationId } from '@/lib/uuidUtils';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://staff.boreal.financial/api';
 
 export interface UploadResponse {
@@ -28,12 +30,21 @@ export interface UploadError {
  * @param applicationId - The application ID
  * @returns Upload response with storage_key and document details
  */
-export async function uploadDocument(
+async function uploadDocument(
   file: File,
   documentType: string,
   applicationId: string
 ): Promise<UploadResponse> {
-  console.log(`📤 [UPLOAD] Starting upload: ${file.name} (${documentType}) for application ${applicationId}`);
+  // Validate application ID before upload
+  const validatedApplicationId = validateApplicationIdForAPI(applicationId);
+  
+  // Additional check against stored ID for consistency
+  const storedApplicationId = getStoredApplicationId();
+  if (storedApplicationId && storedApplicationId !== validatedApplicationId) {
+    throw new Error('Application ID mismatch detected. Please restart the application.');
+  }
+  
+  console.log(`📤 [UPLOAD] Starting upload: ${file.name} (${documentType}) for application ${validatedApplicationId}`);
   
   try {
     // Create FormData for file upload
@@ -49,7 +60,7 @@ export async function uploadDocument(
         fileSize: file.size,
         fileType: file.type,
         documentType: documentType,
-        endpoint: `${API_BASE_URL}/api/public/upload/${applicationId}`,
+        endpoint: `${API_BASE_URL}/api/public/upload/${validatedApplicationId}`,
         bearerToken: import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ? '✅ Present' : '❌ Missing',
         apiBaseUrl: API_BASE_URL,
         timestamp: new Date().toISOString()
@@ -65,7 +76,7 @@ export async function uploadDocument(
     }
 
     // Upload to staff backend
-    const response = await fetch(`${API_BASE_URL}/api/public/upload/${applicationId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/public/upload/${validatedApplicationId}`, {
       method: 'POST',
       body: formData,
       headers: {

@@ -4,6 +4,7 @@ import { useFormDataContext } from '@/context/FormDataContext';
 import { StepHeader } from '@/components/StepHeader';
 import TypedSignature from '@/components/TypedSignature';
 import { toast } from '@/hooks/use-toast';
+import { getStoredApplicationId, validateApplicationIdForAPI } from '@/lib/uuidUtils';
 
 interface AuthorizationData {
   typedName: string;
@@ -118,39 +119,41 @@ export default function Step6_TypedSignature() {
 
 
   const validateDocumentUploads = async (): Promise<boolean> => {
-    // ✅ FIX 2: Always use applicationId from localStorage only (no fallback IDs)
-    const applicationId = localStorage.getItem('applicationId');
-    
-    if (!applicationId) {
-      console.error('❌ [STEP6] No application ID found in localStorage');
-      toast({
-        title: "Application ID Missing",
-        description: "Please restart the application process from Step 1.",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    console.log('🔍 [STEP6] Using applicationId for validation:', applicationId);
-
-    // ✅ Check bypass flag from Step 5 first
-    const bypassDocuments = state.bypassDocuments || false;
-    console.log('🔍 [STEP6] Checking bypass status from Step 5:', { bypassDocuments });
-    
-    if (bypassDocuments) {
-      console.log('✅ [STEP6] Document validation bypassed - allowing finalization based on Step 5 bypass flag');
-      toast({
-        title: "Documents Bypassed",
-        description: "Proceeding with application finalization as requested in Step 5.",
-      });
-      return true;
-    }
-
-    // ✅ Apply strict validation when NOT bypassed
+    // ✅ Use UUID validation system for consistent application ID management
     try {
-      console.log('📋 [STEP6] Validating document uploads via staff backend for applicationId:', applicationId);
+      const applicationId = getStoredApplicationId();
       
-      const response = await fetch(`/api/public/applications/${applicationId}/documents`);
+      if (!applicationId) {
+        console.error('❌ [STEP6] No valid application ID found in localStorage');
+        toast({
+          title: "Application ID Missing",
+          description: "Please restart the application process from Step 1.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Validate the application ID format
+      const validatedApplicationId = validateApplicationIdForAPI(applicationId);
+      console.log('🔍 [STEP6] Using validated applicationId:', validatedApplicationId);
+
+      // ✅ Check bypass flag from Step 5 first
+      const bypassDocuments = state.bypassDocuments || false;
+      console.log('🔍 [STEP6] Checking bypass status from Step 5:', { bypassDocuments });
+      
+      if (bypassDocuments) {
+        console.log('✅ [STEP6] Document validation bypassed - allowing finalization based on Step 5 bypass flag');
+        toast({
+          title: "Documents Bypassed",
+          description: "Proceeding with application finalization as requested in Step 5.",
+        });
+        return true;
+      }
+
+      // ✅ Apply strict validation when NOT bypassed
+      console.log('📋 [STEP6] Validating document uploads via staff backend for applicationId:', validatedApplicationId);
+      
+      const response = await fetch(`/api/public/applications/${validatedApplicationId}/documents`);
       
       if (response.status === 404) {
         console.log('⚠️ [STEP6] Application not found in staff backend - checking for local upload evidence (duplicate email scenario)');
@@ -191,7 +194,7 @@ export default function Step6_TypedSignature() {
       const uploadedDocuments = documentData.documents || [];
       
       console.log('📄 [STEP6] Staff backend document validation result:', {
-        applicationId,
+        applicationId: validatedApplicationId,
         documentsFound: uploadedDocuments.length,
         documents: uploadedDocuments.map((doc: any) => ({
           id: doc.id || doc.documentId,

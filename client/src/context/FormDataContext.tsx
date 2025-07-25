@@ -104,7 +104,6 @@ type FormDataAction =
   | { type: 'UPDATE_STEP6_AUTHORIZATION'; payload: any }
   | { type: 'UPDATE_STEP4_SUBMISSION'; payload: Partial<ApplicationForm> }
   | { type: 'SET_CURRENT_STEP'; payload: number }
-  | { type: 'SET_APPLICATION_ID'; payload: string }
   | { type: 'SET_SIGNING_URL'; payload: string }
   | { type: 'MARK_STEP_COMPLETE'; payload: number }
   | { type: 'MARK_COMPLETE' }

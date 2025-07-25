@@ -16,6 +16,7 @@ import { ApplicationFormSchema } from '../../../shared/schema';
 import { fetchUserCountry, countryCodeToBusinessLocation } from '@/lib/location';
 import { useDebouncedCallback } from 'use-debounce';
 import { StepHeader } from '@/components/StepHeader';
+import { initializeApplicationId, getStoredApplicationId } from '@/lib/uuidUtils';
 
 // Currency formatting utilities
 const formatCurrency = (value: string): string => {
@@ -135,6 +136,19 @@ const fixedAssetsOptions = [
 export default function Step1FinancialProfile() {
   const { state, dispatch } = useFormDataContext();
   const [location, setLocation] = useLocation();
+
+  // Initialize application ID once in Step 1
+  useEffect(() => {
+    const applicationId = initializeApplicationId();
+    
+    // Store in FormData context if not already set
+    if (!state.applicationId || state.applicationId !== applicationId) {
+      dispatch({
+        type: 'SET_APPLICATION_ID',
+        payload: applicationId
+      });
+    }
+  }, [dispatch, state.applicationId]);
 
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),
