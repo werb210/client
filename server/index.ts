@@ -1057,7 +1057,7 @@ app.use((req, res, next) => {
     formData.append('document', new Blob([file.buffer]), file.originalname);
     formData.append('documentType', documentType);
     
-    const response = await fetch(`${cfg.staffApiUrl}/public/applications/${id}/documents`, {
+    const response = await fetch(`${cfg.staffApiUrl}/public/upload/${id}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${cfg.clientToken}`
@@ -2181,7 +2181,7 @@ app.use((req, res, next) => {
       formData.append('documentType', documentType);
       formData.append('applicationId', applicationId);
       
-      const response = await fetch(`${cfg.staffApiUrl}/api/s3-documents-new/upload`, {
+      const response = await fetch(`${cfg.staffApiUrl}/public/upload/${applicationId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${cfg.clientToken}`
@@ -2201,14 +2201,13 @@ app.use((req, res, next) => {
         });
       } else {
         console.log(`⚠️ [SERVER] S3 upload failed: ${response.status} ${response.statusText}`);
-        // Fallback: Still return success to not block user flow
-        res.json({
-          success: true,
-          message: 'Document received - processing in queue',
-          documentId: `fallback_${Date.now()}`,
-          filename: req.file.originalname,
-          documentType: documentType,
-          fallback: true
+        const errorData = await response.text();
+        
+        return res.status(response.status).json({
+          success: false,
+          error: 'Document upload failed',
+          message: `Upload failed: ${response.status} ${response.statusText}`,
+          details: errorData
         });
       }
       
