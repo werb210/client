@@ -5,7 +5,7 @@ import { StepHeader } from '@/components/StepHeader';
 import TypedSignature from '@/components/TypedSignature';
 import { toast } from '@/hooks/use-toast';
 import { getStoredApplicationId, validateApplicationIdForAPI } from '@/lib/uuidUtils';
-import { addToRetryQueue } from '@/utils/applicationRetryQueue';
+import { addToRetryQueue, getRetryQueue } from '@/utils/applicationRetryQueue';
 
 interface AuthorizationData {
   typedName: string;
@@ -88,6 +88,19 @@ export default function Step6_TypedSignature() {
           variant: "destructive"
         });
         return;
+      }
+
+      // Check for retry queue items and show notification
+      const retryQueue = getRetryQueue();
+      const hasRetryItems = retryQueue.length > 0;
+      
+      if (hasRetryItems) {
+        console.log(`🔄 [STEP6] Found ${retryQueue.length} items in retry queue`, retryQueue);
+        toast({
+          title: "Upload Retry Available",
+          description: `${retryQueue.length} document(s) queued for retry when staff backend S3 is available. Application can proceed.`,
+          variant: "default"
+        });
       }
 
       // Check document upload status before finalization

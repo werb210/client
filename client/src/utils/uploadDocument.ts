@@ -11,7 +11,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://staff.boreal.
 export interface UploadResponse {
   success: boolean;
   documentId: string;
-  storage_key: string;
+  storage_key?: string; // Optional for fallback responses
   fileName: string;
   fileSize: number;
   documentType: string;
@@ -134,11 +134,11 @@ export default async function uploadDocument(
 
     const result = await response.json();
     
-    // ✅ CRITICAL: Detect fallback mode and warn user
-    const isFallbackMode = result.fallback === true;
+    // ✅ CRITICAL: Detect fallback mode and handle appropriately
+    const isFallbackMode = result.fallback === true || result.documentId?.startsWith('fallback_');
     
     if (import.meta.env.DEV) {
-      console.log(`✅ [UPLOAD] Upload response - Enhanced details:`, {
+      console.log(`📊 [UPLOAD] Upload response - Enhanced details:`, {
         ...result,
         responseMetadata: {
           status: response.status,
@@ -147,22 +147,45 @@ export default async function uploadDocument(
         }
       });
     } else {
-      console.log(`✅ [UPLOAD] Upload response:`, result);
+      console.log(`📊 [UPLOAD] Upload response:`, result);
     }
     
-    // Log fallback mode detection (silent)
+    // ❌ DISABLE SILENT FALLBACK: Add to retry queue instead of fake success
     if (isFallbackMode) {
-      console.log(`🔄 [UPLOAD] Fallback mode detected - queued for retry`, {
+      console.log(`🔄 [UPLOAD] Fallback mode detected - adding to retry queue`, {
         documentId: result.documentId,
         fileName: file.name,
         documentType,
         fallbackMode: true
       });
+      
+      // Add failed upload to retry queue
+      addToRetryQueue({
+        applicationId: validatedApplicationId,
+        payload: { documentType },
+        type: 'upload',
+        fileName: file.name,
+        documentType,
+        file,
+        error: "Upload failed: Staff backend S3 not available (fallback mode)"
+      });
+      
+      // Return failure with fallback flag for UI notification
+      return {
+        success: false,
+        fallback: true,
+        documentId: result.documentId,
+        fileName: file.name,
+        fileSize: file.size,
+        documentType,
+        message: "Document stored locally - will retry when staff backend S3 is available",
+        storage_key: undefined // No S3 storage key in fallback mode
+      };
     }
 
-    // Validate response contains required fields
-    if (!result.storage_key && !isFallbackMode) {
-      console.warn(`⚠️ [UPLOAD] Warning: No storage_key in response:`, result);
+    // Validate response contains required fields for real S3 uploads
+    if (!result.storage_key) {
+      console.warn(`⚠️ [UPLOAD] Warning: No storage_key in S3 response:`, result);
     }
 
     return {

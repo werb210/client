@@ -532,14 +532,14 @@ function UnifiedDocumentUploadCard({
           }
           
           // Store fallback status for UI display
-          uploadingFile.fallback = isFallbackMode;
-          uploadingFile.documentId = uploadResult.documentId;
+          (uploadingFile as any).fallback = isFallbackMode;
+          (uploadingFile as any).documentId = uploadResult.documentId;
         }
         
         // ✅ CRITICAL FIX: Replace uploading files with completed files (not add to them)
         const completedFiles = uploadingFiles.map(f => ({ 
           ...f, 
-          status: f.fallback ? "fallback" as const : "completed" as const,
+          status: (f as any).fallback ? "fallback" as const : "completed" as const,
           uploadedAt: new Date().toISOString()
         }));
         const otherFiles = uploadedFiles.filter(f => !uploadingFiles.some(u => u.id === f.id));
