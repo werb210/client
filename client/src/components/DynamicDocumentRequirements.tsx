@@ -37,6 +37,7 @@ import {
   CANONICAL_DOCUMENT_LABELS,
   type CanonicalDocumentType
 } from '../lib/docNormalization';
+import { queueFallbackUpload } from '@/utils/fallbackUploadQueue';
 
 
 // TypeScript Interfaces - Export for use in other components
@@ -46,10 +47,12 @@ export interface UploadedFile {
   size: number;
   type: string;
   file: File;
-  status: "uploading" | "completed" | "error";
+  status: "uploading" | "completed" | "error" | "fallback";
   documentType: string;
   preview?: string;
   uploadProgress?: number;
+  fallback?: boolean; // ✅ Track fallback mode documents
+  documentId?: string; // ✅ Store document ID for tracking
 }
 
 // Legacy interface for backward compatibility
@@ -89,6 +92,11 @@ function UploadedFileItem({
   // Generate preview URL for documents if not already present
   const getPreviewUrl = (file: UploadedFile) => {
     if (file.preview) return file.preview;
+    
+    // ✅ Disable PDF preview for fallback files (documents may be lost)
+    if (file.fallback || file.status === 'fallback') {
+      return null;
+    }
     
     // For PDF and image files, create object URL for preview
     if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
@@ -137,8 +145,14 @@ function UploadedFileItem({
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
           </div>
         )}
-        {file.status === "completed" && (
+        {file.status === "completed" && !file.fallback && (
           <CheckCircle className="w-4 h-4 text-green-500" />
+        )}
+        {file.status === "fallback" && (
+          <>
+            <AlertCircle className="w-4 h-4 text-yellow-500" />
+            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">⚠️ Fallback</span>
+          </>
         )}
         {file.status === "error" && (
           <>
@@ -483,7 +497,36 @@ function UnifiedDocumentUploadCard({
           }
 
           const uploadResult = await uploadResponse.json();
-          console.log(`✅ [S3-BACKEND] Upload successful:`, uploadResult);
+          
+          // ✅ CRITICAL: Detect fallback mode and warn user
+          const isFallbackMode = uploadResult.fallback === true;
+          
+          if (isFallbackMode) {
+            console.warn(`⚠️ [UPLOAD] FALLBACK MODE DETECTED - Document may be lost!`, {
+              documentId: uploadResult.documentId,
+              fileName: file.name,
+              documentType: category,
+              fallbackMode: true
+            });
+            
+            // Show fallback warning toast
+            toast({
+              title: "⚠️ Document Upload Warning",
+              description: `${file.name} uploaded in fallback mode - document may not be permanently stored. Please verify upload success.`,
+              variant: "destructive",
+            });
+            
+            // Add to fallback retry queue
+            queueFallbackUpload({
+              file,
+              documentType: category,
+              applicationId,
+              documentId: uploadResult.documentId,
+              fileName: file.name
+            });
+          } else {
+            console.log(`✅ [S3-BACKEND] Upload successful:`, uploadResult);
+          }
           
           // ✅ B. Step 5 (Document Upload) - SUBMISSION RELIABILITY CHECKLIST
           console.log("✅ File uploaded:", file.name);
@@ -494,12 +537,16 @@ function UnifiedDocumentUploadCard({
           } else {
             console.warn(`⚠️ [S3-BACKEND] No storage_key in response for ${file.name}`);
           }
+          
+          // Store fallback status for UI display
+          uploadingFile.fallback = isFallbackMode;
+          uploadingFile.documentId = uploadResult.documentId;
         }
         
         // ✅ CRITICAL FIX: Replace uploading files with completed files (not add to them)
         const completedFiles = uploadingFiles.map(f => ({ 
           ...f, 
-          status: "completed" as const,
+          status: f.fallback ? "fallback" as const : "completed" as const,
           uploadedAt: new Date().toISOString()
         }));
         const otherFiles = uploadedFiles.filter(f => !uploadingFiles.some(u => u.id === f.id));

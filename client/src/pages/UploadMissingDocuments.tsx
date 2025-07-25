@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CloudUpload, CheckCircle, AlertTriangle, ArrowLeft, FileText, Info } from 'lucide-react';
 import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequirements';
 import { UploadedDocumentList, type DocumentItem } from '@/components/UploadedDocumentList';
+import { FallbackStatusBanner } from '@/components/FallbackStatusBanner';
 import { ENHANCED_DOCUMENT_REQUIREMENTS } from '../../../shared/documentMapping';
 
 interface ApplicationData {
@@ -339,6 +340,19 @@ export default function UploadMissingDocuments() {
           </CardContent>
         </Card>
 
+        {/* ✅ FALLBACK STATUS BANNER */}
+        {applicationId && (
+          <FallbackStatusBanner 
+            applicationId={applicationId}
+            onRetryAll={() => {
+              toast({
+                title: "Retrying Uploads",
+                description: "Background retry system will attempt to re-upload fallback documents",
+              });
+            }}
+          />
+        )}
+
         {/* ✅ FINALIZATION BLOCKING BANNER */}
         {applicationId && requiredDocTypes.length > 0 && uploadedFiles.length < requiredDocTypes.length && (
           <Alert className="mb-6 border-red-200 bg-red-50">
@@ -366,16 +380,10 @@ export default function UploadMissingDocuments() {
             <CardContent>
               <DynamicDocumentRequirements
                 applicationId={applicationId}
-                requirements={requiredDocTypes.map(type => ({ 
-                  label: type, 
-                  description: `Required document: ${type}`,
-                  quantity: 1
-                }))}
+                requirements={requiredDocTypes}
                 uploadedFiles={uploadedFiles}
                 onFilesUploaded={setUploadedFiles}
                 onRequirementsChange={() => {}}
-                onFileAdded={handleFileUploadSuccess}
-                onFileRemoved={() => {}}
               />
             </CardContent>
           </Card>

@@ -15,6 +15,7 @@ export interface UploadResponse {
   fileSize: number;
   documentType: string;
   message?: string;
+  fallback?: boolean; // ✅ Add fallback flag to interface
 }
 
 export interface UploadError {
@@ -30,7 +31,7 @@ export interface UploadError {
  * @param applicationId - The application ID
  * @returns Upload response with storage_key and document details
  */
-async function uploadDocument(
+export default async function uploadDocument(
   file: File,
   documentType: string,
   applicationId: string
@@ -113,8 +114,12 @@ async function uploadDocument(
     }
 
     const result = await response.json();
+    
+    // ✅ CRITICAL: Detect fallback mode and warn user
+    const isFallbackMode = result.fallback === true;
+    
     if (import.meta.env.DEV) {
-      console.log(`✅ [UPLOAD] Upload successful - Enhanced response details:`, {
+      console.log(`✅ [UPLOAD] Upload response - Enhanced details:`, {
         ...result,
         responseMetadata: {
           status: response.status,
@@ -123,11 +128,21 @@ async function uploadDocument(
         }
       });
     } else {
-      console.log(`✅ [UPLOAD] Upload successful:`, result);
+      console.log(`✅ [UPLOAD] Upload response:`, result);
+    }
+    
+    // Log fallback mode detection
+    if (isFallbackMode) {
+      console.warn(`⚠️ [UPLOAD] FALLBACK MODE DETECTED - Document may be lost!`, {
+        documentId: result.documentId,
+        fileName: file.name,
+        documentType,
+        fallbackMode: true
+      });
     }
 
     // Validate response contains required fields
-    if (!result.storage_key) {
+    if (!result.storage_key && !isFallbackMode) {
       console.warn(`⚠️ [UPLOAD] Warning: No storage_key in response:`, result);
     }
 
@@ -138,7 +153,8 @@ async function uploadDocument(
       fileName: result.fileName || file.name,
       fileSize: result.fileSize || file.size,
       documentType: result.documentType || documentType,
-      message: result.message
+      message: result.message,
+      fallback: isFallbackMode // ✅ Pass fallback flag to caller
     };
 
   } catch (error) {
