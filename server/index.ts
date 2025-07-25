@@ -2173,13 +2173,18 @@ app.use((req, res, next) => {
       }
       
       console.log(`📤 [SERVER] File: ${req.file.originalname}, Size: ${req.file.size} bytes`);
-      console.log(`📤 [SERVER] Document type: ${documentType}, Application: ${applicationId}`);
+      console.log(`📤 [SERVER] MIME Type: ${req.file.mimetype}, Document type: ${documentType}, Application: ${applicationId}`);
       
-      // Forward to staff backend S3 system
+      // Forward to staff backend S3 system with proper content type
+      const FormData = (await import('node-fetch')).FormData;
       const formData = new FormData();
-      formData.append('document', new Blob([req.file.buffer]), req.file.originalname);
+      
+      // Determine proper MIME type for PDF files
+      const mimeType = req.file.originalname.toLowerCase().endsWith('.pdf') ? 'application/pdf' : req.file.mimetype || 'application/pdf';
+      console.log(`📋 [SERVER] Using MIME type: ${mimeType} for file ${req.file.originalname}`);
+      
+      formData.append('document', new Blob([req.file.buffer], { type: mimeType }), req.file.originalname);
       formData.append('documentType', documentType);
-      formData.append('applicationId', applicationId);
       
       const response = await fetch(`${cfg.staffApiUrl}/public/upload/${applicationId}`, {
         method: 'POST',
@@ -2192,13 +2197,10 @@ app.use((req, res, next) => {
       if (response.ok) {
         const result = await response.json();
         console.log(`✅ [SERVER] S3 upload successful: ${req.file.originalname}`);
-        res.json({
-          success: true,
-          message: 'Document uploaded successfully',
-          documentId: result.documentId || `doc_${Date.now()}`,
-          filename: req.file.originalname,
-          documentType: documentType
-        });
+        console.log(`📋 [SERVER] Staff backend response:`, JSON.stringify(result, null, 2));
+        
+        // Forward the complete staff backend response
+        res.json(result);
       } else {
         console.log(`⚠️ [SERVER] S3 upload failed: ${response.status} ${response.statusText}`);
         const errorData = await response.text();
