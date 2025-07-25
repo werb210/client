@@ -11,9 +11,13 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const API_BASE_URL = 'http://localhost:5000/api/public';
-const BEARER_TOKEN = 'ae2dd3089a06aa32157abd1b997a392836059ba3d47dca79cff0660c09f95042';
-const APPLICATION_ID = 'aac71c9a-d154-4914-8982-4f1a33ef8259';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000/api/public';
+const BEARER_TOKEN = process.env.BEARER_TOKEN || (() => {
+  console.error('❌ [SECURITY] BEARER_TOKEN environment variable is required');
+  console.error('Please set: export BEARER_TOKEN=your_actual_token');
+  process.exit(1);
+})();
+const APPLICATION_ID = process.env.APPLICATION_ID || 'aac71c9a-d154-4914-8982-4f1a33ef8259';
 
 // All 6 banking documents for final manual retry
 const ALL_DOCUMENTS = [
