@@ -931,6 +931,8 @@ export default function Step4ApplicantInfoComplete() {
                           {...field} 
                           type="date" 
                           className="h-12"
+                          inputMode="none"
+                          pattern="\d{4}-\d{2}-\d{2}"
                           onKeyDown={(e) => {
                             // Date inputs use native HTML5 navigation - no custom handling needed
                           }}
@@ -1120,6 +1122,8 @@ export default function Step4ApplicantInfoComplete() {
                             {...field} 
                             type="date" 
                             className="h-12"
+                            inputMode="none"
+                            pattern="\d{4}-\d{2}-\d{2}"
                             onKeyDown={(e) => {
                               const input = e.currentTarget;
                               const value = input.value;
