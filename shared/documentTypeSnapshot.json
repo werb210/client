@@ -1,6 +1,10 @@
 {
   "version": "1.0.0",
   "timestamp": "2025-07-27T21:37:04.443Z",
+  "locked": true,
+  "lockedAt": "2025-07-27T21:48:00.000Z",
+  "contractStatus": "LOCKED",
+  "modificationPolicy": "Requires [ENUM-AUTHORIZED] commit message and version increment",
   "documentTypes": [
     "accounts_payable",
     "accounts_receivable",

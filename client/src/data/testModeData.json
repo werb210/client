@@ -1,0 +1,38 @@
+{
+  "testApplications": [
+    {
+      "id": "test-app-001",
+      "businessName": "Test Tech Solutions",
+      "contact": "John Test",
+      "email": "john@test.example.com",
+      "amount": 75000,
+      "category": "Working Capital",
+      "status": "test_submitted"
+    },
+    {
+      "id": "test-app-002", 
+      "businessName": "Demo Manufacturing Co",
+      "contact": "Jane Demo",
+      "email": "jane@test.example.com",
+      "amount": 250000,
+      "category": "Equipment Financing",
+      "status": "test_in_review"
+    }
+  ],
+  "testDocuments": [
+    { "type": "bank_statements", "fileName": "test_bank_nov_2024.pdf", "size": 156700 },
+    { "type": "financial_statements", "fileName": "test_financials_2024.pdf", "size": 189300 },
+    { "type": "business_license", "fileName": "test_license.pdf", "size": 89500 }
+  ],
+  "testLenders": [
+    { "name": "Test Bank A", "rate": "8.5%", "terms": "5 years", "category": "Term Loans" },
+    { "name": "Test Credit Union", "rate": "9.2%", "terms": "3 years", "category": "Working Capital" },
+    { "name": "Demo Finance Co", "rate": "12.1%", "terms": "2 years", "category": "Equipment" }
+  ],
+  "testValidationRules": {
+    "skipEmailValidation": true,
+    "allowTestDomains": true,
+    "mockApiResponses": true,
+    "enableDebugLogging": true
+  }
+}
