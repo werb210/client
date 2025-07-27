@@ -5,46 +5,133 @@
 
 /**
  * CRITICAL: Central Document Type Mapping for Staff Backend Compatibility
- * Maps client-side document types to staff backend enum values
+ * Maps ALL client-side document types to the 22 official backend enum values
+ * Based on SUPPORTED_DOCUMENT_TYPES from shared/documentTypes.ts
  */
 export const DOCUMENT_TYPE_MAP: Record<string, string> = {
-  // Direct matches (backend compatible)
-  'void_cheque': 'void_cheque',
-  'bank_statements': 'bank_statements',
-  'government_id': 'government_id',
-  'business_license': 'business_license',
-  'financial_statements': 'financial_statements',
-  'profit_loss_statement': 'profit_loss_statement',
-  'balance_sheet': 'balance_sheet',
-  'cash_flow_statement': 'cash_flow_statement',
-  'tax_returns': 'tax_returns',
-  'accounts_receivable': 'accounts_receivable',
+  // ============ OFFICIAL BACKEND TYPES (22 supported) ============
   'accounts_payable': 'accounts_payable',
-  'personal_financial_statement': 'personal_financial_statement',
+  'accounts_receivable': 'accounts_receivable', 
+  'articles_of_incorporation': 'articles_of_incorporation',
+  'balance_sheet': 'balance_sheet',
+  'bank_statements': 'bank_statements',
+  'business_license': 'business_license',
   'business_plan': 'business_plan',
+  'cash_flow_statement': 'cash_flow_statement',
+  'collateral_docs': 'collateral_docs',
+  'drivers_license_front_back': 'drivers_license_front_back',
   'equipment_quote': 'equipment_quote',
-  'sample_invoices': 'sample_invoices',
+  'financial_statements': 'financial_statements',
+  'invoice_samples': 'invoice_samples',
+  'other': 'other',
+  'personal_financial_statement': 'personal_financial_statement',
+  'personal_guarantee': 'personal_guarantee',
+  'profit_loss_statement': 'profit_loss_statement',
+  'proof_of_identity': 'proof_of_identity',
+  'signed_application': 'signed_application',
   'supplier_agreement': 'supplier_agreement',
-  'driver_license': 'driver_license',
+  'tax_returns': 'tax_returns',
+  'void_pad': 'void_pad',
   
-  // CRITICAL MAPPINGS: Client types → Backend types
-  'account_prepared_financials': 'financial_statements', // mapped
-  'pnl_statement': 'profit_loss_statement',              // mapped
-  'accountant_prepared_statements': 'financial_statements', // mapped
-  'void_pad': 'void_cheque',                             // mapped
-  'banking_info': 'void_cheque',                         // mapped
-  'invoice_summary': 'sample_invoices',                  // mapped
-  'ar_report': 'accounts_receivable',                    // mapped
-  'ap_report': 'accounts_payable',                       // mapped
-  'tax_return': 'tax_returns',                           // mapped
-  'bank_statement': 'bank_statements',                   // mapped
-  'drivers_license_front_back': 'driver_license',       // mapped
-  'id_verification': 'driver_license',                   // mapped
-  'voided_check': 'void_cheque',                         // mapped
-  'invoice_samples': 'sample_invoices',                  // mapped
-  'invoices': 'sample_invoices',                         // mapped
-  'receivables': 'accounts_receivable',                  // mapped
-  'payables': 'accounts_payable',                        // mapped
+  // ============ CLIENT-SIDE MAPPINGS → BACKEND TYPES ============
+  
+  // Bank Statements variations
+  'bank_statement': 'bank_statements',
+  'banking_statements': 'bank_statements',
+  'bank_account_statements': 'bank_statements',
+  
+  // Financial Statements variations → financial_statements
+  'account_prepared_financials': 'financial_statements',
+  'accountant_prepared_financials': 'financial_statements', 
+  'accountant_prepared_statements': 'financial_statements',
+  'accountant_prepared_financial_statements': 'financial_statements',
+  'audited_financial_statements': 'financial_statements',
+  'audited_financials': 'financial_statements',
+  'compiled_financial_statements': 'financial_statements',
+  
+  // P&L Statement variations → profit_loss_statement
+  'pnl_statement': 'profit_loss_statement',
+  'p&l_statement': 'profit_loss_statement',
+  'income_statement': 'profit_loss_statement',
+  'profit_and_loss_statement': 'profit_loss_statement',
+  
+  // Tax Returns variations
+  'tax_return': 'tax_returns',
+  'business_tax_returns': 'tax_returns',
+  'corporate_tax_returns': 'tax_returns',
+  
+  // Void Check variations → void_pad
+  'void_cheque': 'void_pad',
+  'void_check': 'void_pad',
+  'voided_check': 'void_pad',
+  'cancelled_check': 'void_pad',
+  'banking_info': 'void_pad',
+  'bank_verification': 'void_pad',
+  
+  // Driver's License variations
+  'driver_license': 'drivers_license_front_back',
+  'drivers_license': 'drivers_license_front_back',
+  'driving_license': 'drivers_license_front_back',
+  'id_verification': 'drivers_license_front_back',
+  'government_id': 'drivers_license_front_back',
+  
+  // Invoice variations → invoice_samples  
+  'invoice_summary': 'invoice_samples',
+  'invoices': 'invoice_samples',
+  'sample_invoices': 'invoice_samples',
+  'customer_invoices': 'invoice_samples',
+  
+  // Accounts Receivable variations
+  'ar_report': 'accounts_receivable',
+  'receivables': 'accounts_receivable',
+  'ar_aging': 'accounts_receivable',
+  'accounts_receivable_aging': 'accounts_receivable',
+  
+  // Accounts Payable variations
+  'ap_report': 'accounts_payable',
+  'payables': 'accounts_payable',
+  'ap_aging': 'accounts_payable',
+  'accounts_payable_aging': 'accounts_payable',
+  
+  // Equipment variations
+  'equipment_invoice': 'equipment_quote',
+  'equipment_specifications': 'equipment_quote',
+  
+  // Business License variations
+  'operating_license': 'business_license',
+  'professional_license': 'business_license',
+  
+  // Articles variations
+  'incorporation_documents': 'articles_of_incorporation',
+  'corporate_formation_documents': 'articles_of_incorporation',
+  
+  // Personal Financial Statement variations
+  'personal_financial_statements': 'personal_financial_statement',
+  'personal_balance_sheet': 'personal_financial_statement',
+  
+  // Collateral variations
+  'collateral_documents': 'collateral_docs',
+  'security_documents': 'collateral_docs',
+  
+  // Proof of Identity variations
+  'identity_verification': 'proof_of_identity',
+  'id_documents': 'proof_of_identity',
+  
+  // Supplier Agreement variations
+  'supplier_contracts': 'supplier_agreement',
+  'vendor_agreements': 'supplier_agreement',
+  
+  // Business Plan variations
+  'business_plans': 'business_plan',
+  'financial_projections': 'business_plan',
+  
+  // Personal Guarantee variations
+  'personal_guarantees': 'personal_guarantee',
+  'guarantee_documents': 'personal_guarantee',
+  
+  // Signed Application variations
+  'completed_application': 'signed_application',
+  'loan_application': 'signed_application',
 };
 
 /**

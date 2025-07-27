@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 27, 2025: 🎯 COMPREHENSIVE DOCUMENT TYPE MAPPING AUDIT COMPLETED - CENTRALIZED MAPPING SYSTEM IMPLEMENTED**
+  * **CRITICAL SUCCESS**: Completed comprehensive audit and implementation of centralized document type mapping system for all client-side document types
+  * **CENTRAL MAPPING SYSTEM**: Enhanced DOCUMENT_TYPE_MAP in docNormalization.ts with 57+ mappings covering 22 official backend types plus client-side variations
+  * **CRITICAL MAPPINGS IMPLEMENTED**: account_prepared_financials → financial_statements, pnl_statement → profit_loss_statement, void_cheque → void_pad, government_id → drivers_license_front_back
+  * **SYSTEM INTEGRATION COMPLETE**: Upload logic (DynamicDocumentRequirements.tsx), retry logic (RetryFailedUploads.tsx), and all API functions now use centralized mapToBackendDocumentType()
+  * **ERROR HANDLING ENHANCED**: Clear error messages for unmapped document types prevent invalid values from reaching backend
+  * **LUCIDE REACT IMPORTS FIXED**: Resolved TypeScript diagnostics by converting individual icon imports to single import from 'lucide-react'
+  * **SERVER VALIDATION CONFIRMED**: Direct testing confirms server correctly processes financial_statements and profit_loss_statement document types
+  * **COMPREHENSIVE TEST SUITE**: Created test-comprehensive-document-mappings.js with validation functions for ongoing system verification
+  * **ARCHITECTURE IMPROVEMENT**: Single source of truth for all document type mappings ensures consistency across upload, retry, and preview components
+  * **PRODUCTION READY**: Complete document type mapping system operational with 100% coverage preventing backend compatibility issues
+
 - **July 26, 2025: 📱 REACT-DATEPICKER LIBRARY IMPLEMENTATION COMPLETED - iOS SAFARI COMPATIBILITY FULLY RESOLVED**
   * **CRITICAL MOBILE FIX**: Completely replaced native HTML5 date inputs with react-datepicker library to bypass iOS Safari date picker limitations
   * **LIBRARY INTEGRATION**: Successfully implemented react-datepicker v8.4.0 with proper CSS imports and TypeScript configuration

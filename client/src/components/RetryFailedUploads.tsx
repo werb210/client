@@ -12,13 +12,9 @@ import { Badge } from '@/components/ui/badge';
 
 import { useToast } from '@/hooks/use-toast';
 
-import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
-import Upload from 'lucide-react/dist/esm/icons/upload';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import X from 'lucide-react/dist/esm/icons/x';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
+import { RefreshCw, Upload, AlertCircle, CheckCircle, X, FileText } from 'lucide-react';
 import { uploadDocumentPublic } from '@/lib/api';
+import { mapToBackendDocumentType } from '@/lib/docNormalization';
 
 
 interface FailedUpload {
@@ -68,7 +64,22 @@ export function RetryFailedUploads() {
     setRetryingIds(prev => new Set(prev).add(upload.id));
 
     try {
-      await uploadDocumentPublic(upload.applicationId, upload.file, upload.categoryId);
+      // 🔧 CRITICAL: Use central document type mapping for retry
+      let mappedDocumentType: string;
+      try {
+        mappedDocumentType = mapToBackendDocumentType(upload.categoryId);
+        console.log(`🔧 [RETRY-MAPPING] Document "${upload.categoryId}" mapped to backend type: "${mappedDocumentType}"`);
+      } catch (error) {
+        console.error(`❌ [RETRY-MAPPING-ERROR] Failed to map document type "${upload.categoryId}":`, error);
+        toast({
+          title: "Retry Error",
+          description: `Unable to retry upload - invalid document type: ${upload.categoryId}`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      await uploadDocumentPublic(upload.applicationId, upload.file, mappedDocumentType);
       
       // Remove from failed uploads on success
       const updatedUploads = failedUploads.filter(u => u.id !== upload.id);
