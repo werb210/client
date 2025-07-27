@@ -108,16 +108,35 @@ function matchesCategory(productCategory: string, requestedCategory: string): bo
   // Direct match
   if (productLower === requestedLower) return true;
   
-  // Category aliases
+  // Category aliases - Enhanced with plural forms and variations
   const aliases: Record<string, string[]> = {
-    'working capital': ['business working capital', 'working capital loan', 'working capital financing'],
-    'equipment financing': ['equipment loan', 'equipment finance', 'equipment purchase'],
-    'business line of credit': ['line of credit', 'credit line', 'revolving credit'],
-    'term loan': ['business term loan', 'commercial term loan', 'sba term loan'],
-    'invoice factoring': ['accounts receivable financing', 'factoring', 'ar financing']
+    'working capital': ['business working capital', 'working capital loan', 'working capital financing', 'working capitals'],
+    'equipment financing': ['equipment loan', 'equipment finance', 'equipment purchase', 'equipment financings'],
+    'business line of credit': ['line of credit', 'credit line', 'revolving credit', 'business lines of credit'],
+    'term loan': ['business term loan', 'commercial term loan', 'sba term loan', 'term loans'],
+    'invoice factoring': ['accounts receivable financing', 'factoring', 'ar financing', 'invoice factorings']
   };
   
-  return aliases[requestedLower]?.some(alias => productLower.includes(alias)) || false;
+  // Handle plural forms - Convert "Term Loans" to "Term Loan" for matching
+  const normalizeCategory = (category: string): string => {
+    const lower = category.toLowerCase();
+    if (lower.endsWith('s') && lower !== 'business') {
+      const singular = lower.slice(0, -1);
+      // Check if singular form exists in our aliases
+      if (aliases[singular]) {
+        return singular;
+      }
+    }
+    return lower;
+  };
+  
+  const normalizedRequested = normalizeCategory(requestedCategory);
+  const normalizedProduct = normalizeCategory(productCategory);
+  
+  // Direct match with normalized categories
+  if (normalizedProduct === normalizedRequested) return true;
+  
+  return aliases[normalizedRequested]?.some(alias => normalizedProduct.includes(alias)) || false;
 }
 
 /**
@@ -141,9 +160,9 @@ function scoreProduct(
   const matchReasons: string[] = [];
   const disqualificationReasons: string[] = [];
   
-  // 1. Category matching (0-30 points)
+  // 1. Category matching (0-20 points) - Reduced from 30 to match user expectations
   if (matchesCategory(product.category, input.category)) {
-    scoreBreakdown.categoryMatch = 30;
+    scoreBreakdown.categoryMatch = 20;
     matchReasons.push(`Category match: ${product.category}`);
   } else {
     scoreBreakdown.categoryMatch = 0;
@@ -163,15 +182,17 @@ function scoreProduct(
     disqualificationReasons.push(`Amount out of range: $${input.amountRequested.toLocaleString()} not in $${product.amount_min.toLocaleString()}-$${product.amount_max.toLocaleString()}`);
   }
   
-  // 3. Country preference (0-15 points)
-  const normalizedCountry = input.country === 'USA' ? 'USA' : 'Canada';
-  const productCountry = product.country === 'US' ? 'USA' : product.country;
+  // 3. Country preference (0-30 points) - Increased from 15 to match user expectations
+  const normalizedCountry = input.country === 'USA' ? 'USA' : 'Canada';  
+  const productCountry = product.country === 'US' || product.country === 'USA' ? 'USA' : 
+                        product.country === 'CA' || product.country === 'Canada' ? 'Canada' : 
+                        product.country;
   
   if (productCountry === normalizedCountry) {
-    scoreBreakdown.countryPreference = 15;
+    scoreBreakdown.countryPreference = 30;
     matchReasons.push(`Country match: ${productCountry}`);
-  } else if (productCountry === 'US/CA' || productCountry === 'Both') {
-    scoreBreakdown.countryPreference = 10;
+  } else if (productCountry === 'US/CA' || productCountry === 'Both' || productCountry === 'North America') {
+    scoreBreakdown.countryPreference = 20;
     matchReasons.push(`Multi-country lender: ${productCountry}`);
   } else {
     scoreBreakdown.countryPreference = 0;
