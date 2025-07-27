@@ -129,38 +129,55 @@ export default function DevRecommendationDebug() {
       setDebugResults(originalResults);
       setAdvancedResults(advancedResults);
       
-      // Send recommendation log to analytics if we have results
+      // Send recommendation log to analytics if we have results (non-blocking)
       if (advancedResults.qualifiedProducts.length > 0) {
-        try {
-          const { sendRecommendationLog } = await import('@/lib/recommendationDebugger');
-          await sendRecommendationLog({
-            applicantId: localStorage.getItem('applicationId') || 'debug-test-session',
-            recommendedLenders: advancedResults.qualifiedProducts.map(p => ({
-              productId: p.productId,
-              productName: p.name,
-              lenderName: p.lenderName,
-              category: p.category,
-              country: p.country,
-              score: p.matchScore
-            })),
-            rejectedLenders: advancedResults.filteredOutProducts.map(p => ({
-              productId: p.productId,
-              productName: p.name,
-              lenderName: p.lenderName,
-              category: p.category,
-              country: p.country,
-              failureReasons: p.rejectionReasons
-            })),
-            filtersApplied: [
-              `Country: ${testInput.country}`,
-              `Amount: ${testInput.amountRequested.toLocaleString()}`,
-              `Category: ${testInput.whatAreYouLookingFor}`,
-              `Purpose: ${testInput.purposeOfFunds}`
-            ]
-          });
-        } catch (analyticsError) {
-          console.warn('Analytics logging failed:', analyticsError);
-        }
+        // Don't await - run analytics in background without blocking UI
+        setTimeout(async () => {
+          try {
+            const response = await fetch('/api/analytics/recommendation-log', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || ''}`
+              },
+              body: JSON.stringify({
+                applicantId: localStorage.getItem('applicationId') || 'debug-test-session',
+                recommendedLenders: advancedResults.qualifiedProducts.map(p => ({
+                  productId: p.productId,
+                  productName: p.name,
+                  lenderName: p.lenderName,
+                  category: p.category,
+                  country: p.country,
+                  score: p.matchScore
+                })),
+                rejectedLenders: advancedResults.filteredOutProducts.map(p => ({
+                  productId: p.productId,
+                  productName: p.name,
+                  lenderName: p.lenderName,
+                  category: p.category,
+                  country: p.country,
+                  failureReasons: p.rejectionReasons
+                })),
+                filtersApplied: [
+                  `Country: ${testInput.country}`,
+                  `Amount: ${testInput.amountRequested.toLocaleString()}`,
+                  `Category: ${testInput.whatAreYouLookingFor}`,
+                  `Purpose: ${testInput.purposeOfFunds}`
+                ],
+                timestamp: new Date().toISOString(),
+                source: 'debug-panel'
+              })
+            });
+            
+            if (response.ok) {
+              console.log('✅ [ANALYTICS] Advanced scoring log sent successfully');
+            } else {
+              console.warn('⚠️ [ANALYTICS] Advanced scoring log failed:', response.status);
+            }
+          } catch (analyticsError) {
+            console.warn('⚠️ [ANALYTICS] Advanced scoring log failed (non-critical):', analyticsError instanceof Error ? analyticsError.message : analyticsError);
+          }
+        }, 100);
       }
     } catch (error) {
       console.error('Debug test failed:', error);
@@ -329,23 +346,7 @@ export default function DevRecommendationDebug() {
               {isRunning ? 'Running Analysis...' : 'Run Debug Test'}
             </Button>
 
-            {/* Preset Tests */}
-            <div className="pt-4 border-t">
-              <h3 className="font-medium mb-2">Quick Tests</h3>
-              <div className="grid grid-cols-1 gap-2">
-                {presetTests.map((preset, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setTestInput(preset.input)}
-                    className="text-left justify-start"
-                  >
-                    {preset.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
+            
           </CardContent>
         </Card>
 

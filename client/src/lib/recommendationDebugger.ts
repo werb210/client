@@ -75,17 +75,22 @@ export async function debugRecommendationFiltering(
     executionTimeMs
   };
 
-  // Step 4 - Recommendation Log Transmission (Client Side)
-  await sendRecommendationLog({
-    recommendedLenders: passedProducts,
-    rejectedLenders: failedProducts,
-    filtersApplied: [
-      `Country: ${input.country}`,
-      `Amount: ${input.amountRequested}`,
-      `Category: ${input.category}`,
-      ...(input.purposeOfFunds ? [`Purpose: ${input.purposeOfFunds}`] : [])
-    ]
-  });
+  // Step 4 - Recommendation Log Transmission (Client Side) - Non-blocking
+  try {
+    await sendRecommendationLog({
+      recommendedLenders: passedProducts,
+      rejectedLenders: failedProducts,
+      filtersApplied: [
+        `Country: ${input.country}`,
+        `Amount: ${input.amountRequested}`,
+        `Category: ${input.category}`,
+        ...(input.purposeOfFunds ? [`Purpose: ${input.purposeOfFunds}`] : [])
+      ]
+    });
+  } catch (error) {
+    // Analytics failure should not break debug functionality
+    console.warn('⚠️ Analytics logging failed (non-critical):', error instanceof Error ? error.message : error);
+  }
   
   console.log('🎯 [RECOMMENDATION DEBUG] Analysis complete:', debugResult);
   
@@ -392,7 +397,7 @@ async function sendRecommendationLog(payload: RecommendationLogPayload): Promise
     // Get application ID from localStorage if available
     const applicantId = localStorage.getItem('applicationId') || `debug-session-${Date.now()}`;
     
-    const response = await fetch(`${API_BASE_URL}/analytics/recommendation-log`, {
+    const response = await fetch(`/api/analytics/recommendation-log`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -426,6 +431,7 @@ async function sendRecommendationLog(payload: RecommendationLogPayload): Promise
       console.warn('⚠️ Failed to send recommendation log:', response.status, response.statusText);
     }
   } catch (error) {
-    console.error('❌ Error sending recommendation log:', error);
+    console.warn('⚠️ Recommendation log failed (non-critical):', error instanceof Error ? error.message : error);
+    // Don't throw - analytics failure shouldn't break debug functionality
   }
 }
