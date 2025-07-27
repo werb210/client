@@ -13,6 +13,7 @@ import {
   type DebugInput,
   type RecommendationDebugResult 
 } from '@/lib/recommendationDebugger';
+import mockLenderProducts from '@/data/mockLenderProducts';
 
 interface TestInput {
   country: string;
@@ -33,12 +34,14 @@ export default function DevRecommendationDebug() {
   const [isRunning, setIsRunning] = useState(false);
 
   // Fetch all lender products for analysis
-  const { data: allProducts = [], isLoading } = useQuery({
+  const { data: allProducts = [], isLoading, error } = useQuery({
     queryKey: ['/api/public/lender-products'],
   });
 
-  // Type guard for products array
-  const products = Array.isArray(allProducts) ? allProducts : [];
+  // Type guard for products array - use mock data if API unavailable
+  const products = Array.isArray(allProducts) && allProducts.length > 0 
+    ? allProducts 
+    : mockLenderProducts;
 
   const runDebugTest = async () => {
     setIsRunning(true);
