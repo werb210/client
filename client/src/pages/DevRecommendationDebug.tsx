@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle, XCircle, AlertTriangle, Search, Filter, Clock, Target, Settings, BarChart3 } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Search, Filter, Clock, Target, Settings, BarChart3, FileText } from 'lucide-react';
 import { 
   debugRecommendationFiltering, 
   getCommonTestScenarios,
@@ -17,6 +17,8 @@ import {
 } from '@/lib/recommendationDebugger';
 import { getAdvancedRecommendations, type FilteringOptions, type RecommendationInput } from '@/lib/recommendationEngine';
 import mockLenderProducts from '@/data/mockLenderProducts';
+import { ENHANCED_DOCUMENT_REQUIREMENTS } from '../../../shared/documentMapping';
+import { DOCUMENT_TYPE_LABELS } from '../../../shared/documentTypes';
 
 interface TestInput {
   country: string;
@@ -33,6 +35,40 @@ const fundsPurposeOptions = [
   { value: 'expansion', label: 'Business Expansion' },
   { value: 'working_capital', label: 'Working Capital' },
 ];
+
+// Helper function to get required documents by category
+const getRequiredDocumentsByCategory = (category: string): string[] => {
+  // Normalize category name for mapping
+  const normalizedCategory = category.toLowerCase().replace(/\s+/g, '_');
+  
+  // Category mappings
+  const categoryMappings: Record<string, string> = {
+    'term_loan': 'term_loan',
+    'business_line_of_credit': 'line_of_credit',
+    'line_of_credit': 'line_of_credit',
+    'equipment_financing': 'equipment_financing',
+    'working_capital': 'working_capital',
+    'invoice_factoring': 'invoice_factoring',
+    'purchase_order_financing': 'purchase_order_financing',
+    'asset-based_lending': 'asset_based_lending',
+    'asset_based_lending': 'asset_based_lending',
+    
+    // Alternative naming patterns
+    'equipment': 'equipment_financing',
+    'factoring': 'invoice_factoring',
+    'capital': 'working_capital',
+    'loan': 'term_loan',
+    'credit': 'line_of_credit',
+  };
+
+  const mappedCategory = categoryMappings[normalizedCategory] || normalizedCategory;
+  const documentTypes = ENHANCED_DOCUMENT_REQUIREMENTS[mappedCategory] || [];
+  
+  // Convert document types to display labels
+  return documentTypes.map(docType => 
+    DOCUMENT_TYPE_LABELS[docType] || docType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  );
+};
 
 export default function DevRecommendationDebug() {
   const [testInput, setTestInput] = useState<TestInput>({
@@ -406,6 +442,12 @@ export default function DevRecommendationDebug() {
                     <span>Advanced Scoring ({advancedResults.qualifiedProducts.length})</span>
                   </TabsTrigger>
                 )}
+                {debugResults && debugResults.passedProducts.length > 0 && (
+                  <TabsTrigger value="documents" className="flex items-center space-x-2">
+                    <FileText className="w-4 h-4" />
+                    <span>Required Documents</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="matched" className="space-y-3">
@@ -578,6 +620,77 @@ export default function DevRecommendationDebug() {
                       </div>
                     </div>
                   )}
+                </TabsContent>
+              )}
+
+              {/* Required Documents Tab */}
+              {debugResults && debugResults.passedProducts.length > 0 && (
+                <TabsContent value="documents" className="space-y-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg mb-4">
+                    <div className="text-lg font-semibold text-blue-600">
+                      Document Requirements by Category
+                    </div>
+                    <div className="text-sm text-blue-800">
+                      Shows required documents for each qualified product category
+                    </div>
+                  </div>
+
+                  {/* Group products by category and show document requirements */}
+                  {(() => {
+                    const categoriesWithDocs = new Map<string, { products: any[], documents: string[] }>();
+                    
+                    // Group products by category
+                    debugResults.passedProducts.forEach(product => {
+                      const category = product.category;
+                      if (!categoriesWithDocs.has(category)) {
+                        categoriesWithDocs.set(category, {
+                          products: [],
+                          documents: getRequiredDocumentsByCategory(category)
+                        });
+                      }
+                      categoriesWithDocs.get(category)!.products.push(product);
+                    });
+
+                    return Array.from(categoriesWithDocs.entries()).map(([category, data]) => (
+                      <div key={category} className="border rounded-lg p-4 bg-white">
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="font-medium text-lg">{category}</h3>
+                          <Badge variant="outline">
+                            {data.products.length} product{data.products.length !== 1 ? 's' : ''}
+                          </Badge>
+                        </div>
+                        
+                        <div className="mb-3">
+                          <h4 className="text-sm font-medium text-gray-600 mb-2">Products in this category:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {data.products.map((product, idx) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {product.lenderName}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-600 mb-2">Required Documents:</h4>
+                          {data.documents.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {data.documents.map((doc, idx) => (
+                                <div key={idx} className="flex items-center space-x-2 p-2 bg-gray-50 rounded text-sm">
+                                  <FileText className="w-4 h-4 text-gray-500" />
+                                  <span>{doc}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-500 italic">
+                              No specific document requirements found for this category
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ));
+                  })()}
                 </TabsContent>
               )}
             </Tabs>
