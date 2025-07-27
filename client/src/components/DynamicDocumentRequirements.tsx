@@ -25,18 +25,15 @@ import {
   getDocumentRequirements 
 } from '../../../shared/documentMapping';
 import { 
-  getApiCategory,
-  getDisplayName,
-  normalizeDocumentName as normalizeDocName
-} from '../lib/documentMapping';
+  DOCUMENT_CATEGORIES,
+  DISPLAY_LABELS,
+  getDocumentLabel as getCanonicalLabel
+} from '../lib/documentCategories';
 import { 
-  normalizeDocRequirement,
-  getCanonicalDocumentInfo,
-  CANONICAL_DOCUMENT_LABELS,
-  type CanonicalDocumentType,
   mapToBackendDocumentType,
   isValidDocumentType,
-  DOCUMENT_TYPE_MAP
+  getCanonicalDocumentTypes,
+  LEGACY_TO_CANONICAL
 } from '../lib/docNormalization';
 import { queueFallbackUpload } from '@/utils/fallbackUploadQueue';
 
@@ -398,11 +395,10 @@ function UnifiedDocumentUploadCard({
       // 🔧 CRITICAL: Use central document type mapping with error handling
       let category: string;
       try {
-        const normalizedType = normalizeDocRequirement(doc.label);
-        const fallbackType = normalizedType || getApiCategory(doc.label);
-        category = mapToBackendDocumentType(fallbackType || doc.label);
+        // Use the new canonical document type mapping
+        category = mapToBackendDocumentType(doc.label);
         
-        console.log(`🔧 [CENTRAL-MAPPING] Document "${doc.label}" mapped to backend type: "${category}"`);
+        console.log(`🔧 [CANONICAL-MAPPING] Document "${doc.label}" mapped to canonical type: "${category}"`);
       } catch (error) {
         console.error(`❌ [MAPPING-ERROR] Failed to map document type "${doc.label}":`, error);
         toast({
@@ -835,9 +831,9 @@ export function DynamicDocumentRequirements({
         continue;
       }
       
-      // Now get the display label for this document type
-      const displayLabel = getDocumentTypeLabel(documentType as any);
-      console.log(`🔍 [DEBUG] Document type "${documentType}" → display label: "${displayLabel}"`);
+      // Now get the display label for this document type using canonical labels
+      const displayLabel = getCanonicalLabel(documentType) || getDocumentTypeLabel(documentType as any);
+      console.log(`🔍 [DEBUG] Document type "${documentType}" → canonical display label: "${displayLabel}"`);
       
       renderedDocumentTypes.add(documentType);
       deduplicatedRequirements.push({
