@@ -33,7 +33,7 @@ try {
  * Based on SUPPORTED_DOCUMENT_TYPES from shared/documentTypes.ts
  */
 export const DOCUMENT_TYPE_MAP: Record<string, string> = {
-  // ============ OFFICIAL BACKEND TYPES (22 supported) ============
+  // ============ UPDATED BACKEND TYPES (22 supported - updated Jan 27, 2025) ============
   'accounts_payable': 'accounts_payable',
   'accounts_receivable': 'accounts_receivable', 
   'articles_of_incorporation': 'articles_of_incorporation',
@@ -45,17 +45,17 @@ export const DOCUMENT_TYPE_MAP: Record<string, string> = {
   'collateral_docs': 'collateral_docs',
   'drivers_license_front_back': 'drivers_license_front_back',
   'equipment_quote': 'equipment_quote',
-  'financial_statements': 'financial_statements',
+  'accountant_financials': 'accountant_financials',  // Updated from financial_statements
   'invoice_samples': 'invoice_samples',
   'other': 'other',
-  'personal_financial_statement': 'personal_financial_statement',
+  'personal_financials': 'personal_financials',  // Updated from personal_financial_statement
   'personal_guarantee': 'personal_guarantee',
-  'profit_loss_statement': 'profit_loss_statement',
+  'profit_and_loss': 'profit_and_loss',  // Updated from profit_loss_statement
   'proof_of_identity': 'proof_of_identity',
   'signed_application': 'signed_application',
   'supplier_agreement': 'supplier_agreement',
   'tax_returns': 'tax_returns',
-  'void_pad': 'void_pad',
+  'void_cheque': 'void_cheque',  // Updated from void_pad
   
   // ============ CLIENT-SIDE MAPPINGS → BACKEND TYPES ============
   
@@ -64,33 +64,40 @@ export const DOCUMENT_TYPE_MAP: Record<string, string> = {
   'banking_statements': 'bank_statements',
   'bank_account_statements': 'bank_statements',
   
-  // Financial Statements variations → financial_statements
-  'account_prepared_financials': 'financial_statements',
-  'accountant_prepared_financials': 'financial_statements', 
-  'accountant_prepared_statements': 'financial_statements',
-  'accountant_prepared_financial_statements': 'financial_statements',
-  'audited_financial_statements': 'financial_statements',
-  'audited_financials': 'financial_statements',
-  'compiled_financial_statements': 'financial_statements',
+  // Financial Statements variations → accountant_financials (updated)
+  'account_prepared_financials': 'accountant_financials',
+  'accountant_prepared_financials': 'accountant_financials', 
+  'accountant_prepared_statements': 'accountant_financials',
+  'accountant_prepared_financial_statements': 'accountant_financials',
+  'audited_financial_statements': 'accountant_financials',
+  'audited_financials': 'accountant_financials',
+  'compiled_financial_statements': 'accountant_financials',
+  'financial_statements': 'accountant_financials',
   
-  // P&L Statement variations → profit_loss_statement
-  'pnl_statement': 'profit_loss_statement',
-  'p&l_statement': 'profit_loss_statement',
-  'income_statement': 'profit_loss_statement',
-  'profit_and_loss_statement': 'profit_loss_statement',
+  // P&L Statement variations → profit_and_loss (updated)
+  'pnl_statement': 'profit_and_loss',
+  'p&l_statement': 'profit_and_loss',
+  'income_statement': 'profit_and_loss',
+  'profit_and_loss_statement': 'profit_and_loss',
+  'profit_loss_statement': 'profit_and_loss',
   
   // Tax Returns variations
   'tax_return': 'tax_returns',
   'business_tax_returns': 'tax_returns',
   'corporate_tax_returns': 'tax_returns',
   
-  // Void Check variations → void_pad
-  'void_cheque': 'void_pad',
-  'void_check': 'void_pad',
-  'voided_check': 'void_pad',
-  'cancelled_check': 'void_pad',
-  'banking_info': 'void_pad',
-  'bank_verification': 'void_pad',
+  // Void Check variations → void_cheque (updated)
+  'void_cheque': 'void_cheque',
+  'void_check': 'void_cheque',
+  'voided_check': 'void_cheque',
+  'cancelled_check': 'void_cheque',
+  'banking_info': 'void_cheque',
+  'bank_verification': 'void_cheque',
+  'void_pad': 'void_cheque',
+  
+  // Personal Financial Statement variations → personal_financials (updated)
+  'personal_financial_statement': 'personal_financials',
+  'personal_financials': 'personal_financials',
   
   // Driver's License variations
   'driver_license': 'drivers_license_front_back',

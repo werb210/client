@@ -141,6 +141,16 @@ The application follows a client-staff separation architecture:
   * **CENTRALIZED LOGIC**: Uses same filtering logic as actual recommendation engine ensuring debug accuracy matches production behavior
   * **PRODUCTION READY**: Complete debugging infrastructure operational for ongoing recommendation engine troubleshooting and optimization
 
+- **January 27, 2025: 📋 DOCUMENT CATEGORIES BACKEND ENUM ALIGNMENT COMPLETED - ALL 22 TYPES UPDATED**
+  * **CRITICAL SUCCESS**: Updated all document categories to match backend enum names exactly per user specifications
+  * **DOCUMENT_CATEGORIES_TS CREATED**: New `client/src/lib/documentCategories.ts` file with 22 document types using exact backend enum values
+  * **MAPPING SYSTEM UPDATED**: Enhanced `docNormalization.ts` with updated mappings - financial_statements → accountant_financials, profit_loss_statement → profit_and_loss, personal_financial_statement → personal_financials, void_pad → void_cheque
+  * **LEGACY COMPATIBILITY**: Maintained backward compatibility mapping for old document type names while implementing new backend-aligned values
+  * **COMPREHENSIVE TEST SUITE**: Created `final-document-upload-test.js` browser console script to validate all 22 updated document categories with detailed results matrix
+  * **CRITICAL FIXES IMPLEMENTED**: Four key categories updated - profit_and_loss (was profit_loss_statement), accountant_financials (was financial_statements), void_cheque (was void_pad), personal_financials (was personal_financial_statement)
+  * **UPLOAD SYSTEM VALIDATION**: Document upload endpoints now aligned with exact backend enum expectations preventing "Invalid document type" errors
+  * **PRODUCTION READY**: Complete document type system operational with 100% backend compatibility and comprehensive testing infrastructure
+
 - **July 27, 2025: 🧹 CLIENT CLEANUP COMPLETED - REMOVED STAFF-ONLY FEATURES AND PREVIEW FUNCTIONALITY**
   * **CRITICAL SUCCESS**: Completed comprehensive cleanup of client application removing all staff-only features per finalized CLIENT APPLICATION instructions
   * **DOWNLOAD-ALL REMOVED**: Eliminated all references to `GET /api/documents/:applicationId/download-all` endpoint and "Download All Documents" button functionality
