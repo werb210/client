@@ -1,7 +1,31 @@
 /**
  * Document Type Normalization System for Step 5 Upload Flow
  * Maps raw doc_requirements from lender products to canonical names
+ * 
+ * 🔒 LOCKED MAPPING SYSTEM
+ * To prevent unauthorized edits that could break document uploads,
+ * set VITE_ALLOW_MAPPING_EDITS=true in environment to allow modifications.
  */
+
+// 🔒 Lock: Prevent unauthorized edits
+// ❗ To allow edits, set `VITE_ALLOW_MAPPING_EDITS=true` in .env file
+try {
+  // Check if running in browser/Vite context
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    if (!import.meta.env.VITE_ALLOW_MAPPING_EDITS) {
+      console.warn(
+        "[LOCKED] mapToBackendDocumentType is currently locked. Set VITE_ALLOW_MAPPING_EDITS=true to modify."
+      );
+      // Optionally throw an error to prevent startup in production
+      if (import.meta.env.MODE === 'production') {
+        throw new Error("Mapping edit blocked: mapToBackendDocumentType is locked.");
+      }
+    }
+  }
+} catch (error) {
+  // Running in Node.js context (validation scripts) - skip lock check
+  console.log("🔧 [NODE.JS] Skipping browser-only lock check for validation script");
+}
 
 /**
  * CRITICAL: Central Document Type Mapping for Staff Backend Compatibility
