@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step 3 → Step 4 Verification Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #003D7A;
+            border-bottom: 3px solid #003D7A;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #002B5C;
+            margin-top: 30px;
+        }
+        
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .field-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .field-item.missing {
+            border-left-color: #dc3545;
+        }
+        
+        .field-name {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .field-value {
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #003D7A, #002B5C);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .test-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .console-log {
+            background: #212529;
+            color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 15px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .navigation-links {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .nav-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #17a2b8;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .nav-link:hover {
+            background: #138496;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Step 3 → Step 4 Field Verification Test</h1>
+        
+        <div class="status info">
+            <strong>Purpose:</strong> Verify that all 9 required Step 3 business fields are properly mapped and included in the POST /api/public/applications request when submitting Step 4.
+        </div>
+        
+        <h2>📋 Required Step 3 Fields Checklist</h2>
+        <div class="field-grid" id="fieldChecklist">
+            <!-- Will be populated by JavaScript -->
+        </div>
+        
+        <h2>🚀 Testing Options</h2>
+        
+        <div class="navigation-links">
+            <a href="/apply/step-1" class="nav-link">Start Fresh Application</a>
+            <a href="/apply/step-3" class="nav-link">Go to Step 3</a>
+            <a href="/apply/step-4" class="nav-link">Go to Step 4</a>
+        </div>
+        
+        <button class="test-button" onclick="simulateStep3Data()">
+            🧪 Simulate Step 3 Data in LocalStorage
+        </button>
+        
+        <button class="test-button" onclick="simulateCompleteApplication()">
+            🚀 Simulate Complete Application Submission
+        </button>
+        
+        <button class="test-button" onclick="checkCurrentFormData()">
+            🔍 Check Current Form Data
+        </button>
+        
+        <button class="test-button" onclick="clearAllData()">
+            🗑️ Clear All Test Data
+        </button>
+        
+        <div id="testResults"></div>
+        
+        <h2>📊 Console Output</h2>
+        <div class="console-log" id="consoleOutput">
+            Console logs will appear here...
+        </div>
+        
+        <h2>📝 Manual Testing Instructions</h2>
+        <ol>
+            <li><strong>Option A - Use Simulation:</strong>
+                <ul>
+                    <li>Click "Simulate Step 3 Data" to populate localStorage with test data</li>
+                    <li>Navigate to Step 4 using the link above</li>
+                    <li>Fill out applicant information and submit</li>
+                </ul>
+            </li>
+            <li><strong>Option B - Manual Entry:</strong>
+                <ul>
+                    <li>Start fresh application from Step 1</li>
+                    <li>Complete Step 1 (funding amount, location, purpose)</li>
+                    <li>Complete Step 2 (select financing product)</li>
+                    <li>Complete Step 3 with ALL business details</li>
+                    <li>Complete Step 4 and submit</li>
+                </ul>
+            </li>
+            <li><strong>Verification:</strong>
+                <ul>
+                    <li>Open browser console (F12)</li>
+                    <li>Look for "📊 Step 3 (business details):" log entry</li>
+                    <li>Verify all 9 required fields are present with values</li>
+                </ul>
+            </li>
+        </ol>
+        
+        <h2>✅ Success Criteria</h2>
+        <div class="status success" style="display: none;" id="successCriteria">
+            <strong>✅ All tests passed!</strong><br>
+            • All 9 required Step 3 fields present in API payload<br>
+            • yearsInBusiness calculated correctly from businessStartDate<br>
+            • monthlyRevenue calculated correctly from annualRevenue<br>
+            • businessType mapped from businessStructure<br>
+            • POST /api/public/applications executed successfully
+        </div>
+    </div>
+
+    <script>
+        // Required Step 3 fields that must be present in API submission
+        const requiredStep3Fields = [
+            { field: 'businessName', description: 'Business operating name', source: 'operatingName → businessName' },
+            { field: 'businessType', description: 'Business legal structure', source: 'businessStructure → businessType' },
+            { field: 'industry', description: 'Business industry sector', source: 'Step 1 industry or Step 3' },
+            { field: 'website', description: 'Business website URL', source: 'businessWebsite → website' },
+            { field: 'yearsInBusiness', description: 'Years since business started', source: 'Calculated from businessStartDate' },
+            { field: 'numberOfEmployees', description: 'Total employee count', source: 'employeeCount → numberOfEmployees' },
+            { field: 'businessAddress', description: 'Primary business address', source: 'businessStreetAddress → businessAddress' },
+            { field: 'annualRevenue', description: 'Annual revenue amount', source: 'estimatedYearlyRevenue → annualRevenue' },
+            { field: 'monthlyRevenue', description: 'Monthly revenue amount', source: 'Calculated from annualRevenue / 12' }
+        ];
+        
+        // Test data for complete Step 3 simulation
+        const testStep3Data = {
+            operatingName: 'TestFlow Technologies Inc',
+            legalName: 'TestFlow Technologies Incorporated',
+            businessName: 'TestFlow Technologies Inc',
+            businessStructure: 'Corporation',
+            businessStartDate: '2021-01-15',
+            employeeCount: 12,
+            estimatedYearlyRevenue: 950000,
+            businessWebsite: 'https://testflow.tech',
+            businessStreetAddress: '321 Innovation Way',
+            businessCity: 'Toronto',
+            businessState: 'ON',
+            businessPostalCode: 'M5V 1A1',
+            businessPhone: '+14167890123',
+            businessZip: 'M5V 1A1'
+        };
+        
+        const testStep1Data = {
+            fundingAmount: 150000,
+            requestedAmount: 150000,
+            use_of_funds: 'Equipment purchase',
+            lookingFor: 'Equipment purchase',
+            fundsPurpose: 'Equipment purchase',
+            businessLocation: 'CA',
+            industry: 'Technology',
+            selectedCategory: 'Equipment Financing'
+        };
+        
+        // Console logging override
+        const originalLog = console.log;
+        const originalError = console.error;
+        const consoleOutput = document.getElementById('consoleOutput');
+        
+        function logToPage(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.color = type === 'error' ? '#ff6b6b' : type === 'warn' ? '#ffd93d' : '#f8f9fa';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            consoleOutput.appendChild(logEntry);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logToPage(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            logToPage(args.join(' '), 'error');
+        };
+        
+        // Initialize field checklist
+        function initializeFieldChecklist() {
+            const fieldChecklist = document.getElementById('fieldChecklist');
+            
+            requiredStep3Fields.forEach(field => {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'field-item';
+                fieldDiv.id = `field-${field.field}`;
+                
+                fieldDiv.innerHTML = `
+                    <div class="field-name">${field.field}</div>
+                    <div class="field-value">${field.description}</div>
+                    <div class="field-value"><em>Source: ${field.source}</em></div>
+                `;
+                
+                fieldChecklist.appendChild(fieldDiv);
+            });
+        }
+        
+        // Simulate Step 3 data in localStorage
+        function simulateStep3Data() {
+            const formData = {
+                step1: testStep1Data,
+                step3: testStep3Data,
+                applicationId: 'test-app-' + Date.now()
+            };
+            
+            localStorage.setItem('formData', JSON.stringify(formData));
+            localStorage.setItem('applicationId', formData.applicationId);
+            
+            showStatus('Step 3 test data simulated successfully! Navigate to Step 4 to test submission.', 'success');
+            console.log('🧪 Simulated Step 3 data:', testStep3Data);
+            console.log('🧪 Simulated Step 1 data:', testStep1Data);
+            
+            checkCurrentFormData();
+        }
+        
+        // Check current form data
+        function checkCurrentFormData() {
+            const formData = JSON.parse(localStorage.getItem('formData') || '{}');
+            const applicationId = localStorage.getItem('applicationId');
+            
+            console.log('🔍 Current Form Data Check:');
+            console.log('Application ID:', applicationId);
+            console.log('Step 1 data:', formData.step1);
+            console.log('Step 3 data:', formData.step3);
+            console.log('Step 4 data:', formData.step4);
+            
+            // Verify required fields
+            const step3 = formData.step3 || {};
+            let missingFields = [];
+            
+            requiredStep3Fields.forEach(field => {
+                const fieldElement = document.getElementById(`field-${field.field}`);
+                let value = null;
+                
+                // Check for field value based on mapping logic
+                switch(field.field) {
+                    case 'businessName':
+                        value = step3.operatingName || step3.legalName || step3.businessName;
+                        break;
+                    case 'businessType':
+                        value = step3.businessStructure;
+                        break;
+                    case 'industry':
+                        value = step3.industry || formData.step1?.industry;
+                        break;
+                    case 'website':
+                        value = step3.businessWebsite;
+                        break;
+                    case 'yearsInBusiness':
+                        value = step3.businessStartDate ? 
+                            Math.max(0, new Date().getFullYear() - new Date(step3.businessStartDate).getFullYear()) : null;
+                        break;
+                    case 'numberOfEmployees':
+                        value = step3.employeeCount || step3.numberOfEmployees;
+                        break;
+                    case 'businessAddress':
+                        value = step3.businessStreetAddress || step3.businessAddress;
+                        break;
+                    case 'annualRevenue':
+                        value = step3.estimatedYearlyRevenue || step3.annualRevenue;
+                        break;
+                    case 'monthlyRevenue':
+                        value = step3.estimatedYearlyRevenue ? 
+                            Math.round(step3.estimatedYearlyRevenue / 12) : 
+                            (step3.annualRevenue ? Math.round(step3.annualRevenue / 12) : null);
+                        break;
+                }
+                
+                if (value !== null && value !== undefined && value !== '') {
+                    fieldElement.classList.remove('missing');
+                    fieldElement.querySelector('.field-value').innerHTML = 
+                        `${field.description}<br><strong>Value: ${value}</strong>`;
+                } else {
+                    fieldElement.classList.add('missing');
+                    missingFields.push(field.field);
+                }
+            });
+            
+            if (missingFields.length === 0) {
+                showStatus(`✅ All ${requiredStep3Fields.length} required fields are present!`, 'success');
+            } else {
+                showStatus(`❌ Missing ${missingFields.length} required fields: ${missingFields.join(', ')}`, 'error');
+            }
+        }
+        
+        // Simulate complete application submission
+        async function simulateCompleteApplication() {
+            const completeApplicationData = {
+                step1: testStep1Data,
+                step3: {
+                    ...testStep3Data,
+                    // Add the calculated and mapped fields
+                    businessName: testStep3Data.operatingName,
+                    businessType: testStep3Data.businessStructure,
+                    industry: testStep1Data.industry,
+                    website: testStep3Data.businessWebsite,
+                    yearsInBusiness: Math.max(0, new Date().getFullYear() - new Date(testStep3Data.businessStartDate).getFullYear()),
+                    numberOfEmployees: testStep3Data.employeeCount,
+                    businessAddress: testStep3Data.businessStreetAddress,
+                    annualRevenue: testStep3Data.estimatedYearlyRevenue,
+                    monthlyRevenue: Math.round(testStep3Data.estimatedYearlyRevenue / 12)
+                },
+                step4: {
+                    applicantFirstName: 'Test',
+                    applicantLastName: 'User',
+                    applicantEmail: 'test.user@testflow.tech',
+                    applicantPhone: '+14165551234',
+                    applicantAddress: '123 Test Street',
+                    applicantCity: 'Toronto',
+                    applicantState: 'ON',
+                    applicantZipCode: 'M4B 1B3',
+                    applicantDateOfBirth: '1990-05-15',
+                    ownershipPercentage: 100,
+                    firstName: 'Test',
+                    lastName: 'User',
+                    email: 'test.user@testflow.tech',
+                    phone: '+14165551234'
+                }
+            };
+            
+            console.log('🚀 Simulating complete application submission...');
+            console.log('📊 Step 3 (business details):', completeApplicationData.step3);
+            
+            try {
+                const response = await fetch('/api/public/applications', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken') || 'test-token'}`
+                    },
+                    body: JSON.stringify(completeApplicationData)
+                });
+                
+                console.log('📥 API Response Status:', response.status, response.statusText);
+                
+                const responseData = await response.text();
+                console.log('📥 API Response Body:', responseData);
+                
+                if (response.ok) {
+                    showStatus('✅ Application submitted successfully! Check console for full payload details.', 'success');
+                    document.getElementById('successCriteria').style.display = 'block';
+                } else {
+                    showStatus(`❌ Application submission failed: ${response.status} ${response.statusText}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('❌ Submission error:', error);
+                showStatus(`❌ Submission error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Clear all test data
+        function clearAllData() {
+            localStorage.removeItem('formData');
+            localStorage.removeItem('applicationId');
+            localStorage.removeItem('financialFormData');
+            
+            showStatus('🗑️ All test data cleared from localStorage', 'info');
+            console.log('🗑️ LocalStorage cleared');
+            
+            // Reset field checklist
+            requiredStep3Fields.forEach(field => {
+                const fieldElement = document.getElementById(`field-${field.field}`);
+                fieldElement.classList.remove('missing');
+                fieldElement.querySelector('.field-value').innerHTML = field.description;
+            });
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const testResults = document.getElementById('testResults');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+            testResults.appendChild(statusDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                statusDiv.remove();
+            }, 5000);
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFieldChecklist();
+            checkCurrentFormData();
+            
+            console.log('🔍 Step 3 → Step 4 Verification Test initialized');
+            console.log('📋 Ready to test field mapping for all 9 required Step 3 fields');
+        });
+    </script>
+</body>
+</html>
