@@ -108,7 +108,10 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
       if (reportResponse.ok) {
         const result = await reportResponse.json();
         console.log('✅ [CLIENT] Issue report submitted successfully:', result);
-        alert('Issue report submitted successfully! Our team will review it.');
+        
+        // Step 5 - Show success alert for issue report
+        alert('✅ Your issue report has been submitted');
+        onClose(); // Close the modal after successful submission
       } else {
         console.error('❌ [CLIENT] Issue report failed:', reportResponse.status);
         alert('Failed to submit issue report. Please try again.');
@@ -787,7 +790,8 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sessionId: sessionId,
+          sessionId: localStorage.getItem('sessionId') || sessionId,
+          applicationId: localStorage.getItem('applicationId'),
           userEmail: userEmail || 'anonymous',
           userName: userName || 'Anonymous User',
           currentStep: currentStep || 'unknown',
@@ -803,6 +807,9 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         console.log('✅ [CLIENT] Human escalation request submitted successfully');
         setHumanRequestStatus('connected');
         addBotMessage("Great! I've connected you with our support team. A team member will reply shortly to assist you personally.");
+        
+        // Step 5 - Show success alert for escalation
+        alert('✅ Your request has been sent to a human support agent');
         
         // Also emit via Socket.IO for real-time notification to staff
         if (socket && isConnected) {

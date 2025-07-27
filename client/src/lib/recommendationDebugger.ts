@@ -6,6 +6,8 @@
  * used in the actual recommendation engine.
  */
 
+import { API_BASE_URL } from '@/constants';
+
 export interface FilterTestResult {
   productId: string;
   productName: string;
@@ -72,6 +74,18 @@ export async function debugRecommendationFiltering(
     countryBreakdown,
     executionTimeMs
   };
+
+  // Step 4 - Recommendation Log Transmission (Client Side)
+  await sendRecommendationLog({
+    recommendedLenders: passedProducts,
+    rejectedLenders: failedProducts,
+    filtersApplied: [
+      `Country: ${input.country}`,
+      `Amount: ${input.amountRequested}`,
+      `Category: ${input.category}`,
+      ...(input.purposeOfFunds ? [`Purpose: ${input.purposeOfFunds}`] : [])
+    ]
+  });
   
   console.log('🎯 [RECOMMENDATION DEBUG] Analysis complete:', debugResult);
   
@@ -362,4 +376,56 @@ export function getCommonTestScenarios(): Array<{ name: string; input: DebugInpu
       }
     }
   ];
+}
+
+/**
+ * Step 4 - Send recommendation log to staff backend for analytics
+ */
+interface RecommendationLogPayload {
+  recommendedLenders: FilterTestResult[];
+  rejectedLenders: FilterTestResult[];
+  filtersApplied: string[];
+}
+
+async function sendRecommendationLog(payload: RecommendationLogPayload): Promise<void> {
+  try {
+    // Get application ID from localStorage if available
+    const applicantId = localStorage.getItem('applicationId') || `debug-session-${Date.now()}`;
+    
+    const response = await fetch(`${API_BASE_URL}/analytics/recommendation-log`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+      },
+      body: JSON.stringify({
+        applicantId,
+        recommendedLenders: payload.recommendedLenders.map(lender => ({
+          productId: lender.productId,
+          productName: lender.productName,
+          lenderName: lender.lenderName,
+          category: lender.category,
+          country: lender.country,
+          score: lender.score
+        })),
+        rejectedLenders: payload.rejectedLenders.map(lender => ({
+          productId: lender.productId,
+          productName: lender.productName,
+          lenderName: lender.lenderName,
+          category: lender.category,
+          country: lender.country,
+          failureReasons: lender.failureReasons
+        })),
+        filtersApplied: payload.filtersApplied
+      })
+    });
+
+    if (response.ok) {
+      console.log('✅ Recommendation log sent successfully');
+    } else {
+      console.warn('⚠️ Failed to send recommendation log:', response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error('❌ Error sending recommendation log:', error);
+  }
 }
