@@ -95,6 +95,7 @@ import { FetchWindowTest } from "@/pages/FetchWindowTest";
 import FetchWindowDebugRoute from "@/pages/FetchWindowDebugRoute";
 import DocumentNormalizationTest from "@/pages/DocumentNormalizationTest";
 import DevDocumentMapping from "@/pages/DevDocumentMapping";
+import DevRecommendationDebug from "@/pages/DevRecommendationDebug";
 import E2ETestRunner from "@/pages/E2ETestRunner";
 import FileTypeValidationTest from "@/test/FileTypeValidationTest";
 import Step5CategoryTest from "@/test/Step5CategoryTest";
@@ -166,6 +167,7 @@ export function MainLayout() {
       
       {/* Developer Tools */}
       <Route path="/dev/document-mapping" component={DevDocumentMapping} />
+      <Route path="/dev/recommendation-debug" component={DevRecommendationDebug} />
 
 
       <Route path="/fallback-test" component={lazy(() => import('@/pages/FallbackTest').then(m => ({ default: m.FallbackTest })))} />
