@@ -26,12 +26,20 @@ interface TestInput {
   hasStrongFinancials: boolean;
 }
 
+// Purpose of Funds options matching Step 1 exactly
+const fundsPurposeOptions = [
+  { value: 'equipment', label: 'Equipment Purchase' },
+  { value: 'inventory', label: 'Inventory Purchase' },
+  { value: 'expansion', label: 'Business Expansion' },
+  { value: 'working_capital', label: 'Working Capital' },
+];
+
 export default function DevRecommendationDebug() {
   const [testInput, setTestInput] = useState<TestInput>({
     country: 'Canada',
     amountRequested: 100000,
     whatAreYouLookingFor: 'Term Loan',
-    purposeOfFunds: 'Working Capital',
+    purposeOfFunds: 'working_capital',
     hasStrongFinancials: false
   });
   
@@ -98,7 +106,7 @@ export default function DevRecommendationDebug() {
       country: scenario.input.country,
       amountRequested: scenario.input.amountRequested,
       whatAreYouLookingFor: scenario.input.category,
-      purposeOfFunds: scenario.input.purposeOfFunds || 'General Business'
+      purposeOfFunds: scenario.input.purposeOfFunds || 'working_capital'
     }
   }));
 
@@ -183,11 +191,21 @@ export default function DevRecommendationDebug() {
 
             <div>
               <label className="block text-sm font-medium mb-2">Purpose of Funds</label>
-              <Input
-                value={testInput.purposeOfFunds}
-                onChange={(e) => setTestInput(prev => ({ ...prev, purposeOfFunds: e.target.value }))}
-                placeholder="Working Capital"
-              />
+              <Select 
+                value={testInput.purposeOfFunds} 
+                onValueChange={(value) => setTestInput(prev => ({ ...prev, purposeOfFunds: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select purpose of funds" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fundsPurposeOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center space-x-2">
