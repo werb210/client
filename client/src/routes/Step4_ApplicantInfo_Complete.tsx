@@ -38,6 +38,8 @@ import { StepHeader } from "@/components/StepHeader";
 import { ValidationErrorModal } from "@/components/ValidationErrorModal";
 import { SsnWarningModal } from "@/components/SsnWarningModal";
 import { useToast } from "@/hooks/use-toast";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 
 // Step 4 Schema - Required fields for form validation
@@ -927,21 +929,26 @@ export default function Step4ApplicantInfoComplete() {
                     <FormItem>
                       <FormLabel>Date Of Birth *</FormLabel>
                       <FormControl>
-                        <Input 
-                          {...field} 
-                          type="date" 
-                          className="h-12"
-                          inputMode="none"
-                          pattern="\d{4}-\d{2}-\d{2}"
-                          onKeyDown={(e) => {
-                            // Date inputs use native HTML5 navigation - no custom handling needed
+                        <DatePicker
+                          selected={field.value ? new Date(field.value) : null}
+                          onChange={(date: Date | null) => {
+                            if (date) {
+                              // Format as YYYY-MM-DD for form consistency
+                              const formatted = date.toISOString().split('T')[0];
+                              field.onChange(formatted);
+                            } else {
+                              field.onChange('');
+                            }
                           }}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            field.onChange(value);
-                            
-                            // Auto-advance removed for date inputs - HTML5 date picker handles navigation
-                          }}
+                          dateFormat="yyyy-MM-dd"
+                          showMonthDropdown
+                          showYearDropdown
+                          dropdownMode="select"
+                          yearDropdownItemNumber={100}
+                          maxDate={new Date()}
+                          placeholderText="Select your date of birth"
+                          className="h-12 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          wrapperClassName="w-full"
                         />
                       </FormControl>
                       <FormMessage />
@@ -1118,42 +1125,26 @@ export default function Step4ApplicantInfoComplete() {
                       <FormItem>
                         <FormLabel>Partner Date of Birth</FormLabel>
                         <FormControl>
-                          <Input 
-                            {...field} 
-                            type="date" 
-                            className="h-12"
-                            inputMode="none"
-                            pattern="\d{4}-\d{2}-\d{2}"
-                            onKeyDown={(e) => {
-                              const input = e.currentTarget;
-                              const value = input.value;
-                              
-                              // Auto-advance when year is complete (4 digits)
-                              if (e.key >= '0' && e.key <= '9') {
-                                const cursorPos = input.selectionStart || 0;
-                                
-                                // If typing in year position and year will be 4 digits
-                                if (cursorPos <= 4 && value.length >= 3) {
-                                  setTimeout(() => {
-                                    // Date inputs don't support setSelectionRange - skip cursor positioning
-                                    // This is expected behavior for HTML5 date input types
-                                  }, 0);
-                                }
+                          <DatePicker
+                            selected={field.value ? new Date(field.value) : null}
+                            onChange={(date: Date | null) => {
+                              if (date) {
+                                // Format as YYYY-MM-DD for form consistency
+                                const formatted = date.toISOString().split('T')[0];
+                                field.onChange(formatted);
+                              } else {
+                                field.onChange('');
                               }
                             }}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              field.onChange(value);
-                              
-                              // Auto-advance when sections are complete
-                              if (value.length === 4 && !value.includes('-')) {
-                                // Year complete, move to month
-                                setTimeout(() => {
-                                  const input = e.target;
-                                  input.setSelectionRange(5, 7);
-                                }, 0);
-                              }
-                            }}
+                            dateFormat="yyyy-MM-dd"
+                            showMonthDropdown
+                            showYearDropdown
+                            dropdownMode="select"
+                            yearDropdownItemNumber={100}
+                            maxDate={new Date()}
+                            placeholderText="Select partner's date of birth"
+                            className="h-12 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            wrapperClassName="w-full"
                           />
                         </FormControl>
                         <FormMessage />
