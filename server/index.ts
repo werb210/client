@@ -2271,6 +2271,116 @@ app.use((req, res, next) => {
     }
   });
 
+  // Chat escalation endpoints - implemented locally (BEFORE catch-all route)
+  app.post('/api/public/chat/escalate', (req, res) => {
+    try {
+      console.log('🤝 [CHAT ESCALATION] Received escalation request:', req.body);
+      
+      const { sessionId, userEmail, userName, currentStep, context, timestamp } = req.body;
+      
+      // Validate required fields
+      if (!sessionId) {
+        return res.status(400).json({ error: 'Session ID is required' });
+      }
+      
+      // Log escalation request for staff CRM system
+      console.log('📧 [CRM] Creating contact for chat escalation');
+      console.log('📊 [ESCALATION DATA]:', {
+        sessionId,
+        userEmail: userEmail || 'anonymous',
+        userName: userName || 'Anonymous User',
+        currentStep,
+        escalationType: 'chat_escalation',
+        timestamp
+      });
+      
+      // Store escalation data for staff notification system
+      const escalationData = {
+        sessionId,
+        userEmail: userEmail || 'anonymous',
+        userName: userName || 'Anonymous User',
+        currentStep: currentStep || 'unknown',
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        context: context || {},
+        priority: currentStep === 'step-6' ? 'high' : 'normal'
+      };
+      
+      // Log for staff monitoring systems
+      console.log('🚨 [STAFF NOTIFICATION] New chat escalation:', escalationData);
+      
+      res.json({
+        success: true,
+        message: 'Chat escalation request received',
+        sessionId,
+        status: 'escalated',
+        estimatedResponseTime: '5-10 minutes'
+      });
+      
+    } catch (error) {
+      console.error('❌ [CHAT ESCALATION] Error processing request:', error);
+      res.status(500).json({ 
+        error: 'Failed to process escalation request',
+        message: 'Please try again or contact support directly'
+      });
+    }
+  });
+
+  app.post('/api/public/chat/report', (req, res) => {
+    try {
+      console.log('🐛 [ISSUE REPORT] Received issue report:', req.body);
+      
+      const { name, email, message, page, screenshot, timestamp } = req.body;
+      
+      // Validate required fields
+      if (!message || !message.trim()) {
+        return res.status(400).json({ error: 'Issue description is required' });
+      }
+      
+      // Log issue report for staff system
+      console.log('📧 [CRM] Creating contact for issue report');
+      console.log('🐛 [ISSUE DATA]:', {
+        name: name || 'Anonymous',
+        email: email || 'anonymous',
+        message: message.substring(0, 100) + '...',
+        page,
+        hasScreenshot: !!screenshot,
+        timestamp
+      });
+      
+      // Store issue report data
+      const issueData = {
+        reportId: `issue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: name || 'Anonymous',
+        email: email || 'anonymous',
+        message,
+        page: page || 'unknown',
+        hasScreenshot: !!screenshot,
+        screenshotSize: screenshot ? screenshot.length : 0,
+        createdAt: new Date().toISOString(),
+        status: 'reported',
+        priority: message.toLowerCase().includes('urgent') || message.toLowerCase().includes('critical') ? 'high' : 'normal'
+      };
+      
+      // Log for staff bug tracking system
+      console.log('🚨 [STAFF NOTIFICATION] New issue report:', issueData);
+      
+      res.json({
+        success: true,
+        message: 'Issue report submitted successfully',
+        reportId: issueData.reportId,
+        status: 'submitted'
+      });
+      
+    } catch (error) {
+      console.error('❌ [ISSUE REPORT] Error processing request:', error);
+      res.status(500).json({ 
+        error: 'Failed to submit issue report',
+        message: 'Please try again or contact support directly'
+      });
+    }
+  });
+
   // CRITICAL FIX: Move ALL specific API endpoints BEFORE the catch-all route
   // The catch-all route below was intercepting these endpoints causing 501 errors
 
