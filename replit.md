@@ -93,6 +93,17 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 27, 2025: 🧹 CLIENT CLEANUP COMPLETED - REMOVED STAFF-ONLY FEATURES AND PREVIEW FUNCTIONALITY**
+  * **CRITICAL SUCCESS**: Completed comprehensive cleanup of client application removing all staff-only features per finalized CLIENT APPLICATION instructions
+  * **DOWNLOAD-ALL REMOVED**: Eliminated all references to `GET /api/documents/:applicationId/download-all` endpoint and "Download All Documents" button functionality
+  * **PREVIEW LOGIC REMOVED**: Removed document preview functionality from UploadedDocumentList.tsx and DocumentPreview.tsx components
+  * **WINDOW.MANUALRETRYALL ELIMINATED**: Completely removed `window.manualRetryAll` staff-only debugging function from applicationRetryQueue.ts and all HTML test files
+  * **CLEAN CLIENT IMPLEMENTATION**: UploadedDocumentList.tsx now only shows document status badges and remove buttons, no preview/download actions
+  * **SIMPLIFIED UPLOAD WORKFLOW**: Client application focuses solely on upload mapping correctness using centralized mapToBackendDocumentType() function
+  * **DEVELOPER TOOLS MAINTAINED**: `/dev/document-mapping` panel and validation scripts remain operational for development use
+  * **FILE CLEANUP**: Removed 10+ test files and HTML pages containing staff-only manual retry functionality
+  * **PRODUCTION READY**: Clean client implementation ready for deployment without unnecessary staff debugging features
+
 - **July 27, 2025: 🔒 DOCUMENT MAPPING SYSTEM LOCK IMPLEMENTATION COMPLETED - COMPREHENSIVE CI PROTECTION SYSTEM DEPLOYED**
   * **CRITICAL SUCCESS**: Completed comprehensive document mapping system lock with CI enforcement as requested in CLIENT APPLICATION instructions
   * **STEP 1 - MAPPING SYSTEM LOCK**: Implemented environment variable-controlled lock (`VITE_ALLOW_MAPPING_EDITS`) preventing unauthorized edits to `client/src/lib/docNormalization.ts`

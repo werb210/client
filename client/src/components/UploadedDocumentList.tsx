@@ -10,14 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
   FileText, 
-  Download, 
-  Eye, 
   Trash2, 
   CheckCircle, 
   AlertCircle,
   Clock
 } from 'lucide-react';
-import { previewDocument, downloadDocument } from '@/utils/uploadDocument';
 
 export interface DocumentItem {
   id: string;
@@ -44,43 +41,7 @@ export function UploadedDocumentList({
 }: UploadedDocumentListProps) {
   const { toast } = useToast();
 
-  const handlePreview = async (doc: DocumentItem) => {
-    try {
-      console.log(`👁️ [PREVIEW] Opening preview for: ${doc.fileName} (ID: ${doc.documentId})`);
-      await previewDocument(doc.documentId);
-      
-      toast({
-        title: "Preview Opened",
-        description: `${doc.fileName} opened in new tab`,
-      });
-    } catch (error) {
-      console.error(`❌ [PREVIEW] Failed to preview ${doc.fileName}:`, error);
-      toast({
-        title: "Preview Failed",
-        description: "Could not open document preview. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDownload = async (doc: DocumentItem) => {
-    try {
-      console.log(`💾 [DOWNLOAD] Downloading: ${doc.fileName} (ID: ${doc.documentId})`);
-      await downloadDocument(doc.documentId, doc.fileName);
-      
-      toast({
-        title: "Download Started",
-        description: `${doc.fileName} download initiated`,
-      });
-    } catch (error) {
-      console.error(`❌ [DOWNLOAD] Failed to download ${doc.fileName}:`, error);
-      toast({
-        title: "Download Failed", 
-        description: "Could not download document. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+  // Preview and download functionality removed per client requirements
 
   const handleRemove = (doc: DocumentItem) => {
     if (onRemoveDocument) {
@@ -214,36 +175,16 @@ export function UploadedDocumentList({
               </div>
             </div>
 
-            {showActions && doc.status === 'completed' && (
+            {showActions && onRemoveDocument && (
               <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handlePreview(doc)}
-                  className="text-blue-600 hover:text-blue-700"
+                  onClick={() => handleRemove(doc)}
+                  className="text-red-600 hover:text-red-700"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
                 </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownload(doc)}
-                  className="text-green-600 hover:text-green-700"
-                >
-                  <Download className="w-4 h-4" />
-                </Button>
-                
-                {onRemoveDocument && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleRemove(doc)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
               </div>
             )}
           </div>

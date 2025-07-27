@@ -278,24 +278,9 @@ async function retryApplicationFinalization(item: QueuedApplication): Promise<bo
   return response.ok;
 }
 
-/**
- * Manual retry function for debugging - accessible via window.manualRetryAll()
- */
-export const manualRetryAll = async (): Promise<void> => {
-  console.log('🔧 [MANUAL RETRY] Starting manual retry of all queued items');
-  
-  const result = await processRetryQueue();
-  console.log('🔧 [MANUAL RETRY] Manual retry complete:', result);
-};
+// Manual retry function removed per client requirements
 
-/**
- * Add to global window for debugging
- */
-if (typeof window !== 'undefined') {
-  (window as any).manualRetryAll = manualRetryAll;
-  (window as any).getRetryQueue = getRetryQueue;
-  (window as any).getRetryQueueSummary = getRetryQueueSummary;
-}
+// Manual retry debugging functions removed per client requirements
 
 /**
  * Export debug logs for staff support
