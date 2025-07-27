@@ -25,17 +25,18 @@ import {
   getDocumentRequirements 
 } from '../../../shared/documentMapping';
 import { 
-  DOCUMENT_TYPE_MAP,
   getApiCategory,
   getDisplayName,
-  isValidDocumentType,
   normalizeDocumentName as normalizeDocName
 } from '../lib/documentMapping';
 import { 
   normalizeDocRequirement,
   getCanonicalDocumentInfo,
   CANONICAL_DOCUMENT_LABELS,
-  type CanonicalDocumentType
+  type CanonicalDocumentType,
+  mapToBackendDocumentType,
+  isValidDocumentType,
+  DOCUMENT_TYPE_MAP
 } from '../lib/docNormalization';
 import { queueFallbackUpload } from '@/utils/fallbackUploadQueue';
 
@@ -192,16 +193,16 @@ function UnifiedDocumentUploadCard({
 }) {
   const { toast } = useToast();
   
-  // ✅ PATCH 2: Use shared normalizeDocumentName function for consistent mapping
-  const getApiDocumentType = normalizeDocumentName;
-  
-  let apiDocumentType = getApiDocumentType(doc.label);
-  
-  // 🔧 FIX: Apply same mapping fix for consistency
-  if (apiDocumentType === 'account_prepared_financials') {
-    apiDocumentType = 'financial_statements';
-  } else if (apiDocumentType === 'pnl_statement') {
-    apiDocumentType = 'profit_loss_statement';
+  // ✅ CRITICAL: Use central document type mapping for consistency
+  let apiDocumentType: string;
+  try {
+    const normalizedType = normalizeDocRequirement(doc.label);
+    const fallbackType = normalizedType || normalizeDocumentName(doc.label);
+    apiDocumentType = mapToBackendDocumentType(fallbackType || doc.label);
+  } catch (error) {
+    console.error(`❌ [CONSISTENCY-MAPPING-ERROR] Failed to map document type "${doc.label}":`, error);
+    // Fallback to avoid breaking the component
+    apiDocumentType = doc.label;
   }
   const documentFiles = uploadedFiles.filter(f => {
     // ✅ Ensure files stay bound to correct category based on document_type field from server
@@ -394,17 +395,22 @@ function UnifiedDocumentUploadCard({
     if (e.target.files) {
       const files = Array.from(e.target.files);
       
-      // Use canonical document normalization for API mapping
-      const normalizedType = normalizeDocRequirement(doc.label);
-      let category = normalizedType || getApiCategory(doc.label);
-      
-      // 🔧 FIX: Map specific document types to staff backend enum values
-      if (category === 'account_prepared_financials') {
-        category = 'financial_statements';
-        console.log(`🔧 [MAPPING-FIX] Mapped account_prepared_financials → financial_statements`);
-      } else if (category === 'pnl_statement') {
-        category = 'profit_loss_statement';
-        console.log(`🔧 [MAPPING-FIX] Mapped pnl_statement → profit_loss_statement`);
+      // 🔧 CRITICAL: Use central document type mapping with error handling
+      let category: string;
+      try {
+        const normalizedType = normalizeDocRequirement(doc.label);
+        const fallbackType = normalizedType || getApiCategory(doc.label);
+        category = mapToBackendDocumentType(fallbackType || doc.label);
+        
+        console.log(`🔧 [CENTRAL-MAPPING] Document "${doc.label}" mapped to backend type: "${category}"`);
+      } catch (error) {
+        console.error(`❌ [MAPPING-ERROR] Failed to map document type "${doc.label}":`, error);
+        toast({
+          title: "Document Type Error",
+          description: `Unable to process document type: ${doc.label}. Please contact support.`,
+          variant: "destructive",
+        });
+        return;
       }
       
       // 🧪 DEBUG: Enhanced logging for equipment quote debugging

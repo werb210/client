@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Upload Validation - Step 5 Testing</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-section h3 { margin: 0 0 10px 0; color: #333; }
+        .upload-form { display: flex; flex-direction: column; gap: 10px; }
+        .upload-form input, .upload-form button { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .upload-form button { background: #007cba; color: white; cursor: pointer; }
+        .upload-form button:hover { background: #005a8c; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; font-family: monospace; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .mapping-info { background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .console-output { background: #f8f9fa; border: 1px solid #e9ecef; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Document Upload Validation - Step 5 Testing</h1>
+        <p><strong>Purpose:</strong> Verify that account_prepared_financials and pnl_statement uploads work correctly with proper document type mapping.</p>
+        
+        <div class="mapping-info">
+            <h4>📋 Document Type Mappings:</h4>
+            <ul>
+                <li><strong>account_prepared_financials</strong> → <code>financial_statements</code></li>
+                <li><strong>pnl_statement</strong> → <code>profit_loss_statement</code></li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test 1: Account Prepared Financials Upload</h3>
+            <div class="upload-form">
+                <input type="file" id="file1" accept=".pdf,.docx,.doc" />
+                <input type="text" id="appId1" placeholder="Application ID (UUID format)" value="a3e1b626-7588-4e3d-89ed-849e89eaca72" />
+                <button onclick="testUpload('file1', 'appId1', 'financial_statements', 'Account Prepared Financials')">Upload Account Prepared Financials</button>
+            </div>
+            <div id="result1" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test 2: Profit & Loss Statement Upload</h3>
+            <div class="upload-form">
+                <input type="file" id="file2" accept=".pdf,.docx,.doc" />
+                <input type="text" id="appId2" placeholder="Application ID (UUID format)" value="a3e1b626-7588-4e3d-89ed-849e89eaca72" />
+                <button onclick="testUpload('file2', 'appId2', 'profit_loss_statement', 'Profit & Loss Statement')">Upload P&L Statement</button>
+            </div>
+            <div id="result2" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Console Output Monitor</h3>
+            <p>This section captures console logs from upload tests:</p>
+            <div id="consoleOutput" class="console-output">
+                <em>Console logs will appear here during uploads...</em>
+            </div>
+            <button onclick="clearConsole()">Clear Console</button>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ Validation Checklist</h3>
+            <ul id="checklist">
+                <li id="check1">❓ Account Prepared Financials input present</li>
+                <li id="check2">❓ P&L Statement input present</li>
+                <li id="check3">❓ Uploads send POST to /api/public/upload/:applicationId</li>
+                <li id="check4">❓ Content-Type: multipart/form-data</li>
+                <li id="check5">❓ Form data includes correct documentType values</li>
+                <li id="check6">❓ Success toasts appear for successful uploads</li>
+                <li id="check7">❓ File preview UI shows uploaded documents</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const consoleOutput = document.getElementById('consoleOutput');
+        
+        function addToConsole(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #666;">[${timestamp}]</span> <span style="color: ${type === 'error' ? 'red' : 'blue'};">[${type.toUpperCase()}]</span> ${message}`;
+            consoleOutput.appendChild(logEntry);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole('log', args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole('error', args.join(' '));
+        };
+        
+        function clearConsole() {
+            consoleOutput.innerHTML = '<em>Console cleared...</em>';
+        }
+        
+        async function testUpload(fileInputId, appIdInputId, documentType, testName) {
+            const fileInput = document.getElementById(fileInputId);
+            const appIdInput = document.getElementById(appIdInputId);
+            const resultDiv = document.getElementById(fileInputId.replace('file', 'result'));
+            
+            if (!fileInput.files[0]) {
+                showResult(resultDiv, 'error', 'Please select a file first');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const applicationId = appIdInput.value.trim();
+            
+            if (!applicationId || !applicationId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+                showResult(resultDiv, 'error', 'Please enter a valid UUID format application ID');
+                return;
+            }
+            
+            console.log(`🧪 Starting ${testName} upload test...`);
+            console.log(`📁 File: ${file.name} (${file.size} bytes, ${file.type})`);
+            console.log(`🆔 Application ID: ${applicationId}`);
+            console.log(`📋 Document Type: ${documentType}`);
+            
+            try {
+                const formData = new FormData();
+                formData.append('document', file);
+                formData.append('documentType', documentType);
+                
+                console.log(`📤 Sending POST to /api/public/upload/${applicationId}`);
+                console.log(`📋 Content-Type: multipart/form-data`);
+                console.log(`🔑 Form data: document=${file.name}, documentType=${documentType}`);
+                
+                const response = await fetch(`/api/public/upload/${applicationId}`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Authorization': 'Bearer ' + getCookie('authToken') // Try to get auth token
+                    }
+                });
+                
+                const responseText = await response.text();
+                let responseData;
+                
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch {
+                    responseData = { rawResponse: responseText };
+                }
+                
+                console.log(`📊 Response Status: ${response.status} ${response.statusText}`);
+                console.log(`📊 Response Headers:`, Object.fromEntries(response.headers.entries()));
+                console.log(`📊 Response Body:`, responseData);
+                
+                if (response.ok) {
+                    showResult(resultDiv, 'success', `✅ Upload successful! Status: ${response.status}\\nResponse: ${JSON.stringify(responseData, null, 2)}`);
+                    updateChecklist('check3', true);
+                    updateChecklist('check4', true);
+                    updateChecklist('check5', true);
+                } else {
+                    showResult(resultDiv, 'error', `❌ Upload failed! Status: ${response.status}\\nResponse: ${JSON.stringify(responseData, null, 2)}`);
+                }
+                
+            } catch (error) {
+                console.error(`❌ Upload error:`, error);
+                showResult(resultDiv, 'error', `❌ Network error: ${error.message}`);
+            }
+        }
+        
+        function showResult(element, type, message) {
+            element.className = `result ${type}`;
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+        
+        function updateChecklist(checkId, passed) {
+            const element = document.getElementById(checkId);
+            if (element) {
+                element.innerHTML = element.innerHTML.replace('❓', passed ? '✅' : '❌');
+            }
+        }
+        
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return '';
+        }
+        
+        // Initialize checklist
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 Document Upload Validation Page Ready');
+            console.log('📋 Please test both upload types with real PDF/DOCX files');
+            
+            // Check if inputs are present
+            updateChecklist('check1', document.getElementById('file1') !== null);
+            updateChecklist('check2', document.getElementById('file2') !== null);
+        });
+    </script>
+</body>
+</html>

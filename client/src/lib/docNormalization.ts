@@ -3,6 +3,79 @@
  * Maps raw doc_requirements from lender products to canonical names
  */
 
+/**
+ * CRITICAL: Central Document Type Mapping for Staff Backend Compatibility
+ * Maps client-side document types to staff backend enum values
+ */
+export const DOCUMENT_TYPE_MAP: Record<string, string> = {
+  // Direct matches (backend compatible)
+  'void_cheque': 'void_cheque',
+  'bank_statements': 'bank_statements',
+  'government_id': 'government_id',
+  'business_license': 'business_license',
+  'financial_statements': 'financial_statements',
+  'profit_loss_statement': 'profit_loss_statement',
+  'balance_sheet': 'balance_sheet',
+  'cash_flow_statement': 'cash_flow_statement',
+  'tax_returns': 'tax_returns',
+  'accounts_receivable': 'accounts_receivable',
+  'accounts_payable': 'accounts_payable',
+  'personal_financial_statement': 'personal_financial_statement',
+  'business_plan': 'business_plan',
+  'equipment_quote': 'equipment_quote',
+  'sample_invoices': 'sample_invoices',
+  'supplier_agreement': 'supplier_agreement',
+  'driver_license': 'driver_license',
+  
+  // CRITICAL MAPPINGS: Client types → Backend types
+  'account_prepared_financials': 'financial_statements', // mapped
+  'pnl_statement': 'profit_loss_statement',              // mapped
+  'accountant_prepared_statements': 'financial_statements', // mapped
+  'void_pad': 'void_cheque',                             // mapped
+  'banking_info': 'void_cheque',                         // mapped
+  'invoice_summary': 'sample_invoices',                  // mapped
+  'ar_report': 'accounts_receivable',                    // mapped
+  'ap_report': 'accounts_payable',                       // mapped
+  'tax_return': 'tax_returns',                           // mapped
+  'bank_statement': 'bank_statements',                   // mapped
+  'drivers_license_front_back': 'driver_license',       // mapped
+  'id_verification': 'driver_license',                   // mapped
+  'voided_check': 'void_cheque',                         // mapped
+  'invoice_samples': 'sample_invoices',                  // mapped
+  'invoices': 'sample_invoices',                         // mapped
+  'receivables': 'accounts_receivable',                  // mapped
+  'payables': 'accounts_payable',                        // mapped
+};
+
+/**
+ * CRITICAL: Safe document type mapping with error handling
+ * Ensures all client types are mapped to valid backend types
+ */
+export function mapToBackendDocumentType(clientDocType: string): string {
+  if (!clientDocType || typeof clientDocType !== 'string') {
+    throw new Error(`Invalid document type: ${clientDocType}`);
+  }
+  
+  const normalizedInput = clientDocType.toLowerCase().trim();
+  const backendType = DOCUMENT_TYPE_MAP[normalizedInput];
+  
+  if (!backendType) {
+    console.error(`❌ [DOCUMENT-TYPE-ERROR] Unmapped document type: "${clientDocType}"`);
+    console.error(`❌ Available mappings:`, Object.keys(DOCUMENT_TYPE_MAP));
+    throw new Error(`Unmapped document type: ${clientDocType}. Please add mapping to DOCUMENT_TYPE_MAP.`);
+  }
+  
+  console.log(`🔧 [DOCUMENT-TYPE-MAP] "${clientDocType}" → "${backendType}"`);
+  return backendType;
+}
+
+/**
+ * Validate if a document type is supported
+ */
+export function isValidDocumentType(docType: string): boolean {
+  return docType in DOCUMENT_TYPE_MAP;
+}
+
 // Canonical document types (restricted set)
 export const CANONICAL_DOCUMENT_TYPES = [
   'bank_statements',
