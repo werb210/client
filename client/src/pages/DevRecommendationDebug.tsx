@@ -74,7 +74,8 @@ export default function DevRecommendationDebug() {
       purposeOfFunds: testInput.purposeOfFunds
     };
     
-    const advancedInput: RecommendationInput = {
+    // Run advanced recommendation engine
+    const recommendationInput: RecommendationInput = {
       country: testInput.country,
       amountRequested: testInput.amountRequested,
       category: testInput.whatAreYouLookingFor,
@@ -86,11 +87,45 @@ export default function DevRecommendationDebug() {
       // Run both original and advanced analysis
       const [originalResults, advancedResults] = await Promise.all([
         debugRecommendationFiltering(products, debugInput),
-        Promise.resolve(getAdvancedRecommendations(products, advancedInput, filteringOptions))
+        Promise.resolve(getAdvancedRecommendations(products, recommendationInput, filteringOptions))
       ]);
       
       setDebugResults(originalResults);
       setAdvancedResults(advancedResults);
+      
+      // Send recommendation log to analytics if we have results
+      if (advancedResults.qualifiedProducts.length > 0) {
+        try {
+          const { sendRecommendationLog } = await import('@/lib/recommendationDebugger');
+          await sendRecommendationLog({
+            applicantId: localStorage.getItem('applicationId') || 'debug-test-session',
+            recommendedLenders: advancedResults.qualifiedProducts.map(p => ({
+              productId: p.productId,
+              productName: p.name,
+              lenderName: p.lenderName,
+              category: p.category,
+              country: p.country,
+              score: p.matchScore
+            })),
+            rejectedLenders: advancedResults.filteredOutProducts.map(p => ({
+              productId: p.productId,
+              productName: p.name,
+              lenderName: p.lenderName,
+              category: p.category,
+              country: p.country,
+              failureReasons: p.rejectionReasons
+            })),
+            filtersApplied: [
+              `Country: ${testInput.country}`,
+              `Amount: ${testInput.amountRequested.toLocaleString()}`,
+              `Category: ${testInput.whatAreYouLookingFor}`,
+              `Purpose: ${testInput.purposeOfFunds}`
+            ]
+          });
+        } catch (analyticsError) {
+          console.warn('Analytics logging failed:', analyticsError);
+        }
+      }
     } catch (error) {
       console.error('Debug test failed:', error);
     } finally {
@@ -365,6 +400,12 @@ export default function DevRecommendationDebug() {
                   <XCircle className="w-4 h-4" />
                   <span>Failed ({debugResults.failedProducts.length})</span>
                 </TabsTrigger>
+                {advancedResults && (
+                  <TabsTrigger value="scoring" className="flex items-center space-x-2">
+                    <BarChart3 className="w-4 h-4" />
+                    <span>Advanced Scoring ({advancedResults.qualifiedProducts.length})</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="matched" className="space-y-3">
@@ -425,6 +466,120 @@ export default function DevRecommendationDebug() {
                   </div>
                 ))}
               </TabsContent>
+
+              {/* Advanced Scoring Tab */}
+              {advancedResults && (
+                <TabsContent value="scoring" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {advancedResults.qualifiedProducts.length}
+                      </div>
+                      <div className="text-sm text-blue-800">Qualified Products</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-gray-600">
+                        {advancedResults.executionTime.toFixed(2)}ms
+                      </div>
+                      <div className="text-sm text-gray-800">Execution Time</div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm border-collapse border border-gray-200">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="border border-gray-200 px-2 py-1 text-left">Product</th>
+                          <th className="border border-gray-200 px-2 py-1 text-center">Score</th>
+                          <th className="border border-gray-200 px-2 py-1 text-center">Confidence</th>
+                          <th className="border border-gray-200 px-2 py-1 text-center">Category</th>
+                          <th className="border border-gray-200 px-2 py-1 text-center">Amount</th>
+                          <th className="border border-gray-200 px-2 py-1 text-center">Country</th>
+                          <th className="border border-gray-200 px-2 py-1 text-center">Interest</th>
+                          <th className="border border-gray-200 px-2 py-1 text-center">Top Lender</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {advancedResults.qualifiedProducts.map((product, index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="border border-gray-200 px-2 py-1">
+                              <div className="font-medium">{product.name}</div>
+                              <div className="text-xs text-gray-500">{product.lenderName}</div>
+                            </td>
+                            <td className="border border-gray-200 px-2 py-1 text-center">
+                              <Badge 
+                                className={
+                                  product.matchScore >= 70 ? 'bg-green-100 text-green-800' :
+                                  product.matchScore >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }
+                              >
+                                {product.matchScore}
+                              </Badge>
+                            </td>
+                            <td className="border border-gray-200 px-2 py-1 text-center">
+                              <Badge 
+                                variant={
+                                  product.confidenceLevel === 'high' ? 'default' :
+                                  product.confidenceLevel === 'medium' ? 'secondary' : 'outline'
+                                }
+                              >
+                                {product.confidenceLevel}
+                              </Badge>
+                            </td>
+                            <td className="border border-gray-200 px-2 py-1 text-center">
+                              <span className="text-xs">
+                                {product.scoreBreakdown.categoryMatch}pts
+                              </span>
+                            </td>
+                            <td className="border border-gray-200 px-2 py-1 text-center">
+                              <span className="text-xs">
+                                {product.scoreBreakdown.amountFit}pts
+                              </span>
+                            </td>
+                            <td className="border border-gray-200 px-2 py-1 text-center">
+                              <span className="text-xs">
+                                {product.scoreBreakdown.countryPreference}pts
+                              </span>
+                            </td>
+                            <td className="border border-gray-200 px-2 py-1 text-center">
+                              <span className="text-xs">
+                                {product.scoreBreakdown.interestRateBonus}pts
+                              </span>
+                            </td>
+                            <td className="border border-gray-200 px-2 py-1 text-center">
+                              <span className="text-xs">
+                                {product.scoreBreakdown.topLenderBonus}pts
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {advancedResults.filteredOutProducts.length > 0 && (
+                    <div>
+                      <h3 className="font-medium mb-2 text-red-600">Filtered Out Products</h3>
+                      <div className="space-y-2">
+                        {advancedResults.filteredOutProducts.slice(0, 5).map((product, index) => (
+                          <div key={index} className="p-2 border rounded bg-red-50 text-sm">
+                            <div className="font-medium">{product.name} ({product.lenderName})</div>
+                            <div className="text-xs text-red-600">
+                              Rejected: {product.rejectionReasons.join(', ')}
+                            </div>
+                          </div>
+                        ))}
+                        {advancedResults.filteredOutProducts.length > 5 && (
+                          <div className="text-xs text-gray-500 text-center">
+                            ... and {advancedResults.filteredOutProducts.length - 5} more
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+              )}
             </Tabs>
           </CardContent>
         </Card>

@@ -18,7 +18,11 @@ export interface LenderProduct {
 }
 
 export interface ScoredProduct extends LenderProduct {
-  score: number;
+  productId: string;
+  matchScore: number;
+  rejectionReasons: string[];
+  matchedFilters: string[];
+  confidenceLevel: 'high' | 'medium' | 'low';
   scoreBreakdown: {
     baseScore: number;
     categoryMatch: number;
@@ -216,9 +220,26 @@ function scoreProduct(
     });
   }
   
+  // Determine confidence level based on score
+  const confidenceLevel: 'high' | 'medium' | 'low' = 
+    totalScore >= 70 ? 'high' : 
+    totalScore >= 50 ? 'medium' : 'low';
+
+  // Generate matched filters list
+  const matchedFilters: string[] = [];
+  if (scoreBreakdown.countryPreference > 0) matchedFilters.push(`Country: ${input.country}`);
+  if (scoreBreakdown.categoryMatch > 0) matchedFilters.push(`Category: ${input.category}`);
+  if (scoreBreakdown.amountFit > 0) matchedFilters.push(`Amount: ${input.amountRequested.toLocaleString()}`);
+  if (input.purposeOfFunds) matchedFilters.push(`Purpose: ${input.purposeOfFunds}`);
+
   return {
     ...product,
-    score: totalScore,
+    productId: product.id,
+    matchScore: totalScore,
+    rejectionReasons: disqualificationReasons,
+    matchedFilters,
+    confidenceLevel,
+    score: totalScore, // Keep backwards compatibility
     scoreBreakdown,
     matchReasons,
     disqualificationReasons: disqualificationReasons.length > 0 ? disqualificationReasons : undefined
