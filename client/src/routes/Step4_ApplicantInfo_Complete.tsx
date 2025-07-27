@@ -600,6 +600,13 @@ export default function Step4ApplicantInfoComplete() {
         // 🟨 STEP 4: Log Step 4 and Step 5 IDs for matching - REPLIT MUST DO
         console.log("Step 4 ID:", result.applicationId || result.id);
         
+        // ✅ CLIENT APPLICATION FIX 4: Document Upload Follow-up ID Persistence
+        const applicationId = result.applicationId || result.id;
+        if (applicationId) {
+          localStorage.setItem("lastApplicationId", applicationId);
+          console.log("💾 Saved lastApplicationId to localStorage:", applicationId);
+        }
+        
         // ✅ A. Step 4 (Application Submission) - SUBMISSION RELIABILITY CHECKLIST
         console.log("✅ Step 4 submission succeeded:", result.applicationId || result.id);
         console.log("✅ Application created:", result);

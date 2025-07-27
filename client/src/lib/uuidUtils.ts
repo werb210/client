@@ -25,13 +25,23 @@ export const isValidUUID = (id: string): boolean => {
 
 /**
  * Get application ID from localStorage with validation
+ * ✅ CLIENT APPLICATION FIX 4: Check both 'applicationId' and 'lastApplicationId'
  */
 export const getStoredApplicationId = (): string | null => {
-  const stored = localStorage.getItem('applicationId');
-  if (!stored || !isValidUUID(stored)) {
-    return null;
+  // First check primary applicationId
+  let stored = localStorage.getItem('applicationId');
+  if (stored && isValidUUID(stored)) {
+    return stored;
   }
-  return stored;
+  
+  // ✅ Fallback to lastApplicationId for document upload follow-up
+  stored = localStorage.getItem('lastApplicationId');
+  if (stored && isValidUUID(stored)) {
+    console.log('💾 [UUID] Using lastApplicationId fallback:', stored);
+    return stored;
+  }
+  
+  return null;
 };
 
 /**
