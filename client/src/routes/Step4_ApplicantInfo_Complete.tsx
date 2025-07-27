@@ -310,12 +310,18 @@ export default function Step4ApplicantInfoComplete() {
         }
       }
 
-      // 🚨 CRITICAL FIX: Complete Step 3 business payload with all fields
+      // 🚨 CRITICAL FIX: Complete Step 3 business payload with all required fields
       const step3 = {
         // Core business identity
         operatingName: businessFields.operatingName || '',
         legalName: businessFields.legalName || businessFields.operatingName || '',
         businessName: businessFields.operatingName || businessFields.legalName || businessFields.businessName || '',
+        
+        // ✅ REQUIRED FIELD: businessType (mapped from businessStructure)
+        businessType: businessFields.businessStructure || '',
+        
+        // ✅ REQUIRED FIELD: industry (from Step 1 or Step 3)
+        industry: businessFields.industry || state.step1?.industry || '',
         
         // Business address
         businessAddress: businessFields.businessStreetAddress || businessFields.businessAddress || '',
@@ -328,14 +334,28 @@ export default function Step4ApplicantInfoComplete() {
         // Contact information
         businessPhone: businessFields.businessPhone || '',
         businessWebsite: businessFields.businessWebsite || '',
+        website: businessFields.businessWebsite || '', // Alternative field name
         
         // Business details
         businessStructure: businessFields.businessStructure || '',
         businessStartDate: businessFields.businessStartDate || '',
+        
+        // ✅ REQUIRED FIELD: yearsInBusiness (calculated from businessStartDate)
+        yearsInBusiness: businessFields.businessStartDate ? 
+          Math.max(0, new Date().getFullYear() - new Date(businessFields.businessStartDate).getFullYear()) : 0,
+        
+        // Employee information
         numberOfEmployees: businessFields.employeeCount || businessFields.numberOfEmployees || 0,
         employeeCount: businessFields.employeeCount || businessFields.numberOfEmployees || 0,
+        
+        // Revenue information
         annualRevenue: businessFields.estimatedYearlyRevenue || businessFields.annualRevenue || 0,
-        estimatedYearlyRevenue: businessFields.estimatedYearlyRevenue || businessFields.annualRevenue || 0
+        estimatedYearlyRevenue: businessFields.estimatedYearlyRevenue || businessFields.annualRevenue || 0,
+        
+        // ✅ REQUIRED FIELD: monthlyRevenue (calculated from annual revenue)
+        monthlyRevenue: businessFields.estimatedYearlyRevenue ? 
+          Math.round(businessFields.estimatedYearlyRevenue / 12) : 
+          (businessFields.annualRevenue ? Math.round(businessFields.annualRevenue / 12) : 0)
       };
 
       // 🚨 CRITICAL FIX: Complete Step 4 contact payload with all fields
@@ -423,8 +443,15 @@ export default function Step4ApplicantInfoComplete() {
       });
       console.log("📊 Step 3 (business details):", {
         businessName: step3.businessName,
+        businessType: step3.businessType,
+        industry: step3.industry,
+        website: step3.website,
+        yearsInBusiness: step3.yearsInBusiness,
+        numberOfEmployees: step3.numberOfEmployees,
+        businessAddress: step3.businessAddress,
+        annualRevenue: step3.annualRevenue,
+        monthlyRevenue: step3.monthlyRevenue,
         operatingName: step3.operatingName,
-        legalName: step3.legalName,
         businessPhone: step3.businessPhone,
         businessState: step3.businessState,
         fieldCount: Object.keys(step3).length
