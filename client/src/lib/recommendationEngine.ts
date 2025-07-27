@@ -118,16 +118,9 @@ function matchesCategory(productCategory: string, requestedCategory: string): bo
   };
   
   // Handle plural forms - Convert "Term Loans" to "Term Loan" for matching
+  // Use .toLowerCase().replace(/s$/, '') as specified by user
   const normalizeCategory = (category: string): string => {
-    const lower = category.toLowerCase();
-    if (lower.endsWith('s') && lower !== 'business') {
-      const singular = lower.slice(0, -1);
-      // Check if singular form exists in our aliases
-      if (aliases[singular]) {
-        return singular;
-      }
-    }
-    return lower;
+    return category.toLowerCase().replace(/s$/, '');
   };
   
   const normalizedRequested = normalizeCategory(requestedCategory);
@@ -160,7 +153,7 @@ function scoreProduct(
   const matchReasons: string[] = [];
   const disqualificationReasons: string[] = [];
   
-  // 1. Category matching (0-20 points) - Reduced from 30 to match user expectations
+  // 1. Category matching (0-20 points) - USER SPECIFIED: +20 points for category match
   if (matchesCategory(product.category, input.category)) {
     scoreBreakdown.categoryMatch = 20;
     matchReasons.push(`Category match: ${product.category}`);
@@ -182,10 +175,13 @@ function scoreProduct(
     disqualificationReasons.push(`Amount out of range: $${input.amountRequested.toLocaleString()} not in $${product.amount_min.toLocaleString()}-$${product.amount_max.toLocaleString()}`);
   }
   
-  // 3. Country preference (0-30 points) - Increased from 15 to match user expectations
-  const normalizedCountry = input.country === 'USA' ? 'USA' : 'Canada';  
-  const productCountry = product.country === 'US' || product.country === 'USA' ? 'USA' : 
-                        product.country === 'CA' || product.country === 'Canada' ? 'Canada' : 
+  // 3. Country preference (0-30 points) - USER SPECIFIED: +30 points for country match
+  // Normalize "US" / "USA" and "CA" / "Canada" consistently
+  const normalizedCountry = (input.country === 'US' || input.country === 'USA') ? 'USA' : 
+                           (input.country === 'CA' || input.country === 'Canada') ? 'Canada' : 
+                           input.country;
+  const productCountry = (product.country === 'US' || product.country === 'USA') ? 'USA' : 
+                        (product.country === 'CA' || product.country === 'Canada') ? 'Canada' : 
                         product.country;
   
   if (productCountry === normalizedCountry) {

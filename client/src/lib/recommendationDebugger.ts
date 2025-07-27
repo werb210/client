@@ -428,10 +428,11 @@ async function sendRecommendationLog(payload: RecommendationLogPayload): Promise
     if (response.ok) {
       console.log('✅ Recommendation log sent successfully');
     } else {
-      console.warn('⚠️ Failed to send recommendation log:', response.status, response.statusText);
+      console.warn('⚠️ Failed to send recommendation log (non-blocking):', response.status, response.statusText);
     }
   } catch (error) {
-    console.warn('⚠️ Recommendation log failed (non-critical):', error instanceof Error ? error.message : error);
+    console.warn('⚠️ Analytics logging failed (non-critical, debug panel continues):', error instanceof Error ? error.message : error);
     // Don't throw - analytics failure shouldn't break debug functionality
+    // USER SPECIFIED: Show warning if analytics fail (but not hard error)
   }
 }
