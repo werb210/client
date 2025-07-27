@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "timestamp": "2025-07-27T21:21:44.830Z",
+      "totalTests": 22,
+      "successCount": 22,
+      "failureCount": 0,
+      "successRate": "100.0%",
+      "failures": [],
+      "criticalCategoriesStatus": [
+        {
+          "category": "profit_and_loss",
+          "working": true
+        },
+        {
+          "category": "accountant_financials",
+          "working": true
+        },
+        {
+          "category": "void_cheque",
+          "working": true
+        },
+        {
+          "category": "personal_financials",
+          "working": true
+        }
+      ]
+    }
+  ],
+  "alertsRaised": 0,
+  "consecutiveFailures": 0,
+  "lastRun": "2025-07-27T21:21:44.830Z"
+}

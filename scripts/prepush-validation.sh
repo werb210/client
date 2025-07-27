@@ -1,22 +1,30 @@
 #!/bin/bash
 
-# Pre-push Validation Script
-# Runs document type mapping validation before git push
+# 🔒 PRE-PUSH VALIDATION SCRIPT
+# Git pre-push hook to prevent invalid document enum commits
+# Usage: Add to .git/hooks/pre-push
 
-echo "🔍 PRE-PUSH VALIDATION"
-echo "============================================================"
+set -e
 
-# Validate document type mappings
-echo "📋 Checking document type mappings..."
-tsx scripts/validateMappings.ts
+echo "🔒 PRE-PUSH DOCUMENT ENUM VALIDATION"
+echo "===================================="
 
-# Check if validation passed
+# Validate document enums before push
+echo "📋 Checking document enum consistency..."
+tsx scripts/validateDocumentEnums.ts
+
 if [ $? -ne 0 ]; then
-    echo "❌ PRE-PUSH VALIDATION FAILED"
-    echo "Fix document type mapping issues before pushing"
+    echo "❌ PUSH BLOCKED: Document enum validation failed"
+    echo ""
+    echo "🔧 ACTION REQUIRED:"
+    echo "1. Fix document enum inconsistencies"
+    echo "2. Run: tsx scripts/validateDocumentEnums.ts" 
+    echo "3. Commit fixes and try push again"
+    echo ""
     exit 1
 fi
 
-echo "✅ All pre-push validations passed"
-echo "🚀 Ready to push to repository"
-echo "============================================================"
+echo "✅ Document enum validation passed"
+echo "🚀 Push allowed - all enums consistent"
+
+exit 0

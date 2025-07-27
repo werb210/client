@@ -17,17 +17,17 @@ export const SUPPORTED_DOCUMENT_TYPES = [
   'collateral_docs',
   'drivers_license_front_back',
   'equipment_quote',
-  'financial_statements',
+  'accountant_financials',
   'invoice_samples',
   'other',
-  'personal_financial_statement',
+  'personal_financials',
   'personal_guarantee',
-  'profit_loss_statement',
+  'profit_and_loss',
   'proof_of_identity',
   'signed_application',
   'supplier_agreement',
   'tax_returns',
-  'void_pad'
+  'void_cheque'
 ] as const;
 
 export type DocumentType = typeof SUPPORTED_DOCUMENT_TYPES[number];
@@ -45,17 +45,17 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   'collateral_docs': 'Collateral Documents',
   'drivers_license_front_back': 'Driver\'s License (Front & Back)',
   'equipment_quote': 'Equipment Quote',
-  'financial_statements': 'Accountant Prepared Financial Statements',
+  'accountant_financials': 'Accountant Prepared Financial Statements',
   'invoice_samples': 'Invoice Samples',
   'other': 'Other Documents',
-  'personal_financial_statement': 'Personal Financial Statement',
+  'personal_financials': 'Personal Financial Statement',
   'personal_guarantee': 'Personal Guarantee',
-  'profit_loss_statement': 'Profit & Loss Statement',
+  'profit_and_loss': 'Profit & Loss Statement',
   'proof_of_identity': 'Proof of Identity',
   'signed_application': 'Signed Application',
   'supplier_agreement': 'Supplier Agreement',
   'tax_returns': 'Tax Returns',
-  'void_pad': 'Voided Check'
+  'void_cheque': 'Voided Check'
 };
 
 // Document type descriptions for user guidance
@@ -71,17 +71,17 @@ export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
   'collateral_docs': 'Documentation for assets securing the loan',
   'drivers_license_front_back': 'Government-issued photo identification',
   'equipment_quote': 'Quote or invoice for equipment financing',
-  'financial_statements': 'Professional financial statements prepared by a certified accountant (P&L, Balance Sheet, Cash Flow)',
+  'accountant_financials': 'Professional financial statements prepared by a certified accountant (P&L, Balance Sheet, Cash Flow)',
   'invoice_samples': 'Sample invoices showing billing patterns',
   'other': 'Additional documents as requested',
-  'personal_financial_statement': 'Personal assets and liabilities statement',
+  'personal_financials': 'Personal assets and liabilities statement',
   'personal_guarantee': 'Personal guarantee for business debt',
-  'profit_loss_statement': 'Statement of revenues and expenses',
+  'profit_and_loss': 'Statement of revenues and expenses',
   'proof_of_identity': 'Government-issued identification documents',
   'signed_application': 'Completed and signed loan application',
   'supplier_agreement': 'Contracts with key suppliers',
   'tax_returns': 'Business tax returns (typically 2-3 years)',
-  'void_pad': 'Voided check for bank account verification'
+  'void_cheque': 'Voided check for bank account verification'
 };
 
 // Document quantity requirements
@@ -97,17 +97,17 @@ export const DOCUMENT_QUANTITIES: Record<DocumentType, number> = {
   'collateral_docs': 1,
   'drivers_license_front_back': 2, // Front and back
   'equipment_quote': 1,
-  'financial_statements': 3, // P&L, Balance Sheet, Cash Flow
+  'accountant_financials': 3, // P&L, Balance Sheet, Cash Flow
   'invoice_samples': 3, // Sample invoices
   'other': 1,
-  'personal_financial_statement': 1,
+  'personal_financials': 1,
   'personal_guarantee': 1,
-  'profit_loss_statement': 1,
+  'profit_and_loss': 1,
   'proof_of_identity': 1,
   'signed_application': 1,
   'supplier_agreement': 1,
   'tax_returns': 2, // Typically 2-3 years
-  'void_pad': 1
+  'void_cheque': 1
 };
 
 // Utility functions
