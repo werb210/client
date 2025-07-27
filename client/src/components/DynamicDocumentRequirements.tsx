@@ -195,7 +195,14 @@ function UnifiedDocumentUploadCard({
   // ✅ PATCH 2: Use shared normalizeDocumentName function for consistent mapping
   const getApiDocumentType = normalizeDocumentName;
   
-  const apiDocumentType = getApiDocumentType(doc.label);
+  let apiDocumentType = getApiDocumentType(doc.label);
+  
+  // 🔧 FIX: Apply same mapping fix for consistency
+  if (apiDocumentType === 'account_prepared_financials') {
+    apiDocumentType = 'financial_statements';
+  } else if (apiDocumentType === 'pnl_statement') {
+    apiDocumentType = 'profit_loss_statement';
+  }
   const documentFiles = uploadedFiles.filter(f => {
     // ✅ Ensure files stay bound to correct category based on document_type field from server
     const fileDocType = f.documentType?.toLowerCase() || '';
@@ -389,7 +396,16 @@ function UnifiedDocumentUploadCard({
       
       // Use canonical document normalization for API mapping
       const normalizedType = normalizeDocRequirement(doc.label);
-      const category = normalizedType || getApiCategory(doc.label);
+      let category = normalizedType || getApiCategory(doc.label);
+      
+      // 🔧 FIX: Map specific document types to staff backend enum values
+      if (category === 'account_prepared_financials') {
+        category = 'financial_statements';
+        console.log(`🔧 [MAPPING-FIX] Mapped account_prepared_financials → financial_statements`);
+      } else if (category === 'pnl_statement') {
+        category = 'profit_loss_statement';
+        console.log(`🔧 [MAPPING-FIX] Mapped pnl_statement → profit_loss_statement`);
+      }
       
       // 🧪 DEBUG: Enhanced logging for equipment quote debugging
       console.log(`🧪 [DEBUG] Document label: "${doc.label}"`);
