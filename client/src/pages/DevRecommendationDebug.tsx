@@ -543,7 +543,7 @@ export default function DevRecommendationDebug() {
                         </tr>
                       </thead>
                       <tbody>
-                        {advancedResults.qualifiedProducts.map((product, index) => (
+                        {advancedResults.qualifiedProducts.map((product: any, index: number) => (
                           <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                             <td className="border border-gray-200 px-2 py-1">
                               <div className="font-medium">{product.name}</div>
@@ -605,7 +605,7 @@ export default function DevRecommendationDebug() {
                     <div>
                       <h3 className="font-medium mb-2 text-red-600">Filtered Out Products</h3>
                       <div className="space-y-2">
-                        {advancedResults.filteredOutProducts.slice(0, 5).map((product, index) => (
+                        {advancedResults.filteredOutProducts.slice(0, 5).map((product: any, index: number) => (
                           <div key={index} className="p-2 border rounded bg-red-50 text-sm">
                             <div className="font-medium">{product.name} ({product.lenderName})</div>
                             <div className="text-xs text-red-600">
