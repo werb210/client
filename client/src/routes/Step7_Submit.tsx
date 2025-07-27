@@ -53,6 +53,7 @@ export default function Step7Submit() {
 
   // Get uploaded files from state
   const uploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
+  const bypassDocuments = state.step5DocumentUpload?.bypassDocuments || false;
   
   // Calculate completion status
   const completedSteps = [
@@ -60,7 +61,7 @@ export default function Step7Submit() {
     state.step2Completed ? 'Product Recommendations' : null,
     state.step3Completed ? 'Business Details' : null,
     state.step4Completed ? 'Applicant Information' : null,
-    uploadedFiles.length > 0 ? 'Document Upload' : null,
+    (uploadedFiles.length > 0 || bypassDocuments) ? (bypassDocuments ? 'Document Upload (Bypassed)' : 'Document Upload') : null,
     state.step6Signature?.signedAt ? 'Electronic Signature' : null
   ].filter(Boolean);
 
@@ -128,7 +129,8 @@ export default function Step7Submit() {
         
         // Document metadata
         documentCount: uploadedFiles.length,
-        documentTypes: uploadedFiles.map(f => f.documentType).join(', ')
+        documentTypes: uploadedFiles.map(f => f.documentType).join(', '),
+        bypassDocuments: bypassDocuments
       };
       
       // ✅ USER REQUIREMENT: Add comprehensive submission logging
@@ -138,6 +140,7 @@ export default function Step7Submit() {
       console.log("📤 Applicant Name:", `${applicationData.step4?.firstName || ''} ${applicationData.step4?.lastName || ''}`.trim() || 'NOT FOUND');
       console.log("📤 Application ID:", applicationData.applicationId);
       console.log("📤 Document Count:", uploadedFiles.length);
+      console.log("📤 Document Upload Bypassed:", bypassDocuments);
       
       formData.append('applicationData', JSON.stringify(applicationData));
       

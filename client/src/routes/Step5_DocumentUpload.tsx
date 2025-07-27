@@ -539,10 +539,22 @@ export default function Step5DocumentUpload() {
 
   const handleBypass = async () => {
     try {
-      // ✅ TASK 1: Set bypass flag in local form state as instructed
-      dispatch({ 
-        type: "UPDATE_FORM_DATA", 
-        payload: { bypassDocuments: true } 
+      console.log('🚀 [STEP5] Starting document bypass process...');
+      
+      // ✅ CRITICAL FIX: Set bypass flag in step5DocumentUpload structure 
+      dispatch({
+        type: 'UPDATE_FORM_DATA',
+        payload: {
+          step5DocumentUpload: {
+            ...state.step5DocumentUpload,
+            files,
+            uploadedFiles,
+            bypassDocuments: true,
+            completed: true,
+            allRequirementsComplete: false,
+            totalRequirements
+          }
+        }
       });
 
       // ✅ TASK 1: Persist bypass flag to backend if sync is enabled
@@ -563,10 +575,17 @@ export default function Step5DocumentUpload() {
         }
       }
 
-      // ✅ TASK 1: Move user to Step 6 (do NOT trigger finalization here)
+      toast({
+        title: "Document Upload Bypassed",
+        description: "You can upload required documents later. Proceeding to electronic signature.",
+        variant: "default"
+      });
+
+      console.log('✅ [STEP5] Bypass complete - moving to Step 6');
       setLocation('/apply/step-6');
+      
     } catch (error) {
-      logger.error('Failed to bypass documents:', error);
+      console.error('❌ [STEP5] Failed to bypass documents:', error);
       toast({
         title: "Error",
         description: "Failed to proceed without documents. Please try again.",

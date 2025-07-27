@@ -75,19 +75,38 @@ export default function Step6_TypedSignature() {
         agreementsCount: Object.values(authData.agreements).filter(Boolean).length
       });
 
-      // 🟨 TASK 2: Block finalization if no document evidence found - REPLIT MUST DO
+      // ✅ TASK 2: Check document evidence but allow bypass if set in Step 5
       const hasUploads =
         (state.step5DocumentUpload?.uploadedFiles?.length ?? 0) > 0 ||
         (state.step5DocumentUpload?.files?.length ?? 0) > 0;
+      
+      const bypassDocuments = state.step5DocumentUpload?.bypassDocuments || false;
 
-      if (!hasUploads) {
-        console.warn("🚨 BLOCKING FINALIZATION — No upload evidence found");
+      console.log('🔍 [STEP6] Document validation check:', {
+        hasUploads,
+        bypassDocuments,
+        uploadedFilesCount: state.step5DocumentUpload?.uploadedFiles?.length || 0,
+        filesCount: state.step5DocumentUpload?.files?.length || 0
+      });
+
+      if (!hasUploads && !bypassDocuments) {
+        console.warn("🚨 BLOCKING FINALIZATION — No upload evidence found and no bypass set");
         toast({
           title: "Upload Required",
-          description: "Please upload at least one document before proceeding.",
+          description: "Please upload at least one document or use 'Proceed without Required Documents' in Step 5.",
           variant: "destructive"
         });
+        setLocation('/apply/step-5');
         return;
+      }
+
+      if (bypassDocuments) {
+        console.log("✅ [STEP6] Document bypass enabled - allowing finalization without uploads");
+        toast({
+          title: "Documents Bypassed",
+          description: "Proceeding without required documents as requested.",
+          variant: "default"
+        });
       }
 
       // Check for retry queue items and show notification

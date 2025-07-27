@@ -39,7 +39,7 @@ export async function getDocumentRequirementsAggregation(
   requestedAmount: number
 ): Promise<DocumentAggregationResult> {
   
-  // Starting document aggregation (logging disabled)
+  console.log(`🔍 [AGGREGATION] Starting document aggregation for: "${selectedCategory}" in ${selectedCountry} for $${requestedAmount.toLocaleString()}`);
   
   try {
     // Fetch all lender products from staff API
@@ -51,56 +51,82 @@ export async function getDocumentRequirementsAggregation(
     
     const data = await response.json();
     
-    // API response received (logging disabled)
+    console.log(`📊 [AGGREGATION] API response received, processing data...`);
     
     // Handle both direct array and wrapped response formats
     let allProducts;
     if (Array.isArray(data)) {
-      // Direct array response (server extracts data.products for us)
       allProducts = data;
-      // Direct array response received
+      console.log(`📦 [AGGREGATION] Direct array response: ${allProducts.length} products`);
     } else if (data.success && Array.isArray(data.products)) {
-      // Wrapped response format
       allProducts = data.products;
-      // Wrapped response received
+      console.log(`📦 [AGGREGATION] Wrapped response: ${allProducts.length} products`);
     } else {
       console.error('❌ [AGGREGATION] Invalid API response format:', data);
       throw new Error('Invalid API response format');
     }
-    // Products loaded from staff API
+    
+    // ✅ CRITICAL FIX: Map Step 2 category names to backend category names
+    const categoryMappings: Record<string, string[]> = {
+      'Working Capital': ['Working Capital', 'working_capital', 'Working Capital Loan'],
+      'Term Loan': ['Term Loan', 'term_loan', 'Term Loans'],
+      'Business Line of Credit': ['Line of Credit', 'line_of_credit', 'Business Line of Credit', 'LOC'],
+      'Equipment Financing': ['Equipment Financing', 'equipment_financing', 'Equipment Finance'],
+      'Invoice Factoring': ['Invoice Factoring', 'invoice_factoring', 'Factoring'],
+      'Purchase Order Financing': ['Purchase Order Financing', 'purchase_order_financing', 'PO Financing'],
+      'Asset-Based Lending': ['Asset-Based Lending', 'asset_based_lending', 'ABL']
+    };
+    
+    const mappedCategories = categoryMappings[selectedCategory] || [selectedCategory];
+    console.log(`🗂️ [AGGREGATION] Category "${selectedCategory}" mapped to: [${mappedCategories.join(', ')}]`);
     
     // Normalize country format
     const normalizedCountry = selectedCountry === 'canada' || selectedCountry === 'Canada' ? 'CA' :
                              selectedCountry === 'united-states' || selectedCountry === 'United States' ? 'US' :
                              selectedCountry;
     
+    console.log(`🌍 [AGGREGATION] Country normalized: "${selectedCountry}" → "${normalizedCountry}"`);
+    
     // ✅ STEP 1: Filter all local lender products that match criteria
     const eligibleProducts = allProducts.filter((product: any) => {
-      // Category match
-      const categoryMatch = product.category === selectedCategory;
+      // Category match - use flexible mapping
+      const categoryMatch = mappedCategories.some(cat => 
+        product.category === cat || 
+        product.category?.toLowerCase() === cat.toLowerCase() ||
+        product.productType === cat ||
+        product.type === cat
+      );
       
       // Country match
-      const countryMatch = product.country === normalizedCountry;
+      const countryMatch = product.country === normalizedCountry || 
+                          product.geography === normalizedCountry ||
+                          product.region === normalizedCountry;
       
       // Amount range match
-      const minAmount = product.min_amount || product.amountMin || 0;
-      const maxAmount = product.max_amount || product.amountMax || Number.MAX_SAFE_INTEGER;
+      const minAmount = product.min_amount || product.amountMin || product.amount_min || 0;
+      const maxAmount = product.max_amount || product.amountMax || product.amount_max || Number.MAX_SAFE_INTEGER;
       const amountMatch = minAmount <= requestedAmount && maxAmount >= requestedAmount;
       
       const isEligible = categoryMatch && countryMatch && amountMatch;
       
-      // Product eligibility check complete
+      // Enhanced logging for debugging
+      console.log(`🧪 [AGGREGATION] Product "${product.name}" - Category: ${categoryMatch ? '✅' : '❌'} (${product.category}), Country: ${countryMatch ? '✅' : '❌'} (${product.country}), Amount: ${amountMatch ? '✅' : '❌'} ($${minAmount}-$${maxAmount}), Eligible: ${isEligible ? '✅' : '❌'}`);
       
       return isEligible;
     });
     
-    // Eligible products filtering complete
+    console.log(`🎯 [AGGREGATION] Filtering complete: ${eligibleProducts.length} eligible products found`);
     
     if (eligibleProducts.length === 0) {
+      console.log(`❌ [AGGREGATION] No products match criteria - providing fallback documents`);
+      
+      // ✅ FALLBACK LOGIC: If no products match, provide standard documents based on category
+      const fallbackDocuments = getFallbackDocumentsForCategory(selectedCategory);
+      
       return {
         eligibleProducts: [],
-        requiredDocuments: [],
-        message: `No lenders match your criteria: ${selectedCategory} in ${selectedCountry} for $${requestedAmount.toLocaleString()}`,
+        requiredDocuments: fallbackDocuments,
+        message: `No exact matches found for ${selectedCategory} in ${selectedCountry} for $${requestedAmount.toLocaleString()}. Showing standard documents for ${selectedCategory}.`,
         hasMatches: false
       };
     }
@@ -119,6 +145,8 @@ export async function getDocumentRequirementsAggregation(
       return info.label;
     });
     
+    console.log(`✅ [AGGREGATION] Successfully aggregated ${transformedDocuments.length} document requirements from ${eligibleProducts.length} eligible products`);
+    
     return {
       eligibleProducts,
       requiredDocuments: transformedDocuments,
@@ -128,13 +156,37 @@ export async function getDocumentRequirementsAggregation(
     
   } catch (error) {
     console.error('❌ [AGGREGATION] Error calculating document requirements:', error);
+    
+    // Provide fallback documents even on error
+    const fallbackDocuments = getFallbackDocumentsForCategory(selectedCategory);
+    
     return {
       eligibleProducts: [],
-      requiredDocuments: [],
-      message: `Error fetching document requirements: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      requiredDocuments: fallbackDocuments,
+      message: `Error fetching requirements (${error instanceof Error ? error.message : 'Unknown error'}). Showing standard documents for ${selectedCategory}.`,
       hasMatches: false
     };
   }
+}
+
+/**
+ * Get fallback document requirements when no products match
+ */
+function getFallbackDocumentsForCategory(category: string): string[] {
+  const fallbackMappings: Record<string, string[]> = {
+    'Working Capital': ['Bank Statements', 'Financial Statements', 'Business Tax Returns'],
+    'Term Loan': ['Bank Statements', 'Business Tax Returns', 'Financial Statements', 'Cash Flow Statement'],
+    'Business Line of Credit': ['Bank Statements', 'Financial Statements', 'Business Tax Returns'],
+    'Equipment Financing': ['Equipment Quote', 'Bank Statements', 'Business Tax Returns'],
+    'Invoice Factoring': ['Accounts Receivable Aging', 'Bank Statements', 'Invoice Samples'],
+    'Purchase Order Financing': ['Purchase Orders', 'Bank Statements', 'Customer Credit Information'],
+    'Asset-Based Lending': ['Asset Valuation', 'Bank Statements', 'Financial Statements']
+  };
+  
+  const documents = fallbackMappings[category] || ['Bank Statements', 'Business Tax Returns', 'Financial Statements'];
+  console.log(`🔄 [FALLBACK] Providing ${documents.length} fallback documents for category "${category}": [${documents.join(', ')}]`);
+  
+  return documents;
 }
 
 /**
