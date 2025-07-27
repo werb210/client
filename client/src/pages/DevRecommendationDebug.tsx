@@ -5,14 +5,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Progress } from '@/components/ui/progress';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle, XCircle, AlertTriangle, Search, Filter, Clock, Target } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Search, Filter, Clock, Target, Settings, BarChart3 } from 'lucide-react';
 import { 
   debugRecommendationFiltering, 
   getCommonTestScenarios,
   type DebugInput,
   type RecommendationDebugResult 
 } from '@/lib/recommendationDebugger';
+import { getAdvancedRecommendations, type FilteringOptions, type RecommendationInput } from '@/lib/recommendationEngine';
 import mockLenderProducts from '@/data/mockLenderProducts';
 
 interface TestInput {
@@ -20,6 +23,7 @@ interface TestInput {
   amountRequested: number;
   whatAreYouLookingFor: string;
   purposeOfFunds: string;
+  hasStrongFinancials: boolean;
 }
 
 export default function DevRecommendationDebug() {
@@ -27,11 +31,20 @@ export default function DevRecommendationDebug() {
     country: 'Canada',
     amountRequested: 100000,
     whatAreYouLookingFor: 'Term Loan',
-    purposeOfFunds: 'Working Capital'
+    purposeOfFunds: 'Working Capital',
+    hasStrongFinancials: false
   });
   
   const [debugResults, setDebugResults] = useState<RecommendationDebugResult | null>(null);
+  const [advancedResults, setAdvancedResults] = useState<any>(null);
   const [isRunning, setIsRunning] = useState(false);
+  
+  // Advanced scoring options
+  const [filteringOptions, setFilteringOptions] = useState<FilteringOptions>({
+    showFilteredOut: true,
+    applyOverrideBoosts: true,
+    logInternalScoring: true
+  });
 
   // Fetch all lender products for analysis
   const { data: allProducts = [], isLoading, error } = useQuery({
@@ -53,9 +66,23 @@ export default function DevRecommendationDebug() {
       purposeOfFunds: testInput.purposeOfFunds
     };
     
+    const advancedInput: RecommendationInput = {
+      country: testInput.country,
+      amountRequested: testInput.amountRequested,
+      category: testInput.whatAreYouLookingFor,
+      purposeOfFunds: testInput.purposeOfFunds,
+      hasStrongFinancials: testInput.hasStrongFinancials
+    };
+    
     try {
-      const results = await debugRecommendationFiltering(products, debugInput);
-      setDebugResults(results);
+      // Run both original and advanced analysis
+      const [originalResults, advancedResults] = await Promise.all([
+        debugRecommendationFiltering(products, debugInput),
+        Promise.resolve(getAdvancedRecommendations(products, advancedInput, filteringOptions))
+      ]);
+      
+      setDebugResults(originalResults);
+      setAdvancedResults(advancedResults);
     } catch (error) {
       console.error('Debug test failed:', error);
     } finally {
@@ -161,6 +188,48 @@ export default function DevRecommendationDebug() {
                 onChange={(e) => setTestInput(prev => ({ ...prev, purposeOfFunds: e.target.value }))}
                 placeholder="Working Capital"
               />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={testInput.hasStrongFinancials}
+                onCheckedChange={(checked) => setTestInput(prev => ({ ...prev, hasStrongFinancials: checked }))}
+              />
+              <label className="text-sm font-medium">Strong Financials</label>
+            </div>
+
+            {/* Advanced Options */}
+            <div className="pt-4 border-t">
+              <h3 className="font-medium mb-3 flex items-center space-x-2">
+                <Settings className="w-4 h-4" />
+                <span>Advanced Options</span>
+              </h3>
+              
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={filteringOptions.showFilteredOut}
+                    onCheckedChange={(checked) => setFilteringOptions(prev => ({ ...prev, showFilteredOut: checked }))}
+                  />
+                  <label className="text-sm">Show filtered-out lenders</label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={filteringOptions.applyOverrideBoosts}
+                    onCheckedChange={(checked) => setFilteringOptions(prev => ({ ...prev, applyOverrideBoosts: checked }))}
+                  />
+                  <label className="text-sm">Apply override boosts</label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={filteringOptions.logInternalScoring}
+                    onCheckedChange={(checked) => setFilteringOptions(prev => ({ ...prev, logInternalScoring: checked }))}
+                  />
+                  <label className="text-sm">Log internal scoring</label>
+                </div>
+              </div>
             </div>
 
             <Button 

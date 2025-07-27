@@ -5,6 +5,8 @@ const HelpIcon = () => <span className="text-blue-600">💬</span>;
 const CloseIcon = () => <span>✕</span>;
 const SendIcon = () => <span>→</span>;
 const UserIcon = () => <span className="text-white">👤</span>;
+const CheckCircleIcon = () => <span className="text-green-600">✓</span>;
+const AlertTriangleIcon = () => <span className="text-red-600">⚠</span>;
 import { cn } from '@/lib/utils';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -178,6 +180,9 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   const [isConnected, setIsConnected] = useState(false);
   const [isMobileFullscreen, setIsMobileFullscreen] = useState(false);
   const [trainingData, setTrainingData] = useState<TrainingExample[]>([]);
+  const [humanRequestStatus, setHumanRequestStatus] = useState<'idle' | 'requesting' | 'connected'>('idle');
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [userName, setUserName] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const proactiveTimeoutRef = useRef<NodeJS.Timeout>();
@@ -198,10 +203,22 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     scrollToBottom();
   }, [messages]);
 
-  // Initial greeting with contact collection
+  // Initial greeting with contact collection and session storage
   useEffect(() => {
     if (isOpen && messages.length === 0 && !hasGreeted) {
       setHasGreeted(true);
+      
+      // Initialize user data from session storage or applicationData
+      const storedEmail = sessionStorage.getItem('userEmail') || applicationData?.contactEmail || '';
+      const storedName = sessionStorage.getItem('userName') || applicationData?.contactName || '';
+      
+      setUserEmail(storedEmail);
+      setUserName(storedName);
+      
+      // Store session data
+      if (storedEmail) sessionStorage.setItem('userEmail', storedEmail);
+      if (storedName) sessionStorage.setItem('userName', storedName);
+      sessionStorage.setItem('sessionId', sessionId);
       
       // Make chat instance available globally for chat-client.js
       (window as any).chatBotInstance = {
@@ -213,6 +230,12 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
             timestamp: new Date()
           };
           setMessages(prev => [...prev, message]);
+        },
+        setUserData: (email: string, name: string) => {
+          setUserEmail(email);
+          setUserName(name);
+          sessionStorage.setItem('userEmail', email);
+          sessionStorage.setItem('userName', name);
         }
       };
       
@@ -223,7 +246,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         }
       }, 800); // Allow time for chat-client.js to load
     }
-  }, [isOpen, messages.length, hasGreeted]);
+  }, [isOpen, messages.length, hasGreeted, applicationData]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -751,25 +774,66 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
   };
 
-  // Request human chat function
-  const requestHumanChat = async () => {
-    console.log('Requesting human chat for session:', sessionId);
-    
-    addBotMessage('Connecting you to a human agent. Please hold while we find someone to assist you...');
-    
+  // Enhanced human escalation with API endpoints
+  const requestHuman = async () => {
     try {
-      // Use global requestHuman function (Socket.IO only - no REST fallback)
-      if ((window as any).requestHuman) {
-        (window as any).requestHuman();
-        console.log('Client requested human chat via Socket.IO');
-        addBotMessage('Request sent successfully. A human agent will join the chat shortly.');
+      console.log('🤝 [CLIENT] Requesting human assistance...');
+      setHumanRequestStatus('requesting');
+      
+      // Method 1: Use new escalation API endpoint
+      const response = await fetch('/api/public/chat/escalate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          userEmail: userEmail || 'anonymous',
+          userName: userName || 'Anonymous User',
+          currentStep: currentStep || 'unknown',
+          context: {
+            messages: messages.slice(-5), // Last 5 messages for context
+            applicationData: applicationData
+          },
+          timestamp: new Date().toISOString()
+        }),
+      });
+
+      if (response.ok) {
+        console.log('✅ [CLIENT] Human escalation request submitted successfully');
+        setHumanRequestStatus('connected');
+        addBotMessage("Great! I've connected you with our support team. A team member will reply shortly to assist you personally.");
+        
+        // Also emit via Socket.IO for real-time notification to staff
+        if (socket && isConnected) {
+          socket.emit('user-request-human', {
+            sessionId: sessionId,
+            userEmail: userEmail,
+            userName: userName,
+            message: 'User has requested human assistance',
+            timestamp: new Date().toISOString(),
+            currentStep: currentStep || 'unknown'
+          });
+        }
       } else {
-        throw new Error('Socket.IO connection not available');
+        console.error('❌ [CLIENT] Human escalation request failed:', response.status);
+        throw new Error('Escalation API request failed');
       }
       
     } catch (error) {
-      console.error('Failed to request human assistance:', error);
-      addBotMessage('Sorry, we had trouble connecting you to a human agent. Please try refreshing the page or call us directly at 1-888-811-1887.');
+      console.error('❌ [CLIENT] Failed to request human assistance:', error);
+      setHumanRequestStatus('idle');
+      addBotMessage("I'm having trouble connecting you to a human right now. Please try again in a moment, or you can contact our support team directly.");
+    }
+  };
+
+  // Report issue functionality  
+  const reportIssue = async () => {
+    try {
+      console.log('🐛 [CLIENT] Opening issue report dialog...');
+      setShowFeedbackModal(true);
+    } catch (error) {
+      console.error('❌ [CLIENT] Failed to open issue report:', error);
     }
   };
 
@@ -877,6 +941,39 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
             )}
           <div ref={messagesEndRef} />
         </div>
+      </div>
+
+      {/* Handoff Action Buttons */}
+      <div className="chat-actions-bar flex gap-2 p-3 border-t border-gray-100 bg-gray-50">
+        <button
+          onClick={requestHuman}
+          disabled={humanRequestStatus === 'requesting'}
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+        >
+          {humanRequestStatus === 'requesting' ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Connecting...</span>
+            </>
+          ) : humanRequestStatus === 'connected' ? (
+            <>
+              <CheckCircleIcon />
+              <span>Team Notified</span>
+            </>
+          ) : (
+            <>
+              <UserIcon className="w-4 h-4" />
+              <span>Talk to a Human</span>
+            </>
+          )}
+        </button>
+        <button
+          onClick={reportIssue}
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
+        >
+          <AlertTriangleIcon />
+          <span>Report an Issue</span>
+        </button>
       </div>
 
       {/* Input Area */}
