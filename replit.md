@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 28, 2025: 📁 STEP 5 REUSABLE COMPONENT IMPLEMENTATION - UPLOAD-DOCUMENTS PAGE COMPLETE**
+  * **CRITICAL SUCCESS**: Implemented Step5 component reuse for /upload-documents page with fromRedirect prop support
+  * **COMPONENT REUSE**: UploadDocuments.tsx now uses Step5_DocumentUpload component with redirect mode functionality
+  * **URL PARAMETER LOADING**: Enhanced Step5 to load applicationId from URL query parameters (?app=, ?id=, ?applicationId=)
+  * **CONDITIONAL UI**: Different headers, navigation, and buttons based on fromRedirect prop - hides stepper and bypass banner in redirect mode
+  * **SUBMIT DOCUMENTS BUTTON**: Replaces "Continue to Step 6" with "Submit Documents" button in redirect mode
+  * **PIPELINE REASSESSMENT**: Added handleSubmitDocuments function with POST /api/public/upload/:applicationId/reassess endpoint
+  * **NAVIGATION CUSTOMIZATION**: Shows "Back to Dashboard" instead of "Previous" button and removes "Save for Later" in redirect mode
+  * **HEADER CUSTOMIZATION**: Custom header "Upload Supporting Documents" without step numbering for redirect mode
+  * **EXISTING UPLOAD HOOKS**: Maintains all existing document category logic, upload slots, and status tracking
+  * **SMS INTEGRATION READY**: Component ready for SMS link workflow where staff backend sends links to /upload-documents?app=UUID
+
 - **July 28, 2025: 🚫 COMPLETE SMS/TWILIO REMOVAL FROM CLIENT APPLICATION - STAFF BACKEND ONLY SMS HANDLING**
   * **CRITICAL SUCCESS**: Completely removed all SMS and Twilio references from client application per Replit requirements
   * **CLIENT SMS REMOVAL**: Eliminated all SMS imports, sendSms functions, sendOtp utilities, and /api/send-sms calls from client codebase

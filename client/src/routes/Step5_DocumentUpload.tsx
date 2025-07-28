@@ -35,13 +35,37 @@ import { useDocumentVerification } from '@/hooks/useDocumentVerification';
 import type { UploadedFile } from '../components/DynamicDocumentRequirements';
 
 
-export default function Step5DocumentUpload() {
+interface Step5Props {
+  fromRedirect?: boolean;
+}
+
+export default function Step5DocumentUpload(props: Step5Props = {}) {
   const { state, dispatch } = useFormDataContext();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
-  // ✅ Use centralized UUID validation for consistent application ID management
-  const applicationId = getStoredApplicationId();
+  // ✅ Handle redirect mode - load app ID from URL query param
+  const redirected = props.fromRedirect || false;
+  
+  // Get application ID - either from URL param (if redirected) or localStorage
+  let applicationId: string | null = null;
+  
+  if (redirected) {
+    // Parse URL parameters to get application ID when redirected
+    const urlParams = new URLSearchParams(window.location.search);
+    applicationId = urlParams.get('app') || urlParams.get('id') || urlParams.get('applicationId');
+    
+    console.log('🔄 [STEP5] Redirect mode - URL params:', window.location.search);
+    console.log('🔄 [STEP5] Parsed app ID from URL:', applicationId);
+    
+    // Store in localStorage for consistency
+    if (applicationId) {
+      localStorage.setItem('applicationId', applicationId);
+    }
+  } else {
+    // Normal flow - use centralized UUID validation
+    applicationId = getStoredApplicationId();
+  }
   
   // 🟨 STEP 4: Log Step 5 using ID for matching - REPLIT MUST DO
   console.log("Step 5 using ID:", applicationId);
@@ -522,7 +546,19 @@ export default function Step5DocumentUpload() {
     }
 
     console.log(`📋 [STEP5] Moving to Step 6 with ${submissionMode} mode`);
-    setLocation('/apply/step-6');
+    
+    // Handle navigation differently for redirect mode
+    if (redirected) {
+      // In redirect mode, stay on the page and show success message
+      toast({
+        title: "Documents Submitted",
+        description: "Your documents have been submitted successfully.",
+        variant: "default",
+      });
+    } else {
+      // Normal flow - proceed to Step 6
+      setLocation('/apply/step-6');
+    }
   };
 
   const handleSaveAndContinueLater = () => {
@@ -540,6 +576,53 @@ export default function Step5DocumentUpload() {
       title: "Progress Saved",
       description: "Your document uploads have been saved. You can continue later.",
     });
+  };
+
+  // Submit documents hook for redirect mode
+  const handleSubmitDocuments = async () => {
+    if (!applicationId) {
+      toast({
+        title: "Application ID Missing", 
+        description: "Cannot submit documents without application ID.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Trigger pipeline reassessment from staff backend
+      const response = await fetch(`/api/public/upload/${applicationId}/reassess`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.VITE_CLIENT_APP_SHARED_TOKEN || 'test-token'}`
+        },
+        body: JSON.stringify({
+          documentsUploaded: uploadedFiles.length,
+          timestamp: new Date().toISOString()
+        })
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Documents Submitted Successfully",
+          description: "Your documents have been submitted and the application will be reassessed.",
+          variant: "default",
+        });
+        
+        // Navigate back to dashboard
+        setLocation('/dashboard');
+      } else {
+        throw new Error('Failed to submit documents');
+      }
+    } catch (error) {
+      console.error('❌ [STEP5] Document submission failed:', error);
+      toast({
+        title: "Submission Failed",
+        description: "Unable to submit documents. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleBypass = async () => {
@@ -602,11 +685,22 @@ export default function Step5DocumentUpload() {
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
 
-      <StepHeader 
-        stepNumber={5}
-        title="Upload Documents"
-        description="Upload the required documents for lender review"
-      />
+      {/* Only show step header in normal flow, not in redirect mode */}
+      {!redirected && (
+        <StepHeader 
+          stepNumber={5}
+          title="Upload Documents"
+          description="Upload the required documents for lender review"
+        />
+      )}
+      
+      {/* Show custom header for redirect mode */}
+      {redirected && (
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold text-gray-900">Upload Supporting Documents</h1>
+          <p className="text-gray-600">Complete your application by uploading the required documents</p>
+        </div>
+      )}
 
       {/* Status Badges */}
       <div className="flex justify-center items-center space-x-4">
@@ -666,8 +760,8 @@ export default function Step5DocumentUpload() {
         </Card>
       )}
 
-      {/* Proceed Without Documents Banner */}
-      <ProceedBypassBanner onBypass={handleBypass} />
+      {/* Proceed Without Documents Banner - Only show in normal flow */}
+      {!redirected && <ProceedBypassBanner onBypass={handleBypass} />}
 
 
 
@@ -782,39 +876,76 @@ export default function Step5DocumentUpload() {
 
       
 
-      {/* Navigation */}
+      {/* Navigation - Different buttons for redirect vs normal mode */}
       <div className="flex justify-between items-center pt-6">
-        <Button
-          variant="outline"
-          onClick={handlePrevious}
-          className="flex items-center space-x-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Previous</span>
-        </Button>
+        {!redirected && (
+          <Button
+            variant="outline"
+            onClick={handlePrevious}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Previous</span>
+          </Button>
+        )}
+        
+        {redirected && (
+          <Button
+            variant="outline"
+            onClick={() => setLocation('/dashboard')}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Dashboard</span>
+          </Button>
+        )}
 
-        <Button
-          onClick={handleNext}
-          disabled={isUploading || isManualVerifying || !canProceed()}
-          className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-        >
-          {isUploading ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              <span>Uploading {Object.keys(uploadProgress).length} files...</span>
-            </>
-          ) : isManualVerifying ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              <span>Verifying Documents...</span>
-            </>
-          ) : (
-            <>
-              <span>Continue to Final Submission</span>
-              <ArrowRight className="w-4 h-4" />
-            </>
+        <div className="flex items-center space-x-3">
+          {!redirected && (
+            <Button
+              variant="outline"
+              onClick={handleSaveAndContinueLater}
+              className="flex items-center space-x-2"
+            >
+              <Save className="w-4 h-4" />
+              <span>Save for Later</span>
+            </Button>
           )}
-        </Button>
+
+          {redirected ? (
+            <Button
+              onClick={handleSubmitDocuments}
+              disabled={uploadedFiles.length === 0}
+              className="flex items-center space-x-2"
+            >
+              <span>Submit Documents</span>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleNext}
+              disabled={isUploading || isManualVerifying || !canProceed()}
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isUploading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Uploading {Object.keys(uploadProgress).length} files...</span>
+                </>
+              ) : isManualVerifying ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Verifying Documents...</span>
+                </>
+              ) : (
+                <>
+                  <span>Continue to Final Submission</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
