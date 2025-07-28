@@ -22,6 +22,9 @@ export const LEGACY_TO_CANONICAL: Record<string, string> = {
   'financial_statements': 'account_prepared_financials',
   'accountant_financials': 'account_prepared_financials',
   'accountant_prepared_financial_statements': 'account_prepared_financials',
+  // Tax return mappings
+  'business_tax_returns': 'tax_returns',
+  'business_tax_return': 'tax_returns',
   'profit_loss_statement': 'profit_and_loss_statement',
   'profit_and_loss': 'profit_and_loss_statement',
   'void_cheque': 'void_pad',
@@ -94,6 +97,10 @@ const DOCUMENT_TYPE_MAP: Record<string, string> = {
   'tax_returns': 'tax_returns',
   'trade_references': 'trade_references',
   'void_pad': 'void_pad',
+  
+  // Business Tax Returns mapping (critical fix for tax return upload classification)
+  'business_tax_returns': 'tax_returns',
+  'business_tax_return': 'tax_returns',
   
   // Legacy mappings using LEGACY_TO_CANONICAL
   ...LEGACY_TO_CANONICAL

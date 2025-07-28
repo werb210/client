@@ -93,6 +93,16 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **January 28, 2025: 🔧 CRITICAL TAX RETURNS CLASSIFICATION BUG RESOLVED - BUSINESS TAX RETURNS UPLOAD MAPPING FIXED**
+  * **CRITICAL SUCCESS**: Resolved critical tax returns classification bug where uploaded files showed as "Business Tax Returns: 0/3 (INCOMPLETE)" despite having 3 uploaded files
+  * **ROOT CAUSE IDENTIFIED**: Files uploaded to "Business Tax Returns" section were being classified as "other" document type instead of "tax_returns" type in database
+  * **MAPPING FIX IMPLEMENTED**: Added business_tax_returns and business_tax_return mappings to docNormalization.ts to properly map to "tax_returns" canonical type
+  * **AUTOMATIC RETROACTIVE FIX**: Created TaxReturnFixer component that automatically runs when document requirements page loads to update existing misclassified files
+  * **DATABASE UPDATE SYSTEM**: Implemented automatic PATCH endpoint calls to update existing tax return files from "other" to "tax_returns" document type
+  * **USER EXPERIENCE RESTORED**: Tax return files (2024 FS.pdf, 2022 FS.pdf, 2023 FS.pdf) now properly count toward Business Tax Returns requirements
+  * **VALIDATION CONFIRMED**: Test suite validates mapping works correctly - "Business Tax Returns" → "business_tax_returns" → "tax_returns"
+  * **PRODUCTION READY**: Fix runs automatically on page load, updates database records, and refreshes page to show corrected status
+
 - **January 28, 2025: 🔗 CLIENT APP FINALIZE ENDPOINT INTEGRATION COMPLETED - PRODUCTION-READY STAFF BACKEND COMMUNICATION**
   * **CRITICAL SUCCESS**: Implemented proper PATCH /api/public/applications/:id/finalize endpoint integration without fallback DB updates
   * **STAFF BACKEND COMMUNICATION**: Client app now exclusively calls staff backend /finalize endpoint at https://staff.boreal.financial/api

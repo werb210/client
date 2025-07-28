@@ -36,6 +36,7 @@ import {
   LEGACY_TO_CANONICAL
 } from '../lib/docNormalization';
 import { queueFallbackUpload } from '@/utils/fallbackUploadQueue';
+import { TaxReturnFixer } from './TaxReturnFixer';
 
 
 // TypeScript Interfaces - Export for use in other components
@@ -842,6 +843,16 @@ export function DynamicDocumentRequirements({
       const getCanonicalDocumentType = (displayLabel: string): string => {
         const labelLower = displayLabel.toLowerCase();
         
+        // Tax Returns (must come BEFORE financial statements check)
+        if (labelLower.includes('tax') && labelLower.includes('return')) {
+          return 'tax_returns';
+        }
+        
+        // Business Tax Returns (must come BEFORE financial statements check)  
+        if (labelLower.includes('business') && labelLower.includes('tax')) {
+          return 'tax_returns';
+        }
+        
         // Both "Financial Statements" and "Accountant Prepared Financial Statements" → account_prepared_financials
         if (labelLower.includes('financial') && labelLower.includes('statement')) {
           return 'account_prepared_financials';
@@ -850,11 +861,6 @@ export function DynamicDocumentRequirements({
         // Bank statements
         if (labelLower.includes('bank') && labelLower.includes('statement')) {
           return 'bank_statements';
-        }
-        
-        // Tax Returns
-        if (labelLower.includes('tax') && labelLower.includes('return')) {
-          return 'tax_returns';
         }
         
         // Default: normalize to underscore format
@@ -870,10 +876,12 @@ export function DynamicDocumentRequirements({
         continue;
       }
       
-      // Use the canonical label for Financial Statements
+      // Use canonical labels for consistent display
       let displayLabel = docName;
       if (documentType === 'account_prepared_financials') {
         displayLabel = 'Financial Statements';
+      } else if (documentType === 'tax_returns') {
+        displayLabel = 'Business Tax Returns';
       }
       
       console.log(`🔍 [DEBUG] Document type "${documentType}" → display label: "${displayLabel}"`);
@@ -915,6 +923,15 @@ export function DynamicDocumentRequirements({
           // Bank statements
           if (labelLower.includes('bank') && labelLower.includes('statement')) {
             return 'bank_statements';
+          }
+          
+          // Tax Returns and Business Tax Returns
+          if (labelLower.includes('tax') && labelLower.includes('return')) {
+            return 'tax_returns';
+          }
+          
+          if (labelLower.includes('business') && labelLower.includes('tax')) {
+            return 'tax_returns';
           }
           
           // Both "Accountant Prepared Financial Statements" and "Financial Statements" → account_prepared_financials
@@ -1057,24 +1074,33 @@ export function DynamicDocumentRequirements({
     }
   }, [uploadedFiles, documentRequirements, onRequirementsChange]);
 
+  // Check if we need to fix existing tax return files
+  const hasTaxReturns = documentRequirements.some(req => 
+    req.label.toLowerCase().includes('tax') && req.label.toLowerCase().includes('return')
+  );
+
   // No loading or error states needed - we always have the requirements from props
 
   return (
-    <div 
-      ref={containerRef}
-      className={`space-y-6 transition-all duration-300 ${
-        isMobile && keyboardOpen 
-          ? 'pb-4' // Reduced padding when keyboard open
-          : 'pb-8' // Normal padding
-      }`}
-      style={{
-        // Dynamic height adjustment for mobile keyboard
-        ...(isMobile && keyboardOpen && {
-          maxHeight: 'calc(var(--device-height, 100vh) - var(--keyboard-height, 0px) - 100px)',
-          overflowY: 'auto'
-        })
-      }}
-    >
+    <>
+      {/* Auto-fix existing tax return files */}
+      {hasTaxReturns && <TaxReturnFixer applicationId={applicationId} />}
+      
+      <div 
+        ref={containerRef}
+        className={`space-y-6 transition-all duration-300 ${
+          isMobile && keyboardOpen 
+            ? 'pb-4' // Reduced padding when keyboard open
+            : 'pb-8' // Normal padding
+        }`}
+        style={{
+          // Dynamic height adjustment for mobile keyboard
+          ...(isMobile && keyboardOpen && {
+            maxHeight: 'calc(var(--device-height, 100vh) - var(--keyboard-height, 0px) - 100px)',
+            overflowY: 'auto'
+          })
+        }}
+      >
       {/* 📱 MOBILE KEYBOARD INDICATOR */}
       {isMobile && keyboardOpen && (
         <div className="bg-blue-100 border border-blue-300 rounded-lg p-3 text-sm text-blue-800">
@@ -1120,6 +1146,7 @@ export function DynamicDocumentRequirements({
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
