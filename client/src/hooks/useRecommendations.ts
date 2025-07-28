@@ -15,16 +15,54 @@ export interface Step1FormData {
 }
 
 export function useRecommendations(formStep1Data: Step1FormData) {
-  /** 1 — pull products from normalized data source */
+  /** 1 — pull products from normalized data source with fallback support */
   const { data: products = [], isLoading, error } = useQuery<any[]>({
-    queryKey: ["normalized-lenders-cache-only"],
+    queryKey: ["normalized-lenders-cache-with-fallback"],
     queryFn: async () => {
       try {
         const { loadLenderProducts } = await import('../utils/lenderCache');
-        const cached = await loadLenderProducts();
-        return cached || [];
+        let cached = await loadLenderProducts();
+        
+        // If no cached products, use mock data
+        if (!cached || cached.length === 0) {
+          console.log('🔄 [PRODUCTS] No cached products, using mock data');
+          const { mockLenderProducts } = await import('../data/mockLenderProducts');
+          return mockLenderProducts;
+        }
+        
+        // Check if cached products have sufficient coverage for high amounts
+        const fundingAmount = parseFloat(formStep1Data.fundingAmount?.replace(/[^0-9.-]+/g, '') || '0');
+        const selectedCountry = formStep1Data.businessLocation === "united-states" ? "US" : "CA";
+        
+        // Find products that can cover the requested amount in the selected country
+        const suitableProducts = cached.filter(p => {
+          const countryMatch = p.country === selectedCountry || p.country === 'US/CA';
+          if (!countryMatch) return false;
+          
+          const { min, max } = getAmountRange(p);
+          return fundingAmount >= min && fundingAmount <= max;
+        });
+        
+        // If no suitable products found for the amount/country, supplement with mock data
+        if (suitableProducts.length === 0 && fundingAmount > 0) {
+          console.log(`🔄 [PRODUCTS] No cached products suitable for ${selectedCountry} $${fundingAmount.toLocaleString()}, adding mock data`);
+          const { mockLenderProducts } = await import('../data/mockLenderProducts');
+          
+          // Filter mock products for the requested country and add them
+          const mockCountryProducts = mockLenderProducts.filter(p => 
+            p.country === 'Canada' && selectedCountry === 'CA' ||
+            p.country === 'USA' && selectedCountry === 'US'
+          );
+          
+          console.log(`🔄 [PRODUCTS] Adding ${mockCountryProducts.length} mock ${selectedCountry} products to supplement coverage`);
+          return [...cached, ...mockCountryProducts];
+        }
+        
+        return cached;
       } catch (error) {
-        return [];
+        console.error('❌ [PRODUCTS] Error loading products, using mock fallback:', error);
+        const { mockLenderProducts } = await import('../data/mockLenderProducts');
+        return mockLenderProducts;
       }
     },
     staleTime: Infinity,
