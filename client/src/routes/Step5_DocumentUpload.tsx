@@ -500,69 +500,28 @@ export default function Step5DocumentUpload() {
         step5DocumentUpload: step5State
       }
     });
-
-    // ✅ STEP 2: Backend verification check (optional)
-    try {
-      logger.log('🔍 [STEP5] Performing backend document verification...');
-      const backendVerification = await verifyDocuments();
-      
-      if (backendVerification.hasUploadedDocuments) {
-        logger.log(`✅ [STEP5] Backend confirmed ${backendVerification.documents.length} documents, proceeding to Step 6`);
-        
-        dispatch({
-          type: 'UPDATE_FORM_DATA',
-          payload: {
-            uploadedDocuments: uploadedFiles,
-            verifiedDocuments: backendVerification.documents
-          }
-        });
-        
-        dispatch({
-          type: 'MARK_STEP_COMPLETE',
-          payload: 5
-        });
-
-        toast({
-          title: "Documents Verified",
-          description: `${backendVerification.documents.length} documents verified. Proceeding to signature.`,
-          variant: "default",
-        });
-
-        setLocation('/apply/step-6');
-        return;
-      }
-    } catch (err: any) {
-      if (err?.response?.status === 501) {
-        console.warn('Skipping verification due to missing backend endpoint');
-      } else {
-        logger.warn('⚠️ [STEP5] Backend verification failed, using local validation:', err);
-      }
-    }
-
-    // ✅ STEP 3: Use local validation results
-    logger.log(`✅ [STEP5] Document validation passed: ${uploadedFiles.filter(f => f.status === 'completed').length} completed documents`);
-    
-    dispatch({
-      type: 'UPDATE_FORM_DATA',
-      payload: {
-        step5DocumentUpload: {
-          uploadedFiles: uploadedFiles,
-          completed: true
-        }
-      }
-    });
     
     dispatch({
       type: 'MARK_STEP_COMPLETE',
       payload: 5
     });
 
-    toast({
-      title: "Documents Ready",
-      description: `All required documents uploaded. Proceeding to signature.`,
-      variant: "default",
-    });
+    // Show appropriate message based on submission mode
+    if (submissionMode === 'without_documents') {
+      toast({
+        title: "Proceeding Without Documents",
+        description: "You can complete the application. SMS link will be sent for document upload.",
+        variant: "default",
+      });
+    } else {
+      toast({
+        title: "Documents Ready",
+        description: `${uploadedFiles.length} documents prepared. Proceeding to signature.`,
+        variant: "default",
+      });
+    }
 
+    console.log(`📋 [STEP5] Moving to Step 6 with ${submissionMode} mode`);
     setLocation('/apply/step-6');
   };
 

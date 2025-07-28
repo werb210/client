@@ -448,13 +448,23 @@ export default function Step6_TypedSignature() {
       }
       const applicationId = validateApplicationIdForAPI(storedApplicationId);
 
+      // ✅ Determine submission status based on document presence
+      const submissionMode = state.step5DocumentUpload?.submissionMode || 'with_documents';
+      const hasDocuments = state.step5DocumentUpload?.hasDocuments || false;
+      const submissionStatus = hasDocuments ? 'submitted' : 'submitted_no_docs';
+      
+      console.log(`📤 [STEP6] Submission status: ${submissionStatus} (mode: ${submissionMode})`);
+
       // Prepare the final application data
       const finalApplicationData = {
         step1: state.step1,
         step3: state.step3,
         step4: state.step4,
         step6: state.step6Authorization,
-        applicationId
+        applicationId,
+        status: submissionStatus,
+        submissionMode: submissionMode,
+        hasDocuments: hasDocuments
       };
 
       // 🟨 STEP 3: Confirm finalize is called - REPLIT MUST DO
@@ -586,10 +596,21 @@ export default function Step6_TypedSignature() {
         console.log('💾 [STEP6] ApplicationId stored for future document uploads:', applicationId);
       }
 
-      toast({
-        title: "Application submitted!",
-        description: "Your financing application has been submitted for review. You'll receive updates via email.",
-      });
+      // ✅ Show appropriate success message based on submission mode
+      if (submissionStatus === 'submitted_no_docs') {
+        toast({
+          title: "Application submitted!",
+          description: "Application submitted. Please check your phone to upload the required documents.",
+          variant: "default"
+        });
+        console.log('📱 [STEP6] SMS notification will be sent for document upload');
+      } else {
+        toast({
+          title: "Application submitted!",
+          description: "Your financing application has been submitted for review. You'll receive updates via email.",
+          variant: "default"
+        });
+      }
 
       // Navigate to success page
       setLocation('/application-success');
