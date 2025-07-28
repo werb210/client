@@ -204,9 +204,11 @@ function UnifiedDocumentUploadCard({
   const documentFiles = uploadedFiles.filter(f => {
     // ✅ Ensure files stay bound to correct category based on document_type field from server
     const fileDocType = f.documentType?.toLowerCase() || '';
-    const isMatch = f.status === "completed" && fileDocType === apiDocumentType;
+    // ✅ Accept both completed AND uploaded status to handle S3 uploads
+    const isValidStatus = f.status === "completed" || f.status === "uploading" || (f as any).uploadedAt;
+    const isMatch = isValidStatus && fileDocType === apiDocumentType;
     
-    console.log(`🔍 [CARD] File "${f.name}" (type: "${fileDocType}") vs requirement "${doc.label}" (api: "${apiDocumentType}") → match: ${isMatch}`);
+    console.log(`🔍 [CARD] File "${f.name}" (type: "${fileDocType}") vs requirement "${doc.label}" (api: "${apiDocumentType}") → match: ${isMatch}, status: ${f.status}`);
     return isMatch;
   });
   
