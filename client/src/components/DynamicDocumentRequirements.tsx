@@ -193,13 +193,13 @@ function UnifiedDocumentUploadCard({
   // ✅ CRITICAL: Use central document type mapping for consistency
   let apiDocumentType: string;
   try {
-    const normalizedType = normalizeDocRequirement(doc.label);
-    const fallbackType = normalizedType || normalizeDocumentName(doc.label);
-    apiDocumentType = mapToBackendDocumentType(fallbackType || doc.label);
+    // Direct mapping using the mapToBackendDocumentType function
+    apiDocumentType = mapToBackendDocumentType(doc.label);
+    console.log(`🔧 [DOC-MAPPING] Document "${doc.label}" → "${apiDocumentType}"`);
   } catch (error) {
     console.error(`❌ [CONSISTENCY-MAPPING-ERROR] Failed to map document type "${doc.label}":`, error);
     // Fallback to avoid breaking the component
-    apiDocumentType = doc.label;
+    apiDocumentType = mapToBackendDocumentType('other');
   }
   const documentFiles = uploadedFiles.filter(f => {
     // ✅ Ensure files stay bound to correct category based on document_type field from server

@@ -49,7 +49,11 @@ export const LEGACY_TO_CANONICAL: Record<string, string> = {
   'collateral_documents': 'collateral_docs',
   'collateral': 'collateral_docs',
   'other_documents': 'other',
-  'miscellaneous': 'other'
+  'miscellaneous': 'other',
+  
+  // Additional common UI document names that need mapping
+  'accounts_receivable_aging': 'accounts_receivable',
+  'accounts_payable_aging': 'accounts_payable'
 };
 
 /**
