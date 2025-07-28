@@ -95,31 +95,35 @@ export function useRecommendations(formStep1Data: Step1FormData) {
         console.log(`🔍 [REVENUE] ${p.name}: Required $${revenueMin.toLocaleString()}, User has $${applicantRevenue.toLocaleString()} → ${revenueMatch ? '✅' : '❌'}`);
       }
       
-      // Product type check based on what user is looking for
-      if (formStep1Data.lookingFor === "capital") {
+      // ✅ STRICT PRODUCT TYPE FILTERING - Fixed per user requirements
+      if (formStep1Data.lookingFor === "equipment") {
+        // ✅ STRICT: Only Equipment Financing products allowed when "equipment" selected
+        const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
+        if (!isEquipmentProduct) {
+          failedProducts.push({product: p, reason: `Excluded for Equipment Financing selection: category=${p.category}`});
+          console.log(`🔍 [EQUIPMENT_STRICT] ${p.name} (${p.category}): Excluded - not Equipment Financing`);
+          return false;
+        }
+      } else if (formStep1Data.lookingFor === "capital") {
+        // ✅ STRICT: Only Working Capital and LOC products allowed when "capital" selected
         const isCapitalProduct = isBusinessCapitalProduct(p.category);
-        // Enhanced debug logging for Working Capital products
         if (p.category?.toLowerCase().includes('working')) {
           console.log(`🔍 [CAPITAL_CHECK] "${p.name}" (${p.category}) → Capital Product: ${isCapitalProduct ? 'YES ✅' : 'NO ❌'}`);
         }
-        if (!isCapitalProduct) {
-          failedProducts.push({product: p, reason: `Not capital product: category=${p.category}`});
-          return false;
-        }
-      } else if (formStep1Data.lookingFor === "equipment") {
-        const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
-        if (!isEquipmentProduct) {
-          failedProducts.push({product: p, reason: `Not equipment product: category=${p.category}`});
+        if (!isCapitalProduct && !isLineOfCredit) {
+          failedProducts.push({product: p, reason: `Excluded for Working Capital selection: category=${p.category}`});
+          console.log(`🔍 [CAPITAL_STRICT] ${p.name} (${p.category}): Excluded - not Working Capital or LOC`);
           return false;
         }
       } else if (formStep1Data.lookingFor === "both") {
-        // For "both", exclude equipment-only products - only include products that support hybrid use
+        // ✅ HYBRID: Only hybrid-capable products (exclude pure equipment-only)
         const isCapitalProduct = isBusinessCapitalProduct(p.category);
         const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
         
         // If it's an equipment-only product, exclude it when user wants "both"
         if (isEquipmentProduct && !isCapitalProduct) {
           failedProducts.push({product: p, reason: `Equipment-only product excluded for 'both' selection: category=${p.category}`});
+          console.log(`🔍 [BOTH_FILTER] ${p.name}: Equipment-only product excluded for 'both' selection`);
           return false;
         }
         

@@ -84,27 +84,38 @@ export function filterProducts(products: LenderProduct[], form: RecommendationFo
                               fundsPurpose !== 'equipment' &&
                               !fundsPurpose?.includes('equipment');
     
-    // 6. PRODUCT TYPE MATCHING - Using fuzzy category matching with "both" logic fix
+    // 6. STRICT PRODUCT TYPE MATCHING - Fixed per user requirements
     let typeMatch = false;
     
-    if (lookingFor === 'both') {
-      // For "both", exclude equipment-only products - only include capital products that can be used for equipment
+    if (lookingFor === 'equipment') {
+      // ✅ STRICT: Only Equipment Financing products allowed when "equipment" selected
+      typeMatch = isEquipmentFinancing;
+      if (!isEquipmentFinancing) {
+        console.log(`🔍 [EQUIPMENT_STRICT] ${product.name} (${productCategory}): Excluded - not Equipment Financing`);
+      }
+    } else if (lookingFor === 'capital') {
+      // ✅ STRICT: Only Working Capital and LOC products allowed when "capital" selected
+      const isWorkingCapital = matchesCategory('working_capital', productCategory);
+      typeMatch = isWorkingCapital || isLineOfCredit;
+      if (!typeMatch) {
+        console.log(`🔍 [CAPITAL_STRICT] ${product.name} (${productCategory}): Excluded - not Working Capital or LOC`);
+      }
+    } else if (lookingFor === 'both') {
+      // ✅ HYBRID: Only hybrid-capable products (exclude pure equipment-only)
       const isCapitalProduct = matchesCategory('working_capital', productCategory) ||
                               matchesCategory('line of credit', productCategory) ||
                               productCategory?.toLowerCase().includes('term loan') ||
                               productCategory?.toLowerCase().includes('invoice factoring') ||
                               productCategory?.toLowerCase().includes('purchase order');
       
-      // Equipment-only products are excluded when user selects "both"
       typeMatch = isCapitalProduct && !isEquipmentFinancing;
       
       if (isEquipmentFinancing && !isCapitalProduct) {
         console.log(`🔍 [BOTH_FILTER] ${product.name}: Equipment-only product excluded for 'both' selection`);
       }
-    } else if (lookingFor === 'capital') {
-      typeMatch = !isEquipmentFinancing;
-    } else if (lookingFor === 'equipment') {
-      typeMatch = isEquipmentFinancing || (fundsPurpose === 'equipment');
+    } else {
+      // Default: allow all products if lookingFor is not recognized
+      typeMatch = true;
     }
 
     // FINAL DECISION: Standard match OR LOC override
