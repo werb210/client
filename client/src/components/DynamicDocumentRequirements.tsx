@@ -838,9 +838,31 @@ export function DynamicDocumentRequirements({
     console.log(`🔍 [DEBUG] Processing ${requirements.length} document requirements:`, requirements);
     
     for (const docName of requirements) {
-      // First normalize to get the document type (this is the key for deduplication)
-      const documentType = normalizeDocumentName(docName);
-      console.log(`🔍 [DEBUG] Processing "${docName}" → documentType: "${documentType}"`);
+      // Use the API mapping logic to get the canonical document type (this is the key for deduplication)
+      const getCanonicalDocumentType = (displayLabel: string): string => {
+        const labelLower = displayLabel.toLowerCase();
+        
+        // Both "Financial Statements" and "Accountant Prepared Financial Statements" → account_prepared_financials
+        if (labelLower.includes('financial') && labelLower.includes('statement')) {
+          return 'account_prepared_financials';
+        }
+        
+        // Bank statements
+        if (labelLower.includes('bank') && labelLower.includes('statement')) {
+          return 'bank_statements';
+        }
+        
+        // Tax Returns
+        if (labelLower.includes('tax') && labelLower.includes('return')) {
+          return 'tax_returns';
+        }
+        
+        // Default: normalize to underscore format
+        return labelLower.replace(/\s+/g, '_');
+      };
+      
+      const documentType = getCanonicalDocumentType(docName);
+      console.log(`🔍 [DEBUG] Processing "${docName}" → canonical documentType: "${documentType}"`);
       
       // Skip if this document TYPE has already been rendered (not display label)
       if (renderedDocumentTypes.has(documentType)) {
@@ -848,9 +870,13 @@ export function DynamicDocumentRequirements({
         continue;
       }
       
-      // Now get the display label for this document type using canonical labels
-      const displayLabel = getCanonicalLabel(documentType) || getDocumentTypeLabel(documentType as any);
-      console.log(`🔍 [DEBUG] Document type "${documentType}" → canonical display label: "${displayLabel}"`);
+      // Use the canonical label for Financial Statements
+      let displayLabel = docName;
+      if (documentType === 'account_prepared_financials') {
+        displayLabel = 'Financial Statements';
+      }
+      
+      console.log(`🔍 [DEBUG] Document type "${documentType}" → display label: "${displayLabel}"`);
       
       renderedDocumentTypes.add(documentType);
       deduplicatedRequirements.push({
