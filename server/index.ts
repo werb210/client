@@ -2434,12 +2434,17 @@ app.use((req, res, next) => {
     await setupVite(app, httpServer);
   }
   
-  // Add Socket.IO server for real-time chat
+  // Add Socket.IO server for real-time chat with iOS-compatible settings
   const io = new SocketIOServer(httpServer, {
     cors: {
       origin: "*",
       methods: ["GET", "POST"]
-    }
+    },
+    transports: ['websocket'],
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    allowEIO3: true,
+    maxHttpBufferSize: 1e6
   });
   
   io.on('connection', (socket) => {

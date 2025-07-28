@@ -13,14 +13,19 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Socket.IO available, initializing connection...');
     
     // Initialize socket connection with iOS-compatible transport settings
-    socket = io({
+    // Connect to the current domain (client app's server) not the staff backend
+    const socketUrl = window.location.origin;
+    console.log('Connecting Socket.IO to:', socketUrl);
+    
+    socket = io(socketUrl, {
       transports: ['websocket'],
       upgrade: false,
       timeout: 20000,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
-      autoConnect: true
+      autoConnect: true,
+      forceNew: true
     });
     
     // Connection event handlers
