@@ -13,8 +13,12 @@ export default function UploadDocuments() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Parse URL parameters to get application ID
-  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const urlParams = new URLSearchParams(window.location.search);
   const appId = urlParams.get('app');
+  
+  console.log('UploadDocuments - Current location:', location);
+  console.log('UploadDocuments - URL search params:', window.location.search);
+  console.log('UploadDocuments - Parsed app ID:', appId);
 
   useEffect(() => {
     if (!appId) {
