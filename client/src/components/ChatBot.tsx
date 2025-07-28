@@ -804,58 +804,72 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
   };
 
-  // Enhanced human escalation with API endpoints
+  // Enhanced human escalation with proper escalate_to_human event per test specification
   const requestHuman = async () => {
     try {
-      console.log('🤝 [CLIENT] Requesting human assistance...');
+      console.log('🚨 [ESCALATION] Chat escalated to human by user request');
+      
+      // Set escalated state to block further AI responses
+      setIsEscalated(true);
       setHumanRequestStatus('requesting');
       
-      // Method 1: Use new escalation API endpoint
-      const response = await fetch('/api/public/chat/escalate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sessionId: localStorage.getItem('sessionId') || sessionId,
-          applicationId: localStorage.getItem('applicationId'),
-          userEmail: userEmail || 'anonymous',
-          userName: userName || 'Anonymous User',
-          currentStep: currentStep || 'unknown',
-          context: {
-            messages: messages.slice(-5), // Last 5 messages for context
-            applicationData: applicationData
-          },
-          timestamp: new Date().toISOString()
-        }),
-      });
-
-      if (response.ok) {
-        console.log('✅ [CLIENT] Human escalation request submitted successfully');
-        setHumanRequestStatus('connected');
-        addBotMessage("Great! I've connected you with our support team. A team member will reply shortly to assist you personally.");
+      // Get user contact info from session storage
+      const userContact = JSON.parse(sessionStorage.getItem('chatbotContact') || '{}');
+      
+      // Prepare escalation payload as per test specification
+      const escalationData = {
+        clientId: sessionId,
+        name: userContact.name || userName || 'Anonymous User',
+        email: userContact.email || userEmail || 'anonymous@example.com',
+        timestamp: new Date().toISOString(),
+        sessionId: sessionId,
+        context: `User requested human assistance during ${currentStep ? `Step ${currentStep}` : 'application process'}`
+      };
+      
+      console.log('📋 [ESCALATION] Sending escalation payload:', escalationData);
+      
+      // Emit escalate_to_human event via Socket.IO for immediate staff notification
+      if (socket && isConnected) {
+        socket.emit('escalate_to_human', escalationData);
+        console.log('📡 [ESCALATION] escalate_to_human event emitted via Socket.IO');
         
-        // Step 5 - Show success alert for escalation
-        alert('✅ Your request has been sent to a human support agent');
+        // Wait for escalation confirmation
+        socket.on('escalation_confirmed', (data: any) => {
+          console.log('✅ [ESCALATION] Escalation confirmed by server:', data);
+          setHumanRequestStatus('connected');
+          
+          // Show user that AI is now blocked and they're connected to human
+          addBotMessage("✅ You're now connected to a human agent. AI responses are blocked - only our staff will reply from now on.");
+          
+          // Show success alert for escalation
+          alert('✅ Your request has been sent to a human support agent');
+        });
         
-        // Also emit via Socket.IO for real-time notification to staff
-        if (socket && isConnected) {
-          socket.emit('user-request-human', {
-            sessionId: sessionId,
-            userEmail: userEmail,
-            userName: userName,
-            message: 'User has requested human assistance',
-            timestamp: new Date().toISOString(),
-            currentStep: currentStep || 'unknown'
-          });
-        }
       } else {
-        console.error('❌ [CLIENT] Human escalation request failed:', response.status);
-        throw new Error('Escalation API request failed');
+        console.warn('⚠️ [ESCALATION] Socket.IO not available, using HTTP fallback');
+        
+        // HTTP fallback for escalation
+        const response = await fetch('/api/public/chat/escalate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(escalationData),
+        });
+
+        if (response.ok) {
+          console.log('✅ [ESCALATION] HTTP escalation request successful');
+          setHumanRequestStatus('connected');
+          addBotMessage("✅ You're now connected to a human agent. AI responses are blocked - only our staff will reply from now on.");
+          alert('✅ Your request has been sent to a human support agent');
+        } else {
+          throw new Error('HTTP escalation failed');
+        }
       }
       
     } catch (error) {
-      console.error('❌ [CLIENT] Failed to request human assistance:', error);
+      console.error('❌ [ESCALATION] Failed to escalate to human:', error);
+      setIsEscalated(false);  // Reset escalation state on error
       setHumanRequestStatus('idle');
       addBotMessage("I'm having trouble connecting you to a human right now. Please try again in a moment, or you can contact our support team directly.");
     }

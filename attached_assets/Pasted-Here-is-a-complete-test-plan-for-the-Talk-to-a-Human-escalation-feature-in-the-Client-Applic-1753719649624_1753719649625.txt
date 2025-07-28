@@ -1,0 +1,94 @@
+Here is a **complete test plan** for the `Talk to a Human` escalation feature in the **Client Application**, reflecting your recent changes and requirements.
+
+---
+
+## ✅ TEST PLAN – CLIENT APPLICATION: `Talk to a Human` Escalation Flow
+
+### 🔧 Purpose
+
+To verify that the FinBot chatbot correctly:
+
+* Escalates chat to a human agent on request
+* Halts all chatbot replies after escalation
+* Sends correct escalation data to the staff backend
+* Connects the user to a real-time chat session with staff
+
+---
+
+### 🧪 Test Environment
+
+* **Platform**: iPhone Safari, Desktop Chrome
+* **Client URL**: [https://client.boreal.financial](https://client.boreal.financial)
+* **Staff URL**: [https://staff.boreal.financial](https://staff.boreal.financial)
+* **Backend Logs**: Replit Console + Network tab
+* **Users**:
+
+  * Test User: `alex@example.com`
+
+---
+
+### ✅ Test Case 1: Trigger Chatbot Escalation
+
+| Step | Action                           | Expected Result                                 |
+| ---- | -------------------------------- | ----------------------------------------------- |
+| 1    | Open client app in mobile Safari | FinBot loads on home page                       |
+| 2    | Type message like `hello`        | FinBot responds automatically                   |
+| 3    | Click `Talk to a Human` button   | Chatbot displays “Connecting you…” message      |
+| 4    | Enter name and email if prompted | Info is submitted                               |
+| 5    | Wait for response                | 🔒 **No more AI/chatbot replies should appear** |
+| 6    | Open Staff App → Chat Management | New session with user's name/email appears      |
+| 7    | Staff clicks on session          | Conversation opens; shows all previous messages |
+
+---
+
+### ✅ Test Case 2: Verify Socket Escalation Payload
+
+| Step | Action                   | Expected Result                 |
+| ---- | ------------------------ | ------------------------------- |
+| 1    | Open Dev Tools > Network | Monitor WebSocket frames        |
+| 2    | Click “Talk to a Human”  | Frame sent: `escalate_to_human` |
+| 3    | Inspect payload          | Payload includes:               |
+
+```json
+{
+  "clientId": "<uuid>",
+  "name": "Alex Carter",
+  "email": "alex@example.com",
+  "timestamp": "2025-07-28T15:24:00Z"
+}
+```
+
+---
+
+### ✅ Test Case 3: Real-Time Sync with Staff App
+
+| Step | Action                   | Expected Result                                       |
+| ---- | ------------------------ | ----------------------------------------------------- |
+| 1    | Staff replies to chat    | Message is seen in client chatbox                     |
+| 2    | Staff adds note          | Note appears in timeline                              |
+| 3    | Staff closes session     | Chat in client ends or shows “Agent has left” message |
+| 4    | Staff reopens chat       | Full message history visible                          |
+| 5    | Check Communication Logs | Message, timestamps, and sender logged                |
+
+---
+
+### ✅ Test Case 4: Chatbot Interruption Prevention
+
+| Step | Action                    | Expected Result                     |
+| ---- | ------------------------- | ----------------------------------- |
+| 1    | Trigger “Talk to a Human” | AI disables                         |
+| 2    | Ask new questions         | ❌ Chatbot does **not** reply        |
+| 3    | Wait 60 seconds           | ❌ No AI-generated messages appear   |
+| 4    | Reload page (optional)    | Session resumes with human, not bot |
+
+---
+
+### 🧼 Cleanup
+
+* Reset test chat sessions via `/chat-management`
+* Clear Socket.IO sessions if required
+* Clear test contact `alex@example.com` if not needed
+
+---
+
+Would you like me to write the same test for **Report an Issue**, or auto-run this test via Puppeteer/Cypress next?
