@@ -205,7 +205,7 @@ export default function ApplicationSuccess() {
         </Card>
 
         {/* Navigation */}
-        <div className="text-center">
+        <div className="text-right">
           <Button 
             onClick={() => setLocation('/')}
             className="bg-teal-600 hover:bg-teal-700 text-white"
