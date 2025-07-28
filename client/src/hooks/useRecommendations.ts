@@ -64,9 +64,29 @@ export function useRecommendations(formStep1Data: Step1FormData) {
         return false;
       }
       
-      // Amount range check - FIXED: Use unified field access helper
+      // Amount range check - ENHANCED DEBUG: Show all amount fields
       const { min, max } = getAmountRange(p);
       const amountMatch = fundingAmount >= min && fundingAmount <= max;
+      
+      // ENHANCED DEBUG: Show all possible amount fields to debug parsing issues
+      console.log(`🔍 [AMOUNT_DEBUG] ${p.name}:`, {
+        raw_fields: {
+          amount_min: p.amount_min,
+          amount_max: p.amount_max,
+          amountMin: p.amountMin,
+          amountMax: p.amountMax,
+          fundingMin: p.fundingMin,
+          fundingMax: p.fundingMax,
+          minAmount: p.minAmount,
+          maxAmount: p.maxAmount,
+          min_amount: p.min_amount,
+          max_amount: p.max_amount
+        },
+        parsed: { min, max },
+        fundingAmount,
+        amountMatch
+      });
+      
       if (!amountMatch) {
         failedProducts.push({product: p, reason: `Amount out of range: $${min?.toLocaleString()}-$${max === Infinity ? 'unlimited' : max?.toLocaleString()} vs $${fundingAmount.toLocaleString()}`});
         return false;
