@@ -405,7 +405,7 @@ export default function Step5DocumentUpload() {
   };
 
   const canProceed = () => {
-    // ✅ ENHANCED DETECTION: Check multiple sources for uploaded documents
+    // ✅ BYPASS CHECK MODE: Always allow proceeding for submission without documents flow
     const completedFiles = uploadedFiles.filter(f => f.status === 'completed').length;
     const totalUploadedFiles = uploadedFiles.length;
     
@@ -415,7 +415,7 @@ export default function Step5DocumentUpload() {
     // Check localStorage for any document evidence
     const localStorageFiles = JSON.parse(localStorage.getItem('uploadedDocuments') || '[]').length;
     
-    console.log(`🔍 [CANPROCEED] Enhanced document check:`, {
+    console.log(`🔍 [CANPROCEED] Bypass check mode - always allow continuing:`, {
       completedFiles,
       totalUploadedFiles,
       s3Files,
@@ -426,26 +426,21 @@ export default function Step5DocumentUpload() {
       uploadedFileDetails: uploadedFiles.map(f => ({ name: f.name, status: f.status, storage: f.storage, storageKey: f.storageKey }))
     });
     
-    // PRIORITY 1: If user has any uploaded files (completed, S3, or any status), allow proceeding
+    // PRIORITY 1: If user has any uploaded files (completed, S3, or any status), proceed with documents
     if (completedFiles > 0 || s3Files > 0 || totalUploadedFiles > 0 || localStorageFiles > 0) {
-      console.log(`✅ [CANPROCEED] Found uploaded documents (completed: ${completedFiles}, S3: ${s3Files}, total: ${totalUploadedFiles}, localStorage: ${localStorageFiles}) - allowing proceed`);
+      console.log(`✅ [CANPROCEED] Found uploaded documents (completed: ${completedFiles}, S3: ${s3Files}, total: ${totalUploadedFiles}, localStorage: ${localStorageFiles}) - proceeding with documents`);
       return true;
     }
     
-    // PRIORITY 2: If requirements marked complete by DynamicDocumentRequirements, allow
+    // PRIORITY 2: If requirements marked complete by DynamicDocumentRequirements, proceed
     if (allRequirementsComplete) {
-      console.log(`✅ [CANPROCEED] Requirements marked complete - allowing proceed`);
+      console.log(`✅ [CANPROCEED] Requirements marked complete - proceeding`);
       return true;
     }
     
-    // PRIORITY 3: If no requirements loaded yet or no matches, allow bypass
-    if (!intersectionResults.hasMatches || !intersectionResults.requiredDocuments.length) {
-      console.log(`✅ [CANPROCEED] No requirements or matches - allowing bypass`);
-      return true; 
-    }
-    
-    console.log(`❌ [CANPROCEED] Blocking proceed - no documents found and requirements not met`);
-    return false;
+    // ✅ NEW: PRIORITY 3: Always allow proceeding without documents (minimal validation mode)
+    console.log(`✅ [CANPROCEED] Bypass check mode - allowing submission without documents`);
+    return true;
   };
 
   // Handle requirements completion status
@@ -468,7 +463,7 @@ export default function Step5DocumentUpload() {
     setLocation('/apply/step-4');
   };
 
-  // ✅ FIXED: Proper Continue button validation for Step 5
+  // ✅ ENHANCED: Allow continuing to Step 6 even without documents
   const handleNext = async () => {
     if (!applicationId) {
       toast({
@@ -479,20 +474,32 @@ export default function Step5DocumentUpload() {
       return;
     }
 
-    logger.log('🚀 [STEP5] Navigation attempt - validating document uploads...');
+    logger.log('🚀 [STEP5] Navigation attempt - using bypass check mode...');
 
-    // ✅ STEP 1: Use same logic as canProceed() function for consistency
-    if (!canProceed()) {
-      console.log('❌ [STEP5] Navigation blocked by canProceed() validation');
-      toast({
-        title: "Documents Required",
-        description: "Please upload all required documents before continuing.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // ✅ BYPASS CHECK MODE: Always allow proceeding (minimal validation)
+    console.log('✅ [STEP5] Bypass check mode - proceeding to Step 6 regardless of document status');
     
-    console.log('✅ [STEP5] Navigation allowed by canProceed() validation');
+    // Determine if user has uploaded documents or is submitting without documents
+    const hasDocuments = uploadedFiles.length > 0;
+    const submissionMode = hasDocuments ? 'with_documents' : 'without_documents';
+    
+    console.log(`📋 [STEP5] Submission mode: ${submissionMode} (${uploadedFiles.length} documents)`);
+    
+    // Set appropriate flags for Step 6 processing
+    const step5State = {
+      uploadedFiles: uploadedFiles,
+      completed: true,
+      submissionMode: submissionMode,
+      hasDocuments: hasDocuments,
+      bypassDocuments: !hasDocuments // Set bypass flag if no documents
+    };
+    
+    dispatch({
+      type: 'UPDATE_FORM_DATA',
+      payload: {
+        step5DocumentUpload: step5State
+      }
+    });
 
     // ✅ STEP 2: Backend verification check (optional)
     try {

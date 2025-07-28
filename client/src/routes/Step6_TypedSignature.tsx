@@ -75,43 +75,35 @@ export default function Step6_TypedSignature() {
         agreementsCount: Object.values(authData.agreements).filter(Boolean).length
       });
 
-      // ✅ FIX 1: Proceed Without Documents Loop Bug - Allow empty uploads only if bypass flag is set
+      // ✅ ENHANCED: Determine submission mode and handle accordingly
       const hasUploads =
         (state.step5DocumentUpload?.uploadedFiles?.length ?? 0) > 0 ||
         (state.step5DocumentUpload?.files?.length ?? 0) > 0;
       
-      const bypassDocuments = state.step5DocumentUpload?.bypassDocuments || false;
+      const submissionMode = state.step5DocumentUpload?.submissionMode || (hasUploads ? 'with_documents' : 'without_documents');
+      const hasDocuments = state.step5DocumentUpload?.hasDocuments || hasUploads;
 
-      console.log('🔍 [STEP6] Document validation check:', {
+      console.log('🔍 [STEP6] Submission mode check:', {
         hasUploads,
-        bypassDocuments,
+        hasDocuments,
+        submissionMode,
         uploadedFilesCount: state.step5DocumentUpload?.uploadedFiles?.length || 0,
-        filesCount: state.step5DocumentUpload?.files?.length || 0,
-        willAllowEmptyUploads: bypassDocuments
+        filesCount: state.step5DocumentUpload?.files?.length || 0
       });
 
-      // Only block finalization if NO documents AND NO bypass flag
-      if (!hasUploads && !bypassDocuments) {
-        console.warn("🚨 BLOCKING FINALIZATION — No upload evidence found and no bypass set");
+      // ✅ ALWAYS ALLOW FINALIZATION - No document validation blocking
+      if (submissionMode === 'without_documents') {
+        console.log("📤 [STEP6] Submission without documents mode - will trigger SMS notification");
         toast({
-          title: "Upload Required",
-          description: "Please upload at least one document or use 'Proceed without Required Documents' in Step 5.",
-          variant: "destructive"
+          title: "Ready to Submit",
+          description: "Application will be submitted. SMS link will be sent for document upload.",
+          variant: "default"
         });
-        setLocation('/apply/step-5');
-        return;
-      }
-
-      // Log bypass usage for debugging
-      if (bypassDocuments && !hasUploads) {
-        console.log("✅ [STEP6] Allowing finalization with empty uploads due to bypass flag");
-      }
-
-      if (bypassDocuments) {
-        console.log("✅ [STEP6] Document bypass enabled - allowing finalization without uploads");
+      } else {
+        console.log("📤 [STEP6] Submission with documents mode - standard processing");
         toast({
-          title: "Documents Bypassed",
-          description: "Proceeding without required documents as requested.",
+          title: "Ready to Submit",
+          description: "Application will be submitted with uploaded documents.",
           variant: "default"
         });
       }
@@ -129,17 +121,8 @@ export default function Step6_TypedSignature() {
         });
       }
 
-      // Check document upload status before finalization
-      const documentCheckPassed = await validateDocumentUploads();
-      if (!documentCheckPassed) {
-        toast({
-          title: "Documents Required",
-          description: "Please upload all required documents before finalizing your application.",
-          variant: "destructive"
-        });
-        setLocation('/apply/step-5');
-        return;
-      }
+      // ✅ SKIP document validation - allow submission regardless of document status
+      console.log('📤 [STEP6] Skipping document validation - proceeding with final submission');
 
       // Submit the final application
       await submitFinalApplication();
