@@ -4,7 +4,12 @@
  */
 
 const API_BASE_URL = 'https://staff.boreal.financial/api';
-const CLIENT_TOKEN = process.env.VITE_CLIENT_APP_SHARED_TOKEN || 'sk-client-borealsys2025-secure-token-v1-hXpY9K';
+const CLIENT_TOKEN = process.env.VITE_CLIENT_APP_SHARED_TOKEN;
+
+if (!CLIENT_TOKEN) {
+  console.error('❌ VITE_CLIENT_APP_SHARED_TOKEN environment variable is required');
+  process.exit(1);
+}
 
 // Get application ID from localStorage or environment
 const APPLICATION_ID = 'current'; // You'll need to replace with your actual application ID
