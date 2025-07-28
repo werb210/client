@@ -405,27 +405,37 @@ export default function Step5DocumentUpload() {
   };
 
   const canProceed = () => {
+    // ✅ CRITICAL FIX: Always allow proceeding if user has uploaded documents
+    const completedFiles = uploadedFiles.filter(f => f.status === 'completed').length;
+    
+    console.log(`🔍 [CANPROCEED] Document check:`, {
+      completedFiles,
+      allRequirementsComplete,
+      uploadedFilesLength: uploadedFiles.length,
+      intersectionHasMatches: intersectionResults.hasMatches,
+      requiredDocsLength: intersectionResults.requiredDocuments.length
+    });
+    
+    // If user has uploaded completed documents, allow proceeding
+    if (completedFiles > 0) {
+      console.log(`✅ [CANPROCEED] User has ${completedFiles} completed documents - allowing proceed`);
+      return true;
+    }
+    
+    // If no uploaded files but allRequirementsComplete is true (from DynamicDocumentRequirements), allow
+    if (allRequirementsComplete) {
+      console.log(`✅ [CANPROCEED] Requirements marked complete - allowing proceed`);
+      return true;
+    }
+    
+    // If no requirements loaded yet or no matches, allow bypass
     if (!intersectionResults.hasMatches || !intersectionResults.requiredDocuments.length) {
-      // No matches or empty requirements = allow bypass
+      console.log(`✅ [CANPROCEED] No requirements or matches - allowing bypass`);
       return true; 
     }
     
-    // ✅ ENHANCED: Check both formal validation AND local upload evidence
-    const hasValidDocuments = validateDocumentCompleteness();
-    
-    // ✅ FALLBACK: If formal validation fails, check if we have locally uploaded files
-    if (!hasValidDocuments && uploadedFiles.length > 0) {
-      const locallyUploadedCount = uploadedFiles.filter(f => 
-        f.status === 'completed' || f.status === 'uploading' || (f as any).uploadedAt
-      ).length;
-      
-      console.log(`🔍 [CANPROCEED] Formal validation: ${hasValidDocuments}, Local uploads: ${locallyUploadedCount}`);
-      
-      // Allow proceeding if we have locally uploaded files (S3 uploads that haven't synced yet)
-      return locallyUploadedCount > 0;
-    }
-    
-    return hasValidDocuments;
+    console.log(`❌ [CANPROCEED] Blocking proceed - no completed files and requirements not met`);
+    return false;
   };
 
   // Handle requirements completion status
