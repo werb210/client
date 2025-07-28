@@ -343,6 +343,62 @@ export async function get2FAStatus(): Promise<{
 }
 
 // Applications API for Draft-Before-Sign Flow
+// Fetch application by ID for document requirements
+export async function fetchApplicationById(applicationId: string) {
+  try {
+    console.log(`📡 [fetchApplicationById] Fetching application: ${applicationId}`);
+    
+    const response = await apiFetch(`${API_BASE_URL}/applications/${applicationId}`, {
+      method: 'GET',
+    });
+
+    if (response.ok) {
+      const application = await response.json();
+      console.log(`✅ [fetchApplicationById] Application fetched successfully:`, application);
+      return application;
+    } else if (response.status === 404) {
+      console.log(`❌ [fetchApplicationById] Application not found: ${applicationId}`);
+      throw new ApiError('Application not found', 404, response);
+    } else {
+      throw new ApiError(`Failed to fetch application: ${response.status}`, response.status, response);
+    }
+  } catch (error) {
+    console.error(`❌ [fetchApplicationById] Error fetching application:`, error);
+    throw error;
+  }
+}
+
+// Upload document to staff API
+export async function uploadDocumentToStaffAPI(appId: string, file: File, docType: string) {
+  try {
+    console.log(`📤 [uploadDocumentToStaffAPI] Uploading ${file.name} for app ${appId}, type ${docType}`);
+
+    const formData = new FormData();
+    formData.append('document', file);
+    formData.append('documentType', docType);
+    formData.append('applicationId', appId);
+
+    const response = await fetch(`${API_BASE_URL}/upload/${appId}`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+      }
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log(`✅ [uploadDocumentToStaffAPI] Upload successful:`, result);
+      return result;
+    } else {
+      throw new ApiError(`Upload failed: ${response.status}`, response.status, response);
+    }
+  } catch (error) {
+    console.error(`❌ [uploadDocumentToStaffAPI] Upload error:`, error);
+    throw error;
+  }
+}
+
 export const Applications = {
   /* Create draft and get signUrl */
   createDraft: (formData: Record<string, any>) =>

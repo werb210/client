@@ -22,7 +22,7 @@ import { StepHeader } from '@/components/StepHeader';
 
 
 import { getDocumentRequirementsAggregation } from '@/lib/documentAggregation';
-import { normalizeDocumentName } from '../../../shared/documentTypes';
+import { normalizeDocumentName } from '@shared/documentTypes';
 import { getStoredApplicationId, validateApplicationIdForAPI } from '@/lib/uuidUtils';
 
 import { useDebouncedCallback } from 'use-debounce';
@@ -434,7 +434,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
     const totalUploadedFiles = uploadedFiles.length;
     
     // Also check if we have any files with S3 storage (from console logs showing S3 success)
-    const s3Files = uploadedFiles.filter(f => f.storageKey || f.storage === 's3').length;
+    const s3Files = uploadedFiles.filter(f => (f as any).storageKey || (f as any).storage === 's3').length;
     
     // Check localStorage for any document evidence
     const localStorageFiles = JSON.parse(localStorage.getItem('uploadedDocuments') || '[]').length;
@@ -447,7 +447,12 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
       allRequirementsComplete,
       intersectionHasMatches: intersectionResults.hasMatches,
       requiredDocsLength: intersectionResults.requiredDocuments.length,
-      uploadedFileDetails: uploadedFiles.map(f => ({ name: f.name, status: f.status, storage: f.storage, storageKey: f.storageKey }))
+      uploadedFileDetails: uploadedFiles.map(f => ({ 
+        name: f.name, 
+        status: f.status, 
+        storage: (f as any).storage || 'unknown', 
+        storageKey: (f as any).storageKey || 'none' 
+      }))
     });
     
     // PRIORITY 1: If user has any uploaded files (completed, S3, or any status), proceed with documents

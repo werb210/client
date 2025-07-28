@@ -1,0 +1,82 @@
+/**
+ * Document requirements utility for /upload-documents page
+ * Simplified approach based on application financing category
+ */
+
+export interface RequiredDocumentType {
+  type: string;
+  category: string;
+  label: string;
+  required: number;
+  description?: string;
+}
+
+/**
+ * Get required document types from application data
+ * Uses simplified category-based approach for reliability
+ */
+export function getRequiredDocumentTypes(application: any): RequiredDocumentType[] {
+  if (!application) {
+    console.log('📋 [docRequirements] No application data provided');
+    return [];
+  }
+
+  console.log('📋 [docRequirements] Getting document requirements for application:', application.id);
+
+  // Extract financing category from application
+  const category = application.category || application.financingType || 'working_capital';
+  const fundingAmount = application.fundingAmount || 0;
+
+  console.log('📋 [docRequirements] Application category:', category, 'Amount:', fundingAmount);
+
+  // Get document requirements by category
+  const requiredDocs = getDocumentRequirementsByCategory(category);
+
+  console.log(`📋 [docRequirements] Found ${requiredDocs.length} required document types:`, 
+    requiredDocs.map(d => `${d.label} (${d.required})`));
+
+  return requiredDocs;
+}
+
+/**
+ * Get document requirements for a specific financing category
+ */
+export function getDocumentRequirementsByCategory(category: string): RequiredDocumentType[] {
+  // Normalize category name
+  const normalizedCategory = category.toLowerCase().replace(/\s+/g, '_');
+  
+  // Common document requirements by category
+  const categoryRequirements: Record<string, RequiredDocumentType[]> = {
+    'working_capital': [
+      { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 6 },
+      { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 },
+      { type: 'tax_returns', category: 'tax', label: 'Business Tax Returns', required: 3 }
+    ],
+    'equipment_financing': [
+      { type: 'equipment_quote', category: 'equipment', label: 'Equipment Quote', required: 1 },
+      { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 6 },
+      { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 }
+    ],
+    'term_loan': [
+      { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 6 },
+      { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 },
+      { type: 'tax_returns', category: 'tax', label: 'Business Tax Returns', required: 3 },
+      { type: 'drivers_license_front_back', category: 'identity', label: 'ID Documents', required: 1 }
+    ],
+    'line_of_credit': [
+      { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 3 },
+      { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 }
+    ],
+    'invoice_factoring': [
+      { type: 'accounts_receivable_aging', category: 'financial', label: 'Accounts Receivable Aging', required: 1 },
+      { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 3 },
+      { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 }
+    ]
+  };
+
+  const requirements = categoryRequirements[normalizedCategory] || categoryRequirements['working_capital'];
+  
+  console.log(`📋 [getDocumentRequirementsByCategory] Category "${category}" → "${normalizedCategory}" has ${requirements.length} requirements`);
+  
+  return requirements;
+}
