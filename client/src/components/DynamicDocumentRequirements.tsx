@@ -876,14 +876,14 @@ export function DynamicDocumentRequirements({
             return 'bank_statements';
           }
           
-          // Accountant Prepared Financial Statements → financial_statements
+          // Accountant Prepared Financial Statements → account_prepared_financials
           if (labelLower.includes('accountant') && labelLower.includes('prepared') && labelLower.includes('financial')) {
-            return 'financial_statements';
+            return 'account_prepared_financials';
           }
           
-          // General Financial Statements → financial_statements  
+          // General Financial Statements → account_prepared_financials (maps to same backend type)
           if (labelLower.includes('financial') && labelLower.includes('statement')) {
-            return 'financial_statements';
+            return 'account_prepared_financials';
           }
           
           // Personal Financial Statement
