@@ -510,7 +510,7 @@ export default function Step5DocumentUpload() {
     if (submissionMode === 'without_documents') {
       toast({
         title: "Proceeding Without Documents",
-        description: "You can complete the application. SMS link will be sent for document upload.",
+        description: "You can complete the application. Document upload will be available after submission.",
         variant: "default",
       });
     } else {

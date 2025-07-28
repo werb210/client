@@ -93,10 +93,10 @@ export default function Step6_TypedSignature() {
 
       // ✅ ALWAYS ALLOW FINALIZATION - No document validation blocking
       if (submissionMode === 'without_documents') {
-        console.log("📤 [STEP6] Submission without documents mode - will trigger SMS notification");
+        console.log("📤 [STEP6] Submission without documents mode - staff backend will handle notifications");
         toast({
           title: "Ready to Submit",
-          description: "Application will be submitted. SMS link will be sent for document upload.",
+          description: "Application will be submitted. Document upload will be available after submission.",
           variant: "default"
         });
       } else {
@@ -600,10 +600,10 @@ export default function Step6_TypedSignature() {
       if (submissionStatus === 'submitted_no_docs') {
         toast({
           title: "Application submitted!",
-          description: "Application submitted. Please check your phone to upload the required documents.",
+          description: "Application submitted. Document upload will be available after submission.",
           variant: "default"
         });
-        console.log('📱 [STEP6] SMS notification will be sent for document upload');
+        console.log('📤 [STEP6] Document upload notification handled by staff backend');
       } else {
         toast({
           title: "Application submitted!",

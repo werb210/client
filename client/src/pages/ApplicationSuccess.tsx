@@ -114,7 +114,7 @@ export default function ApplicationSuccess() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-lg font-semibold text-gray-900">Email & SMS</p>
+              <p className="text-lg font-semibold text-gray-900">Email Updates</p>
               <p className="text-sm text-gray-600 mt-1">
                 You'll receive updates at each stage
               </p>

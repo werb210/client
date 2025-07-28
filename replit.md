@@ -93,6 +93,18 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 28, 2025: 🚫 COMPLETE SMS/TWILIO REMOVAL FROM CLIENT APPLICATION - STAFF BACKEND ONLY SMS HANDLING**
+  * **CRITICAL SUCCESS**: Completely removed all SMS and Twilio references from client application per Replit requirements
+  * **CLIENT SMS REMOVAL**: Eliminated all SMS imports, sendSms functions, sendOtp utilities, and /api/send-sms calls from client codebase
+  * **STEP COMPONENT CLEANUP**: Audited and cleaned Step5_DocumentUpload.tsx, Step6_TypedSignature.tsx, and ApplicationSuccess.tsx
+  * **TOAST MESSAGE UPDATES**: Changed "SMS link will be sent" to "Document upload will be available after submission"
+  * **CONSOLE LOG CLEANUP**: Updated logging from "SMS notification will be sent" to "notification handled by staff backend"
+  * **SERVER SMS REMOVAL**: Removed client-side SMS triggering logic from server finalization endpoint
+  * **toE164 UTILITY ARCHIVED**: Phone number validation utility marked as removed - SMS processing delegated to staff backend
+  * **VERIFICATION READY**: Client application now completely SMS-free and ready for final verification steps
+  * **STAFF BACKEND DELEGATION**: All SMS notifications (submission, document upload reminders, pipeline stages) handled exclusively by staff backend
+  * **MANUAL TESTING PROTOCOL**: Created verification steps for testing complete workflow without client SMS involvement
+
 - **July 28, 2025: ✅ PRODUCTION DEPLOYMENT ISSUE RESOLVED - APPLICATION NOW READY FOR TRUE PRODUCTION MODE**
   * **ROOT CAUSE IDENTIFIED**: Replit deployments use `REPLIT_ENVIRONMENT=production` instead of `NODE_ENV=production` for environment detection
   * **ENVIRONMENT DETECTION FIX**: Updated `server/index.ts` and `server/config.ts` to detect production mode using either `NODE_ENV` or `REPLIT_ENVIRONMENT` variables

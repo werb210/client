@@ -435,41 +435,7 @@ app.use((req, res, next) => {
           const data = await response.json();
           console.log('✅ [SERVER] SUCCESS: Application finalized successfully');
           
-          // 🔧 FIX 1: SMS TRIGGER FOR SKIPPED DOCUMENTS
-          // Check if this is a submission without documents (status: submitted_no_docs)
-          if (req.body.status === 'submitted_no_docs' || req.body.bypassDocuments === true) {
-            console.log('📱 [SMS] Triggering SMS for skipped documents submission');
-            
-            try {
-              // Trigger SMS notification to user about document upload requirement
-              const smsResponse = await fetch(`${cfg.staffApiUrl}/api/sms/send-document-upload-reminder`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${cfg.clientToken}`
-                },
-                body: JSON.stringify({
-                  applicationId: req.params.applicationId,
-                  phoneNumber: req.body.phoneNumber || req.body.step4?.applicantPhone,
-                  applicantName: req.body.step4?.applicantFirstName || 'applicant',
-                  uploadUrl: `${process.env.VITE_APP_URL || 'https://clientportal.boreal.financial'}/upload-documents?id=${req.params.applicationId}`
-                })
-              });
-              
-              if (smsResponse.ok) {
-                console.log('✅ [SMS] Document upload reminder SMS sent successfully');
-                // Add SMS confirmation to response
-                data.smsNotificationSent = true;
-                data.smsMessage = 'SMS sent with document upload instructions';
-              } else {
-                console.warn('⚠️ [SMS] Failed to send document upload reminder SMS');
-                data.smsNotificationSent = false;
-              }
-            } catch (smsError) {
-              console.error('❌ [SMS] SMS notification error:', (smsError as Error).message);
-              data.smsNotificationSent = false;
-            }
-          }
+          // CLIENT APPLICATION: SMS handling removed - all notifications handled by staff backend
           
           res.json(data);
         } else {
