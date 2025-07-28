@@ -977,39 +977,6 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         </div>
       </div>
 
-      {/* Handoff Action Buttons */}
-      <div className="chat-actions-bar flex gap-2 p-3 border-t border-gray-100 bg-gray-50">
-        <button
-          onClick={requestHuman}
-          disabled={humanRequestStatus === 'requesting'}
-          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-        >
-          {humanRequestStatus === 'requesting' ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>Connecting...</span>
-            </>
-          ) : humanRequestStatus === 'connected' ? (
-            <>
-              <CheckCircleIcon />
-              <span>Team Notified</span>
-            </>
-          ) : (
-            <>
-              <UserIcon />
-              <span>Talk to a Human</span>
-            </>
-          )}
-        </button>
-        <button
-          onClick={reportIssue}
-          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
-        >
-          <AlertTriangleIcon />
-          <span>Report an Issue</span>
-        </button>
-      </div>
-
       {/* Input Area */}
       <div className="chat-input-container flex gap-2 p-3 border-t border-gray-200">
         <input
