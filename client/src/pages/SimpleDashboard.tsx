@@ -97,18 +97,7 @@ export default function SimpleDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => {
-            // Check for existing application ID in storage
-            const existingAppId = sessionStorage.getItem('applicationId') || localStorage.getItem('applicationId');
-            if (existingAppId) {
-              setLocation(`/upload-documents?app=${existingAppId}`);
-            } else {
-              // Create a new application session for document upload
-              const newAppId = `temp-${Date.now()}`;
-              sessionStorage.setItem('applicationId', newAppId);
-              setLocation(`/upload-documents?app=${newAppId}`);
-            }
-          }}>
+          <Card className="hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -119,7 +108,26 @@ export default function SimpleDashboard() {
                   <p className="text-sm text-gray-500">Complete your application by uploading required documents</p>
                 </div>
               </div>
-              <Button className="w-full bg-purple-600 hover:bg-purple-700">
+              <Button 
+                className="w-full bg-purple-600 hover:bg-purple-700"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent card click handler
+                  console.log('Upload Documents button clicked!');
+                  
+                  // Check for existing application ID in storage
+                  const existingAppId = sessionStorage.getItem('applicationId') || localStorage.getItem('applicationId');
+                  if (existingAppId) {
+                    console.log('Using existing app ID:', existingAppId);
+                    setLocation(`/upload-documents?app=${existingAppId}`);
+                  } else {
+                    // Create a new application session for document upload
+                    const newAppId = `temp-${Date.now()}`;
+                    console.log('Creating new app ID:', newAppId);
+                    sessionStorage.setItem('applicationId', newAppId);
+                    setLocation(`/upload-documents?app=${newAppId}`);
+                  }
+                }}
+              >
                 Upload Documents
               </Button>
             </CardContent>
