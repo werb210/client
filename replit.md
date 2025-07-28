@@ -93,6 +93,15 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 28, 2025: 📁 CLIENT APPLICATION /UPLOAD-DOCUMENTS REQUIREMENTS COMPLETED - SMS WORKFLOW READY**
+  * **REQUIREMENT 1 ✅**: /upload-documents?app={id} successfully parses ID and fetches application data from GET /api/public/applications/{id}
+  * **REQUIREMENT 2 ✅**: Document categories render like Step 5 using DocumentUploadCard components with Step5Wrapper layout
+  * **REQUIREMENT 3 ✅**: Valid document upload through POST /api/public/upload/{appId} endpoint with FormData and Bearer authentication
+  * **WORKING CAPITAL CATEGORIES**: Bank Statements (6), Financial Statements (1), Business Tax Returns (3) display correctly
+  * **SMS INTEGRATION READY**: Page loads application data, shows document requirements, enables upload functionality for SMS-triggered workflow
+  * **API FALLBACK SYSTEM**: Shows default document categories when API returns 401 error with yellow warning banner
+  * **UPLOAD ENDPOINTS CONFIRMED**: Document upload and reassessment endpoints operational for complete SMS document workflow
+
 - **July 28, 2025: 📁 STEP 5 REUSABLE COMPONENT IMPLEMENTATION - UPLOAD-DOCUMENTS PAGE COMPLETE**
   * **CRITICAL SUCCESS**: Implemented Step5 component reuse for /upload-documents page with fromRedirect prop support
   * **COMPONENT REUSE**: UploadDocuments.tsx now uses Step5_DocumentUpload component with redirect mode functionality

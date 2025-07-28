@@ -78,7 +78,7 @@ export function DocumentUploadCard({
       formData.append('applicationId', appId);
 
       // Upload to staff backend API (use correct endpoint)
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/upload/${appId}`, {
+      const response = await fetch(`/api/public/upload/${appId}`, {
         method: 'POST',
         body: formData,
         headers: {
