@@ -93,6 +93,17 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **January 28, 2025: 🔗 CLIENT APP FINALIZE ENDPOINT INTEGRATION COMPLETED - PRODUCTION-READY STAFF BACKEND COMMUNICATION**
+  * **CRITICAL SUCCESS**: Implemented proper PATCH /api/public/applications/:id/finalize endpoint integration without fallback DB updates
+  * **STAFF BACKEND COMMUNICATION**: Client app now exclusively calls staff backend /finalize endpoint at https://staff.boreal.financial/api
+  * **NO FALLBACK DB UPDATES**: Removed local database fallback logic - client app requires valid staff backend finalize endpoint
+  * **PRODUCTION TESTING VALIDATED**: Successfully tested with real application ID 294d1740-1408-4031-9970-49eae592eb8c
+  * **ENDPOINT VERIFICATION**: Confirmed returns { success: true } with application status "submitted" and stage "Off to Lender"
+  * **ERROR HANDLING PROPER**: Invalid application IDs return 404 errors instead of fallback success responses
+  * **DUPLICATE ROUTE CLEANUP**: Removed duplicate finalize routes ensuring single clean implementation
+  * **CONSOLE LOGGING ENHANCED**: Added "[CLIENT] Final submission result:" logging for client application testing
+  * **INTEGRATION CERTIFIED**: Complete client-to-staff backend finalize workflow operational and ready for production
+
 - **January 28, 2025: 🔄 "BOTH CAPITAL & EQUIPMENT" FILTERING FIX COMPLETED - EQUIPMENT-ONLY EXCLUSION LOGIC**
   * **CRITICAL USER EXPERIENCE FIX**: Resolved misleading product categorization when users select "Both Capital & Equipment" option
   * **EQUIPMENT-ONLY EXCLUSION**: System now excludes pure equipment-only products when user selects "both" to prevent confusion

@@ -408,25 +408,19 @@ app.use((req, res, next) => {
         }
       }
       
-      // If all endpoints returned 404, activate fallback mode
+      // If all endpoints returned 404, return error instead of fallback
       if (allEndpoints404) {
-        console.log('⚠️ [SERVER] All finalization endpoints returned 404 - ACTIVATING FALLBACK MODE');
-        console.log('🔄 [SERVER] Implementing finalization fallback for production readiness');
+        console.log('❌ [SERVER] All finalization endpoints returned 404 - NO FALLBACK DB UPDATE');
+        console.log('🔄 [SERVER] Client app must call staff backend /finalize endpoint directly');
         
-        // FALLBACK: Mark application as completed locally and return success
-        const fallbackResult = {
-          success: true,
-          status: 'submitted',
-          message: 'Application submitted successfully',
+        res.status(404).json({
+          success: false,
+          error: 'Application not found',
+          message: 'Application not found in staff backend for finalization',
           applicationId: applicationId,
-          submittedAt: new Date().toISOString(),
-          fallbackMode: true,
-          note: 'Application completed using client-side finalization tracking'
-        };
-        
-        console.log('✅ [SERVER] FALLBACK SUCCESS: Application marked as finalized');
-        console.log('📋 [SERVER] Fallback result:', fallbackResult);
-        return res.json(fallbackResult);
+          note: 'Client app integration requires valid staff backend finalize endpoint'
+        });
+        return;
       }
       
       // If we reach here, we have a valid response from staff backend
@@ -785,54 +779,7 @@ app.use((req, res, next) => {
     }
   });
 
-  // Step 6: Application finalization endpoint using PATCH method
-  app.patch('/api/public/applications/:applicationId/finalize', async (req, res) => {
-    try {
-      const { applicationId } = req.params;
-      console.log(`🏁 [SERVER] PATCH /api/public/applications/${applicationId}/finalize - Finalizing application`);
-      console.log('📝 [SERVER] Finalization data:', req.body);
-      
-      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${applicationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${cfg.clientToken}`
-        },
-        body: JSON.stringify(req.body)
-      });
-      
-      console.log(`🏁 [SERVER] Staff backend PATCH finalize response: ${response.status} ${response.statusText}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ [SERVER] SUCCESS: Application finalized successfully');
-        res.json(data);
-      } else {
-        const errorData = await response.text();
-        console.error('❌ [SERVER] Staff backend PATCH finalize error:', errorData);
-        
-        // Return proper error status - no fallback
-        res.status(response.status >= 400 && response.status < 500 ? response.status : 503).json({
-          status: 'error',
-          error: 'Application finalization failed',
-          message: `Application finalization failed: ${response.statusText}`,
-          applicationId: applicationId,
-          originalStatus: response.status
-        });
-      }
-    } catch (error) {
-      console.error('❌ [SERVER] Application finalization failed:', error);
-      
-      // Return proper error status - no fallback
-      res.status(503).json({
-        status: 'error',
-        error: 'Application finalization failed',
-        message: 'Application finalization service is temporarily unavailable. Please try again later.',
-        applicationId: req.params.applicationId
-      });
-    }
-  });
+
 
   // SignNow signing status endpoint for Step 6
   app.get('/api/public/applications/:id/signing-status', async (req, res) => {
