@@ -32,7 +32,7 @@ import { ArrowRight, ArrowLeft, Save, FileText, CheckCircle, AlertTriangle, Info
 import { DocumentUploadStatus } from '@/components/DocumentUploadStatus';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
 
-import type { UploadedFile } from '../components/DynamicDocumentRequirements';
+import type { UploadedFile } from '@/components/DynamicDocumentRequirements';
 
 
 interface Step5Props {
