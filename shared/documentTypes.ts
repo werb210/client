@@ -125,7 +125,7 @@ export const DOCUMENT_QUANTITIES: Record<DocumentType, number> = {
   'debt_schedule': 1,
   'drivers_license_front_back': 2, // Front and back
   'equipment_quote': 1,
-  'financial_statements': 3, // Complete financial package
+  'financial_statements': 3, // Financial statements require 3 documents
   'income_statement': 1,
   'invoice_samples': 3, // Sample invoices
   'lease_agreements': 1,
@@ -137,7 +137,7 @@ export const DOCUMENT_QUANTITIES: Record<DocumentType, number> = {
   'purchase_orders': 3, // Sample purchase orders
   'signed_application': 1,
   'supplier_agreement': 1,
-  'tax_returns': 2, // Typically 2-3 years
+  'tax_returns': 3, // Tax returns require 3 years
   'trade_references': 3, // Typically 3 references
   'void_pad': 1
 };

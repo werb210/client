@@ -810,6 +810,21 @@ export function DynamicDocumentRequirements({
         return 3;
       }
       
+      // Financial Statements (general) require 3 documents
+      if (normalizedName.includes('financial') && normalizedName.includes('statement')) {
+        return 3;
+      }
+      
+      // Tax Returns require 3 documents
+      if (normalizedName.includes('tax') && normalizedName.includes('return')) {
+        return 3;
+      }
+      
+      // Business Tax Returns require 3 documents
+      if (normalizedName.includes('business_tax_returns') || normalizedName.includes('business tax returns')) {
+        return 3;
+      }
+      
       // All other documents require 1
       return 1;
     };
