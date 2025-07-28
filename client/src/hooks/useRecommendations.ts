@@ -113,11 +113,19 @@ export function useRecommendations(formStep1Data: Step1FormData) {
           return false;
         }
       } else if (formStep1Data.lookingFor === "both") {
-        // For "both", include both capital and equipment financing products
+        // For "both", exclude equipment-only products - only include products that support hybrid use
         const isCapitalProduct = isBusinessCapitalProduct(p.category);
         const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
-        if (!isCapitalProduct && !isEquipmentProduct) {
-          failedProducts.push({product: p, reason: `Neither capital nor equipment: category=${p.category}`});
+        
+        // If it's an equipment-only product, exclude it when user wants "both"
+        if (isEquipmentProduct && !isCapitalProduct) {
+          failedProducts.push({product: p, reason: `Equipment-only product excluded for 'both' selection: category=${p.category}`});
+          return false;
+        }
+        
+        // Only include capital products (which can be used for equipment too) or hybrid products
+        if (!isCapitalProduct) {
+          failedProducts.push({product: p, reason: `Neither capital nor hybrid product: category=${p.category}`});
           return false;
         }
       }
@@ -163,6 +171,10 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   
   console.log("🔍 [STEP2] Working Capital products that passed:", 
     (matches as any[]).filter((m: any) => m.product.category?.toLowerCase().includes('working')).length
+  );
+  
+  console.log("🔍 [STEP2] Equipment-only products excluded for 'both':", 
+    failedProducts.filter(f => f.reason.includes('Equipment-only')).length
   );
   
   console.log("🔍 [STEP2] Filtered out:", failedProducts.map(f => `${f.product.name}: ${f.reason}`));
@@ -218,10 +230,17 @@ function isEquipmentFinancingProduct(category: string): boolean {
     'Asset Based Lending'
   ];
   
-  return equipmentCategories.some(cat => 
+  const isEquipment = equipmentCategories.some(cat => 
     category.toLowerCase().includes(cat.toLowerCase()) ||
     cat.toLowerCase().includes(category.toLowerCase())
   );
+  
+  // Enhanced debug logging for equipment products
+  if (isEquipment) {
+    console.log(`🔍 [EQUIPMENT_CHECK] "${category}" -> Equipment Product: YES ✅`);
+  }
+  
+  return isEquipment;
 }
 
 function calculateScore(

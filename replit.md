@@ -93,6 +93,15 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **January 28, 2025: 🔄 "BOTH CAPITAL & EQUIPMENT" FILTERING FIX COMPLETED - EQUIPMENT-ONLY EXCLUSION LOGIC**
+  * **CRITICAL USER EXPERIENCE FIX**: Resolved misleading product categorization when users select "Both Capital & Equipment" option
+  * **EQUIPMENT-ONLY EXCLUSION**: System now excludes pure equipment-only products when user selects "both" to prevent confusion
+  * **HYBRID PRODUCT FOCUS**: "Both" selection now only shows capital products that can be used for equipment purchases (Working Capital, LOC, Term Loans, etc.)
+  * **DUAL ENGINE UPDATE**: Applied filtering logic to both `lib/recommendation.ts` and `hooks/useRecommendations.ts` for consistency
+  * **ENHANCED DEBUG LOGGING**: Added comprehensive logging to track equipment-only exclusions and "both" selection filtering
+  * **USER SCENARIO ADDRESSED**: $700K funding + $400K equipment requests now show appropriate hybrid-capable products only
+  * **CATEGORY CLARITY**: Eliminates confusion where "Equipment Financing" appeared as standalone when user wanted dual-purpose funding
+
 - **January 28, 2025: 🔗 LINE OF CREDIT OVERRIDE RULE IMPLEMENTATION COMPLETED - ENHANCED PRODUCT RECOMMENDATION FILTERING**
   * **CRITICAL SUCCESS**: Implemented comprehensive Line of Credit override rule ensuring LOC products are always included when funding amount fits within range
   * **LOC OVERRIDE LOGIC**: Added force-include logic bypassing all other business criteria (purpose, revenue, industry) when `min_amount ≤ requested_amount ≤ max_amount`

@@ -1,0 +1,100 @@
+✅ Understood. Based on your screenshots and instructions, here's a breakdown and the required fix:
+
+---
+
+### 🟠 Problem Identified
+
+When the user selects:
+
+* **"Both Capital & Equipment"**
+* And inputs valid values for both capital and equipment use (e.g., \$700K funding + \$400K equipment)
+
+🔎 **Step 2 is showing “Equipment Financing” as a standalone category**, which implies it's an **equipment-only** product — **this is misleading**.
+
+---
+
+### ✅ Desired Behavior
+
+> If the user selects **“Both Capital & Equipment”**, then **Step 2 should only show products that support hybrid use** (or **both categories**), not equipment-only financing.
+
+---
+
+### 🛠 Required Fix (Client Application)
+
+#### Replit – Please apply the following changes:
+
+#### 📁 File: `useRecommendations.ts` (or wherever filtering happens)
+
+#### ✅ Step 1: Update filtering logic
+
+Add a conditional block like:
+
+```ts
+// 🚫 If user selects both, exclude equipment-only products
+if (purpose === 'Both Capital & Equipment') {
+  if (product.category === 'Equipment Financing' && !product.supportsCapitalUse) {
+    return false; // Exclude pure equipment-only products
+  }
+}
+```
+
+You may also add a new metadata field to each product like:
+
+```json
+{
+  "category": "Equipment Financing",
+  "supportsCapitalUse": true
+}
+```
+
+Or in TS:
+
+```ts
+interface LenderProduct {
+  category: string;
+  supportsCapitalUse?: boolean;
+}
+```
+
+#### ✅ Step 2: Label hybrid-capable products clearly
+
+Update the display logic to say:
+
+> “Supports capital and equipment funding” — to clarify the category when both uses are selected.
+
+---
+
+### 📋 Are These the Only Matching Products?
+
+Yes, based on your inputs:
+
+| Field     | Value                    |
+| --------- | ------------------------ |
+| Amount    | \$700,000                |
+| Equipment | \$400,000                |
+| Location  | Canada                   |
+| Industry  | Agriculture              |
+| Revenue   | \$1M–\$5M                |
+| Purpose   | Both Capital & Equipment |
+
+Only **4 product categories** passed all filters:
+
+1. ✅ **Equipment Financing** (4 hybrid-capable options)
+2. ✅ **Purchase Order Financing**
+3. ✅ **Invoice Factoring**
+4. ❌ **LOC** — amount exceeds most caps
+5. ❌ **Term Loan** — likely failed purpose match (needs `Working Capital`)
+6. ❌ **Revenue Advance** — industry disqualified
+
+✔️ Result: 3 categories showing is correct
+❌ But **Equipment-only category should be renamed or merged** when purpose is dual
+
+---
+
+### ✅ Action Items
+
+* [ ] Update filtering logic to **exclude equipment-only** when both uses are selected
+* [ ] Add display indicator for **hybrid-eligible** products
+* [ ] Update product metadata to reflect `supportsCapitalUse` (optional but ideal)
+
+Would you like Replit to apply this fix now and re-run a test case for `$700K Capital + $400K Equipment` to verify?

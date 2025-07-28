@@ -84,11 +84,28 @@ export function filterProducts(products: LenderProduct[], form: RecommendationFo
                               fundsPurpose !== 'equipment' &&
                               !fundsPurpose?.includes('equipment');
     
-    // 6. PRODUCT TYPE MATCHING - Using fuzzy category matching
-    const typeMatch = lookingFor === 'both' ||
-                     (lookingFor === 'capital' && !isEquipmentFinancing) ||
-                     (lookingFor === 'equipment' && isEquipmentFinancing) ||
-                     (fundsPurpose === 'equipment' && isEquipmentFinancing);
+    // 6. PRODUCT TYPE MATCHING - Using fuzzy category matching with "both" logic fix
+    let typeMatch = false;
+    
+    if (lookingFor === 'both') {
+      // For "both", exclude equipment-only products - only include capital products that can be used for equipment
+      const isCapitalProduct = matchesCategory('working_capital', productCategory) ||
+                              matchesCategory('line of credit', productCategory) ||
+                              productCategory?.toLowerCase().includes('term loan') ||
+                              productCategory?.toLowerCase().includes('invoice factoring') ||
+                              productCategory?.toLowerCase().includes('purchase order');
+      
+      // Equipment-only products are excluded when user selects "both"
+      typeMatch = isCapitalProduct && !isEquipmentFinancing;
+      
+      if (isEquipmentFinancing && !isCapitalProduct) {
+        console.log(`🔍 [BOTH_FILTER] ${product.name}: Equipment-only product excluded for 'both' selection`);
+      }
+    } else if (lookingFor === 'capital') {
+      typeMatch = !isEquipmentFinancing;
+    } else if (lookingFor === 'equipment') {
+      typeMatch = isEquipmentFinancing || (fundsPurpose === 'equipment');
+    }
 
     // FINAL DECISION: Standard match OR LOC override
     const standardMatch = countryMatch && amountMatch && !factorExclusion && !equipmentExclusion && typeMatch;
