@@ -849,7 +849,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       <button
         id="chatLauncher"
         onClick={onToggle}
-        className="fixed bottom-5 right-5 text-white rounded-full px-5 py-3 flex items-center gap-2 shadow-lg cursor-pointer z-[1000] transition-colors duration-200"
+        className="chat-button text-white rounded-full px-5 py-3 flex items-center gap-2 shadow-lg cursor-pointer z-[1000] transition-colors duration-200"
         style={{
           background: '#007A3D',
           fontSize: '16px',
@@ -969,7 +969,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
             </>
           ) : (
             <>
-              <UserIcon className="w-4 h-4" />
+              <UserIcon />
               <span>Talk to a Human</span>
             </>
           )}

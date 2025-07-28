@@ -243,13 +243,15 @@ export function MainLayout() {
       <Route component={NotFound} />
     </Switch>
     
-    {/* Global ChatBot - Available on all pages */}
-    <ChatBot 
-      isOpen={isOpen}
-      onToggle={toggleChat}
-      currentStep={currentStep}
-      applicationData={applicationData}
-    />
+    {/* Global ChatBot - Available on all pages - Centered Bottom */}
+    <div className="finbot-wrapper">
+      <ChatBot 
+        isOpen={isOpen}
+        onToggle={toggleChat}
+        currentStep={currentStep}
+        applicationData={applicationData}
+      />
+    </div>
     </>
   );
 }
