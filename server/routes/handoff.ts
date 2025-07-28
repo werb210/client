@@ -34,7 +34,8 @@ router.post('/handoff/request', async (req, res) => {
 
     handoffQueue.push(handoffRequest);
 
-    console.log(`[HANDOFF] New request: ${handoffRequest.id}, Session: ${sessionId}, Sentiment: ${sentiment}`);
+    console.log(`✅ [HANDOFF] New request added: ${handoffRequest.id}, Session: ${sessionId}, Sentiment: ${sentiment}`);
+    console.log(`📋 [HANDOFF] Queue now has ${handoffQueue.length} total requests`);
 
     res.json({
       success: true,
@@ -55,9 +56,14 @@ router.post('/handoff/request', async (req, res) => {
 // Get handoff queue (for staff dashboard)
 router.get('/handoff/queue', async (req, res) => {
   try {
+    console.log('🔍 [HANDOFF ROUTER] Queue requested - current queue size:', handoffQueue.length);
+    console.log('📋 [HANDOFF ROUTER] Full queue:', handoffQueue.map(r => ({ id: r.id, status: r.status, timestamp: r.timestamp })));
+    
     const pendingRequests = handoffQueue
       .filter(req => req.status === 'pending')
       .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    console.log('✅ [HANDOFF ROUTER] Returning', pendingRequests.length, 'pending requests');
 
     res.json({
       success: true,

@@ -114,27 +114,17 @@ export default function SimpleDashboard() {
                   e.stopPropagation(); // Prevent card click handler
                   console.log('Upload Documents button clicked!');
                   
-                  // Check for existing application ID in storage
+                  // 🔧 FIX 3: PROPER APPLICATION ID BINDING FOR DOCUMENT UPLOADS
                   const existingAppId = sessionStorage.getItem('applicationId') || localStorage.getItem('applicationId');
                   if (existingAppId) {
-                    console.log('Using existing app ID:', existingAppId);
-                    const targetUrl = `/upload-documents?app=${existingAppId}`;
-                    console.log('Navigating to:', targetUrl);
-                    setLocation(targetUrl);
+                    console.log('🎯 [DASHBOARD] Using existing app ID:', existingAppId);
+                    const targetUrl = `/upload-documents?id=${existingAppId}`;
+                    console.log('🔗 [DASHBOARD] Navigating to:', targetUrl);
+                    window.location.href = targetUrl;
                   } else {
-                    // Create a new application session for document upload
-                    const newAppId = `temp-${Date.now()}`;
-                    console.log('Creating new app ID:', newAppId);
-                    sessionStorage.setItem('applicationId', newAppId);
-                    const targetUrl = `/upload-documents?app=${newAppId}`;
-                    console.log('Navigating to:', targetUrl);
-                    setLocation(targetUrl);
+                    console.warn('⚠️ [DASHBOARD] No application ID found - redirecting to start application');
+                    setLocation('/apply/step-1');
                   }
-                  
-                  // Fallback navigation method
-                  setTimeout(() => {
-                    window.location.href = `/upload-documents?app=${existingAppId || `temp-${Date.now()}`}`;
-                  }, 100);
                 }}
               >
                 Upload Documents

@@ -33,14 +33,26 @@ export function ChatBotDashboard() {
 
   const fetchHandoffQueue = async () => {
     try {
+      console.log('🔍 [HANDOFF] Fetching handoff queue from server...');
       const response = await fetch('/api/handoff/queue');
+      console.log('📡 [HANDOFF] Queue response status:', response.status);
+      
+      if (!response.ok) {
+        console.error('❌ [HANDOFF] Queue fetch failed:', response.status, response.statusText);
+        return;
+      }
+      
       const data = await response.json();
+      console.log('📋 [HANDOFF] Queue data received:', data);
       
       if (data.success) {
-        setHandoffQueue(data.queue);
+        setHandoffQueue(data.queue || []);
+        console.log(`✅ [HANDOFF] Queue updated with ${data.queue?.length || 0} requests`);
+      } else {
+        console.warn('⚠️ [HANDOFF] Queue response unsuccessful:', data);
       }
     } catch (error) {
-      console.error('Failed to fetch handoff queue:', error);
+      console.error('❌ [HANDOFF] Failed to fetch handoff queue:', error);
     }
   };
 

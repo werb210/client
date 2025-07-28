@@ -34,21 +34,28 @@ export default function UploadMissingDocuments() {
   const [allRequiredUploaded, setAllRequiredUploaded] = useState(false);
 
   useEffect(() => {
-    // Get application ID from URL params or localStorage
+    // 🔧 FIX 3: ENHANCED APPLICATION ID DETECTION FOR DOCUMENT UPLOADS
     const urlParams = new URLSearchParams(window.location.search);
-    const urlId = urlParams.get('id');
+    const urlId = urlParams.get('id') || urlParams.get('applicationId') || urlParams.get('app_id') || urlParams.get('app');
     const storageId = localStorage.getItem('applicationId');
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+    const hashId = hashParams.get('id') || hashParams.get('applicationId');
     
-    const finalId = urlId || storageId;
+    // Try multiple sources for application ID
+    const finalId = urlId || hashId || storageId;
     
-    console.log('🔍 [UPLOAD-DOCS] Application ID check:', {
+    console.log('🔍 [UPLOAD-DOCS] Enhanced application ID detection:', {
       fromURL: urlId,
+      fromHash: hashId,
       fromLocalStorage: storageId,
-      finalId
+      finalId,
+      fullURL: window.location.href,
+      search: window.location.search,
+      hash: window.location.hash
     });
 
     if (!finalId) {
-      console.warn('⚠️ [UPLOAD-DOCS] No application ID found');
+      console.warn('⚠️ [UPLOAD-DOCS] No application ID found in any source');
       toast({
         title: "Missing Application",
         description: "Please start an application before uploading documents.",
@@ -58,9 +65,13 @@ export default function UploadMissingDocuments() {
       return;
     }
 
+    // Store the found ID in localStorage for future use
+    localStorage.setItem('applicationId', finalId);
+    console.log(`✅ [UPLOAD-DOCS] Application ID set: ${finalId}`);
+    
     setApplicationId(finalId);
     loadApplicationData(finalId);
-  }, [setLocation]);
+  }, [setLocation, toast]);
 
   const loadApplicationData = async (appId: string) => {
     try {
