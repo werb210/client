@@ -72,6 +72,15 @@ export function useRecommendations(formStep1Data: Step1FormData) {
         return false;
       }
 
+      // ✅ LINE OF CREDIT OVERRIDE RULE - Always include LOC if amount fits
+      const isLineOfCredit = p.category?.toLowerCase().includes('line of credit') || 
+                            p.category?.toLowerCase().includes('loc') ||
+                            p.category === 'Business Line of Credit';
+      if (isLineOfCredit) {
+        console.log(`🔍 [LOC_OVERRIDE] ${p.name}: FORCE INCLUDED due to Line of Credit rule`);
+        return true; // Skip all other validation for LOC products
+      }
+
       // Revenue requirement check - NEW: Add revenue filtering
       const revenueMin = getRevenueMin(p);
       const applicantRevenue = revenueLastYear || 0;
@@ -161,6 +170,8 @@ export function useRecommendations(formStep1Data: Step1FormData) {
  * Determines if a product category is suitable for business capital needs
  */
 function isBusinessCapitalProduct(category: string): boolean {
+  if (!category) return false;
+  
   const capitalCategories = [
     'Working Capital',
     'Business Line of Credit', 
@@ -172,10 +183,18 @@ function isBusinessCapitalProduct(category: string): boolean {
     'Purchase Order Financing'
   ];
   
-  return capitalCategories.some(cat => 
-    category.toLowerCase().includes(cat.toLowerCase()) ||
-    cat.toLowerCase().includes(category.toLowerCase())
+  const categoryLower = category.toLowerCase();
+  const isCapital = capitalCategories.some(cat => 
+    categoryLower.includes(cat.toLowerCase()) ||
+    cat.toLowerCase().includes(categoryLower)
   );
+  
+  // Enhanced debug logging for Working Capital specifically
+  if (categoryLower.includes('working') || categoryLower.includes('capital')) {
+    console.log(`🔍 [CAPITAL_CHECK] "${category}" -> ${isCapital ? 'IS CAPITAL ✅' : 'NOT CAPITAL ❌'}`);
+  }
+  
+  return isCapital;
 }
 
 /**

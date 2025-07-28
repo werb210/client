@@ -66,28 +66,36 @@ export function filterProducts(products: LenderProduct[], form: RecommendationFo
     const amountRange = getAmountRange(product);
     const amountMatch = fundingAmount >= amountRange.min && fundingAmount <= amountRange.max;
     
-    // 3. INVOICE FACTORING BUSINESS RULE - Using category helper
+    // 3. LINE OF CREDIT OVERRIDE RULE - Always include LOC if amount fits
     const productCategory = getProductCategory(product);
+    const isLineOfCredit = matchesCategory('line of credit', productCategory) || 
+                          productCategory?.toLowerCase().includes('line of credit') ||
+                          productCategory?.toLowerCase().includes('loc');
+    const LOC_OVERRIDE = isLineOfCredit && countryMatch && amountMatch;
+    
+    // 4. INVOICE FACTORING BUSINESS RULE - Using category helper
     const isInvoiceFactoring = matchesCategory('factoring', productCategory);
     const factorExclusion = isInvoiceFactoring && accountsReceivableBalance === 0;
     
-    // 4. EQUIPMENT FINANCING BUSINESS RULE (RELAXED) - Using category helper
+    // 5. EQUIPMENT FINANCING BUSINESS RULE (RELAXED) - Using category helper
     const isEquipmentFinancing = matchesCategory('equipment', productCategory);
     const equipmentExclusion = isEquipmentFinancing && 
                               lookingFor === 'capital' && 
                               fundsPurpose !== 'equipment' &&
                               !fundsPurpose?.includes('equipment');
     
-    // 5. PRODUCT TYPE MATCHING - Using fuzzy category matching
+    // 6. PRODUCT TYPE MATCHING - Using fuzzy category matching
     const typeMatch = lookingFor === 'both' ||
                      (lookingFor === 'capital' && !isEquipmentFinancing) ||
                      (lookingFor === 'equipment' && isEquipmentFinancing) ||
                      (fundsPurpose === 'equipment' && isEquipmentFinancing);
 
-    const passes = countryMatch && amountMatch && !factorExclusion && !equipmentExclusion && typeMatch;
+    // FINAL DECISION: Standard match OR LOC override
+    const standardMatch = countryMatch && amountMatch && !factorExclusion && !equipmentExclusion && typeMatch;
+    const passes = standardMatch || LOC_OVERRIDE;
     
     // Debug logging for key products and all Working Capital products
-    if (product.name?.includes('Accord') || product.name?.includes('Advance') || productCategory === 'Working Capital' || !passes) {
+    if (product.name?.includes('Accord') || product.name?.includes('Advance') || productCategory === 'Working Capital' || isLineOfCredit || !passes) {
       console.log(`🔍 [FILTER] ${product.name} (${productCategory}):`, {
         geographies: geographies.join(','),
         countryMatch,
@@ -96,15 +104,17 @@ export function filterProducts(products: LenderProduct[], form: RecommendationFo
         typeMatch,
         factorExclusion,
         equipmentExclusion,
-        passes
+        LOC_OVERRIDE: LOC_OVERRIDE ? '✅ FORCED INCLUDE' : false,
+        passes: passes ? '✅' : '❌'
       });
     }
     
-    // Special logging for Working Capital products
+    // Special logging for Working Capital products and LOC overrides
     if (productCategory === 'Working Capital') {
       console.log(`💼 [WORKING_CAPITAL_FILTER] ${product.name} (${product.lender_name || 'Unknown Lender'}):`, {
         id: product.id,
         passes,
+        LOC_OVERRIDE: LOC_OVERRIDE ? '✅ FORCED BY LOC RULE' : false,
         reasons: {
           countryMatch: `${product.country} === ${normalizedHQ} = ${countryMatch}`,
           amountMatch: `${amountRange.min} <= ${fundingAmount} <= ${amountRange.max} = ${amountMatch}`,
@@ -113,6 +123,11 @@ export function filterProducts(products: LenderProduct[], form: RecommendationFo
           equipmentExclusion: `Equipment excluded = ${equipmentExclusion}`
         }
       });
+    }
+    
+    // Log LOC override decisions
+    if (LOC_OVERRIDE) {
+      console.log(`🔗 [LOC_OVERRIDE] ${product.name}: FORCE INCLUDED - Line of Credit rule applied`);
     }
     
     return passes;

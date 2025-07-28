@@ -114,6 +114,8 @@ export const CATEGORY_MAP: Record<string, string[]> = {
   ],
   working_capital: [
     "Working Capital", 
+    "Working Capital Loan",
+    "Working Capital Financing",
     "Term Loan", 
     "Loan",
     "Business Loan",
@@ -128,7 +130,7 @@ export const CATEGORY_MAP: Record<string, string[]> = {
     "invoice_factoring",
     "accounts_receivable_factoring"
   ],
-  line_of_credit: [
+  "line of credit": [
     "Line of Credit",
     "Business Line of Credit", 
     "LOC",
