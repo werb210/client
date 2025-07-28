@@ -18,8 +18,8 @@ export default function UploadDocuments() {
   const urlParams = new URLSearchParams(window.location.search);
   const appId = urlParams.get('app') || urlParams.get('id') || urlParams.get('applicationId');
   
-  console.log('🔄 [UploadDocuments] NEW IMPLEMENTATION - Loading page with app ID:', appId);
-  console.log('🔄 [UploadDocuments] NEW IMPLEMENTATION - This should show in console if working');
+  console.log('🔄 [UploadDocuments] STEP 5 ARCHITECTURE - Loading page with app ID:', appId);
+  console.log('🔄 [UploadDocuments] STEP 5 ARCHITECTURE - Document cards should be visible now');
   
   // Fetch application data (same as Step 5)
   const { data: application, isLoading, error } = useQuery({
