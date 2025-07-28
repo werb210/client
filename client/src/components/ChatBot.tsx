@@ -363,11 +363,10 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       console.log('Initializing Socket.IO connection for real-time chat');
       
       // Use global socket if available, or create new one with iOS-compatible settings
-      // Connect to the current domain (client app's server) not the staff backend
-      const socketUrl = window.location.origin;
-      console.log('ChatBot connecting Socket.IO to:', socketUrl);
+      // Connect to the local client server using relative path
+      console.log('ChatBot connecting Socket.IO to local client server');
       
-      const socketInstance = (window as any).globalSocket || (window as any).io(socketUrl, {
+      const socketInstance = (window as any).globalSocket || (window as any).io('/', {
         transports: ['websocket'],
         upgrade: false,
         timeout: 20000,
