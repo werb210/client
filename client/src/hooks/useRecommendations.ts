@@ -98,6 +98,10 @@ export function useRecommendations(formStep1Data: Step1FormData) {
       // Product type check based on what user is looking for
       if (formStep1Data.lookingFor === "capital") {
         const isCapitalProduct = isBusinessCapitalProduct(p.category);
+        // Enhanced debug logging for Working Capital products
+        if (p.category?.toLowerCase().includes('working')) {
+          console.log(`🔍 [CAPITAL_CHECK] "${p.name}" (${p.category}) → Capital Product: ${isCapitalProduct ? 'YES ✅' : 'NO ❌'}`);
+        }
         if (!isCapitalProduct) {
           failedProducts.push({product: p, reason: `Not capital product: category=${p.category}`});
           return false;
@@ -184,14 +188,20 @@ function isBusinessCapitalProduct(category: string): boolean {
   ];
   
   const categoryLower = category.toLowerCase();
-  const isCapital = capitalCategories.some(cat => 
+  
+  // Enhanced Working Capital detection with multiple variations
+  const isWorkingCapital = categoryLower.includes('working capital') || 
+                          categoryLower.includes('working_capital') ||
+                          categoryLower === 'working capital';
+  
+  const isCapital = isWorkingCapital || capitalCategories.some(cat => 
     categoryLower.includes(cat.toLowerCase()) ||
     cat.toLowerCase().includes(categoryLower)
   );
   
-  // Enhanced debug logging for Working Capital specifically
-  if (categoryLower.includes('working') || categoryLower.includes('capital')) {
-    console.log(`🔍 [CAPITAL_CHECK] "${category}" -> ${isCapital ? 'IS CAPITAL ✅' : 'NOT CAPITAL ❌'}`);
+  // Enhanced debug logging for all products
+  if (categoryLower.includes('working') || categoryLower.includes('capital') || !isCapital) {
+    console.log(`🔍 [CAPITAL_CHECK] "${category}" -> Working Capital: ${isWorkingCapital}, Is Capital: ${isCapital ? 'YES ✅' : 'NO ❌'}`);
   }
   
   return isCapital;
