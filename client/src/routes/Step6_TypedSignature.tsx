@@ -75,7 +75,7 @@ export default function Step6_TypedSignature() {
         agreementsCount: Object.values(authData.agreements).filter(Boolean).length
       });
 
-      // ✅ TASK 2: Check document evidence but allow bypass if set in Step 5
+      // ✅ FIX 1: Proceed Without Documents Loop Bug - Allow empty uploads only if bypass flag is set
       const hasUploads =
         (state.step5DocumentUpload?.uploadedFiles?.length ?? 0) > 0 ||
         (state.step5DocumentUpload?.files?.length ?? 0) > 0;
@@ -86,9 +86,11 @@ export default function Step6_TypedSignature() {
         hasUploads,
         bypassDocuments,
         uploadedFilesCount: state.step5DocumentUpload?.uploadedFiles?.length || 0,
-        filesCount: state.step5DocumentUpload?.files?.length || 0
+        filesCount: state.step5DocumentUpload?.files?.length || 0,
+        willAllowEmptyUploads: bypassDocuments
       });
 
+      // Only block finalization if NO documents AND NO bypass flag
       if (!hasUploads && !bypassDocuments) {
         console.warn("🚨 BLOCKING FINALIZATION — No upload evidence found and no bypass set");
         toast({
@@ -98,6 +100,11 @@ export default function Step6_TypedSignature() {
         });
         setLocation('/apply/step-5');
         return;
+      }
+
+      // Log bypass usage for debugging
+      if (bypassDocuments && !hasUploads) {
+        console.log("✅ [STEP6] Allowing finalization with empty uploads due to bypass flag");
       }
 
       if (bypassDocuments) {

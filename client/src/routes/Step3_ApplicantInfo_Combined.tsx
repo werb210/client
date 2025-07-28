@@ -295,13 +295,13 @@ export default function Step3ApplicantInfoCombined() {
                 )}
               </div>
 
-              {/* Zip Code */}
+              {/* ZIP Code - FIX 6: Use valid U.S. zip format */}
               <div className="space-y-2">
-                <Label htmlFor="businessZipCode">Zip Code *</Label>
+                <Label htmlFor="businessZipCode">ZIP Code *</Label>
                 <Input
                   id="businessZipCode"
                   {...form.register('businessZipCode')}
-                  placeholder="12345"
+                  placeholder="12345 or 12345-6789"
                   maxLength={10}
                 />
                 {form.formState.errors.businessZipCode && (

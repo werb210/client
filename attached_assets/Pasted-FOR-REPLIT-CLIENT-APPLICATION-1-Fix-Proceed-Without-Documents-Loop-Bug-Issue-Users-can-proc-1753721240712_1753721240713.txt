@@ -1,0 +1,92 @@
+FOR REPLIT – CLIENT APPLICATION
+1. 📤 Fix “Proceed Without Documents” Loop Bug
+Issue: Users can proceed without uploading documents, but submission loops back to upload screen.
+
+Fix Instructions:
+
+In Step 6 component, allow empty uploads only if bypass flag is set
+
+Backend must accept applications with required_documents: [] if bypassUpload: true
+
+Fix PATCH /applications/:id/finalize logic to not reject 0 documents when bypass is true
+
+2. 🧪 Write Full Test Coverage for Finalized Applications (No Docs)
+Instructions:
+
+Simulate entire 7-step flow with “Proceed Without Required Documents”
+
+Check:
+
+application.status === 'pending'
+
+All required agreements + signature captured
+
+finalizeApplication() call success
+
+App redirects to /application/complete not back to /upload
+
+3. 🧠 FinBot Chat - Report Issue Storage Test
+Fix Instructions:
+
+When user clicks “Report an Issue”, ensure it:
+
+Calls POST /api/chat/issues with transcript
+
+Creates CRM contact if new (if name + email submitted)
+
+Confirm issue logs appear in Staff App > AI Reports tab
+
+4. 🧪 Smoke Test: Application Submission with Docs
+Test Instructions:
+
+Select any loan product
+
+Upload 3 sample PDFs (Bank + Financials)
+
+Complete agreements and signature
+
+Submit → must reach /application/complete
+
+Staff App must receive:
+
+Application card
+
+Uploaded docs in S3
+
+Contact auto-created
+
+5. 🧠 Test Product Recommendation Logic (Step 2)
+Inputs: United States, Equipment Financing, $50,000
+Expected Output: Product category “Business Line of Credit” with 95% match
+Fixes to Check:
+
+Ensure filters apply business_location, purpose, and revenue
+
+Log filter output length and matched categories in console for QA
+
+6. 🧾 Fix Typo in Step 1 / Step 3
+Replace “ZIP Code” placeholder with valid U.S. zip format
+
+Fix date formatting for “Business Start Date”
+
+Use dropdown for U.S. states (already working)
+
+✅ AFTER IMPLEMENTATION: Replit Must Report Back
+For each instruction above:
+
+✅ Confirm route added/updated
+
+✅ Confirm front-end reflects changes
+
+✅ Confirm environment variables set (Twilio, Microsoft 365)
+
+✅ Report back test results (success or error)
+
+Let me know when to proceed with final verification or if you'd like the deployment script.
+
+
+
+
+
+
+
