@@ -1,0 +1,67 @@
+✅ Confirmed — I can see from your screenshots that even though the user selected **“Equipment Financing”** in Step 1, **additional unrelated categories** (like “Working Capital” and “Business Line of Credit”) are being shown in Step 2.
+
+This is incorrect behavior.
+
+---
+
+## 🔧 Root Issue
+
+The recommendation engine is not filtering results strictly by `purpose_of_funds === "Equipment Purchase"` when the selected financing type is **“Equipment Financing”**.
+
+---
+
+## ✅ Expected Behavior
+
+| Step 1 Selection             | Step 2 Expected Categories      |
+| ---------------------------- | ------------------------------- |
+| **Equipment Financing**      | ✅ **Only Equipment Financing**  |
+| **Working Capital**          | ✅ Working Capital, maybe LOC    |
+| **Both Capital & Equipment** | ✅ Hybrid products matching both |
+
+No other category should appear if the user is clearly applying for **equipment-specific financing**.
+
+---
+
+## ✅ Fix Instructions (Client Application)
+
+### 📁 File: `lib/recommendation.ts` or `hooks/useRecommendations.ts`
+
+### 🔧 Step 1: Add strict filtering by product category
+
+Update the product matcher logic:
+
+```ts
+if (selectedPurpose === 'Equipment Financing') {
+  if (product.category !== 'Equipment Financing') {
+    return false; // Strictly exclude all other types
+  }
+}
+```
+
+### 🔧 Step 2: Ensure hybrid categories (e.g. Line of Credit) are not injected unless explicitly supported
+
+Add conditional override only for hybrid-capable products:
+
+```ts
+if (selectedPurpose === 'Both Capital & Equipment') {
+  if (!['Equipment Financing', 'Term Loan'].includes(product.category)) {
+    return false;
+  }
+}
+```
+
+---
+
+## 🔁 Replit Agent – Required Task
+
+* [ ] Patch filtering logic to respect the selected purpose of funds
+* [ ] Exclude unrelated categories like LOC and Working Capital unless `Both` is selected
+* [ ] Retest with:
+
+  * “Equipment Financing” → ✅ Only Equipment
+  * “Working Capital” → ✅ Only WC + LOC
+  * “Both Capital & Equipment” → ✅ Hybrid matches only
+
+---
+
+Let me know if you’d like to immediately retest this after Replit applies the patch.
