@@ -207,6 +207,15 @@ h1, h2, h3, h4, h5, h6 {
     @apply font-sans antialiased bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   }
+
+  /* Mobile chatbot fullscreen support */
+  body.chatbot-fullscreen {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100vh;
+    height: var(--device-height, 100vh);
+  }
 }
 
 @layer components {
@@ -273,6 +282,60 @@ h1, h2, h3, h4, h5, h6 {
   
   .bg-warning-50 {
     background-color: var(--warning-50);
+  }
+
+  /* ChatBot mobile optimization for iOS */
+  .finbot-wrapper {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  .finbot-wrapper > * {
+    pointer-events: auto;
+  }
+
+  /* Mobile viewport fixes for iOS */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS-specific styles */
+    .finbot-wrapper {
+      bottom: calc(20px + env(safe-area-inset-bottom));
+      right: calc(20px + env(safe-area-inset-right));
+    }
+  }
+
+  /* Keyboard-aware mobile chat */
+  @media (max-width: 640px) {
+    .finbot-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100vh;
+      height: var(--device-height, 100vh);
+      max-height: calc(100vh - var(--keyboard-height, 0px));
+      z-index: 9999;
+    }
+
+    /* Prevent zoom on input focus for iOS */
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  /* Visual Viewport API support for mobile keyboards */
+  @supports (height: 100dvh) {
+    @media (max-width: 640px) {
+      .finbot-wrapper {
+        height: 100dvh;
+      }
+    }
   }
   
   .bg-warning-100 {

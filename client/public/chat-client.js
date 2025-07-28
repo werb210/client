@@ -12,8 +12,16 @@ document.addEventListener('DOMContentLoaded', function() {
   if (typeof io !== 'undefined') {
     console.log('Socket.IO available, initializing connection...');
     
-    // Initialize socket connection
-    socket = io();
+    // Initialize socket connection with iOS-compatible transport settings
+    socket = io({
+      transports: ['websocket'],
+      upgrade: false,
+      timeout: 20000,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+      autoConnect: true
+    });
     
     // Connection event handlers
     socket.on('connect', () => {
@@ -26,6 +34,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     socket.on('connect_error', (error) => {
       console.error('Socket.IO connection error:', error);
+      console.warn('Connection Error Details:', error.message);
+      console.warn('Retrying connection...');
+    });
+
+    socket.on('reconnect_attempt', () => {
+      console.log('Reconnecting to Socket.IO server...');
+    });
+
+    socket.on('reconnect', (attemptNumber) => {
+      console.log('Socket.IO reconnected after', attemptNumber, 'attempts');
+    });
+
+    socket.on('reconnect_failed', () => {
+      console.error('Socket.IO failed to reconnect after maximum attempts');
     });
 
     // Join a session on connection

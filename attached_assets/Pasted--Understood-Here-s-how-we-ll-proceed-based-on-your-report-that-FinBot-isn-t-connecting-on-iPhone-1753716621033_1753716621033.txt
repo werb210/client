@@ -1,0 +1,104 @@
+✅ Understood. Here’s how we’ll proceed based on your report that **FinBot isn’t connecting on iPhone** (as shown in your screenshot):
+
+---
+
+## 🧪 Step-by-Step Debug Plan: Chatbot Not Connecting on iPhone (FinBot)
+
+### ✅ Immediate Actions for Replit (Client Application)
+
+1. **Test on iPhone Safari + Chrome:**
+
+   * Open DevTools for mobile browser (Safari Web Inspector or Chrome Remote Debugging).
+   * Check console for WebSocket or CORS-related errors blocking connection to the chatbot server.
+
+2. **Verify WebSocket Connection:**
+
+   * Ensure that the client app connects to the correct server:
+
+     ```
+     wss://staff.boreal.financial
+     ```
+
+     or fallback:
+
+     ```
+     wss://replit-url/... (Replit dev)
+     ```
+
+3. **Check Socket.IO Version Compatibility:**
+
+   * Confirm that both `client/src/components/ChatBot.tsx` and the Staff App backend use matching Socket.IO versions (`v4.x` preferred).
+   * Mismatched versions can cause mobile-specific handshake failures.
+
+4. **Force iOS-Compatible Transport:**
+
+   * Update `chat-client.js` and `ChatBot.tsx`:
+
+     ```ts
+     const socket = io(SERVER_URL, {
+       transports: ['websocket'],
+       upgrade: false,
+     });
+     ```
+
+5. **Test HTTPS / SSL Certificates:**
+
+   * iOS may reject self-signed or invalid SSL certs.
+   * Verify:
+
+     ```
+     https://staff.boreal.financial/socket.io
+     ```
+
+     returns a valid upgrade response (status 101 on desktop and mobile).
+
+6. **Mobile Viewport Issue:**
+
+   * Ensure the chatbot container is not being clipped or placed offscreen in small viewports.
+   * Add:
+
+     ```css
+     position: fixed;
+     bottom: 20px;
+     right: 20px;
+     z-index: 9999;
+     ```
+
+7. **Reconnect Debug Logs:**
+
+   * Enable reconnection logs in `chat-client.js`:
+
+     ```ts
+     socket.on('connect_error', (err) => {
+       console.warn('Connection Error:', err.message);
+     });
+     socket.on('reconnect_attempt', () => {
+       console.log('Reconnecting...');
+     });
+     ```
+
+---
+
+## 📲 To User:
+
+Please try the following:
+
+* **Refresh the chatbot screen on Safari.**
+* **Tap "Start Your Application" and wait 5–10 seconds** to see if FinBot connects.
+* If it still fails, open iOS Safari Developer Tools on a Mac and **look for network errors** related to:
+
+  * WebSocket failures
+  * SSL/TLS
+  * CORS
+
+---
+
+## ✅ Replit Final Instructions
+
+Replit (Client App):
+
+* Implement fixes 2 through 6 above.
+* Test on iOS device with both mobile Chrome and Safari.
+* Report back with the console output if FinBot still does not connect.
+
+Let me know once FinBot connects successfully or if you'd like to enable **fallback chat mode (email-based escalation)** for mobile users.

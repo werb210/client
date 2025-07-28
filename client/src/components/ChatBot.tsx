@@ -362,8 +362,16 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     if (isOpen && typeof window !== 'undefined' && (window as any).io) {
       console.log('Initializing Socket.IO connection for real-time chat');
       
-      // Use global socket if available, or create new one
-      const socketInstance = (window as any).globalSocket || (window as any).io();
+      // Use global socket if available, or create new one with iOS-compatible settings
+      const socketInstance = (window as any).globalSocket || (window as any).io({
+        transports: ['websocket'],
+        upgrade: false,
+        timeout: 20000,
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5,
+        autoConnect: true
+      });
       setSocket(socketInstance);
 
       // Join the session with proper error handling
@@ -392,7 +400,21 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
       socketInstance.on('connect_error', (error: any) => {
         console.error('Socket.IO connection error:', error);
+        console.warn('Connection Error Details:', error.message);
+        console.warn('Retrying connection...');
         setIsConnected(false);
+      });
+
+      socketInstance.on('reconnect_attempt', () => {
+        console.log('Reconnecting to Socket.IO server...');
+      });
+
+      socketInstance.on('reconnect', (attemptNumber: number) => {
+        console.log('Socket.IO reconnected after', attemptNumber, 'attempts');
+      });
+
+      socketInstance.on('reconnect_failed', () => {
+        console.error('Socket.IO failed to reconnect after maximum attempts');
       });
 
       // Listen for real-time messages
