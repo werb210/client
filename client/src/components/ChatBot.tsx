@@ -186,6 +186,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   const [humanRequestStatus, setHumanRequestStatus] = useState<'idle' | 'requesting' | 'connected'>('idle');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userName, setUserName] = useState<string>('');
+  const [isEscalated, setIsEscalated] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const proactiveTimeoutRef = useRef<NodeJS.Timeout>();
@@ -586,7 +587,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   };
 
   const sendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading || isEscalated) return;
 
     const messageText = inputValue.trim();
     
@@ -983,17 +984,17 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ask me anything about financing..."
-          disabled={isLoading}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          placeholder={isEscalated ? "Chat escalated to human agent..." : "Ask me anything about financing..."}
+          disabled={isLoading || isEscalated}
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
         />
         <button
           onClick={sendMessage}
-          disabled={!inputValue.trim() || isLoading}
+          disabled={!inputValue.trim() || isLoading || isEscalated}
           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          style={{ background: '#007A3D' }}
+          style={{ background: isEscalated ? '#9CA3AF' : '#007A3D' }}
           onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = '#005D2E')}
-          onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = '#007A3D')}
+          onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = isEscalated ? '#9CA3AF' : '#007A3D')}
         >
           <SendIcon />
         </button>
@@ -1012,35 +1013,54 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
           <div className="flex gap-2">
             <button
               onClick={async () => {
-                addBotMessage('Connecting you to a human agent. Please hold while we find someone to assist you...');
+                // IMMEDIATELY block further chatbot responses
+                setIsEscalated(true);
+                setHumanRequestStatus('requesting');
+                
+                // Add connection message and stop AI responses
+                addBotMessage('🤝 Connecting you to a human agent... Your chat session has been escalated to our support team. Please wait while we connect you.');
                 
                 try {
-                  // Request human assistance via both Socket.IO and HTTP
+                  // Get user contact info
+                  const storedEmail = sessionStorage.getItem('userEmail') || userEmail || 'anonymous';
+                  const storedName = sessionStorage.getItem('userName') || userName || 'Anonymous User';
+                  const clientId = sessionId;
+                  
+                  console.log('🚨 [ESCALATION] Session escalated - blocking AI responses');
+                  console.log('📞 [ESCALATION] Requesting human assistance via Socket.IO');
+                  
+                  // Use the correct event name as specified
                   if (socket && isConnected) {
-                    console.log('📞 Requesting human assistance via Socket.IO');
-                    // Use the correct event name and simple data structure
-                    socket.emit('user-request-human', { 
+                    socket.emit('escalate_to_human', {
+                      clientId,
+                      name: storedName,
+                      email: storedEmail,
+                      timestamp: new Date().toISOString(),
                       sessionId,
-                      userName: sessionStorage.getItem('userName') || applicationData?.firstName || 'Customer'
+                      context: { currentStep, applicationData }
                     });
-                    console.log('Client emitted user-request-human via footer button');
+                    console.log('✅ [ESCALATION] Escalation event emitted via Socket.IO');
                   }
 
-                  // Also make HTTP request as fallback
+                  // HTTP fallback
                   await fetch('/api/chat/request-staff', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                       sessionId,
-                      userName: applicationData?.firstName || 'Customer',
-                      context: { currentStep, applicationData }
+                      userName: storedName,
+                      userEmail: storedEmail,
+                      context: { currentStep, applicationData, escalated: true }
                     })
                   });
                   
-                  console.log('✅ Human assistance request sent successfully');
+                  setHumanRequestStatus('connected');
+                  console.log('✅ [ESCALATION] Human assistance request sent - AI responses blocked');
                 } catch (error) {
-                  console.error('❌ Failed to request human assistance:', error);
-                  addBotMessage('Sorry, we had trouble connecting you to a human agent. Please try the Report Issue button or call us directly at 1-888-811-1887.');
+                  console.error('❌ [ESCALATION] Failed to escalate to human:', error);
+                  setIsEscalated(false); // Re-enable AI if escalation fails
+                  setHumanRequestStatus('idle');
+                  addBotMessage('Sorry, we had trouble connecting you to a human agent. Please try again or call us directly at 1-888-811-1887.');
                 }
               }}
               className="px-3 py-1.5 rounded border-none cursor-pointer transition-colors duration-200 text-white text-xs"

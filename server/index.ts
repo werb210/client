@@ -2485,9 +2485,26 @@ app.use((req, res, next) => {
       }
     });
     
-    // 🔧 Task 3: Handle "request_human" events for live staff UI
-    socket.on('request_human', (data) => {
-      console.log(`🔗 [SOCKET] Human assistance request:`, data);
+    // Handle escalate_to_human event - blocks AI responses
+    socket.on('escalate_to_human', (data) => {
+      console.log(`🚨 [ESCALATION] Chat escalated to human:`, data);
+      
+      // Mark session as escalated to block further AI responses
+      const escalationData = {
+        clientId: data.clientId || data.sessionId,
+        name: data.name,
+        email: data.email,
+        timestamp: data.timestamp,
+        sessionId: data.sessionId,
+        context: data.context,
+        escalated: true
+      };
+      
+      // Broadcast escalation to staff immediately - HIGH PRIORITY
+      socket.broadcast.emit('chat_escalated', escalationData);
+      io.emit('staff_urgent_escalation', escalationData); // High priority staff notification
+      
+      console.log(`🚨 [ESCALATION] Session ${data.sessionId} escalated and broadcasted to staff`);
       
       // Create CRM contact with escalation context
       if (data.name && data.email) {
@@ -2501,13 +2518,27 @@ app.use((req, res, next) => {
             firstName: data.name.split(" ")[0],
             lastName: data.name.split(" ")[1] || "",
             email: data.email,
-            source: "chat_escalation",
-            context: `Page: ${data.currentPage}, Session: ${data.sessionId}`,
-            timestamp: data.timestamp
+            source: "chat_escalation_blocked",
+            context: `Escalated Session: ${data.sessionId}, Client: ${data.clientId}`,
+            timestamp: data.timestamp,
+            priority: "high"
           })
         }).then(response => {
           if (response.ok) {
-            console.log(`✅ [SOCKET] CRM contact created for chat escalation`);
+            console.log(`✅ [ESCALATION] High-priority CRM contact created for escalated chat`);
+          }
+        }).catch(err => {
+          console.log(`⚠️ [ESCALATION] CRM escalation contact failed:`, err.message);
+        });
+      }
+      
+      // Notify client that escalation was successful
+      socket.emit('escalation_confirmed', {
+        status: 'escalated',
+        message: 'Your chat has been escalated to a human agent. AI responses are now blocked.',
+        timestamp: new Date().toISOString()
+      });
+    });
           }
         }).catch(err => {
           console.log(`⚠️ [SOCKET] CRM escalation contact failed:`, err.message);
