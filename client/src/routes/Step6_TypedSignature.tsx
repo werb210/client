@@ -527,6 +527,9 @@ export default function Step6_TypedSignature() {
           const retryResult = await retryResponse.json();
           console.log('✅ [STEP6] Application finalized successfully after form_data resubmission:', retryResult);
           
+          // ✅ REQUIRED CLIENT APPLICATION LOGGING
+          console.log("[CLIENT] Final submission result:", retryResult);
+          
           // ✅ C. Step 6 (Finalization) - SUBMISSION RELIABILITY CHECKLIST
           console.log("✅ Application finalized:", applicationId);
           
@@ -580,6 +583,9 @@ export default function Step6_TypedSignature() {
 
       const result = await response.json();
       console.log('✅ [STEP6] Application submitted successfully:', result);
+      
+      // ✅ REQUIRED CLIENT APPLICATION LOGGING
+      console.log("[CLIENT] Final submission result:", result);
 
       // ✅ C. Step 6 (Finalization) - SUBMISSION RELIABILITY CHECKLIST
       console.log("✅ Application finalized:", applicationId);
