@@ -32,7 +32,9 @@ export default function UploadDocuments() {
   // Get required document types from application
   const requiredDocs = application ? getRequiredDocumentTypes(application) : [];
   
-  console.log('📋 [UploadDocuments] Required documents:', requiredDocs.length);
+  console.log('📋 [UploadDocuments] Application data:', application);
+  console.log('📋 [UploadDocuments] Required documents:', requiredDocs.length, requiredDocs);
+  console.log('📋 [UploadDocuments] Query status:', { isLoading, error: error?.message });
   
   // Handle file upload completion
   const handleUploadComplete = async (file: File, docType: string) => {
@@ -40,7 +42,8 @@ export default function UploadDocuments() {
       console.log(`📤 [UploadDocuments] Processing upload: ${file.name} for type ${docType}`);
       
       // Upload to staff backend API (already working from existing implementation)
-      await uploadDocumentToStaffAPI(appId!, file, docType);
+      const result = await uploadDocumentToStaffAPI(appId!, file, docType);
+      console.log('📤 [UploadDocuments] Upload result:', result);
       
       setUploadedCount(prev => prev + 1);
       
@@ -101,6 +104,15 @@ export default function UploadDocuments() {
     }
   };
   
+  // Debug: Force show document cards for testing
+  console.log('📋 [UploadDocuments] Debug - Current state:', {
+    appId,
+    isLoading,
+    hasApplication: !!application,
+    hasError: !!error,
+    requiredDocsLength: requiredDocs.length
+  });
+
   // Loading state
   if (isLoading) {
     return (
@@ -131,16 +143,67 @@ export default function UploadDocuments() {
     );
   }
   
-  // No documents required
-  if (requiredDocs.length === 0) {
+  // No documents required - but let's always show something for testing
+  if (requiredDocs.length === 0 && application) {
+    // Show default working capital documents if no specific requirements found
+    const defaultDocs = [
+      { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 6 },
+      { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 },
+      { type: 'tax_returns', category: 'tax', label: 'Business Tax Returns', required: 3 }
+    ];
+    
+    console.log('📋 [UploadDocuments] No specific requirements found, using default documents');
+    
     return (
-      <Step5Wrapper title="Upload Documents">
-        <div className="text-center py-8">
-          <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900">No Documents Required</h3>
-          <p className="text-gray-600 mb-6">Your application doesn't require additional documents at this time.</p>
-          <Button onClick={() => setLocation('/dashboard')}>
-            Return to Dashboard
+      <Step5Wrapper 
+        title="Upload Required Documents" 
+        description="Complete your application by uploading the required documents below"
+      >
+        {/* Default Document Upload Cards */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
+          {defaultDocs.map((docType) => (
+            <DocumentUploadCard 
+              key={docType.type} 
+              docType={docType.type} 
+              appId={appId!}
+              label={docType.label}
+              required={docType.required}
+              category={docType.category}
+              onUploadComplete={handleUploadComplete}
+            />
+          ))}
+        </div>
+        
+        {/* Upload Progress Summary */}
+        {uploadedCount > 0 && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <span className="text-green-800 font-medium">
+                {uploadedCount} document{uploadedCount !== 1 ? 's' : ''} uploaded successfully
+              </span>
+            </div>
+          </div>
+        )}
+        
+        {/* Navigation */}
+        <div className="flex justify-between items-center pt-6">
+          <Button
+            variant="outline"
+            onClick={() => setLocation('/dashboard')}
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Dashboard</span>
+          </Button>
+          
+          <Button
+            onClick={handleSubmitDocuments}
+            disabled={uploadedCount === 0}
+            className="flex items-center space-x-2"
+          >
+            <span>Submit Documents</span>
+            <CheckCircle className="w-4 h-4" />
           </Button>
         </div>
       </Step5Wrapper>
