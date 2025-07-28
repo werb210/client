@@ -118,14 +118,23 @@ export default function SimpleDashboard() {
                   const existingAppId = sessionStorage.getItem('applicationId') || localStorage.getItem('applicationId');
                   if (existingAppId) {
                     console.log('Using existing app ID:', existingAppId);
-                    setLocation(`/upload-documents?app=${existingAppId}`);
+                    const targetUrl = `/upload-documents?app=${existingAppId}`;
+                    console.log('Navigating to:', targetUrl);
+                    setLocation(targetUrl);
                   } else {
                     // Create a new application session for document upload
                     const newAppId = `temp-${Date.now()}`;
                     console.log('Creating new app ID:', newAppId);
                     sessionStorage.setItem('applicationId', newAppId);
-                    setLocation(`/upload-documents?app=${newAppId}`);
+                    const targetUrl = `/upload-documents?app=${newAppId}`;
+                    console.log('Navigating to:', targetUrl);
+                    setLocation(targetUrl);
                   }
+                  
+                  // Fallback navigation method
+                  setTimeout(() => {
+                    window.location.href = `/upload-documents?app=${existingAppId || `temp-${Date.now()}`}`;
+                  }, 100);
                 }}
               >
                 Upload Documents
