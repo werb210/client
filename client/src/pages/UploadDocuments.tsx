@@ -19,8 +19,8 @@ export default function UploadDocuments() {
   useEffect(() => {
     if (!appId) {
       toast({
-        title: "Error",
-        description: "No application ID found. Redirecting to dashboard.",
+        title: "Missing Application ID",
+        description: "Please start from the dashboard to upload documents.",
         variant: "destructive",
       });
       navigate('/dashboard');
@@ -80,7 +80,10 @@ export default function UploadDocuments() {
         <CardHeader>
           <CardTitle>Upload Supporting Documents</CardTitle>
           <CardDescription>
-            Your application has been signed. Please upload any required supporting documents to complete your submission.
+            {appId?.startsWith('temp-') 
+              ? "Upload your business documents to get started with your financing application."
+              : "Your application has been signed. Please upload any required supporting documents to complete your submission."
+            }
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -101,7 +104,8 @@ export default function UploadDocuments() {
               onClick={handleFinalSubmit}
               disabled={isSubmitting || documents.length === 0}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Application'}
+              {isSubmitting ? 'Submitting...' : 
+               appId?.startsWith('temp-') ? 'Continue with Application' : 'Submit Application'}
             </Button>
           </div>
         </CardContent>
