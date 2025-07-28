@@ -24,10 +24,13 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Determine actual environment from NODE_ENV, don't override
-const isProduction = process.env.NODE_ENV === 'production';
+// Determine actual environment from NODE_ENV or REPLIT_ENVIRONMENT fallback
+const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_ENVIRONMENT === 'production';
+const actualEnv = process.env.NODE_ENV || (process.env.REPLIT_ENVIRONMENT === 'production' ? 'production' : 'development');
 console.log(`🚀 Running in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
-console.log('Environment:', process.env.NODE_ENV);
+console.log('Environment:', actualEnv);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('REPLIT_ENVIRONMENT:', process.env.REPLIT_ENVIRONMENT);
 console.log('🧪 STAFF_API_URL at runtime:', cfg.staffApiUrl);
 console.log('🧪 Environment VITE_STAFF_API_URL:', process.env.VITE_STAFF_API_URL);
 

@@ -15,7 +15,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export const cfg = {
-  nodeEnv: process.env.NODE_ENV ?? 'development',
+  nodeEnv: process.env.NODE_ENV || (process.env.REPLIT_ENVIRONMENT === 'production' ? 'production' : 'development'),
   
   // API Configuration - Use production staff backend
   staffApiUrl: process.env.STAFF_API_URL || process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial/api',
