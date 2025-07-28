@@ -25,8 +25,9 @@ const __dirname = dirname(__filename);
 const app = express();
 
 // Determine actual environment from NODE_ENV or REPLIT_ENVIRONMENT fallback
-const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_ENVIRONMENT === 'production';
-const actualEnv = process.env.NODE_ENV || (process.env.REPLIT_ENVIRONMENT === 'production' ? 'production' : 'development');
+// Force production mode for optimized performance
+const isProduction = true; // Force production mode for static file serving
+const actualEnv = 'production';
 console.log(`🚀 Running in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
 console.log('Environment:', actualEnv);
 console.log('NODE_ENV:', process.env.NODE_ENV);
@@ -2417,7 +2418,7 @@ app.use((req, res, next) => {
   const httpServer = createServer(app);
 
   // Configure static file serving and SPA routing
-  const isProductionBuild = process.env.NODE_ENV === 'production';
+  const isProductionBuild = true; // Always use production static file serving
   
   if (isProductionBuild) {
     // Production: serve built files
