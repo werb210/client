@@ -44,7 +44,7 @@ export type DocumentType = typeof SUPPORTED_DOCUMENT_TYPES[number];
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   'accounts_payable': 'Accounts Payable',
   'accounts_receivable': 'Accounts Receivable',
-  'account_prepared_financials': 'Accountant Prepared Financial Statements',
+  'account_prepared_financials': 'Financial Statements',
   'ap': 'Accounts Payable (AP)',
   'ar': 'Accounts Receivable (AR)',
   'articles_of_incorporation': 'Articles of Incorporation',
@@ -57,7 +57,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   'debt_schedule': 'Debt Schedule',
   'drivers_license_front_back': 'Driver\'s License (Front & Back)',
   'equipment_quote': 'Equipment Quote',
-  'financial_statements': 'Financial Statements',
+  'financial_statements': 'Financial Statements (Legacy)',
   'income_statement': 'Income Statement',
   'invoice_samples': 'Invoice Samples',
   'lease_agreements': 'Lease Agreements',
@@ -78,7 +78,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
 export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
   'accounts_payable': 'Outstanding bills and invoices owed to suppliers',
   'accounts_receivable': 'Outstanding invoices from customers',
-  'account_prepared_financials': 'Professional financial statements prepared by a certified accountant (P&L, Balance Sheet, Cash Flow)',
+  'account_prepared_financials': 'Professional financial statements (P&L, Balance Sheet, Cash Flow) - 3 documents required',
   'ap': 'Accounts payable aging reports and outstanding bills',
   'ar': 'Accounts receivable aging reports and outstanding invoices',
   'articles_of_incorporation': 'Legal documents forming your corporation',

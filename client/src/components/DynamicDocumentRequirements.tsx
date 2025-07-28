@@ -891,12 +891,8 @@ export function DynamicDocumentRequirements({
             return 'bank_statements';
           }
           
-          // Accountant Prepared Financial Statements → account_prepared_financials
-          if (labelLower.includes('accountant') && labelLower.includes('prepared') && labelLower.includes('financial')) {
-            return 'account_prepared_financials';
-          }
-          
-          // General Financial Statements → account_prepared_financials (maps to same backend type)
+          // Both "Accountant Prepared Financial Statements" and "Financial Statements" → account_prepared_financials
+          // This ensures they are treated as the same document type to prevent duplication
           if (labelLower.includes('financial') && labelLower.includes('statement')) {
             return 'account_prepared_financials';
           }

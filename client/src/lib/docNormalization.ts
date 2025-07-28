@@ -18,8 +18,10 @@ if (!ALLOW_EDITS) {
  */
 export const LEGACY_TO_CANONICAL: Record<string, string> = {
   // Critical legacy mappings to new canonical enums per CLIENT APPLICATION requirements
+  // Both "Financial Statements" and "Accountant Prepared Financial Statements" map to same type
   'financial_statements': 'account_prepared_financials',
   'accountant_financials': 'account_prepared_financials',
+  'accountant_prepared_financial_statements': 'account_prepared_financials',
   'profit_loss_statement': 'profit_and_loss_statement',
   'profit_and_loss': 'profit_and_loss_statement',
   'void_cheque': 'void_pad',
