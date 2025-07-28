@@ -2539,21 +2539,6 @@ app.use((req, res, next) => {
         timestamp: new Date().toISOString()
       });
     });
-          }
-        }).catch(err => {
-          console.log(`⚠️ [SOCKET] CRM escalation contact failed:`, err.message);
-        });
-      }
-      
-      // Broadcast to staff clients for live notifications
-      socket.broadcast.emit('staff_chat_request', {
-        ...data,
-        socketId: socket.id,
-        timestamp: new Date().toISOString()
-      });
-      
-      console.log(`📡 [SOCKET] Chat escalation broadcasted to staff`);
-    });
 
     // Handle human assistance requests - CORRECT EVENT NAME
     socket.on('user-request-human', async (data) => {
