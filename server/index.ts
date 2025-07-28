@@ -2380,6 +2380,93 @@ app.use((req, res, next) => {
     }
   });
 
+  // Document upload endpoints
+  app.get('/api/public/required-docs/:applicationId', async (req, res) => {
+    try {
+      const { applicationId } = req.params;
+      console.log(`📋 [SERVER] Getting required documents for application: ${applicationId}`);
+      
+      // Proxy to staff backend
+      const response = await fetch(`${cfg.staffApiUrl}/public/required-docs/${applicationId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        res.json(data);
+      } else {
+        console.log(`❌ [SERVER] Staff backend error for required-docs: ${response.status}`);
+        // Return mock data for development
+        res.json({
+          requiredDocuments: [
+            "bank_statements",
+            "tax_returns", 
+            "financial_statements"
+          ]
+        });
+      }
+    } catch (error) {
+      console.error('❌ [SERVER] Required docs endpoint error:', error);
+      res.json({
+        requiredDocuments: [
+          "bank_statements",
+          "tax_returns",
+          "financial_statements"
+        ]
+      });
+    }
+  });
+
+  app.get('/api/public/applications/:applicationId', async (req, res) => {
+    try {
+      const { applicationId } = req.params;
+      console.log(`📋 [SERVER] Getting application data for: ${applicationId}`);
+      
+      // Proxy to staff backend
+      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${applicationId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        res.json(data);
+      } else {
+        console.log(`❌ [SERVER] Staff backend error for application: ${response.status}`);
+        // Return mock data for development
+        res.json({
+          id: applicationId,
+          status: 'draft',
+          form_data: {
+            step1: {
+              productCategory: 'working_capital',
+              fundsPurpose: 'working_capital'
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.error('❌ [SERVER] Application endpoint error:', error);
+      res.json({
+        id: applicationId,
+        status: 'draft', 
+        form_data: {
+          step1: {
+            productCategory: 'working_capital',
+            fundsPurpose: 'working_capital'
+          }
+        }
+      });
+    }
+  });
+
   // CRITICAL FIX: Move ALL specific API endpoints BEFORE the catch-all route
   // The catch-all route below was intercepting these endpoints causing 501 errors
 

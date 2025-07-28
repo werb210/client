@@ -910,7 +910,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       "chat-widget bg-white flex flex-col shadow-xl z-50",
       isMobileFullscreen 
         ? "fullscreen-mobile fixed inset-0 w-full h-full max-h-none rounded-none" 
-        : "fixed bottom-0 right-5 w-80 max-h-[750px] rounded-t-lg"
+        : "fixed bottom-0 right-5 w-80 max-h-[600px] rounded-t-lg"
     )}>
       {/* Professional Chat Header */}
       <div 
@@ -942,7 +942,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         "chat-body flex-1 overflow-y-auto p-3 flex flex-col",
         isMobileFullscreen && "min-h-0" // Ensure proper flex behavior on mobile
       )}>
-        <div className="chat-messages flex-1 space-y-3 overflow-y-auto" data-chat-messages>
+        <div className="chat-messages flex-1 space-y-3 overflow-y-auto max-h-[350px]" data-chat-messages>
             {messages.map((message, index) => (
               <div
                 key={`${message.id}-${index}` || `msg-${index}-${message.timestamp.getTime()}`}
@@ -1016,15 +1016,16 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       
       {/* Enhanced Chat Footer with Multiple Options */}
       <div 
-        className="chat-footer text-white py-3 px-4 text-sm"
+        className="chat-footer text-white py-2 px-4 text-sm flex-shrink-0"
         style={{
           background: '#005D2E',
-          borderTop: '1px solid rgba(255,255,255,0.2)'
+          borderTop: '1px solid rgba(255,255,255,0.2)',
+          minHeight: '50px'
         }}
       >
-        <div className="flex justify-between items-center">
-          <span>Need help?</span>
-          <div className="flex gap-2">
+        <div className="flex justify-between items-center h-full">
+          <span className="text-xs">Need help?</span>
+          <div className="flex gap-1.5">
             <button
               onClick={async () => {
                 // IMMEDIATELY block further chatbot responses
@@ -1077,7 +1078,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
                   addBotMessage('Sorry, we had trouble connecting you to a human agent. Please try again or call us directly at 1-888-811-1887.');
                 }
               }}
-              className="px-3 py-1.5 rounded border-none cursor-pointer transition-colors duration-200 text-white text-xs"
+              className="px-2 py-1 rounded border-none cursor-pointer transition-colors duration-200 text-white text-xs"
               style={{
                 background: 'rgba(255,255,255,0.15)'
               }}
@@ -1088,7 +1089,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
             </button>
             <button
               onClick={() => setShowFeedbackModal(true)}
-              className="px-3 py-1.5 rounded border-none cursor-pointer transition-colors duration-200 text-white text-xs"
+              className="px-2 py-1 rounded border-none cursor-pointer transition-colors duration-200 text-white text-xs"
               style={{
                 background: 'rgba(255,255,255,0.15)'
               }}

@@ -198,9 +198,10 @@ export function MainLayout() {
       <Route path="/application-success" component={ApplicationSuccess} />
       
       {/* Document Management */}
-      <Route path="/upload-documents" component={UploadMissingDocuments} />
-      <Route path="/upload-documents/:applicationId?" component={UploadDocuments} />
-      <Route path="/upload-documents/:id" component={LateUpload} />
+      <Route path="/upload-documents/:applicationId" component={UploadDocuments} />
+      <Route path="/upload-documents" component={UploadDocuments} />
+      <Route path="/upload-missing/:id" component={UploadMissingDocuments} />
+      <Route path="/upload-late/:id" component={LateUpload} />
       <Route path="/upload-complete" component={UploadComplete} />
       
       {/* Application Entry Points */}
