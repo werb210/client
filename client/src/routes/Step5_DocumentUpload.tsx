@@ -405,36 +405,46 @@ export default function Step5DocumentUpload() {
   };
 
   const canProceed = () => {
-    // ✅ CRITICAL FIX: Always allow proceeding if user has uploaded documents
+    // ✅ ENHANCED DETECTION: Check multiple sources for uploaded documents
     const completedFiles = uploadedFiles.filter(f => f.status === 'completed').length;
+    const totalUploadedFiles = uploadedFiles.length;
     
-    console.log(`🔍 [CANPROCEED] Document check:`, {
+    // Also check if we have any files with S3 storage (from console logs showing S3 success)
+    const s3Files = uploadedFiles.filter(f => f.storageKey || f.storage === 's3').length;
+    
+    // Check localStorage for any document evidence
+    const localStorageFiles = JSON.parse(localStorage.getItem('uploadedDocuments') || '[]').length;
+    
+    console.log(`🔍 [CANPROCEED] Enhanced document check:`, {
       completedFiles,
+      totalUploadedFiles,
+      s3Files,
+      localStorageFiles,
       allRequirementsComplete,
-      uploadedFilesLength: uploadedFiles.length,
       intersectionHasMatches: intersectionResults.hasMatches,
-      requiredDocsLength: intersectionResults.requiredDocuments.length
+      requiredDocsLength: intersectionResults.requiredDocuments.length,
+      uploadedFileDetails: uploadedFiles.map(f => ({ name: f.name, status: f.status, storage: f.storage, storageKey: f.storageKey }))
     });
     
-    // If user has uploaded completed documents, allow proceeding
-    if (completedFiles > 0) {
-      console.log(`✅ [CANPROCEED] User has ${completedFiles} completed documents - allowing proceed`);
+    // PRIORITY 1: If user has any uploaded files (completed, S3, or any status), allow proceeding
+    if (completedFiles > 0 || s3Files > 0 || totalUploadedFiles > 0 || localStorageFiles > 0) {
+      console.log(`✅ [CANPROCEED] Found uploaded documents (completed: ${completedFiles}, S3: ${s3Files}, total: ${totalUploadedFiles}, localStorage: ${localStorageFiles}) - allowing proceed`);
       return true;
     }
     
-    // If no uploaded files but allRequirementsComplete is true (from DynamicDocumentRequirements), allow
+    // PRIORITY 2: If requirements marked complete by DynamicDocumentRequirements, allow
     if (allRequirementsComplete) {
       console.log(`✅ [CANPROCEED] Requirements marked complete - allowing proceed`);
       return true;
     }
     
-    // If no requirements loaded yet or no matches, allow bypass
+    // PRIORITY 3: If no requirements loaded yet or no matches, allow bypass
     if (!intersectionResults.hasMatches || !intersectionResults.requiredDocuments.length) {
       console.log(`✅ [CANPROCEED] No requirements or matches - allowing bypass`);
       return true; 
     }
     
-    console.log(`❌ [CANPROCEED] Blocking proceed - no completed files and requirements not met`);
+    console.log(`❌ [CANPROCEED] Blocking proceed - no documents found and requirements not met`);
     return false;
   };
 
@@ -471,10 +481,9 @@ export default function Step5DocumentUpload() {
 
     logger.log('🚀 [STEP5] Navigation attempt - validating document uploads...');
 
-    // ✅ STEP 1: Use proper validation logic
-    const isValidated = validateDocumentCompleteness();
-    
-    if (!isValidated) {
+    // ✅ STEP 1: Use same logic as canProceed() function for consistency
+    if (!canProceed()) {
+      console.log('❌ [STEP5] Navigation blocked by canProceed() validation');
       toast({
         title: "Documents Required",
         description: "Please upload all required documents before continuing.",
@@ -482,6 +491,8 @@ export default function Step5DocumentUpload() {
       });
       return;
     }
+    
+    console.log('✅ [STEP5] Navigation allowed by canProceed() validation');
 
     // ✅ STEP 2: Backend verification check (optional)
     try {
