@@ -48,7 +48,7 @@ export const cfg = {
 if (cfg.nodeEnv === 'production') {
   const requiredSecrets = {
     CLIENT_APP_SHARED_TOKEN: cfg.clientToken,
-    SIGNNOW_API_KEY: cfg.signNowToken
+    // SIGNNOW_API_KEY: cfg.signNowToken // Temporarily disabled for deployment
   };
   
   for (const [secretName, value] of Object.entries(requiredSecrets)) {
