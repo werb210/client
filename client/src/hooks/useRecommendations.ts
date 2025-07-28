@@ -15,54 +15,24 @@ export interface Step1FormData {
 }
 
 export function useRecommendations(formStep1Data: Step1FormData) {
-  /** 1 — pull products from normalized data source with fallback support */
+  /** 1 — pull products from normalized data source (authentic data only) */
   const { data: products = [], isLoading, error } = useQuery<any[]>({
-    queryKey: ["normalized-lenders-cache-with-fallback"],
+    queryKey: ["normalized-lenders-cache-only"],
     queryFn: async () => {
       try {
         const { loadLenderProducts } = await import('../utils/lenderCache');
-        let cached = await loadLenderProducts();
+        const cached = await loadLenderProducts();
         
-        // If no cached products, use mock data
         if (!cached || cached.length === 0) {
-          console.log('🔄 [PRODUCTS] No cached products, using mock data');
-          const { mockLenderProducts } = await import('../data/mockLenderProducts');
-          return mockLenderProducts;
+          console.log('❌ [PRODUCTS] No cached products available from staff backend');
+          return [];
         }
         
-        // Check if cached products have sufficient coverage for high amounts
-        const fundingAmount = parseFloat(formStep1Data.fundingAmount?.replace(/[^0-9.-]+/g, '') || '0');
-        const selectedCountry = formStep1Data.businessLocation === "united-states" ? "US" : "CA";
-        
-        // Find products that can cover the requested amount in the selected country
-        const suitableProducts = cached.filter(p => {
-          const countryMatch = p.country === selectedCountry || p.country === 'US/CA';
-          if (!countryMatch) return false;
-          
-          const { min, max } = getAmountRange(p);
-          return fundingAmount >= min && fundingAmount <= max;
-        });
-        
-        // If no suitable products found for the amount/country, supplement with mock data
-        if (suitableProducts.length === 0 && fundingAmount > 0) {
-          console.log(`🔄 [PRODUCTS] No cached products suitable for ${selectedCountry} $${fundingAmount.toLocaleString()}, adding mock data`);
-          const { mockLenderProducts } = await import('../data/mockLenderProducts');
-          
-          // Filter mock products for the requested country and add them
-          const mockCountryProducts = mockLenderProducts.filter(p => 
-            p.country === 'Canada' && selectedCountry === 'CA' ||
-            p.country === 'USA' && selectedCountry === 'US'
-          );
-          
-          console.log(`🔄 [PRODUCTS] Adding ${mockCountryProducts.length} mock ${selectedCountry} products to supplement coverage`);
-          return [...cached, ...mockCountryProducts];
-        }
-        
+        console.log(`📦 [PRODUCTS] Loaded ${cached.length} authentic products from staff backend`);
         return cached;
       } catch (error) {
-        console.error('❌ [PRODUCTS] Error loading products, using mock fallback:', error);
-        const { mockLenderProducts } = await import('../data/mockLenderProducts');
-        return mockLenderProducts;
+        console.error('❌ [PRODUCTS] Error loading authentic products:', error);
+        return [];
       }
     },
     staleTime: Infinity,
@@ -80,8 +50,8 @@ export function useRecommendations(formStep1Data: Step1FormData) {
 
   // Production mode: Console logging disabled
 
-  // Debug logging: Track filtering logic
-  console.log(`🔍 [STEP2] Starting with ${(products as any[]).length} products for filtering`);
+  // Debug logging: Track filtering logic and data availability
+  console.log(`🔍 [STEP2] Starting with ${(products as any[]).length} authentic products for filtering`);
   console.log(`🔍 [STEP2] Filter criteria:`, { 
     headquarters, 
     fundingAmount, 
@@ -90,7 +60,27 @@ export function useRecommendations(formStep1Data: Step1FormData) {
     accountsReceivableBalance: formStep1Data.accountsReceivableBalance 
   });
 
+  // Data availability analysis for transparency
+  if ((products as any[]).length > 0) {
+    const selectedCountryCode = headquarters === "United States" ? "US" : "CA";
+    const countryProducts = (products as any[]).filter(p => p.country === selectedCountryCode || p.country === 'US/CA');
+    
+    if (countryProducts.length > 0) {
+      const maxAmounts = countryProducts.map(p => getAmountRange(p).max).filter(max => max !== Infinity);
+      const highestLimit = maxAmounts.length > 0 ? Math.max(...maxAmounts) : 0;
+      
+      console.log(`📊 [DATA_COVERAGE] ${selectedCountryCode} products: ${countryProducts.length}, highest limit: $${highestLimit.toLocaleString()}`);
+      
+      if (fundingAmount > highestLimit) {
+        console.log(`⚠️ [DATA_GAP] Requested $${fundingAmount.toLocaleString()} exceeds highest available limit $${highestLimit.toLocaleString()} for ${selectedCountryCode}`);
+      }
+    }
+  }
+
   const failedProducts: Array<{product: any, reason: string}> = [];
+  
+  // Provide data transparency when no matches found
+  const selectedCountryCode = headquarters === "United States" ? "US" : "CA";
   
   const matches = (products as any[])
     .filter((p: any) => {
@@ -240,6 +230,31 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   );
   
   console.log("🔍 [STEP2] Filtered out:", failedProducts.map(f => `${f.product.name}: ${f.reason}`));
+
+  // Data transparency: Show what authentic data is available when no matches found
+  if (matches.length === 0 && (products as any[]).length > 0) {
+    const countryProducts = (products as any[]).filter(p => p.country === selectedCountryCode || p.country === 'US/CA');
+    
+    if (countryProducts.length > 0) {
+      const availableRanges = countryProducts.map(p => {
+        const range = getAmountRange(p);
+        return `${p.name}: $${range.min.toLocaleString()}-$${range.max === Infinity ? 'unlimited' : range.max.toLocaleString()}`;
+      });
+      
+      console.log(`📋 [AUTHENTIC_DATA] Available ${selectedCountryCode} products and ranges:`);
+      availableRanges.forEach(range => console.log(`  • ${range}`));
+      
+      const maxAmounts = countryProducts.map(p => getAmountRange(p).max).filter(max => max !== Infinity);
+      const highestLimit = maxAmounts.length > 0 ? Math.max(...maxAmounts) : 0;
+      
+      if (fundingAmount > highestLimit) {
+        console.log(`⚠️ [DATA_LIMITATION] Your request ($${fundingAmount.toLocaleString()}) exceeds the highest available limit ($${highestLimit.toLocaleString()}) in our authentic ${selectedCountryCode} lender database.`);
+        console.log(`💡 [SUGGESTION] Consider contacting us to request access to additional lender partnerships or reducing your funding amount.`);
+      }
+    } else {
+      console.log(`❌ [NO_DATA] No authentic ${selectedCountryCode} lender products available in current database.`);
+    }
+  }
 
   return { products: matches, categories, isLoading, error };
 }
