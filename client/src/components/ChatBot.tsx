@@ -910,7 +910,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       "chat-widget bg-white flex flex-col shadow-xl z-50",
       isMobileFullscreen 
         ? "fullscreen-mobile fixed inset-0 w-full h-full max-h-none rounded-none" 
-        : "fixed bottom-0 right-5 w-80 max-h-[600px] rounded-t-lg"
+        : "fixed bottom-0 right-5 w-80 max-h-[700px] rounded-t-lg"
     )}>
       {/* Professional Chat Header */}
       <div 
@@ -942,7 +942,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         "chat-body flex-1 overflow-y-auto p-3 flex flex-col",
         isMobileFullscreen && "min-h-0" // Ensure proper flex behavior on mobile
       )}>
-        <div className="chat-messages flex-1 space-y-3 overflow-y-auto max-h-[350px]" data-chat-messages>
+        <div className="chat-messages flex-1 space-y-3 overflow-y-auto max-h-[480px]" data-chat-messages>
             {messages.map((message, index) => (
               <div
                 key={`${message.id}-${index}` || `msg-${index}-${message.timestamp.getTime()}`}
