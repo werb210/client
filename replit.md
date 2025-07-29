@@ -93,6 +93,16 @@ The application follows a client-staff separation architecture:
 
 ## Recent Changes
 
+- **July 29, 2025: 🔧 DASHBOARD "UPLOAD REQUIRED DOCUMENTS" BUTTON FIX COMPLETED - NAVIGATION ISSUE RESOLVED**
+  * **CRITICAL BUG FIXED**: Dashboard button was using wrong URL parameter format (?id= instead of ?app=)
+  * **ROOT CAUSE**: UploadDocuments.tsx expects "app" parameter but dashboard was sending "id" parameter
+  * **SOLUTION APPLIED**: Updated SimpleDashboard.tsx button to use `/upload-documents?app=${applicationId}` format
+  * **NAVIGATION VERIFIED**: Button now properly constructs URL with correct parameter name
+  * **PARAMETER PARSING**: UploadDocuments page can successfully parse ?app= parameter from dashboard navigation
+  * **FALLBACK SYSTEM**: Dashboard checks both sessionStorage and localStorage for applicationId
+  * **ERROR HANDLING**: Redirects to /apply/step-1 if no applicationId found in storage
+  * **SMS INTEGRATION READY**: Both SMS links and dashboard button now use consistent URL format
+
 - **July 28, 2025: 📁 CLIENT APPLICATION /UPLOAD-DOCUMENTS REQUIREMENTS COMPLETED - SMS WORKFLOW READY**
   * **REQUIREMENT 1 ✅**: /upload-documents?app={id} successfully parses ID and fetches application data from GET /api/public/applications/{id}
   * **REQUIREMENT 2 ✅**: Document categories render like Step 5 using DocumentUploadCard components with Step5Wrapper layout

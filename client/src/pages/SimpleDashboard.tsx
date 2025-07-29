@@ -114,11 +114,11 @@ export default function SimpleDashboard() {
                   e.stopPropagation(); // Prevent card click handler
                   console.log('Upload Documents button clicked!');
                   
-                  // 🔧 FIX 3: PROPER APPLICATION ID BINDING FOR DOCUMENT UPLOADS
+                  // 🔧 FIX: PROPER APPLICATION ID BINDING FOR DOCUMENT UPLOADS
                   const existingAppId = sessionStorage.getItem('applicationId') || localStorage.getItem('applicationId');
                   if (existingAppId) {
                     console.log('🎯 [DASHBOARD] Using existing app ID:', existingAppId);
-                    const targetUrl = `/upload-documents?id=${existingAppId}`;
+                    const targetUrl = `/upload-documents?app=${existingAppId}`;
                     console.log('🔗 [DASHBOARD] Navigating to:', targetUrl);
                     window.location.href = targetUrl;
                   } else {
