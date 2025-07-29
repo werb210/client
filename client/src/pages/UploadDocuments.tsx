@@ -53,9 +53,19 @@ export default function UploadDocuments() {
   // Get required document types from application
   const requiredDocs = application ? getRequiredDocumentTypes(application) : [];
   
+  // Force show documents if we have no application data but have appId
+  const showDefaultDocs = !application && appId;
+  const finalRequiredDocs = requiredDocs.length > 0 ? requiredDocs : (showDefaultDocs || appId) ? [
+    { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 6 },
+    { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 },
+    { type: 'tax_returns', category: 'tax', label: 'Business Tax Returns', required: 3 }
+  ] : [];
+  
   console.log('📋 [UploadDocuments] Application data:', application);
   console.log('📋 [UploadDocuments] Required documents:', requiredDocs.length, requiredDocs);
+  console.log('📋 [UploadDocuments] Final documents:', finalRequiredDocs.length, finalRequiredDocs);
   console.log('📋 [UploadDocuments] Query status:', { isLoading, error: error?.message });
+  console.log('📋 [UploadDocuments] Should show default docs:', showDefaultDocs);
   
   // Handle file upload completion
   const handleUploadComplete = async (file: File, docType: string) => {
@@ -312,7 +322,7 @@ export default function UploadDocuments() {
     >
       {/* Document Upload Cards - Render Step 5 upload UI with document type blocks */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
-        {requiredDocs.map((docType) => (
+        {finalRequiredDocs.map((docType) => (
           <DocumentUploadCard 
             key={docType.type} 
             docType={docType.type} 

@@ -22,12 +22,20 @@ export function getRequiredDocumentTypes(application: any): RequiredDocumentType
   }
 
   console.log('📋 [docRequirements] Getting document requirements for application:', application.id);
+  console.log('📋 [docRequirements] Application full data:', application);
 
-  // Extract financing category from application
-  const category = application.category || application.financingType || 'working_capital';
-  const fundingAmount = application.fundingAmount || 0;
+  // Extract financing category from application with better parsing
+  let category = 'working_capital'; // default
+  
+  if (application.form_data?.step1?.productCategory) {
+    category = application.form_data.step1.productCategory;
+  } else if (application.category) {
+    category = application.category;
+  } else if (application.financingType) {
+    category = application.financingType;
+  }
 
-  console.log('📋 [docRequirements] Application category:', category, 'Amount:', fundingAmount);
+  console.log('📋 [docRequirements] Determined category:', category);
 
   // Get document requirements by category
   const requiredDocs = getDocumentRequirementsByCategory(category);
