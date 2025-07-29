@@ -82,7 +82,12 @@ export function getDocumentRequirementsByCategory(category: string): RequiredDoc
     ]
   };
 
-  const requirements = categoryRequirements[normalizedCategory] || categoryRequirements['working_capital'];
+  // Return requirements for the category, or default working capital requirements
+  const requirements = categoryRequirements[normalizedCategory] || [
+    { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 6 },
+    { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 },
+    { type: 'tax_returns', category: 'tax', label: 'Business Tax Returns', required: 3 }
+  ];
   
   console.log(`📋 [getDocumentRequirementsByCategory] Category "${category}" → "${normalizedCategory}" has ${requirements.length} requirements`);
   

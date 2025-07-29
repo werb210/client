@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getRequiredDocumentTypes } from "@/utils/docRequirements";
@@ -9,63 +8,60 @@ import { DocumentUploadCard } from '@/components/DocumentUploadCard';
 import { Step5Wrapper } from '@/components/Step5Wrapper';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 
+interface RequiredDocumentType {
+  type: string;
+  category: string;
+  label: string;
+  required: number;
+}
+
 export default function UploadDocuments() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [uploadedCount, setUploadedCount] = useState(0);
+  const [application, setApplication] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   
   // Parse URL parameters to get application ID
   const urlParams = new URLSearchParams(window.location.search);
   const appId = urlParams.get('app') || urlParams.get('id') || urlParams.get('applicationId');
   
-  console.log('🔄 [UploadDocuments] STEP 5 ARCHITECTURE - Loading page with app ID:', appId);
-  console.log('🔄 [UploadDocuments] STEP 5 ARCHITECTURE - Document cards should be visible now');
+  console.log('🔄 [UploadDocuments] Loading page with app ID:', appId);
   
-  // Fetch application data with enhanced error handling
-  const { data: application, isLoading, error } = useQuery({
-    queryKey: ["application", appId],
-    queryFn: async () => {
-      if (!appId) throw new Error('No application ID provided');
-      console.log('🔄 [UploadDocuments] Fetching application:', appId);
-      
-      try {
-        const result = await fetchApplicationById(appId);
-        console.log('✅ [UploadDocuments] Application fetched successfully:', result);
-        return result;
-      } catch (error) {
+  useEffect(() => {
+    if (!appId) {
+      setLoading(false);
+      return;
+    }
+    
+    console.log('🔄 [UploadDocuments] Fetching application:', appId);
+    
+    fetchApplicationById(appId)
+      .then((data) => {
+        console.log('✅ [UploadDocuments] Application fetched successfully:', data);
+        setApplication(data);
+      })
+      .catch((error) => {
         console.warn('⚠️ [UploadDocuments] API fetch failed, using fallback mode:', error);
-        // Return minimal application data for fallback mode
-        return {
-          id: appId,
+        // Fallback behavior if fetch fails
+        setApplication({ 
+          id: appId, 
           businessName: "Application",
-          status: "draft",
-          form_data: {
-            step1: { productCategory: "working_capital" }
-          }
-        };
-      }
-    },
-    enabled: !!appId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: false // Don't retry, use fallback
-  });
+          form_data: { 
+            step1: { productCategory: "working_capital" } 
+          } 
+        });
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [appId]);
   
   // Get required document types from application
   const requiredDocs = application ? getRequiredDocumentTypes(application) : [];
   
-  // Force show documents if we have no application data but have appId
-  const showDefaultDocs = !application && appId;
-  const finalRequiredDocs = requiredDocs.length > 0 ? requiredDocs : (showDefaultDocs || appId) ? [
-    { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 6 },
-    { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 },
-    { type: 'tax_returns', category: 'tax', label: 'Business Tax Returns', required: 3 }
-  ] : [];
-  
   console.log('📋 [UploadDocuments] Application data:', application);
   console.log('📋 [UploadDocuments] Required documents:', requiredDocs.length, requiredDocs);
-  console.log('📋 [UploadDocuments] Final documents:', finalRequiredDocs.length, finalRequiredDocs);
-  console.log('📋 [UploadDocuments] Query status:', { isLoading, error: error?.message });
-  console.log('📋 [UploadDocuments] Should show default docs:', showDefaultDocs);
   
   // Handle file upload completion
   const handleUploadComplete = async (file: File, docType: string) => {
@@ -134,18 +130,9 @@ export default function UploadDocuments() {
       });
     }
   };
-  
-  // Debug: Force show document cards for testing
-  console.log('📋 [UploadDocuments] Debug - Current state:', {
-    appId,
-    isLoading,
-    hasApplication: !!application,
-    hasError: !!error,
-    requiredDocsLength: requiredDocs.length
-  });
 
   // Loading state
-  if (isLoading) {
+  if (loading) {
     return (
       <Step5Wrapper title="Loading Application...">
         <div className="text-center py-8">
@@ -156,8 +143,26 @@ export default function UploadDocuments() {
     );
   }
   
-  // Error state - but show default documents if we have appId
-  if (error && !appId) {
+  // Error state - no application ID
+  if (!appId) {
+    return (
+      <Step5Wrapper title="Upload Documents">
+        <div className="text-center py-8">
+          <div className="text-red-600 mb-4">
+            <CheckCircle className="h-12 w-12 mx-auto mb-2" />
+            <h3 className="text-lg font-semibold">Application Not Found</h3>
+            <p className="text-gray-600">No application ID found in URL.</p>
+          </div>
+          <Button onClick={() => setLocation('/dashboard')}>
+            Return to Dashboard
+          </Button>
+        </div>
+      </Step5Wrapper>
+    );
+  }
+
+  // No application found
+  if (!application) {
     return (
       <Step5Wrapper title="Upload Documents">
         <div className="text-center py-8">
@@ -174,155 +179,34 @@ export default function UploadDocuments() {
     );
   }
 
-  // If we have an appId but API failed, show default documents anyway
-  if (error && appId) {
-    console.log('📋 [UploadDocuments] API failed but appId exists, showing default documents');
-    
-    const defaultDocs = [
-      { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 6 },
-      { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 },
-      { type: 'tax_returns', category: 'tax', label: 'Business Tax Returns', required: 3 }
-    ];
-    
-    return (
-      <Step5Wrapper 
-        title="Upload Required Documents" 
-        description="Complete your application by uploading the required documents below (default requirements shown)"
-      >
-        {/* API Error Notice */}
+  // Always show documents regardless - use fallback if needed
+  const documentsToShow: RequiredDocumentType[] = requiredDocs.length > 0 ? requiredDocs : [
+    { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 6 },
+    { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 },
+    { type: 'tax_returns', category: 'tax', label: 'Business Tax Returns', required: 3 }
+  ];
+
+  console.log('📋 [UploadDocuments] Documents to show:', documentsToShow.length, documentsToShow);
+
+  return (
+    <Step5Wrapper 
+      title="Upload Required Documents" 
+      description={`Upload the documents below for ${application?.businessName || 'your application'}`}
+    >
+      {requiredDocs.length === 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
           <div className="flex items-center space-x-2">
             <div className="text-yellow-600">⚠️</div>
             <span className="text-yellow-800 text-sm">
-              Unable to load specific requirements. Showing standard document categories.
+              Showing standard document categories for your application.
             </span>
           </div>
         </div>
+      )}
 
-        {/* Default Document Upload Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
-          {defaultDocs.map((docType) => (
-            <DocumentUploadCard 
-              key={docType.type} 
-              docType={docType.type} 
-              appId={appId!}
-              label={docType.label}
-              required={docType.required}
-              category={docType.category}
-              onUploadComplete={handleUploadComplete}
-            />
-          ))}
-        </div>
-        
-        {/* Upload Progress Summary */}
-        {uploadedCount > 0 && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              <span className="text-green-800 font-medium">
-                {uploadedCount} document{uploadedCount !== 1 ? 's' : ''} uploaded successfully
-              </span>
-            </div>
-          </div>
-        )}
-        
-        {/* Navigation */}
-        <div className="flex justify-between items-center pt-6">
-          <Button
-            variant="outline"
-            onClick={() => setLocation('/dashboard')}
-            className="flex items-center space-x-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Back to Dashboard</span>
-          </Button>
-          
-          <Button
-            onClick={handleSubmitDocuments}
-            className="flex items-center space-x-2"
-          >
-            <span>Submit Documents</span>
-          </Button>
-        </div>
-      </Step5Wrapper>
-    );
-  }
-  
-  // No documents required - but let's always show something for testing
-  if (requiredDocs.length === 0 && application) {
-    // Show default working capital documents if no specific requirements found
-    const defaultDocs = [
-      { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 6 },
-      { type: 'financial_statements', category: 'financial', label: 'Financial Statements', required: 1 },
-      { type: 'tax_returns', category: 'tax', label: 'Business Tax Returns', required: 3 }
-    ];
-    
-    console.log('📋 [UploadDocuments] No specific requirements found, using default documents');
-    
-    return (
-      <Step5Wrapper 
-        title="Upload Required Documents" 
-        description="Complete your application by uploading the required documents below"
-      >
-        {/* Default Document Upload Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
-          {defaultDocs.map((docType) => (
-            <DocumentUploadCard 
-              key={docType.type} 
-              docType={docType.type} 
-              appId={appId!}
-              label={docType.label}
-              required={docType.required}
-              category={docType.category}
-              onUploadComplete={handleUploadComplete}
-            />
-          ))}
-        </div>
-        
-        {/* Upload Progress Summary */}
-        {uploadedCount > 0 && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              <span className="text-green-800 font-medium">
-                {uploadedCount} document{uploadedCount !== 1 ? 's' : ''} uploaded successfully
-              </span>
-            </div>
-          </div>
-        )}
-        
-        {/* Navigation */}
-        <div className="flex justify-between items-center pt-6">
-          <Button
-            variant="outline"
-            onClick={() => setLocation('/dashboard')}
-            className="flex items-center space-x-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Dashboard</span>
-          </Button>
-          
-          <Button
-            onClick={handleSubmitDocuments}
-            disabled={uploadedCount === 0}
-            className="flex items-center space-x-2"
-          >
-            <span>Submit Documents</span>
-            <CheckCircle className="w-4 h-4" />
-          </Button>
-        </div>
-      </Step5Wrapper>
-    );
-  }
-  
-  return (
-    <Step5Wrapper 
-      title="Upload Required Documents" 
-      description="Complete your application by uploading the required documents below"
-    >
-      {/* Document Upload Cards - Render Step 5 upload UI with document type blocks */}
+      {/* Document Upload Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
-        {finalRequiredDocs.map((docType) => (
+        {documentsToShow.map((docType: RequiredDocumentType) => (
           <DocumentUploadCard 
             key={docType.type} 
             docType={docType.type} 
