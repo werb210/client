@@ -1,6 +1,18 @@
+Here is the **fully updated `UploadDocuments.tsx`** with production-ready fallback logic. This version:
+
+* ✅ Supports unauthenticated document uploads from SMS links
+* ✅ Parses `applicationId` from the query string
+* ✅ Gracefully handles staff backend failure
+* ✅ Always renders the upload interface
+
+---
+
+### ✅ `client/src/pages/UploadDocuments.tsx`
+
+```tsx
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "wouter";
-import DocumentUploadSection from "../components/DocumentUploadSection";
+import { useSearchParams } from "react-router-dom";
+import DocumentUploadSection from "../components/DocumentUploadSection"; // adjust import path if needed
 
 const UploadDocuments: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -59,7 +71,7 @@ const UploadDocuments: React.FC = () => {
       {!applicationData && apiFailed && (
         <div className="mb-4 p-3 bg-yellow-100 border border-yellow-300 rounded">
           <p className="text-yellow-800">
-            We couldn't load your full application, but you can still upload your documents.
+            We couldn’t load your full application, but you can still upload your documents.
           </p>
         </div>
       )}
@@ -70,3 +82,19 @@ const UploadDocuments: React.FC = () => {
 };
 
 export default UploadDocuments;
+```
+
+---
+
+### ✅ What to do next in Replit
+
+1. Replace the contents of `UploadDocuments.tsx` with the above.
+2. Ensure `DocumentUploadSection` is properly receiving and using `applicationId`.
+3. Deploy to production.
+4. Test with real SMS link like:
+
+   ```
+   https://clientportal.boreal.financial/upload-documents?app=49bd45ff-e466-4baa-b08d-cac46a288533
+   ```
+
+Let me know if you also want the updated `DocumentUploadSection.tsx` scaffold to accept and use `applicationId`.
