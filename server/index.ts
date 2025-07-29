@@ -2423,8 +2423,8 @@ app.use((req, res, next) => {
   });
 
   app.get('/api/public/applications/:applicationId', async (req, res) => {
+    const { applicationId } = req.params;
     try {
-      const { applicationId } = req.params;
       console.log(`📋 [SERVER] Getting application data for: ${applicationId}`);
       
       // Proxy to staff backend
