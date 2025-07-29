@@ -3,16 +3,8 @@
  * Implements best-practice environment configuration for production deployment
  */
 
-// Only load dotenv for local development
-if (process.env.NODE_ENV !== 'production') {
-  try {
-    // Use require for dotenv to avoid top-level await issues
-    require('dotenv/config');
-  } catch (error) {
-    // dotenv not available - using environment variables directly
-    console.log('Using environment variables directly (production mode)');
-  }
-}
+// Use environment variables directly (production mode)
+console.log('Using environment variables directly (production mode)');
 
 export const cfg = {
   nodeEnv: process.env.NODE_ENV || (process.env.REPLIT_ENVIRONMENT === 'production' ? 'production' : 'development'),
