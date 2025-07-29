@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "wouter";
+import { useSearch } from "wouter";
 import DocumentUploadSection from "../components/DocumentUploadSection";
 
 const UploadDocuments: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const applicationIdFromQuery = searchParams.get("app");
+  const search = useSearch();
+  const urlParams = new URLSearchParams(search);
+  const applicationIdFromQuery = urlParams.get("app");
 
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [applicationData, setApplicationData] = useState<any>(null);
   const [apiFailed, setApiFailed] = useState(false);
+  
+  console.log('🆕 [NEW UploadDocuments] Loading with app ID:', applicationIdFromQuery);
 
   // Set applicationId from query
   useEffect(() => {
