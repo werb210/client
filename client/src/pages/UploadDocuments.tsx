@@ -56,25 +56,37 @@ export default function UploadDocuments() {
     localStorage.setItem('applicationId', appId);
     sessionStorage.setItem('applicationId', appId);
     
+    // ALWAYS set fallback first to ensure UI renders
+    const fallbackApp = { 
+      id: appId, 
+      businessName: "Your Application",
+      form_data: { 
+        step1: { productCategory: "working_capital" } 
+      } 
+    };
+    
     fetchApplicationById(appId)
       .then((data) => {
-        console.log('✅ [UploadDocuments] Application fetched successfully:', data);
+        console.log('✅ [UploadDocuments] Application fetched successfully - using real data:', data);
         setApplication(data);
       })
       .catch((error) => {
         console.warn('⚠️ [UploadDocuments] API fetch failed, using fallback mode:', error);
-        // Fallback behavior if fetch fails - still allow document upload
-        setApplication({ 
-          id: appId, 
-          businessName: "Your Application",
-          form_data: { 
-            step1: { productCategory: "working_capital" } 
-          } 
-        });
+        console.log('🔧 [UploadDocuments] Setting fallback application to ensure document cards render');
+        setApplication(fallbackApp);
       })
       .finally(() => {
         setLoading(false);
       });
+      
+    // Set fallback immediately if API is slow
+    setTimeout(() => {
+      if (!application && appId) {
+        console.log('🔧 [UploadDocuments] Timeout fallback - ensuring document interface shows');
+        setApplication(fallbackApp);
+        setLoading(false);
+      }
+    }, 1000);
   }, [appId]);
   
   // Get required document types from application
@@ -186,21 +198,22 @@ export default function UploadDocuments() {
     );
   }
 
-  // Show document interface even if application fetch fails (since we have appId)
-  if (!application && appId && !loading) {
-    console.log('🔧 [UploadDocuments] Application fetch failed but we have appId - showing fallback interface');
-    // Use fallback application data to still allow document upload
-    const fallbackApp = { 
-      id: appId, 
-      businessName: "Your Application",
-      form_data: { 
-        step1: { productCategory: "working_capital" } 
-      } 
-    };
-    setApplication(fallbackApp);
-  }
+  // CRITICAL FIX: Always show document interface when we have appId, regardless of API success
+  useEffect(() => {
+    if (appId && !loading && !application) {
+      console.log('🔧 [UploadDocuments] Activating fallback interface - API failed but appId exists');
+      const fallbackApp = { 
+        id: appId, 
+        businessName: "Your Application",
+        form_data: { 
+          step1: { productCategory: "working_capital" } 
+        } 
+      };
+      setApplication(fallbackApp);
+    }
+  }, [appId, loading, application]);
 
-  // Only show error if truly no application ID
+  // NEVER redirect - only show error if truly no application ID AND not loading
   if (!appId && !loading) {
     return (
       <Step5Wrapper title="Upload Documents">
@@ -223,6 +236,19 @@ export default function UploadDocuments() {
     );
   }
 
+  // CRITICAL: Always render document interface if we have appId, even without full application data
+  if (appId && !application && !loading) {
+    console.log('🚨 [UploadDocuments] CRITICAL FIX ACTIVATED - Rendering document interface without application data');
+    const fallbackApp = { 
+      id: appId, 
+      businessName: "Your Application",
+      form_data: { 
+        step1: { productCategory: "working_capital" } 
+      } 
+    };
+    setApplication(fallbackApp);
+  }
+
   // Always show documents regardless - use fallback if needed
   const documentsToShow: RequiredDocumentType[] = requiredDocs.length > 0 ? requiredDocs : [
     { type: 'bank_statements', category: 'banking', label: 'Bank Statements', required: 6 },
@@ -237,8 +263,14 @@ export default function UploadDocuments() {
     isLoading: loading,
     hasApplication: !!application,
     hasError: false,
-    requiredDocsLength: requiredDocs.length
+    requiredDocsLength: requiredDocs.length,
+    shouldRenderCards: !!(appId && documentsToShow.length > 0)
   });
+
+  // FORCE RENDER CHECK: Log when cards should be visible
+  if (appId && documentsToShow.length > 0) {
+    console.log('🎯 [UploadDocuments] CARDS SHOULD BE VISIBLE NOW - appId exists and documents available');
+  }
 
   return (
     <Step5Wrapper 

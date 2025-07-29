@@ -5,8 +5,8 @@
  * Tests the complete SMS link workflow that users experience
  */
 
-const { execSync } = require('child_process');
-const fs = require('fs');
+import { execSync } from 'child_process';
+import fs from 'fs';
 
 async function testRealUserWorkflow() {
   console.log('🔍 TESTING REAL USER WORKFLOW - Production Simulation');
