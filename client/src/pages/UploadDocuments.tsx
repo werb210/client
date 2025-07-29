@@ -272,6 +272,21 @@ export default function UploadDocuments() {
     console.log('🎯 [UploadDocuments] CARDS SHOULD BE VISIBLE NOW - appId exists and documents available');
   }
 
+  // CRITICAL PRODUCTION FIX: Always render if we have appId
+  if (!appId) {
+    return (
+      <Step5Wrapper title="Upload Documents">
+        <div className="text-center py-8">
+          <div className="text-red-600 mb-4">
+            <AlertCircle className="h-12 w-12 mx-auto mb-2" />
+            <h3 className="text-lg font-semibold">Application Not Found</h3>
+            <p className="text-gray-600">No application ID found in URL</p>
+          </div>
+        </div>
+      </Step5Wrapper>
+    );
+  }
+
   return (
     <Step5Wrapper 
       title="Upload Required Documents" 
