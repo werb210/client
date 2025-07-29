@@ -33,9 +33,10 @@
 6. **Persistence**: Application should remain live
 
 ### 🔗 Production URLs
-- **Client Application**: https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev
+- **Primary Production URL**: https://clientportal.boreal.financial ✅ ACTIVE
+- **Replit Deployment URL**: https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev
 - **Staff Backend**: https://staff.boreal.financial/api
-- **Domain Mapping**: Ready for `https://clientportal.boreal.financial` if configured
+- **Domain Mapping**: ✅ CONFIGURED AND ACTIVE
 
 ## 🎯 Deployment Success Confirmed
 
