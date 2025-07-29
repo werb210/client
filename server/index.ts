@@ -2673,10 +2673,8 @@ app.use((req, res, next) => {
     });
   });
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Use PORT environment variable for Replit deployments, fallback to 5000 for development
+  const port = cfg.port; // This uses process.env.PORT || '5000' from config
   httpServer.listen({
     port,
     host: "0.0.0.0",
@@ -2684,5 +2682,10 @@ app.use((req, res, next) => {
   }, () => {
     log(`Client app serving on port ${port} - API calls will route to staff backend`);
     log(`Socket.IO server available for real-time chat`);
+    
+    // Show deployment-specific info
+    if (cfg.nodeEnv === 'production') {
+      log(`🚀 PRODUCTION DEPLOYMENT: Server ready for Replit deployment on port ${port}`);
+    }
   });
 })();
