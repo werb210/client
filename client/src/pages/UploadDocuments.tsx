@@ -6,7 +6,7 @@ import { getRequiredDocumentTypes } from "@/utils/docRequirements";
 import { fetchApplicationById, uploadDocumentToStaffAPI } from '@/lib/api';
 import { DocumentUploadCard } from '@/components/DocumentUploadCard';
 import { Step5Wrapper } from '@/components/Step5Wrapper';
-import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface RequiredDocumentType {
   type: string;
@@ -22,19 +22,39 @@ export default function UploadDocuments() {
   const [application, setApplication] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
-  // Parse URL parameters to get application ID
+  // Parse URL parameters to get application ID - Enhanced debugging
   const urlParams = new URLSearchParams(window.location.search);
   const appId = urlParams.get('app') || urlParams.get('id') || urlParams.get('applicationId');
   
-  console.log('🔄 [UploadDocuments] Loading page with app ID:', appId);
+  // Debug URL parsing
+  console.log('🔍 [UploadDocuments] URL Debug:', {
+    fullUrl: window.location.href,
+    search: window.location.search,
+    pathname: window.location.pathname,
+    allParams: Object.fromEntries(urlParams.entries()),
+    appParam: urlParams.get('app'),
+    idParam: urlParams.get('id'),
+    applicationIdParam: urlParams.get('applicationId'),
+    finalAppId: appId
+  });
+  
+  console.log('🔄 [UploadDocuments] STEP 5 ARCHITECTURE - Loading page with app ID:', appId);
+  console.log('🔄 [UploadDocuments] STEP 5 ARCHITECTURE - URL search params:', window.location.search);
+  console.log('🔄 [UploadDocuments] STEP 5 ARCHITECTURE - Full URL:', window.location.href);
+  console.log('🔄 [UploadDocuments] STEP 5 ARCHITECTURE - Document cards should be visible now');
   
   useEffect(() => {
     if (!appId) {
+      console.warn('⚠️ [UploadDocuments] No application ID found in URL - showing error state');
       setLoading(false);
       return;
     }
     
     console.log('🔄 [UploadDocuments] Fetching application:', appId);
+    
+    // Store the app ID for future navigation (but don't redirect)
+    localStorage.setItem('applicationId', appId);
+    sessionStorage.setItem('applicationId', appId);
     
     fetchApplicationById(appId)
       .then((data) => {
@@ -43,10 +63,10 @@ export default function UploadDocuments() {
       })
       .catch((error) => {
         console.warn('⚠️ [UploadDocuments] API fetch failed, using fallback mode:', error);
-        // Fallback behavior if fetch fails
+        // Fallback behavior if fetch fails - still allow document upload
         setApplication({ 
           id: appId, 
-          businessName: "Application",
+          businessName: "Your Application",
           form_data: { 
             step1: { productCategory: "working_capital" } 
           } 
@@ -149,30 +169,54 @@ export default function UploadDocuments() {
       <Step5Wrapper title="Upload Documents">
         <div className="text-center py-8">
           <div className="text-red-600 mb-4">
-            <CheckCircle className="h-12 w-12 mx-auto mb-2" />
+            <AlertCircle className="h-12 w-12 mx-auto mb-2" />
             <h3 className="text-lg font-semibold">Application Not Found</h3>
-            <p className="text-gray-600">No application ID found in URL.</p>
+            <p className="text-gray-600 mb-4">
+              No application ID found in the URL. Please use the link from your SMS or email to access your application.
+            </p>
+            <div className="text-sm text-gray-500 mb-4">
+              Expected URL format: /upload-documents?app=YOUR_APPLICATION_ID
+            </div>
           </div>
-          <Button onClick={() => setLocation('/dashboard')}>
-            Return to Dashboard
+          <Button onClick={() => setLocation('/apply/step-1')}>
+            Start New Application
           </Button>
         </div>
       </Step5Wrapper>
     );
   }
 
-  // No application found
-  if (!application) {
+  // Show document interface even if application fetch fails (since we have appId)
+  if (!application && appId && !loading) {
+    console.log('🔧 [UploadDocuments] Application fetch failed but we have appId - showing fallback interface');
+    // Use fallback application data to still allow document upload
+    const fallbackApp = { 
+      id: appId, 
+      businessName: "Your Application",
+      form_data: { 
+        step1: { productCategory: "working_capital" } 
+      } 
+    };
+    setApplication(fallbackApp);
+  }
+
+  // Only show error if truly no application ID
+  if (!appId && !loading) {
     return (
       <Step5Wrapper title="Upload Documents">
         <div className="text-center py-8">
           <div className="text-red-600 mb-4">
-            <CheckCircle className="h-12 w-12 mx-auto mb-2" />
+            <AlertCircle className="h-12 w-12 mx-auto mb-2" />
             <h3 className="text-lg font-semibold">Application Not Found</h3>
-            <p className="text-gray-600">Unable to load application details.</p>
+            <p className="text-gray-600 mb-4">
+              No application ID found in the URL. Please use the link from your SMS or email to access your application.
+            </p>
+            <div className="text-sm text-gray-500 mb-4">
+              Expected URL format: /upload-documents?app=YOUR_APPLICATION_ID
+            </div>
           </div>
-          <Button onClick={() => setLocation('/dashboard')}>
-            Return to Dashboard
+          <Button onClick={() => setLocation('/apply/step-1')}>
+            Start New Application
           </Button>
         </div>
       </Step5Wrapper>
@@ -187,6 +231,14 @@ export default function UploadDocuments() {
   ];
 
   console.log('📋 [UploadDocuments] Documents to show:', documentsToShow.length, documentsToShow);
+  console.log('📋 [UploadDocuments] Query status:', { isLoading: loading });
+  console.log('📋 [UploadDocuments] Debug - Current state:', {
+    appId,
+    isLoading: loading,
+    hasApplication: !!application,
+    hasError: false,
+    requiredDocsLength: requiredDocs.length
+  });
 
   return (
     <Step5Wrapper 

@@ -1,0 +1,130 @@
+Thanks — that confirms the core issue: **the SMS links *look* correct but still redirect to `/dashboard` due to incorrect routing or `useNavigate()` logic in the client app**.
+
+---
+
+## 🔍 Root Cause
+
+When you visit:
+
+```
+https://clientportal.boreal.financial/upload-documents?app=7637fa61-a067-47ba-8ae3-f0129c208dfc
+```
+
+👉 Instead of staying on `/upload-documents`, the app **immediately navigates to `/dashboard`**.
+
+This happens when:
+
+* `UploadDocuments.tsx` fails to find the `applicationId` param
+* Or the layout logic force-navigates unauthenticated or uninitialized users to the dashboard
+
+---
+
+## ✅ Fix Plan (Client Application – Replit Instructions)
+
+### 🧠 Interpretation
+
+We want `/upload-documents?app=...` to work **as a standalone entry point** without going to `/dashboard`.
+
+---
+
+### ✅ 1. Patch `UploadDocuments.tsx`
+
+Open `client/src/pages/UploadDocuments.tsx` and ensure:
+
+```ts
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+export default function UploadDocumentsPage() {
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(window.location.search);
+  const appId = searchParams.get('app');
+
+  useEffect(() => {
+    if (!appId) {
+      // Prevent redirect loop:
+      console.warn("Missing appId in URL — cannot continue");
+      return;
+    }
+
+    // Optional: Store in session/local storage for future navigation
+    localStorage.setItem("activeAppId", appId);
+  }, [appId]);
+
+  if (!appId) {
+    return (
+      <div className="text-center p-4">
+        <h2 className="text-xl font-bold">Application Not Found</h2>
+        <p>Please use the link from your SMS or email to access your application.</p>
+      </div>
+    );
+  }
+
+  return (
+    <Step5Wrapper applicationId={appId} />
+  );
+}
+```
+
+> 🔁 Make sure there's **no redirect** to `/dashboard` anywhere in this file.
+
+---
+
+### ✅ 2. Check Main Router or Layout
+
+Open `client/src/App.tsx` or `MainLayout.tsx` and search for:
+
+```ts
+navigate("/dashboard")
+```
+
+Make sure that logic **only triggers for pages that actually require login or app ID**.
+
+---
+
+### ✅ 3. Update SMS Template in Staff Backend
+
+In the staff app, open:
+
+```
+server/routes/enhancedSmsTemplates.ts
+```
+
+Update all SMS templates from:
+
+```ts
+https://clientportal.boreal.financial/dashboard
+```
+
+To:
+
+```ts
+https://clientportal.boreal.financial/upload-documents?app=${applicationId}
+```
+
+Then restart the app and verify.
+
+---
+
+### ✅ 4. Confirm Navigation Works
+
+Open this test link in a browser:
+
+```
+https://clientportal.boreal.financial/upload-documents?app=7637fa61-a067-47ba-8ae3-f0129c208dfc
+```
+
+✅ You should **see the UploadDocuments page directly**, not the dashboard.
+✅ It should render all document upload cards for that application ID.
+
+---
+
+## 🧪 Want Me to Generate the Patch Now?
+
+If you confirm Replit is ready, I’ll send:
+
+* ✅ Full fixed `UploadDocuments.tsx`
+* ✅ SMS template patch in staff app
+* ✅ Updated router check for layout redirection
+
+Just say **“send patch now”** and I’ll generate everything.
