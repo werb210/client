@@ -24,12 +24,10 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Determine actual environment from NODE_ENV or REPLIT_ENVIRONMENT fallback
-// Force production mode for optimized performance
-const isProduction = true; // Force production mode for static file serving
-const actualEnv = 'production';
-console.log(`🚀 Running in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
-console.log('Environment:', actualEnv);
+// Determine actual environment - true production mode
+const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_ENVIRONMENT === 'production';
+const actualEnv = isProduction ? 'production' : 'development';
+console.log(`🚀 Running in ${actualEnv.toUpperCase()} mode`);
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('REPLIT_ENVIRONMENT:', process.env.REPLIT_ENVIRONMENT);
 console.log('🧪 STAFF_API_URL at runtime:', cfg.staffApiUrl);
