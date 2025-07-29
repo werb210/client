@@ -41,14 +41,21 @@ export class ApiError extends Error {
 // Generic API request function with enhanced error handling
 export const apiFetch = async (path: string, opts: RequestInit = {}): Promise<Response> => {
   try {
-    const response = await fetch(`${path}`, {
+    const fullUrl = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
+    console.log('🔧 [API] Making request to:', fullUrl);
+    console.log('🔧 [API] With auth token:', import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ? 'Present' : 'Missing');
+    
+    const response = await fetch(fullUrl, {
       headers: { 
         "Content-Type": "application/json",
         "Authorization": `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`,
         ...(opts.headers || {}) 
       },
+      credentials: 'include', // Include cookies for session
       ...opts,
     });
+    
+    console.log('🔧 [API] Response status:', response.status, response.statusText);
     return response;
   } catch (error) {
     // Handle network/CORS errors that cause empty error objects
@@ -347,8 +354,9 @@ export async function get2FAStatus(): Promise<{
 export async function fetchApplicationById(applicationId: string) {
   try {
     console.log(`📡 [fetchApplicationById] Fetching application: ${applicationId}`);
+    console.log(`📡 [fetchApplicationById] Using API base: ${API_BASE_URL}`);
     
-    const response = await apiFetch(`${API_BASE_URL}/applications/${applicationId}`, {
+    const response = await apiFetch(`/applications/${applicationId}`, {
       method: 'GET',
     });
 
@@ -378,7 +386,7 @@ export async function uploadDocumentToStaffAPI(appId: string, file: File, docTyp
     formData.append('documentType', docType);
     formData.append('applicationId', appId);
 
-    const response = await fetch(`${API_BASE_URL}/upload/${appId}`, {
+    const response = await fetch(`/api/public/upload/${appId}`, {
       method: 'POST',
       body: formData,
       headers: {
