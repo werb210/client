@@ -234,7 +234,9 @@ export function MainLayout() {
       
       {/* PWA Testing */}
       <Route path="/pwa-test" component={PWATestPage} />
-      <Route path="/pwa-diagnostics" component={() => <SimplePWADiagnostics />} />
+      <Route path="/pwa-diagnostics">
+        <SimplePWADiagnostics />
+      </Route>
       <Route path="/pwa-diagnostics-full" component={PWADiagnosticsPage} />
       
       {/* Chatbot Testing */}

@@ -1,0 +1,113 @@
+Thanks for the full report. Let’s now **fix the Client Application PWA frontend issues** by addressing the two problems directly:
+
+---
+
+## ✅ FIX PLAN: Client PWA Frontend Issues
+
+---
+
+### 🛠 PROBLEM 1: **Service Worker being served as HTML instead of JS**
+
+#### 🔍 Cause:
+
+Vite (or other dev/build tools) are misrouting `/service-worker.js` to `index.html`.
+
+#### ✅ Fix:
+
+In `vite.config.ts`:
+
+```ts
+export default defineConfig({
+  // ...
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        sw: resolve(__dirname, 'public/service-worker.js'),
+      },
+    },
+  },
+  server: {
+    fs: {
+      allow: ['public'],
+    },
+  }
+});
+```
+
+Also, in `index.html`, **add this explicitly in the `<head>`:**
+
+```html
+<link rel="manifest" href="/manifest.json" />
+```
+
+---
+
+### 🛠 PROBLEM 2: **React route `/pwa-diagnostics` not rendering**
+
+#### 🔍 Cause:
+
+React Router doesn't handle direct link loads to `/pwa-diagnostics`, so browser falls back to server (which returns `index.html`).
+
+#### ✅ Fix:
+
+In your `vite.config.ts`, add fallback:
+
+```ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    historyApiFallback: true, // Enables SPA routing fallback
+  },
+})
+```
+
+---
+
+### ✅ Recommended Route Setup
+
+In `App.tsx`:
+
+```tsx
+<Routes>
+  <Route path="/" element={<Home />} />
+  <Route path="/application" element={<Application />} />
+  <Route path="/pwa-diagnostics" element={<PWADiagnostics />} />
+  {/* fallback route */}
+  <Route path="*" element={<NotFound />} />
+</Routes>
+```
+
+---
+
+## ✅ FINAL CHECKLIST FOR CLIENT APP PWA FIX
+
+### 🔧 Files:
+
+* `vite.config.ts` → add SPA fallback + static SW file mapping
+* `public/service-worker.js` → ensure valid JS, not HTML
+* `public/manifest.json` → confirm icons and name
+* `App.tsx` → confirm `/pwa-diagnostics` route exists and points to real component
+
+---
+
+## ✅ REPLIT CLIENT TASK
+
+**Instructions to Replit Agent:**
+
+> 🧠 Replit, please now:
+>
+> 1. Fix the Vite config to:
+>
+>    * Serve `service-worker.js` as JavaScript
+>    * Enable SPA fallback routing for `/pwa-diagnostics`
+> 2. Ensure `/pwa-diagnostics` renders a React component
+> 3. Confirm manifest and SW files are served via `/public`
+> 4. Report with terminal logs confirming PWA interface is working
+> 5. Confirm install prompt works and no console errors
+
+Once you report completion, I’ll validate the PWA fully and run another round of client smoke tests.

@@ -126,6 +126,20 @@ app.use((req, res, next) => {
 (async () => {
   // CORS already configured above with production-ready settings
 
+  // ✅ PWA: Serve service worker explicitly as JavaScript (fix MIME type issue) - PRIORITY ROUTE
+  app.get('/service-worker.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.resolve(import.meta.dirname, 'public', 'service-worker.js'));
+  });
+
+  // ✅ PWA: Serve manifest.json explicitly - PRIORITY ROUTE
+  app.get('/manifest.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.resolve(import.meta.dirname, 'public', 'manifest.json'));
+  });
+
   // Health check endpoint for monitoring
   app.get('/api/health', (req, res) => {
     res.json({ 
