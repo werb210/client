@@ -5,6 +5,7 @@ import { ChatBotTest } from "@/components/ChatBotTest";
 import { ChatBotDashboard } from "@/components/ChatBotDashboard";
 
 import { useChatBot } from "@/hooks/useChatBot";
+import { PwaPrompt } from "@/components/PwaPrompt";
 
 // V1 Route Components (Source of Truth)
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
@@ -271,6 +272,9 @@ export function MainLayout() {
       <Route path="/" component={LandingPage} />
       <Route component={NotFound} />
     </Switch>
+    
+    {/* PWA Installation Prompt */}
+    <PwaPrompt />
     
     {/* Global ChatBot - Available on all pages - Centered Bottom */}
     <div className="finbot-wrapper">

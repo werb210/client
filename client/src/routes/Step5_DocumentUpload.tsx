@@ -31,6 +31,8 @@ import { ArrowRight, ArrowLeft, Save, FileText, CheckCircle, AlertTriangle, Info
 
 import { DocumentUploadStatus } from '@/components/DocumentUploadStatus';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
+import { StrictDocumentValidation } from '@/components/StrictDocumentValidation';
+import { validateStrictDocumentRequirements } from '@/utils/strictDocumentValidation';
 
 import type { UploadedFile } from '@/components/DynamicDocumentRequirements';
 
@@ -429,46 +431,33 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
   };
 
   const canProceed = () => {
-    // ✅ BYPASS CHECK MODE: Always allow proceeding for submission without documents flow
-    const completedFiles = uploadedFiles.filter(f => f.status === 'completed').length;
-    const totalUploadedFiles = uploadedFiles.length;
+    if (!applicationId) {
+      console.log('⚠️ [STEP5] Cannot proceed: No application ID');
+      return false;
+    }
+
+    // Use strict document validation
+    const strictValidation = validateStrictDocumentRequirements(uploadedFiles);
     
-    // Also check if we have any files with S3 storage (from console logs showing S3 success)
-    const s3Files = uploadedFiles.filter(f => (f as any).storageKey || (f as any).storage === 's3').length;
-    
-    // Check localStorage for any document evidence
-    const localStorageFiles = JSON.parse(localStorage.getItem('uploadedDocuments') || '[]').length;
-    
-    console.log(`🔍 [CANPROCEED] Bypass check mode - always allow continuing:`, {
-      completedFiles,
-      totalUploadedFiles,
-      s3Files,
-      localStorageFiles,
-      allRequirementsComplete,
-      intersectionHasMatches: intersectionResults.hasMatches,
-      requiredDocsLength: intersectionResults.requiredDocuments.length,
-      uploadedFileDetails: uploadedFiles.map(f => ({ 
-        name: f.name, 
-        status: f.status, 
-        storage: (f as any).storage || 'unknown', 
-        storageKey: (f as any).storageKey || 'none' 
-      }))
+    if (!strictValidation.canProceed) {
+      console.log('⚠️ [STEP5] Cannot proceed: Strict validation failed', {
+        accountantDocs: strictValidation.accountantDocsCount,
+        taxDocs: strictValidation.taxDocsCount,
+        errors: strictValidation.errors
+      });
+      return false;
+    }
+
+    // Check if there are active uploads
+    if (isUploading) {
+      console.log('⚠️ [STEP5] Cannot proceed: Uploads in progress');
+      return false;
+    }
+
+    console.log('✅ [STEP5] Can proceed: Strict validation passed', {
+      accountantDocs: `${strictValidation.accountantDocsCount}/3`,
+      taxDocs: `${strictValidation.taxDocsCount}/3`
     });
-    
-    // PRIORITY 1: If user has any uploaded files (completed, S3, or any status), proceed with documents
-    if (completedFiles > 0 || s3Files > 0 || totalUploadedFiles > 0 || localStorageFiles > 0) {
-      console.log(`✅ [CANPROCEED] Found uploaded documents (completed: ${completedFiles}, S3: ${s3Files}, total: ${totalUploadedFiles}, localStorage: ${localStorageFiles}) - proceeding with documents`);
-      return true;
-    }
-    
-    // PRIORITY 2: If requirements marked complete by DynamicDocumentRequirements, proceed
-    if (allRequirementsComplete) {
-      console.log(`✅ [CANPROCEED] Requirements marked complete - proceeding`);
-      return true;
-    }
-    
-    // ✅ NEW: PRIORITY 3: Always allow proceeding without documents (minimal validation mode)
-    console.log(`✅ [CANPROCEED] Bypass check mode - allowing submission without documents`);
     return true;
   };
 
@@ -848,6 +837,12 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
           onFileRemoved={handleFileRemoved}
         />
       </div>
+
+      {/* Strict Document Validation */}
+      <StrictDocumentValidation 
+        uploadedFiles={uploadedFiles}
+        className="mb-6"
+      />
 
       {/* Document Upload Status */}
       {verificationResult ? (
