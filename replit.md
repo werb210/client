@@ -64,6 +64,14 @@ The application employs a client-staff separation architecture. The client is a 
 
 ## Recent Changes (August 2025)
 
+### Document Validation & Chat Escalation Enhancement (August 1, 2025) ✅
+- **Strict Document Validation**: Implemented 3+3 document requirement system enforcing exactly 3 accountant + 3 tax documents before Step 6 progression
+- **Chat Escalation Backend**: Added POST /api/public/chat/escalate endpoint with local storage fallback when staff backend unavailable
+- **PWA Prompt Enhancement**: Updated A2HS prompts for iOS Safari with custom "Tap share icon → Add to Home Screen" instructions and 2-visit tracking
+- **StrictDocumentValidation Component**: Integrated into Step 5 with real-time progress indicators showing document count requirements
+- **Support Infrastructure**: Created comprehensive FAQ and Troubleshooting pages with diagnostic links and escalation pathways
+- **Production Testing**: Validated all endpoints, chat escalation working correctly, health checks operational
+
 ### PWA Implementation Complete ✅
 - **Push Notification System**: Full backend infrastructure with VAPID keys, database storage, and comprehensive API routes
 - **Database Integration**: Created push_subscriptions table for managing notification subscriptions with proper foreign key relationships
