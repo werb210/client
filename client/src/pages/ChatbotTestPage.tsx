@@ -196,13 +196,13 @@ export default function ChatbotTestPage() {
               <Separator />
               
               <div className="text-sm text-muted-foreground">
-                <p className="font-medium mb-2">Available Test Scenarios:</p>
+                <p className="font-medium mb-2">Try These Prompts:</p>
                 <ul className="space-y-1 text-xs">
-                  <li>• Ask about document requirements</li>
-                  <li>• Request help with application steps</li>
-                  <li>• Inquire about lender products</li>
-                  <li>• Express frustration (tests escalation)</li>
-                  <li>• Ask for human agent assistance</li>
+                  <li>• "What types of lenders do you work with?"</li>
+                  <li>• "Help me upload my tax returns"</li>
+                  <li>• "What documents do I need for Step 5?"</li>
+                  <li>• "I'd like to speak to a human"</li>
+                  <li>• "Can someone call me back?"</li>
                 </ul>
               </div>
             </CardContent>

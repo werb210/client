@@ -179,7 +179,7 @@ router.get('/history/:sessionId', async (req, res) => {
  */
 router.post('/escalate', async (req, res) => {
   try {
-    const { sessionId, reason } = req.body;
+    const { sessionId, reason, applicationId, transcript, user_input } = req.body;
     
     if (!sessionId) {
       return res.status(400).json({
@@ -199,20 +199,47 @@ router.post('/escalate', async (req, res) => {
     // Generate conversation summary for staff
     const summary = await openaiService.summarizeConversation(session.messages);
 
+    // Prepare escalation data matching the expected format
+    const escalationData = {
+      sessionId,
+      applicationId: applicationId || session.applicationId,
+      transcript: transcript || session.messages,
+      user_input: user_input || reason || 'User requested human assistance',
+      summary,
+      escalatedAt: new Date().toISOString(),
+      reason: reason || 'Manual escalation requested'
+    };
+
     session.escalated = true;
     session.updatedAt = new Date();
     chatSessions.set(sessionId, session);
 
     console.log(`🚨 Chat session ${sessionId} escalated to human agent`);
-    console.log(`📝 Summary: ${summary}`);
+    console.log(`📝 Escalation data:`, escalationData);
 
-    // Here you would notify staff about the escalation
-    // await notifyStaffOfEscalation(sessionId, summary, reason);
+    // Send push notification to staff about escalation
+    try {
+      const notificationResponse = await fetch(`${req.protocol}://${req.get('host')}/api/notifications/agent-response`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId: escalationData.applicationId,
+          message: `Chat escalation: ${escalationData.user_input}`
+        })
+      });
+      
+      if (notificationResponse.ok) {
+        console.log('✅ Staff notification sent for chat escalation');
+      }
+    } catch (notifyError) {
+      console.warn('⚠️ Failed to send staff notification:', notifyError);
+    }
 
     res.json({
       success: true,
-      message: 'Chat escalated to human agent',
-      summary
+      message: 'Chat escalated to human agent. You should receive a response shortly.',
+      summary,
+      escalationData
     });
 
   } catch (error) {
