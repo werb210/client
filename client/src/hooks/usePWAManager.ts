@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { initializePushNotifications } from '../utils/push';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -64,7 +65,7 @@ export function usePWAManager() {
     }
   }, []);
 
-  // Setup push notifications
+  // Setup push notifications using the utility function
   const setupPushNotifications = useCallback(async () => {
     if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
       console.warn('[PWA] Push notifications not supported');
@@ -74,59 +75,29 @@ export function usePWAManager() {
     setStatus(prev => ({ ...prev, pushSupported: true }));
 
     try {
-      // Request notification permission
-      const permission = await Notification.requestPermission();
+      const applicationId = localStorage.getItem('applicationId') || undefined;
+      const success = await initializePushNotifications(applicationId);
       
-      if (permission === 'granted') {
-        const registration = await navigator.serviceWorker.ready;
-        
-        // Check if already subscribed
-        const existingSubscription = await registration.pushManager.getSubscription();
-        
-        if (existingSubscription) {
-          setStatus(prev => ({ ...prev, pushSubscribed: true }));
-          return;
-        }
-
-        // Subscribe to push notifications
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: await getVapidPublicKey()
-        });
-
-        // Send subscription to server
-        const response = await fetch('/api/public/push-subscription', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            subscription: subscription.toJSON(),
-            applicationId: localStorage.getItem('applicationId') || undefined
-          })
-        });
-
-        if (response.ok) {
-          setStatus(prev => ({ ...prev, pushSubscribed: true }));
-          console.log('[PWA] Push subscription created successfully');
-        }
+      if (success) {
+        setStatus(prev => ({ ...prev, pushSubscribed: true }));
       }
     } catch (error) {
       console.error('[PWA] Push notification setup failed:', error);
     }
   }, []);
 
-  // Get VAPID public key
-  const getVapidPublicKey = async (): Promise<string> => {
+  // Initialize offline storage
+  const initializeOfflineStorage = useCallback(async () => {
     try {
-      const response = await fetch('/api/vapid-public-key');
-      const data = await response.json();
-      return data.publicKey;
+      // Check if IndexedDB is available
+      if ('indexedDB' in window) {
+        setStatus(prev => ({ ...prev, offlineStorageActive: true }));
+        console.log('[PWA] Offline storage initialized');
+      }
     } catch (error) {
-      console.error('[PWA] Failed to get VAPID public key:', error);
-      throw error;
+      console.error('[PWA] Offline storage initialization failed:', error);
     }
-  };
+  }, []);
 
   // Check offline storage
   const checkOfflineStorage = useCallback(() => {

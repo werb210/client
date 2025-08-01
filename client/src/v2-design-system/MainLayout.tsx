@@ -103,6 +103,7 @@ import E2ETestRunner from "@/pages/E2ETestRunner";
 import FileTypeValidationTest from "@/test/FileTypeValidationTest";
 import Step5CategoryTest from "@/test/Step5CategoryTest";
 import DocumentValidationTest from "@/test/DocumentValidationTest";
+import { PushNotificationTest } from "@/pages/PushNotificationTest";
 import ProductValidationTest from "@/routes/ProductValidationTest";
 import TrainChatbot from "@/routes/TrainChatbot";
 
@@ -188,8 +189,8 @@ export function MainLayout() {
       <Route path="/apply/step-3" component={Step3BusinessDetailsComplete} />
       <Route path="/step4-applicant-details" component={Step4ApplicantInfoComplete} />
       <Route path="/apply/step-4" component={Step4ApplicantInfoComplete} />
-      <Route path="/step5-document-upload" component={Step5DocumentUpload} />
-      <Route path="/apply/step-5" component={Step5DocumentUpload} />
+      <Route path="/step5-document-upload" component={() => <Step5DocumentUpload />} />
+      <Route path="/apply/step-5" component={() => <Step5DocumentUpload />} />
       <Route path="/step6-typed-signature" component={Step6TypedSignature} />
       <Route path="/apply/step-6" component={Step6TypedSignature} />
 
@@ -239,6 +240,7 @@ export function MainLayout() {
       </Route>
       <Route path="/pwa-diagnostics-full" component={PWADiagnosticsPage} />
       <Route path="/pwa-comprehensive-test" component={lazy(() => import('@/pages/PWAComprehensiveTest'))} />
+      <Route path="/push-notification-test" component={PushNotificationTest} />
       
       {/* Chatbot Testing */}
       <Route path="/chatbot-ai-test" component={lazy(() => import('@/pages/ChatbotTestPage'))} />
