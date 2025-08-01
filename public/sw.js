@@ -3,14 +3,17 @@
  * Handles offline functionality, caching, push notifications, and background sync
  */
 
-const CACHE_NAME = 'boreal-financial-v1.0.0';
-const STATIC_CACHE_NAME = 'boreal-static-v1.0.0';
-const DYNAMIC_CACHE_NAME = 'boreal-dynamic-v1.0.0';
+const CACHE_NAME = 'boreal-client-cache-v1';
+const STATIC_CACHE_NAME = 'boreal-static-v1';
+const DYNAMIC_CACHE_NAME = 'boreal-dynamic-v1';
+const OFFLINE_URL = '/offline';
 
 // Files to cache immediately
 const STATIC_ASSETS = [
   '/',
+  '/index.html',
   '/manifest.json',
+  OFFLINE_URL,
   '/step1-business-details',
   '/step2-product-selection',
   '/step3-financial-details',
@@ -18,7 +21,8 @@ const STATIC_ASSETS = [
   '/step5-document-upload',
   '/step6-signature',
   '/step7-confirmation',
-  // Add critical CSS and JS files here
+  '/icons/icon-192x192.svg',
+  '/icons/icon-512x512.svg'
 ];
 
 // API endpoints that should be cached
@@ -238,94 +242,68 @@ async function syncDocumentUploads() {
 self.addEventListener('push', (event) => {
   console.log('[SW] Push notification received');
   
-  let options = {
-    body: 'You have a new message',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
+  const data = event.data?.json() || {};
+  const title = data.title || 'Boreal Client Notification';
+  const options = {
+    body: data.body || 'Update on your application',
+    icon: '/icons/icon-192x192.svg',
+    badge: '/icons/icon-192x192.svg',
+    tag: data.tag || 'client-alert',
     vibrate: [200, 100, 200],
-    data: {},
+    data: { url: data.url || '/' },
     actions: [
       {
         action: 'open',
-        title: 'Open App',
-        icon: '/icons/action-open.png'
+        title: 'Open App'
       },
       {
         action: 'dismiss',
-        title: 'Dismiss',
-        icon: '/icons/action-dismiss.png'
+        title: 'Dismiss'
       }
     ]
   };
-  
-  if (event.data) {
-    const data = event.data.json();
-    options.body = data.message || options.body;
-    options.data = data;
-    
-    // Customize notification based on type
-    if (data.type === 'document-required') {
-      options.body = `Please upload: ${data.documentType}`;
-      options.actions[0].action = 'upload-document';
-      options.actions[0].title = 'Upload Now';
-    } else if (data.type === 'agent-response') {
-      options.body = 'Support agent has responded to your message';
-      options.actions[0].action = 'open-chat';
-      options.actions[0].title = 'View Message';
-    } else if (data.type === 'application-update') {
-      options.body = `Application status: ${data.status}`;
-      options.actions[0].action = 'view-status';
-      options.actions[0].title = 'View Details';
-    }
+
+  // Customize notification based on type
+  if (data.type === 'document-required') {
+    options.body = `Please upload: ${data.documentType}`;
+    options.actions[0].action = 'upload-document';
+    options.actions[0].title = 'Upload Now';
+    options.data.url = '/step5-document-upload';
+  } else if (data.type === 'agent-response') {
+    options.body = 'Support agent has responded to your message';
+    options.actions[0].action = 'open-chat';
+    options.actions[0].title = 'View Message';
+    options.data.url = '/?chat=open';
+  } else if (data.type === 'application-update') {
+    options.body = `Application status: ${data.status}`;
+    options.actions[0].action = 'view-status';
+    options.actions[0].title = 'View Details';
+    options.data.url = '/application-status';
   }
   
   event.waitUntil(
-    self.registration.showNotification('Boreal Financial', options)
+    self.registration.showNotification(title, options)
   );
 });
 
-// Handle notification clicks
+// Handle notification clicks  
 self.addEventListener('notificationclick', (event) => {
   console.log('[SW] Notification clicked:', event.action);
   
   event.notification.close();
   
-  const action = event.action;
-  const data = event.notification.data;
-  
   event.waitUntil(
-    self.clients.matchAll({ type: 'window' }).then((clients) => {
-      // Check if app is already open
-      for (const client of clients) {
-        if (client.url.includes(self.registration.scope)) {
-          // Focus existing window and navigate
-          client.focus();
-          
-          if (action === 'upload-document') {
-            client.navigate('/step5-document-upload');
-          } else if (action === 'open-chat') {
-            client.postMessage({ type: 'OPEN_CHAT', data });
-          } else if (action === 'view-status') {
-            client.navigate('/application-status');
-          } else {
-            client.navigate('/');
-          }
-          
-          return;
+    self.clients.matchAll({ type: 'window' }).then((clientList) => {
+      // Focus existing window if available
+      for (const client of clientList) {
+        if ('focus' in client) {
+          return client.focus();
         }
       }
-      
-      // Open new window if not already open
-      let url = '/';
-      if (action === 'upload-document') {
-        url = '/step5-document-upload';
-      } else if (action === 'open-chat') {
-        url = '/?chat=open';
-      } else if (action === 'view-status') {
-        url = '/application-status';
+      // Open new window with notification URL
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(event.notification.data.url);
       }
-      
-      return self.clients.openWindow(url);
     })
   );
 });

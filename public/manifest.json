@@ -1,6 +1,6 @@
 {
-  "name": "Boreal Financial - Business Financing",
-  "short_name": "Boreal Financial",
+  "name": "Boreal Financial - Client Portal",
+  "short_name": "Boreal Client",
   "description": "Apply for business financing with Boreal Financial. Access funding from 41+ lenders for equipment purchase, working capital, business expansion, and more.",
   "start_url": "/",
   "display": "standalone",
@@ -63,14 +63,14 @@
   ],
   "shortcuts": [
     {
-      "name": "New Application",
-      "short_name": "Apply",
-      "description": "Start a new financing application",
-      "url": "/step1-business-details",
+      "name": "Resume Application",
+      "short_name": "Resume",
+      "description": "Continue your financing application",
+      "url": "/resume",
       "icons": [
         {
-          "src": "/icons/shortcut-apply.png",
-          "sizes": "96x96"
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
         }
       ]
     },
@@ -81,20 +81,20 @@
       "url": "/step5-document-upload",
       "icons": [
         {
-          "src": "/icons/shortcut-upload.png",
-          "sizes": "96x96"
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
         }
       ]
     },
     {
-      "name": "Chat Support",
-      "short_name": "Support",
-      "description": "Get help from our team",
-      "url": "/?chat=open",
+      "name": "Application Status",
+      "short_name": "Status",
+      "description": "Check your application progress",
+      "url": "/application-status",
       "icons": [
         {
-          "src": "/icons/shortcut-chat.png",
-          "sizes": "96x96"
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
         }
       ]
     }
