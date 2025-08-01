@@ -31,6 +31,9 @@ import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import { TermsOfService } from "@/pages/TermsOfService";
 import { CookieConsentTest } from "@/pages/CookieConsentTest";
 import { PWADiagnostics } from "@/pages/PWADiagnostics";
+import { ClientAppAudit } from "@/pages/ClientAppAudit";
+import FAQ from "@/pages/FAQ";
+import Troubleshooting from "@/pages/Troubleshooting";
 
 // BackendDiagnosticPage removed with legacy auth cleanup
 import SideBySideApplication from "@/pages/SideBySideApplication";
@@ -244,6 +247,9 @@ export function MainLayout() {
       <Route path="/pwa-comprehensive-test" component={lazy(() => import('@/pages/PWAComprehensiveTest'))} />
       <Route path="/push-notification-test" component={PushNotificationTest} />
       
+      {/* Comprehensive Audit */}
+      <Route path="/client-app-audit" component={ClientAppAudit} />
+      
       {/* Chatbot Testing */}
       <Route path="/chatbot-ai-test" component={lazy(() => import('@/pages/ChatbotTestPage'))} />
       
@@ -251,6 +257,10 @@ export function MainLayout() {
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/cookie-consent-test" component={CookieConsentTest} />
+      
+      {/* Support Pages */}
+      <Route path="/faq" component={FAQ} />
+      <Route path="/troubleshooting" component={Troubleshooting} />
       <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} />
       <Route path="/advanced-chatbot-test" component={() => <ChatBotTest />} />
       <Route path="/chatbot-dashboard" component={() => <ChatBotDashboard />} />
