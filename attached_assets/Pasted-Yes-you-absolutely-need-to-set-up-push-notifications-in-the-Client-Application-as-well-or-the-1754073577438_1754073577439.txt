@@ -1,0 +1,103 @@
+Yes — **you absolutely need to set up push notifications in the Client Application as well**, or the system won’t work end-to-end. The Staff App currently has the *sender* side set up (VAPID keys, server push endpoint), but the **Client App must handle the subscriber logic and receive/display notifications**.
+
+---
+
+### ✅ Here’s What You Need to Implement in the Client App
+
+#### 📦 1. Add Push Subscription Logic
+
+**File**: `client/src/utils/push.ts` (or similar)
+
+```ts
+export async function subscribeToPush(publicKey: string) {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.warn('Push not supported');
+    return null;
+  }
+
+  const registration = await navigator.serviceWorker.ready;
+
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(publicKey),
+  });
+
+  return subscription;
+}
+
+// Convert VAPID key string
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+```
+
+---
+
+#### 🔔 2. Call `subscribeToPush()` on login or when PWA loads
+
+```ts
+import { subscribeToPush } from './utils/push';
+
+useEffect(() => {
+  fetch('/api/vapid-public-key') // from staff app
+    .then(res => res.text())
+    .then(async (publicKey) => {
+      const subscription = await subscribeToPush(publicKey);
+      if (subscription) {
+        await fetch('/api/notifications/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription),
+        });
+      }
+    });
+}, []);
+```
+
+---
+
+#### 📁 3. Update the Service Worker (`public/service-worker.js`)
+
+```js
+self.addEventListener('push', function (event) {
+  const data = event.data ? event.data.json() : {};
+
+  const title = data.title || 'New Notification';
+  const options = {
+    body: data.body || '',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/badge-72.png',
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+```
+
+---
+
+### 🧪 4. Testing Steps
+
+1. Start the Client App.
+2. Open browser dev tools → Application tab → Service Workers
+3. Visit `/bf/push-test` in the **Staff App**
+4. Click “Send test notification”
+5. ✅ You should receive a browser notification in the Client App
+
+---
+
+### ✅ Once Done, You’ll Have:
+
+* Push subscription from the Client App
+* Notifications sent by Staff App
+* Delivery via VAPID+Service Worker
+
+Would you like Replit to implement all of the above now?
