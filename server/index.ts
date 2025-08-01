@@ -1419,6 +1419,38 @@ app.use((req, res, next) => {
       res.status(503).json({ error: 'Push notifications not configured' });
     }
   });
+
+  // Test push notification endpoint for diagnostics
+  app.post('/api/notifications/test', async (req, res) => {
+    try {
+      const { title, body, url } = req.body;
+      
+      // Send test notification to all subscriptions (in real app, filter by user)
+      const notificationResponse = await fetch(`${req.protocol}://${req.get('host')}/api/notifications/agent-response`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId: 'diagnostic-test',
+          message: body || 'PWA diagnostic test notification',
+          title: title || 'PWA Test',
+          url: url || '/pwa-diagnostics'
+        })
+      });
+      
+      if (notificationResponse.ok) {
+        res.json({ success: true, message: 'Test notification sent' });
+      } else {
+        throw new Error('Failed to send test notification');
+      }
+    } catch (error) {
+      console.error('❌ Test notification error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to send test notification',
+        details: error.message 
+      });
+    }
+  });
   
   // Feedback endpoint for issue reporting with screenshot support
   app.post('/api/feedback', upload.single('screenshot'), async (req, res) => {
