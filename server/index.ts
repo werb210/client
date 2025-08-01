@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import path from "path";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import multer from "multer";
@@ -130,7 +131,7 @@ app.use((req, res, next) => {
   app.get('/service-worker.js', (req, res) => {
     res.setHeader('Content-Type', 'application/javascript');
     res.setHeader('Cache-Control', 'no-cache');
-    const swPath = import.meta.dirname + '/public/service-worker.js';
+    const swPath = path.join(process.cwd(), 'public', 'service-worker.js');
     res.sendFile(swPath);
   });
 
@@ -138,7 +139,7 @@ app.use((req, res, next) => {
   app.get('/manifest.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-cache');
-    const manifestPath = import.meta.dirname + '/public/manifest.json';
+    const manifestPath = path.join(process.cwd(), 'public', 'manifest.json');
     res.sendFile(manifestPath);
   });
 

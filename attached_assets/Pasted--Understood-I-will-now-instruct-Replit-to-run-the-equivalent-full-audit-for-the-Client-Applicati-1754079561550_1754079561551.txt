@@ -1,0 +1,108 @@
+✅ Understood. I will now instruct Replit to run the **equivalent full audit for the Client Application** across all navigation routes, PWA status, submission features, document handling, and integrations. The audit will produce a structured report matching the Staff audit format above.
+
+---
+
+## ✅ INSTRUCTION TO REPLIT (CLIENT APP)
+
+> **Scope**: Run a comprehensive audit of the Client App at `https://clientportal.boreal.financial`
+> **Goal**: Verify every major route, component, and PWA feature is implemented and working 100%
+> **Deliverables**: A detailed audit summary, feature-by-feature breakdown, and final JSON report.
+
+---
+
+### ✅ CLIENT APP: AUDIT TASK LIST FOR REPLIT
+
+#### 🧱 CORE INFRASTRUCTURE
+
+* [ ] Confirm Vite SPA routing works correctly
+* [ ] Confirm PWA registration + manifest + service worker
+* [ ] Confirm API connectivity to Staff App
+
+#### 📌 MAIN NAVIGATION ROUTES
+
+* [ ] `/` → Landing Page (must have Apply buttons linked to Step 1)
+* [ ] `/step-1` through `/step-7` → Application Flow Steps 1–7
+* [ ] `/faq` → FAQ Page (static, migrated from V1)
+* [ ] `/troubleshooting` → Troubleshooting Page (static)
+* [ ] `/finalize/:applicationId` → Final submission redirect page
+* [ ] `/document-upload/:applicationId` → Re-upload fallback page
+
+#### 📂 FORM FEATURES (Steps 1–7)
+
+* [ ] Step 1: Business Details input
+* [ ] Step 2: AI-Powered Lender Recommendation
+* [ ] Step 3: Product-specific Questions (dynamic based on product)
+* [ ] Step 4: Applicant Contact Info
+* [ ] Step 5: Document Upload
+
+  * [ ] Document requirements generated correctly
+  * [ ] Upload buttons and deduplication
+  * [ ] Validation of 3 Accountant + 3 Tax documents
+* [ ] Step 6: Review
+* [ ] Step 7: Signature / Final Submit
+
+#### 📤 SUBMISSION & BACKEND SYNC
+
+* [ ] Application UUID is used across steps
+* [ ] Application is sent via API to Staff App
+* [ ] All uploaded documents are stored in S3
+* [ ] Rejected documents trigger error state
+* [ ] Finalization route triggers `/api/public/applications/:id/finalize`
+
+#### 💬 CHATBOT FEATURES
+
+* [ ] OpenAI-based chatbot renders
+* [ ] "Talk to a Human" triggers escalation to Staff App
+* [ ] "Report an Issue" logs issue to escalation tab
+* [ ] Chatbox works on desktop + mobile
+* [ ] Only shows on `/step-*` and `/faq`, not `/finalize`
+
+#### 📱 PWA SUPPORT
+
+* [ ] Manifest is served with proper MIME type
+* [ ] Service Worker is valid JS and active
+* [ ] Push notification subscription works
+* [ ] A2HS (Add to Home Screen) triggerable on iPad Safari
+* [ ] `/pwa-diagnostics` (if exists) shows valid status
+
+#### ✅ CLIENT FINAL OUTPUT FORMAT
+
+```json
+{
+  "LandingPage": "✅ PASS",
+  "Step1": "✅ PASS",
+  "Step2_LenderRecommendation": "✅ PASS",
+  "Step3_DynamicQuestions": "✅ PASS",
+  "Step4_ApplicantInfo": "✅ PASS",
+  "Step5_DocumentUpload": "⚠️ PARTIAL - Validation OK, duplicate rule broken",
+  "Step6_Review": "✅ PASS",
+  "Step7_Submit": "✅ PASS",
+  "FinalizePage": "✅ PASS",
+  "FAQPage": "✅ PASS",
+  "TroubleshootingPage": "✅ PASS",
+  "ChatBot": "✅ PASS",
+  "ChatEscalation": "✅ PASS",
+  "PushNotifications": "✅ PASS",
+  "PWA_A2HS": "⚠️ PARTIAL - Not triggered on iPad Safari",
+  "BackendSubmission": "✅ PASS",
+  "S3Uploads": "✅ PASS",
+  "DocumentValidation": "⚠️ PARTIAL - Needs strict enforcement for required counts"
+}
+```
+
+---
+
+## 🛠️ REPLIT MUST NOW:
+
+* Run the above full audit on the **Client App**
+* Output a structured JSON status and list working, partial, and missing features
+* Pay special attention to:
+
+  * Chatbot escalation links
+  * Document rules for Step 5
+  * A2HS support on iPad
+  * Broken or missing finalization step
+
+---
+
+Once Replit completes and reports the Client audit, I will cross-reference it with the Staff audit for any dependency failures or mislinked submissions.

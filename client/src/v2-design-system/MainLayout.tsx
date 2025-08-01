@@ -30,6 +30,7 @@ import UploadComplete from "@/routes/UploadComplete";
 import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import { TermsOfService } from "@/pages/TermsOfService";
 import { CookieConsentTest } from "@/pages/CookieConsentTest";
+import { PWADiagnostics } from "@/pages/PWADiagnostics";
 
 // BackendDiagnosticPage removed with legacy auth cleanup
 import SideBySideApplication from "@/pages/SideBySideApplication";
@@ -235,7 +236,8 @@ export function MainLayout() {
       
       {/* PWA Testing */}
       <Route path="/pwa-test" component={PWATestPage} />
-      <Route path="/pwa-diagnostics">
+      <Route path="/pwa-diagnostics" component={PWADiagnostics} />
+      <Route path="/pwa-diagnostics-simple">
         <SimplePWADiagnostics />
       </Route>
       <Route path="/pwa-diagnostics-full" component={PWADiagnosticsPage} />
