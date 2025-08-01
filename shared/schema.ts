@@ -133,6 +133,25 @@ export const ApplicationFormSchema = z.object({
 export type ApplicationForm = z.infer<typeof ApplicationFormSchema>;
 
 /* ------------------------------------------------------------------
+   PUSH NOTIFICATION SUBSCRIPTION SCHEMA
+-------------------------------------------------------------------*/
+export const PushSubscriptionSchema = z.object({
+  id: z.string().uuid().optional(),
+  applicationId: z.string().uuid().optional(),
+  userId: z.string().optional(),
+  endpoint: z.string(),
+  keys: z.object({
+    p256dh: z.string(),
+    auth: z.string()
+  }),
+  userAgent: z.string().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional()
+});
+
+export type PushSubscription = z.infer<typeof PushSubscriptionSchema>;
+
+/* ------------------------------------------------------------------
    STEP-SPECIFIC SCHEMAS (FOR FORM VALIDATION)
 -------------------------------------------------------------------*/
 export const step1Schema = z.object({
