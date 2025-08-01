@@ -130,14 +130,16 @@ app.use((req, res, next) => {
   app.get('/service-worker.js', (req, res) => {
     res.setHeader('Content-Type', 'application/javascript');
     res.setHeader('Cache-Control', 'no-cache');
-    res.sendFile(path.resolve(import.meta.dirname, 'public', 'service-worker.js'));
+    const swPath = import.meta.dirname + '/public/service-worker.js';
+    res.sendFile(swPath);
   });
 
   // ✅ PWA: Serve manifest.json explicitly - PRIORITY ROUTE
   app.get('/manifest.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-cache');
-    res.sendFile(path.resolve(import.meta.dirname, 'public', 'manifest.json'));
+    const manifestPath = import.meta.dirname + '/public/manifest.json';
+    res.sendFile(manifestPath);
   });
 
   // Health check endpoint for monitoring
