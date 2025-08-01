@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PWA Diagnostics Test</title>
+</head>
+<body>
+    <h1>Test PWA Diagnostics Route</h1>
+    <script>
+        // Test if the route is accessible
+        fetch('/pwa-diagnostics')
+            .then(response => {
+                console.log('PWA Diagnostics Response:', response.status);
+                return response.text();
+            })
+            .then(html => {
+                console.log('HTML contains PWA:', html.includes('PWA'));
+                console.log('HTML contains diagnostics:', html.includes('diagnostics'));
+            })
+            .catch(error => {
+                console.error('Error accessing PWA diagnostics:', error);
+            });
+    </script>
+</body>
+</html>
