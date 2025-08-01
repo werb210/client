@@ -73,6 +73,7 @@ import SyncDiagnostics from "@/pages/SyncDiagnostics";
 import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
 
 import CanadianWorkingCapitalTest from "@/pages/CanadianWorkingCapitalTest";
+import PWATestPage from "@/pages/PWATestPage";
 import DebugCanadianEquipmentAPI from "@/pages/DebugCanadianEquipmentAPI";
 import ApiConnectivityTest from "@/pages/ApiConnectivityTest";
 import ListLenderCategories from "@/pages/ListLenderCategories";
@@ -228,6 +229,9 @@ export function MainLayout() {
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
       <Route path="/api-connectivity-test" component={ApiConnectivityTest} />
       <Route path="/cache-setup" component={InitialCacheSetup} />
+      
+      {/* PWA Testing */}
+      <Route path="/pwa-test" component={PWATestPage} />
       
       {/* Legal Pages */}
       <Route path="/privacy-policy" component={PrivacyPolicy} />

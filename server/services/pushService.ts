@@ -19,8 +19,11 @@ const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 const vapidEmail = process.env.VAPID_EMAIL || 'mailto:admin@boreal.financial';
 
+// Ensure VAPID email has proper mailto: format
+const formattedVapidEmail = vapidEmail.startsWith('mailto:') ? vapidEmail : `mailto:${vapidEmail}`;
+
 if (vapidPublicKey && vapidPrivateKey) {
-  webpush.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey);
+  webpush.setVapidDetails(formattedVapidEmail, vapidPublicKey, vapidPrivateKey);
   console.log('✅ Push notification service initialized with VAPID keys');
 } else {
   console.warn('⚠️ VAPID keys not found - push notifications will not work');

@@ -5,7 +5,7 @@
 
 import express from 'express';
 import { z } from 'zod';
-import { pool } from '../config/database';
+import { pool } from '../db';
 import { sendClientNotification, sendBulkNotifications, NotificationTemplates } from '../services/pushService';
 
 const router = express.Router();

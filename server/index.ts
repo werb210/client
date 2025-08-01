@@ -1407,6 +1407,16 @@ app.use((req, res, next) => {
   app.use('/api', chatbotTrainingRouter);
   app.use('/api/notifications', notificationsRouter);
   app.use('/debug', chatbotTrainingRouter);
+
+  // VAPID public key endpoint for PWA push notifications
+  app.get('/api/vapid-public-key', (req, res) => {
+    const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+    if (vapidPublicKey) {
+      res.json({ publicKey: vapidPublicKey });
+    } else {
+      res.status(503).json({ error: 'Push notifications not configured' });
+    }
+  });
   
   // Feedback endpoint for issue reporting with screenshot support
   app.post('/api/feedback', upload.single('screenshot'), async (req, res) => {

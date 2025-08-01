@@ -170,6 +170,114 @@ async function handleStaticRequest(request) {
   }
 }
 
+// Push notification handling
+self.addEventListener('push', (event) => {
+  console.log('[SW] Push notification received');
+  
+  if (!event.data) {
+    console.log('[SW] Push event but no data');
+    return;
+  }
+  
+  try {
+    const payload = event.data.json();
+    console.log('[SW] Push payload:', payload);
+    
+    const notificationOptions = {
+      body: payload.body,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      tag: payload.type || 'general',
+      data: {
+        url: payload.url || '/',
+        type: payload.type || 'general',
+        ...payload.data
+      },
+      requireInteraction: payload.type === 'document-required' || payload.type === 'agent-response',
+      actions: []
+    };
+    
+    // Add actions based on notification type
+    if (payload.type === 'document-required') {
+      notificationOptions.actions = [
+        { action: 'upload', title: 'Upload Document' },
+        { action: 'dismiss', title: 'Later' }
+      ];
+    } else if (payload.type === 'agent-response') {
+      notificationOptions.actions = [
+        { action: 'reply', title: 'Reply' },
+        { action: 'dismiss', title: 'Dismiss' }
+      ];
+    }
+    
+    event.waitUntil(
+      self.registration.showNotification(
+        payload.title || 'Boreal Financial',
+        notificationOptions
+      )
+    );
+  } catch (error) {
+    console.error('[SW] Error processing push notification:', error);
+    
+    // Fallback notification
+    event.waitUntil(
+      self.registration.showNotification('Boreal Financial', {
+        body: 'You have a new notification',
+        icon: '/icons/icon-192x192.png',
+        tag: 'fallback'
+      })
+    );
+  }
+});
+
+// Handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+  console.log('[SW] Notification clicked:', event.notification.tag);
+  
+  event.notification.close();
+  
+  const notificationData = event.notification.data || {};
+  let targetUrl = notificationData.url || '/';
+  
+  // Handle action clicks
+  if (event.action) {
+    console.log('[SW] Notification action clicked:', event.action);
+    
+    switch (event.action) {
+      case 'upload':
+        targetUrl = '/step5-document-upload';
+        break;
+      case 'reply':
+        targetUrl = '/chat';
+        break;
+      case 'dismiss':
+        return; // Don't open anything
+    }
+  }
+  
+  // Open or focus the client
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Check if there's already a window/tab open with the target URL
+      for (const client of clientList) {
+        if (client.url.includes(targetUrl.replace('/', ''))) {
+          return client.focus();
+        }
+      }
+      
+      // Check if there's any client open
+      if (clientList.length > 0) {
+        const client = clientList[0];
+        client.navigate?.(targetUrl);
+        return client.focus();
+      }
+      
+      // Open new window
+      return clients.openWindow(targetUrl);
+    })
+  );
+});
+
 // Background sync for form submissions
 self.addEventListener('sync', (event) => {
   console.log('[SW] Background sync triggered:', event.tag);
