@@ -233,6 +233,9 @@ export function MainLayout() {
       {/* PWA Testing */}
       <Route path="/pwa-test" component={PWATestPage} />
       
+      {/* Chatbot Testing */}
+      <Route path="/chatbot-ai-test" component={lazy(() => import('@/pages/ChatbotTestPage'))} />
+      
       {/* Legal Pages */}
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />

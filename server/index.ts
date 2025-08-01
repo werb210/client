@@ -17,6 +17,7 @@ import statusRouter from "./routes/status.js";
 import handoffRouter from "./routes/handoff.js";
 import chatbotTrainingRouter from "./routes/chatbotTraining";
 import notificationsRouter from "./routes/notifications";
+import chatRouter from "./routes/chat";
 import { logUploadEvent, auditUploadAttempt, ZERO_DOCUMENTS_QUERY } from "./utils/uploadStabilization.js";
 
 // ES module path resolution
@@ -1406,6 +1407,7 @@ app.use((req, res, next) => {
   app.use('/api', handoffRouter);
   app.use('/api', chatbotTrainingRouter);
   app.use('/api/notifications', notificationsRouter);
+  app.use('/api/chat', chatRouter);
   app.use('/debug', chatbotTrainingRouter);
 
   // VAPID public key endpoint for PWA push notifications

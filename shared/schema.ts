@@ -129,7 +129,7 @@ export const ApplicationFormSchema = z.object({
   }),
 });
 
-// Infer the type from the schema
+// Infer the type from the schema (first definition)
 export type ApplicationForm = z.infer<typeof ApplicationFormSchema>;
 
 /* ------------------------------------------------------------------
@@ -150,6 +150,34 @@ export const PushSubscriptionSchema = z.object({
 });
 
 export type PushSubscription = z.infer<typeof PushSubscriptionSchema>;
+
+/* ------------------------------------------------------------------
+   CHAT SYSTEM SCHEMAS - OpenAI Chatbot Integration
+-------------------------------------------------------------------*/
+export const ChatSessionSchema = z.object({
+  id: z.string().uuid().optional(),
+  sessionId: z.string(),
+  userId: z.string().optional(),
+  applicationId: z.string().optional(),
+  escalated: z.boolean().default(false),
+  escalationReason: z.string().optional(),
+  summary: z.string().optional(),
+  sentimentScore: z.number().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional()
+});
+
+export const ChatMessageSchema = z.object({
+  id: z.string().uuid().optional(),
+  sessionId: z.string(),
+  role: z.enum(['user', 'assistant', 'system']),
+  content: z.string(),
+  metadata: z.record(z.any()).optional(), // For storing additional context
+  createdAt: z.string().optional()
+});
+
+export type ChatSession = z.infer<typeof ChatSessionSchema>;
+export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 
 /* ------------------------------------------------------------------
    STEP-SPECIFIC SCHEMAS (FOR FORM VALIDATION)
@@ -235,7 +263,7 @@ export const step6Schema = z.object({
   submittedAt: z.string().optional(),
 });
 
-export type ApplicationForm = z.infer<typeof ApplicationFormSchema>;
+// Type already defined above - removed duplicate
 
 /* ------------------------------------------------------------------
    STEP SCHEMAS (for React‑Hook‑Form per page validation)

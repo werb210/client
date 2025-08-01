@@ -46,3 +46,6 @@ externalPort = 8080
 [[ports]]
 localPort = 24678
 externalPort = 3000
+
+[agent]
+integrations = ["javascript_openai==1.0.0"]
