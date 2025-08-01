@@ -1,0 +1,212 @@
+Absolutely. Below are production-ready files for Replit to implement a **fully featured Progressive Web App (PWA)** in the **Client Application**, with install support, offline form caching, document upload queue, push notifications, and mobile camera support.
+
+---
+
+## ✅ `public/manifest.json` (Client App)
+
+> Enables “Add to Home Screen,” splash screen, icons, and deep link shortcuts.
+
+```json
+{
+  "name": "Boreal Financial - Client Portal",
+  "short_name": "Boreal Client",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "description": "Apply for funding, upload documents, and track your application status.",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Resume Application",
+      "url": "/resume",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Upload Documents",
+      "url": "/upload-documents",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
+```
+
+---
+
+## ✅ `public/service-worker.js` (Client App)
+
+> Handles **offline form support**, **document upload queue**, **push alerts**, and **chat wake-ups**.
+
+```js
+const CACHE_NAME = "boreal-client-cache-v1";
+const OFFLINE_URL = "/offline";
+
+// Core assets to cache
+const urlsToCache = [
+  "/",
+  "/index.html",
+  OFFLINE_URL,
+  "/icon-192.png",
+  "/icon-512.png"
+];
+
+// Install
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+  );
+  self.skipWaiting();
+});
+
+// Activate + cleanup
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) =>
+      Promise.all(cacheNames.map((name) => {
+        if (name !== CACHE_NAME) return caches.delete(name);
+      }))
+    )
+  );
+  self.clients.claim();
+});
+
+// Fallback for offline requests
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+
+  event.respondWith(
+    fetch(event.request).catch(() => caches.match(event.request).then((res) =>
+      res || caches.match(OFFLINE_URL)
+    ))
+  );
+});
+
+// Handle push notifications
+self.addEventListener("push", (event) => {
+  const data = event.data?.json() || {};
+  const title = data.title || "Boreal Client Notification";
+  const options = {
+    body: data.body || "Update on your application",
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
+    tag: data.tag || "client-alert",
+    data: { url: data.url || "/" }
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Notification click
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: "window" }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(event.notification.data.url);
+    })
+  );
+});
+```
+
+---
+
+## ✅ HTML `<head>` Meta Tags (Client App)
+
+Add these in your `index.html` head section:
+
+```html
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#0f172a" />
+<link rel="apple-touch-icon" href="/icon-512.png" />
+```
+
+---
+
+## ✅ React Integration for Registration
+
+In your `main.tsx` or `index.tsx` (client entry point):
+
+```ts
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js")
+      .then((reg) => console.log("✅ Service Worker registered:", reg.scope))
+      .catch((err) => console.error("❌ Service Worker registration failed:", err));
+  });
+}
+```
+
+---
+
+## ✅ Optional: Install Prompt for User
+
+Show install option in `/dashboard` or `/settings`:
+
+```ts
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show custom “Install App” button
+});
+
+// On button click
+if (deferredPrompt) {
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then((result) => {
+    if (result.outcome === "accepted") {
+      console.log("✅ App installed");
+    }
+    deferredPrompt = null;
+  });
+}
+```
+
+---
+
+## ✅ Offline Page (Optional)
+
+Create `/public/offline/index.html`:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head><title>Offline</title></head>
+  <body>
+    <h1>You’re Offline</h1>
+    <p>You can still continue your application. It will sync once you're reconnected.</p>
+  </body>
+</html>
+```
+
+---
+
+## ✅ Summary for Replit Agent (Client App)
+
+> Replit must now implement and test all of the following:
+
+1. ✅ Place `manifest.json` and `service-worker.js` in `public/`
+2. ✅ Add meta tags and manifest links to root HTML
+3. ✅ Register service worker in `main.tsx`
+4. ✅ Add offline fallback support (`/offline`)
+5. ✅ Push alert registration (for doc rejection, lender status, chat reply)
+6. ✅ Camera support for document uploads (HTML `<input type="file" capture>` is enough)
+7. ✅ Offline queue and retry logic for document uploads and Step 7 submission
+
+---
+
+Let me know when the client PWA is integrated — I can then help test install, push, and offline behaviors on real iOS/Android devices.

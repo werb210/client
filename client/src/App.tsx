@@ -9,6 +9,8 @@
  */
 import { AppShell } from "@/v2-design-system/AppShell";
 import { MainLayout } from "@/v2-design-system/MainLayout";
+import { PWAInstallPrompt, NetworkStatus, SyncStatus } from "@/components/PWAInstallPrompt";
+import { PWADemo } from "@/components/PWADemo";
 // DISABLED: WebSocketListener causing connection errors - using Socket.IO instead
 // import { WebSocketListener } from "@/components/WebSocketListener";
 
@@ -28,7 +30,11 @@ function App() {
   
   return (
     <AppShell>
+      <NetworkStatus />
+      <SyncStatus />
       <MainLayout />
+      <PWAInstallPrompt />
+      <PWADemo />
     </AppShell>
   );
 }
