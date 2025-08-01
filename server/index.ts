@@ -1447,7 +1447,7 @@ app.use((req, res, next) => {
       res.status(500).json({ 
         success: false, 
         error: 'Failed to send test notification',
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });

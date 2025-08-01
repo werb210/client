@@ -182,8 +182,8 @@ export function usePWAManager() {
 
     try {
       const registration = await navigator.serviceWorker.ready;
-      if ('sync' in registration) {
-        await registration.sync.register(tag);
+      if ('sync' in registration && registration.sync) {
+        await (registration.sync as any).register(tag);
         console.log(`[PWA] Background sync registered: ${tag}`);
       }
     } catch (error) {
