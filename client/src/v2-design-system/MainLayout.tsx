@@ -74,6 +74,7 @@ import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
 
 import CanadianWorkingCapitalTest from "@/pages/CanadianWorkingCapitalTest";
 import PWATestPage from "@/pages/PWATestPage";
+import PWADiagnosticsPage from "@/pages/PWADiagnosticsPage";
 import DebugCanadianEquipmentAPI from "@/pages/DebugCanadianEquipmentAPI";
 import ApiConnectivityTest from "@/pages/ApiConnectivityTest";
 import ListLenderCategories from "@/pages/ListLenderCategories";
@@ -232,7 +233,7 @@ export function MainLayout() {
       
       {/* PWA Testing */}
       <Route path="/pwa-test" component={PWATestPage} />
-      <Route path="/pwa-diagnostics" component={lazy(() => import('@/pages/PWADiagnosticsPage'))} />
+      <Route path="/pwa-diagnostics" component={PWADiagnosticsPage} />
       
       {/* Chatbot Testing */}
       <Route path="/chatbot-ai-test" component={lazy(() => import('@/pages/ChatbotTestPage'))} />
