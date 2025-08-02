@@ -9,7 +9,7 @@ interface UploadedFile {
   name: string;
   size: number;
   type: string;
-  status: 'completed' | 'uploading' | 'error';
+  status: 'completed' | 'uploading' | 'error' | 'fallback';
   documentType: string;
   file?: File;
 }
