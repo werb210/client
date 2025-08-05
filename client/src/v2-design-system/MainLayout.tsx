@@ -255,6 +255,7 @@ export function MainLayout() {
       {/* Chatbot Testing */}
       <Route path="/chatbot-ai-test" component={lazy(() => import('@/pages/ChatbotTestPage'))} />
       <Route path="/chatbot-ai-suite-test" component={lazy(() => import('@/pages/ChatbotAISuiteTest'))} />
+      <Route path="/comprehensive-client-test" component={lazy(() => import('@/pages/ComprehensiveClientAppTest'))} />
       
       {/* Legal Pages */}
       <Route path="/privacy-policy" component={PrivacyPolicy} />
