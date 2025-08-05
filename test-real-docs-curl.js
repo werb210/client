@@ -8,6 +8,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Helper function to safely escape shell arguments
+function escapeShellArg(arg) {
+  return `'${arg.replace(/'/g, "'\"'\"'")}'`;
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -59,10 +64,10 @@ function createApplication() {
     }
   };
 
-  const curlCommand = `curl -s -X POST "${API_BASE_URL}/applications" \\
-    -H "Content-Type: application/json" \\
-    -H "Authorization: Bearer ${BEARER_TOKEN}" \\
-    -d '${JSON.stringify(applicationData)}'`;
+  const curlCommand = `curl -s -X POST ${escapeShellArg(API_BASE_URL + '/applications')} \\
+    -H ${escapeShellArg('Content-Type: application/json')} \\
+    -H ${escapeShellArg('Authorization: Bearer ' + BEARER_TOKEN)} \\
+    -d ${escapeShellArg(JSON.stringify(applicationData))}`;
 
   try {
     const result = execSync(curlCommand, { encoding: 'utf8' });
@@ -108,10 +113,10 @@ function uploadRealDocuments(applicationId) {
     const fileStats = fs.statSync(filePath);
     console.log(`📊 [CURL TEST] File info: ${fileName} (${fileStats.size} bytes)`);
 
-    const curlCommand = `curl -s -X POST "${API_BASE_URL}/upload/${applicationId}" \\
-      -H "Authorization: Bearer ${BEARER_TOKEN}" \\
-      -F "document=@${filePath}" \\
-      -F "documentType=bank_statements"`;
+    const curlCommand = `curl -s -X POST ${escapeShellArg(API_BASE_URL + '/upload/' + applicationId)} \\
+      -H ${escapeShellArg('Authorization: Bearer ' + BEARER_TOKEN)} \\
+      -F ${escapeShellArg('document=@' + filePath)} \\
+      -F ${escapeShellArg('documentType=bank_statements')}`;
 
     try {
       const result = execSync(curlCommand, { encoding: 'utf8' });
@@ -200,10 +205,10 @@ function finalizeApplication(applicationId) {
     applicationId: applicationId
   };
 
-  const curlCommand = `curl -s -X PATCH "${API_BASE_URL}/applications/${applicationId}/finalize" \\
-    -H "Content-Type: application/json" \\
-    -H "Authorization: Bearer ${BEARER_TOKEN}" \\
-    -d '${JSON.stringify(finalizationData)}'`;
+  const curlCommand = `curl -s -X PATCH ${escapeShellArg(API_BASE_URL + '/applications/' + applicationId + '/finalize')} \\
+    -H ${escapeShellArg('Content-Type: application/json')} \\
+    -H ${escapeShellArg('Authorization: Bearer ' + BEARER_TOKEN)} \\
+    -d ${escapeShellArg(JSON.stringify(finalizationData))}`;
 
   try {
     const result = execSync(curlCommand, { encoding: 'utf8' });
