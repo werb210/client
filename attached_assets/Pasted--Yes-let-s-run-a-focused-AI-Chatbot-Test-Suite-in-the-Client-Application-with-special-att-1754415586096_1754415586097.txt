@@ -1,0 +1,66 @@
+✅ Yes — let’s run a **focused AI Chatbot Test Suite** in the **Client Application** with special attention to:
+
+> 🔴 **Canada Startup Funding False Positive**
+> (The bot must stop saying that Canadian startups are fundable if they are not.)
+
+---
+
+## 🤖 AI CHATBOT – CLIENT APP TEST PLAN
+
+**Purpose:** Ensure the chatbot gives correct, compliant answers for common product questions — based on lender data.
+
+---
+
+### 🔁 PRIMARY TEST CASES (English)
+
+| Question                                              | Expected Answer Behavior                                                                                         |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 💬 “Can you fund a startup in Canada?”                | ❌ Must **not** say "Yes" or imply it's easy. Should say: "Most Canadian lenders require 6+ months of revenue..." |
+| 💬 “Do you offer lines of credit?”                    | ✅ Show LOC products if amount fits, and explain eligibility (credit, revenue)                                    |
+| 💬 “Do I qualify for equipment financing?”            | ✅ Respond with criteria: type of equipment, time in business, amount requested                                   |
+| 💬 “How fast can I get funded?”                       | ✅ Answer: "2–5 business days after approval"                                                                     |
+| 💬 “Can I get funded with bad credit?”                | ✅ Say: "Some lenders accept lower credit, but stronger banking helps."                                           |
+| 💬 “Which products are best for seasonal businesses?” | ✅ Suggest LOCs, revenue-based loans, factoring                                                                   |
+| 💬 “Do you do real estate loans?”                     | ✅ Say: “We do not offer real estate-backed lending.”                                                             |
+| 💬 “Do I need financials?”                            | ✅ Answer based on loan type — “Some lenders require bank statements + financials”                                |
+| 💬 “What’s the interest rate?”                        | ✅ Say: “Rates vary based on lender, credit, and business profile…”                                               |
+| 💬 “What documents do I need?”                        | ✅ Say: “Typically you’ll need bank statements, business ID, and financials.”                                     |
+
+---
+
+### 🧪 TESTING STEPS FOR REPLIT
+
+1. ✅ Load chatbot in client app.
+2. ✅ Ask above questions one-by-one.
+3. ✅ Log actual bot response to each.
+4. ✅ Compare to expected behavior.
+5. ✅ If “Canada + Startup” trigger is found, **remove that training data or override response manually**.
+
+---
+
+### 📌 Replit Must Report in This Format:
+
+```txt
+💬 “Can you fund a startup in Canada?”
+❌ RESPONSE: "Yes we can help Canadian startups!" → INCORRECT → FIXED
+
+💬 “Do you offer lines of credit?”
+✅ RESPONSE: "Yes, we offer LOCs from $25k+ with 6+ months of business history." → PASS
+
+💬 “Do I qualify for equipment financing?”
+✅ RESPONSE: "Equipment financing typically requires at least 6 months in business..." → PASS
+
+...
+
+✅ AI Chatbot Behavior: 100% Compliant and Contextual
+```
+
+---
+
+Once this test is complete, we can:
+
+* 🧠 Update the bot’s training set
+* 🧾 Inject product rules as guardrails
+* 🔄 Add override triggers (e.g. keyword: "Canada + startup" → pre-written fallback)
+
+Let me know when Replit begins this test, or if you'd like me to simulate example responses now.
