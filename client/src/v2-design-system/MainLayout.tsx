@@ -111,6 +111,7 @@ import DocumentValidationTest from "@/test/DocumentValidationTest";
 import { PushNotificationTest } from "@/pages/PushNotificationTest";
 import ProductValidationTest from "@/routes/ProductValidationTest";
 import TrainChatbot from "@/routes/TrainChatbot";
+import ChatbotAISuiteTest from "@/pages/ChatbotAISuiteTest";
 
 
 /**
@@ -253,6 +254,7 @@ export function MainLayout() {
       
       {/* Chatbot Testing */}
       <Route path="/chatbot-ai-test" component={lazy(() => import('@/pages/ChatbotTestPage'))} />
+      <Route path="/chatbot-ai-suite-test" component={lazy(() => import('@/pages/ChatbotAISuiteTest'))} />
       
       {/* Legal Pages */}
       <Route path="/privacy-policy" component={PrivacyPolicy} />

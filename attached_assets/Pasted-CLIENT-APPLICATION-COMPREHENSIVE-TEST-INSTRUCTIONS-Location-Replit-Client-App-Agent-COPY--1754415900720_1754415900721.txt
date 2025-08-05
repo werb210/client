@@ -1,0 +1,71 @@
+CLIENT APPLICATION – COMPREHENSIVE TEST INSTRUCTIONS
+📱 Location: Replit Client App Agent
+📋 COPY + PASTE INSTRUCTION BLOCK (CLIENT)
+// 🚀 CLIENT APP COMPREHENSIVE TEST SUITE – START
+// Run all tests for UI, API calls, S3 upload, chatbot, validation
+
+✅ 1. LANDING PAGE
+- Welcome screen loads
+- “Apply Now” → redirects to Step 1
+- Footer links: Terms, FAQ, Troubleshooting work
+
+✅ 2. AUTH SYSTEM (if enabled)
+- Registration / login works
+- OTP SMS delivers via Twilio
+- Rate limiting for failed logins
+
+✅ 3. MULTI-STEP FORM (APPLICATION)
+- Step 1: Business Details form validates and submits
+- Step 2: Product Category + Amount works
+- Step 3: AI Lender Recommendation engine loads
+- Step 4: Dynamic questions based on product
+- Step 5: Document upload (drag/drop or file select)
+- Step 6: Preview and confirm files (correct mapping)
+- Step 7: Final review + submit → redirects properly
+
+✅ 4. DOCUMENT UPLOAD
+- Only allowed types: PDF, DOCX, XLSX, JPG, PNG
+- Uploads to S3 directly (no fallback)
+- Mapping to correct document_type
+- Re-upload replaces file successfully
+- UI marks success/failure clearly
+
+✅ 5. API FINALIZATION
+- Final payload includes:
+  - Application UUID
+  - Business data
+  - Uploaded document S3 keys
+- Backend responds 200 OK
+
+✅ 6. CHATBOT
+- Chat widget loads on all pages
+- Ask “Can I get funding as a startup in Canada?” → should say **NO**
+- Ask “Do you offer lines of credit?” → should return LOC info
+- Ask “What are the interest rates?” → says “Varies by lender and profile”
+- Ask “What docs do I need?” → responds with list
+- “Talk to a human” = triggers handoff in staff app
+
+✅ 7. OFFLINE SUPPORT
+- If network disabled:
+  - Shows offline banner
+  - Form inputs are preserved
+  - Upload queue saves and retries after reconnect
+
+✅ 8. MOBILE VIEW
+- All steps work in mobile view
+- Chatbot, upload zone, buttons responsive
+
+✅ 9. SECURITY + PRIVACY
+- No PII in console logs
+- HTTPS required
+- Document uploads protected by S3 signed URLs
+// 🚀 CLIENT APP COMPREHENSIVE TEST SUITE – COMPLETE
+➡️ Replit must report back all results like this:
+✅ LANDING PAGE: PASS
+✅ FORM FLOW: PASS
+✅ DOCUMENT UPLOAD: PASS
+✅ API FINALIZATION: PASS
+✅ CHATBOT: PASS
+✅ MOBILE VIEW: PASS
+✅ SECURITY: PASS
+🎯 CLIENT APP STATUS: 100% FUNCTIONAL

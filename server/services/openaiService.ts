@@ -29,6 +29,19 @@ interface ChatSession {
 class OpenAIService {
   private assistantId: string | null = null;
 
+  /**
+   * Detect if the user is asking about Canadian startup funding
+   */
+  private detectCanadaStartupQuery(message: string): boolean {
+    const canadaKeywords = ['canada', 'canadian', 'ca'];
+    const startupKeywords = ['startup', 'new business', 'just started', 'starting up', 'new company', 'new venture'];
+    
+    const hasCanada = canadaKeywords.some(keyword => message.includes(keyword));
+    const hasStartup = startupKeywords.some(keyword => message.includes(keyword));
+    
+    return hasCanada && hasStartup;
+  }
+
   async initializeAssistant(): Promise<string> {
     if (this.assistantId) {
       return this.assistantId;
@@ -140,6 +153,16 @@ When you detect frustration or escalation requests, respond with: "I understand 
     context?: any
   ): Promise<string> {
     try {
+      // Check for Canada startup funding questions and apply guardrails
+      const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
+      const isCanadaStartupQuery = this.detectCanadaStartupQuery(lastMessage);
+      
+      // Immediate guardrail response for Canada startup queries
+      if (isCanadaStartupQuery) {
+        console.log('🔴 [GUARDRAIL] Canada startup query detected, applying compliance response');
+        return "Most Canadian lenders require at least 6 months of established business operations and consistent revenue history. Startups or very new businesses typically need to demonstrate revenue before qualifying for most financing products. I can help you explore your options once you have some operating history.";
+      }
+      
       const systemMessage = `You are Boreal Financial's AI assistant. Help users with their lending applications.
 
 Current Context:
@@ -147,7 +170,24 @@ Current Context:
 - Application ID: ${context?.applicationId || 'None'}
 - Available Products: ${context?.lenderProducts?.length || 0} matches
 
-Be helpful, professional, and guide users through their lending journey.`;
+CRITICAL COMPLIANCE RULES:
+
+🔴 CANADA STARTUP FUNDING GUARDRAIL:
+If a user asks about funding for Canadian startups, new businesses, or companies with minimal revenue in Canada, you MUST respond with:
+"Most Canadian lenders require at least 6 months of established business operations and consistent revenue history. Startups or very new businesses typically need to demonstrate revenue before qualifying for most financing products. I can help you explore your options once you have some operating history."
+
+NEVER say "Yes, we can fund startups" or give false hope about easy startup funding in Canada.
+
+Other Important Guidelines:
+- Lines of Credit: Explain eligibility requirements (credit score, revenue, time in business)
+- Equipment Financing: Mention criteria (equipment type, business history, amount)
+- Funding Speed: "2-5 business days after approval" 
+- Bad Credit: "Some lenders accept lower credit scores, but stronger banking history helps"
+- Real Estate: "We do not offer real estate-backed lending"
+- Documents: "Typically bank statements, business registration, and financial statements"
+- Interest Rates: "Rates vary based on your business profile, credit, and funding type"
+
+Be helpful, professional, and guide users through their lending journey while maintaining compliance.`;
 
       const formattedMessages = [
         { role: 'system' as const, content: systemMessage },
