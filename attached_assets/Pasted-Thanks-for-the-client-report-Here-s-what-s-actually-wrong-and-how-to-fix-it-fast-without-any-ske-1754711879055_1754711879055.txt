@@ -1,0 +1,127 @@
+Thanks for the “client report.” Here’s what’s actually wrong (and how to fix it fast without any sketchy bypasses).
+
+# What’s wrong (from your report)
+
+1. **Env vars are unset**: `UI_ORIGIN`, `API_ORIGIN`, `COOKIE_DOMAIN`, `NODE_ENV` = **not set** → cookie pathing/samesite/domain logic can’t work reliably.
+2. **Cookie name mismatch**: server is setting `auth_token`, but our standard is **`bf_auth`**. Your `/me` endpoint and middleware expect `bf_auth` first.
+3. **Cookie-only auth fails** while bearer works → classic **domain / SameSite / Secure** mismatch (or cookie not attached to requests).
+4. **Token field name drift**: login response returns `token` not `bearer`. You said you “adjusted,” but let’s standardize so we don’t chase ghosts later.
+
+# Fix it now — precise, minimal changes
+
+## Staff (backend)
+
+**A) Set envs (no secrets printed):**
+
+* `UI_ORIGIN=https://staff.boreal.financial`
+* `API_ORIGIN=https://staff.boreal.financial`  *(use your actual API origin; if same host, that’s fine)*
+* `COOKIE_DOMAIN=.boreal.financial`  *(only if UI and API are on different hosts; otherwise omit)*
+* `NODE_ENV=production`
+
+**B) Standardize login response + cookie name**
+
+* Make sure the cookie name is **`bf_auth`** (not `auth_token`).
+* Return **`bearer`** in the JSON (not `token`).
+
+```ts
+// login handler (final shape)
+const token = signAuthToken({ userId: user.id, role: user.role, email: user.email });
+
+res.cookie('bf_auth', token, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
+  // If UI and API differ by host → SameSite=None, else Lax
+  sameSite: (process.env.COOKIE_DOMAIN || (process.env.UI_ORIGIN && process.env.API_ORIGIN && !process.env.UI_ORIGIN.startsWith(process.env.API_ORIGIN)))
+    ? 'none'
+    : 'lax',
+});
+
+return res.json({ ok: true, bearer: token, user: { id: user.id, role: user.role, email: user.email } });
+```
+
+**C) Keep token extraction order** (cookie first, then bearer) in your auth middleware and `/me`.
+
+## Client (frontend)
+
+**A) Accept both response keys (future-proof)**
+
+```ts
+// client/src/api/auth.ts
+import { apiPost, apiGet, setBearer } from './http';
+
+export async function login(email: string, password: string) {
+  const res = await apiPost('/api/auth/login', { email, password });
+  const tok = res?.bearer ?? res?.token ?? null;  // accept either; prefer 'bearer'
+  if (res?.ok && tok) setBearer(tok);
+  return res;
+}
+```
+
+**B) Ensure bearer is stored only in sessionStorage (not localStorage), and always send cookies too.**
+(Your `http.ts` should already match the version I gave: `credentials: 'include'` + optional `Authorization: Bearer …`.)
+
+**C) No dev bypass, no auto-auth.**
+Keep the `PrivateRoute` that waits for `/me` and shows “Verifying…” — do **not** force auth.
+
+# Verify (no guesswork, post receipts)
+
+## 1) Env sanity (names only)
+
+Paste values’ **presence** (not secrets):
+
+```
+echo UI_ORIGIN=${UI_ORIGIN:+SET} API_ORIGIN=${API_ORIGIN:+SET} COOKIE_DOMAIN=${COOKIE_DOMAIN:+SET} NODE_ENV=${NODE_ENV:+SET}
+```
+
+## 2) Cookie-only path (should work now)
+
+```
+# Login (capture cookie)
+curl -s -i -c /tmp/c.jar -H "Content-Type: application/json" \
+  -d '{"email":"todd.w@boreal.financial","password":"password123"}' \
+  https://staff.boreal.financial/api/auth/login | head -n 20
+
+# Check: response includes Set-Cookie: bf_auth=...
+# Then call /me with only the cookie
+curl -s -b /tmp/c.jar https://staff.boreal.financial/api/rbac/auth/me
+```
+
+Expected: `{"ok":true,"user":{...}}`
+
+## 3) Bearer-only path (fallback)
+
+Grab the `bearer` from the login JSON and:
+
+```
+curl -s -H "Authorization: Bearer <PASTE_BEARER>" \
+  https://staff.boreal.financial/api/rbac/auth/me
+```
+
+Expected: `{"ok":true,"user":{...}}`
+
+## 4) Frontend behavior
+
+* Desktop top-level tab: login page → submit → lands on `/portal`, refresh stays logged in (via cookie).
+* iPad top-level tab: same behavior. If cookies are blocked by the context, it still works via bearer header (since we set it after a real login).
+
+## 5) Guardrails (prove no bypass remains)
+
+```
+grep -RInE "bypass|direct.?access|dev.?auth" client/src || echo "OK: no bypass strings"
+grep -RInE "localStorage.*bearer|localStorage.*auth|isAuthenticated\s*=\s*true" client/src || echo "OK: no forced/persistent auth"
+grep -RIn "todd.w@boreal.financial" client/src || echo "OK: no hardcoded demo user"
+```
+
+# If cookie-only still fails
+
+99% it’s one of these:
+
+* **Domain**: cookie set for `staff.boreal.financial` but API calls go to `api.boreal.financial` (or vice versa). Set `COOKIE_DOMAIN=.boreal.financial` and keep both hosts under it.
+* **SameSite**: cross-site context but cookie is `SameSite=Lax`. Switch to `None` **and** ensure `Secure: true` (HTTPS).
+* **Path**: cookie set with `path=/login` (don’t do that). Use `path=/`.
+* **CORS**: Missing `credentials: true` on server or client. (Server: `cors({ origin: UI_ORIGIN, credentials: true })`; Client: we already use `credentials: 'include'`.)
+* **Iframe**: iPad in an embedded/iframe context? Cookies are often blocked — open in a top-level tab. (But bearer fallback should still work.)
+
+Have Replit run the steps above **exactly** and paste the outputs. Once cookie-only shows 200 on `/me`, you’re properly fixed. No more duct-tape “bypasses.”

@@ -3,7 +3,7 @@ let BEARER: string | null = null;
 export function setBearer(tok: string | null) { BEARER = tok || null; }
 
 // Resolve API base (same-origin default)
-const API_BASE = (import.meta as any)?.env?.VITE_API_BASE || '';
+const API_BASE = (import.meta as any)?.env?.VITE_API_BASE || 'https://staff.boreal.financial/api';
 
 async function handle(res: Response) {
   const text = await res.text();
