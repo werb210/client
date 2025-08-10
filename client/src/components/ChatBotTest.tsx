@@ -20,7 +20,8 @@ export function ChatBotTest() {
         body: JSON.stringify({ 
           text: 'I am very frustrated with this application process!',
           sessionId: 'test_session'
-        })
+        }),
+        credentials: 'include'
       });
       results.sentiment = await sentimentResponse.json();
 
@@ -34,13 +35,14 @@ export function ChatBotTest() {
           fromLang: 'en',
           toLang: 'es',
           sessionId: 'test_session'
-        })
+        }),
+        credentials: 'include'
       });
       results.translation = await translateResponse.json();
 
       // Test status check
       console.log('Testing status check...');
-      const statusResponse = await fetch('/api/status/test-app-123');
+      const statusResponse = await fetch('/api/status/test-app-123', { credentials: 'include' });
       results.status = await statusResponse.json();
 
       // Test enhanced chat with context

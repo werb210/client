@@ -32,7 +32,7 @@ export function RuntimeAlertPanel({ currentStep }: RuntimeAlertPanelProps) {
       if (!applicationId) return;
       
       try {
-        const response = await fetch(`/api/public/documents/${applicationId}`);
+        const response = await fetch(`/api/public/documents/${applicationId}`, { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           setDocumentsUploaded(data?.documents?.length || 0);

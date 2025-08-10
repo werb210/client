@@ -18,7 +18,7 @@ export const ApiEndpointTester = () => {
   const testEndpoint = async (url: string, label: string): Promise<TestResult> => {
     const startTime = Date.now();
     try {
-      const response = await fetch(url).catch(fetchError => {
+      const response = await fetch(url, { credentials: 'include' }).catch(fetchError => {
         throw new Error(`Network error: ${fetchError.message}`);
       });
       const responseTime = Date.now() - startTime;
