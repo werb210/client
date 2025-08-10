@@ -22,6 +22,7 @@ import { handleChatEscalation, getEscalationStatus } from "./routes/chatEscalati
 import { logUploadEvent, auditUploadAttempt, ZERO_DOCUMENTS_QUERY } from "./utils/uploadStabilization.js";
 import opsRouter from "./routes/ops";
 import clientMessagesRouter from "./routes/clientMessages";
+import supportRouter from "./routes/support";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -1428,6 +1429,7 @@ app.use((req, res, next) => {
   app.use('/api/notifications', notificationsRouter);
   app.use('/api/ops', opsRouter);
   app.use('/api/client', clientMessagesRouter);
+  app.use('/api/support', supportRouter);
   
   // Chat escalation endpoints
   app.post('/api/public/chat/escalate', handleChatEscalation);

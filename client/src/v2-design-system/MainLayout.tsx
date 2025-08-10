@@ -6,6 +6,7 @@ import { ChatBotDashboard } from "@/components/ChatBotDashboard";
 
 import { useChatBot } from "@/hooks/useChatBot";
 import { PwaPrompt } from "@/components/PwaPrompt";
+import ReportIssueButton from "@/components/ReportIssueButton";
 
 // V1 Route Components (Source of Truth)
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
@@ -125,6 +126,9 @@ export function MainLayout() {
   
   return (
     <>
+      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12}}>
+        <ReportIssueButton appId={undefined} reportedBy="client@unknown" />
+      </div>
       <Switch>
       {/* Diagnostic Routes */}
       {/* Route removed with legacy auth cleanup */}
