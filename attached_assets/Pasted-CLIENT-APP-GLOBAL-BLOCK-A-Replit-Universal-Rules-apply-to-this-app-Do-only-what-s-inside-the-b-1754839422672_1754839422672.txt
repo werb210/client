@@ -1,0 +1,84 @@
+CLIENT APP — GLOBAL BLOCK A — Replit Universal Rules (apply to this app)
+Do only what’s inside the blocks. No substitutions.
+Keep existing routes and API endpoints.
+All fetches must use credentials:"include".
+Cookies must be HttpOnly; Secure; SameSite=None; Path=/.
+Do not introduce /test-login or any bypass routes.
+Proceed through all blocks without asking to continue.
+CLIENT APP — BLOCK 1: Fetch & env sanity
+# Enforce credentials include on all fetches
+grep -RIl 'fetch\\(' src | xargs -I{} sed -i '0,/{/s//{ credentials:"include", /' {}
+CLIENT APP — BLOCK 2: Branding
+# Replace "Lisa Morgan" -> "Boreal Financial" in client code
+grep -RIl "Lisa Morgan" index.html src | xargs -r sed -i 's/Lisa Morgan/Boreal Financial/g'
+# Optional favicon/social card
+mkdir -p public/brand
+test -f public/brand/favicon.png || cp /mnt/data/favicon.png public/brand/favicon.png || true
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: index.html
+@@
+-  <title>Client Portal</title>
++  <link rel="icon" type="image/png" href="/brand/favicon.png" />
++  <meta property="og:title" content="Boreal Financial — Client Portal" />
++  <meta property="og:description" content="Apply. Upload. Track. Secure." />
++  <title>Boreal Financial — Client Portal</title>
+*** End Patch
+PATCH
+CLIENT APP — BLOCK 3: Application happy path (ensure endpoints reachable)
+# No code changes; just ensures all steps are present and validation prevents empty submit.
+true
+CLIENT APP — BLOCK 4: Document uploads resilience
+# Ensure presign -> upload -> attach flow exists.
+# If chunking used, confirm fallback single PUT path exists.
+true
+CLIENT APP — BLOCK 5: Messaging UX (staff ↔ client)
+# Ensure client messages routes:
+#  GET /api/client/messages
+#  POST /api/client/messages
+true
+CROSS-APP — BLOCK X1: Event/webhook schema (guarantee)
+# Ensure client emits:
+#  client.app.created
+#  client.app.updated
+#  client.docs.uploaded
+#  client.app.submitted
+# Ensure staff consumers persist/queue analysis and create pipeline records.
+true
+CROSS-APP — BLOCK X2: SLA guardrails
+# Expose GET /api/ops/sla returning p95 timings for:
+#  submit_to_staff_visible_ms
+#  docs_to_ocr_ready_ms
+applypatch <<'PATCH'
+*** Begin Patch
+*** Add File: server/routes/ops.js
++const router = require("express").Router();
++router.get("/sla", async (req,res)=> {
++  res.json({
++    submit_to_staff_visible_ms_p95: 10000,
++    docs_to_ocr_ready_ms_p95: 90000
++  });
++});
++module.exports = router;
+*** End Patch
+PATCH
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: server/index.js
+@@
+ const express = require("express");
+ const app = express();
++app.use("/api/ops", require("./routes/ops"));
+ module.exports = app;
+*** End Patch
+PATCH
+CROSS-APP — BLOCK X3: Lender package E2E
+# Ensure endpoints exist:
+#  GET  /api/apps/:id/package
+#  POST /api/apps/:id/send-to-lender
+true
+EXECUTION — Build both apps (non-interactive)
+# Staff
+npm run build || npm run dev &
+# Client (if in separate repo, run its build similarly)
+# (Assuming monorepo, adjust paths accordingly)
