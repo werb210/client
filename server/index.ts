@@ -23,6 +23,7 @@ import { logUploadEvent, auditUploadAttempt, ZERO_DOCUMENTS_QUERY } from "./util
 import opsRouter from "./routes/ops";
 import clientMessagesRouter from "./routes/clientMessages";
 import supportRouter from "./routes/support";
+import authRouter from "./routes/auth";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -1430,6 +1431,7 @@ app.use((req, res, next) => {
   app.use('/api/ops', opsRouter);
   app.use('/api/client', clientMessagesRouter);
   app.use('/api/support', supportRouter);
+  app.use('/api/auth', authRouter);
   
   // Chat escalation endpoints
   app.post('/api/public/chat/escalate', handleChatEscalation);
