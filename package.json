@@ -97,7 +97,7 @@
     "js-cookie": "^3.0.5",
     "jsdom": "^26.1.0",
     "libphonenumber-js": "^1.12.9",
-    "lighthouse-ci": "^1.13.1",
+    "lighthouse-ci": "^1.10.0",
     "lucide-react": "^0.453.0",
     "memoizee": "^0.4.17",
     "memorystore": "^1.6.7",
