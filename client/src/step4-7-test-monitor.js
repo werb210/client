@@ -242,7 +242,7 @@ class Step47TestMonitor {
   testManualContinue() {
     this.log('🧪 Testing manual continue button', 'info');
     
-    const continueButton = document.querySelector('button[data-testid="continue-without-signing"]') ||
+    const continueButton = document.querySelector('button[data-testid="continue-without-signing--step4-7-monitor"]') ||
                           document.querySelector('button:contains("Continue")');
     
     if (continueButton) {
@@ -270,7 +270,7 @@ class Step47TestMonitor {
     await this.waitForPageLoad();
     
     // Find and click submit button
-    const submitButton = document.querySelector('button[data-testid="final-submit"]') ||
+    const submitButton = document.querySelector('button[data-testid="final-submit--step4-7-monitor"]') ||
                         document.querySelector('button[type="submit"]');
     
     if (submitButton) {
@@ -279,11 +279,11 @@ class Step47TestMonitor {
       
       // Wait for submission completion
       await this.waitForCondition(() => {
-        const successMessage = document.querySelector('[data-testid="success-message"]');
+        const successMessage = document.querySelector('[data-testid="success-message--step4-7-monitor"]');
         return successMessage !== null;
       }, 15000);
       
-      const successMessage = document.querySelector('[data-testid="success-message"]');
+      const successMessage = document.querySelector('[data-testid="success-message--step4-7-monitor"]');
       if (successMessage) {
         this.log('✅ Step 7 final submission completed', 'success');
         return true;

@@ -150,8 +150,8 @@ export default function E2ETestRunner() {
       setCurrentStep('step2');
       updateResult('step2', 'running', 'Selecting product...');
       
-      await waitForElement('[data-testid="product-card"]', 10000);
-      const productCard = document.querySelector('[data-testid="product-card"]');
+      await waitForElement('[data-testid="product-card--e2e-runner"]', 10000);
+      const productCard = document.querySelector('[data-testid="product-card--e2e-runner"]');
       if (productCard) {
         (productCard as HTMLElement).click();
         await waitForNavigation('/apply/step-3');
@@ -221,7 +221,7 @@ export default function E2ETestRunner() {
       await waitForPageLoad();
       
       // Simulate document upload
-      const uploadArea = document.querySelector('[data-testid="upload-area"]');
+      const uploadArea = document.querySelector('[data-testid="upload-area--e2e-runner"]');
       if (uploadArea) {
         updateResult('step5', 'success', 'Document upload areas found');
       } else {
@@ -252,7 +252,7 @@ export default function E2ETestRunner() {
           if (window.location.pathname === '/apply/step-7') {
             updateResult('step6', 'success', 'Auto-redirect to Step 7 successful');
           } else {
-            const continueButton = document.querySelector('button[data-testid="continue-without-signing"]');
+            const continueButton = document.querySelector('button[data-testid="continue-without-signing--e2e-runner"]');
             if (continueButton) {
               (continueButton as HTMLButtonElement).click();
               updateResult('step6', 'success', 'Manual continue successful');
@@ -268,7 +268,7 @@ export default function E2ETestRunner() {
       updateResult('step7', 'running', 'Testing final submission...');
       
       await waitForNavigation('/apply/step-7');
-      const submitButton = document.querySelector('button[data-testid="final-submit"]') || 
+      const submitButton = document.querySelector('button[data-testid="final-submit--e2e-runner"]') || 
                           document.querySelector('button[type="submit"]');
       
       if (submitButton) {

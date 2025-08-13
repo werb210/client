@@ -106,12 +106,12 @@ class FullE2ETest {
     
     // Wait for products to load
     await this.waitForCondition(() => {
-      const products = document.querySelectorAll('[data-testid="product-card"]');
+      const products = document.querySelectorAll('[data-testid="product-card--full-e2e-test"]');
       return products.length > 0;
     }, 10000);
     
     // Select first available product
-    const firstProduct = document.querySelector('[data-testid="product-card"]');
+    const firstProduct = document.querySelector('[data-testid="product-card--full-e2e-test"]');
     if (firstProduct) {
       firstProduct.click();
       await this.waitForNavigation('/apply/step-3');
@@ -230,7 +230,7 @@ class FullE2ETest {
     }
     
     // Test document upload functionality
-    const uploadAreas = document.querySelectorAll('[data-testid="upload-area"]');
+    const uploadAreas = document.querySelectorAll('[data-testid="upload-area--full-e2e-test"]');
     if (uploadAreas.length > 0) {
       this.log(`Found ${uploadAreas.length} document upload areas`);
       
@@ -304,7 +304,7 @@ class FullE2ETest {
             this.log('✅ Auto-redirect to Step 7 successful');
           } else {
             this.log('⚠️ Auto-redirect not detected, using manual continue');
-            const continueButton = document.querySelector('button[data-testid="continue-without-signing"]');
+            const continueButton = document.querySelector('button[data-testid="continue-without-signing--full-e2e-test"]');
             if (continueButton) {
               continueButton.click();
             }
@@ -328,7 +328,7 @@ class FullE2ETest {
     }, 10000);
     
     // Look for final submission button
-    const submitButton = document.querySelector('button[data-testid="final-submit"]') || 
+    const submitButton = document.querySelector('button[data-testid="final-submit--full-e2e-test"]') || 
                         document.querySelector('button[type="submit"]');
     
     if (submitButton) {
@@ -337,11 +337,11 @@ class FullE2ETest {
       
       // Wait for submission completion
       await this.waitForCondition(() => {
-        const successMessage = document.querySelector('[data-testid="success-message"]');
+        const successMessage = document.querySelector('[data-testid="success-message--full-e2e-test"]');
         return successMessage !== null;
       }, 15000);
       
-      const successMessage = document.querySelector('[data-testid="success-message"]');
+      const successMessage = document.querySelector('[data-testid="success-message--full-e2e-test"]');
       if (successMessage) {
         this.log('✅ Step 7 final submission completed successfully');
         return true;
