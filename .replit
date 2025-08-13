@@ -49,4 +49,4 @@ localPort = 24678
 externalPort = 3000
 
 [agent]
-integrations = ["javascript_openai==1.0.0"]
+integrations = ["javascript_websocket==1.0.0", "javascript_object_storage==1.0.0", "javascript_openai==1.0.0"]
