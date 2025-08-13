@@ -284,12 +284,11 @@ export const Step1Schema = ApplicationFormSchema.pick({
 });
 
 export const Step3Schema = ApplicationFormSchema.pick({
-  operatingName: true,
-  legalName: true,
-  businessStreetAddress: true,
+  businessName: true,
+  businessAddress: true,
   businessCity: true,
   businessState: true,
-  businessPostalCode: true,
+  businessZipCode: true,
   businessPhone: true,
   employeeCount: true,
   businessWebsite: true,
@@ -299,29 +298,29 @@ export const Step3Schema = ApplicationFormSchema.pick({
 });
 
 export const Step4Schema = ApplicationFormSchema.pick({
-  applicantName: true,
-  applicantEmail: true,
-  applicantBirthdate: true,
-  applicantSSN: true,
-  percentageOwnership: true,
-  mobilePhone: true,
+  firstName: true,
+  lastName: true,
+  personalEmail: true,
+  dateOfBirth: true,
+  socialSecurityNumber: true,
+  ownershipPercentage: true,
+  personalPhone: true,
   applicantAddress: true,
-  applicantStreetAddress: true,
   applicantCity: true,
   applicantState: true,
   applicantPostalCode: true,
-  titleInBusiness: true,
-  partnerName: true,
+  title: true,
+  partnerFirstName: true,
+  partnerLastName: true,
   partnerEmail: true,
   partnerPhone: true,
-  partnerOwnership: true,
-  partnerTitle: true,
-  partnerSSN: true,
+  partnerOwnershipPercentage: true,
+  partnerSinSsn: true,
 });
 
 export const Step6Schema = ApplicationFormSchema.pick({
   communicationConsent: true,
-  documentMaintenanceConsent: true,
+  creditCheckConsent: true,
 });
 
 // Export validation helpers (aliases for backward compatibility)
