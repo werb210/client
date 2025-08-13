@@ -279,11 +279,11 @@ class Step47TestMonitor {
       
       // Wait for submission completion
       await this.waitForCondition(() => {
-        const successMessage = document.querySelector('[data-testid="success-message--step4-7-monitor-unique"]');
+        const successMessage = document.querySelector('[data-testid="success-message--step4-7-monitor-v1"]');
         return successMessage !== null;
       }, 15000);
       
-      const successMessage = document.querySelector('[data-testid="success-message--step4-7-monitor-unique"]');
+      const successMessage = document.querySelector('[data-testid="success-message--step4-7-monitor-v2"]');
       if (successMessage) {
         this.log('✅ Step 7 final submission completed', 'success');
         return true;

@@ -106,12 +106,12 @@ class FullE2ETest {
     
     // Wait for products to load
     await this.waitForCondition(() => {
-      const products = document.querySelectorAll('[data-testid="product-card--full-e2e-test-v2"]');
+      const products = document.querySelectorAll('[data-testid^="product-card--e2e-runner-"]');
       return products.length > 0;
     }, 10000);
     
     // Select first available product
-    const firstProduct = document.querySelector('[data-testid="product-card--full-e2e-test-v2"]');
+    const firstProduct = document.querySelector('[data-testid="product-card--e2e-runner-0"]');
     if (firstProduct) {
       firstProduct.click();
       await this.waitForNavigation('/apply/step-3');
@@ -337,11 +337,11 @@ class FullE2ETest {
       
       // Wait for submission completion
       await this.waitForCondition(() => {
-        const successMessage = document.querySelector('[data-testid="success-message--full-e2e-test-v2"]');
+        const successMessage = document.querySelector('[data-testid="success-message--full-e2e-test-final"]');
         return successMessage !== null;
       }, 15000);
       
-      const successMessage = document.querySelector('[data-testid="success-message--full-e2e-test-v2"]');
+      const successMessage = document.querySelector('[data-testid="success-message--full-e2e-test-complete"]');
       if (successMessage) {
         this.log('✅ Step 7 final submission completed successfully');
         return true;

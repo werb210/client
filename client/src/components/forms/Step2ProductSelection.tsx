@@ -174,9 +174,10 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
             </CardHeader>
             <CardContent className="p-0">
               <div className="grid gap-4 p-6">
-                {products.slice(0, 3).map((product: any) => (
+                {products.slice(0, 3).map((product: any, index: number) => (
                   <div
                     key={product.id}
+                    data-testid={`product-card--e2e-runner-${index}`}
                     className={`p-4 border rounded-lg cursor-pointer transition-all ${
                       selectedProduct === product.id
                         ? 'border-teal-500 bg-teal-50'
