@@ -1,0 +1,188 @@
+Client Application
+1) Static duplicate/UI audit (testIDs, labels, handlers)
+
+File: scripts/static_audit_client.sh
+
+#!/usr/bin/env bash
+set -euo pipefail
+echo "=== CLIENT STATIC AUDIT ==="
+
+echo "--- Duplicate data-testid values ---"
+rg -No 'data-testid=[\"\x27]([^\"\x27]+)[\"\x27]' client \
+| sed -E 's/.*data-testid=[\"\x27]([^\"\x27]+)[\"\x27].*/\1/' | sort | uniq -d || true
+
+echo "--- Suspicious repeated labels ---"
+rg -No '<(Button|button|MenuItem|Tab)[^>]*>([^<]{1,60})</' client \
+| sed -E 's/.*>([^<]+)</\1/' | awk '{$1=$1;print}' | sort | uniq -d || true
+
+echo "--- Multiple onClick bindings per file (heuristic) ---"
+rg -n --no-heading 'onClick=\{[^}]+\}' client | awk -F: '{print $1}' | sort | uniq -c | sort -nr | head -20
+
+echo "=== DONE (static) ==="
+
+
+Run:
+
+# SHOW CONSOLE OUTPUT
+bash scripts/static_audit_client.sh
+
+2) Playwright: screens sanity (all core tabs clickable; no duplicates)
+
+File: tests/ui_crawl_client.spec.ts
+
+import { test, expect } from "@playwright/test";
+
+const START = process.env.CLIENT_URL || "http://localhost:5173/";
+
+test("core navigation works; duplicate labels flagged", async ({ page }) => {
+  await page.goto(START);
+
+  // core nav examples (adjust selectors to your final layout)
+  const nav = [
+    "[data-testid='nav-pipeline']",
+    "[data-testid='nav-contacts']",
+    "[data-testid='nav-communication']",
+    "[data-testid='nav-lenders']",
+    "[data-testid='nav-documents']",
+    "[data-testid='nav-reports']",
+  ];
+  for (const sel of nav) {
+    const el = await page.$(sel);
+    expect(el, `Missing nav item ${sel}`).not.toBeNull();
+    await page.click(sel);
+  }
+
+  // duplicate labels
+  const items = page.locator('button, [role="button"], [data-testid], [role="menuitem"], [role="tab"]');
+  const map = new Map<string, number>();
+  const n = await items.count();
+  for (let i=0;i<n;i++){
+    const el = items.nth(i);
+    const t = (await el.textContent() || "").replace(/\s+/g," ").trim();
+    const key = t || (await el.getAttribute("data-testid")) || "";
+    if (!key) continue;
+    map.set(key, (map.get(key)||0)+1);
+  }
+  const dups = [...map.entries()].filter(([_,c])=>c>1);
+  console.log("CLIENT_DUPLICATES", JSON.stringify(dups, null, 2));
+});
+
+3) Runtime guard (client): console + network
+
+File: tests/runtime_guard_client.spec.ts
+
+import { test, expect } from "@playwright/test";
+
+const START = process.env.CLIENT_URL || "http://localhost:5173/";
+
+test("client no console errors and no broken network calls", async ({ page }) => {
+  const errors:string[] = [];
+  page.on("console", (msg) => { if (msg.type()==="error") errors.push(msg.text()); });
+
+  const failures:string[] = [];
+  page.on("response", async r => {
+    if (r.status() >= 400) failures.push(`${r.status()} ${r.url()}`);
+  });
+
+  await page.goto(START);
+  await page.waitForLoadState("networkidle");
+
+  if (errors.length) throw new Error("Console errors:\n" + errors.join("\n"));
+  expect(failures, "Broken network calls").toHaveLength(0);
+});
+
+4) One-command master runner + report
+
+File: scripts/full_regression.sh
+
+#!/usr/bin/env bash
+set -euo pipefail
+
+STAMP=$(date +"%Y%m%d-%H%M%S")
+OUT="regression-report-$STAMP.md"
+echo "# Regression Report ($STAMP)" > "$OUT"
+
+section () { echo -e "\n## $1\n" | tee -a "$OUT"; }
+
+section "Staff Static Audit"
+{ bash scripts/static_audit_staff.sh; } 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | tee -a "$OUT"
+
+section "Client Static Audit"
+{ bash scripts/static_audit_client.sh; } 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | tee -a "$OUT"
+
+section "Playwright - Staff UI Crawl"
+{ npx playwright test tests/ui_crawl_staff.spec.ts --reporter=list; } 2>&1 | tee -a "$OUT" || true
+
+section "Playwright - Staff Runtime Guard"
+{ npx playwright test tests/runtime_guard_staff.spec.ts --reporter=list; } 2>&1 | tee -a "$OUT" || true
+
+section "Playwright - Client UI Crawl"
+{ npx playwright test tests/ui_crawl_client.spec.ts --reporter=list; } 2>&1 | tee -a "$OUT" || true
+
+section "Playwright - Client Runtime Guard"
+{ npx playwright test tests/runtime_guard_client.spec.ts --reporter=list; } 2>&1 | tee -a "$OUT" || true
+
+section "CI Guards"
+{ bash scripts/ci_guards.sh; } 2>&1 | tee -a "$OUT" || true
+
+echo -e "\n---\n**Status legend:**\n- Static audit lists duplicates (must be 0)\n- Playwright tests must pass (0 console errors, 0 network errors, buttons clickable)\n- CI guards must pass (no CORS or route duplication)\n" | tee -a "$OUT"
+
+echo "Wrote $OUT"
+
+
+Run:
+
+# SHOW CONSOLE OUTPUT
+bash scripts/full_regression.sh
+
+5) What this catches (explicitly)
+
+Duplicates we’ve seen bite us
+
+Multiple CORS installs / header hacks
+
+Duplicate Express routes (same Method+Path)
+
+Reused data-testid values → ambiguous coverage
+
+Copy-pasted button/menu/tab labels that collide
+
+Multiple onClick handlers in the same component file (heuristic for double actions)
+
+Runtime breakage
+
+Console errors/warnings (fail fast)
+
+4xx/5xx API responses, including silent CORS blocks
+
+Slow API calls (>1.5s) that indicate timeouts/race conditions
+
+Feature completeness
+
+Every API route in the manifest must have a visible, clickable UI control
+
+Buttons must be present and clickable (no hidden/disabled regressions)
+
+6) Replit “do this now” checklist
+
+Create all files above exactly as named.
+
+Wire coverageRouter in server/index.ts and add the UI page.
+
+Ensure each feature has a button with the specified data-testid.
+
+Install tools:
+
+npm i -D playwright @playwright/test supertest vitest cross-env ripgrep express-list-endpoints
+npx playwright install --with-deps
+
+
+Run:
+
+# SHOW CONSOLE OUTPUT
+bash scripts/full_regression.sh
+
+
+Post the report (markdown file) back here.
+
+If anything fails, the report will tell us exactly where: which route is missing a UI control, which label/testID is duplicated, which requests break, and which CORS/route duplicates snuck back in. This is how we find all issues, duplicated buttons, and anything not 100%—and keep it that way.
