@@ -150,8 +150,8 @@ export default function E2ETestRunner() {
       setCurrentStep('step2');
       updateResult('step2', 'running', 'Selecting product...');
       
-      await waitForElement('[data-testid="product-card--e2e-runner"]', 10000);
-      const productCard = document.querySelector('[data-testid="product-card--e2e-runner"]');
+      await waitForElement('[data-testid="product-card--e2e-runner-unique"]', 10000);
+      const productCard = document.querySelector('[data-testid="product-card--e2e-runner-unique"]');
       if (productCard) {
         (productCard as HTMLElement).click();
         await waitForNavigation('/apply/step-3');
