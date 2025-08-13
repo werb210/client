@@ -5,6 +5,7 @@ import path from "path";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import multer from "multer";
+import cookieParser from "cookie-parser";
 import { setupVite, serveStatic, log } from "./vite";
 import cfg from "./config";
 import lendersRouter from "./routes/lenders";
@@ -89,6 +90,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
 // Configure multer for document uploads
 const upload = multer({
