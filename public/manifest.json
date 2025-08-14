@@ -1,126 +1,78 @@
 {
-  "name": "Boreal Financial - Client Portal",
-  "short_name": "Boreal Client",
-  "description": "Apply for business financing with Boreal Financial. Access funding from 41+ lenders for equipment purchase, working capital, business expansion, and more.",
+  "name": "Boreal Financial Client Portal",
+  "short_name": "Boreal Financial",
+  "description": "Business financing application portal with 41+ lenders",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0d9488",
   "orientation": "portrait-primary",
-  "scope": "/",
-  "lang": "en",
-  "dir": "ltr",
   "categories": ["finance", "business", "productivity"],
+  "lang": "en",
   "icons": [
     {
-      "src": "/icons/icon-72x72.png",
+      "src": "/icons/icon-72x72.svg",
       "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-96x96.png",
+      "src": "/icons/icon-96x96.svg", 
       "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "src": "/icons/icon-128x128.svg",
+      "sizes": "128x128", 
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-144x144.png",
+      "src": "/icons/icon-144x144.svg",
       "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/svg+xml", 
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-152x152.png",
+      "src": "/icons/icon-152x152.svg",
       "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/icons/icon-192x192.svg",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-384x384.png",
+      "src": "/icons/icon-384x384.svg",
       "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icons/icon-512x512.svg",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [
     {
-      "name": "Resume Application",
-      "short_name": "Resume",
-      "description": "Continue your financing application",
-      "url": "/resume",
-      "icons": [
-        {
-          "src": "/icons/icon-192x192.png",
-          "sizes": "192x192"
-        }
-      ]
+      "name": "Apply for Financing",
+      "short_name": "Apply",
+      "description": "Start a new financing application",
+      "url": "/apply/step-1",
+      "icons": [{ "src": "/icons/icon-192x192.svg", "sizes": "192x192" }]
     },
     {
-      "name": "Upload Documents",
-      "short_name": "Upload",
-      "description": "Upload required documents",
-      "url": "/step5-document-upload",
-      "icons": [
-        {
-          "src": "/icons/icon-192x192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "Application Status",
-      "short_name": "Status",
-      "description": "Check your application progress",
-      "url": "/application-status",
-      "icons": [
-        {
-          "src": "/icons/icon-192x192.png",
-          "sizes": "192x192"
-        }
-      ]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/desktop-home.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Home screen showing application steps"
-    },
-    {
-      "src": "/screenshots/mobile-apply.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Mobile application form"
-    }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false,
-  "protocol_handlers": [
-    {
-      "protocol": "web+boreal",
-      "url": "/?action=%s"
+      "name": "Dashboard",
+      "short_name": "Dashboard", 
+      "description": "View your application dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icons/icon-192x192.svg", "sizes": "192x192" }]
     }
   ]
 }

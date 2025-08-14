@@ -458,7 +458,7 @@ export const initializePWA = () => {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
+        const registration = await navigator.serviceWorker.register('/service-worker.js');
         console.log('Service worker registered successfully:', registration);
         
         // Listen for service worker messages
