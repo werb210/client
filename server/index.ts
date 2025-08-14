@@ -1443,6 +1443,10 @@ app.use((req, res, next) => {
   const analyticsRouter = (await import('./routes/analytics')).default;
   app.use('/api/analytics', analyticsRouter);
   
+  // Client KYC routes
+  const clientKycRouter = (await import('./routes/client/privacy/kyc')).default;
+  app.use('/api/client/privacy/kyc', clientKycRouter);
+  
   app.use('/api/ops', opsRouter);
   app.use('/api/client', clientMessagesRouter);
   app.use('/api/support', supportRouter);
