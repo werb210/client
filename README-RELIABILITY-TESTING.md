@@ -52,22 +52,47 @@ The reliability testing framework consists of multiple test suites designed to v
 - Category-based result breakdown
 - Performance metrics and averages
 
-### 3. Playwright E2E Tests (`tests/e2e/`)
+### 3. UI Monkey Testing (`tests/e2e/ui_monkey.spec.ts`)
 
-**Purpose**: Browser-based end-to-end testing with advanced scenarios
+**Purpose**: Automated UI interaction testing to detect console errors and crashes
 **Coverage**:
-- `full_flow_soak.spec.ts`: Application stability with hard reloads
-- `network_flake.spec.ts`: Offline/online resilience testing  
-- `application_stability.spec.ts`: Multi-step application flow validation
+- Random clicking on buttons, links, and interactive elements
+- Form field interactions with random data input
+- Route navigation testing across all application pages
+- Console error detection during user interactions
+- Network error monitoring during UI testing
 
 **Usage**:
 ```bash
-npx playwright test
-# or
-./scripts/reliability-test.sh
+./scripts/ui-monkey-test.sh
+# or with custom duration
+MONKEY_MINUTES=10 ./scripts/ui-monkey-test.sh
 ```
 
-**Note**: Requires Playwright browser installation. Falls back to HTTP testing in environments where browsers cannot be installed.
+**Features**:
+- Configurable test duration (default: 5 minutes)
+- Falls back to HTTP-based testing when Playwright unavailable
+- Comprehensive error logging and reporting
+
+### 4. Chaos Testing Suite (`tests/chaos-testing-suite.sh`)
+
+**Purpose**: Stress testing application stability under extreme conditions
+**Coverage**:
+- **Rapid Fire Requests**: 50 consecutive requests to test response handling
+- **Route Bombardment**: Random route testing with concurrent access
+- **Concurrent Connections**: Multiple simultaneous connection testing
+- **Timeout Stress**: Testing with aggressive timeout constraints
+- **Memory Pressure**: Large page request simulation
+
+### 5. Master Testing Suite (`scripts/master-testing-suite.sh`)
+
+**Purpose**: Orchestrates all testing suites with comprehensive reporting
+**Coverage**: Executes all reliability testing components with timeout management and result aggregation
+
+**Usage**:
+```bash
+./scripts/master-testing-suite.sh
+```
 
 ## Configuration
 
