@@ -13,23 +13,17 @@ export function devIframeHeaderKiller(req: Request, res: Response, next: NextFun
     return origSetHeader(name, value);
   };
 
-  // 2) On writeHead, purge any stray XFO and ensure CSP has frame-ancestors
+  // 2) On writeHead, purge any stray XFO and ensure CSP has frame-ancestors  
   const origWriteHead = res.writeHead.bind(res);
-  res.writeHead = function (statusCode: number, statusMessage?: any, headers?: any) {
+  (res as any).writeHead = function (statusCode: number, statusMessage?: any, headers?: any) {
     res.removeHeader("X-Frame-Options");
     const existing = String(res.getHeader("Content-Security-Policy") || "");
     const fa = "frame-ancestors " + REPLIT_ANCESTORS.join(" ") + ";";
     if (!existing) res.setHeader("Content-Security-Policy", fa);
     else if (!/frame-ancestors/i.test(existing)) res.setHeader("Content-Security-Policy", `${existing.trim()} ${fa}`);
     
-    // Handle different call signatures
-    if (arguments.length === 1) {
-      return origWriteHead.call(this, statusCode);
-    } else if (arguments.length === 2) {
-      return origWriteHead.call(this, statusCode, statusMessage);
-    } else {
-      return origWriteHead.call(this, statusCode, statusMessage, headers);
-    }
+    // Use apply to handle variable arguments safely
+    return origWriteHead.apply(this, arguments as any);
   };
 
   next();
