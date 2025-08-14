@@ -15,13 +15,21 @@ export function devIframeHeaderKiller(req: Request, res: Response, next: NextFun
 
   // 2) On writeHead, purge any stray XFO and ensure CSP has frame-ancestors
   const origWriteHead = res.writeHead.bind(res);
-  res.writeHead = function (statusCode: number, statusMessage?: string | any, headers?: any) {
+  res.writeHead = function (statusCode: number, statusMessage?: any, headers?: any) {
     res.removeHeader("X-Frame-Options");
     const existing = String(res.getHeader("Content-Security-Policy") || "");
     const fa = "frame-ancestors " + REPLIT_ANCESTORS.join(" ") + ";";
     if (!existing) res.setHeader("Content-Security-Policy", fa);
     else if (!/frame-ancestors/i.test(existing)) res.setHeader("Content-Security-Policy", `${existing.trim()} ${fa}`);
-    return origWriteHead.call(this, statusCode, statusMessage, headers);
+    
+    // Handle different call signatures
+    if (arguments.length === 1) {
+      return origWriteHead.call(this, statusCode);
+    } else if (arguments.length === 2) {
+      return origWriteHead.call(this, statusCode, statusMessage);
+    } else {
+      return origWriteHead.call(this, statusCode, statusMessage, headers);
+    }
   };
 
   next();
