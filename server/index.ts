@@ -1,3 +1,5 @@
+import cors from "cors";
+import { stripXfo, replitHelmet } from "./middleware/replitPreview";
 import express, { type Request, Response, NextFunction } from "express";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -31,6 +33,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+app.set("trust proxy", 1);
+app.use(cors({ origin: /replit\.dev$|replit\.com$/i, credentials: false }));
+
+// Apply Replit preview fixes BEFORE other security middleware
+if (process.env.NODE_ENV !== "production") { 
+  app.use(stripXfo); 
+  app.use(replitHelmet); 
+}
 
 // Determine actual environment - true production mode
 const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_ENVIRONMENT === 'production';
@@ -2788,3 +2798,8 @@ app.use((req, res, next) => {
     }
   });
 })();
+
+// --- DEV HEALTH ENDPOINT (ok to keep in prod) ---
+app.get("/_health", (_req, res) => {
+  res.status(200).json({ ok: true, ts: new Date().toISOString() });
+});
