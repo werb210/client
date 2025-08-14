@@ -1438,6 +1438,11 @@ app.use((req, res, next) => {
   // Client-specific search routes
   const clientSearchRouter = (await import('./routes/client/search')).default;
   app.use('/api/client/search', clientSearchRouter);
+  
+  // Analytics routes
+  const analyticsRouter = (await import('./routes/analytics')).default;
+  app.use('/api/analytics', analyticsRouter);
+  
   app.use('/api/ops', opsRouter);
   app.use('/api/client', clientMessagesRouter);
   app.use('/api/support', supportRouter);
