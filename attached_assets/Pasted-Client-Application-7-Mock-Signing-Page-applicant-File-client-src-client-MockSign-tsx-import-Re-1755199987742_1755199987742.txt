@@ -1,0 +1,77 @@
+Client Application
+7) Mock Signing Page (applicant)
+
+File: client/src/client/MockSign.tsx
+
+import React, { useEffect, useState } from "react";
+
+export default function MockSign(){
+  const [packId, setPackId] = useState(""); const [contactId, setContactId] = useState("");
+  useEffect(()=>{
+    const u = new URLSearchParams(location.search);
+    setPackId(u.get("pack") || ""); setContactId(u.get("contact") || "");
+  }, []);
+  async function sign(){
+    await fetch("/api/docs/packs/esign/webhook", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ packId, status: "completed" }) });
+    alert("Signed (mock)");
+    location.href = "/client"; // back to portal
+  }
+  return (
+    <div className="p-6 max-w-md mx-auto space-y-3">
+      <h1 className="text-xl font-semibold">Sign Documents</h1>
+      <p className="text-sm text-gray-600">Pack {packId} for Contact {contactId}</p>
+      <button className="px-3 py-2 rounded bg-black text-white" onClick={sign}>Accept & Sign (Mock)</button>
+    </div>
+  );
+}
+
+
+Wire route: client/src/App.tsx
+
+import MockSign from "./client/MockSign";
+<Route path="/client/sign/mock" element={<MockSign />} />
+
+8) Playwright Smoke Tests
+
+File: tests/docpacks-esign.spec.ts
+
+import { test, expect } from "@playwright/test";
+
+test("Doc Pack tab shell loads", async ({ page }) => {
+  await page.goto("/applications/TEST/docs");
+  await expect(page.getByText(/Document Packs/i)).toBeVisible();
+});
+
+test("Mock sign page loads", async ({ page }) => {
+  await page.goto("/client/sign/mock?pack=PK&contact=C1");
+  await expect(page.getByText(/Sign Documents/i)).toBeVisible();
+});
+
+
+Run:
+
+npx playwright test tests/docpacks-esign.spec.ts
+
+9) Reporting — paste back
+
+DB migration output for 2025_08_14_docpacks_esign.sql.
+
+Server logs confirming routes mounted: /api/docs/templates/*, /api/docs/packs/*.
+
+Create one template via POST /api/docs/templates (simple Liquid body), then:
+
+Create a pack for a real applicationId with that template.
+
+Render the pack → list back the doc_pack_items rows showing pdf_s3_key values.
+
+Send for signature → return signerUrl (mock).
+
+Open the mock sign URL → call webhook automatically via “Accept & Sign”.
+
+Confirm pack status becomes completed and esign_signers.status='signed'.
+
+Verify the reminder scans enqueue an SMS if a pack remains sent after 24h (show reminders_queue row).
+
+Playwright output for docpacks-esign.spec.ts.
+
+Any console/server warnings or errors to patch.
