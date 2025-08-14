@@ -1430,6 +1430,10 @@ app.use((req, res, next) => {
   app.use('/api', handoffRouter);
   app.use('/api', chatbotTrainingRouter);
   app.use('/api/notifications', notificationsRouter);
+  
+  // Client-specific notification routes
+  const clientNotificationsRouter = (await import('./routes/client/notifications')).default;
+  app.use('/api/client/notifications', clientNotificationsRouter);
   app.use('/api/ops', opsRouter);
   app.use('/api/client', clientMessagesRouter);
   app.use('/api/support', supportRouter);

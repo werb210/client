@@ -1,0 +1,165 @@
+Client Application
+A) Shared prerequisites (duplicated here on purpose)
+
+1) ENV (append):
+File: .env
+
+# ===== Search / FTS =====
+SEARCH_DEFAULT_LANG=english
+SEARCH_RESULT_LIMIT=50
+
+
+2) DB migrations (same as staff):
+File: server/db/migrations/2025_08_14_search_fts.sql
+
+-- (IDENTICAL CONTENT AS IN STAFF BLOCK)
+-- Contacts, Applications, Messages, Documents FTS and Saved Views table
+-- Copy the exact SQL from the Staff block to keep schema in sync.
+
+
+Run:
+
+npm run db:migrate
+
+
+3) Shared Search API (client-scoped wrapper):
+File: server/routes/client/search.ts
+
+import { Router } from "express";
+import { db } from "../../db/client";
+import { sql } from "drizzle-orm";
+
+const router = Router();
+
+/* Clients can only search their own messages & documents; scope by contact_id */
+router.get("/", async (req:any, res) => {
+  const contactId = req.contact?.id || req.query.contactId;
+  if (!contactId) return res.status(401).json({ error: "Unauthorized" });
+
+  const q = String(req.query.q || "").trim();
+  const lang = process.env.SEARCH_DEFAULT_LANG || "english";
+  const limit = Math.max(1, Math.min(Number(req.query.limit || 50), 200));
+  const tsquery = q ? `plainto_tsquery('${lang}', ${db.param(q)})` : "NULL";
+
+  const list:any[] = [];
+
+  // Messages
+  const m = await db.execute(sql`
+    SELECT 'messages' AS type, m.id,
+      (upper(m.channel) || ' ' || m.direction || ' • ' || to_char(m.created_at,'YYYY-MM-DD HH24:MI')) AS title,
+      ts_rank(m.search_doc, ${sql.raw(tsquery)}) AS rank,
+      ts_headline('${sql.raw(lang)}', coalesce(m.body,''), ${sql.raw(tsquery)}) AS snippet
+    FROM comm_messages m
+    WHERE m.contact_id=${contactId}
+      AND ${q ? sql`m.search_doc @@ ${sql.raw(tsquery)}` : sql`true`}
+    ORDER BY rank DESC NULLS LAST, m.created_at DESC
+    LIMIT ${limit}
+  `);
+  list.push(...(m.rows || []));
+
+  // Documents
+  const d = await db.execute(sql`
+    SELECT 'documents' AS type, d.id,
+      (d.filename || ' • ' || coalesce(d.category,'')) AS title,
+      ts_rank(d.search_doc, ${sql.raw(tsquery)}) AS rank,
+      ts_headline('${sql.raw(lang)}', coalesce(d.filename,'') || ' ' || coalesce(d.category,''), ${sql.raw(tsquery)}) AS snippet
+    FROM documents d
+    WHERE d.application_id IN (SELECT id FROM applications WHERE contact_id=${contactId})
+      AND ${q ? sql`d.search_doc @@ ${sql.raw(tsquery)}` : sql`true`}
+    ORDER BY rank DESC NULLS LAST, d.created_at DESC
+    LIMIT ${limit}
+  `);
+  list.push(...(d.rows || []));
+
+  res.json(list.slice(0, limit));
+});
+
+export default router;
+
+
+Mount:
+File: server/index.ts
+
+import clientSearchRouter from "./routes/client/search";
+app.use("/api/client/search", clientSearchRouter);
+
+B) Client-specific UI
+
+My Search page:
+File: client/src/client/MySearch.tsx
+
+import React, { useState } from "react";
+
+type Row = { type:string; id:string; title:string; snippet?:string; rank?:number };
+
+export default function MySearch(){
+  const [q, setQ] = useState("");
+  const [rows, setRows] = useState<Row[]>([]);
+  const contactId = new URLSearchParams(location.search).get("contactId") || "";
+
+  async function run(){
+    const data = await (await fetch(`/api/client/search?q=${encodeURIComponent(q)}&contactId=${encodeURIComponent(contactId)}`)).json();
+    setRows(data);
+  }
+
+  function open(r:Row){
+    if (r.type === "messages") location.href = `/client/messages/${r.id}`;
+    if (r.type === "documents") location.href = `/client/documents/${r.id}`;
+  }
+
+  return (
+    <div className="p-4 space-y-3">
+      <h1 className="text-xl font-semibold">Search My Stuff</h1>
+      <div className="flex gap-2">
+        <input className="border px-2 py-1 w-full" placeholder="Search messages and documents…" value={q} onChange={e=>setQ(e.target.value)} onKeyDown={(e)=> e.key==='Enter' && run()} />
+        <button className="px-3 py-1 bg-black text-white rounded" onClick={run}>Search</button>
+      </div>
+      <table className="w-full text-sm border">
+        <thead className="bg-gray-100"><tr><th className="p-2 text-left">Type</th><th className="p-2 text-left">Title</th><th className="p-2 text-left">Snippet</th><th className="p-2 text-left">Score</th></tr></thead>
+        <tbody>
+          {rows.map((r,i)=>(
+            <tr key={i} className="border-t hover:bg-gray-50 cursor-pointer" onClick={()=>open(r)}>
+              <td className="p-2 uppercase">{r.type}</td>
+              <td className="p-2">{r.title}</td>
+              <td className="p-2"><span dangerouslySetInnerHTML={{ __html: r.snippet || "" }} /></td>
+              <td className="p-2">{r.rank?.toFixed(3)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
+Wire route:
+File: client/src/App.tsx
+
+import MySearch from "./client/MySearch";
+<Route path="/client/search" element={<MySearch />} />
+
+C) Tests (client)
+
+File: tests/search-client.spec.ts
+
+import { test, expect } from "@playwright/test";
+
+test("Client search page loads", async ({ page }) => {
+  await page.goto("/client/search?contactId=TEST");
+  await expect(page.getByText(/Search My Stuff/i)).toBeVisible();
+});
+
+
+Run:
+
+npx playwright test tests/search-client.spec.ts
+
+D) Reporting (client)
+
+Paste back:
+
+Server logs confirming /api/client/search mounted.
+
+A call to /api/client/search?q=invoice&contactId=<id> showing at least one messages or documents hit.
+
+Screenshot or JSON of the client page with results.
