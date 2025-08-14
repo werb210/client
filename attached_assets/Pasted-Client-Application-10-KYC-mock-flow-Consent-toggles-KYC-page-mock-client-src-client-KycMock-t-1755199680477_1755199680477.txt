@@ -1,0 +1,96 @@
+Client Application
+10) KYC mock flow + Consent toggles
+
+KYC page (mock): client/src/client/KycMock.tsx
+
+import React, { useEffect, useState } from "react";
+
+export default function KycMock(){
+  const [contactId, setContactId] = useState<string>("");
+  useEffect(()=>{ setContactId(new URLSearchParams(location.search).get("contact") || ""); }, []);
+  function complete(status:"approved"|"rejected"){
+    fetch(`/api/privacy/kyc/webhook?ref=mock-${contactId}&status=${status}`, { method:"POST" }).then(()=> alert("KYC " + status));
+  }
+  return (
+    <div className="p-6 max-w-md mx-auto space-y-3">
+      <h1 className="text-xl font-semibold">KYC Verification (Mock)</h1>
+      <p className="text-sm text-gray-600">Simulated KYC for Contact {contactId}</p>
+      <div className="flex gap-2">
+        <button className="px-3 py-2 rounded bg-green-600 text-white" onClick={()=>complete("approved")}>Approve</button>
+        <button className="px-3 py-2 rounded bg-red-600 text-white" onClick={()=>complete("rejected")}>Reject</button>
+      </div>
+    </div>
+  );
+}
+
+
+Consent widget: client/src/client/Consent.tsx
+
+import React, { useState } from "react";
+export default function Consent({ contactId }:{contactId:string}){
+  const [terms, setTerms] = useState(false);
+  const [marketing, setMarketing] = useState(false);
+
+  async function save(){
+    await fetch(`/api/privacy/consent/${contactId}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ kind:"terms", granted: terms }) });
+    await fetch(`/api/privacy/consent/${contactId}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ kind:"marketing", granted: marketing }) });
+    alert("Saved");
+  }
+  return (
+    <div className="space-y-2">
+      <label className="flex items-center gap-2"><input type="checkbox" checked={terms} onChange={e=>setTerms(e.target.checked)} /> I agree to the Terms</label>
+      <label className="flex items-center gap-2"><input type="checkbox" checked={marketing} onChange={e=>setMarketing(e.target.checked)} /> I agree to receive marketing</label>
+      <button className="px-3 py-1 bg-black text-white rounded" onClick={save}>Save</button>
+    </div>
+  );
+}
+
+
+Wire routes (client portal shell): client/src/App.tsx
+
+import KycMock from "./client/KycMock";
+<Route path="/client/kyc/mock" element={<KycMock />} />
+
+
+(Render <Consent contactId={...} /> on your portal onboarding page.)
+
+11) Playwright Smoke Tests
+
+File: tests/data-protection.spec.ts
+
+import { test, expect } from "@playwright/test";
+
+test("DSAR panel loads", async ({ page }) => {
+  await page.goto("/admin/privacy/dsar");
+  await expect(page.getByText(/Privacy Tools \(DSAR\)/i)).toBeVisible();
+});
+
+test("KYC mock page loads", async ({ page }) => {
+  await page.goto("/client/kyc/mock?contact=TEST");
+  await expect(page.getByText(/KYC Verification \(Mock\)/i)).toBeVisible();
+});
+
+
+Run:
+
+npx playwright test tests/data-protection.spec.ts
+
+12) Reporting — paste back
+
+DB migration output for 2025_08_14_data_protection.sql.
+
+Backfill script output (count backfilled).
+
+Server logs showing /api/privacy/* routes mounted.
+
+From a contact API response, show that email/phone are masked unless user has pii.view.
+
+Start KYC for a contact → open mock page → approve → show kyc_sessions.status=approved.
+
+Queue DSAR export, then POST /api/privacy/dsar/run/:id and paste JSON + confirm emailed attachment (mask addresses).
+
+Show a retention sweep run redacting at least one contact (paste retention_actions row).
+
+Playwright output for data-protection.spec.ts.
+
+Any errors/warnings encountered.
