@@ -42,6 +42,8 @@ import MockSign from "@/pages/MockSign";
 import DocumentPacksDemo from "@/pages/DocumentPacksDemo";
 import NotificationsClient from "@/pages/NotificationsClient";
 import NotificationsDemo from "@/pages/NotificationsDemo";
+import MySearch from "@/pages/MySearch";
+import SearchDemo from "@/pages/SearchDemo";
 
 // BackendDiagnosticPage removed with legacy auth cleanup
 import SideBySideApplication from "@/pages/SideBySideApplication";
@@ -283,6 +285,8 @@ export function MainLayout() {
       <Route path="/docpacks-demo" component={DocumentPacksDemo} />
       <Route path="/client/notifications" component={NotificationsClient} />
       <Route path="/notifications-demo" component={NotificationsDemo} />
+      <Route path="/client/search" component={MySearch} />
+      <Route path="/search-demo" component={SearchDemo} />
       <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} />
       <Route path="/advanced-chatbot-test" component={() => <ChatBotTest />} />
       <Route path="/chatbot-dashboard" component={() => <ChatBotDashboard />} />

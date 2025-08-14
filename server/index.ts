@@ -1434,6 +1434,10 @@ app.use((req, res, next) => {
   // Client-specific notification routes
   const clientNotificationsRouter = (await import('./routes/client/notifications')).default;
   app.use('/api/client/notifications', clientNotificationsRouter);
+  
+  // Client-specific search routes
+  const clientSearchRouter = (await import('./routes/client/search')).default;
+  app.use('/api/client/search', clientSearchRouter);
   app.use('/api/ops', opsRouter);
   app.use('/api/client', clientMessagesRouter);
   app.use('/api/support', supportRouter);
