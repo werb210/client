@@ -254,7 +254,7 @@ export default function LenderDemo() {
               <div className="bg-gray-50 rounded p-3">
                 <Label className="text-xs text-gray-600">Production Portal Access:</Label>
                 <p className="font-mono text-sm break-all">
-                  {window.location.origin}/lender/access?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  {window.location.origin}/lender/access?token=PRODUCTION_LENDER_TOKEN_HERE
                 </p>
               </div>
             </div>
