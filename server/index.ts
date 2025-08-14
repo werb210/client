@@ -1447,6 +1447,10 @@ app.use((req, res, next) => {
   const clientKycRouter = (await import('./routes/client/privacy/kyc')).default;
   app.use('/api/client/privacy/kyc', clientKycRouter);
   
+  // Lender portal routes
+  const lenderRouter = (await import('./routes/lender')).default;
+  app.use('/api/lender', lenderRouter);
+  
   app.use('/api/ops', opsRouter);
   app.use('/api/client', clientMessagesRouter);
   app.use('/api/support', supportRouter);

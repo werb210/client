@@ -47,6 +47,8 @@ import SearchDemo from "@/pages/SearchDemo";
 import AnalyticsDemo from "@/pages/AnalyticsDemo";
 import KycStart from "@/pages/KycStart";
 import KycDemo from "@/pages/KycDemo";
+import LenderPortal from "@/pages/LenderPortal";
+import LenderDemo from "@/pages/LenderDemo";
 
 // BackendDiagnosticPage removed with legacy auth cleanup
 import SideBySideApplication from "@/pages/SideBySideApplication";
@@ -293,6 +295,8 @@ export function MainLayout() {
       <Route path="/analytics-demo" component={AnalyticsDemo} />
       <Route path="/client/kyc/start" component={KycStart} />
       <Route path="/kyc-demo" component={KycDemo} />
+      <Route path="/lender/access" component={LenderPortal} />
+      <Route path="/lender-demo" component={LenderDemo} />
       <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} />
       <Route path="/advanced-chatbot-test" component={() => <ChatBotTest />} />
       <Route path="/chatbot-dashboard" component={() => <ChatBotDashboard />} />

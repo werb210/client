@@ -1,0 +1,244 @@
+# ============================
+# CLIENT APPLICATION — SINGLE BLOCK (copy/paste all)
+# Feature: Lender Portal (MVP) — token link access, docs list/upload, messages
+# Replit Rules Header (agent): Exact Execution • Two apps separated • Full copy/paste blocks • No delays/questions
+# ============================
+set -euo pipefail
+
+# --- 0) ENV (append idempotently)
+if ! grep -q "LENDER_JWT_SECRET" .env 2>/dev/null; then
+  cat >> .env << 'EOF'
+# ===== Lender Portal =====
+LENDER_JWT_SECRET=__set_same_as_staff__
+EOF
+fi
+
+# --- 1) DB migration (if client backend is separate; ensure minimal tables)
+mkdir -p server/db/migrations
+cat > server/db/migrations/2025_08_14_lender_portal_client.sql << 'EOF'
+CREATE TABLE IF NOT EXISTS lender_partners (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  email text,
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS app_lender_shares (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  application_id uuid NOT NULL,
+  partner_id uuid NOT NULL,
+  token text NOT NULL,
+  perms text[] NOT NULL DEFAULT '{view_docs,upload_docs,read_messages,write_messages}',
+  expires_at timestamptz NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='comm_messages' AND column_name='role') THEN
+    CREATE TABLE IF NOT EXISTS comm_messages (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      application_id uuid,
+      contact_id uuid,
+      partner_id uuid,
+      direction text,
+      channel text,
+      role text,
+      body text,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  END IF;
+END $$;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='documents' AND column_name='source') THEN
+    CREATE TABLE IF NOT EXISTS documents (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      application_id uuid,
+      filename text,
+      s3_key text,
+      category text,
+      source text,
+      partner_id uuid,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  END IF;
+END $$;
+EOF
+
+npm run db:migrate
+
+# --- 2) Services — JWT verify (shared)
+mkdir -p server/services/lender
+cat > server/services/lender/jwt.ts << 'EOF'
+import jwt from "jsonwebtoken";
+const secret = process.env.LENDER_JWT_SECRET || "dev_lender_secret";
+export function verifyShareToken(token:string){
+  try { return jwt.verify(token, secret) as any; } catch { return null; }
+}
+EOF
+
+# --- 3) Lender middleware + API routes
+mkdir -p server/routes/lender
+cat > server/routes/lender/mw.ts << 'EOF'
+import { db } from "../../db/client";
+import { sql } from "drizzle-orm";
+import { verifyShareToken } from "../../services/lender/jwt";
+
+export async function lenderAuth(req:any, res:any, next:any){
+  const token = String(req.query.token || req.headers["x-lender-token"] || "");
+  if (!token) return res.status(401).json({ error: "missing token" });
+  const data:any = verifyShareToken(token);
+  if (!data) return res.status(401).json({ error: "invalid token" });
+  // Validate against DB (not expired, exists)
+  const r = await db.execute(sql`SELECT application_id, partner_id, perms, expires_at FROM app_lender_shares WHERE token=${token} LIMIT 1`);
+  const share = r.rows?.[0];
+  if (!share) return res.status(401).json({ error: "share not found" });
+  if (new Date(share.expires_at).getTime() < Date.now()) return res.status(401).json({ error: "link expired" });
+  req.lender = { applicationId: share.application_id, partnerId: share.partner_id, perms: share.perms, token };
+  next();
+}
+EOF
+
+cat > server/routes/lender/index.ts << 'EOF'
+import { Router } from "express";
+import { db } from "../../db/client";
+import { sql } from "drizzle-orm";
+import { lenderAuth } from "./mw";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
+const router = Router();
+router.use(lenderAuth);
+
+/* App summary + docs list */
+router.get("/app", async (req:any, res)=>{
+  const appId = req.lender.applicationId;
+  const app = (await db.execute(sql`SELECT id, product_category, stage, amount_requested FROM applications WHERE id=${appId} LIMIT 1`)).rows?.[0];
+  const docs = (await db.execute(sql`SELECT id, filename, category, created_at FROM documents WHERE application_id=${appId} ORDER BY created_at DESC`)).rows || [];
+  res.json({ application: app, documents: docs });
+});
+
+/* Messages (read/write via channel 'portal' role 'lender') */
+router.get("/messages", async (req:any, res)=>{
+  const appId = req.lender.applicationId;
+  const r = await db.execute(sql`SELECT id, body, created_at, role FROM comm_messages WHERE application_id=${appId} AND channel='portal' ORDER BY created_at DESC LIMIT 100`);
+  res.json(r.rows || []);
+});
+router.post("/messages", async (req:any, res)=>{
+  if (!req.lender.perms.includes("write_messages")) return res.status(403).json({ error: "forbidden" });
+  const appId = req.lender.applicationId;
+  await db.execute(sql`
+    INSERT INTO comm_messages(application_id, partner_id, direction, channel, role, body, created_at)
+    VALUES (${appId}, ${req.lender.partnerId}, 'in', 'portal', 'lender', ${String(req.body?.body||"")}, now())
+  `);
+  res.json({ ok: true });
+});
+
+/* Upload (simple direct upload; for large files, switch to presigned URLs) */
+router.post("/upload", async (req:any, res)=>{
+  if (!req.lender.perms.includes("upload_docs")) return res.status(403).json({ error: "forbidden" });
+  const appId = req.lender.applicationId;
+  const { filename, contentB64, category } = req.body || {};
+  if (!filename || !contentB64) return res.status(400).json({ error: "missing file" });
+  const s3 = new S3Client({ region: process.env.AWS_REGION });
+  const key = `lender/${appId}/${Date.now()}_${String(filename).replace(/\s+/g,"_")}`;
+  const buf = Buffer.from(String(contentB64), "base64");
+  await s3.send(new PutObjectCommand({ Bucket: process.env.S3_BUCKET!, Key: key, Body: buf, ContentType: "application/octet-stream" }));
+  await db.execute(sql`INSERT INTO documents(application_id, filename, s3_key, category, source, partner_id) VALUES (${appId}, ${filename}, ${key}, ${category||null}, 'lender', ${req.lender.partnerId})`);
+  res.json({ ok: true, s3_key: key });
+});
+
+export default router;
+EOF
+
+# Mount lender API (idempotent)
+if ! grep -q "app.use(\"/api/lender\"" server/index.ts; then
+  cat >> server/index.ts << 'EOF'
+import lenderApi from "./routes/lender";
+app.use("/api/lender", lenderApi);
+EOF
+fi
+
+# --- 4) Public Lender UI (token-based)
+mkdir -p client/src/lender
+cat > client/src/lender/Portal.tsx << 'EOF'
+import React, { useEffect, useState } from "react";
+
+export default function LenderPortal(){
+  const token = new URLSearchParams(location.search).get("token") || "";
+  const [app, setApp] = useState<any>(null);
+  const [docs, setDocs] = useState<any[]>([]);
+  const [msgs, setMsgs] = useState<any[]>([]);
+  const [body, setBody] = useState("");
+
+  async function load(){
+    const a = await (await fetch(`/api/lender/app?token=${encodeURIComponent(token)}`)).json();
+    setApp(a.application); setDocs(a.documents);
+    setMsgs(await (await fetch(`/api/lender/messages?token=${encodeURIComponent(token)}`)).json());
+  }
+  async function send(){
+    await fetch(`/api/lender/messages?token=${encodeURIComponent(token)}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ body }) });
+    setBody(""); load();
+  }
+  async function upload(e:any){
+    const file = e.target.files?.[0]; if (!file) return;
+    const b64 = await file.arrayBuffer().then(b=> Buffer.from(b).toString("base64"));
+    await fetch(`/api/lender/upload?token=${encodeURIComponent(token)}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ filename: file.name, contentB64: b64 }) });
+    load();
+  }
+
+  useEffect(()=>{ load(); }, []);
+  if (!token) return <div className="p-6">Missing token.</div>;
+
+  return (
+    <div className="p-6 max-w-5xl mx-auto space-y-4">
+      <h1 className="text-xl font-semibold">Lender Workspace</h1>
+      {app && (
+        <div className="border rounded p-3">
+          <div className="text-sm">Application <b>{app.id}</b> • {app.product_category} • Stage: {app.stage}</div>
+          <div className="text-sm">Requested: {app.amount_requested}</div>
+        </div>
+      )}
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="border rounded p-3">
+          <div className="font-medium mb-2">Documents</div>
+          <input type="file" onChange={upload} className="text-sm mb-2" />
+          <ul className="space-y-1">
+            {docs.map(d=> <li key={d.id} className="text-sm border rounded p-2">{d.filename} <span className="text-xs text-gray-500">({new Date(d.created_at).toLocaleString()})</span></li>)}
+          </ul>
+        </div>
+        <div className="border rounded p-3">
+          <div className="font-medium mb-2">Messages</div>
+          <div className="space-y-2 max-h-72 overflow-auto border rounded p-2 bg-white">
+            {msgs.map((m:any)=> <div key={m.id} className="text-sm"><span className="text-xs text-gray-500">{new Date(m.created_at).toLocaleString()} • {m.role}</span><br/>{m.body}</div>)}
+          </div>
+          <div className="flex gap-2 mt-2">
+            <input className="border px-2 py-1 w-full" placeholder="Type a message…" value={body} onChange={e=>setBody(e.target.value)} onKeyDown={(e)=> e.key==='Enter' && send()} />
+            <button className="px-3 py-1 bg-black text-white rounded" onClick={send}>Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+EOF
+
+# Wire route
+if ! grep -q "/lender/access" client/src/App.tsx 2>/dev/null; then
+  cat >> client/src/App.tsx << 'EOF'
+import LenderPortal from "./lender/Portal";
+<Route path="/lender/access" element={<LenderPortal />} />
+EOF
+fi
+
+# --- 5) Smoke test (minimal)
+mkdir -p tests
+cat > tests/lender-client.spec.ts << 'EOF'
+import { test, expect } from "@playwright/test";
+test("Lender portal route exists", async ({ page }) => {
+  await page.goto("/lender/access?token=TEST");
+  await expect(page.getByText(/Lender Workspace/i)).toBeVisible();
+});
+EOF
+
+echo "=== CLIENT: Public Lender Portal mounted at /lender/access?token=... with docs list/upload and messaging. ==="
