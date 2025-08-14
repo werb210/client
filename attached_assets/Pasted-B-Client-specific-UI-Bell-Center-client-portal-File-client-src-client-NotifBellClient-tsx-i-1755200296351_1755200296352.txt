@@ -1,0 +1,104 @@
+B) Client-specific UI
+
+Bell + Center (client portal):
+File: client/src/client/NotifBellClient.tsx
+
+import React, { useEffect, useState } from "react";
+
+export default function NotifBellClient({ contactId }:{ contactId:string }){
+  const [count, setCount] = useState(0);
+  useEffect(()=>{
+    const es = new EventSource(`/api/client/notifications/stream?contactId=${encodeURIComponent(contactId)}`);
+    es.addEventListener("notification", ()=> setCount(c=>c+1));
+    es.addEventListener("ping", ()=>{});
+    return ()=> es.close();
+  }, [contactId]);
+  return (
+    <a href={`/client/notifications?contactId=${encodeURIComponent(contactId)}`} className="relative inline-flex items-center">
+      <span className="material-icons">notifications</span>
+      {count > 0 && <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1 rounded">{count}</span>}
+    </a>
+  );
+}
+
+
+File: client/src/client/NotificationsClient.tsx
+
+import React, { useEffect, useState } from "react";
+
+export default function NotificationsClient(){
+  const [items, setItems] = useState<any[]>([]);
+  const contactId = new URLSearchParams(location.search).get("contactId") || "";
+  async function load(){ setItems(await (await fetch(`/api/client/notifications?contactId=${encodeURIComponent(contactId)}`)).json()); }
+  async function read(id:string){
+    await fetch(`/api/client/notifications/${id}/read?contactId=${encodeURIComponent(contactId)}`, { method:"POST" });
+    await load();
+  }
+  useEffect(()=>{ load(); }, []);
+  return (
+    <div className="p-4">
+      <h1 className="text-xl font-semibold mb-3">Updates</h1>
+      <ul className="space-y-2">
+        {items.map(n=>(
+          <li key={n.id} className="border rounded p-3 bg-white flex items-start justify-between">
+            <div>
+              <div className="font-medium">{n.title}</div>
+              <div className="text-sm text-gray-600">{new Date(n.created_at).toLocaleString()}</div>
+              {n.body && <div className="text-sm mt-1">{n.body}</div>}
+            </div>
+            {!n.read_at && <button className="text-xs underline" onClick={()=>read(n.id)}>Mark read</button>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+
+Wire (client routes / header):
+File: client/src/App.tsx
+
+import NotifBellClient from "./client/NotifBellClient";
+import NotificationsClient from "./client/NotificationsClient";
+
+/* In client portal header JSX (pass the logged-in contactId): */
+{/* <NotifBellClient contactId={contactId} /> */}
+
+/* Route: */
+<Route path="/client/notifications" element={<NotificationsClient />} />
+
+C) Playwright smoke tests (client)
+
+File: tests/notifications-client.spec.ts
+
+import { test, expect } from "@playwright/test";
+
+test("Client notifications page loads", async ({ page }) => {
+  await page.goto("/client/notifications?contactId=TEST");
+  await expect(page.getByText(/Updates/i)).toBeVisible();
+});
+
+
+Run:
+
+npx playwright test tests/notifications-client.spec.ts
+
+D) Reporting (client)
+
+Paste back:
+
+Server logs showing /api/client/notifications/* mounted and a stream connection.
+
+POST /api/client/notifications/test with a real contactId → confirm in UI.
+
+Complete a mock sign or mock KYC for that contact → confirm a new client notification row.
+
+✅ This step delivers
+
+Real-time SSE notifications for both Staff & Client apps (with toast counters).
+
+Notification Center pages to review and mark read.
+
+Daily email digest to staff for unread items.
+
+Event hooks wired to SLA breaches, e-sign completion, and KYC approval.

@@ -40,6 +40,8 @@ import KycMock from "@/pages/KycMock";
 import PrivacyComplianceDemo from "@/pages/PrivacyComplianceDemo";
 import MockSign from "@/pages/MockSign";
 import DocumentPacksDemo from "@/pages/DocumentPacksDemo";
+import NotificationsClient from "@/pages/NotificationsClient";
+import NotificationsDemo from "@/pages/NotificationsDemo";
 
 // BackendDiagnosticPage removed with legacy auth cleanup
 import SideBySideApplication from "@/pages/SideBySideApplication";
@@ -279,6 +281,8 @@ export function MainLayout() {
       <Route path="/client/sign/mock" component={MockSign} />
       <Route path="/privacy-compliance-demo" component={PrivacyComplianceDemo} />
       <Route path="/docpacks-demo" component={DocumentPacksDemo} />
+      <Route path="/client/notifications" component={NotificationsClient} />
+      <Route path="/notifications-demo" component={NotificationsDemo} />
       <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} />
       <Route path="/advanced-chatbot-test" component={() => <ChatBotTest />} />
       <Route path="/chatbot-dashboard" component={() => <ChatBotDashboard />} />
