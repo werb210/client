@@ -1,4 +1,5 @@
 
+import { devIframeHeaderKiller } from "./middleware/devIframeHard";
 import { allowReplitIframe } from "./middleware/devIframe";
 import express, { type Request, Response, NextFunction } from "express";
 import { fileURLToPath } from "url";
@@ -33,6 +34,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+if (process.env.NODE_ENV !== "production") { app.use(devIframeHeaderKiller); }
 if (process.env.NODE_ENV !== "production") { app.use(allowReplitIframe); }
 
 // Determine actual environment - true production mode
