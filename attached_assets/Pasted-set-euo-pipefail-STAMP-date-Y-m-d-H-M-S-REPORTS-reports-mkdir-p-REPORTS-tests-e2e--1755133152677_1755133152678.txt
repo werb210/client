@@ -1,0 +1,62 @@
+set -euo pipefail
+STAMP="$(date +%Y%m%d-%H%M%S)"; REPORTS="reports"; mkdir -p "$REPORTS" tests/e2e
+
+npm i -D @playwright/test playwright >/dev/null 2>&1 || true
+npx playwright install --with-deps >/dev/null 2>&1 || true
+
+# -------- 1) End-to-End flow with cookie persistence + hard reloads --------
+cat > tests/e2e/full_flow_soak.spec.ts <<'TS'
+import { test, expect } from "@playwright/test";
+const CLIENT = process.env.CLIENT_URL || "http://127.0.0.1:5173";
+const STAFF  = process.env.STAFF_URL  || "http://127.0.0.1:5000";
+
+test('client full flow with hard reloads', async ({ page, context }) => {
+  // Prime staff cookie for the portal endpoints
+  await page.request.post(`${STAFF}/api/portal/test-login`, { data: {} });
+
+  // Messages page should load and remain stable across reloads
+  await page.goto(`${CLIENT}/messages`, { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("client-messages-page")).toBeVisible();
+
+  for (let i=0;i<25;i++){
+    await page.reload();
+    await expect(page.getByTestId("client-messages-page")).toBeVisible();
+    // send a light message every 5 iterations
+    if (i % 5 === 0) {
+      await page.getByTestId("compose-message").fill(`ping ${i}`);
+      await page.getByTestId("send-message").click();
+    }
+  }
+
+  // New tab continuity
+  const p2 = await context.newPage();
+  await p2.goto(`${CLIENT}/messages`);
+  await expect(p2.getByTestId("client-messages-page")).toBeVisible();
+});
+TS
+
+# -------- 2) Network flake + offline resume guard --------
+cat > tests/e2e/network_flake.spec.ts <<'TS'
+import { test, expect } from "@playwright/test";
+const CLIENT = process.env.CLIENT_URL || "http://127.0.0.1:5173";
+test('offline/online recovers without crash', async ({ page }) => {
+  await page.goto(`${CLIENT}/messages`, { waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("client-messages-page")).toBeVisible();
+  // Simulate offline
+  await page.context().setOffline(true);
+  await page.reload();
+  // App should render shell (not blank); compose should be disabled or still present
+  await expect(page.getByTestId("client-messages-page")).toBeVisible();
+  // Back online
+  await page.context().setOffline(false);
+  await page.reload();
+  await expect(page.getByTestId("client-messages-page")).toBeVisible();
+});
+TS
+
+echo "== Run =="
+CLIENT_URL="${CLIENT_URL:-http://127.0.0.1:5173}" STAFF_URL="${STAFF_URL:-http://127.0.0.1:5000}" \
+  npx playwright test tests/e2e/*.spec.ts --reporter=list | tee "$REPORTS/client-reliability-${STAMP}.log" || true
+
+echo "== Summary =="
+echo "• Client reliability log: reports/client-reliability-${STAMP}.log"
