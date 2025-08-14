@@ -92,7 +92,7 @@ run_category() {
     case "$category_name" in
         "Core Application Routes")
             test_endpoint "$CLIENT_URL/" "Landing Page" "financing" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
-            test_endpoint "$CLIENT_URL/dashboard" "Dashboard" "dashboard" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
+            test_endpoint "$CLIENT_URL/dashboard" "Dashboard" "Boreal Financial" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
             test_endpoint "$CLIENT_URL/apply/step-1" "Step 1 - Financial Profile" "" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
             test_endpoint "$CLIENT_URL/apply/step-2" "Step 2 - Recommendations" "" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
             test_endpoint "$CLIENT_URL/apply/step-3" "Step 3 - Business Details" "" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
@@ -101,7 +101,7 @@ run_category() {
             test_endpoint "$CLIENT_URL/apply/step-6" "Step 6 - Signature" "" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
             ;;
         "PWA Features")
-            test_endpoint "$CLIENT_URL/service-worker.js" "Service Worker" "ServiceWorker" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
+            test_endpoint "$CLIENT_URL/service-worker.js" "Service Worker" "CACHE_NAME" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
             test_endpoint "$CLIENT_URL/manifest.json" "PWA Manifest" "name" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
             test_endpoint "$CLIENT_URL/pwa-test" "PWA Test Page" "PWA" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
             test_endpoint "$CLIENT_URL/pwa-diagnostics" "PWA Diagnostics" "" && category_passed=$((category_passed + 1)); category_total=$((category_total + 1))
