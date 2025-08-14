@@ -36,6 +36,8 @@ import { PWADiagnostics } from "@/pages/PWADiagnostics";
 import { ClientAppAudit } from "@/pages/ClientAppAudit";
 import FAQ from "@/pages/FAQ";
 import Troubleshooting from "@/pages/Troubleshooting";
+import KycMock from "@/pages/KycMock";
+import PrivacyComplianceDemo from "@/pages/PrivacyComplianceDemo";
 
 // BackendDiagnosticPage removed with legacy auth cleanup
 import SideBySideApplication from "@/pages/SideBySideApplication";
@@ -269,6 +271,10 @@ export function MainLayout() {
       {/* Support Pages */}
       <Route path="/faq" component={FAQ} />
       <Route path="/troubleshooting" component={Troubleshooting} />
+      
+      {/* Privacy & Compliance */}
+      <Route path="/client/kyc/mock" component={KycMock} />
+      <Route path="/privacy-compliance-demo" component={PrivacyComplianceDemo} />
       <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} />
       <Route path="/advanced-chatbot-test" component={() => <ChatBotTest />} />
       <Route path="/chatbot-dashboard" component={() => <ChatBotDashboard />} />
