@@ -1,4 +1,5 @@
 
+import { allowReplitIframe } from "./middleware/devIframe";
 import express, { type Request, Response, NextFunction } from "express";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -32,6 +33,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+if (process.env.NODE_ENV !== "production") { app.use(allowReplitIframe); }
 
 // Determine actual environment - true production mode
 const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_ENVIRONMENT === 'production';
@@ -2790,4 +2792,5 @@ app.use((req, res, next) => {
   });
 })();
 
-
+// Dev health endpoint
+app.get("/_health", (_req, res) => res.status(200).json({ ok:true, ts:new Date().toISOString() }));
