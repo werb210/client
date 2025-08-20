@@ -12,6 +12,7 @@ import cookieParser from "cookie-parser";
 import { setupVite, serveStatic, log } from "./vite";
 import cfg from "./config";
 import lendersRouter from "./routes/lenders";
+import applicationsRouter from "./routes/applications";
 import loanProductCategoriesRouter from "./routes/loanProductCategories";
 import documentRequirementsRouter from "./routes/documentRequirements";
 import dataIngestionRouter from "./routes/dataIngestion";
@@ -175,221 +176,83 @@ app.use((req, res, next) => {
     res.json({ ip: ip });
   });
 
-  // API Proxy to Staff Backend - Enhanced logging
+  // API route to local lenders - use local database instead of external staff backend
   app.get('/api/public/lenders', async (req, res) => {
     try {
-      console.log('📡 [SERVER] Proxying request to staff backend /api/public/lenders');
+      console.log('📡 [SERVER] Using local database for lender products');
       
-      const response = await fetch(`${cfg.staffApiUrl}/public/lenders`, {
+      // Forward query parameters to local lenders route
+      const queryString = new URLSearchParams(req.query as any).toString();
+      const localUrl = `http://localhost:${cfg.port}/api/lenders${queryString ? '?' + queryString : ''}`;
+      
+      const response = await fetch(localUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${cfg.clientToken}`
         }
       });
       
-      console.log(`📡 [SERVER] Staff backend response: ${response.status} ${response.statusText}`);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log(`📡 [SERVER] ✅ Received ${Array.isArray(data) ? data.length : 'unknown'} products from staff backend`);
-        console.log(`📡 [SERVER] Response type: ${typeof data}, keys: ${Object.keys(data || {})}`);
+        console.log(`📡 [SERVER] ✅ Retrieved ${data.products?.length || 0} products from local database`);
         
-        // If staff backend returns wrapped data, extract the products array
-        if (data && typeof data === 'object' && !Array.isArray(data)) {
-          if (data.products && Array.isArray(data.products)) {
-            console.log(`📡 [SERVER] Extracting products array: ${data.products.length} items`);
-            res.json(data.products);
-          } else if (data.data && Array.isArray(data.data)) {
-            console.log(`📡 [SERVER] Extracting data array: ${data.data.length} items`);
-            res.json(data.data);
-          } else {
-            console.log(`📡 [SERVER] Unknown data structure, returning as-is`);
-            res.json(data);
-          }
-        } else {
-          res.json(data);
-        }
+        // Return the products array directly (client expects raw array, not wrapped object)
+        res.json(data.products || []);
       } else {
         const errorText = await response.text();
-        console.error('❌ [SERVER] Staff backend error:', errorText);
-        res.status(503).json({
+        console.error('❌ [SERVER] Local database error:', errorText);
+        res.status(500).json({
           status: 'error',
-          error: 'Lender products unavailable',
-          message: 'Lender products service is temporarily unavailable. Please try again later.'
+          error: 'Database error',
+          message: 'Failed to retrieve lender products from database'
         });
       }
     } catch (error) {
-      console.error('❌ [SERVER] Failed to fetch lender products:', error);
-      res.status(503).json({
+      console.error('❌ [SERVER] Failed to fetch lender products from local database:', error);
+      res.status(500).json({
         status: 'error',
-        error: 'Lender products unavailable',
-        message: 'Lender products service is temporarily unavailable. Please try again later.'
+        error: 'Database error',
+        message: 'Failed to retrieve lender products from database'
       });
     }
   });
 
-  // Application submission endpoint - proxy to staff backend
+  // Application submission endpoint - use local database
   app.post('/api/public/applications', async (req, res) => {
     try {
-      console.log('\n🚀 [SERVER] POST /api/public/applications - Received payload from client');
-      console.log('⏰ [SERVER] Request timestamp:', new Date().toISOString());
-      console.log('🔍 [SERVER] Request headers:', req.headers);
-      console.log('📝 [SERVER] Request body size:', JSON.stringify(req.body).length + ' bytes');
-      // Transform payload to match exact staff backend expectations
-      console.log('🔍 [SERVER] Creating staff backend compliant payload...');
+      console.log('📝 [SERVER] Using local database for application submission');
       
-      const originalPayload = req.body;
+      // Forward to local applications route
+      const localUrl = `http://localhost:${cfg.port}/api/applications`;
       
-      // Create the exact payload structure required by staff backend
-      const payload = {
-        step1: {
-          requestedAmount: String(originalPayload.step1?.fundingAmount || originalPayload.step1?.requestedAmount || "0"),
-          useOfFunds: originalPayload.step1?.fundsPurpose === "working_capital" ? "Working capital" : 
-                     originalPayload.step1?.fundsPurpose || "Working capital"
-        },
-        step3: {
-          businessName: originalPayload.step3?.operatingName || originalPayload.step3?.businessName || "",
-          legalBusinessName: originalPayload.step3?.legalName || originalPayload.step3?.legalBusinessName || 
-                           originalPayload.step3?.operatingName || "",
-          businessType: originalPayload.step3?.businessStructure === "corporation" ? "Corporation" :
-                       originalPayload.step3?.businessStructure || "Corporation",
-          businessEmail: originalPayload.step4?.applicantEmail || originalPayload.step4?.email || "",
-          businessPhone: originalPayload.step3?.businessPhone || originalPayload.step4?.applicantPhone || ""
-        },
-        step4: {
-          firstName: originalPayload.step4?.applicantFirstName || originalPayload.step4?.firstName || "",
-          lastName: originalPayload.step4?.applicantLastName || originalPayload.step4?.lastName || "",
-          email: originalPayload.step4?.applicantEmail || originalPayload.step4?.email || "",
-          phone: originalPayload.step4?.applicantPhone || originalPayload.step4?.phone || "",
-          dob: originalPayload.step4?.applicantDateOfBirth || originalPayload.step4?.dob || "",
-          sin: (originalPayload.step4?.applicantSSN || originalPayload.step4?.sin || "").replace(/\s+/g, ""),
-          ownershipPercentage: originalPayload.step4?.ownershipPercentage || 100
-        }
-      };
-      
-      console.log('🔄 [SERVER] Transformed payload to staff backend format');
-      
-      console.log('🟢 [SERVER] Final payload being sent to staff backend:', payload);
-      console.log('📋 [SERVER] Application payload received with step-based structure');
-      
-      const finalUrl = `${cfg.staffApiUrl}/public/applications`;
-      console.log(`📡 [SERVER] Forwarding to: ${finalUrl}`);
-      console.log(`🎯 [SERVER] Direct staff backend endpoint: ${finalUrl}`);
-      console.log('🔑 [SERVER] Using auth token:', cfg.clientToken ? 'Present' : 'Missing');
-      
-      // Check for test account bypass header
-      const headers: any = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${cfg.clientToken}`
-      };
-      
-      // Add duplicate bypass header for test accounts (optional)
-      if (req.headers['x-allow-duplicate'] === 'true') {
-        headers['x-allow-duplicate'] = 'true';
-        console.log('🧪 [SERVER] Test account duplicate bypass enabled');
-      }
-      
-      console.log('📤 [SERVER] Making request to staff backend...');
-      const response = await fetch(finalUrl, {
+      const response = await fetch(localUrl, {
         method: 'POST',
-        headers,
-        body: JSON.stringify(payload)
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(req.body)
       });
       
-      console.log('📥 [SERVER] Staff backend responded in', Date.now() - Date.now(), 'ms');
-      
-      console.log(`📋 [SERVER] Staff backend response: ${response.status} ${response.statusText}`);
-      
-      // Enhanced logging for user verification
       if (response.ok) {
-        console.log('✅ [SERVER] SUCCESS: Application submitted to staff backend');
-        console.log('🎯 [SERVER] Staff backend is receiving submissions');
+        const data = await response.json();
+        console.log('✅ [SERVER] Application submitted to local database successfully');
+        res.json(data);
       } else {
-        console.log('❌ [SERVER] FAILED: Staff backend rejected submission');
-      }
-      
-      if (!response.ok) {
         const errorData = await response.text();
-        console.error('❌ [SERVER] Staff backend error:', errorData);
-        
-        // Handle 409 duplicate responses - create new application with existing user
-        if (response.status === 409) {
-          console.log('🔄 [SERVER] Duplicate email detected, creating new application with existing user');
-          
-          // Generate new application ID for this submission
-          const newApplicationId = crypto.randomUUID();
-          console.log(`✅ [SERVER] Created new application ID for duplicate email: ${newApplicationId}`);
-          
-          return res.status(200).json({
-            success: true,
-            message: 'New application created with existing user account',
-            applicationId: newApplicationId,
-            externalId: `app_prod_${newApplicationId}`,
-            status: 'draft',
-            timestamp: new Date().toISOString()
-          });
-        }
-        
-        // Handle 500 error with duplicate key constraint - create new application
-        if (response.status === 500 && errorData.includes('duplicate key value violates unique constraint "users_email_key"')) {
-          console.log('🔍 [SERVER] Duplicate email constraint detected - creating new application');
-          
-          // Generate new application ID for this submission
-          const newApplicationId = crypto.randomUUID();
-          console.log(`✅ [SERVER] Created new application ID for duplicate constraint: ${newApplicationId}`);
-          
-          return res.status(200).json({
-            success: true,
-            message: 'New application created with existing user account',
-            applicationId: newApplicationId,
-            externalId: `app_prod_${newApplicationId}`,
-            status: 'draft',
-            timestamp: new Date().toISOString()
-          });
-        }
-        
-        throw new Error(`Staff API returned ${response.status}: ${errorData}`);
-      }
-      
-      const data = await response.json();
-      console.log('✅ [SERVER] Staff backend success response:', data);
-      
-      res.json(data);
-    } catch (error) {
-      console.error('❌ [SERVER] Application creation failed:', error);
-      
-      // Check if this is a 409 duplicate error that was already handled
-      if (error instanceof Error && error.message.includes('Staff API returned 409')) {
-        // This should have been handled above, but if it reaches here, pass through
-        return;
-      }
-      
-      // Handle duplicate constraint errors that reach the catch block - create new application
-      console.log('🔍 [SERVER] Checking error message for duplicate constraint:', error instanceof Error ? error.message : 'Not an Error instance');
-      if (error instanceof Error && (error.message.includes('duplicate key value violates unique constraint') || error.message.includes('users_email_key'))) {
-        console.log('🔍 [SERVER] Duplicate email constraint detected in catch block - creating new application');
-        
-        // Generate new application ID for this submission
-        const newApplicationId = crypto.randomUUID();
-        console.log(`✅ [SERVER] Created new application ID in catch block: ${newApplicationId}`);
-        
-        return res.status(200).json({
-          success: true,
-          message: 'New application created with existing user account',
-          applicationId: newApplicationId,
-          externalId: `app_prod_${newApplicationId}`,
-          status: 'draft',
-          timestamp: new Date().toISOString()
+        console.error('❌ [SERVER] Local application submission error:', errorData);
+        res.status(response.status).json({
+          success: false,
+          error: 'Application submission failed',
+          message: 'Failed to submit application to local database'
         });
       }
-      
-      res.status(502).json({
+    } catch (error) {
+      console.error('❌ [SERVER] Application creation failed:', error);
+      res.status(500).json({
         success: false,
-        error: 'Staff backend unavailable',
-        message: 'Cannot create application - staff backend unavailable',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Database error',
+        message: 'Failed to create application in local database'
       });
     }
   });
@@ -1191,8 +1054,9 @@ app.use((req, res, next) => {
 
 
 
-  // Mount lender routes
+  // Mount API routes
   app.use('/api/lenders', lendersRouter);
+  app.use('/api/applications', applicationsRouter);
 
   app.use('/api/loan-products', loanProductCategoriesRouter);
   app.use('/api/loan-products', documentRequirementsRouter);

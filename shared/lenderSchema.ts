@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { pgTable, text, integer, decimal, jsonb, timestamp, uuid, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, decimal, jsonb, timestamp, uuid, boolean, varchar, serial } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { sql } from 'drizzle-orm';
 
 // Lender Products Table Schema (matching existing database structure)
 export const lenderProducts = pgTable('lender_products', {
@@ -19,6 +20,33 @@ export const lenderProducts = pgTable('lender_products', {
   active: boolean('active').default(true),
 });
 
+// Applications Table Schema (matching existing database structure)
+export const applications = pgTable('applications', {
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  user_id: varchar('user_id').notNull(),
+  status: varchar('status').notNull(),
+  current_step: integer('current_step').notNull(),
+  business_legal_name: varchar('business_legal_name'),
+  industry: varchar('industry'),
+  headquarters: varchar('headquarters'),
+  annual_revenue: varchar('annual_revenue'),
+  use_of_funds: text('use_of_funds'),
+  requested_amount: decimal('requested_amount', { precision: 12, scale: 2 }),
+  selected_product: varchar('selected_product'),
+  applicant_name: varchar('applicant_name'),
+  applicant_email: varchar('applicant_email'),
+  applicant_phone: varchar('applicant_phone'),
+  terms_accepted: boolean('terms_accepted'),
+  signature_completed: boolean('signature_completed'),
+  signed_document_url: varchar('signed_document_url'),
+  form_data: jsonb('form_data'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+  product_category: text('product_category'),
+  stage: text('stage'),
+  amount_requested: text('amount_requested'),
+});
+
 // Zod schemas for validation
 export const insertLenderProductSchema = createInsertSchema(lenderProducts, {
   min_amount: z.coerce.number().positive().optional(),
@@ -32,9 +60,20 @@ export const insertLenderProductSchema = createInsertSchema(lenderProducts, {
 
 export const selectLenderProductSchema = createSelectSchema(lenderProducts);
 
+export const insertApplicationSchema = createInsertSchema(applications, {
+  requested_amount: z.coerce.number().positive().optional(),
+  current_step: z.coerce.number().int().min(1).max(7).default(1),
+  status: z.string().default('draft'),
+  form_data: z.record(z.any()).optional(),
+});
+
+export const selectApplicationSchema = createSelectSchema(applications);
+
 // TypeScript types
 export type LenderProduct = typeof lenderProducts.$inferSelect;
 export type InsertLenderProduct = typeof lenderProducts.$inferInsert;
+export type Application = typeof applications.$inferSelect;
+export type InsertApplication = typeof applications.$inferInsert;
 
 // API response types
 export interface LenderProductsResponse {

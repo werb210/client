@@ -124,6 +124,9 @@ export const ApplicationFormSchema = z.object({
   communicationConsent: z.boolean().refine((v) => v, {
     message: 'You must consent to communication',
   }),
+  creditCheckConsent: z.boolean().refine((v) => v, {
+    message: 'You must consent to credit check',
+  }),
   documentMaintenanceConsent: z.boolean().refine((v) => v, {
     message: 'You must consent to document maintenance',
   }),
