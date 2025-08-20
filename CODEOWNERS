@@ -1,0 +1,4 @@
+# Require approval on sensitive areas
+shared/*        @werb210
+src/lib/api.ts  @werb210
+src/config.ts   @werb210
