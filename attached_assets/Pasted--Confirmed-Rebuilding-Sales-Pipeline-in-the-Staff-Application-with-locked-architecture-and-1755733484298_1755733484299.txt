@@ -1,0 +1,108 @@
+✅ Confirmed: Rebuilding **Sales Pipeline** in the Staff Application with **locked architecture** and **single source of truth**.
+All previous duplicate files, routes, and UI logic will be replaced.
+
+---
+
+### 🔒 LOCKED ARCHITECTURE PLAN – SALES PIPELINE
+
+**✅ Single Route:**
+
+```
+client/src/pages/staff/pipeline/PipelinePage.tsx
+```
+
+**✅ Single Import Path:**
+
+```tsx
+import PipelinePage from "@/pages/staff/pipeline/PipelinePage"
+```
+
+**✅ Folder Structure:**
+
+```
+client/
+└── src/
+    └── pages/
+        └── staff/
+            └── pipeline/
+                ├── PipelinePage.tsx         ← main view
+                ├── PipelineBoard.tsx        ← board layout (DND lanes)
+                ├── ApplicationCard.tsx      ← draggable cards
+                ├── PipelineDrawer.tsx       ← drawer with Application detail tabs
+                └── index.ts                 ← export all components
+```
+
+**✅ Tab Subcomponents (inside Drawer):**
+
+```
+client/src/pages/staff/pipeline/tabs/
+├── ApplicationTab.tsx
+├── BankingTab.tsx
+├── FinancialsTab.tsx
+├── DocumentsTab.tsx
+└── LendersTab.tsx
+```
+
+---
+
+### 🧠 STATE + DATA FLOW
+
+* Uses React Context (`PipelineContext`) for shared pipeline state
+* Uses TanStack Query for API loading
+* All cards load from `/api/applications`
+* Card click triggers `<PipelineDrawer openId={id} />`
+* Drawer loads tabs dynamically from `/api/application/:id/details`
+
+---
+
+### 🚧 IN-PROGRESS TASKS (Replit agent will execute):
+
+1. ✅ **Delete all duplicate files**
+2. ✅ **Lock route to only use `PipelinePage.tsx`**
+3. ✅ **Verify only one DnD board exists**
+4. 🔄 **Rebuild Drawer Tabs using single state model**
+5. 🔄 **Hook up drawer Open button correctly to app cards**
+6. 🔄 **Ensure app cards appear in correct lanes:**
+
+   * New → In Review → Requires Docs → Lender → Completed
+7. 🔄 **Sync with document states (rejected = Requires Docs)**
+8. 🔄 **Live update via mutation hooks (stage move triggers API call)**
+9. 🧪 **Run end-to-end regression on card click, drawer open, tab switching, and card movement**
+
+---
+
+### ✅ REPLIT: PROCEED WITH MODULE CLEANUP + REBUILD
+
+**Replit Agent Instructions:**
+
+1. DELETE all files **except** the following:
+
+```bash
+KEEP:
+client/src/pages/staff/pipeline/PipelinePage.tsx
+client/src/pages/staff/pipeline/index.ts
+```
+
+2. DELETE these duplicate files:
+
+```bash
+rm -rf client/src/pages/staff/sections/SalesPipeline.tsx
+rm -rf client/src/pages/staff/PipelineBoard.tsx
+rm -rf client/src/pages/Pipeline/
+rm -rf client/src/pages/staff/sections/SalesPipelineV3.tsx
+rm -rf client/src/pages/staff/sections/CompleteSalesPipeline.tsx
+```
+
+3. REBUILD from the locked structure above.
+
+4. CONFIRM all `navigate("/pipeline")` and routing entries point to `/pages/staff/pipeline/PipelinePage.tsx`
+
+5. REPORT BACK with:
+
+   * List of files removed
+   * Routing test result
+   * Whether cards load and drawer opens
+
+---
+
+💬 Let me know when ready to begin the next module (Contacts, Documents, etc).

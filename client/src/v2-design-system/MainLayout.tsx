@@ -123,6 +123,9 @@ import FileTypeValidationTest from "@/test/FileTypeValidationTest";
 import Step5CategoryTest from "@/test/Step5CategoryTest";
 import DocumentValidationTest from "@/test/DocumentValidationTest";
 import { PushNotificationTest } from "@/pages/PushNotificationTest";
+
+// Staff Application Components
+import PipelinePage from "@/pages/staff/pipeline/PipelinePage";
 import ProductValidationTest from "@/routes/ProductValidationTest";
 import TrainChatbot from "@/routes/TrainChatbot";
 import ChatbotAISuiteTest from "@/pages/ChatbotAISuiteTest";
@@ -220,6 +223,9 @@ export function MainLayout() {
       
       {/* Dashboard */}
       <Route path="/dashboard" component={SimpleDashboard} />
+      
+      {/* Staff Application Routes */}
+      <Route path="/staff/pipeline" component={PipelinePage} />
       
       {/* Success Page */}
       <Route path="/application-success" component={ApplicationSuccess} />
