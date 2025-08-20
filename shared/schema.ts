@@ -124,9 +124,6 @@ export const ApplicationFormSchema = z.object({
   communicationConsent: z.boolean().refine((v) => v, {
     message: 'You must consent to communication',
   }),
-  creditCheckConsent: z.boolean().refine((v) => v, {
-    message: 'You must consent to credit check',
-  }),
   documentMaintenanceConsent: z.boolean().refine((v) => v, {
     message: 'You must consent to document maintenance',
   }),
@@ -323,7 +320,6 @@ export const Step4Schema = ApplicationFormSchema.pick({
 
 export const Step6Schema = ApplicationFormSchema.pick({
   communicationConsent: true,
-  creditCheckConsent: true,
 });
 
 // Export validation helpers (aliases for backward compatibility)

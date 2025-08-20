@@ -12,7 +12,6 @@ import cookieParser from "cookie-parser";
 import { setupVite, serveStatic, log } from "./vite";
 import cfg from "./config";
 import lendersRouter from "./routes/lenders";
-import applicationsRouter from "./routes/applications";
 import loanProductCategoriesRouter from "./routes/loanProductCategories";
 import documentRequirementsRouter from "./routes/documentRequirements";
 import dataIngestionRouter from "./routes/dataIngestion";
@@ -176,83 +175,83 @@ app.use((req, res, next) => {
     res.json({ ip: ip });
   });
 
-  // API route to local lenders - use local database instead of external staff backend
+  // API route for lenders - forward to Staff API
   app.get('/api/public/lenders', async (req, res) => {
     try {
-      console.log('📡 [SERVER] Using local database for lender products');
+      console.log('📡 [SERVER] Forwarding lender products request to Staff API');
       
-      // Forward query parameters to local lenders route
+      // Forward query parameters to Staff API
       const queryString = new URLSearchParams(req.query as any).toString();
-      const localUrl = `http://localhost:${cfg.port}/api/lenders${queryString ? '?' + queryString : ''}`;
+      const staffUrl = `${cfg.staffApiUrl}/public/lenders${queryString ? '?' + queryString : ''}`;
       
-      const response = await fetch(localUrl, {
+      const response = await fetch(staffUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
         }
       });
       
       if (response.ok) {
         const data = await response.json();
-        console.log(`📡 [SERVER] ✅ Retrieved ${data.products?.length || 0} products from local database`);
-        
-        // Return the products array directly (client expects raw array, not wrapped object)
-        res.json(data.products || []);
+        console.log(`📡 [SERVER] ✅ Retrieved lender products from Staff API`);
+        res.json(data);
       } else {
         const errorText = await response.text();
-        console.error('❌ [SERVER] Local database error:', errorText);
-        res.status(500).json({
+        console.error('❌ [SERVER] Staff API error:', response.status, errorText);
+        res.status(response.status).json({
           status: 'error',
-          error: 'Database error',
-          message: 'Failed to retrieve lender products from database'
+          error: 'Staff API error',
+          message: 'Failed to retrieve lender products from Staff API'
         });
       }
     } catch (error) {
-      console.error('❌ [SERVER] Failed to fetch lender products from local database:', error);
+      console.error('❌ [SERVER] Failed to fetch lender products from Staff API:', error);
       res.status(500).json({
         status: 'error',
-        error: 'Database error',
-        message: 'Failed to retrieve lender products from database'
+        error: 'Network error',
+        message: 'Failed to reach Staff API'
       });
     }
   });
 
-  // Application submission endpoint - use local database
+  // Application submission endpoint - forward to Staff API
   app.post('/api/public/applications', async (req, res) => {
     try {
-      console.log('📝 [SERVER] Using local database for application submission');
+      console.log('📝 [SERVER] Forwarding application submission to Staff API');
       
-      // Forward to local applications route
-      const localUrl = `http://localhost:${cfg.port}/api/applications`;
+      // Forward to Staff API
+      const staffUrl = `${cfg.staffApiUrl}/public/applications`;
       
-      const response = await fetch(localUrl, {
+      const response = await fetch(staffUrl, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
         },
         body: JSON.stringify(req.body)
       });
       
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ [SERVER] Application submitted to local database successfully');
+        console.log('✅ [SERVER] Application submitted to Staff API successfully');
         res.json(data);
       } else {
         const errorData = await response.text();
-        console.error('❌ [SERVER] Local application submission error:', errorData);
+        console.error('❌ [SERVER] Staff API application submission error:', response.status, errorData);
         res.status(response.status).json({
           success: false,
-          error: 'Application submission failed',
-          message: 'Failed to submit application to local database'
+          error: 'Staff API error',
+          message: 'Failed to submit application to Staff API'
         });
       }
     } catch (error) {
-      console.error('❌ [SERVER] Application creation failed:', error);
+      console.error('❌ [SERVER] Application submission failed:', error);
       res.status(500).json({
         success: false,
-        error: 'Database error',
-        message: 'Failed to create application in local database'
+        error: 'Network error',
+        message: 'Failed to reach Staff API'
       });
     }
   });
@@ -1056,7 +1055,7 @@ app.use((req, res, next) => {
 
   // Mount API routes
   app.use('/api/lenders', lendersRouter);
-  app.use('/api/applications', applicationsRouter);
+  // Removed unauthorized local applications router - all application calls now forward to Staff API
 
   app.use('/api/loan-products', loanProductCategoriesRouter);
   app.use('/api/loan-products', documentRequirementsRouter);
