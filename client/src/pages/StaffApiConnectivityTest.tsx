@@ -113,7 +113,7 @@ export default function StaffApiConnectivityTest() {
             {getStatusBadge(appsLoading, appsError, applications)}
             {applications && Array.isArray(applications) && (
               <p className="text-xs text-muted-foreground mt-1">
-                {applications.length} items
+                {(applications as any[]).length} items
               </p>
             )}
           </CardContent>
@@ -127,7 +127,7 @@ export default function StaffApiConnectivityTest() {
             {getStatusBadge(productsLoading, productsError, lenderProducts)}
             {lenderProducts && Array.isArray(lenderProducts) && (
               <p className="text-xs text-muted-foreground mt-1">
-                {lenderProducts.length} items
+                {(lenderProducts as any[]).length} items
               </p>
             )}
           </CardContent>
@@ -141,7 +141,7 @@ export default function StaffApiConnectivityTest() {
             {getStatusBadge(docsLoading, docsError, documents)}
             {documents && Array.isArray(documents) && (
               <p className="text-xs text-muted-foreground mt-1">
-                {documents.length} items
+                {(documents as any[]).length} items
               </p>
             )}
           </CardContent>
@@ -155,7 +155,7 @@ export default function StaffApiConnectivityTest() {
             {getStatusBadge(lendersLoading, lendersError, lenders)}
             {lenders && Array.isArray(lenders) && (
               <p className="text-xs text-muted-foreground mt-1">
-                {lenders.length} items
+                {(lenders as any[]).length} items
               </p>
             )}
           </CardContent>
