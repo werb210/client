@@ -126,6 +126,7 @@ import { PushNotificationTest } from "@/pages/PushNotificationTest";
 
 // Staff Application Components
 import PipelinePage from "@/pages/staff/pipeline/PipelinePage";
+import StaffApiConnectivityTest from "@/pages/StaffApiConnectivityTest";
 import ProductValidationTest from "@/routes/ProductValidationTest";
 import TrainChatbot from "@/routes/TrainChatbot";
 import ChatbotAISuiteTest from "@/pages/ChatbotAISuiteTest";
@@ -226,6 +227,7 @@ export function MainLayout() {
       
       {/* Staff Application Routes */}
       <Route path="/staff/pipeline" component={PipelinePage} />
+      <Route path="/staff-api-connectivity-test" component={StaffApiConnectivityTest} />
       
       {/* Success Page */}
       <Route path="/application-success" component={ApplicationSuccess} />
