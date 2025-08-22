@@ -37,6 +37,8 @@ export interface DocumentUploadData {
     category: string;
   }>;
   completed?: boolean;
+  submissionMode?: string;
+  hasDocuments?: boolean;
 }
 
 export interface FormDataState extends Partial<ApplicationForm> {
