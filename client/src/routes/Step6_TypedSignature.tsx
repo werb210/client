@@ -613,7 +613,6 @@ export default function Step6_TypedSignature() {
       }
 
       // Emit GTM step_completed event
-      const applicationId = localStorage.getItem('applicationId');
       window.dataLayer = window.dataLayer || [];
       window.dataLayer.push({ 
         event: 'step_completed', 
