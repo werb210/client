@@ -1,0 +1,80 @@
+Awesome—thanks for the detailed agent log. Deployment is healthy. Now let’s finish GA4.
+
+Below is a **single copy-paste block for the Replit Agent** to 1) standardize the GA ID, and 2) verify that events are reaching GA4.
+
+---
+
+### 🟦 REPLIT AGENT: GA4 finalization + verification (Client app)
+
+```
+# 0) Summary of intent
+# - Use GA4 Measurement ID: G-W1FZMKVRY  (the one visible in GA UI screenshots)
+# - Ensure this ID is in the client app and working end-to-end
+# - Open the production site (NOT the Replit preview iframe), confirm 'collect' hits,
+#   fire a manual event, and confirm in GA Realtime.
+
+# 1) Ensure the correct GA4 ID is installed in the base HTML
+open client/index.html
+
+# Replace any occurrence of G-WL1FZMKVRY (with letter L) or any other GA4 ID
+# with the correct one: G-W1FZMKVRY (with digit 1).
+# Ensure the block is present just before </head>:
+
+# --- begin required block ---
+# <script async src="https://www.googletagmanager.com/gtag/js?id=G-W1FZMKVRY"></script>
+# <script>
+#   window.dataLayer = window.dataLayer || [];
+#   function gtag(){dataLayer.push(arguments);}
+#   gtag('js', new Date());
+#   gtag('config', 'G-W1FZMKVRY');
+# </script>
+# --- end required block ---
+
+save
+
+# 2) Redeploy production (Bundle -> Promote)
+open_tab Deployments
+click "Bundle"
+wait_for_bundle
+click "Promote"
+wait_until_status "Production • Healthy"
+
+# 3) Open the production site in a NEW browser tab (not the Replit preview)
+open_url https://clientportal.boreal.financial
+
+# 4) Verify GA hits in the browser
+# - Open DevTools > Network
+# - In the filter box, type: collect
+# - Confirm at least one request like:
+#   https://www.google-analytics.com/g/collect?v=2&tid=G-W1FZMKVRY...
+screenshot_network "collect"  # (attach a screenshot in the report if supported)
+
+# 5) Fire a manual test event to GA4 from the Console
+# (DevTools > Console on the production tab)
+run_in_console "
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('event', 'ga_test_event', { step: 'manual_verification', ok: true });
+"
+
+# 6) Confirm in GA Realtime
+# - Open GA4 Realtime for the Boreal Financial property
+# - Confirm 1 active user and 'ga_test_event' appears in the event stream (or DebugView)
+open_url https://analytics.google.com/analytics/web/
+# (navigate to Boreal Financial > Reports > Realtime and verify)
+
+# 7) Report back
+# Post here:
+# - Whether 'gtag/js' and 'collect' requests are visible (status 200)
+# - Whether Realtime shows at least 1 active user
+# - Whether 'ga_test_event' appeared
+# - Attach the Network tab screenshot if possible
+```
+
+---
+
+#### Why I standardized to `G-W1FZMKVRY`
+
+Every GA screenshot you shared shows **`G-W1FZMKVRY` (with the digit 1)**. The `G-WL1...` (with a letter L) was likely a typo. Using the wrong ID will always yield “No data received.”
+
+If you want me to also add **basic custom events** (e.g., `application_started`, `step_viewed`, `application_submitted`) once GA is confirmed live, tell me and I’ll give a second agent block to add them cleanly.
