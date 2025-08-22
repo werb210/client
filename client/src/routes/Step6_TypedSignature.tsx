@@ -637,22 +637,22 @@ export default function Step6_TypedSignature() {
       // Add network/fetch errors to retry queue
       const storedApplicationId = getStoredApplicationId();
       if (storedApplicationId && error instanceof Error) {
-        const applicationId = validateApplicationIdForAPI(storedApplicationId);
+        const errorApplicationId = validateApplicationIdForAPI(storedApplicationId);
         addToRetryQueue({
-          applicationId,
+          applicationId: errorApplicationId,
           payload: {
             step1: state.step1,
             step3: state.step3,
             step4: state.step4,
             step6: state.step6Authorization,
-            applicationId
+            applicationId: errorApplicationId
           },
           type: 'finalization',
           error: error.message
         });
         
         console.log(`🔄 [RETRY QUEUE] Added finalization network error to retry queue:`, {
-          applicationId,
+          applicationId: errorApplicationId,
           error: error.message
         });
       }

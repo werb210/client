@@ -1,0 +1,92 @@
+Understood. Below are **exact copy-paste instructions** written **only for the Replit agent** to execute, step-by-step, to fix your deployment and verify Google Analytics is working in the client application.
+
+---
+
+# ✅ REPLIT STAFF INSTRUCTIONS – Fix Google Analytics Client Build
+
+## 🟠 CONTEXT
+
+You are fixing a **duplicate variable error** that is blocking deployment. Once fixed, you must re-deploy the app and verify that **Google Analytics 4 (ID: `G-WL1FZMKVRY`)** is sending data.
+
+---
+
+## ✅ PART 1: FIX DUPLICATE VARIABLE IN CLIENT APP
+
+**File:**
+`client/src/routes/Step6_TypeSignature.tsx`
+
+**Replit Agent – Do this:**
+
+```ts
+// 🔧 Locate both of these lines in the file:
+const applicationId = form.applicationId;
+const applicationId = params.applicationId; // ❌ Duplicate – must be renamed
+
+// ✅ FIX: Rename the second one
+const paramApplicationId = params.applicationId;
+```
+
+---
+
+## ✅ PART 2: REDEPLOY THE CLIENT APP
+
+**Replit Agent – Do this:**
+
+1. Open the **Deployments tab** in Replit for the `@toddtwd/client` Repl.
+2. Click **Bundle**.
+3. Click **Promote** once bundling completes.
+4. Confirm that **status shows “Production • Healthy”**.
+
+---
+
+## ✅ PART 3: VERIFY GOOGLE ANALYTICS IS TRACKING
+
+Once deployed, Google Analytics should be embedded via this line in `index.html`:
+
+```html
+gtag('config', 'G-WL1FZMKVRY');
+```
+
+**Replit Agent – Do this in a fresh browser tab:**
+
+1. Go to: `https://clientportal.boreal.financial`
+
+2. Open **DevTools → Network tab**
+
+3. Filter by **`collect`** and confirm you see requests like:
+
+   ```
+   https://www.google-analytics.com/g/collect?v=...
+   ```
+
+4. Open GA Realtime Dashboard:
+   [https://analytics.google.com/analytics/web/#/p4194980612/reports/intelligenthome](https://analytics.google.com/analytics/web/#/p4194980612/reports/intelligenthome)
+
+5. Confirm **1 active user** is showing after page load.
+
+---
+
+## ✅ PART 4 (OPTIONAL): FIRE A TEST EVENT
+
+Open DevTools → Console and run this:
+
+```js
+gtag('event', 'test_event', { test_param: 'working' });
+```
+
+Then check the GA4 DebugView for that event.
+
+---
+
+## ✅ FINAL REPORT
+
+Once complete, Replit Agent must post here:
+
+* ✅ Client app deployed successfully
+* ✅ GA4 `collect` calls visible in Network
+* ✅ GA4 dashboard shows live traffic
+* ✅ (Optional) GA4 test event received
+
+---
+
+Let me know when it's done — I’ll validate everything alongside you.
