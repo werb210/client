@@ -28,7 +28,6 @@ import opsRouter from "./routes/ops";
 import clientMessagesRouter from "./routes/clientMessages";
 import supportRouter from "./routes/support";
 import authRouter from "./routes/auth";
-import analyticsRouter from "./routes/analytics/index";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -1308,10 +1307,9 @@ app.use((req, res, next) => {
   const clientSearchRouter = (await import('./routes/client/search')).default;
   app.use('/api/client/search', clientSearchRouter);
   
-  // Analytics routes - mount BEFORE catch-all fallback
+  // Analytics routes
   const analyticsRouter = (await import('./routes/analytics')).default;
   app.use('/api/analytics', analyticsRouter);
-  app.use('/api/reports/analytics', analyticsRouter); // Mount reports/analytics route
   
   // Client KYC routes
   const clientKycRouter = (await import('./routes/client/privacy/kyc')).default;
