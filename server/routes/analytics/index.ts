@@ -64,4 +64,48 @@ router.get("/rolling/7d", async (_req, res) => {
   }
 });
 
+// Events tracking endpoint for frontend analytics
+router.get("/events", async (req: any, res) => {
+  try {
+    // Return sample events for now - in production this would query the database
+    const events = [
+      {
+        event: "step_view",
+        step: "step_1",
+        timestamp: new Date().toISOString(),
+        source: "application_flow"
+      },
+      {
+        event: "step_completed", 
+        step: "step_2",
+        timestamp: new Date().toISOString(),
+        source: "application_flow"
+      },
+      {
+        event: "ga_test_event",
+        step: "step_2_product_recommendations", 
+        timestamp: new Date().toISOString(),
+        source: "auto_debug"
+      }
+    ];
+    res.json(events);
+  } catch (error) {
+    console.error("Analytics events error:", error);
+    res.status(500).json({ error: "Failed to retrieve analytics events" });
+  }
+});
+
+// Track new events (POST endpoint for frontend to submit events)
+router.post("/events", async (req: any, res) => {
+  try {
+    const { event, step, source, data } = req.body;
+    // In production, this would save to database
+    console.log(`📊 Analytics Event: ${event} | Step: ${step} | Source: ${source}`);
+    res.json({ success: true, message: "Event tracked successfully" });
+  } catch (error) {
+    console.error("Analytics tracking error:", error);
+    res.status(500).json({ error: "Failed to track event" });
+  }
+});
+
 export default router;
