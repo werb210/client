@@ -16,6 +16,20 @@ export default function Step2Recommendations() {
   const [, setLocation] = useLocation();
   const [selectedProduct, setSelectedProduct] = useState<string>('');
 
+  // ✅ GA TEST EVENT - Fire on page load
+  useEffect(() => {
+    if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+      (window as any).gtag('event', 'ga_test_event', {
+        step: 'step_2_product_recommendations',
+        source: 'auto_debug',
+        verified: true,
+      });
+      console.log('✅ GA test event fired automatically on load');
+    } else {
+      console.warn('⚠️ gtag is not defined. GA event not sent.');
+    }
+  }, []);
+
   // Get user's Step 1 data for matching from unified schema
   const normalizeHeadquarters = (location: string): string => {
     if (location === 'united-states' || location === 'United States' || location === 'US') return 'US';
