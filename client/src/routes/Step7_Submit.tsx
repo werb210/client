@@ -217,6 +217,15 @@ export default function Step7Submit() {
         // Don't fail the main submission for CRM issues
       }
       
+      // Emit GTM event to dataLayer
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'application_submitted',
+        application_id: applicationId,
+        product_type: state.step2?.selectedCategory || 'not_selected',
+        country: state.step1?.businessLocation || 'not_specified',
+      });
+      
       // Update state with submission success
       dispatch({
         type: 'MARK_COMPLETE'
