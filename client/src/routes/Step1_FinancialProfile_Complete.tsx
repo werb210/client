@@ -253,12 +253,29 @@ export default function Step1FinancialProfile() {
 
       logger.log('✅ Form data dispatched to context');
 
+      // Emit GTM step_completed event
+      const applicationId = getStoredApplicationId();
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ 
+        event: 'step_completed', 
+        step: 1, 
+        application_id: applicationId, 
+        product_type: data.lookingFor || 'not_selected' 
+      });
+
       // Navigate to Step 2
       logger.log('✅ Navigating to Step 2...');
       setLocation('/apply/step-2');
     } catch (error) {
       logger.error('❌ Error submitting form:', error);
       console.error('🔧 Step 1 save error:', error);
+      
+      // Emit GTM error event
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ 
+        event: 'error_occurred', 
+        message: error instanceof Error ? error.message : 'Step 1 submission error' 
+      });
     }
   };
 
@@ -268,6 +285,14 @@ export default function Step1FinancialProfile() {
   // Country detection and application startup
   useEffect(() => {
     markApplicationStarted();
+    
+    // Emit GTM form_started event
+    const applicationId = getStoredApplicationId();
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ 
+      event: 'form_started', 
+      application_id: applicationId 
+    });
     
     // Auto-detect user's country if not already set
     if (!state.step1?.businessLocation || !state.step1?.headquarters) {

@@ -734,6 +734,16 @@ export default function Step4ApplicantInfoComplete() {
       payload: 4,
     });
 
+    // Emit GTM step_completed event
+    const applicationId = localStorage.getItem('applicationId');
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ 
+      event: 'step_completed', 
+      step: 4, 
+      application_id: applicationId, 
+      product_type: 'applicant_info' 
+    });
+
     setLocation("/apply/step-5");
   };
 

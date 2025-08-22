@@ -347,6 +347,16 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
     console.log("📤 [STEP5] handleFilesUploaded called with:", files.length, "files");
     console.log("📤 [STEP5] Files details:", files.map(f => ({ name: f.name, type: f.documentType })));
     
+    // Emit GTM document_uploaded events for newly uploaded files
+    files.forEach(file => {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'document_uploaded',
+        doc_type: file.documentType || 'unknown',
+        application_id: applicationId
+      });
+    });
+    
     setUploadedFiles(files);
     
     // Save to proper step5DocumentUpload location
@@ -550,6 +560,15 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
         variant: "default",
       });
     } else {
+      // Emit GTM step_completed event
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'step_completed',
+        step: 5,
+        application_id: applicationId,
+        product_type: 'document_upload'
+      });
+      
       // Normal flow - proceed to Step 6
       setLocation('/apply/step-6');
     }
@@ -663,6 +682,15 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
         variant: "default"
       });
 
+      // Emit GTM step_completed event for bypass
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'step_completed',
+        step: 5,
+        application_id: applicationId,
+        product_type: 'document_bypass'
+      });
+      
       console.log('✅ [STEP5] Bypass complete - moving to Step 6');
       setLocation('/apply/step-6');
       

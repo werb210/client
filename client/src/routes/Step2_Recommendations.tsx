@@ -102,6 +102,16 @@ export default function Step2Recommendations() {
       return;
     }
     
+    // Emit GTM step_completed event
+    const applicationId = localStorage.getItem('applicationId');
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ 
+      event: 'step_completed', 
+      step: 2, 
+      application_id: applicationId, 
+      product_type: selectedProduct 
+    });
+    
     dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
     setLocation('/apply/step-3');
   };

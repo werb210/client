@@ -612,11 +612,28 @@ export default function Step6_TypedSignature() {
         });
       }
 
+      // Emit GTM step_completed event
+      const applicationId = localStorage.getItem('applicationId');
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ 
+        event: 'step_completed', 
+        step: 6, 
+        application_id: applicationId, 
+        product_type: 'signature_complete' 
+      });
+
       // Navigate to success page
       setLocation('/application-success');
 
     } catch (error) {
       console.error('❌ [STEP6] Final submission failed:', error);
+      
+      // Emit GTM error event
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ 
+        event: 'error_occurred', 
+        message: error instanceof Error ? error.message : 'Step 6 signature submission error' 
+      });
       
       // Add network/fetch errors to retry queue
       const storedApplicationId = getStoredApplicationId();

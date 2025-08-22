@@ -192,6 +192,16 @@ export default function Step3BusinessDetailsComplete() {
 
     // State persistence complete
     
+    // Emit GTM step_completed event
+    const applicationId = localStorage.getItem('applicationId');
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ 
+      event: 'step_completed', 
+      step: 3, 
+      application_id: applicationId, 
+      product_type: 'business_details' 
+    });
+
     // Navigate to Step 4
     setLocation('/apply/step-4');
   };
