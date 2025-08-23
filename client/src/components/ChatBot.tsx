@@ -127,38 +127,43 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+    <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-white shadow-2xl">
+        <CardHeader className="bg-gray-50 border-b">
+          <CardTitle className="flex items-center justify-between text-gray-900">
             Report an Issue
-            <Button variant="ghost" size="icon" onClick={onClose}>
+            <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-gray-200">
               <CloseIcon />
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 bg-white">
           <div>
-            <label className="text-sm font-medium">Describe the issue:</label>
+            <label className="text-sm font-medium text-gray-700">Describe the issue:</label>
             <textarea
               value={reportText}
               onChange={(e) => setReportText(e.target.value)}
               placeholder="Please describe what went wrong or what you were expecting..."
-              className="w-full h-24 mt-1 p-2 border rounded-md resize-none"
+              className="w-full h-32 mt-2 p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               disabled={isSubmitting}
             />
           </div>
-          <div className="text-xs text-gray-500">
-            Your conversation history and a screenshot will be included to help us understand the context.
+          <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+            💡 Your conversation history and a screenshot will be included to help us understand the context.
           </div>
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <div className="flex gap-3 justify-end pt-2">
+            <Button 
+              variant="outline" 
+              onClick={onClose} 
+              disabled={isSubmitting}
+              className="px-4 py-2"
+            >
               Cancel
             </Button>
             <Button 
               onClick={submitReport} 
               disabled={!reportText.trim() || isSubmitting}
-              className="bg-red-600 hover:bg-red-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2"
             >
               {isSubmitting ? 'Capturing & Sending...' : 'Send Report with Screenshot'}
             </Button>
