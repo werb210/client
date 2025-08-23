@@ -5,33 +5,47 @@ import { useLocation } from 'wouter';
 import { StepHeader } from '@/components/StepHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Clock } from 'lucide-react';
+import { AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useLenderProducts, useProductCategories } from '@/hooks/useLenderProducts';
 
 export default function Step2Recommendations() {
   const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+
+  // Load products and categories from local sync
+  const products = useLenderProducts();
+  const categories = useProductCategories();
 
   // ✅ GA TEST EVENT - Fire on page load
   useEffect(() => {
     if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
       (window as any).gtag('event', 'ga_test_event', {
-        step: 'step_2_pending_review',
-        source: 'security_restricted',
+        step: 'step_2_recommendations_loaded',
+        source: 'local_sync',
         verified: true,
+        productsCount: products.length,
+        categoriesCount: categories.length,
       });
-      console.log('✅ GA test event fired for pending review page');
+      console.log('✅ GA test event fired for recommendations page');
     }
-  }, []);
+  }, [products.length, categories.length]);
 
-  // Continue to next step (skip recommendations)
+  // Continue to next step with selected category
   const handleContinue = () => {
     dispatch({
       type: 'UPDATE_FORM_DATA',
       payload: {
         step2: {
-          status: 'pending_review',
-          message: 'Lender matching will be processed after document submission',
+          selectedCategory,
+          availableProducts: products.filter(p => 
+            !selectedCategory || 
+            p.category === selectedCategory || 
+            p.productCategory === selectedCategory
+          ),
+          totalProducts: products.length,
+          totalCategories: categories.length,
         },
       },
     });
@@ -64,12 +78,46 @@ export default function Step2Recommendations() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center space-y-6">
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-lg">
-                  Complete your application and upload documents to unlock lender recommendations.
-                </AlertDescription>
-              </Alert>
+              {products.length > 0 ? (
+                <Alert className="border-green-200 bg-green-50">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-lg text-green-700">
+                    {products.length} lender products loaded and ready for recommendations.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert>
+                  <Clock className="h-4 w-4" />
+                  <AlertDescription className="text-lg">
+                    Loading lender products from staff app...
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {categories.length > 0 && (
+                <div className="bg-white rounded-lg p-6 border">
+                  <h3 className="text-lg font-semibold mb-4">Available Product Categories</h3>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {categories.map((category) => (
+                      <Button
+                        key={category}
+                        variant={selectedCategory === category ? "default" : "outline"}
+                        onClick={() => setSelectedCategory(category)}
+                        className="text-left justify-start"
+                      >
+                        {category}
+                      </Button>
+                    ))}
+                  </div>
+                  {selectedCategory && (
+                    <div className="mt-4 p-4 bg-teal-50 rounded">
+                      <p className="text-sm text-teal-700">
+                        Selected: <strong>{selectedCategory}</strong>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 p-6 rounded-lg">
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">

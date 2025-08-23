@@ -1,121 +1,94 @@
-/**
- * RESTRICTED: No public access to lender products from client
- * All lender recommendations are processed server-side by Staff App
- */
-
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 /**
- * ❌ DISABLED: Lender products hook removed
- * Use useApplicationStatus instead
+ * ✅ ENABLED: Load lender products from local sync
+ * Products are synced from staff app and stored locally
  */
-export const useLenderProducts = () => {
-  return {
-    data: [],
-    isLoading: false,
-    error: new Error("Lender products integration disabled - use application status polling"),
-  };
+export function useLenderProducts() {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const res = await fetch("/data/lenderProducts.json");
+        const data = await res.json();
+        setProducts(data);
+        console.log(`✅ Loaded ${data.length} lender products from local sync`);
+      } catch (error) {
+        console.error("❌ Failed to load lender products:", error);
+        setProducts([]);
+      }
+    }
+    fetchProducts();
+  }, []);
+
+  return products;
+}
+
+/**
+ * ✅ ENABLED: React Query version for consistent API
+ */
+export const useLenderProductsQuery = () => {
+  return useQuery({
+    queryKey: ["lender-products-local"],
+    queryFn: async () => {
+      const res = await fetch("/data/lenderProducts.json");
+      if (!res.ok) {
+        throw new Error("Failed to load local lender products");
+      }
+      const data = await res.json();
+      console.log(`✅ Loaded ${data.length} lender products from local sync`);
+      return data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
 };
 
 /**
- * ❌ DISABLED: No live WebSocket updates for lender products on client
+ * ✅ ENABLED: Get products by category
  */
+export function useLenderProductsByCategory(category?: string) {
+  const products = useLenderProducts();
+  
+  if (!category) return products;
+  
+  return products.filter(product => 
+    product.category?.toLowerCase() === category.toLowerCase() ||
+    product.productCategory?.toLowerCase() === category.toLowerCase()
+  );
+}
+
+/**
+ * ✅ ENABLED: Get unique categories
+ */
+export function useProductCategories() {
+  const products = useLenderProducts();
+  
+  const categories = [...new Set(
+    products.map(p => p.category || p.productCategory).filter(Boolean)
+  )];
+  
+  return categories;
+}
+
+/**
+ * ✅ ENABLED: Find product by ID
+ */
+export function useLenderProduct(id?: string) {
+  const products = useLenderProducts();
+  
+  return products.find(p => p.id === id || p.productId === id) || null;
+}
+
+// Keep disabled functions for backward compatibility
 export function useLenderProductsLive() {
-  // No-op - no WebSocket connection for lender data
+  // No-op - using local sync instead
   return;
 }
 
-/**
- * ❌ DISABLED: No direct lender product queries from client
- */
-export function useLenderProductsQuery() {
-  return useQuery({
-    queryKey: ['lender-products-disabled'],
-    queryFn: () => {
-      throw new Error("Client cannot access lender products directly");
-    },
-    enabled: false,
-    retry: false,
-  });
-}
-
-/**
- * ❌ DISABLED: No category-based product filtering on client
- */
-export function useLenderProductsByCategory() {
-  return useQuery({
-    queryKey: ['lenderProducts', 'disabled'],
-    queryFn: () => {
-      throw new Error("Lender product filtering restricted to Staff App");
-    },
-    enabled: false,
-    retry: false,
-  });
-}
-
-/**
- * ❌ DISABLED: No amount-based product filtering on client
- */
-export function useLenderProductsByAmount() {
-  return useQuery({
-    queryKey: ['lenderProducts', 'amount-disabled'],
-    queryFn: () => {
-      throw new Error("Lender product filtering restricted to Staff App");
-    },
-    enabled: false,
-    retry: false,
-  });
-}
-
-/**
- * ❌ DISABLED: No individual lender product access on client
- */
-export function useLenderProduct() {
-  return useQuery({
-    queryKey: ['lenderProduct', 'disabled'],
-    queryFn: () => {
-      throw new Error("Individual lender product access restricted to Staff App");
-    },
-    enabled: false,
-    retry: false,
-  });
-}
-
-/**
- * 🔒 SECURITY MESSAGE: Explains why lender data is restricted
- */
-export const LENDER_ACCESS_MESSAGE = {
-  title: "Lender Matching In Progress",
-  message: "We'll match you with lenders once your documents are reviewed.",
-  status: "pending_review",
-  action: "Upload all required documents to proceed"
-} as const;
-
-// All product-related utilities disabled
-export const V2_FIELD_MAPPING = {} as const;
-export const V2_CATEGORY_OPTIONS = [] as const;
-
-export function formatCategoryNameV2(): string {
-  return "Available after document review";
-}
-
-export function matchesAmountRangeV2(): boolean {
-  return false; // No client-side matching
-}
-
-export function getRequiredDocumentsV2(): string[] {
-  return []; // Documents managed server-side
-}
-
-export function formatInterestRateV2(): string {
-  return "Rates available after approval";
-}
-
-export function formatTermRangeV2(): string {
-  return "Terms available after approval";
-}
-
-// Type exports removed - no lender product types on client
-export type LenderProduct = never;
-export type LenderProductsResponse = never;
-export type LenderProductFilters = never;
+// Export types for external use (will be defined by the synced data structure)
+export type LenderProduct = any;
+export type LenderProductsResponse = { products: LenderProduct[] };
+export type LenderProductFilters = Record<string, any>;
