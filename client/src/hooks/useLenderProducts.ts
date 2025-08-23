@@ -106,7 +106,7 @@ export function useLenderProducts(filters?: LenderProductFilters) {
       return result;
     },
     staleTime: 1 * 60 * 1000, // Consider data stale after 1 minute (faster refresh)
-    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     refetchOnWindowFocus: true, // Always refresh when user focuses window
     refetchOnMount: true, // Always fetch fresh data on mount
     retry: 3,

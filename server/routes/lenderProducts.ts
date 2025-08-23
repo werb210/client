@@ -6,7 +6,7 @@ const router = Router();
 // In-memory storage for lender products (replace with your database)
 let lenderProducts: any[] = [];
 
-// ✅ Single source of truth - sync endpoint for client apps
+// ✅ Single source of truth - sync endpoint for client apps (GET)
 router.get("/sync", async (req, res) => {
   try {
     // In a real implementation, this would query your database
@@ -25,6 +25,44 @@ router.get("/sync", async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: "Failed to fetch lender products" 
+    });
+  }
+});
+
+// ✅ CLIENT APP PATCH - Complete replacement sync endpoint (POST)
+router.post("/sync", async (req, res) => {
+  try {
+    const { products } = req.body;
+    
+    if (!products || !Array.isArray(products)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Products array is required" 
+      });
+    }
+
+    // Completely replace the lender product list (client patch functionality)
+    lenderProducts.length = 0; // Clear existing products
+    lenderProducts.push(...products); // Add new products
+    
+    // Notify client apps of complete sync
+    await notifyClientApps();
+    
+    // Broadcast to SSE connections
+    broadcastProductUpdate();
+
+    res.status(200).json({ 
+      success: true, 
+      count: products.length,
+      message: `Successfully synced ${products.length} lender products`
+    });
+    
+    console.log(`✅ CLIENT SYNC: Replaced all products with ${products.length} new products`);
+  } catch (error) {
+    console.error("❌ Client sync failed:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: "Failed to sync lender products" 
     });
   }
 });
@@ -180,7 +218,7 @@ async function notifyClientApps() {
       
       console.log(`✅ Notified client app: ${url}`);
     } catch (error) {
-      console.warn(`⚠️  Failed to notify client app ${url}:`, error.message);
+      console.warn(`⚠️  Failed to notify client app ${url}:`, error instanceof Error ? error.message : 'Unknown error');
     }
   });
   
@@ -237,7 +275,7 @@ function broadcastProductUpdate() {
     try {
       connection.write(`data: ${message}\n\n`);
     } catch (error) {
-      console.warn('SSE connection error:', error.message);
+      console.warn('SSE connection error:', error instanceof Error ? error.message : 'Unknown error');
     }
   });
 }
