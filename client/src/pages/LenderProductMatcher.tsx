@@ -8,7 +8,8 @@ import Building2 from 'lucide-react/dist/esm/icons/building-2';
 import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
 import FileText from 'lucide-react/dist/esm/icons/file-text';
 import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import { fetchLenderProducts, type LenderProduct } from '@/api/lenderProducts';
+import { fetchLenderProducts } from '@/lib/api';
+import type { LenderProduct } from '@/api/__generated__/staff.d.ts';
 
 interface MatchedProduct extends LenderProduct {
   matchScore: number;

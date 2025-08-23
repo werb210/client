@@ -6,7 +6,7 @@ import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
 import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
 import XCircle from 'lucide-react/dist/esm/icons/x-circle';
 import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
-import { fetchLenderProducts } from '@/api/lenderProducts';
+import { fetchLenderProducts } from '@/lib/api';
 import { getProductRecommendations, type RecommendationFilters } from '@/lib/strictRecommendationEngine';
 import { getDocumentRequirements } from '@/lib/lenderProductNormalizer';
 

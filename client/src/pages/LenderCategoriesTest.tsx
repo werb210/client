@@ -7,7 +7,8 @@ import Building2 from 'lucide-react/dist/esm/icons/building-2';
 import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
 import MapPin from 'lucide-react/dist/esm/icons/map-pin';
 import Calendar from 'lucide-react/dist/esm/icons/calendar';
-import { fetchLenderProducts, type LenderProduct } from '@/api/lenderProducts';
+import { fetchLenderProducts } from '@/lib/api';
+import type { LenderProduct } from '@/api/__generated__/staff.d.ts';
 
 // Extract unique categories and count products per category
 function analyzeProductCategories(products: LenderProduct[]) {

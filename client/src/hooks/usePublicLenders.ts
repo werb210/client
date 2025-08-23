@@ -1,6 +1,6 @@
 import { useLenderProducts } from "@/lib/useLenderProducts";
 import { useQuery } from "@tanstack/react-query";
-import { fetchLenderProducts } from "@/api/lenderProducts";
+import { fetchLenderProducts } from "@/lib/api";
 
 /**
  * Custom hook for fetching lender products with IndexedDB caching

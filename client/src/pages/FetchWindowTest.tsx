@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FetchWindowDebugPanel } from '../components/FetchWindowDebugPanel';
-import { fetchLenderProducts, getCacheInfo } from '../api/lenderProducts';
+import { fetchLenderProducts } from '@/lib/api';
 import { getFetchWindowInfo } from '../utils/fetchWindow';
 import { clearLenderCache, getCacheStats } from '../utils/lenderCache';
 

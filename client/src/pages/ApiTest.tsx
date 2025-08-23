@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { fetchLenderProducts } from '@/api/lenderProducts';
+import { fetchLenderProducts } from '@/lib/api';
 
 export default function ApiTest() {
   const [products, setProducts] = useState<any[]>([]);
@@ -97,7 +97,7 @@ export default function ApiTest() {
         }
       } catch (definitiveError) {
         console.error("❌ Fetch error:", definitiveError);
-        if (definitiveError.name === 'TypeError' && definitiveError.message === 'Failed to fetch') {
+        if (definitiveError instanceof Error && definitiveError.name === 'TypeError' && definitiveError.message === 'Failed to fetch') {
           // console.log("🚫 CONFIRMED: This is 100% a CORS preflight block");
         }
       }

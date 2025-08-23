@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchLenderProducts } from '../api/lenderProducts';
+import { fetchLenderProducts } from '@/lib/api';
 
 export default function LenderDataTest() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);

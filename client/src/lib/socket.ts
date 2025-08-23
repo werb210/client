@@ -3,14 +3,12 @@ import { io } from "socket.io-client";
 const WS_URL =
   import.meta.env.MODE === "development"
     ? "ws://localhost:5000/ws"
-    : "wss://staff.boreal.financial/ws";
+    : import.meta.env.VITE_WS_URL || "wss://staff.boreal.financial/ws";
 
 export const socket = io(WS_URL, {
   path: "/ws",
   transports: ["websocket"],
-  auth: {
-    token: `Bearer ${import.meta.env.VITE_CLIENT_TOKEN}`,
-  },
+  withCredentials: true,
 });
 
 socket.on("connect", () => console.info("[Client WS] Connected"));

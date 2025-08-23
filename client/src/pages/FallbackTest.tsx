@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { fetchLenderProducts } from '../api/lenderProducts';
+import { fetchLenderProducts } from '@/lib/api';
 import { LenderProduct } from '../../../shared/lenderProductSchema';
 
 export function FallbackTest() {

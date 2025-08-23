@@ -1,4 +1,4 @@
-import { fetchLenderProducts } from "@/api/lenderProducts";
+import { fetchLenderProducts } from "@/lib/api";
 import { getAllLocalProducts, upsertProducts, clearLocalProducts } from "@/db/lenderProducts";
 
 export async function syncLenderProducts(): Promise<{

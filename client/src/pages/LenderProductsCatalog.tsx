@@ -11,7 +11,7 @@ import Building from 'lucide-react/dist/esm/icons/building';
 import Clock from 'lucide-react/dist/esm/icons/clock';
 import Grid3X3 from 'lucide-react/dist/esm/icons/grid-3-x-3';
 import Users from 'lucide-react/dist/esm/icons/users';
-import { fetchLenderProducts } from '@/api/lenderProducts';
+import { fetchLenderProducts } from '@/lib/api';
 
 const formatCurrency = (amount: number): string => {
   if (amount >= 1000000) {

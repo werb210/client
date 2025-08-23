@@ -3,7 +3,7 @@
  * Ensures client app exclusively uses the 43+ product staff database
  */
 
-import { fetchLenderProducts } from '../api/lenderProducts';
+import { fetchLenderProducts } from '@/lib/api';
 
 export interface VerificationResult {
   success: boolean;

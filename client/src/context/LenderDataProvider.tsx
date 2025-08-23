@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { LenderProduct } from '../types/lenderProduct';
-import { fetchLenderProducts } from '../api/lenderProducts';
+import { fetchLenderProducts } from '@/lib/api';
 
 interface LenderDataContextType {
   products: LenderProduct[];
