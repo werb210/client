@@ -1,27 +1,29 @@
-import axios from "axios";
-export const api = axios.create({ baseURL: "/api", withCredentials: true });
+// client/src/lib/api.ts
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-const API_URL = import.meta.env.VITE_API_URL;
-const CLIENT_TOKEN = import.meta.env.VITE_CLIENT_TOKEN;
+export async function getLenderProducts() {
+  const res = await fetch(`${API_BASE}/lender-products`);
+  if (!res.ok) throw new Error("Failed to fetch lender products");
+  const { data } = await res.json();
+  return data;
+}
 
+export async function getPipelineCards() {
+  const res = await fetch(`${API_BASE}/pipeline/cards`);
+  if (!res.ok) throw new Error("Failed to fetch pipeline cards");
+  const { data } = await res.json();
+  return data;
+}
+
+// Legacy compatibility
 export async function fetchLenderProducts() {
-  const res = await fetch(`${API_URL}/api/lender-products`, {
-    headers: { Authorization: `Bearer ${CLIENT_TOKEN}` },
-  });
-
-  if (!res.ok) {
-    console.error("❌ Failed to fetch lender products:", res.status, await res.text());
-    return [];
-  }
-
-  return res.json();
+  return await getLenderProducts();
 }
 
 export async function fetchFromProduction(path: string) {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${API_BASE}${path}`, {
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${CLIENT_TOKEN}`,
     },
   });
 

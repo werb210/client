@@ -1,0 +1,95 @@
+PART 2 — CLIENT APPLICATION FIXES
+Step 1. Use Live Staff API Data
+
+File: client/src/lib/api.ts
+
+// client/src/lib/api.ts
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
+export async function getLenderProducts() {
+  const res = await fetch(`${API_BASE}/lender-products`);
+  if (!res.ok) throw new Error("Failed to fetch lender products");
+  const { data } = await res.json();
+  return data;
+}
+
+export async function getPipelineCards() {
+  const res = await fetch(`${API_BASE}/pipeline/cards`);
+  if (!res.ok) throw new Error("Failed to fetch pipeline cards");
+  const { data } = await res.json();
+  return data;
+}
+
+Step 2. Stop Using Fallback Fake Data
+
+File: client/src/pages/Pipeline.tsx
+
+// Replace old fallback import:
+// import mockCards from "../data/mockPipeline.json";
+
+// Fetch live data:
+import { getPipelineCards } from "../lib/api";
+
+useEffect(() => {
+  getPipelineCards()
+    .then(setCards)
+    .catch(() => setCards([]));
+}, []);
+
+Step 3. Update Environment Variables
+
+File: client/.env.production
+
+VITE_API_BASE_URL=https://staff.boreal.financial/api
+VITE_WS_URL=wss://staff.boreal.financial/ws
+NODE_ENV=production
+
+PART 3 — VALIDATION & TESTS
+Step 1. Backend Tests
+# Restart staff app
+npm run dev
+
+# Test users API
+curl -s https://staff.boreal.financial/api/users | jq
+
+# Test pipeline cards
+curl -s https://staff.boreal.financial/api/pipeline/cards | jq
+
+# Test lender products
+curl -s https://staff.boreal.financial/api/lender-products | jq
+
+Step 2. Client Tests
+# Build production client
+cd client
+npm run build
+npm run preview
+
+# Confirm API calls hit staff backend:
+# Open DevTools → Network tab → Verify:
+# - GET /api/lender-products returns 32 live products
+# - GET /api/pipeline/cards returns real applications
+
+Step 3. WebSocket Test
+curl -I wss://staff.boreal.financial/ws || echo "WebSocket test failed"
+
+PART 4 — SUCCESS CRITERIA
+Feature	Before	After
+User Management	❌ Broken CRUD	✅ Full CRUD
+Sales Pipeline Cards	❌ Missing / Fallback	✅ Real DB cards
+Client Lender Data	❌ 11 fake products	✅ 32 live products
+WebSockets	❌ Misconfigured	✅ Working
+NEXT STEPS
+
+Apply all code updates.
+
+Restart backend & rebuild client.
+
+Run all validation commands.
+
+Confirm:
+
+Users list loads.
+
+Pipeline cards show real data.
+
+Client app fetches from live staff backend.
