@@ -9,11 +9,7 @@
 export async function fetchLenderProducts() {
   try {
     // Try client-facing API first, fallback to local cache
-    let res = await fetch(`${import.meta.env.VITE_API_URL}/lender-products`, {
-      headers: {
-        Authorization: `Bearer ${import.meta.env.VITE_CLIENT_API_KEY}`,
-      },
-    });
+    let res = await fetch(`${import.meta.env.VITE_API_URL}/lender-products`);
     let data;
     
     if (res.ok) {

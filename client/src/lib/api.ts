@@ -5,11 +5,7 @@ const API_BASE = import.meta.env.VITE_API_URL;
  * Uses dedicated client endpoint with authentication
  */
 export async function getLenderProducts() {
-  const response = await fetch(`${API_BASE}/lender-products`, {
-    headers: {
-      Authorization: `Bearer ${import.meta.env.VITE_CLIENT_API_KEY}`,
-    },
-  });
+  const response = await fetch(`${API_BASE}/lender-products`);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch lender products: ${response.status}`);
