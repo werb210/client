@@ -1,6 +1,11 @@
 import { io } from "socket.io-client";
 
-export const socket = io(import.meta.env.VITE_SOCKET_URL, {
+const WS_URL =
+  import.meta.env.MODE === "development"
+    ? "ws://localhost:5000/ws"
+    : "wss://staff.boreal.financial/ws";
+
+export const socket = io(WS_URL, {
   path: "/ws",
   transports: ["websocket"],
   auth: {
