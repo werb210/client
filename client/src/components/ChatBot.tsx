@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 // Removed unnecessary UI component imports for cleaner custom implementation
 // Using simple text icons for reliability
 const HelpIcon = () => <span className="text-blue-600">💬</span>;
@@ -123,39 +124,39 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
 
   if (!isOpen) return null;
 
-  return (
-    <>
-      {/* Background overlay */}
+  // Force center with document body append
+  return ReactDOM.createPortal(
+    <div 
+      style={{
+        position: 'fixed !important' as any,
+        top: '0px !important' as any,
+        left: '0px !important' as any,
+        width: '100vw !important' as any,
+        height: '100vh !important' as any,
+        backgroundColor: 'rgba(0, 0, 0, 0.8) !important' as any,
+        zIndex: '2147483647 !important' as any,
+        display: 'flex !important' as any,
+        alignItems: 'center !important' as any,
+        justifyContent: 'center !important' as any,
+        margin: '0 !important' as any,
+        padding: '0 !important' as any
+      }}
+      onClick={onClose}
+    >
       <div 
         style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          zIndex: 999998
+          width: '500px !important' as any,
+          maxWidth: '90vw !important' as any,
+          minHeight: '400px !important' as any,
+          maxHeight: '80vh !important' as any,
+          backgroundColor: '#ffffff !important' as any,
+          borderRadius: '12px !important' as any,
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8) !important' as any,
+          border: '5px solid #ff0000 !important' as any,
+          margin: 'auto !important' as any,
+          position: 'relative !important' as any
         }}
-        onClick={onClose}
-      />
-      
-      {/* Centered modal */}
-      <div 
-        style={{
-          position: 'fixed',
-          top: '50vh',
-          left: '50vw',
-          transform: 'translate(-50%, -50%)',
-          width: '500px',
-          maxWidth: '90vw',
-          minHeight: '400px',
-          maxHeight: '80vh',
-          backgroundColor: '#ffffff',
-          borderRadius: '12px',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
-          zIndex: 999999,
-          border: '3px solid #e5e5e5'
-        }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div 
@@ -221,7 +222,8 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
           </div>
         </div>
       </div>
-    </>
+    </div>,
+    document.body
   );
 }
 
