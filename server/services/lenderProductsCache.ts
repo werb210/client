@@ -5,13 +5,15 @@ let lenderProductsCache: any[] = [];
 let lastCacheUpdate: string | null = null;
 
 const STAFF_API_URL = process.env.STAFF_API_URL || "https://staff.boreal.financial";
+const CLIENT_TOKEN = process.env.CLIENT_TOKEN || process.env.VITE_CLIENT_TOKEN;
 
-// ✅ Refresh lender products cache from staff app
+// ✅ Refresh lender products cache from local API
 export async function refreshLenderProductsCache(): Promise<any[]> {
   try {
-    console.log(`🔄 Refreshing lender products cache from: ${STAFF_API_URL}/api/lender-products/sync`);
+    console.log(`🔄 Refreshing lender products cache from local API`);
     
-    const response = await axios.get(`${STAFF_API_URL}/api/lender-products/sync`, {
+    // Use local API endpoint instead of external staff API
+    const response = await axios.get('http://localhost:5000/api/lender-products/sync', {
       timeout: 10000,
       headers: {
         'Accept': 'application/json',
@@ -28,7 +30,7 @@ export async function refreshLenderProductsCache(): Promise<any[]> {
       
       return lenderProductsCache;
     } else {
-      throw new Error(`Staff API returned error: ${response.data.error}`);
+      throw new Error(`Local API returned error: ${response.data.error}`);
     }
     
   } catch (error) {

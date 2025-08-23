@@ -39,9 +39,15 @@ export function useLenderProducts(filters?: LenderProductFilters) {
   return useQuery({
     queryKey: ['lenderProducts', filters],
     queryFn: async () => {
-      console.log('🔄 Fetching live lender products from staff app...');
-      const result = await staffClient.publicLendersList(filters);
-      console.log(`✅ Loaded ${result.length} lender products from staff app`);
+      console.log('🔄 Fetching live lender products from local API...');
+      // Use local API endpoint which forwards to staff app
+      const response = await fetch('/api/lender-products/sync');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch lender products: ${response.statusText}`);
+      }
+      const data = await response.json();
+      const result = data.products || [];
+      console.log(`✅ Loaded ${result.length} lender products from local API`);
       return result;
     },
     staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes

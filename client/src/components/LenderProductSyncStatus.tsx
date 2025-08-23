@@ -74,7 +74,7 @@ export function LenderProductSyncStatus() {
           <div className="text-xs text-gray-500 text-center">
             {syncStatus === 'online' && '✅ Real-time sync active'}
             {syncStatus === 'offline' && '⚠️ Using cached data'}
-            {syncStatus === 'syncing' && '🔄 Syncing with staff app...'}
+            {syncStatus === 'syncing' && '🔄 Syncing with local API...'}
           </div>
         </div>
       </CardContent>
