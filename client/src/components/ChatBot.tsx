@@ -44,8 +44,16 @@ interface FeedbackModalProps {
 function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
   const [reportText, setReportText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [screenshotBase64, setScreenshotBase64] = useState('');
 
-  const captureScreenshot = async (): Promise<Blob | null> => {
+  // Take screenshot when modal opens
+  useEffect(() => {
+    if (isOpen && !screenshotBase64) {
+      captureScreenshot().then(setScreenshotBase64);
+    }
+  }, [isOpen]);
+
+  const captureScreenshot = async (): Promise<string> => {
     try {
       // Dynamically import html2canvas
       const html2canvas = (await import('html2canvas')).default;
@@ -57,15 +65,16 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
         scrollY: -window.scrollY,
         useCORS: true,
         allowTaint: true,
-        scale: 0.5 // Reduce size for faster processing
+        scale: 0.8,
+        height: window.innerHeight,
+        width: window.innerWidth
       });
       
-      return new Promise(resolve => {
-        canvas.toBlob(resolve, 'image/png', 0.8);
-      });
+      // Convert to base64 immediately
+      return canvas.toDataURL('image/png', 0.8);
     } catch (error) {
       console.error('Screenshot capture failed:', error);
-      return null;
+      return '';
     }
   };
 
@@ -74,21 +83,9 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
     
     setIsSubmitting(true);
     try {
-      // 🔧 Task 4: Implement issue reporting with screenshot
-      const userContact = JSON.parse(sessionStorage.getItem('chatbotContact') || '{}');
-      const screenshot = await captureScreenshot();
-      let screenshotBase64 = '';
-      
-      // Convert screenshot to base64 if available
-      if (screenshot) {
-        screenshotBase64 = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(screenshot);
-        });
-      }
-      
       console.log('🐛 [CLIENT] Submitting issue report with screenshot');
+      
+      const userContact = JSON.parse(sessionStorage.getItem('chatbotContact') || '{}');
       
       const reportResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai/report-issue`, {
         method: 'POST',
@@ -100,7 +97,7 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
           email: userContact.email || '',
           message: reportText.trim(),
           page: window.location.pathname,
-          screenshot: screenshotBase64,
+          screenshot: screenshotBase64, // Use the pre-captured screenshot
           timestamp: new Date().toISOString(),
         }),
       });
@@ -109,9 +106,9 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
         const result = await reportResponse.json();
         console.log('✅ [CLIENT] Issue report submitted successfully:', result);
         
-        // Step 5 - Show success alert for issue report
         alert('✅ Your issue report has been submitted');
-        onClose(); // Close the modal after successful submission
+        onClose();
+        setReportText(''); // Clear the text for next time
       } else {
         console.error('❌ [CLIENT] Issue report failed:', reportResponse.status);
         alert('Failed to submit issue report. Please try again.');
@@ -128,28 +125,36 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
 
   return (
     <div 
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
       style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(2px)',
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        top: '0',
+        left: '0',
+        right: '0',
+        bottom: '0',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        zIndex: '999999',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        padding: '20px'
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
-        className="bg-white rounded-lg shadow-2xl border-0 max-w-lg w-full mx-4"
         style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          width: '100%',
+          maxWidth: '500px',
           minHeight: '400px',
           maxHeight: '90vh',
-          backgroundColor: '#ffffff',
-          border: 'none',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+          position: 'relative',
+          top: '0',
+          left: '0',
+          transform: 'none'
         }}
       >
         {/* Header */}
