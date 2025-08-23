@@ -12,6 +12,7 @@ import { AppShell } from "@/v2-design-system/AppShell";
 import { MainLayout } from "@/v2-design-system/MainLayout";
 import { PWAInstallPrompt, NetworkStatus, SyncStatus } from "@/components/PWAInstallPrompt";
 import { PWAOfflineQueue } from "@/components/PWAOfflineQueue";
+import { useWebSocket } from "@/hooks/useWebSocket";
 // DISABLED: WebSocketListener causing connection errors - using Socket.IO instead
 // import { WebSocketListener } from "@/components/WebSocketListener";
 
@@ -23,6 +24,8 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 function App() {
+  useWebSocket(); // ✅ Enables live updates globally
+  
   // Verify VITE_API_BASE_URL injection
   console.log("🔧 STAFF API:", import.meta.env.VITE_API_BASE_URL);
   console.log("🔧 ENV MODE:", import.meta.env.MODE);

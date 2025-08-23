@@ -4,20 +4,18 @@ export const api = axios.create({ baseURL: "/api", withCredentials: true });
 const API_URL = import.meta.env.VITE_API_URL;
 const CLIENT_TOKEN = import.meta.env.VITE_CLIENT_TOKEN;
 
-export const fetchLenderProducts = async () => {
+export async function fetchLenderProducts() {
   const res = await fetch(`${API_URL}/api/lender-products`, {
-    headers: {
-      "Authorization": `Bearer ${CLIENT_TOKEN}`,
-    },
+    headers: { Authorization: `Bearer ${CLIENT_TOKEN}` },
   });
 
   if (!res.ok) {
-    console.error(`[API] Lender products fetch failed: ${res.status}`);
-    throw new Error("Failed to fetch lender products");
+    console.error("❌ Failed to fetch lender products:", res.status, await res.text());
+    return [];
   }
 
   return res.json();
-};
+}
 
 export async function fetchFromProduction(path: string) {
   const res = await fetch(`${API_URL}${path}`, {
