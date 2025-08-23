@@ -1134,9 +1134,9 @@ app.use((req, res, next) => {
         // Transform staff products to 22-field schema
         const transformedProducts = staffProducts.map((product: any) => ({
           id: product.id?.toString() || crypto.randomUUID(),
-          lenderName: product.lenderName || "External Lender",
-          productCategory: product.category || "Working Capital",
-          productName: product.name || "External Product",
+          lenderName: product.name || product.lenderName || "External Lender", 
+          productCategory: product.category || product.productCategory || "Working Capital",
+          productName: product.productName || product.name || "External Product",
           minimumLendingAmount: parseFloat(product.minAmount || product.amountMin) || 10000,
           maximumLendingAmount: parseFloat(product.maxAmount || product.amountMax) || 500000,
           interestRateMinimum: parseFloat(product.interestRateMin) || 0.08,
