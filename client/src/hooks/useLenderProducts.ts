@@ -7,7 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchLenderProducts } from "@/lib/api";
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { LenderProductFilters } from '@/api/__generated__/staffClient';
+import type { LenderProductFilters, LenderProduct } from '@/api/__generated__/staff.d.ts';
+import { staffClient } from '@/api/__generated__/staffClient';
 
 /**
  * ✅ WebSocket live updates hook for lender products
@@ -240,4 +241,4 @@ export function formatTermRangeV2(product: LenderProduct): string {
 }
 
 // Export types for external use
-export type { LenderProduct, LenderProductsResponse, LenderProductFilters } from '@/api/__generated__/staffClient';
+export type { LenderProduct, LenderProductsResponse, LenderProductFilters } from '@/api/__generated__/staff.d.ts';

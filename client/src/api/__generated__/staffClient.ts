@@ -3,7 +3,7 @@
  * Generated from expanded lender product schema
  */
 
-import { LenderProduct, LenderProductsResponse, LenderProductFilters } from './staff';
+import type { LenderProduct, LenderProductsResponse, LenderProductFilters } from './staff.d.ts';
 
 export interface StaffClientConfig {
   baseUrl: string;
@@ -81,7 +81,7 @@ export class StaffClient {
     } catch (error) {
       clearTimeout(timeoutId);
       
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new Error(`Staff API timeout after ${this.timeout}ms`);
       }
       
@@ -117,7 +117,7 @@ export class StaffClient {
     } catch (error) {
       clearTimeout(timeoutId);
       
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new Error(`Staff API timeout after ${this.timeout}ms`);
       }
       
@@ -142,4 +142,4 @@ export const staffClient = createClient({
 });
 
 // Export types for external use
-export type { LenderProduct, LenderProductsResponse, LenderProductFilters } from './staff';
+export type { LenderProduct, LenderProductsResponse, LenderProductFilters } from './staff.d.ts';
