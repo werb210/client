@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { z } from "zod";
 
-// Staff API URL - directly connect to staff backend
-const API_URL = import.meta.env.VITE_STAFF_API_URL || "https://staff.boreal.financial";
+// Local API URL - connect to local database endpoint  
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 // Product schema matching the database structure
 const LenderProductSchema = z.object({
@@ -39,15 +39,15 @@ export const useLenderProducts = () => {
   return useQuery({
     queryKey: ["lenderProducts"],
     queryFn: async (): Promise<LenderProduct[]> => {
-      console.log(`🔄 Fetching lender products from staff API: ${API_URL}/api/lender-products`);
+      console.log(`🔄 Fetching lender products from local database API: /api/lender-products`);
       
-      const { data } = await axios.get(`${API_URL}/api/lender-products`);
+      const { data } = await axios.get(`/api/lender-products`);
       
       if (!data.success) {
         throw new Error("Failed to fetch lender products from staff API");
       }
       
-      console.log(`✅ Loaded ${data.count} lender products from staff API`);
+      console.log(`✅ Loaded ${data.count} lender products from local database`);
       return data.products;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
