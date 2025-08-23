@@ -5,6 +5,22 @@ export const api = axios.create({ baseURL: "/api", withCredentials: true });
 const API_URL = "https://staff.boreal.financial";
 const CLIENT_TOKEN = process.env.CLIENT_TOKEN;
 
+export async function fetchLenderProducts() {
+  const res = await fetch(`${API_URL}/api/lender-products`, {
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${CLIENT_TOKEN}`,
+    },
+  });
+
+  if (!res.ok) {
+    console.error(`API Error [${res.status}] fetching lender products`);
+    throw new Error("Failed to fetch lender products");
+  }
+
+  return res.json();
+}
+
 export async function fetchFromProduction(path: string) {
   const res = await fetch(`${API_URL}${path}`, {
     headers: {
