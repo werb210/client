@@ -1,45 +1,18 @@
-// src/api/lenderProducts.ts
-import { useEffect, useState } from 'react';
+/**
+ * ❌ DISABLED: Lender products API integration removed
+ * All lender product fetching is disabled - client only polls application status
+ */
 
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch: ${response.statusText}`);
-  }
-  const data = await response.json();
-  return data.products || data;
-};
+export async function fetchLenderProducts(): Promise<never[]> {
+  throw new Error("Lender products API integration disabled - use application status polling instead");
+}
 
-export const useLenderProducts = () => {
-  const [products, setProducts] = useState([]);
-  const [socketConnected, setSocketConnected] = useState(false);
+export async function getLenderProducts(): Promise<never[]> {
+  throw new Error("Lender products API integration disabled - use application status polling instead");
+}
 
-  // Initial fetch
-  const fetchProducts = async () => {
-    const data = await fetcher('/api/lender-products/sync');
-    setProducts(data);
-  };
+export async function getLenderCategories(): Promise<never[]> {
+  throw new Error("Lender categories API integration disabled - use application status polling instead");
+}
 
-  // WebSocket for real-time updates
-  useEffect(() => {
-    fetchProducts(); // Initial load
-    const token = localStorage.getItem('authToken');
-    const ws = new WebSocket(
-      `wss://staff.boreal.financial?token=${token}`
-    );
-
-    ws.onopen = () => setSocketConnected(true);
-    ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      if (msg.type === 'PRODUCT_SYNC') {
-        setProducts(msg.products); // ✅ Full dataset replacement
-      }
-    };
-    ws.onerror = () => console.error('WebSocket failed, switching to polling');
-    ws.onclose = () => setSocketConnected(false);
-
-    return () => ws.close();
-  }, []);
-
-  return { products, socketConnected, refresh: fetchProducts };
-};
+// All lender product related API calls are disabled

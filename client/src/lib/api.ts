@@ -1,5 +1,4 @@
 const API_BASE = import.meta.env.VITE_API_BASE;
-const API_KEY = import.meta.env.VITE_CLIENT_API_KEY;
 
 /**
  * ❌ DISABLED: Client cannot fetch lender products
@@ -17,7 +16,6 @@ export async function submitApplication(data: any) {
     method: "POST",
     headers: { 
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${API_KEY}`,
     },
     body: JSON.stringify(data),
   });
@@ -35,9 +33,6 @@ export async function uploadDocument(file: File, appId: string) {
 
   const res = await fetch(`${API_BASE}/documents`, { 
     method: "POST", 
-    headers: {
-      "Authorization": `Bearer ${API_KEY}`,
-    },
     body: formData 
   });
   if (!res.ok) throw new Error("Failed to upload document");
@@ -65,7 +60,6 @@ export function apiFetch(url: string, options: RequestInit = {}): Promise<Respon
   const mergedOptions: RequestInit = {
     credentials: 'include',
     headers: {
-      "Authorization": `Bearer ${API_KEY}`,
       ...options.headers,
     },
     ...options,

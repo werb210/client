@@ -1,19 +1,8 @@
-export async function fetchLenderProducts(applicationId: string) {
-  const response = await fetch(
-    `${import.meta.env.VITE_API_BASE}/lender-products?applicationId=${applicationId}`,
-    {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${import.meta.env.VITE_CLIENT_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+/**
+ * ❌ DISABLED: Lender products service removed
+ * Replaced with application status polling
+ */
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to fetch lender products");
-  }
-
-  return response.json();
+export async function fetchLenderProducts(): Promise<never[]> {
+  throw new Error("Lender products service disabled - use application status polling instead");
 }

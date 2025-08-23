@@ -6,39 +6,15 @@
 import { useQuery } from "@tanstack/react-query";
 
 /**
- * ✅ CONDITIONAL: Fetch lender products only after documents are approved
+ * ❌ DISABLED: Lender products hook removed
+ * Use useApplicationStatus instead
  */
-export const useLenderProducts = (applicationId?: string, documentsApproved: boolean = false) => {
-  return useQuery({
-    queryKey: ["lender-products", applicationId],
-    queryFn: async () => {
-      if (!applicationId) {
-        throw new Error("Application ID required");
-      }
-      
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE}/lender-products?applicationId=${applicationId}`,
-        {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${import.meta.env.VITE_CLIENT_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to fetch lender products");
-      }
-
-      const data = await response.json();
-      return data.products || [];
-    },
-    enabled: documentsApproved && !!applicationId, // Only enabled after docs approved
-    retry: 2,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+export const useLenderProducts = () => {
+  return {
+    data: [],
+    isLoading: false,
+    error: new Error("Lender products integration disabled - use application status polling"),
+  };
 };
 
 /**
