@@ -85,15 +85,13 @@ export function checkSchemaIntegrity(): boolean {
 }
 
 // CLI usage
-if (require.main === module) {
-  const command = process.argv[2];
-  
-  if (command === "generate") {
-    generateSchemaLock();
-  } else if (command === "check") {
-    const isValid = checkSchemaIntegrity();
-    process.exit(isValid ? 0 : 1);
-  } else {
-    console.log("Usage: npm run schema:check OR npm run schema:generate");
-  }
+const command = process.argv[2];
+
+if (command === "generate" || command === "--snapshot") {
+  generateSchemaLock();
+} else if (command === "check") {
+  const isValid = checkSchemaIntegrity();
+  process.exit(isValid ? 0 : 1);
+} else {
+  console.log("Usage: npm run schema:check OR npm run schema:generate OR --snapshot");
 }
