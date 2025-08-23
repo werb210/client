@@ -3,6 +3,22 @@ import { refreshLenderProductsCache } from "../services/lenderProductsCache";
 
 const router = Router();
 
+// ✅ Webhook endpoint for server push (matching client API pattern)
+router.post("/lender-products/sync", async (req, res) => {
+  try {
+    const products = req.body;
+    console.log(`📢 Received lender products sync webhook: ${products.length} products`);
+    
+    // Set products in local cache/storage
+    // This would typically update your local database or cache
+    
+    return res.status(200).json({ received: products.length });
+  } catch (error) {
+    console.error('❌ Webhook sync error:', error);
+    return res.status(500).json({ error: 'Webhook processing failed' });
+  }
+});
+
 // ✅ Webhook endpoint for lender product updates
 router.post("/lender-products/update", async (req, res) => {
   try {

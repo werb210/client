@@ -6,6 +6,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { staffClient, LenderProduct, LenderProductFilters } from '@/api/__generated__/staffClient';
+import { fetchLenderProducts, getCachedProducts } from '@/api/lenderProducts';
 
 /**
  * ✅ WebSocket live updates hook for lender products
@@ -70,25 +71,17 @@ export function useLenderProducts(filters?: LenderProductFilters) {
   // Enable WebSocket live updates
   useLenderProductsLive();
   
-  // Fallback SSE for compatibility
+  // Listen for custom events from the WebSocket handler
   useEffect(() => {
-    const eventSource = new EventSource('/api/lender-products/events');
-    
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'lender-products-updated') {
-        console.log('📢 SSE: Lender products updated - refreshing cache');
-        queryClient.invalidateQueries({ queryKey: ['lender-products'] });
-      }
+    const handleProductUpdate = (event: CustomEvent) => {
+      console.log('📢 Products updated via WebSocket - refreshing cache');
+      queryClient.invalidateQueries({ queryKey: ['lender-products'] });
     };
-    
-    eventSource.onerror = () => {
-      console.warn('⚠️  SSE connection lost, relying on WebSocket');
-      eventSource.close();
-    };
+
+    window.addEventListener('lenderProductsUpdated', handleProductUpdate as EventListener);
     
     return () => {
-      eventSource.close();
+      window.removeEventListener('lenderProductsUpdated', handleProductUpdate as EventListener);
     };
   }, [queryClient]);
 
@@ -96,12 +89,7 @@ export function useLenderProducts(filters?: LenderProductFilters) {
     queryKey: ['lender-products', filters],
     queryFn: async () => {
       console.log('🔄 Fetching latest lender products...');
-      const response = await fetch('/api/lender-products/sync');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch lender products: ${response.statusText}`);
-      }
-      const data = await response.json();
-      const result = data.products || [];
+      const result = await fetchLenderProducts();
       console.log(`✅ Loaded ${result.length} lender products`);
       return result;
     },
