@@ -1,63 +1,45 @@
-// ✅ Auto-refresh products when webhook or WS message received
+// src/api/lenderProducts.ts
+import { useEffect, useState } from 'react';
 
-const STAFF_API_URL = '/api';
-const STAFF_WS_URL = 'wss://staff.boreal.financial';
-
-// Simple in-memory cache
-const cache = new Map();
-
-export async function fetchLenderProducts() {
-  const response = await fetch(`${STAFF_API_URL}/lender-products/sync`);
-  if (!response.ok) throw new Error("Failed to fetch lender products");
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch: ${response.statusText}`);
+  }
   const data = await response.json();
-  return data.products || [];
-}
-
-// WebSocket listener
-const ws = new WebSocket(`${STAFF_WS_URL}`);
-ws.onmessage = (event) => {
-  const { type, products } = JSON.parse(event.data);
-  if (type === "PRODUCT_SYNC") {
-    cache.set("lender_products", products);
-    renderProducts(products);
-  }
+  return data.products || data;
 };
 
-ws.onopen = () => {
-  console.log('✅ WebSocket connected to staff backend');
+export const useLenderProducts = () => {
+  const [products, setProducts] = useState([]);
+  const [socketConnected, setSocketConnected] = useState(false);
+
+  // Initial fetch
+  const fetchProducts = async () => {
+    const data = await fetcher('/api/lender-products/sync');
+    setProducts(data);
+  };
+
+  // WebSocket for real-time updates
+  useEffect(() => {
+    fetchProducts(); // Initial load
+    const token = localStorage.getItem('authToken');
+    const ws = new WebSocket(
+      `wss://staff.boreal.financial?token=${token}`
+    );
+
+    ws.onopen = () => setSocketConnected(true);
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'PRODUCT_SYNC') {
+        setProducts(msg.products); // ✅ Full dataset replacement
+      }
+    };
+    ws.onerror = () => console.error('WebSocket failed, switching to polling');
+    ws.onclose = () => setSocketConnected(false);
+
+    return () => ws.close();
+  }, []);
+
+  return { products, socketConnected, refresh: fetchProducts };
 };
-
-ws.onerror = (error) => {
-  console.error('❌ WebSocket connection error:', error);
-};
-
-ws.onclose = () => {
-  console.log('🔌 WebSocket connection closed');
-};
-
-// Render products function
-function renderProducts(products: any[]) {
-  // Trigger UI update - this would integrate with your React components
-  const event = new CustomEvent('lenderProductsUpdated', { detail: products });
-  window.dispatchEvent(event);
-}
-
-// Get cached products
-export function getCachedProducts() {
-  return cache.get("lender_products") || [];
-}
-
-// Set products in cache
-export function setCachedProducts(products: any[]) {
-  cache.set("lender_products", products);
-  renderProducts(products);
-}
-
-// Webhook endpoint for server push
-export default async function handler(req: any, res: any) {
-  if (req.method === "POST") {
-    const products = req.body;
-    cache.set("lender_products", products);
-    return res.status(200).json({ received: products.length });
-  }
-}

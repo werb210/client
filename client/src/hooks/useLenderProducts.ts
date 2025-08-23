@@ -3,10 +3,10 @@
  * Fetches live data from staff app with WebSocket-based synchronization
  */
 
+import { useLenderProducts as useLenderProductsAPI } from '@/api/lenderProducts';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { staffClient, LenderProduct, LenderProductFilters } from '@/api/__generated__/staffClient';
-import { fetchLenderProducts, getCachedProducts } from '@/api/lenderProducts';
 
 /**
  * ✅ WebSocket live updates hook for lender products
@@ -62,10 +62,18 @@ export function useLenderProductsLive() {
 }
 
 /**
- * ✅ Real-time lender products hook with WebSocket integration
- * Always fetches latest products with automatic live updates
+ * ✅ Main export - Single Block Fix implementation
+ * Uses the consolidated API hook with WebSocket integration
  */
 export function useLenderProducts(filters?: LenderProductFilters) {
+  return useLenderProductsAPI();
+}
+
+/**
+ * ✅ Legacy React Query implementation (fallback)
+ * Kept for backward compatibility with existing components
+ */
+export function useLenderProductsQuery(filters?: LenderProductFilters) {
   const queryClient = useQueryClient();
   
   // Enable WebSocket live updates
@@ -89,7 +97,12 @@ export function useLenderProducts(filters?: LenderProductFilters) {
     queryKey: ['lender-products', filters],
     queryFn: async () => {
       console.log('🔄 Fetching latest lender products...');
-      const result = await fetchLenderProducts();
+      const response = await fetch('/api/lender-products/sync');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch lender products: ${response.statusText}`);
+      }
+      const data = await response.json();
+      const result = data.products || [];
       console.log(`✅ Loaded ${result.length} lender products`);
       return result;
     },
