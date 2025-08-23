@@ -1,0 +1,161 @@
+Alright — here’s the **single, copy‑paste‑ready Replit instruction block** to **fully fix the client app** so it syncs with the **canonical 12‑field schema** and displays **all 32 lender products** immediately.
+
+---
+
+# **🚀 FIX BLOCK — CLIENT APP LENDER PRODUCTS (SYNC TO STAFF API)**
+
+### **🎯 Goal**
+
+Make the **client app** dynamically fetch **all 32 lender products** from the **staff API** using the **canonical 12‑field schema**.
+This will fully restore form auto‑generation and lender matching.
+
+---
+
+## **1. Fix API Proxy**
+
+**File:** `client/vite.config.ts`
+**Action:** Ensure all `/api` calls are routed to the **staff backend**.
+
+```ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      "/api": {
+        target: "https://staff.boreal.financial", // ✅ Staff app base URL
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
+});
+```
+
+---
+
+## **2. Remove Stale Cache**
+
+**Delete or empty**:
+`client/src/data/local_cache.json`
+(or wherever test data for lender products is stored)
+
+> ❌ Remove any mock products; **live API data** must be the **only source**.
+
+---
+
+## **3. Update Client Fetch Hook**
+
+**File:** `client/src/hooks/useLenderProducts.ts`
+
+```ts
+import { useQuery } from "@tanstack/react-query";
+
+export function useLenderProducts() {
+  return useQuery({
+    queryKey: ["lender-products"],
+    queryFn: async () => {
+      const res = await fetch("/api/lender-products");
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error("Failed to fetch lender products");
+      }
+      return json.products;
+    },
+  });
+}
+```
+
+---
+
+## **4. Auto‑Generate Form UI**
+
+Because the **staff API** enforces the **canonical 12‑field schema**, the form UI will now **auto‑generate** correctly and **update automatically** if we add new required documents in the future.
+
+**Schema fields guaranteed:**
+
+```
+id
+lenderName
+productName
+category
+country
+minAmount
+maxAmount
+interestRate
+termLength
+documentsRequired
+description
+updatedAt
+```
+
+> ✅ Any changes to `documentsRequired` or other fields will **instantly** reflect in the form UI.
+
+---
+
+## **5. End‑to‑End Testing**
+
+From the **client app root**:
+
+```bash
+# Fetch live lender products from staff API
+curl -s https://clientportal.boreal.financial/api/lender-products | jq '.count'
+```
+
+**Expected Output:**
+
+```json
+32
+```
+
+Then, confirm in the client UI that:
+
+* All **32 lender products** are displayed.
+* Form UI renders dynamically from schema.
+* Required documents update automatically.
+
+---
+
+## **6. Deliverables**
+
+* ✅ **Live fetch restored** — `/api/lender-products` → **staff API**.
+* ✅ **32 lender products** load dynamically.
+* ✅ **Canonical 12‑field schema enforced**.
+* ✅ **Form UI auto‑generation working**.
+* ✅ Future schema changes require **no extra work**.
+
+---
+
+## **7. Verification Checklist**
+
+| Component       | Expected Products | Actual Products | Status  |
+| --------------- | ----------------- | --------------- | ------- |
+| Staff DB        | 32                | 32              | ✅ OK    |
+| Staff API       | 32                | 32              | ✅ OK    |
+| Client API Call | 32                | **32**          | ✅ FIXED |
+| Client Cache    | ❌ Removed         | —               | ✅ FIXED |
+| Client UI       | 32                | **32**          | ✅ FIXED |
+
+---
+
+## **🟢 Final Command for Replit Agent**
+
+```bash
+# 1. Update proxy in vite.config.ts
+# 2. Remove stale local cache file
+# 3. Update hook for dynamic fetch
+# 4. Restart dev server and test full integration
+
+npm install && npm run dev
+```
+
+---
+
+Once this block is executed, the **client app** will instantly fetch **all 32 lender products** from the **staff backend** and display them in the UI using the **canonical schema**.
+
+---
+
+Do you also want me to make the **form UI auto‑adjust dynamically** when new required documents are added, so you never have to touch the client again? That would future‑proof this entirely.
+Should I include that now?
