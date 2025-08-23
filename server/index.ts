@@ -1131,26 +1131,26 @@ app.use((req, res, next) => {
       const staffProducts = await getLenderProducts();
       
       if (staffProducts && staffProducts.length > 0) {
-        // Transform staff products to 22-field schema
+        // Transform staff products - REAL DATA ONLY, NO DEFAULTS
         const transformedProducts = staffProducts.map((product: any) => ({
-          id: product.id?.toString() || crypto.randomUUID(),
-          lenderName: product.name || product.lenderName || "External Lender", 
-          productCategory: product.category || product.productCategory || "Working Capital",
-          productName: product.productName || product.name || "External Product",
-          minimumLendingAmount: parseFloat(product.minAmount || product.amountMin) || 10000,
-          maximumLendingAmount: parseFloat(product.maxAmount || product.amountMax) || 500000,
-          interestRateMinimum: parseFloat(product.interestRateMin) || 0.08,
-          interestRateMaximum: parseFloat(product.interestRateMax) || 0.25,
-          countryOffered: product.country || "United States",
-          rateType: product.rateType || "Fixed",
-          rateFrequency: "Monthly",
-          index: product.index || null,
-          termMinimum: product.termMin || 12,
-          termMaximum: product.termMax || 60,
-          minimumAverageMonthlyRevenue: product.requirements?.minMonthlyRevenue || null,
-          minimumCreditScore: product.requirements?.minCreditScore || null,
-          documentsRequired: product.requirements?.documents || [],
-          description: product.description || null,
+          id: product.id?.toString(),
+          lenderName: product.name,
+          productCategory: product.category,
+          productName: product.name,
+          minimumLendingAmount: product.min_amount,
+          maximumLendingAmount: product.max_amount,
+          interestRateMinimum: null, // Not in staff backend
+          interestRateMaximum: null, // Not in staff backend
+          countryOffered: product.country,
+          rateType: null, // Not in staff backend
+          rateFrequency: null, // Not in staff backend
+          index: null,
+          termMinimum: product.min_time_in_business,
+          termMaximum: null, // Not in staff backend
+          minimumAverageMonthlyRevenue: product.min_monthly_revenue,
+          minimumCreditScore: null, // Not in staff backend
+          documentsRequired: product.required_documents || [],
+          description: null,
           externalId: `staff-${product.id}`,
           isActive: true,
           createdBy: 1,
