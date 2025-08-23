@@ -1124,21 +1124,25 @@ app.use((req, res, next) => {
     }
   });
 
-  // ✅ BLOCK 2: Direct database connection for live lender products
+  // ✅ STEP 1: 22-Field Schema API with Database Transformation
   app.get('/api/lender-products', async (req: Request, res: Response) => {
     try {
       const { db } = await import('./db');
-      const { lenderProducts } = await import('../shared/lenderSchema');
+      const { lenderProducts, transformToClientSchema } = await import('../shared/lenderSchema');
       const { eq } = await import('drizzle-orm');
       
-      const products = await db.select().from(lenderProducts).where(eq(lenderProducts.active, true));
+      // Query existing 13-column database
+      const dbProducts = await db.select().from(lenderProducts).where(eq(lenderProducts.active, true));
       
-      console.log(`✅ Served ${products.length} products from PostgreSQL database`);
+      // Transform to 22-field client interface
+      const transformedProducts = dbProducts.map(transformToClientSchema);
+      
+      console.log(`✅ Served ${transformedProducts.length} products from PostgreSQL database (transformed to 22-field schema)`);
       return res.status(200).json({ 
         success: true,
-        products, 
-        count: products.length,
-        source: "postgresql_database" 
+        products: transformedProducts, 
+        count: transformedProducts.length,
+        source: "postgresql_database_transformed" 
       });
     } catch (err) {
       console.error('❌ Failed to serve lender products from database:', err);

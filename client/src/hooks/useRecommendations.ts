@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { LenderProduct } from '@shared/lenderProductSchema';
+import type { LenderProduct } from '@shared/lenderSchema';
 import { getAmountRange, getRevenueMin } from "@/lib/fieldAccess";
 
 export interface Step1FormData {
@@ -16,31 +16,24 @@ export interface Step1FormData {
 
 export function useRecommendations(formStep1Data: Step1FormData) {
   /** 1 — pull products from normalized data source (authentic data only) */
-  const { data: products = [], isLoading, error } = useQuery<any[]>({
-    queryKey: ["normalized-lenders-cache-only"],
+  const { data: products = [], isLoading, error } = useQuery<LenderProduct[]>({
+    queryKey: ["lenderProducts"],
     queryFn: async () => {
-      try {
-        const { loadLenderProducts } = await import('../utils/lenderCache');
-        const cached = await loadLenderProducts();
-        
-        if (!cached || cached.length === 0) {
-          console.log('❌ [PRODUCTS] No cached products available from staff backend');
-          return [];
-        }
-        
-        console.log(`📦 [PRODUCTS] Loaded ${cached.length} authentic products from staff backend`);
-        return cached;
-      } catch (error) {
-        console.error('❌ [PRODUCTS] Error loading authentic products:', error);
+      console.log('🔄 [PRODUCTS] Fetching from API with 22-field schema...');
+      
+      const res = await fetch('/api/lender-products');
+      const data = await res.json();
+      
+      if (!data.success) {
+        console.log('❌ [PRODUCTS] Failed to fetch from API');
         return [];
       }
+      
+      console.log(`📦 [PRODUCTS] Loaded ${data.count} products with 22-field schema`);
+      return data.products;
     },
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchInterval: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: false
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
   });
 
   /** 2 — filter + score */
@@ -84,115 +77,100 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   
   const matches = (products as any[])
     .filter((p: any) => {
-      // Country check - exact match or multi-country (US/CA)
-      const selectedCountryCode = headquarters === "United States" ? "US" : "CA";
-      const countryMatch = p.country === selectedCountryCode || p.country === 'US/CA';
+      // ✅ STEP 2: Country check with 22-field schema
+      const targetCountry = headquarters === "United States" ? "United States" : "Canada";
+      const countryMatch = p.countryOffered === targetCountry;
       if (!countryMatch) {
-        failedProducts.push({product: p, reason: `Country mismatch: ${p.country} vs ${selectedCountryCode}`});
+        failedProducts.push({product: p, reason: `Country mismatch: ${p.countryOffered} vs ${targetCountry}`});
         return false;
       }
       
-      // Amount range check - ENHANCED DEBUG: Show all amount fields
-      const { min, max } = getAmountRange(p);
-      const amountMatch = fundingAmount >= min && fundingAmount <= max;
+          // ✅ STEP 2: Enhanced amount filtering with 22-field schema
+      const amountMatch = fundingAmount >= p.minimumLendingAmount && fundingAmount <= p.maximumLendingAmount;
       
-      // ENHANCED DEBUG: Show all possible amount fields to debug parsing issues
-      console.log(`🔍 [AMOUNT_DEBUG] ${p.name}:`, {
-        raw_fields: {
-          amount_min: p.amount_min,
-          amount_max: p.amount_max,
-          amountMin: p.amountMin,
-          amountMax: p.amountMax,
-          fundingMin: p.fundingMin,
-          fundingMax: p.fundingMax,
-          minAmount: p.minAmount,
-          maxAmount: p.maxAmount,
-          min_amount: p.min_amount,
-          max_amount: p.max_amount
-        },
-        parsed: { min, max },
-        fundingAmount,
-        amountMatch
+      console.log(`🔍 [AMOUNT_CHECK] ${p.productName}:`, {
+        range: `$${p.minimumLendingAmount.toLocaleString()}-$${p.maximumLendingAmount.toLocaleString()}`,
+        requested: `$${fundingAmount.toLocaleString()}`,
+        match: amountMatch ? '✅' : '❌'
       });
       
       if (!amountMatch) {
-        failedProducts.push({product: p, reason: `Amount out of range: $${min?.toLocaleString()}-$${max === Infinity ? 'unlimited' : max?.toLocaleString()} vs $${fundingAmount.toLocaleString()}`});
+        failedProducts.push({product: p, reason: `Amount out of range: $${p.minimumLendingAmount?.toLocaleString()}-$${p.maximumLendingAmount?.toLocaleString()} vs $${fundingAmount.toLocaleString()}`});
         return false;
       }
 
       // ✅ LINE OF CREDIT OVERRIDE RULE - Always include LOC if amount fits
-      const isLineOfCredit = p.category?.toLowerCase().includes('line of credit') || 
-                            p.category?.toLowerCase().includes('loc') ||
-                            p.category === 'Business Line of Credit';
+      const isLineOfCredit = p.productCategory?.toLowerCase().includes('line of credit') || 
+                            p.productCategory?.toLowerCase().includes('loc') ||
+                            p.productCategory === 'Line of Credit';
       if (isLineOfCredit) {
-        console.log(`🔍 [LOC_OVERRIDE] ${p.name}: FORCE INCLUDED due to Line of Credit rule`);
+        console.log(`🔍 [LOC_OVERRIDE] ${p.productName}: FORCE INCLUDED due to Line of Credit rule`);
         return true; // Skip all other validation for LOC products
       }
 
-      // Revenue requirement check - NEW: Add revenue filtering
-      const revenueMin = getRevenueMin(p);
+      // ✅ STEP 2: Revenue requirement check with 22-field schema
+      const revenueMin = p.minimumAverageMonthlyRevenue ? p.minimumAverageMonthlyRevenue * 12 : 0; // Convert monthly to annual
       const applicantRevenue = revenueLastYear || 0;
       const revenueMatch = applicantRevenue >= revenueMin;
-      if (!revenueMatch) {
+      if (!revenueMatch && revenueMin > 0) {
         failedProducts.push({product: p, reason: `Revenue too low: requires $${revenueMin?.toLocaleString()} vs $${applicantRevenue.toLocaleString()}`});
         return false;
       }
       
       // Enhanced debug logging for revenue filtering
       if (revenueMin > 0) {
-        console.log(`🔍 [REVENUE] ${p.name}: Required $${revenueMin.toLocaleString()}, User has $${applicantRevenue.toLocaleString()} → ${revenueMatch ? '✅' : '❌'}`);
+        console.log(`🔍 [REVENUE] ${p.productName}: Required $${revenueMin.toLocaleString()}, User has $${applicantRevenue.toLocaleString()} → ${revenueMatch ? '✅' : '❌'}`);
       }
       
-      // ✅ STRICT PRODUCT TYPE FILTERING - Fixed per user requirements
+      // ✅ STRICT PRODUCT TYPE FILTERING - Updated for 22-field schema
       if (formStep1Data.lookingFor === "equipment") {
         // ✅ STRICT: Only Equipment Financing products allowed when "equipment" selected
-        const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
+        const isEquipmentProduct = isEquipmentFinancingProduct(p.productCategory);
         if (!isEquipmentProduct) {
-          failedProducts.push({product: p, reason: `Excluded for Equipment Financing selection: category=${p.category}`});
-          console.log(`🔍 [EQUIPMENT_STRICT] ${p.name} (${p.category}): Excluded - not Equipment Financing`);
+          failedProducts.push({product: p, reason: `Excluded for Equipment Financing selection: category=${p.productCategory}`});
+          console.log(`🔍 [EQUIPMENT_STRICT] ${p.productName} (${p.productCategory}): Excluded - not Equipment Financing`);
           return false;
         }
       } else if (formStep1Data.lookingFor === "capital") {
         // ✅ STRICT: Only Working Capital and LOC products allowed when "capital" selected
-        const isCapitalProduct = isBusinessCapitalProduct(p.category);
-        if (p.category?.toLowerCase().includes('working')) {
-          console.log(`🔍 [CAPITAL_CHECK] "${p.name}" (${p.category}) → Capital Product: ${isCapitalProduct ? 'YES ✅' : 'NO ❌'}`);
+        const isCapitalProduct = isBusinessCapitalProduct(p.productCategory);
+        if (p.productCategory?.toLowerCase().includes('working')) {
+          console.log(`🔍 [CAPITAL_CHECK] "${p.productName}" (${p.productCategory}) → Capital Product: ${isCapitalProduct ? 'YES ✅' : 'NO ❌'}`);
         }
         if (!isCapitalProduct && !isLineOfCredit) {
-          failedProducts.push({product: p, reason: `Excluded for Working Capital selection: category=${p.category}`});
-          console.log(`🔍 [CAPITAL_STRICT] ${p.name} (${p.category}): Excluded - not Working Capital or LOC`);
+          failedProducts.push({product: p, reason: `Excluded for Working Capital selection: category=${p.productCategory}`});
+          console.log(`🔍 [CAPITAL_STRICT] ${p.productName} (${p.productCategory}): Excluded - not Working Capital or LOC`);
           return false;
         }
       } else if (formStep1Data.lookingFor === "both") {
         // ✅ HYBRID: Only hybrid-capable products (exclude pure equipment-only)
-        const isCapitalProduct = isBusinessCapitalProduct(p.category);
-        const isEquipmentProduct = isEquipmentFinancingProduct(p.category);
+        const isCapitalProduct = isBusinessCapitalProduct(p.productCategory);
+        const isEquipmentProduct = isEquipmentFinancingProduct(p.productCategory);
         
         // If it's an equipment-only product, exclude it when user wants "both"
         if (isEquipmentProduct && !isCapitalProduct) {
-          failedProducts.push({product: p, reason: `Equipment-only product excluded for 'both' selection: category=${p.category}`});
-          console.log(`🔍 [BOTH_FILTER] ${p.name}: Equipment-only product excluded for 'both' selection`);
+          failedProducts.push({product: p, reason: `Equipment-only product excluded for 'both' selection: category=${p.productCategory}`});
+          console.log(`🔍 [BOTH_FILTER] ${p.productName}: Equipment-only product excluded for 'both' selection`);
           return false;
         }
         
         // Only include capital products (which can be used for equipment too) or hybrid products
         if (!isCapitalProduct) {
-          failedProducts.push({product: p, reason: `Neither capital nor hybrid product: category=${p.category}`});
+          failedProducts.push({product: p, reason: `Neither capital nor hybrid product: category=${p.productCategory}`});
           return false;
         }
       }
       
       // Exclude Invoice Factoring if no accounts receivable
-      // Fix: Use accountsReceivableBalance (numeric) instead of accountsReceivable (string)
       if (formStep1Data.accountsReceivableBalance === 0 && 
-          (p.category.toLowerCase().includes('invoice') || p.category.toLowerCase().includes('factoring'))) {
+          (p.productCategory.toLowerCase().includes('invoice') || p.productCategory.toLowerCase().includes('factoring'))) {
         failedProducts.push({product: p, reason: `Invoice factoring excluded: no A/R balance`});
         return false;
       }
       
       return true;
     })
-    .map((p: any) => ({
+    .map((p: LenderProduct) => ({
       product: p,
       score: calculateScore(p, formStep1Data, headquarters, fundingAmount, revenueLastYear),
     }))
@@ -201,7 +179,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   /** 3 — aggregate to category rows */
   const categories = matches.reduce<Record<string, { score: number; count: number; products: typeof matches }>>(
     (acc: any, m: any) => {
-      const key = m.product.category;
+      const key = m.product.productCategory;
       if (!acc[key]) {
         acc[key] = { score: m.score, count: 0, products: [] };
       }
@@ -222,14 +200,14 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   });
   
   console.log("🔍 [STEP2] Working Capital products that passed:", 
-    (matches as any[]).filter((m: any) => m.product.category?.toLowerCase().includes('working')).length
+    (matches as any[]).filter((m: any) => m.product.productCategory?.toLowerCase().includes('working')).length
   );
   
   console.log("🔍 [STEP2] Equipment-only products excluded for 'both':", 
     failedProducts.filter(f => f.reason.includes('Equipment-only')).length
   );
   
-  console.log("🔍 [STEP2] Filtered out:", failedProducts.map(f => `${f.product.name}: ${f.reason}`));
+  console.log("🔍 [STEP2] Filtered out:", failedProducts.map(f => `${f.product.productName}: ${f.reason}`));
 
   // Data transparency: Show what authentic data is available when no matches found
   if (matches.length === 0 && (products as any[]).length > 0) {
@@ -329,25 +307,31 @@ function calculateScore(
 ): number {
   let score = 0;
 
-  // Geography match (25 points)
-  const targetCountry = headquarters === "United States" ? "US" : "CA";
-  if (product.geography.includes(targetCountry)) {
+  // Geography match (25 points) - Updated for 22-field schema
+  const targetCountry = headquarters === "United States" ? "United States" : "Canada";
+  if (product.countryOffered === targetCountry) {
     score += 25;
   }
 
-  // Funding range match (25 points)
-  if (fundingAmount >= product.minAmount && fundingAmount <= product.maxAmount) {
+  // Funding range match (25 points) - Updated for 22-field schema
+  if (fundingAmount >= product.minimumLendingAmount && fundingAmount <= product.maximumLendingAmount) {
     score += 25;
   }
 
-  // Industry match (25 points)
-  if (formData.industry && product.industries?.includes(formData.industry)) {
+  // Industry match (25 points) - Skip for now (not in 22-field schema yet)
+  // if (formData.industry && product.industries?.includes(formData.industry)) {
+  //   score += 25;
+  // }
+
+  // Revenue requirement match (25 points) - Updated for 22-field schema
+  if (!product.minimumAverageMonthlyRevenue || revenueLastYear >= (product.minimumAverageMonthlyRevenue * 12)) {
     score += 25;
   }
 
-  // Revenue requirement match (25 points)  
-  if (!product.minRevenue || revenueLastYear >= product.minRevenue) {
-    score += 25;
+  // ✅ STEP 2: LOC products get bonus points
+  if (product.productCategory.toLowerCase().includes('line of credit') || 
+      product.productCategory.toLowerCase().includes('credit')) {
+    score += 10;
   }
 
   return Math.min(score, 100);

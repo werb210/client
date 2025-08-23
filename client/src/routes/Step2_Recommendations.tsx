@@ -41,7 +41,7 @@ export default function Step2Recommendations() {
           selectedCategory,
           availableProducts: products.filter((p: any) => 
             !selectedCategory || 
-            p.type === selectedCategory
+            p.productCategory === selectedCategory
           ),
           totalProducts: products.length,
           totalCategories: categories.length,
