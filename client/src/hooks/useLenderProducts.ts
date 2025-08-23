@@ -22,22 +22,27 @@ export function useLenderProducts(): LenderProduct[] {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        // Try API endpoint first, fallback to static file
-        let res = await fetch("/api/lender-products");
+        // Try client-facing API first, fallback to local cache
+        let res = await fetch(`${import.meta.env.VITE_API_URL}/lender-products`, {
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_CLIENT_API_KEY}`,
+          },
+        });
         let data;
         
         if (res.ok) {
           const apiData = await res.json();
           data = apiData.products || apiData;
-          console.log(`✅ Loaded ${Array.isArray(data) ? data.length : 0} lender products from API cache`);
+          console.log(`✅ Loaded ${Array.isArray(data) ? data.length : 0} lender products from client API`);
         } else {
-          // Fallback to static file
+          console.warn(`⚠️ Client API failed (${res.status}), falling back to local cache`);
+          // Fallback to local cache
           res = await fetch("/data/lenderProducts.json");
           if (!res.ok) {
-            throw new Error("Failed to load from both API and static file");
+            throw new Error("Failed to load from both client API and local cache");
           }
           data = await res.json();
-          console.log(`✅ Loaded ${Array.isArray(data) ? data.length : 0} lender products from static cache`);
+          console.log(`✅ Loaded ${Array.isArray(data) ? data.length : 0} lender products from local cache`);
         }
         
         setProducts(Array.isArray(data) ? data : []);
@@ -57,24 +62,29 @@ export function useLenderProducts(): LenderProduct[] {
  */
 export const useLenderProductsQuery = () => {
   return useQuery({
-    queryKey: ["lender-products-local"],
+    queryKey: ["lender-products-client-api"],
     queryFn: async () => {
-      // Try API endpoint first, fallback to static file
-      let res = await fetch("/api/lender-products");
+      // Try client-facing API first, fallback to local cache
+      let res = await fetch(`${import.meta.env.VITE_API_URL}/lender-products`, {
+        headers: {
+          Authorization: `Bearer ${import.meta.env.VITE_CLIENT_API_KEY}`,
+        },
+      });
       let data;
       
       if (res.ok) {
         const apiData = await res.json();
         data = apiData.products || apiData;
-        console.log(`✅ Loaded ${data.length} lender products from API cache`);
+        console.log(`✅ Loaded ${data.length} lender products from client API`);
       } else {
-        // Fallback to static file
+        console.warn(`⚠️ Client API failed (${res.status}), falling back to local cache`);
+        // Fallback to local cache
         res = await fetch("/data/lenderProducts.json");
         if (!res.ok) {
-          throw new Error("Failed to load local lender products");
+          throw new Error("Failed to load from both client API and local cache");
         }
         data = await res.json();
-        console.log(`✅ Loaded ${data.length} lender products from static cache`);
+        console.log(`✅ Loaded ${data.length} lender products from local cache`);
       }
       
       return Array.isArray(data) ? data : [];

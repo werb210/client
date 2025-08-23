@@ -4,19 +4,24 @@
  */
 
 /**
- * ✅ ENABLED: Fetch lender products from local sync
+ * ✅ ENABLED: Fetch lender products from client API
  */
 export async function fetchLenderProducts() {
   try {
-    // Try API endpoint first, fallback to static file
-    let res = await fetch("/api/lender-products");
+    // Try client-facing API first, fallback to local cache
+    let res = await fetch(`${import.meta.env.VITE_API_URL}/lender-products`, {
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_CLIENT_API_KEY}`,
+      },
+    });
     let data;
     
     if (res.ok) {
       const apiData = await res.json();
       data = apiData.products || apiData;
     } else {
-      // Fallback to static file
+      console.warn(`⚠️ Client API failed (${res.status}), falling back to local cache`);
+      // Fallback to local cache
       res = await fetch("/data/lenderProducts.json");
       if (!res.ok) {
         throw new Error(`Failed to fetch from both sources: ${res.statusText}`);

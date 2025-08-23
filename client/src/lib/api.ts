@@ -1,11 +1,21 @@
-const API_BASE = import.meta.env.VITE_API_BASE;
+const API_BASE = import.meta.env.VITE_API_URL;
 
 /**
- * ❌ DISABLED: Client cannot fetch lender products
- * All lender data is processed server-side by Staff App
+ * ✅ ENABLED: Client-facing lender products API
+ * Uses dedicated client endpoint with authentication
  */
 export async function getLenderProducts() {
-  throw new Error("Lender product access restricted - handled server-side only");
+  const response = await fetch(`${API_BASE}/lender-products`, {
+    headers: {
+      Authorization: `Bearer ${import.meta.env.VITE_CLIENT_API_KEY}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch lender products: ${response.status}`);
+  }
+
+  return response.json();
 }
 
 /**
@@ -40,10 +50,10 @@ export async function uploadDocument(file: File, appId: string) {
 }
 
 /**
- * ❌ DISABLED: Legacy lender product fetch
+ * ✅ ENABLED: Fetch lender products from client API
  */
 export async function fetchLenderProducts() {
-  throw new Error("Lender product access restricted - handled server-side only");
+  return getLenderProducts();
 }
 
 /**
