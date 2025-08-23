@@ -1099,6 +1099,31 @@ app.use((req, res, next) => {
     });
   });
 
+  // ✅ NEW: Schema endpoint for staff app form generation
+  app.get('/api/schema/lender-products', (req: Request, res: Response) => {
+    try {
+      const { getLenderProductJsonSchema } = require("../shared/schemas/lenderProductSchema");
+      const schema = getLenderProductJsonSchema();
+      res.status(200).json({
+        success: true,
+        schema,
+        meta: {
+          version: "1.0.0",
+          description: "Lender product schema for client-staff synchronization",
+          fields: Object.keys(schema.properties).length,
+          generated: new Date().toISOString()
+        }
+      });
+      console.log("✅ Served lender product schema to staff app");
+    } catch (error) {
+      console.error("❌ Failed to generate schema:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to generate schema" 
+      });
+    }
+  });
+
   // API endpoint to serve local cache (alternative to static file)
   app.get('/api/lender-products', async (req: Request, res: Response) => {
     try {

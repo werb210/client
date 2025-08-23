@@ -1,32 +1,34 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
+import { LenderProductsResponseSchema, type LenderProduct } from "../../../shared/schemas/lenderProductSchema";
 
-// ✅ ENHANCED: Schema validation for live API integration
-const LenderProductSchema = z.object({
+// ✅ ENHANCED: Use shared schema with backward compatibility
+const BackwardCompatibleProductSchema = z.object({
+  id: z.string(),
+  lenderName: z.string().optional(),
+  productName: z.string().optional(),
+  name: z.string().optional(), // Legacy support
+  category: z.string(),
+  country: z.string().optional(),
+  minAmount: z.number().optional(),
+  maxAmount: z.number().optional(),
+  interestRate: z.number().optional(),
+  termLength: z.string().optional(),
+  documentsRequired: z.array(z.string()).optional(),
+  requiredDocuments: z.array(z.string()).optional(), // Legacy support
+  description: z.string().optional(),
+  updatedAt: z.string().optional(),
+}).passthrough(); // Allow additional fields for flexibility
+
+const BackwardCompatibleResponseSchema = z.object({
   ok: z.boolean(),
   count: z.number(),
-  products: z.array(
-    z.object({
-      id: z.string(),
-      lenderName: z.string().optional(),
-      productName: z.string().optional(),
-      name: z.string().optional(), // Support both name formats
-      category: z.string(),
-      country: z.string().optional(),
-      minAmount: z.number().optional(),
-      maxAmount: z.number().optional(),
-      interestRate: z.number().optional(),
-      termLength: z.string().optional(),
-      documentsRequired: z.array(z.string()).optional(),
-      requiredDocuments: z.array(z.string()).optional(), // Support both formats
-      description: z.string().optional(),
-      updatedAt: z.string().optional(),
-    }).passthrough() // Allow additional fields for flexibility
-  ),
+  products: z.array(BackwardCompatibleProductSchema),
 });
 
-interface LenderProduct {
+// Legacy interface for backward compatibility
+interface LegacyLenderProduct {
   id?: string;
   productId?: string;
   category?: string;
@@ -41,8 +43,8 @@ interface LenderProduct {
  * ✅ ENABLED: Load lender products from local sync
  * Products are synced from staff app and stored locally
  */
-export function useLenderProducts(): LenderProduct[] {
-  const [products, setProducts] = useState<LenderProduct[]>([]);
+export function useLenderProducts(): LegacyLenderProduct[] {
+  const [products, setProducts] = useState<LegacyLenderProduct[]>([]);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -95,14 +97,14 @@ export const useLenderProductsQuery = () => {
 /**
  * ✅ ENHANCED: Fetch with schema validation
  */
-export async function fetchLenderProducts(): Promise<LenderProduct[]> {
+export async function fetchLenderProducts(): Promise<LegacyLenderProduct[]> {
   try {
     // Try live API first with schema validation
     const res = await fetch(`${import.meta.env.VITE_API_URL}/lender-products`);
     
     if (res.ok) {
       const apiData = await res.json();
-      const parsed = LenderProductSchema.safeParse(apiData);
+      const parsed = BackwardCompatibleResponseSchema.safeParse(apiData);
       
       if (parsed.success) {
         console.log(`✅ Loaded ${parsed.data.count} validated lender products from live API`);
@@ -133,12 +135,12 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
 /**
  * ✅ ENABLED: Get products by category
  */
-export function useLenderProductsByCategory(category?: string): LenderProduct[] {
+export function useLenderProductsByCategory(category?: string): LegacyLenderProduct[] {
   const products = useLenderProducts();
   
   if (!category) return products;
   
-  return products.filter((product: LenderProduct) => 
+  return products.filter((product: LegacyLenderProduct) => 
     product.category?.toLowerCase() === category.toLowerCase() ||
     product.productCategory?.toLowerCase() === category.toLowerCase()
   );
@@ -151,7 +153,7 @@ export function useProductCategories(): string[] {
   const products = useLenderProducts();
   
   const categories = [...new Set(
-    products.map((p: LenderProduct) => p.category || p.productCategory).filter(Boolean)
+    products.map((p: LegacyLenderProduct) => p.category || p.productCategory).filter(Boolean)
   )];
   
   return categories as string[];
@@ -160,10 +162,10 @@ export function useProductCategories(): string[] {
 /**
  * ✅ ENABLED: Find product by ID
  */
-export function useLenderProduct(id?: string): LenderProduct | null {
+export function useLenderProduct(id?: string): LegacyLenderProduct | null {
   const products = useLenderProducts();
   
-  return products.find((p: LenderProduct) => p.id === id || p.productId === id) || null;
+  return products.find((p: LegacyLenderProduct) => p.id === id || p.productId === id) || null;
 }
 
 // Keep disabled functions for backward compatibility
@@ -173,6 +175,6 @@ export function useLenderProductsLive() {
 }
 
 // Export types for external use
-export type { LenderProduct };
-export type LenderProductsResponse = { products: LenderProduct[] };
+export type { LegacyLenderProduct };
+export type { LenderProduct, LenderProductsResponse } from "../../../shared/schemas/lenderProductSchema";
 export type LenderProductFilters = Record<string, any>;
