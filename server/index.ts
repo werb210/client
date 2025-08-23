@@ -1124,31 +1124,102 @@ app.use((req, res, next) => {
     }
   });
 
-  // ✅ STEP 1: 22-Field Schema API with Database Transformation
+  // ✅ HYBRID SYNC: 22-Field Schema API with Staff Backend + Database
   app.get('/api/lender-products', async (req: Request, res: Response) => {
     try {
-      const { db } = await import('./db');
-      const { lenderProducts, transformToClientSchema } = await import('../shared/lenderSchema');
-      const { eq } = await import('drizzle-orm');
+      const { transformToClientSchema } = await import('../shared/lenderSchema');
+      const forceLocal = req.query.source === 'local';
+      const forceStaff = req.query.source === 'staff';
       
-      // Query existing 13-column database
-      const dbProducts = await db.select().from(lenderProducts).where(eq(lenderProducts.active, true));
+      let allProducts = [];
+      let sources = [];
       
-      // Transform to 22-field client interface
-      const transformedProducts = dbProducts.map(transformToClientSchema);
+      // 1. Get local database products (if not forcing staff-only)
+      if (!forceStaff) {
+        try {
+          const { db } = await import('./db');
+          const { lenderProducts } = await import('../shared/lenderSchema');
+          const { eq } = await import('drizzle-orm');
+          
+          const dbProducts = await db.select().from(lenderProducts).where(eq(lenderProducts.active, true));
+          const localTransformed = dbProducts.map(transformToClientSchema);
+          
+          allProducts.push(...localTransformed);
+          sources.push(`local_db(${localTransformed.length})`);
+          console.log(`✅ Loaded ${localTransformed.length} products from local database`);
+        } catch (err) {
+          console.error('⚠️ Local database query failed:', err.message);
+        }
+      }
       
-      console.log(`✅ Served ${transformedProducts.length} products from PostgreSQL database (transformed to 22-field schema)`);
+      // 2. Get staff backend products (if not forcing local-only)
+      if (!forceLocal) {
+        try {
+          const { getLenderProducts } = await import('./services/lenderProductsCache');
+          const staffProducts = await getLenderProducts();
+          
+          if (staffProducts && staffProducts.length > 0) {
+            // Transform staff products to 22-field schema
+            const staffTransformed = staffProducts.map((product: any) => ({
+              id: product.id?.toString() || crypto.randomUUID(),
+              lenderName: product.lenderName || "External Lender",
+              productCategory: product.category || "Working Capital",
+              productName: product.name || "External Product",
+              minimumLendingAmount: parseFloat(product.minAmount || product.amountMin) || 10000,
+              maximumLendingAmount: parseFloat(product.maxAmount || product.amountMax) || 500000,
+              interestRateMinimum: parseFloat(product.interestRateMin) || 0.08,
+              interestRateMaximum: parseFloat(product.interestRateMax) || 0.25,
+              countryOffered: product.country || "United States",
+              rateType: product.rateType || "Fixed",
+              rateFrequency: "Monthly",
+              index: product.index || null,
+              termMinimum: product.termMin || 12,
+              termMaximum: product.termMax || 60,
+              minimumAverageMonthlyRevenue: product.requirements?.minMonthlyRevenue || null,
+              minimumCreditScore: product.requirements?.minCreditScore || null,
+              documentsRequired: product.requirements?.documents || [],
+              description: product.description || null,
+              externalId: `staff-${product.id}`,
+              isActive: true,
+              createdBy: 1,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }));
+            
+            allProducts.push(...staffTransformed);
+            sources.push(`staff_backend(${staffTransformed.length})`);
+            console.log(`✅ Loaded ${staffTransformed.length} products from staff backend`);
+          }
+        } catch (err) {
+          console.error('⚠️ Staff backend sync failed:', err.message);
+        }
+      }
+      
+      // 3. Deduplicate by external ID or name
+      const uniqueProducts = allProducts.reduce((acc, product) => {
+        const key = product.externalId || product.productName;
+        if (!acc.find(p => (p.externalId || p.productName) === key)) {
+          acc.push(product);
+        }
+        return acc;
+      }, []);
+      
+      const sourceDescription = sources.length > 0 ? sources.join(' + ') : 'none';
+      console.log(`✅ Served ${uniqueProducts.length} total products from: ${sourceDescription}`);
+      
       return res.status(200).json({ 
         success: true,
-        products: transformedProducts, 
-        count: transformedProducts.length,
-        source: "postgresql_database_transformed" 
+        products: uniqueProducts, 
+        count: uniqueProducts.length,
+        source: sourceDescription,
+        schema: "22_field_hybrid_sync"
       });
+      
     } catch (err) {
-      console.error('❌ Failed to serve lender products from database:', err);
+      console.error('❌ Failed to serve hybrid lender products:', err);
       return res.status(500).json({ 
         success: false,
-        error: "Failed to query database", 
+        error: "Failed to load products from any source", 
         products: [] 
       });
     }

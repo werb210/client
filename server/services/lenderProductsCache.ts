@@ -4,13 +4,13 @@ import axios from "axios";
 let lenderProductsCache: any[] = [];
 let lastCacheUpdate: string | null = null;
 
-const STAFF_API_URL = process.env.STAFF_API_URL || "https://staff.boreal.financial";
-const CLIENT_TOKEN = process.env.CLIENT_TOKEN || process.env.VITE_CLIENT_TOKEN;
+const STAFF_API_BASE = "https://staff.boreal.financial";
+const CLIENT_TOKEN = process.env.VITE_CLIENT_API_KEY || process.env.CLIENT_TOKEN;
 
 // Health check for production API
 async function checkProductionApiHealth(): Promise<boolean> {
   try {
-    const response = await axios.get(`${STAFF_API_URL}/api/health`, { timeout: 5000 });
+    const response = await axios.get(`${STAFF_API_BASE}/api/health`, { timeout: 5000 });
     return response.data?.status === "ok";
   } catch {
     return false;
@@ -20,10 +20,10 @@ async function checkProductionApiHealth(): Promise<boolean> {
 // ✅ Refresh lender products cache from PRODUCTION API
 export async function refreshLenderProductsCache(): Promise<any[]> {
   try {
-    console.log(`🔄 Refreshing lender products cache from PRODUCTION API: ${STAFF_API_URL}`);
+    console.log(`🔄 Refreshing lender products cache from PRODUCTION API: ${STAFF_API_BASE}`);
     
-    // Use PRODUCTION API endpoint instead of local
-    const response = await axios.get(`${STAFF_API_URL}/api/lender-products`, {
+    // ✅ CORRECTED: Use working staff backend endpoint  
+    const response = await axios.get(`${STAFF_API_BASE}/api/lender-products`, {
       timeout: 10000,
       headers: {
         'Accept': 'application/json',
@@ -32,17 +32,27 @@ export async function refreshLenderProductsCache(): Promise<any[]> {
       }
     });
     
-    if (response.data.success) {
+    // ✅ Handle both staff backend response formats
+    if (response.data && Array.isArray(response.data)) {
+      // Direct array format from staff backend
+      lenderProductsCache = response.data;
+    } else if (response.data.success && response.data.products) {
+      // Wrapped format with success flag
       lenderProductsCache = response.data.products;
-      lastCacheUpdate = new Date().toISOString();
-      
-      console.log(`✅ Cache refreshed: ${lenderProductsCache.length} lender products loaded`);
-      console.log(`📅 Last updated: ${lastCacheUpdate}`);
-      
-      return lenderProductsCache;
+    } else if (response.data.products) {
+      // Just products array
+      lenderProductsCache = response.data.products;
     } else {
-      throw new Error(`Local API returned error: ${response.data.error}`);
+      throw new Error(`Unexpected staff backend response format: ${JSON.stringify(response.data).substring(0, 200)}`);
     }
+    
+    lastCacheUpdate = new Date().toISOString();
+    
+    console.log(`✅ Cache refreshed from staff backend: ${lenderProductsCache.length} lender products loaded`);
+    console.log(`📅 Last updated: ${lastCacheUpdate}`);
+    console.log(`🔄 Staff backend sync established successfully`);
+    
+    return lenderProductsCache;
     
   } catch (error) {
     console.error("❌ Failed to refresh lender products cache:", error.message);
