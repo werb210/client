@@ -1,0 +1,81 @@
+PART 2 — CLIENT APPLICATION FIXES
+
+📍 Repo: https://github.com/werb210/client
+
+1. Remove Pipeline References
+
+File: src/lib/api.ts
+🔴 Remove: getPipelineCards() and any imports of /api/pipeline/cards.
+
+✅ Keep Only These API Helpers:
+
+const API_BASE = import.meta.env.VITE_API_BASE || "https://staff.boreal.financial/api";
+
+export async function getLenderProducts() {
+  const res = await fetch(`${API_BASE}/public-lender-products`);
+  if (!res.ok) throw new Error("Failed to fetch lender products");
+  return res.json();
+}
+
+export async function submitApplication(data: any) {
+  const res = await fetch(`${API_BASE}/applications`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to submit application");
+  return res.json();
+}
+
+export async function uploadDocument(file: File, appId: string) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("applicationId", appId);
+
+  const res = await fetch(`${API_BASE}/documents`, { method: "POST", body: formData });
+  if (!res.ok) throw new Error("Failed to upload document");
+  return res.json();
+}
+
+2. Update Environment Config
+
+File: client/.env.production
+
+VITE_API_BASE=https://staff.boreal.financial/api
+
+3. Rebuild Client App
+npm run build
+npm run preview
+
+4. Validate Client Uses Live Products
+curl -s https://staff.boreal.financial/api/public-lender-products | jq '.products | length'
+
+
+✅ Should return 32 lender products instead of fallback 11.
+
+PART 3 — TEST PLAN
+Test	Expected Result
+Client lender products UI	Shows 32 live products from staff DB
+Client uploads document	Stored in S3, visible in staff app
+Staff pipeline cards	Generated from DB only, unaffected by client
+Protected staff APIs	/api/pipeline/cards requires Bearer ✅
+Public lender products API	No auth needed, serves 32 products ✅
+PART 4 — DEPLOYMENT
+
+Push to Staff App repo
+
+git add .
+git commit -m "Fix: Separate client APIs from staff Sales Pipeline"
+git push origin main
+
+
+Push to Client App repo
+
+git add .
+git commit -m "Fix: Use public lender products API, remove pipeline calls"
+git push origin main
+
+
+Restart Both Apps in Replit
+
+npm run build && npm start

@@ -1,38 +1,34 @@
-// client/src/lib/api.ts
-const API_BASE = import.meta.env.VITE_API_BASE_URL;
+const API_BASE = import.meta.env.VITE_API_BASE || "https://staff.boreal.financial/api";
 
 export async function getLenderProducts() {
-  const res = await fetch(`${API_BASE}/lender-products`);
+  const res = await fetch(`${API_BASE}/public-lender-products`);
   if (!res.ok) throw new Error("Failed to fetch lender products");
-  const { data } = await res.json();
-  return data;
+  return res.json();
 }
 
-export async function getPipelineCards() {
-  const res = await fetch(`${API_BASE}/pipeline/cards`);
-  if (!res.ok) throw new Error("Failed to fetch pipeline cards");
-  const { data } = await res.json();
-  return data;
+export async function submitApplication(data: any) {
+  const res = await fetch(`${API_BASE}/applications`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to submit application");
+  return res.json();
+}
+
+export async function uploadDocument(file: File, appId: string) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("applicationId", appId);
+
+  const res = await fetch(`${API_BASE}/documents`, { method: "POST", body: formData });
+  if (!res.ok) throw new Error("Failed to upload document");
+  return res.json();
 }
 
 // Legacy compatibility
 export async function fetchLenderProducts() {
   return await getLenderProducts();
-}
-
-export async function fetchFromProduction(path: string) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!res.ok) {
-    console.error(`Production API error [${res.status}] on ${path}`);
-    throw new Error(`Failed to fetch ${path}`);
-  }
-
-  return res.json();
 }
 
 // Legacy compatibility wrapper for existing code that uses apiFetch
