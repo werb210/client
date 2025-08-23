@@ -1,0 +1,44 @@
+Lender Products Table Schema
+export const lenderProducts = pgTable("lender_products", {
+  id: serial("id").primaryKey(),
+  lenderName: text("lender_name").notNull(),
+  productCategory: text("product_category").notNull(), // SBA, Equipment, Working Capital, Term Loan, etc.
+  productName: text("product_name").notNull(),
+  minimumLendingAmount: integer("minimum_lending_amount").notNull(),
+  maximumLendingAmount: integer("maximum_lending_amount").notNull(),
+  interestRateMinimum: real("interest_rate_minimum").notNull(), // stored as decimal (e.g., 0.05 for 5%)
+  interestRateMaximum: real("interest_rate_maximum").notNull(),
+  countryOffered: text("country_offered").notNull(), // 'United States' or 'Canada'
+  rateType: text("rate_type").notNull(), // 'Fixed' or 'Floating'
+  rateFrequency: text("rate_frequency").notNull().default("Monthly"), // 'Monthly' or 'Annually'
+  index: text("index"), // Prime, SOFR, etc. (optional, mainly for floating rates)
+  termMinimum: integer("term_minimum").notNull(), // in months
+  termMaximum: integer("term_maximum").notNull(), // in months
+  minimumAverageMonthlyRevenue: integer("minimum_average_monthly_revenue"), // minimum monthly revenue requirement
+  minimumCreditScore: integer("minimum_credit_score"), // minimum credit score requirement
+  documentsRequired: text("documents_required").array(), // array of document types
+  description: text("description"), // optional product description
+  externalId: text("external_id"), // for tracking products from external APIs, must be unique when present
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+Insert Schema and Types
+There's no separate insert schema defined for lender products in your current codebase, but you can create one if needed:
+
+export const insertLenderProductSchema = createInsertSchema(lenderProducts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type LenderProduct = typeof lenderProducts.$inferSelect;
+export type InsertLenderProduct = z.infer<typeof insertLenderProductSchema>;
+Key Details:
+Single Table Design: Lender information (name) is stored within each product record rather than in a separate lenders table
+Product Categories: SBA, Equipment, Working Capital, Term Loan, etc.
+Financial Details: Min/max amounts, interest rates, terms
+Requirements: Credit score minimums, revenue requirements, required documents
+Geographic: Country restrictions
+External Integration: externalId field for API integrations
+Activity Tracking: isActive flag and audit fields
