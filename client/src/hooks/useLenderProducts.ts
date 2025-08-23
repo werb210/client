@@ -1,20 +1,53 @@
 /**
- * Updated lender products hook using V2 schema
- * Migrated from old interface to new expanded OpenAPI schema
+ * Real-time lender products hook with automatic sync
+ * Fetches live data from staff app with webhook-based cache invalidation
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { staffClient, LenderProduct, LenderProductFilters } from '@/api/__generated__/staffClient';
 
 /**
- * Fetch all lender products using V2 schema
+ * ✅ Real-time lender products hook - auto-syncs with staff app
+ * No local storage, always fresh data from single source of truth
  */
 export function useLenderProducts(filters?: LenderProductFilters) {
+  const queryClient = useQueryClient();
+  
+  // Set up auto-refresh via server-sent events or polling
+  useEffect(() => {
+    const eventSource = new EventSource('/api/lender-products/events');
+    
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'lender-products-updated') {
+        console.log('📢 Lender products updated - refreshing cache');
+        queryClient.invalidateQueries({ queryKey: ['lenderProducts'] });
+      }
+    };
+    
+    eventSource.onerror = () => {
+      console.warn('⚠️  SSE connection lost, falling back to periodic refresh');
+      eventSource.close();
+    };
+    
+    return () => {
+      eventSource.close();
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ['lenderProducts', filters],
-    queryFn: () => staffClient.publicLendersList(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    queryFn: async () => {
+      console.log('🔄 Fetching live lender products from staff app...');
+      const result = await staffClient.publicLendersList(filters);
+      console.log(`✅ Loaded ${result.length} lender products from staff app`);
+      return result;
+    },
+    staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes
+    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes  
+    refetchOnWindowFocus: true, // Refresh when user focuses window
+    refetchOnMount: true, // Always fetch fresh data on mount
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });

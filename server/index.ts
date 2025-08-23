@@ -21,6 +21,8 @@ import translateRouter from "./routes/translate.js";
 import statusRouter from "./routes/status.js";
 import handoffRouter from "./routes/handoff.js";
 import chatbotTrainingRouter from "./routes/chatbotTraining";
+import lenderProductsRouter from "./routes/lenderProducts";
+import webhooksRouter from "./routes/webhooks";
 import notificationsRouter from "./routes/notifications";
 import { handleChatEscalation, getEscalationStatus } from "./routes/chatEscalation";
 import { logUploadEvent, auditUploadAttempt, ZERO_DOCUMENTS_QUERY } from "./utils/uploadStabilization.js";
@@ -1297,6 +1299,8 @@ app.use((req, res, next) => {
   app.use('/api', statusRouter);
   app.use('/api', handoffRouter);
   app.use('/api', chatbotTrainingRouter);
+  app.use('/api/lender-products', lenderProductsRouter);
+  app.use('/webhooks', webhooksRouter);
   app.use('/api/notifications', notificationsRouter);
   
   // Client-specific notification routes

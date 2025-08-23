@@ -101,6 +101,7 @@ import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
 import FullApplicationSubmissionTest from "@/pages/FullApplicationSubmissionTest";
 import AutoSubmitApplicationTest from "@/pages/AutoSubmitApplicationTest";
+import LenderProductSyncDemo from "@/pages/LenderProductSyncDemo";
 
 import BackendRequestTest from "@/pages/BackendRequestTest";
 import WorkflowTestPage from "@/routes/WorkflowTestPage";
@@ -309,6 +310,7 @@ export function MainLayout() {
       <Route path="/kyc-demo" component={KycDemo} />
       <Route path="/lender/access" component={LenderPortal} />
       <Route path="/lender-demo" component={LenderDemo} />
+      <Route path="/lender-product-sync-demo" component={LenderProductSyncDemo} />
       <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} />
       <Route path="/advanced-chatbot-test" component={() => <ChatBotTest />} />
       <Route path="/chatbot-dashboard" component={() => <ChatBotDashboard />} />
