@@ -123,11 +123,12 @@ export default function FullApplicationSubmissionTest() {
     } catch (error) {
       console.error('❌ Application submission failed:', error);
       
-      setSubmissionResult({ error: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setSubmissionResult({ error: errorMessage });
       
       toast({
         title: "Application Submission Failed",
-        description: error.message || 'An unexpected error occurred during submission.',
+        description: errorMessage || 'An unexpected error occurred during submission.',
         variant: "destructive",
       });
     } finally {

@@ -100,6 +100,7 @@ import ApiConnectivityTest from "@/pages/ApiConnectivityTest";
 import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
 import FullApplicationSubmissionTest from "@/pages/FullApplicationSubmissionTest";
+import AutoSubmitApplicationTest from "@/pages/AutoSubmitApplicationTest";
 
 import BackendRequestTest from "@/pages/BackendRequestTest";
 import WorkflowTestPage from "@/routes/WorkflowTestPage";
@@ -189,6 +190,7 @@ export function MainLayout() {
       <Route path="/list-lender-categories" component={ListLenderCategories} />
       <Route path="/equipment-financing-fix-test" component={EquipmentFinancingFixTest} />
       <Route path="/full-application-test" component={FullApplicationSubmissionTest} />
+      <Route path="/auto-submit-test" component={AutoSubmitApplicationTest} />
 
       <Route path="/backend-request-test" component={BackendRequestTest} />
       <Route path="/validation-test" component={ValidationTestPage} />

@@ -28,6 +28,6 @@ export const STAFF_API = new Proxy({}, {
     if (prop === 'toString' || prop === Symbol.toPrimitive || prop === 'valueOf') {
       return () => getStaffApiUrl();
     }
-    return getStaffApiUrl()[prop as keyof string];
+    return (getStaffApiUrl() as any)[prop as keyof string];
   }
 }) as string;
