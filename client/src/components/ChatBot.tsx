@@ -127,49 +127,95 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-white shadow-2xl">
-        <CardHeader className="bg-gray-50 border-b">
-          <CardTitle className="flex items-center justify-between text-gray-900">
-            Report an Issue
-            <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-gray-200">
-              <CloseIcon />
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 bg-white">
+    <div 
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
+      style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+        backdropFilter: 'blur(2px)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-2xl border-0 max-w-lg w-full mx-4"
+        style={{
+          minHeight: '400px',
+          maxHeight: '90vh',
+          backgroundColor: '#ffffff',
+          border: 'none',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        }}
+      >
+        {/* Header */}
+        <div 
+          className="px-6 py-4 border-b bg-gray-50 rounded-t-lg"
+          style={{ borderBottom: '1px solid #e5e7eb' }}
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">Report an Issue</h2>
+            <button 
+              onClick={onClose}
+              className="p-2 rounded-md hover:bg-gray-200 transition-colors"
+              style={{ border: 'none', backgroundColor: 'transparent' }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+        
+        {/* Content */}
+        <div className="px-6 py-4 space-y-4">
           <div>
-            <label className="text-sm font-medium text-gray-700">Describe the issue:</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Describe the issue:
+            </label>
             <textarea
               value={reportText}
               onChange={(e) => setReportText(e.target.value)}
               placeholder="Please describe what went wrong or what you were expecting..."
-              className="w-full h-32 mt-2 p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full h-32 p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               disabled={isSubmitting}
+              style={{
+                fontSize: '14px',
+                lineHeight: '1.4'
+              }}
             />
           </div>
-          <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+          
+          <div 
+            className="text-xs text-gray-600 bg-blue-50 p-3 rounded-md"
+            style={{ backgroundColor: '#eff6ff', border: '1px solid #dbeafe' }}
+          >
             💡 Your conversation history and a screenshot will be included to help us understand the context.
           </div>
-          <div className="flex gap-3 justify-end pt-2">
-            <Button 
-              variant="outline" 
-              onClick={onClose} 
+        </div>
+        
+        {/* Footer */}
+        <div className="px-6 py-4 bg-gray-50 rounded-b-lg border-t">
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
             >
               Cancel
-            </Button>
-            <Button 
-              onClick={submitReport} 
+            </button>
+            <button
+              onClick={submitReport}
               disabled={!reportText.trim() || isSubmitting}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 transition-colors"
             >
               {isSubmitting ? 'Capturing & Sending...' : 'Send Report with Screenshot'}
-            </Button>
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
