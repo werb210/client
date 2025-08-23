@@ -7,6 +7,7 @@ import { useLenderProducts as useLenderProductsAPI } from '@/api/lenderProducts'
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { staffClient, LenderProduct, LenderProductFilters } from '@/api/__generated__/staffClient';
+import { fetchFromProduction } from '@/lib/api';
 
 /**
  * ✅ WebSocket live updates hook for lender products
@@ -62,11 +63,18 @@ export function useLenderProductsLive() {
 }
 
 /**
- * ✅ Main export - Single Block Fix implementation
- * Uses the consolidated API hook with WebSocket integration
+ * ✅ Main export - Production API implementation
+ * Uses fetchFromProduction with authentication
  */
 export function useLenderProducts(filters?: LenderProductFilters) {
-  return useLenderProductsAPI();
+  return useQuery({
+    queryKey: ["lender-products", filters],
+    queryFn: () => fetchFromProduction("/api/lender-products"),
+    staleTime: 1 * 60 * 1000, // 1 minute
+    gcTime: 10 * 60 * 1000, // 10 minutes 
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
 }
 
 /**
