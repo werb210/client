@@ -15,6 +15,7 @@ export const cfg = {
   // Authentication Tokens
   clientToken: process.env.VITE_CLIENT_APP_SHARED_TOKEN || process.env.CLIENT_APP_SHARED_TOKEN!,
   signNowToken: process.env.SIGNNOW_API_KEY!,
+  clientSyncSecret: process.env.CLIENT_SYNC_SECRET || 'dev_sync_secret_2024',
   
   // SignNow Configuration  
   templateId: process.env.TEMPLATE_ID_PROD,
@@ -40,6 +41,7 @@ export const cfg = {
 if (cfg.nodeEnv === 'production') {
   const requiredSecrets = {
     CLIENT_APP_SHARED_TOKEN: cfg.clientToken,
+    // CLIENT_SYNC_SECRET: cfg.clientSyncSecret, // Optional in development
     // SIGNNOW_API_KEY: cfg.signNowToken // Temporarily disabled for deployment
   };
   

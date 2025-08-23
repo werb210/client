@@ -29,9 +29,29 @@ router.get("/sync", async (req, res) => {
   }
 });
 
-// ✅ CLIENT APP PATCH - Complete replacement sync endpoint (POST)
+// ✅ CLIENT APP PATCH - Secure complete replacement sync endpoint (POST)
 router.post("/sync", async (req, res) => {
   try {
+    // Validate staff authorization
+    const authHeader = req.headers.authorization;
+    const expectedAuth = `Bearer ${process.env.CLIENT_SYNC_SECRET}`;
+    
+    if (!process.env.CLIENT_SYNC_SECRET) {
+      console.error("❌ CLIENT_SYNC_SECRET not configured");
+      return res.status(500).json({ 
+        success: false, 
+        error: "Server configuration error" 
+      });
+    }
+    
+    if (authHeader !== expectedAuth) {
+      console.warn("❌ Unauthorized sync attempt from:", req.ip);
+      return res.status(401).json({ 
+        success: false, 
+        error: "Unauthorized - invalid sync credentials" 
+      });
+    }
+
     const { products } = req.body;
     
     if (!products || !Array.isArray(products)) {
