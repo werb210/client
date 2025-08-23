@@ -68,7 +68,8 @@ export async function fetchLenderProducts(): Promise<LenderProduct[]> {
     return [];
   } catch (error) {
     console.error('[LENDER-PRODUCTS] ❌ Error fetching products:', error);
-    console.error('[LENDER-PRODUCTS] Error details:', error.message, error.stack);
+    const err = error as Error;
+    console.error('[LENDER-PRODUCTS] Error details:', err.message, err.stack);
     return [];
   }
 }

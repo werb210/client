@@ -70,7 +70,8 @@ export async function loadLenderProducts(): Promise<LenderProduct[] | null> {
  */
 export async function loadLastFetchTime(): Promise<number | null> {
   try {
-    return await get(TIMESTAMP_KEY);
+    const timestamp = await get(TIMESTAMP_KEY);
+    return timestamp ?? null;
   } catch (error) {
     console.error('[CACHE] ❌ Failed to load timestamp:', error);
     return null;
@@ -82,7 +83,8 @@ export async function loadLastFetchTime(): Promise<number | null> {
  */
 export async function loadCacheSource(): Promise<string | null> {
   try {
-    return await get(SOURCE_KEY);
+    const source = await get(SOURCE_KEY);
+    return source ?? null;
   } catch (error) {
     console.error('[CACHE] ❌ Failed to load source:', error);
     return null;
@@ -94,7 +96,8 @@ export async function loadCacheSource(): Promise<string | null> {
  */
 export async function loadCacheMetadata(): Promise<CacheMetadata | null> {
   try {
-    return await get(METADATA_KEY);
+    const metadata = await get(METADATA_KEY);
+    return metadata ?? null;
   } catch (error) {
     console.error('[CACHE] ❌ Failed to load metadata:', error);
     return null;
@@ -160,7 +163,7 @@ export async function getCacheStats() {
       source: 'unknown',
       metadata: null,
       cacheAge: null,
-      error: error.message
+      error: (error as Error).message
     };
   }
 }

@@ -41,15 +41,16 @@ export function validateApplicationPayload(payload: any): { isValid: boolean; mi
 
   // Check each step for required fields
   Object.entries(REQUIRED_FIELDS).forEach(([stepKey, requiredFields]) => {
+    const requiredFieldsArray = [...requiredFields] as string[];
     const stepData = payload[stepKey];
     if (!stepData) {
-      missingFields[stepKey] = requiredFields;
+      missingFields[stepKey] = requiredFieldsArray;
       isValid = false;
       return;
     }
 
     const stepMissing: string[] = [];
-    requiredFields.forEach(field => {
+    requiredFieldsArray.forEach(field => {
       let fieldFound = false;
       
       // Check primary field name
@@ -61,7 +62,7 @@ export function validateApplicationPayload(payload: any): { isValid: boolean; mi
       if (!fieldFound && FIELD_ALIASES[stepKey as keyof typeof FIELD_ALIASES]) {
         const aliases = FIELD_ALIASES[stepKey as keyof typeof FIELD_ALIASES][field as keyof typeof FIELD_ALIASES[keyof typeof FIELD_ALIASES]];
         if (aliases) {
-          aliases.forEach(alias => {
+          [...aliases].forEach(alias => {
             if (stepData[alias] !== undefined && stepData[alias] !== null && stepData[alias] !== "") {
               fieldFound = true;
             }
@@ -196,7 +197,8 @@ class StaffApiClient {
 
       return response.json();
     } catch (error) {
-      console.warn('[STAFF_API] Request failed:', error.message || error);
+      const err = error as Error;
+      console.warn('[STAFF_API] Request failed:', err.message || error);
       throw error;
     }
   }
