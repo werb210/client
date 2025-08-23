@@ -1,0 +1,97 @@
+Alright — we’ll run a **full schema mismatch audit** between the **Client Application** and **Staff Application**.
+The goal is to **verify** that the database fields, API contracts, and syncing logic for **Lenders**, **Lender Products**, and **Applications** are perfectly aligned.
+We’ll identify **all mismatches** and output a clear report of what’s broken, why the client only sees 2 products while the staff app has 32, and how to fix it.
+
+---
+
+## **Plan: Deep Schema Mismatch Test**
+
+### **Step 1. API Contract Dump**
+
+* Pull all relevant schemas from both apps:
+
+  * **Lenders** (`/api/lenders`)
+  * **Lender Products** (`/api/lender-products`)
+  * **Applications** (`/api/applications`)
+* Do this for:
+
+  * **Staff app** (`staff.boreal.financial`)
+  * **Client app** (`client.boreal.financial`)
+* Save the raw JSON.
+
+---
+
+### **Step 2. Schema Compare**
+
+We’ll compare field-by-field:
+
+* Field names
+* Data types
+* Required vs. optional
+* Relationships:
+
+  * `lender_id` ↔ `lender_products.lender_id`
+  * `application.lender_product_id` ↔ `lender_products.id`
+* Check for deprecated or missing fields.
+
+---
+
+### **Step 3. Data Consistency Test**
+
+* Cross-check **IDs** in both apps.
+* Find lender products in staff app that **do not exist** in the client app.
+* Detect any records where the client expects a field that doesn’t exist in the staff DB, or vice versa.
+
+---
+
+### **Step 4. Sync Logic Verification**
+
+* Check the client app’s sync mechanism:
+
+  * Does it fetch from `/api/lender-products/sync`?
+  * Does it filter out products missing required fields?
+  * Does it skip lenders missing names?
+* If the client silently filters out products, we’ll flag that.
+
+---
+
+### **Step 5. Deliverable**
+
+I’ll output a **full mismatch report**:
+
+```yaml
+Lender Products:
+  Total Staff: 32
+  Total Client: 2
+  Missing in Client:
+    - 25 products with missing lender names
+    - 5 products mismatched due to schema fields
+  Fixes:
+    - Populate missing lender names OR adjust client filter
+    - Align product schema between apps
+
+Applications:
+  Schema mismatch: ✅/❌
+  ID mapping: ✅/❌
+Lenders:
+  Schema mismatch: ✅/❌
+  ID mapping: ✅/❌
+```
+
+---
+
+## **Next Step**
+
+I need to pull **all JSON payloads** from both apps for these endpoints.
+Do you want me to:
+
+1. Use your **production API** for both apps (recommended)?
+2. Or use the **local Replit dev environment** for the audit?
+
+If we want **live data**, I’ll connect directly to:
+
+* **Staff API** → `https://staff.boreal.financial/api`
+* **Client API** → `https://client.boreal.financial/api`
+
+Which do you want?
+Live production will give us the **real mismatches** behind the missing 30 lender products.
