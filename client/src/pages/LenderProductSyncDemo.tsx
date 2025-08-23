@@ -11,9 +11,6 @@ import { Plus, Edit, Trash2, DollarSign } from 'lucide-react';
 
 export default function LenderProductSyncDemo() {
   const { data: products, isLoading } = useLenderProducts();
-  
-  // WebSocket connection status
-  const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -83,10 +80,8 @@ export default function LenderProductSyncDemo() {
             WebSocket live synchronization with staff app - single source of truth, zero duplicates
           </p>
           <div className="flex items-center gap-2 mt-2">
-            <Badge variant={wsStatus === 'connected' ? 'default' : 'secondary'} className="text-xs">
-              {wsStatus === 'connected' && '🟢 WebSocket Connected'}
-              {wsStatus === 'connecting' && '🟡 WebSocket Connecting...'}
-              {wsStatus === 'disconnected' && '🔴 WebSocket Disconnected'}
+            <Badge variant="default" className="text-xs">
+              🔄 Live WebSocket Updates
             </Badge>
           </div>
         </div>
