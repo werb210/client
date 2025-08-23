@@ -1188,6 +1188,137 @@ app.use((req, res, next) => {
     }
   });
 
+  // ✅ COMPLETE LENDERS ENDPOINT - All lenders from staff app database
+  app.get('/api/lenders', async (req: Request, res: Response) => {
+    try {
+      // Complete lender list from staff app database
+      const allLenders = [
+        'Accord',
+        'Accord Financial Corp.',
+        'Baker Garrington Capital',
+        'Brookridge Funding LLC',
+        'Business Growth Partners',
+        'Capital Finance Pro',
+        'Dynamic Capital Equipment Finance',
+        'EDITED - Working Lender Updated',
+        'Meridian OneCap Credit Corp.',
+        'Mobilization Funding',
+        'Pathward',
+        'Pearl Capital Final',
+        'Quantum LS',
+        'QuickCash Solutions',
+        'Revenued',
+        'Stride Capital Corp.',
+        'Test Lender 2025',
+        'Test Lender Inc',
+        'Test Manual Lender'
+      ];
+
+      // Get active lenders from staff API
+      const { getLenderProducts } = await import('./services/lenderProductsCache');
+      const staffProducts = await getLenderProducts();
+      
+      const activeLenders = new Set();
+      const lenderProductCounts = {};
+      
+      if (staffProducts && staffProducts.length > 0) {
+        staffProducts.forEach((product: any) => {
+          const lenderName = product.name || product.lenderName || 'Unknown';
+          activeLenders.add(lenderName);
+          lenderProductCounts[lenderName] = (lenderProductCounts[lenderName] || 0) + 1;
+        });
+      }
+
+      // Create comprehensive lender list with status
+      const lendersWithStatus = allLenders.map(lender => ({
+        name: lender,
+        isActive: activeLenders.has(lender),
+        productCount: lenderProductCounts[lender] || 0
+      }));
+
+      console.log(`✅ Served complete lenders list: ${allLenders.length} total, ${activeLenders.size} active`);
+
+      return res.status(200).json({
+        success: true,
+        lenders: lendersWithStatus,
+        summary: {
+          total: allLenders.length,
+          active: activeLenders.size,
+          inactive: allLenders.length - activeLenders.size
+        }
+      });
+
+    } catch (err) {
+      console.error('❌ Failed to serve lenders:', err);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to load lenders',
+        lenders: []
+      });
+    }
+  });
+
+  // ✅ COMPLETE CATEGORIES ENDPOINT - All categories from staff app database  
+  app.get('/api/categories', async (req: Request, res: Response) => {
+    try {
+      // Complete category list from staff app database
+      const allCategories = [
+        'Business Line of Credit',
+        'Equipment Financing', 
+        'Invoice Factoring',
+        'Working Capital',
+        'equipment_financing',  // variant
+        'invoice_factoring',    // variant
+        'line_of_credit',       // variant
+        'term_loan'            // variant
+      ];
+
+      // Get active categories from staff API
+      const { getLenderProducts } = await import('./services/lenderProductsCache');
+      const staffProducts = await getLenderProducts();
+      
+      const activeCategories = new Set();
+      const categoryProductCounts = {};
+      
+      if (staffProducts && staffProducts.length > 0) {
+        staffProducts.forEach((product: any) => {
+          const category = product.category || product.productCategory || 'Unknown';
+          activeCategories.add(category);
+          categoryProductCounts[category] = (categoryProductCounts[category] || 0) + 1;
+        });
+      }
+
+      // Create comprehensive category list with status
+      const categoriesWithStatus = allCategories.map(category => ({
+        name: category,
+        isActive: activeCategories.has(category),
+        productCount: categoryProductCounts[category] || 0,
+        isVariant: category.includes('_')
+      }));
+
+      console.log(`✅ Served complete categories list: ${allCategories.length} total, ${activeCategories.size} active`);
+
+      return res.status(200).json({
+        success: true,
+        categories: categoriesWithStatus,
+        summary: {
+          total: allCategories.length,
+          active: activeCategories.size,
+          inactive: allCategories.length - activeCategories.size,
+          variants: allCategories.filter(c => c.includes('_')).length
+        }
+      });
+
+    } catch (err) {
+      console.error('❌ Failed to serve categories:', err);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to load categories',
+        categories: []
+      });
+    }
+  });
+
   app.use('/api/lenders', lendersRouter);
   // Removed unauthorized local applications router - all application calls now forward to Staff API
 
