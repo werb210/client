@@ -48,6 +48,12 @@ console.log('REPLIT_ENVIRONMENT:', process.env.REPLIT_ENVIRONMENT);
 console.log('🧪 STAFF_API_URL at runtime:', cfg.staffApiUrl);
 console.log('🧪 Environment VITE_STAFF_API_URL:', process.env.VITE_STAFF_API_URL);
 
+// Initialize lender products on startup
+import { initLenderProducts } from './services/lenderProducts';
+initLenderProducts().catch(err => {
+  console.error('❌ Failed to initialize lender products:', err);
+});
+
 // Production-ready CORS configuration
 app.use((req, res, next) => {
   const origin = req.headers.origin;
