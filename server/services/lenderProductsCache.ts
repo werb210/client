@@ -7,16 +7,27 @@ let lastCacheUpdate: string | null = null;
 const STAFF_API_URL = process.env.STAFF_API_URL || "https://staff.boreal.financial";
 const CLIENT_TOKEN = process.env.CLIENT_TOKEN || process.env.VITE_CLIENT_TOKEN;
 
-// ✅ Refresh lender products cache from local API
+// Health check for production API
+async function checkProductionApiHealth(): Promise<boolean> {
+  try {
+    const response = await axios.get(`${STAFF_API_URL}/api/health`, { timeout: 5000 });
+    return response.data?.status === "ok";
+  } catch {
+    return false;
+  }
+}
+
+// ✅ Refresh lender products cache from PRODUCTION API
 export async function refreshLenderProductsCache(): Promise<any[]> {
   try {
-    console.log(`🔄 Refreshing lender products cache from local API`);
+    console.log(`🔄 Refreshing lender products cache from PRODUCTION API: ${STAFF_API_URL}`);
     
-    // Use local API endpoint instead of external staff API
-    const response = await axios.get('http://localhost:5000/api/lender-products/sync', {
+    // Use PRODUCTION API endpoint instead of local
+    const response = await axios.get(`${STAFF_API_URL}/api/lender-products`, {
       timeout: 10000,
       headers: {
         'Accept': 'application/json',
+        'Authorization': CLIENT_TOKEN ? `Bearer ${CLIENT_TOKEN}` : undefined,
         'User-Agent': 'client-app-cache-sync'
       }
     });

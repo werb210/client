@@ -1,0 +1,25 @@
+{
+  "lenders": {
+    "id": "string",
+    "name": "string",
+    "country": "string",
+    "status": "string",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+  },
+  "lenderProducts": {
+    "id": "string",
+    "lenderId": "string",
+    "name": "string",
+    "description": "string",
+    "productType": "string",
+    "minAmount": "number",
+    "maxAmount": "number",
+    "rate": "string",
+    "country": "string",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+  },
+  "timestamp": "2025-08-23T01:57:00.000Z",
+  "version": "1.0.0"
+}

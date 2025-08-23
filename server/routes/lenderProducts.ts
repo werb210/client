@@ -301,36 +301,36 @@ function broadcastProductUpdate() {
   });
 }
 
-// ✅ Initialize with some sample data
-if (lenderProducts.length === 0) {
-  lenderProducts = [
-    {
-      id: "lender_equipment_001",
-      lenderId: "boreal_capital",
-      name: "Equipment Financing Plus",
-      description: "Comprehensive equipment financing for manufacturing and industrial businesses",
-      productType: "equipment_financing",
-      minAmount: 50000,
-      maxAmount: 2000000,
-      rate: "Prime + 2.5%",
-      country: "Canada",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: "lender_working_capital_001", 
-      lenderId: "boreal_capital",
-      name: "Working Capital Line of Credit",
-      description: "Flexible working capital solutions for growing businesses",
-      productType: "working_capital",
-      minAmount: 25000,
-      maxAmount: 500000,
-      rate: "Prime + 1.5%",
-      country: "Canada",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+// ✅ Initialize by fetching from production API instead of hardcoded data
+import { refreshLenderProductsCache } from "../services/lenderProductsCache";
+
+// Initialize with production data on startup
+(async () => {
+  if (lenderProducts.length === 0) {
+    try {
+      const productionProducts = await refreshLenderProductsCache();
+      lenderProducts.push(...productionProducts);
+      console.log(`🚀 Initialized with ${lenderProducts.length} products from production API`);
+    } catch (error) {
+      console.warn("⚠️  Failed to initialize from production API, using fallback data");
+      // Fallback to minimal sample data only if production fails
+      lenderProducts = [
+        {
+          id: "lender_equipment_001",
+          lenderId: "boreal_capital",
+          name: "Equipment Financing Plus (Fallback)",
+          description: "Fallback data - production API unavailable",
+          productType: "equipment_financing",
+          minAmount: 50000,
+          maxAmount: 2000000,
+          rate: "Prime + 2.5%",
+          country: "Canada",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
     }
-  ];
-}
+  }
+})();
 
 export default router;
