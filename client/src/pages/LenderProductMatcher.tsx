@@ -3,11 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
-import Building2 from 'lucide-react/dist/esm/icons/building-2';
-import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import { Loader2, Building2, DollarSign, FileText, CheckCircle } from 'lucide-react';
 import { fetchLenderProducts } from '@/lib/api';
 import type { LenderProduct } from '@/api/__generated__/staff.d.ts';
 
@@ -35,17 +31,17 @@ export default function LenderProductMatcher() {
 
     const filtered = allProducts.filter(product => {
       // Geography match
-      const geoMatch = product.geography.includes(userScenario.country as 'US' | 'CA');
+      const geoMatch = product.geography && Array.isArray(product.geography) && product.geography.includes(userScenario.country as 'US' | 'CA');
       
       // Amount range match
-      const amountMatch = userScenario.fundingAmount >= product.minAmount && 
-                         userScenario.fundingAmount <= product.maxAmount;
+      const amountMatch = userScenario.fundingAmount >= product.minAmountUsd && 
+                         userScenario.fundingAmount <= product.maxAmountUsd;
       
       // Product type match for capital/working capital
       const typeMatch = userScenario.lookingFor === 'capital' && 
-                       (product.category === 'term_loan' || 
-                        product.category === 'working_capital' ||
-                        product.category === 'line_of_credit');
+                       (product.productCategory === 'term_loan' || 
+                        product.productCategory === 'working_capital' ||
+                        product.productCategory === 'line_of_credit');
 
       return geoMatch && amountMatch && typeMatch;
     });
@@ -56,13 +52,13 @@ export default function LenderProductMatcher() {
       let matchScore = 0;
 
       // Geography scoring
-      if (product.geography.includes(userScenario.country as 'US' | 'CA')) {
+      if (product.geography && Array.isArray(product.geography) && product.geography.includes(userScenario.country as 'US' | 'CA')) {
         matchReasons.push(`Available in ${userScenario.country}`);
         matchScore += 20;
       }
 
       // Amount scoring (closer to minimum = higher score)
-      const amountRatio = userScenario.fundingAmount / product.minAmount;
+      const amountRatio = userScenario.fundingAmount / product.minAmountUsd;
       if (amountRatio >= 1 && amountRatio <= 2) {
         matchReasons.push('Optimal funding amount range');
         matchScore += 30;
@@ -72,20 +68,20 @@ export default function LenderProductMatcher() {
       }
 
       // Product type scoring
-      if (product.productType === 'term_loan') {
+      if (product.productCategory === 'term_loan') {
         matchReasons.push('Term loan for business growth');
         matchScore += 25;
-      } else if (product.productType === 'working_capital') {
+      } else if (product.productCategory === 'working_capital') {
         matchReasons.push('Working capital for operations');
         matchScore += 25;
-      } else if (product.productType === 'line_of_credit') {
+      } else if (product.productCategory === 'line_of_credit') {
         matchReasons.push('Flexible line of credit');
         matchScore += 20;
       }
 
       // Lender reputation (major banks get bonus)
       const majorBanks = ['Bank of America', 'Wells Fargo', 'JPMorgan Chase', 'Capital One', 'TD Bank', 'BMO', 'RBC'];
-      if (majorBanks.some(bank => product.lenderName.includes(bank))) {
+      if (majorBanks.some(bank => product.lender.includes(bank))) {
         matchReasons.push('Major financial institution');
         matchScore += 15;
       }
@@ -207,8 +203,8 @@ export default function LenderProductMatcher() {
                       <div key={product.id} className="border rounded-lg p-4 bg-white">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <div className="font-medium text-gray-900">{product.productName}</div>
-                            <div className="text-sm text-gray-600">{product.lenderName}</div>
+                            <div className="font-medium text-gray-900">{product.product}</div>
+                            <div className="text-sm text-gray-600">{product.lender}</div>
                           </div>
                           <Badge variant="secondary" className="ml-2">
                             {product.matchScore}% match
@@ -219,16 +215,16 @@ export default function LenderProductMatcher() {
                           <div className="flex justify-between">
                             <span className="text-gray-600">Amount Range:</span>
                             <span className="font-medium">
-                              ${product.minAmount.toLocaleString()} - ${product.maxAmount.toLocaleString()}
+                              ${product.minAmountUsd.toLocaleString()} - ${product.maxAmountUsd.toLocaleString()}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Product Type:</span>
-                            <span className="font-medium">{product.productType.replace('_', ' ')}</span>
+                            <span className="font-medium">{product.productCategory.replace('_', ' ')}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Geography:</span>
-                            <span className="font-medium">{product.geography.join(', ')}</span>
+                            <span className="font-medium">{product.geography && Array.isArray(product.geography) ? product.geography.join(', ') : 'N/A'}</span>
                           </div>
                         </div>
 

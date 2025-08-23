@@ -100,14 +100,14 @@ export function FallbackTest() {
               {products.map((product, index) => (
                 <div key={product.id || index} className="border rounded p-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                    <div><strong>Lender:</strong> {product.lender}</div>
-                    <div><strong>Product:</strong> {product.product}</div>
-                    <div><strong>Category:</strong> {product.productCategory}</div>
+                    <div><strong>Lender:</strong> {product.lenderName}</div>
+                    <div><strong>Product:</strong> {product.name}</div>
+                    <div><strong>Category:</strong> {product.category}</div>
                     <div><strong>Geography:</strong> {Array.isArray(product.geography) ? product.geography.join(', ') : product.geography}</div>
-                    <div><strong>Min Amount:</strong> ${product.minAmountUsd?.toLocaleString()}</div>
-                    <div><strong>Max Amount:</strong> ${product.maxAmountUsd?.toLocaleString()}</div>
-                    <div><strong>Rate:</strong> {product.interestRate}</div>
-                    <div><strong>Terms:</strong> {product.termMonths}</div>
+                    <div><strong>Min Amount:</strong> ${product.minAmount?.toLocaleString()}</div>
+                    <div><strong>Max Amount:</strong> ${product.maxAmount?.toLocaleString()}</div>
+                    <div><strong>Rate:</strong> {product.interestRateMin}</div>
+                    <div><strong>Terms:</strong> {product.termMinMonths}</div>
                   </div>
                 </div>
               ))}

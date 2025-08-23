@@ -13,7 +13,7 @@ export function usePublicLenders() {
     queryKey: ['public-lenders'],
     queryFn: async () => {
       try {
-        const { fetchLenderProducts } = await import('../api/lenderProducts');
+        const { fetchLenderProducts } = await import('../lib/api');
         const products = await fetchLenderProducts();
         console.log(`[usePublicLenders] Fetched ${products.length} products`);
         return products;
@@ -33,7 +33,7 @@ export function usePublicLenderStats() {
     queryKey: ["public-lender-stats"],
     queryFn: async () => {
       try {
-        const { fetchLenderProducts } = await import('../api/lenderProducts');
+        const { fetchLenderProducts } = await import('../lib/api');
         const products = await fetchLenderProducts();
         
         const stats = {

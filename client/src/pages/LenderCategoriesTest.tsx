@@ -2,11 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
-import Building2 from 'lucide-react/dist/esm/icons/building-2';
-import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
-import MapPin from 'lucide-react/dist/esm/icons/map-pin';
-import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import { Loader2, Building2, DollarSign, MapPin, Calendar } from 'lucide-react';
 import { fetchLenderProducts } from '@/lib/api';
 import type { LenderProduct } from '@/api/__generated__/staff.d.ts';
 
@@ -22,7 +18,7 @@ function analyzeProductCategories(products: LenderProduct[]) {
   }> = {};
 
   products.forEach(product => {
-    const category = product.category;
+    const category = product.productCategory;
     
     if (!categoryStats[category]) {
       categoryStats[category] = {
@@ -37,17 +33,19 @@ function analyzeProductCategories(products: LenderProduct[]) {
 
     categoryStats[category].count++;
     categoryStats[category].products.push(product);
-    categoryStats[category].lenders.add(product.lenderName);
+    categoryStats[category].lenders.add(product.lender);
     
-    product.geography.forEach(geo => {
-      categoryStats[category].geographies.add(geo);
-    });
-
-    if (product.minAmount < categoryStats[category].minAmount) {
-      categoryStats[category].minAmount = product.minAmount;
+    if (product.geography && Array.isArray(product.geography)) {
+      product.geography.forEach(geo => {
+        categoryStats[category].geographies.add(geo);
+      });
     }
-    if (product.maxAmount > categoryStats[category].maxAmount) {
-      categoryStats[category].maxAmount = product.maxAmount;
+
+    if (product.minAmountUsd < categoryStats[category].minAmount) {
+      categoryStats[category].minAmount = product.minAmountUsd;
+    }
+    if (product.maxAmountUsd > categoryStats[category].maxAmount) {
+      categoryStats[category].maxAmount = product.maxAmountUsd;
     }
   });
 
@@ -218,7 +216,7 @@ export default function LenderCategoriesTest() {
                     <div className="space-y-1">
                       {stats.products.slice(0, 2).map(product => (
                         <div key={product.id} className="text-sm text-gray-600">
-                          • {product.name} ({product.lenderName})
+                          • {product.product} ({product.lender})
                         </div>
                       ))}
                       {stats.products.length > 2 && (

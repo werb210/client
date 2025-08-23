@@ -4,13 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
-import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
-import MapPin from 'lucide-react/dist/esm/icons/map-pin';
-import Building from 'lucide-react/dist/esm/icons/building';
-import Clock from 'lucide-react/dist/esm/icons/clock';
-import Grid3X3 from 'lucide-react/dist/esm/icons/grid-3-x-3';
-import Users from 'lucide-react/dist/esm/icons/users';
+import { Loader2, DollarSign, MapPin, Building, Clock, Grid3X3, Users } from 'lucide-react';
 import { fetchLenderProducts } from '@/lib/api';
 
 const formatCurrency = (amount: number): string => {
