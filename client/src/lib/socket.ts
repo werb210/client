@@ -1,14 +1,14 @@
 import { io } from "socket.io-client";
 
-const WS_URL =
-  import.meta.env.MODE === "development"
-    ? "ws://localhost:5000/ws"
-    : import.meta.env.VITE_WS_URL || "wss://staff.boreal.financial/ws";
+const IS_DEV = import.meta.env.MODE === "development";
+
+export const WS_URL = IS_DEV
+  ? "ws://localhost:5000/ws"
+  : import.meta.env.VITE_WS_URL || "wss://staff.boreal.financial/ws";
 
 export const socket = io(WS_URL, {
-  path: "/ws",
   transports: ["websocket"],
-  withCredentials: true,
+  reconnection: true,
 });
 
 socket.on("connect", () => console.info("[Client WS] Connected"));
