@@ -172,21 +172,15 @@ export async function syncLenderProducts(): Promise<SyncResult> {
     };
   }
   
-  // No API and no cache - fallback to minimal dataset
-  console.error('[SYNC] ❌ No API and no cache available - using fallback data');
-  
-  const { FALLBACK_LENDER_PRODUCTS } = await import('./fallbackData');
-  const fallbackData = FALLBACK_LENDER_PRODUCTS;
-  const fallbackHash = calculateProductHash(fallbackData);
-  
-  await storeProducts(fallbackData, fallbackHash);
+  // No API and no cache - return empty result
+  console.error('[SYNC] ❌ No API and no cache available - returning empty dataset');
   
   return {
     success: false,
-    data: fallbackData,
+    data: [],
     fromCache: false,
     needsRetry: true,
-    error: 'API unavailable and no cache - using fallback data'
+    error: 'API unavailable and no cache - empty dataset returned'
   };
 }
 
