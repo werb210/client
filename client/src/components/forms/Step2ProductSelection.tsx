@@ -174,7 +174,7 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
             </CardHeader>
             <CardContent className="p-0">
               <div className="grid gap-4 p-6">
-                {products.slice(0, 3).map((product: any, index: number) => (
+                {products.map((product: any, index: number) => (
                   <div
                     key={product.id}
                     data-testid={`product-card--e2e-runner-${index}`}
