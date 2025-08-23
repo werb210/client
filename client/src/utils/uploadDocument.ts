@@ -6,7 +6,7 @@
 import { validateApplicationIdForAPI, getStoredApplicationId } from '@/lib/uuidUtils';
 import { addToRetryQueue } from '@/utils/applicationRetryQueue';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://staff.boreal.financial/api';
+const STAFF_API_URL = import.meta.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial';
 
 export interface UploadResponse {
   success: boolean;
@@ -62,9 +62,9 @@ export default async function uploadDocument(
         fileSize: file.size,
         fileType: file.type,
         documentType: documentType,
-        endpoint: `${API_BASE_URL}/api/applications/${validatedApplicationId}/documents`,
+        endpoint: `${STAFF_API_URL}/api/applications/${validatedApplicationId}/documents`,
         bearerToken: import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ? '✅ Present' : '❌ Missing',
-        apiBaseUrl: API_BASE_URL,
+        apiBaseUrl: STAFF_API_URL,
         timestamp: new Date().toISOString()
       });
     } else {
@@ -73,12 +73,12 @@ export default async function uploadDocument(
         fileSize: file.size,
         fileType: file.type,
         documentType: documentType,
-        endpoint: `${API_BASE_URL}/api/applications/${applicationId}/documents`
+        endpoint: `${STAFF_API_URL}/api/applications/${applicationId}/documents`
       });
     }
 
     // Upload to staff backend
-    const response = await fetch(`${API_BASE_URL}/api/applications/${validatedApplicationId}/documents`, {
+    const response = await fetch(`${STAFF_API_URL}/api/applications/${validatedApplicationId}/documents`, {
       method: 'POST',
       body: formData,
       headers: {
@@ -235,7 +235,7 @@ export async function getDocumentAccessUrl(documentId: string): Promise<string> 
   console.log(`🔗 [ACCESS] Getting access URL for document: ${documentId}`);
   
   try {
-    const response = await fetch(`${API_BASE_URL}/api/public/s3-access/${documentId}`, {
+    const response = await fetch(`${STAFF_API_URL}/api/public/s3-access/${documentId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`

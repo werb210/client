@@ -1,6 +1,6 @@
 // Staff API client for application submission and SignNow integration
 
-const STAFF_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://app.boreal.financial/api/public';
+const STAFF_API_URL = import.meta.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial';
 
 // ✅ Required Fields Validation Configuration
 const REQUIRED_FIELDS = {
@@ -216,7 +216,7 @@ class StaffApiClient {
 
       // Use public upload endpoint without Authorization headers
       const uploadUrl = applicationId 
-        ? `${this.baseUrl}/api/public/applications/${applicationId}/documents`
+        ? `${this.baseUrl}/api/applications/${applicationId}/documents`
         : `${this.baseUrl}/uploads`;
       
       const response = await fetch(uploadUrl, {
@@ -431,7 +431,7 @@ class StaffApiClient {
     isComplete: boolean;
   }> {
     const response = await this.makeRequest<any>(
-      `/api/public/applications/${applicationId}/documents`
+      `/api/applications/${applicationId}/documents`
     );
     return response;
   }
