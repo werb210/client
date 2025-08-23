@@ -99,6 +99,7 @@ import DebugCanadianEquipmentAPI from "@/pages/DebugCanadianEquipmentAPI";
 import ApiConnectivityTest from "@/pages/ApiConnectivityTest";
 import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
+import FullApplicationSubmissionTest from "@/pages/FullApplicationSubmissionTest";
 
 import BackendRequestTest from "@/pages/BackendRequestTest";
 import WorkflowTestPage from "@/routes/WorkflowTestPage";
@@ -187,6 +188,7 @@ export function MainLayout() {
       <Route path="/debug-canadian-equipment-api" component={DebugCanadianEquipmentAPI} />
       <Route path="/list-lender-categories" component={ListLenderCategories} />
       <Route path="/equipment-financing-fix-test" component={EquipmentFinancingFixTest} />
+      <Route path="/full-application-test" component={FullApplicationSubmissionTest} />
 
       <Route path="/backend-request-test" component={BackendRequestTest} />
       <Route path="/validation-test" component={ValidationTestPage} />
