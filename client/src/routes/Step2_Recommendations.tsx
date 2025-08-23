@@ -67,7 +67,7 @@ export default function Step2Recommendations() {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="text-lg">
-                  We'll match you with lenders once your documents are reviewed.
+                  Complete your application and upload documents to unlock lender recommendations.
                 </AlertDescription>
               </Alert>
 

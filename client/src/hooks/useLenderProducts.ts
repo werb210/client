@@ -6,17 +6,38 @@
 import { useQuery } from "@tanstack/react-query";
 
 /**
- * ❌ DISABLED: Client cannot fetch lender products directly
- * All matching is done server-side after document review
+ * ✅ CONDITIONAL: Fetch lender products only after documents are approved
  */
-export const useLenderProducts = () => {
+export const useLenderProducts = (applicationId?: string, documentsApproved: boolean = false) => {
   return useQuery({
-    queryKey: ["lender-products"],
-    queryFn: () => {
-      throw new Error("Lender product access restricted - handled server-side only");
+    queryKey: ["lender-products", applicationId],
+    queryFn: async () => {
+      if (!applicationId) {
+        throw new Error("Application ID required");
+      }
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE}/lender-products?applicationId=${applicationId}`,
+        {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${import.meta.env.VITE_CLIENT_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to fetch lender products");
+      }
+
+      const data = await response.json();
+      return data.products || [];
     },
-    enabled: false, // Completely disabled
-    retry: false,
+    enabled: documentsApproved && !!applicationId, // Only enabled after docs approved
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 

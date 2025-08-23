@@ -15,7 +15,7 @@ import {
   type DebugInput,
   type RecommendationDebugResult 
 } from '@/lib/recommendationDebugger';
-import { getAdvancedRecommendations, type FilteringOptions, type RecommendationInput } from '@/lib/recommendationEngine';
+import { type FilteringOptions, type RecommendationInput } from '@/lib/recommendationEngine';
 import mockLenderProducts from '@/data/mockLenderProducts';
 import { ENHANCED_DOCUMENT_REQUIREMENTS } from '../../../shared/documentMapping';
 import { DOCUMENT_TYPE_LABELS } from '../../../shared/documentTypes';
