@@ -62,7 +62,7 @@ export default async function uploadDocument(
         fileSize: file.size,
         fileType: file.type,
         documentType: documentType,
-        endpoint: `${API_BASE_URL}/api/public/upload/${validatedApplicationId}`,
+        endpoint: `${API_BASE_URL}/api/applications/${validatedApplicationId}/documents`,
         bearerToken: import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ? '✅ Present' : '❌ Missing',
         apiBaseUrl: API_BASE_URL,
         timestamp: new Date().toISOString()
@@ -73,12 +73,12 @@ export default async function uploadDocument(
         fileSize: file.size,
         fileType: file.type,
         documentType: documentType,
-        endpoint: `${API_BASE_URL}/api/public/upload/${applicationId}`
+        endpoint: `${API_BASE_URL}/api/applications/${applicationId}/documents`
       });
     }
 
     // Upload to staff backend
-    const response = await fetch(`${API_BASE_URL}/api/public/upload/${validatedApplicationId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/applications/${validatedApplicationId}/documents`, {
       method: 'POST',
       body: formData,
       headers: {

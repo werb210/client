@@ -317,7 +317,7 @@ class StaffApiClient {
       // console.log('  step3:', correctPayload.step3);
       // console.log('  step4:', correctPayload.step4);
 
-      const response = await this.makeRequest<ApplicationSubmissionResponse>('/public/applications', {
+      const response = await this.makeRequest<ApplicationSubmissionResponse>('/api/applications', {
         method: 'POST',
         body: JSON.stringify(correctPayload),
       });
@@ -340,7 +340,7 @@ class StaffApiClient {
     try {
       // console.log(`🏁 Finalizing application: ${applicationId}`);
       
-      const response = await this.makeRequest<FinalizationResponse>(`/applications/${applicationId}/finalize`, {
+      const response = await this.makeRequest<FinalizationResponse>(`/api/applications/${applicationId}/finalize`, {
         method: 'POST',
       });
       
@@ -389,7 +389,7 @@ class StaffApiClient {
       // console.log('🟢 Final payload being sent to staff backend:', applicationData);
       // console.log('📝 Complete application payload:', JSON.stringify(applicationData, null, 2));
       
-      const response = await this.makeRequest<{ applicationId: string; signNowDocumentId?: string }>('/public/applications', {
+      const response = await this.makeRequest<{ applicationId: string; signNowDocumentId?: string }>('/api/applications', {
         method: 'POST',
         body: JSON.stringify(applicationData),
       });
