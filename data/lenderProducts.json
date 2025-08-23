@@ -1,36 +1,7 @@
 [
   {
-    "id": "bdc_capital_term_loan",
-    "name": "BDC Term Loan",
-    "lender": "BDC Capital",
-    "category": "Term Loan",
-    "productCategory": "Term Loan",
-    "requiredDocuments": [
-      "Financial Statements",
-      "Bank Statements",
-      "Tax Returns"
-    ]
-  },
-  {
-    "id": "accord_factoring",
-    "name": "Invoice Factoring",
-    "lender": "Accord Financial",
-    "category": "Invoice Factoring",
-    "productCategory": "Invoice Factoring",
-    "requiredDocuments": [
-      "AR Report",
-      "Customer List"
-    ]
-  },
-  {
-    "id": "test_product_sync",
-    "name": "🔥 Test Product Sync 🔥",
-    "lender": "Test Lender",
-    "category": "Working Capital",
-    "productCategory": "Working Capital",
-    "requiredDocuments": [
-      "bank_statements",
-      "tax_returns"
-    ]
+    "id": "verification_test",
+    "name": "Verification Test Product",
+    "category": "Test"
   }
 ]
