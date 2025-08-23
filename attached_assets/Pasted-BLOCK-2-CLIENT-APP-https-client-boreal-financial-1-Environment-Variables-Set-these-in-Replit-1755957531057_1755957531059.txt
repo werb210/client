@@ -1,0 +1,111 @@
+BLOCK 2 — CLIENT APP (https://client.boreal.financial)
+1. Environment Variables
+
+Set these in Replit → Secrets for the client app:
+
+VITE_API_URL=https://staff.boreal.financial
+VITE_SOCKET_URL=wss://staff.boreal.financial
+VITE_CLIENT_TOKEN=<same_global_bearer_token>
+
+2. API Client Setup
+
+File: client/src/lib/api.ts
+
+const API_URL = import.meta.env.VITE_API_URL;
+const CLIENT_TOKEN = import.meta.env.VITE_CLIENT_TOKEN;
+
+export const fetchLenderProducts = async () => {
+  const res = await fetch(`${API_URL}/api/lender-products`, {
+    headers: {
+      "Authorization": `Bearer ${CLIENT_TOKEN}`,
+    },
+  });
+
+  if (!res.ok) {
+    console.error(`[API] Lender products fetch failed: ${res.status}`);
+    throw new Error("Failed to fetch lender products");
+  }
+
+  return res.json();
+};
+
+3. Lender Products Hook
+
+File: client/src/hooks/useLenderProducts.ts
+
+import { useQuery } from "@tanstack/react-query";
+import { fetchLenderProducts } from "@/lib/api";
+
+export const useLenderProducts = () => {
+  return useQuery(["lender-products"], fetchLenderProducts, {
+    staleTime: 60 * 1000,
+    retry: 2,
+  });
+};
+
+4. WebSocket Live Updates
+
+File: client/src/lib/socket.ts
+
+import { io } from "socket.io-client";
+
+export const socket = io(import.meta.env.VITE_SOCKET_URL, {
+  path: "/ws",
+  transports: ["websocket"],
+  auth: {
+    token: `Bearer ${import.meta.env.VITE_CLIENT_TOKEN}`,
+  },
+});
+
+socket.on("connect", () => console.info("[Client WS] Connected"));
+socket.on("disconnect", () => console.warn("[Client WS] Disconnected"));
+socket.on("connect_error", (err) =>
+  console.error("[Client WS] Connection Error:", err.message)
+);
+
+
+Hook for live updates:
+
+import { useEffect } from "react";
+import { socket } from "@/lib/socket";
+import { queryClient } from "@/lib/queryClient";
+
+export const useLiveStatus = () => {
+  useEffect(() => {
+    if (!socket.connected) socket.connect();
+
+    socket.on("pipeline:update", () => {
+      console.info("[Client] Refreshing lender products");
+      queryClient.invalidateQueries(["lender-products"]);
+    });
+
+    return () => {
+      socket.off("pipeline:update");
+    };
+  }, []);
+};
+
+5. E2E Tests
+
+File: client/tests/e2e/client.e2e.spec.ts
+
+import { test, expect } from "@playwright/test";
+
+test("Client fetches all 32 lender products", async ({ request }) => {
+  const res = await request.get(
+    "https://staff.boreal.financial/api/lender-products",
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.VITE_CLIENT_TOKEN}`,
+      },
+    }
+  );
+  expect(res.status()).toBe(200);
+  const products = await res.json();
+  expect(products.length).toBe(32);
+});
+
+6. Verify Integration
+curl -s -H "Authorization: Bearer $VITE_CLIENT_TOKEN" \
+https://staff.boreal.financial/api/lender-products | jq 'length'
+# ✅ Expect: 32

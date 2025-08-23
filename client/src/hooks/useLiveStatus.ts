@@ -4,13 +4,11 @@ import { queryClient } from "@/lib/queryClient";
 
 export const useLiveStatus = () => {
   useEffect(() => {
-    if (!socket.connected) {
-      socket.connect();
-    }
+    if (!socket.connected) socket.connect();
 
     socket.on("pipeline:update", () => {
-      console.info("[Client] Refreshing application status");
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      console.info("[Client] Refreshing lender products");
+      queryClient.invalidateQueries({ queryKey: ["lender-products"] });
     });
 
     return () => {

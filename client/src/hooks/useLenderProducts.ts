@@ -62,12 +62,14 @@ export function useLenderProductsLive() {
   }, [queryClient]);
 }
 
-/**
- * ✅ Block 2 - Client App Hook Implementation
- */
-export function useLenderProducts() {
-  return useQuery(["lender-products"], fetchLenderProducts);
-}
+export const useLenderProducts = () => {
+  return useQuery({
+    queryKey: ["lender-products"],
+    queryFn: fetchLenderProducts,
+    staleTime: 60 * 1000,
+    retry: 2,
+  });
+};
 
 /**
  * ✅ Legacy React Query implementation (fallback)
