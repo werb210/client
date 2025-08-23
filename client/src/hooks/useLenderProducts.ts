@@ -1,6 +1,6 @@
 /**
- * Real-time lender products hook with automatic sync
- * Fetches live data from staff app with webhook-based cache invalidation
+ * Real-time lender products hook with WebSocket live updates
+ * Fetches live data from staff app with WebSocket-based synchronization
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -8,26 +8,82 @@ import { useEffect } from 'react';
 import { staffClient, LenderProduct, LenderProductFilters } from '@/api/__generated__/staffClient';
 
 /**
- * ✅ Real-time lender products hook - auto-syncs with staff app
- * No local storage, always fresh data from single source of truth
+ * ✅ WebSocket live updates hook for lender products
+ * Connects to staff backend WebSocket for real-time synchronization
+ */
+export function useLenderProductsLive() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const wsUrl = "wss://staff.boreal.financial";
+    console.log(`🔗 Connecting to WebSocket: ${wsUrl}`);
+    
+    const ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+      console.log('✅ WebSocket connected to staff backend');
+    };
+    
+    ws.onmessage = (msg) => {
+      try {
+        const { event, payload } = JSON.parse(msg.data);
+        console.log(`📢 WebSocket event received: ${event}`);
+
+        if (event === "lenderProductsUpdated") {
+          // Invalidate cache so latest products are fetched automatically
+          console.log('🔄 Invalidating lender products cache...');
+          queryClient.invalidateQueries({ queryKey: ["lender-products"] });
+        }
+        
+        if (event === "fullSync") {
+          // Direct cache update with full product list
+          console.log('📦 Full sync - updating cache directly');
+          queryClient.setQueryData(["lender-products"], payload);
+        }
+      } catch (error) {
+        console.error('❌ WebSocket message parsing error:', error);
+      }
+    };
+    
+    ws.onerror = (error) => {
+      console.error('❌ WebSocket connection error:', error);
+    };
+    
+    ws.onclose = () => {
+      console.log('🔌 WebSocket connection closed');
+    };
+    
+    return () => {
+      console.log('🔌 Closing WebSocket connection...');
+      ws.close();
+    };
+  }, [queryClient]);
+}
+
+/**
+ * ✅ Real-time lender products hook with WebSocket integration
+ * Always fetches latest products with automatic live updates
  */
 export function useLenderProducts(filters?: LenderProductFilters) {
   const queryClient = useQueryClient();
   
-  // Set up auto-refresh via server-sent events or polling
+  // Enable WebSocket live updates
+  useLenderProductsLive();
+  
+  // Fallback SSE for compatibility
   useEffect(() => {
     const eventSource = new EventSource('/api/lender-products/events');
     
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === 'lender-products-updated') {
-        console.log('📢 Lender products updated - refreshing cache');
-        queryClient.invalidateQueries({ queryKey: ['lenderProducts'] });
+        console.log('📢 SSE: Lender products updated - refreshing cache');
+        queryClient.invalidateQueries({ queryKey: ['lender-products'] });
       }
     };
     
     eventSource.onerror = () => {
-      console.warn('⚠️  SSE connection lost, falling back to periodic refresh');
+      console.warn('⚠️  SSE connection lost, relying on WebSocket');
       eventSource.close();
     };
     
@@ -37,22 +93,21 @@ export function useLenderProducts(filters?: LenderProductFilters) {
   }, [queryClient]);
 
   return useQuery({
-    queryKey: ['lenderProducts', filters],
+    queryKey: ['lender-products', filters],
     queryFn: async () => {
-      console.log('🔄 Fetching live lender products from local API...');
-      // Use local API endpoint which forwards to staff app
+      console.log('🔄 Fetching latest lender products...');
       const response = await fetch('/api/lender-products/sync');
       if (!response.ok) {
         throw new Error(`Failed to fetch lender products: ${response.statusText}`);
       }
       const data = await response.json();
       const result = data.products || [];
-      console.log(`✅ Loaded ${result.length} lender products from local API`);
+      console.log(`✅ Loaded ${result.length} lender products`);
       return result;
     },
-    staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes
-    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes  
-    refetchOnWindowFocus: true, // Refresh when user focuses window
+    staleTime: 1 * 60 * 1000, // Consider data stale after 1 minute (faster refresh)
+    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: true, // Always refresh when user focuses window
     refetchOnMount: true, // Always fetch fresh data on mount
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
