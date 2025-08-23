@@ -4,32 +4,12 @@
  */
 
 /**
- * ✅ ENABLED: Fetch lender products from client API
+ * ✅ ENHANCED: Use validated fetchLenderProducts from hooks
  */
 export async function fetchLenderProducts() {
-  try {
-    // Try client-facing API first, fallback to local cache
-    let res = await fetch(`${import.meta.env.VITE_API_URL}/lender-products`);
-    let data;
-    
-    if (res.ok) {
-      const apiData = await res.json();
-      data = apiData.products || apiData;
-    } else {
-      console.warn(`⚠️ Client API failed (${res.status}), falling back to local cache`);
-      // Fallback to local cache
-      res = await fetch("/data/lenderProducts.json");
-      if (!res.ok) {
-        throw new Error(`Failed to fetch from both sources: ${res.statusText}`);
-      }
-      data = await res.json();
-    }
-    
-    return Array.isArray(data) ? data : [];
-  } catch (error) {
-    console.error("❌ Failed to load lender products:", error);
-    return [];
-  }
+  // Import the enhanced function with schema validation
+  const { fetchLenderProducts: validatedFetch } = await import('../hooks/useLenderProducts');
+  return await validatedFetch();
 }
 
 /**
