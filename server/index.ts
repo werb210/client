@@ -1099,6 +1099,27 @@ app.use((req, res, next) => {
     });
   });
 
+  // API endpoint to serve local cache (alternative to static file)
+  app.get('/api/lender-products', async (req: Request, res: Response) => {
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const filePath = path.join(process.cwd(), "data", "lenderProducts.json");
+      
+      if (!fs.existsSync(filePath)) {
+        console.warn('📁 Local cache missing for /api/lender-products');
+        return res.status(500).json({ error: "Cache missing", products: [] });
+      }
+      
+      const products = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      console.log(`✅ Served ${products.length} products from local cache`);
+      return res.status(200).json({ products, source: "local_cache" });
+    } catch (err) {
+      console.error('❌ Failed to serve lender products from cache:', err);
+      return res.status(500).json({ error: "Failed to read cache", products: [] });
+    }
+  });
+
   app.use('/api/lenders', lendersRouter);
   // Removed unauthorized local applications router - all application calls now forward to Staff API
 

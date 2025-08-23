@@ -8,11 +8,22 @@
  */
 export async function fetchLenderProducts() {
   try {
-    const res = await fetch("/data/lenderProducts.json");
-    if (!res.ok) {
-      throw new Error(`Failed to fetch: ${res.statusText}`);
+    // Try API endpoint first, fallback to static file
+    let res = await fetch("/api/lender-products");
+    let data;
+    
+    if (res.ok) {
+      const apiData = await res.json();
+      data = apiData.products || apiData;
+    } else {
+      // Fallback to static file
+      res = await fetch("/data/lenderProducts.json");
+      if (!res.ok) {
+        throw new Error(`Failed to fetch from both sources: ${res.statusText}`);
+      }
+      data = await res.json();
     }
-    const data = await res.json();
+    
     return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("❌ Failed to load lender products:", error);

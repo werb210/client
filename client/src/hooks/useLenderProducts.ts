@@ -22,10 +22,25 @@ export function useLenderProducts(): LenderProduct[] {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const res = await fetch("/data/lenderProducts.json");
-        const data = await res.json();
+        // Try API endpoint first, fallback to static file
+        let res = await fetch("/api/lender-products");
+        let data;
+        
+        if (res.ok) {
+          const apiData = await res.json();
+          data = apiData.products || apiData;
+          console.log(`✅ Loaded ${Array.isArray(data) ? data.length : 0} lender products from API cache`);
+        } else {
+          // Fallback to static file
+          res = await fetch("/data/lenderProducts.json");
+          if (!res.ok) {
+            throw new Error("Failed to load from both API and static file");
+          }
+          data = await res.json();
+          console.log(`✅ Loaded ${Array.isArray(data) ? data.length : 0} lender products from static cache`);
+        }
+        
         setProducts(Array.isArray(data) ? data : []);
-        console.log(`✅ Loaded ${Array.isArray(data) ? data.length : 0} lender products from local sync`);
       } catch (error) {
         console.error("❌ Failed to load lender products:", error);
         setProducts([]);
@@ -44,13 +59,25 @@ export const useLenderProductsQuery = () => {
   return useQuery({
     queryKey: ["lender-products-local"],
     queryFn: async () => {
-      const res = await fetch("/data/lenderProducts.json");
-      if (!res.ok) {
-        throw new Error("Failed to load local lender products");
+      // Try API endpoint first, fallback to static file
+      let res = await fetch("/api/lender-products");
+      let data;
+      
+      if (res.ok) {
+        const apiData = await res.json();
+        data = apiData.products || apiData;
+        console.log(`✅ Loaded ${data.length} lender products from API cache`);
+      } else {
+        // Fallback to static file
+        res = await fetch("/data/lenderProducts.json");
+        if (!res.ok) {
+          throw new Error("Failed to load local lender products");
+        }
+        data = await res.json();
+        console.log(`✅ Loaded ${data.length} lender products from static cache`);
       }
-      const data = await res.json();
-      console.log(`✅ Loaded ${data.length} lender products from local sync`);
-      return data;
+      
+      return Array.isArray(data) ? data : [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,

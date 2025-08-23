@@ -12,6 +12,17 @@
     ]
   },
   {
+    "id": "accord_factoring",
+    "name": "Invoice Factoring",
+    "lender": "Accord Financial",
+    "category": "Invoice Factoring",
+    "productCategory": "Invoice Factoring",
+    "requiredDocuments": [
+      "AR Report",
+      "Customer List"
+    ]
+  },
+  {
     "id": "test_product_sync",
     "name": "🔥 Test Product Sync 🔥",
     "lender": "Test Lender",
