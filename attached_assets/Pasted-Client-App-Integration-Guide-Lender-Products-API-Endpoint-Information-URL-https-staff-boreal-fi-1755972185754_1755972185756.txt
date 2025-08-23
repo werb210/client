@@ -1,0 +1,101 @@
+Client App Integration Guide - Lender Products API
+Endpoint Information
+URL: https://staff.boreal.financial/api/client/lender-products
+Method: GET
+Authentication: None required (Public endpoint)
+Content-Type: application/json
+Request Format
+// Simple GET request - no headers or authentication needed
+fetch('https://staff.boreal.financial/api/client/lender-products')
+  .then(response => response.json())
+  .then(data => console.log(data));
+Response Format
+{
+  "ok": true,
+  "count": 11,
+  "products": [
+    {
+      "id": "416d4253-18ec-4c1a-81a2-d00d386e3499",
+      "lender_name": "Accord",
+      "name": "AccordAccess", 
+      "category": "business_loan",
+      "min_amount": 5000,
+      "max_amount": 50000,
+      "interest_rate": "0.19990000128746033% - 0.4999000132083893%",
+      "term": "6 - 24 months",
+      "min_credit_score": null,
+      "description": "",
+      "country": "CA",
+      "active": true
+    }
+  ]
+}
+Product Object Schema
+Each product in the products array contains:
+
+id (string): Unique product identifier
+lender_name (string): Name of the lending institution
+name (string): Product name
+category (string): Product type (e.g., "business_loan")
+min_amount (number): Minimum loan amount
+max_amount (number): Maximum loan amount
+interest_rate (string): Interest rate range
+term (string): Loan term duration
+min_credit_score (number|null): Minimum credit score requirement
+description (string): Product description
+country (string): Country code (CA/US)
+active (boolean): Whether product is currently active
+Status Codes
+200 - Success with product data
+500 - Server error
+Error Response Format
+{
+  "ok": false,
+  "error": "Failed to fetch lender products"
+}
+Usage Examples
+JavaScript/Fetch:
+
+async function getLenderProducts() {
+  try {
+    const response = await fetch('https://staff.boreal.financial/api/client/lender-products');
+    const data = await response.json();
+    
+    if (data.ok) {
+      console.log(`Found ${data.count} products:`, data.products);
+      return data.products;
+    } else {
+      console.error('API Error:', data.error);
+    }
+  } catch (error) {
+    console.error('Network Error:', error);
+  }
+}
+React Hook:
+
+import { useState, useEffect } from 'react';
+function useLenderProducts() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    fetch('https://staff.boreal.financial/api/client/lender-products')
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok) {
+          setProducts(data.products);
+        } else {
+          setError(data.error);
+        }
+      })
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, []);
+  return { products, loading, error };
+}
+Data Notes
+Returns up to 11 active products from live database
+Products are ordered by creation date (newest first)
+All fields are real production data
+No pagination currently implemented
+Updates automatically when staff app data changes
