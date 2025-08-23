@@ -7,16 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useLenderProducts, useProductCategories } from '@/hooks/useLenderProducts';
+import { useLenderProductsArray, useProductCategoriesArray } from '@/hooks/useLenderProducts';
 
 export default function Step2Recommendations() {
   const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
-  // Load products and categories from local sync
-  const products = useLenderProducts();
-  const categories = useProductCategories();
+  // Load products and categories from staff API
+  const products = useLenderProductsArray();
+  const categories = useProductCategoriesArray();
 
   // ✅ GA TEST EVENT - Fire on page load
   useEffect(() => {
@@ -41,8 +41,7 @@ export default function Step2Recommendations() {
           selectedCategory,
           availableProducts: products.filter((p: any) => 
             !selectedCategory || 
-            p.category === selectedCategory || 
-            p.productCategory === selectedCategory
+            p.type === selectedCategory
           ),
           totalProducts: products.length,
           totalCategories: categories.length,
@@ -61,7 +60,7 @@ export default function Step2Recommendations() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
       <div className="container mx-auto px-4 py-8">
         <StepHeader
-          currentStep={2}
+          stepNumber={2}
           totalSteps={7}
           title="Lender Matching"
           description="Your application will be matched with suitable lenders after document review"

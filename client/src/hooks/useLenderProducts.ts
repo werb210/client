@@ -1,180 +1,108 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { z } from "zod";
-import { LenderProductsResponseSchema, type LenderProduct } from "../../../shared/schemas/lenderProductSchema";
 
-// ✅ ENHANCED: Use shared schema with backward compatibility
-const BackwardCompatibleProductSchema = z.object({
-  id: z.string(),
-  lenderName: z.string().optional(),
-  productName: z.string().optional(),
-  name: z.string().optional(), // Legacy support
-  category: z.string(),
-  country: z.string().optional(),
-  minAmount: z.number().optional(),
-  maxAmount: z.number().optional(),
-  interestRate: z.number().optional(),
-  termLength: z.string().optional(),
-  documentsRequired: z.array(z.string()).optional(),
-  requiredDocuments: z.array(z.string()).optional(), // Legacy support
-  description: z.string().optional(),
-  updatedAt: z.string().optional(),
-}).passthrough(); // Allow additional fields for flexibility
+// Staff API URL - directly connect to staff backend
+const API_URL = import.meta.env.VITE_STAFF_API_URL || "https://staff.boreal.financial";
 
-const BackwardCompatibleResponseSchema = z.object({
-  ok: z.boolean(),
-  count: z.number(),
-  products: z.array(BackwardCompatibleProductSchema),
+// Product schema matching the database structure
+const LenderProductSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  type: z.string(),
+  description: z.string().nullable(),
+  min_amount: z.string().or(z.number()),
+  max_amount: z.string().or(z.number()),
+  interest_rate_min: z.string().or(z.number()).nullable(),
+  interest_rate_max: z.string().or(z.number()).nullable(),
+  term_min: z.number().nullable(),
+  term_max: z.number().nullable(),
+  requirements: z.array(z.string()).nullable(),
+  video_url: z.string().nullable(),
+  active: z.boolean(),
 });
 
-// Legacy interface for backward compatibility
-interface LegacyLenderProduct {
-  id?: string;
-  productId?: string;
-  category?: string;
-  productCategory?: string;
-  name?: string;
-  lender?: string;
-  requiredDocuments?: string[];
-  [key: string]: any;
-}
+const LenderProductsResponseSchema = z.object({
+  success: z.boolean(),
+  products: z.array(LenderProductSchema),
+  count: z.number(),
+});
+
+export type LenderProduct = z.infer<typeof LenderProductSchema>;
+export type LenderProductsResponse = z.infer<typeof LenderProductsResponseSchema>;
 
 /**
- * ✅ ENABLED: Load lender products from local sync
- * Products are synced from staff app and stored locally
+ * ✅ BLOCK 2: Direct staff API connection without cache fallback
+ * Fetches live lender products from staff backend
  */
-export function useLenderProducts(): LegacyLenderProduct[] {
-  const [products, setProducts] = useState<LegacyLenderProduct[]>([]);
-
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        // Try client-facing API first, fallback to local cache
-        let res = await fetch(`${import.meta.env.VITE_API_URL}/lender-products`);
-        let data;
-        
-        if (res.ok) {
-          const apiData = await res.json();
-          data = apiData.products || apiData;
-          console.log(`✅ Loaded ${Array.isArray(data) ? data.length : 0} lender products from client API`);
-        } else {
-          console.warn(`⚠️ Client API failed (${res.status}), falling back to local cache`);
-          // Fallback to local cache
-          res = await fetch("/data/lenderProducts.json");
-          if (!res.ok) {
-            throw new Error("Failed to load from both client API and local cache");
-          }
-          data = await res.json();
-          console.log(`✅ Loaded ${Array.isArray(data) ? data.length : 0} lender products from local cache`);
-        }
-        
-        setProducts(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("❌ Failed to load lender products:", error);
-        setProducts([]);
-      }
-    }
-    fetchProducts();
-  }, []);
-
-  return products;
-}
-
-/**
- * ✅ ENHANCED: React Query with schema validation
- */
-export const useLenderProductsQuery = () => {
+export const useLenderProducts = () => {
   return useQuery({
-    queryKey: ["lender-products-client-api"],
-    queryFn: async () => {
-      return await fetchLenderProducts();
+    queryKey: ["lenderProducts"],
+    queryFn: async (): Promise<LenderProduct[]> => {
+      console.log(`🔄 Fetching lender products from staff API: ${API_URL}/api/lender-products`);
+      
+      const { data } = await axios.get(`${API_URL}/api/lender-products`);
+      
+      if (!data.success) {
+        throw new Error("Failed to fetch lender products from staff API");
+      }
+      
+      console.log(`✅ Loaded ${data.count} lender products from staff API`);
+      return data.products;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };
 
 /**
- * ✅ ENHANCED: Fetch with schema validation
+ * ✅ Get products by category/type
  */
-export async function fetchLenderProducts(): Promise<LegacyLenderProduct[]> {
-  try {
-    // Try live API first with schema validation
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/lender-products`);
+export function useLenderProductsByCategory(category?: string) {
+  const { data: products = [], ...query } = useLenderProducts();
+  
+  const filteredProducts = category 
+    ? products.filter((product: LenderProduct) => 
+        product.type.toLowerCase() === category.toLowerCase()
+      )
+    : products;
     
-    if (res.ok) {
-      const apiData = await res.json();
-      const parsed = BackwardCompatibleResponseSchema.safeParse(apiData);
-      
-      if (parsed.success) {
-        console.log(`✅ Loaded ${parsed.data.count} validated lender products from live API`);
-        return parsed.data.products;
-      } else {
-        console.warn("⚠️ Live API returned invalid schema, falling back to cache:", parsed.error.issues);
-      }
-    } else {
-      console.warn(`⚠️ Live API failed (${res.status}), falling back to local cache`);
-    }
-    
-    // Fallback to local cache
-    const cacheRes = await fetch("/data/lenderProducts.json");
-    if (cacheRes.ok) {
-      const cacheData = await cacheRes.json();
-      const products = Array.isArray(cacheData) ? cacheData : [];
-      console.log(`✅ Loaded ${products.length} lender products from local cache`);
-      return products;
-    }
-    
-    throw new Error("Failed to load from both live API and local cache");
-  } catch (error) {
-    console.error("❌ Failed to load lender products:", error);
-    return [];
-  }
+  return { ...query, data: filteredProducts };
 }
 
 /**
- * ✅ ENABLED: Get products by category
+ * ✅ Get unique product types/categories
  */
-export function useLenderProductsByCategory(category?: string): LegacyLenderProduct[] {
-  const products = useLenderProducts();
-  
-  if (!category) return products;
-  
-  return products.filter((product: LegacyLenderProduct) => 
-    product.category?.toLowerCase() === category.toLowerCase() ||
-    product.productCategory?.toLowerCase() === category.toLowerCase()
-  );
-}
-
-/**
- * ✅ ENABLED: Get unique categories
- */
-export function useProductCategories(): string[] {
-  const products = useLenderProducts();
+export function useProductCategories() {
+  const { data: products = [], ...query } = useLenderProducts();
   
   const categories = [...new Set(
-    products.map((p: LegacyLenderProduct) => p.category || p.productCategory).filter(Boolean)
+    products.map((p: LenderProduct) => p.type).filter(Boolean)
   )];
   
-  return categories as string[];
+  return { ...query, data: categories };
 }
 
 /**
- * ✅ ENABLED: Find product by ID
+ * ✅ Find product by ID
  */
-export function useLenderProduct(id?: string): LegacyLenderProduct | null {
-  const products = useLenderProducts();
+export function useLenderProduct(id?: number | string) {
+  const { data: products = [], ...query } = useLenderProducts();
   
-  return products.find((p: LegacyLenderProduct) => p.id === id || p.productId === id) || null;
+  const productId = typeof id === 'string' ? parseInt(id) : id;
+  const product = products.find((p: LenderProduct) => p.id === productId) || null;
+  
+  return { ...query, data: product };
 }
 
-// Keep disabled functions for backward compatibility
-export function useLenderProductsLive() {
-  // No-op - using local sync instead
-  return;
+// Legacy compatibility - return array directly for older components
+export function useLenderProductsArray(): LenderProduct[] {
+  const { data } = useLenderProducts();
+  return data || [];
 }
 
-// Export types for external use
-export type { LegacyLenderProduct };
-export type { LenderProduct, LenderProductsResponse } from "../../../shared/schemas/lenderProductSchema";
-export type LenderProductFilters = Record<string, any>;
+export function useProductCategoriesArray(): string[] {
+  const { data } = useProductCategories();
+  return data || [];
+}

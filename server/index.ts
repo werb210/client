@@ -1124,24 +1124,29 @@ app.use((req, res, next) => {
     }
   });
 
-  // API endpoint to serve local cache (alternative to static file)
+  // ✅ BLOCK 2: Direct database connection for live lender products
   app.get('/api/lender-products', async (req: Request, res: Response) => {
     try {
-      const fs = await import('fs');
-      const path = await import('path');
-      const filePath = path.join(process.cwd(), "data", "lenderProducts.json");
+      const { db } = await import('./db');
+      const { lenderProducts } = await import('../shared/lenderSchema');
+      const { eq } = await import('drizzle-orm');
       
-      if (!fs.existsSync(filePath)) {
-        console.warn('📁 Local cache missing for /api/lender-products');
-        return res.status(500).json({ error: "Cache missing", products: [] });
-      }
+      const products = await db.select().from(lenderProducts).where(eq(lenderProducts.active, true));
       
-      const products = JSON.parse(fs.readFileSync(filePath, "utf8"));
-      console.log(`✅ Served ${products.length} products from local cache`);
-      return res.status(200).json({ products, source: "local_cache" });
+      console.log(`✅ Served ${products.length} products from PostgreSQL database`);
+      return res.status(200).json({ 
+        success: true,
+        products, 
+        count: products.length,
+        source: "postgresql_database" 
+      });
     } catch (err) {
-      console.error('❌ Failed to serve lender products from cache:', err);
-      return res.status(500).json({ error: "Failed to read cache", products: [] });
+      console.error('❌ Failed to serve lender products from database:', err);
+      return res.status(500).json({ 
+        success: false,
+        error: "Failed to query database", 
+        products: [] 
+      });
     }
   });
 
