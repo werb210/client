@@ -1,155 +1,147 @@
 import { useState, useEffect } from 'react';
 import { logger } from '@/lib/utils';
 import { useFormData } from '@/context/FormDataContext';
-
 import { useLocation } from 'wouter';
-
-import { Step2RecommendationEngine } from '@/components/Step2RecommendationEngine';
-
 import { StepHeader } from '@/components/StepHeader';
-
-import { useDebouncedCallback } from 'use-debounce';
-
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, Clock } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function Step2Recommendations() {
   const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
-  const [selectedProduct, setSelectedProduct] = useState<string>('');
 
   // ✅ GA TEST EVENT - Fire on page load
   useEffect(() => {
     if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
       (window as any).gtag('event', 'ga_test_event', {
-        step: 'step_2_product_recommendations',
-        source: 'auto_debug',
+        step: 'step_2_pending_review',
+        source: 'security_restricted',
         verified: true,
       });
-      console.log('✅ GA test event fired automatically on load');
-    } else {
-      console.warn('⚠️ gtag is not defined. GA event not sent.');
+      console.log('✅ GA test event fired for pending review page');
     }
   }, []);
 
-  // Get user's Step 1 data for matching from unified schema
-  const normalizeHeadquarters = (location: string): string => {
-    if (location === 'united-states' || location === 'United States' || location === 'US') return 'US';
-    if (location === 'canada' || location === 'Canada' || location === 'CA') return 'CA';
-    return location || 'US';
-  };
-
-  // CRITICAL FIX: Use businessLocation field directly since it's already normalized as CA/US in Step 1
-  const formData = {
-    headquarters: state.step1?.businessLocation || 'US', // Use businessLocation directly, it's already CA/US format
-    industry: state.step1?.industry,
-    lookingFor: state.step1?.lookingFor,
-    fundingAmount: state.step1?.fundingAmount,
-    fundsPurpose: state.step1?.fundsPurpose,
-    accountsReceivableBalance: state.step1?.accountsReceivableBalance || 0,
-    // Additional fields for context
-    salesHistory: state.step1?.salesHistory,
-    averageMonthlyRevenue: state.step1?.averageMonthlyRevenue,
-  };
-
-  // ✅ STEP 1: REVIEW STATE STRUCTURE (ChatGPT Instructions)
-  logger.log("Step 1 Data:", state.step1);
-  logger.log("Step 3 Data:", state.step3);
-  logger.log('[STEP2] Form data passed to filtering:', formData);
-  logger.log('[STEP2] Raw Step 1 data:', {
-    businessLocation: state.step1?.businessLocation,
-    headquarters: state.step1?.headquarters,
-    lookingFor: state.step1?.lookingFor,
-    fundingAmount: state.step1?.fundingAmount,
-    accountsReceivableBalance: state.step1?.accountsReceivableBalance
-  });
-
-  // Debug logging disabled for production
-  // All form data passed to filtering algorithm
-
-  const handleProductSelect = (product: string) => {
-    setSelectedProduct(product);
-    // ✅ STEP 4: STORE SELECTED CATEGORY PROPERLY (ChatGPT Instructions)
+  // Continue to next step (skip recommendations)
+  const handleContinue = () => {
     dispatch({
       type: 'UPDATE_FORM_DATA',
       payload: {
         step2: {
-          selectedCategory: product,
-          selectedCategoryName: product
-        }
-      }
+          status: 'pending_review',
+          message: 'Lender matching will be processed after document submission',
+        },
+      },
     });
-    // ✅ STEP 5: DEBUG DISPLAY (ChatGPT Instructions)
-    logger.log("Selected Category:", product);
-    logger.log("Updated state.step2?.selectedCategory:", product);
+    setLocation('/step3');
   };
 
-  // Auto-save selected product with 2-second delay
-  const debouncedSave = useDebouncedCallback((product: string) => {
-    if (product) {
-      // STEP-BASED COMPLIANCE: Store selection in step2 object
-      dispatch({
-        type: 'UPDATE_FORM_DATA',
-        payload: {
-          step2: {
-            selectedCategory: product,
-            selectedCategoryName: product,
-            completed: true
-          }
-        }
-      });
-      logger.log('💾 Step 2 - Auto-saved product selection to step2 object:', product);
-      logger.log("Final state.step2?.selectedCategory:", product);
-      logger.log("Context state after auto-save:", state.step2);
-    }
-  }, 2000);
-
-  // Trigger autosave when product selection changes
-  useEffect(() => {
-    if (selectedProduct) {
-      debouncedSave(selectedProduct);
-    }
-  }, [selectedProduct, debouncedSave]);
-
-  const handleContinue = () => {
-    // Production validation: Require product selection
-    if (!selectedProduct) {
-      alert('Please select a product category before continuing.');
-      return;
-    }
-    
-    // Emit GTM step_completed event
-    const applicationId = localStorage.getItem('applicationId');
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ 
-      event: 'step_completed', 
-      step: 2, 
-      application_id: applicationId, 
-      product_type: selectedProduct 
-    });
-    
-    dispatch({ type: 'SET_CURRENT_STEP', payload: 3 });
-    setLocation('/apply/step-3');
-  };
-
-  const handlePrevious = () => {
-    setLocation('/apply/step-1');
+  // Go back to Step 1
+  const handleBack = () => {
+    setLocation('/step1');
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 space-y-6">
-        <StepHeader 
-          stepNumber={2}
-          title="Product Recommendations"
-          description="Select the best financing option based on your business profile"
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      <div className="container mx-auto px-4 py-8">
+        <StepHeader
+          currentStep={2}
+          totalSteps={7}
+          title="Lender Matching"
+          description="Your application will be matched with suitable lenders after document review"
         />
-        
-        <Step2RecommendationEngine
-          formData={formData}
-          selectedProduct={selectedProduct}
-          onProductSelect={handleProductSelect}
-          onContinue={handleContinue}
-          onPrevious={handlePrevious}
-        />
+
+        <div className="max-w-4xl mx-auto mt-8">
+          <Card className="border-2 border-teal-200 dark:border-teal-700">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-teal-100 dark:bg-teal-900 rounded-full flex items-center justify-center mb-4">
+                <Clock className="w-8 h-8 text-teal-600 dark:text-teal-400" />
+              </div>
+              <CardTitle className="text-2xl text-teal-700 dark:text-teal-300">
+                Lender Matching In Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center space-y-6">
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-lg">
+                  We'll match you with lenders once your documents are reviewed.
+                </AlertDescription>
+              </Alert>
+
+              <div className="bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 p-6 rounded-lg">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                  What happens next?
+                </h3>
+                <div className="grid md:grid-cols-3 gap-4 text-center">
+                  <div className="space-y-2">
+                    <div className="w-12 h-12 bg-teal-500 text-white rounded-full flex items-center justify-center mx-auto font-bold text-lg">
+                      1
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Complete your application
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center mx-auto font-bold text-lg">
+                      2
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Upload required documents
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center mx-auto font-bold text-lg">
+                      3
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Our team matches you with lenders
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 p-4 rounded-lg">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>Security Notice:</strong> Lender recommendations are processed server-side 
+                  to ensure the best matches and protect sensitive financial data.
+                </p>
+              </div>
+
+              <div className="flex gap-4 justify-center pt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={handleBack}
+                  className="px-8"
+                >
+                  ← Back to Step 1
+                </Button>
+                <Button 
+                  onClick={handleContinue}
+                  className="px-8 bg-teal-600 hover:bg-teal-700"
+                >
+                  Continue to Application →
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Debug info for development */}
+          {process.env.NODE_ENV === 'development' && (
+            <Card className="mt-4 border-gray-200">
+              <CardHeader>
+                <CardTitle className="text-sm">Development Info</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-gray-600">
+                  Step 1 Data: {JSON.stringify(state.step1, null, 2)}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );

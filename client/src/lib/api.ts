@@ -1,21 +1,17 @@
 const API_BASE = import.meta.env.VITE_API_BASE;
 const API_KEY = import.meta.env.VITE_CLIENT_API_KEY;
 
+/**
+ * ❌ DISABLED: Client cannot fetch lender products
+ * All lender data is processed server-side by Staff App
+ */
 export async function getLenderProducts() {
-  const resp = await fetch(`${API_BASE}/lender-products`, {
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-    },
-  });
-
-  const data = await resp.json();
-  if (!data.ok) {
-    console.error("Lender products fetch failed:", data);
-    throw new Error(data.error || "Failed to fetch lender products");
-  }
-  return data.products;
+  throw new Error("Lender product access restricted - handled server-side only");
 }
 
+/**
+ * ✅ ALLOWED: Application submission
+ */
 export async function submitApplication(data: any) {
   const res = await fetch(`${API_BASE}/applications`, {
     method: "POST",
@@ -29,6 +25,9 @@ export async function submitApplication(data: any) {
   return res.json();
 }
 
+/**
+ * ✅ ALLOWED: Document upload
+ */
 export async function uploadDocument(file: File, appId: string) {
   const formData = new FormData();
   formData.append("file", file);
@@ -45,16 +44,24 @@ export async function uploadDocument(file: File, appId: string) {
   return res.json();
 }
 
-// Legacy compatibility
+/**
+ * ❌ DISABLED: Legacy lender product fetch
+ */
 export async function fetchLenderProducts() {
-  return await getLenderProducts();
+  throw new Error("Lender product access restricted - handled server-side only");
 }
 
-// Legacy compatibility wrapper for existing code that uses apiFetch
+/**
+ * ✅ LIMITED: API fetch wrapper for allowed endpoints only
+ */
 export function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  // Only allow application and document endpoints
+  if (!url.includes('/applications') && !url.includes('/documents')) {
+    throw new Error(`API endpoint ${url} is restricted from client access`);
+  }
+
   const fullUrl = url.startsWith('/api/') ? url : `/api${url.startsWith('/') ? url : '/' + url}`;
   
-  // Merge credentials and auth with options
   const mergedOptions: RequestInit = {
     credentials: 'include',
     headers: {

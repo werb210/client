@@ -1,0 +1,73 @@
+1. Update Environment Config
+
+File: client/.env.production
+
+VITE_API_BASE=https://staff.boreal.financial/api/client
+VITE_CLIENT_API_KEY=bf_client_live_32products_2025
+VITE_WS_URL=wss://staff.boreal.financial/ws
+
+2. Update Fetch Logic
+
+File: client/src/services/lenderProducts.ts
+
+export async function fetchLenderProducts(applicationId: string) {
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE}/lender-products?applicationId=${applicationId}`,
+    {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${import.meta.env.VITE_CLIENT_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to fetch lender products");
+  }
+
+  return response.json();
+}
+
+3. Trigger AI Matching Only After Docs Approved
+
+File: client/src/views/LenderRecommendations.tsx
+
+if (!allDocumentsAccepted) {
+  return <p>Waiting for required documents to be approved…</p>;
+}
+
+// ✅ Only fetch when docs are fully accepted
+const { products } = await fetchLenderProducts(applicationId);
+renderProductList(products);
+
+4. Clear Cache & Rebuild
+pnpm clean
+pnpm build
+pnpm preview
+
+FINAL VALIDATION STEPS
+Test Case	Expected Result
+Missing Bearer Token	❌ {ok:false,error:"Missing bearer"}
+Wrong API Key	❌ {ok:false,error:"Invalid token"}
+Correct API Key, Docs Missing	❌ {ok:false,error:"Required documents not yet approved"}
+Correct API Key, Docs Approved	✅ {ok:true,products:[...32 lender products...]}
+Client App Display	✅ Renders 32 lender products after docs accepted
+Root Cause
+
+Staff app generated a 28‑char key but client was configured with 29‑char key.
+
+Endpoint paths mismatched (/api/public/* vs /api/client/*).
+
+AI lender matching was triggered too early in the client app.
+
+Outcome After Fix
+
+✅ Staff + client env keys are perfectly aligned.
+
+✅ AI matching locked to lenders tab only.
+
+✅ Client only shows lender products once documents are fully accepted.
+
+✅ No unsecured lender product exposure.
