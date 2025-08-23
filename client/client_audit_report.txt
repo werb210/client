@@ -1,0 +1,59 @@
+=== CLIENT APP AUDIT ===
+
+Duplicate Hooks/Components:
+
+Unused Exports:
+npm warn exec The following package was not found and will be installed: ts-prune@0.10.3
+/home/runner/.npm/_npx/1532855dfcb86dac/node_modules/@ts-morph/common/dist/ts-morph-common.js:1897
+            throw this.getFileNotFoundErrorIfNecessary(err, filePath);
+            ^
+
+FileNotFoundError: File not found: /home/runner/workspace/client/tsconfig.json
+    at RealFileSystemHost.getFileNotFoundErrorIfNecessary (/home/runner/.npm/_npx/1532855dfcb86dac/node_modules/@ts-morph/common/dist/ts-morph-common.js:1955:50)
+    at RealFileSystemHost.readFileSync (/home/runner/.npm/_npx/1532855dfcb86dac/node_modules/@ts-morph/common/dist/ts-morph-common.js:1897:24)
+    at TransactionalFileSystem.readFileSync (/home/runner/.npm/_npx/1532855dfcb86dac/node_modules/@ts-morph/common/dist/ts-morph-common.js:2431:32)
+    at TsConfigResolver.getTsConfigFileJson (/home/runner/.npm/_npx/1532855dfcb86dac/node_modules/@ts-morph/common/dist/ts-morph-common.js:2985:38)
+    at TsConfigResolver.decorator (/home/runner/.npm/_npx/1532855dfcb86dac/node_modules/@ts-morph/common/dist/ts-morph-common.js:2811:46)
+    at TsConfigResolver.parseJsonConfigFileContent (/home/runner/.npm/_npx/1532855dfcb86dac/node_modules/@ts-morph/common/dist/ts-morph-common.js:2981:70)
+    at TsConfigResolver.decorator (/home/runner/.npm/_npx/1532855dfcb86dac/node_modules/@ts-morph/common/dist/ts-morph-common.js:2811:46)
+    at TsConfigResolver.getCompilerOptions (/home/runner/.npm/_npx/1532855dfcb86dac/node_modules/@ts-morph/common/dist/ts-morph-common.js:2950:21)
+    at TsConfigResolver.decorator (/home/runner/.npm/_npx/1532855dfcb86dac/node_modules/@ts-morph/common/dist/ts-morph-common.js:2811:46)
+    at getTsConfigCompilerOptions (/home/runner/.npm/_npx/1532855dfcb86dac/node_modules/ts-morph/dist/ts-morph.js:20009:111) {
+  path: '/home/runner/workspace/client/tsconfig.json',
+  code: 'ENOENT'
+}
+
+Node.js v20.19.3
+
+Unused Dependencies:
+npm warn exec The following package was not found and will be installed: depcheck@1.4.7
+Path . does not contain a package.json file
+
+Unused Files:
+src/components/ui/aspect-ratio.tsx
+src/components/ui/alert-dialog.tsx
+src/components/ui/slider.tsx
+src/components/ui/hover-card.tsx
+src/components/ui/toggle-group.tsx
+src/components/ui/avatar.tsx
+src/components/ui/accordion.tsx
+src/components/ui/breadcrumb.tsx
+src/components/ui/carousel.tsx
+src/components/ui/context-menu.tsx
+src/components/ui/dropdown-menu.tsx
+src/components/ui/menubar.tsx
+src/components/ui/navigation-menu.tsx
+src/components/ui/pagination.tsx
+src/components/ui/resizable.tsx
+src/components/ui/sidebar.tsx
+src/components/forms/Step1BusinessBasics.tsx
+src/components/recommendations/RecommendationCard.tsx
+src/components/Step2DebugBypass.tsx
+src/components/ProductCategoryCard.tsx
+src/components/ApplicationStatusMonitor.tsx
+src/components/DocumentPreview.tsx
+src/components/DocumentUploadRequiredBanner.tsx
+src/components/RetryFailedUploads.tsx
+src/components/Step5Wrapper.tsx
+
+Duplicate API Definitions:
