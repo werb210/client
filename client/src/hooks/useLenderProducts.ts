@@ -1,20 +1,31 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
+interface LenderProduct {
+  id?: string;
+  productId?: string;
+  category?: string;
+  productCategory?: string;
+  name?: string;
+  lender?: string;
+  requiredDocuments?: string[];
+  [key: string]: any;
+}
+
 /**
  * ✅ ENABLED: Load lender products from local sync
  * Products are synced from staff app and stored locally
  */
-export function useLenderProducts() {
-  const [products, setProducts] = useState([]);
+export function useLenderProducts(): LenderProduct[] {
+  const [products, setProducts] = useState<LenderProduct[]>([]);
 
   useEffect(() => {
     async function fetchProducts() {
       try {
         const res = await fetch("/data/lenderProducts.json");
         const data = await res.json();
-        setProducts(data);
-        console.log(`✅ Loaded ${data.length} lender products from local sync`);
+        setProducts(Array.isArray(data) ? data : []);
+        console.log(`✅ Loaded ${Array.isArray(data) ? data.length : 0} lender products from local sync`);
       } catch (error) {
         console.error("❌ Failed to load lender products:", error);
         setProducts([]);
@@ -49,12 +60,12 @@ export const useLenderProductsQuery = () => {
 /**
  * ✅ ENABLED: Get products by category
  */
-export function useLenderProductsByCategory(category?: string) {
+export function useLenderProductsByCategory(category?: string): LenderProduct[] {
   const products = useLenderProducts();
   
   if (!category) return products;
   
-  return products.filter(product => 
+  return products.filter((product: LenderProduct) => 
     product.category?.toLowerCase() === category.toLowerCase() ||
     product.productCategory?.toLowerCase() === category.toLowerCase()
   );
@@ -63,23 +74,23 @@ export function useLenderProductsByCategory(category?: string) {
 /**
  * ✅ ENABLED: Get unique categories
  */
-export function useProductCategories() {
+export function useProductCategories(): string[] {
   const products = useLenderProducts();
   
   const categories = [...new Set(
-    products.map(p => p.category || p.productCategory).filter(Boolean)
+    products.map((p: LenderProduct) => p.category || p.productCategory).filter(Boolean)
   )];
   
-  return categories;
+  return categories as string[];
 }
 
 /**
  * ✅ ENABLED: Find product by ID
  */
-export function useLenderProduct(id?: string) {
+export function useLenderProduct(id?: string): LenderProduct | null {
   const products = useLenderProducts();
   
-  return products.find(p => p.id === id || p.productId === id) || null;
+  return products.find((p: LenderProduct) => p.id === id || p.productId === id) || null;
 }
 
 // Keep disabled functions for backward compatibility
@@ -88,7 +99,7 @@ export function useLenderProductsLive() {
   return;
 }
 
-// Export types for external use (will be defined by the synced data structure)
-export type LenderProduct = any;
+// Export types for external use
+export type { LenderProduct };
 export type LenderProductsResponse = { products: LenderProduct[] };
 export type LenderProductFilters = Record<string, any>;

@@ -1056,6 +1056,43 @@ app.use((req, res, next) => {
 
 
   // Mount API routes
+  // Sync endpoints for receiving data from staff app
+  app.post('/api/sync/lender-products', async (req: Request, res: Response) => {
+    const key = req.headers.authorization?.replace("Bearer ", "");
+    if (key !== process.env.CLIENT_SYNC_KEY) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const PRODUCTS_PATH = path.join(process.cwd(), "data", "lenderProducts.json");
+      
+      // Ensure data directory exists
+      const dataDir = path.dirname(PRODUCTS_PATH);
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+
+      fs.writeFileSync(PRODUCTS_PATH, JSON.stringify(req.body.products, null, 2));
+      console.log("✅ Lender products updated locally");
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      console.error("❌ Failed to update lender products:", err);
+      return res.status(500).json({ error: "Failed to save products" });
+    }
+  });
+
+  // Serve lender products data as static JSON
+  app.get('/data/lenderProducts.json', (req: Request, res: Response) => {
+    res.sendFile('lenderProducts.json', { root: 'data' }, (err) => {
+      if (err) {
+        console.error('Failed to serve lender products:', err);
+        res.status(404).json({ products: [] });
+      }
+    });
+  });
+
   app.use('/api/lenders', lendersRouter);
   // Removed unauthorized local applications router - all application calls now forward to Staff API
 

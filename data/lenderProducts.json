@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "id": "bdc_capital_term_loan",
+    "name": "BDC Term Loan",
+    "lender": "BDC Capital",
+    "category": "Term Loan",
+    "productCategory": "Term Loan",
+    "requiredDocuments": [
+      "Financial Statements",
+      "Bank Statements",
+      "Tax Returns"
+    ]
+  },
+  {
+    "id": "accord_financial_factoring",
+    "name": "Invoice Factoring",
+    "lender": "Accord Financial",
+    "category": "Invoice Factoring",
+    "productCategory": "Invoice Factoring",
+    "requiredDocuments": [
+      "AR Report",
+      "Customer List",
+      "Sample Invoices"
+    ]
+  },
+  {
+    "id": "sba_preferred_loan",
+    "name": "SBA 7(a) Loan",
+    "lender": "SBA Preferred Lender",
+    "category": "Working Capital",
+    "productCategory": "Working Capital",
+    "requiredDocuments": [
+      "Personal Financial Statement",
+      "Business Plan",
+      "Cash Flow"
+    ]
+  }
+]

@@ -39,7 +39,7 @@ export default function Step2Recommendations() {
       payload: {
         step2: {
           selectedCategory,
-          availableProducts: products.filter(p => 
+          availableProducts: products.filter((p: any) => 
             !selectedCategory || 
             p.category === selectedCategory || 
             p.productCategory === selectedCategory
