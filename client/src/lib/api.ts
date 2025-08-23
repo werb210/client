@@ -1,23 +1,15 @@
 import axios from "axios";
 export const api = axios.create({ baseURL: "/api", withCredentials: true });
 
-// Production API configuration
-const API_URL = "https://staff.boreal.financial";
+// Block 2 - Client App API Configuration
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const CLIENT_TOKEN = process.env.CLIENT_TOKEN;
 
 export async function fetchLenderProducts() {
   const res = await fetch(`${API_URL}/api/lender-products`, {
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${CLIENT_TOKEN}`,
-    },
+    headers: { Authorization: `Bearer ${CLIENT_TOKEN}` },
   });
-
-  if (!res.ok) {
-    console.error(`API Error [${res.status}] fetching lender products`);
-    throw new Error("Failed to fetch lender products");
-  }
-
+  if (!res.ok) throw new Error(`API Error ${res.status}`);
   return res.json();
 }
 

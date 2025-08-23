@@ -159,7 +159,7 @@ export default function KycDemo() {
                         <strong>URL:</strong> 
                         <a 
                           href={testResult.session.url} 
-                          target="_blank" 
+                           
                           className="text-blue-600 hover:underline text-xs ml-1"
                         >
                           {testResult.session.url}

@@ -3,11 +3,11 @@
  * Fetches live data from staff app with WebSocket-based synchronization
  */
 
-import { useLenderProducts as useLenderProductsAPI } from '@/api/lenderProducts';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
+import { fetchLenderProducts } from "@/lib/api";
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { staffClient, LenderProduct, LenderProductFilters } from '@/api/__generated__/staffClient';
-import { fetchLenderProducts } from '@/lib/api';
+import { LenderProductFilters } from '@/api/__generated__/staffClient';
 
 /**
  * ✅ WebSocket live updates hook for lender products
@@ -63,14 +63,10 @@ export function useLenderProductsLive() {
 }
 
 /**
- * ✅ Main export - Production API implementation
- * Uses fetchLenderProducts with authentication
+ * ✅ Block 2 - Client App Hook Implementation
  */
-export function useLenderProducts(filters?: LenderProductFilters) {
-  return useQuery({
-    queryKey: ["lender-products"],
-    queryFn: fetchLenderProducts,
-  });
+export function useLenderProducts() {
+  return useQuery(["lender-products"], fetchLenderProducts);
 }
 
 /**
