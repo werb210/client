@@ -124,37 +124,37 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div 
-      style={{
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        right: '0',
-        bottom: '0',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        zIndex: '999999',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px'
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <>
+      {/* Background overlay */}
       <div 
         style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          zIndex: 999998
+        }}
+        onClick={onClose}
+      />
+      
+      {/* Centered modal */}
+      <div 
+        style={{
+          position: 'fixed',
+          top: '50vh',
+          left: '50vw',
+          transform: 'translate(-50%, -50%)',
+          width: '500px',
+          maxWidth: '90vw',
+          minHeight: '400px',
+          maxHeight: '80vh',
           backgroundColor: '#ffffff',
           borderRadius: '12px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-          width: '100%',
-          maxWidth: '500px',
-          minHeight: '400px',
-          maxHeight: '90vh',
-          position: 'relative',
-          top: '0',
-          left: '0',
-          transform: 'none'
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+          zIndex: 999999,
+          border: '3px solid #e5e5e5'
         }}
       >
         {/* Header */}
@@ -221,7 +221,7 @@ function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
