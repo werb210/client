@@ -2,17 +2,17 @@ const API_BASE = import.meta.env.VITE_API_BASE;
 const API_KEY = import.meta.env.VITE_CLIENT_API_KEY;
 
 export async function getLenderProducts() {
-  const res = await fetch(`${API_BASE}/public/lender-products`, {
+  const resp = await fetch(`${API_BASE}/lender-products`, {
     headers: {
-      "Authorization": `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${API_KEY}`,
     },
   });
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch lender products: ${res.status}`);
+  const data = await resp.json();
+  if (!data.ok) {
+    console.error("Lender products fetch failed:", data);
+    throw new Error(data.error || "Failed to fetch lender products");
   }
-
-  const data = await res.json();
   return data.products;
 }
 

@@ -1,0 +1,100 @@
+Got it — I see exactly what’s happening from the screenshots and reports:
+
+---
+
+### **Root Cause**
+
+Even though the staff backend **accepts the API key** and returns 32 lender products when tested directly, the **client app is still pointing at the wrong base URL**.
+
+Right now, it’s hitting:
+
+```
+https://api.boreal.financial
+```
+
+…instead of:
+
+```
+https://staff.boreal.financial
+```
+
+That’s why every endpoint shows `Invalid token` — the wrong backend is rejecting the request.
+
+---
+
+### **Required Fix**
+
+#### **Step 1 — Update Client `.env.production`**
+
+```env
+# ❌ REMOVE old API_BASE pointing to api.boreal.financial
+# VITE_API_BASE=https://api.boreal.financial
+
+# ✅ USE the correct Staff backend URL instead:
+VITE_API_BASE=https://staff.boreal.financial/api/public
+
+# API Key stays the same:
+VITE_CLIENT_API_KEY=bf_client_7d9f4e1c9e7240a1b7f3d72a
+```
+
+---
+
+#### **Step 2 — Update API Helper**
+
+**File:** `src/lib/api.ts`
+
+```ts
+export async function getLenderProducts() {
+  const resp = await fetch(`${import.meta.env.VITE_API_BASE}/lender-products`, {
+    headers: {
+      Authorization: `Bearer ${import.meta.env.VITE_CLIENT_API_KEY}`,
+    },
+  });
+
+  const data = await resp.json();
+  if (!data.ok) {
+    console.error("Lender products fetch failed:", data);
+    throw new Error(data.error || "Failed to fetch lender products");
+  }
+  return data.products;
+}
+```
+
+---
+
+#### **Step 3 — Force Clean Rebuild**
+
+```bash
+rm -rf node_modules .vite dist
+npm install
+npm run build
+npm run preview
+```
+
+This ensures the updated environment variables are picked up.
+
+---
+
+#### **Step 4 — Validate Endpoint**
+
+```bash
+curl -s -H "Authorization: Bearer bf_client_7d9f4e1c9e7240a1b7f3d72a" \
+https://staff.boreal.financial/api/public/lender-products | jq
+```
+
+✅ You should now see **32 products** returned.
+
+---
+
+### **Result**
+
+* Client app now pulls **live lender products** (32 items)
+* Staff backend API key auth works
+* No more "Invalid token" errors
+* Fallback to 11 hardcoded products will disappear
+
+---
+
+Do you also want me to **disable the client’s 11-product fallback** entirely so it can **never silently use stale data again**?
+That would fully lock it to the staff backend.
+Should I?
