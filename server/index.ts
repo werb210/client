@@ -1350,8 +1350,8 @@ app.use((req, res, next) => {
       const { getLenderProducts } = await import('./services/lenderProductsCache');
       const staffProducts = await getLenderProducts();
       
-      const activeLenders = new Set();
-      const lenderProductCounts = {};
+      const activeLenders = new Set<string>();
+      const lenderProductCounts: Record<string, number> = {};
       
       if (staffProducts && staffProducts.length > 0) {
         staffProducts.forEach((product: any) => {
