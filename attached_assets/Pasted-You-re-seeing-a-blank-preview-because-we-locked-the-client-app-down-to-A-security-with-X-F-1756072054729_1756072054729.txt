@@ -1,0 +1,71 @@
+You’re seeing a blank preview because we locked the **client** app down to A+ security with:
+
+* `X-Frame-Options: DENY`
+* `Content-Security-Policy: frame-ancestors 'none'`
+
+Replit’s preview runs your site **inside an iframe**, so those headers intentionally block it. (Opening via “External page” works because that isn’t inside an iframe.)
+
+Here’s the clean fix that keeps A+ in **production** but allows the **dev/staging** preview to render in Replit.
+
+### What to do (client app only)
+
+1. **Add a dev toggle**
+   Set an env var in the client app:
+   `DEV_ALLOW_IFRAME=true`
+
+2. **Update your security headers code** (client app’s server — wherever you set Helmet/CSP; commonly `server/security/headers.ts` or `server/index.ts`)
+
+Drop this logic in your security middleware:
+
+```ts
+// server/security/headers.ts (client app)
+
+import helmet from "helmet";
+import type { RequestHandler } from "express";
+
+const isProd = process.env.NODE_ENV === "production";
+const allowDevIframe =
+  !isProd && (process.env.DEV_ALLOW_IFRAME === "true" || process.env.REPL_ID);
+
+const frameAncestors = allowDevIframe
+  ? ["'self'", "https://replit.com", "https://*.replit.com", "https://*.replit.dev", "https://*.id.repl.co"]
+  : ["'none'"];
+
+export const securityHeaders: RequestHandler = helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      // keep your existing directives...
+      "frame-ancestors": frameAncestors,
+    },
+  },
+  // X-Frame-Options + CSP should be consistent:
+  frameguard: allowDevIframe ? { action: "sameorigin" } : { action: "deny" },
+});
+```
+
+If you’re setting headers manually, ensure you **don’t** also set a conflicting `X-Frame-Options` when `frame-ancestors` is present; use the same logic as above.
+
+3. **Restart the client app**, then either:
+
+* Click **External page** (works immediately), or
+* Use the Replit preview pane (now allowed in dev with the new CSP).
+
+### How to verify (quick)
+
+* Run:
+
+  ```
+  curl -sSI http://localhost:5000 | grep -i -E "x-frame-options|content-security-policy"
+  ```
+
+  In dev you should see `frame-ancestors 'self' https://replit.com https://*.replit.com https://*.replit.dev https://*.id.repl.co`
+* In prod you should see `frame-ancestors 'none'` and `X-Frame-Options: DENY`.
+
+### Why this is safe
+
+* **Prod stays A+** (no embedding anywhere).
+* **Dev/staging only** relaxes just enough to let Replit render the iframe preview.
+* You can also keep using **External page** for the strict prod headers during testing if you prefer not to relax CSP in dev.
+
+If you apply this in the **client** app, the page will render in the Replit preview again without weakening production security.

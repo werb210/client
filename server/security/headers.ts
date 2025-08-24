@@ -3,12 +3,16 @@ import type { RequestHandler } from "express";
 
 // For iframe/preview compatibility, use NODE_ENV for security mode, not REPLIT_ENVIRONMENT
 const IN_PROD = process.env.NODE_ENV === "production";
-const ALLOW_IFRAME_ORIGINS = process.env.ALLOW_IFRAME_ORIGINS?.split(/\s+/) ?? [];
+const allowDevIframe = !IN_PROD && (process.env.DEV_ALLOW_IFRAME === "true" || process.env.REPL_ID);
+
+const frameAncestors = allowDevIframe
+  ? ["'self'", "https://replit.com", "https://*.replit.com", "https://*.replit.dev", "https://*.id.repl.co"]
+  : ["'none'"];
 
 export const securityHeaders = (): RequestHandler[] => [
   helmet({
-    // X-Frame-Options: DENY for maximum security (A+ compliance)
-    frameguard: { action: "deny" },   // ✅ Always DENY for A+ security
+    // X-Frame-Options: Conditional based on environment
+    frameguard: allowDevIframe ? { action: "sameorigin" } : { action: "deny" },
 
     contentSecurityPolicy: {
       useDefaults: false,  // Disable defaults to avoid conflicts
@@ -35,8 +39,8 @@ export const securityHeaders = (): RequestHandler[] => [
           "https://www.googletagmanager.com"
         ].filter(Boolean), // Add analytics connections
         
-        // ✅ A+ Security: Always deny frame embedding
-        "frame-ancestors": ["'none'"],              // ✅ Always deny for A+ security
+        // ✅ A+ Security in prod, dev-friendly iframe support in dev
+        "frame-ancestors": frameAncestors,
               
         "object-src": ["'none'"],
         "base-uri":   ["'self'"],
