@@ -1,0 +1,145 @@
+yep—let’s mirror the same “handoff kit” for the **client app** so I get everything I need in one shot.
+
+# 1) Copy-paste template (fill the blanks)
+
+```
+# Bug title
+Page/URL: (e.g., /apply, /apply/step-4, /chat)
+Silo: (BF or SLF)
+Browser/OS: (e.g., Chrome 126 / macOS 14)
+Timestamp: (local time)
+
+Steps to reproduce:
+1) …
+2) …
+Expected:
+Actual:
+
+Console errors (RAW text, not screenshots):
+- Full message:
+- Stack trace (DevTools → click error → Copy stack trace):
+- File:Line (e.g., ApplicationWizard.tsx:184)
+
+Network failures (DevTools → Network):
+- Request URL:
+- Method / Status:
+- Response body (paste):
+- Request payload (paste):
+- Request headers (redact auth if present):
+
+IDs on screen (if shown):
+- applicationId:
+- documentId(s):
+- chatSessionId:
+- userId / email used:
+
+Feature flags / silo switches visible:
+- flags: …
+- silo: bf|slf
+```
+
+# 2) One screenshot per failing flow
+
+* Keep **DevTools open** with **Preserve log** enabled.
+* **Console** tab: scroll to the **first** error.
+* **Network** tab: select the failing request (show **Headers** + **Response**).
+* Include the **address bar** so I can see the exact route & query.
+
+# 3) HAR + server logs (best)
+
+* **Client HAR**: DevTools → Network → **Save all as HAR with content**.
+* **Staff backend logs** (because the client forwards many calls): copy the last \~200 lines from its console (especially for `/api/applications`, `/api/documents`, `/api/chat/*`).
+* Zip & drop here, or paste the raw HAR text if that’s easier.
+
+# 4) Quick curl checks (paste the outputs)
+
+Run these **from the client runtime shell** (adjust hostnames if different):
+
+```bash
+# Health
+curl -sS http://localhost:5000/health
+
+# Wizard data
+curl -sS http://localhost:5000/api/public/config | head -50
+
+# Submit application (dry-run endpoint if present)
+curl -i -X POST http://localhost:5000/api/applications/validate \
+  -H "Content-Type: application/json" \
+  -d '{"businessName":"Test Co"}'
+
+# Document upload handshake (client → staff)
+curl -i http://localhost:5000/api/documents/presign?filename=test.pdf
+
+# Chat / handoff (client → staff)
+curl -i -X POST http://localhost:5000/api/chat/request-staff -d 'test=1'
+```
+
+> If any of these are proxied to the Staff app, include the **staff** response/status too.
+
+# 5) Happy-path checklist (tick what passed/failed)
+
+**Application Wizard**
+
+* [ ] Step 1 Business Info saves (201/200 returns applicationId)
+* [ ] Step 2 Owners saves (201/200)
+* [ ] Step 3 Financials saves (201/200)
+* [ ] Step 4 **Documents upload**:
+
+  * [ ] presign URL (200)
+  * [ ] PUT to S3 (200)
+  * [ ] POST metadata to staff (200 + documentId)
+  * [ ] UI shows 100% + appears in “Submitted documents”
+* [ ] Step 5 Banking connect (if applicable) completes; analysis status shown
+* [ ] Step 6 Review/Submit returns **submitted** status
+
+**Post-submit cross-checks**
+
+* [ ] Appears in Staff **Pipeline** with same applicationId
+* [ ] Staff **Documents** tab shows same doc count
+* [ ] OCR status visible (queued/processed/errors)
+
+**Chat / Support**
+
+* [ ] “Talk to a human” sends to Staff `/api/chat/request-staff` (200)
+* [ ] User message → Staff `/api/chat/user-message` (200/ws event)
+* [ ] Issue report → Staff `/api/support/issue` (200)
+
+**Realtime**
+
+* [ ] Socket.io connects (no red retries in console)
+* [ ] Server emits seen client-side (one event name + payload sample)
+
+# 6) Super-useful tiny snippets
+
+**Dump most recent console errors into your clipboard**
+
+```js
+(() => {
+  // Run in Console after reproducing; then paste here
+  console.log('Navigator:', navigator.userAgent);
+  console.log('Time:', new Date().toString());
+})();
+```
+
+(Chrome doesn’t allow programmatically copying devtools logs, so the raw copy of each error/stack is best.)
+
+**Inspect local/session storage keys that might affect auth/tenant**
+
+```js
+console.log('localStorage:', JSON.stringify(localStorage, null, 2));
+console.log('sessionStorage:', JSON.stringify(sessionStorage, null, 2));
+```
+
+(Redact tokens if present.)
+
+# 7) Known client→staff touchpoints to always include
+
+* `/api/applications/*` (create/update/submit)
+* `/api/documents/presign`, `/api/documents/complete` (or equivalent)
+  *(client → staff → S3 chain)*
+* `/api/chat/request-staff`, `/api/chat/user-message`, `/api/support/issue`
+* Any `socket.io` namespace and connection URL being used
+
+---
+
+If you drop **one filled template + one HAR + one staff log snippet** per broken flow (Application, Documents, Chat), I can pinpoint root causes quickly and give you exact patches.
