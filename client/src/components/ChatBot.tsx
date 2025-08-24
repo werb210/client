@@ -418,67 +418,36 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
   // Socket.IO integration for real-time messaging
   useEffect(() => {
-    if (isOpen && typeof window !== 'undefined' && (window as any).io) {
+    if (isOpen && !socketRef.current) {
       console.log('Initializing Socket.IO connection for real-time chat');
       
-      // Use global socket if available, or create new one with iOS-compatible settings
-      // Connect to the local client server using relative path
-      console.log('ChatBot connecting Socket.IO to local client server');
-      
-      const socketInstance = (window as any).globalSocket || (window as any).io('/', {
-        transports: ['websocket'],
-        upgrade: false,
-        timeout: 20000,
-        reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionAttempts: 5,
-        autoConnect: true,
-        forceNew: false
-      });
+      // Use centralized socket instance to prevent connection conflicts
+      const { getSocket } = require('@/lib/socket');
+      const socketInstance = getSocket();
       setSocket(socketInstance);
 
-      // Join the session with proper error handling
-      try {
-        if (socketInstance && !socketInstance.connected) {
-          socketInstance.emit('join-session', sessionId);
-          console.log('Emitted join-session for sessionId:', sessionId);
-        }
-      } catch (error) {
-        console.error('Failed to join session:', error);
-      }
+      // Set socket instance for this chat session
+      
+      // Join the session
+      socketInstance.emit('join-session', sessionId);
+      console.log('Joined session:', sessionId);
 
-      // Connection status with enhanced logging
-      socketInstance.on('connect', () => {
-        console.log('Socket.IO connected, client ID:', socketInstance.id);
+      // Set up event listeners
+      const handleConnect = () => {
+        console.log('✅ [Chat] Socket connected');
         setIsConnected(true);
-        // Re-join session on reconnect
         socketInstance.emit('join-session', sessionId);
-        console.log('Re-joined session after reconnect:', sessionId);
-      });
+      };
 
-      socketInstance.on('disconnect', (reason: any) => {
-        console.log('Socket.IO disconnected, reason:', reason);
+      const handleDisconnect = (reason: any) => {
+        console.log(`🔌 [Chat] Socket disconnected: ${reason}`);
         setIsConnected(false);
-      });
+      };
 
-      socketInstance.on('connect_error', (error: any) => {
-        console.error('Socket.IO connection error:', error);
-        console.warn('Connection Error Details:', error.message);
-        console.warn('Retrying connection...');
+      const handleConnectError = (error: any) => {
+        console.warn(`⚠️ [Chat] Connection error, retrying...`);
         setIsConnected(false);
-      });
-
-      socketInstance.on('reconnect_attempt', () => {
-        console.log('Reconnecting to Socket.IO server...');
-      });
-
-      socketInstance.on('reconnect', (attemptNumber: number) => {
-        console.log('Socket.IO reconnected after', attemptNumber, 'attempts');
-      });
-
-      socketInstance.on('reconnect_failed', () => {
-        console.error('Socket.IO failed to reconnect after maximum attempts');
-      });
+      };
 
       // Listen for real-time messages
       socketInstance.on('new-message', (msg: any) => {

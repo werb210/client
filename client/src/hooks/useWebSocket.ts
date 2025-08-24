@@ -1,33 +1,30 @@
 import { useEffect } from "react";
-import { io } from "socket.io-client";
+import { getSocket } from "@/lib/socket";
 import { queryClient } from "@/lib/queryClient";
-
-const WS_URL = import.meta.env.VITE_WS_URL;
-const CLIENT_TOKEN = import.meta.env.VITE_CLIENT_TOKEN;
 
 export function useWebSocket() {
   useEffect(() => {
-    const socket = io(WS_URL, {
-      transports: ["websocket"],
-      auth: { token: CLIENT_TOKEN }
-    });
+    // Use centralized socket instance to prevent conflicts
+    const socket = getSocket();
 
-    socket.on("connect", () => console.log("✅ WebSocket connected"));
-
-    socket.on("lender-products:update", () => {
+    // Set up event listeners
+    const handleLenderUpdate = () => {
       console.log("🔄 Lender products updated");
       queryClient.invalidateQueries({ queryKey: ["lender-products"] });
-    });
+    };
 
-    socket.on("pipeline:update", () => {
+    const handlePipelineUpdate = () => {
       console.log("🔄 Pipeline updated");
       queryClient.invalidateQueries({ queryKey: ["pipeline"] });
-    });
+    };
 
-    socket.on("disconnect", () => console.warn("⚠️ WebSocket disconnected"));
+    socket.on("lender-products:update", handleLenderUpdate);
+    socket.on("pipeline:update", handlePipelineUpdate);
 
     return () => {
-      socket.disconnect();
+      // Remove listeners but don't disconnect (other components may be using it)
+      socket.off("lender-products:update", handleLenderUpdate);
+      socket.off("pipeline:update", handlePipelineUpdate);
     };
   }, []);
 }
