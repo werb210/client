@@ -324,15 +324,30 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
   // Handle AI responses and lender suggestions
   const handleAIResponse = async (userInput: string) => {
+    // Simple local responses based on user input
+    let response = "";
+    
+    const input = userInput.toLowerCase();
+    
+    if (input.includes('hello') || input.includes('hi') || input.includes('hey')) {
+      response = "Hello! I'm here to help you with business financing. What type of funding are you looking for today?";
+    } else if (input.includes('loan') || input.includes('funding') || input.includes('finance')) {
+      response = "Great! We offer various business financing options including term loans, lines of credit, and equipment financing. What's your business looking to accomplish with funding?";
+    } else if (input.includes('amount') || input.includes('how much')) {
+      response = "Our lending partners can provide funding from $10,000 to $5M+ depending on your business needs and qualifications. What amount are you considering?";
+    } else if (input.includes('rate') || input.includes('interest')) {
+      response = "Interest rates vary based on your business profile, credit, and loan type. Our specialists can provide personalized rate quotes after reviewing your application.";
+    } else {
+      response = "I'd be happy to help you explore business financing options! You can start an application, upload documents, or speak with our specialists for personalized assistance.";
+    }
+    
+    addBotMessage(response);
+    
+    // Log user message to staff (non-blocking)
     try {
-      // For now, provide a basic response while AI endpoint is being set up
-      addBotMessage("Thank you for your question! I'm here to help you with business financing. What specific information would you like to know about our lending solutions?");
-      
-      // Log user message to staff (non-blocking)
       logUserMessage(userInput);
     } catch (error) {
-      console.error('AI response error:', error);
-      addBotMessage(currentStrings.errorOccurred);
+      console.warn('Failed to log message:', error);
     }
   };
 
