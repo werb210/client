@@ -16,13 +16,34 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 // DISABLED: WebSocketListener causing connection errors - using Socket.IO instead
 // import { WebSocketListener } from "@/components/WebSocketListener";
 
-// Add global unhandled promise rejection handler for cleaner console output
+// Enhanced promise rejection handler with better filtering
 window.addEventListener('unhandledrejection', (event) => {
-  // In development, log warnings for debugging
-  if (import.meta.env.DEV) {
-    console.warn('[App] Unhandled promise rejection prevented:', event.reason);
+  const reason = event.reason;
+  
+  // Filter out common safe rejections that don't need logging
+  if (reason && typeof reason === 'object') {
+    const message = reason.message || String(reason);
+    const safeErrors = [
+      'AbortError',
+      'Load was cancelled',
+      'Navigation cancelled', 
+      'The user aborted a request',
+      'signal is aborted without reason',
+      'ResizeObserver loop limit exceeded',
+      'Non-Error promise rejection captured'
+    ];
+    
+    if (safeErrors.some(safe => message.includes(safe))) {
+      event.preventDefault();
+      return;
+    }
   }
-  // Prevent the console error from appearing
+  
+  // Only log significant errors in development
+  if (import.meta.env.DEV && reason) {
+    console.warn('[App] Promise rejection:', reason.message || reason);
+  }
+  
   event.preventDefault();
 });
 

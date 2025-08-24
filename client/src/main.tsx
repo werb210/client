@@ -4,33 +4,7 @@ import App from "./App";
 import "./index.css";
 import { initializePWA } from "./lib/pwa";
 
-// Enhanced error handling to prevent app crashes and identify sources
-window.addEventListener('unhandledrejection', (event) => {
-  event.preventDefault();
-  
-  // In development, log the actual error for debugging (but less verbose)
-  if (import.meta.env.DEV) {
-    // Only log significant errors, filter out common safe rejections
-    const reason = event.reason;
-    if (reason && !isKnownSafeRejection(reason)) {
-      console.warn('[App] Unhandled promise rejection:', reason.message || reason);
-    }
-  }
-});
-
-// Helper to identify safe rejections that can be ignored
-function isKnownSafeRejection(reason: any): boolean {
-  const message = reason?.message || String(reason);
-  const safeMessages = [
-    'AbortError',
-    'Load was cancelled',
-    'Navigation cancelled',
-    'The user aborted a request',
-    'signal is aborted without reason'
-  ];
-  
-  return safeMessages.some(safe => message.includes(safe));
-}
+// Remove duplicate unhandled rejection handler - handled in App.tsx
 
 // Initialize PWA features
 initializePWA();

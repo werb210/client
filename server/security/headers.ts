@@ -16,11 +16,11 @@ export const securityHeaders = (): RequestHandler[] => [
       useDefaults: true,
       directives: {
         "default-src": ["'self'"],
-        "script-src": ["'self'"],
-        "style-src":  ["'self'"],
-        "img-src":    ["'self'", "data:"],
-        "font-src":   ["'self'"],
-        "connect-src":["'self'", process.env.STAFF_API_URL ?? ""].filter(Boolean),
+        "script-src": ["'self'", "'unsafe-inline'"],  // Allow inline scripts for React/Vite
+        "style-src":  ["'self'", "'unsafe-inline'"],  // Allow inline styles for CSS-in-JS
+        "img-src":    ["'self'", "data:", "blob:"],   // Add blob: for generated images
+        "font-src":   ["'self'", "data:"],            // Add data: for base64 fonts
+        "connect-src":["'self'", process.env.STAFF_API_URL ?? "", "ws:", "wss:"].filter(Boolean), // Add WebSocket support
         
         // ✅ Dev/Prod split for frame-ancestors
         "frame-ancestors": IN_PROD
