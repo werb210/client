@@ -7,10 +7,8 @@ const ALLOW_IFRAME_ORIGINS = process.env.ALLOW_IFRAME_ORIGINS?.split(/\s+/) ?? [
 
 export const securityHeaders = (): RequestHandler[] => [
   helmet({
-    // X-Frame-Options: Dev/Prod split for Replit preview compatibility
-    frameguard: IN_PROD
-      ? { action: "deny" }            // ✅ prod = DENY for A+ security
-      : { action: "sameorigin" },     // ✅ dev = allow same-origin (Replit preview)
+    // X-Frame-Options: DENY for maximum security (A+ compliance)
+    frameguard: { action: "deny" },   // ✅ Always DENY for A+ security
 
     contentSecurityPolicy: {
       useDefaults: true,
@@ -22,12 +20,8 @@ export const securityHeaders = (): RequestHandler[] => [
         "font-src":   ["'self'", "data:"],            // Add data: for base64 fonts
         "connect-src":["'self'", process.env.STAFF_API_URL ?? "", "ws:", "wss:"].filter(Boolean), // Add WebSocket support
         
-        // ✅ Dev/Prod split for frame-ancestors
-        "frame-ancestors": IN_PROD
-          ? ["'none'"]                                // ✅ prod = cannot be framed (A+ security)
-          : (ALLOW_IFRAME_ORIGINS.length > 0
-              ? ALLOW_IFRAME_ORIGINS                 // dev allowlist if specified
-              : ["'self'", "https://replit.com", "https://*.replit.dev", "https://*.id.repl.co"]), // default Replit domains
+        // ✅ A+ Security: Always deny frame embedding
+        "frame-ancestors": ["'none'"],              // ✅ Always deny for A+ security
               
         "object-src": ["'none'"],
         "base-uri":   ["'self'"]

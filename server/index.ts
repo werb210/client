@@ -36,6 +36,10 @@ import { securityHeaders } from "./security/headers";
 import { rlGeneral, rlAuth, rlUpload, rlChatbot } from "./security/rate";
 import healthRoutes from "./routes/health";
 
+// A+ Security: Fail-fast environment validation
+import { Env } from "./config/env";
+void Env; // Ensures environment validation happens early
+
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -78,7 +82,7 @@ app.use((req, res, next) => {
 });
 
 // Build version endpoint for cache debugging
-const BUILD_ID = process.env.GIT_COMMIT || new Date().toISOString();
+const BUILD_ID = process.env.BUILD_ID || process.env.GIT_COMMIT || new Date().toISOString();
 app.get('/__version', (_req, res) => res.json({ app: 'client', build: BUILD_ID }));
 
 // Production-ready CORS configuration (without conflicting security headers)
@@ -1409,8 +1413,8 @@ app.use((req, res, next) => {
       const { getLenderProducts } = await import('./services/lenderProductsCache');
       const staffProducts = await getLenderProducts();
       
-      const activeCategories = new Set();
-      const categoryProductCounts = {};
+      const activeCategories = new Set<string>();
+      const categoryProductCounts: Record<string, number> = {};
       
       if (staffProducts && staffProducts.length > 0) {
         staffProducts.forEach((product: any) => {
@@ -2898,6 +2902,16 @@ app.use((req, res, next) => {
     // Production: serve built files
     const clientBuildPath = join(__dirname, '../dist/public');
     console.log(`[STATIC] Serving client files from: ${clientBuildPath}`);
+    
+    // A+ Security: Ensure HTML is always fresh in staging/production
+    app.use((req, res, next) => {
+      if (req.method === "GET" && req.headers.accept?.includes("text/html")) {
+        res.setHeader("Cache-Control", "no-store, must-revalidate");
+        res.setHeader("Pragma", "no-cache");
+      }
+      next();
+    });
+    
     app.use(express.static(clientBuildPath));
     
     // SPA Routing: All non-API routes should serve index.html for React Router with CSRF token
