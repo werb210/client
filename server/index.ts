@@ -32,52 +32,19 @@ import supportRouter from "./routes/support";
 import authRouter from "./routes/auth";
 import leadsRouter from "./routes/leads";
 import { issueCsrf, requireCsrf } from "./security/csrf";
+import { securityHeaders } from "./security/headers";
+import { rlGeneral, rlAuth, rlUpload, rlChatbot } from "./security/rate";
+import healthRoutes from "./routes/health";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+app.set("trust proxy", 1); // for secure cookies behind proxies
+
 if (process.env.NODE_ENV !== "production") { app.use(devIframeHeaderKiller); }
 if (process.env.NODE_ENV !== "production") { app.use(allowReplitIframe); }
-
-// Rate limiting middleware (simple implementation)
-const rateLimitStore = new Map();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const RATE_LIMIT_MAX = 100; // 100 requests per minute
-
-app.use((req: Request, res: Response, next: NextFunction) => {
-  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
-  const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW;
-  
-  // Clean up old entries
-  for (const [ip, requests] of rateLimitStore.entries()) {
-    const filteredRequests = requests.filter((time: number) => time > windowStart);
-    if (filteredRequests.length === 0) {
-      rateLimitStore.delete(ip);
-    } else {
-      rateLimitStore.set(ip, filteredRequests);
-    }
-  }
-  
-  // Check current IP
-  const requests = rateLimitStore.get(clientIP) || [];
-  const recentRequests = requests.filter((time: number) => time > windowStart);
-  
-  if (recentRequests.length >= RATE_LIMIT_MAX) {
-    return res.status(429).json({
-      error: 'Too Many Requests',
-      message: 'Rate limit exceeded. Please try again later.',
-      retryAfter: 60
-    });
-  }
-  
-  recentRequests.push(now);
-  rateLimitStore.set(clientIP, recentRequests);
-  
-  next();
-});
 
 // Determine actual environment - true production mode
 const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_ENVIRONMENT === 'production';
@@ -94,6 +61,12 @@ initLenderProducts().catch(err => {
   console.error('❌ Failed to initialize lender products:', err);
 });
 
+// Apply security headers first
+securityHeaders().forEach(mw => app.use(mw));
+
+// Apply general rate limiting
+app.use(rlGeneral);
+
 // Production-ready CORS configuration
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -109,7 +82,7 @@ app.use((req, res, next) => {
   }
   
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, X-CSRF-Token');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, X-CSRF-Token, x-csrf-token');
   res.header('Access-Control-Allow-Credentials', 'true');
   
   // Security headers
@@ -1737,7 +1710,12 @@ app.use((req, res, next) => {
   app.use('/api/notifications', notificationsRouter);
   
   // Mount lead capture routes with CSRF protection
+  // Apply specific rate limits for chatbot endpoints
+  app.use("/api/chat", rlChatbot);
+  app.use("/api/leads", rlChatbot);
+  
   app.use('/api', leadsRouter);
+  app.use(healthRoutes);
   
   // Mount enhanced chat routes for staff handoff
   const chatEnhancedRouter = (await import('./routes/chat-enhanced')).default;
@@ -2930,23 +2908,32 @@ app.use((req, res, next) => {
     app.use(express.static(clientBuildPath));
     
     // SPA Routing: All non-API routes should serve index.html for React Router with CSRF token
-    app.get('*', issueCsrf, async (req, res) => {
-      const indexPath = join(__dirname, '../dist/public/index.html');
-      console.log(`[SPA] Serving index.html for route: ${req.path}`);
-      
-      try {
-        // Inject CSRF token into HTML for client access
-        const fs = await import('fs');
-        const html = fs.readFileSync(indexPath, 'utf8');
-        const htmlWithCsrf = html.replace(
-          '<head>',
-          `<head><script>window.__CSRF__ = '${req.csrfToken}';</script>`
-        );
-        res.send(htmlWithCsrf);
-      } catch (error) {
-        console.error('Error serving SPA route:', error);
-        res.status(500).send('Internal Server Error');
+    // BUT exclude health endpoints from SPA routing
+    app.get('*', (req, res, next) => {
+      // Skip SPA routing for health endpoints
+      if (req.path.startsWith('/health')) {
+        return next();
       }
+      
+      // Apply CSRF token issuance
+      issueCsrf(req, res, () => {
+        const indexPath = join(__dirname, '../dist/public/index.html');
+        console.log(`[SPA] Serving index.html for route: ${req.path}`);
+        
+        try {
+          // Inject CSRF token into HTML for client access
+          const fs = require('fs');
+          const html = fs.readFileSync(indexPath, 'utf8');
+          const htmlWithCsrf = html.replace(
+            '<head>',
+            `<head><script>window.__CSRF__ = '${req.csrfToken || ''}';</script>`
+          );
+          res.send(htmlWithCsrf);
+        } catch (error) {
+          console.error('Error serving SPA route:', error);
+          res.status(500).send('Internal Server Error');
+        }
+      });
     });
   } else {
     // Development: use Vite dev server

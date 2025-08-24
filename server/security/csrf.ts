@@ -13,37 +13,41 @@ declare global {
 }
 
 export function issueCsrf(req: Request, res: Response, next: NextFunction) {
-  const token = req.cookies?.[CSRF_COOKIE] || crypto.randomBytes(16).toString("hex");
-  
-  // Set CSRF cookie (accessible to JavaScript for header inclusion)
-  res.cookie(CSRF_COOKIE, token, { 
-    httpOnly: false, // Must be accessible to JS for header inclusion
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: "lax", 
-    path: "/",
-    maxAge: 1000 * 60 * 60 * 24 // 24 hours
-  });
-  
-  // Echo token in response header for client to read
-  res.setHeader("x-csrf-token", token);
-  req.csrfToken = token;
+  const isGet = req.method === "GET" || req.method === "HEAD";
+  if (isGet && !req.cookies?.[CSRF_COOKIE]) {
+    const token = crypto.randomBytes(32).toString("base64url");
+    
+    // Set CSRF cookie (accessible to JavaScript for header inclusion)
+    res.cookie(CSRF_COOKIE, token, { 
+      httpOnly: false, // Must be accessible to JS for header inclusion
+      secure: true, // Always secure for production-ready config
+      sameSite: "lax", 
+      path: "/",
+      maxAge: 1000 * 60 * 60 * 24 // 24 hours
+    });
+    
+    // Echo token in response header for client to read
+    res.setHeader("x-csrf-token", token);
+    req.csrfToken = token;
+  }
   
   next();
 }
 
 export function requireCsrf(req: Request, res: Response, next: NextFunction) {
-  if (req.method === "GET" || req.method === "HEAD") {
-    return next(); // Skip CSRF for safe methods
+  const method = req.method.toUpperCase();
+  const needsCheck = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+
+  // Dev-only minimal bypass for explicit test routes
+  if (process.env.NODE_ENV !== "production") {
+    const devBypass = req.path.startsWith("/__dev/allow-nocsrf");
+    if (devBypass) return next();
   }
-  
+
+  if (!needsCheck) return next();
+
   const cookieToken = req.cookies?.[CSRF_COOKIE];
-  const headerToken = req.get("x-csrf-token");
-  
-  // Only allow bypass for specific development endpoints
-  if (!cookieToken && process.env.NODE_ENV === 'development' && req.path === '/api/test-only') {
-    console.log('[CSRF] Development mode: CSRF check bypassed for test endpoint only');
-    return next();
-  }
+  const headerToken = (req.get("x-csrf-token") || req.get("X-CSRF-Token"))?.trim();
   
   if (!cookieToken || !headerToken || cookieToken !== headerToken) {
     console.warn('[CSRF] Blocked request:', {
