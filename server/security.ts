@@ -4,14 +4,14 @@ import rateLimit from "express-rate-limit";
 import type { Express } from "express";
 
 export function harden(app: Express) {
-  // Helmet security headers
+  // Helmet security headers with strict CSP (no unsafe-inline)
   app.use(helmet({
     frameguard: { action: "deny" },
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://app.signnow.com", "https://*.signnow.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        scriptSrc: ["'self'", "https://app.signnow.com", "https://*.signnow.com"],
+        styleSrc: ["'self'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "blob:", "https:"],
         connectSrc: ["'self'", "wss:", "ws:", "https:", "http:"],
@@ -20,7 +20,8 @@ export function harden(app: Express) {
         mediaSrc: ["'self'"],
         workerSrc: ["'self'", "blob:"],
         baseUri: ["'self'"],
-        formAction: ["'self'"]
+        formAction: ["'self'"],
+        reportUri: ["/csp-report"]
       }
     }
   }));
