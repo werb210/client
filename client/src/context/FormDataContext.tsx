@@ -140,7 +140,19 @@ const initialState: FormDataState = {
   step6Signature: {},
   
   // Authorization data for typed signature
-  step6Authorization: {}
+  step6Authorization: {
+    typedName: '',
+    agreements: {
+      creditCheck: false,
+      dataSharing: false,
+      termsAccepted: false,
+      electronicSignature: false,
+      accurateInformation: false
+    },
+    timestamp: '',
+    userAgent: '',
+    stepCompleted: false
+  }
 };
 
 function formDataReducer(state: FormDataState, action: FormDataAction): FormDataState {
@@ -174,7 +186,7 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
         },
         ...action.payload, // Also store at root level for backward compatibility
       };
-    case 'SET_STEP3':
+    case 'UPDATE_STEP3':
       console.log("🔧 Step 3 dispatched:", action.payload);
       return {
         ...state,
