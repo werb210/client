@@ -41,6 +41,44 @@ const app = express();
 if (process.env.NODE_ENV !== "production") { app.use(devIframeHeaderKiller); }
 if (process.env.NODE_ENV !== "production") { app.use(allowReplitIframe); }
 
+// Rate limiting middleware (simple implementation)
+const rateLimitStore = new Map();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_MAX = 100; // 100 requests per minute
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW;
+  
+  // Clean up old entries
+  for (const [ip, requests] of rateLimitStore.entries()) {
+    const filteredRequests = requests.filter((time: number) => time > windowStart);
+    if (filteredRequests.length === 0) {
+      rateLimitStore.delete(ip);
+    } else {
+      rateLimitStore.set(ip, filteredRequests);
+    }
+  }
+  
+  // Check current IP
+  const requests = rateLimitStore.get(clientIP) || [];
+  const recentRequests = requests.filter((time: number) => time > windowStart);
+  
+  if (recentRequests.length >= RATE_LIMIT_MAX) {
+    return res.status(429).json({
+      error: 'Too Many Requests',
+      message: 'Rate limit exceeded. Please try again later.',
+      retryAfter: 60
+    });
+  }
+  
+  recentRequests.push(now);
+  rateLimitStore.set(clientIP, recentRequests);
+  
+  next();
+});
+
 // Determine actual environment - true production mode
 const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_ENVIRONMENT === 'production';
 const actualEnv = isProduction ? 'production' : 'development';
@@ -71,7 +109,7 @@ app.use((req, res, next) => {
   }
   
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, X-CSRF-Token');
   res.header('Access-Control-Allow-Credentials', 'true');
   
   // Security headers

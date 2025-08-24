@@ -39,9 +39,9 @@ export function requireCsrf(req: Request, res: Response, next: NextFunction) {
   const cookieToken = req.cookies?.[CSRF_COOKIE];
   const headerToken = req.get("x-csrf-token");
   
-  // Allow requests without cookies in development/testing
-  if (!cookieToken && process.env.NODE_ENV === 'development') {
-    console.log('[CSRF] Development mode: allowing request without cookie');
+  // Only allow bypass for specific development endpoints
+  if (!cookieToken && process.env.NODE_ENV === 'development' && req.path === '/api/test-only') {
+    console.log('[CSRF] Development mode: CSRF check bypassed for test endpoint only');
     return next();
   }
   
