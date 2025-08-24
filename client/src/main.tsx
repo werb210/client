@@ -8,18 +8,29 @@ import { initializePWA } from "./lib/pwa";
 window.addEventListener('unhandledrejection', (event) => {
   event.preventDefault();
   
-  // In development, log the actual error for debugging
+  // In development, log the actual error for debugging (but less verbose)
   if (import.meta.env.DEV) {
-    console.warn('[App] Unhandled promise rejection prevented:', event.reason || {});
-    
-    // Additional debugging for promise rejection sources
-    if (event.reason && event.reason.stack) {
-      console.warn('[App] Rejection stack:', event.reason.stack);
+    // Only log significant errors, filter out common safe rejections
+    const reason = event.reason;
+    if (reason && !isKnownSafeRejection(reason)) {
+      console.warn('[App] Unhandled promise rejection:', reason.message || reason);
     }
   }
-  
-  // Suppress all unhandled rejections for clean production console
 });
+
+// Helper to identify safe rejections that can be ignored
+function isKnownSafeRejection(reason: any): boolean {
+  const message = reason?.message || String(reason);
+  const safeMessages = [
+    'AbortError',
+    'Load was cancelled',
+    'Navigation cancelled',
+    'The user aborted a request',
+    'signal is aborted without reason'
+  ];
+  
+  return safeMessages.some(safe => message.includes(safe));
+}
 
 // Initialize PWA features
 initializePWA();

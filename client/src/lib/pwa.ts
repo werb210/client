@@ -454,27 +454,50 @@ export class NetworkStatusManager {
 
 // Initialize PWA features
 export const initializePWA = () => {
-  // Register service worker
+  // Register service worker with error handling
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
       try {
-        const registration = await navigator.serviceWorker.register('/service-worker.js');
-        console.log('Service worker registered successfully:', registration);
+        // Check if service worker file exists first
+        const response = await fetch('/service-worker.js', { method: 'HEAD' });
+        if (!response.ok) {
+          console.log('Service worker file not found, skipping registration');
+          return;
+        }
+
+        const registration = await navigator.serviceWorker.register('/service-worker.js', {
+          scope: '/'
+        });
+        
+        if (import.meta.env.DEV) {
+          console.log('✅ Service worker registered successfully');
+        }
         
         // Listen for service worker messages
         navigator.serviceWorker.addEventListener('message', (event) => {
-          console.log('Message from service worker:', event.data);
+          if (import.meta.env.DEV) {
+            console.log('Message from service worker:', event.data);
+          }
           
           if (event.data.type === 'SYNC_SUCCESS') {
             // Handle successful background sync
-            console.log('Background sync completed');
+            if (import.meta.env.DEV) {
+              console.log('Background sync completed');
+            }
           }
         });
         
-      } catch (error) {
-        console.error('Service worker registration failed:', error);
+      } catch (error: unknown) {
+        if (import.meta.env.DEV) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.warn('Service worker registration failed:', errorMessage);
+        }
       }
     });
+  } else {
+    if (import.meta.env.DEV) {
+      console.log('Service workers not supported in this browser');
+    }
   }
 
   // Initialize PWA components

@@ -18,7 +18,10 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 
 // Add global unhandled promise rejection handler for cleaner console output
 window.addEventListener('unhandledrejection', (event) => {
-  console.warn('[App] Unhandled promise rejection prevented:', event.reason);
+  // In development, log warnings for debugging
+  if (import.meta.env.DEV) {
+    console.warn('[App] Unhandled promise rejection prevented:', event.reason);
+  }
   // Prevent the console error from appearing
   event.preventDefault();
 });
