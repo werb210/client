@@ -11,26 +11,30 @@ export const securityHeaders = (): RequestHandler[] => [
     frameguard: { action: "deny" },   // ✅ Always DENY for A+ security
 
     contentSecurityPolicy: {
-      useDefaults: true,
+      useDefaults: false,  // Disable defaults to avoid conflicts
       directives: {
         "default-src": ["'self'"],
-        "script-src": ["'self'", "'unsafe-inline'"],  // Allow inline scripts for React/Vite
+        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],  // Allow eval for Vite development
         "style-src":  ["'self'", "'unsafe-inline'"],  // Allow inline styles for CSS-in-JS
-        "img-src":    ["'self'", "data:", "blob:"],   // Add blob: for generated images
-        "font-src":   ["'self'", "data:"],            // Add data: for base64 fonts
-        "connect-src":["'self'", process.env.STAFF_API_URL ?? "", "ws:", "wss:"].filter(Boolean), // Add WebSocket support
+        "img-src":    ["'self'", "data:", "blob:", "https:"],   // Allow https images
+        "font-src":   ["'self'", "data:", "https:"],            // Allow external fonts
+        "connect-src":["'self'", process.env.STAFF_API_URL ?? "", "ws:", "wss:", "https:"].filter(Boolean), // Add https for APIs
         
         // ✅ A+ Security: Always deny frame embedding
         "frame-ancestors": ["'none'"],              // ✅ Always deny for A+ security
               
         "object-src": ["'none'"],
-        "base-uri":   ["'self'"]
+        "base-uri":   ["'self'"],
+        "form-action": ["'self'"],
+        "frame-src":   ["'none'"],
+        "worker-src":  ["'self'", "blob:"],         // Allow service workers
+        "manifest-src": ["'self'"]                  // Allow PWA manifest
       }
     },
     referrerPolicy: { policy: "strict-origin-when-cross-origin" },
-    crossOriginEmbedderPolicy: true,
+    crossOriginEmbedderPolicy: false,  // Disable to fix compatibility issues
     crossOriginOpenerPolicy: { policy: "same-origin" },
-    crossOriginResourcePolicy: { policy: "same-origin" },
+    crossOriginResourcePolicy: false,  // Disable to fix resource loading
     hsts: IN_PROD ? { maxAge: 15552000, includeSubDomains: true, preload: true } : false
   }),
   helmet.noSniff(),
