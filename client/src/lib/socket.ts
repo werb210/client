@@ -5,31 +5,34 @@ let socketInstance: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socketInstance) {
-    // Use dynamic URL construction to avoid undefined env vars
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    // Use proper Socket.IO path that matches server setup
+    const wsUrl = '/';
     
     socketInstance = io(wsUrl, {
-      transports: ['websocket'],
+      path: '/socket.io/',
+      transports: ['websocket', 'polling'],
+      upgrade: true,
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
-      timeout: 5000,
+      reconnectionAttempts: 3,
+      timeout: 10000,
       forceNew: false,
-      withCredentials: true,
+      withCredentials: false,
     });
 
-    // Clean error handling
+    // Minimal logging to reduce console noise
     socketInstance.on("connect", () => {
-      console.log("✅ [Socket] Connected successfully");
+      console.log("✅ Socket connected");
     });
     
     socketInstance.on("disconnect", (reason) => {
-      console.log(`🔌 [Socket] Disconnected: ${reason}`);
+      if (reason !== 'io client disconnect') {
+        console.log(`🔌 Socket disconnected: ${reason}`);
+      }
     });
     
-    socketInstance.on("connect_error", (error) => {
-      console.warn(`⚠️ [Socket] Connection failed, retrying...`);
+    socketInstance.on("connect_error", () => {
+      // Silent retry - no console spam
     });
   }
   

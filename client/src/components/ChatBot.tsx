@@ -418,65 +418,70 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
   // Socket.IO integration for real-time messaging
   useEffect(() => {
-    if (isOpen && !socketRef.current) {
+    if (isOpen && !socket) {
       console.log('Initializing Socket.IO connection for real-time chat');
       
-      // Use centralized socket instance to prevent connection conflicts
-      const { getSocket } = require('@/lib/socket');
-      const socketInstance = getSocket();
-      setSocket(socketInstance);
-
-      // Set socket instance for this chat session
-      
-      // Join the session
-      socketInstance.emit('join-session', sessionId);
-      console.log('Joined session:', sessionId);
-
-      // Set up event listeners
-      const handleConnect = () => {
-        console.log('✅ [Chat] Socket connected');
-        setIsConnected(true);
+      // Import socket function properly
+      import('@/lib/socket').then(({ getSocket }) => {
+        const socketInstance = getSocket();
+        setSocket(socketInstance);
+        
+        // Join the session
         socketInstance.emit('join-session', sessionId);
-      };
+        console.log('Joined session:', sessionId);
 
-      const handleDisconnect = (reason: any) => {
-        console.log(`🔌 [Chat] Socket disconnected: ${reason}`);
-        setIsConnected(false);
-      };
-
-      const handleConnectError = (error: any) => {
-        console.warn(`⚠️ [Chat] Connection error, retrying...`);
-        setIsConnected(false);
-      };
-
-      // Listen for real-time messages
-      socketInstance.on('new-message', (msg: any) => {
-        console.log('Received real-time message:', msg);
-        const message: Message = {
-          id: Date.now().toString(),
-          role: msg.role || 'assistant',
-          content: msg.message || msg.content,
-          timestamp: new Date()
+        // Set up event listeners
+        const handleConnect = () => {
+          console.log('✅ [Chat] Socket connected');
+          setIsConnected(true);
+          socketInstance.emit('join-session', sessionId);
         };
-        setMessages(prev => [...prev, message]);
-      });
 
-      // Staff handoff notifications
-      socketInstance.on('staff-assigned', (data: any) => {
-        console.log('Staff assigned:', data);
-        addBotMessage(`Great! A human specialist (${data.staffName}) has joined the chat to assist you.`);
-      });
+        const handleDisconnect = (reason: any) => {
+          console.log(`🔌 [Chat] Socket disconnected: ${reason}`);
+          setIsConnected(false);
+        };
 
-      return () => {
-        console.log('Cleaning up Socket.IO connection');
-        if (socketInstance && socketInstance.connected) {
-          socketInstance.disconnect();
-        }
-        setSocket(null);
-        setIsConnected(false);
-      };
+        const handleConnectError = () => {
+          setIsConnected(false);
+        };
+
+        // Add event listeners
+        socketInstance.on('connect', handleConnect);
+        socketInstance.on('disconnect', handleDisconnect);
+        socketInstance.on('connect_error', handleConnectError);
+
+        // Listen for real-time messages
+        socketInstance.on('new-message', (msg: any) => {
+          console.log('Received real-time message:', msg);
+          const message: Message = {
+            id: Date.now().toString(),
+            role: msg.role || 'assistant',
+            content: msg.message || msg.content,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, message]);
+        });
+
+        // Staff handoff notifications
+        socketInstance.on('staff-assigned', (data: any) => {
+          console.log('Staff assigned:', data);
+          addBotMessage(`Great! A human specialist (${data.staffName}) has joined the chat to assist you.`);
+        });
+
+        // Cleanup function
+        return () => {
+          socketInstance.off('connect', handleConnect);
+          socketInstance.off('disconnect', handleDisconnect);
+          socketInstance.off('connect_error', handleConnectError);
+          socketInstance.off('new-message');
+          socketInstance.off('staff-assigned');
+        };
+      }).catch(error => {
+        console.error('Failed to load socket:', error);
+      });
     }
-  }, [isOpen, sessionId]);
+  }, [isOpen, socket, sessionId]);
 
   // Enhanced proactive messaging setup
   useEffect(() => {
