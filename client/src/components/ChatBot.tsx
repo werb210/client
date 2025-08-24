@@ -237,8 +237,11 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   const [currentLanguage, setCurrentLanguage] = useState('en');
   const [sentiment, setSentiment] = useState<string>('neutral');
   const [proactiveShown, setProactiveShown] = useState(false);
-  const [socket, setSocket] = useState<any>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  // DISABLED: Socket state causing console errors  
+  // const [socket, setSocket] = useState<any>(null);
+  // const [isConnected, setIsConnected] = useState(false);
+  const socket = null; // Always null since Socket.IO is disabled
+  const isConnected = false; // Always false since Socket.IO is disabled
   const [isMobileFullscreen, setIsMobileFullscreen] = useState(false);
   const [trainingData, setTrainingData] = useState<TrainingExample[]>([]);
   const [humanRequestStatus, setHumanRequestStatus] = useState<'idle' | 'requesting' | 'connected'>('idle');
@@ -420,7 +423,8 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   useEffect(() => {
     if (isOpen) {
       console.log('Chat opened - using HTTP polling for messages');
-      setIsConnected(true); // Mock connected state
+      // DISABLED: setIsConnected causing connection attempts
+      // setIsConnected(true); // Mock connected state
       
       // Use simple HTTP polling instead of WebSocket
       const pollInterval = setInterval(async () => {
@@ -435,7 +439,8 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
       return () => {
         clearInterval(pollInterval);
-        setIsConnected(false);
+        // DISABLED: setIsConnected causing connection attempts
+        // setIsConnected(false);
       };
     }
   }, [isOpen, sessionId]);
@@ -605,19 +610,19 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     setInputValue('');
     setIsLoading(true);
 
-    // Send via Socket.IO for real-time messaging
-    if (socket && isConnected) {
-      console.log('📤 Sending message via Socket.IO:', messageText);
-      socket.emit('user-message', { 
-        sessionId, 
-        message: messageText,
-        context: {
-          currentStep,
-          applicationData,
-          timestamp: new Date().toISOString()
-        }
-      });
-    }
+    // DISABLED: Socket.IO causing console errors - using HTTP polling
+    // if (socket && isConnected) {
+    //   console.log('📤 Sending message via Socket.IO:', messageText);
+    //   socket.emit('user-message', { 
+    //     sessionId, 
+    //     message: messageText,
+    //     context: {
+    //       currentStep,
+    //       applicationData,
+    //       timestamp: new Date().toISOString()
+    //     }
+    //   });
+    // }
 
     // Clear proactive timeout since user is engaging
     if (proactiveTimeoutRef.current) {
@@ -647,23 +652,23 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
 
     try {
-      // If Socket.IO is connected, send via Socket.IO and wait for real-time response
-      if (socket && isConnected) {
-        console.log('Sending message via Socket.IO...');
-        socket.emit('user-message', { 
-          sessionId, 
-          message: processedMessage,
-          context: {
-            currentStep,
-            applicationData,
-            sentiment: analysis.sentiment,
-            intent: analysis.intent
-          }
-        });
-        console.log('Message sent via Socket.IO, waiting for real-time response...');
-        setIsLoading(false);
-        return;
-      }
+      // DISABLED: Socket.IO causing console errors - using HTTP polling
+      // if (socket && isConnected) {
+      //   console.log('Sending message via Socket.IO...');
+      //   socket.emit('user-message', { 
+      //     sessionId, 
+      //     message: processedMessage,
+      //     context: {
+      //       currentStep,
+      //       applicationData,
+      //       sentiment: analysis.sentiment,
+      //       intent: analysis.intent
+      //     }
+      //   });
+      //   console.log('Message sent via Socket.IO, waiting for real-time response...');
+      //   setIsLoading(false);
+      //   return;
+      // }
 
       // Fallback to HTTP API when Socket.IO is not available
       console.log('📡 Using HTTP fallback for chat API');
@@ -817,25 +822,25 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       
       console.log('📋 [ESCALATION] Sending escalation payload:', escalationData);
       
-      // Emit escalate_to_human event via Socket.IO for immediate staff notification
-      if (socket && isConnected) {
-        socket.emit('escalate_to_human', escalationData);
-        console.log('📡 [ESCALATION] escalate_to_human event emitted via Socket.IO');
-        
-        // Wait for escalation confirmation
-        socket.on('escalation_confirmed', (data: any) => {
-          console.log('✅ [ESCALATION] Escalation confirmed by server:', data);
-          setHumanRequestStatus('connected');
-          
-          // Show user that AI is now blocked and they're connected to human
-          addBotMessage("✅ You're now connected to a human agent. AI responses are blocked - only our staff will reply from now on.");
-          
-          // Show success alert for escalation
-          alert('✅ Your request has been sent to a human support agent');
-        });
-        
-      } else {
-        console.warn('⚠️ [ESCALATION] Socket.IO not available, using HTTP fallback');
+      // DISABLED: Socket.IO causing console errors - using HTTP polling
+      // if (socket && isConnected) {
+      //   socket.emit('escalate_to_human', escalationData);
+      //   console.log('📡 [ESCALATION] escalate_to_human event emitted via Socket.IO');
+      //   
+      //   // Wait for escalation confirmation
+      //   socket.on('escalation_confirmed', (data: any) => {
+      //     console.log('✅ [ESCALATION] Escalation confirmed by server:', data);
+      //     setHumanRequestStatus('connected');
+      //     
+      //     // Show user that AI is now blocked and they're connected to human
+      //     addBotMessage("✅ You're now connected to a human agent. AI responses are blocked - only our staff will reply from now on.");
+      //     
+      //     // Show success alert for escalation
+      //     alert('✅ Your request has been sent to a human support agent');
+      //   });
+      //   
+      // } else {
+        console.log('📡 [ESCALATION] Using HTTP fallback for escalation');
         
         // HTTP fallback for escalation
         const response = await fetch('/api/public/chat/escalate', {
@@ -1033,18 +1038,18 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
                   console.log('🚨 [ESCALATION] Session escalated - blocking AI responses');
                   console.log('📞 [ESCALATION] Requesting human assistance via Socket.IO');
                   
-                  // Use the correct event name as specified
-                  if (socket && isConnected) {
-                    socket.emit('escalate_to_human', {
-                      clientId,
-                      name: storedName,
-                      email: storedEmail,
-                      timestamp: new Date().toISOString(),
-                      sessionId,
-                      context: { currentStep, applicationData }
-                    });
-                    console.log('✅ [ESCALATION] Escalation event emitted via Socket.IO');
-                  }
+                  // DISABLED: Socket.IO causing console errors
+                  // if (socket && isConnected) {
+                  //   socket.emit('escalate_to_human', {
+                  //     clientId,
+                  //     name: storedName,
+                  //     email: storedEmail,
+                  //     timestamp: new Date().toISOString(),
+                  //     sessionId,
+                  //     context: { currentStep, applicationData }
+                  //   });
+                  //   console.log('✅ [ESCALATION] Escalation event emitted via Socket.IO');
+                  // }
 
                   // HTTP fallback
                   await fetch('/api/chat/request-staff', {
