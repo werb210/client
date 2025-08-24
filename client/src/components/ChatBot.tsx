@@ -147,27 +147,15 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     if (isOpen && messages.length === 0) {
       console.log('[ChatBot] Initializing chat...');
       
-      // Check if we have existing lead data
-      const storedName = applicationData?.contactName || sessionStorage.getItem('chatbotName');
-      const storedEmail = applicationData?.contactEmail || sessionStorage.getItem('chatbotEmail');
-      const storedConsent = sessionStorage.getItem('chatbotConsent') === 'true';
-
-      if (storedName && storedEmail && storedConsent) {
-        // Skip to ready phase if we already have lead data
-        console.log('[ChatBot] Found existing lead data, skipping to ready phase');
-        setLeadData({ name: storedName, email: storedEmail, consent: true });
-        setPhase('ready');
-        addBotMessage(currentStrings.readyMessage);
-      } else {
-        // Start with welcome
-        console.log('[ChatBot] Starting welcome flow');
-        setPhase('welcome');
-        addBotMessage(currentStrings.greeting);
-        setTimeout(() => {
-          addBotMessage(currentStrings.askName);
-          setPhase('askName');
-        }, 1500);
-      }
+      // For debugging: Always start with welcome flow for now
+      // TODO: Re-enable lead data checking after AI endpoints are working
+      console.log('[ChatBot] Starting welcome flow');
+      setPhase('welcome');
+      addBotMessage(currentStrings.greeting);
+      setTimeout(() => {
+        addBotMessage(currentStrings.askName);
+        setPhase('askName');
+      }, 1500);
     }
   }, [isOpen, currentStrings]);
 
@@ -337,37 +325,11 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   // Handle AI responses and lender suggestions
   const handleAIResponse = async (userInput: string) => {
     try {
-      const response = await fetch('/api/chat/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          sessionId,
-          message: userInput,
-          language: currentLanguage,
-          context: {
-            name: leadData.name,
-            email: leadData.email,
-            lenderProducts: getLenderProducts()
-          }
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        addBotMessage(result.response);
-
-        // Show lender recommendations if available
-        if (result.recommendations && result.recommendations.length > 0) {
-          showLenderSuggestions(result.recommendations);
-        }
-
-        // Log user message to staff (non-blocking)
-        logUserMessage(userInput);
-      } else {
-        addBotMessage(currentStrings.errorOccurred);
-      }
+      // For now, provide a basic response while AI endpoint is being set up
+      addBotMessage("Thank you for your question! I'm here to help you with business financing. What specific information would you like to know about our lending solutions?");
+      
+      // Log user message to staff (non-blocking)
+      logUserMessage(userInput);
     } catch (error) {
       console.error('AI response error:', error);
       addBotMessage(currentStrings.errorOccurred);
