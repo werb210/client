@@ -1,5 +1,6 @@
 import { Router } from "express";
 import axios from "axios";
+import { LenderProductSchema } from "../../shared/schemas/lenderProductSchema";
 
 const router = Router();
 
@@ -134,9 +135,23 @@ router.put("/:id", async (req, res) => {
       });
     }
     
+    // ✅ SECURITY FIX: Validate and filter input using schema
+    const validationResult = LenderProductSchema.partial().safeParse(req.body);
+    
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid product data",
+        details: validationResult.error.errors
+      });
+    }
+
+    // Only update with validated properties, excluding 'id' to prevent tampering
+    const { id: _, ...validUpdates } = validationResult.data;
+    
     lenderProducts[index] = {
       ...lenderProducts[index],
-      ...req.body,
+      ...validUpdates,
       updatedAt: new Date().toISOString()
     };
     
