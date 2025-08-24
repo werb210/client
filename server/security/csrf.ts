@@ -38,11 +38,8 @@ export function requireCsrf(req: Request, res: Response, next: NextFunction) {
   const method = req.method.toUpperCase();
   const needsCheck = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
 
-  // Dev-only minimal bypass for explicit test routes
-  if (process.env.NODE_ENV !== "production") {
-    const devBypass = req.path.startsWith("/__dev/allow-nocsrf");
-    if (devBypass) return next();
-  }
+  // Dev-only bypass is confined to a single, explicit path. Anything else is enforced.
+  if (process.env.NODE_ENV !== "production" && req.path === "/__dev/allow-nocsrf") return next();
 
   if (!needsCheck) return next();
 

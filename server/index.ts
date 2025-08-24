@@ -1711,7 +1711,11 @@ app.use((req, res, next) => {
   
   // Mount lead capture routes with CSRF protection
   // Apply specific rate limits for chatbot endpoints
+  app.use("/api/login", rlAuth);
+  app.use("/api/session", rlAuth);
+  app.use("/api/upload", rlUpload);
   app.use("/api/chat", rlChatbot);
+  app.use("/api/chatbot", rlChatbot);
   app.use("/api/leads", rlChatbot);
   
   app.use('/api', leadsRouter);
@@ -2916,13 +2920,13 @@ app.use((req, res, next) => {
       }
       
       // Apply CSRF token issuance
-      issueCsrf(req, res, () => {
+      issueCsrf(req, res, async () => {
         const indexPath = join(__dirname, '../dist/public/index.html');
         console.log(`[SPA] Serving index.html for route: ${req.path}`);
         
         try {
           // Inject CSRF token into HTML for client access
-          const fs = require('fs');
+          const fs = await import('fs');
           const html = fs.readFileSync(indexPath, 'utf8');
           const htmlWithCsrf = html.replace(
             '<head>',
