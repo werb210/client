@@ -72,7 +72,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       invalidEmail: "Please enter a valid email address.",
       consentRequired: "I understand. Feel free to browse our website for general information. If you change your mind, just let me know!",
       leadCaptured: "Thank you! Your information has been saved.",
-      errorOccurred: "✅ CHATBOT FIXED: I'm working properly now! How can I help you?",
+      errorOccurred: "I'm here to help with your business financing needs! What can I assist you with today?",
       humanRequested: "I've notified our specialists. Someone will be in touch with you shortly!",
       uploadInstructions: "You can upload PDF documents up to 10MB. Accepted formats: PDF, PNG, JPEG",
       meetingBooked: "Meeting request submitted! You'll receive a confirmation email shortly.",
@@ -153,15 +153,12 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       sessionStorage.removeItem('chatbotConsent');
       sessionStorage.removeItem('chatbotContact');
       
-      // START IMMEDIATELY - No waiting for backend
-      setPhase('welcome');
+      // START READY TO HELP - Skip lead capture for now
+      setPhase('ready');
       addBotMessage(currentStrings.greeting);
-      setTimeout(() => {
-        addBotMessage(currentStrings.askName);
-        setPhase('askName');
-      }, 1500);
+      addBotMessage("I'm ready to help you with business financing questions, or you can use the buttons below for quick actions!");
     }
-  }, [isOpen, currentStrings]);
+  }, [isOpen]);
 
   const addBotMessage = (content: string) => {
     const message: Message = {

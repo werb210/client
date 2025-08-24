@@ -1,0 +1,79 @@
+Instruction Block — CLIENT app (fresh preview every time)
+1) Disable the Service Worker in dev/staging
+
+client/src/main.tsx (or wherever you register the SW)
+
+// Disable service worker in non-production so the preview never serves stale JS
+if ("serviceWorker" in navigator) {
+  const dev = import.meta.env.MODE !== "production";
+  if (dev) {
+    navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+    caches?.keys?.().then(keys => keys.forEach(k => caches.delete(k)));
+    console.info("[PWA] SW disabled in dev; caches cleared");
+  } else {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  }
+}
+
+2) Make HTML truly non-cacheable; let hashed assets cache
+
+server/boot.ts (or your main Express setup), add before express.static(...):
+
+import type { Request, Response, NextFunction } from "express";
+const DEV = process.env.NODE_ENV !== "production";
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.method === "GET" && req.accepts("html")) {
+    res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
+  }
+  next();
+});
+
+app.use(
+  express.static("dist/public", {
+    setHeaders(res, filePath) {
+      if (filePath.endsWith(".html")) {
+        res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
+      } else {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      }
+    },
+  })
+);
+
+// Simple build/version probe for cache-busting checks
+app.get("/__version", (_req, res) => {
+  res.json({
+    app: "client",
+    env: process.env.NODE_ENV,
+    build: process.env.BUILD_ID || new Date().toISOString(),
+    dev: DEV,
+  });
+});
+
+3) Fix CSP so the app can render inside Replit’s iframe in dev
+
+If you set strict CSP previously (e.g., frame-ancestors 'none') the Replit preview iframe will refuse to load. Allow it only in dev:
+
+server/security/headers.ts (or wherever you call Helmet/CSP)
+
+import helmet from "helmet";
+
+const DEV = process.env.NODE_ENV !== "production";
+
+// In dev: allow Replit iframe. In prod: block all framing.
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        // … keep your other directives …
+        "frame-ancestors": DEV
+          ? ["'self'", "https://replit.com", "*.replit.com", "*.replit.dev", "*.id.repl.co"]
+          : ["'none'"],
+      },
+    },
+    // XFO mirrors CSP: SAMEORIGIN in dev, DENY in prod
+    frameguard: { action: DEV ? "sameorigin" : "deny" },
+  })
+);
