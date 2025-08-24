@@ -97,11 +97,34 @@ router.post('/message', async (req, res) => {
     // Analyze sentiment for escalation detection
     const sentimentAnalysis = await openaiService.analyzeSentiment(message);
     
-    // Get AI response
+    // Get AI response with enhanced lender context
     const aiResponse = await openaiService.createChatCompletion(
       session.messages,
       session.context
     );
+
+    // Try to extract lender recommendations from context
+    let recommendations = [];
+    try {
+      if (session.context?.lenderProducts && Array.isArray(session.context.lenderProducts)) {
+        // Smart filtering based on message intent
+        const messageWords = message.toLowerCase().split(' ');
+        const isSeekingFinancing = messageWords.some((word: string) => 
+          ['loan', 'financing', 'money', 'fund', 'capital', 'credit', 'amount', 'borrow'].includes(word)
+        );
+        
+        if (isSeekingFinancing) {
+          // Filter products that might match user's request
+          recommendations = session.context.lenderProducts
+            .filter((product: any) => product.isActive !== false)
+            .slice(0, 3); // Top 3 recommendations
+          
+          console.log(`🎯 [CHAT] Generated ${recommendations.length} lender recommendations for financing inquiry`);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error processing lender recommendations:', error);
+    }
 
     // Add assistant response to session
     const assistantMessage = {
@@ -127,7 +150,8 @@ router.post('/message', async (req, res) => {
       success: true,
       response: aiResponse,
       sentiment: sentimentAnalysis,
-      escalated: session.escalated
+      escalated: session.escalated,
+      recommendations: recommendations.length > 0 ? recommendations : undefined
     });
 
   } catch (error) {

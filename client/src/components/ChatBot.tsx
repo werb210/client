@@ -673,10 +673,10 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       // Fallback to HTTP API when Socket.IO is not available
       console.log('📡 Using HTTP fallback for chat API');
       
-      // Fetch lender products from cache or API
+      // Fetch fresh lender products for enhanced recommendations
       const { fetchLenderProducts } = await import('../api/lenderProducts');
       const products = await fetchLenderProducts();
-      console.log(`🤖 [CHATBOT] Fetched ${products.length} lender products for AI context`);
+      console.log(`🤖 [CHATBOT] Fetched ${products.length} LIVE lender products for enhanced AI recommendations`);
       
       const contextData = {
         currentStep,
@@ -691,7 +691,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         console.warn('🤖 [CHATBOT] WARNING: No lender products available for AI context');
       }
 
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/chat/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -700,7 +700,8 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
           context: {
             ...contextData,
             sentiment: analysis.sentiment,
-            intent: analysis.intent
+            intent: analysis.intent,
+            lenderProducts: products // Enhanced lender context
           },
           messages: messages.slice(-5), // Last 5 messages for context
           trainingData: trainingData.slice(0, 50) // Include training examples for enhanced context
@@ -713,10 +714,24 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
       const data = await response.json();
       
+      // Handle enhanced response with lender recommendations
+      let assistantContent = data.response || data.reply || 'I apologize, but I encountered an issue. Please try asking your question again.';
+      
+      // If AI provided lender recommendations, format them nicely
+      if (data.recommendations && data.recommendations.length > 0) {
+        assistantContent += '\n\n**Recommended Lenders:**\n';
+        data.recommendations.slice(0, 3).forEach((lender: any, index: number) => {
+          assistantContent += `${index + 1}. **${lender.name || lender.lender_name}** - ${lender.category || 'Business Financing'}\n`;
+          if (lender.minAmount && lender.maxAmount) {
+            assistantContent += `   Amount: $${lender.minAmount?.toLocaleString()} - $${lender.maxAmount?.toLocaleString()}\n`;
+          }
+        });
+      }
+      
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.reply || 'I apologize, but I encountered an issue. Please try asking your question again.',
+        content: assistantContent,
         timestamp: new Date()
       };
 
