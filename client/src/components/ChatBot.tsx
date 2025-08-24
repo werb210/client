@@ -535,7 +535,21 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
   };
 
-  if (!isOpen) return null;
+  // Render floating button when closed, chat window when open
+  if (!isOpen) {
+    return (
+      <button
+        onClick={onToggle}
+        className="fixed bottom-4 right-4 w-12 h-12 rounded-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white shadow-lg z-50 flex items-center justify-center transition-all duration-200 hover:scale-110"
+        aria-label="Open chat"
+        title="Chat with Boreal Financial Assistant"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.013 8.013 0 01-2.79-.491l-4.21 1.035L8.41 16.79A8.01 8.01 0 0121 12z" />
+        </svg>
+      </button>
+    );
+  }
 
   return (
     <div className="fixed bottom-4 right-4 w-96 h-[600px] bg-white border border-gray-200 rounded-lg shadow-xl flex flex-col z-50">
