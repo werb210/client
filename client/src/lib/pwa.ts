@@ -24,7 +24,9 @@ export class PWAInstaller {
     window.addEventListener('appinstalled', () => {
       this.isInstalled = true;
       this.hideInstallPrompt();
-      console.log('PWA installed successfully');
+      if (import.meta.env.DEV) {
+        console.log('✅ PWA installed successfully');
+      }
     });
 
     // Check if running as PWA
@@ -43,14 +45,20 @@ export class PWAInstaller {
       const result = await this.deferredPrompt.userChoice;
       
       if (result.outcome === 'accepted') {
-        console.log('User accepted PWA installation');
+        if (import.meta.env.DEV) {
+          console.log('✅ PWA installed successfully');
+        }
         return true;
       } else {
-        console.log('User dismissed PWA installation');
+        if (import.meta.env.DEV) {
+          console.log('User dismissed PWA installation');
+        }
         return false;
       }
     } catch (error) {
-      console.error('PWA installation failed:', error);
+      if (import.meta.env.DEV) {
+        console.warn('PWA installation failed:', error instanceof Error ? error.message : 'Unknown error');
+      }
       return false;
     } finally {
       this.deferredPrompt = null;
@@ -193,7 +201,9 @@ export class OfflineStorageManager {
       const request = store.put(formData);
 
       request.onsuccess = () => {
-        console.log(`Form data saved for step ${step}`);
+        if (import.meta.env.DEV) {
+          console.log(`✅ Form data saved for step ${step}`);
+        }
         resolve();
       };
 
@@ -241,7 +251,9 @@ export class OfflineStorageManager {
       const request = store.add(submission);
 
       request.onsuccess = () => {
-        console.log('Form submission queued for sync');
+        if (import.meta.env.DEV) {
+          console.log('✅ Form submission queued for sync');
+        }
         // Register background sync
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.ready.then(registration => {
@@ -325,7 +337,9 @@ export class OfflineStorageManager {
       });
     }
 
-    console.log('All offline data cleared');
+    if (import.meta.env.DEV) {
+      console.log('✅ All offline data cleared');
+    }
   }
 }
 
@@ -342,7 +356,7 @@ export class PushNotificationManager {
       try {
         this.registration = await navigator.serviceWorker.ready;
       } catch (error) {
-        console.error('Service worker not ready:', error);
+        // Service worker not ready, fail silently
       }
     }
   }

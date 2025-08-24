@@ -55,12 +55,14 @@ export function PWAInstallPrompt() {
       const result = await deferredPrompt.userChoice;
       
       if (result.outcome === 'accepted') {
-        console.log('User accepted PWA installation');
-      } else {
-        console.log('User dismissed PWA installation');
+        if (import.meta.env.DEV) {
+          console.log('✅ PWA installed successfully');
+        }
       }
     } catch (error) {
-      console.error('PWA installation failed:', error);
+      if (import.meta.env.DEV) {
+        console.warn('PWA installation failed:', error instanceof Error ? error.message : 'Unknown error');
+      }
     } finally {
       setDeferredPrompt(null);
       setShowPrompt(false);

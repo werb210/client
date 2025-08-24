@@ -43,13 +43,18 @@ export function usePWAManager() {
   // Register service worker
   const registerServiceWorker = useCallback(async () => {
     if (!('serviceWorker' in navigator)) {
-      console.warn('[PWA] Service workers not supported');
+      if (import.meta.env.DEV) {
+        console.warn('[PWA] Service workers not supported');
+      }
       return;
     }
 
     try {
       const registration = await navigator.serviceWorker.register('/service-worker.js');
-      console.log('[PWA] Service worker registered:', registration.scope);
+      
+      if (import.meta.env.DEV) {
+        console.log('✅ Service worker registered');
+      }
       
       // Wait for service worker to be ready
       await navigator.serviceWorker.ready;
@@ -61,14 +66,16 @@ export function usePWAManager() {
       }
 
     } catch (error) {
-      console.error('[PWA] Service worker registration failed:', error);
+      if (import.meta.env.DEV) {
+        console.warn('[PWA] Service worker registration failed:', error instanceof Error ? error.message : 'Unknown error');
+      }
     }
   }, []);
 
   // Setup push notifications using the utility function
   const setupPushNotifications = useCallback(async () => {
     if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn('[PWA] Push notifications not supported');
+      // Push notifications not supported, fail silently
       return;
     }
 
@@ -82,7 +89,9 @@ export function usePWAManager() {
         setStatus(prev => ({ ...prev, pushSubscribed: true }));
       }
     } catch (error) {
-      console.error('[PWA] Push notification setup failed:', error);
+      if (import.meta.env.DEV) {
+        console.warn('[PWA] Push notification setup failed:', error instanceof Error ? error.message : 'Unknown error');
+      }
     }
   }, []);
 
