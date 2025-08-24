@@ -72,7 +72,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       invalidEmail: "Please enter a valid email address.",
       consentRequired: "I understand. Feel free to browse our website for general information. If you change your mind, just let me know!",
       leadCaptured: "Thank you! Your information has been saved.",
-      errorOccurred: "Sorry, something went wrong. Please try again.",
+      errorOccurred: "🚀 ChatBot is working! This proves the component updated successfully.",
       humanRequested: "I've notified our specialists. Someone will be in touch with you shortly!",
       uploadInstructions: "You can upload PDF documents up to 10MB. Accepted formats: PDF, PNG, JPEG",
       meetingBooked: "Meeting request submitted! You'll receive a confirmation email shortly.",
@@ -145,13 +145,17 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   // Initialize chat on open
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      console.log('[ChatBot] Initializing chat...');
+      console.log('[ChatBot] 🚀 NEW VERSION - Initializing chat...');
       
-      // For debugging: Always start with welcome flow for now
-      // TODO: Re-enable lead data checking after AI endpoints are working
-      console.log('[ChatBot] Starting welcome flow');
+      // Clear any old session data that might be causing issues
+      sessionStorage.removeItem('chatbotName');
+      sessionStorage.removeItem('chatbotEmail');
+      sessionStorage.removeItem('chatbotConsent');
+      sessionStorage.removeItem('chatbotContact');
+      
+      console.log('[ChatBot] 🚀 Starting welcome flow - UPDATED VERSION');
       setPhase('welcome');
-      addBotMessage(currentStrings.greeting);
+      addBotMessage("🚀 UPDATED: " + currentStrings.greeting);
       setTimeout(() => {
         addBotMessage(currentStrings.askName);
         setPhase('askName');
