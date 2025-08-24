@@ -145,6 +145,8 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   // Initialize chat on open
   useEffect(() => {
     if (isOpen && messages.length === 0) {
+      console.log('[ChatBot] Initializing chat...');
+      
       // Check if we have existing lead data
       const storedName = applicationData?.contactName || sessionStorage.getItem('chatbotName');
       const storedEmail = applicationData?.contactEmail || sessionStorage.getItem('chatbotEmail');
@@ -152,11 +154,13 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
       if (storedName && storedEmail && storedConsent) {
         // Skip to ready phase if we already have lead data
+        console.log('[ChatBot] Found existing lead data, skipping to ready phase');
         setLeadData({ name: storedName, email: storedEmail, consent: true });
         setPhase('ready');
         addBotMessage(currentStrings.readyMessage);
       } else {
         // Start with welcome
+        console.log('[ChatBot] Starting welcome flow');
         setPhase('welcome');
         addBotMessage(currentStrings.greeting);
         setTimeout(() => {
