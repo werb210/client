@@ -859,7 +859,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         } else {
           throw new Error('HTTP escalation failed');
         }
-      }
+      // }
       
     } catch (error) {
       console.error('❌ [ESCALATION] Failed to escalate to human:', error);
