@@ -24,7 +24,8 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 function App() {
-  useWebSocket(); // ✅ Enables live updates globally
+  // DISABLED: useWebSocket causing console errors
+  // useWebSocket(); // ✅ Enables live updates globally
   
   // Verify VITE_API_BASE_URL injection
   console.log("🔧 STAFF API:", import.meta.env.VITE_API_BASE_URL);
