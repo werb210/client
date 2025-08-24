@@ -227,9 +227,25 @@ app.use((req, res, next) => {
   app.post('/api/public/applications', async (req, res) => {
     try {
       console.log('📝 [SERVER] Forwarding application submission to Staff API');
+      console.log('📦 [SERVER] Request body size:', JSON.stringify(req.body).length, 'characters');
+      console.log('📦 [SERVER] Request body structure:', Object.keys(req.body));
+      
+      // Validate we have the expected step-based structure or flat structure
+      const hasStepData = req.body.step1 || req.body.step3 || req.body.step4;
+      const hasFlatData = req.body.businessLegalName || req.body.applicantName || req.body.requestedAmount;
+      
+      if (!hasStepData && !hasFlatData) {
+        console.log('❌ [SERVER] No valid application data found');
+        console.log('📦 [SERVER] Full request body:', JSON.stringify(req.body, null, 2));
+        return res.status(400).json({
+          error: 'Invalid application format - no application data found',
+          received: Object.keys(req.body)
+        });
+      }
       
       // Forward to Staff API
       const staffUrl = `${cfg.staffApiUrl}/public/applications`;
+      console.log('🎯 [SERVER] Forwarding to:', staffUrl);
       
       const response = await fetch(staffUrl, {
         method: 'POST',
@@ -260,6 +276,120 @@ app.use((req, res, next) => {
         success: false,
         error: 'Network error',
         message: 'Failed to reach Staff API'
+      });
+    }
+  });
+
+  // Legacy /api/applications endpoint for auto-save compatibility
+  app.post('/api/applications', async (req, res) => {
+    console.log('📝 [SERVER] Legacy auto-save endpoint - converting to step format');
+    
+    // Convert flat format to step-based format for Staff API
+    const flatData = req.body;
+    const stepBasedData = {
+      step1: {
+        requestedAmount: flatData.requestedAmount || 0,
+        fundingAmount: flatData.requestedAmount || 0,
+        use_of_funds: flatData.useOfFunds || '',
+        industry: flatData.industry || '',
+        businessLocation: 'US'
+      },
+      step3: {
+        businessName: flatData.businessLegalName || '',
+        operatingName: flatData.businessLegalName || '',
+        legalName: flatData.businessLegalName || '',
+        industry: flatData.industry || '',
+        businessType: 'LLC', // Default value
+        headquarters: flatData.headquarters || ''
+      },
+      step4: {
+        firstName: flatData.applicantName?.split(' ')[0] || '',
+        lastName: flatData.applicantName?.split(' ').slice(1).join(' ') || '',
+        email: flatData.applicantEmail || '',
+        applicantEmail: flatData.applicantEmail || '',
+        phone: flatData.applicantPhone || ''
+      },
+      metadata: {
+        source: 'auto-save',
+        status: flatData.status || 'draft'
+      }
+    };
+    
+    // Forward converted data to public applications endpoint
+    req.body = stepBasedData;
+    console.log('🔄 [SERVER] Converted flat data to step format, forwarding...');
+    
+    // Reuse the main application submission logic
+    try {
+      const staffUrl = `${cfg.staffApiUrl}/public/applications`;
+      const response = await fetch(staffUrl, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
+        },
+        body: JSON.stringify(stepBasedData)
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ [SERVER] Auto-save application created successfully');
+        res.json(data);
+      } else {
+        const errorData = await response.text();
+        console.error('❌ [SERVER] Auto-save failed:', response.status, errorData);
+        res.status(response.status).json({
+          success: false,
+          error: 'Auto-save failed',
+          message: errorData
+        });
+      }
+    } catch (error) {
+      console.error('❌ [SERVER] Auto-save network error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Network error',
+        message: 'Failed to auto-save application'
+      });
+    }
+  });
+
+  app.patch('/api/applications/:id', async (req, res) => {
+    const { id } = req.params;
+    console.log(`📝 [SERVER] Legacy PATCH endpoint - updating application ${id}`);
+    
+    // Forward to public applications PATCH endpoint
+    try {
+      const response = await fetch(`${cfg.staffApiUrl}/public/applications/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
+        },
+        body: JSON.stringify(req.body)
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ [SERVER] Application ${id} updated successfully`);
+        res.json(data);
+      } else {
+        const errorData = await response.text();
+        console.error(`❌ [SERVER] Update failed for ${id}:`, response.status, errorData);
+        res.status(response.status).json({
+          success: false,
+          error: 'Update failed',
+          message: errorData
+        });
+      }
+    } catch (error) {
+      console.error(`❌ [SERVER] Update network error for ${id}:`, error);
+      res.status(500).json({
+        success: false,
+        error: 'Network error',
+        message: 'Failed to update application'
       });
     }
   });
