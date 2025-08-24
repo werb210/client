@@ -1,16 +1,11 @@
+// client/src/components/ChatBot.tsx - 4-phase lead capture chatbot
 import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-// Removed unnecessary UI component imports for cleaner custom implementation
-// Using simple text icons for reliability
-const HelpIcon = () => <span className="text-blue-600">💬</span>;
-const CloseIcon = () => <span>✕</span>;
-const SendIcon = () => <span>→</span>;
-const UserIcon = () => <span className="text-white">👤</span>;
-const CheckCircleIcon = () => <span className="text-green-600">✓</span>;
-const AlertTriangleIcon = () => <span className="text-red-600">⚠</span>;
-import { cn } from '@/lib/utils';
-import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
@@ -26,241 +21,113 @@ interface ChatBotProps {
   applicationData?: any;
 }
 
-interface TrainingExample {
-  user: string;
-  bot: string;
-  metadata: {
-    category: string;
-    country: string;
-    context: string;
-  };
-}
+type ChatPhase = 'welcome' | 'askName' | 'askEmail' | 'askConsent' | 'ready';
 
-interface FeedbackModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  conversation: string;
-}
-
-function FeedbackModal({ isOpen, onClose, conversation }: FeedbackModalProps) {
-  const [reportText, setReportText] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [screenshotBase64, setScreenshotBase64] = useState('');
-
-  // Take screenshot when modal opens
-  useEffect(() => {
-    if (isOpen && !screenshotBase64) {
-      captureScreenshot().then(setScreenshotBase64);
-    }
-  }, [isOpen]);
-
-  const captureScreenshot = async (): Promise<string> => {
-    try {
-      // Dynamically import html2canvas
-      const html2canvas = (await import('html2canvas')).default;
-      
-      // Scroll to top for full page capture
-      window.scrollTo(0, 0);
-      
-      const canvas = await html2canvas(document.body, { 
-        scrollY: -window.scrollY,
-        useCORS: true,
-        allowTaint: true,
-        scale: 0.8,
-        height: window.innerHeight,
-        width: window.innerWidth
-      });
-      
-      // Convert to base64 immediately
-      return canvas.toDataURL('image/png', 0.8);
-    } catch (error) {
-      console.error('Screenshot capture failed:', error);
-      return '';
-    }
-  };
-
-  const submitReport = async () => {
-    if (!reportText.trim()) return;
-    
-    setIsSubmitting(true);
-    try {
-      console.log('🐛 [CLIENT] Submitting issue report with screenshot');
-      
-      const userContact = JSON.parse(sessionStorage.getItem('chatbotContact') || '{}');
-      
-      const reportResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai/report-issue`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: userContact.name || 'Anonymous',
-          email: userContact.email || '',
-          message: reportText.trim(),
-          page: window.location.pathname,
-          screenshot: screenshotBase64, // Use the pre-captured screenshot
-          timestamp: new Date().toISOString(),
-        }),
-      });
-      
-      if (reportResponse.ok) {
-        const result = await reportResponse.json();
-        console.log('✅ [CLIENT] Issue report submitted successfully:', result);
-        
-        alert('✅ Your issue report has been submitted');
-        onClose();
-        setReportText(''); // Clear the text for next time
-      } else {
-        console.error('❌ [CLIENT] Issue report failed:', reportResponse.status);
-        alert('Failed to submit issue report. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-      alert('Failed to submit report. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  // Force center with document body append
-  return ReactDOM.createPortal(
-    <div 
-      style={{
-        position: 'fixed !important' as any,
-        top: '0px !important' as any,
-        left: '0px !important' as any,
-        width: '100vw !important' as any,
-        height: '100vh !important' as any,
-        backgroundColor: 'rgba(0, 0, 0, 0.8) !important' as any,
-        zIndex: '2147483647 !important' as any,
-        display: 'flex !important' as any,
-        alignItems: 'center !important' as any,
-        justifyContent: 'center !important' as any,
-        margin: '0 !important' as any,
-        padding: '0 !important' as any
-      }}
-      onClick={onClose}
-    >
-      <div 
-        style={{
-          width: '500px !important' as any,
-          maxWidth: '90vw !important' as any,
-          minHeight: '400px !important' as any,
-          maxHeight: '80vh !important' as any,
-          backgroundColor: '#ffffff !important' as any,
-          borderRadius: '12px !important' as any,
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8) !important' as any,
-          border: '5px solid #ff0000 !important' as any,
-          margin: 'auto !important' as any,
-          position: 'relative !important' as any
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div 
-          className="px-6 py-4 border-b bg-gray-50 rounded-t-lg"
-          style={{ borderBottom: '1px solid #e5e7eb' }}
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Report an Issue</h2>
-            <button 
-              onClick={onClose}
-              className="p-2 rounded-md hover:bg-gray-200 transition-colors"
-              style={{ border: 'none', backgroundColor: 'transparent' }}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-        
-        {/* Content */}
-        <div className="px-6 py-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Describe the issue:
-            </label>
-            <textarea
-              value={reportText}
-              onChange={(e) => setReportText(e.target.value)}
-              placeholder="Please describe what went wrong or what you were expecting..."
-              className="w-full h-32 p-3 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              disabled={isSubmitting}
-              style={{
-                fontSize: '14px',
-                lineHeight: '1.4'
-              }}
-            />
-          </div>
-          
-          <div 
-            className="text-xs text-gray-600 bg-blue-50 p-3 rounded-md"
-            style={{ backgroundColor: '#eff6ff', border: '1px solid #dbeafe' }}
-          >
-            💡 Your conversation history and a screenshot will be included to help us understand the context.
-          </div>
-        </div>
-        
-        {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 rounded-b-lg border-t">
-          <div className="flex gap-3 justify-end">
-            <button
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={submitReport}
-              disabled={!reportText.trim() || isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 transition-colors"
-            >
-              {isSubmitting ? 'Capturing & Sending...' : 'Send Report with Screenshot'}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>,
-    document.body
-  );
+interface LenderProduct {
+  id: string;
+  name: string;
+  lender: string;
+  minAmount?: number;
+  maxAmount?: number;
+  description?: string;
 }
 
 export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: ChatBotProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [hasGreeted, setHasGreeted] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [phase, setPhase] = useState<ChatPhase>('welcome');
+  const [currentLanguage, setCurrentLanguage] = useState<'en' | 'fr'>('en');
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
-  const [currentLanguage, setCurrentLanguage] = useState('en');
-  const [sentiment, setSentiment] = useState<string>('neutral');
-  const [proactiveShown, setProactiveShown] = useState(false);
-  // DISABLED: Socket state causing console errors  
-  // const [socket, setSocket] = useState<any>(null);
-  // const [isConnected, setIsConnected] = useState(false);
-  const socket = null; // Always null since Socket.IO is disabled
-  const isConnected = false; // Always false since Socket.IO is disabled
-  const [isMobileFullscreen, setIsMobileFullscreen] = useState(false);
-  const [trainingData, setTrainingData] = useState<TrainingExample[]>([]);
+  
+  // Lead capture data
+  const [leadData, setLeadData] = useState({
+    name: '',
+    email: '',
+    consent: false
+  });
+
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [humanRequestStatus, setHumanRequestStatus] = useState<'idle' | 'requesting' | 'connected'>('idle');
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [userName, setUserName] = useState<string>('');
-  const [isEscalated, setIsEscalated] = useState<boolean>(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const proactiveTimeoutRef = useRef<NodeJS.Timeout>();
+  const { toast } = useToast();
 
+  // Language strings
+  const strings = {
+    en: {
+      greeting: "👋 Hello! I'm your Boreal Financial assistant. I'm here to help you find the perfect funding solution for your business.",
+      askName: "To get started, may I have your name?",
+      askEmail: "Thank you! What's your email address?",
+      askConsent: "Before we continue, I need your consent to contact you about funding opportunities. Do you agree to receive communications from Boreal Financial?",
+      consentYes: "Yes, I consent",
+      consentNo: "No, thank you",
+      readyMessage: "Perfect! I'm now ready to help you with your funding needs. What would you like to know about business financing?",
+      startApp: "Start Application",
+      uploadDocs: "Upload Documents",
+      bookMeeting: "Book Meeting",
+      talkHuman: "Talk to Human",
+      invalidEmail: "Please enter a valid email address.",
+      consentRequired: "I understand. Feel free to browse our website for general information. If you change your mind, just let me know!",
+      leadCaptured: "Thank you! Your information has been saved.",
+      errorOccurred: "Sorry, something went wrong. Please try again.",
+      humanRequested: "I've notified our specialists. Someone will be in touch with you shortly!",
+      uploadInstructions: "You can upload PDF documents up to 10MB. Accepted formats: PDF, PNG, JPEG",
+      meetingBooked: "Meeting request submitted! You'll receive a confirmation email shortly.",
+      languageToggle: "FR",
+      languageLabel: "Language:"
+    },
+    fr: {
+      greeting: "👋 Bonjour! Je suis votre assistant Boreal Financial. Je suis ici pour vous aider à trouver la solution de financement parfaite pour votre entreprise.",
+      askName: "Pour commencer, puis-je avoir votre nom?",
+      askEmail: "Merci! Quelle est votre adresse e-mail?",
+      askConsent: "Avant de continuer, j'ai besoin de votre consentement pour vous contacter au sujet des opportunités de financement. Acceptez-vous de recevoir des communications de Boreal Financial?",
+      consentYes: "Oui, je consens",
+      consentNo: "Non, merci",
+      readyMessage: "Parfait! Je suis maintenant prêt à vous aider avec vos besoins de financement. Que souhaitez-vous savoir sur le financement d'entreprise?",
+      startApp: "Démarrer la demande",
+      uploadDocs: "Télécharger des documents",
+      bookMeeting: "Réserver une réunion",
+      talkHuman: "Parler à un humain",
+      invalidEmail: "Veuillez entrer une adresse e-mail valide.",
+      consentRequired: "Je comprends. N'hésitez pas à parcourir notre site web pour des informations générales. Si vous changez d'avis, faites-le moi savoir!",
+      leadCaptured: "Merci! Vos informations ont été sauvegardées.",
+      errorOccurred: "Désolé, quelque chose s'est mal passé. Veuillez réessayer.",
+      humanRequested: "J'ai notifié nos spécialistes. Quelqu'un vous contactera bientôt!",
+      uploadInstructions: "Vous pouvez télécharger des documents PDF jusqu'à 10MB. Formats acceptés: PDF, PNG, JPEG",
+      meetingBooked: "Demande de réunion soumise! Vous recevrez un e-mail de confirmation bientôt.",
+      languageToggle: "EN",
+      languageLabel: "Langue:"
+    }
+  };
+
+  const currentStrings = strings[currentLanguage];
+
+  // Get CSRF token from window or cookie
+  const getCsrfToken = () => {
+    // Try to get from window first (set by server)
+    if (typeof window !== 'undefined' && (window as any).__CSRF__) {
+      return (window as any).__CSRF__;
+    }
+    
+    // Fallback to cookie
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === '__Host-bf_csrf') {
+        return value;
+      }
+    }
+    
+    return null;
+  };
+
+  // Auto-scroll to bottom
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      const chatContainer = messagesEndRef.current.parentElement;
-      if (chatContainer) {
-        const atBottom = chatContainer.scrollTop + chatContainer.clientHeight >= chatContainer.scrollHeight - 20;
-        if (atBottom || messages.length <= 2) { // Always scroll for first few messages
-          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -268,854 +135,577 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     scrollToBottom();
   }, [messages]);
 
-  // Initial greeting with contact collection and session storage
-  useEffect(() => {
-    if (isOpen && messages.length === 0 && !hasGreeted) {
-      setHasGreeted(true);
-      
-      // Initialize user data from session storage or applicationData
-      const storedEmail = sessionStorage.getItem('userEmail') || applicationData?.contactEmail || '';
-      const storedName = sessionStorage.getItem('userName') || applicationData?.contactName || '';
-      
-      setUserEmail(storedEmail);
-      setUserName(storedName);
-      
-      // Store session data
-      if (storedEmail) sessionStorage.setItem('userEmail', storedEmail);
-      if (storedName) sessionStorage.setItem('userName', storedName);
-      sessionStorage.setItem('sessionId', sessionId);
-      
-      // Make chat instance available globally for chat-client.js
-      (window as any).chatBotInstance = {
-        addMessage: (role: string, content: string) => {
-          const message: Message = {
-            id: Date.now().toString(),
-            role: role === 'assistant' ? 'assistant' : 'user',
-            content,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, message]);
-        },
-        setUserData: (email: string, name: string) => {
-          setUserEmail(email);
-          setUserName(name);
-          sessionStorage.setItem('userEmail', email);
-          sessionStorage.setItem('userName', name);
-        }
-      };
-      
-      // Start welcome flow with contact collection after a brief delay
-      setTimeout(() => {
-        if ((window as any).startChat) {
-          (window as any).startChat();
-        }
-      }, 800); // Allow time for chat-client.js to load
-    }
-  }, [isOpen, messages.length, hasGreeted, applicationData]);
-
+  // Focus input when chat opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
 
-  // 🤖 TRAINING DATA PRELOADING: Load chatbot training data on initialization
+  // Initialize chat on open
   useEffect(() => {
-    const loadTrainingData = async () => {
-      try {
-        console.log('🤖 [CHATBOT] Loading training data...');
-        const response = await fetch('/api/training-data');
-        
-        if (response.ok) {
-          const data = await response.json();
-          setTrainingData(data.examples || []);
-          console.log(`🤖 [CHATBOT] Loaded ${data.totalExamples} training examples across ${data.categories?.length || 0} categories`);
-          console.log('🤖 [CHATBOT] Available categories:', data.categories);
-        } else {
-          console.log('🤖 [CHATBOT] No pre-generated training data found');
-          // Optionally trigger training data generation
-          const generateResponse = await fetch('/api/generate-training', { method: 'POST' });
-          if (generateResponse.ok) {
-            const generatedData = await generateResponse.json();
-            setTrainingData(generatedData.data?.examples || []);
-            console.log('🤖 [CHATBOT] Generated and loaded new training data');
-          }
-        }
-      } catch (error) {
-        console.warn('🤖 [CHATBOT] Training data loading failed:', error);
-        // Continue without training data - chatbot will still work
-      }
-    };
+    if (isOpen && messages.length === 0) {
+      // Check if we have existing lead data
+      const storedName = applicationData?.contactName || sessionStorage.getItem('chatbotName');
+      const storedEmail = applicationData?.contactEmail || sessionStorage.getItem('chatbotEmail');
+      const storedConsent = sessionStorage.getItem('chatbotConsent') === 'true';
 
-    if (isOpen && trainingData.length === 0) {
-      loadTrainingData();
-    }
-  }, [isOpen, trainingData.length]);
-
-  // Mobile fullscreen detection and keyboard-aware resizing
-  useEffect(() => {
-    const checkMobileFullscreen = () => {
-      const isMobile = window.matchMedia('(max-width: 600px)').matches;
-      const shouldBeFullscreen = isOpen && isMobile;
-      setIsMobileFullscreen(shouldBeFullscreen);
-
-      // Toggle body scroll prevention on mobile
-      if (shouldBeFullscreen) {
-        document.body.classList.add('chatbot-fullscreen');
-        console.log('📱 Mobile fullscreen chatbot activated');
+      if (storedName && storedEmail && storedConsent) {
+        // Skip to ready phase if we already have lead data
+        setLeadData({ name: storedName, email: storedEmail, consent: true });
+        setPhase('ready');
+        addBotMessage(currentStrings.readyMessage);
       } else {
-        document.body.classList.remove('chatbot-fullscreen');
+        // Start with welcome
+        setPhase('welcome');
+        addBotMessage(currentStrings.greeting);
+        setTimeout(() => {
+          addBotMessage(currentStrings.askName);
+          setPhase('askName');
+        }, 1500);
       }
-    };
-
-    // Keyboard-aware viewport adjustment for mobile
-    const adjustForKeyboard = () => {
-      const vh = Math.max(window.visualViewport?.height || 0, window.innerHeight);
-      document.documentElement.style.setProperty('--device-height', `${vh}px`);
-    };
-
-    // VirtualKeyboard API support (Chrome on Android)
-    const setupVirtualKeyboard = () => {
-      if ("virtualKeyboard" in navigator) {
-        (navigator as any).virtualKeyboard.overlaysContent = true;
-        (navigator as any).virtualKeyboard.addEventListener("geometrychange", (e: any) => {
-          const kbHeight = e.target.boundingRect.height;
-          document.documentElement.style.setProperty('--keyboard-height', `${kbHeight}px`);
-        });
-      }
-    };
-
-    // Check on mount and when chat opens
-    if (isOpen) {
-      checkMobileFullscreen();
-      adjustForKeyboard();
-      setupVirtualKeyboard();
-    } else {
-      // Always remove body class when chat closes
-      document.body.classList.remove('chatbot-fullscreen');
-      setIsMobileFullscreen(false);
     }
+  }, [isOpen, currentStrings]);
 
-    // Listen for resize events and viewport changes
-    const handleResize = () => {
-      if (isOpen) {
-        checkMobileFullscreen();
-        adjustForKeyboard();
+  const addBotMessage = (content: string) => {
+    const message: Message = {
+      id: `bot_${Date.now()}`,
+      role: 'assistant',
+      content,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, message]);
+  };
+
+  const addUserMessage = (content: string) => {
+    const message: Message = {
+      id: `user_${Date.now()}`,
+      role: 'user',
+      content,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, message]);
+  };
+
+  // Email validation
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // PII detection and blocking
+  const containsPII = (text: string) => {
+    // Check for SSN/SIN patterns
+    const ssnPattern = /\b\d{3}-?\d{2}-?\d{4}\b|\b\d{9}\b/;
+    const sinPattern = /\b\d{3}\s?\d{3}\s?\d{3}\b/;
+    
+    if (ssnPattern.test(text) || sinPattern.test(text)) {
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Submit lead to server
+  const submitLead = async () => {
+    try {
+      const csrfToken = getCsrfToken();
+      if (!csrfToken) {
+        throw new Error('CSRF token not available');
       }
-    };
 
-    window.addEventListener('resize', handleResize);
-    window.visualViewport?.addEventListener('resize', adjustForKeyboard);
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken
+        },
+        body: JSON.stringify({
+          name: leadData.name,
+          email: leadData.email,
+          consent: leadData.consent,
+          source: 'chat',
+          page: window.location.pathname,
+          tenant: 'boreal',
+          language: currentLanguage,
+          utmParams: {
+            source: new URLSearchParams(window.location.search).get('utm_source'),
+            medium: new URLSearchParams(window.location.search).get('utm_medium'),
+            campaign: new URLSearchParams(window.location.search).get('utm_campaign')
+          }
+        })
+      });
 
-    // Initial setup
-    adjustForKeyboard();
-    setupVirtualKeyboard();
+      if (response.ok) {
+        // Store in session for future chats
+        sessionStorage.setItem('chatbotName', leadData.name);
+        sessionStorage.setItem('chatbotEmail', leadData.email);
+        sessionStorage.setItem('chatbotConsent', 'true');
+        sessionStorage.setItem('chatbotContact', JSON.stringify({
+          name: leadData.name,
+          email: leadData.email
+        }));
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.visualViewport?.removeEventListener('resize', adjustForKeyboard);
-      // Cleanup body class on unmount
-      document.body.classList.remove('chatbot-fullscreen');
-    };
-  }, [isOpen]);
+        addBotMessage(currentStrings.leadCaptured);
+        setTimeout(() => {
+          addBotMessage(currentStrings.readyMessage);
+          setPhase('ready');
+        }, 1000);
 
-  // DISABLED: Socket.IO causing console errors - using HTTP polling instead
-  useEffect(() => {
-    if (isOpen) {
-      console.log('Chat opened - using HTTP polling for messages');
-      // DISABLED: setIsConnected causing connection attempts
-      // setIsConnected(true); // Mock connected state
-      
-      // Use simple HTTP polling instead of WebSocket
-      const pollInterval = setInterval(async () => {
-        // Poll for new messages via HTTP API
-        try {
-          // This would poll the server for new chat messages
-          // For now, just mock the connection
-        } catch (error) {
-          console.log('Polling error:', error);
+        // Emit analytics event
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'lead_captured', {
+            source: 'chat',
+            name: leadData.name,
+            email: leadData.email
+          });
         }
-      }, 2000);
-
-      return () => {
-        clearInterval(pollInterval);
-        // DISABLED: setIsConnected causing connection attempts
-        // setIsConnected(false);
-      };
-    }
-  }, [isOpen, sessionId]);
-
-  // Enhanced proactive messaging setup
-  useEffect(() => {
-    if (isOpen && !proactiveShown) {
-      // DISABLED: Proactive message timeout to prevent promise rejections
-      // proactiveTimeoutRef.current = setTimeout(() => {
-      //   if (!proactiveShown) {
-      //     const contextualMessage = getContextualProactiveMessage();
-      //     addBotMessage(contextualMessage);
-      //     setProactiveShown(true);
-      //   }
-      // }, 15000);
-    }
-
-    // Enhanced exit intent detection
-    const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY < 10 && isOpen && !proactiveShown) {
-        const exitMessage = getExitIntentMessage();
-        addBotMessage(exitMessage);
-        setProactiveShown(true);
+      } else {
+        throw new Error('Failed to submit lead');
       }
-    };
-
-    if (isOpen) {
-      window.addEventListener('mouseleave', handleMouseLeave);
+    } catch (error) {
+      console.error('Lead submission error:', error);
+      addBotMessage(currentStrings.errorOccurred);
     }
+  };
 
-    return () => {
-      if (proactiveTimeoutRef.current) {
-        clearTimeout(proactiveTimeoutRef.current);
+  // Handle user input
+  const handleSubmit = async () => {
+    if (!inputValue.trim() || isLoading) return;
+
+    const userInput = inputValue.trim();
+    setInputValue('');
+    setIsLoading(true);
+
+    addUserMessage(userInput);
+
+    try {
+      switch (phase) {
+        case 'askName':
+          setLeadData(prev => ({ ...prev, name: userInput }));
+          addBotMessage(currentStrings.askEmail);
+          setPhase('askEmail');
+          break;
+
+        case 'askEmail':
+          if (!isValidEmail(userInput)) {
+            addBotMessage(currentStrings.invalidEmail);
+          } else {
+            setLeadData(prev => ({ ...prev, email: userInput }));
+            addBotMessage(currentStrings.askConsent);
+            setPhase('askConsent');
+          }
+          break;
+
+        case 'askConsent':
+          const isYes = userInput.toLowerCase().includes('yes') || 
+                       userInput.toLowerCase().includes('oui') ||
+                       userInput.toLowerCase().includes('y');
+          
+          if (isYes) {
+            setLeadData(prev => ({ ...prev, consent: true }));
+            await submitLead();
+          } else {
+            addBotMessage(currentStrings.consentRequired);
+            setPhase('welcome');
+          }
+          break;
+
+        case 'ready':
+          // Handle AI responses
+          if (containsPII(userInput)) {
+            addBotMessage("For security reasons, please don't share sensitive information like SSN or SIN numbers in chat. Use our secure upload feature instead.");
+            break;
+          }
+
+          // Send to AI service
+          await handleAIResponse(userInput);
+          break;
       }
-      window.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, [isOpen, proactiveShown]);
+    } catch (error) {
+      console.error('Input handling error:', error);
+      addBotMessage(currentStrings.errorOccurred);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const getLenderProducts = () => {
+  // Handle AI responses and lender suggestions
+  const handleAIResponse = async (userInput: string) => {
+    try {
+      const response = await fetch('/api/chat/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sessionId,
+          message: userInput,
+          language: currentLanguage,
+          context: {
+            name: leadData.name,
+            email: leadData.email,
+            lenderProducts: getLenderProducts()
+          }
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        addBotMessage(result.response);
+
+        // Show lender recommendations if available
+        if (result.recommendations && result.recommendations.length > 0) {
+          showLenderSuggestions(result.recommendations);
+        }
+
+        // Log user message to staff (non-blocking)
+        logUserMessage(userInput);
+      } else {
+        addBotMessage(currentStrings.errorOccurred);
+      }
+    } catch (error) {
+      console.error('AI response error:', error);
+      addBotMessage(currentStrings.errorOccurred);
+    }
+  };
+
+  // Get lender products from cache
+  const getLenderProducts = (): LenderProduct[] => {
     try {
       const cached = localStorage.getItem('lender-products-cache');
       if (cached) {
         const data = JSON.parse(cached);
         return data.products || [];
       }
-      return [];
-    } catch {
-      return [];
-    }
-  };
-
-  // Advanced features implementation
-  const glossary: Record<string, string> = {
-    DSCR: 'Debt Service Coverage Ratio: A measure of a company\'s ability to use its operating income to repay all its debt obligations.',
-    'WORKING CAPITAL': 'Working Capital: The capital of a business used in its day-to-day trading operations, calculated as current assets minus current liabilities.',
-    'EQUIPMENT FINANCING': 'Equipment Financing: A loan secured by the equipment being purchased, typically used for business machinery and vehicles.',
-    'LINE OF CREDIT': 'Line of Credit: A flexible borrowing option that allows you to access funds up to a pre-approved limit when needed.',
-    'INVOICE FACTORING': 'Invoice Factoring: Selling your accounts receivable to a third party at a discount to get immediate cash flow.',
-    'TERM LOAN': 'Term Loan: A traditional loan with fixed monthly payments over a set period, typically for larger business investments.'
-  };
-
-  const analyzeMessage = async (text: string) => {
-    try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, sessionId })
-      });
-      const analysis = await response.json();
-      setSentiment(analysis.sentiment || 'neutral');
-      
-      // Show handoff UI if needed
-      if (analysis.requires_handoff) {
-        addBotMessage('I understand this is important to you. Let me connect you with a human specialist who can provide more detailed assistance. Please use the "Report it" button below to describe your specific needs.');
-      }
-      
-      return analysis;
     } catch (error) {
-      console.error('Analysis failed:', error);
-      return { sentiment: 'neutral', intent: 'general' };
+      console.error('Error loading lender products:', error);
     }
+    return [];
   };
 
-  const translateMessage = async (text: string, fromLang: string, toLang: string) => {
+  // Show lender suggestions
+  const showLenderSuggestions = (recommendations: LenderProduct[]) => {
+    const suggestionsHtml = recommendations.map(product => 
+      `🏦 **${product.lender}** - ${product.name}
+      ${product.description || ''}
+      ${product.minAmount && product.maxAmount ? `Amount: $${product.minAmount.toLocaleString()} - $${product.maxAmount.toLocaleString()}` : ''}`
+    ).join('\n\n');
+
+    addBotMessage(`Here are some funding options that might interest you:\n\n${suggestionsHtml}\n\nWould you like to learn more about any of these options?`);
+  };
+
+  // Log user message to staff (non-blocking)
+  const logUserMessage = async (message: string) => {
     try {
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, fromLang, toLang, sessionId })
-      });
-      const result = await response.json();
-      return result.translatedText || text;
-    } catch (error) {
-      console.error('Translation failed:', error);
-      return text;
-    }
-  };
+      const staffApiUrl = process.env.VITE_STAFF_API_URL || process.env.VITE_API_URL?.replace('/api', '');
+      if (!staffApiUrl) return;
 
-  const checkApplicationStatus = async () => {
-    try {
-      const applicationId = applicationData?.applicationId || localStorage.getItem('applicationId');
-      const response = await fetch(`/api/status/${applicationId || ''}`);
-      const status = await response.json();
-      
-      const statusMessage = `Your application status: ${status.status}. ${status.message}`;
-      if (status.missing && status.missing.length > 0) {
-        addBotMessage(`${statusMessage}\n\nMissing documents: ${status.missing.join(', ')}`);
-      } else {
-        addBotMessage(statusMessage);
-      }
-      
-      return status;
-    } catch (error) {
-      console.error('Status check failed:', error);
-      addBotMessage('Unable to retrieve your application status. Please contact support at info@boreal.financial');
-    }
-  };
-
-  const checkGlossary = (text: string) => {
-    const upperText = text.toUpperCase();
-    for (const [term, definition] of Object.entries(glossary)) {
-      if (upperText.includes(term) || upperText.includes(`WHAT IS ${term}`) || upperText.includes(`DEFINE ${term}`)) {
-        addBotMessage(`📚 **${term}**: ${definition}`);
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const addBotMessage = (content: string) => {
-    const botMessage: Message = {
-      id: Date.now().toString(),
-      role: 'assistant',
-      content,
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, botMessage]);
-  };
-
-  const sendMessage = async () => {
-    if (!inputValue.trim() || isLoading || isEscalated) return;
-
-    const messageText = inputValue.trim();
-    
-    // Check if chat is awaiting user input for contact collection
-    if ((window as any).processUserInput && (window as any).processUserInput(messageText)) {
-      // Add user message and let contact flow handle it
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        role: 'user',
-        content: messageText,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, userMessage]);
-      setInputValue('');
-      return; // Exit early, contact flow will continue
-    }
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: messageText,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    setIsLoading(true);
-
-    // DISABLED: Socket.IO causing console errors - using HTTP polling
-    // if (socket && isConnected) {
-    //   console.log('📤 Sending message via Socket.IO:', messageText);
-    //   socket.emit('user-message', { 
-    //     sessionId, 
-    //     message: messageText,
-    //     context: {
-    //       currentStep,
-    //       applicationData,
-    //       timestamp: new Date().toISOString()
-    //     }
-    //   });
-    // }
-
-    // Clear proactive timeout since user is engaging
-    if (proactiveTimeoutRef.current) {
-      clearTimeout(proactiveTimeoutRef.current);
-    }
-
-    // Check for glossary terms
-    if (checkGlossary(messageText)) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Check for status inquiry
-    if (messageText.toLowerCase().includes('status') || messageText.toLowerCase().includes('application')) {
-      await checkApplicationStatus();
-      setIsLoading(false);
-      return;
-    }
-
-    // Analyze sentiment and intent
-    const analysis = await analyzeMessage(messageText);
-
-    // Handle non-English languages
-    let processedMessage = messageText;
-    if (currentLanguage !== 'en') {
-      processedMessage = await translateMessage(messageText, currentLanguage, 'en');
-    }
-
-    try {
-      // DISABLED: Socket.IO causing console errors - using HTTP polling
-      // if (socket && isConnected) {
-      //   console.log('Sending message via Socket.IO...');
-      //   socket.emit('user-message', { 
-      //     sessionId, 
-      //     message: processedMessage,
-      //     context: {
-      //       currentStep,
-      //       applicationData,
-      //       sentiment: analysis.sentiment,
-      //       intent: analysis.intent
-      //     }
-      //   });
-      //   console.log('Message sent via Socket.IO, waiting for real-time response...');
-      //   setIsLoading(false);
-      //   return;
-      // }
-
-      // Fallback to HTTP API when Socket.IO is not available
-      console.log('📡 Using HTTP fallback for chat API');
-      
-      // Fetch fresh lender products for enhanced recommendations
-      const { fetchLenderProducts } = await import('../api/lenderProducts');
-      const products = await fetchLenderProducts();
-      console.log(`🤖 [CHATBOT] Fetched ${products.length} LIVE lender products for enhanced AI recommendations`);
-      
-      const contextData = {
-        currentStep,
-        applicationData,
-        products: products // Full product database access - no artificial limits
-      };
-      
-      if (products.length > 0) {
-        console.log('🤖 [CHATBOT] Sample products for AI:', products.slice(0, 3).map((p: any) => p.name || p.product || 'Unknown Product'));
-        console.log(`🤖 [CHATBOT] FULL DATABASE ACCESS: AI now has access to all ${products.length} lender products via enhanced RAG system`);
-      } else {
-        console.warn('🤖 [CHATBOT] WARNING: No lender products available for AI context');
-      }
-
-      const response = await fetch('/api/chat/message', {
+      await fetch(`${staffApiUrl}/api/chat/user-message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: processedMessage,
+          email: leadData.email,
+          name: leadData.name,
+          text: message,
+          source: 'chat',
+          tenant: 'boreal',
+          page: window.location.pathname
+        })
+      });
+    } catch (error) {
+      console.warn('Failed to log user message:', error);
+    }
+  };
+
+  // Quick action handlers
+  const handleStartApplication = () => {
+    const prefillParams = new URLSearchParams({
+      name: leadData.name,
+      email: leadData.email
+    });
+    window.location.href = `/apply?prefill=${prefillParams.toString()}`;
+    
+    // Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'application_started', { source: 'chat' });
+    }
+  };
+
+  const handleUploadDocs = () => {
+    setShowUploadModal(true);
+    
+    // Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'doc_upload_from_chat', { source: 'chat' });
+    }
+  };
+
+  const handleBookMeeting = async () => {
+    try {
+      const staffApiUrl = process.env.VITE_STAFF_API_URL || process.env.VITE_API_URL?.replace('/api', '');
+      if (!staffApiUrl) {
+        addBotMessage("Meeting booking is currently unavailable. Please contact us directly.");
+        return;
+      }
+
+      // Try to get available slots (simplified - would integrate with O365 in production)
+      const response = await fetch(`${staffApiUrl}/api/calendar/available`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        setShowMeetingModal(true);
+        addBotMessage(currentStrings.meetingBooked);
+      } else {
+        addBotMessage("Please contact us directly to schedule a meeting: info@boreal.financial");
+      }
+    } catch (error) {
+      addBotMessage("Please contact us directly to schedule a meeting: info@boreal.financial");
+    }
+
+    // Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'meeting_booked', { source: 'chat' });
+    }
+  };
+
+  const handleTalkToHuman = async () => {
+    try {
+      setHumanRequestStatus('requesting');
+      
+      const staffApiUrl = process.env.VITE_STAFF_API_URL || process.env.VITE_API_URL?.replace('/api', '');
+      if (!staffApiUrl) {
+        throw new Error('Staff API not configured');
+      }
+
+      const response = await fetch(`${staffApiUrl}/api/chat/request-staff`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           sessionId,
-          context: {
-            ...contextData,
-            sentiment: analysis.sentiment,
-            intent: analysis.intent,
-            lenderProducts: products // Enhanced lender context
-          },
-          messages: messages.slice(-5), // Last 5 messages for context
-          trainingData: trainingData.slice(0, 50) // Include training examples for enhanced context
+          name: leadData.name,
+          email: leadData.email,
+          currentPage: window.location.pathname
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
+      if (response.ok) {
+        setHumanRequestStatus('connected');
+        addBotMessage(currentStrings.humanRequested);
+      } else {
+        throw new Error('Request failed');
       }
-
-      const data = await response.json();
-      
-      // Handle enhanced response with lender recommendations
-      let assistantContent = data.response || data.reply || 'I apologize, but I encountered an issue. Please try asking your question again.';
-      
-      // If AI provided lender recommendations, format them nicely
-      if (data.recommendations && data.recommendations.length > 0) {
-        assistantContent += '\n\n**Recommended Lenders:**\n';
-        data.recommendations.slice(0, 3).forEach((lender: any, index: number) => {
-          assistantContent += `${index + 1}. **${lender.name || lender.lender_name}** - ${lender.category || 'Business Financing'}\n`;
-          if (lender.minAmount && lender.maxAmount) {
-            assistantContent += `   Amount: $${lender.minAmount?.toLocaleString()} - $${lender.maxAmount?.toLocaleString()}\n`;
-          }
-        });
-      }
-      
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: assistantContent,
-        timestamp: new Date()
-      };
-
-      // Translate response back if needed
-      let finalResponse = data.reply || 'I apologize, but I encountered an issue. Please try asking your question again.';
-      if (currentLanguage !== 'en') {
-        finalResponse = await translateMessage(finalResponse, 'en', currentLanguage);
-      }
-
-      assistantMessage.content = finalResponse;
-      setMessages(prev => [...prev, assistantMessage]);
-
-      // Enhanced handoff logic with proactive triggers
-      if (data.handoff || shouldTriggerHandoff(userMessage.content, analysis.sentiment)) {
-        addBotMessage('I understand this is important to you. Let me connect you with a human specialist who can provide personalized assistance. Please use the "Talk to Human" button below or click "Report it" to describe your specific needs.');
-        // Add "Talk to Human" button option
-        setTimeout(() => {
-          addBotMessage('You can also click here for immediate human assistance: [Request Human Agent]');
-        }, 1000);
-      }
-
     } catch (error) {
-      console.error('Chat error:', error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+      console.error('Human handoff error:', error);
+      addBotMessage("I'll connect you with our team. Please email us at info@boreal.financial or call 1-800-BOREAL.");
+      setHumanRequestStatus('idle');
+    }
+
+    // Analytics
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'handoff_requested', { source: 'chat' });
     }
   };
 
-  const getConversationText = () => {
-    return messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n');
-  };
-
-  // Enhanced contextual messaging
-  const getContextualProactiveMessage = () => {
-    if (currentStep === 1) {
-      return "I see you're starting your financing application! I can help explain our loan products and guide you through each step.";
-    } else if (currentStep === 2) {
-      return "Need help choosing the right financing product? I can recommend options based on your business type and needs.";
-    } else if (currentStep && currentStep >= 5) {
-      return "Working on document upload? I can explain what documents are needed and help with any questions about the process.";
+  // Handle consent buttons
+  const handleConsentResponse = (consent: boolean) => {
+    if (consent) {
+      setLeadData(prev => ({ ...prev, consent: true }));
+      addUserMessage(currentStrings.consentYes);
+      submitLead();
+    } else {
+      addUserMessage(currentStrings.consentNo);
+      addBotMessage(currentStrings.consentRequired);
+      setPhase('welcome');
     }
-    return "Hi there! I'm here to help with any questions about our financing options or application process.";
   };
 
-  const getExitIntentMessage = () => {
-    if (currentStep && currentStep > 1) {
-      return "Before you go - I can help save your progress or answer any questions about completing your application!";
-    }
-    return "Wait! I can quickly explain our financing options and help you find the perfect loan for your business needs.";
+  // Handle language toggle
+  const toggleLanguage = () => {
+    setCurrentLanguage(prev => prev === 'en' ? 'fr' : 'en');
   };
 
-  // Enhanced handoff logic with context
-  const shouldTriggerHandoff = (userMessage: string, sentiment: string) => {
-    const frustratedPhrases = ['frustrated', 'angry', 'terrible', 'awful', 'hate', 'horrible', 'useless'];
-    const complexPhrases = ['speak to someone', 'human agent', 'representative', 'manager', 'complicated'];
-    
-    const hasFrustratedWords = frustratedPhrases.some(phrase => 
-      userMessage.toLowerCase().includes(phrase)
-    );
-    const hasComplexRequest = complexPhrases.some(phrase => 
-      userMessage.toLowerCase().includes(phrase)
-    );
-    
-    return (sentiment === 'negative' || sentiment === 'frustrated') || 
-           hasFrustratedWords || hasComplexRequest;
-  };
-
+  // Handle key press
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSubmit();
     }
   };
 
-  // Enhanced human escalation with proper escalate_to_human event per test specification
-  const requestHuman = async () => {
-    try {
-      console.log('🚨 [ESCALATION] Chat escalated to human by user request');
-      
-      // Set escalated state to block further AI responses
-      setIsEscalated(true);
-      setHumanRequestStatus('requesting');
-      
-      // Get user contact info from session storage
-      const userContact = JSON.parse(sessionStorage.getItem('chatbotContact') || '{}');
-      
-      // Prepare escalation payload as per test specification
-      const escalationData = {
-        clientId: sessionId,
-        name: userContact.name || userName || 'Anonymous User',
-        email: userContact.email || userEmail || 'anonymous@example.com',
-        timestamp: new Date().toISOString(),
-        sessionId: sessionId,
-        context: `User requested human assistance during ${currentStep ? `Step ${currentStep}` : 'application process'}`
-      };
-      
-      console.log('📋 [ESCALATION] Sending escalation payload:', escalationData);
-      
-      // DISABLED: Socket.IO causing console errors - using HTTP polling
-      // if (socket && isConnected) {
-      //   socket.emit('escalate_to_human', escalationData);
-      //   console.log('📡 [ESCALATION] escalate_to_human event emitted via Socket.IO');
-      //   
-      //   // Wait for escalation confirmation
-      //   socket.on('escalation_confirmed', (data: any) => {
-      //     console.log('✅ [ESCALATION] Escalation confirmed by server:', data);
-      //     setHumanRequestStatus('connected');
-      //     
-      //     // Show user that AI is now blocked and they're connected to human
-      //     addBotMessage("✅ You're now connected to a human agent. AI responses are blocked - only our staff will reply from now on.");
-      //     
-      //     // Show success alert for escalation
-      //     alert('✅ Your request has been sent to a human support agent');
-      //   });
-      //   
-      // } else {
-        console.log('📡 [ESCALATION] Using HTTP fallback for escalation');
-        
-        // HTTP fallback for escalation
-        const response = await fetch('/api/public/chat/escalate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(escalationData),
-        });
-
-        if (response.ok) {
-          console.log('✅ [ESCALATION] HTTP escalation request successful');
-          setHumanRequestStatus('connected');
-          addBotMessage("✅ You're now connected to a human agent. AI responses are blocked - only our staff will reply from now on.");
-          alert('✅ Your request has been sent to a human support agent');
-        } else {
-          throw new Error('HTTP escalation failed');
-        }
-      // }
-      
-    } catch (error) {
-      console.error('❌ [ESCALATION] Failed to escalate to human:', error);
-      setIsEscalated(false);  // Reset escalation state on error
-      setHumanRequestStatus('idle');
-      addBotMessage("I'm having trouble connecting you to a human right now. Please try again in a moment, or you can contact our support team directly.");
-    }
-  };
-
-  // Report issue functionality  
-  const reportIssue = async () => {
-    try {
-      console.log('🐛 [CLIENT] Opening issue report dialog...');
-      setShowFeedbackModal(true);
-    } catch (error) {
-      console.error('❌ [CLIENT] Failed to open issue report:', error);
-    }
-  };
-
-  if (!isOpen) {
-    return (
-      <button
-        id="chatLauncher"
-        onClick={onToggle}
-        className="chat-button text-white rounded-full px-5 py-3 flex items-center gap-2 shadow-lg cursor-pointer z-[1000] transition-colors duration-200"
-        style={{
-          background: '#007A3D',
-          fontSize: '16px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.background = '#005D2E'}
-        onMouseLeave={(e) => e.currentTarget.style.background = '#007A3D'}
-      >
-        <HelpIcon />
-        <span>Chat with FinBot</span>
-      </button>
-    );
-  }
+  if (!isOpen) return null;
 
   return (
-    <div className={cn(
-      "chat-widget bg-white flex flex-col shadow-xl z-50",
-      isMobileFullscreen 
-        ? "fullscreen-mobile fixed inset-0 w-full h-full max-h-none rounded-none" 
-        : "fixed bottom-0 right-5 w-80 h-[85vh] max-h-[850px] rounded-t-lg"
-    )}>
-      {/* Professional Chat Header */}
-      <div 
-        className={cn(
-          "chat-header flex items-center justify-between px-4 py-3 text-white",
-          isMobileFullscreen ? "rounded-none" : "rounded-t-lg"
-        )}
-        style={{ background: '#007A3D' }}
-      >
+    <div className="fixed bottom-4 right-4 w-96 h-[600px] bg-white border border-gray-200 rounded-lg shadow-xl flex flex-col z-50">
+      {/* Header */}
+      <CardHeader className="flex flex-row items-center justify-between p-4 border-b bg-gradient-to-r from-teal-600 to-orange-500 text-white rounded-t-lg">
         <div className="flex items-center gap-2">
-          <HelpIcon />
-          <span className="font-medium">FinBot</span>
-          {isConnected && (
-            <span className="text-xs bg-green-500 px-2 py-0.5 rounded-full">Live</span>
-          )}
-          {!isConnected && socket && (
-            <span className="text-xs bg-yellow-500 px-2 py-0.5 rounded-full">Connecting...</span>
-          )}
-        </div>
-        <button
-          onClick={onToggle}
-          className="text-white hover:text-gray-200 transition-colors text-lg font-bold"
-        >
-          ✖
-        </button>
-      </div>
-      {/* Chat Body */}
-      <div className={cn(
-        "chat-body flex-1 overflow-y-auto p-3 flex flex-col",
-        isMobileFullscreen && "min-h-0" // Ensure proper flex behavior on mobile
-      )}>
-        <div className="chat-messages flex-1 space-y-3 overflow-y-auto" data-chat-messages>
-            {messages.map((message, index) => (
-              <div
-                key={`${message.id}-${index}` || `msg-${index}-${message.timestamp.getTime()}`}
-                className={cn(
-                  "flex gap-2 text-sm",
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                )}
-              >
-                {message.role === 'assistant' && (
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                    <HelpIcon />
-                  </div>
-                )}
-                <div
-                  className={cn(
-                    "max-w-[85%] rounded-lg px-3 py-2",
-                    message.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  )}
-                >
-                  {message.content}
-                </div>
-                {message.role === 'user' && (
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center">
-                    <UserIcon />
-                  </div>
-                )}
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex gap-2 justify-start">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                  <HelpIcon />
-                </div>
-                <div className="bg-gray-100 rounded-lg px-3 py-2 text-sm">
-                  <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                </div>
-              </div>
-            )}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Input Area */}
-      <div className="chat-input-container flex gap-2 p-3 border-t border-gray-200">
-        <input
-          ref={inputRef}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder={isEscalated ? "Chat escalated to human agent..." : "Ask me anything about financing..."}
-          disabled={isLoading || isEscalated}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-        />
-        <button
-          onClick={sendMessage}
-          disabled={!inputValue.trim() || isLoading || isEscalated}
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          style={{ background: isEscalated ? '#9CA3AF' : '#007A3D' }}
-          onMouseEnter={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = '#005D2E')}
-          onMouseLeave={(e) => !e.currentTarget.disabled && (e.currentTarget.style.background = isEscalated ? '#9CA3AF' : '#007A3D')}
-        >
-          <SendIcon />
-        </button>
-      </div>
-      
-      {/* Enhanced Chat Footer with Multiple Options */}
-      <div 
-        className="chat-footer text-white py-2 px-4 text-sm flex-shrink-0"
-        style={{
-          background: '#005D2E',
-          borderTop: '1px solid rgba(255,255,255,0.2)',
-          minHeight: '50px'
-        }}
-      >
-        <div className="flex justify-between items-center h-full">
-          <span className="text-xs">Need help?</span>
-          <div className="flex gap-1.5">
-            <button
-              onClick={async () => {
-                // IMMEDIATELY block further chatbot responses
-                setIsEscalated(true);
-                setHumanRequestStatus('requesting');
-                
-                // Add connection message and stop AI responses
-                addBotMessage('🤝 Connecting you to a human agent... Your chat session has been escalated to our support team. Please wait while we connect you.');
-                
-                try {
-                  // Get user contact info
-                  const storedEmail = sessionStorage.getItem('userEmail') || userEmail || 'anonymous';
-                  const storedName = sessionStorage.getItem('userName') || userName || 'Anonymous User';
-                  const clientId = sessionId;
-                  
-                  console.log('🚨 [ESCALATION] Session escalated - blocking AI responses');
-                  console.log('📞 [ESCALATION] Requesting human assistance via Socket.IO');
-                  
-                  // DISABLED: Socket.IO causing console errors
-                  // if (socket && isConnected) {
-                  //   socket.emit('escalate_to_human', {
-                  //     clientId,
-                  //     name: storedName,
-                  //     email: storedEmail,
-                  //     timestamp: new Date().toISOString(),
-                  //     sessionId,
-                  //     context: { currentStep, applicationData }
-                  //   });
-                  //   console.log('✅ [ESCALATION] Escalation event emitted via Socket.IO');
-                  // }
-
-                  // HTTP fallback
-                  await fetch('/api/chat/request-staff', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                      sessionId,
-                      userName: storedName,
-                      userEmail: storedEmail,
-                      context: { currentStep, applicationData, escalated: true }
-                    })
-                  });
-                  
-                  setHumanRequestStatus('connected');
-                  console.log('✅ [ESCALATION] Human assistance request sent - AI responses blocked');
-                } catch (error) {
-                  console.error('❌ [ESCALATION] Failed to escalate to human:', error);
-                  setIsEscalated(false); // Re-enable AI if escalation fails
-                  setHumanRequestStatus('idle');
-                  addBotMessage('Sorry, we had trouble connecting you to a human agent. Please try again or call us directly at 1-888-811-1887.');
-                }
-              }}
-              className="px-2 py-1 rounded border-none cursor-pointer transition-colors duration-200 text-white text-xs"
-              style={{
-                background: 'rgba(255,255,255,0.15)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-            >
-              Talk to Human
-            </button>
-            <button
-              onClick={() => setShowFeedbackModal(true)}
-              className="px-2 py-1 rounded border-none cursor-pointer transition-colors duration-200 text-white text-xs"
-              style={{
-                background: 'rgba(255,255,255,0.15)'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-            >
-              Report Issue
-            </button>
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+            🤖
+          </div>
+          <div>
+            <h3 className="font-semibold">Boreal Assistant</h3>
+            <p className="text-xs opacity-90">Powered by AI</p>
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleLanguage}
+            className="text-xs bg-white/20 px-2 py-1 rounded hover:bg-white/30 transition-colors"
+            title={currentStrings.languageLabel}
+          >
+            {currentStrings.languageToggle}
+          </button>
+          <button
+            onClick={onToggle}
+            className="text-white hover:bg-white/20 p-1 rounded transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+      </CardHeader>
+
+      {/* Messages */}
+      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[80%] p-3 rounded-lg ${
+                message.role === 'user'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-900'
+              }`}
+            >
+              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              <p className="text-xs opacity-70 mt-1">
+                {message.timestamp.toLocaleTimeString()}
+              </p>
+            </div>
+          </div>
+        ))}
+
+        {/* Consent buttons */}
+        {phase === 'askConsent' && !isLoading && (
+          <div className="flex gap-2 justify-center">
+            <Button
+              onClick={() => handleConsentResponse(true)}
+              className="bg-green-500 hover:bg-green-600 text-white text-sm"
+            >
+              {currentStrings.consentYes}
+            </Button>
+            <Button
+              onClick={() => handleConsentResponse(false)}
+              variant="outline"
+              className="text-sm"
+            >
+              {currentStrings.consentNo}
+            </Button>
+          </div>
+        )}
+
+        {/* Quick actions */}
+        {phase === 'ready' && !isLoading && (
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <Button
+              onClick={handleStartApplication}
+              className="bg-teal-500 hover:bg-teal-600 text-white text-xs p-2 h-auto"
+            >
+              📝 {currentStrings.startApp}
+            </Button>
+            <Button
+              onClick={handleUploadDocs}
+              variant="outline"
+              className="text-xs p-2 h-auto"
+            >
+              📁 {currentStrings.uploadDocs}
+            </Button>
+            <Button
+              onClick={handleBookMeeting}
+              variant="outline"
+              className="text-xs p-2 h-auto"
+            >
+              📅 {currentStrings.bookMeeting}
+            </Button>
+            <Button
+              onClick={handleTalkToHuman}
+              variant="outline"
+              className="text-xs p-2 h-auto"
+              disabled={humanRequestStatus === 'requesting'}
+            >
+              👤 {humanRequestStatus === 'requesting' ? '...' : currentStrings.talkHuman}
+            </Button>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-gray-100 p-3 rounded-lg">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </CardContent>
+
+      {/* Input */}
+      <div className="p-4 border-t">
+        <div className="flex gap-2">
+          <Input
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder={phase === 'ready' ? "Ask me about financing..." : "Type your response..."}
+            disabled={isLoading || phase === 'askConsent'}
+            className="flex-1 text-sm"
+          />
+          <Button
+            onClick={handleSubmit}
+            disabled={!inputValue.trim() || isLoading || phase === 'askConsent'}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+          >
+            →
+          </Button>
+        </div>
       </div>
-      
-      <FeedbackModal 
-        isOpen={showFeedbackModal}
-        onClose={() => setShowFeedbackModal(false)}
-        conversation={getConversationText()}
-      />
+
+      {/* Upload Modal (placeholder) */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full m-4">
+            <h3 className="font-semibold mb-4">Upload Documents</h3>
+            <p className="text-sm text-gray-600 mb-4">{currentStrings.uploadInstructions}</p>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowUploadModal(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowUploadModal(false);
+                  addBotMessage("Document upload feature will be available soon. For now, please email documents to docs@boreal.financial");
+                }}
+                className="flex-1"
+              >
+                Continue
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

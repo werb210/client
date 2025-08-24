@@ -30,6 +30,8 @@ import opsRouter from "./routes/ops";
 import clientMessagesRouter from "./routes/clientMessages";
 import supportRouter from "./routes/support";
 import authRouter from "./routes/auth";
+import leadsRouter from "./routes/leads";
+import { issueCsrf, requireCsrf } from "./security/csrf";
 
 // ES module path resolution
 const __filename = fileURLToPath(import.meta.url);
@@ -162,8 +164,8 @@ app.use((req, res, next) => {
     res.sendFile(manifestPath);
   });
 
-  // Health check endpoint for monitoring
-  app.get('/api/health', (req, res) => {
+  // Health check endpoint for monitoring (with CSRF token issuance)
+  app.get('/api/health', issueCsrf, (req, res) => {
     res.json({ 
       status: 'ok',
       message: 'Client app serving - API calls route to staff backend',
@@ -223,8 +225,8 @@ app.use((req, res, next) => {
     }
   });
 
-  // Application submission endpoint - forward to Staff API
-  app.post('/api/public/applications', async (req, res) => {
+  // Application submission endpoint - forward to Staff API (CSRF protected)
+  app.post('/api/public/applications', requireCsrf, async (req, res) => {
     try {
       console.log('📝 [SERVER] Forwarding application submission to Staff API');
       console.log('📦 [SERVER] Request body size:', JSON.stringify(req.body).length, 'characters');
@@ -280,8 +282,8 @@ app.use((req, res, next) => {
     }
   });
 
-  // Legacy /api/applications endpoint for auto-save compatibility
-  app.post('/api/applications', async (req, res) => {
+  // Legacy /api/applications endpoint for auto-save compatibility (CSRF protected)
+  app.post('/api/applications', requireCsrf, async (req, res) => {
     console.log('📝 [SERVER] Legacy auto-save endpoint - converting to step format');
     
     // Convert flat format to step-based format for Staff API
@@ -1696,6 +1698,17 @@ app.use((req, res, next) => {
   app.use('/webhooks', webhooksRouter);
   app.use('/api/notifications', notificationsRouter);
   
+  // Mount lead capture routes with CSRF protection
+  app.use('/api', leadsRouter);
+  
+  // Mount enhanced chat routes for staff handoff
+  const chatEnhancedRouter = (await import('./routes/chat-enhanced')).default;
+  app.use('/api/chat', chatEnhancedRouter);
+  
+  // Mount AI chat message processing
+  const chatMessageRouter = (await import('./routes/chat-message')).default;
+  app.use('/api/chat', chatMessageRouter);
+  
   // Client-specific notification routes
   const clientNotificationsRouter = (await import('./routes/client/notifications')).default;
   app.use('/api/client/notifications', clientNotificationsRouter);
@@ -2878,11 +2891,19 @@ app.use((req, res, next) => {
     console.log(`[STATIC] Serving client files from: ${clientBuildPath}`);
     app.use(express.static(clientBuildPath));
     
-    // SPA Routing: All non-API routes should serve index.html for React Router
-    app.get('*', (req, res) => {
+    // SPA Routing: All non-API routes should serve index.html for React Router with CSRF token
+    app.get('*', issueCsrf, (req, res) => {
       const indexPath = join(__dirname, '../dist/public/index.html');
       console.log(`[SPA] Serving index.html for route: ${req.path}`);
-      res.sendFile(indexPath);
+      
+      // Inject CSRF token into HTML for client access
+      const fs = require('fs');
+      const html = fs.readFileSync(indexPath, 'utf8');
+      const htmlWithCsrf = html.replace(
+        '<head>',
+        `<head><script>window.__CSRF__ = '${req.csrfToken}';</script>`
+      );
+      res.send(htmlWithCsrf);
     });
   } else {
     // Development: use Vite dev server

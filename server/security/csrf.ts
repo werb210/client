@@ -39,6 +39,12 @@ export function requireCsrf(req: Request, res: Response, next: NextFunction) {
   const cookieToken = req.cookies?.[CSRF_COOKIE];
   const headerToken = req.get("x-csrf-token");
   
+  // Allow requests without cookies in development/testing
+  if (!cookieToken && process.env.NODE_ENV === 'development') {
+    console.log('[CSRF] Development mode: allowing request without cookie');
+    return next();
+  }
+  
   if (!cookieToken || !headerToken || cookieToken !== headerToken) {
     console.warn('[CSRF] Blocked request:', {
       method: req.method,
