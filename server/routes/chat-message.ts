@@ -41,7 +41,7 @@ Your role:
 - Be professional, helpful, and encouraging
 
 Available lender products context:
-${lenderProducts.map(p => `- ${p.lender}: ${p.name} (${p.description || 'No description'})`).join('\n')}
+${lenderProducts.map((p: any) => `- ${p.lender}: ${p.name} (${p.description || 'No description'})`).join('\n')}
 
 Customer context:
 - Name: ${context.name || 'Customer'}
@@ -79,11 +79,11 @@ Guidelines:
       const response = completion.choices[0].message.content;
 
       // Simple keyword-based lender recommendations
-      const recommendations = [];
+      const recommendations: any[] = [];
       const lowerMessage = message.toLowerCase();
       
       if (lowerMessage.includes('equipment') || lowerMessage.includes('machinery')) {
-        const equipmentLenders = lenderProducts.filter(p => 
+        const equipmentLenders = lenderProducts.filter((p: any) => 
           p.name.toLowerCase().includes('equipment') || 
           p.description?.toLowerCase().includes('equipment')
         );
@@ -91,7 +91,7 @@ Guidelines:
       }
       
       if (lowerMessage.includes('working capital') || lowerMessage.includes('cash flow')) {
-        const workingCapitalLenders = lenderProducts.filter(p => 
+        const workingCapitalLenders = lenderProducts.filter((p: any) => 
           p.name.toLowerCase().includes('working') || 
           p.name.toLowerCase().includes('capital') ||
           p.description?.toLowerCase().includes('working capital')
@@ -100,8 +100,8 @@ Guidelines:
       }
 
       // Remove duplicates
-      const uniqueRecommendations = recommendations.filter((rec, index, self) => 
-        index === self.findIndex(r => r.id === rec.id)
+      const uniqueRecommendations = recommendations.filter((rec: any, index: number, self: any[]) => 
+        index === self.findIndex((r: any) => r.id === rec.id)
       );
 
       res.json({

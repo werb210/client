@@ -2892,18 +2892,23 @@ app.use((req, res, next) => {
     app.use(express.static(clientBuildPath));
     
     // SPA Routing: All non-API routes should serve index.html for React Router with CSRF token
-    app.get('*', issueCsrf, (req, res) => {
+    app.get('*', issueCsrf, async (req, res) => {
       const indexPath = join(__dirname, '../dist/public/index.html');
       console.log(`[SPA] Serving index.html for route: ${req.path}`);
       
-      // Inject CSRF token into HTML for client access
-      const fs = require('fs');
-      const html = fs.readFileSync(indexPath, 'utf8');
-      const htmlWithCsrf = html.replace(
-        '<head>',
-        `<head><script>window.__CSRF__ = '${req.csrfToken}';</script>`
-      );
-      res.send(htmlWithCsrf);
+      try {
+        // Inject CSRF token into HTML for client access
+        const fs = await import('fs');
+        const html = fs.readFileSync(indexPath, 'utf8');
+        const htmlWithCsrf = html.replace(
+          '<head>',
+          `<head><script>window.__CSRF__ = '${req.csrfToken}';</script>`
+        );
+        res.send(htmlWithCsrf);
+      } catch (error) {
+        console.error('Error serving SPA route:', error);
+        res.status(500).send('Internal Server Error');
+      }
     });
   } else {
     // Development: use Vite dev server
