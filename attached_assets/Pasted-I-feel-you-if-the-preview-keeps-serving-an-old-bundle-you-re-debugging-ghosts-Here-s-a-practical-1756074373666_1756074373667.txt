@@ -1,0 +1,238 @@
+I feel you—if the preview keeps serving an old bundle, you’re debugging ghosts. Here’s a **practical, two-track plan** that makes Replit show the *real* app **and** gives you a repeatable way to test features even when the preview misbehaves.
+
+---
+
+# 1) Make Replit preview load the latest code (both apps)
+
+## A. Allow Replit’s iframe only in **dev**, keep A+ security in **prod**
+
+Add this middleware to each app’s server (Staff + Client), earliest in boot:
+
+```ts
+// server/mw/devPreview.ts
+import type { Request, Response, NextFunction } from "express";
+
+export function devPreviewHeaders(req: Request, res: Response, next: NextFunction) {
+  const isProd = process.env.NODE_ENV === "production";
+  // Fresh HTML every time
+  if (req.accepts("text/html")) {
+    res.setHeader("Cache-Control", "no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+  }
+  // Frame policy: relax only in dev so Replit preview works
+  if (!isProd) {
+    res.setHeader(
+      "Content-Security-Policy",
+      [
+        "default-src 'self'",
+        "script-src 'self'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data:",
+        "connect-src 'self' https:",
+        "frame-ancestors 'self' https://replit.com *.replit.com *.replit.dev *.id.repl.co",
+      ].join("; ")
+    );
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  }
+  next();
+}
+```
+
+Register it right after you create the `app`:
+
+```ts
+// server/boot.ts (or index.ts)
+import { devPreviewHeaders } from "./mw/devPreview";
+app.use(devPreviewHeaders);
+```
+
+> In **production** your existing CSP (with `frame-ancestors 'none'` + `X-Frame-Options DENY`) remains intact. This only relaxes **dev** so Replit’s iframe can render.
+
+## B. Kill the service worker & stale caches in **dev**
+
+In each app:
+
+```ts
+// client/src/lib/sw-kill.ts
+export async function killSWInDev() {
+  if (import.meta.env.PROD) return;
+  try {
+    for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister();
+    const keys = await caches.keys(); await Promise.all(keys.map(k => caches.delete(k)));
+    console.info("[DEV] Service worker & caches cleared");
+  } catch (e) { console.warn("SW kill error", e); }
+}
+```
+
+Call it once at startup:
+
+```ts
+// client/src/main.tsx
+import { killSWInDev } from "./lib/sw-kill";
+killSWInDev();
+```
+
+## C. Add a build stamp and mismatch banner
+
+```ts
+// server/routes/version.ts
+app.get("/__version", (_req, res) => {
+  res.json({ app: process.env.APP_NAME || "unknown", build: process.env.BUILD_ID || new Date().toISOString() });
+});
+```
+
+```ts
+// client/src/lib/version-watch.ts
+export async function watchBuildVersion() {
+  if (import.meta.env.PROD) return;
+  const res = await fetch("/__version", { cache: "no-store" }).then(r => r.json()).catch(() => null);
+  const current = res?.build || "";
+  const seen = sessionStorage.getItem("__build");
+  if (current && seen && current !== seen) {
+    const ok = confirm("New build detected. Reload now?");
+    if (ok) location.reload();
+  }
+  if (current) sessionStorage.setItem("__build", current);
+}
+```
+
+```ts
+// client/src/main.tsx
+import { watchBuildVersion } from "./lib/version-watch";
+watchBuildVersion();
+```
+
+### How you’ll use this
+
+* Use **External page** (not the small preview) when CSP blocks the iframe.
+* You’ll always see the **latest** HTML/JS (no cache), and a reload prompt when a new build is deployed.
+
+---
+
+# 2) Deterministic feature testing (so you’re never blind)
+
+## A. Run **smoke tests** in the shell (no UI required)
+
+Create these *once* per app (if you don’t already have them):
+
+```bash
+# scripts/smoke.sh
+set -euo pipefail
+HOST="${1:-http://localhost:5000}"
+
+echo "Health:" && curl -fsS "$HOST/api/health" >/dev/null && echo " OK"
+
+echo "Version:" && curl -fsS "$HOST/__version" | jq -r .build
+
+# Public intake → card read
+APP_JSON=$(curl -fsS -X POST "$HOST/api/public/applications" \
+  -H 'Content-Type: application/json' \
+  -d '{"businessInformation":{"legalBusinessName":"Smoke Co"}, "applicantInformation":{"firstName":"Smoky","lastName":"Test","email":"smoke@test.com"}, "finance":{"requestedAmount":50000}}')
+APP_ID=$(echo "$APP_JSON" | jq -r .applicationId)
+echo "Created app: $APP_ID"
+
+curl -fsS "$HOST/api/pipeline/cards/$APP_ID/application" | jq '{ok:(.application.businessName!=null), docCount:.documentCount}'
+```
+
+* **Client app**: run the version/health checks and validate outbound routing (expects 200/501 depending on proxy).
+* **Staff app**: full flow (create app → read card).
+
+> This proves backend features work even if the UI is stale. Keep it in CI so regressions are obvious.
+
+## B. Quick **UI probes** you can paste in the browser console
+
+* **Is the dialer FAB rendered?**
+
+```js
+!!document.querySelector('#dialer-fab') || 'FAB missing'
+```
+
+* **Are Comms tabs mounting content?**
+
+```js
+[...document.querySelectorAll('[data-comm-tab]')].map(n=>({tab:n.getAttribute('data-comm-tab'), hasPanel:!!document.querySelector(`#panel-${n.getAttribute('data-comm-tab')}`)}))
+```
+
+* **What build is the UI showing?**
+
+```js
+fetch('/__version',{cache:'no-store'}).then(r=>r.json()).then(console.log)
+```
+
+---
+
+# 3) Specific fixes for what you reported
+
+## Staff: missing **green dialer** FAB
+
+* Put it in the **global shell**, not inside a page:
+
+```tsx
+// client/src/pages/staff/Shell.tsx
+import { GlobalDialerFab } from '@/components/comm/GlobalDialerFab';
+
+export default function Shell() {
+  return (
+    <>
+      <TopNav />
+      <SideNav />
+      <main><Outlet /></main>
+      <GlobalDialerFab id="dialer-fab" /> {/* <- always mounted */}
+    </>
+  );
+}
+```
+
+* Make it visible and high z-index:
+
+```css
+/* client/src/components/comm/global-dialer.css */
+#dialer-fab{position:fixed; right:24px; bottom:24px; z-index:2147483000}
+```
+
+* If you have SLF routes with a different layout, include the FAB in that shell too (your earlier issue was SLF routes bypassing `Shell.tsx`).
+
+## Staff: Comms tabs show “Select a contact…”
+
+* Ensure each tab **renders a panel** even without a selected contact (for broadcast / manual send):
+
+  * SMS: a composer with “To:” multi-select + message box.
+  * Email: recipient + subject + editor.
+  * Calls: dial pad + keypad + history.
+  * Voicemail: mailbox list + “Check messages” panel.
+
+If feature flags hide these when `contactId` is missing, toggle them **on** in dev:
+
+```ts
+// e.g., env or config
+export const FEATURES = {
+  smsComposerStandalone: true,
+  emailComposerStandalone: true,
+  callDialpadStandalone: true,
+  voicemailStandalone: true,
+};
+```
+
+## Client: chatbot greeting didn’t fire
+
+* With the SW killed and the version watcher added, you should now get the welcome flow immediately. If not:
+
+  * Check the console for `[CHATBOT] SELF-STARTING` (log you already have).
+  * Verify `/api/chat/…` endpoints are **HTTP polling** (no Socket.IO script tags).
+
+---
+
+# 4) Daily workflow so you always see “what’s real”
+
+1. **Deploy/build** (or run) → open **External page**.
+2. The **version banner** prompts you if a new build exists.
+3. If something looks off:
+
+   * Run `scripts/smoke.sh` → confirms backend reality.
+   * Run the **UI probes** → confirms whether the DOM mounted the new components.
+4. If preview iframe refuses to load: it’s CSP; use External page in dev.
+
+---
+
+If you want, I can bundle the snippets above into two PR-ready patches: one for **client**, one for **staff** (same middleware + SW-kill + version watcher), and a small commit to mount the **GlobalDialerFab** in the staff shell.
