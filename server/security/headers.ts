@@ -14,11 +14,26 @@ export const securityHeaders = (): RequestHandler[] => [
       useDefaults: false,  // Disable defaults to avoid conflicts
       directives: {
         "default-src": ["'self'"],
-        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],  // Allow eval for Vite development
+        "script-src": [
+          "'self'", 
+          "'unsafe-inline'", 
+          "'unsafe-eval'",
+          "https://www.googletagmanager.com",
+          "https://www.google-analytics.com", 
+          "https://replit.com"
+        ],  // Allow external analytics and Replit scripts
         "style-src":  ["'self'", "'unsafe-inline'"],  // Allow inline styles for CSS-in-JS
         "img-src":    ["'self'", "data:", "blob:", "https:"],   // Allow https images
         "font-src":   ["'self'", "data:", "https:"],            // Allow external fonts
-        "connect-src":["'self'", process.env.STAFF_API_URL ?? "", "ws:", "wss:", "https:"].filter(Boolean), // Add https for APIs
+        "connect-src":[
+          "'self'", 
+          process.env.STAFF_API_URL ?? "", 
+          "ws:", 
+          "wss:", 
+          "https:", 
+          "https://www.google-analytics.com",
+          "https://www.googletagmanager.com"
+        ].filter(Boolean), // Add analytics connections
         
         // ✅ A+ Security: Always deny frame embedding
         "frame-ancestors": ["'none'"],              // ✅ Always deny for A+ security
@@ -26,7 +41,7 @@ export const securityHeaders = (): RequestHandler[] => [
         "object-src": ["'none'"],
         "base-uri":   ["'self'"],
         "form-action": ["'self'"],
-        "frame-src":   ["'none'"],
+        "frame-src":   ["https://www.googletagmanager.com"],  // Allow Google Tag Manager iframe
         "worker-src":  ["'self'", "blob:"],         // Allow service workers
         "manifest-src": ["'self'"]                  // Allow PWA manifest
       }
