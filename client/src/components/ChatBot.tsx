@@ -666,6 +666,32 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
           </div>
         )}
 
+        {/* Always available quick help buttons */}
+        {!isLoading && phase !== 'askConsent' && (
+          <div className="flex gap-2 mt-4 pt-2 border-t border-gray-100">
+            <Button
+              onClick={handleTalkToHuman}
+              variant="outline"
+              size="sm"
+              className="text-xs flex-1"
+              disabled={humanRequestStatus === 'requesting'}
+            >
+              👤 {humanRequestStatus === 'requesting' ? '...' : 'Talk to Human'}
+            </Button>
+            <Button
+              onClick={() => {
+                addBotMessage("I'll help you report an issue. Please describe what's happening and I'll make sure our team gets your feedback.");
+                addBotMessage("You can also email us directly at support@boreal.financial with any technical issues.");
+              }}
+              variant="outline"
+              size="sm"
+              className="text-xs flex-1"
+            >
+              🐛 Report Issue
+            </Button>
+          </div>
+        )}
+
         {isLoading && (
           <div className="flex justify-start">
             <div className="bg-gray-100 p-3 rounded-lg">
