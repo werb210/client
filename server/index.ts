@@ -243,8 +243,8 @@ app.use((req, res, next) => {
         });
       }
       
-      // Forward to Staff API
-      const staffUrl = `${cfg.staffApiUrl}/public/applications`;
+      // Forward to Staff API  
+      const staffUrl = `${cfg.staffApiUrl.replace('/api/lender-products', '')}/public/applications`;
       console.log('🎯 [SERVER] Forwarding to:', staffUrl);
       
       const response = await fetch(staffUrl, {
@@ -321,7 +321,7 @@ app.use((req, res, next) => {
     
     // Reuse the main application submission logic
     try {
-      const staffUrl = `${cfg.staffApiUrl}/public/applications`;
+      const staffUrl = `${cfg.staffApiUrl.replace('/api/lender-products', '')}/public/applications`;
       const response = await fetch(staffUrl, {
         method: 'POST',
         headers: {
