@@ -1,9 +1,28 @@
 HTTP/1.1 200 OK
-X-Powered-By: Express
-Vary: Origin
-Content-Type: text/html; charset=utf-8
-Date: Sun, 29 Jun 2025 01:14:05 GMT
+Content-Security-Policy: default-src 'self';script-src 'self';style-src 'self';img-src 'self' data:;font-src 'self';connect-src 'self'  https://staff.boreal.financial/api/lender-products;frame-ancestors 'none';object-src 'none';base-uri 'self';form-action 'self';script-src-attr 'none';upgrade-insecure-requests
+Cross-Origin-Embedder-Policy: require-corp
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
+Origin-Agent-Cluster: ?1
+Referrer-Policy: strict-origin-when-cross-origin
+X-Content-Type-Options: nosniff
+X-DNS-Prefetch-Control: off
+X-Download-Options: noopen
+X-Permitted-Cross-Domain-Policies: none
+X-XSS-Protection: 0
+Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), accelerometer=(), autoplay=(), usb=()
+RateLimit-Limit: 600
+RateLimit-Remaining: 592
+RateLimit-Reset: 2025-08-24T19:36:44.093Z
+Access-Control-Allow-Methods: GET,PUT,POST,DELETE,OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization, Content-Length, X-Requested-With, X-CSRF-Token, x-csrf-token
+Access-Control-Allow-Credentials: true
+Set-Cookie: __Host-bf_csrf=zxlxzFRzsOepp-0VLkdGZKvMgPopa5tuT2pQIJW85Wo; Max-Age=86400; Path=/; Expires=Mon, 25 Aug 2025 19:21:44 GMT; Secure; SameSite=Lax
+x-csrf-token: zxlxzFRzsOepp-0VLkdGZKvMgPopa5tuT2pQIJW85Wo
+Content-Type: application/json; charset=utf-8
+Content-Length: 120
+ETag: W/"78-nJg1TEDwQiv2me919s8DmBultvs"
+Date: Sun, 24 Aug 2025 19:21:44 GMT
 Connection: keep-alive
 Keep-Alive: timeout=5
-Content-Length: 42413
 

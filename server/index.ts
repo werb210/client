@@ -43,8 +43,10 @@ const __dirname = dirname(__filename);
 const app = express();
 app.set("trust proxy", 1); // for secure cookies behind proxies
 
-if (process.env.NODE_ENV !== "production") { app.use(devIframeHeaderKiller); }
-if (process.env.NODE_ENV !== "production") { app.use(allowReplitIframe); }
+// Disabled for A+ security grade - no development iframe overrides allowed
+// if (process.env.NODE_ENV !== "production") { app.use(devIframeHeaderKiller); }
+// Disabled for A+ security grade - no iframe embedding allowed
+// if (process.env.NODE_ENV !== "production") { app.use(allowReplitIframe); }
 
 // Determine actual environment - true production mode
 const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_ENVIRONMENT === 'production';
@@ -67,7 +69,7 @@ securityHeaders().forEach(mw => app.use(mw));
 // Apply general rate limiting
 app.use(rlGeneral);
 
-// Production-ready CORS configuration
+// Production-ready CORS configuration (without conflicting security headers)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   const allowedOrigins = cfg.allowedOrigins;
@@ -85,32 +87,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, X-CSRF-Token, x-csrf-token');
   res.header('Access-Control-Allow-Credentials', 'true');
   
-  // Security headers
-  res.header('X-Frame-Options', 'DENY');
-  res.header('X-Content-Type-Options', 'nosniff');
-  res.header('X-XSS-Protection', '1; mode=block');
-  res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
-  // Content Security Policy
-  res.header('Content-Security-Policy', 
-    "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.signnow.com https://*.signnow.com; " +
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-    "font-src 'self' https://fonts.gstatic.com; " +
-    "img-src 'self' data: blob: https:; " +
-    "connect-src 'self' wss: ws: https: http:; " +
-    "frame-src 'self' https://app.signnow.com https://*.signnow.com; " +
-    "object-src 'none'; " +
-    "media-src 'self'; " +
-    "worker-src 'self' blob:; " +
-    "base-uri 'self'; " +
-    "form-action 'self';"
-  );
-  
-  // HSTS (Strict Transport Security) - only in production HTTPS
-  if (process.env.NODE_ENV === 'production') {
-    res.header('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
-  }
+  // Remove manual security headers - let Helmet handle them to avoid conflicts
   next();
 });
 
