@@ -27,11 +27,11 @@ function App() {
   // DISABLED: useWebSocket causing console errors
   // useWebSocket(); // ✅ Enables live updates globally
   
-  // Verify VITE_API_BASE_URL injection
-  console.log("🔧 STAFF API:", import.meta.env.VITE_API_BASE_URL);
-  console.log("🔧 ENV MODE:", import.meta.env.MODE);
-  console.log("🔧 ENV DEV:", import.meta.env.DEV);
-  console.log("🔧 ALL ENV VARS:", Object.keys(import.meta.env));
+  // DISABLED: Verbose environment logging causing console clutter
+  // console.log("🔧 STAFF API:", import.meta.env.VITE_API_BASE_URL);
+  // console.log("🔧 ENV MODE:", import.meta.env.MODE);
+  // console.log("🔧 ENV DEV:", import.meta.env.DEV);
+  // console.log("🔧 ALL ENV VARS:", Object.keys(import.meta.env));
   
   return (
     <AppShell>
