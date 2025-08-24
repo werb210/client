@@ -11,13 +11,12 @@ export function WebSocketListener() {
   const queryClient = useQueryClient();
 
   React.useEffect(() => {
-    // DISABLED: WebSocket listener causing connection errors
-    // The server uses Socket.IO for real-time communication, not raw WebSocket
-    // This component was causing repeated connection attempts to non-existent /ws endpoint
+    // DISABLED: All WebSocket/Socket.IO connections causing console errors
+    // Using HTTP polling for all real-time features instead
     
-    console.log('[WebSocket] Legacy WebSocket listener disabled - using Socket.IO for real-time features');
+    console.log('[WebSocket] All real-time connections disabled - using HTTP polling');
     
-    // Early return to prevent WebSocket connection attempts - cleanup function not needed
+    // No connections attempted to prevent console errors
   }, [queryClient]);
 
   // This component doesn't render anything

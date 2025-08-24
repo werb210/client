@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import path from "path";
 import { createServer } from "http";
-import { Server as SocketIOServer } from "socket.io";
+// DISABLED: Socket.IO import removed to eliminate console errors
 import multer from "multer";
 import cookieParser from "cookie-parser";
 import { setupVite, serveStatic, log } from "./vite";
@@ -2760,154 +2760,8 @@ app.use((req, res, next) => {
     await setupVite(app, httpServer);
   }
   
-  // Add Socket.IO server for real-time chat with standard settings
-  const io = new SocketIOServer(httpServer, {
-    cors: {
-      origin: "*",
-      methods: ["GET", "POST"],
-      credentials: false
-    },
-    transports: ['websocket', 'polling'],
-    pingTimeout: 60000,
-    pingInterval: 25000,
-    allowEIO3: true,
-    maxHttpBufferSize: 1e6,
-    path: '/socket.io/'
-  });
-  
-  io.on('connection', (socket) => {
-    log('Socket.IO client connected:', socket.id);
-    
-    // Handle user joining session
-    socket.on('join-session', (sessionId) => {
-      socket.join(sessionId);
-      log('User joined session:', sessionId);
-    });
-    
-    // Handle user messages
-    socket.on('user-message', async (data) => {
-      const { sessionId, message } = data;
-      log('User message:', message);
-      
-      // Forward to staff application chat system
-      try {
-        const response = await fetch(`${cfg.staffApiUrl}/api/chat/user-message`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${cfg.clientToken}`
-          },
-          body: JSON.stringify({ sessionId, message })
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          // Broadcast response back to session
-          io.to(sessionId).emit('new-message', {
-            role: 'assistant',
-            message: data.reply || 'Message received by staff.'
-          });
-        }
-      } catch (error) {
-        log('Error forwarding message to staff:', String((error as Error).message || error));
-      }
-    });
-    
-    // Handle escalate_to_human event - blocks AI responses
-    socket.on('escalate_to_human', (data) => {
-      console.log(`🚨 [ESCALATION] Chat escalated to human:`, data);
-      
-      // Mark session as escalated to block further AI responses
-      const escalationData = {
-        clientId: data.clientId || data.sessionId,
-        name: data.name,
-        email: data.email,
-        timestamp: data.timestamp,
-        sessionId: data.sessionId,
-        context: data.context,
-        escalated: true
-      };
-      
-      // Broadcast escalation to staff immediately - HIGH PRIORITY
-      socket.broadcast.emit('chat_escalated', escalationData);
-      io.emit('staff_urgent_escalation', escalationData); // High priority staff notification
-      
-      console.log(`🚨 [ESCALATION] Session ${data.sessionId} escalated and broadcasted to staff`);
-      
-      // Create CRM contact with escalation context
-      if (data.name && data.email) {
-        fetch(`${cfg.staffApiUrl}/api/crm/contacts/auto-create`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${cfg.clientToken}`
-          },
-          body: JSON.stringify({
-            firstName: data.name.split(" ")[0],
-            lastName: data.name.split(" ")[1] || "",
-            email: data.email,
-            source: "chat_escalation_blocked",
-            context: `Escalated Session: ${data.sessionId}, Client: ${data.clientId}`,
-            timestamp: data.timestamp,
-            priority: "high"
-          })
-        }).then(response => {
-          if (response.ok) {
-            console.log(`✅ [ESCALATION] High-priority CRM contact created for escalated chat`);
-          }
-        }).catch(err => {
-          console.log(`⚠️ [ESCALATION] CRM escalation contact failed:`, err.message);
-        });
-      }
-      
-      // Notify client that escalation was successful
-      socket.emit('escalation_confirmed', {
-        status: 'escalated',
-        message: 'Your chat has been escalated to a human agent. AI responses are now blocked.',
-        timestamp: new Date().toISOString()
-      });
-    });
-
-    // Handle human assistance requests - CORRECT EVENT NAME
-    socket.on('user-request-human', async (data) => {
-      const { sessionId, userName } = data;
-      console.log('Server received ask-human:', data);
-      
-      // Must use io.emit to broadcast to all staff sockets
-      io.emit('user-request-human', data);
-      console.log('Server broadcast ask-human event');
-      
-      log(`Human assistance requested for session: ${sessionId} by user: ${userName}`);
-      
-      // Forward request to staff application
-      try {
-        await fetch(`${cfg.staffApiUrl}/api/chat/request-staff`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${cfg.clientToken}`
-          },
-          body: JSON.stringify({ sessionId, userName })
-        });
-        
-        // Notify user that request was sent
-        io.to(sessionId).emit('new-message', {
-          role: 'system',
-          message: 'Your request for human assistance has been forwarded to our team. A staff member will join the chat shortly.'
-        });
-      } catch (error) {
-        log('Error requesting human assistance:', String((error as Error).message || error));
-        io.to(sessionId).emit('new-message', {
-          role: 'system',
-          message: 'Unable to connect with staff at the moment. Please try again or contact us directly.'
-        });
-      }
-    });
-    
-    socket.on('disconnect', () => {
-      log('Socket.IO client disconnected:', socket.id);
-    });
-  });
+  // DISABLED: Socket.IO server completely removed to eliminate console errors
+  log('Socket.IO disabled - using HTTP polling for chat');
 
   // Use PORT environment variable for Replit deployments, fallback to 5000 for development
   const port = cfg.port; // This uses process.env.PORT || '5000' from config
@@ -2917,7 +2771,7 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`Client app serving on port ${port} - API calls will route to staff backend`);
-    log(`Socket.IO server available for real-time chat`);
+    log(`HTTP polling enabled for chat (Socket.IO disabled)`);
     
     // Show deployment-specific info
     if (cfg.nodeEnv === 'production') {
