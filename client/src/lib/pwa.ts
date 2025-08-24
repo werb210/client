@@ -468,24 +468,33 @@ export class NetworkStatusManager {
 
 // Initialize PWA features
 export const initializePWA = () => {
-  // Register service worker with error handling
+  // Register service worker ONLY in production to avoid caching issues
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', async () => {
-      try {
-        // Check if service worker file exists first
-        const response = await fetch('/service-worker.js', { method: 'HEAD' });
-        if (!response.ok) {
-          console.log('Service worker file not found, skipping registration');
-          return;
-        }
+    if (import.meta.env.MODE !== 'production') {
+      // Dev/staging: DISABLE service worker to prevent stale cache issues
+      console.log('🔧 Disabling service worker in dev/staging mode');
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
+        console.log('🗑️ Unregistered all service workers');
+      });
+    } else {
+      // Production only
+      window.addEventListener('load', async () => {
+        try {
+          // Check if service worker file exists first
+          const response = await fetch('/service-worker.js', { method: 'HEAD' });
+          if (!response.ok) {
+            console.log('Service worker file not found, skipping registration');
+            return;
+          }
 
-        const registration = await navigator.serviceWorker.register('/service-worker.js', {
-          scope: '/'
-        });
-        
-        if (import.meta.env.DEV) {
-          console.log('✅ Service worker registered successfully');
-        }
+          const registration = await navigator.serviceWorker.register('/service-worker.js', {
+            scope: '/'
+          });
+          
+          if (import.meta.env.DEV) {
+            console.log('✅ Service worker registered successfully');
+          }
         
         // Listen for service worker messages
         navigator.serviceWorker.addEventListener('message', (event) => {
@@ -501,13 +510,14 @@ export const initializePWA = () => {
           }
         });
         
-      } catch (error: unknown) {
-        if (import.meta.env.DEV) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          console.warn('Service worker registration failed:', errorMessage);
+        } catch (error: unknown) {
+          if (import.meta.env.DEV) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.warn('Service worker registration failed:', errorMessage);
+          }
         }
-      }
-    });
+      });
+    }
   } else {
     if (import.meta.env.DEV) {
       console.log('Service workers not supported in this browser');

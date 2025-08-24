@@ -69,6 +69,18 @@ securityHeaders().forEach(mw => app.use(mw));
 // Apply general rate limiting
 app.use(rlGeneral);
 
+// CACHE FIX: Serve HTML as no-store to prevent stale cache issues
+app.use((req, res, next) => {
+  if (req.accepts('html') && req.method === 'GET' && !req.path.startsWith('/api/')) {
+    res.setHeader('Cache-Control', 'no-store, must-revalidate');
+  }
+  next();
+});
+
+// Build version endpoint for cache debugging
+const BUILD_ID = process.env.GIT_COMMIT || new Date().toISOString();
+app.get('/__version', (_req, res) => res.json({ app: 'client', build: BUILD_ID }));
+
 // Production-ready CORS configuration (without conflicting security headers)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
