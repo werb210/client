@@ -142,10 +142,10 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
   }, [isOpen]);
 
-  // Initialize chat on open
+  // Initialize chat on open - SELF-STARTING, NO BACKEND DEPENDENCY
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      console.log('[ChatBot] 🚀 NEW VERSION - Initializing chat...');
+      console.log('[ChatBot] 🚀 SELF-STARTING - No backend dependency');
       
       // Clear any old session data that might be causing issues
       sessionStorage.removeItem('chatbotName');
@@ -153,9 +153,9 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       sessionStorage.removeItem('chatbotConsent');
       sessionStorage.removeItem('chatbotContact');
       
-      console.log('[ChatBot] 🚀 Starting welcome flow - UPDATED VERSION');
+      // START IMMEDIATELY - No waiting for backend
       setPhase('welcome');
-      addBotMessage("🚀 UPDATED: " + currentStrings.greeting);
+      addBotMessage(currentStrings.greeting);
       setTimeout(() => {
         addBotMessage(currentStrings.askName);
         setPhase('askName');
@@ -326,32 +326,56 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     }
   };
 
-  // Handle AI responses and lender suggestions
+  // Handle AI responses - RESILIENT, NEVER BLOCKS UI
   const handleAIResponse = async (userInput: string) => {
-    // Simple local responses based on user input
-    let response = "";
-    
+    try {
+      // Try backend first, but don't block if it fails
+      const { secureFetch } = await import('@/lib/secureFetch');
+      const response = await secureFetch('/api/chat/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          message: userInput,
+          language: currentLanguage,
+          context: { name: leadData.name, email: leadData.email }
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.response) {
+          addBotMessage(result.response);
+          return;
+        }
+      }
+    } catch (error) {
+      console.debug('[ChatBot] Backend unavailable, using local responses:', error);
+    }
+
+    // FALLBACK: Local smart responses (always works)
     const input = userInput.toLowerCase();
+    let reply = "";
     
     if (input.includes('hello') || input.includes('hi') || input.includes('hey')) {
-      response = "Hello! I'm here to help you with business financing. What type of funding are you looking for today?";
+      reply = "Hello! I'm here to help you with business financing. What type of funding are you looking for today?";
     } else if (input.includes('loan') || input.includes('funding') || input.includes('finance')) {
-      response = "Great! We offer various business financing options including term loans, lines of credit, and equipment financing. What's your business looking to accomplish with funding?";
+      reply = "Great! We offer various business financing options including term loans, lines of credit, and equipment financing. What's your business looking to accomplish with funding?";
     } else if (input.includes('amount') || input.includes('how much')) {
-      response = "Our lending partners can provide funding from $10,000 to $5M+ depending on your business needs and qualifications. What amount are you considering?";
+      reply = "Our lending partners can provide funding from $10,000 to $5M+ depending on your business needs and qualifications. What amount are you considering?";
     } else if (input.includes('rate') || input.includes('interest')) {
-      response = "Interest rates vary based on your business profile, credit, and loan type. Our specialists can provide personalized rate quotes after reviewing your application.";
+      reply = "Interest rates vary based on your business profile, credit, and loan type. Our specialists can provide personalized rate quotes after reviewing your application.";
     } else {
-      response = "I'd be happy to help you explore business financing options! You can start an application, upload documents, or speak with our specialists for personalized assistance.";
+      reply = "I'd be happy to help you explore business financing options! You can start an application, upload documents, or speak with our specialists for personalized assistance.";
     }
     
-    addBotMessage(response);
+    addBotMessage(reply);
     
-    // Log user message to staff (non-blocking)
+    // Log user message to staff (non-blocking, ignore failures)
     try {
       logUserMessage(userInput);
     } catch (error) {
-      console.warn('Failed to log message:', error);
+      // Silently ignore logging failures
     }
   };
 
