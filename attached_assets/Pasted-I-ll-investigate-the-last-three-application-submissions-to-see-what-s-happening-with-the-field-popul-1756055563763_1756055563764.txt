@@ -1,0 +1,54 @@
+I'll investigate the last three application submissions to see what's happening with the field population.
+
+
+Agent ran into an error
+
+Opened server/routes/applications/create.ts
+
+Opened server/routes/publicApplications.ts
+I found the issue! Looking at the application creation code and database, I can see what's happening:
+
+
+Executed SQL query SELECT id, business_name, form_data FROM applications ORDER BY created_at DESC LIMIT 3;
+The problem is clear! The form_data field is completely empty {} for all recent applications, which means the form data isn't being captured at all during submission.
+
+Looking at the application creation code, I can see it expects data in step1, step3, step4 format, but the applications are being created with minimal data. Let me check what's happening with the form submission:
+
+
+Executed rg -n --glob '**/*.ts' 'Unknown Business|business_name.*Unknown' server
+
+Executed SQL query SELECT id, business_name, contact_email, business_type, loan_amount, annual_revenue, years_in_business FROM applications WHERE business_name = 'Unknown Business' ORDER BY created_at DESC LIMIT 5;
+I found the exact issue! The problem is that the application creation endpoint is not receiving the form data properly. Here's what's happening:
+
+🔍 Root Cause Analysis
+"Unknown Business" is a fallback value used when no business name is provided (line 408 in applications/create.ts)
+"unknown@email.com" is a fallback email when no contact email is provided
+All other fields are NULL because no real form data is being captured
+The form_data field is empty {} which means the server isn't receiving any step data
+📋 The Issue: Data Format Mismatch
+The server expects data in this format:
+
+{
+  "step1": { "requestedAmount": 100000, "useOfFunds": "..." },
+  "step3": { "businessName": "Real Business", "businessType": "..." },
+  "step4": { "firstName": "John", "lastName": "Doe", "email": "john@business.com" }
+}
+But the applications show that no step data is being received at all, which means either:
+
+Client is sending data in a different format (not step1/step3/step4 structure)
+Data is being lost during transmission
+Server validation is rejecting the submissions but still creating empty applications
+🔧 What's happening in the code:
+Looking at applications/create.ts, when the server doesn't receive proper step data:
+
+It falls back to 'Unknown Business' for the business name
+It falls back to 'unknown@email.com' for contact email
+It creates an empty form_data: {} object
+All individual contact fields remain NULL
+The client app may think it's sending complete data, but the server isn't receiving it in the expected step-based format, causing all submissions to be processed as incomplete applications with fallback values.
+
+To fix this, we need to either:
+
+Fix the client to send data in the expected step1/step3/step4 format, or
+Update the server to handle the format the client is actually sending
+Which format is the client application actually sending?

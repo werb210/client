@@ -13,11 +13,14 @@ import { PersonalDetails } from '@/components/MultiStepForm/PersonalDetails';
 import { DocumentStep } from '@/components/MultiStepForm/DocumentStep';
 import { SignatureStep } from '@/components/MultiStepForm/SignatureStep';
 import { ReviewStep } from '@/components/MultiStepForm/ReviewStep';
+import { AIInsightsDashboard } from '@/components/AIInsightsDashboard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { apiRequest } from '@/lib/queryClient';
 
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Brain, FileText } from 'lucide-react';
 
 function ApplicationFormContent() {
   const { state, dispatch, saveProgress } = useApplication();
@@ -26,6 +29,14 @@ function ApplicationFormContent() {
   const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [applicationId, setApplicationId] = useState<number | undefined>();
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [userBehavior, setUserBehavior] = useState({
+    timeOnStep: 0,
+    stepsCompleted: state.currentStep - 1,
+    documentsUploaded: state.formData.documents?.length || 0,
+    lastActivity: 'form_interaction',
+    strugglingIndicators: [] as string[]
+  });
 
 
 
@@ -123,6 +134,59 @@ function ApplicationFormContent() {
     setLocation('/');
   };
 
+  const handleAIInsightAction = (action: string, data: any) => {
+    console.log('AI Insight Action:', action, data);
+    
+    switch (action) {
+      case 'document_analysis':
+        if (data.missingDocuments?.length > 0) {
+          toast({
+            title: 'Document Recommendations Available',
+            description: `AI identified ${data.missingDocuments.length} recommended documents for your application.`,
+          });
+        }
+        break;
+      case 'amount_optimization':
+        if (data.recommendedAmount && data.recommendedAmount !== state.formData.businessInfo?.loanAmount) {
+          toast({
+            title: 'Amount Optimization Suggestion',
+            description: `AI recommends $${data.recommendedAmount.toLocaleString()} for better approval chances.`,
+          });
+        }
+        break;
+      case 'lender_recommendation':
+        toast({
+          title: 'Lender Recommendations Updated',
+          description: `AI suggested ${data.length} lenders that match your profile.`,
+        });
+        break;
+    }
+  };
+
+  // Track user behavior for AI assistance
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setUserBehavior(prev => ({
+        ...prev,
+        timeOnStep: prev.timeOnStep + 1,
+        stepsCompleted: state.currentStep - 1,
+        documentsUploaded: state.formData.documents?.length || 0
+      }));
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, [state.currentStep, state.formData.documents?.length]);
+
+  // Detect struggling indicators
+  useEffect(() => {
+    const indicators: string[] = [];
+    if (userBehavior.timeOnStep > 10) indicators.push('long_time_on_step');
+    if (state.currentStep === userBehavior.stepsCompleted && userBehavior.timeOnStep > 5) indicators.push('no_progress');
+    if (userBehavior.documentsUploaded === 0 && state.currentStep >= 5) indicators.push('no_documents_uploaded');
+    
+    setUserBehavior(prev => ({ ...prev, strugglingIndicators: indicators }));
+  }, [userBehavior.timeOnStep, state.currentStep, userBehavior.stepsCompleted, userBehavior.documentsUploaded]);
+
   const renderStep = () => {
     switch (state.currentStep) {
       case 1:
@@ -194,8 +258,44 @@ function ApplicationFormContent() {
           </CardHeader>
         </Card>
 
-        {/* Step Content */}
-        {renderStep()}
+        {/* Main Content with AI Assistant */}
+        <Tabs defaultValue="application" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="application" className="flex items-center space-x-2">
+              <FileText className="h-4 w-4" />
+              <span>Application Form</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai-assistant" className="flex items-center space-x-2">
+              <Brain className="h-4 w-4" />
+              <span>AI Assistant</span>
+              {showAIAssistant && <Badge variant="destructive" className="h-2 w-2 p-0" />}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="application" className="space-y-6">
+            {renderStep()}
+          </TabsContent>
+
+          <TabsContent value="ai-assistant" className="space-y-6">
+            <AIInsightsDashboard
+              applicationData={{
+                businessType: state.formData.businessInfo?.industry || 'Unknown',
+                industry: state.formData.businessInfo?.industry || 'Unknown',
+                loanAmount: state.formData.businessInfo?.loanAmount || 0,
+                loanPurpose: state.formData.businessInfo?.useOfFunds || 'General business use',
+                annualRevenue: state.formData.businessInfo?.revenue || 'Unknown',
+                timeInBusiness: '3+ years', // Default value
+                uploadedDocuments: state.formData.documents || [],
+                selectedLenders: [], // Will be populated as user progresses
+                currentStep: state.currentStep,
+                status: 'in_progress'
+              }}
+              currentStep={state.currentStep}
+              userBehavior={userBehavior}
+              onInsightAction={handleAIInsightAction}
+            />
+          </TabsContent>
+        </Tabs>
 
         {/* Navigation Controls */}
         {state.currentStep !== 7 && (
