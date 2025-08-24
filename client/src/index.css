@@ -51,13 +51,17 @@
   .hover\:bg-cbf-orange-dark:hover { background-color: var(--cbf-orange-dark); }
 }
 
-/* FinBot Chat Button Positioning - Center Bottom */
+/* FinBot Chat Button Positioning - Bottom Right */
 .finbot-wrapper {
   position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 0;
+  right: 0;
   z-index: 1000;
+  pointer-events: none; /* Allow clicks to pass through wrapper */
+}
+
+.finbot-wrapper > * {
+  pointer-events: auto; /* Re-enable clicks on chatbot itself */
 }
 
 /* Enhanced Chat Button Styling */
@@ -78,7 +82,7 @@
 /* Mobile spacing enhancement */
 @media (max-width: 480px) {
   .finbot-wrapper {
-    bottom: 70px; /* Add extra room on small screens to avoid overlap with mobile navigation */
+    bottom: 0; /* Keep at bottom edge for mobile */
   }
 }
 
