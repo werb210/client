@@ -685,7 +685,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       };
       
       if (products.length > 0) {
-        console.log('🤖 [CHATBOT] Sample products for AI:', products.slice(0, 3).map(p => p.name || p.product || 'Unknown Product'));
+        console.log('🤖 [CHATBOT] Sample products for AI:', products.slice(0, 3).map((p: any) => p.name || p.product || 'Unknown Product'));
         console.log(`🤖 [CHATBOT] FULL DATABASE ACCESS: AI now has access to all ${products.length} lender products via enhanced RAG system`);
       } else {
         console.warn('🤖 [CHATBOT] WARNING: No lender products available for AI context');
