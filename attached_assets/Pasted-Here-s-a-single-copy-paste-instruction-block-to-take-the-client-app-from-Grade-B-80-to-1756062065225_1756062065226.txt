@@ -1,0 +1,286 @@
+Here’s a single, copy-paste **instruction block** to take the **client app** from “Grade B (80%)” to **A/100%** and lock in production readiness. It includes exact code/config, plus quick verification commands.
+
+---
+
+```bash
+# ===========================
+# CLIENT APP — SECURITY TO 100%
+# Harden headers, CSRF, rate limits, prod config, and staff connectivity checks
+# ===========================
+
+# 1) SECURITY HEADERS (add X-Frame-Options + strong CSP)
+# File: server/security/headers.ts  (create if missing)
+
+cat > server/security/headers.ts <<'TS'
+import helmet from "helmet";
+import { type RequestHandler } from "express";
+
+/**
+ * Use both CSP (frame-ancestors) AND X-Frame-Options for auditors that still check it.
+ * Strict policy; loosen only if you truly need embeds.
+ */
+export const securityHeaders = (): RequestHandler[] => [
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        "default-src": ["'self'"],
+        "script-src": ["'self'"],
+        "style-src": ["'self'"],
+        "img-src": ["'self'","data:"],
+        "font-src": ["'self'"],
+        "connect-src": ["'self'", process.env.STAFF_API_URL ?? ""].filter(Boolean),
+        "frame-ancestors": ["'none'"],   // replaces need for XFO, but we add XFO too
+        "object-src": ["'none'"],
+        "base-uri": ["'self'"]
+      }
+    },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    crossOriginEmbedderPolicy: true,
+    crossOriginOpenerPolicy: { policy: "same-origin" },
+    crossOriginResourcePolicy: { policy: "same-origin" },
+    hsts: process.env.NODE_ENV === "production" ? { maxAge: 15552000, includeSubDomains: true, preload: true } : false
+  }),
+  helmet.frameguard({ action: "deny" }),           // adds X-Frame-Options: DENY for audit parity
+  helmet.noSniff(),
+  helmet.xssFilter(),                              // legacy header; harmless for audits
+];
+TS
+
+# Wire it early in your server:
+# File: server/index.ts  (or your Express bootstrap)
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: server/index.ts
+@@
+ import express from "express";
++import { securityHeaders } from "./security/headers";
+@@
+ const app = express();
++app.set("trust proxy", 1); // for secure cookies behind proxies
++securityHeaders().forEach(mw => app.use(mw));
+*** End Patch
+PATCH
+
+
+# 2) CSRF — STRICT IN PROD, LIMITED BYPASS ONLY FOR DEV TEST ROUTES
+# File: server/security/csrf.ts  (adjust if you already have one)
+
+cat > server/security/csrf.ts <<'TS'
+import type { Request, Response, NextFunction } from "express";
+import crypto from "crypto";
+
+const CSRF_COOKIE = "__Host-bf_csrf";
+
+/** Issue CSRF token cookie on safe requests (GET/HEAD) */
+export function issueCsrf(req: Request, res: Response, next: NextFunction) {
+  const isGet = req.method === "GET" || req.method === "HEAD";
+  if (isGet && !req.cookies?.[CSRF_COOKIE]) {
+    const val = crypto.randomBytes(32).toString("base64url");
+    res.cookie(CSRF_COOKIE, val, {
+      httpOnly: false,  // readable by JS to set header
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      domain: undefined
+    });
+    // Optional: also expose header for convenience
+    res.setHeader("x-csrf-token", val);
+  }
+  next();
+}
+
+/** Require CSRF token on state-changing methods */
+export function requireCsrf(req: Request, res: Response, next: NextFunction) {
+  const method = req.method.toUpperCase();
+  const needsCheck = ["POST","PUT","PATCH","DELETE"].includes(method);
+
+  // Dev-only minimal bypass for explicit test routes
+  if (process.env.NODE_ENV !== "production") {
+    const devBypass = req.path.startsWith("/__dev/allow-nocsrf");
+    if (devBypass) return next();
+  }
+
+  if (!needsCheck) return next();
+
+  const cookie = req.cookies?.[CSRF_COOKIE];
+  const header = (req.get("x-csrf-token") || req.get("X-CSRF-Token"))?.trim();
+  if (!cookie || !header || cookie !== header) {
+    return res.status(403).json({ ok: false, error: "CSRF" });
+  }
+  next();
+}
+TS
+
+# Wire CSRF:
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: server/index.ts
+@@
+ import cookieParser from "cookie-parser";
+ import cors from "cors";
++import { issueCsrf, requireCsrf } from "./security/csrf";
+@@
+ app.use(cookieParser());
+ app.use(express.json({ limit: "1mb" }));
+ app.use(express.urlencoded({ extended: true }));
+@@
+ // Issue tokens on safe requests
+ app.use(issueCsrf);
+@@
+-// Your API routers...
++// Require CSRF for mutating API routes only
++app.use((req, res, next) => {
++  const m = req.method.toUpperCase();
++  const isMutating = m === "POST" || m === "PUT" || m === "PATCH" || m === "DELETE";
++  if (isMutating) return requireCsrf(req, res, next);
++  next();
++});
+*** End Patch
+PATCH
+
+
+# 3) RATE LIMITING — PER-ROUTE BUCKETS (auth stricter, uploads moderate, general relaxed)
+# File: server/security/rate.ts
+
+cat > server/security/rate.ts <<'TS'
+import rateLimit from "express-rate-limit";
+
+export const rlGeneral = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 600,                 // 40 req/min average
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+export const rlAuth = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 75,                  // 5 req/min average
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok:false, error: "Too many auth requests" }
+});
+
+export const rlUpload = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,                 // ~13 req/min; adjust if chunking
+  standardHeaders: true,
+  legacyHeaders: false
+});
+TS
+
+# Wire limiters where appropriate:
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: server/index.ts
+@@
++import { rlGeneral, rlAuth, rlUpload } from "./security/rate";
+@@
++app.use(rlGeneral);
++app.use("/api/login", rlAuth);
++app.use("/api/session", rlAuth);
++app.use("/api/upload", rlUpload);
+*** End Patch
+PATCH
+
+
+# 4) CORS — ALLOW X-CSRF-TOKEN + STAFF API ORIGIN AS NEEDED
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: server/index.ts
+@@
+-const allowed = [process.env.CLIENT_ORIGIN, process.env.ADMIN_ORIGIN].filter(Boolean) as string[];
++const allowed = [process.env.CLIENT_ORIGIN, process.env.ADMIN_ORIGIN].filter(Boolean) as string[];
+ app.use(cors({
+   origin: (origin, cb) => {
+     if (!origin || allowed.includes(origin)) return cb(null, true);
+     return cb(new Error("CORS"), false);
+   },
+   credentials: true,
+-  allowedHeaders: ["Content-Type","Authorization"],
++  allowedHeaders: ["Content-Type","Authorization","X-CSRF-Token","x-csrf-token"],
+   methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"]
+ }));
+*** End Patch
+PATCH
+
+
+# 5) PROD COOKIE & ENV HARDENING
+# Ensure in deployment:
+#   NODE_ENV=production
+#   REPLIT_ENVIRONMENT=production  (if applicable)
+#   SESSION cookies use __Host- prefix, Secure; SameSite=Lax
+# Also ensure app.set('trust proxy', 1) (already added above).
+
+
+# 6) STAFF CONNECTIVITY HEALTH (so you can see backend reachability)
+# File: server/routes/health.ts
+
+mkdir -p server/routes
+cat > server/routes/health.ts <<'TS'
+import type { Router } from "express";
+import express from "express";
+import fetch from "node-fetch";
+
+const r = express.Router();
+
+r.get("/health", (_req, res) => {
+  res.status(200).json({ ok: true, app: "client", mode: process.env.NODE_ENV });
+});
+
+r.get("/health/staff", async (_req, res) => {
+  const base = process.env.STAFF_API_URL;
+  if (!base) return res.status(200).json({ ok: true, staff: "unset" });
+  try {
+    const ping = await fetch(`${base}/health`, { timeout: 3000 as any });
+    res.status(200).json({ ok: true, staff: ping.ok ? "up" : `down:${ping.status}` });
+  } catch (e: any) {
+    res.status(200).json({ ok: true, staff: "error", detail: e?.message ?? "n/a" });
+  }
+});
+
+export default r;
+TS
+
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: server/index.ts
+@@
++import healthRoutes from "./routes/health";
+@@
++app.use(healthRoutes);
+*** End Patch
+PATCH
+
+
+# 7) QUICK VERIFICATION (run these locally/staging)
+CLIENT="${CLIENT_BASE:-http://localhost:3000}"
+
+echo; echo "== Headers (expect CSP + X-Frame-Options: DENY + nosniff = present) =="
+curl -sSI "$CLIENT" | awk 'BEGIN{IGNORECASE=1}/^content-security-policy|^x-frame-options|^x-content-type-options|^referrer-policy|^strict-transport-security/'
+
+echo; echo "== CSRF (GET should issue cookie + header) =="
+curl -sD - "$CLIENT/health" -o /dev/null | awk 'BEGIN{IGNORECASE=1}/^set-cookie: __Host-bf_csrf|^x-csrf-token/'
+
+echo; echo "== CSRF (POST without token must 403) =="
+curl -s -o /dev/null -w "%{http_code}\n" -X POST "$CLIENT/api/test-csrf" -H "Content-Type: application/json" -d '{}' || true
+
+echo; echo "== Rate limit (auth route, expect 429 on burst) =="
+( for i in {1..120}; do curl -s -o /dev/null -w . "$CLIENT/api/login"; done ) | wc -c
+
+echo; echo "== Staff connectivity probe =="
+curl -s "$CLIENT/health/staff" | jq .
+```
+
+---
+
+### What this fixes from your report
+
+* **X-Frame-Options missing** → added `helmet.frameguard('deny')` (header present) + CSP `frame-ancestors 'none'`.
+* **CSRF bypass in dev** → now limited only to explicit `/__dev/allow-nocsrf*` routes; **strict in prod**.
+* **Rate limiting tuning** → route-specific buckets (`/api/login` stricter, `/api/upload` moderate, general relaxed).
+* **CORS** → allows `X-CSRF-Token` header (audit point) and keeps a tight origin allowlist.
+* **Prod config** → `trust proxy`, HSTS, secure cookies, `NODE_ENV=production`.
+* **Operational visibility** → `/health/staff` to surface Staff reachability separately from client health.
+
+Once you apply the patch and run the “Quick verification” section, your client app should score **A/100%** on the items the audit flagged—without affecting your existing client→staff feature flow.
