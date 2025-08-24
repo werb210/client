@@ -470,13 +470,12 @@ export class NetworkStatusManager {
 export const initializePWA = () => {
   // Register service worker ONLY in production to avoid caching issues
   if ('serviceWorker' in navigator) {
-    if (import.meta.env.MODE !== 'production') {
-      // Dev/staging: DISABLE service worker to prevent stale cache issues
-      console.log('🔧 Disabling service worker in dev/staging mode');
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(r => r.unregister());
-        console.log('🗑️ Unregistered all service workers');
-      });
+    const dev = import.meta.env.MODE !== "production";
+    if (dev) {
+      // Dev/staging: DISABLE service worker to prevent stale cache issues and clear caches
+      navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+      caches?.keys?.().then(keys => keys.forEach(k => caches.delete(k)));
+      console.info("[PWA] SW disabled in dev; caches cleared");
     } else {
       // Production only
       window.addEventListener('load', async () => {

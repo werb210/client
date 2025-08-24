@@ -81,9 +81,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Build version endpoint for cache debugging
+// Enhanced version endpoint for cache debugging
 const BUILD_ID = process.env.BUILD_ID || process.env.GIT_COMMIT || new Date().toISOString();
-app.get('/__version', (_req, res) => res.json({ app: 'client', build: BUILD_ID }));
+const DEV = process.env.NODE_ENV !== "production";
+app.get('/__version', (_req, res) => res.json({ 
+  app: 'client', 
+  env: process.env.NODE_ENV,
+  build: BUILD_ID,
+  dev: DEV 
+}));
 
 // Production-ready CORS configuration (without conflicting security headers)
 app.use((req, res, next) => {
@@ -2912,7 +2918,18 @@ app.use((req, res, next) => {
       next();
     });
     
-    app.use(express.static(clientBuildPath));
+    app.use(
+      express.static(clientBuildPath, {
+        setHeaders(res, filePath) {
+          if (filePath.endsWith(".html")) {
+            res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
+          } else {
+            // Hashed assets can cache forever
+            res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+          }
+        },
+      })
+    );
     
     // SPA Routing: All non-API routes should serve index.html for React Router with CSRF token
     // BUT exclude health endpoints from SPA routing
