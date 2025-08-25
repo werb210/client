@@ -47,7 +47,7 @@ interface SyncStatus {
 
 class ReliableLenderSync {
   private static instance: ReliableLenderSync;
-  private apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'https://app.boreal.financial/api';
+  private apiBaseUrl = '/api';
 
   static getInstance(): ReliableLenderSync {
     if (!ReliableLenderSync.instance) {

@@ -14,7 +14,7 @@ export function TaxReturnFixer({ applicationId, onFixComplete }: TaxReturnFixerP
       console.log('🔧 [TAX-FIX] Checking for misclassified tax return files...');
       
       try {
-        const response = await fetch(`https://staff.boreal.financial/api/public/applications/${applicationId}/documents`, {
+        const response = await fetch(`/api/public/applications/${applicationId}/documents`, {
           headers: {
             'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
           }
@@ -50,7 +50,7 @@ export function TaxReturnFixer({ applicationId, onFixComplete }: TaxReturnFixerP
         // Update each file to have correct document type
         for (const file of taxReturnFiles) {
           try {
-            const updateResponse = await fetch(`https://staff.boreal.financial/api/public/documents/${file.id}`, {
+            const updateResponse = await fetch(`/api/public/documents/${file.id}`, {
               method: 'PATCH',
               headers: {
                 'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`,

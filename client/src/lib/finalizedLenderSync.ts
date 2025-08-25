@@ -6,8 +6,7 @@
 import { get, set, clear } from 'idb-keyval';
 
 // Production configuration
-const STAFF_API_URL = import.meta.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial';
-const LENDERS_ENDPOINT = `${STAFF_API_URL}/api/public/lenders`;
+const LENDERS_ENDPOINT = '/api/public/lenders';
 const MIN_PRODUCT_COUNT = 40; // Minimum viable product count
 const CACHE_KEY = 'lender_products_cache';
 const CACHE_TIMESTAMP_KEY = 'lender_products_cache_ts';

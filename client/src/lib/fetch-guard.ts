@@ -1,16 +1,15 @@
-// Hard guard: prevent any fetch to external origins from client bundle.
-const _fetch = window.fetch.bind(window);
-window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
-  const url = typeof input === "string" ? input : (input as any).toString?.() || "";
-  if (/^https?:\/\//i.test(url)) {
-    const u = new URL(url);
-    const allowed = [location.origin];
-    if (!allowed.includes(`${u.origin}`)) {
-      console.error(`[BLOCKED] External fetch from client: ${u.origin}`);
-      throw new Error(`[BLOCKED] External fetch from client: ${u.origin}`);
-    }
+const DEV = import.meta.env.DEV;
+const ALLOW = [/^\/(api|staff|_int)\b/i, /^\/$/, /^\/[?#]/];
+const original = window.fetch;
+window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+  if (DEV) {
+    const url = typeof input === "string" ? input : (input as any).url;
+    const isExternal = /^https?:\/\//i.test(url) && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d{2,5})?\//i.test(url);
+    if (isExternal) throw new Error(`External fetch blocked in dev: ${url}`);
+    if (typeof input === "string" && !ALLOW.some(rx => rx.test(input)))
+      throw new Error(`Non-API path blocked in dev: ${input}`);
   }
-  return _fetch(input, init);
+  return original(input as any, init);
 };
 
 export {}; // Make this a module
