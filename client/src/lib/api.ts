@@ -1,75 +1,71 @@
-const API_BASE = import.meta.env.VITE_API_URL;
-
-/**
- * ✅ ENABLED: Client-facing lender products API
- * Uses dedicated client endpoint with authentication
- */
-export async function getLenderProducts() {
-  const response = await fetch(`${API_BASE}/lender-products`);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch lender products: ${response.status}`);
+const BASE = ""; // same-origin
+function assertSameOrigin(url: string) {
+  if (/^https?:\/\//i.test(url)) {
+    const u = new URL(url);
+    const allowed = [location.origin];
+    if (!allowed.includes(`${u.origin}`)) {
+      throw new Error(`External fetch blocked in client: ${u.origin}`);
+    }
   }
-
-  return response.json();
 }
 
-/**
- * ✅ ALLOWED: Application submission
- */
-export async function submitApplication(data: any) {
-  const res = await fetch(`${API_BASE}/applications`, {
+export async function apiFetch(input: RequestInfo | URL, init: RequestInit = {}) {
+  const url = typeof input === "string" ? input : input.toString();
+  assertSameOrigin(url);
+  const res = await fetch(url, { credentials: "include", ...init });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`API ${res.status} ${res.statusText}: ${body}`);
+  }
+  return res;
+}
+
+export async function uploadDocument(appId: string, file: File, documentType: string) {
+  const fd = new FormData();
+  fd.set("file", file);
+  fd.set("document_type", documentType);
+
+  const res = await apiFetch(`/api/applications/${appId}/documents/upload`, {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-    },
+    body: fd,
+  });
+  return res.json() as Promise<{ ok: boolean; id?: string; file_key?: string }>;
+}
+
+export async function listDocuments(appId: string) {
+  const res = await apiFetch(`/api/applications/${appId}/documents`);
+  return res.json() as Promise<{ ok: boolean; data: any[] }>;
+}
+
+export async function setDocumentStatus(docId: string, status: "accepted"|"rejected"|"pending") {
+  const res = await apiFetch(`/api/documents/${docId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  return res.json() as Promise<{ ok: boolean }>;
+}
+
+export async function getDocumentViewUrl(docId: string) {
+  const res = await apiFetch(`/api/documents/${docId}/view`);
+  return res.json() as Promise<{ ok: boolean; url?: string }>;
+}
+
+// Legacy compatibility functions
+export async function submitApplication(data: any) {
+  const res = await apiFetch("/api/applications", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Failed to submit application");
   return res.json();
 }
 
-/**
- * ✅ ALLOWED: Document upload
- */
-export async function uploadDocument(file: File, appId: string) {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("applicationId", appId);
-
-  const res = await fetch(`${API_BASE}/documents`, { 
-    method: "POST", 
-    body: formData 
-  });
-  if (!res.ok) throw new Error("Failed to upload document");
+export async function getLenderProducts() {
+  const res = await apiFetch("/api/lender-products");
   return res.json();
 }
 
-/**
- * ✅ ENABLED: Fetch lender products from client API
- */
 export async function fetchLenderProducts() {
   return getLenderProducts();
-}
-
-/**
- * ✅ LIMITED: API fetch wrapper for allowed endpoints only
- */
-export function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
-  // Only allow application and document endpoints
-  if (!url.includes('/applications') && !url.includes('/documents')) {
-    throw new Error(`API endpoint ${url} is restricted from client access`);
-  }
-
-  const fullUrl = url.startsWith('/api/') ? url : `/api${url.startsWith('/') ? url : '/' + url}`;
-  
-  const mergedOptions: RequestInit = {
-    credentials: 'include',
-    headers: {
-      ...options.headers,
-    },
-    ...options,
-  };
-  
-  return fetch(fullUrl, mergedOptions);
 }

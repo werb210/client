@@ -4,6 +4,12 @@ import App from "./App";
 import "./index.css";
 import { initializePWA } from "./lib/pwa";
 
+// Block external fetch calls in development
+if (import.meta.env.DEV) {
+  const guardPromise = import("./lib/fetch-guard");
+  guardPromise.catch(console.error);
+}
+
 // Remove duplicate unhandled rejection handler - handled in App.tsx
 
 // Initialize PWA features
