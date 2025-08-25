@@ -1,0 +1,81 @@
+CLIENT (web) — Production & Security Audit
+A) Single API surface (same-origin; no externals)
+// client/src/lib/api.ts
+const BASE = ""; // same-origin
+
+export async function uploadDocument(appId: string, file: File, documentType: string) {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("document_type", documentType);
+  const r = await fetch(`${BASE}/api/applications/${appId}/documents/upload`, {
+    method: "POST", body: fd, credentials: "include",
+  });
+  if (!r.ok) throw new Error(`upload failed: ${r.status}`); return r.json();
+}
+
+export async function listDocuments(appId: string) {
+  const path = import.meta.env.PROD
+    ? `/api/applications/${appId}/documents`      // auth-protected in PROD
+    : `/api/public/applications/${appId}/documents`; // dev helper
+  const r = await fetch(path, { credentials: "include" });
+  if (!r.ok) throw new Error(`list failed: ${r.status}`); return r.json();
+}
+
+export async function setDocumentStatus(docId: string, status: "accepted"|"rejected"|"pending") {
+  const r = await fetch(`/api/documents/${docId}`, {
+    method: "PATCH", headers: { "Content-Type": "application/json" },
+    credentials: "include", body: JSON.stringify({ status }),
+  });
+  if (!r.ok) throw new Error(`status failed: ${r.status}`); return r.json();
+}
+
+B) Dev runtime fetch guard (keep ON in dev)
+// client/src/lib/fetch-guard.ts
+const DEV = import.meta.env.DEV;
+const original = window.fetch;
+
+window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+  if (DEV) {
+    const url = typeof input === "string" ? input : (input as any).url;
+    const isExternal = /^https?:\/\//i.test(url) && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d{2,5})?\//i.test(url);
+    if (isExternal) throw new Error(`External fetch blocked in dev: ${url}`);
+  }
+  return original(input as any, init);
+};
+// client/src/main.tsx
+import "./lib/fetch-guard";
+
+C) Guardrail greps (prove no externals / no S3 on client)
+echo "== S3 refs (should be none in prod code) =="
+rg -n "s3|amazonaws|minio|presign|pre-?sign|SignedURL|putObject|getSignedUrl" client/src \
+ | rg -v "s3Upload\.ts|block-s3\.d\.ts|Steps34Test|ComprehensiveClientAppTest" \
+ && echo "❌ FIX REQUIRED" || echo "✅ OK"
+
+echo; echo "== External URLs (should be none in prod code) =="
+rg -n --pcre2 "https?://(?!localhost|127\.0\.0\.1)" client/src \
+ | rg -v "tests?|example\.com" \
+ && echo "❌ FIX REQUIRED" || echo "✅ OK"
+
+D) Quiet production console & no source maps
+// client/src/lib/quiet-console.ts
+if (import.meta.env.PROD) {
+  const noop = () => {};
+  console.debug = noop; console.log = noop; console.info = noop;
+}
+// client/src/main.tsx
+import "./lib/quiet-console";
+
+// client/vite.config.ts
+import { defineConfig } from "vite";
+export default defineConfig({ build: { sourcemap: false } });
+
+E) Prod UI smoke (browser DevTools)
+// 1) Should work (auth cookie/JWT present in browser)
+const appId = "<server-app-id>";
+const fd = new FormData();
+fd.append("file", new File([new Blob(["ok"],{type:"text/plain"})], "hello.txt"));
+fd.append("document_type", "bank_statements");
+(await fetch(`/api/applications/${appId}/documents/upload`, { method:"POST", body:fd, credentials:"include" })).status;
+
+// 2) Should FAIL in prod (route not mounted)
+(await fetch(`/api/public/applications/${appId}/documents`, { credentials:"include" })).status; // expect 404/403
