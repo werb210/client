@@ -1,10 +1,7 @@
-// ✅ Force production API base URL (corrected endpoint)  
-export const API_BASE_URL = "https://staff.boreal.financial"; // ✅ Force production
+// ✅ Same-origin only - no external URLs from client
+export const API_BASE_URL = ""; // ✅ Same-origin only
 
-export const API_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://staff.boreal.financial/api/applications"
-    : "http://localhost:5000/api/applications";
+export const API_URL = "/api/applications"; // Always relative path
 
 export const API_ENDPOINTS = {
   LENDER_PRODUCTS: "/api/lender-products",

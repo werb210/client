@@ -1,6 +1,6 @@
 // Staff API client for application submission and SignNow integration
 
-const STAFF_API_URL = import.meta.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial';
+const STAFF_API_URL = ""; // Same-origin only
 
 // ✅ Required Fields Validation Configuration
 const REQUIRED_FIELDS = {

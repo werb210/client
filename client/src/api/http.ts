@@ -2,8 +2,8 @@ let BEARER: string | null = null;
 
 export function setBearer(tok: string | null) { BEARER = tok || null; }
 
-// Resolve API base (same-origin default)
-const API_BASE = (import.meta as any)?.env?.VITE_API_BASE || 'https://staff.boreal.financial/api';
+// Resolve API base (same-origin only)
+const API_BASE = '/api'; // Same-origin relative path only
 
 async function handle(res: Response) {
   const text = await res.text();

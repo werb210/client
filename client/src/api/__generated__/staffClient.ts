@@ -134,10 +134,10 @@ export function createClient(config: StaffClientConfig): StaffClient {
 }
 
 /**
- * Default client instance with environment configuration
+ * Default client instance with same-origin configuration
  */
 export const staffClient = createClient({
-  baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://staffportal.replit.app',
+  baseUrl: '', // Same-origin only
   timeout: 15000
 });
 

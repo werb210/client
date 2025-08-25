@@ -1,6 +1,7 @@
 /**
- * ✅ APPLICATION RETRY QUEUE SYSTEM
+ * ✅ APPLICATION RETRY QUEUE SYSTEM - STAFF API ONLY
  * Stores failed application POST and upload attempts for retry when staff API is available
+ * All calls use same-origin relative paths only
  */
 
 import { logger } from '@/lib/utils';
@@ -21,6 +22,22 @@ export interface QueuedApplication {
 
 const STORAGE_KEY = 'boreal_application_retry_queue';
 const MAX_RETRY_ATTEMPTS = 5;
+const BASE = ""; // same-origin only
+
+/**
+ * Retry submitting application using Staff API
+ */
+export async function retrySubmitApplication(payload: any) {
+  // All staff calls are relative paths:
+  const res = await fetch(`/api/public/applications`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Retry submit failed: ${res.status}`);
+  return res.json();
+}
 
 /**
  * Add failed application/upload attempt to retry queue
@@ -134,7 +151,7 @@ export function getRetryQueueSummary(): {
  */
 export async function checkStaffAPIHealth(): Promise<boolean> {
   try {
-    const response = await fetch('https://staff.boreal.financial/api/health');
+    const response = await fetch('/api/health');
     return response.ok;
   } catch (error) {
     console.warn('🔍 [HEALTH CHECK] Staff API health check failed:', error);
@@ -226,7 +243,7 @@ async function retryQueuedItem(item: QueuedApplication): Promise<boolean> {
  * Retry application creation
  */
 async function retryApplicationCreation(item: QueuedApplication): Promise<boolean> {
-  const response = await fetch('https://staff.boreal.financial/api/public/applications', {
+  const response = await fetch('/api/public/applications', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -251,7 +268,7 @@ async function retryDocumentUpload(item: QueuedApplication): Promise<boolean> {
   formData.append('document', item.file);
   formData.append('documentType', item.documentType);
   
-  const response = await fetch(`https://staff.boreal.financial/api/public/upload/${item.applicationId}`, {
+  const response = await fetch(`/api/public/upload/${item.applicationId}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
@@ -266,7 +283,7 @@ async function retryDocumentUpload(item: QueuedApplication): Promise<boolean> {
  * Retry application finalization
  */
 async function retryApplicationFinalization(item: QueuedApplication): Promise<boolean> {
-  const response = await fetch(`https://staff.boreal.financial/api/public/applications/${item.applicationId}/finalize`, {
+  const response = await fetch(`/api/public/applications/${item.applicationId}/finalize`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',

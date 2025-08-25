@@ -2,7 +2,7 @@
  * Application Service - Handles submission and document uploads to Staff API
  */
 
-const STAFF_API_URL = import.meta.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial';
+const STAFF_API_URL = ""; // Same-origin only
 
 export interface ApplicationPayload {
   step1: any;
