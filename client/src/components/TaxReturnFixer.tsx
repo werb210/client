@@ -14,7 +14,7 @@ export function TaxReturnFixer({ applicationId, onFixComplete }: TaxReturnFixerP
       console.log('🔧 [TAX-FIX] Checking for misclassified tax return files...');
       
       try {
-        const response = await fetch(`/api/public/applications/${applicationId}/documents`, {
+        const response = await fetch(`/api/applications/${applicationId}/documents`, {
           headers: {
             'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
           }

@@ -134,7 +134,7 @@ export default function UploadMissingDocuments() {
     try {
       console.log('📄 [UPLOAD-DOCS] Loading existing documents for:', appId);
       
-      const response = await fetch(`/api/public/applications/${appId}/documents`);
+      const response = await fetch(`/api/applications/${appId}/documents`);
       
       if (response.ok) {
         const documents = await response.json();

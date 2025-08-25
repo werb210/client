@@ -45,7 +45,7 @@ export const useDocumentVerification = (applicationId: string | null) => {
       }
 
       try {
-        const response = await fetch(`/api/public/applications/${applicationId}/documents`);
+        const response = await fetch(`/api/applications/${applicationId}/documents`);
         const data = await response.json();
         return data;
       } catch (err: any) {

@@ -24,6 +24,7 @@ import { StepHeader } from '@/components/StepHeader';
 import { getDocumentRequirementsAggregation } from '@/lib/documentAggregation';
 import { normalizeDocumentName } from '@shared/documentTypes';
 import { getStoredApplicationId, validateApplicationIdForAPI } from '@/lib/uuidUtils';
+import { listDocuments } from '@/lib/api';
 
 import { useDebouncedCallback } from 'use-debounce';
 
@@ -140,11 +141,11 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
 
       try {
         console.log(`📂 [STEP5-RELOAD] Fetching uploaded documents for application ${applicationId}`);
-        const response = await fetch(`/api/public/applications/${applicationId}/documents`);
+        const uploadedDocs = await listDocuments(applicationId);
+        const response = { ok: true, status: 200 }; // Wrapper handles errors
         
-        if (response.ok) {
-          const uploadedDocs = await response.json();
-          console.log(`✅ [STEP5-RELOAD] Loaded ${uploadedDocs.length} documents:`, uploadedDocs);
+        // Wrapper handles errors, uploadedDocs is already parsed
+        console.log(`✅ [STEP5-RELOAD] Loaded ${uploadedDocs.length} documents:`, uploadedDocs);
           
           // Convert server response to UploadedFile format
           const reloadedFiles: UploadedFile[] = uploadedDocs.map((doc: any) => ({
@@ -171,11 +172,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
             }
           });
           
-        } else {
-          console.log(`⚠️ [STEP5-RELOAD] Failed to fetch documents: ${response.status}`);
-          // For S3 uploads that aren't showing in staff backend yet, keep existing local files
-          console.log(`📂 [STEP5-RELOAD] Keeping ${uploadedFiles.length} locally tracked files`);
-        }
+        // Error handling moved to wrapper, so this block is not needed
       } catch (error) {
         console.log('❌ [STEP5-RELOAD] Error loading documents:', String(error));
       }

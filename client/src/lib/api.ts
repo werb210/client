@@ -1,5 +1,8 @@
 const BASE = ""; // same-origin
 
+const ALLOW_PUBLIC_DOCS_IN_DEV =
+  import.meta.env.DEV && import.meta.env.VITE_ALLOW_PUBLIC_DOCS_DEV === "1";
+
 export async function apiFetch(path: string, init: RequestInit = {}) {
   const r = await fetch(`${BASE}${path}`, { credentials: "include", ...init });
   if (!r.ok) throw new Error(`fetch failed: ${r.status}`);
@@ -11,32 +14,27 @@ export async function uploadDocument(appId: string, file: File, documentType: st
   fd.append("file", file);
   fd.append("document_type", documentType);
   const r = await fetch(`${BASE}/api/applications/${appId}/documents/upload`, {
-    method: "POST",
-    body: fd,
-    credentials: "include",
+    method: "POST", body: fd, credentials: "include"
   });
-  if (!r.ok) throw new Error(`upload failed: ${r.status}`);
-  return r.json();
+  if (!r.ok) throw new Error(`upload failed: ${r.status}`); return r.json();
 }
 
 export async function listDocuments(appId: string) {
-  const path = import.meta.env.PROD
-    ? `/api/applications/${appId}/documents`          // auth-protected in PROD
-    : `/api/public/applications/${appId}/documents`;  // dev helper only
+  const path = ALLOW_PUBLIC_DOCS_IN_DEV
+    ? `/api/public/applications/${appId}/documents` // **dev only**
+    : `/api/applications/${appId}/documents`;        // **prod & default**
   const r = await fetch(path, { credentials: "include" });
-  if (!r.ok) throw new Error(`list failed: ${r.status}`);
-  return r.json();
+  if (!r.ok) throw new Error(`list failed: ${r.status}`); return r.json();
 }
 
 export async function setDocumentStatus(docId: string, status: "accepted"|"rejected"|"pending") {
   const r = await fetch(`/api/documents/${docId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
     credentials: "include",
+    body: JSON.stringify({ status }),
   });
-  if (!r.ok) throw new Error(`status failed: ${r.status}`);
-  return r.json();
+  if (!r.ok) throw new Error(`patch failed: ${r.status}`); return r.json();
 }
 
 export async function getDocumentViewUrl(docId: string) {

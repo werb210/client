@@ -1,0 +1,58 @@
+CLIENT APP — unblock the Production & Security Gate
+1) kill all public docs calls (the blocker)
+# audit (should return 0 results when fixed)
+rg -n "/api/public/applications/.*/documents" client/src || echo "✅ no public docs calls"
+
+
+If anything shows up (your report listed 6 files), route them through the wrapper:
+
+// client/src/lib/api.ts  (already in place)
+export async function listDocuments(appId: string) {
+  const path = import.meta.env.DEV && import.meta.env.VITE_ALLOW_PUBLIC_DOCS_DEV === "1"
+    ? `/api/public/applications/${appId}/documents`   // dev-only
+    : `/api/applications/${appId}/documents`;         // prod
+  const r = await fetch(path, { credentials: "include" });
+  if (!r.ok) throw new Error(`list failed: ${r.status}`); return r.json();
+}
+
+
+Then replace raw public calls with the wrapper:
+
+# examples (repeat for any leftovers)
+applypatch() { f="$1"; sed -i'' -E \
+'s#fetch\(`/api/public/applications/\$\{appId\}/documents`[^\)]*\)#listDocuments(appId)#g' "$f"; }
+applypatch client/src/routes/Step6_TypedSignature.tsx
+applypatch client/src/routes/Step5_DocumentUpload.tsx
+applypatch client/src/api/applicationHooks.ts
+applypatch client/src/hooks/useDocumentVerification.ts
+applypatch client/src/components/TaxReturnFixer.tsx
+applypatch client/src/pages/UploadMissingDocuments.tsx
+
+
+Add (or confirm) imports where used:
+
+import { listDocuments, uploadDocument, setDocumentStatus } from "@/lib/api";
+
+2) enforce the build gate (fails CI if a public route sneaks in)
+# package.json
+# "scripts": {
+#   "gate:public-docs:src": "rg -n \"/api/public/applications/.*/documents\" src && echo '❌ public docs in src' && exit 1 || echo '✅ src clean'",
+#   "gate:public-docs:dist": "rg -n \"/api/public/applications/.*/documents\" dist && echo '❌ public docs in dist' && exit 1 || echo '✅ dist clean'",
+#   "build:prod": "npm run gate:public-docs:src && vite build && npm run gate:public-docs:dist"
+# }
+npm run build:prod
+
+3) browser smoke (auth’d session)
+// DevTools on client site
+const appId="2ebf6120-512e-428f-b1c1-094acf4b6edc";
+(await fetch(`/api/public/applications/${appId}/documents`, {credentials:"include"})).status;
+// ✅ expect 404/403 in PROD
+
+const fd=new FormData();
+fd.append("file", new File([new Blob(["ok"],{type:"text/plain"})], "hello.txt"));
+fd.append("document_type","bank_statements");
+(await fetch(`/api/applications/${appId}/documents/upload`, {method:"POST", body:fd, credentials:"include"})).status;
+// ✅ expect 200 if authenticated
+
+
+When steps 1–3 pass, your client gate flips to GO.
