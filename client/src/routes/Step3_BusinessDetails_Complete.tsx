@@ -20,8 +20,7 @@ import { useFormData } from '@/context/FormDataContext';
 
 import { useLocation } from 'wouter';
 
-import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
-import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 
 import { ApplicationFormSchema } from '../../../shared/schema';
 
@@ -87,18 +86,18 @@ export default function Step3BusinessDetailsComplete() {
   const form = useForm<BusinessDetailsFormData>({
     resolver: zodResolver(step3Schema),
     defaultValues: {
-      operatingName: state.step3?.operatingName || '',
-      legalName: state.step3?.legalName || '',
-      businessStreetAddress: state.step3?.businessStreetAddress || '',
-      businessCity: state.step3?.businessCity || '',
-      businessState: state.step3?.businessState || '',
-      businessPostalCode: state.step3?.businessPostalCode || '',
-      businessPhone: state.step3?.businessPhone || '',
+      operatingName: state.step3?.operatingName || 'S E T Inc.',
+      legalName: state.step3?.legalName || 'SITE ENGINEERING TECHNOLOGY INC.',
+      businessStreetAddress: state.step3?.businessStreetAddress || 'PO BOX 20056',
+      businessCity: state.step3?.businessCity || 'Red Deer',
+      businessState: state.step3?.businessState || 'AB',
+      businessPostalCode: state.step3?.businessPostalCode || 'T4N 6X5',
+      businessPhone: state.step3?.businessPhone || '+15878881837',
       businessWebsite: state.step3?.businessWebsite || '',
-      businessStartDate: state.step3?.businessStartDate || '',
-      businessStructure: state.step3?.businessStructure || '',
-      employeeCount: state.step3?.employeeCount || 1,
-      estimatedYearlyRevenue: state.step3?.estimatedYearlyRevenue || 0,
+      businessStartDate: state.step3?.businessStartDate || '2018-01-01',
+      businessStructure: state.step3?.businessStructure || 'corporation',
+      employeeCount: state.step3?.employeeCount || 8,
+      estimatedYearlyRevenue: state.step3?.estimatedYearlyRevenue || 1200000,
     },
   });
 

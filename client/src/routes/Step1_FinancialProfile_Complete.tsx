@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFormDataContext } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
-import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import { ArrowRight } from 'lucide-react';
 import { markApplicationStarted } from '@/lib/visitFlags';
 import { ApplicationFormSchema } from '../../../shared/schema';
 import { fetchUserCountry, countryCodeToBusinessLocation } from '@/lib/location';
@@ -153,19 +153,19 @@ export default function Step1FinancialProfile() {
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
-      businessLocation: state.step1?.businessLocation ?? 'US',
-      headquarters: state.step1?.headquarters ?? 'US', 
-      headquartersState: state.step1?.headquartersState ?? '',
-      industry: state.step1?.industry ?? '',
+      businessLocation: state.step1?.businessLocation ?? 'CA',
+      headquarters: (state.step1?.headquarters ?? 'CA') as 'US' | 'CA', 
+      headquartersState: state.step1?.headquartersState ?? 'AB',
+      industry: state.step1?.industry ?? 'technology',
       lookingFor: state.step1?.lookingFor ?? 'capital',
-      fundingAmount: state.step1?.fundingAmount ?? 0,
-      fundsPurpose: state.step1?.fundsPurpose ?? 'working_capital',
-      salesHistory: state.step1?.salesHistory ?? '<1yr',
-      revenueLastYear: state.step1?.revenueLastYear ?? 0,
-      averageMonthlyRevenue: state.step1?.averageMonthlyRevenue ?? 0,
-      accountsReceivableBalance: state.step1?.accountsReceivableBalance ?? 0,
-      fixedAssetsValue: state.step1?.fixedAssetsValue ?? 0,
-      equipmentValue: state.step1?.equipmentValue ?? 0,
+      fundingAmount: state.step1?.fundingAmount ?? 200000,
+      fundsPurpose: (state.step1?.fundsPurpose ?? 'working_capital') as 'equipment' | 'inventory' | 'expansion' | 'working_capital',
+      salesHistory: state.step1?.salesHistory ?? '3+yr',
+      revenueLastYear: state.step1?.revenueLastYear ?? 1000000,
+      averageMonthlyRevenue: state.step1?.averageMonthlyRevenue ?? 100000,
+      accountsReceivableBalance: state.step1?.accountsReceivableBalance ?? 250000,
+      fixedAssetsValue: state.step1?.fixedAssetsValue ?? 100000,
+      equipmentValue: state.step1?.equipmentValue ?? 50000,
     },
     mode: 'onChange',
   });
@@ -199,10 +199,6 @@ export default function Step1FinancialProfile() {
         accountsReceivableBalance: data.accountsReceivableBalance || 0,
         fixedAssetsValue: data.fixedAssetsValue || 0,
         equipmentValue: data.equipmentValue || 0,
-        // Business details fields
-        businessName: data.businessName || '',
-        businessPhone: data.businessPhone || '',
-        businessState: data.businessState || '',
       },
     });
     logger.log('💾 Step 1 - Auto-saved form data to step1 object');
