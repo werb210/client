@@ -45,3 +45,30 @@ export async function setDocumentStatus(docId: string, status: "accepted" | "rej
   });
   return r.json();
 }
+
+/** Get document view URL */
+export async function getDocumentViewUrl(docId: string) {
+  const r = await apiFetch(`/api/documents/${docId}/view`);
+  return r.json();
+}
+
+/** Get lender products */
+export async function getLenderProducts() {
+  const r = await apiFetch("/api/lender-products");
+  return r.json();
+}
+
+/** Fetch lender products (alias) */
+export async function fetchLenderProducts() {
+  return getLenderProducts();
+}
+
+/** Submit application */
+export async function submitApplication(data: any) {
+  const r = await apiFetch("/api/applications", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  return r.json();
+}
