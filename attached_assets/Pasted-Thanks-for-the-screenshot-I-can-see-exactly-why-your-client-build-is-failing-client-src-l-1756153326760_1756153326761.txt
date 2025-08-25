@@ -1,0 +1,152 @@
+Thanks for the screenshot — I can see exactly why your **client** build is failing:
+
+* `client/src/lib/api.ts` is missing a **named export `apiFetch`** that other files import.
+* `client/src/context/FormDataContext.tsx` has a **duplicate `case 'UPDATE_STEP3'`** in the reducer.
+* `client/src/routes/LateUpload.tsx` still imports from `lib/api` (and expects `apiFetch`) → Vite throws an import/export error.
+
+Here’s a tight, copy-paste set of **CLIENT (web) POI blocks** to fix the build immediately.
+
+---
+
+# 🟩 CLIENT — Fix build (missing export + reducer duplicate)
+
+## 1) Add a safe, same-origin `apiFetch` to `client/src/lib/api.ts`
+
+Replace the file contents with this (keeps your document helpers + adds `apiFetch`):
+
+```ts
+// client/src/lib/api.ts
+const SAME_ORIGIN_BASE = ""; // always same-origin
+
+function toPath(path: string) {
+  // ensure leading slash, no full externals
+  if (/^https?:\/\//i.test(path)) throw new Error(`external URL not allowed: ${path}`);
+  return path.startsWith("/") ? path : `/${path}`;
+}
+
+/** Minimal fetch wrapper used across the app */
+export async function apiFetch(path: string, init: RequestInit = {}) {
+  const url = `${SAME_ORIGIN_BASE}${toPath(path)}`;
+  const res = await fetch(url, { credentials: "include", ...init });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`apiFetch ${res.status} ${url} :: ${txt.slice(0, 200)}`);
+  }
+  return res;
+}
+
+/** Upload a document to Staff API (multipart) */
+export async function uploadDocument(appId: string, file: File, documentType: string) {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("document_type", documentType);
+  const r = await apiFetch(`/api/applications/${appId}/documents/upload`, { method: "POST", body: fd });
+  return r.json();
+}
+
+/** List documents (prod uses protected route; dev may use /api/public) */
+export async function listDocuments(appId: string) {
+  const path = import.meta.env.PROD
+    ? `/api/applications/${appId}/documents`
+    : `/api/public/applications/${appId}/documents`;
+  const r = await apiFetch(path);
+  return r.json();
+}
+
+/** Update document status */
+export async function setDocumentStatus(docId: string, status: "accepted" | "rejected" | "pending") {
+  const r = await apiFetch(`/api/documents/${docId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  return r.json();
+}
+```
+
+> Why: other files import `{ apiFetch }` from this module; adding it resolves the “missing export” and the Vite import/export error.
+
+---
+
+## 2) Fix the duplicate reducer case in `client/src/context/FormDataContext.tsx`
+
+Find the reducer `switch(action.type)` and remove the duplication. The second `UPDATE_STEP3` should be `UPDATE_STEP4` (based on your step flow: Step 3 = Business, Step 4 = Applicant). Edit like this:
+
+```ts
+// BEFORE (problem: two 'UPDATE_STEP3' cases)
+case 'UPDATE_STEP3':
+  return { ...state, step3: { ...state.step3, ...action.payload } };
+case 'UPDATE_STEP3': // <-- duplicate
+  return { ...state, step4: { ...state.step4, ...action.payload } };
+
+// AFTER
+case 'UPDATE_STEP3':
+  return { ...state, step3: { ...state.step3, ...action.payload } };
+case 'UPDATE_STEP4':
+  return { ...state, step4: { ...state.step4, ...action.payload } };
+```
+
+Also ensure the **Action** union matches:
+
+```ts
+type Action =
+  | { type: 'UPDATE_STEP1'; payload: Partial<Step1> }
+  | { type: 'UPDATE_STEP2'; payload: Partial<Step2> }
+  | { type: 'UPDATE_STEP3'; payload: Partial<Step3> }
+  | { type: 'UPDATE_STEP4'; payload: Partial<Step4> }; // <- make sure this exists
+```
+
+…and any `dispatch({ type: 'UPDATE_STEP3', ... })` inside your Step 4 screen should become `UPDATE_STEP4`.
+
+> Why: the duplicate `case` is a compile-time error; Vite stops the build.
+
+---
+
+## 3) Ensure `LateUpload.tsx` imports from `lib/api` correctly
+
+Open `client/src/routes/LateUpload.tsx` and make sure the imports reference the functions that now exist:
+
+```ts
+// client/src/routes/LateUpload.tsx
+import { apiFetch, uploadDocument, listDocuments, setDocumentStatus } from '../lib/api'; // adjust relative path if needed
+```
+
+If you see any default import like `import api from '../lib/api'`, change it to the **named** imports above.
+
+> Why: after adding `apiFetch`, the import must match the named export.
+
+---
+
+## 4) Fast checks (optional but handy)
+
+Run these quick source scans from repo root:
+
+```bash
+# any remaining external URLs in client code?
+rg -n --pcre2 "https?://(?!localhost|127\.0\.0\.1)" client/src || echo "✅ no external URLs"
+
+# any accidental duplicate reducer cases left?
+rg -n "case ['\"]UPDATE_STEP3['\"]" client/src/context/FormDataContext.tsx
+rg -n "case ['\"]UPDATE_STEP4['\"]" client/src/context/FormDataContext.tsx
+```
+
+---
+
+## 5) Redeploy
+
+* Re-run the deployment in Replit (“Deploy → Redeploy”).
+* The three errors in your screenshot should disappear:
+
+  * ❌ missing `apiFetch` export → **fixed**
+  * ❌ duplicate `UPDATE_STEP3` → **fixed**
+  * ❌ Vite import/export error (caused by the two above) → **fixed**
+
+---
+
+### FYI on the right-pane console noise in your screenshot
+
+* `X-Frame-Options: deny` + `accounts.google.com … ERR_CONNECTION_CLOSED` → 3rd-party auth iframes being blocked in your preview; not related to this build failure.
+* “Unrecognized feature: publickey-credentials / speaker-selection …” → harmless browser hints.
+* If you still see anything about `https://staff.boreal.financial/api/health` in app code, remove it (dev guard will block it anyway).
+
+If anything else pops after these patches, paste the next build log and I’ll map it 1:1 to the exact line to fix.

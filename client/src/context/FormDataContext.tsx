@@ -186,17 +186,8 @@ function formDataReducer(state: FormDataState, action: FormDataAction): FormData
         },
         ...action.payload, // Also store at root level for backward compatibility
       };
-    case 'UPDATE_STEP3':
-      console.log("🔧 Step 3 dispatched:", action.payload);
-      return {
-        ...state,
-        step3: {
-          ...state.step3,
-          ...action.payload,
-        },
-        ...action.payload, // Also store at root level for backward compatibility
-      };
     case 'UPDATE_STEP4':
+      console.log("🔧 Step 4 dispatched:", action.payload);
       return {
         ...state,
         step4: {
