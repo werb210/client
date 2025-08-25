@@ -1,6 +1,5 @@
 import { Switch, Route } from "wouter";
-import { lazy } from "react";
-import { ChatBot } from "@/components/ChatBot";
+import { lazy, Suspense } from "react";
 import { ChatBotTest } from "@/components/ChatBotTest";
 import { ChatBotDashboard } from "@/components/ChatBotDashboard";
 
@@ -12,10 +11,12 @@ import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
 import Step2RecommendationsRoute from "@/routes/Step2_Recommendations";
 // NEW: Separated Step 3 & 4 Route Components (July 3, 2025)
 import Step3BusinessDetailsComplete from "@/routes/Step3_BusinessDetails_Complete";
-import Step4ApplicantInfoComplete from "@/routes/Step4_ApplicantInfo_Complete";
 
-import Step5DocumentUpload from "@/routes/Step5_DocumentUpload";
-import Step6TypedSignature from "@/routes/Step6_TypedSignature";
+// 🚀 PERFORMANCE OPTIMIZATION: Lazy load heavy components (1000+ lines)
+const Step4ApplicantInfoComplete = lazy(() => import("@/routes/Step4_ApplicantInfo_Complete"));
+const Step5DocumentUpload = lazy(() => import("@/routes/Step5_DocumentUpload"));
+const Step6TypedSignature = lazy(() => import("@/routes/Step6_TypedSignature"));
+const ChatBot = lazy(() => import("@/components/ChatBot").then(module => ({ default: module.ChatBot })));
 
 
 // Core Pages (Authentication removed)
@@ -145,6 +146,7 @@ export function MainLayout() {
   
   return (
     <>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div></div>}>
       <Switch>
       {/* Diagnostic Routes */}
       {/* Route removed with legacy auth cleanup */}
@@ -316,20 +318,23 @@ export function MainLayout() {
       {/* Default Route - Landing Page */}
       <Route path="/" component={LandingPage} />
       <Route component={NotFound} />
-    </Switch>
-    
-    {/* PWA Installation Prompt */}
-    <PwaPrompt />
-    
-    {/* Global ChatBot - Available on all pages - Centered Bottom */}
-    <div className="finbot-wrapper">
-      <ChatBot 
-        isOpen={isOpen}
-        onToggle={toggleChat}
-        currentStep={currentStep}
-        applicationData={applicationData}
-      />
-    </div>
+      </Switch>
+      </Suspense>
+      
+      {/* PWA Installation Prompt */}
+      <PwaPrompt />
+      
+      {/* Global ChatBot - Available on all pages - Centered Bottom */}
+      <div className="finbot-wrapper">
+        <Suspense fallback={<div className="h-16 w-16 animate-pulse bg-teal-100 rounded-full"></div>}>
+          <ChatBot 
+            isOpen={isOpen}
+            onToggle={toggleChat}
+            currentStep={currentStep}
+            applicationData={applicationData}
+          />
+        </Suspense>
+      </div>
     </>
   );
 }

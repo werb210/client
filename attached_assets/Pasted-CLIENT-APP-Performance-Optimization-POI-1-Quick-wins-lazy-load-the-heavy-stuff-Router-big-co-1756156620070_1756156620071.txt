@@ -1,0 +1,157 @@
+CLIENT APP — Performance Optimization POI
+1) Quick wins (lazy-load the heavy stuff)
+
+Router + big components → split immediately.
+
+// src/router.tsx (or wherever routes mount)
+import { Suspense, lazy } from "react";
+const Step4 = lazy(() => import("./routes/Step4_ApplicantInfo_Complete"));
+const Step5 = lazy(() => import("./routes/Step5_DocumentUpload"));
+const Step6 = lazy(() => import("./routes/Step6_TypedSignature"));
+const ChatBot = lazy(() => import("./components/ChatBot"));
+
+export function AppRoutes() {
+  return (
+    <Suspense fallback={null}>
+      {/* …your router … */}
+      {/* examples */}
+      {/* <Route path="/apply/step-4" element={<Step4/>} /> */}
+      {/* <Route path="/apply/step-5" element={<Step5/>} /> */}
+      {/* <Route path="/apply/step-6" element={<Step6/>} /> */}
+      {/* <Route path="/assistant" element={<ChatBot/>} /> */}
+    </Suspense>
+  );
+}
+
+
+Dev-only tools off in prod
+
+// src/main.tsx
+if (import.meta.env.DEV) {
+  // keep dev helpers here so they tree-shake in prod
+  // e.g. react-query-devtools, msw, etc.
+  // await import("./devtools");
+}
+
+2) Vite chunking & analysis
+
+Install visualizer (once):
+
+npm i -D rollup-plugin-visualizer
+
+
+Add chunk strategy + analyzer.
+
+// vite.config.ts
+import { defineConfig, splitVendorChunkPlugin } from "vite";
+import react from "@vitejs/plugin-react";
+import { visualizer } from "rollup-plugin-visualizer";
+
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    react(),
+    splitVendorChunkPlugin(),
+    // HTML report at dist/stats.html
+    visualizer({ filename: "dist/stats.html", template: "treemap", gzipSize: true, brotliSize: true })
+  ],
+  build: {
+    sourcemap: false,            // turn on only when analyzing
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 900,  // quiet noisy warnings
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          forms: ["./src/routes/Step4_ApplicantInfo_Complete.tsx"],
+          chat: ["./src/components/ChatBot.tsx"],
+          vendor_react: ["react", "react-dom"],
+          vendor_utils: ["zustand","zod","yup","lodash-es"]
+        }
+      }
+    },
+    treeshake: "recommended"
+  },
+  define: { __DEV__: mode !== "production" }
+}));
+
+
+Build + open the report:
+
+npm run build
+open dist/stats.html  # or xdg-open on Linux
+
+3) Tree-shaking guard in package.json
+// package.json (top level)
+{
+  "sideEffects": ["*.css","*.scss"]
+}
+
+
+If you know there are no side-effecty modules, you can set "sideEffects": false — but keeping CSS listed avoids accidental style drops.
+
+4) Heavy deps → diet & lazy
+
+Moment → Day.js (or prune locales)
+
+Best: migrate incrementally to dayjs (API-compatible for most common cases).
+
+// replace moment usage
+import dayjs from "dayjs";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+dayjs.extend(localizedFormat);
+// dayjs().format("LL")
+
+
+If you must keep Moment: only load the locale you need and do not import the full locales bundle.
+
+import moment from "moment";
+import "moment/locale/en-ca";
+moment.locale("en-ca");
+
+
+Lodash → per-method or lodash-es
+
+// BEFORE
+import _ from "lodash";
+_.pick(obj, ["a","b"]);
+
+// AFTER (tree-shakeable)
+import pick from "lodash-es/pick"; // or "lodash/pick" if not ESM
+pick(obj, ["a","b"]);
+
+
+Big libraries on demand
+
+// XLSX only where needed
+const { read, utils } = await import("xlsx");
+
+// pdfjs-dist only in the viewer
+const pdfjs = await import("pdfjs-dist");
+
+5) Tailwind & CSS slimming
+
+Check your purge globs are tight so unused classes are removed:
+
+// tailwind.config.js
+module.exports = {
+  content: ["./index.html","./src/**/*.{ts,tsx}"],
+  theme: { extend: {} },
+  plugins: []
+}
+
+6) Verify wins (budget & smoke)
+# Size snapshot (rough)
+du -sh dist/assets
+
+# quick Lighthouse (in another shell)
+npx http-server dist -p 4173 >/dev/null 2>&1 &
+npx -y lighthouse http://localhost:4173 --quiet --chrome-flags="--headless" --only-categories=performance
+
+7) Triage list (hit these next if still >900 KB)
+
+Split each StepX_* screen via React.lazy.
+
+Lazy-load anything >100 KB in dist/stats.html (XLSX, pdfjs, charts).
+
+Replace any import * as with per-symbol imports.
+
+Ensure dev-only libs (faker, msw, testing utilities) live behind import.meta.env.DEV.
