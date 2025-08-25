@@ -2,7 +2,7 @@
 import React from "react";
 import { uploadDocument, listDocuments } from "@/lib/api";
 
-export default function DocumentUploadWidget({ applicationId }: { applicationId: string }) {
+export function DocumentUploadWidget({ applicationId }: { applicationId: string }) {
   const [busy, setBusy] = React.useState(false);
   const [type, setType] = React.useState("bank_statements");
   const [files, setFiles] = React.useState<FileList | null>(null);

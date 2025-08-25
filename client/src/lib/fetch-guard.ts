@@ -1,13 +1,13 @@
-const DEV = import.meta.env.DEV;
-const original = window.fetch;
-
-window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-  if (DEV) {
-    const url = typeof input === "string" ? input : (input as any).url;
-    const isExternal = /^https?:\/\//i.test(url) && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d{2,5})?\//i.test(url);
-    if (isExternal) throw new Error(`External fetch blocked in dev: ${url}`);
-  }
-  return original(input as any, init);
-};
-
-export {}; // Make this a module
+// client/src/lib/fetch-guard.ts
+if (import.meta.env.DEV) {
+  const origFetch = window.fetch;
+  window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    if (/^https?:\/\//i.test(url) && !/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(url)) {
+      throw new Error(`Blocked external fetch in dev: ${url}`);
+    }
+    return origFetch(input, init);
+  };
+  // eslint-disable-next-line no-console
+  console.info("[fetch-guard] dev external fetch blocking is ACTIVE");
+}

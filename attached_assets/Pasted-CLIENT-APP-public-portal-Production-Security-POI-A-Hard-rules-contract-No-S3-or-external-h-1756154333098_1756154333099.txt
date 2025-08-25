@@ -1,0 +1,115 @@
+CLIENT APP (public portal) — Production & Security POI
+A) Hard rules (contract)
+
+No S3 or external host calls from the client.
+
+Single API surface → same-origin paths only (/api/...) that hit the Staff backend.
+
+Dev-only runtime guard blocks external fetch(); disabled in prod.
+
+Build must ship with no external URLs in dist.
+
+B) One surface: client API wrapper (drop-in)
+
+client/src/lib/api.ts
+
+const BASE = ""; // same-origin
+
+export async function uploadDocument(appId: string, file: File, documentType: string) {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("document_type", documentType);
+  const r = await fetch(`${BASE}/api/applications/${appId}/documents/upload`, {
+    method: "POST",
+    body: fd,
+    credentials: "include",
+  });
+  if (!r.ok) throw new Error(`upload failed: ${r.status}`);
+  return r.json();
+}
+
+export async function listDocuments(appId: string) {
+  const path = import.meta.env.PROD
+    ? `/api/applications/${appId}/documents`          // auth-protected in PROD
+    : `/api/public/applications/${appId}/documents`;  // dev helper only
+  const r = await fetch(path, { credentials: "include" });
+  if (!r.ok) throw new Error(`list failed: ${r.status}`);
+  return r.json();
+}
+
+export async function setDocumentStatus(docId: string, status: "accepted"|"rejected"|"pending") {
+  const r = await fetch(`/api/documents/${docId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+    credentials: "include",
+  });
+  if (!r.ok) throw new Error(`status failed: ${r.status}`);
+  return r.json();
+}
+
+C) Dev runtime guard (external fetch blocker)
+
+Ensure it’s imported only once (e.g., in client/src/main.tsx) and it runs in dev:
+
+// client/src/lib/fetch-guard.ts
+if (import.meta.env.DEV) {
+  const origFetch = window.fetch;
+  window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    if (/^https?:\/\//i.test(url) && !/^https?:\/\/(localhost|127\.0\.0\.1)/i.test(url)) {
+      throw new Error(`Blocked external fetch in dev: ${url}`);
+    }
+    return origFetch(input, init);
+  };
+  // eslint-disable-next-line no-console
+  console.info("[fetch-guard] dev external fetch blocking is ACTIVE");
+}
+
+
+In client/src/main.tsx:
+
+if (import.meta.env.DEV) {
+  await import("./lib/fetch-guard");
+}
+
+D) Build gate (no externals / no S3) — run in client repo
+# 1) No S3 refs in client code
+rg -n "s3|amazonaws|minio|presign|SignedURL|putObject|getSignedUrl" client/src \
+  || echo "✅ No S3 references in client"
+
+# 2) No external URLs in production code (allow tests/dev)
+rg -n --pcre2 "https?://(?!localhost|127\.0\.0\.1)" client/src \
+  | rg -v "/_dev/|/playground/|/tests?/|Example|Demo|Mock" \
+  || echo "✅ No external URLs in production code"
+
+# 3) Build, then re-scan bundle
+npm run build
+rg -n --pcre2 "https?://(?!localhost|127\.0\.0\.1)" dist || echo "✅ dist clean (no externals)"
+
+
+If you see hits, replace with relative /api/... paths or move the file under a dev/test-only folder that is not imported into prod.
+
+E) Quick build fixes (seen in your logs)
+# Missing export example (adjust to your file):
+# If a default export was removed, re-export a named symbol:
+# export { DocumentUploadWidget } from './DocumentUploadWidget';
+
+# Duplicate reducer cases → ensure action type strings are unique across reducers.
+# Vite import/export errors → ensure only valid, used exports are re-exported from index barrels.
+
+F) Browser smoke tests (prod behavior)
+
+Open http://localhost:5000 (or your client host), DevTools Console:
+
+// 1) SHOULD WORK if you’re authenticated (cookie/JWT present):
+const appId="2ebf6120-512e-428f-b1c1-094acf4b6edc";
+const fd=new FormData();
+fd.append("file", new File([new Blob(["ok"],{type:"text/plain"})], "hello.txt"));
+fd.append("document_type","bank_statements");
+(await fetch(`/api/applications/${appId}/documents/upload`, {method:"POST", body:fd, credentials:"include"})).status;
+// Expect: 200 (or 401/403 if not authenticated)
+
+// 2) SHOULD FAIL in PROD (route not mounted):
+(await fetch(`/api/public/applications/${appId}/documents`, {credentials:"include"})).status;
+// Expect: 404/403

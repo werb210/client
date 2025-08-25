@@ -1,74 +1,52 @@
-// client/src/lib/api.ts
-const SAME_ORIGIN_BASE = ""; // always same-origin
+const BASE = ""; // same-origin
 
-function toPath(path: string) {
-  // ensure leading slash, no full externals
-  if (/^https?:\/\//i.test(path)) throw new Error(`external URL not allowed: ${path}`);
-  return path.startsWith("/") ? path : `/${path}`;
-}
-
-/** Minimal fetch wrapper used across the app */
 export async function apiFetch(path: string, init: RequestInit = {}) {
-  const url = `${SAME_ORIGIN_BASE}${toPath(path)}`;
-  const res = await fetch(url, { credentials: "include", ...init });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => "");
-    throw new Error(`apiFetch ${res.status} ${url} :: ${txt.slice(0, 200)}`);
-  }
-  return res;
+  const r = await fetch(`${BASE}${path}`, { credentials: "include", ...init });
+  if (!r.ok) throw new Error(`fetch failed: ${r.status}`);
+  return r;
 }
 
-/** Upload a document to Staff API (multipart) */
 export async function uploadDocument(appId: string, file: File, documentType: string) {
   const fd = new FormData();
   fd.append("file", file);
   fd.append("document_type", documentType);
-  const r = await apiFetch(`/api/applications/${appId}/documents/upload`, { method: "POST", body: fd });
+  const r = await fetch(`${BASE}/api/applications/${appId}/documents/upload`, {
+    method: "POST",
+    body: fd,
+    credentials: "include",
+  });
+  if (!r.ok) throw new Error(`upload failed: ${r.status}`);
   return r.json();
 }
 
-/** List documents (prod uses protected route; dev may use /api/public) */
 export async function listDocuments(appId: string) {
   const path = import.meta.env.PROD
-    ? `/api/applications/${appId}/documents`
-    : `/api/public/applications/${appId}/documents`;
-  const r = await apiFetch(path);
+    ? `/api/applications/${appId}/documents`          // auth-protected in PROD
+    : `/api/public/applications/${appId}/documents`;  // dev helper only
+  const r = await fetch(path, { credentials: "include" });
+  if (!r.ok) throw new Error(`list failed: ${r.status}`);
   return r.json();
 }
 
-/** Update document status */
-export async function setDocumentStatus(docId: string, status: "accepted" | "rejected" | "pending") {
-  const r = await apiFetch(`/api/documents/${docId}`, {
+export async function setDocumentStatus(docId: string, status: "accepted"|"rejected"|"pending") {
+  const r = await fetch(`/api/documents/${docId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
+    credentials: "include",
   });
+  if (!r.ok) throw new Error(`status failed: ${r.status}`);
   return r.json();
 }
 
-/** Get document view URL */
 export async function getDocumentViewUrl(docId: string) {
-  const r = await apiFetch(`/api/documents/${docId}/view`);
+  const r = await fetch(`/api/documents/${docId}/view`, { credentials: "include" });
+  if (!r.ok) throw new Error(`view failed: ${r.status}`);
   return r.json();
 }
 
-/** Get lender products */
-export async function getLenderProducts() {
-  const r = await apiFetch("/api/lender-products");
-  return r.json();
-}
-
-/** Fetch lender products (alias) */
 export async function fetchLenderProducts() {
-  return getLenderProducts();
-}
-
-/** Submit application */
-export async function submitApplication(data: any) {
-  const r = await apiFetch("/api/applications", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  const r = await fetch("/api/lender-products", { credentials: "include" });
+  if (!r.ok) throw new Error(`lender products failed: ${r.status}`);
   return r.json();
 }
