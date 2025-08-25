@@ -1,0 +1,27 @@
+name: client-audit
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci --ignore-scripts
+
+      - name: Make scripts executable
+        run: |
+          chmod +x scripts/client-audit.sh || true
+          chmod +x scripts/ci-run-client-audit.sh || true
+
+      - name: Build + Strict Audit
+        run: scripts/ci-run-client-audit.sh

@@ -1,3 +1,26 @@
+Got it — let’s lock the **client** audit into CI and make it fail-safe with a strict mode (no `package.json` edits needed).
+
+---
+
+# 🧱 OIB — Client Audit: CI Guard + Strict Mode (No package.json edits)
+
+**GLOBAL RULES:** non-destructive; prod-safe; no new endpoints; S3-only docs; zero bypasses; show console output.
+
+## CLIENT APPLICATION
+
+### Files touched
+
+* `scripts/client-audit.sh` **(replace with strict-capable version)**
+* `scripts/ci-run-client-audit.sh` **(new)**
+* `.github/workflows/client-audit.yml` **(new)**
+
+---
+
+## 1) Replace `scripts/client-audit.sh` (adds strict mode + extra checks)
+
+> Overwrite the file with this exact content.
+
+```bash
 #!/usr/bin/env bash
 # scripts/client-audit.sh
 set -euo pipefail
@@ -156,3 +179,111 @@ if [[ "$STRICT" == "1" && "$WARNS" -gt 0 ]]; then
 fi
 
 ok "Client audit: PASS"
+```
+
+---
+
+## 2) Add CI runner script (strict by default)
+
+Create `scripts/ci-run-client-audit.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+echo "🛡️ CI: building client and running strict audit…"
+# Build; if your build command differs, adjust here.
+npm run build || (echo "Build failed." && exit 1)
+# Strict mode will fail on warnings
+AUDIT_STRICT=1 bash scripts/client-audit.sh
+```
+
+Make both scripts executable:
+
+```bash
+chmod +x scripts/client-audit.sh
+chmod +x scripts/ci-run-client-audit.sh
+```
+
+---
+
+## 3) Add GitHub Actions workflow (runs on every push)
+
+Create `.github/workflows/client-audit.yml`:
+
+```yaml
+name: client-audit
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci --ignore-scripts
+
+      - name: Make scripts executable
+        run: |
+          chmod +x scripts/client-audit.sh || true
+          chmod +x scripts/ci-run-client-audit.sh || true
+
+      - name: Build + Strict Audit
+        run: scripts/ci-run-client-audit.sh
+```
+
+---
+
+## 4) Verification (local)
+
+```bash
+# Clean old build to remove cached /api/public refs if any
+rm -rf dist
+npm run build
+
+# Non-strict (dev inspection)
+bash scripts/client-audit.sh
+
+# Strict (treats warnings as failures)
+AUDIT_STRICT=1 bash scripts/client-audit.sh
+```
+
+**Pass criteria (strict):**
+
+* No `localhost`/LAN URLs in `dist/`
+* No secret-like tokens in `dist/`
+* No legacy `/api/public/` in `dist/`
+* Lazy-load patterns found for Step4/5/6/ChatBot
+* Either CSP meta present **or** you’re serving CSP via server headers
+
+---
+
+### Notes & Tips
+
+* If strict fails due to a **stale legacy reference**, it’s usually a cached artifact. Run:
+
+  ```bash
+  rm -rf dist && npm run build
+  ```
+
+* If strict flags a legit `fetch()` without credentials on a protected route, fix by adding:
+
+  ```ts
+  fetch(url, { credentials: "include", ... })
+  ```
+
+  (Public, anonymous endpoints may omit credentials.)
+
+* You can toggle strictness per-branch in CI by editing the runner script (e.g., allow warnings on `dev`, strict on `main`).
+
+---
+
+That’s it — your **client audit is now enforceable** in CI with a single, strict switch, no `package.json` edits required.
