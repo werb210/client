@@ -1,0 +1,61 @@
+1) Guard rails active
+# Expect this import in main entry:
+rg -n "fetch-guard" client/src/main.tsx && echo "✅ runtime fetch guard imported"
+
+# No S3 (except the deprecated stub)
+rg -n "s3|AWS|presign|presignedUrl|S3_" client/src \
+  | grep -v "s3Upload.ts" | grep -v "block-s3.d.ts" || echo "✅ no S3 refs"
+
+# No external URLs (only same-origin)
+rg -n --pcre2 "https?://(?!localhost|127\.0\.0\.1)" client/src || echo "✅ no external URLs"
+
+2) Single Staff API surface (examples)
+// client/src/lib/api.ts
+export async function uploadDocument(appId: string, file: File, document_type: string) {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("document_type", document_type);
+  const r = await fetch(`/api/applications/${appId}/documents/upload`, { method: "POST", body: fd, credentials: "include" });
+  if (!r.ok) throw new Error(`Upload failed: ${r.status}`);
+  return r.json();
+}
+export async function listDocuments(appId: string) {
+  const r = await fetch(`/api/public/applications/${appId}/documents`, { credentials: "include" });
+  if (!r.ok) throw new Error(`List failed: ${r.status}`);
+  return r.json();
+}
+export async function setDocumentStatus(docId: string, status: "accepted"|"rejected"|"pending") {
+  const r = await fetch(`/api/documents/${docId}`, { method:"PATCH", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ status }), credentials: "include" });
+  if (!r.ok) throw new Error(`Patch failed: ${r.status}`);
+  return r.json();
+}
+
+3) Widget wiring (upload → list refresh)
+// client/src/components/upload/DocumentUploadWidget.tsx (core calls)
+import { uploadDocument, listDocuments } from "@/lib/api";
+
+async function onUpload(appId: string, file: File, type: string) {
+  await uploadDocument(appId, file, type);
+  const { data } = await listDocuments(appId);
+  setDocs(data);
+}
+
+4) Browser proof (DevTools console)
+const APP_ID = "2ebf6120-512e-428f-b1c1-094acf4b6edc";
+const f = new File([new Blob(["hi"], {type:"text/plain"})], "dev-proof.txt");
+(await fetch(`/api/applications/${APP_ID}/documents/upload`, { method:"POST", body:Object.assign(new FormData(),{append:(k,v)=>FormData.prototype.append.call(this,k,v)}) })).status // ignore; easier:
+
+
+Use the helper instead:
+
+(async ()=>{
+  const appId = "2ebf6120-512e-428f-b1c1-094acf4b6edc";
+  const file = new File([new Blob(["hello"],{type:"text/plain"})], "hello.txt");
+  const fd = new FormData(); fd.append("file", file); fd.append("document_type","bank_statements");
+  const up = await fetch(`/api/applications/${appId}/documents/upload`, { method:"POST", body:fd, credentials:"include" }); console.log("upload", up.status, await up.json());
+  const list = await fetch(`/api/public/applications/${appId}/documents`, { credentials:"include" }); console.log("list", list.status, await list.json());
+})();
+
+5) Negative proof (guard blocks externals)
+// Should throw in dev:
+await fetch("https://staff.boreal.financial/api/health");
