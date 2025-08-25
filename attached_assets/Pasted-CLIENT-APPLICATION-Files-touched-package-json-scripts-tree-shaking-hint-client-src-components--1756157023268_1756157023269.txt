@@ -1,0 +1,133 @@
+CLIENT APPLICATION
+Files touched
+
+package.json (scripts + tree-shaking hint)
+
+client/src/components/ChatLauncher.tsx (new, mounts ChatBot only on click)
+
+client/src/utils/lazyLibs.ts (new, patterns for on-demand heavy libs)
+
+(optional) Replace direct imports of heavy libs to use lazyLibs helpers
+
+1) package.json additions (safe, no build-config changes)
+{
+  "sideEffects": ["**/*.css", "**/*.scss"],
+  "scripts": {
+    "perf:dist": "node -e \"const fs=require('fs');const p='dist/public/assets';if(!fs.existsSync(p)){console.log('No dist yet');process.exit(0)};const f=fs.readdirSync(p).filter(x=>x.endsWith('.js')||x.endsWith('.css'));f.sort((a,b)=>fs.statSync(p+'/'+b).size-fs.statSync(p+'/'+a).size);f.slice(0,20).forEach(n=>{const s=fs.statSync(p+'/'+n).size;console.log((s/1024).toFixed(1)+' KB\\t'+n)})\"",
+    "perf:imports": "rg -n \"^import .* from 'lodash|moment|xlsx|pdfjs|pdf-lib|signature_pad|react-beautiful-dnd'\" client/src || true"
+  }
+}
+
+
+sideEffects keeps CSS from being tree-shaken while allowing better JS pruning.
+
+perf:dist prints top asset sizes (quick CI/console check).
+
+perf:imports helps you find heavy direct imports to convert to dynamic.
+
+2) New: “click-to-load” Chat launcher (prevents ChatBot auto-mount)
+
+Create client/src/components/ChatLauncher.tsx:
+
+import React, { lazy, Suspense, useState } from "react";
+
+const LazyChatBot = lazy(() => import("../components/ChatBot")); // path you already lazy-loaded
+
+export default function ChatLauncher() {
+  const [open, setOpen] = useState(false);
+
+  // Optional: prefetch on hover to hide the spinner
+  const prefetch = () => { import("../components/ChatBot"); };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        onMouseEnter={prefetch}
+        className="fixed bottom-6 right-6 rounded-full shadow-lg px-4 py-3 text-sm font-medium"
+        aria-label="Open chat"
+      >
+        Open Chat
+      </button>
+    );
+  }
+
+  return (
+    <Suspense fallback={<div className="fixed bottom-6 right-6 p-3">Loading chat…</div>}>
+      <LazyChatBot />
+    </Suspense>
+  );
+}
+
+
+How to use: wherever you render <ChatBot />, render <ChatLauncher /> instead. This ensures ChatBot code isn’t downloaded until a user actually opens it.
+
+3) New: on-demand heavy libs (patterns you can reuse today)
+
+Create client/src/utils/lazyLibs.ts:
+
+// XLSX on demand
+export async function useXlsx() {
+  const mod = await import(/* @vite-ignore */ "xlsx"); // dynamic, no top-level weight
+  return mod;
+}
+
+// pdf-lib on demand
+export async function usePdfLib() {
+  const mod = await import(/* @vite-ignore */ "pdf-lib");
+  return mod;
+}
+
+// signature_pad on demand
+export async function useSignaturePad() {
+  const mod = await import(/* @vite-ignore */ "signature_pad");
+  return mod;
+}
+
+// Lodash per-method dynamic import (fallback if you have a few deep usages)
+export async function useLodashDebounce() {
+  const mod = await import("lodash/debounce");
+  return mod.default;
+}
+
+
+Apply the pattern (examples):
+
+// BEFORE (eager, adds weight to initial bundle)
+import * as XLSX from "xlsx";
+
+// AFTER (zero cost until used)
+import { useXlsx } from "../utils/lazyLibs";
+// ...
+const XLSX = await useXlsx();
+
+// BEFORE
+import { PDFDocument } from "pdf-lib";
+
+// AFTER
+import { usePdfLib } from "../utils/lazyLibs";
+// ...
+const { PDFDocument } = await usePdfLib();
+
+// BEFORE
+import SignaturePad from "signature_pad";
+
+// AFTER (keeps Step6 chunk lean until user reaches it)
+import { useSignaturePad } from "../utils/lazyLibs";
+// ...
+const SignaturePad = (await useSignaturePad()).default;
+
+
+If you already lazy-split Step5/Step6, this still helps: the feature chunk stays small, and each heavyweight vendor lib becomes its own mini-chunk only loaded when needed (e.g., export/import flows, PDF manipulation, signature capture, etc.).
+
+4) (Optional) Smarter prefetch between steps
+
+If your router knows the next step, prefetch it silently when the current step validates:
+
+// e.g., inside Step3 success handler:
+import("../routes/Step4_ApplicantInfo_Complete"); // silent prefetch of the lazy chunk
+
+5) Quick verification
+npm run build
+npm run perf:dist          # see top asset sizes
+npm run perf:imports       # locate heavy direct imports still to convert
