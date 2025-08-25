@@ -166,7 +166,7 @@ export class IntegrationVerifier {
   static async testStaffAuth(): Promise<boolean> {
     try {
       // Test general staff portal connectivity instead of auth endpoint
-      const response = await fetch('https://staff.boreal.financial/api/public/lenders', {
+      const response = await fetch('/api/public/lenders', {
         method: 'GET',
         credentials: 'include'
       });

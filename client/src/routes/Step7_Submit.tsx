@@ -155,7 +155,7 @@ export default function Step7Submit() {
         }
       });
       
-      const submitUrl = `${import.meta.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial'}/api/applications/${state.step4?.applicationId}/submit`;
+      const submitUrl = `/api/applications/${state.step4?.applicationId}/submit`;
       console.log("📤 Submitting to URL:", submitUrl);
       
       // ✅ USER REQUIREMENT: Wrap fetch in try/catch for comprehensive error handling
@@ -191,7 +191,7 @@ export default function Step7Submit() {
       // 🔧 Task 1: CRM Contact Creation on Application Submit
       try {
         console.log("🔗 Creating CRM contact for application submission...");
-        const crmResponse = await fetch(`${import.meta.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial'}/api/public/crm/contacts/auto-create`, {
+        const crmResponse = await fetch(`/api/public/crm/contacts/auto-create`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",

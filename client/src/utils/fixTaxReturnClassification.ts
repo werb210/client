@@ -3,7 +3,7 @@
  * This updates the document type in both localStorage and the database
  */
 
-const API_BASE_URL = 'https://staff.boreal.financial/api';
+const API_BASE_URL = '/api';
 
 interface UploadedFile {
   id: string;
