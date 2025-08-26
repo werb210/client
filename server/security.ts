@@ -16,6 +16,9 @@ export function harden(app: Express) {
           "'unsafe-eval'",
           "https://www.googletagmanager.com",
           "https://www.google-analytics.com",
+          "https://replit.com",
+          "https://*.replit.com",
+          "https://*.replit.dev",
           "https://app.signnow.com", 
           "https://*.signnow.com"
         ],
@@ -29,13 +32,19 @@ export function harden(app: Express) {
           "https:", 
           "http:",
           "https://www.google-analytics.com",
-          "https://www.googletagmanager.com"
+          "https://www.googletagmanager.com",
+          "https://replit.com",
+          "https://*.replit.com",
+          "https://*.replit.dev"
         ],
         frameSrc: [
           "'self'", 
           "https://app.signnow.com", 
           "https://*.signnow.com",
-          "https://www.googletagmanager.com"
+          "https://www.googletagmanager.com",
+          "https://replit.com",
+          "https://*.replit.com",
+          "https://*.replit.dev"
         ],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],
