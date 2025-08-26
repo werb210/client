@@ -1,5 +1,5 @@
 // PURPOSE
-// Make the client's "$50,000 in Canada — what categories could match?" call succeed,
+// Make the client’s “$50,000 in Canada — what categories could match?” call succeed,
 // regardless of auth state and while the backend stabilizes.
 
 export async function getMatchingCategories(amount: number, country: 'US'|'CA', opts?: {
