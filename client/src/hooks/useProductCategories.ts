@@ -37,11 +37,11 @@ export function useProductCategories(formData: RecommendationFormData) {
         if (filteredProducts.length === 0) {
           console.log('[useProductCategories] No products match filters - showing sample of raw products:');
           console.log('[useProductCategories] First 3 products:', products.slice(0, 3).map((p: any) => ({
-            name: p.name,
-            country: p.country,
-            category: p.category,
-            minAmount: p.minAmount || p.amountMin || p.amount_min,
-            maxAmount: p.maxAmount || p.amountMax || p.amount_max
+            name: p.productName,
+            country: p.countryOffered,
+            category: p.productCategory,
+            minAmount: p.minimumLendingAmount,
+            maxAmount: p.maximumLendingAmount
           })));
           console.log('[useProductCategories] Form data filters:', formData);
         }
@@ -49,20 +49,20 @@ export function useProductCategories(formData: RecommendationFormData) {
         // Group products by category
         const categoryGroups: Record<string, StaffLenderProduct[]> = {};
         filteredProducts.forEach(product => {
-          const category = product.category;
+          const category = product.productCategory;
           if (!categoryGroups[category]) {
             categoryGroups[category] = [];
           }
           categoryGroups[category].push(product);
           
           // Debug: Log product categorization for Accord products
-          if (product.name?.includes('Accord') || product.lender_name?.includes('Accord')) {
-            console.log(`🔍 [CATEGORIZATION] ${product.name} → Category: "${product.category}"`);
+          if (product.productName?.includes('Accord') || product.lenderName?.includes('Accord')) {
+            console.log(`🔍 [CATEGORIZATION] ${product.productName} → Category: "${product.productCategory}"`);
           }
           
           // Debug: Log all Working Capital products being categorized
-          if (product.category === 'Working Capital') {
-            console.log(`💼 [WORKING_CAPITAL] Adding product: ${product.name} (${product.lender_name}) - ID: ${product.id}`);
+          if (product.productCategory === 'Working Capital') {
+            console.log(`💼 [WORKING_CAPITAL] Adding product: ${product.productName} (${product.lenderName}) - ID: ${product.id}`);
           }
         });
 
@@ -70,7 +70,7 @@ export function useProductCategories(formData: RecommendationFormData) {
         if (categoryGroups['Working Capital']) {
           console.log(`💼 [WORKING_CAPITAL] Final group has ${categoryGroups['Working Capital'].length} products:`);
           categoryGroups['Working Capital'].forEach((p, i) => {
-            console.log(`   ${i+1}. ${p.name} (${p.lender_name}) - ID: ${p.id}`);
+            console.log(`   ${i+1}. ${p.productName} (${p.lenderName}) - ID: ${p.id}`);
           });
         }
 
