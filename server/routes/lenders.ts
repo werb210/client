@@ -284,8 +284,13 @@ router.get('/required-documents/:category', async (req, res) => {
   }
 });
 
-// ✅ CHATGPT INSTRUCTIONS: Debug route for product categories
-router.get('/debug/lenders', async (req, res) => {
+// Debug route for product categories - development only
+router.get('/debug/lenders', (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  next();
+}, async (req, res) => {
   try {
     const products = await db.select().from(lenderProducts);
     const productCategories = products.map(p => p.type).filter(Boolean);
@@ -297,8 +302,13 @@ router.get('/debug/lenders', async (req, res) => {
   }
 });
 
-// ✅ CHATGPT INSTRUCTIONS: Debug route for full product info
-router.get('/debug/products', async (req, res) => {
+// Debug route for full product info - development only  
+router.get('/debug/products', (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  next();
+}, async (req, res) => {
   try {
     const products = await db.select().from(lenderProducts);
     console.log('[DEBUG] Staff API - Total products:', products.length);

@@ -1751,6 +1751,9 @@ app.use((req, res, next) => {
   app.use('/api/ops', opsRouter);
   app.use('/api/client', clientMessagesRouter);
   app.use('/api/support', supportRouter);
+  // Apply stricter rate limiting to auth endpoints
+  app.use('/api/auth/login', rlAuth);
+  app.use('/api/auth/verify-2fa', rlAuth);
   app.use('/api/auth', authRouter);
   
   // Chat escalation endpoints
@@ -1758,7 +1761,10 @@ app.use((req, res, next) => {
   app.get('/api/public/chat/escalate/status/:escalationId', getEscalationStatus);
   
   app.use('/api/chat', chatRouter);
-  app.use('/debug', chatbotTrainingRouter);
+  // Debug endpoints only in development
+  if (process.env.NODE_ENV !== 'production' && process.env.DISABLE_DEBUG !== 'true') {
+    app.use('/debug', chatbotTrainingRouter);
+  }
 
   // VAPID public key endpoint for PWA push notifications
   app.get('/api/vapid-public-key', (req, res) => {
