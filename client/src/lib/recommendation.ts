@@ -21,7 +21,16 @@ export function filterProducts(products: any[], formData: Partial<Recommendation
     return [];
   }
 
-  // Provide safe defaults for all required fields
+  // For testing direct navigation: If no meaningful form data, show all products
+  const hasRealFormData = formData && Object.keys(formData).length > 0 && 
+    (formData.lookingFor || formData.fundingAmount || formData.headquarters);
+  
+  if (!hasRealFormData) {
+    console.log(`🔧 [filterProducts] No meaningful form data - returning all ${products.length} products for testing`);
+    return products.filter(product => product.active !== false);
+  }
+
+  // Provide safe defaults for all required fields  
   const safeFormData = {
     headquarters: formData.headquarters || 'CA',
     fundingAmount: formData.fundingAmount || 50000,
@@ -76,6 +85,8 @@ export function filterProducts(products: any[], formData: Partial<Recommendation
         category.includes('Line of Credit')
       )) ||
       (lookingFor === 'equipment' && category.includes('Equipment'));
+
+    // This code should not be reached since we handle no form data above, but keep as safety
 
     const match = isActive && countryMatch && amountMatch && typeMatch;
     
