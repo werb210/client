@@ -5,8 +5,7 @@ import "./index.css";
 import { initializePWA } from "./lib/pwa";
 
 /** PROD log gate: silence console.log/debug in production */
-if (import.meta && import.meta.env && import.meta.env.PROD) {
-  // Keep warn/error for observability; silence noise
+if (import.meta?.env?.PROD) {
   console.log   = () => {};
   console.debug = () => {};
 }

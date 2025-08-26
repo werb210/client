@@ -1,0 +1,68 @@
+# PURPOSE
+# Apply the audit’s client-side fixes:
+#  1) Conditional logging in PROD (no info leaks/perf hit).
+#  2) Structured API errors (no raw 'fetch failed: 500').
+#  3) Quick report of remaining console.* sites (for future cleanup).
+
+set -euo pipefail
+mkdir -p client/src/lib
+
+echo "== 1) Conditional logger =="
+cat > client/src/lib/log.ts <<'TS'
+export const PROD: boolean = typeof import.meta !== 'undefined'
+  ? (import.meta as any).env?.PROD ?? false
+  : (process.env.NODE_ENV === 'production');
+
+const noOp = (..._a:any[])=>{};
+
+export const log = {
+  debug: PROD ? noOp : (...a:any[]) => console.debug('[D]', ...a),
+  info:  PROD ? noOp : (...a:any[]) => console.info('[I]',  ...a),
+  warn:  (...a:any[]) => console.warn('[W]', ...a),
+  error: (...a:any[]) => console.error('[E]', ...a),
+};
+export default log;
+TS
+
+echo "== 2) Hard-disable noisy console in PROD (keep warn/error) =="
+# Add this near the top of client/src/main.tsx (or your root entry)
+cat <<'PASTE_INTO_MAIN_TSX'
+
+/** PROD log gate: silence console.log/debug in production */
+if (import.meta?.env?.PROD) {
+  console.log   = () => {};
+  console.debug = () => {};
+}
+PASTE_INTO_MAIN_TSX
+
+echo "== 3) Structured API errors =="
+# If you already have client/src/lib/api.ts, replace or merge carefully.
+cat > client/src/lib/api.ts <<'TS'
+export class ApiError extends Error {
+  constructor(public status:number, public code:string, public info?:any){
+    super(`${status} ${code}`);
+    this.name = 'ApiError';
+  }
+}
+async function safeFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
+  const r = await fetch(input, { credentials: 'include', ...init });
+  if (!r.ok) {
+    let code = `HTTP_${r.status}`; let info: any = null;
+    try { info = await r.json(); if (info?.error) code = String(info.error); } catch {}
+    throw new ApiError(r.status, code, info);
+  }
+  return r;
+}
+export async function getJson<T>(url: string): Promise<T> {
+  const r = await safeFetch(url); return r.json() as Promise<T>;
+}
+export async function postJson<T>(url: string, body: any): Promise<T> {
+  const r = await safeFetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  return r.json() as Promise<T>;
+}
+TS
+
+echo "== 4) (Optional) count remaining console.* (for dev triage) =="
+rg -n "console\\.(log|debug|info|dir)\\(" client | wc -l || true
+
+echo "DONE. Build the client, ensure no noisy logs in PROD bundles."

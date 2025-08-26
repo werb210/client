@@ -2,7 +2,7 @@ export const PROD: boolean = typeof import.meta !== 'undefined'
   ? (import.meta as any).env?.PROD ?? false
   : (process.env.NODE_ENV === 'production');
 
-function noOp(..._args:any[]){}
+const noOp = (..._a:any[])=>{};
 
 export const log = {
   debug: PROD ? noOp : (...a:any[]) => console.debug('[D]', ...a),
