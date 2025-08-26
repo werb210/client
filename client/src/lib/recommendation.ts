@@ -28,6 +28,20 @@ export function filterProducts(products: any[], formData: RecommendationFormData
     console.log('[filterProducts] Sample product structure:', products[0]);
   }
 
+  // DEBUG: Log first few products to understand structure
+  console.log('[filterProducts] First 3 products:', products.slice(0, 3));
+  products.slice(0, 5).forEach((product: any, index: number) => {
+    console.log(`Product ${index + 1}:`, {
+      name: product.name,
+      active: product.active,
+      country: product.country,
+      category: product.category,
+      minAmount: product.minAmount || product.amountMin || product.amount_min,
+      maxAmount: product.maxAmount || product.amountMax || product.amount_max,
+      allKeys: Object.keys(product).join(', ')
+    });
+  });
+  
   // TEMPORARY: Return all products to see if the issue is with filtering
   console.log('[filterProducts] TEMPORARY: Returning all products for debugging');
   return products;
