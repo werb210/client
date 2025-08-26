@@ -1,0 +1,188 @@
+Thanks—here’s a straight, no-drama path to get the **client app** working again, validate Step 2 & Step 5, and run a **safe** duplicate check that won’t brick your env.
+
+---
+
+# 1) Get the stack running (no destructive rebuilds)
+
+**Root (API/server):**
+
+```bash
+# if the dev server is failing on "tsx missing"
+npm i -D tsx
+
+# install (without deleting locks)
+npm i
+
+# start server using npx so it works even if tsx wasn’t in node_modules
+npm run dev:real   # (if you have this script) 
+# or
+npx tsx server/index.ts
+```
+
+**Client (public app):**
+
+```bash
+cd client
+npm i
+npm run build   # or npm run dev if you want hot-reload
+```
+
+**Hard-reload your browser** (DevTools → right-click refresh → *Empty Cache and Hard Reload*).
+
+---
+
+# 2) Make sure login isn’t forcing MFA during dev
+
+Set your dev env (Secrets or `.env`):
+
+```
+MFA_BYPASS=true
+REQUIRE_MFA_FOR_ALL=false
+TWILIO_VERIFY_OFF=true
+```
+
+**Frontend hotfix** (prevents getting stuck on the verify page if the API already returned a token):
+
+```ts
+// client/src/pages/auth/Login.tsx (or wherever you handle login)
+const res = await fetch('/api/auth/login', {
+  method: 'POST',
+  headers: {'Content-Type':'application/json'},
+  body: JSON.stringify({ email, password })
+});
+const data = await res.json();
+
+// If token exists, treat it as success even if some old path still includes mfa_required
+if (data?.token) {
+  setToken(data.token);         // your centralized helper
+  navigate('/staff/dashboard'); // or target route
+  return;
+}
+if (data?.mfa_required) navigate('/login/verify');
+else setError(data?.error || 'Login failed');
+```
+
+Make sure your **axios/fetch interceptor** is imported **first** in `client/src/main.tsx` so every request gets `Authorization: Bearer <token>`.
+
+---
+
+# 3) Quick API smoke test (validates data shapes client expects)
+
+```bash
+BASE="http://localhost:5000"
+TOKEN=$(curl -s -X POST "$BASE/api/auth/login" \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"todd.w@boreal.financial","password":"1Sucker1!"}' | jq -r '.token // empty')
+
+echo "Token: ${TOKEN:0:24}..."
+
+# Lender products used by Step 2 & Step 5 (client app)
+curl -s "$BASE/api/lender-products" | jq -c '{success, count: (.products|length)}'
+
+# (If your staff app is also hitting v1 paths, keep both available)
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE/api/v1/lenders" | jq -c 'if type=="array" then {items:length} else . end'
+
+# Reports (shape check)
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE/api/reports/summary" | jq -c 'keys'
+
+# Pipeline board (shape)
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE/api/pipeline/board" | jq -c '{lanes:(.lanes|length),cards:(.cards|length)}'
+
+# Contacts (array)
+curl -s -H "Authorization: Bearer $TOKEN" "$BASE/api/contacts" | jq -c 'if type=="array" then {items:length} else . end'
+```
+
+Expected:
+
+* `/api/lender-products` → `{"success":true,"count":<number>}`
+* Reports keys include `generated`, `exports`, `lastRun`
+* Pipeline returns object with `lanes` & `cards`
+* Contacts returns an array
+
+If any are **401**, your browser will also show empty screens → fix token storage / interceptor import order.
+
+---
+
+# 4) Verify **Step 2** (recommendations) end-to-end
+
+1. Open the client app.
+2. **Step 1**:
+
+   * Country: **United States**
+   * Looking for: **Business Capital / Working Capital**
+   * Amount: **\$25,000**
+3. Continue → **Step 2** should list products (not “No Products Found”).
+
+If it still says “No Products Found”, check Network tab:
+
+* `GET /api/lender-products` status **200**
+* Response fields must be **`productName, productCategory, countryOffered, minimumLendingAmount, maximumLendingAmount, lenderName, isActive`**
+  (Verify your filters and UI use these names—no `name/minAmount/category` leftovers.)
+
+---
+
+# 5) Verify **Step 5** (document list) end-to-end
+
+With Amount + Country + Product Category already known from Step 1/2:
+
+* Ensure Step 5 reads the **same** `/api/lender-products` endpoint (not `/api/public/lenders`).
+* In the browser DevTools console, confirm the Step 5 request returns **200** and the product set is non-empty for your selected criteria.
+* The doc list should render, with required/optional flags aligned to the chosen product category and amount brackets.
+
+Quick self-check you can run locally to mirror Step 2/5 filtering:
+
+```bash
+curl -s "$BASE/api/lender-products" \
+| node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+const amt=25000, country='US', cat='Working Capital';
+const m=d.products.filter(p => p.isActive===true
+  && p.countryOffered===country
+  && p.productCategory===cat
+  && amt>= (p.minimumLendingAmount||0)
+  && amt<= (p.maximumLendingAmount||1e12));
+console.log({matches:m.length, sample:m.slice(0,3).map(x=>({lender:x.lenderName,product:x.productName,range:[x.minimumLendingAmount,x.maximumLendingAmount]}))});"
+```
+
+---
+
+# 6) Safe duplicate check (report-only, won’t delete anything)
+
+```bash
+# Duplicate basenames (case-insensitive) in client/src
+find client/src -type f \( -iname "*.ts" -o -iname "*.tsx" -o -iname "*.js" -o -iname "*.jsx" \) -printf "%f\n" \
+  | tr '[:upper:]' '[:lower:]' | sort | uniq -d | while read n; do
+  echo "DUP: $n"
+  find client/src -type f -iname "$n" -print
+  echo
+done
+
+# Top duplicate packages (quick scan)
+npm ls --all 2>/dev/null | grep -E "── [^@]+@[^ ]+" | sed "s/.*── //" \
+  | awk -F@ '{print tolower($1)"@"$2}' | sort | uniq -c | awk '$1>1' | sort -nr | head -30
+```
+
+**Guardrail (optional):** add a pre-commit hook to block case-conflicting dupes:
+
+```bash
+# .git/hooks/pre-commit (chmod +x)
+#!/usr/bin/env bash
+set -e
+dups=$(git ls-files | awk '{print tolower($0)}' | sort | uniq -d)
+if [ -n "$dups" ]; then
+  echo "❌ Duplicate path basenames (case-insensitive) detected:"
+  echo "$dups"
+  exit 1
+fi
+```
+
+---
+
+## What this gives you
+
+* A **running server** (without risky rebuilds).
+* **MFA truly bypassed** in dev so login returns a token immediately.
+* Verified **data shapes** for the client to render.
+* A **repeatable** Step 2 & Step 5 validation path.
+* A **non-destructive** duplicate detector so this doesn’t regress.
+
+If anything in the smoke test returns unexpected shapes or 401s, tell me **which command** failed and the first 10–20 chars of the response—I’ll pinpoint the exact file to adjust.
