@@ -9,8 +9,12 @@ export function DynamicDocumentRequirements({ applicationId }: { applicationId: 
   async function refresh() {
     setLoading(true);
     try {
-      const res = await listDocuments(applicationId);
-      setDocs(res.data || []);
+      const rawDocs = await listDocuments({ category: "Working Capital" });
+      // when mapping docs to UI items:
+      const items = (rawDocs ?? []).map((d, i) =>
+        typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
+      );
+      setDocs(items);
     } finally {
       setLoading(false);
     }
@@ -34,15 +38,15 @@ export function DynamicDocumentRequirements({ applicationId }: { applicationId: 
   return (
     <div className="space-y-2">
       {docs.map(d => (
-        <div key={d.id} className="flex items-center justify-between gap-2 border p-2 rounded">
+        <div key={d.key || d.id} className="flex items-center justify-between gap-2 border p-2 rounded">
           <div>
-            <div className="font-medium">{d.file_name}</div>
-            <div className="text-xs text-gray-500">{d.document_type} · {d.status}</div>
+            <div className="font-medium">{d.label || d.file_name}</div>
+            <div className="text-xs text-gray-500">{d.required ? 'Required' : 'Optional'} · {d.status || 'pending'}</div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => view(d.id)} className="btn btn-light">View</button>
-            <button onClick={() => accept(d.id)} className="btn btn-success">Accept</button>
-            <button onClick={() => reject(d.id)} className="btn btn-danger">Reject</button>
+            <button onClick={() => view(d.key || d.id)} className="btn btn-light">View</button>
+            <button onClick={() => accept(d.key || d.id)} className="btn btn-success">Accept</button>
+            <button onClick={() => reject(d.key || d.id)} className="btn btn-danger">Reject</button>
           </div>
         </div>
       ))}

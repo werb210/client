@@ -25,72 +25,69 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   return safeFetch(path, init);
 }
 
-// ---------- Step 5: Required documents ----------
-export type RequiredDocsRequest = {
-  category: string;              // e.g. "Invoice Factoring"
-  country?: 'US' | 'CA';
+// --- Types ---
+export type RequiredDocsInput = {
+  category?: string;
+  country?: string;
   amount?: number;
-  time_in_business_months?: number;
-  monthly_revenue?: number;
-  credit_score?: number;
+  lenderId?: string;
+  timeInBusinessMonths?: number;
+  monthlyRevenue?: number;
+  creditScore?: number;
 };
 
-export type RequiredDoc = { key: string; label: string; required: boolean; when?: string };
-export type ApiOptions = {};
+export type RequiredDoc =
+  | { key: string; label: string; required: boolean; reason?: string }
+  | string;
 
-export async function listDocuments(
-  body: RequiredDocsRequest,
-  opts: ApiOptions = {}
-): Promise<{ documents: RequiredDoc[] }> {
-  // Preferred staff endpoint
+// --- Fallbacks by category (used if server isn't ready) ---
+const DOCS_FALLBACK: Record<string, RequiredDoc[]> = {
+  "Working Capital": [
+    { key: "bank_3m", label: "Last 3 months bank statements", required: true },
+    { key: "void_cheque", label: "Void cheque", required: true },
+    { key: "gov_id", label: "Government-issued ID", required: true },
+  ],
+  "Business Line of Credit": [
+    { key: "bank_6m", label: "Last 6 months bank statements", required: true },
+    { key: "yr_fin", label: "Most recent year financials or NOA", required: false },
+  ],
+  "Term Loan": [
+    { key: "tax_returns", label: "Most recent business tax return", required: true },
+    { key: "fin_statements", label: "YTD financial statements", required: true },
+  ],
+  "Equipment Financing": [
+    { key: "equipment_quote", label: "Equipment quote/invoice", required: true },
+    { key: "bank_3m", label: "Last 3 months bank statements", required: true },
+  ],
+  "Invoice Factoring": [
+    { key: "ar_aging", label: "A/R aging report", required: true },
+    { key: "sample_invoices", label: "Sample customer invoices", required: true },
+  ],
+  "Purchase Order Financing": [
+    { key: "purchase_orders", label: "Approved purchase orders", required: true },
+    { key: "supplier_quote", label: "Supplier quote", required: true },
+  ],
+};
+
+// --- Exported API used by Step 5 ---
+export async function listDocuments(input: RequiredDocsInput): Promise<RequiredDoc[]> {
   try {
-    const r = await safeFetch('/api/required-docs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+    const r = await fetch("/api/required-docs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(input),
     });
-
     if (r.ok) {
       const j = await r.json();
-      const docs = (j.documents ?? j.required ?? j.docs ?? []) as RequiredDoc[];
-      return { documents: Array.isArray(docs) ? docs : [] };
+      const docs = j?.documents ?? j?.requiredDocs ?? j?.data ?? [];
+      if (Array.isArray(docs) && docs.length) return docs as RequiredDoc[];
     }
-  } catch { /* fall through to local map */ }
-
-  // Fallback map (keeps UX working if staff endpoint is unavailable)
-  const base: Record<string, RequiredDoc[]> = {
-    'Invoice Factoring': [
-      { key: 'application', label: 'Completed application', required: true },
-      { key: 'ar-aging',   label: 'A/R aging report',       required: true },
-      { key: 'bank-3m',    label: 'Last 3 months bank statements', required: true },
-    ],
-    'Equipment Financing': [
-      { key: 'application', label: 'Completed application',   required: true },
-      { key: 'quote',       label: 'Equipment quote/invoice', required: true },
-      { key: 'bank-3m',     label: 'Last 3 months bank statements', required: true },
-    ],
-    'Business Line of Credit': [
-      { key: 'application', label: 'Completed application', required: true },
-      { key: 'bank-3m',     label: 'Last 3 months bank statements', required: true },
-      { key: 'tax-return',  label: 'Most recent business tax return', required: false },
-    ],
-    'Term Loan': [
-      { key: 'application', label: 'Completed application', required: true },
-      { key: 'financials',  label: 'YTD P&L and Balance Sheet', required: true },
-      { key: 'tax-return',  label: 'Most recent business tax return', required: true },
-    ],
-    'Purchase Order Financing': [
-      { key: 'application', label: 'Completed application', required: true },
-      { key: 'po',          label: 'Purchase order(s)',     required: true },
-      { key: 'supplier',    label: 'Supplier quote',        required: true },
-    ],
-    'Working Capital': [
-      { key: 'application', label: 'Completed application', required: true },
-      { key: 'bank-3m',     label: 'Last 3 months bank statements', required: true },
-    ],
-  };
-  const key = body?.category || 'Working Capital';
-  return { documents: base[key] ?? base['Working Capital'] };
+  } catch {
+    // fall through to fallback
+  }
+  const cat = input.category ?? "Working Capital";
+  return DOCS_FALLBACK[cat] ?? [];
 }
 
 // ---------- Document Management ----------
