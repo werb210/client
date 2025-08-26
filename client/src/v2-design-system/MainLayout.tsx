@@ -93,6 +93,7 @@ import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
 
 import CanadianWorkingCapitalTest from "@/pages/CanadianWorkingCapitalTest";
 import PWATestPage from "@/pages/PWATestPage";
+import ProductDataInspector from "@/pages/ProductDataInspector";
 import PWADiagnosticsPage from "@/pages/PWADiagnosticsPage";
 import SimplePWADiagnostics from "@/pages/SimplePWADiagnostics";
 import DebugCanadianEquipmentAPI from "@/pages/DebugCanadianEquipmentAPI";
@@ -266,6 +267,7 @@ export function MainLayout() {
       <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
       <Route path="/api-connectivity-test" component={ApiConnectivityTest} />
       <Route path="/cache-setup" component={InitialCacheSetup} />
+      <Route path="/product-data-inspector" component={ProductDataInspector} />
       
       {/* PWA Testing */}
       <Route path="/pwa-test" component={PWATestPage} />
