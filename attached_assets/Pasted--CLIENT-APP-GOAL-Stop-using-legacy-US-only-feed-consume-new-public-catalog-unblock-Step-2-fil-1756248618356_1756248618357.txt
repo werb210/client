@@ -1,0 +1,87 @@
+[CLIENT APP]
+
+# GOAL: Stop using legacy US-only feed; consume new public catalog; unblock Step 2/filters.
+
+# --- 1) Fetchers: replace/append in client/src/lib/api.ts ---
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: client/src/lib/api.ts
+@@
++export type CatalogProduct = {
++  id: string;
++  name: string;
++  country: "US"|"CA"|string;
++  category: string;
++  minAmount: number;
++  maxAmount: number;
++  active: boolean;
++};
++
++export async function fetchCatalogProducts(opts?: {
++  country?: "US"|"CA";
++  amount?: number;
++  includeInactive?: boolean;
++  cacheBust?: boolean;
++}): Promise<{ total:number; products: CatalogProduct[] }> {
++  const qs = new URLSearchParams();
++  if (opts?.country) qs.set("country", opts.country);
++  if (opts?.amount) qs.set("amount", String(opts.amount));
++  if (opts?.includeInactive) qs.set("includeInactive","1");
++  if (opts?.cacheBust) qs.set("_", String(Date.now()));
++  const r = await fetch(`/api/catalog/export-products?${qs.toString()}`, { credentials: "include" });
++  if (!r.ok) return { total: 0, products: [] };
++  const j = await r.json();
++  return { total: j.total ?? (j.products?.length||0), products: j.products || [] };
++}
++
++export async function fetchMatchingCategories(amount:number, country:"US"|"CA"): Promise<string[]> {
++  const r = await fetch(`/api/catalog/categories?amount=${amount}&country=${country}`);
++  if (!r.ok) return [];
++  const j = await r.json();
++  return Array.isArray(j?.categories) ? j.categories : [];
++}
+*** End Patch
+PATCH
+
+# --- 2) Step 2 wiring: prefer new catalog, fall back gracefully ---
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: client/src/pages/intake/Step2.tsx
+@@
+-import { /* legacy */ } from "@/lib/api";
++import { fetchCatalogProducts, fetchMatchingCategories } from "@/lib/api";
+@@
+-// legacy load
+-// const { products } = await fetchLenderProducts();
++// new public catalog
++const { products } = await fetchCatalogProducts({ cacheBust: true });
++// optional: derive categories for prefilter by amount/country
++// const cats = await fetchMatchingCategories(form.amount, form.country);
+*** End Patch
+PATCH
+
+# --- 3) Quick sanity button (dev-only) to surface dataset shape ---
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: client/src/components/DebugToolbar.tsx
+@@
++import { fetchCatalogProducts } from "@/lib/api";
++export function CatalogSanityButton() {
++  return (
++    <button
++      onClick={async ()=>{
++        const { total, products } = await fetchCatalogProducts({ includeInactive: true, cacheBust: true });
++        const countries = new Set(products.map(p=>p.country));
++        const cats = new Set(products.map(p=>p.category));
++        // eslint-disable-next-line no-console
++        console.warn("catalog sanity", { total, countries: [...countries], categories: [...cats] });
++        alert(`Catalog total=${total}\nCountries=${[...countries].join(", ")}\nCategories=${[...cats].join(", ")}`);
++      }}
++    >Catalog Sanity</button>
++  );
++}
+*** End Patch
+PATCH
+
+# --- 4) Minimal test (expects CA results once Staff is correct) ---
+node -e "fetch('/api/catalog/categories?amount=50000&country=CA').then(r=>r.json()).then(j=>console.log(j)).catch(e=>console.error(e))"

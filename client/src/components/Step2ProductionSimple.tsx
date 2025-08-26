@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { usePublicLenders } from '@/hooks/usePublicLenders';
+import React, { useState, useEffect } from 'react';
+import { fetchCatalogProducts } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
@@ -25,8 +25,26 @@ export function Step2ProductionSimple({
   onPrevious 
 }: Step2Props) {
   
-  // Direct cache access - no complex filtering
-  const { data: allProducts = [], isLoading, error } = usePublicLenders();
+  // NEW PUBLIC CATALOG - Direct access without complex filtering
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setIsLoading(true);
+        // new public catalog
+        const { products } = await fetchCatalogProducts({ cacheBust: true });
+        setAllProducts(products);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadProducts();
+  }, []);
 
   // Debug cache status and field validation
   React.useEffect(() => {

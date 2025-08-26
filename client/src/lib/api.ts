@@ -186,3 +186,37 @@ export async function getMatchingCategories(amount: number, country: "US" | "CA"
   const j = await r.json();
   return Array.isArray(j?.categories) ? j.categories as string[] : [];
 }
+
+export type CatalogProduct = {
+  id: string;
+  name: string;
+  country: "US"|"CA"|string;
+  category: string;
+  minAmount: number;
+  maxAmount: number;
+  active: boolean;
+};
+
+export async function fetchCatalogProducts(opts?: {
+  country?: "US"|"CA";
+  amount?: number;
+  includeInactive?: boolean;
+  cacheBust?: boolean;
+}): Promise<{ total:number; products: CatalogProduct[] }> {
+  const qs = new URLSearchParams();
+  if (opts?.country) qs.set("country", opts.country);
+  if (opts?.amount) qs.set("amount", String(opts.amount));
+  if (opts?.includeInactive) qs.set("includeInactive","1");
+  if (opts?.cacheBust) qs.set("_", String(Date.now()));
+  const r = await fetch(`/api/catalog/export-products?${qs.toString()}`, { credentials: "include" });
+  if (!r.ok) return { total: 0, products: [] };
+  const j = await r.json();
+  return { total: j.total ?? (j.products?.length||0), products: j.products || [] };
+}
+
+export async function fetchMatchingCategories(amount:number, country:"US"|"CA"): Promise<string[]> {
+  const r = await fetch(`/api/catalog/categories?amount=${amount}&country=${country}`);
+  if (!r.ok) return [];
+  const j = await r.json();
+  return Array.isArray(j?.categories) ? j.categories : [];
+}

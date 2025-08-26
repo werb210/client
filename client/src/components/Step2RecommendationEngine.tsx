@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProductCategories } from '@/hooks/useProductCategories';
-import { usePublicLenders } from '@/hooks/usePublicLenders';
+import { fetchCatalogProducts, fetchMatchingCategories } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, CheckCircle, ArrowRight, AlertTriangle, Bug } from 'lucide-react';
@@ -46,8 +46,28 @@ export function Step2RecommendationEngine({
   
   const headquarters = normalizeLocation(formData.headquarters || formData.businessLocation || 'CA');
   
-  // ✅ STEP 3: FIX MAPPING TO PRODUCT CATEGORIES (ChatGPT Instructions)
-  const { data: allLenderProducts, isLoading: rawLoading, error: rawError } = usePublicLenders();
+  // ✅ NEW PUBLIC CATALOG - Replace legacy US-only feed
+  const [allLenderProducts, setAllLenderProducts] = useState<any[]>([]);
+  const [rawLoading, setRawLoading] = useState(true);
+  const [rawError, setRawError] = useState<Error | null>(null);
+  
+  useEffect(() => {
+    const loadCatalogData = async () => {
+      try {
+        setRawLoading(true);
+        // new public catalog
+        const { products } = await fetchCatalogProducts({ cacheBust: true });
+        setAllLenderProducts(products);
+        // optional: derive categories for prefilter by amount/country
+        // const cats = await fetchMatchingCategories(filteringData.fundingAmount, filteringData.headquarters as "US"|"CA");
+      } catch (err) {
+        setRawError(err as Error);
+      } finally {
+        setRawLoading(false);
+      }
+    };
+    loadCatalogData();
+  }, []);
   
   // Ensure all required fields have proper defaults for filtering
   const filteringData = {
