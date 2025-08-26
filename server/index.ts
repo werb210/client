@@ -56,11 +56,7 @@ app.set("trust proxy", 1); // for secure cookies behind proxies
 // Determine actual environment - true production mode
 const isProduction = process.env.NODE_ENV === 'production' || process.env.REPLIT_ENVIRONMENT === 'production';
 const actualEnv = isProduction ? 'production' : 'development';
-console.log(`🚀 Running in ${actualEnv.toUpperCase()} mode`);
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('REPLIT_ENVIRONMENT:', process.env.REPLIT_ENVIRONMENT);
-console.log('🧪 STAFF_API_URL at runtime:', cfg.staffApiUrl);
-console.log('🧪 Environment VITE_STAFF_API_URL:', process.env.VITE_STAFF_API_URL);
+// Production environment configured
 
 // Initialize lender products on startup
 import { initLenderProducts } from './services/lenderProducts';
@@ -196,7 +192,7 @@ app.use((req, res, next) => {
   // API route for lenders - forward to Staff API
   app.get('/api/public/lenders', async (req, res) => {
     try {
-      console.log('📡 [SERVER] Forwarding lender products request to Staff API');
+      // Forwarding to staff API
       
       // Forward query parameters to Staff API
       const queryString = new URLSearchParams(req.query as any).toString();
@@ -212,7 +208,7 @@ app.use((req, res, next) => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log(`📡 [SERVER] ✅ Retrieved lender products from Staff API`);
+        // Retrieved from staff API
         res.json(data);
       } else {
         const errorText = await response.text();
@@ -236,17 +232,14 @@ app.use((req, res, next) => {
   // Application submission endpoint - forward to Staff API (CSRF protected)
   app.post('/api/public/applications', requireCsrf, async (req, res) => {
     try {
-      console.log('📝 [SERVER] Forwarding application submission to Staff API');
-      console.log('📦 [SERVER] Request body size:', JSON.stringify(req.body).length, 'characters');
-      console.log('📦 [SERVER] Request body structure:', Object.keys(req.body));
+      // Forwarding application submission
       
       // Validate we have the expected step-based structure or flat structure
       const hasStepData = req.body.step1 || req.body.step3 || req.body.step4;
       const hasFlatData = req.body.businessLegalName || req.body.applicantName || req.body.requestedAmount;
       
       if (!hasStepData && !hasFlatData) {
-        console.log('❌ [SERVER] No valid application data found');
-        console.log('📦 [SERVER] Full request body:', JSON.stringify(req.body, null, 2));
+        // Invalid application data
         return res.status(400).json({
           error: 'Invalid application format - no application data found',
           received: Object.keys(req.body)
@@ -255,7 +248,7 @@ app.use((req, res, next) => {
       
       // Forward to Staff API  
       const staffUrl = `${cfg.staffApiUrl.replace('/api/lender-products', '')}/public/applications`;
-      console.log('🎯 [SERVER] Forwarding to:', staffUrl);
+      // Forwarding to staff backend
       
       const response = await fetch(staffUrl, {
         method: 'POST',
@@ -269,7 +262,7 @@ app.use((req, res, next) => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ [SERVER] Application submitted to Staff API successfully');
+        // Application submitted successfully
         res.json(data);
       } else {
         const errorData = await response.text();
@@ -292,7 +285,7 @@ app.use((req, res, next) => {
 
   // Legacy /api/applications endpoint for auto-save compatibility (CSRF protected)
   app.post('/api/applications', requireCsrf, async (req, res) => {
-    console.log('📝 [SERVER] Legacy auto-save endpoint - converting to step format');
+    // Legacy auto-save conversion
     
     // Convert flat format to step-based format for Staff API
     const flatData = req.body;

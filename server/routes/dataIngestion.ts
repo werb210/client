@@ -43,7 +43,7 @@ const IngestRequestSchema = z.object({
  * Ingest new live data using V2 schema
  */
 router.post('/ingest-live-data', async (req, res) => {
-  console.log('🔄 Starting live data ingestion process...');
+  // Starting data ingestion process
   
   try {
     // Validate request body
@@ -57,7 +57,7 @@ router.post('/ingest-live-data', async (req, res) => {
     }
 
     const { products: liveProducts } = validation.data;
-    console.log(`📊 Processing ${liveProducts.length} live products...`);
+    // Processing live products
 
     let successCount = 0;
     let errorCount = 0;
@@ -122,7 +122,7 @@ router.post('/ingest-live-data', async (req, res) => {
         successCount++;
         
         if (i % 10 === 0) {
-          console.log(`✅ Processed ${i + 1}/${liveProducts.length} products`);
+          // Product processed
         }
 
       } catch (error) {
@@ -138,7 +138,7 @@ router.post('/ingest-live-data', async (req, res) => {
     }
 
     // Log final results
-    console.log(`📊 Ingestion complete: ${successCount} success, ${errorCount} failed`);
+    // Ingestion complete
 
     // Return results
     res.json({
@@ -201,11 +201,11 @@ router.get('/database-status', async (req, res) => {
  */
 router.delete('/clear-database', async (req, res) => {
   try {
-    console.log('🗑️ Clearing lender products database...');
+    // Clearing database
     
     const deleteResult = await db.delete(lenderProducts);
     
-    console.log('✅ Database cleared successfully');
+    // Database cleared
     
     res.json({
       success: true,

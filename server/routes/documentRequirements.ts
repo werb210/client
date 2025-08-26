@@ -11,7 +11,7 @@ router.get('/required-documents/:category', async (req, res) => {
     const { category } = req.params;
     const { headquarters = 'united_states', fundingAmount = '$50,000' } = req.query as { headquarters?: string; fundingAmount?: string };
 
-    console.log(`🔍 FETCHING DOCUMENT REQUIREMENTS:`, { category, headquarters, fundingAmount });
+    // Fetching document requirements
 
     // Build filter conditions
     const conditions = [
@@ -30,7 +30,7 @@ router.get('/required-documents/:category', async (req, res) => {
       .where(and(...conditions))
       .limit(10);
 
-    console.log(`📋 Found ${results.length} products with requirements for ${category}`);
+    // Found products with requirements
 
     // Extract unique documents from all matching products
     const allDocs = new Set<string>();
@@ -53,7 +53,7 @@ router.get('/required-documents/:category', async (req, res) => {
 
     // Fallback documents if no specific requirements found
     if (documentRequirements.length === 0) {
-      console.log(`⚠️ No specific requirements found for ${category}, using fallback documents`);
+      // Using fallback documents
       
       const fallbackDocs = getFallbackDocuments(category);
       res.json({ 
@@ -66,7 +66,7 @@ router.get('/required-documents/:category', async (req, res) => {
       return;
     }
 
-    console.log(`✅ Returning ${documentRequirements.length} document requirements for ${category}`);
+    // Returning document requirements
 
     res.json({ 
       success: true, 

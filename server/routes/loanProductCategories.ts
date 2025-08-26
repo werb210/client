@@ -22,10 +22,10 @@ router.get('/categories', async (req, res) => {
       fundsPurpose
     } = req.query as ProductCategoryFilters;
 
-    console.log(`🔍 FILTERING PRODUCTS:`, { country, lookingFor, fundingAmount, accountsReceivableBalance, fundsPurpose });
+    // Filtering products
 
     // CRITICAL: Only use authentic 41-product database - delegate to client-side cached data
-    console.log(`🔄 Delegating to client-side Step 2 system with authentic 41-product IndexedDB cache`);
+    // Delegating to client-side system
     
     // Return error to force Step 2 to use client-side useLocalLenders hook with authentic data
     return res.status(503).json({
@@ -44,8 +44,7 @@ router.get('/categories', async (req, res) => {
     const filteredProducts = products.filter((p: any) => {
       // Log product structure for debugging
       if (products.indexOf(p) === 0) {
-        console.log(`📋 Sample product structure:`, Object.keys(p));
-        console.log(`📋 Sample product:`, p);
+        // Sample product structure
       }
 
       // Country filter - check different possible field names
@@ -56,7 +55,7 @@ router.get('/categories', async (req, res) => {
           : productCountry === selectedCountryCode || productCountry === 'US/CA';
         
         if (!countryMatches) {
-          console.log(`❌ Product ${p.name} rejected: country mismatch (${productCountry} vs ${selectedCountryCode})`);
+          // Product rejected: country mismatch
           return false;
         }
       }
@@ -74,12 +73,12 @@ router.get('/categories', async (req, res) => {
       if (lookingFor === 'capital') {
         const isCapitalProduct = isBusinessCapitalProduct(productType);
         if (!isCapitalProduct) {
-          console.log(`❌ Product ${p.name} rejected: not a capital product (${productType})`);
+          // Product rejected: not capital
           return false;
         }
       } else if (lookingFor === 'equipment') {
         if (!productType || !productType.toLowerCase().includes('equipment')) {
-          console.log(`❌ Product ${p.name} rejected: not an equipment product (${productType})`);
+          // Product rejected: not equipment
           return false;
         }
       }
@@ -91,7 +90,7 @@ router.get('/categories', async (req, res) => {
       
       if (hasNoAccountsReceivable && productType &&
           (productType.toLowerCase().includes('invoice') || productType.toLowerCase().includes('factoring'))) {
-        console.log(`Invoice Factoring: ${p.lender || p.lenderName || p.name} excluded because no accounts receivable (${accountsReceivableBalance})`);
+        // Invoice factoring excluded
         return false;
       }
 
