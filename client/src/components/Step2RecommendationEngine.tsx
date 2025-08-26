@@ -77,7 +77,7 @@ export function Step2RecommendationEngine({
     if (workingCapitalCategory) {
       console.log(`💼 [STEP2] Working Capital category found with ${workingCapitalCategory.count} products:`);
       workingCapitalCategory.products?.forEach((p, i) => {
-        console.log(`   ${i+1}. ${p.name} (${p.lender_name})`);
+        console.log(`   ${i+1}. ${p.productName || p.lenderName} (${p.lenderName})`);
       });
     } else {
       console.log("❌ [STEP2] Working Capital category not found in productCategories");

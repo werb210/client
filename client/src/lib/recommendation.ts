@@ -28,23 +28,51 @@ export function filterProducts(products: any[], formData: RecommendationFormData
     console.log('[filterProducts] Sample product structure:', products[0]);
   }
 
-  // DEBUG: Log first few products to understand structure
-  console.log('[filterProducts] First 3 products:', products.slice(0, 3));
-  products.slice(0, 5).forEach((product: any, index: number) => {
-    console.log(`Product ${index + 1}:`, {
-      name: product.name,
-      active: product.active,
-      country: product.country,
-      category: product.category,
-      minAmount: product.minAmount || product.amountMin || product.amount_min,
-      maxAmount: product.maxAmount || product.amountMax || product.amount_max,
-      allKeys: Object.keys(product).join(', ')
-    });
+  // FIXED: Use correct field names for filtering
+  return products.filter(product => {
+    // Active status filtering
+    const isActive = product.isActive === true;
+    
+    // Country/headquarters matching with correct field name
+    const productCountry = product.countryOffered;
+    const formCountry = formData.headquarters;
+    
+    const countryMatch = 
+      !formCountry || // If no form country specified, accept all
+      !productCountry || // If product has no country restriction, accept
+      (formCountry === 'US' && (productCountry === 'US' || productCountry === 'United States' || productCountry === 'USA')) ||
+      (formCountry === 'CA' && (productCountry === 'CA' || productCountry === 'Canada')) ||
+      (productCountry === 'Both') || // Products available in both countries
+      (productCountry === 'All'); // Products available everywhere
+
+    // Funding amount matching with correct field names
+    const fundingAmount = formData.fundingAmount || 50000;
+    const minAmount = product.minimumLendingAmount || 0;
+    const maxAmount = product.maximumLendingAmount || 999999999;
+    
+    const amountMatch = fundingAmount >= minAmount && fundingAmount <= maxAmount;
+
+    // Product type matching with correct field name
+    const lookingFor = formData.lookingFor || 'capital';
+    const category = product.productCategory || '';
+    
+    const typeMatch = 
+      !lookingFor || // If no type specified, accept all
+      lookingFor === 'both' || // Show all products if looking for both
+      (lookingFor === 'capital' && (
+        category.includes('Working Capital') || 
+        category.includes('Business Loan') || 
+        category.includes('Term Loan') ||
+        category.includes('Line of Credit')
+      )) ||
+      (lookingFor === 'equipment' && category.includes('Equipment'));
+
+    const match = isActive && countryMatch && amountMatch && typeMatch;
+    
+    console.log(`[filterProducts] ${product.productName || product.lenderName}: Active(${isActive}) + Country(${countryMatch}) + Amount(${amountMatch}) + Type(${typeMatch}) = ${match}`);
+
+    return match;
   });
-  
-  // TEMPORARY: Return all products to see if the issue is with filtering
-  console.log('[filterProducts] TEMPORARY: Returning all products for debugging');
-  return products;
 
   /* Original filtering logic - temporarily disabled for debugging
   return products.filter(product => {
