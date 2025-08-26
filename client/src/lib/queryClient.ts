@@ -50,12 +50,12 @@ export const getQueryFn: (options: {
       // Safely handle all error types to prevent runtime issues
       try {
         // Handle errors gracefully
-        if (error && typeof error === 'object' && 'status' in error && error.status === 401 && unauthorizedBehavior === "returnNull") {
+        if (error instanceof api.ApiError && error.status === 401 && unauthorizedBehavior === "returnNull") {
           return null;
         }
         
         // Handle staff backend unavailable gracefully
-        if (error && typeof error === 'object' && 'status' in error && (error as any).status >= 500) {
+        if (error instanceof api.ApiError && error.status >= 500) {
           console.warn('Staff backend temporarily unavailable, returning null for graceful degradation');
           return null;
         }
@@ -89,13 +89,13 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: Infinity,
       retry: false, // Disable retries to prevent infinite loops
-      onError: (error) => {
+      onError: (error: unknown) => {
         console.warn('[QUERY] Query error handled gracefully:', error);
       }
     },
     mutations: {
       retry: false,
-      onError: (error) => {
+      onError: (error: unknown) => {
         console.warn('[MUTATION] Mutation error handled gracefully:', error);
       }
     },

@@ -284,8 +284,9 @@ router.get('/required-documents/:category', async (req, res) => {
   }
 });
 
-// Debug routes completely removed in production builds
-if (process.env.NODE_ENV !== 'production' && process.env.REPLIT_ENVIRONMENT !== 'production') {
+// Debug routes only in pure development (not production environments)
+const isPureDevelopment = process.env.NODE_ENV === 'development' && process.env.REPLIT_ENVIRONMENT !== 'production';
+if (isPureDevelopment) {
   // Debug route for product categories - development only
   router.get('/debug/lenders', async (req, res) => {
     try {

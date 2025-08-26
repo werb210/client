@@ -58,3 +58,36 @@ export async function fetchLenderProducts() {
     return [];
   }
 }
+
+// Additional API methods needed by queryClient
+export async function getUserApplications() {
+  const r = await fetch("/api/applications", { credentials: "include" });
+  if (!r.ok) throw new Error(`applications failed: ${r.status}`);
+  return r.json();
+}
+
+export async function getApplication(applicationId: string) {
+  const r = await fetch(`/api/applications/${applicationId}`, { credentials: "include" });
+  if (!r.ok) throw new Error(`application failed: ${r.status}`);
+  return r.json();
+}
+
+export async function fetchRequiredDocuments(category: string) {
+  const r = await fetch(`/api/documents/requirements?category=${encodeURIComponent(category)}`, { credentials: "include" });
+  if (!r.ok) throw new Error(`documents failed: ${r.status}`);
+  return r.json();
+}
+
+export async function getLenderProducts(category?: string) {
+  const url = category ? `/api/lender-products?category=${encodeURIComponent(category)}` : "/api/lender-products";
+  const r = await fetch(url, { credentials: "include" });
+  if (!r.ok) throw new Error(`lender products failed: ${r.status}`);
+  return r.json();
+}
+
+export class ApiError extends Error {
+  constructor(message: string, public status: number) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
