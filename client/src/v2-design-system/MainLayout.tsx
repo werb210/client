@@ -92,6 +92,7 @@ import LenderDiagnostics from "@/pages/LenderDiagnostics";
 // import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
 
 import CanadianWorkingCapitalTest from "@/pages/CanadianWorkingCapitalTest";
+import CatalogFieldsPage from "@/pages/debug/CatalogFields";
 // import PWATestPage from "@/pages/PWATestPage";
 import ProductDataInspector from "@/pages/ProductDataInspector";
 // import PWADiagnosticsPage from "@/pages/PWADiagnosticsPage"; // Removed
@@ -315,7 +316,10 @@ export function MainLayout() {
       {/* <Route path="/advanced-chatbot-test" component={[^}]*} /> */} */}
       {/* <Route path="/chatbot-dashboard" component={[^}]*} /> */} */}
       <Route path="/train-chatbot" component={[^}]*} /> */}
-      <Route path="/debug/train" component={[^}]*} /> */}
+      <Route path="/debug/train" component={lazy(() => import('@/routes/TrainChatbot'))} />
+      
+      {/* Debug Pages */}
+      <Route path="/debug/catalog-fields" component={CatalogFieldsPage} />
       
       {/* Default Route - Landing Page */}
       <Route path="/" component={[^}]*} /> */}

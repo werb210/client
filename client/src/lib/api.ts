@@ -232,3 +232,92 @@ export async function fetchMatchingCategories(amount:number, country:"US"|"CA"):
   const j = await r.json();
   return Array.isArray(j?.categories) ? j.categories : [];
 }
+
+// ========== CATALOG FIELDS DEBUG FUNCTIONALITY ==========
+
+export type CanonicalField = {
+  name: string;
+  type: "string"|"number"|"boolean"|"enum"|"array";
+  required: boolean;
+  values?: string[];
+  source?: string;
+};
+
+export type CatalogFieldsResponse = {
+  canonical_fields: CanonicalField[];
+  legacy_aliases: Record<string,string>;
+  sample_endpoint: string;
+  export_endpoint: string;
+};
+
+export async function getCatalogFields(): Promise<CatalogFieldsResponse> {
+  const r = await fetch("/api/catalog/fields", { credentials: "include" });
+  if (!r.ok) throw new Error("fields fetch failed: " + r.status);
+  return r.json();
+}
+
+export async function getCatalogSample(): Promise<any> {
+  const r = await fetch("/api/catalog/sample", { credentials: "include" });
+  if (!r.ok) throw new Error("sample fetch failed: " + r.status);
+  return r.json();
+}
+
+/** Canonical, normalized product shape the CLIENT should use everywhere. */
+export type LenderProductNormalized = {
+  id: string;
+  name: string;
+  lender_id?: string|null;
+  lender_name?: string|null;
+  country: "US"|"CA";
+  category: "Business Line of Credit"|"Term Loan"|"Equipment Financing"|"Invoice Factoring"|"Purchase Order Financing"|"Working Capital";
+  min_amount?: number|null;
+  max_amount?: number|null;
+  interest_rate_min?: number|null;
+  interest_rate_max?: number|null;
+  term_min?: number|null;  // months
+  term_max?: number|null;  // months
+  active: boolean;
+  required_documents?: Array<{ key: string; label: string; required: boolean; reason?: string }|string>;
+};
+
+// Legacy → canonical normalization used by list/export calls.
+export function normalizeProduct(p: any): LenderProductNormalized {
+  const name         = p?.name ?? p?.productName;
+  const lender_name  = p?.lender_name ?? p?.lenderName ?? null;
+  const country      = (p?.country ?? p?.countryOffered ?? "").toString().toUpperCase();
+  const category     = p?.category ?? p?.productCategory;
+  const min_amount   = p?.min_amount ?? p?.minimumLendingAmount ?? null;
+  const max_amount   = p?.max_amount ?? p?.maximumLendingAmount ?? null;
+  const active       = (typeof p?.active === "boolean") ? p.active : !!p?.isActive;
+
+  // Universal doc minimum (server may also provide)
+  const docs = Array.isArray(p?.required_documents) && p.required_documents.length
+    ? p.required_documents
+    : [{ key: "bank_6m", label: "Last 6 months bank statements", required: true }];
+
+  return {
+    id: String(p?.id ?? ""),
+    name: String(name ?? ""),
+    lender_id: p?.lender_id ?? null,
+    lender_name: lender_name ? String(lender_name) : null,
+    country: (country === "CA" ? "CA" : "US") as "US"|"CA",
+    category: String(category ?? "Working Capital") as LenderProductNormalized["category"],
+    min_amount: (min_amount == null ? null : Number(min_amount)),
+    max_amount: (max_amount == null ? null : Number(max_amount)),
+    interest_rate_min: (p?.interest_rate_min == null ? null : Number(p.interest_rate_min)),
+    interest_rate_max: (p?.interest_rate_max == null ? null : Number(p.interest_rate_max)),
+    term_min: (p?.term_min == null ? null : Number(p.term_min)),
+    term_max: (p?.term_max == null ? null : Number(p.term_max)),
+    active,
+    required_documents: docs
+  };
+}
+
+export async function fetchCatalogNormalized(limit = 25): Promise<{ total:number; products:LenderProductNormalized[] }> {
+  const r = await fetch(`/api/catalog/export-products?includeInactive=1&limit=${limit}`, { credentials: "include" });
+  if (!r.ok) throw new Error("export-products failed: " + r.status);
+  const j = await r.json();
+  const products = Array.isArray(j?.products) ? j.products.map(normalizeProduct) : [];
+  const total = Number(j?.total ?? products.length);
+  return { total, products };
+}
