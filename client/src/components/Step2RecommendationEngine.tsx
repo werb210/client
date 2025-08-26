@@ -57,16 +57,24 @@ export function Step2RecommendationEngine({
   });
   
   // ✅ DEBUG: Log fetched lender products and categories
-  console.log("Fetched lender products count:", allLenderProducts?.length || 0);
-  console.log("Product categories generated:", productCategories?.length || 0);
-  console.log("Categories loading:", isLoading);
-  console.log("Form data for filtering:", {
+  console.log("🔍 [STEP2-DEBUG] Fetched lender products count:", allLenderProducts?.length || 0);
+  console.log("🔍 [STEP2-DEBUG] Product categories generated:", productCategories?.length || 0);
+  console.log("🔍 [STEP2-DEBUG] Categories loading:", isLoading);
+  console.log("🔍 [STEP2-DEBUG] RAW FormData received from Step 1:", formData);
+  console.log("🔍 [STEP2-DEBUG] Form data for filtering:", {
     headquarters,
     lookingFor: formData.lookingFor,
     fundingAmount: formData.fundingAmount,
     accountsReceivableBalance: formData.accountsReceivableBalance,
     fundsPurpose: formData.fundsPurpose
   });
+  
+  if (!formData.lookingFor) {
+    console.warn("⚠️ [STEP2-DEBUG] formData.lookingFor is missing! This will cause filtering issues.");
+  }
+  if (!formData.fundingAmount) {
+    console.warn("⚠️ [STEP2-DEBUG] formData.fundingAmount is missing! This will cause filtering issues.");
+  }
   
   if (productCategories && productCategories.length > 0) {
     console.log("Available categories:", productCategories.map(c => c.category));

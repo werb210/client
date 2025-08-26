@@ -18,7 +18,8 @@ export function useProductCategories(formData: RecommendationFormData) {
     queryKey: ['product-categories', formData],
     queryFn: async () => {
       try {
-        console.log(`[useProductCategories] Starting with ${products.length} products`);
+        console.log(`🔍 [useProductCategories] Starting with ${products.length} products`);
+        console.log(`🔍 [useProductCategories] FormData received:`, formData);
         
         if (productsError) {
           console.warn('[useProductCategories] Products error:', productsError);
@@ -31,8 +32,15 @@ export function useProductCategories(formData: RecommendationFormData) {
         }
       
         // Apply filtering logic to get relevant products
+        console.log(`🔍 [useProductCategories] About to call filterProducts with:`, formData);
         const filteredProducts = filterProducts(products, formData);
-        console.log('[useProductCategories] Filtered products:', filteredProducts.length);
+        console.log(`🔍 [useProductCategories] filterProducts returned ${filteredProducts.length} products`);
+        
+        if (filteredProducts.length === 0) {
+          console.error(`❌ [useProductCategories] ZERO PRODUCTS AFTER FILTERING!`);
+          console.error(`❌ [useProductCategories] Input data:`, formData);
+          console.error(`❌ [useProductCategories] Raw products count:`, products.length);
+        }
         
         if (filteredProducts.length === 0) {
           console.log('[useProductCategories] No products match filters - showing sample of raw products:');
