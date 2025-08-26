@@ -93,6 +93,7 @@ import LenderDiagnostics from "@/pages/LenderDiagnostics";
 
 import CanadianWorkingCapitalTest from "@/pages/CanadianWorkingCapitalTest";
 import CatalogFieldsPage from "@/pages/debug/CatalogFields";
+import CatalogDumpPage from "@/pages/debug/CatalogDump";
 // import PWATestPage from "@/pages/PWATestPage";
 import ProductDataInspector from "@/pages/ProductDataInspector";
 // import PWADiagnosticsPage from "@/pages/PWADiagnosticsPage"; // Removed
@@ -320,6 +321,7 @@ export function MainLayout() {
       
       {/* Debug Pages */}
       <Route path="/debug/catalog-fields" component={CatalogFieldsPage} />
+      <Route path="/debug/catalog-dump" component={CatalogDumpPage} />
       
       {/* Default Route - Landing Page */}
       <Route path="/" component={[^}]*} /> */}

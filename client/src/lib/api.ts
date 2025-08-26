@@ -321,3 +321,20 @@ export async function fetchCatalogNormalized(limit = 25): Promise<{ total:number
   const total = Number(j?.total ?? products.length);
   return { total, products };
 }
+
+export type CatalogDump = {
+  total: number;
+  canonical_fields: string[];
+  products: Record<string, any>[];
+};
+
+export async function fetchCatalogDump(params?: { country?: "US"|"CA"; lender_id?: string; limit?: number }): Promise<CatalogDump> {
+  const q = new URLSearchParams();
+  if (params?.country)   q.set("country", params.country);
+  if (params?.lender_id) q.set("lender_id", params.lender_id);
+  if (params?.limit)     q.set("limit", String(params.limit));
+  const url = "/api/catalog/dump" + (q.toString() ? `?${q.toString()}` : "");
+  const r = await fetch(url, { credentials: "include" });
+  if (!r.ok) throw new Error(`catalog dump failed: ${r.status}`);
+  return r.json();
+}
