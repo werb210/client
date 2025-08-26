@@ -36,7 +36,7 @@ export function useProductCategories(formData: RecommendationFormData) {
         
         if (filteredProducts.length === 0) {
           console.log('[useProductCategories] No products match filters - showing sample of raw products:');
-          console.log('[useProductCategories] First 3 products:', products.slice(0, 3).map(p => ({
+          console.log('[useProductCategories] First 3 products:', products.slice(0, 3).map((p: any) => ({
             name: p.name,
             country: p.country,
             category: p.category,
