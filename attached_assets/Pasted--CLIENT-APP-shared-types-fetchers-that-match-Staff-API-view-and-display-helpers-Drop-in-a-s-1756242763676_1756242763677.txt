@@ -1,6 +1,7 @@
 // CLIENT APP: shared types, fetchers that match Staff API/view, and display helpers.
-// Types kept in lockstep with crm_lender_products_canon (+ lender_name join)
+// Drop in a shared lib (e.g., src/lib/lenders.ts) and import where needed.
 
+// 1) Types kept in lockstep with crm_lender_products_canon (+ lender_name join)
 export type LenderProduct = {
   id: string;
   name: string;
@@ -33,8 +34,8 @@ export type LenderCount = {
   ui_filtered: number;
 };
 
-// Fetchers: expect Staff API to expose endpoints backed by the views
-// /api/crm/lender-products -> SELECT c.*, l.name AS lender_name FROM crm_lender_products_canon c LEFT JOIN lenders l ON l.id=c.lender_id WHERE (?tenantId)
+// 2) Fetchers: expect Staff API to expose endpoints backed by the views
+//    /api/crm/lender-products -> SELECT c.*, l.name AS lender_name FROM crm_lender_products_canon c LEFT JOIN lenders l ON l.id=c.lender_id WHERE (?tenantId)
 export async function fetchLenderProducts(tenantId?: string): Promise<LenderProduct[]> {
   const qs = tenantId ? `?tenantId=${encodeURIComponent(tenantId)}` : '';
   const res = await fetch(`/api/crm/lender-products${qs}`, { credentials: 'include' });
@@ -48,16 +49,34 @@ export async function fetchLenderProducts(tenantId?: string): Promise<LenderProd
   }));
 }
 
-// /api/crm/lender-counts -> SELECT * FROM crm_lender_counts
+//    /api/crm/lender-counts -> SELECT * FROM crm_lender_counts
 export async function fetchLenderCounts(): Promise<LenderCount[]> {
   const res = await fetch(`/api/crm/lender-counts`, { credentials: 'include' });
   if (!res.ok) throw new Error(`Failed to load lender counts: ${res.status}`);
   return (await res.json()) as LenderCount[];
 }
 
-// UI helpers
+// 3) UI helpers
 export const formatCurrencyRange = (min: number | null, max: number | null) => {
   const fmt = (n: number | null) => (n == null ? '—' : `$${n.toLocaleString()}`);
   if (min == null && max == null) return 'Not provided';
   return `${fmt(min)} – ${fmt(max)}`;
 };
+
+// Example usage in a React row renderer (pseudo):
+/*
+function ProductRow({ p }: { p: LenderProduct }) {
+  return (
+    <div className="row">
+      <div className="name">{p.name}</div>
+      <div className="lender">{p.lender_name ?? '—'}</div>
+      <div className="meta">
+        <span>{p.country}</span>
+        <span>{p.category}</span>
+        <span>{formatCurrencyRange(p.min_amount, p.max_amount)}</span>
+        <span>{p.active ? 'Active' : 'Inactive'}</span>
+      </div>
+    </div>
+  );
+}
+*/

@@ -44,14 +44,14 @@ export async function getDocumentViewUrl(docId: string) {
 }
 
 export async function fetchLenderProducts() {
+  // For now, use the existing endpoint but transform to match the expected format
   const r = await fetch("/api/lender-products", { credentials: "include" });
   if (!r.ok) throw new Error(`lender products failed: ${r.status}`);
   const response = await r.json();
   console.log('[fetchLenderProducts] API response:', response);
   
-  // Extract products array from response
+  // Extract products array from response and transform to match LenderProduct shape
   if (response.success && response.products) {
-    // Transform staff API response to match LenderProduct shape
     const transformedProducts = response.products.map((p: any) => ({
       id: p.id,
       name: p.productName || p.name,
@@ -62,7 +62,8 @@ export async function fetchLenderProducts() {
       category: p.productCategory || p.category,
       min_amount: p.minimumLendingAmount ?? p.min_amount ?? null,
       max_amount: p.maximumLendingAmount ?? p.max_amount ?? null,
-      active: p.isActive ?? p.active ?? true
+      active: p.isActive ?? p.active ?? true,
+      variant_sig: p.variant_sig
     }));
     
     console.log(`[fetchLenderProducts] Returning ${transformedProducts.length} transformed products`);

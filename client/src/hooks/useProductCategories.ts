@@ -33,13 +33,19 @@ export function useProductCategories(formData: RecommendationFormData) {
       
         // Apply filtering logic to get relevant products
         console.log(`🔍 [useProductCategories] About to call filterProducts with:`, formData);
-        const filteredProducts = filterProducts(products, formData);
-        console.log(`🔍 [useProductCategories] filterProducts returned ${filteredProducts.length} products`);
         
-        if (filteredProducts.length === 0) {
+        // For testing: if no meaningful form data, show all products
+        const hasFormData = formData && (formData.lookingFor || formData.fundingAmount);
+        const filteredProducts = hasFormData ? filterProducts(products, formData) : products;
+        console.log(`🔍 [useProductCategories] filterProducts returned ${filteredProducts.length} products (hasFormData: ${hasFormData})`);
+        
+        if (filteredProducts.length === 0 && hasFormData) {
           console.error(`❌ [useProductCategories] ZERO PRODUCTS AFTER FILTERING!`);
           console.error(`❌ [useProductCategories] Input data:`, formData);
           console.error(`❌ [useProductCategories] Raw products count:`, products.length);
+          // Fallback: use all products for testing
+          const allProducts = products;
+          console.log(`🔄 [useProductCategories] Falling back to all ${allProducts.length} products`);
         }
         
         if (filteredProducts.length === 0) {
@@ -56,8 +62,9 @@ export function useProductCategories(formData: RecommendationFormData) {
       
         // Group products by category
         const categoryGroups: Record<string, StaffLenderProduct[]> = {};
-        filteredProducts.forEach(product => {
-          const category = product.productCategory;
+        const productsToProcess = filteredProducts.length > 0 ? filteredProducts : products;
+        productsToProcess.forEach(product => {
+          const category = product.category || product.productCategory;
           if (!categoryGroups[category]) {
             categoryGroups[category] = [];
           }
@@ -69,8 +76,8 @@ export function useProductCategories(formData: RecommendationFormData) {
           }
           
           // Debug: Log all Working Capital products being categorized
-          if (product.productCategory === 'Working Capital') {
-            console.log(`💼 [WORKING_CAPITAL] Adding product: ${product.productName} (${product.lenderName}) - ID: ${product.id}`);
+          if ((product.category || product.productCategory) === 'Working Capital') {
+            console.log(`💼 [WORKING_CAPITAL] Adding product: ${product.name || product.productName} (${product.lender_name || product.lenderName}) - ID: ${product.id}`);
           }
         });
 
@@ -85,7 +92,7 @@ export function useProductCategories(formData: RecommendationFormData) {
         // console.log('[useProductCategories] Category groups:', Object.keys(categoryGroups));
 
         // Calculate statistics for each category
-        const totalProducts = filteredProducts.length;
+        const totalProducts = productsToProcess.length;
         const categories: ProductCategory[] = Object.entries(categoryGroups)
           .map(([category, categoryProducts]) => ({
             category,

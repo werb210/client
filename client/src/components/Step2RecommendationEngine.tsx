@@ -75,7 +75,7 @@ export function Step2RecommendationEngine({
     fundsPurpose: formData.fundsPurpose
   });
   
-  // Debug form data with safe defaults
+  // Debug form data with safe defaults for testing
   const debugFormData = {
     lookingFor: formData.lookingFor || 'capital',
     fundingAmount: formData.fundingAmount || 50000,
@@ -85,6 +85,12 @@ export function Step2RecommendationEngine({
   };
   
   console.log("🔍 [STEP2-DEBUG] Form data being used for filtering:", debugFormData);
+  
+  // When testing Step 2 directly without Step 1 data, show default categories
+  const hasFormData = formData && (formData.lookingFor || formData.fundingAmount);
+  if (!hasFormData) {
+    console.log("🔧 [STEP2-TESTING] No form data available, showing all products for testing");
+  }
   
   if (productCategories && productCategories.length > 0) {
     console.log("Available categories:", productCategories.map(c => c.category));
