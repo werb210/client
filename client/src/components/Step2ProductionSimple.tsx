@@ -36,36 +36,36 @@ export function Step2ProductionSimple({
         const sample = allProducts[0];
         // console.log('[STEP2] Sample product:', sample);
         
-        // Detailed field analysis
+        // Detailed field analysis - FIXED FIELD NAMES
         const fieldCheck = {
-          hasMinAmount: !!sample?.minAmount,
-          hasMaxAmount: !!sample?.maxAmount,
-          hasCountry: !!sample?.country,
-          minAmountType: typeof sample?.minAmount,
-          maxAmountType: typeof sample?.maxAmount,
-          minAmountValue: sample?.minAmount,
-          maxAmountValue: sample?.maxAmount,
-          isMinAmountNaN: isNaN(sample?.minAmount),
-          isMaxAmountNaN: isNaN(sample?.maxAmount),
+          hasMinAmount: !!sample?.minimumLendingAmount,
+          hasMaxAmount: !!sample?.maximumLendingAmount,
+          hasCountry: !!sample?.countryOffered,
+          minAmountType: typeof sample?.minimumLendingAmount,
+          maxAmountType: typeof sample?.maximumLendingAmount,
+          minAmountValue: sample?.minimumLendingAmount,
+          maxAmountValue: sample?.maximumLendingAmount,
+          isMinAmountNaN: isNaN(sample?.minimumLendingAmount),
+          isMaxAmountNaN: isNaN(sample?.maximumLendingAmount),
           allFields: Object.keys(sample || {})
         };
         // console.log('[STEP2] Field validation:', fieldCheck);
         
-        // Additional field mapping check
-        const hasAPIFields = !!(sample?.amountMin && sample?.amountMax);
-        const hasSchemaFields = !!(sample?.minAmount && sample?.maxAmount);
+        // Additional field mapping check - FIXED FIELD NAMES
+        const hasAPIFields = !!(sample?.minimumLendingAmount && sample?.maximumLendingAmount);
+        const hasSchemaFields = !!(sample?.minimumLendingAmount && sample?.maximumLendingAmount);
         // console.log('[STEP2] Field mapping check:', { hasAPIFields, hasSchemaFields });
         
-        // Check for field name variations and problematic products
+        // Check for field name variations and problematic products - FIXED FIELD NAMES
         const fieldAnalysis = allProducts.map(p => ({
-          hasMinAmount: !!p.minAmount,
-          hasMaxAmount: !!p.maxAmount,
-          hasAmountMin: !!p.amountMin,
-          hasAmountMax: !!p.amountMax,
-          minAmountType: typeof p.minAmount,
-          maxAmountType: typeof p.maxAmount,
-          amountMinType: typeof p.amountMin,
-          amountMaxType: typeof p.amountMax
+          hasMinAmount: !!p.minimumLendingAmount,
+          hasMaxAmount: !!p.maximumLendingAmount,
+          hasAmountMin: !!p.minimumLendingAmount,
+          hasAmountMax: !!p.maximumLendingAmount,
+          minAmountType: typeof p.minimumLendingAmount,
+          maxAmountType: typeof p.maximumLendingAmount,
+          amountMinType: typeof p.minimumLendingAmount,
+          amountMaxType: typeof p.maximumLendingAmount
         }));
         
         const withSchemaFields = fieldAnalysis.filter(p => p.hasMinAmount && p.hasMaxAmount).length;
@@ -166,9 +166,9 @@ export function Step2ProductionSimple({
                       const validProducts = allProducts.filter(p => {
                         if (!p) return false;
                         
-                        // Try many possible field name combinations
+                        // Try CORRECT field name combinations - FIXED
                         const amountFields = [
-                          [p.minAmount, p.maxAmount],
+                          [p.minimumLendingAmount, p.maximumLendingAmount],
                           [p.amountMin, p.amountMax],
                           [p.minAmountUsd, p.maxAmountUsd],
                           [p.amount_min, p.amount_max],
@@ -196,9 +196,9 @@ export function Step2ProductionSimple({
                       
                       // Extract min/max amounts from any valid field combination
                       const amounts = validProducts.map(p => {
-                        // Try all possible field combinations
+                        // Try CORRECT field combinations - FIXED
                         const fieldPairs = [
-                          [p.minAmount, p.maxAmount],
+                          [p.minimumLendingAmount, p.maximumLendingAmount],
                           [p.amountMin, p.amountMax],
                           [p.minAmountUsd, p.maxAmountUsd],
                           [p.amount_min, p.amount_max],
@@ -234,7 +234,7 @@ export function Step2ProductionSimple({
                 <div className="text-sm text-muted-foreground">
                   <strong>Available Markets:</strong> {
                     allProducts.length > 0 
-                      ? Array.from(new Set(allProducts.map(p => p.country).filter(Boolean))).join(', ') || 'Not specified'
+                      ? Array.from(new Set(allProducts.map(p => p.countryOffered).filter(Boolean))).join(', ') || 'Not specified'
                       : 'None'
                   }
                 </div>

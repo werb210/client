@@ -38,9 +38,9 @@ export function usePublicLenderStats() {
         
         const stats = {
           totalProducts: products.length,
-          maxFunding: Math.max(...products.map(p => p.maxAmount || 0)),
-          countries: Array.from(new Set(products.map(p => p.country).filter(Boolean))).length,
-          categories: Array.from(new Set(products.map(p => p.category))).length
+          maxFunding: Math.max(...products.map(p => p.maximumLendingAmount || 0)),
+          countries: Array.from(new Set(products.map(p => p.countryOffered).filter(Boolean))).length,
+          categories: Array.from(new Set(products.map(p => p.productCategory))).length
         };
         
         console.log(`[usePublicLenderStats] Generated stats:`, stats);
