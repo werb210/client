@@ -4,57 +4,45 @@ import rateLimit from "express-rate-limit";
 import type { Express } from "express";
 
 export function harden(app: Express) {
-  // Helmet security headers with frontend-compatible CSP
+  const isProd = process.env.NODE_ENV === 'production';
+  const isReplit = !!process.env.REPLIT_ENVIRONMENT || !!process.env.REPL_ID || !!process.env.REPL_SLUG;
+
+  // Allow Replit iframe only in dev; keep strict in prod
+  const frameAncestors = isProd
+    ? ["'self'"]
+    : ["'self'", "https://replit.com", "https://*.replit.dev"];
+
   app.use(helmet({
-    frameguard: { action: "deny" },
+    // X-Frame-Options blocks embedding; disable and rely on CSP below
+    frameguard: false,
+    crossOriginEmbedderPolicy: false, // needed for some dev toolchains
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
     contentSecurityPolicy: {
+      useDefaults: true,
       directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'", 
-          "'unsafe-inline'", 
-          "'unsafe-eval'",
-          "https://www.googletagmanager.com",
-          "https://www.google-analytics.com",
-          "https://replit.com",
-          "https://*.replit.com",
-          "https://*.replit.dev",
-          "https://app.signnow.com", 
-          "https://*.signnow.com"
-        ],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:", "blob:", "https:"],
-        connectSrc: [
-          "'self'", 
-          "wss:", 
-          "ws:", 
-          "https:", 
-          "http:",
-          "https://www.google-analytics.com",
-          "https://www.googletagmanager.com",
-          "https://replit.com",
-          "https://*.replit.com",
-          "https://*.replit.dev"
-        ],
-        frameSrc: [
-          "'self'", 
-          "https://app.signnow.com", 
-          "https://*.signnow.com",
-          "https://www.googletagmanager.com",
-          "https://replit.com",
-          "https://*.replit.com",
-          "https://*.replit.dev"
-        ],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'"],
-        workerSrc: ["'self'", "blob:"],
-        baseUri: ["'self'"],
-        formAction: ["'self'"],
-        reportUri: ["/csp-report"]
+        "default-src": ["'self'"],
+        "img-src": ["'self'", "data:", "https:"],
+        "style-src": ["'self'", "'unsafe-inline'", "https:"],
+        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:"],
+        "connect-src": ["'self'", "https:", "ws:", "wss:"],
+        "frame-ancestors": frameAncestors,
+        "frame-src": ["'self'", "https:"],
+        "object-src": ["'none'"],
+        "media-src": ["'self'"],
+        "worker-src": ["'self'", "blob:"],
+        "base-uri": ["'self'"],
+        "form-action": ["'self'"]
       }
     }
   }));
+
+  // Extra safety: if Helmet or a proxy still adds X-Frame-Options, strip it in dev
+  if (!isProd) {
+    app.use((_req, res, next) => {
+      res.removeHeader('X-Frame-Options');
+      next();
+    });
+  }
 
   // Rate limiting - more restrictive for security
   app.use(rateLimit({

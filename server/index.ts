@@ -67,6 +67,13 @@ initLenderProducts().catch(err => {
 // Apply security hardening (includes rate limiting and security headers)
 harden(app);
 
+// Optional workspace iframe route for better preview compatibility
+app.get('/workspace_iframe.html', (_req, res) => {
+  // Serve the real SPA; avoids extra sandbox/feature warnings
+  const distPath = path.join(__dirname, '..', 'dist', 'public');
+  res.sendFile(path.join(distPath, 'index.html'));
+});
+
 // CACHE FIX: Serve HTML as no-store to prevent stale cache issues
 app.use((req, res, next) => {
   if (req.accepts('html') && req.method === 'GET' && !req.path.startsWith('/api/')) {

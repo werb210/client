@@ -1,0 +1,110 @@
+You’re right—the client preview isn’t loading because your **CSP/X-Frame headers block Replit’s iframe**. The red error on the right literally says:
+
+> Refused to frame `…janeway.replit.dev` because an ancestor violates **frame-ancestors 'self'**.
+
+Everything else (banner script, “unrecognized feature”, CSP report 404) is noise. Fix is to **allow Replit as a frame ancestor in dev** and **disable X-Frame-Options** (helmet’s frameguard) in dev.
+
+Here’s a drop-in patch. Give this to the Staff app agent and restart.
+
+### 1) Update security/helmet config (dev-only relax)
+
+**server/security.ts** (or wherever you call `helmet()`):
+
+```ts
+// server/security.ts
+import type { Express } from 'express';
+import helmet from 'helmet';
+
+export function applySecurity(app: Express) {
+  const isProd = process.env.NODE_ENV === 'production';
+  const isReplit =
+    !!process.env.REPLIT_ENVIRONMENT || !!process.env.REPL_ID || !!process.env.REPL_SLUG;
+
+  // Allow Replit iframe only in dev; keep strict in prod
+  const frameAncestors = isProd
+    ? ["'self'"]
+    : ["'self'", "https://replit.com", "https://*.replit.dev"];
+
+  app.use(
+    helmet({
+      // X-Frame-Options blocks embedding; disable and rely on CSP below
+      frameguard: false,
+      crossOriginEmbedderPolicy: false, // needed for some dev toolchains
+      crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+          "default-src": ["'self'"],
+          "img-src": ["'self'", "data:", "https:"],
+          "style-src": ["'self'", "'unsafe-inline'", "https:"],
+          "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:"],
+          "connect-src": ["'self'", "https:", "ws:", "wss:"],
+          "frame-ancestors": frameAncestors,
+          // (optional) quiet the Replit dev banner script if you keep it:
+          // "report-to": [], "report-uri": [] // remove noisy /csp-report posts
+        },
+      },
+    })
+  );
+
+  // Extra safety: if Helmet or a proxy still adds X-Frame-Options, strip it in dev
+  if (!isProd) {
+    app.use((_req, res, next) => {
+      res.removeHeader('X-Frame-Options');
+      next();
+    });
+  }
+}
+```
+
+Then ensure it’s used in your main file:
+
+```ts
+// server/index.ts
+import express from 'express';
+import { applySecurity } from './security';
+// ...
+const app = express();
+applySecurity(app);
+// ... the rest of your routes & SPA serving
+```
+
+### 2) (Optional) Keep your special preview route simple
+
+If you created a `workspace_iframe.html`, you can point it to the real SPA to reduce warnings:
+
+```ts
+// server/index.ts
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DIST = path.join(__dirname, '..', 'dist', 'public');
+
+app.get('/workspace_iframe.html', (_req, res) => {
+  // Serve the real SPA; avoids extra sandbox/feature warnings
+  res.sendFile(path.join(DIST, 'index.html'));
+});
+```
+
+### 3) Restart & quick sanity checks
+
+* In Replit shell:
+
+  ```bash
+  echo "NODE_ENV=$NODE_ENV  REPLIT_ENVIRONMENT=$REPLIT_ENVIRONMENT"
+  ```
+
+  (We expect `NODE_ENV=development` in this preview.)
+* Restart the Staff server.
+* In the preview panel, hit the **hard refresh** icon (or open in a new tab).
+  The “refused to frame” error should be gone and the app should load.
+
+---
+
+#### Why this fixes it
+
+* **Your CSP had `frame-ancestors 'self'`**, which forbids embedding in Replit’s iframe. We now allow `https://*.replit.dev` and `https://replit.com` **only in dev**.
+* Helmet’s **frameguard (X-Frame-Options)** also blocks iframes; we turn it **off in dev** and let CSP handle things.
+* The remaining yellow “unrecognized feature” logs come from Replit’s sandbox and are harmless.
+
+If you prefer, I can also provide a minimal patch that toggles this behavior with a single env var (e.g., `ALLOW_IFRAME_PREVIEW=true`).
