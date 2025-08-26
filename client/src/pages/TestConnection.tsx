@@ -44,7 +44,7 @@ export default function TestConnection() {
 
       // Test 2: CORS preflight test
       try {
-        const corsResponse = await fetch(`${API_BASE_URL}/auth/user`, {
+        const corsResponse = await fetch(`${API_BASE_URL}/api/health`, {
           method: 'OPTIONS',
           mode: 'cors',
           headers: {
@@ -64,23 +64,22 @@ export default function TestConnection() {
         };
       }
 
-      // Test 3: Auth endpoint
+      // Test 3: API endpoint
       try {
-        const authResponse = await fetch(`${API_BASE_URL}/auth/user`, {
+        const apiResponse = await fetch(`${API_BASE_URL}/api/lender-products`, {
           method: 'GET',
           mode: 'cors',
           credentials: 'include',
         });
         tests.auth = {
-          success: authResponse.status !== 0,
-          status: authResponse.status,
-          message: authResponse.status === 401 ? 'Auth endpoint reachable (401 expected)' : 
-                   authResponse.ok ? 'Auth endpoint accessible' : `HTTP ${authResponse.status}`
+          success: apiResponse.status !== 0,
+          status: apiResponse.status,
+          message: apiResponse.ok ? 'API endpoint accessible' : `HTTP ${apiResponse.status}`
         };
       } catch (error) {
         tests.auth = {
           success: false,
-          message: error instanceof Error ? error.message : 'Auth test failed'
+          message: error instanceof Error ? error.message : 'API test failed'
         };
       }
 

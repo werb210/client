@@ -29,11 +29,11 @@ import { logUploadEvent, auditUploadAttempt, ZERO_DOCUMENTS_QUERY } from "./util
 import opsRouter from "./routes/ops";
 import clientMessagesRouter from "./routes/clientMessages";
 import supportRouter from "./routes/support";
-import authRouter from "./routes/auth";
+// Auth router removed - client app is public
 import leadsRouter from "./routes/leads";
 import { issueCsrf, requireCsrf } from "./security/csrf";
 import { securityHeaders } from "./security/headers";
-import { rlGeneral, rlAuth, rlUpload, rlChatbot } from "./security/rate";
+import { rlGeneral, rlUpload, rlChatbot } from "./security/rate";
 import healthRoutes from "./routes/health";
 
 // A+ Security: Fail-fast environment validation
@@ -1710,8 +1710,7 @@ app.use((req, res, next) => {
   
   // Mount lead capture routes with CSRF protection
   // Apply specific rate limits for chatbot endpoints
-  app.use("/api/login", rlAuth);
-  app.use("/api/session", rlAuth);
+  // Auth rate limiting removed - client app is public
   app.use("/api/upload", rlUpload);
   app.use("/api/chat", rlChatbot);
   app.use("/api/chatbot", rlChatbot);
@@ -1751,10 +1750,7 @@ app.use((req, res, next) => {
   app.use('/api/ops', opsRouter);
   app.use('/api/client', clientMessagesRouter);
   app.use('/api/support', supportRouter);
-  // Apply stricter rate limiting to auth endpoints
-  app.use('/api/auth/login', rlAuth);
-  app.use('/api/auth/verify-2fa', rlAuth);
-  app.use('/api/auth', authRouter);
+  // Auth routes removed - client app doesn't require authentication
   
   // Chat escalation endpoints
   app.post('/api/public/chat/escalate', handleChatEscalation);

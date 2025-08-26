@@ -28,10 +28,8 @@ export const getQueryFn: (options: {
     
     try {
       // Route different endpoints to appropriate API functions
-      if (endpoint === '/api/auth/user') {
-        return await api.getUserProfile();
-      } else if (endpoint === '/api/2fa/status') {
-        return await api.get2FAStatus();
+      if (endpoint === '/api/health') {
+        return await api.getHealthStatus();
       } else if (endpoint === '/api/applications') {
         return await api.getUserApplications();
       } else if (endpoint.startsWith('/api/applications/')) {

@@ -53,9 +53,8 @@ function createRateLimit(windowMs: number, max: number, message: any = { ok: fal
   };
 }
 
-// A+ Security: Stricter rate limits for production hardening
+// A+ Security: Rate limits for public client application
 export const rlGeneral = createRateLimit(15 * 60 * 1000, 100); // 15 min, 100 requests (A+ compliance)
-export const rlAuth = createRateLimit(15 * 60 * 1000, 30, { ok: false, error: "Too many auth requests" }); // Stricter auth limiting
 export const rlUpload = createRateLimit(10 * 60 * 1000, 20); // 10 min, 20 uploads (A+ compliance)
 export const rlChatbot = createRateLimit(15 * 60 * 1000, 150, { ok: false, error: "Too many chatbot requests" }); // ~10 req/min
 export const rlBot = createRateLimit(15 * 60 * 1000, 180, { ok: false, error: "Too many bot requests" });
