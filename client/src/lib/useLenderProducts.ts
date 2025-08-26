@@ -1,0 +1,60 @@
+import { useQuery } from '@tanstack/react-query';
+import { LenderProduct } from '@/db/lenderProducts';
+
+export interface UseLenderProductsResult {
+  products: LenderProduct[];
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+export function useLenderProducts(): UseLenderProductsResult {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['/api/lender-products'],
+    queryFn: async () => {
+      const response = await fetch('/api/lender-products');
+      if (!response.ok) {
+        throw new Error('Failed to fetch lender products');
+      }
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch lender products');
+      }
+      return result.products || [];
+    },
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  return {
+    products: data || [],
+    isLoading,
+    error: error as Error | null,
+    refetch,
+  };
+}
+
+// Additional hook for filtered products
+export function useFilteredLenderProducts(
+  category?: string,
+  amount?: number,
+  country?: string
+): UseLenderProductsResult {
+  const { products, isLoading, error, refetch } = useLenderProducts();
+
+  const filteredProducts = products.filter(product => {
+    const matchesCategory = !category || product.productCategory === category;
+    const matchesAmount = !amount || (amount >= product.minimumLendingAmount && amount <= product.maximumLendingAmount);
+    const matchesCountry = !country || product.countryOffered === country || product.countryOffered === 'United States';
+    const isActive = product.isActive !== false;
+    
+    return matchesCategory && matchesAmount && matchesCountry && isActive;
+  });
+
+  return {
+    products: filteredProducts,
+    isLoading,
+    error,
+    refetch,
+  };
+}

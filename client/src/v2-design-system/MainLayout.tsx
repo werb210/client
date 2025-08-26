@@ -1,7 +1,7 @@
 import { Switch, Route } from "wouter";
 import { lazy, Suspense } from "react";
-import { ChatBotTest } from "@/components/ChatBotTest";
-import { ChatBotDashboard } from "@/components/ChatBotDashboard";
+// import { ChatBotTest } from "@/components/ChatBotTest";
+// import { ChatBotDashboard } from "@/components/ChatBotDashboard";
 
 import { useChatBot } from "@/hooks/useChatBot";
 import { PwaPrompt } from "@/components/PwaPrompt";
@@ -311,9 +311,9 @@ export function MainLayout() {
       <Route path="/lender/access" component={LenderPortal} />
       <Route path="/lender-demo" component={LenderDemo} />
       <Route path="/lender-product-sync-demo" component={LenderProductSyncDemo} />
-      <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} />
-      <Route path="/advanced-chatbot-test" component={() => <ChatBotTest />} />
-      <Route path="/chatbot-dashboard" component={() => <ChatBotDashboard />} />
+      {/* <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} /> */}
+      {/* <Route path="/advanced-chatbot-test" component={() => <ChatBotTest />} /> */}
+      {/* <Route path="/chatbot-dashboard" component={() => <ChatBotDashboard />} /> */}
       <Route path="/train-chatbot" component={lazy(() => import('@/routes/TrainChatbot'))} />
       <Route path="/debug/train" component={lazy(() => import('@/routes/TrainChatbot'))} />
       
