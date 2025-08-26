@@ -1,0 +1,121 @@
+Nice work getting the client SPA to serve correctly. From here, let’s lock the fix in and verify the *whole* flow is healthy with quick, copy-paste checks.
+
+# 1) Server config: the safe, final shape
+
+Make sure your Express setup looks like this (prevents the “JSON request got HTML” problem and always serves the SPA from the right place):
+
+```ts
+// server/index.ts
+import path from "node:path";
+import express from "express";
+
+const app = express();
+
+// 1) APIs first
+app.use("/api", apiRouter);
+
+// 2) Static assets from the client build
+const STATIC_DIR = path.resolve("dist/public");
+app.use(express.static(STATIC_DIR, { index: false, maxAge: "1h" }));
+
+// 3) Catch-all to SPA (but never for /api)
+app.get("*", (req, res) => {
+  if (req.path.startsWith("/api")) return res.status(404).json({ error: "not_found" });
+  res.sendFile(path.join(STATIC_DIR, "index.html"));
+});
+
+app.listen(5000, () => console.log("web on :5000"));
+```
+
+And in your Vite config (client), pin the outDir so builds always land where the server expects:
+
+```ts
+// client/vite.config.ts
+export default defineConfig({
+  build: { outDir: "../dist/public", emptyOutDir: true },
+  // …
+});
+```
+
+# 2) SPA & API smoke tests (run these now)
+
+```bash
+BASE="http://localhost:5000"
+
+echo "== SPA root should be HTML 200"
+curl -sI "$BASE/" | sed -n '1p;/content-type/p'
+
+echo "== One CSS asset should be 200"
+CSS=$(curl -s "$BASE/" | sed -n 's/.*href="\(\/assets\/index-[^"]*\.css\)".*/\1/p' | head -1)
+curl -sI "$BASE$CSS" | sed -n '1p;/content-type/p'
+
+echo "== Products API structure"
+curl -s "$BASE/api/lender-products" | jq -c '{success, count:(.products|length), sample:(.products[0]|{lenderName,productName,productCategory,minimumLendingAmount,maximumLendingAmount})}'
+
+echo "== Step 2 filter (US + Working Capital + $25k)"
+curl -s "$BASE/api/lender-products" \
+| jq '[.products[] | select(.isActive==true
+    and (.countryOffered=="US" or .countryOffered=="United States")
+    and .productCategory=="Working Capital"
+    and .minimumLendingAmount<=25000
+    and .maximumLendingAmount>=25000)] | {matches:length, sample:[.[0:3][]|{lenderName,productName}]}'
+
+echo "== Step 5 documents endpoint (should exist or 501 while wiring)"
+curl -sI "$BASE/api/documents" | sed -n '1p'
+```
+
+**Expected:**
+
+* `/` → `200 OK`, `content-type: text/html`
+* `/assets/...css` → `200 OK`, `content-type: text/css`
+* `/api/lender-products` → `success:true` and \~32 products
+* Step 2 filter → `matches > 0`
+* `/api/documents` → either `200` (if wired) or `501` (intentional placeholder)
+
+# 3) Guard against regressions (tiny wrapper)
+
+Ensure the client never tries to parse HTML as JSON again:
+
+```ts
+// client/src/lib/http.ts
+export async function api(path: string, init: RequestInit = {}) {
+  const url = path.startsWith("/api") ? path : `/api${path}`;
+  const res = await fetch(url, { ...init, headers: { Accept: "application/json", ...(init.headers||{}) } });
+  const ct = res.headers.get("content-type") || "";
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  if (!ct.includes("application/json")) throw new Error("Non-JSON response");
+  return res.json();
+}
+```
+
+Use `api('/lender-products')`, `api('/documents')`, etc.
+
+# 4) Quick duplicate & collision scan (copy/paste)
+
+```bash
+echo "=== Duplicate basenames (case-insensitive) ==="
+find client/src -type f \( -iname "*.ts" -o -iname "*.tsx" -o -iname "*.js" -o -iname "*.jsx" \) \
+  -printf "%f\n" | tr '[:upper:]' '[:lower:]' | sort | uniq -d \
+| while read n; do echo "--- $n"; find client/src -type f -iname "$n"; echo; done
+
+echo "=== Hot-spot duplicates (actions.ts, api.ts, lenderproducts.ts, use*.ts) ==="
+for n in actions.ts api.ts lenderproducts.ts usechatbot.ts uselenderproducts.ts; do
+  echo "--- $n"; find client/src -type f -iname "$n"; echo; done
+
+echo "=== Default-exported component name collisions ==="
+grep -RInE "export default function ([A-Z][A-Za-z0-9_]*)" client/src \
+  | sed -E 's/.*export default function ([A-Za-z0-9_]+).*/\1/' \
+  | sort | uniq -d \
+| while read c; do echo "--- $c"; grep -RIn "export default function $c" client/src | cut -d: -f1 | uniq; echo; done
+```
+
+**If you see hits:** pick a canonical file, update imports to that one, and delete/rename the rest. Rebuild.
+
+# 5) Known console red herrings you can ignore
+
+* `chrome-extension://… ERR_FILE_NOT_FOUND` — browser extensions in the Replit preview sandbox.
+* `workspace_iframe.html 404` — fixed by serving a simple placeholder; harmless for production.
+
+---
+
+If any of the smoke tests above don’t match the expected output, paste the output and I’ll pinpoint the exact file/line to change.

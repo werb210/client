@@ -2937,18 +2937,11 @@ app.use((req, res, next) => {
       res.type('html').send('<!doctype html><meta charset="utf-8">');
     });
     
-    // SPA fallback for everything that isn't /api/*
-    app.get(/^\/(?!api\/).*/, (req, res) => {
-      const dist = path.join(__dirname, '../dist/public');
-      const indexPath = path.join(dist, 'index.html');
-      console.log(`[SPA] Serving index.html for route: ${req.path} from ${indexPath}`);
-      
-      try {
-        res.sendFile(indexPath);
-      } catch (error) {
-        console.error('Error serving SPA route:', error);
-        res.status(500).json({ error: 'server_error' });
-      }
+    // Catch-all to SPA (but never for /api)
+    app.get("*", (req, res) => {
+      if (req.path.startsWith("/api")) return res.status(404).json({ error: "not_found" });
+      const STATIC_DIR = path.join(__dirname, '../dist/public');
+      res.sendFile(path.join(STATIC_DIR, "index.html"));
     });
 
     // Error handler so routes don't throw 500
