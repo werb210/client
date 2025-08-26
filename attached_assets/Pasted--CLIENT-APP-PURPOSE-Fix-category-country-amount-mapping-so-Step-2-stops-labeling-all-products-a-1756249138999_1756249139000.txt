@@ -1,3 +1,11 @@
+[CLIENT APP]
+
+# PURPOSE: Fix category/country/amount mapping so Step 2 stops labeling all products as "Working Capital".
+# ACTION: Replace the normalization + fetch logic and use the public Staff catalog endpoints first,
+#         falling back to the legacy endpoint only if needed. Never default category to "Working Capital".
+
+# 1) Create/replace: client/src/lib/products.ts
+cat > client/src/lib/products.ts <<'TS'
 /* Normalized catalog types */
 export type RawProduct = any;
 
@@ -109,3 +117,34 @@ export async function getProductsForStep2(params: {
     return amount >= min && amount <= max;
   });
 }
+TS
+
+# 2) Ensure Step 2 uses the normalized helpers
+#    Replace any ad-hoc category logic that defaulted to "Working Capital".
+#    Example wiring (adjust import path if your project alias differs):
+
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: client/src/pages/step2-recommendations.tsx
+@@
+-import { fetchAllLenderProducts } from "@/lib/api"; // or any old helper
++import { getProductsForStep2, getMatchingCategories } from "@/lib/products";
+@@
+-  // OLD (caused all "Working Capital" due to default)
+-  // const products = await fetchAllLenderProducts();
+-  // const categories = deriveCategories(products) ?? ["Working Capital"];
++  // NEW: derive strictly from normalized catalog (no category defaulting)
++  const products = await getProductsForStep2({ amount, country });
++  const categories = await getMatchingCategories({ amount, country });
+*** End Patch
+PATCH
+
+# 3) Optional: where you group by category, show "Unknown" group last instead of coalescing to Working Capital.
+applypatch <<'PATCH'
+*** Begin Patch
+*** Update File: client/src/components/Recommendations/List.tsx
+@@
+-const groupKey = (p: any) => p.category || "Working Capital";
++const groupKey = (p: any) => p.category || "Unknown";
+*** End Patch
+PATCH

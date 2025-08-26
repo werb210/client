@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProductCategories } from '@/hooks/useProductCategories';
-import { fetchCatalogProducts, fetchMatchingCategories } from '@/lib/api';
+import { getProductsForStep2, getMatchingCategories } from '@/lib/products';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, CheckCircle, ArrowRight, AlertTriangle, Bug } from 'lucide-react';
@@ -46,29 +46,6 @@ export function Step2RecommendationEngine({
   
   const headquarters = normalizeLocation(formData.headquarters || formData.businessLocation || 'CA');
   
-  // ✅ NEW PUBLIC CATALOG - Replace legacy US-only feed
-  const [allLenderProducts, setAllLenderProducts] = useState<any[]>([]);
-  const [rawLoading, setRawLoading] = useState(true);
-  const [rawError, setRawError] = useState<Error | null>(null);
-  
-  useEffect(() => {
-    const loadCatalogData = async () => {
-      try {
-        setRawLoading(true);
-        // new public catalog
-        const { products } = await fetchCatalogProducts({ cacheBust: true });
-        setAllLenderProducts(products);
-        // optional: derive categories for prefilter by amount/country
-        // const cats = await fetchMatchingCategories(filteringData.fundingAmount, filteringData.headquarters as "US"|"CA");
-      } catch (err) {
-        setRawError(err as Error);
-      } finally {
-        setRawLoading(false);
-      }
-    };
-    loadCatalogData();
-  }, []);
-  
   // Ensure all required fields have proper defaults for filtering
   const filteringData = {
     headquarters: headquarters || 'CA',
@@ -77,6 +54,37 @@ export function Step2RecommendationEngine({
     accountsReceivableBalance: Number(formData.accountsReceivableBalance) || 0,
     fundsPurpose: formData.fundsPurpose || 'working_capital'
   };
+  
+  // ✅ NEW NORMALIZED CATALOG - No more "Working Capital" defaults
+  const [allLenderProducts, setAllLenderProducts] = useState<any[]>([]);
+  const [productCategories, setProductCategories] = useState<any[]>([]);
+  const [rawLoading, setRawLoading] = useState(true);
+  const [rawError, setRawError] = useState<Error | null>(null);
+  
+  useEffect(() => {
+    const loadCatalogData = async () => {
+      try {
+        setRawLoading(true);
+        // NEW: derive strictly from normalized catalog (no category defaulting)
+        const products = await getProductsForStep2({ 
+          amount: filteringData.fundingAmount, 
+          country: filteringData.headquarters as "US"|"CA" 
+        });
+        const categories = await getMatchingCategories({ 
+          amount: filteringData.fundingAmount, 
+          country: filteringData.headquarters as "US"|"CA" 
+        });
+        
+        setAllLenderProducts(products);
+        setProductCategories(categories.map(cat => ({ category: cat, count: products.filter(p => p.category === cat).length })));
+      } catch (err) {
+        setRawError(err as Error);
+      } finally {
+        setRawLoading(false);
+      }
+    };
+    loadCatalogData();
+  }, [filteringData.fundingAmount, filteringData.headquarters]);
   
   console.log("🔧 [STEP2-FIX] Using filtering data:", filteringData);
   
@@ -157,7 +165,7 @@ export function Step2RecommendationEngine({
   // Format looking for display
   const formatLookingFor = (looking: string) => {
     const map: Record<string, string> = {
-      'capital': 'Working Capital',
+      'capital': 'Business Finance',
       'equipment': 'Equipment Financing',
       'both': 'Both Capital & Equipment'
     };

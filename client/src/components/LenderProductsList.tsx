@@ -40,7 +40,7 @@ function ProductCard({ product }: { product: LenderProduct }) {
       'equipment_financing': 'Equipment Financing',
       'invoice_factoring': 'Invoice Factoring', 
       'line_of_credit': 'Line of Credit',
-      'working_capital': 'Working Capital',
+      'working_capital': 'Unknown',
       'term_loan': 'Term Loan',
       'purchase_order_financing': 'Purchase Order Financing'
     };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchCatalogProducts } from '@/lib/api';
+import { fetchCatalogNormalized } from '@/lib/products';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
@@ -34,8 +34,8 @@ export function Step2ProductionSimple({
     const loadProducts = async () => {
       try {
         setIsLoading(true);
-        // new public catalog
-        const { products } = await fetchCatalogProducts({ cacheBust: true });
+        // NEW NORMALIZED CATALOG - No more "Working Capital" defaults
+        const products = await fetchCatalogNormalized();
         setAllProducts(products);
       } catch (err) {
         setError(err as Error);
