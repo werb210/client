@@ -1,0 +1,195 @@
+Totally fair—since the client app had major issues, let’s **prove** Step 2 and Step 5 (and the rest) work with a few tight, copy-pasteable tests. No guessing.
+
+---
+
+# Do-this-now smoke tests (copy/paste)
+
+## 1) Verify auth + routes + DB in one minute
+
+```bash
+# Get JWT (adjust creds if needed)
+TOKEN=$(curl -s -X POST http://localhost:5000/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"todd.w@boreal.financial","password":"1Sucker1!"}' | jq -r .token)
+
+# Who am I? (tenant, role, etc.)
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/_diag/whoami | jq
+
+# What API paths actually exist? (we’ll compare against what the UI calls)
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/_diag/routes | jq
+
+# DB quick health + sample rows from key tables
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/_diag/db | jq
+```
+
+* If `/_diag/db` shows **sampleCount > 0** for applications/contacts/lenders, DB is fine.
+* If routes list doesn’t include what the UI calls (e.g. `/api/v1/lenders`, `/api/lender-products`), that’s why the UI is empty—add those routes or change the client.
+
+---
+
+## 2) Step 2 (products) — end-to-end without the UI
+
+**Goal:** Confirm the API returns products and your Step 2 filter (US + Working Capital + \$25k) produces matches.
+
+```bash
+curl -s http://localhost:5000/api/lender-products \
+| node -e "
+const d=JSON.parse(require('fs').readFileSync(0,'utf8'));
+const products=d.products||d; // tolerate {success,products} or raw []
+console.log('Total products:', products.length);
+const matches=products.filter(p=>{
+  const active = p.isActive===true;
+  const country = (p.countryOffered||'').toUpperCase()==='US';
+  const amt=25000;
+  const amtOk = amt >= (p.minimumLendingAmount||0) && amt <= (p.maximumLendingAmount||1e12);
+  const cat=(p.productCategory||'').toLowerCase();
+  const catOk = cat.includes('working capital');
+  return active && country && amtOk && catOk;
+});
+console.log('Step 2 matches (US + Working Capital + $25k):', matches.length);
+console.log('Sample:', matches.slice(0,3).map(x=>({
+  lender: x.lenderName, name: x.productName,
+  min:x.minimumLendingAmount, max:x.maximumLendingAmount
+})));
+"
+```
+
+* If `matches.length > 0`, **Step 2 has data**; remaining issues are purely client mapping/rendering.
+* If `0`, dump what the API actually returns so we can fix field names:
+
+```bash
+curl -s http://localhost:5000/api/lender-products | jq '.[0] // .products[0]'
+```
+
+---
+
+## 3) Step 5 (documents) — does product data reach docs logic?
+
+**Goal:** Prove we can compute a required doc list when **amount, country, category** are known.
+
+If you have a server helper like `documentAggregation.ts`, add a **dev-only** probe route (paste once, restart):
+
+```ts
+// server: dev probe for Step 5
+app.get('/api/_diag/step5-docs', async (req, res) => {
+  const amount = Number(req.query.amount ?? 25000);
+  const country = String(req.query.country ?? 'US');
+  const category = String(req.query.category ?? 'Working Capital');
+
+  // fetch same products Step 2 uses
+  const resp = await fetch('http://localhost:5000/api/lender-products');
+  const json = await resp.json();
+  const products = json.products ?? json;
+
+  // same eligibility logic Step 2 uses
+  const eligible = products.filter(p=>{
+    const active=p.isActive===true;
+    const countryMatch=(p.countryOffered||'').toUpperCase()===country.toUpperCase();
+    const cat=(p.productCategory||'').toLowerCase();
+    const catMatch=cat.includes(category.toLowerCase());
+    const min=p.minimumLendingAmount||0, max=p.maximumLendingAmount||Number.MAX_SAFE_INTEGER;
+    const amtOk = amount>=min && amount<=max;
+    return active && countryMatch && catMatch && amtOk;
+  });
+
+  // very simple doc policy example; replace with your real rules
+  const base = ['Application Form','Government ID','Voided Cheque'];
+  const wc   = ['Last 3 Months Bank Statements'];
+  const high = ['Last 12 Months Bank Statements','Business Financials'];
+  const docs = new Set(base);
+  if (category.toLowerCase().includes('working')) wc.forEach(d=>docs.add(d));
+  if (amount>=100000) high.forEach(d=>docs.add(d));
+
+  res.json({ ok:true, input:{amount,country,category}, eligible: eligible.length, sample: eligible.slice(0,3), requiredDocuments: [...docs] });
+});
+```
+
+Now test it:
+
+```bash
+curl -s "http://localhost:5000/api/_diag/step5-docs?amount=25000&country=US&category=Working%20Capital" | jq
+```
+
+* Expect `eligible > 0` and a `requiredDocuments` array. If `eligible == 0`, Step 5 will never show docs—fix the **same** product field names used in Step 2.
+
+---
+
+## 4) UI sanity: is the client even asking for the right things?
+
+Open DevTools → **Network** tab while reproducing:
+
+* Click to Step 2 and Step 5.
+* Check each failing request:
+
+  * **Request URL** (does it match: `/api/lender-products` or `/api/v1/lenders/products` or your expected path?)
+  * **Status** (200 vs 401/404/500)
+  * **Request Headers**: must include `Authorization: Bearer <token>` and `Accept: application/json`
+  * **Response**: is it **JSON** or an **HTML** SPA page (DOCTYPE…)? If HTML, a catch-all route is hijacking assets.
+
+> If the path differs, either add a thin server alias for the client’s path **or** change the client to call the working path. Don’t leave them mismatched.
+
+---
+
+## 5) “Red bar” prevention (fast): add a self-check page
+
+Create `/debug/self-check` in the UI that runs, in order:
+
+* Auth check (`/api/_diag/whoami`)
+* Products check (counts + 3 sample titles)
+* Step 2 filter check (US + Working Capital + \$25k)
+* Step 5 doc probe check (`/_diag/step5-docs`)
+* Contacts/applications quick counts
+
+Render ✅/❌ so you can screenshot health in one place.
+
+---
+
+## 6) One E2E test you can run today (Cypress snippet)
+
+Create `cypress/e2e/client-flow.cy.ts`:
+
+```ts
+describe('Client flow: Step 1 → Step 2 → Step 5', () => {
+  it('shows products in Step 2 and docs in Step 5', () => {
+    cy.visit('/client'); // adjust
+    // Step 1
+    cy.get('[name="country"]').select('United States');
+    cy.get('[name="need"]').select('Business Capital');
+    cy.get('[name="amount"]').clear().type('25000');
+    cy.contains('Continue').click();
+
+    // Step 2
+    cy.intercept('GET', '/api/lender-products').as('products');
+    cy.wait('@products').its('response.statusCode').should('eq', 200);
+    cy.contains(/Working Capital/i); // a category/logo/card shows
+    cy.get('[data-testid="product-card"]').should('have.length.greaterThan', 0);
+
+    // Continue to Step 5
+    cy.contains('Continue').click();
+    cy.contains(/Required Documents/i);
+    cy.get('[data-testid="doc-item"]').should('have.length.greaterThan', 0);
+  });
+});
+```
+
+Run: `npx cypress open` (or `run`) and watch it assert the real flow.
+
+---
+
+## 7) Common “it’s blank” gotchas (quick checklist)
+
+* **Path mismatch:** UI calls `/api/v1/lenders` but server only has `/api/lenders/list`. Add a **route alias** or change the client.
+* **Token mismatch:** Axios/fetch interceptor reads a **different key** than login writes. Centralize on one `getToken()/setToken()` helper.
+* **Catch-all route order:** `app.get('*')` must come **after** `app.use('/assets', express.static(...))` and all `/api/*` routes.
+* **Iframe prefix:** Normalize `/.replit.dev/...` → `/` before sending requests.
+* **Field names drift:** Client must use `productName`, `productCategory`, `countryOffered`, `minimumLendingAmount`, `maximumLendingAmount`, `lenderName`.
+
+---
+
+## 8) If the DB is fine but UI still empty
+
+* Paste the **probe routes** above and send me the three outputs (whoami, routes, db).
+* From DevTools, send 1 failing request’s **Headers + Response**.
+  With those, I can pinpoint whether it’s **path, auth, shape, or schema**—and the snippets above already include fixes for each.
+
+If you want, I can also give you a **single-page /debug/self-check** component that runs all of this and prints ✅/❌ so you never ship blind again.
