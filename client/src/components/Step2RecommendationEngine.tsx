@@ -48,13 +48,19 @@ export function Step2RecommendationEngine({
   
   // ✅ STEP 3: FIX MAPPING TO PRODUCT CATEGORIES (ChatGPT Instructions)
   const { data: allLenderProducts, isLoading: rawLoading, error: rawError } = usePublicLenders();
-  const { data: productCategories, isLoading, error } = useProductCategories({
-    headquarters: headquarters,
+  
+  // Ensure all required fields have proper defaults for filtering
+  const filteringData = {
+    headquarters: headquarters || 'CA',
     lookingFor: (formData.lookingFor || 'capital') as 'capital' | 'equipment' | 'both',
     fundingAmount: Number(formData.fundingAmount) || 50000,
     accountsReceivableBalance: Number(formData.accountsReceivableBalance) || 0,
     fundsPurpose: formData.fundsPurpose || 'working_capital'
-  });
+  };
+  
+  console.log("🔧 [STEP2-FIX] Using filtering data:", filteringData);
+  
+  const { data: productCategories, isLoading, error } = useProductCategories(filteringData);
   
   // ✅ DEBUG: Log fetched lender products and categories
   console.log("🔍 [STEP2-DEBUG] Fetched lender products count:", allLenderProducts?.length || 0);

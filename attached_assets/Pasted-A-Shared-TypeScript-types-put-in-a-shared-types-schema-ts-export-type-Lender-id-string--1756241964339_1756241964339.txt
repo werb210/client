@@ -1,0 +1,91 @@
+A) Shared TypeScript types (put in a shared types/schema.ts)
+export type Lender = {
+  id: string;
+  name: string;
+  tenant_id: string;
+  active: boolean;
+};
+
+export type LenderProduct = {
+  id: string;
+  name: string;
+  lender_id: string;
+  lender_name?: string;
+  tenant_id: string;
+  country: 'US' | 'CA';
+  category:
+    | 'Business Line of Credit'
+    | 'Term Loan'
+    | 'Equipment Financing'
+    | 'Invoice Factoring'
+    | 'Purchase Order Financing'
+    | 'Working Capital'
+    | 'Asset-Based Lending'
+    | 'SBA Loan';
+  min_amount: number | null;
+  max_amount: number | null;
+  active: boolean;
+};
+
+B) Client fetch (expects Staff API to use the view/join above)
+export async function fetchLenderProducts(tenantId?: string): Promise<LenderProduct[]> {
+  const qs = tenantId ? `?tenantId=${tenantId}` : '';
+  const res = await fetch(`/api/crm/lender-products${qs}`, { credentials: 'include' });
+  if (!res.ok) throw new Error(`Failed to load lender products: ${res.status}`);
+  const items = await res.json();
+  // Guard: normalize null/0 amounts for display
+  return items.map((p: any) => ({
+    ...p,
+    min_amount: p.min_amount ?? null,
+    max_amount: p.max_amount ?? null,
+  }));
+}
+
+C) Client display helpers
+export const fmtRange = (min: number | null, max: number | null) => {
+  if (min == null && max == null) return 'Not provided';
+  const fmt = (n: number | null) => n == null ? '—' : `$${n.toLocaleString()}`;
+  return `${fmt(min)} – ${fmt(max)}`;
+};
+
+
+Use fmtRange(p.min_amount, p.max_amount) so $0–$0 doesn’t mislead (prefer NULL over zeros).
+
+🔎 Quick validation (no file writes)
+
+Run these to confirm everything lines up:
+
+-- 1) Totals
+SELECT (SELECT COUNT(*) FROM lenders) AS lenders,
+       (SELECT COUNT(*) FROM crm_lender_products_canon) AS products;
+
+-- 2) Per-lender counts seen by UI
+SELECT * FROM crm_lender_counts ORDER BY lender_name;
+
+-- 3) Sample rows for the list
+SELECT c.*, l.name AS lender_name
+FROM crm_lender_products_canon c
+LEFT JOIN lenders l ON l.id = c.lender_id
+ORDER BY lender_name NULLS FIRST, c.name
+LIMIT 20;
+
+
+Expected now:
+
+22 products in the canonical view
+
+Per-lender ui_filtered not zero (unless you deliberately keep products inactive or missing category)
+
+List shows lender names and real ranges
+
+TL;DR
+
+Your DB constraints were right; the wiring (columns, joins, filters) was inconsistent.
+
+We normalized reads via a canonical VIEW + fixed queries.
+
+The importer now reports truth and writes to both legacy and canonical columns (no breaking changes).
+
+Client & Staff both use the same field contract, so they stay in sync.
+
+If you paste the console output from the validation queries, I’ll confirm the counts and spot any last stragglers (tenant/category/active) immediately.
