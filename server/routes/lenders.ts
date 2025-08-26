@@ -284,52 +284,45 @@ router.get('/required-documents/:category', async (req, res) => {
   }
 });
 
-// Debug route for product categories - development only
-router.get('/debug/lenders', (req, res, next) => {
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(404).json({ error: 'Not found' });
-  }
-  next();
-}, async (req, res) => {
-  try {
-    const products = await db.select().from(lenderProducts);
-    const productCategories = products.map(p => p.type).filter(Boolean);
-    console.log('[DEBUG] Staff API - Product categories:', productCategories);
-    res.json(productCategories);
-  } catch (error) {
-    console.error('Error in debug/lenders route:', error);
-    res.status(500).json({ error: 'Failed to fetch lender categories' });
-  }
-});
+// Debug routes completely removed in production builds
+if (process.env.NODE_ENV !== 'production' && process.env.REPLIT_ENVIRONMENT !== 'production') {
+  // Debug route for product categories - development only
+  router.get('/debug/lenders', async (req, res) => {
+    try {
+      const products = await db.select().from(lenderProducts);
+      const productCategories = products.map(p => p.type).filter(Boolean);
+      console.log('[DEBUG] Staff API - Product categories:', productCategories);
+      res.json(productCategories);
+    } catch (error) {
+      console.error('Error in debug/lenders route:', error);
+      res.status(500).json({ error: 'Failed to fetch lender categories' });
+    }
+  });
 
-// Debug route for full product info - development only  
-router.get('/debug/products', (req, res, next) => {
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(404).json({ error: 'Not found' });
-  }
-  next();
-}, async (req, res) => {
-  try {
-    const products = await db.select().from(lenderProducts);
-    console.log('[DEBUG] Staff API - Total products:', products.length);
-    
-    const categories = [...new Set(products.map(p => p.type))].filter(Boolean);
-    console.log('[DEBUG] Staff API - Unique categories:', categories);
-    
-    res.json({
-      totalProducts: products.length,
-      categories: categories,
-      sampleProducts: products.slice(0, 3).map(p => ({
-        product_name: p.name,
-        product_type: p.type,
-        min_amount: p.min_amount,
-        max_amount: p.max_amount
-      }))
-    });
-  } catch (error) {
-    console.error('Error in debug/products route:', error);
-    res.status(500).json({ error: 'Failed to fetch debug products' });
-  }
-});
+  // Debug route for full product info - development only  
+  router.get('/debug/products', async (req, res) => {
+    try {
+      const products = await db.select().from(lenderProducts);
+      console.log('[DEBUG] Staff API - Total products:', products.length);
+      
+      const categories = [...new Set(products.map(p => p.type))].filter(Boolean);
+      console.log('[DEBUG] Staff API - Unique categories:', categories);
+      
+      res.json({
+        totalProducts: products.length,
+        categories: categories,
+        sampleProducts: products.slice(0, 3).map(p => ({
+          product_name: p.name,
+          product_type: p.type,
+          min_amount: p.min_amount,
+          max_amount: p.max_amount
+        }))
+      });
+    } catch (error) {
+      console.error('Error in debug/products route:', error);
+      res.status(500).json({ error: 'Failed to fetch debug products' });
+    }
+  });
+}
 
 export default router;

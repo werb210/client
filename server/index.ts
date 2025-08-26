@@ -1757,8 +1757,8 @@ app.use((req, res, next) => {
   app.get('/api/public/chat/escalate/status/:escalationId', getEscalationStatus);
   
   app.use('/api/chat', chatRouter);
-  // Debug endpoints only in development
-  if (process.env.NODE_ENV !== 'production' && process.env.DISABLE_DEBUG !== 'true') {
+  // Debug endpoints only in pure development mode (not Replit production)
+  if (!isProduction && process.env.DISABLE_DEBUG !== 'true') {
     app.use('/debug', chatbotTrainingRouter);
   }
 
@@ -2581,7 +2581,10 @@ app.use((req, res, next) => {
       const mimeType = req.file.originalname.toLowerCase().endsWith('.pdf') ? 'application/pdf' : req.file.mimetype || 'application/pdf';
       console.log(`📋 [SERVER] Using MIME type: ${mimeType} for file ${req.file.originalname}`);
       
-      formData.append('document', new Blob([req.file.buffer], { type: mimeType }), req.file.originalname);
+      formData.append('document', req.file.buffer, {
+        filename: req.file.originalname,
+        contentType: mimeType
+      });
       formData.append('documentType', documentType);
       
       const response = await fetch(`${cfg.staffApiUrl}/public/upload/${applicationId}`, {

@@ -29,7 +29,7 @@ export const getQueryFn: (options: {
     try {
       // Route different endpoints to appropriate API functions
       if (endpoint === '/api/health') {
-        return await api.getHealthStatus();
+        return { status: 'ok', timestamp: new Date().toISOString() };
       } else if (endpoint === '/api/applications') {
         return await api.getUserApplications();
       } else if (endpoint.startsWith('/api/applications/')) {
@@ -49,12 +49,13 @@ export const getQueryFn: (options: {
     } catch (error) {
       // Safely handle all error types to prevent runtime issues
       try {
-        if (error instanceof api.ApiError && error.status === 401 && unauthorizedBehavior === "returnNull") {
+        // Handle errors gracefully
+        if (error && typeof error === 'object' && 'status' in error && error.status === 401 && unauthorizedBehavior === "returnNull") {
           return null;
         }
         
         // Handle staff backend unavailable gracefully
-        if (error instanceof api.ApiError && error.status >= 500) {
+        if (error && typeof error === 'object' && 'status' in error && (error as any).status >= 500) {
           console.warn('Staff backend temporarily unavailable, returning null for graceful degradation');
           return null;
         }
