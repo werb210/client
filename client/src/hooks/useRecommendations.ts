@@ -21,7 +21,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
     queryFn: async () => {
       console.log('🔄 [PRODUCTS] Fetching from API with 22-field schema...');
       
-      const res = await fetch('/api/lender-products');
+      const res = await fetch('/api/catalog/export-products?includeInactive=1');
       const data = await res.json();
       
       if (!data.success) {

@@ -129,7 +129,7 @@ export async function uploadDocument(appId: string, file: File, documentType: st
 
 // ---------- Product Data ----------
 export async function fetchLenderProducts() {
-  const r = await safeFetch("/api/lender-products");
+  const r = await safeFetch("/api/catalog/export-products?includeInactive=1");
   const response = await r.json();
   
   // Extract products array from response and transform to match LenderProduct shape
@@ -155,7 +155,7 @@ export async function fetchLenderProducts() {
 }
 
 export async function getLenderProducts(category?: string) {
-  const url = category ? `/api/lender-products?category=${encodeURIComponent(category)}` : "/api/lender-products";
+  const url = category ? `/api/catalog/export-products?includeInactive=1?category=${encodeURIComponent(category)}` : "/api/catalog/export-products?includeInactive=1";
   const r = await safeFetch(url);
   return r.json();
 }

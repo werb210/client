@@ -48,7 +48,7 @@ export function useLenderProducts() {
     queryFn: async (): Promise<LenderProduct[]> => {
       console.log('🔄 Fetching lender products with 22-field schema...');
       
-      const res = await fetch(`/api/lender-products`);
+      const res = await fetch(`/api/catalog/export-products?includeInactive=1`);
       const data = await res.json();
       
       if (!data.success) {
@@ -59,7 +59,7 @@ export function useLenderProducts() {
       const transformedProducts: LenderProduct[] = data.products.map((product: any) => ({
         id: product.id.toString(),
         lenderName: "Boreal Financial", // Default for existing products
-        productCategory: product.type || "Working Capital", // Map type to category
+        productCategory: product.category || product.productCategory || "Unknown", // Map to normalized category
         productName: product.name,
         minimumLendingAmount: parseFloat(product.min_amount) || 0,
         maximumLendingAmount: parseFloat(product.max_amount) || 0,

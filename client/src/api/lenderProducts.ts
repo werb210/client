@@ -18,7 +18,7 @@ export interface LenderProductsResponse {
 // API functions for lender products
 export const fetchLenderProducts = async (): Promise<LenderProductsResponse> => {
   try {
-    const response = await fetch('/api/lender-products');
+    const response = await fetch('/api/catalog/export-products?includeInactive=1');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

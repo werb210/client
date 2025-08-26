@@ -32,7 +32,7 @@ import UploadComplete from "@/routes/UploadComplete";
 import { PrivacyPolicy } from "@/pages/PrivacyPolicy";
 import { TermsOfService } from "@/pages/TermsOfService";
 import { CookieConsentTest } from "@/pages/CookieConsentTest";
-import { PWADiagnostics } from "@/pages/PWADiagnostics";
+// import { PWADiagnostics } from "@/pages/PWADiagnostics"; // Removed
 import { ClientAppAudit } from "@/pages/ClientAppAudit";
 import FAQ from "@/pages/FAQ";
 import Troubleshooting from "@/pages/Troubleshooting";
@@ -53,11 +53,11 @@ import LenderDemo from "@/pages/LenderDemo";
 // BackendDiagnosticPage removed with legacy auth cleanup
 import SideBySideApplication from "@/pages/SideBySideApplication";
 import SimpleApplication from "@/pages/SimpleApplication";
-import LenderTest from "@/pages/LenderTest";
+// import LenderTest from "@/pages/LenderTest"; // Removed
 import LendersByCategory from "@/pages/LendersByCategory";
 import StaffApiTest from "@/pages/StaffApiTest";
-import CorsTest from "@/pages/CorsTest";
-import ApiTest from "@/pages/ApiTest";
+// import CorsTest from "@/pages/CorsTest"; // Removed
+// import ApiTest from "@/pages/ApiTest"; // Removed
 import SyncMonitor from "@/pages/SyncMonitor";
 import LenderProductsByCountry from "@/routes/LenderProductsByCountry";
 import CompleteWorkflowTest from "@/test/CompleteWorkflowTest";
@@ -68,36 +68,36 @@ import Steps34Test from "@/pages/Steps34Test";
 import Step5IntersectionTest from "@/test/Step5IntersectionTest";
 import TestingFlowValidation from "@/pages/TestingFlowValidation";
 import UnifiedDocumentTest from "@/pages/UnifiedDocumentTest";
-import LenderCategoriesTest from "@/pages/LenderCategoriesTest";
-import DocumentRequirementsTest from "@/pages/DocumentRequirementsTest";
+// import LenderCategoriesTest from "@/pages/LenderCategoriesTest"; // Removed
+// import DocumentRequirementsTest from "@/pages/DocumentRequirementsTest";
 import LenderProductMatcher from "@/pages/LenderProductMatcher";
 import StrictValidationTest from "@/pages/StrictValidationTest";
 import DataIngestionInterface from "@/pages/DataIngestionInterface";
 import TypedApiDemo from "@/pages/TypedApiDemo";
 import CanadianProductTest from "@/pages/CanadianProductTest";
 import CanadianFilteringTest from "@/pages/CanadianFilteringTest";
-import ApiDiagnostic from "@/pages/ApiDiagnostic";
-import SyncedProductsTest from "@/pages/SyncedProductsTest";
+// import ApiDiagnostic from "@/pages/ApiDiagnostic"; // Removed
+// import SyncedProductsTest from "@/pages/SyncedProductsTest";
 import WorkflowTest from "@/pages/WorkflowTest";
 import LenderProductsCatalog from "@/pages/LenderProductsCatalog";
-import BankingDocumentTest from "@/pages/BankingDocumentTest";
+// import BankingDocumentTest from "@/pages/BankingDocumentTest";
 import ApplicationIdFlowTest from "@/pages/ApplicationIdFlowTest";
 import CriticalFixesValidation from "@/pages/CriticalFixesValidation";
-import ComprehensiveE2ETest from "@/pages/ComprehensiveE2ETest";
-import ComprehensiveE2ETestPage from "@/pages/ComprehensiveE2ETestPage";
-import IndexedDBTest from "@/pages/IndexedDBTest";
-import ReliableSyncTest from "@/pages/ReliableSyncTest";
+// import ComprehensiveE2ETest from "@/pages/ComprehensiveE2ETest";
+// import ComprehensiveE2ETestPage from "@/pages/ComprehensiveE2ETestPage";
+// import IndexedDBTest from "@/pages/IndexedDBTest";
+// import ReliableSyncTest from "@/pages/ReliableSyncTest";
 import LenderDiagnostics from "@/pages/LenderDiagnostics";
-import SyncDiagnostics from "@/pages/SyncDiagnostics";
-import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
+// import SyncDiagnostics from "@/pages/SyncDiagnostics";
+// import LenderDiagnosticsFinalized from "@/pages/LenderDiagnosticsFinalized";
 
 import CanadianWorkingCapitalTest from "@/pages/CanadianWorkingCapitalTest";
-import PWATestPage from "@/pages/PWATestPage";
+// import PWATestPage from "@/pages/PWATestPage";
 import ProductDataInspector from "@/pages/ProductDataInspector";
-import PWADiagnosticsPage from "@/pages/PWADiagnosticsPage";
-import SimplePWADiagnostics from "@/pages/SimplePWADiagnostics";
-import DebugCanadianEquipmentAPI from "@/pages/DebugCanadianEquipmentAPI";
-import ApiConnectivityTest from "@/pages/ApiConnectivityTest";
+// import PWADiagnosticsPage from "@/pages/PWADiagnosticsPage"; // Removed
+// import SimplePWADiagnostics from "@/pages/SimplePWADiagnostics"; // Removed
+// import DebugCanadianEquipmentAPI from "@/pages/DebugCanadianEquipmentAPI"; // Removed
+// import ApiConnectivityTest from "@/pages/ApiConnectivityTest";
 import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
 import FullApplicationSubmissionTest from "@/pages/FullApplicationSubmissionTest";
@@ -111,18 +111,18 @@ import ValidationTestPage from "@/pages/ValidationTestPage";
 import InitialCacheSetup from "@/pages/InitialCacheSetup";
 import CacheManagement from "@/pages/CacheManagement";
 import UUIDTestPage from "@/pages/UUIDTestPage";
-import EnvTest from "@/pages/EnvTest";
+// import EnvTest from "@/pages/EnvTest";
 
 import Step2ProductsAvailabilityTest from "@/pages/Step2ProductsAvailabilityTest";
-import LenderDataTest from "@/pages/LenderDataTest";
+// import LenderDataTest from "@/pages/LenderDataTest";
 
 import ClientVerificationDiagnostic from "@/pages/ClientVerificationDiagnostic";
 import { FetchWindowTest } from "@/pages/FetchWindowTest";
 import FetchWindowDebugRoute from "@/pages/FetchWindowDebugRoute";
-import DocumentNormalizationTest from "@/pages/DocumentNormalizationTest";
+// import DocumentNormalizationTest from "@/pages/DocumentNormalizationTest";
 import DevDocumentMapping from "@/pages/DevDocumentMapping";
 import DevRecommendationDebug from "@/pages/DevRecommendationDebug";
-import E2ETestRunner from "@/pages/E2ETestRunner";
+// import E2ETestRunner from "@/pages/E2ETestRunner";
 import FileTypeValidationTest from "@/test/FileTypeValidationTest";
 import Step5CategoryTest from "@/test/Step5CategoryTest";
 import DocumentValidationTest from "@/test/DocumentValidationTest";
@@ -130,7 +130,7 @@ import { PushNotificationTest } from "@/pages/PushNotificationTest";
 
 // Staff Application Components
 import PipelinePage from "@/pages/staff/pipeline/PipelinePage";
-import StaffApiConnectivityTest from "@/pages/StaffApiConnectivityTest";
+// import StaffApiConnectivityTest from "@/pages/StaffApiConnectivityTest";
 import ProductValidationTest from "@/routes/ProductValidationTest";
 import TrainChatbot from "@/routes/TrainChatbot";
 import ChatbotAISuiteTest from "@/pages/ChatbotAISuiteTest";
@@ -151,175 +151,175 @@ export function MainLayout() {
       <Switch>
       {/* Diagnostic Routes */}
       {/* Route removed with legacy auth cleanup */}
-      <Route path="/lender-test" component={LenderTest} />
-      <Route path="/lenders-by-category" component={LendersByCategory} />
-      <Route path="/lenders-by-country" component={LenderProductsByCountry} />
-      <Route path="/staff-api-test" component={StaffApiTest} />
-      <Route path="/cors-test" component={CorsTest} />
-      <Route path="/api-test" component={ApiTest} />
-      <Route path="/api-diagnostic" component={ApiDiagnostic} />
-      <Route path="/synced-products-test" component={SyncedProductsTest} />
-      <Route path="/sync-monitor" component={SyncMonitor} />
-      <Route path="/sync-diagnostics" component={SyncDiagnostics} />
-      <Route path="/diagnostics/lenders" component={LenderDiagnosticsFinalized} />
-      <Route path="/complete-workflow-test" component={CompleteWorkflowTest} />
-      <Route path="/stage-monitor-test" component={StageMonitorTest} />
+      {/* <Route path="/lender-test" component={[^}]*} /> */} */}
+      <Route path="/lenders-by-category" component={[^}]*} /> */}
+      <Route path="/lenders-by-country" component={[^}]*} /> */}
+      <Route path="/staff-api-test" component={[^}]*} /> */}
+      {/* <Route path="/cors-test" component={[^}]*} /> */} */}
+      {/* <Route path="/api-test" component={[^}]*} /> */} */}
+      {/* <Route path="/api-diagnostic" component={[^}]*} /> */} */}
+      <Route path="/synced-products-test" component={[^}]*} /> */}
+      <Route path="/sync-monitor" component={[^}]*} /> */}
+      <Route path="/sync-diagnostics" component={[^}]*} /> */}
+      <Route path="/diagnostics/lenders" component={[^}]*} /> */}
+      <Route path="/complete-workflow-test" component={[^}]*} /> */}
+      <Route path="/stage-monitor-test" component={[^}]*} /> */}
 
-      <Route path="/step5-test" component={Step5Test} />
-      <Route path="/step5-intersection-test" component={Step5IntersectionTest} />
-      <Route path="/steps34-test" component={Steps34Test} />
-      <Route path="/testing-flow-validation" component={TestingFlowValidation} />
-      <Route path="/unified-document-test" component={UnifiedDocumentTest} />
-      <Route path="/lender-categories" component={LenderCategoriesTest} />
-      <Route path="/document-requirements-test" component={DocumentRequirementsTest} />
-      <Route path="/lender-product-matcher" component={LenderProductMatcher} />
-      <Route path="/strict-validation-test" component={StrictValidationTest} />
-      <Route path="/data-ingestion" component={DataIngestionInterface} />
-      <Route path="/typed-api-demo" component={TypedApiDemo} />
-      <Route path="/canadian-product-test" component={CanadianProductTest} />
-      <Route path="/canadian-filtering-test" component={CanadianFilteringTest} />
-      <Route path="/catalog" component={LenderProductsCatalog} />
-      <Route path="/banking-document-test" component={BankingDocumentTest} />
-      <Route path="/comprehensive-e2e-test" component={ComprehensiveE2ETest} />
-      <Route path="/e2e-test" component={ComprehensiveE2ETestPage} />
-      <Route path="/indexeddb-test" component={IndexedDBTest} />
-      <Route path="/reliable-sync-test" component={ReliableSyncTest} />
+      <Route path="/step5-test" component={[^}]*} /> */}
+      <Route path="/step5-intersection-test" component={[^}]*} /> */}
+      <Route path="/steps34-test" component={[^}]*} /> */}
+      <Route path="/testing-flow-validation" component={[^}]*} /> */}
+      <Route path="/unified-document-test" component={[^}]*} /> */}
+      {/* <Route path="/lender-categories" component={[^}]*} /> */} */}
+      {/* <Route path="/document-requirements-test" component={[^}]*} /> */} */}
+      <Route path="/lender-product-matcher" component={[^}]*} /> */}
+      <Route path="/strict-validation-test" component={[^}]*} /> */}
+      <Route path="/data-ingestion" component={[^}]*} /> */}
+      <Route path="/typed-api-demo" component={[^}]*} /> */}
+      <Route path="/canadian-product-test" component={[^}]*} /> */}
+      <Route path="/canadian-filtering-test" component={[^}]*} /> */}
+      <Route path="/catalog" component={[^}]*} /> */}
+      <Route path="/banking-document-test" component={[^}]*} /> */}
+      {/* <Route path="/comprehensive-e2e-test" component={[^}]*} /> */} */}
+      {/* <Route path="/e2e-test" component={[^}]*} /> */} */}
+      {/* <Route path="/indexeddb-test" component={[^}]*} /> */} */}
+      {/* <Route path="/reliable-sync-test" component={[^}]*} /> */} */}
 
-      <Route path="/canadian-working-capital-test" component={CanadianWorkingCapitalTest} />
-      <Route path="/debug-canadian-equipment-api" component={DebugCanadianEquipmentAPI} />
-      <Route path="/list-lender-categories" component={ListLenderCategories} />
-      <Route path="/equipment-financing-fix-test" component={EquipmentFinancingFixTest} />
-      <Route path="/full-application-test" component={FullApplicationSubmissionTest} />
-      <Route path="/auto-submit-test" component={AutoSubmitApplicationTest} />
+      <Route path="/canadian-working-capital-test" component={[^}]*} /> */}
+      {/* <Route path="/debug-canadian-equipment-api" component={[^}]*} /> */} */}
+      <Route path="/list-lender-categories" component={[^}]*} /> */}
+      <Route path="/equipment-financing-fix-test" component={[^}]*} /> */}
+      <Route path="/full-application-test" component={[^}]*} /> */}
+      <Route path="/auto-submit-test" component={[^}]*} /> */}
 
-      <Route path="/backend-request-test" component={BackendRequestTest} />
-      <Route path="/validation-test" component={ValidationTestPage} />
-      <Route path="/cache-management" component={CacheManagement} />
-      <Route path="/uuid-test" component={UUIDTestPage} />
-      <Route path="/fetch-window-test" component={FetchWindowTest} />
-      <Route path="/fetch-window-debug-route" component={FetchWindowDebugRoute} />
-      <Route path="/document-normalization-test" component={DocumentNormalizationTest} />
+      <Route path="/backend-request-test" component={[^}]*} /> */}
+      <Route path="/validation-test" component={[^}]*} /> */}
+      <Route path="/cache-management" component={[^}]*} /> */}
+      <Route path="/uuid-test" component={[^}]*} /> */}
+      <Route path="/fetch-window-test" component={[^}]*} /> */}
+      <Route path="/fetch-window-debug-route" component={[^}]*} /> */}
+      {/* <Route path="/document-normalization-test" component={[^}]*} /> */}
       
       {/* Developer Tools */}
-      <Route path="/dev/document-mapping" component={DevDocumentMapping} />
-      <Route path="/dev/recommendation-debug" component={DevRecommendationDebug} />
+      <Route path="/dev/document-mapping" component={[^}]*} /> */}
+      <Route path="/dev/recommendation-debug" component={[^}]*} /> */}
 
 
       <Route path="/fallback-test" component={lazy(() => import('@/pages/FallbackTest').then(m => ({ default: m.FallbackTest })))} />
-      <Route path="/application-creation-test" component={lazy(() => import('@/pages/ApplicationCreationTest'))} />
-      <Route path="/application-flow-test" component={lazy(() => import('@/pages/ApplicationFlowTest'))} />
-      <Route path="/security-test-runner" component={lazy(() => import('../security/SecurityTestRunner'))} />
-      <Route path="/client-verification-diagnostic" component={ClientVerificationDiagnostic} />
+      <Route path="/application-creation-test" component={[^}]*} /> */}
+      <Route path="/application-flow-test" component={[^}]*} /> */}
+      <Route path="/security-test-runner" component={[^}]*} /> */}
+      <Route path="/client-verification-diagnostic" component={[^}]*} /> */}
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
-      <Route path="/step1-financial-profile" component={Step1FinancialProfile} />
-      <Route path="/apply/step-1" component={Step1FinancialProfile} />
-      <Route path="/step2-recommendations" component={Step2RecommendationsRoute} />
-      <Route path="/apply/step-2" component={Step2RecommendationsRoute} />
-      <Route path="/step3-business-details" component={Step3BusinessDetailsComplete} />
-      <Route path="/apply/step-3" component={Step3BusinessDetailsComplete} />
-      <Route path="/step4-applicant-details" component={Step4ApplicantInfoComplete} />
-      <Route path="/apply/step-4" component={Step4ApplicantInfoComplete} />
-      <Route path="/step5-document-upload" component={() => <Step5DocumentUpload />} />
-      <Route path="/apply/step-5" component={() => <Step5DocumentUpload />} />
-      <Route path="/step6-typed-signature" component={Step6TypedSignature} />
-      <Route path="/apply/step-6" component={Step6TypedSignature} />
+      <Route path="/step1-financial-profile" component={[^}]*} /> */}
+      <Route path="/apply/step-1" component={[^}]*} /> */}
+      <Route path="/step2-recommendations" component={[^}]*} /> */}
+      <Route path="/apply/step-2" component={[^}]*} /> */}
+      <Route path="/step3-business-details" component={[^}]*} /> */}
+      <Route path="/apply/step-3" component={[^}]*} /> */}
+      <Route path="/step4-applicant-details" component={[^}]*} /> */}
+      <Route path="/apply/step-4" component={[^}]*} /> */}
+      <Route path="/step5-document-upload" component={[^}]*} /> */}
+      <Route path="/apply/step-5" component={[^}]*} /> */}
+      <Route path="/step6-typed-signature" component={[^}]*} /> */}
+      <Route path="/apply/step-6" component={[^}]*} /> */}
 
       
       {/* Dashboard */}
-      <Route path="/dashboard" component={SimpleDashboard} />
+      <Route path="/dashboard" component={[^}]*} /> */}
       
       {/* Staff Application Routes */}
-      <Route path="/staff/pipeline" component={PipelinePage} />
-      <Route path="/staff-api-connectivity-test" component={StaffApiConnectivityTest} />
+      <Route path="/staff/pipeline" component={[^}]*} /> */}
+      {/* <Route path="/staff-api-connectivity-test" component={[^}]*} /> */}
       
       {/* Success Page */}
-      <Route path="/application-success" component={ApplicationSuccess} />
+      <Route path="/application-success" component={[^}]*} /> */}
       
       {/* Document Management */}
-      <Route path="/upload-documents/:applicationId" component={UploadDocuments} />
-      <Route path="/upload-documents" component={UploadDocuments} />
-      <Route path="/upload-missing/:id" component={UploadMissingDocuments} />
-      <Route path="/upload-late/:id" component={LateUpload} />
-      <Route path="/upload-complete" component={UploadComplete} />
+      <Route path="/upload-documents/:applicationId" component={[^}]*} /> */}
+      <Route path="/upload-documents" component={[^}]*} /> */}
+      <Route path="/upload-missing/:id" component={[^}]*} /> */}
+      <Route path="/upload-late/:id" component={[^}]*} /> */}
+      <Route path="/upload-complete" component={[^}]*} /> */}
       
       {/* Application Entry Points */}
-      <Route path="/simple-application" component={SimpleApplication} />
-      <Route path="/application" component={SideBySideApplication} />
-      <Route path="/side-by-side-application" component={SideBySideApplication} />
+      <Route path="/simple-application" component={[^}]*} /> */}
+      <Route path="/application" component={[^}]*} /> */}
+      <Route path="/side-by-side-application" component={[^}]*} /> */}
       
       {/* Workflow Testing */}
-      <Route path="/env-test" component={EnvTest} />
-      <Route path="/workflow-test-page" component={WorkflowTestPage} />
-      <Route path="/document-upload-test" component={DocumentUploadTestPage} />
-      <Route path="/step2-products-test" component={Step2ProductsAvailabilityTest} />
-      <Route path="/workflow-test" component={WorkflowTest} />
-      <Route path="/application-id-flow-test" component={ApplicationIdFlowTest} />
-      <Route path="/critical-fixes-validation" component={CriticalFixesValidation} />
-      <Route path="/e2e-test-runner" component={E2ETestRunner} />
-      <Route path="/file-type-validation-test" component={FileTypeValidationTest} />
-      <Route path="/step5-category-test" component={Step5CategoryTest} />
-      <Route path="/document-validation-test" component={DocumentValidationTest} />
-      <Route path="/product-validation-test" component={ProductValidationTest} />
-      <Route path="/train-chatbot" component={TrainChatbot} />
+      {/* <Route path="/env-test" component={[^}]*} /> */}
+      <Route path="/workflow-test-page" component={[^}]*} /> */}
+      <Route path="/document-upload-test" component={[^}]*} /> */}
+      <Route path="/step2-products-test" component={[^}]*} /> */}
+      <Route path="/workflow-test" component={[^}]*} /> */}
+      <Route path="/application-id-flow-test" component={[^}]*} /> */}
+      <Route path="/critical-fixes-validation" component={[^}]*} /> */}
+      {/* <Route path="/e2e-test-runner" component={[^}]*} /> */}
+      <Route path="/file-type-validation-test" component={[^}]*} /> */}
+      <Route path="/step5-category-test" component={[^}]*} /> */}
+      <Route path="/document-validation-test" component={[^}]*} /> */}
+      <Route path="/product-validation-test" component={[^}]*} /> */}
+      <Route path="/train-chatbot" component={[^}]*} /> */}
       
       {/* Diagnostic Pages */}
-      <Route path="/diagnostics/lenders" component={LenderDiagnostics} />
-      <Route path="/api-connectivity-test" component={ApiConnectivityTest} />
-      <Route path="/cache-setup" component={InitialCacheSetup} />
-      <Route path="/product-data-inspector" component={ProductDataInspector} />
+      <Route path="/diagnostics/lenders" component={[^}]*} /> */}
+      {/* <Route path="/api-connectivity-test" component={[^}]*} /> */}
+      <Route path="/cache-setup" component={[^}]*} /> */}
+      <Route path="/product-data-inspector" component={[^}]*} /> */}
       
       {/* PWA Testing */}
-      <Route path="/pwa-test" component={PWATestPage} />
-      <Route path="/pwa-diagnostics" component={PWADiagnostics} />
-      <Route path="/pwa-diagnostics-simple">
+      {/* <Route path="/pwa-test" component={[^}]*} /> */}
+      {/* <Route path="/pwa-diagnostics" component={[^}]*} /> */} */}
+      {/* <Route path="/pwa-diagnostics-simple">
         <SimplePWADiagnostics />
-      </Route>
-      <Route path="/pwa-diagnostics-full" component={PWADiagnosticsPage} />
-      <Route path="/pwa-comprehensive-test" component={lazy(() => import('@/pages/PWAComprehensiveTest'))} />
-      <Route path="/push-notification-test" component={PushNotificationTest} />
+      </Route> */}
+      {/* <Route path="/pwa-diagnostics-full" component={[^}]*} /> */} */}
+      <Route path="/pwa-comprehensive-test" component={[^}]*} /> */}
+      <Route path="/push-notification-test" component={[^}]*} /> */}
       
       {/* Comprehensive Audit */}
-      <Route path="/client-app-audit" component={ClientAppAudit} />
+      <Route path="/client-app-audit" component={[^}]*} /> */}
       
       {/* Chatbot Testing */}
-      <Route path="/chatbot-ai-test" component={lazy(() => import('@/pages/ChatbotTestPage'))} />
-      <Route path="/chatbot-ai-suite-test" component={lazy(() => import('@/pages/ChatbotAISuiteTest'))} />
-      <Route path="/comprehensive-client-test" component={lazy(() => import('@/pages/ComprehensiveClientAppTest'))} />
+      <Route path="/chatbot-ai-test" component={[^}]*} /> */}
+      <Route path="/chatbot-ai-suite-test" component={[^}]*} /> */}
+      <Route path="/comprehensive-client-test" component={[^}]*} /> */}
       
       {/* Legal Pages */}
-      <Route path="/privacy-policy" component={PrivacyPolicy} />
-      <Route path="/terms-of-service" component={TermsOfService} />
-      <Route path="/cookie-consent-test" component={CookieConsentTest} />
+      <Route path="/privacy-policy" component={[^}]*} /> */}
+      <Route path="/terms-of-service" component={[^}]*} /> */}
+      <Route path="/cookie-consent-test" component={[^}]*} /> */}
       
       {/* Support Pages */}
-      <Route path="/faq" component={FAQ} />
-      <Route path="/troubleshooting" component={Troubleshooting} />
+      <Route path="/faq" component={[^}]*} /> */}
+      <Route path="/troubleshooting" component={[^}]*} /> */}
       
       {/* Privacy & Compliance */}
-      <Route path="/client/kyc/mock" component={KycMock} />
-      <Route path="/client/sign/mock" component={MockSign} />
-      <Route path="/privacy-compliance-demo" component={PrivacyComplianceDemo} />
-      <Route path="/docpacks-demo" component={DocumentPacksDemo} />
-      <Route path="/client/notifications" component={NotificationsClient} />
-      <Route path="/notifications-demo" component={NotificationsDemo} />
-      <Route path="/client/search" component={MySearch} />
-      <Route path="/search-demo" component={SearchDemo} />
-      <Route path="/analytics-demo" component={AnalyticsDemo} />
-      <Route path="/client/kyc/start" component={KycStart} />
-      <Route path="/kyc-demo" component={KycDemo} />
-      <Route path="/lender/access" component={LenderPortal} />
-      <Route path="/lender-demo" component={LenderDemo} />
-      <Route path="/lender-product-sync-demo" component={LenderProductSyncDemo} />
-      {/* <Route path="/chatbot-test" component={lazy(() => import('@/pages/ChatBotTest'))} /> */}
-      {/* <Route path="/advanced-chatbot-test" component={() => <ChatBotTest />} /> */}
-      {/* <Route path="/chatbot-dashboard" component={() => <ChatBotDashboard />} /> */}
-      <Route path="/train-chatbot" component={lazy(() => import('@/routes/TrainChatbot'))} />
-      <Route path="/debug/train" component={lazy(() => import('@/routes/TrainChatbot'))} />
+      <Route path="/client/kyc/mock" component={[^}]*} /> */}
+      <Route path="/client/sign/mock" component={[^}]*} /> */}
+      <Route path="/privacy-compliance-demo" component={[^}]*} /> */}
+      <Route path="/docpacks-demo" component={[^}]*} /> */}
+      <Route path="/client/notifications" component={[^}]*} /> */}
+      <Route path="/notifications-demo" component={[^}]*} /> */}
+      <Route path="/client/search" component={[^}]*} /> */}
+      <Route path="/search-demo" component={[^}]*} /> */}
+      <Route path="/analytics-demo" component={[^}]*} /> */}
+      <Route path="/client/kyc/start" component={[^}]*} /> */}
+      <Route path="/kyc-demo" component={[^}]*} /> */}
+      <Route path="/lender/access" component={[^}]*} /> */}
+      <Route path="/lender-demo" component={[^}]*} /> */}
+      <Route path="/lender-product-sync-demo" component={[^}]*} /> */}
+      {/* <Route path="/chatbot-test" component={[^}]*} /> */} */}
+      {/* <Route path="/advanced-chatbot-test" component={[^}]*} /> */} */}
+      {/* <Route path="/chatbot-dashboard" component={[^}]*} /> */} */}
+      <Route path="/train-chatbot" component={[^}]*} /> */}
+      <Route path="/debug/train" component={[^}]*} /> */}
       
       {/* Default Route - Landing Page */}
-      <Route path="/" component={LandingPage} />
-      <Route component={NotFound} />
+      <Route path="/" component={[^}]*} /> */}
+      <Route component={[^}]*} /> */}
       </Switch>
       </Suspense>
       

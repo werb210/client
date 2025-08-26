@@ -43,7 +43,7 @@ export async function getDocumentRequirementsAggregation(
   
   try {
     // Fetch all lender products from staff API - FIXED ENDPOINT
-    const response = await fetch('/api/lender-products');
+    const response = await fetch('/api/catalog/export-products?includeInactive=1');
     
     if (!response.ok) {
       throw new Error(`Staff API error: ${response.status}`);

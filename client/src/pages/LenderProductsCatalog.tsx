@@ -40,7 +40,7 @@ const getCategoryColor = (category: string): string => {
 
 export default function LenderProductsCatalog() {
   const { data: products, isLoading, error } = useQuery({
-    queryKey: ['/api/lender-products'],
+    queryKey: ['/api/catalog/export-products?includeInactive=1'],
     queryFn: fetchLenderProducts,
   });
 

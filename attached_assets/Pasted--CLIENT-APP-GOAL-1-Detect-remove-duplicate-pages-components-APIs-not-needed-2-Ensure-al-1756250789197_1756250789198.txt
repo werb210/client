@@ -1,0 +1,103 @@
+[CLIENT APP]
+
+# GOAL
+# 1) Detect & remove duplicate pages/components/APIs not needed.
+# 2) Ensure all product data comes from /api/catalog/export-products (no legacy).
+# 3) Rebuild and verify Step 2 (categories) + Step 5 (required docs).
+#
+# SAFETY SWITCHES
+#   DRY_RUN=1 -> list actions only
+#   DRY_RUN=0 -> APPLY edits
+
+set -euo pipefail
+DRY_RUN="${DRY_RUN:-1}"
+echo "==> Client duplicate cleanup (DRY_RUN=$DRY_RUN)"
+
+# -------- 0) Canonical files we KEEP ----------
+KEEP_CLIENT=(
+  "client/src/lib/api.ts"
+  "client/src/lib/log.ts"
+  "client/src/pages/intake/Step2.tsx"
+  "client/src/components/DynamicDocumentRequirements.tsx"
+)
+
+# -------- 1) Inventory likely duplicate files ----------
+echo "==> Scanning client for duplicate-like files"
+PATTERNS=(-name "*final*" -o -name "*enhanced*" -o -name "*comprehensive*" -o -name "*direct*" -o -name "*simple*" -o -name "*v2*" -o -name "*backup*" -o -name "*copy*" -o -name "Pasted-*")
+find client -type f \( "${PATTERNS[@]}" \) | sort > /tmp/client.dupe.candidates.txt || true
+echo "Found $(wc -l </tmp/client.dupe.candidates.txt) client candidate files"
+head -30 /tmp/client.dupe.candidates.txt || true
+
+# -------- 2) Ensure no legacy endpoint usage ----------
+echo "==> Checking for legacy /api/lender-products usage"
+if command -v rg >/dev/null 2>&1; then
+  rg -n "/api/lender-products" client || true
+else
+  grep -Rni "/api/lender-products" client || true
+fi
+LEGACY_USE=$( (command -v rg >/dev/null 2>&1 && rg -n "/api/lender-products" client | wc -l) || (grep -Rni "/api/lender-products" client | wc -l) )
+if [[ "${LEGACY_USE:-0}" -gt 0 ]]; then
+  echo "ABORT: Client still references /api/lender-products in $LEGACY_USE places."
+  echo "Fix by replacing with: /api/catalog/export-products?includeInactive=1"
+  exit 1
+fi
+
+# -------- 3) Remove superseded multi-form pages (keep unified form) ----------
+echo "==> Preparing deletion list (client pages/components duplicates)"
+DEL_CLIENT="/tmp/client.to.delete.txt"
+> "$DEL_CLIENT"
+
+# Old lender product pages often named create/edit/view (adjust if your paths differ)
+find client/src/pages -type f -regex '.*(products\-create|products\-edit|products\-view)\.(tsx|jsx|ts|js)$' >> "$DEL_CLIENT" || true
+
+# Exclude KEEP list
+TMP="/tmp/client.to.delete.filtered.txt"
+> "$TMP"
+while IFS= read -r f; do
+  keep=0
+  for k in "${KEEP_CLIENT[@]}"; do [[ "$f" == "$k" ]] && keep=1 && break; done
+  [[ "$keep" -eq 0 ]] && echo "$f" >> "$TMP"
+done <"$DEL_CLIENT"
+mv "$TMP" "$DEL_CLIENT"
+
+echo "Planned deletions (client):"
+cat "$DEL_CLIENT" | sed 's/^/  - /' | head -50 || true
+DEL_COUNT=$(wc -l <"$DEL_CLIENT" || echo 0)
+echo "Total planned deletions: $DEL_COUNT"
+
+if [[ "$DRY_RUN" = "0" && "$DEL_COUNT" -gt 0 ]]; then
+  xargs -r git rm -f < "$DEL_CLIENT"
+fi
+
+# -------- 4) Enforce canonical imports and API usage ----------
+echo "==> Enforcing canonical API import & endpoint"
+# Ensure api.ts exports fetchCatalog, categoriesFor, listDocumentsFor
+API_FILE="client/src/lib/api.ts"
+if ! grep -q "export async function fetchCatalog" "$API_FILE"; then
+  echo "WARN: fetchCatalog not found in $API_FILE. Ensure you pasted the canonical client API functions."
+fi
+
+# Replace any lingering relative imports of lib/api with alias @/lib/api
+if command -v rg >/dev/null 2>&1; then
+  rg -n "from \"\.\.\/.*\/lib\/api\"" client || true
+fi
+if [[ "$DRY_RUN" = "0" ]]; then
+  # macOS/BSD sed fallback to GNU sed if available; adjust as needed
+  sed -i.bak -E 's#from "\.\.\/([^"]*)\/lib\/api"#from "@/lib/api"#g' $(git ls-files "client/**/*.ts*" | tr '\n' ' ') || true
+fi
+
+# -------- 5) Rebuild client ----------
+echo "==> Rebuilding client app"
+if [[ "$DRY_RUN" = "0" ]]; then
+  (cd client && (npm ci || pnpm i || yarn) && (npm run build || pnpm build || yarn build))
+fi
+
+# -------- 6) Runtime verification (client → staff) ----------
+echo "==> Verifying live data path used by client"
+echo "Expect categories for CA $50k if CA products exist:"
+curl -s "http://localhost:5000/api/catalog/categories?amount=50000&country=CA" | head -c 300 || true
+echo
+echo "Expect export-products returns total + products array:"
+curl -s "http://localhost:5000/api/catalog/export-products?includeInactive=1" | head -c 300 || true
+echo
+echo "==> Client cleanup & rebuild script finished."
