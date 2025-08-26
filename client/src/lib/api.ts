@@ -25,69 +25,60 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   return safeFetch(path, init);
 }
 
-// --- Types ---
 export type RequiredDocsInput = {
+  productId?: string;
   category?: string;
-  country?: string;
+  country?: "US"|"CA" | string;
   amount?: number;
   lenderId?: string;
-  timeInBusinessMonths?: number;
-  monthlyRevenue?: number;
-  creditScore?: number;
 };
 
-export type RequiredDoc =
-  | { key: string; label: string; required: boolean; reason?: string }
-  | string;
-
-// --- Fallbacks by category (used if server isn't ready) ---
-const DOCS_FALLBACK: Record<string, RequiredDoc[]> = {
-  "Working Capital": [
-    { key: "bank_3m", label: "Last 3 months bank statements", required: true },
-    { key: "void_cheque", label: "Void cheque", required: true },
-    { key: "gov_id", label: "Government-issued ID", required: true },
-  ],
-  "Business Line of Credit": [
-    { key: "bank_6m", label: "Last 6 months bank statements", required: true },
-    { key: "yr_fin", label: "Most recent year financials or NOA", required: false },
-  ],
-  "Term Loan": [
-    { key: "tax_returns", label: "Most recent business tax return", required: true },
-    { key: "fin_statements", label: "YTD financial statements", required: true },
-  ],
-  "Equipment Financing": [
-    { key: "equipment_quote", label: "Equipment quote/invoice", required: true },
-    { key: "bank_3m", label: "Last 3 months bank statements", required: true },
-  ],
-  "Invoice Factoring": [
-    { key: "ar_aging", label: "A/R aging report", required: true },
-    { key: "sample_invoices", label: "Sample customer invoices", required: true },
-  ],
-  "Purchase Order Financing": [
-    { key: "purchase_orders", label: "Approved purchase orders", required: true },
-    { key: "supplier_quote", label: "Supplier quote", required: true },
-  ],
+export type RequiredDoc = {
+  key: string;
+  label: string;
+  required: boolean;
+  months?: number;
+  reason?: string;
 };
 
-// --- Exported API used by Step 5 ---
+const BASELINE_DOC: RequiredDoc = {
+  key: "bank_statements",
+  label: "Last 6 months bank statements",
+  required: true,
+  months: 6
+};
+
 export async function listDocuments(input: RequiredDocsInput): Promise<RequiredDoc[]> {
+  // 1) Try Staff API (public)
   try {
     const r = await fetch("/api/required-docs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(input),
+      body: JSON.stringify(input ?? {})
     });
     if (r.ok) {
       const j = await r.json();
-      const docs = j?.documents ?? j?.requiredDocs ?? j?.data ?? [];
-      if (Array.isArray(docs) && docs.length) return docs as RequiredDoc[];
+      let docs: RequiredDoc[] = Array.isArray(j?.documents) ? j.documents : [];
+      // guarantee baseline >= 6 months
+      const idx = docs.findIndex(d => d.key === "bank_statements");
+      if (idx === -1) {
+        docs.unshift({ ...BASELINE_DOC });
+      } else {
+        const d = docs[idx];
+        docs[idx] = {
+          ...d,
+          required: true,
+          label: BASELINE_DOC.label,
+          months: Math.max(6, Number(d.months ?? 0))
+        };
+      }
+      return docs;
     }
-  } catch {
-    // fall through to fallback
-  }
-  const cat = input.category ?? "Working Capital";
-  return DOCS_FALLBACK[cat] ?? [];
+  } catch (_) {/* fall through */}
+
+  // 2) Fallback (local baseline only)
+  return [ { ...BASELINE_DOC } ];
 }
 
 // ---------- Document Management ----------
