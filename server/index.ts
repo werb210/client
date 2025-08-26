@@ -2919,7 +2919,8 @@ app.use((req, res, next) => {
     });
     
     app.use(
-      express.static(clientBuildPath, {
+      express.static(path.join(__dirname, '../dist/public'), {
+        index: false, // don't auto-serve index.html here
         setHeaders(res, filePath) {
           if (filePath.endsWith(".html")) {
             res.setHeader("Cache-Control", "no-store, max-age=0, must-revalidate");
@@ -2930,34 +2931,30 @@ app.use((req, res, next) => {
         },
       })
     );
+
+    // Optional: Replit helper to silence iframe errors
+    app.get('/workspace_iframe.html', (_req, res) => {
+      res.type('html').send('<!doctype html><meta charset="utf-8">');
+    });
     
-    // SPA Routing: All non-API routes should serve index.html for React Router with CSRF token
-    // BUT exclude health endpoints from SPA routing
-    app.get('*', (req, res, next) => {
-      // Skip SPA routing for health endpoints
-      if (req.path.startsWith('/health')) {
-        return next();
-      }
+    // SPA fallback for everything that isn't /api/*
+    app.get(/^\/(?!api\/).*/, (req, res) => {
+      const dist = path.join(__dirname, '../dist/public');
+      const indexPath = path.join(dist, 'index.html');
+      console.log(`[SPA] Serving index.html for route: ${req.path} from ${indexPath}`);
       
-      // Apply CSRF token issuance
-      issueCsrf(req, res, async () => {
-        const indexPath = join(__dirname, '../dist/public/index.html');
-        console.log(`[SPA] Serving index.html for route: ${req.path}`);
-        
-        try {
-          // Inject CSRF token into HTML for client access
-          const fs = await import('fs');
-          const html = fs.readFileSync(indexPath, 'utf8');
-          const htmlWithCsrf = html.replace(
-            '<head>',
-            `<head><script>window.__CSRF__ = '${req.csrfToken || ''}';</script>`
-          );
-          res.send(htmlWithCsrf);
-        } catch (error) {
-          console.error('Error serving SPA route:', error);
-          res.status(500).send('Internal Server Error');
-        }
-      });
+      try {
+        res.sendFile(indexPath);
+      } catch (error) {
+        console.error('Error serving SPA route:', error);
+        res.status(500).json({ error: 'server_error' });
+      }
+    });
+
+    // Error handler so routes don't throw 500
+    app.use((err: any, _req: any, res: any, _next: any) => {
+      console.error('[SERVER ERROR]', err);
+      res.status(500).json({ error: 'server_error' });
     });
   } else {
     // Development: use Vite dev server

@@ -58,3 +58,37 @@ export function useFilteredLenderProducts(
     refetch,
   };
 }
+
+// Additional hook for manual sync functionality
+export function useLenderProductsSync() {
+  const queryClient = useQuery.useQueryClient?.() || null;
+  
+  const syncProducts = async (): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await fetch('/api/lender-products/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // Invalidate and refetch products
+        if (queryClient) {
+          queryClient.invalidateQueries({ queryKey: ['/api/lender-products'] });
+        }
+        return { success: true, message: 'Products synced successfully' };
+      } else {
+        return { success: false, message: 'Failed to sync products' };
+      }
+    } catch (error) {
+      console.error('Error syncing products:', error);
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  };
+
+  return { syncProducts };
+}

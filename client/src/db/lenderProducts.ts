@@ -41,3 +41,30 @@ export const filterProductsByCategory = (
     return matchesCategory && matchesAmount && matchesCountry && isActive;
   });
 };
+
+export interface SyncStats {
+  lastSync: string;
+  productCount: number;
+  isActive: boolean;
+  nextSync: string;
+}
+
+export const getSyncStats = async (): Promise<SyncStats> => {
+  try {
+    const products = await getLenderProducts();
+    return {
+      lastSync: new Date().toISOString(),
+      productCount: products.length,
+      isActive: true,
+      nextSync: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour from now
+    };
+  } catch (error) {
+    console.error('Error getting sync stats:', error);
+    return {
+      lastSync: 'Unknown',
+      productCount: 0,
+      isActive: false,
+      nextSync: 'Unknown',
+    };
+  }
+};

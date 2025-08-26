@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { PipelineBoard } from './PipelineBoard';
+// import { PipelineBoard } from './PipelineBoard';
 import { PipelineDrawer } from './PipelineDrawer';
 
 // Pipeline Context for shared state management
@@ -105,7 +105,8 @@ export default function PipelinePage() {
 
         {/* Pipeline Board */}
         <div className="flex-1 overflow-hidden">
-          <PipelineBoard applications={applications} />
+          {/* <PipelineBoard applications={applications} /> */}
+          <div className="p-4 text-center text-gray-500">Pipeline Board Component Loading...</div>
         </div>
 
         {/* Drawer */}

@@ -1,0 +1,128 @@
+Got it—looking closely at that screenshot, here’s what’s really going on and the shortest path to green.
+
+# What the errors mean (only the ones that matter)
+
+* `Internal Server Error` in the preview pane
+  Your server is returning **500** for the root page (the SPA). That’s why you don’t see the client UI.
+
+* `GET … /workspace_iframe.html 500 (Internal Server Error)`
+  Replit’s preview tries to load a helper page. Because your server doesn’t serve it, it shows 500. Harmless—but it proves your catch-all route is throwing instead of falling back to `index.html`.
+
+* Several `chrome-extension://…` and “Unrecognized feature” warnings
+  These are from extensions + the Replit sandbox, **not** your app. Ignore them (or use an Incognito window).
+
+* 404s for `/__replit__/…/attached_assets/...png`
+  Those are Replit attachments the app doesn’t host. Noise only.
+
+* `NotAllowedError: documentType is currently locked. Set VITE_ALLOW_MAPPING_EDITS=true…`
+  That’s a Vite-Devtools message (expect it in Replit preview). Not your runtime problem.
+
+👉 The only blocker here is: **your server isn’t serving the built client correctly** (root returns 500), so the SPA never boots.
+
+---
+
+# Fix it (copy/paste)
+
+### 1) Build the client (once)
+
+From the `client/` folder:
+
+```bash
+npm ci
+npm run build
+```
+
+### 2) Serve the SPA correctly
+
+In your server (Express) entry (e.g., `server/index.ts`), ensure this **exact** order:
+
+```ts
+import path from 'path';
+import express from 'express';
+
+const app = express();
+
+// 1) APIs first
+app.use('/api', apiRouter);
+
+// 2) Static assets from client build
+const dist = path.resolve(__dirname, '../client/dist');
+app.use(express.static(dist, { index: false })); // don't auto-serve index.html here
+
+// 3) (Optional) Replit helper to silence iframe errors
+app.get('/workspace_iframe.html', (_req, res) => {
+  res.type('html').send('<!doctype html><meta charset="utf-8">');
+});
+
+// 4) SPA fallback for everything that isn't /api/*
+app.get(/^\/(?!api\/).*/, (_req, res) => {
+  res.sendFile(path.join(dist, 'index.html'));
+});
+
+// 5) Last: error handler so / doesn’t throw a 500
+app.use((err: any, _req, res, _next) => {
+  console.error('[SERVER ERROR]', err);
+  res.status(500).json({ error: 'server_error' });
+});
+```
+
+> Common pitfalls this fixes:
+>
+> * Static middleware missing or placed **after** a crashing catch-all
+> * Sending `index.html` from the wrong path (e.g., `dist/public` vs `dist`)
+> * Throwing inside the catch-all → preview shows “Internal Server Error”
+
+### 3) (Dev-only) lighten CSP if you want the embedded Replit preview to be quiet
+
+If you set a strict CSP, Replit’s injected preview scripts will complain. In dev only:
+
+```ts
+if (process.env.NODE_ENV !== 'production') {
+  app.use((_req, res, next) => {
+    res.setHeader(
+      'Content-Security-Policy',
+      [
+        "default-src 'self' data: blob: https:",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+        "style-src  'self' 'unsafe-inline' https:",
+        "img-src    'self' data: blob: https:",
+        "connect-src 'self' https: ws:",
+        "frame-src  'self' https://replit.com"
+      ].join('; ')
+    );
+    next();
+  });
+}
+```
+
+---
+
+# Verify (2 minutes)
+
+1. **Open in a new tab** (not the embedded preview) or Incognito.
+2. Network tab:
+
+   * `GET /` → 200 and loads `index.html`
+   * `GET /assets/*.js` → 200
+   * Your `/api/*` calls → 200 (you already have that)
+3. Console: only extension noise; **no red errors** from your own bundles.
+
+---
+
+# Where this leaves the features
+
+* **Step 2 (recommendations):** API returns 32 “Working Capital” products and filtering is correct → should render once the SPA loads.
+* **Step 5 (documents):** your endpoint is still returning 501 (by design). UI will route, but you’ll see “not implemented” until we wire the backend.
+
+---
+
+# If it still says “Internal Server Error”
+
+* You’re likely sending a **wrong file path** to `index.html`. Log it:
+
+  ```ts
+  console.log('[SPA index]', path.join(dist, 'index.html'));
+  ```
+* Or your error handler is missing and an exception in the catch-all bubbles up.
+
+Fix the two lines above and the app will boot. Once the SPA is served, those CSP/extension warnings won’t block anything.
