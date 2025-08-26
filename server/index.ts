@@ -34,6 +34,7 @@ import leadsRouter from "./routes/leads";
 import { issueCsrf, requireCsrf } from "./security/csrf";
 import { securityHeaders } from "./security/headers";
 import { rlGeneral, rlUpload, rlChatbot } from "./security/rate";
+import { harden } from "./security";
 import healthRoutes from "./routes/health";
 
 // A+ Security: Fail-fast environment validation
@@ -67,11 +68,8 @@ initLenderProducts().catch(err => {
   console.error('❌ Failed to initialize lender products:', err);
 });
 
-// Apply security headers first
-securityHeaders().forEach(mw => app.use(mw));
-
-// Apply general rate limiting
-app.use(rlGeneral);
+// Apply security hardening (includes rate limiting and security headers)
+harden(app);
 
 // CACHE FIX: Serve HTML as no-store to prevent stale cache issues
 app.use((req, res, next) => {
@@ -1761,6 +1759,11 @@ app.use((req, res, next) => {
   const isPureDevelopment = process.env.NODE_ENV === 'development' && process.env.REPLIT_ENVIRONMENT !== 'production';
   if (isPureDevelopment && process.env.DISABLE_DEBUG !== 'true') {
     app.use('/debug', chatbotTrainingRouter);
+  } else {
+    // Return 404 for debug endpoints in production
+    app.use('/debug', (req, res) => {
+      res.status(404).json({ error: 'Not found' });
+    });
   }
 
   // VAPID public key endpoint for PWA push notifications
@@ -2943,9 +2946,24 @@ app.use((req, res, next) => {
       res.type('html').send('<!doctype html><meta charset="utf-8">');
     });
     
+    // Handle unknown/debug routes before SPA fallback  
+    app.get('/debug/*', (req, res) => {
+      res.status(404).json({ error: 'Not found' });
+    });
+    
     // Catch-all to SPA (but never for /api)
     app.get("*", (req, res) => {
       if (req.path.startsWith("/api")) return res.status(404).json({ error: "not_found" });
+      
+      // Block resource files and unknown patterns from serving index.html
+      if (req.path.match(/\.(js|css|png|jpg|gif|ico|svg|woff|woff2|pdf|zip)$/) || 
+          req.path.includes('..') || 
+          req.path.startsWith('/admin') ||
+          req.path.startsWith('/wp-') ||
+          req.path.startsWith('/phpmyadmin')) {
+        return res.status(404).json({ error: 'Resource not found' });
+      }
+      
       const STATIC_DIR = path.join(__dirname, '../dist/public');
       res.sendFile(path.join(STATIC_DIR, "index.html"));
     });
