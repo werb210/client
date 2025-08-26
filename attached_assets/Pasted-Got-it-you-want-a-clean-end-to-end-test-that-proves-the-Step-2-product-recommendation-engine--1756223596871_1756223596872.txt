@@ -1,0 +1,302 @@
+Got it — you want a **clean, end-to-end test** that proves the Step-2 product-recommendation engine works and the **Funding Options** actually render in the UI. Here’s a tight plan you can run today, plus example code you can drop in for automation.
+
+---
+
+# 0) Preconditions (dev)
+
+* Server on `http://localhost:5000`
+* Auth: `todd.w@boreal.financial / 1Sucker1!`
+* 2FA test mode (so we don’t wait for real SMS):
+
+  * `VERIFY_TEST_MODE=true`
+  * `VERIFY_TEST_CODE=000000`
+* JWT already wired in axios/fetch interceptors (you have this)
+
+---
+
+# 1) Seed deterministic test data (apps + products)
+
+Create a one-off seed route (dev-only) or run SQL. Minimal data to exercise matching:
+
+```ts
+// server/dev-seed.ts (mount only in dev)
+app.post("/api/dev/seed-reco", requireJwt, async (_req, res) => {
+  // Application with the fields Step 2 needs:
+  await db.query(`
+    INSERT INTO applications (id, business_name, requested_amount, monthly_revenue,
+                              time_in_business_months, naics, province, credit_score, status)
+    VALUES ('app_e2e_001', 'Maple Leaf Retail Co.', 250000, 180000, 36, '445110', 'AB', 690, 'review')
+    ON CONFLICT (id) DO NOTHING;
+  `);
+
+  // Lender products to choose from:
+  await db.query(`
+    INSERT INTO lenders (id, name) VALUES ('l1','Prairie Bank'), ('l2','Northern Credit')
+    ON CONFLICT (id) DO NOTHING;
+  `);
+
+  await db.query(`
+    INSERT INTO lender_products (id, lender_id, name, product_type, max_amount, min_revenue,
+                                 min_time_in_business_months, min_credit_score, rate)
+    VALUES
+    ('p1','l1','Term Loan','term',500000, 50000, 12, 660, '9.5%'),
+    ('p2','l2','Working Capital','wc', 300000, 30000,  6, 640, '11.2%')
+    ON CONFLICT (id) DO NOTHING;
+  `);
+
+  res.json({ ok: true });
+});
+```
+
+Smoke it:
+
+```bash
+# 1. login → token
+TOKEN=$(curl -s -X POST http://localhost:5000/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"todd.w@boreal.financial","password":"1Sucker1!"}' | jq -r '.token')
+
+# 2. set 2FA test mode (if you require verify step)
+curl -s -X POST http://localhost:5000/api/auth/mfa/check \
+  -H 'Content-Type: application/json' \
+  -d '{"attemptId":"test","code":"000000"}' >/dev/null
+
+# 3. seed
+curl -s -X POST http://localhost:5000/api/dev/seed-reco \
+  -H "Authorization: Bearer $TOKEN" | jq .
+```
+
+---
+
+# 2) Contract check (API shapes used by Step-2)
+
+The Step-2 engine usually needs:
+
+* **Application** (normalized): `requestedAmount`, `monthlyRevenue`, `timeInBusinessMonths`, `naics`, `province`, `creditScore`
+* **Products**: `id`, `lenderId`, `productType`, `maxAmount`, `minRevenue`, `minTimeInBusinessMonths`, `minCreditScore`, `rate`
+
+Add a tiny contract test route (dev-only) that **normalizes** fields (handles your earlier “field matching” issue) and computes recommendations:
+
+```ts
+// server/dev-reco-preview.ts (dev only)
+import z from "zod";
+
+const AppZ = z.object({
+  id: z.string(),
+  requestedAmount: z.number(),
+  monthlyRevenue: z.number(),
+  timeInBusinessMonths: z.number(),
+  naics: z.string().optional(),
+  province: z.string().optional(),
+  creditScore: z.number().optional(),
+});
+
+const ProductZ = z.object({
+  id: z.string(),
+  lenderId: z.string(),
+  name: z.string(),
+  productType: z.string(),
+  maxAmount: z.number(),
+  minRevenue: z.number().default(0),
+  minTimeInBusinessMonths: z.number().default(0),
+  minCreditScore: z.number().default(0),
+  rate: z.string(),
+});
+
+// normalize DB → client expectation
+async function getNormalizedApp(db: any, appId: string) {
+  const { rows } = await db.query(`
+    SELECT id,
+      COALESCE(requested_amount, amount, "requestedAmount")           AS "requestedAmount",
+      COALESCE(monthly_revenue, "monthlyRevenue")                     AS "monthlyRevenue",
+      COALESCE(time_in_business_months, "timeInBusinessMonths", 0)    AS "timeInBusinessMonths",
+      COALESCE(naics, industry_code)                                  AS "naics",
+      COALESCE(province, state, region)                               AS "province",
+      COALESCE(credit_score, fico, beacon)                            AS "creditScore"
+    FROM applications WHERE id = $1 LIMIT 1
+  `, [appId]);
+
+  if (!rows?.[0]) throw new Error("app-not-found");
+  return AppZ.parse({
+    id: rows[0].id,
+    requestedAmount: Number(rows[0].requestedAmount || 0),
+    monthlyRevenue: Number(rows[0].monthlyRevenue || 0),
+    timeInBusinessMonths: Number(rows[0].timeInBusinessMonths || 0),
+    naics: rows[0].naics || undefined,
+    province: rows[0].province || undefined,
+    creditScore: rows[0].creditScore ? Number(rows[0].creditScore) : undefined,
+  });
+}
+
+async function getNormalizedProducts(db: any) {
+  const { rows } = await db.query(`
+    SELECT id, lender_id, name, product_type,
+           COALESCE(max_amount, 0)                      AS "maxAmount",
+           COALESCE(min_revenue, 0)                     AS "minRevenue",
+           COALESCE(min_time_in_business_months, 0)     AS "minTimeInBusinessMonths",
+           COALESCE(min_credit_score, 0)                AS "minCreditScore",
+           rate
+    FROM lender_products
+  `);
+
+  return rows.map((r: any) => ProductZ.parse({
+    id: r.id, lenderId: r.lender_id, name: r.name, productType: r.product_type,
+    maxAmount: Number(r.maxAmount), minRevenue: Number(r.minRevenue),
+    minTimeInBusinessMonths: Number(r.minTimeInBusinessMonths),
+    minCreditScore: Number(r.minCreditScore), rate: r.rate,
+  }));
+}
+
+// naive recommender: hard filters + scoring
+function recommend(app: z.infer<typeof AppZ>, products: z.infer<typeof ProductZ>[]) {
+  const eligible = products.filter(p =>
+    app.requestedAmount <= p.maxAmount &&
+    app.monthlyRevenue >= p.minRevenue &&
+    app.timeInBusinessMonths >= p.minTimeInBusinessMonths &&
+    (!p.minCreditScore || (app.creditScore || 0) >= p.minCreditScore)
+  );
+
+  // simple score: larger maxAmount and lower min requirements rank higher
+  const scored = eligible.map(p => {
+    const score = (p.maxAmount / (app.requestedAmount || 1)) * 0.5
+                + (app.monthlyRevenue / (p.minRevenue || 1)) * 0.3
+                + ((app.creditScore || 0) - p.minCreditScore) * 0.2;
+    return { ...p, score };
+  }).sort((a,b)=>b.score-a.score);
+
+  return { offers: scored.slice(0, 5) };
+}
+
+app.get("/api/dev/reco-preview", requireJwt, async (req, res) => {
+  try {
+    const appId = (req.query.appId as string) || "app_e2e_001";
+    const appN  = await getNormalizedApp(db, appId);
+    const prods = await getNormalizedProducts(db);
+    const result = recommend(appN, prods);
+    res.json({ app: appN, offers: result.offers });
+  } catch (e:any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+```
+
+Sanity:
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:5000/api/dev/reco-preview?appId=app_e2e_001" | jq .
+```
+
+You should see `offers[0..]` with `p1` or `p2`.
+
+---
+
+# 3) UI End-to-End (Playwright) — login → 2FA → Step-2 → funding options present
+
+Create `e2e/step2.recommendation.spec.ts`:
+
+```ts
+import { test, expect } from "@playwright/test";
+
+test("Step 2 shows funding options", async ({ page }) => {
+  // 1) Login page
+  await page.goto("http://localhost:5000/login");
+  await page.getByLabel(/email/i).fill("todd.w@boreal.financial");
+  await page.getByLabel(/password/i).fill("1Sucker1!");
+  await page.getByRole("button", { name: /sign in/i }).click();
+
+  // 2) 2FA (test mode)
+  await expect(page).toHaveURL(/\/login\/verify/);
+  await page.getByLabel(/verification code/i).fill("000000");
+  await page.getByRole("button", { name: /verify/i }).click();
+
+  // 3) Land in staff area
+  await expect(page).toHaveURL(/\/staff/);
+
+  // 4) Navigate to a specific application "Step 2" (adjust selector/route)
+  // Example: from Pipeline → click first card → Step 2 tab
+  await page.getByRole("link", { name: /pipeline/i }).click();
+  await page.getByTestId("pipeline-card-app_e2e_001").click();
+  await page.getByRole("tab", { name: /step 2/i }).click();
+
+  // 5) Assert the Funding Options render (list/table/cards)
+  await expect(page.getByRole("heading", { name: /funding options/i })).toBeVisible();
+
+  // expect at least one offer row/card
+  const offerItems = page.locator("[data-testid='offer-item']");
+  await expect(offerItems).toHaveCountGreaterThan(0);
+
+  // optional: open offer details
+  await offerItems.first().getByRole("button", { name: /details|view/i }).click();
+  await expect(page.getByText(/rate|term|payment/i)).toBeVisible();
+});
+```
+
+Run:
+
+```bash
+npx playwright test e2e/step2.recommendation.spec.ts --headed
+```
+
+> If your UI uses different selectors, swap `getByRole`/`data-testid` accordingly. Add `data-testid="offer-item"` to your offer card row component to make this stable.
+
+---
+
+# 4) API Smoke for Step-2 (curl)
+
+These are the endpoints Step-2 relies on (adjust to your app):
+
+```bash
+echo "App normalized (server/preview):"
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:5000/api/dev/reco-preview?appId=app_e2e_001" | jq '{app, count: (.offers|length)}'
+
+echo "Products list:"
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:5000/api/lenders/products | jq 'length'
+```
+
+Expect: offers `> 0`, products `> 0`.
+
+---
+
+# 5) Guardrails (to prevent “field matching” regressions)
+
+Add a tiny **schema validator** in the server and log if any required field is missing before you compute recommendations:
+
+```ts
+function assertFields(app: any) {
+  const missing = [];
+  if (app.requestedAmount == null)        missing.push("requestedAmount");
+  if (app.monthlyRevenue == null)         missing.push("monthlyRevenue");
+  if (app.timeInBusinessMonths == null)   missing.push("timeInBusinessMonths");
+  if (missing.length) {
+    console.warn("[reco] missing fields:", missing);
+  }
+}
+```
+
+Call `assertFields(appN)` before `recommend(...)`. Ship it with a metric/log so you’ll see mismatches immediately.
+
+---
+
+# 6) Acceptance Criteria (copy/paste)
+
+* After login + 2FA, navigating to **Step 2** shows **≥1 funding option** for `app_e2e_001`.
+* Network shows **200** responses from:
+
+  * `/api/lenders/products` (array length ≥ 1)
+  * `reco-preview` (offers length ≥ 1)
+* UI shows offer rows/cards with **Rate**, **Term**, **Max Amount** (or your fields).
+* No console errors; no “Failed to load” banners.
+
+---
+
+## If something still blocks options from rendering
+
+Grab **one** failing network call from DevTools and report:
+
+* **URL**
+* **HTTP status**
+* First \~20 lines of **response body**
+
+I’ll map that straight to the exact normalization line to fix.
