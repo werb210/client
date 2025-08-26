@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProductCategories } from '@/hooks/useProductCategories';
-import { getProductsForStep2, getMatchingCategories } from '@/lib/products';
+import { fetchCatalog, categoriesFor } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, CheckCircle, ArrowRight, AlertTriangle, Bug } from 'lucide-react';
@@ -65,15 +65,9 @@ export function Step2RecommendationEngine({
     const loadCatalogData = async () => {
       try {
         setRawLoading(true);
-        // NEW: derive strictly from normalized catalog (no category defaulting)
-        const products = await getProductsForStep2({ 
-          amount: filteringData.fundingAmount, 
-          country: filteringData.headquarters as "US"|"CA" 
-        });
-        const categories = await getMatchingCategories({ 
-          amount: filteringData.fundingAmount, 
-          country: filteringData.headquarters as "US"|"CA" 
-        });
+        // NEW: use catalog API (no category defaulting)
+        const { products } = await fetchCatalog();
+        const categories = categoriesFor(filteringData.fundingAmount, filteringData.headquarters as "US"|"CA", products);
         
         setAllLenderProducts(products);
         setProductCategories(categories.map(cat => ({ category: cat, count: products.filter(p => p.category === cat).length })));

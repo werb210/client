@@ -1,8 +1,5 @@
 export class ApiError extends Error {
-  constructor(public status:number, public code:string, public info?:any){
-    super(`${status} ${code}`);
-    this.name = 'ApiError';
-  }
+  constructor(public status:number, public code:string, public info?:any){ super(code); }
 }
 async function safeFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
   const r = await fetch(input, { credentials: 'include', ...init });
@@ -25,60 +22,84 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   return safeFetch(path, init);
 }
 
-export type RequiredDocsInput = {
-  productId?: string;
-  category?: string;
-  country?: "US"|"CA" | string;
-  amount?: number;
-  lenderId?: string;
+export type LenderProduct = {
+  id: string;
+  name: string;
+  lender_name: string;
+  country: "US"|"CA";
+  category: string;
+  min_amount: number;
+  max_amount: number;
+  active: boolean;
+  documents?: Array<{ key:string; label:string; required:boolean; months?:number }>;
 };
 
-export type RequiredDoc = {
-  key: string;
-  label: string;
-  required: boolean;
-  months?: number;
-  reason?: string;
-};
+export type RequiredDoc = { key:string; label:string; required:boolean; months?:number } | string;
 
-const BASELINE_DOC: RequiredDoc = {
-  key: "bank_statements",
-  label: "Last 6 months bank statements",
-  required: true,
-  months: 6
-};
+async function getJson(path:string){
+  const r = await fetch(path, { credentials:"include" });
+  if(!r.ok) throw new ApiError(r.status, "HTTP_ERROR", await r.text().catch(()=>undefined));
+  return r.json();
+}
 
-export async function listDocuments(input: RequiredDocsInput): Promise<RequiredDoc[]> {
-  // 1) Try Staff API (public)
-  try {
+export async function fetchCatalog(){
+  const j = await getJson("/api/catalog/export-products?includeInactive=1");
+  const src = Array.isArray(j) ? j : (j.products ?? []);
+  const products: LenderProduct[] = (src as any[]).map(p => ({
+    id: String(p.id),
+    name: String(p.name ?? p.product_name ?? p.productName ?? "Unnamed"),
+    lender_name: String(p.lender_name ?? p.lenderName ?? ""),
+    country: String(p.country ?? p.countryOffered ?? "").toUpperCase() as "US"|"CA",
+    category: String(p.category ?? p.productCategory ?? ""),
+    min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0) || 0,
+    max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? 0) || 0,
+    active: Boolean(p.active ?? p.isActive ?? true),
+    documents: Array.isArray(p.documents ?? p.required_documents) ? (p.documents ?? p.required_documents) : undefined,
+  }));
+
+  // Guard uniform/stub dataset
+  const uniq = (a:any[]) => Array.from(new Set(a));
+  const looksUniform = products.length>0
+    && (uniq(products.map(p=>p.country)).length===1 || uniq(products.map(p=>p.category)).length===1)
+    && uniq(products.map(p=>String(p.min_amount))).length===1
+    && uniq(products.map(p=>String(p.max_amount))).length===1;
+  if(looksUniform) throw new ApiError(412,"ASK_REFRESH_DATASET",{ hint:"/api/catalog/sanity" });
+
+  return { total: products.length, products };
+}
+
+export function categoriesFor(amount:number, country:"US"|"CA", products:LenderProduct[]){
+  const out = new Set<string>();
+  for(const p of products){
+    if(p.country!==country) continue;
+    if(amount < p.min_amount) continue;
+    if(p.max_amount && amount > p.max_amount) continue;
+    if(p.category) out.add(p.category);
+  }
+  return Array.from(out).sort();
+}
+
+const FALLBACK_BANK6: RequiredDoc = { key:"bank_statements", label:"Last 6 months bank statements", required:true, months:6 };
+
+export async function listDocumentsFor(product: LenderProduct){
+  if(product.documents?.length) return product.documents;
+  try{
     const r = await fetch("/api/required-docs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(input ?? {})
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ category: product.category, country: product.country, amount: product.min_amount })
     });
-    if (r.ok) {
+    if(r.ok){
       const j = await r.json();
-      let docs: RequiredDoc[] = Array.isArray(j?.documents) ? j.documents : [];
-      // guarantee baseline >= 6 months
-      const idx = docs.findIndex(d => d.key === "bank_statements");
-      if (idx === -1) {
-        docs.unshift({ ...BASELINE_DOC });
-      } else {
-        const d = docs[idx];
-        docs[idx] = {
-          ...d,
-          required: true,
-          label: BASELINE_DOC.label,
-          months: Math.max(6, Number(d.months ?? 0))
-        };
-      }
-      return docs;
+      const docs = j?.documents ?? j?.requiredDocs ?? [];
+      if(Array.isArray(docs) && docs.length) return docs;
     }
-  } catch (_) {/* fall through */}
+  }catch{}
+  return [FALLBACK_BANK6];
+}
 
-  // 2) Fallback (local baseline only)
-  return [ { ...BASELINE_DOC } ];
+// Legacy compatibility
+export async function listDocuments(input: any): Promise<RequiredDoc[]> {
+  return [FALLBACK_BANK6];
 }
 
 // ---------- Document Management ----------

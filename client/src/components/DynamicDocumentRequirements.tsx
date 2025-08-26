@@ -1,6 +1,6 @@
 // AFTER: strictly Staff API
 import React from "react";
-import { listDocuments, getDocumentViewUrl, setDocumentStatus, type RequiredDocsInput, type RequiredDoc } from "@/lib/api";
+import { listDocumentsFor, getDocumentViewUrl, setDocumentStatus, type LenderProduct, type RequiredDoc } from "@/lib/api";
 
 function normalizeDocs(docs: RequiredDoc[]) {
   return (docs ?? []).map((d, i) =>
@@ -15,8 +15,18 @@ export function DynamicDocumentRequirements({ applicationId }: { applicationId: 
   async function refresh() {
     setLoading(true);
     try {
-      // Example usage:
-      const rawDocs = await listDocuments({ productId: applicationId, category: "Working Capital", country: "US", amount: 50000 } as RequiredDocsInput);
+      // Example usage with product object:
+      const sampleProduct: LenderProduct = { 
+        id: applicationId, 
+        name: "Sample Product", 
+        lender_name: "Sample Lender",
+        category: "Working Capital", 
+        country: "US", 
+        min_amount: 50000,
+        max_amount: 5000000,
+        active: true
+      };
+      const rawDocs = await listDocumentsFor(sampleProduct);
       // rawDocs is Guaranteed to include "Last 6 months bank statements"
       const items = normalizeDocs(rawDocs);
       setDocs(items);

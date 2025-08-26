@@ -66,12 +66,8 @@ export async function fetchCatalogNormalized(): Promise<LenderProduct[]> {
     }
   } catch { /* fall through */ }
 
-  // 2) Legacy shim
-  const r2 = await fetch("/api/lender-products", { credentials: "include" });
-  if (!r2.ok) return [];
-  const j2 = await r2.json();
-  const rows = (j2.products ?? j2) as RawProduct[];
-  return Array.isArray(rows) ? rows.map(normalizeProduct) : [];
+  // No fallback - catalog only
+  return [];
 }
 
 /** Get unique categories that match amount+country */
