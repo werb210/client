@@ -113,7 +113,7 @@ export function Step2RecommendationEngine({
   // Format looking for display
   const formatLookingFor = (looking: string) => {
     const map: Record<string, string> = {
-      'capital': 'Business Capital',
+      'capital': 'Working Capital',
       'equipment': 'Equipment Financing',
       'both': 'Both Capital & Equipment'
     };
