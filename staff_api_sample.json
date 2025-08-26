@@ -1,0 +1,32 @@
+[
+  {
+    "id": "65-1756241495141-xop3wh91t",
+    "name": "Accord",
+    "lender": "Accord",
+    "country": "US",
+    "category": "Working Capital",
+    "min_amount": 5000,
+    "max_amount": 50000,
+    "active": true
+  },
+  {
+    "id": "66-1756241495101-d2lee7cz5",
+    "name": "Accord",
+    "lender": "Accord",
+    "country": "US",
+    "category": "Working Capital",
+    "min_amount": 25000,
+    "max_amount": 250000,
+    "active": true
+  },
+  {
+    "id": "80-1756241495377-3e5ncws94",
+    "name": "Accord Financial Corp.",
+    "lender": "Accord Financial Corp.",
+    "country": "US",
+    "category": "Working Capital",
+    "min_amount": 20000,
+    "max_amount": 1500000,
+    "active": true
+  }
+]
