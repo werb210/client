@@ -1,0 +1,97 @@
+export type CanonicalProduct = {
+  id: string;
+  name: string;
+  lender_id: string;
+  lender_name: string;
+  country: "CA"|"US";
+  category: string;
+  min_amount?: number|null;
+  max_amount?: number|null;
+  interest_rate_min?: number|null;
+  interest_rate_max?: number|null;
+  term_min?: number|null;
+  term_max?: number|null;
+  active: boolean;
+  required_documents: Array<{key:string;label:string;required:boolean;months?:number}>;
+};
+
+type FieldAliases = Record<string,string>;
+
+async function fetchFieldAliases(): Promise<FieldAliases> {
+  try {
+    const r = await fetch("/api/catalog/fields", { credentials:"include" });
+    if (!r.ok) throw new Error();
+    const j = await r.json();
+    return j?.legacy_aliases ?? {};
+  } catch {
+    return {
+      productName:"name",
+      lenderName:"lender_name",
+      countryOffered:"country",
+      productCategory:"category",
+      minimumLendingAmount:"min_amount",
+      maximumLendingAmount:"max_amount",
+      isActive:"active",
+      requiredDocs:"required_documents",
+    };
+  }
+}
+
+function pick(raw:any, canon:string, aliases:FieldAliases){
+  if (raw[canon] !== undefined && raw[canon] !== null) return raw[canon];
+  for (const [legacy, target] of Object.entries(aliases)) {
+    if (target === canon && raw[legacy] !== undefined) return raw[legacy];
+  }
+  return undefined;
+}
+
+function normalizeOne(raw:any, aliases:FieldAliases): CanonicalProduct {
+  const country = String(pick(raw,"country",aliases) ?? "").toUpperCase();
+  let docs:any = pick(raw,"required_documents",aliases);
+  if (!Array.isArray(docs) || docs.length === 0) {
+    docs = [{ key:"bank_6m", label:"Last 6 months bank statements", required:true, months:6 }];
+  }
+  return {
+    id: String(pick(raw,"id",aliases) ?? raw.id),
+    name: String(pick(raw,"name",aliases) ?? ""),
+    lender_id: String(pick(raw,"lender_id",aliases) ?? pick(raw,"lenderId",aliases) ?? ""),
+    lender_name: String(pick(raw,"lender_name",aliases) ?? ""),
+    country: (country === "CA" || country === "US" ? country : "US") as "CA"|"US",
+    category: String(pick(raw,"category",aliases) ?? "Working Capital"),
+    min_amount: Number(pick(raw,"min_amount",aliases) ?? 0),
+    max_amount: Number(pick(raw,"max_amount",aliases) ?? 0),
+    interest_rate_min: pick(raw,"interest_rate_min",aliases) ?? null,
+    interest_rate_max: pick(raw,"interest_rate_max",aliases) ?? null,
+    term_min: pick(raw,"term_min",aliases) ?? null,
+    term_max: pick(raw,"term_max",aliases) ?? null,
+    active: Boolean(pick(raw,"active",aliases) ?? true),
+    required_documents: docs,
+  };
+}
+
+export async function fetchCatalogNormalized(): Promise<CanonicalProduct[]> {
+  const aliases = await fetchFieldAliases();
+  // Prefer canonical export
+  try {
+    const r = await fetch("/api/catalog/export-products?includeInactive=1", { credentials:"include" });
+    if (r.ok) {
+      const j = await r.json();
+      return (j.products || []).map((p:any)=>normalizeOne(p, aliases));
+    }
+  } catch {}
+  // Fallback to legacy
+  const r2 = await fetch("/api/lender-products", { credentials:"include" });
+  const j2 = await r2.json();
+  return (j2.products || []).map((p:any)=>normalizeOne(p, aliases));
+}
+
+// Quick audit: print every product with every field/value
+export async function printCatalogForAudit(limit=50){
+  const rows = await fetchCatalogNormalized();
+  const fields = ["id","name","lender_id","lender_name","country","category","min_amount","max_amount","interest_rate_min","interest_rate_max","term_min","term_max","active","required_documents"];
+  console.log("Total products:", rows.length);
+  rows.slice(0,limit).forEach((p,i)=>{
+    console.log(`\n#${i+1}: ${p.name} (${p.id})`);
+    fields.forEach(f=>console.log(f.padEnd(20), ":", (f==="required_documents"? JSON.stringify(p[f as keyof CanonicalProduct]) : (p as any)[f])));
+  });
+}

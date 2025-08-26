@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
+import { fetchCatalogNormalized, CanonicalProduct } from '@/lib/catalog';
 import { useProductCategories } from '@/hooks/useProductCategories';
-import { fetchCatalog, categoriesFor } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, CheckCircle, ArrowRight, AlertTriangle, Bug } from 'lucide-react';
@@ -55,26 +55,29 @@ export function Step2RecommendationEngine({
     fundsPurpose: formData.fundsPurpose || 'working_capital'
   };
   
-  // ✅ NEW NORMALIZED CATALOG - No more "Working Capital" defaults
-  const [allLenderProducts, setAllLenderProducts] = useState<any[]>([]);
-  const [productCategories, setProductCategories] = useState<any[]>([]);
-  const [rawLoading, setRawLoading] = useState(true);
-  const [rawError, setRawError] = useState<Error | null>(null);
+  // ✅ NEW CANONICAL CATALOG - Field aliasing and fallback support
+  const [allLenderProducts, setAllLenderProducts] = useState<CanonicalProduct[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState<Error | null>(null);
   
   useEffect(() => {
     const loadCatalogData = async () => {
       try {
-        setRawLoading(true);
-        // NEW: use catalog API (no category defaulting)
-        const { products } = await fetchCatalog();
-        const categories = categoriesFor(filteringData.fundingAmount, filteringData.headquarters as "US"|"CA", products);
+        setCatalogLoading(true);
+        console.log('🔄 [CATALOG] Loading normalized products with field aliasing...');
+        
+        // NEW: Use catalog system with alias mapping and fallback
+        const products = await fetchCatalogNormalized();
+        
+        console.log(`✅ [CATALOG] Loaded ${products.length} canonical products`);
+        console.log('📋 [CATALOG] Sample product structure:', products[0] || 'No products');
         
         setAllLenderProducts(products);
-        setProductCategories(categories.map(cat => ({ category: cat, count: products.filter(p => p.category === cat).length })));
       } catch (err) {
-        setRawError(err as Error);
+        console.error('❌ [CATALOG] Load failed:', err);
+        setCatalogError(err as Error);
       } finally {
-        setRawLoading(false);
+        setCatalogLoading(false);
       }
     };
     loadCatalogData();
@@ -123,7 +126,7 @@ export function Step2RecommendationEngine({
     if (workingCapitalCategory) {
       console.log(`💼 [STEP2] Working Capital category found with ${workingCapitalCategory.count} products:`);
       workingCapitalCategory.products?.forEach((p, i) => {
-        console.log(`   ${i+1}. ${p.productName || p.lenderName} (${p.lenderName})`);
+        console.log(`   ${i+1}. ${p.name || p.lender_name} (${p.lender_name})`);
       });
     } else {
       console.log("❌ [STEP2] Working Capital category not found in productCategories");
@@ -131,8 +134,8 @@ export function Step2RecommendationEngine({
   }
   
   // ✅ CHATGPT VERIFICATION: Log API responses
-  if (rawError) {
-    console.error("Raw lender products API error:", rawError);
+  if (catalogError) {
+    console.error("Catalog lender products API error:", catalogError);
   }
   if (error) {
     console.error("Product categories hook error:", error);

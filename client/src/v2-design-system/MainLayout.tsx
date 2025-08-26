@@ -153,8 +153,8 @@ export function MainLayout() {
       <Switch>
       {/* Diagnostic Routes */}
       {/* Route removed with legacy auth cleanup */}
-      {/* <Route path="/lender-test" component={[^}]*} /> */} */}
-      <Route path="/lenders-by-category" component={[^}]*} /> */}
+      {/* <Route path="/lender-test" component={...} /> */}
+      {/* <Route path="/lenders-by-category" component={...} /> */}
       <Route path="/lenders-by-country" component={[^}]*} /> */}
       <Route path="/staff-api-test" component={[^}]*} /> */}
       {/* <Route path="/cors-test" component={[^}]*} /> */} */}

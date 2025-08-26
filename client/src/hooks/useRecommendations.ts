@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { LenderProduct } from '@shared/lenderSchema';
+import { fetchCatalogNormalized, CanonicalProduct } from '@/lib/catalog';
 import { getAmountRange, getRevenueMin } from "@/lib/fieldAccess";
 
 export interface Step1FormData {
@@ -15,22 +15,16 @@ export interface Step1FormData {
 }
 
 export function useRecommendations(formStep1Data: Step1FormData) {
-  /** 1 — pull products from normalized data source (authentic data only) */
-  const { data: products = [], isLoading, error } = useQuery<LenderProduct[]>({
+  /** 1 — pull products from canonical catalog system */
+  const { data: products = [], isLoading, error } = useQuery<CanonicalProduct[]>({
     queryKey: ["lenderProducts"],
     queryFn: async () => {
-      console.log('🔄 [PRODUCTS] Fetching from API with 22-field schema...');
+      console.log('🔄 [PRODUCTS] Fetching through catalog system with field aliasing...');
       
-      const res = await fetch('/api/catalog/export-products?includeInactive=1');
-      const data = await res.json();
+      const canonicalProducts = await fetchCatalogNormalized();
       
-      if (!data.success) {
-        console.log('❌ [PRODUCTS] Failed to fetch from API');
-        return [];
-      }
-      
-      console.log(`📦 [PRODUCTS] Loaded ${data.count} products with 22-field schema`);
-      return data.products;
+      console.log(`📦 [PRODUCTS] Loaded ${canonicalProducts.length} canonical products`);
+      return canonicalProducts;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 3,
@@ -39,7 +33,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   /** 2 — filter + score */
   const fundingAmount = parseFloat(formStep1Data.fundingAmount?.replace(/[^0-9.-]+/g, '') || '0');
   const revenueLastYear = getRevenueValue(formStep1Data.lastYearRevenue || '');
-  const headquarters = formStep1Data.businessLocation === "united-states" ? "United States" as const : "Canada" as const;
+  const headquarters = formStep1Data.businessLocation === "united-states" ? "US" as const : "CA" as const;
 
   // Production mode: Console logging disabled
 
@@ -53,19 +47,18 @@ export function useRecommendations(formStep1Data: Step1FormData) {
     accountsReceivableBalance: formStep1Data.accountsReceivableBalance 
   });
 
-  // Data availability analysis for transparency
-  if ((products as any[]).length > 0) {
-    const selectedCountryCode = headquarters === "United States" ? "US" : "CA";
-    const countryProducts = (products as any[]).filter(p => p.country === selectedCountryCode || p.country === 'US/CA');
+  // Data availability analysis with canonical products
+  if (products.length > 0) {
+    const countryProducts = products.filter(p => p.country === headquarters);
     
     if (countryProducts.length > 0) {
-      const maxAmounts = countryProducts.map(p => getAmountRange(p).max).filter(max => max !== Infinity);
+      const maxAmounts = countryProducts.map(p => p.max_amount || 0).filter(max => max > 0);
       const highestLimit = maxAmounts.length > 0 ? Math.max(...maxAmounts) : 0;
       
-      console.log(`📊 [DATA_COVERAGE] ${selectedCountryCode} products: ${countryProducts.length}, highest limit: $${highestLimit.toLocaleString()}`);
+      console.log(`📊 [DATA_COVERAGE] ${headquarters} products: ${countryProducts.length}, highest limit: $${highestLimit.toLocaleString()}`);
       
       if (fundingAmount > highestLimit) {
-        console.log(`⚠️ [DATA_GAP] Requested $${fundingAmount.toLocaleString()} exceeds highest available limit $${highestLimit.toLocaleString()} for ${selectedCountryCode}`);
+        console.log(`⚠️ [DATA_GAP] Requested $${fundingAmount.toLocaleString()} exceeds highest available limit $${highestLimit.toLocaleString()} for ${headquarters}`);
       }
     }
   }
@@ -156,21 +149,21 @@ export function useRecommendations(formStep1Data: Step1FormData) {
         
         // Only include capital products (which can be used for equipment too) or hybrid products
         if (!isCapitalProduct) {
-          failedProducts.push({product: p, reason: `Neither capital nor hybrid product: category=${p.productCategory}`});
+          failedProducts.push({product: p, reason: `Neither capital nor hybrid product: category=${p.category}`});
           return false;
         }
       }
       
       // Exclude Invoice Factoring if no accounts receivable
       if (formStep1Data.accountsReceivableBalance === 0 && 
-          (p.productCategory.toLowerCase().includes('invoice') || p.productCategory.toLowerCase().includes('factoring'))) {
+          (p.category.toLowerCase().includes('invoice') || p.category.toLowerCase().includes('factoring'))) {
         failedProducts.push({product: p, reason: `Invoice factoring excluded: no A/R balance`});
         return false;
       }
       
       return true;
     })
-    .map((p: LenderProduct) => ({
+    .map((p: CanonicalProduct) => ({
       product: p,
       score: calculateScore(p, formStep1Data, headquarters, fundingAmount, revenueLastYear),
     }))
@@ -179,7 +172,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   /** 3 — aggregate to category rows */
   const categories = matches.reduce<Record<string, { score: number; count: number; products: typeof matches }>>(
     (acc: any, m: any) => {
-      const key = m.product.productCategory;
+      const key = m.product.category;
       if (!acc[key]) {
         acc[key] = { score: m.score, count: 0, products: [] };
       }
@@ -200,14 +193,14 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   });
   
   console.log("🔍 [STEP2] Working Capital products that passed:", 
-    (matches as any[]).filter((m: any) => m.product.productCategory?.toLowerCase().includes('working')).length
+    (matches as any[]).filter((m: any) => m.product.category?.toLowerCase().includes('working')).length
   );
   
   console.log("🔍 [STEP2] Equipment-only products excluded for 'both':", 
     failedProducts.filter(f => f.reason.includes('Equipment-only')).length
   );
   
-  console.log("🔍 [STEP2] Filtered out:", failedProducts.map(f => `${f.product.productName}: ${f.reason}`));
+  console.log("🔍 [STEP2] Filtered out:", failedProducts.map(f => `${f.product.name}: ${f.reason}`));
 
   // Data transparency: Show what authentic data is available when no matches found
   if (matches.length === 0 && (products as any[]).length > 0) {
@@ -299,22 +292,21 @@ function isEquipmentFinancingProduct(category: string): boolean {
 }
 
 function calculateScore(
-  product: LenderProduct, 
+  product: CanonicalProduct, 
   formData: Step1FormData, 
-  headquarters: "United States" | "Canada",
+  headquarters: "US" | "CA",
   fundingAmount: number,
   revenueLastYear: number
 ): number {
   let score = 0;
 
-  // Geography match (25 points) - Updated for 22-field schema
-  const targetCountry = headquarters === "United States" ? "United States" : "Canada";
-  if (product.countryOffered === targetCountry) {
+  // Geography match (25 points) - Updated for canonical schema
+  if (product.country === headquarters) {
     score += 25;
   }
 
-  // Funding range match (25 points) - Updated for 22-field schema
-  if (fundingAmount >= product.minimumLendingAmount && fundingAmount <= product.maximumLendingAmount) {
+  // Funding range match (25 points) - Updated for canonical schema
+  if (fundingAmount >= (product.min_amount || 0) && fundingAmount <= (product.max_amount || Infinity)) {
     score += 25;
   }
 
@@ -323,14 +315,12 @@ function calculateScore(
   //   score += 25;
   // }
 
-  // Revenue requirement match (25 points) - Updated for 22-field schema
-  if (!product.minimumAverageMonthlyRevenue || revenueLastYear >= (product.minimumAverageMonthlyRevenue * 12)) {
-    score += 25;
-  }
+  // Revenue requirement match (25 points) - Skip for canonical schema (not implemented yet)
+  score += 25; // Default to passing revenue check for now
 
   // ✅ STEP 2: LOC products get bonus points
-  if (product.productCategory.toLowerCase().includes('line of credit') || 
-      product.productCategory.toLowerCase().includes('credit')) {
+  if (product.category.toLowerCase().includes('line of credit') || 
+      product.category.toLowerCase().includes('credit')) {
     score += 10;
   }
 

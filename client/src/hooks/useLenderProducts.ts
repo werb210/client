@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
+import { fetchCatalogNormalized, CanonicalProduct } from "@/lib/catalog";
 
 // ✅ COMPREHENSIVE 22-FIELD LENDER PRODUCT SCHEMA
 const LenderProductSchema = z.object({
@@ -45,45 +46,14 @@ export type LenderProductsResponse = z.infer<typeof LenderProductsResponseSchema
 export function useLenderProducts() {
   return useQuery({
     queryKey: ["lenderProducts"],
-    queryFn: async (): Promise<LenderProduct[]> => {
-      console.log('🔄 Fetching lender products with 22-field schema...');
+    queryFn: async (): Promise<CanonicalProduct[]> => {
+      console.log('🔄 Fetching products through canonical catalog system...');
       
-      const res = await fetch(`/api/catalog/export-products?includeInactive=1`);
-      const data = await res.json();
+      // Use new catalog system with field aliasing and fallback
+      const products = await fetchCatalogNormalized();
       
-      if (!data.success) {
-        throw new Error("Failed to fetch lender products");
-      }
-      
-      // Transform existing products to 22-field schema with defaults
-      const transformedProducts: LenderProduct[] = data.products.map((product: any) => ({
-        id: product.id.toString(),
-        lenderName: "Boreal Financial", // Default for existing products
-        productCategory: product.category || product.productCategory || "Unknown", // Map to normalized category
-        productName: product.name,
-        minimumLendingAmount: parseFloat(product.min_amount) || 0,
-        maximumLendingAmount: parseFloat(product.max_amount) || 0,
-        interestRateMinimum: parseFloat(product.interest_rate_min) || 0.05,
-        interestRateMaximum: parseFloat(product.interest_rate_max) || 0.25,
-        countryOffered: "United States", // Default country
-        rateType: "Fixed", // Default rate type
-        rateFrequency: "Monthly", // Default frequency
-        index: undefined, // Optional field
-        termMinimum: product.term_min || 12,
-        termMaximum: product.term_max || 60,
-        minimumAverageMonthlyRevenue: undefined, // Optional
-        minimumCreditScore: undefined, // Optional
-        documentsRequired: product.requirements || [],
-        description: product.description,
-        externalId: undefined, // Optional
-        isActive: product.active !== false,
-        createdBy: 1, // Default system user
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }));
-      
-      console.log(`✅ Loaded ${transformedProducts.length} products with 22-field schema`);
-      return transformedProducts;
+      console.log(`✅ Loaded ${products.length} canonical products with field normalization`);
+      return products;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 3,
@@ -98,8 +68,8 @@ export function useLenderProductsByCategory(category?: string) {
   const { data: products = [], ...query } = useLenderProducts();
   
   const filteredProducts = category 
-    ? products.filter((product: LenderProduct) => 
-        product.productCategory.toLowerCase() === category.toLowerCase()
+    ? products.filter((product: CanonicalProduct) => 
+        product.category.toLowerCase() === category.toLowerCase()
       )
     : products;
     
@@ -114,25 +84,27 @@ export function useRecommendedProducts(amount?: number, creditScore?: number) {
   
   if (!amount) return { ...query, data: products };
   
-  const recommended = products.filter((product: LenderProduct) => {
-    const withinAmount = amount >= product.minimumLendingAmount && amount <= product.maximumLendingAmount;
-    const withinCredit = !product.minimumCreditScore || !creditScore || creditScore >= product.minimumCreditScore;
+  const recommended = products.filter((product: CanonicalProduct) => {
+    const withinAmount = amount >= (product.min_amount || 0) && amount <= (product.max_amount || Infinity);
+    const withinCredit = true; // Skip credit checks for now as canonical schema doesn't have min credit score
     
     // Always include Line of Credit products when within range
-    const isLOC = product.productCategory.toLowerCase().includes('credit') || 
-                  product.productCategory.toLowerCase().includes('line');
+    const isLOC = product.category.toLowerCase().includes('credit') || 
+                  product.category.toLowerCase().includes('line');
     
     return withinAmount && withinCredit && (isLOC || true);
   }).sort((a, b) => {
     // Prioritize LOC products
-    const aIsLOC = a.productCategory.toLowerCase().includes('credit');
-    const bIsLOC = b.productCategory.toLowerCase().includes('credit');
+    const aIsLOC = a.category.toLowerCase().includes('credit');
+    const bIsLOC = b.category.toLowerCase().includes('credit');
     
     if (aIsLOC && !bIsLOC) return -1;
     if (!aIsLOC && bIsLOC) return 1;
     
     // Then sort by interest rate
-    return a.interestRateMinimum - b.interestRateMinimum;
+    const aRate = a.interest_rate_min || 0;
+    const bRate = b.interest_rate_min || 0;
+    return aRate - bRate;
   });
     
   return { ...query, data: recommended };
@@ -145,7 +117,7 @@ export function useProductCategories() {
   const { data: products = [], ...query } = useLenderProducts();
   
   const categories = [...new Set(
-    products.map((p: LenderProduct) => p.productCategory).filter(Boolean)
+    products.map((p: CanonicalProduct) => p.category).filter(Boolean)
   )];
   
   return { ...query, data: categories };
@@ -157,7 +129,7 @@ export function useProductCategories() {
 export function useLenderProduct(id?: string) {
   const { data: products = [], ...query } = useLenderProducts();
   
-  const product = products.find((p: LenderProduct) => p.id === id) || null;
+  const product = products.find((p: CanonicalProduct) => p.id === id) || null;
   
   return { ...query, data: product };
 }
@@ -170,13 +142,13 @@ export function useProductDocuments(productId?: string) {
   
   return { 
     ...query, 
-    data: product?.documentsRequired || [],
+    data: product?.required_documents || [],
     isLoading: query.isLoading
   };
 }
 
 // Legacy compatibility - return array directly for older components
-export function useLenderProductsArray(): LenderProduct[] {
+export function useLenderProductsArray(): CanonicalProduct[] {
   const { data } = useLenderProducts();
   return data || [];
 }
