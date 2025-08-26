@@ -7,6 +7,16 @@ export default function Step2Recommendations() {
   const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
 
+  // Debug: Log form data received from Step 1
+  console.log('🔍 [STEP2] Form data received:', state);
+  console.log('🔍 [STEP2] Step1 data:', state.step1);
+  console.log('🔍 [STEP2] Root level data:', {
+    lookingFor: state.lookingFor,
+    fundingAmount: state.fundingAmount,
+    businessLocation: state.businessLocation,
+    headquarters: state.headquarters
+  });
+
   const handleProductSelect = (product: string) => {
     dispatch({
       type: 'UPDATE_FORM_DATA',
@@ -46,7 +56,16 @@ export default function Step2Recommendations() {
 
         <div className="max-w-4xl mx-auto mt-8">
           <Step2RecommendationEngine
-            formData={state}
+            formData={{
+              ...state,
+              ...state.step1,
+              // Ensure required fields are available for filtering
+              headquarters: state.headquarters || state.step1?.headquarters || 'CA',
+              lookingFor: state.lookingFor || state.step1?.lookingFor || 'capital', 
+              fundingAmount: state.fundingAmount || state.step1?.fundingAmount || 50000,
+              accountsReceivableBalance: state.accountsReceivableBalance || state.step1?.accountsReceivableBalance || 0,
+              fundsPurpose: state.fundsPurpose || state.step1?.fundsPurpose || 'working_capital'
+            }}
             selectedProduct={state.selectedProduct || ''}
             onProductSelect={handleProductSelect}
             onContinue={handleContinue}

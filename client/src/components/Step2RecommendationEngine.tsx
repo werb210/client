@@ -44,16 +44,16 @@ export function Step2RecommendationEngine({
     return location;
   };
   
-  const headquarters = normalizeLocation(formData.headquarters || formData.businessLocation);
+  const headquarters = normalizeLocation(formData.headquarters || formData.businessLocation || 'CA');
   
   // ✅ STEP 3: FIX MAPPING TO PRODUCT CATEGORIES (ChatGPT Instructions)
   const { data: allLenderProducts, isLoading: rawLoading, error: rawError } = usePublicLenders();
   const { data: productCategories, isLoading, error } = useProductCategories({
     headquarters: headquarters,
-    lookingFor: formData.lookingFor || 'capital',
+    lookingFor: (formData.lookingFor || 'capital') as 'capital' | 'equipment' | 'both',
     fundingAmount: Number(formData.fundingAmount) || 50000,
     accountsReceivableBalance: Number(formData.accountsReceivableBalance) || 0,
-    fundsPurpose: formData.fundsPurpose || 'working capital'
+    fundsPurpose: formData.fundsPurpose || 'working_capital'
   });
   
   // ✅ DEBUG: Log fetched lender products and categories
@@ -69,12 +69,16 @@ export function Step2RecommendationEngine({
     fundsPurpose: formData.fundsPurpose
   });
   
-  if (!formData.lookingFor) {
-    console.warn("⚠️ [STEP2-DEBUG] formData.lookingFor is missing! This will cause filtering issues.");
-  }
-  if (!formData.fundingAmount) {
-    console.warn("⚠️ [STEP2-DEBUG] formData.fundingAmount is missing! This will cause filtering issues.");
-  }
+  // Debug form data with safe defaults
+  const debugFormData = {
+    lookingFor: formData.lookingFor || 'capital',
+    fundingAmount: formData.fundingAmount || 50000,
+    headquarters: headquarters,
+    accountsReceivableBalance: formData.accountsReceivableBalance || 0,
+    fundsPurpose: formData.fundsPurpose || 'working_capital'
+  };
+  
+  console.log("🔍 [STEP2-DEBUG] Form data being used for filtering:", debugFormData);
   
   if (productCategories && productCategories.length > 0) {
     console.log("Available categories:", productCategories.map(c => c.category));

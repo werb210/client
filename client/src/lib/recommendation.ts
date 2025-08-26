@@ -15,13 +15,22 @@ export interface RecommendationFormData {
 /**
  * ✅ ENABLED: Basic product filtering for client-side recommendations
  */
-export function filterProducts(products: any[], formData: RecommendationFormData): any[] {
+export function filterProducts(products: any[], formData: Partial<RecommendationFormData>): any[] {
   if (!products || products.length === 0) {
     console.log('[filterProducts] No products provided');
     return [];
   }
 
-  console.log(`[filterProducts] Starting with ${products.length} products, filtering by:`, formData);
+  // Provide safe defaults for all required fields
+  const safeFormData = {
+    headquarters: formData.headquarters || 'CA',
+    fundingAmount: formData.fundingAmount || 50000,
+    lookingFor: (formData.lookingFor || 'capital') as 'capital' | 'equipment' | 'both',
+    accountsReceivableBalance: formData.accountsReceivableBalance || 0,
+    fundsPurpose: formData.fundsPurpose || 'working_capital'
+  };
+
+  console.log(`[filterProducts] Starting with ${products.length} products, filtering by:`, safeFormData);
   
   // Debug: Log first product structure
   if (products.length > 0) {
@@ -35,7 +44,7 @@ export function filterProducts(products: any[], formData: RecommendationFormData
     
     // Country/headquarters matching with correct field name
     const productCountry = product.countryOffered;
-    const formCountry = formData.headquarters;
+    const formCountry = safeFormData.headquarters;
     
     const countryMatch = 
       !formCountry || // If no form country specified, accept all
@@ -46,14 +55,14 @@ export function filterProducts(products: any[], formData: RecommendationFormData
       (productCountry === 'All'); // Products available everywhere
 
     // Funding amount matching with correct field names
-    const fundingAmount = formData.fundingAmount || 50000;
+    const fundingAmount = safeFormData.fundingAmount;
     const minAmount = product.minimumLendingAmount || 0;
     const maxAmount = product.maximumLendingAmount || 999999999;
     
     const amountMatch = fundingAmount >= minAmount && fundingAmount <= maxAmount;
 
     // Product type matching with correct field name
-    const lookingFor = formData.lookingFor || 'capital';
+    const lookingFor = safeFormData.lookingFor;
     const category = product.productCategory || '';
     
     const typeMatch = 
