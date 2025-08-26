@@ -1,6 +1,12 @@
 // AFTER: strictly Staff API
 import React from "react";
-import { listDocuments, getDocumentViewUrl, setDocumentStatus } from "@/lib/api";
+import { listDocuments, getDocumentViewUrl, setDocumentStatus, type RequiredDoc } from "@/lib/api";
+
+function normalizeDocs(docs: RequiredDoc[]) {
+  return (docs ?? []).map((d, i) =>
+    typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
+  );
+}
 
 export function DynamicDocumentRequirements({ applicationId }: { applicationId: string }) {
   const [docs, setDocs] = React.useState<any[]>([]);
@@ -10,10 +16,7 @@ export function DynamicDocumentRequirements({ applicationId }: { applicationId: 
     setLoading(true);
     try {
       const rawDocs = await listDocuments({ category: "Working Capital" });
-      // when mapping docs to UI items:
-      const items = (rawDocs ?? []).map((d, i) =>
-        typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
-      );
+      const items = normalizeDocs(rawDocs);
       setDocs(items);
     } finally {
       setLoading(false);
