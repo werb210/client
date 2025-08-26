@@ -5,6 +5,7 @@
 
 import { Router } from 'express';
 import { z } from 'zod';
+import { sql } from 'drizzle-orm';
 import { db } from '../db.js';
 import { lenderProducts } from '../../shared/lenderSchema.js';
 
@@ -68,56 +69,24 @@ router.post('/ingest-live-data', async (req, res) => {
       const liveProduct = liveProducts[i];
       
       try {
-        // Map V2 schema to database schema
+        // Map V2 schema to database schema (matching shared/lenderSchema.ts)
         const dbProduct = {
-          id: liveProduct.id,
           name: liveProduct.product,
-          lender_name: liveProduct.lender,
-          product_type: liveProduct.productCategory,
-          min_amount: liveProduct.minAmountUsd,
-          max_amount: liveProduct.maxAmountUsd,
-          interest_rate_min: liveProduct.interestRateMin,
-          interest_rate_max: liveProduct.interestRateMax,
+          type: liveProduct.productCategory,
+          description: liveProduct.description,
+          min_amount: liveProduct.minAmountUsd?.toString() || '0',
+          max_amount: liveProduct.maxAmountUsd?.toString() || '0',
+          interest_rate_min: liveProduct.interestRateMin?.toString(),
+          interest_rate_max: liveProduct.interestRateMax?.toString(),
           term_min: liveProduct.termMinMonths,
           term_max: liveProduct.termMaxMonths,
-          rate_type: liveProduct.rateType,
-          interest_frequency: liveProduct.interestFrequency,
-          required_docs: liveProduct.requiredDocs,
-          min_revenue: liveProduct.minRevenue,
-          industries: liveProduct.industries,
-          description: liveProduct.description,
-          geography: liveProduct.geography || ['US'],
-          is_active: liveProduct.isActive,
-          created_at: new Date(),
-          updated_at: new Date()
+          requirements: liveProduct.requiredDocs || [],
+          video_url: null as string | null,
+          active: liveProduct.isActive ?? true
         };
 
-        // Insert into database with conflict resolution
-        await db.insert(lenderProducts)
-          .values(dbProduct)
-          .onConflictDoUpdate({
-            target: lenderProducts.id,
-            set: {
-              name: dbProduct.name,
-              lender_name: dbProduct.lender_name,
-              product_type: dbProduct.product_type,
-              min_amount: dbProduct.min_amount,
-              max_amount: dbProduct.max_amount,
-              interest_rate_min: dbProduct.interest_rate_min,
-              interest_rate_max: dbProduct.interest_rate_max,
-              term_min: dbProduct.term_min,
-              term_max: dbProduct.term_max,
-              rate_type: dbProduct.rate_type,
-              interest_frequency: dbProduct.interest_frequency,
-              required_docs: dbProduct.required_docs,
-              min_revenue: dbProduct.min_revenue,
-              industries: dbProduct.industries,
-              description: dbProduct.description,
-              geography: dbProduct.geography,
-              is_active: dbProduct.is_active,
-              updated_at: new Date()
-            }
-          });
+        // Insert into database (no conflict resolution needed for new data)
+        await db.insert(lenderProducts).values(dbProduct);
 
         successCount++;
         
@@ -173,11 +142,11 @@ router.get('/database-status', async (req, res) => {
     
     // Get category breakdown
     const categories = await db.select({
-      category: lenderProducts.product_type,
-      count: db.sql`count(*)`
+      category: lenderProducts.type,
+      count: sql`count(*)`
     })
     .from(lenderProducts)
-    .groupBy(lenderProducts.product_type);
+    .groupBy(lenderProducts.type);
 
     res.json({
       totalProducts: productCount,
