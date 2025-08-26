@@ -51,8 +51,22 @@ export async function fetchLenderProducts() {
   
   // Extract products array from response
   if (response.success && response.products) {
-    console.log(`[fetchLenderProducts] Returning ${response.products.length} products`);
-    return response.products;
+    // Transform staff API response to match LenderProduct shape
+    const transformedProducts = response.products.map((p: any) => ({
+      id: p.id,
+      name: p.productName || p.name,
+      lender_id: p.lender_id || 'unknown',
+      lender_name: p.lenderName || p.lender_name,
+      tenant_id: p.tenant_id || 'default',
+      country: (p.countryOffered || p.country) as 'US' | 'CA',
+      category: p.productCategory || p.category,
+      min_amount: p.minimumLendingAmount ?? p.min_amount ?? null,
+      max_amount: p.maximumLendingAmount ?? p.max_amount ?? null,
+      active: p.isActive ?? p.active ?? true
+    }));
+    
+    console.log(`[fetchLenderProducts] Returning ${transformedProducts.length} transformed products`);
+    return transformedProducts;
   } else {
     console.error('[fetchLenderProducts] Invalid response structure:', response);
     return [];

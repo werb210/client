@@ -40,10 +40,10 @@ export function filterProducts(products: any[], formData: Partial<Recommendation
   // FIXED: Use correct field names for filtering
   return products.filter(product => {
     // Active status filtering - be more lenient for testing
-    const isActive = product.isActive !== false && product.active !== false;
+    const isActive = product.active !== false;
     
     // Country/headquarters matching with correct field name
-    const productCountry = product.countryOffered;
+    const productCountry = product.country;
     const formCountry = safeFormData.headquarters;
     
     const countryMatch = 
@@ -57,14 +57,14 @@ export function filterProducts(products: any[], formData: Partial<Recommendation
 
     // Funding amount matching with correct field names
     const fundingAmount = safeFormData.fundingAmount;
-    const minAmount = product.minimumLendingAmount || 0;
-    const maxAmount = product.maximumLendingAmount || 999999999;
+    const minAmount = product.min_amount || 0;
+    const maxAmount = product.max_amount || 999999999;
     
     const amountMatch = fundingAmount >= minAmount && fundingAmount <= maxAmount;
 
     // Product type matching with correct field name
     const lookingFor = safeFormData.lookingFor;
-    const category = product.productCategory || '';
+    const category = product.category || '';
     
     const typeMatch = 
       !lookingFor || // If no type specified, accept all
@@ -79,7 +79,7 @@ export function filterProducts(products: any[], formData: Partial<Recommendation
 
     const match = isActive && countryMatch && amountMatch && typeMatch;
     
-    console.log(`[filterProducts] ${product.productName || product.lenderName}: Active(${isActive}) + Country(${countryMatch}) + Amount(${amountMatch}) + Type(${typeMatch}) = ${match}`);
+    console.log(`[filterProducts] ${product.name || product.lender_name}: Active(${isActive}) + Country(${countryMatch}) + Amount(${amountMatch}) + Type(${typeMatch}) = ${match}`);
 
     return match;
   });

@@ -1,4 +1,4 @@
-// A) Shared TypeScript types (put in a shared types/schema.ts)
+// Shared types for Staff & Client (to prevent drift)
 export type Lender = {
   id: string;
   name: string;
@@ -27,23 +27,32 @@ export type LenderProduct = {
   active: boolean;
 };
 
-// C) Client display helpers
+// Render amounts helper that treats NULL as "Not provided" (no more $0–$0)
 export const fmtRange = (min: number | null, max: number | null) => {
   if (min == null && max == null) return 'Not provided';
   const fmt = (n: number | null) => n == null ? '—' : `$${n.toLocaleString()}`;
   return `${fmt(min)} – ${fmt(max)}`;
 };
 
-// B) Client fetch (expects Staff API to use the view/join above)
+// Client fetch function for lender products
 export async function fetchLenderProducts(tenantId?: string): Promise<LenderProduct[]> {
   const qs = tenantId ? `?tenantId=${tenantId}` : '';
-  const res = await fetch(`/api/crm/lender-products${qs}`, { credentials: 'include' });
+  const res = await fetch(`/api/lender-products${qs}`, { credentials: 'include' });
   if (!res.ok) throw new Error(`Failed to load lender products: ${res.status}`);
-  const items = await res.json();
-  // Guard: normalize null/0 amounts for display
+  const data = await res.json();
+  const items = data.products || [];
+  
+  // Transform staff API response to match LenderProduct shape
   return items.map((p: any) => ({
-    ...p,
-    min_amount: p.min_amount ?? null,
-    max_amount: p.max_amount ?? null,
+    id: p.id,
+    name: p.productName || p.name,
+    lender_id: p.lender_id || 'unknown',
+    lender_name: p.lenderName || p.lender_name,
+    tenant_id: p.tenant_id || 'default',
+    country: (p.countryOffered || p.country) as 'US' | 'CA',
+    category: p.productCategory || p.category,
+    min_amount: p.minimumLendingAmount ?? p.min_amount ?? null,
+    max_amount: p.maximumLendingAmount ?? p.max_amount ?? null,
+    active: p.isActive ?? p.active ?? true
   }));
 }
