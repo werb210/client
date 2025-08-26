@@ -42,8 +42,8 @@ export async function getDocumentRequirementsAggregation(
   console.log(`🔍 [AGGREGATION] Starting document aggregation for: "${selectedCategory}" in ${selectedCountry} for $${requestedAmount.toLocaleString()}`);
   
   try {
-    // Fetch all lender products from staff API
-    const response = await fetch('/api/public/lenders');
+    // Fetch all lender products from staff API - FIXED ENDPOINT
+    const response = await fetch('/api/lender-products');
     
     if (!response.ok) {
       throw new Error(`Staff API error: ${response.status}`);
@@ -87,30 +87,30 @@ export async function getDocumentRequirementsAggregation(
     
     console.log(`🌍 [AGGREGATION] Country normalized: "${selectedCountry}" → "${normalizedCountry}"`);
     
-    // ✅ STEP 1: Filter all local lender products that match criteria
+    // ✅ STEP 1: Filter all local lender products that match criteria - FIXED FIELD NAMES
     const eligibleProducts = allProducts.filter((product: any) => {
-      // Category match - use flexible mapping
+      // Category match - use flexible mapping - FIXED FIELD NAME
       const categoryMatch = mappedCategories.some(cat => 
-        product.category === cat || 
-        product.category?.toLowerCase() === cat.toLowerCase() ||
+        product.productCategory === cat || 
+        product.productCategory?.toLowerCase() === cat.toLowerCase() ||
         product.productType === cat ||
         product.type === cat
       );
       
-      // Country match
-      const countryMatch = product.country === normalizedCountry || 
+      // Country match - FIXED FIELD NAME
+      const countryMatch = product.countryOffered === normalizedCountry || 
                           product.geography === normalizedCountry ||
                           product.region === normalizedCountry;
       
-      // Amount range match
-      const minAmount = product.min_amount || product.amountMin || product.amount_min || 0;
-      const maxAmount = product.max_amount || product.amountMax || product.amount_max || Number.MAX_SAFE_INTEGER;
+      // Amount range match - FIXED FIELD NAMES
+      const minAmount = product.minimumLendingAmount || product.amountMin || product.amount_min || 0;
+      const maxAmount = product.maximumLendingAmount || product.amountMax || product.amount_max || Number.MAX_SAFE_INTEGER;
       const amountMatch = minAmount <= requestedAmount && maxAmount >= requestedAmount;
       
       const isEligible = categoryMatch && countryMatch && amountMatch;
       
-      // Enhanced logging for debugging
-      console.log(`🧪 [AGGREGATION] Product "${product.name}" - Category: ${categoryMatch ? '✅' : '❌'} (${product.category}), Country: ${countryMatch ? '✅' : '❌'} (${product.country}), Amount: ${amountMatch ? '✅' : '❌'} ($${minAmount}-$${maxAmount}), Eligible: ${isEligible ? '✅' : '❌'}`);
+      // Enhanced logging for debugging - FIXED FIELD NAMES
+      console.log(`🧪 [AGGREGATION] Product "${product.productName || product.lenderName}" - Category: ${categoryMatch ? '✅' : '❌'} (${product.productCategory}), Country: ${countryMatch ? '✅' : '❌'} (${product.countryOffered}), Amount: ${amountMatch ? '✅' : '❌'} ($${minAmount}-$${maxAmount}), Eligible: ${isEligible ? '✅' : '❌'}`);
       
       return isEligible;
     });
