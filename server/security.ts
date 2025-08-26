@@ -4,18 +4,39 @@ import rateLimit from "express-rate-limit";
 import type { Express } from "express";
 
 export function harden(app: Express) {
-  // Helmet security headers with strict CSP (no unsafe-inline)
+  // Helmet security headers with frontend-compatible CSP
   app.use(helmet({
     frameguard: { action: "deny" },
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "https://app.signnow.com", "https://*.signnow.com"],
-        styleSrc: ["'self'", "https://fonts.googleapis.com"],
+        scriptSrc: [
+          "'self'", 
+          "'unsafe-inline'", 
+          "'unsafe-eval'",
+          "https://www.googletagmanager.com",
+          "https://www.google-analytics.com",
+          "https://app.signnow.com", 
+          "https://*.signnow.com"
+        ],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "blob:", "https:"],
-        connectSrc: ["'self'", "wss:", "ws:", "https:", "http:"],
-        frameSrc: ["'self'", "https://app.signnow.com", "https://*.signnow.com"],
+        connectSrc: [
+          "'self'", 
+          "wss:", 
+          "ws:", 
+          "https:", 
+          "http:",
+          "https://www.google-analytics.com",
+          "https://www.googletagmanager.com"
+        ],
+        frameSrc: [
+          "'self'", 
+          "https://app.signnow.com", 
+          "https://*.signnow.com",
+          "https://www.googletagmanager.com"
+        ],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],
         workerSrc: ["'self'", "blob:"],
