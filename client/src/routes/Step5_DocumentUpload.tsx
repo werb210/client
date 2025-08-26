@@ -35,7 +35,7 @@ import { useDocumentVerification } from '@/hooks/useDocumentVerification';
 import { StrictDocumentValidation } from '@/components/StrictDocumentValidation';
 import { validateStrictDocumentRequirements } from '@/utils/strictDocumentValidation';
 
-import type { UploadedFile } from '@/components/DynamicDocumentRequirements';
+import type { UploadedFile } from '@/types/uploadedFile';
 
 
 interface Step5Props {

@@ -44,5 +44,7 @@ export function useChatBot() {
     setCurrentStep,
     applicationData,
     setApplicationData: updateApplicationData,
+    isOpen: false, // Add missing property
+    toggleChat: () => {}, // Add missing function
   };
 }
