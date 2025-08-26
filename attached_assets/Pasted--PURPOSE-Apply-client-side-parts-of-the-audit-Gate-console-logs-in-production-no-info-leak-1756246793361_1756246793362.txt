@@ -1,0 +1,81 @@
+# PURPOSE
+# Apply client-side parts of the audit:
+#  • Gate console logs in production (no info leaks/perf hit)
+#  • Structured API errors (no raw 'fetch failed: 500')
+#  • Quick grep to track remaining console.* calls (dev-visible only)
+
+set -euo pipefail
+mkdir -p client/src/lib
+
+echo "== 1) Conditional logger =="
+cat > client/src/lib/log.ts <<'TS'
+export const PROD: boolean = typeof import.meta !== 'undefined'
+  ? (import.meta as any).env?.PROD ?? false
+  : (process.env.NODE_ENV === 'production');
+
+function noOp(..._args:any[]){}
+
+export const log = {
+  debug: PROD ? noOp : (...a:any[]) => console.debug('[D]', ...a),
+  info:  PROD ? noOp : (...a:any[]) => console.info('[I]',  ...a),
+  warn:  (...a:any[]) => console.warn('[W]', ...a),
+  error: (...a:any[]) => console.error('[E]', ...a),
+};
+export default log;
+TS
+
+echo "== 2) Hard-disable noisy console in PROD (keeps warn/error) =="
+# Add this near the top of client/src/main.tsx (or your main entry)
+cat <<'PASTE_ME'
+
+/** PROD log gate: silence console.log/debug in production */
+if (import.meta && import.meta.env && import.meta.env.PROD) {
+  // Keep warn/error for observability; silence noise
+  console.log   = () => {};
+  console.debug = () => {};
+}
+PASTE_ME
+
+echo "== 3) Structured API errors =="
+# If you already have a client/src/lib/api.ts, replace/augment with below helpers.
+cat > client/src/lib/api.ts <<'TS'
+export class ApiError extends Error {
+  constructor(
+    public status:number,
+    public code:string,
+    public info?:any
+  ){
+    super(`${status} ${code}`);
+    this.name = 'ApiError';
+  }
+}
+
+async function safeFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
+  const r = await fetch(input, { credentials: 'include', ...init });
+  if (!r.ok) {
+    let code = `HTTP_${r.status}`;
+    let payload: any = null;
+    try { payload = await r.json(); if (payload?.error) code = String(payload.error); } catch {}
+    throw new ApiError(r.status, code, payload);
+  }
+  return r;
+}
+
+export async function getJson<T>(url: string): Promise<T> {
+  const r = await safeFetch(url);
+  return r.json() as Promise<T>;
+}
+
+export async function postJson<T>(url: string, body: any): Promise<T> {
+  const r = await safeFetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r.json() as Promise<T>;
+}
+TS
+
+echo "== 4) (Optional) count remaining console.* calls for refactors (dev only) =="
+echo "ripgrep counts:"
+rg -n \"console\\.(log|debug|info|dir)\" client | wc -l || true

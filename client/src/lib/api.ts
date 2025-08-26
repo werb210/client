@@ -1,11 +1,47 @@
+export class ApiError extends Error {
+  constructor(
+    public status:number,
+    public code:string,
+    public info?:any
+  ){
+    super(`${status} ${code}`);
+    this.name = 'ApiError';
+  }
+}
+
+async function safeFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
+  const r = await fetch(input, { credentials: 'include', ...init });
+  if (!r.ok) {
+    let code = `HTTP_${r.status}`;
+    let payload: any = null;
+    try { payload = await r.json(); if (payload?.error) code = String(payload.error); } catch {}
+    throw new ApiError(r.status, code, payload);
+  }
+  return r;
+}
+
+export async function getJson<T>(url: string): Promise<T> {
+  const r = await safeFetch(url);
+  return r.json() as Promise<T>;
+}
+
+export async function postJson<T>(url: string, body: any): Promise<T> {
+  const r = await safeFetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r.json() as Promise<T>;
+}
+
+// Legacy API methods for backward compatibility
 const BASE = ""; // same-origin
 
 const ALLOW_PUBLIC_DOCS_IN_DEV =
   import.meta.env.DEV && import.meta.env.VITE_ALLOW_PUBLIC_DOCS_DEV === "1";
 
 export async function apiFetch(path: string, init: RequestInit = {}) {
-  const r = await fetch(`${BASE}${path}`, { credentials: "include", ...init });
-  if (!r.ok) throw new Error(`fetch failed: ${r.status}`);
+  const r = await safeFetch(`${BASE}${path}`, init);
   return r;
 }
 
@@ -13,42 +49,38 @@ export async function uploadDocument(appId: string, file: File, documentType: st
   const fd = new FormData();
   fd.append("file", file);
   fd.append("document_type", documentType);
-  const r = await fetch(`${BASE}/api/applications/${appId}/documents/upload`, {
-    method: "POST", body: fd, credentials: "include"
+  const r = await safeFetch(`${BASE}/api/applications/${appId}/documents/upload`, {
+    method: "POST", body: fd
   });
-  if (!r.ok) throw new Error(`upload failed: ${r.status}`); return r.json();
+  return r.json();
 }
 
 export async function listDocuments(appId: string) {
   const path = ALLOW_PUBLIC_DOCS_IN_DEV
     ? `/api/public/applications/${appId}/documents` // **dev only**
     : `/api/applications/${appId}/documents`;        // **prod & default**
-  const r = await fetch(path, { credentials: "include" });
-  if (!r.ok) throw new Error(`list failed: ${r.status}`); return r.json();
+  const r = await safeFetch(path);
+  return r.json();
 }
 
 export async function setDocumentStatus(docId: string, status: "accepted"|"rejected"|"pending") {
-  const r = await fetch(`/api/documents/${docId}`, {
+  const r = await safeFetch(`/api/documents/${docId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify({ status }),
   });
-  if (!r.ok) throw new Error(`patch failed: ${r.status}`); return r.json();
+  return r.json();
 }
 
 export async function getDocumentViewUrl(docId: string) {
-  const r = await fetch(`/api/documents/${docId}/view`, { credentials: "include" });
-  if (!r.ok) throw new Error(`view failed: ${r.status}`);
+  const r = await safeFetch(`/api/documents/${docId}/view`);
   return r.json();
 }
 
 export async function fetchLenderProducts() {
   // For now, use the existing endpoint but transform to match the expected format
-  const r = await fetch("/api/lender-products", { credentials: "include" });
-  if (!r.ok) throw new Error(`lender products failed: ${r.status}`);
+  const r = await safeFetch("/api/lender-products");
   const response = await r.json();
-  console.log('[fetchLenderProducts] API response:', response);
   
   // Extract products array from response and transform to match LenderProduct shape
   if (response.success && response.products) {
@@ -66,43 +98,30 @@ export async function fetchLenderProducts() {
       variant_sig: p.variant_sig
     }));
     
-    console.log(`[fetchLenderProducts] Returning ${transformedProducts.length} transformed products`);
     return transformedProducts;
   } else {
-    console.error('[fetchLenderProducts] Invalid response structure:', response);
     return [];
   }
 }
 
 // Additional API methods needed by queryClient
 export async function getUserApplications() {
-  const r = await fetch("/api/applications", { credentials: "include" });
-  if (!r.ok) throw new Error(`applications failed: ${r.status}`);
+  const r = await safeFetch("/api/applications");
   return r.json();
 }
 
 export async function getApplication(applicationId: string) {
-  const r = await fetch(`/api/applications/${applicationId}`, { credentials: "include" });
-  if (!r.ok) throw new Error(`application failed: ${r.status}`);
+  const r = await safeFetch(`/api/applications/${applicationId}`);
   return r.json();
 }
 
 export async function fetchRequiredDocuments(category: string) {
-  const r = await fetch(`/api/documents/requirements?category=${encodeURIComponent(category)}`, { credentials: "include" });
-  if (!r.ok) throw new Error(`documents failed: ${r.status}`);
+  const r = await safeFetch(`/api/documents/requirements?category=${encodeURIComponent(category)}`);
   return r.json();
 }
 
 export async function getLenderProducts(category?: string) {
   const url = category ? `/api/lender-products?category=${encodeURIComponent(category)}` : "/api/lender-products";
-  const r = await fetch(url, { credentials: "include" });
-  if (!r.ok) throw new Error(`lender products failed: ${r.status}`);
+  const r = await safeFetch(url);
   return r.json();
-}
-
-export class ApiError extends Error {
-  constructor(message: string, public status: number) {
-    super(message);
-    this.name = 'ApiError';
-  }
 }

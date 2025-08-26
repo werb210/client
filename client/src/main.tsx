@@ -4,6 +4,13 @@ import App from "./App";
 import "./index.css";
 import { initializePWA } from "./lib/pwa";
 
+/** PROD log gate: silence console.log/debug in production */
+if (import.meta && import.meta.env && import.meta.env.PROD) {
+  // Keep warn/error for observability; silence noise
+  console.log   = () => {};
+  console.debug = () => {};
+}
+
 // Block external fetch calls in dev only
 if (import.meta.env.DEV) {
   await import("./lib/fetch-guard");
