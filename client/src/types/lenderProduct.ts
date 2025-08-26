@@ -3,15 +3,16 @@
 
 export interface LenderProduct {
   id: string;
-  name: string;
-  lender: string;
-  category: string;
+  productName: string;
+  lenderName: string;
+  productCategory: string;
   subcategory?: string;
   description?: string;
-  minAmount?: number;
-  maxAmount?: number;
+  minimumLendingAmount?: number;
+  maximumLendingAmount?: number;
+  countryOffered?: string;
+  isActive?: boolean;
   geography?: string[];
-  country?: string;
   requiredDocuments?: string[];
   doc_requirements?: string[];
   documentRequirements?: string[];
