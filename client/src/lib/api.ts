@@ -46,5 +46,15 @@ export async function getDocumentViewUrl(docId: string) {
 export async function fetchLenderProducts() {
   const r = await fetch("/api/lender-products", { credentials: "include" });
   if (!r.ok) throw new Error(`lender products failed: ${r.status}`);
-  return r.json();
+  const response = await r.json();
+  console.log('[fetchLenderProducts] API response:', response);
+  
+  // Extract products array from response
+  if (response.success && response.products) {
+    console.log(`[fetchLenderProducts] Returning ${response.products.length} products`);
+    return response.products;
+  } else {
+    console.error('[fetchLenderProducts] Invalid response structure:', response);
+    return [];
+  }
 }
