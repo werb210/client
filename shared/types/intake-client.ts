@@ -9,14 +9,17 @@ export type {
 } from '../../client/src/lib/intake-client';
 
 export {
-  OPEN_QUESTIONS,
+  formatCurrencyRange,
   getRecommendations,
   getRequiredDocs,
   dedupeRecommended,
   collapseVisualVariants,
-  runEndOfFlowCleanup,
-  useAsk,
-  step2Flow,
-  step5Flow,
-  finalizeFlow
+  runDedupe,
+  rebuildCatalogIfSupported,
+  confirmClientIntegration,
+  missingFieldsForStep2,
+  step2RecommendFlow,
+  step5DocsFlow,
+  finalizeCleanupAndRebuild,
+  CLIENT_OPEN_QUESTIONS
 } from '../../client/src/lib/intake-client';

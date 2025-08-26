@@ -2,7 +2,7 @@
  * ✅ ENABLED: Client-side recommendation system for demo purposes
  * Basic product filtering and recommendations
  */
-import { StaffLenderProduct } from '@/types/lenderProduct';
+import { LenderProduct } from '@/types/lenderProduct';
 
 export interface RecommendationFormData {
   headquarters: string;

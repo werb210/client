@@ -242,3 +242,32 @@ export const CLIENT_OPEN_QUESTIONS = [
   'Any lender-specific document requirements beyond the category defaults?',
   'If Staff lacks /api/import/rebuild, who triggers the importer when catalog < 42?',
 ];
+
+// ---------- Example (pseudo React) ----------
+/*
+import { useState } from 'react';
+import {
+  IntakeAnswers, step2RecommendFlow, step5DocsFlow, confirmClientIntegration,
+  finalizeCleanupAndRebuild, CLIENT_OPEN_QUESTIONS
+} from '@/lib/intake-client';
+
+async function runWizardFlow(answers: IntakeAnswers, selectedProductIds: string[]) {
+  // Confirm Staff connectivity & product visibility
+  const check = await confirmClientIntegration({ expectProducts: 42 });
+  if (!check.ok) {
+    // Show check.message and possibly render CLIENT_OPEN_QUESTIONS
+  }
+
+  // Step 2
+  const recs = await step2RecommendFlow(answers, { collapseVariants: false });
+
+  // Step 5
+  const docs = await step5DocsFlow(selectedProductIds, answers);
+
+  // Finish: dedupe + optional rebuild
+  const confirm = async (msg: string) => window.confirm(msg);
+  await finalizeCleanupAndRebuild(confirm, 42);
+
+  return { recs, docs };
+}
+*/

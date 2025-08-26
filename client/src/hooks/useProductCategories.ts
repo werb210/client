@@ -35,11 +35,16 @@ export function useProductCategories(formData: RecommendationFormData) {
         console.log(`🔍 [useProductCategories] About to call filterProducts with:`, formData);
         
         // For testing: if no meaningful form data, show all products
-        const hasFormData = formData && (formData.lookingFor || formData.fundingAmount);
-        const filteredProducts = hasFormData ? filterProducts(products, formData) : products;
-        console.log(`🔍 [useProductCategories] filterProducts returned ${filteredProducts.length} products (hasFormData: ${hasFormData})`);
+        const hasRealFormData = formData && formData.lookingFor && formData.fundingAmount;
         
-        if (filteredProducts.length === 0 && hasFormData) {
+        if (!hasRealFormData) {
+          console.log(`🔧 [useProductCategories] No real form data (lookingFor: ${formData?.lookingFor}, fundingAmount: ${formData?.fundingAmount}) - using all ${products.length} products`);
+        }
+        
+        const filteredProducts = hasRealFormData ? filterProducts(products, formData) : products;
+        console.log(`🔍 [useProductCategories] filterProducts returned ${filteredProducts.length} products (hasRealFormData: ${hasRealFormData})`);
+        
+        if (filteredProducts.length === 0 && hasRealFormData) {
           console.error(`❌ [useProductCategories] ZERO PRODUCTS AFTER FILTERING!`);
           console.error(`❌ [useProductCategories] Input data:`, formData);
           console.error(`❌ [useProductCategories] Raw products count:`, products.length);
