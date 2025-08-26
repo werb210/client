@@ -1,0 +1,56 @@
+// PURPOSE
+// Consume stable Staff endpoints so the Sales Pipeline Application cards and Contacts cards render correctly,
+// regardless of backend schema quirks.
+
+// 1) TYPES (shared with Staff view shape)
+export type PipelineCard = {
+  application_id: string;
+  borrower_name: string | null;
+  company_name: string | null;
+  stage: string | null;
+  status: string | null;
+  amount: number | null;
+  lender_name: string | null;
+  product_name: string | null;
+  category: string | null;
+  country: 'US' | 'CA' | string | null;
+  min_amount: number | null;
+  max_amount: number | null;
+  active: boolean | null;
+  updated_at: string | null;
+};
+
+export type ContactCard = {
+  contact_id: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  company_name: string | null;
+  applications_count: number;
+};
+
+// 2) FETCHERS
+export async function fetchPipelineCards(opts?: { limit?: number; tenantId?: string }) {
+  const q = new URLSearchParams();
+  if (opts?.limit) q.set('limit', String(opts.limit));
+  if (opts?.tenantId) q.set('tenantId', opts.tenantId);
+  const res = await fetch(`/api/pipeline-cards${q.toString() ? `?${q}` : ''}`, { credentials: 'include' });
+  if (!res.ok) throw new Error(`Failed to load pipeline cards: ${res.status}`);
+  return (await res.json()) as PipelineCard[];
+}
+
+export async function fetchContactCards(opts?: { limit?: number; tenantId?: string }) {
+  const q = new URLSearchParams();
+  if (opts?.limit) q.set('limit', String(opts.limit));
+  if (opts?.tenantId) q.set('tenantId', opts.tenantId);
+  const res = await fetch(`/api/contact-cards${q.toString() ? `?${q}` : ''}`, { credentials: 'include' });
+  if (!res.ok) throw new Error(`Failed to load contact cards: ${res.status}`);
+  return (await res.json()) as ContactCard[];
+}
+
+// 3) UI HELPERS
+export const formatCurrencyRange = (min: number | null, max: number | null) => {
+  const fmt = (n: number | null) => (n == null ? '—' : `$${n.toLocaleString()}`);
+  if (min == null && max == null) return 'Not provided';
+  return `${fmt(min)} – ${fmt(max)}`;
+};

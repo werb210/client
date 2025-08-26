@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
 import { filterProducts, RecommendationFormData } from '@/lib/recommendation';
-import { StaffLenderProduct } from '@/types/lenderProduct';
+import { LenderProduct } from '@/types/lenderProduct';
 
 export interface ProductCategory {
   category: string;
   count: number;
   percentage: number;
-  products: StaffLenderProduct[];
+  products: LenderProduct[];
 }
 
 export function useProductCategories(formData: RecommendationFormData) {
@@ -61,7 +61,7 @@ export function useProductCategories(formData: RecommendationFormData) {
         }
       
         // Group products by category
-        const categoryGroups: Record<string, StaffLenderProduct[]> = {};
+        const categoryGroups: Record<string, LenderProduct[]> = {};
         const productsToProcess = filteredProducts.length > 0 ? filteredProducts : products;
         productsToProcess.forEach(product => {
           const category = product.category || product.productCategory;

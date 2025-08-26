@@ -1,4 +1,3 @@
-import { useLenderProducts } from "@/lib/useLenderProducts";
 import { useQuery } from "@tanstack/react-query";
 import { fetchLenderProducts } from "@/lib/api";
 
@@ -38,9 +37,9 @@ export function usePublicLenderStats() {
         
         const stats = {
           totalProducts: products.length,
-          maxFunding: Math.max(...products.map(p => p.max_amount || 0)),
-          countries: Array.from(new Set(products.map(p => p.country).filter(Boolean))).length,
-          categories: Array.from(new Set(products.map(p => p.category))).length
+          maxFunding: Math.max(...products.map((p: any) => p.max_amount || 0)),
+          countries: Array.from(new Set(products.map((p: any) => p.country).filter(Boolean))).length,
+          categories: Array.from(new Set(products.map((p: any) => p.category))).length
         };
         
         console.log(`[usePublicLenderStats] Generated stats:`, stats);
