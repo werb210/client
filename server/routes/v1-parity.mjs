@@ -18,19 +18,12 @@ const toV1 = (row) => ({
   min_time_in_business: row.min_time_in_business ?? null,
   min_monthly_revenue: row.min_monthly_revenue ?? null,
   excluded_industries: row.excluded_industries ?? [],
-  required_documents: row.required_documents ?? null,
+  required_documents: row.required_documents ?? [],
 });
 
 r.get("/api/v1/products", async (_req, res) => {
   try {
     const products = getAll();
-    console.log('V1 DEBUG - First product from cache:', JSON.stringify({
-      id: products[0]?.id,
-      min_time_in_business: products[0]?.min_time_in_business,
-      min_monthly_revenue: products[0]?.min_monthly_revenue,
-      excluded_industries: products[0]?.excluded_industries,
-      required_documents: products[0]?.required_documents
-    }, null, 2));
     res.json(products.map(toV1));
   } catch (e) {
     res.status(500).json({ error: "v1 products failed", detail: String(e.message || e) });
