@@ -22,6 +22,7 @@ import statusRouter from "./routes/status.js";
 import handoffRouter from "./routes/handoff.js";
 import chatbotTrainingRouter from "./routes/chatbotTraining";
 import lenderProductsRouter from "./routes/lenderProducts";
+import syncLenderProductsRouter from "./routes/sync-lender-products";
 import webhooksRouter from "./routes/webhooks";
 import notificationsRouter from "./routes/notifications";
 import { handleChatEscalation, getEscalationStatus } from "./routes/chatEscalation";
@@ -1202,32 +1203,7 @@ app.use((req, res, next) => {
 
 
   // Mount API routes
-  // Sync endpoints for receiving data from staff app
-  app.post('/api/sync/lender-products', async (req: Request, res: Response) => {
-    const key = req.headers.authorization?.replace("Bearer ", "");
-    if (key !== process.env.CLIENT_SYNC_KEY) {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
-
-    try {
-      const fs = await import('fs');
-      const path = await import('path');
-      const PRODUCTS_PATH = path.join(process.cwd(), "data", "lenderProducts.json");
-      
-      // Ensure data directory exists
-      const dataDir = path.dirname(PRODUCTS_PATH);
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-      }
-
-      fs.writeFileSync(PRODUCTS_PATH, JSON.stringify(req.body.products, null, 2));
-      console.log("✅ Lender products updated locally");
-      return res.status(200).json({ success: true });
-    } catch (err) {
-      console.error("❌ Failed to update lender products:", err);
-      return res.status(500).json({ error: "Failed to save products" });
-    }
-  });
+  // Removed old sync endpoint - now handled by syncLenderProductsRouter
 
   // Serve lender products data as static JSON
   app.get('/data/lenderProducts.json', (req: Request, res: Response) => {
@@ -1264,97 +1240,30 @@ app.use((req, res, next) => {
     }
   });
 
-  // ✅ STAFF BACKEND SYNC: 22-Field Schema API from Staff Backend Only
-  app.get('/api/lender-products', async (req: Request, res: Response) => {
-    try {
-      const { getLenderProducts } = await import('./services/lenderProductsCache');
-      const staffProducts = await getLenderProducts();
-      
-      if (staffProducts && staffProducts.length > 0) {
-        // Transform staff products - REAL DATA ONLY, NO DEFAULTS
-        const transformedProducts = staffProducts.map((product: any) => ({
-          id: product.id?.toString(),
-          lenderName: product.name,
-          productCategory: product.category,
-          productName: product.name,
-          minimumLendingAmount: product.min_amount,
-          maximumLendingAmount: product.max_amount,
-          interestRateMinimum: null, // Not in staff backend
-          interestRateMaximum: null, // Not in staff backend
-          countryOffered: product.country,
-          rateType: null, // Not in staff backend
-          rateFrequency: null, // Not in staff backend
-          index: null,
-          termMinimum: product.min_time_in_business,
-          termMaximum: null, // Not in staff backend
-          minimumAverageMonthlyRevenue: product.min_monthly_revenue,
-          minimumCreditScore: null, // Not in staff backend
-          documentsRequired: product.required_documents || [],
-          description: null,
-          externalId: `staff-${product.id}`,
-          isActive: true,
-          createdBy: 1,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }));
-        
-        console.log(`✅ Served ${transformedProducts.length} products from staff backend`);
-        
-        return res.status(200).json({ 
-          success: true,
-          products: transformedProducts, 
-          count: transformedProducts.length,
-          source: "staff_backend",
-          schema: "22_field_staff_sync"
-        });
-      } else {
-        console.warn('⚠️ No products available from staff backend');
-        return res.status(200).json({ 
-          success: true,
-          products: [], 
-          count: 0,
-          source: "staff_backend",
-          schema: "22_field_staff_sync"
-        });
-      }
-      
-    } catch (err) {
-      console.error('❌ Failed to serve staff backend lender products:', err);
-      return res.status(500).json({ 
-        success: false,
-        error: "Failed to load products from staff backend", 
-        products: [] 
-      });
-    }
-  });
+  // Mount sync routes for push-based lender products
+  app.use(syncLenderProductsRouter);
 
-  // ✅ V1 PRODUCTS API - Direct product array format (no wrapper)
+  // ✅ V1 PRODUCTS API - Direct product array format from in-memory catalog
   app.get('/api/v1/products', async (req: Request, res: Response) => {
     try {
-      const { getLenderProducts } = await import('./services/lenderProductsCache');
-      const staffProducts = await getLenderProducts();
+      const { getAll } = await import('./services/lenderProductsCache');
+      const products = getAll();
       
-      if (staffProducts && staffProducts.length > 0) {
-        // Transform to v1 format - direct array with normalized fields
-        const v1Products = staffProducts.map((product: any) => ({
-          id: product.id?.toString(),
-          productName: product.name,
-          lenderName: product.name,
-          countryOffered: product.country,
-          productCategory: product.category,
-          minimumLendingAmount: product.min_amount,
-          maximumLendingAmount: product.max_amount,
-          minimumAverageMonthlyRevenue: product.min_monthly_revenue,
-          isActive: true,
-          required_documents: product.required_documents || []
-        }));
-        
-        console.log(`✅ Served ${v1Products.length} products via v1 API`);
-        return res.status(200).json(v1Products);
-      } else {
-        console.warn('⚠️ No products available for v1 API');
-        return res.status(200).json([]);
-      }
+      // Transform to v1 format - direct array with normalized fields
+      const v1Products = products.map((product: any) => ({
+        id: product.id,
+        productName: product.name,
+        lenderName: product.lender_name,
+        countryOffered: product.country,
+        productCategory: product.category,
+        minimumLendingAmount: product.min_amount,
+        maximumLendingAmount: product.max_amount,
+        isActive: product.active,
+        required_documents: []
+      }));
+      
+      console.log(`✅ Served ${v1Products.length} products via v1 API from in-memory catalog`);
+      return res.status(200).json(v1Products);
       
     } catch (err) {
       console.error('❌ Failed to serve v1 products API:', err);

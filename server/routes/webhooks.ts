@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { refreshLenderProductsCache } from "../services/lenderProductsCache";
+import { getCacheStats } from "../services/lenderProductsCache";
 
 const router = Router();
 
@@ -30,8 +30,8 @@ router.post("/lender-products/update", async (req, res) => {
       source: req.headers['x-webhook-source']
     });
     
-    // Refresh the lender products cache
-    await refreshLenderProductsCache();
+    // Get current cache stats
+    const stats = getCacheStats();
     
     res.status(200).json({ 
       success: true, 

@@ -316,35 +316,10 @@ function broadcastProductUpdate() {
   });
 }
 
-// ✅ Initialize by fetching from production API instead of hardcoded data
-import { refreshLenderProductsCache } from "../services/lenderProductsCache";
-
-// Initialize with production data on startup
+// ✅ Initialize with minimal fallback data (push-based system doesn't need initialization)
 (async () => {
   if (lenderProducts.length === 0) {
-    try {
-      const productionProducts = await refreshLenderProductsCache();
-      lenderProducts.push(...productionProducts);
-      console.log(`🚀 Initialized with ${lenderProducts.length} products from production API`);
-    } catch (error) {
-      console.warn("⚠️  Failed to initialize from production API, using fallback data");
-      // Fallback to minimal sample data only if production fails
-      lenderProducts = [
-        {
-          id: "lender_equipment_001",
-          lenderId: "boreal_capital",
-          name: "Equipment Financing Plus (Fallback)",
-          description: "Fallback data - production API unavailable",
-          productType: "equipment_financing",
-          minAmount: 50000,
-          maxAmount: 2000000,
-          rate: "Prime + 2.5%",
-          country: "Canada",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ];
-    }
+    console.log("📦 Using push-based lender products system - no initialization needed");
   }
 })();
 

@@ -1,11 +1,10 @@
 import express from "express";
-import syncLenderProducts from "./routes/api/sync/lender-products";
+// Removed old sync import - using push-based system in main server
 import { getLenderProductJsonSchema } from "../shared/schemas/lenderProductSchema";
 
 const router = express.Router();
 
-// Sync endpoint for receiving lender products from staff app
-router.post("/api/sync/lender-products", syncLenderProducts);
+// Removed old sync endpoint - using push-based system in main server
 
 // ✅ NEW: Schema endpoint for staff app form generation
 router.get("/api/schema/lender-products", (req, res) => {
