@@ -8,7 +8,7 @@ import { PwaPrompt } from "@/components/PwaPrompt";
 
 // V1 Route Components (Source of Truth)
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
-import Step2RecommendationsRoute from "@/routes/Step2_Recommendations";
+import Step2Recommendations from "@/routes/Step2_Recommendations";
 // NEW: Separated Step 3 & 4 Route Components (July 3, 2025)
 import Step3BusinessDetailsComplete from "@/routes/Step3_BusinessDetails_Complete";
 
@@ -217,7 +217,7 @@ export function MainLayout() {
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/apply/step-1" component={Step1FinancialProfile} />
-      <Route path="/apply/step-2" component={Step2RecommendationsRoute} />
+      <Route path="/apply/step-2" component={Step2Recommendations} />
       <Route path="/apply/step-3" component={Step3BusinessDetailsComplete} />
       <Route path="/apply/step-4" component={Step4ApplicantInfoComplete} />
       <Route path="/apply/step-5" component={Step5DocumentUpload} />
