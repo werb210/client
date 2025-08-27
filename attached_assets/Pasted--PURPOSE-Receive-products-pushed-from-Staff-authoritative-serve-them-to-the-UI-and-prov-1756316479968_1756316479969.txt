@@ -1,0 +1,135 @@
+# PURPOSE
+# Receive products **pushed** from Staff (authoritative), serve them to the UI,
+# and provide a one-shot manual pull for initialization/troubleshooting.
+
+set -euo pipefail
+
+echo "== 1) Server-side receive endpoint (with SYNC_TOKEN auth) =="
+mkdir -p server/routes
+
+cat > server/routes/sync-lender-products.mjs <<'JS'
+import express from "express";
+const router = express.Router();
+
+// In-memory catalog (replace with persistent store if desired)
+let CATALOG = { products: [], signature: null, updated_at: null };
+
+router.get("/api/lender-products", (_req, res) => {
+  // Legacy-compatible shape used by the UI layer already
+  return res.json({
+    total: CATALOG.products.length,
+    products: CATALOG.products
+  });
+});
+
+router.post("/api/sync/lender-products", express.json({limit:"5mb"}), (req, res) => {
+  const token = req.get("X-Sync-Token");
+  if (!token || token !== process.env.SYNC_TOKEN) {
+    return res.status(401).json({ ok:false, error:"unauthorized" });
+  }
+  const items = Array.isArray(req.body?.products) ? req.body.products : [];
+  // normalize minimal fields we rely on in Step 2/Step 5
+  const norm = items.map(p => ({
+    id: p.id,
+    name: p.name ?? p.productName,
+    lender_name: p.lender_name ?? p.lenderName ?? null,
+    country: String(p.country ?? p.countryOffered ?? '').toUpperCase(),
+    category: p.category ?? p.productCategory ?? 'Working Capital',
+    min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0),
+    max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? 0),
+    active: (p.active ?? p.isActive) !== false
+  }));
+
+  // simple dedupe by id
+  const seen = new Set(); const dedup = [];
+  for (const p of norm) { if (p?.id && !seen.has(p.id)) { seen.add(p.id); dedup.push(p); } }
+
+  // compute signature
+  const sig = require("crypto").createHash("sha256")
+    .update(JSON.stringify(dedup))
+    .digest("hex");
+
+  CATALOG = { products: dedup, signature: sig, updated_at: new Date().toISOString() };
+  return res.json({
+    ok: true,
+    total: dedup.length,
+    by_country: Object.entries(dedup.reduce((a,p)=>((a[p.country]=(a[p.country]||0)+1),a),{}))
+      .map(([k,n])=>({k, n})),
+    signature: sig,
+    updated_at: CATALOG.updated_at
+  });
+});
+
+export default router;
+JS
+
+# Mount routes in your client server bootstrap
+BOOT="server/boot.ts"
+grep -q "sync-lender-products.mjs" "$BOOT" || cat >> "$BOOT" <<'JS'
+// Receive products from Staff + serve them to the UI
+import syncLenderProducts from "./routes/sync-lender-products.mjs";
+app.use(syncLenderProducts);
+JS
+
+echo "== 2) OPTIONAL: one-shot manual pull from Staff for initialization =="
+cat > server/routes/_int/pull-staff-products.mjs <<'JS'
+import express from "express";
+import fetch from "node-fetch";
+const router = express.Router();
+
+/** POST /internal/pull-staff-products
+ * Pulls Staff V1 products and writes into the same in-memory catalog
+ * as the push endpoint (for debugging/first-run only).
+ */
+router.post("/internal/pull-staff-products", async (req, res) => {
+  try {
+    const base = process.env.STAFF_BASE || "https://staff.boreal.financial";
+    const r = await fetch(`${base}/api/v1/products`);
+    const v1 = await r.json(); // array
+    // mimic the push receiver body
+    const normalized = v1.map(p => ({
+      id: p.id,
+      name: p.productName ?? p.name,
+      lender_name: p.lenderName ?? p.lender_name ?? null,
+      country: String(p.countryOffered ?? p.country ?? '').toUpperCase(),
+      category: p.productCategory ?? p.category ?? 'Working Capital',
+      min_amount: Number(p.minimumLendingAmount ?? p.min_amount ?? 0),
+      max_amount: Number(p.maximumLendingAmount ?? p.max_amount ?? 0),
+      active: (p.isActive ?? p.active) !== false
+    }));
+    // forward into the existing receiver to avoid code duplication
+    const resp = await fetch(`${req.protocol}://${req.get("host")}/api/sync/lender-products`, {
+      method:"POST",
+      headers: { "Content-Type":"application/json", "X-Sync-Token": process.env.SYNC_TOKEN || "" },
+      body: JSON.stringify({ products: normalized })
+    });
+    const body = await resp.json().catch(()=> ({}));
+    res.status(resp.status).json(body);
+  } catch (e) {
+    res.status(500).json({ ok:false, error:String(e?.message||e) });
+  }
+});
+
+export default router;
+JS
+
+grep -q "_int/pull-staff-products.mjs" "$BOOT" || cat >> "$BOOT" <<'JS'
+// Internal pull (init/debug)
+import pullStaffProducts from "./routes/_int/pull-staff-products.mjs";
+app.use(pullStaffProducts);
+JS
+
+echo "== 3) UI/logic: make Step 2 & Step 5 use the in-memory catalog =="
+# Ensure your client data hooks read from /api/lender-products (served above)
+# and rely on canonical fields (country, category, min_amount, max_amount, active).
+
+# Example test calls:
+echo "== 4) Verify current catalog on the client =="
+curl -s http://localhost:5000/api/lender-products \
+| jq '{ total, by_country:(.products|group_by(.country)|map({k:.[0].country, n:length})) }'
+
+echo "== 5) If Staff just clicked Sync to Client =="
+echo "• The above should immediately reflect Staff counts (e.g. CA:17, US:25)."
+
+echo "== 6) If CA is still 0 on the client =="
+echo "• It means Staff pushed 0 CA rows. Fix the source in Staff, click Sync again."
