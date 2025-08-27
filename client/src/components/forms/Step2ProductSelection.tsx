@@ -24,7 +24,8 @@ export function Step2ProductSelection({ onNext, onPrevious }: Step2Props) {
   const { recommendations, isLoading, error } = useStaffRecommendations();
   
   // Get industry insights (safe access)
-  const industryInsights = generateIndustryInsights(state.formData?.industry || '');
+  const industry = state?.formData?.industry ?? '';
+  const industryInsights = generateIndustryInsights(industry);
 
   const handleContinue = () => {
     // Since recommendations are always disabled, always use fallback

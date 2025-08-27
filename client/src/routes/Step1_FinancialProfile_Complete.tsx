@@ -17,6 +17,7 @@ import { fetchUserCountry, countryCodeToBusinessLocation } from '@/lib/location'
 import { useDebouncedCallback } from 'use-debounce';
 import { StepHeader } from '@/components/StepHeader';
 import { initializeApplicationId, getStoredApplicationId } from '@/lib/uuidUtils';
+import { saveIntake } from '@/utils/normalizeIntake';
 
 // Currency formatting utilities
 const formatCurrency = (value: string): string => {
@@ -265,6 +266,17 @@ export default function Step1FinancialProfile() {
       } catch (e) {
         logger.warn('⚠️ Could not backup to localStorage:', e);
       }
+
+      // Save intake data for Step 2 using new normalizer
+      const intake = {
+        amount: step1Payload.fundingAmount,
+        country: step1Payload.headquarters as 'CA' | 'US',
+        monthlyRevenue: step1Payload.averageMonthlyRevenue,
+        timeInBusinessMonths: 120, // Convert from salesHistory
+        industry: step1Payload.industry
+      };
+      saveIntake(intake);
+      logger.log('✅ Intake data saved for Step 2');
 
       logger.log('✅ Form data dispatched to context');
 

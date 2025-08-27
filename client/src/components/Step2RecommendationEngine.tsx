@@ -2,15 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, ArrowRight, Loader2 } from 'lucide-react';
+import { normalizeIntake, loadIntake, type Intake } from '@/utils/normalizeIntake';
 
-type Intake = {
-  product_id?: string | null;
-  country?: "CA" | "US" | null;
-  amount?: number | null;
-  timeInBusinessMonths?: number | null;
-  monthlyRevenue?: number | null;
-  industry?: string | null;
-};
+// Intake type now imported from normalizeIntake utility
 
 type Props = {
   // we'll accept either; callers can pass whichever they have
@@ -22,56 +16,42 @@ type Props = {
   onPrevious?: () => void;
 };
 
-function toNumber(v: any): number | null {
-  if (v === null || v === undefined || v === "") return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function normalize(raw: any): Intake | null {
-  if (!raw || typeof raw !== "object") return null;
-
-  const amount = toNumber(raw.amount ?? raw.loanAmount ?? raw.loan_amount ?? raw.fundingAmount);
-  const tib = toNumber(raw.timeInBusinessMonths ?? raw.time_in_business);
-  const rev = toNumber(raw.monthlyRevenue ?? raw.monthly_revenue ?? raw.averageMonthlyRevenue);
-
-  const country =
-    raw.country ??
-    raw.countryOffered ??
-    raw.country_offered ??
-    raw.headquarters ??
-    raw.businessLocation ??
-    null;
-
-  const product_id = raw.product_id ?? raw.id ?? null;
-
-  return {
-    product_id,
-    country: country === "CA" || country === "US" ? country : null,
-    amount,
-    timeInBusinessMonths: tib,
-    monthlyRevenue: rev,
-    industry: raw.industry ?? null,
-  };
+function PendingCard() {
+  return (
+    <Card className="max-w-xl mx-auto">
+      <CardHeader>
+        <div className="flex items-center space-x-2">
+          <Target className="h-5 w-5 text-orange-500" />
+          <CardTitle>Product Matching Pending</CardTitle>
+        </div>
+        <CardDescription>
+          We couldn't read your details from Step 1. Please go back and complete the form.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <a className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2" href="/apply/step-1">
+          Back to Step 1
+        </a>
+      </CardContent>
+    </Card>
+  );
 }
 
 function Step2RecommendationEngine(props: Props) {
-  // Accept both names; default to {} so we never destructure undefined
+  // Use new normalizer to get intake data from props or sessionStorage
   const raw = props.intake ?? props.formData ?? {};
-  const intake = useMemo(() => normalize(raw), [raw]);
+  const intake: Intake | null = normalizeIntake(raw) ?? normalizeIntake(loadIntake());
 
-  const hasEnoughForMatch =
-    !!intake?.country &&
-    typeof intake?.amount === "number" &&
-    (intake?.amount ?? 0) > 0;
+  if (!intake) return <PendingCard />;
+
+  // Helper function for safe number formatting
+  const fmt = (n: number) => (Number.isFinite(n) ? n.toLocaleString() : '—');
 
   const [state, setState] = useState<
     { status: "idle" | "pending" | "ready" | "error"; data?: any; error?: any }
-  >({ status: hasEnoughForMatch ? "pending" : "idle" });
+  >({ status: "pending" });
 
   useEffect(() => {
-    if (!hasEnoughForMatch) return;
-
     let cancelled = false;
     (async () => {
       try {
@@ -84,46 +64,7 @@ function Step2RecommendationEngine(props: Props) {
     })();
 
     return () => { cancelled = true; };
-  }, [hasEnoughForMatch, intake]);
-
-  // ——— UX states ———
-  if (!hasEnoughForMatch) {
-    return (
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <div className="flex items-center space-x-2">
-            <Target className="h-5 w-5 text-orange-500" />
-            <CardTitle>Product Matching Pending</CardTitle>
-          </div>
-          <CardDescription>
-            Enter your amount and country to see matching lenders.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
-              <p className="text-orange-800">
-                <strong>Missing Information:</strong> Please complete Step 1 with:
-              </p>
-              <ul className="mt-2 text-orange-700 list-disc list-inside">
-                <li>Funding amount (how much you need)</li>
-                <li>Business location (US or Canada)</li>
-                <li>Basic business information</li>
-              </ul>
-            </div>
-            <div className="flex space-x-3">
-              <Button onClick={props.onPrevious} variant="outline">
-                Back to Step 1
-              </Button>
-              <Button onClick={props.onContinue} disabled>
-                Continue (Complete Step 1 first)
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  }, [intake]);
 
   if (state.status === "pending") {
     return (
@@ -134,7 +75,7 @@ function Step2RecommendationEngine(props: Props) {
             <CardTitle>Finding matches...</CardTitle>
           </div>
           <CardDescription>
-            Analyzing your profile: ${intake?.amount?.toLocaleString() || 'amount not set'} in {intake?.country || 'location not set'}
+            Analyzing your profile: ${fmt(intake.amount)} • Country: {intake.country} • Revenue: ${fmt(intake.monthlyRevenue)}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -182,7 +123,7 @@ function Step2RecommendationEngine(props: Props) {
           <CardTitle>Product Matching Pending</CardTitle>
         </div>
         <CardDescription>
-          Profile received: ${intake?.amount?.toLocaleString() || 'amount not set'} for {intake?.industry || 'industry not set'} business in {intake?.country || 'location not set'}
+          Profile received: ${fmt(intake.amount)} for {intake.industry || 'business'} in {intake.country}
         </CardDescription>
       </CardHeader>
       <CardContent>
