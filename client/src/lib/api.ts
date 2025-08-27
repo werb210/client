@@ -398,59 +398,111 @@ export type CategoryRecommendation = {
   products: CanonicalProduct[];
 };
 
-const DOCS_FALLBACK: Record<string, RequiredDoc[]> = {
-  "Working Capital": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
-  "Business Line of Credit": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
-  "Term Loan": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
-  "Equipment Financing": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
-  "Invoice Factoring": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
-  "Purchase Order Financing": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+// Removed old implementations - using refined versions below
+
+// ========== REFINED CATALOG PRODUCTS & STEP 2/5 HELPERS ==========
+
+// Minimal, safe helpers used by Step 2 (recommendations) and Step 5 (required docs).
+export type CanonicalProduct = {
+  id: string;
+  name: string;
+  lender_id: string;
+  lender_name: string;
+  country: "CA" | "US";
+  category: string;
+  min_amount: number;
+  max_amount: number;
+  interest_rate_min: number | null;
+  interest_rate_max: number | null;
+  term_min: number | null;
+  term_max: number | null;
+  active: boolean;
+  required_documents: Array<{ key: string; label: string; required: boolean; months?: number }>;
 };
 
-export async function recommendProducts(input: IntakeInput): Promise<CategoryRecommendation[]> {
-  const { products } = await fetchCatalogDump(500); // trusts canonical category when available
-  const amt = Number(input.amount || 0);
-  const cc = String(input.country || "").toUpperCase();
-
-  // 1) Filter by country + amount window
-  const matches = products.filter(p =>
-    p.country === cc &&
-    (Number.isFinite(p.min_amount) ? p.min_amount <= amt : true) &&
-    (Number.isFinite(p.max_amount) ? amt <= p.max_amount : true) &&
-    p.active !== false
-  );
-
-  // 2) Simple relevance scoring (closest max_amount first; then higher max)
-  const scored = matches
-    .map(p => ({
-      score: Math.abs((p.max_amount ?? Number.MAX_SAFE_INTEGER) - amt),
-      p,
-    }))
-    .sort((a, b) => a.score - b.score || (b.p.max_amount ?? 0) - (a.p.max_amount ?? 0))
-    .map(x => x.p);
-
-  // 3) Group by canonical category
-  const byCat = new Map<string, CanonicalProduct[]>();
-  for (const p of scored) {
-    const cat = p.category || "Working Capital";
-    if (!byCat.has(cat)) byCat.set(cat, []);
-    byCat.get(cat)!.push(p);
-  }
-
-  // 4) If caller specified a category, surface it first
-  const result: CategoryRecommendation[] = [];
-  const order = Array.from(byCat.keys());
-  if (input.category && byCat.has(input.category)) {
-    result.push({ category: input.category, products: byCat.get(input.category)! });
-  }
-  for (const c of order) {
-    if (!input.category || c !== input.category) {
-      result.push({ category: c, products: byCat.get(c)! });
-    }
-  }
-  return result;
+function toCanonicalFromLegacy(lp: any): CanonicalProduct {
+  const countryRaw = String(lp.countryOffered || lp.country || "").trim().toUpperCase();
+  const country = countryRaw === "CANADA" || countryRaw === "CAN" ? "CA"
+                : countryRaw === "USA" || countryRaw === "UNITED STATES" ? "US"
+                : (countryRaw || "US");
+  return {
+    id: String(lp.id ?? ""),
+    name: String(lp.name ?? lp.productName ?? ""),
+    lender_id: String(lp.lender_id ?? lp.lenderId ?? lp.lenderName ?? ""),
+    lender_name: String(lp.lender_name ?? lp.lenderName ?? ""),
+    country: country as "CA" | "US",
+    category: String(lp.category ?? lp.productCategory ?? "Working Capital"),
+    min_amount: Number(lp.min_amount ?? lp.minimumLendingAmount ?? 0),
+    max_amount: Number(lp.max_amount ?? lp.maximumLendingAmount ?? Number.MAX_SAFE_INTEGER),
+    interest_rate_min: lp.interest_rate_min ?? lp.interestRateMinimum ?? null,
+    interest_rate_max: lp.interest_rate_max ?? lp.interestRateMaximum ?? null,
+    term_min: lp.term_min ?? lp.termMinimum ?? null,
+    term_max: lp.term_max ?? lp.termMaximum ?? null,
+    active: (lp.active ?? lp.isActive) !== false,
+    required_documents: Array.isArray(lp.required_documents ?? lp.documentsRequired)
+      ? (lp.required_documents ?? lp.documentsRequired)
+      : [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  };
 }
 
+export async function fetchCatalogProducts(params?: {
+  country?: "CA" | "US";
+  amount?: number;
+  includeInactive?: boolean;
+}): Promise<CanonicalProduct[]> {
+  const qs = new URLSearchParams();
+  if (params?.country) qs.set("country", params.country);
+  if (params?.amount != null) qs.set("amount", String(params.amount));
+  qs.set("includeInactive", params?.includeInactive ? "1" : "0");
+
+  // Try canonical export first
+  try {
+    const r = await fetch(`/api/catalog/export-products?${qs.toString()}`, { credentials: "include" });
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j?.products)) return j.products as CanonicalProduct[];
+    }
+  } catch {}
+
+  // Fallback to legacy shim (now fixed to emit correct CA/US)
+  const r2 = await fetch(`/api/lender-products`, { credentials: "include" });
+  const j2 = await r2.json();
+  const items = Array.isArray(j2?.products) ? j2.products : [];
+  return items.map(toCanonicalFromLegacy);
+}
+
+// === Step 2 helpers ===
+export type IntakeInput = {
+  amount: number;
+  country: "CA" | "US";
+  timeInBusinessMonths?: number;
+  monthlyRevenue?: number;
+  creditScore?: number;
+};
+
+export async function recommendProducts(intake: IntakeInput) {
+  const products = await fetchCatalogProducts({ country: intake.country, amount: intake.amount });
+  const eligible = products.filter(p => p.active &&
+    (!intake.country || p.country === intake.country) &&
+    (p.min_amount <= intake.amount && intake.amount <= p.max_amount)
+  );
+
+  // Simple relevance: closest max_amount to requested amount (lower distance is better)
+  const ranked = eligible
+    .map(p => ({ score: Math.abs((p.max_amount ?? Number.MAX_SAFE_INTEGER) - intake.amount), p }))
+    .sort((a, b) => a.score - b.score || (b.p.max_amount - a.p.max_amount))
+    .map(x => x.p);
+
+  // Group by category for UI
+  const byCat = ranked.reduce((acc, p) => {
+    (acc[p.category] ||= []).push(p);
+    return acc;
+  }, {} as Record<string, CanonicalProduct[]>);
+
+  return { products: ranked, byCategory: byCat };
+}
+
+// === Step 5 helpers ===
 export type RequiredDocsInput = {
   category?: string;
   country?: "CA" | "US";
@@ -461,79 +513,34 @@ export type RequiredDocsInput = {
   creditScore?: number;
 };
 
-export async function listDocuments(input: RequiredDocsInput): Promise<RequiredDoc[]> {
-  // Prefer Staff endpoint; fall back to baseline (6-month bank statements) per category.
+const DOCS_FALLBACK: Record<string, Array<{ key: string; label: string; required: boolean; months?: number }>> = {
+  "Working Capital": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  "Business Line of Credit": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  "Term Loan": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  "Equipment Financing": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  "Invoice Factoring": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  "Purchase Order Financing": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+};
+
+export async function listDocuments(input: RequiredDocsInput) {
   try {
-    const r = await fetch("/api/required-docs", {
+    const r = await fetch(`/api/required-docs`, {
       method: "POST",
-      headers: JSON_HEADERS,
+      headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify(input),
     });
     if (r.ok) {
       const j = await r.json();
       const docs = j?.documents ?? j?.requiredDocs ?? j?.data ?? [];
-      if (Array.isArray(docs) && docs.length) {
-        return docs.map((d: any, i: number) =>
-          typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
-        );
-      }
+      if (Array.isArray(docs) && docs.length) return docs;
     }
-  } catch { /* noop → fallback */ }
-
-  const cat = input.category || "Working Capital";
+  } catch {}
+  const cat = input.category ?? "Working Capital";
   return DOCS_FALLBACK[cat] ?? DOCS_FALLBACK["Working Capital"];
 }
 
-// ========== CATALOG PRODUCTS & LENDERS API ==========
-
-export type CatalogProduct = {
-  id: string;
-  name: string;
-  lender_name: string;
-  lender_id?: string;
-  country: string;        // "US" | "CA"
-  category: string;
-  min_amount: number;
-  max_amount: number;
-  active: boolean;
-};
-
-export async function fetchCatalogProducts(): Promise<CatalogProduct[]> {
-  // Prefer canonical; fallback to lender-products; never call bare /v1/*
-  try {
-    const r = await fetch("/api/catalog/export-products?includeInactive=1", { credentials: "include" });
-    if (r.ok) {
-      const j = await r.json();
-      return (j.products ?? []).map((p: any) => ({
-        id: p.id,
-        name: p.name ?? p.productName,
-        lender_name: p.lender_name ?? p.lenderName,
-        lender_id: p.lender_id ?? p.lenderId,
-        country: String(p.country ?? p.countryOffered ?? "").toUpperCase(),
-        category: p.category ?? p.productCategory ?? "Working Capital",
-        min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0),
-        max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? Number.MAX_SAFE_INTEGER),
-        active: (p.active ?? p.isActive) !== false,
-      }));
-    }
-  } catch {}
-  // fallback: legacy lender-products (object with products array)
-  const r2 = await fetch("/api/lender-products", { credentials: "include" });
-  const legacy = await r2.json();
-  const arr = legacy.products ?? [];
-  return (arr ?? []).map((p: any) => ({
-    id: p.id,
-    name: p.productName ?? p.name,
-    lender_name: p.lenderName ?? p.lender_name,
-    country: String(p.countryOffered ?? p.country ?? "").toUpperCase(),
-    category: p.productCategory ?? p.category ?? "Working Capital",
-    min_amount: Number(p.minimumLendingAmount ?? p.min_amount ?? 0),
-    max_amount: Number(p.maximumLendingAmount ?? p.max_amount ?? Number.MAX_SAFE_INTEGER),
-    active: (p.isActive ?? p.active) !== false,
-  }));
-}
-
+// === UI Lenders helper (kept for compatibility) ===
 export type UILender = { id: string; name: string; product_count: number };
 
 export async function fetchUILenders(): Promise<UILender[]> {
