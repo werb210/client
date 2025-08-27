@@ -322,7 +322,7 @@ export function MainLayout() {
 /* commented route */
       
       {/* Default Route - Landing Page */}
-      {/* <Route component={LandingPage} /> */}
+      <Route component={LandingPage} />
       </Switch>
       </Suspense>
       
