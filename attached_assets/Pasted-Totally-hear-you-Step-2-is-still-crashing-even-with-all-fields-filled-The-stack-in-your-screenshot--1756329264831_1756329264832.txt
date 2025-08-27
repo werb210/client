@@ -1,0 +1,206 @@
+Totally hear you—Step 2 is still crashing even with all fields filled. The stack in your screenshot shows a hard read of `amount` off an **undefined** intake object. That usually means the route is passing the wrong prop shape (e.g., `intake` vs `formData`) or no object at all, and the Step 2 component destructures it unguarded.
+
+Below are **surgical patches** you can drop in to make Step 2 unbreakable. They (a) accept either prop name, (b) normalize field names, (c) guard all reads, and (d) only call the recommender when inputs actually exist. I’m also including a small patch for the Step 1 → Step 2 navigation to ensure the data actually arrives.
+
+---
+
+# 1) Step 2 route: always pass a safe object
+
+```tsx
+// routes/Step2Route.tsx
+import { useLocation, Navigate } from "react-router-dom";
+import Step2RecommendationEngine from "../components/Step2RecommendationEngine";
+
+export default function Step2Route() {
+  const loc = useLocation() as { state?: any };
+
+  // Pull from (1) router state, (2) localStorage, (3) nothing
+  const fromState = loc?.state?.formData ?? loc?.state?.intake ?? null;
+
+  const fromStorage = (() => {
+    try {
+      const s = localStorage.getItem("apply.form");
+      return s ? JSON.parse(s) : null;
+    } catch { return null; }
+  })();
+
+  const raw = fromState ?? fromStorage ?? null;
+
+  // If you prefer hard redirect instead of pending UI, uncomment:
+  // if (!raw) return <Navigate to="/apply/step-1?reason=missing-intake" replace />;
+
+  return <Step2RecommendationEngine formData={raw ?? {}} />;
+}
+```
+
+---
+
+# 2) Step 2 component: normalize + guard everything
+
+```tsx
+// components/Step2RecommendationEngine.tsx
+import { useEffect, useMemo, useState } from "react";
+
+type Intake = {
+  product_id?: string | null;
+  country?: "CA" | "US" | null;
+  amount?: number | null;
+  timeInBusinessMonths?: number | null;
+  monthlyRevenue?: number | null;
+  industry?: string | null;
+};
+
+type Props = {
+  // we’ll accept either; callers can pass whichever they have
+  formData?: Partial<Intake> | any;
+  intake?: Partial<Intake> | any;
+};
+
+function toNumber(v: any): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function normalize(raw: any): Intake | null {
+  if (!raw || typeof raw !== "object") return null;
+
+  const amount = toNumber(raw.amount ?? raw.loanAmount ?? raw.loan_amount);
+  const tib = toNumber(raw.timeInBusinessMonths ?? raw.time_in_business);
+  const rev = toNumber(raw.monthlyRevenue ?? raw.monthly_revenue);
+
+  const country =
+    raw.country ??
+    raw.countryOffered ??
+    raw.country_offered ??
+    null;
+
+  const product_id = raw.product_id ?? raw.id ?? null;
+
+  return {
+    product_id,
+    country: country === "CA" || country === "US" ? country : null,
+    amount,
+    timeInBusinessMonths: tib,
+    monthlyRevenue: rev,
+    industry: raw.industry ?? null,
+  };
+}
+
+export default function Step2RecommendationEngine(props: Props) {
+  // Accept both names; default to {} so we never destructure undefined
+  const raw = props.intake ?? props.formData ?? {};
+  const intake = useMemo(() => normalize(raw), [raw]);
+
+  const hasEnoughForMatch =
+    !!intake?.country &&
+    typeof intake?.amount === "number" &&
+    (intake?.amount ?? 0) > 0;
+
+  const [state, setState] = useState<
+    { status: "idle" | "pending" | "ready" | "error"; data?: any; error?: any }
+  >({ status: hasEnoughForMatch ? "pending" : "idle" });
+
+  useEffect(() => {
+    if (!hasEnoughForMatch) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/recommend", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(intake), // safe, normalized
+        });
+        if (!res.ok) throw new Error(`recommend failed ${res.status}`);
+        const json = await res.json();
+        if (!cancelled) setState({ status: "ready", data: json });
+      } catch (e) {
+        if (!cancelled) setState({ status: "error", error: String(e) });
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [hasEnoughForMatch, intake]);
+
+  // ——— UX states ———
+  if (!hasEnoughForMatch) {
+    return (
+      <div className="p-6 rounded-xl border">
+        <h2 className="text-xl font-semibold">Product Matching Pending</h2>
+        <p className="mt-2 text-sm text-gray-600">
+          Enter your amount and country to see matching lenders.
+        </p>
+        <div className="mt-4 flex gap-2">
+          <a className="btn" href="/apply/step-1">Back to Step 1</a>
+          <a className="btn-secondary" href="/apply/help">What info is required?</a>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.status === "pending") return <div>Finding matches…</div>;
+  if (state.status === "error")   return <div>Could not load recommendations.</div>;
+
+  // Render your matches UI here
+  return <MatchesList data={state.data} />;
+}
+
+// Stub to keep TypeScript happy; replace with your real UI
+function MatchesList({ data }: { data: any }) {
+  return <pre className="text-sm">{JSON.stringify(data, null, 2)}</pre>;
+}
+```
+
+**Why this stops the crash:** we no longer do `const { amount } = intake` when `intake` is `undefined`. We coalesce, normalize, and gate the recommender call behind `hasEnoughForMatch`.
+
+---
+
+# 3) Step 1 submit: guarantee data is handed to Step 2
+
+Make sure you’re **actually passing** the data to Step 2 (and persisting a backup).
+
+```tsx
+// routes/Step1Route.tsx (submit handler)
+import { useNavigate } from "react-router-dom";
+const navigate = useNavigate();
+
+function onSubmit(values: any) {
+  const canonical = {
+    product_id: values.product_id ?? null,
+    country: values.country ?? values.countryOffered ?? values.country_offered ?? null,
+    amount: Number(values.amount ?? values.loanAmount ?? values.loan_amount ?? 0),
+    timeInBusinessMonths: Number(values.timeInBusinessMonths ?? values.time_in_business ?? 0),
+    monthlyRevenue: Number(values.monthlyRevenue ?? values.monthly_revenue ?? 0),
+    industry: values.industry ?? null,
+  };
+
+  // persist a backup so Step 2 can recover even if navigation state is lost
+  try { localStorage.setItem("apply.form", JSON.stringify(canonical)); } catch {}
+
+  navigate("/apply/step-2", {
+    state: { formData: canonical }, // IMPORTANT: matches Step2Route expectation
+    replace: false,
+  });
+}
+```
+
+---
+
+# 4) Quick sanity checks to run now
+
+* Search for any lingering calls to a legacy function that might still run on mount:
+
+  * `recommendProducts()` or similar.
+* Ensure **only one** Step 2 route is active and it renders the component you just patched.
+* Do a **hard rebuild/restart** on Replit so the old bundle (`index-24v9burl.js`) isn’t served.
+
+---
+
+# 5) Minimal fallback (if you need to ship instantly)
+
+If you can’t touch Step 1 right now, Step 2 alone will still stop crashing and show the “Product Matching Pending” screen when data doesn’t arrive. Once Step 1 starts passing state or localStorage is populated, it will automatically proceed to matching.
+
+---
+
+If you paste these patches in, Step 2 won’t crash—even with empty inputs—and it will also work when all fields are filled.

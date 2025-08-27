@@ -156,15 +156,15 @@ export default function Step1FinancialProfile() {
       businessLocation: state.step1?.businessLocation,
       headquarters: state.step1?.headquarters as "US" | "CA" | undefined,
       headquartersState: state.step1?.headquartersState,
-      industry: state.step1?.industry,
-      lookingFor: state.step1?.lookingFor,
-      fundingAmount: state.step1?.fundingAmount,
-      fundsPurpose: state.step1?.fundsPurpose as "equipment" | "inventory" | "expansion" | "working_capital" | undefined,
-      salesHistory: state.step1?.salesHistory,
-      revenueLastYear: state.step1?.revenueLastYear,
-      averageMonthlyRevenue: state.step1?.averageMonthlyRevenue,
-      accountsReceivableBalance: state.step1?.accountsReceivableBalance,
-      fixedAssetsValue: state.step1?.fixedAssetsValue,
+      industry: state.step1?.industry || 'professional_services', // Default to Professional Services
+      lookingFor: state.step1?.lookingFor || 'capital', // Default to Capital
+      fundingAmount: state.step1?.fundingAmount || 50000, // Default to $50,000
+      fundsPurpose: (state.step1?.fundsPurpose as "equipment" | "inventory" | "expansion" | "working_capital" | undefined) || 'working_capital', // Default to Working Capital
+      salesHistory: state.step1?.salesHistory || '1-3yr', // Default to 1-3 years
+      revenueLastYear: state.step1?.revenueLastYear || 100000, // Default to $100,000-$250,000 range
+      averageMonthlyRevenue: state.step1?.averageMonthlyRevenue || 10000, // Default to $10,000-$25,000 range
+      accountsReceivableBalance: state.step1?.accountsReceivableBalance || 0, // Default to No Account Receivables
+      fixedAssetsValue: state.step1?.fixedAssetsValue || 0, // Default to No fixed assets
       equipmentValue: state.step1?.equipmentValue,
     },
     mode: 'onChange',
