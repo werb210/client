@@ -134,7 +134,7 @@ function Step2RecommendationEngine(props: Props) {
             <CardTitle>Finding matches...</CardTitle>
           </div>
           <CardDescription>
-            Analyzing your profile: ${intake?.amount?.toLocaleString()} in {intake?.country}
+            Analyzing your profile: ${intake?.amount?.toLocaleString() || 'amount not set'} in {intake?.country || 'location not set'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -182,7 +182,7 @@ function Step2RecommendationEngine(props: Props) {
           <CardTitle>Product Matching Pending</CardTitle>
         </div>
         <CardDescription>
-          Profile received: ${intake?.amount?.toLocaleString()} for {intake?.industry} business in {intake?.country}
+          Profile received: ${intake?.amount?.toLocaleString() || 'amount not set'} for {intake?.industry || 'industry not set'} business in {intake?.country || 'location not set'}
         </CardDescription>
       </CardHeader>
       <CardContent>
