@@ -84,7 +84,7 @@ export class PWAInstaller {
     prompt.id = 'pwa-install-prompt';
     prompt.className = 'fixed bottom-4 left-4 right-4 bg-teal-600 text-white p-4 rounded-lg shadow-lg z-50 flex items-center justify-between';
     
-    // Safe DOM creation without innerHTML
+    // Safe DOM creation using createElement
     const leftDiv = document.createElement('div');
     leftDiv.className = 'flex items-center space-x-3';
     
