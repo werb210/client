@@ -83,62 +83,24 @@ export class PWAInstaller {
     const prompt = document.createElement('div');
     prompt.id = 'pwa-install-prompt';
     prompt.className = 'fixed bottom-4 left-4 right-4 bg-teal-600 text-white p-4 rounded-lg shadow-lg z-50 flex items-center justify-between';
-    
-    // Safe DOM creation without innerHTML
-    const leftDiv = document.createElement('div');
-    leftDiv.className = 'flex items-center space-x-3';
-    
-    const svg1 = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg1.setAttribute('class', 'w-6 h-6');
-    svg1.setAttribute('fill', 'none');
-    svg1.setAttribute('stroke', 'currentColor');
-    svg1.setAttribute('viewBox', '0 0 24 24');
-    
-    const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path1.setAttribute('stroke-linecap', 'round');
-    path1.setAttribute('stroke-linejoin', 'round');
-    path1.setAttribute('stroke-width', '2');
-    path1.setAttribute('d', 'M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z');
-    svg1.appendChild(path1);
-    
-    const span = document.createElement('span');
-    span.className = 'text-sm font-medium';
-    span.textContent = 'Install Boreal Financial app for easy access';
-    
-    leftDiv.appendChild(svg1);
-    leftDiv.appendChild(span);
-    
-    const rightDiv = document.createElement('div');
-    rightDiv.className = 'flex space-x-2';
-    
-    const installBtn = document.createElement('button');
-    installBtn.id = 'pwa-install-btn';
-    installBtn.className = 'bg-white text-teal-600 px-3 py-1 rounded text-sm font-medium hover:bg-gray-100';
-    installBtn.textContent = 'Install';
-    
-    const dismissBtn = document.createElement('button');
-    dismissBtn.id = 'pwa-dismiss-btn';
-    dismissBtn.className = 'text-white/80 hover:text-white';
-    
-    const svg2 = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg2.setAttribute('class', 'w-5 h-5');
-    svg2.setAttribute('fill', 'none');
-    svg2.setAttribute('stroke', 'currentColor');
-    svg2.setAttribute('viewBox', '0 0 24 24');
-    
-    const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path2.setAttribute('stroke-linecap', 'round');
-    path2.setAttribute('stroke-linejoin', 'round');
-    path2.setAttribute('stroke-width', '2');
-    path2.setAttribute('d', 'M6 18L18 6M6 6l12 12');
-    svg2.appendChild(path2);
-    
-    dismissBtn.appendChild(svg2);
-    rightDiv.appendChild(installBtn);
-    rightDiv.appendChild(dismissBtn);
-    
-    prompt.appendChild(leftDiv);
-    prompt.appendChild(rightDiv);
+    prompt.innerHTML = `
+      <div class="flex items-center space-x-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+        </svg>
+        <span class="text-sm font-medium">Install Boreal Financial app for easy access</span>
+      </div>
+      <div class="flex space-x-2">
+        <button id="pwa-install-btn" class="bg-white text-teal-600 px-3 py-1 rounded text-sm font-medium hover:bg-gray-100">
+          Install
+        </button>
+        <button id="pwa-dismiss-btn" class="text-white/80 hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    `;
 
     document.body.appendChild(prompt);
 

@@ -193,7 +193,7 @@ export class IntegrationVerifier {
     try {
       // Check if React app is properly initialized
       const reactRoot = document.getElementById('root');
-      if (!reactRoot || !reactRoot.textContent) {
+      if (!reactRoot || !reactRoot.innerHTML) {
         // console.log('❌ React app not initialized');
         return false;
       }
