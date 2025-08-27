@@ -1,30 +1,86 @@
-import { useEffect, useState } from "react";
-import { fetchCatalogNormalized, CanonicalProduct } from "@/lib/catalog";
+import React from "react";
+import { fetchCatalogDump, type CanonicalField, type CanonicalProduct } from "@/lib/api";
 
-export default function CatalogDump(){
-  const [rows,setRows]=useState<CanonicalProduct[]>([]);
-  useEffect(()=>{ fetchCatalogNormalized().then(setRows).catch(()=>setRows([])); },[]);
-  if (!rows.length) return <div>Loading catalog…</div>;
-  
-  const fields: (keyof CanonicalProduct)[] = ["id","name","lender_id","lender_name","country","category","min_amount","max_amount","interest_rate_min","interest_rate_max","term_min","term_max","active","required_documents"];
-  
+export default function CatalogDump() {
+  const [fields, setFields] = React.useState<CanonicalField[]>([]);
+  const [rows, setRows] = React.useState<CanonicalProduct[]>([]);
+  const [err, setErr] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const { canonical_fields, products } = await fetchCatalogDump(500);
+        setFields(canonical_fields);
+        setRows(products);
+      } catch (e: any) {
+        setErr(e?.message ?? "Failed to load catalog");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (loading) return <div style={{ padding: 16 }}>Loading catalog data…</div>;
+  if (err) return <div style={{ color: "crimson", padding: 16 }}>Error: {err}</div>;
+
+  const cols = fields.map((f) => f.name);
+
+  const asText = (v: any) => {
+    if (v == null) return "";
+    if (Array.isArray(v)) {
+      return v
+        .map((d) => (typeof d === "string" ? d : d?.label ?? JSON.stringify(d)))
+        .join(" • ");
+    }
+    if (typeof v === "object") return JSON.stringify(v);
+    if (typeof v === "number") return v.toLocaleString();
+    return String(v);
+  };
+
   return (
-    <div style={{fontFamily:"ui-monospace",padding:16}}>
-      <h1>Catalog Dump (Canonical Fields)</h1>
-      <p>Showing {rows.length} products from canonical catalog system</p>
-      {rows.map((p,i)=>(
-        <div key={p.id} style={{border:"1px solid #ddd",borderRadius:12,margin:"12px 0",padding:12}}>
-          <div style={{fontWeight:700,marginBottom:8}}>{i+1}. {p.name} — {p.lender_name}</div>
-          {fields.map(f=>(
-            <div key={String(f)} style={{marginBottom:4}}>
-              <strong style={{color:"#0366d6"}}>{String(f)}:</strong>{" "}
-              <span style={{fontFamily:"monospace"}}>
-                {f==="required_documents" ? JSON.stringify(p[f]) : String((p as any)[f] ?? "")}
-              </span>
-            </div>
-          ))}
-        </div>
-      ))}
+    <div style={{ padding: 16 }}>
+      <h1 style={{ marginBottom: 8 }}>Catalog Dump (Canonical Fields)</h1>
+      <div style={{ marginBottom: 12, fontFamily: "monospace" }}>
+        Fields: {cols.join(", ")}
+      </div>
+      <div style={{ overflowX: "auto", border: "1px solid #eee", borderRadius: 8 }}>
+        <table style={{ borderCollapse: "collapse", width: "100%" }}>
+          <thead>
+            <tr>
+              {cols.map((c) => (
+                <th
+                  key={c}
+                  style={{
+                    textAlign: "left",
+                    padding: "8px 10px",
+                    borderBottom: "1px solid #ddd",
+                    background: "#fafafa",
+                    whiteSpace: "nowrap",
+                    fontWeight: 600,
+                  }}
+                >
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={(r as any).id ?? i}>
+                {cols.map((c) => (
+                  <td key={c} style={{ padding: "6px 10px", borderBottom: "1px solid #f3f3f3", verticalAlign: "top" }}>
+                    {asText((r as any)[c])}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p style={{ marginTop: 10, color: "#666" }}>
+        Source: Prefer <code>/api/catalog/dump</code>; falls back to legacy and normalizes.
+      </p>
     </div>
   );
 }

@@ -1,0 +1,196 @@
+[CLIENT APP]
+
+# FILE: client/src/lib/api.ts
+# — Add canonical catalog types + a single fetch that prefers /catalog/dump and
+#    cleanly falls back to legacy /lender-products while NORMALIZING fields.
+#    This prevents the “all Working Capital” bug by trusting canonical `category`
+#    whenever the catalog endpoints are available.
+
+export type CanonicalField = {
+  name: string;
+  type: string;
+  required?: boolean;
+};
+
+export type RequiredDoc = { key: string; label: string; required: boolean; months?: number };
+
+export type CanonicalProduct = {
+  id: string;
+  name: string;
+  lender_id?: string | null;
+  lender_name: string;
+  country: "CA" | "US";
+  category: string;
+  min_amount: number;
+  max_amount: number;
+  interest_rate_min?: number | null;
+  interest_rate_max?: number | null;
+  term_min?: number | null;
+  term_max?: number | null;
+  active: boolean;
+  required_documents?: RequiredDoc[];
+};
+
+type DumpResponse = {
+  canonical_fields: CanonicalField[];
+  products: CanonicalProduct[];
+};
+
+const JSON_HEADERS = { "Content-Type": "application/json" as const };
+
+async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
+  const r = await fetch(url, { credentials: "include", ...init });
+  if (!r.ok) throw new Error(`fetch ${url} failed: ${r.status}`);
+  return r.json() as Promise<T>;
+}
+
+/** Normalize one legacy /api/lender-products row to the canonical shape */
+function normalizeLegacy(p: any): CanonicalProduct {
+  return {
+    id: String(p.id),
+    name: p.name ?? p.productName ?? "",
+    lender_id: p.lender_id ?? null,
+    lender_name: p.lender_name ?? p.lenderName ?? "",
+    country: String(p.country ?? p.countryOffered ?? "US").toUpperCase() as "CA" | "US",
+    category: p.category ?? p.productCategory ?? "", // used ONLY on legacy fallback
+    min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0) || 0,
+    max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? 0) || 0,
+    interest_rate_min: p.interest_rate_min ?? p.interestRateMinimum ?? null,
+    interest_rate_max: p.interest_rate_max ?? p.interestRateMaximum ?? null,
+    term_min: p.term_min ?? p.termMinimum ?? null,
+    term_max: p.term_max ?? p.termMaximum ?? null,
+    active: Boolean(p.active ?? p.isActive ?? true),
+    required_documents:
+      p.required_documents ??
+      p.documentsRequired ??
+      [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  };
+}
+
+/**
+ * Fetch canonical fields + products in one go.
+ * Order of preference:
+ *   1) /api/catalog/dump  (authoritative list of canonical_fields + products)
+ *   2) /api/lender-products (legacy; normalized via normalizeLegacy)
+ */
+export async function fetchCatalogDump(limit = 500): Promise<DumpResponse> {
+  try {
+    const dump = await fetchJSON<DumpResponse>(`/api/catalog/dump?limit=${limit}`);
+    // Trust server-provided canonical fields & product.category (fixes WC-only bug)
+    return dump;
+  } catch {
+    // Legacy fallback: synthesize canonical_fields and normalize products
+    const legacy = await fetchJSON<{ products: any[] }>(`/api/lender-products`);
+    const products = (legacy.products ?? []).map(normalizeLegacy);
+    // Build a minimal canonical_fields list from our CanonicalProduct keys
+    const sample = products[0] ?? ({} as CanonicalProduct);
+    const canonical_fields: CanonicalField[] = Object.keys(sample).map((k) => ({
+      name: k,
+      type: typeof (sample as any)[k] === "number" ? "number" : "string",
+    }));
+    return { canonical_fields, products };
+  }
+}
+
+# ---------------------------------------------------------------------------
+
+# FILE: client/src/pages/debug/CatalogDump.tsx
+# — A lightweight page that shows EVERY product with EVERY field,
+#   using canonical_fields from the server for column order.
+
+import React from "react";
+import { fetchCatalogDump, type CanonicalField, type CanonicalProduct } from "@/lib/api";
+
+export default function CatalogDump() {
+  const [fields, setFields] = React.useState<CanonicalField[]>([]);
+  const [rows, setRows] = React.useState<CanonicalProduct[]>([]);
+  const [err, setErr] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const { canonical_fields, products } = await fetchCatalogDump(500);
+        setFields(canonical_fields);
+        setRows(products);
+      } catch (e: any) {
+        setErr(e?.message ?? "Failed to load catalog");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (loading) return <div style={{ padding: 16 }}>Loading catalog data…</div>;
+  if (err) return <div style={{ color: "crimson", padding: 16 }}>Error: {err}</div>;
+
+  const cols = fields.map((f) => f.name);
+
+  const asText = (v: any) => {
+    if (v == null) return "";
+    if (Array.isArray(v)) {
+      return v
+        .map((d) => (typeof d === "string" ? d : d?.label ?? JSON.stringify(d)))
+        .join(" • ");
+    }
+    if (typeof v === "object") return JSON.stringify(v);
+    if (typeof v === "number") return v.toLocaleString();
+    return String(v);
+  };
+
+  return (
+    <div style={{ padding: 16 }}>
+      <h1 style={{ marginBottom: 8 }}>Catalog Dump (Canonical Fields)</h1>
+      <div style={{ marginBottom: 12, fontFamily: "monospace" }}>
+        Fields: {cols.join(", ")}
+      </div>
+      <div style={{ overflowX: "auto", border: "1px solid #eee", borderRadius: 8 }}>
+        <table style={{ borderCollapse: "collapse", width: "100%" }}>
+          <thead>
+            <tr>
+              {cols.map((c) => (
+                <th
+                  key={c}
+                  style={{
+                    textAlign: "left",
+                    padding: "8px 10px",
+                    borderBottom: "1px solid #ddd",
+                    background: "#fafafa",
+                    whiteSpace: "nowrap",
+                    fontWeight: 600,
+                  }}
+                >
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={(r as any).id ?? i}>
+                {cols.map((c) => (
+                  <td key={c} style={{ padding: "6px 10px", borderBottom: "1px solid #f3f3f3", verticalAlign: "top" }}>
+                    {asText((r as any)[c])}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p style={{ marginTop: 10, color: "#666" }}>
+        Source: Prefer <code>/api/catalog/dump</code>; falls back to legacy and normalizes.
+      </p>
+    </div>
+  );
+}
+
+# ---------------------------------------------------------------------------
+
+# FILE: client/src/v2-design-system/MainLayout.tsx  (or your router file)
+# — Register the debug route (adjust import path to your router if different).
+
+import CatalogDump from "@/pages/debug/CatalogDump";
+
+{/* …inside your <Routes> … */}
+<Route path="/debug/catalog-dump" element={<CatalogDump />} />

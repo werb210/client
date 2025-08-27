@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchCatalogNormalized, CanonicalProduct } from '@/lib/catalog';
+import { fetchCatalogDump, CanonicalProduct } from "@/lib/api";
 import { getAmountRange, getRevenueMin } from "@/lib/fieldAccess";
 
 export interface Step1FormData {
@@ -21,7 +21,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
     queryFn: async () => {
       console.log('🔄 [PRODUCTS] Fetching through canonical catalog system...');
       
-      const canonicalProducts = await fetchCatalogNormalized();
+      const { products: canonicalProducts } = await fetchCatalogDump();
       
       console.log(`📦 [PRODUCTS] Loaded ${canonicalProducts.length} canonical products`);
       return canonicalProducts;

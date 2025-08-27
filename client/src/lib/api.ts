@@ -242,13 +242,7 @@ export async function fetchMatchingCategories(amount:number, country:"US"|"CA"):
 
 // ========== CATALOG FIELDS DEBUG FUNCTIONALITY ==========
 
-export type CanonicalField = {
-  name: string;
-  type: "string"|"number"|"boolean"|"enum"|"array";
-  required: boolean;
-  values?: string[];
-  source?: string;
-};
+// Moved CanonicalField definition to end of file to avoid duplicates
 
 export type CatalogFieldsResponse = {
   canonical_fields: CanonicalField[];
@@ -335,11 +329,89 @@ export type CatalogDump = {
   products: Record<string, any>[];
 };
 
-export async function listDocuments(input:{category?:string;country?:string;amount?:number;}) {
+export type CanonicalField = {
+  name: string;
+  type: string;
+  required?: boolean;
+};
+
+export type RequiredDoc = { key: string; label: string; required: boolean; months?: number };
+
+export type CanonicalProduct = {
+  id: string;
+  name: string;
+  lender_id?: string | null;
+  lender_name: string;
+  country: "CA" | "US";
+  category: string;
+  min_amount: number;
+  max_amount: number;
+  interest_rate_min?: number | null;
+  interest_rate_max?: number | null;
+  term_min?: number | null;
+  term_max?: number | null;
+  active: boolean;
+  required_documents?: RequiredDoc[];
+};
+
+type DumpResponse = {
+  canonical_fields: CanonicalField[];
+  products: CanonicalProduct[];
+};
+
+const JSON_HEADERS = { "Content-Type": "application/json" as const };
+
+async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
+  const r = await fetch(url, { credentials: "include", ...init });
+  if (!r.ok) throw new Error(`fetch ${url} failed: ${r.status}`);
+  return r.json() as Promise<T>;
+}
+
+/** Normalize one legacy /api/lender-products row to the canonical shape */
+function normalizeLegacy(p: any): CanonicalProduct {
+  return {
+    id: String(p.id),
+    name: p.name ?? p.productName ?? "",
+    lender_id: p.lender_id ?? null,
+    lender_name: p.lender_name ?? p.lenderName ?? "",
+    country: String(p.country ?? p.countryOffered ?? "US").toUpperCase() as "CA" | "US",
+    category: p.category ?? p.productCategory ?? "", // used ONLY on legacy fallback
+    min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0) || 0,
+    max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? 0) || 0,
+    interest_rate_min: p.interest_rate_min ?? p.interestRateMinimum ?? null,
+    interest_rate_max: p.interest_rate_max ?? p.interestRateMaximum ?? null,
+    term_min: p.term_min ?? p.termMinimum ?? null,
+    term_max: p.term_max ?? p.termMaximum ?? null,
+    active: Boolean(p.active ?? p.isActive ?? true),
+    required_documents:
+      p.required_documents ??
+      p.documentsRequired ??
+      [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  };
+}
+
+/**
+ * Fetch canonical fields + products in one go.
+ * Order of preference:
+ *   1) /api/catalog/dump  (authoritative list of canonical_fields + products)
+ *   2) /api/lender-products (legacy; normalized via normalizeLegacy)
+ */
+export async function fetchCatalogDump(limit = 500): Promise<DumpResponse> {
   try {
-    const r = await j("/api/required-docs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(input)});
-    const docs = r?.documents ?? r?.requiredDocs ?? [];
-    if (Array.isArray(docs) && docs.length) return docs;
-  } catch {}
-  return [{key:"bank_6m",label:"Last 6 months bank statements",required:true,months:6}];
+    const dump = await fetchJSON<DumpResponse>(`/api/catalog/dump?limit=${limit}`);
+    // Trust server-provided canonical fields & product.category (fixes WC-only bug)
+    return dump;
+  } catch {
+    // Legacy fallback: synthesize canonical_fields and normalize products
+    const legacy = await fetchJSON<{ products: any[] }>(`/api/lender-products`);
+    const products = (legacy.products ?? []).map(normalizeLegacy);
+    // Build a minimal canonical_fields list from our CanonicalProduct keys
+    const sample = products[0] ?? ({} as CanonicalProduct);
+    const canonical_fields: CanonicalField[] = Object.keys(sample).map((k) => ({
+      name: k,
+      type: typeof (sample as any)[k] === "number" ? "number" : "string",
+      required: false,
+    }));
+    return { canonical_fields, products };
+  }
 }

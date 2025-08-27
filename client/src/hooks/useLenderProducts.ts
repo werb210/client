@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchCatalogNormalized, CanonicalProduct } from "@/lib/catalog";
+import { fetchCatalogDump, CanonicalProduct } from "@/lib/api";
 
 // ✅ USING CANONICAL PRODUCT TYPE FROM CATALOG SYSTEM
 
@@ -14,7 +14,7 @@ export function useLenderProducts() {
       console.log('🔄 Fetching products through canonical catalog system...');
       
       // Use new catalog system with field aliasing and fallback
-      const products = await fetchCatalogNormalized();
+      const { products } = await fetchCatalogDump();
       
       console.log(`✅ Loaded ${products.length} canonical products with field normalization`);
       return products;
