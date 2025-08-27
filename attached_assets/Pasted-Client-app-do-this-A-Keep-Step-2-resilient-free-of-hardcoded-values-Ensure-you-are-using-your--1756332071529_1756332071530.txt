@@ -1,0 +1,59 @@
+Client app — do this
+A) Keep Step-2 resilient & free of hardcoded values
+
+Ensure you are using your intake normalizer and safe number formatter everywhere Step 2 renders.
+
+Safe formatter (use everywhere, replaces direct .toLocaleString()):
+
+// client/src/utils/format.ts
+export const fmtMoney = (n?: number | null) =>
+  (Number.isFinite(n as number) ? (n as number).toLocaleString() : '—');
+
+
+Use it:
+
+{/* instead of intake.amount.toLocaleString() */}
+{fmtMoney(intake?.amount)}
+
+B) Remove lingering hardcoded defaults
+
+Search & replace any remaining hardcoded amounts/industry fallbacks noted by the test:
+
+intake-client.ts (10000 hardcode) → derive from Step 1 input
+
+sanitizeLenderProduct.ts industry default 'general' → only set if truly missing
+
+Replace any remaining amount, loanAmount, fundingAmount ambiguity with the normalizer.
+
+C) Persist canonical intake after Step 1 submit
+
+On Step 1 Submit, call saveIntake(canonical). On Step 2 mount, load with loadIntake() and normalize. Render a Pending state if intake is absent—never crash.
+
+D) Produce the trace expected by staff (including docs)
+
+Your staff script looks for /tmp/submission_continuity.json. Write exactly there and include required_documents and uploaded_documents keys so the staff “document linkage” checks can run.
+
+Client trace writer (run after submission; adjust to your vars):
+
+# CLIENT block
+CLIENT_BASE=${CLIENT_BASE:-http://localhost:5000}
+TRACE=/tmp/submission_continuity.json
+
+jq -n \
+  --arg app_id "$APP_ID" \
+  --argjson intake "$INTAKE" \
+  --argjson staff_product "$SPROD" \
+  --argjson required_documents "${REQ_DOCS:-[]}" \
+  --arg client_base "$CLIENT_BASE" \
+  '{ meta:{timestamp:(now|todate), client_base:$client_base,
+           test:"real_submission"},
+     app_id:$app_id,
+     intake:$intake,
+     staff_product_at_submit:$staff_product,
+     required_documents:$required_documents,
+     uploaded_documents: [] }' \
+> "$TRACE"
+echo "Wrote $TRACE"
+
+
+If you already created /tmp/submission_continuity_with_docs.json, either copy it to /tmp/submission_continuity.json or set TRACE=/tmp/submission_continuity.json in your scripts so staff sees it.
