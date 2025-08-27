@@ -1,6 +1,6 @@
 export type CanonicalProduct = {
   id: string;
-  name: string;             // from productName/name
+  name: string;
   lender_name?: string|null;
   country: "CA"|"US"|null;
   category: string|null;
@@ -10,37 +10,37 @@ export type CanonicalProduct = {
   required_documents: string[];
   min_time_in_business: number|null;
   min_monthly_revenue: number|null;
-  excluded_industries?: string[]|null;
 };
 
-function normCountry(x:any): "CA"|"US"|null {
-  const v = (x??"").toString().trim().toUpperCase();
-  return v==="CA"||v==="US" ? v as any : null;
-}
-
-function toCanonicalFromV1(p:any): CanonicalProduct {
+const norm = (x:any)=> (x??"").toString().trim().toUpperCase();
+function toCanonical(p:any): CanonicalProduct {
   return {
     id: p.id,
     name: p.productName ?? p.name ?? "",
     lender_name: p.lenderName ?? null,
-    country: normCountry(p.countryOffered ?? p.country),
-    category: p.productCategory ?? p.category ?? null,
-    min_amount: p.minimumLendingAmount ?? p.min_amount ?? null,
-    max_amount: p.maximumLendingAmount ?? p.max_amount ?? null,
-    active: (p.isActive ?? p.active ?? true) === true,
+    country: ["CA","US"].includes(norm(p.countryOffered)) ? (norm(p.countryOffered) as any) : null,
+    category: p.productCategory ?? null,
+    min_amount: p.minimumLendingAmount ?? null,
+    max_amount: p.maximumLendingAmount ?? null,
+    active: (p.isActive ?? true) === true,
     required_documents: Array.isArray(p.required_documents) ? p.required_documents : [],
     min_time_in_business: p.min_time_in_business ?? null,
     min_monthly_revenue: p.min_monthly_revenue ?? null,
-    excluded_industries: Array.isArray(p.excluded_industries) ? p.excluded_industries : null,
   };
 }
 
-function toCanonicalFromLegacy(p:any): CanonicalProduct {
-  return {
-    id: p.id,
-    name: p.name ?? p.productName ?? "",
-    lender_name: p.lender_name ?? p.lenderName ?? null,
-    country: normCountry(p.country ?? p.countryOffered),
+export async function fetchProducts(): Promise<CanonicalProduct[]> {
+  const r = await fetch("/api/v1/products", { credentials: "include" });
+  if (r.ok) {
+    const j = await r.json();
+    if (Array.isArray(j)) return j.map(toCanonical);
+  }
+  // legacy fallback (optional)
+  const r2 = await fetch("/api/lender-products");
+  const j2 = await r2.json();
+  return (j2.products ?? []).map((p:any)=>({
+    id: p.id, name: p.name ?? p.productName ?? "", lender_name: p.lender_name ?? null,
+    country: ["CA","US"].includes(norm(p.country)) ? (norm(p.country) as any) : null,
     category: p.category ?? p.productCategory ?? null,
     min_amount: p.min_amount ?? p.minimumLendingAmount ?? null,
     max_amount: p.max_amount ?? p.maximumLendingAmount ?? null,
@@ -48,27 +48,7 @@ function toCanonicalFromLegacy(p:any): CanonicalProduct {
     required_documents: Array.isArray(p.required_documents) ? p.required_documents : [],
     min_time_in_business: p.min_time_in_business ?? null,
     min_monthly_revenue: p.min_monthly_revenue ?? null,
-    excluded_industries: Array.isArray(p.excluded_industries) ? p.excluded_industries : null,
-  };
-}
-
-export async function fetchProducts(): Promise<CanonicalProduct[]> {
-  // 1) try v1 (preferred)
-  try {
-    const r = await fetch("/api/v1/products", { credentials: "include" });
-    if (r.ok) {
-      const j = await r.json();
-      if (Array.isArray(j)) {
-        return j.map(toCanonicalFromV1);
-      }
-    }
-  } catch {}
-  // 2) fallback legacy
-  const r2 = await fetch("/api/lender-products", { credentials: "include" });
-  if (!r2.ok) throw new Error("Failed to load products");
-  const j2 = await r2.json();
-  const list = Array.isArray(j2?.products) ? j2.products : [];
-  return list.map(toCanonicalFromLegacy);
+  }));
 }
 
 // Legacy exports for backward compatibility
@@ -82,7 +62,7 @@ export type RecommendationIntake = {
   industry?: string;
 };
 
-// Legacy recommendation function - will be replaced by new recommend.ts
+// Legacy recommendation function - honors Staff constraints
 export function recommend(intake: RecommendationIntake, products: CanonicalProduct[]) {
   const tib = intake.timeInBusinessMonths ?? 0;
   const rev = intake.monthlyRevenue ?? 0;
@@ -93,7 +73,6 @@ export function recommend(intake: RecommendationIntake, products: CanonicalProdu
     if (p.max_amount != null && intake.amount > p.max_amount) return false;
     if (p.min_time_in_business != null && tib < p.min_time_in_business) return false;
     if (p.min_monthly_revenue != null && rev < p.min_monthly_revenue) return false;
-    if (intake.industry && (p.excluded_industries || []).includes(intake.industry)) return false;
     return true;
   }).sort((a,b) => {
     const ac = ((a.min_amount ?? intake.amount) + (a.max_amount ?? intake.amount))/2;
@@ -102,7 +81,7 @@ export function recommend(intake: RecommendationIntake, products: CanonicalProdu
   });
 }
 
-// Legacy required docs function - will be replaced by new requiredDocs.ts
+// Legacy required docs function - uses Staff product.required_documents
 export function requiredDocsFor(p: CanonicalProduct): string[] {
   if (Array.isArray(p.required_documents) && p.required_documents.length > 0) return p.required_documents;
   return ["Bank Statements (6 months)", "Business Tax Returns"];
@@ -147,11 +126,11 @@ export async function submitApplication(intake: Intake) {
   return r.id;
 }
 
-// Fix pack 5 — cache/version guard to purge any stale "US-only" data
+// Cache versioning
 export const CATALOG_SCHEMA_VERSION = "v1.3-country-nullable+staff-docs";
 export function needCacheReset(stored?: string) { return stored !== CATALOG_SCHEMA_VERSION; }
 
-// Quick QA (optional)
+// QA function
 export async function qa() {
   const items = await fetchProducts();
   console.log("Products:", items.length);
