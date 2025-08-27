@@ -509,3 +509,86 @@ export async function listDocuments(input: RequiredDocsInput): Promise<RequiredD
   const cat = input.category || "Working Capital";
   return DOCS_FALLBACK[cat] ?? DOCS_FALLBACK["Working Capital"];
 }
+
+// ========== CATALOG PRODUCTS & LENDERS API ==========
+
+export type CatalogProduct = {
+  id: string;
+  name: string;
+  lender_name: string;
+  lender_id?: string;
+  country: string;        // "US" | "CA"
+  category: string;
+  min_amount: number;
+  max_amount: number;
+  active: boolean;
+};
+
+export async function fetchCatalogProducts(): Promise<CatalogProduct[]> {
+  // Prefer canonical; fallback to lender-products; never call bare /v1/*
+  try {
+    const r = await fetch("/api/catalog/export-products?includeInactive=1", { credentials: "include" });
+    if (r.ok) {
+      const j = await r.json();
+      return (j.products ?? []).map((p: any) => ({
+        id: p.id,
+        name: p.name ?? p.productName,
+        lender_name: p.lender_name ?? p.lenderName,
+        lender_id: p.lender_id ?? p.lenderId,
+        country: String(p.country ?? p.countryOffered ?? "").toUpperCase(),
+        category: p.category ?? p.productCategory ?? "Working Capital",
+        min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0),
+        max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? Number.MAX_SAFE_INTEGER),
+        active: (p.active ?? p.isActive) !== false,
+      }));
+    }
+  } catch {}
+  // fallback: legacy lender-products (object with products array)
+  const r2 = await fetch("/api/lender-products", { credentials: "include" });
+  const legacy = await r2.json();
+  const arr = legacy.products ?? [];
+  return (arr ?? []).map((p: any) => ({
+    id: p.id,
+    name: p.productName ?? p.name,
+    lender_name: p.lenderName ?? p.lender_name,
+    country: String(p.countryOffered ?? p.country ?? "").toUpperCase(),
+    category: p.productCategory ?? p.category ?? "Working Capital",
+    min_amount: Number(p.minimumLendingAmount ?? p.min_amount ?? 0),
+    max_amount: Number(p.maximumLendingAmount ?? p.max_amount ?? Number.MAX_SAFE_INTEGER),
+    active: (p.isActive ?? p.active) !== false,
+  }));
+}
+
+export type UILender = { id: string; name: string; product_count: number };
+
+export async function fetchUILenders(): Promise<UILender[]> {
+  // Prefer staff's parity endpoint (already aggregated). If missing, aggregate locally.
+  try {
+    const r = await fetch("/api/public/lenders", { credentials: "include" });
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j?.lenders)) return j.lenders;
+      // Handle case where public/lenders returns products array directly
+      if (Array.isArray(j)) {
+        const by = new Map<string, UILender>();
+        for (const p of j) {
+          const id = p.lender_id || p.lenderName || p.lender_name;
+          const name = p.lenderName || p.lender_name || id;
+          const cur = by.get(id) ?? { id, name, product_count: 0 };
+          cur.product_count += 1;
+          by.set(id, cur);
+        }
+        return Array.from(by.values()).sort((a,b)=>b.product_count-a.product_count);
+      }
+    }
+  } catch {}
+  const prods = await fetchCatalogProducts();
+  const by = new Map<string, UILender>();
+  for (const p of prods) {
+    const id = p.lender_id || p.lender_name;
+    const cur = by.get(id) ?? { id, name: p.lender_name, product_count: 0 };
+    cur.product_count += 1;
+    by.set(id, cur);
+  }
+  return Array.from(by.values()).sort((a,b)=>b.product_count-a.product_count);
+}

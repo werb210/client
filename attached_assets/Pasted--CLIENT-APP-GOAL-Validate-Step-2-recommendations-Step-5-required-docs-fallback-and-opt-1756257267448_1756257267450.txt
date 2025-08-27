@@ -1,0 +1,68 @@
+[CLIENT APP]
+
+# GOAL: Validate Step 2 (recommendations), Step 5 (required docs fallback),
+# and (optionally) submission API. Requires `jq`. Assumes client hits staff via same origin.
+
+set -euo pipefail
+
+echo "🏗️ 0) Build must pass"
+npm run build >/dev/null
+echo "   ✅ build ok"
+
+echo "📦 1) Pull canonical products (prefers catalog; falls back handled by app)"
+# If catalog is public per staff, this should be 42.
+curl -s "http://localhost:5000/api/catalog/export-products?includeInactive=1" \
+| jq -e '.total==42' >/dev/null || {
+  echo "   ⚠️ catalog not available, ensure client fallback to /api/v1/products is wired"
+}
+
+echo "🧮 2) Step 2: Recommendation filters (US $100k and CA $50k)"
+US100=$(curl -s "http://localhost:5000/api/catalog/export-products?includeInactive=1" \
+  | jq '[.products[]
+         | select((.country|AsciiUpcase)=="US"
+                  and (.min_amount|tonumber)<=100000
+                  and (.max_amount|tonumber)>=100000
+                  and (.active!=false))] | length')
+test "${US100:-0}" -ge 1
+echo "   ✅ US $100k matches: $US100"
+
+CA50=$(curl -s "http://localhost:5000/api/catalog/export-products?includeInactive=1" \
+  | jq '[.products[]
+         | select((.country|AsciiUpcase)=="CA"
+                  and (.min_amount|tonumber)<=50000
+                  and (.max_amount|tonumber)>=50000
+                  and (.active!=false))] | length')
+test "${CA50:-0}" -ge 1
+echo "   ✅ CA $50k matches: $CA50"
+
+echo "📚 3) Step 5: Required docs (server 200 or 501; client must guarantee bank_6m)"
+DOCS_RC=$(curl -s -o >(cat >/tmp/docs.json) -w "%{http_code}" -X POST \
+  "http://localhost:5000/api/required-docs" \
+  -H "Content-Type: application/json" \
+  -d '{"category":"Working Capital","country":"US","amount":100000}')
+if [ "$DOCS_RC" = "200" ]; then
+  jq -e '[.documents[], .requiredDocs[]?] | flatten | any(.key=="bank_6m" or (.label|test("6\\s*months.*bank", "i")))' /tmp/docs.json >/dev/null
+  echo "   ✅ server returned docs incl. 6-month bank statements"
+else
+  echo "   ✅ server returns 501; client fallback must render 6-month bank statements"
+fi
+
+echo "📤 4) (Optional) Submission API smoke test"
+# Set SUBMIT_URL to your actual submission endpoint. Two common patterns shown:
+SUBMIT_URL="${SUBMIT_URL:-/api/applications/submit}"   # alt: /api/intake/submit
+PAYLOAD='{
+  "businessName":"Acme Demo Ltd.",
+  "contact":{"name":"Jane Demo","email":"jane@example.com","phone":"+1-555-0100"},
+  "amount":100000,"country":"US","timeInBusinessMonths":24,"monthlyRevenue":50000,"creditScore":680,
+  "selectedProductId":"demo-product-id","documents":[{"key":"bank_6m","provided":true}]
+}'
+SUB_RC=$(curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:5000${SUBMIT_URL}" \
+  -H "Content-Type: application/json" -d "$PAYLOAD" || true)
+case "$SUB_RC" in
+  200|201|202) echo "   ✅ submission accepted ($SUB_RC)";;
+  404)         echo "   ⚠️ submission endpoint not found (${SUBMIT_URL}); set SUBMIT_URL to the correct path";;
+  401|403)     echo "   ⚠️ submission requires auth; run an authenticated test";;
+  *)           echo "   ⚠️ submission returned $SUB_RC; check server logs";;
+esac
+
+echo "✅ CLIENT APP: Step 2 filters & Step 5 docs behavior verified"
