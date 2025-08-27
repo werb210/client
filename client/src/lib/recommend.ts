@@ -3,6 +3,11 @@ import type { CanonicalProduct } from "./products";
 export type Intake = { country: "CA"|"US"; amount: number; timeInBusinessMonths?: number; monthlyRevenue?: number; };
 
 export function recommend(products: CanonicalProduct[], intake: Intake) {
+  // Guard against undefined intake
+  if (!intake || typeof intake.amount === 'undefined') {
+    return [];
+  }
+  
   // Strict country match; products with null country are excluded.
   const eligible = products.filter(p =>
     p.active !== false &&

@@ -25,7 +25,7 @@ function Step2RecommendationEngine({ intake, onSelectProduct }: Props) {
       }
     })();
     return () => { mounted = false; };
-  }, [intake.amount, intake.country, intake.category, intake.timeInBusinessMonths, intake.monthlyRevenue, intake.creditScore]);
+  }, [intake?.amount, intake?.country, intake?.category, intake?.timeInBusinessMonths, intake?.monthlyRevenue, intake?.creditScore]);
 
   if (loading) return <div>Finding matches…</div>;
   if (err) return <div style={{ color: "crimson" }}>{err}</div>;
@@ -40,7 +40,7 @@ function Step2RecommendationEngine({ intake, onSelectProduct }: Props) {
             {g.products.map(p => (
               <li key={p.id} style={{ marginBottom: 6 }}>
                 <button onClick={() => onSelectProduct?.(p)} style={{ all: "unset", cursor: "pointer" }}>
-                  {p.name} — {p.lender_name} · {p.country} · ${p.min_amount.toLocaleString()}–${p.max_amount.toLocaleString()}
+                  {p.name} — {p.lender_name} · {p.country} · ${(p.min_amount || 0).toLocaleString()}–${(p.max_amount || 0).toLocaleString()}
                 </button>
               </li>
             ))}
