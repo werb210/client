@@ -216,29 +216,23 @@ export function MainLayout() {
 /* commented route */
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
+      <Route path="/apply/step-1" component={Step1FinancialProfile} />
+      <Route path="/apply/step-2" component={Step2RecommendationsRoute} />
+      <Route path="/apply/step-3" component={Step3BusinessDetailsComplete} />
+      <Route path="/apply/step-4" component={Step4ApplicantInfoComplete} />
+      <Route path="/apply/step-5" component={Step5DocumentUpload} />
+      <Route path="/apply/step-6" component={Step6TypedSignature} />
 
       
       {/* Dashboard */}
-/* commented route */
+      <Route path="/dashboard" component={SimpleDashboard} />
       
       {/* Staff Application Routes */}
 /* commented route */
 /* commented route */
       
       {/* Success Page */}
-/* commented route */
+      <Route path="/success" component={ApplicationSuccess} />
       
       {/* Document Management */}
 /* commented route */
