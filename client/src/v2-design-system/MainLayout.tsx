@@ -273,11 +273,7 @@ export function MainLayout() {
 /* commented route */
       
       {/* PWA Testing */}
-/* commented route */
-/* commented route */
-/* commented route */
-        <SimplePWADiagnostics />
-      </Route> */}
+      {/* <Route path="/pwa-test" component={SimplePWADiagnostics} /> */}
 /* commented route */
 /* commented route */
 /* commented route */
@@ -325,8 +321,7 @@ export function MainLayout() {
 /* commented route */
       
       {/* Default Route - Landing Page */}
-/* commented route */
-      <Route component={...} /> */}
+      {/* <Route component={LandingPage} /> */}
       </Switch>
       </Suspense>
       

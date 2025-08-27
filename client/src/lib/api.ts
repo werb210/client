@@ -43,14 +43,10 @@ export type LenderProduct = {
 
 export type RequiredDoc = { key:string; label:string; required:boolean; months?:number } | string;
 
-async function getJson(path:string){
-  const r = await fetch(path, { credentials:"include" });
-  if(!r.ok) throw new ApiError(r.status, "HTTP_ERROR", await r.text().catch(()=>undefined));
-  return r.json();
-}
+// Removed duplicate getJson function
 
 export async function fetchCatalog(){
-  const j = await getJson("/api/catalog/export-products?includeInactive=1");
+  const j = await getJson<any>("/api/catalog/export-products?includeInactive=1");
   const src = Array.isArray(j) ? j : (j.products ?? []);
   const products: LenderProduct[] = (src as any[]).map(p => ({
     id: String(p.id),
@@ -104,10 +100,7 @@ export async function listDocumentsFor(product: LenderProduct){
   return [FALLBACK_BANK6];
 }
 
-// Legacy compatibility
-export async function listDocuments(input: any): Promise<RequiredDoc[]> {
-  return [FALLBACK_BANK6];
-}
+// Legacy compatibility removed - using new comprehensive listDocuments function
 
 // ---------- Document Management ----------
 export async function getDocumentViewUrl(docId: string) {
@@ -242,7 +235,7 @@ export async function fetchMatchingCategories(amount:number, country:"US"|"CA"):
 
 // ========== CATALOG FIELDS DEBUG FUNCTIONALITY ==========
 
-// Moved CanonicalField definition to end of file to avoid duplicates
+// Removed duplicate CanonicalField definition
 
 export type CatalogFieldsResponse = {
   canonical_fields: CanonicalField[];
@@ -335,7 +328,7 @@ export type CanonicalField = {
   required?: boolean;
 };
 
-export type RequiredDoc = { key: string; label: string; required: boolean; months?: number };
+// Removed duplicate RequiredDoc definition
 
 export type CanonicalProduct = {
   id: string;

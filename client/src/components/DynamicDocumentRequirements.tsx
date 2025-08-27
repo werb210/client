@@ -5,7 +5,7 @@ type Props = {
   context: RequiredDocsInput; // must include category; country/amount optional
 };
 
-export default function DynamicDocumentRequirements({ context }: Props) {
+export function DynamicDocumentRequirements({ context }: Props) {
   const [docs, setDocs] = React.useState<RequiredDoc[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
