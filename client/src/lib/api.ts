@@ -1,3 +1,10 @@
+const BASE = import.meta.env.VITE_STAFF_BASE ?? "/";
+const j = async (p: string, init?: RequestInit) => {
+  const r = await fetch(BASE.replace(/\/$/,"") + p, {credentials:"include", ...init});
+  if (!r.ok) throw new Error(`api ${p} -> ${r.status}`);
+  return r.json();
+};
+
 export class ApiError extends Error {
   constructor(public status:number, public code:string, public info?:any){ super(code); }
 }
@@ -328,13 +335,11 @@ export type CatalogDump = {
   products: Record<string, any>[];
 };
 
-export async function fetchCatalogDump(params?: { country?: "US"|"CA"; lender_id?: string; limit?: number }): Promise<CatalogDump> {
-  const q = new URLSearchParams();
-  if (params?.country)   q.set("country", params.country);
-  if (params?.lender_id) q.set("lender_id", params.lender_id);
-  if (params?.limit)     q.set("limit", String(params.limit));
-  const url = "/api/catalog/dump" + (q.toString() ? `?${q.toString()}` : "");
-  const r = await fetch(url, { credentials: "include" });
-  if (!r.ok) throw new Error(`catalog dump failed: ${r.status}`);
-  return r.json();
+export async function listDocuments(input:{category?:string;country?:string;amount?:number;}) {
+  try {
+    const r = await j("/api/required-docs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(input)});
+    const docs = r?.documents ?? r?.requiredDocs ?? [];
+    if (Array.isArray(docs) && docs.length) return docs;
+  } catch {}
+  return [{key:"bank_6m",label:"Last 6 months bank statements",required:true,months:6}];
 }

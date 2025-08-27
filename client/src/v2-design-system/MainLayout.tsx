@@ -129,6 +129,7 @@ import FileTypeValidationTest from "@/test/FileTypeValidationTest";
 import Step5CategoryTest from "@/test/Step5CategoryTest";
 import DocumentValidationTest from "@/test/DocumentValidationTest";
 import { PushNotificationTest } from "@/pages/PushNotificationTest";
+import CatalogDump from "@/pages/debug/CatalogDump";
 
 // Staff Application Components
 import PipelinePage from "@/pages/staff/pipeline/PipelinePage";
@@ -153,179 +154,179 @@ export function MainLayout() {
       <Switch>
       {/* Diagnostic Routes */}
       {/* Route removed with legacy auth cleanup */}
-      {/* <Route path="/lender-test" component={...} /> */}
-      {/* <Route path="/lenders-by-category" component={...} /> */}
-      <Route path="/lenders-by-country" component={[^}]*} /> */}
-      <Route path="/staff-api-test" component={[^}]*} /> */}
-      {/* <Route path="/cors-test" component={[^}]*} /> */} */}
-      {/* <Route path="/api-test" component={[^}]*} /> */} */}
-      {/* <Route path="/api-diagnostic" component={[^}]*} /> */} */}
-      <Route path="/synced-products-test" component={[^}]*} /> */}
-      <Route path="/sync-monitor" component={[^}]*} /> */}
-      <Route path="/sync-diagnostics" component={[^}]*} /> */}
-      <Route path="/diagnostics/lenders" component={[^}]*} /> */}
-      <Route path="/complete-workflow-test" component={[^}]*} /> */}
-      <Route path="/stage-monitor-test" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
 
-      <Route path="/step5-test" component={[^}]*} /> */}
-      <Route path="/step5-intersection-test" component={[^}]*} /> */}
-      <Route path="/steps34-test" component={[^}]*} /> */}
-      <Route path="/testing-flow-validation" component={[^}]*} /> */}
-      <Route path="/unified-document-test" component={[^}]*} /> */}
-      {/* <Route path="/lender-categories" component={[^}]*} /> */} */}
-      {/* <Route path="/document-requirements-test" component={[^}]*} /> */} */}
-      <Route path="/lender-product-matcher" component={[^}]*} /> */}
-      <Route path="/strict-validation-test" component={[^}]*} /> */}
-      <Route path="/data-ingestion" component={[^}]*} /> */}
-      <Route path="/typed-api-demo" component={[^}]*} /> */}
-      <Route path="/canadian-product-test" component={[^}]*} /> */}
-      <Route path="/canadian-filtering-test" component={[^}]*} /> */}
-      <Route path="/catalog" component={[^}]*} /> */}
-      <Route path="/banking-document-test" component={[^}]*} /> */}
-      {/* <Route path="/comprehensive-e2e-test" component={[^}]*} /> */} */}
-      {/* <Route path="/e2e-test" component={[^}]*} /> */} */}
-      {/* <Route path="/indexeddb-test" component={[^}]*} /> */} */}
-      {/* <Route path="/reliable-sync-test" component={[^}]*} /> */} */}
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
 
-      <Route path="/canadian-working-capital-test" component={[^}]*} /> */}
-      {/* <Route path="/debug-canadian-equipment-api" component={[^}]*} /> */} */}
-      <Route path="/list-lender-categories" component={[^}]*} /> */}
-      <Route path="/equipment-financing-fix-test" component={[^}]*} /> */}
-      <Route path="/full-application-test" component={[^}]*} /> */}
-      <Route path="/auto-submit-test" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
 
-      <Route path="/backend-request-test" component={[^}]*} /> */}
-      <Route path="/validation-test" component={[^}]*} /> */}
-      <Route path="/cache-management" component={[^}]*} /> */}
-      <Route path="/uuid-test" component={[^}]*} /> */}
-      <Route path="/fetch-window-test" component={[^}]*} /> */}
-      <Route path="/fetch-window-debug-route" component={[^}]*} /> */}
-      {/* <Route path="/document-normalization-test" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
       
       {/* Developer Tools */}
-      <Route path="/dev/document-mapping" component={[^}]*} /> */}
-      <Route path="/dev/recommendation-debug" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
 
 
-      <Route path="/fallback-test" component={lazy(() => import('@/pages/FallbackTest').then(m => ({ default: m.FallbackTest })))} />
-      <Route path="/application-creation-test" component={[^}]*} /> */}
-      <Route path="/application-flow-test" component={[^}]*} /> */}
-      <Route path="/security-test-runner" component={[^}]*} /> */}
-      <Route path="/client-verification-diagnostic" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
-      <Route path="/step1-financial-profile" component={[^}]*} /> */}
-      <Route path="/apply/step-1" component={[^}]*} /> */}
-      <Route path="/step2-recommendations" component={[^}]*} /> */}
-      <Route path="/apply/step-2" component={[^}]*} /> */}
-      <Route path="/step3-business-details" component={[^}]*} /> */}
-      <Route path="/apply/step-3" component={[^}]*} /> */}
-      <Route path="/step4-applicant-details" component={[^}]*} /> */}
-      <Route path="/apply/step-4" component={[^}]*} /> */}
-      <Route path="/step5-document-upload" component={[^}]*} /> */}
-      <Route path="/apply/step-5" component={[^}]*} /> */}
-      <Route path="/step6-typed-signature" component={[^}]*} /> */}
-      <Route path="/apply/step-6" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
 
       
       {/* Dashboard */}
-      <Route path="/dashboard" component={[^}]*} /> */}
+/* commented route */
       
       {/* Staff Application Routes */}
-      <Route path="/staff/pipeline" component={[^}]*} /> */}
-      {/* <Route path="/staff-api-connectivity-test" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
       
       {/* Success Page */}
-      <Route path="/application-success" component={[^}]*} /> */}
+/* commented route */
       
       {/* Document Management */}
-      <Route path="/upload-documents/:applicationId" component={[^}]*} /> */}
-      <Route path="/upload-documents" component={[^}]*} /> */}
-      <Route path="/upload-missing/:id" component={[^}]*} /> */}
-      <Route path="/upload-late/:id" component={[^}]*} /> */}
-      <Route path="/upload-complete" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
       
       {/* Application Entry Points */}
-      <Route path="/simple-application" component={[^}]*} /> */}
-      <Route path="/application" component={[^}]*} /> */}
-      <Route path="/side-by-side-application" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
       
       {/* Workflow Testing */}
-      {/* <Route path="/env-test" component={[^}]*} /> */}
-      <Route path="/workflow-test-page" component={[^}]*} /> */}
-      <Route path="/document-upload-test" component={[^}]*} /> */}
-      <Route path="/step2-products-test" component={[^}]*} /> */}
-      <Route path="/workflow-test" component={[^}]*} /> */}
-      <Route path="/application-id-flow-test" component={[^}]*} /> */}
-      <Route path="/critical-fixes-validation" component={[^}]*} /> */}
-      {/* <Route path="/e2e-test-runner" component={[^}]*} /> */}
-      <Route path="/file-type-validation-test" component={[^}]*} /> */}
-      <Route path="/step5-category-test" component={[^}]*} /> */}
-      <Route path="/document-validation-test" component={[^}]*} /> */}
-      <Route path="/product-validation-test" component={[^}]*} /> */}
-      <Route path="/train-chatbot" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
       
       {/* Diagnostic Pages */}
-      <Route path="/diagnostics/lenders" component={[^}]*} /> */}
-      {/* <Route path="/api-connectivity-test" component={[^}]*} /> */}
-      <Route path="/cache-setup" component={[^}]*} /> */}
-      <Route path="/product-data-inspector" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
       
       {/* PWA Testing */}
-      {/* <Route path="/pwa-test" component={[^}]*} /> */}
-      {/* <Route path="/pwa-diagnostics" component={[^}]*} /> */} */}
-      {/* <Route path="/pwa-diagnostics-simple">
+/* commented route */
+/* commented route */
+/* commented route */
         <SimplePWADiagnostics />
       </Route> */}
-      {/* <Route path="/pwa-diagnostics-full" component={[^}]*} /> */} */}
-      <Route path="/pwa-comprehensive-test" component={[^}]*} /> */}
-      <Route path="/push-notification-test" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
       
       {/* Comprehensive Audit */}
-      <Route path="/client-app-audit" component={[^}]*} /> */}
+/* commented route */
       
       {/* Chatbot Testing */}
-      <Route path="/chatbot-ai-test" component={[^}]*} /> */}
-      <Route path="/chatbot-ai-suite-test" component={[^}]*} /> */}
-      <Route path="/comprehensive-client-test" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
       
       {/* Legal Pages */}
-      <Route path="/privacy-policy" component={[^}]*} /> */}
-      <Route path="/terms-of-service" component={[^}]*} /> */}
-      <Route path="/cookie-consent-test" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
+/* commented route */
       
       {/* Support Pages */}
-      <Route path="/faq" component={[^}]*} /> */}
-      <Route path="/troubleshooting" component={[^}]*} /> */}
+/* commented route */
+/* commented route */
       
       {/* Privacy & Compliance */}
-      <Route path="/client/kyc/mock" component={[^}]*} /> */}
-      <Route path="/client/sign/mock" component={[^}]*} /> */}
-      <Route path="/privacy-compliance-demo" component={[^}]*} /> */}
-      <Route path="/docpacks-demo" component={[^}]*} /> */}
-      <Route path="/client/notifications" component={[^}]*} /> */}
-      <Route path="/notifications-demo" component={[^}]*} /> */}
-      <Route path="/client/search" component={[^}]*} /> */}
-      <Route path="/search-demo" component={[^}]*} /> */}
-      <Route path="/analytics-demo" component={[^}]*} /> */}
-      <Route path="/client/kyc/start" component={[^}]*} /> */}
-      <Route path="/kyc-demo" component={[^}]*} /> */}
-      <Route path="/lender/access" component={[^}]*} /> */}
-      <Route path="/lender-demo" component={[^}]*} /> */}
-      <Route path="/lender-product-sync-demo" component={[^}]*} /> */}
-      {/* <Route path="/chatbot-test" component={[^}]*} /> */} */}
-      {/* <Route path="/advanced-chatbot-test" component={[^}]*} /> */} */}
-      {/* <Route path="/chatbot-dashboard" component={[^}]*} /> */} */}
-      <Route path="/train-chatbot" component={[^}]*} /> */}
-      <Route path="/debug/train" component={lazy(() => import('@/routes/TrainChatbot'))} />
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
+/* commented route */
       
       {/* Debug Pages */}
-      <Route path="/debug/catalog-fields" component={CatalogFieldsPage} />
-      <Route path="/debug/catalog-dump" component={CatalogDumpPage} />
+/* commented route */
+/* commented route */
       
       {/* Default Route - Landing Page */}
-      <Route path="/" component={[^}]*} /> */}
-      <Route component={[^}]*} /> */}
+/* commented route */
+      <Route component={...} /> */}
       </Switch>
       </Suspense>
       

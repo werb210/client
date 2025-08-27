@@ -1,43 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { z } from "zod";
 import { fetchCatalogNormalized, CanonicalProduct } from "@/lib/catalog";
 
-// ✅ COMPREHENSIVE 22-FIELD LENDER PRODUCT SCHEMA
-const LenderProductSchema = z.object({
-  id: z.string(),
-  lenderName: z.string(),
-  productCategory: z.string(), // SBA, Equipment, Working Capital, Term Loan, etc.
-  productName: z.string(),
-  minimumLendingAmount: z.number(),
-  maximumLendingAmount: z.number(),
-  interestRateMinimum: z.number(), // stored as decimal (e.g., 0.05 for 5%)
-  interestRateMaximum: z.number(),
-  countryOffered: z.string(), // 'United States' or 'Canada'
-  rateType: z.string(), // 'Fixed' or 'Floating'
-  rateFrequency: z.string(), // 'Monthly' or 'Annually'
-  index: z.string().optional(), // Prime, SOFR, etc.
-  termMinimum: z.number(), // in months
-  termMaximum: z.number(), // in months
-  minimumAverageMonthlyRevenue: z.number().optional(),
-  minimumCreditScore: z.number().optional(),
-  documentsRequired: z.array(z.string()),
-  description: z.string().optional(),
-  externalId: z.string().optional(),
-  isActive: z.boolean(),
-  createdBy: z.number(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-const LenderProductsResponseSchema = z.object({
-  success: z.boolean(),
-  products: z.array(LenderProductSchema),
-  count: z.number(),
-  source: z.string().optional(),
-});
-
-export type LenderProduct = z.infer<typeof LenderProductSchema>;
-export type LenderProductsResponse = z.infer<typeof LenderProductsResponseSchema>;
+// ✅ USING CANONICAL PRODUCT TYPE FROM CATALOG SYSTEM
 
 /**
  * ✅ STEP 1: React Query Hook with 22-Field Schema

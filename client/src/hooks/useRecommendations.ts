@@ -19,7 +19,7 @@ export function useRecommendations(formStep1Data: Step1FormData) {
   const { data: products = [], isLoading, error } = useQuery<CanonicalProduct[]>({
     queryKey: ["lenderProducts"],
     queryFn: async () => {
-      console.log('🔄 [PRODUCTS] Fetching through catalog system with field aliasing...');
+      console.log('🔄 [PRODUCTS] Fetching through canonical catalog system...');
       
       const canonicalProducts = await fetchCatalogNormalized();
       
