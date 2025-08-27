@@ -1,0 +1,138 @@
+# PURPOSE (30-min triage)
+# Fix pages showing wrong layouts/missing features by forcing stable data
+# sources, removing banners, and clearing any stale/stub caches in the client.
+
+set -euo pipefail
+
+### 0) ENV — minimal & safe
+# Ensure the client talks to its own server proxy (which hits Staff V1).
+# Turn off banners in client UI quickly.
+cat > .env.production <<'ENV'
+VITE_API_BASE=/
+VITE_SHOW_BANNERS=false
+ENV
+
+### 1) DATA LAYER — force V1 → legacy fallback (no stub JSON)
+# Replace any calls to /api/catalog/export-products in the client with V1.
+rg -n '/api/catalog/export-products' client/src || true
+# One-liner replacement (safe idempotent):
+rg -l '/api/catalog/export-products' client/src | xargs -rn1 sed -i '' -e 's|/api/catalog/export-products|/api/v1/products|g' || true
+
+# Canonical fetch helper (create/overwrite)
+mkdir -p client/src/lib
+cat > client/src/lib/products.ts <<'TS'
+export type V1Product = {
+  id: string;
+  productName: string;
+  lenderName: string;
+  countryOffered: string;
+  productCategory: string;
+  minimumLendingAmount?: number|null;
+  maximumLendingAmount?: number|null;
+  isActive?: boolean|null;
+};
+
+export async function fetchProductsStable(): Promise<V1Product[]> {
+  // Primary: V1 (staff server-provided, public)
+  const v1 = await fetch('/api/v1/products', { credentials:'include' });
+  if (v1.ok) {
+    const arr = await v1.json();
+    if (Array.isArray(arr) && arr.length) return arr as V1Product[];
+  }
+  // Fallback: hardened legacy shim (mapped from V1 server-side)
+  const leg = await fetch('/api/lender-products', { credentials:'include' });
+  if (leg.ok) {
+    const j = await leg.json();
+    const arr = Array.isArray(j?.products) ? j.products.map((p:any):V1Product => ({
+      id: p.id,
+      productName: p.name ?? p.productName,
+      lenderName: p.lender_name ?? p.lenderName,
+      countryOffered: String(p.country ?? p.countryOffered ?? '').toUpperCase(),
+      productCategory: p.category ?? p.productCategory,
+      minimumLendingAmount: p.min_amount ?? p.minimumLendingAmount ?? null,
+      maximumLendingAmount: p.max_amount ?? p.maximumLendingAmount ?? null,
+      isActive: (p.active ?? p.isActive ?? true),
+    })) : [];
+    if (arr.length) return arr;
+  }
+  return [];
+}
+TS
+
+### 2) STEP 2/STEP 5 — strict filters + required docs fallback
+cat > client/src/lib/recommend.ts <<'TS'
+import type { V1Product } from "./products";
+export type Intake = { country:'US'|'CA'; amount:number; category?:string };
+export type RequiredDoc = { key:string; label:string; required:boolean; months?:number };
+
+export function filterProducts(intake: Intake, prods: V1Product[]) {
+  const cc = intake.country.toUpperCase();
+  return prods.filter(p => {
+    const country = String(p.countryOffered||'').toUpperCase();
+    const min = Number(p.minimumLendingAmount ?? 0);
+    const max = Number(p.maximumLendingAmount ?? Number.MAX_SAFE_INTEGER);
+    const inCountry = country === cc;
+    const inAmount = min <= intake.amount && intake.amount <= max;
+    const active = (p.isActive ?? true) !== false;
+    const inCat = intake.category ? (p.productCategory === intake.category) : true;
+    return inCountry && inAmount && active && inCat;
+  });
+}
+
+export async function listDocs(intake: Intake): Promise<RequiredDoc[]> {
+  // Staff docs endpoint may not exist; fallback to 6-month bank statements.
+  try {
+    const r = await fetch('/api/required-docs', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ category: intake.category, country: intake.country, amount: intake.amount })
+    });
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j?.documents) && j.documents.length) return j.documents;
+    }
+  } catch {}
+  return [{ key:'bank_6m', label:'Last 6 months bank statements', required:true, months:6 }];
+}
+TS
+
+### 3) LENDERS PAGE/GRIDS — stop “No lenders found…”
+# Use V1 for lenders aggregation on the client side to avoid auth friction.
+cat > client/src/lib/lenders.ts <<'TS'
+import { fetchProductsStable } from "./products";
+export type UILender = { id:string; name:string; product_count:number };
+
+export async function fetchUILenders(): Promise<UILender[]> {
+  const prods = await fetchProductsStable();
+  const by = new Map<string,UILender>();
+  for (const p of prods) {
+    const id = p.lenderName || 'Unknown';
+    const cur = by.get(id) ?? { id, name:id, product_count:0 };
+    cur.product_count += 1;
+    by.set(id, cur);
+  }
+  return Array.from(by.values()).sort((a,b)=>b.product_count-a.product_count);
+}
+TS
+
+### 4) KILL BANNERS (client) — fast toggle to fix broken layouts
+# Global CSS kill-switch (only affects banner-like elements)
+mkdir -p client/src/styles
+cat > client/src/styles/hotfix.css <<'CSS'
+.banner, .promo-banner, [data-test="top-banner"], .marketing-banner { display:none !important; }
+CSS
+
+# Ensure hotfix CSS is imported once (index.css or main.tsx, whichever exists)
+if rg -q 'hotfix\.css' client/src/main.tsx; then :; else
+  sed -i '' -e '1i\
+import "./styles/hotfix.css";
+' client/src/main.tsx
+fi
+
+### 5) BUILD & RUN
+npm run build --silent || true
+# (Serve as you normally do — ensure proxy to server is in place)
+
+### 6) SMOKE TESTS (expect real data, not stub)
+echo "Products:" && curl -s http://localhost:5000/api/v1/products | jq 'length'
+echo "Legacy shim total:" && curl -s http://localhost:5000/api/lender-products | jq '.total'
+echo "Sanity:" && curl -s http://localhost:5000/api/catalog/sanity | jq .

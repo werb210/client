@@ -10,9 +10,9 @@ export interface UseLenderProductsResult {
 
 export function useLenderProducts(): UseLenderProductsResult {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['/api/catalog/export-products'],
+    queryKey: ['/api/v1/products'],
     queryFn: async () => {
-      const response = await fetch('/api/catalog/export-products?includeInactive=1');
+      const response = await fetch('/api/v1/products');
       if (!response.ok) {
         throw new Error('Failed to fetch lender products');
       }
@@ -75,7 +75,7 @@ export function useLenderProductsSync() {
       if (response.ok) {
         // Invalidate and refetch products
         if (queryClient) {
-          queryClient.invalidateQueries({ queryKey: ['/api/catalog/export-products?includeInactive=1'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/v1/products'] });
         }
         return { success: true, message: 'Products synced successfully' };
       } else {

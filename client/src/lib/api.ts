@@ -87,7 +87,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
   } catch {/* fall back */}
   
   try {
-    const r = await fetch("/api/catalog/export-products?includeInactive=1", { credentials: "include" });
+    const r = await fetch("/api/v1/products", { credentials: "include" });
     if (r.ok) {
       const j = await r.json();
       const items = j?.products ?? j ?? [];

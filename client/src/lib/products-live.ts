@@ -27,8 +27,8 @@ export async function fetchLenderProductsLive(opts?: {
     ...(opts?.lenderId ? { lenderId: opts.lenderId } : {}),
     ...(opts?.includeInactive ?? true ? { includeInactive: '1' } : {}),
   });
-  const r = await fetch(`/api/catalog/export-products?${qs.toString()}`, { credentials: 'include' });
-  if (!r.ok) throw new Error(`/api/catalog/export-products failed: ${r.status}`);
+  const r = await fetch(`/api/v1/products?${qs.toString()}`, { credentials: 'include' });
+  if (!r.ok) throw new Error(`/api/v1/products failed: ${r.status}`);
   const j = await r.json();
   const rows = (j.products || []) as LenderProductRow[];
 

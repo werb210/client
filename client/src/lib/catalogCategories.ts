@@ -30,7 +30,7 @@ export async function getMatchingCategories(amount: number, country: 'US'|'CA', 
   }
 
   // 2) Fallback: legacy shim + local filter (works without auth)
-  const lr = await fetch('/api/catalog/export-products?includeInactive=1', { credentials: 'include', headers });
+  const lr = await fetch('/api/v1/products', { credentials: 'include', headers });
   if (lr.ok) {
     const j = await lr.json().catch(()=>({}));
     const products: any[] = j.products || [];

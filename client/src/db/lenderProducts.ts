@@ -14,7 +14,7 @@ export interface LenderProduct {
 
 export const getLenderProducts = async (): Promise<LenderProduct[]> => {
   try {
-    const response = await fetch('/api/catalog/export-products?includeInactive=1');
+    const response = await fetch('/api/v1/products');
     const data = await response.json();
     if (data.success) {
       return data.products || [];

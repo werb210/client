@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, DollarSign, MapPin, Building, Clock, Grid3X3, Users } from 'lucide-react';
-import { fetchLenderProducts } from '@/lib/api';
+import { fetchCatalogProducts } from '@/lib/api';
 
 const formatCurrency = (amount: number): string => {
   if (amount >= 1000000) {
@@ -40,8 +40,8 @@ const getCategoryColor = (category: string): string => {
 
 export default function LenderProductsCatalog() {
   const { data: products, isLoading, error } = useQuery({
-    queryKey: ['/api/catalog/export-products?includeInactive=1'],
-    queryFn: fetchLenderProducts,
+    queryKey: ['/api/v1/products'],
+    queryFn: fetchCatalogProducts,
   });
 
   if (isLoading) {
@@ -88,10 +88,10 @@ export default function LenderProductsCatalog() {
 
   // Group products by lender
   const productsByLender = products?.reduce((acc, product) => {
-    if (!acc[product.lenderName]) {
-      acc[product.lenderName] = [];
+    if (!acc[product.lender_name]) {
+      acc[product.lender_name] = [];
     }
-    acc[product.lenderName].push(product);
+    acc[product.lender_name].push(product);
     return acc;
   }, {} as Record<string, typeof products>) || {};
 
@@ -125,7 +125,7 @@ export default function LenderProductsCatalog() {
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {new Set(products?.map(p => p.lenderName)).size || 0}
+                {new Set(products?.map(p => p.lender_name)).size || 0}
               </div>
               <div className="text-sm text-gray-600">Lenders</div>
             </CardContent>
@@ -160,9 +160,9 @@ export default function LenderProductsCatalog() {
             const categoryProducts = productsByCategory[category];
           const categoryStats = {
             count: categoryProducts.length,
-            minAmount: Math.min(...categoryProducts.map(p => p.minAmount)),
-            maxAmount: Math.max(...categoryProducts.map(p => p.maxAmount)),
-            lenders: new Set(categoryProducts.map(p => p.lenderName)).size,
+            minAmount: Math.min(...categoryProducts.map(p => p.min_amount)),
+            maxAmount: Math.max(...categoryProducts.map(p => p.max_amount)),
+            lenders: new Set(categoryProducts.map(p => p.lender_name)).size,
             countries: new Set(categoryProducts.flatMap(p => p.geography)).size,
           };
 
@@ -217,7 +217,7 @@ export default function LenderProductsCatalog() {
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600 font-medium">
-                        {product.lenderName}
+                        {product.lender_name}
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -225,7 +225,7 @@ export default function LenderProductsCatalog() {
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Amount Range:</span>
                           <span className="font-medium">
-                            {formatCurrency(product.minAmount)} - {formatCurrency(product.maxAmount)}
+                            {formatCurrency(product.min_amount)} - {formatCurrency(product.max_amount)}
                           </span>
                         </div>
                         
@@ -297,8 +297,8 @@ export default function LenderProductsCatalog() {
             const lenderProducts = productsByLender[lenderName];
             const lenderStats = {
               count: lenderProducts.length,
-              minAmount: Math.min(...lenderProducts.map(p => p.minAmount)),
-              maxAmount: Math.max(...lenderProducts.map(p => p.maxAmount)),
+              minAmount: Math.min(...lenderProducts.map(p => p.min_amount)),
+              maxAmount: Math.max(...lenderProducts.map(p => p.max_amount)),
               categories: new Set(lenderProducts.map(p => p.category)).size,
               countries: new Set(lenderProducts.flatMap(p => p.geography)).size,
             };
@@ -362,7 +362,7 @@ export default function LenderProductsCatalog() {
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Amount Range:</span>
                             <span className="font-medium">
-                              {formatCurrency(product.minAmount)} - {formatCurrency(product.maxAmount)}
+                              {formatCurrency(product.min_amount)} - {formatCurrency(product.max_amount)}
                             </span>
                           </div>
                           
