@@ -6,7 +6,7 @@ export type Canonical = {
   id: string;
   name: string;
   lender_name: string;
-  country: "CA"|"US"|string;
+  country: "CA"|"US"|string|null;
   category: string;
   min_amount: number;
   max_amount: number;
@@ -34,8 +34,8 @@ function toCanonical(p: any): Canonical {
   return {
     id: String(p.id),
     name: p.name ?? p.productName ?? "",
-    lender_name: p.lender_name ?? p.lenderName ?? p.name ?? "", // Staff uses 'name' as lender name
-    country: country || null, // Keep null for missing countries, don't default to US
+    lender_name: p.lender_name ?? p.lenderName ?? "", // Fixed: don't fallback to p.name
+    country: country || null, // Keep original country value from normCountry
     category: p.category ?? p.productCategory ?? "Working Capital",
     min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0),
     max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? 0),
@@ -131,11 +131,13 @@ export async function pullFromStaffBackend(): Promise<{ saved: number; CA: numbe
     }
 
     const data = await response.json();
+    
+    // Handle different response formats - normalize to array
     let products = [];
-
-    // Handle different response formats
     if (data.products && Array.isArray(data.products)) {
       products = data.products;
+    } else if (data.items && Array.isArray(data.items)) {
+      products = data.items;
     } else if (Array.isArray(data)) {
       products = data;
     } else {

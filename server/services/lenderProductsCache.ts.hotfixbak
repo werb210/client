@@ -130,11 +130,11 @@ export async function pullFromStaffBackend(): Promise<{ saved: number; CA: numbe
       throw new Error(`Staff backend response: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json(); const products = Array.isArray(data) ? data : (data.items || data.products || []);
+    const data = await response.json();
     let products = [];
 
     // Handle different response formats
-    if (Array.isArray(products)) {
+    if (data.products && Array.isArray(data.products)) {
       products = data.products;
     } else if (Array.isArray(data)) {
       products = data;

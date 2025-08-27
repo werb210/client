@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# CLIENT AUDIT — Pull lender products, expose push/pull endpoints, dump fields, detect defaults/hardcodes.
+# Run from the client repo root or any shell that can reach the client server.
+# Requirements: curl, jq. (rg/grep optional for code scan)
+set -euo pipefail
+
+need(){ command -v "$1" >/dev/null || { echo "Missing $1"; exit 1; }; }
+need curl; need jq; command -v rg >/dev/null || true
+
+CLIENT_BASE="${CLIENT_BASE:-http://localhost:5000}"
+STAFF_BASE="${STAFF_BASE:-https://staff.boreal.financial}"
+DIAG="${DIAG:-1}"            # append ?diag=1 where supported
+OUT="${OUT:-client_audit.json}"
+
+durl(){ local u="$1"; [[ "$DIAG" == "1" ]] && { [[ "$u" == *\?* ]] && echo "$u&diag=1" || echo "$u?diag=1"; } || echo "$u"; }
+sec(){ printf "\n===== %s =====\n" "$1"; }
+
+sec "ENDPOINTS USED BY CLIENT TO PUSH/PULL (DECLARED)"
+echo "Pull from Staff (client-internal):"
+echo " • POST $CLIENT_BASE/internal/pull-staff-products   (preferred, if present)"
+echo " • POST $CLIENT_BASE/pull-products                  (legacy/back-compat)"
+echo "Serve to UI:"
+echo " • GET  $CLIENT_BASE/api/v1/products                (preferred to UI)"
+echo " • GET  $CLIENT_BASE/api/lender-products            (legacy shim; still exists in places)"
+echo "Staff truth (for reference):"
+echo " • GET  $STAFF_BASE/api/v1/products                 (authoritative)"
+echo " • GET  $STAFF_BASE/api/lender-products             (legacy shim)"
+
+sec "OPTIONAL CODE SCAN (best-effort) — where client references push/pull endpoints"
+if command -v rg >/dev/null; then
+  rg -n --hidden --iglob '!node_modules' --fixed-strings \
+    '/api/v1/products' \
+    '/api/lender-products' \
+    '/api/catalog/export-products' \
+    '/internal/pull-staff-products' \
+    '/pull-products' \
+    'https://staff.boreal.financial/api/v1/products' \
+    'https://staff.boreal.financial/api/lender-products' \
+    || true
+else
+  grep -RIn --exclude-dir=node_modules \
+    -e '/api/v1/products' -e '/api/lender-products' -e '/api/catalog/export-products' \
+    -e '/internal/pull-staff-products' -e '/pull-products' \
+    -e 'https://staff.boreal.financial/api/v1/products' \
+    -e 'https://staff.boreal.financial/api/lender-products' \
+    . || true
+fi
+
+sec "TRIGGER PULL FROM STAFF (best-effort, safe/idempotent)"
+for ep in "$CLIENT_BASE/internal/pull-staff-products" "$CLIENT_BASE/pull-products"; do
+  echo "POST $ep"
+  set +e
+  curl -sS -X POST "$ep" -H 'content-type: application/json' -d '{}' | jq . || true
+  set -e
+done
+
+sec "FETCH CLIENT V1 PRODUCTS (with provenance if supported)"
+C_RAW="$(curl -fsS "$(durl "$CLIENT_BASE/api/v1/products")" || echo '{"items":[]}')"
+# normalize: accept array or {items:[]}
+if echo "$C_RAW" | jq -e 'type=="array"' >/dev/null 2>&1; then
+  C_LIST="$(echo "$C_RAW")"
+  C_DIAG="no _diag (array response)"
+else
+  C_LIST="$(echo "$C_RAW" | jq -c '.items // []')"
+  C_DIAG="$(echo "$C_RAW" | jq '._diag // "no _diag rollup"' )"
+fi
+C_TOTAL="$(echo "$C_LIST" | jq 'length')"
+echo "Client v1 products: $C_TOTAL"
+
+sec "COUNTRY DISTRIBUTION (CLIENT)"
+echo "$C_LIST" | jq '
+  map((.country // .countryOffered // "NULL")|ascii_upcase)
+  | group_by(.) | map({country:.[0], count:length})'
+
+sec "ALL LENDER PRODUCT FIELDS (CLIENT — union of keys)"
+echo "$C_LIST" | jq 'reduce .[] as $p ({}; . + ($p|keys|map({(.):true})|add)) | keys'
+
+sec "SAMPLE PRODUCT (CLIENT) + PROVENANCE SUMMARY IF PRESENT"
+echo "$C_RAW" | jq '{
+  sample: ((.items // (if type=="array" then . else [] end)) | .[0]),
+  _diag: ._diag // "no _diag (diag disabled or not supported)"
+}'
+
+sec "HARDCODE/DEFAULT DETECTION (CLIENT — heuristics)"
+echo "$C_LIST" | jq '[
+  {
+    field:"country",
+    all_null: (map(.country // .countryOffered) | all(.==null)),
+    all_us:   (map(((.country // .countryOffered // "NULL")|ascii_upcase)=="US") | all),
+    mixed:    ((map(.country // .countryOffered) | unique | length) > 1)
+  },
+  {
+    field:"min_amount",
+    many_zeros: ( [ .[] | select((.min_amount // .minimumLendingAmount // 0)==0) ] | length ) > (length/2)
+  },
+  {
+    field:"max_amount",
+    many_zeros: ( [ .[] | select((.max_amount // .maximumLendingAmount // 0)==0) ] | length ) > (length/2)
+  },
+  {
+    field:"required_documents",
+    not_array: ( [ .[] | select((.required_documents|type)!="array") ] | length ) > 0
+  }
+]'
+
+sec "WRITE MACHINE-READABLE BUNDLE"
+jq -n \
+  --arg client_base "$CLIENT_BASE" \
+  --arg staff_base "$STAFF_BASE" \
+  --argjson client_raw "$(echo "$C_RAW")" \
+  --argjson client_list "$(echo "$C_LIST")" \
+  --arg client_diag "$C_DIAG" \
+'{
+  meta:{client_base:$client_base, staff_base:$staff_base},
+  client:{raw:$client_raw, list:$client_list, diag:$client_diag}
+}' > "$OUT"
+echo "Wrote: $OUT"
+echo "Done."

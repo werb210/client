@@ -3,16 +3,17 @@ import { getAll } from "../services/lenderProductsCache.js";
 
 const r = express.Router();
 
-/* Helper to transform to V1 format with exposed Staff fields */
+/* Helper to transform to V1 format with canonical Client field names */
 const toV1 = (row) => ({
   id: row.id,
-  productName: row.name ?? "",
-  lenderName: row.lender_name ?? row.name ?? "",
-  countryOffered: row.country ?? null,           // never default to 'US'
-  productCategory: row.category ?? null,
-  minimumLendingAmount: row.min_amount ?? null,
-  maximumLendingAmount: row.max_amount ?? null,
-  isActive: typeof row.active === "boolean" ? row.active : null,
+  name: row.name ?? "",
+  lender_name: row.lender_name ?? "",
+  country: row.country ?? null,           // never default to 'US'
+  category: row.category ?? null,
+  min_amount: row.min_amount ?? null,
+  max_amount: row.max_amount ?? null,
+  active: typeof row.active === "boolean" ? row.active : null,
+  updated_at: row.updated_at,
 
   /* NEW: expose Staff fields that were previously lost */
   min_time_in_business: row.min_time_in_business ?? null,

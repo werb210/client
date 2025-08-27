@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# CLIENT HOTFIX: make the client pull resilient to Staff V1 shapes, refresh cache, and verify CA/US.
+# Requirements: curl, jq, rg (optional), sed (optional)
+
+set -euo pipefail
+need(){ command -v "$1" >/dev/null || { echo "Missing $1"; exit 1; }; }
+need curl; need jq; command -v rg >/dev/null || true
+
+CLIENT_BASE="${CLIENT_BASE:-http://localhost:5000}"
+STAFF_V1="${STAFF_V1:-https://staff.boreal.financial/api/v1/products}"
+EXPECT_CA="${EXPECT_CA:-17}"
+EXPECT_US="${EXPECT_US:-25}"
+
+echo "== 0) Show the actual 500 body from the client pull endpoint (so we know why it fails) =="
+# Try both known client pull endpoints; ignore failures but print body & status.
+for ep in "$CLIENT_BASE/internal/pull-staff-products" "$CLIENT_BASE/pull-products" ; do
+  echo "--- POST $ep"
+  set +e
+  curl -sS -D /tmp/headers.$$ -X POST "$ep" -H 'content-type: application/json' -d '{}' | cat
+  echo; echo "Status:"; awk '/HTTP/{print}' /tmp/headers.$$
+  set -e
+done
+
+echo "== 1) Fetch Staff V1 directly (ground truth) and normalize shapes =="
+# Staff V1 sometimes returns {items:[...]}; harden to also accept raw [] or {products:[]}
+STF_RAW="$(curl -fsS "$STAFF_V1")"
+STF_LIST="$(printf '%s' "$STF_RAW" | jq -c '( .items // .products // (if type=="array" then . else []) )')"
+STF_TOT="$(printf '%s' "$STF_LIST" | jq 'length')"
+echo "Staff V1 total: $STF_TOT"
+printf '%s' "$STF_LIST" | jq -e '
+  { by_country:
+      ( map((.country // .countryOffered // "NULL")|ascii_upcase)
+        | group_by(.) | map({k:.[0],n:length}) )
+  }'
+
+echo "== 2) Create a resilient client-side normalizer and use it to repopulate the cache =="
+# Some clients expose an internal ingestion endpoint; try both common ones.
+# Body is always a plain array of canonical products.
+TMP_JSON="/tmp/staff_v1_norm.$$.json"
+printf '%s' "$STF_LIST" | jq '
+  map({
+    id,
+    product_name: (.product_name // .productName // ""),
+    lender_name:  (.lender_name  // .lenderName  // null),
+    country:      ((.country // .countryOffered // null) as $c
+                  | if ($c|type)=="string" and (($c|ascii_upcase)=="CA" or ($c|ascii_upcase)=="US")
+                    then ($c|ascii_upcase) else null end),
+    category:     (.category // .productCategory // null),
+    min_amount:   (.min_amount // .minimumLendingAmount // null),
+    max_amount:   (.max_amount // .maximumLendingAmount // null),
+    min_time_in_business: (.min_time_in_business // null),
+    min_monthly_revenue:  (.min_monthly_revenue  // null),
+    required_documents:   (if (.required_documents|type)=="array" then .required_documents else [] end),
+    excluded_industries:  (if (.excluded_industries|type)=="array" then .excluded_industries else [] end),
+    active:               ((.active // .isActive // true) == true)
+  })
+' > "$TMP_JSON"
+
+echo "--- Attempt client ingestion endpoints (best-effort) ---"
+set +e
+curl -sS -X POST "$CLIENT_BASE/internal/ingest-products" \
+  -H 'content-type: application/json' --data-binary @"$TMP_JSON" | jq . || true
+curl -sS -X POST "$CLIENT_BASE/api/_admin/push-products" \
+  -H 'content-type: application/json' --data-binary @"$TMP_JSON" | jq . || true
+set -e
+
+echo "== 3) If ingestion endpoints don’t exist, patch the puller to be shape-safe (idempotent) =="
+# Best-effort patch: make the client puller accept {items}, {products}, or [].
+# Adjust the known file if it exists; otherwise this step is skipped (no harm).
+FILE_PULL="server/services/lenderProductsCache.ts"
+if [ -f "$FILE_PULL" ]; then
+  cp "$FILE_PULL" "$FILE_PULL.bak" || true
+  # Replace common brittle parses with robust normalization in-place
+  sed -i '' -e 's/const data = await res.json();/const data = await res.json(); const list = Array.isArray(data) ? data : (data.items ?? data.products ?? []);/g' "$FILE_PULL" 2>/dev/null || true
+  sed -i '' -e 's/const products = data\.products;/const products = Array.isArray(data) ? data : (data.items ?? data.products ?? []);/g' "$FILE_PULL" 2>/dev/null || true
+  echo "[patched] $FILE_PULL (backup at $FILE_PULL.bak)"
+else
+  echo "[skip] puller file not found: $FILE_PULL"
+fi
+
+echo "== 4) Try the client pull again now =="
+for ep in "$CLIENT_BASE/internal/pull-staff-products" "$CLIENT_BASE/pull-products" ; do
+  echo "--- POST $ep"
+  set +e
+  curl -sS -X POST "$ep" -H 'content-type: application/json' -d '{}' | jq . || true
+  set -e
+done
+
+echo "== 5) Verify the client v1 endpoint mirrors Staff V1 split =="
+C_RAW="$(curl -fsS "$CLIENT_BASE/api/v1/products" || echo '{"items":[]}' )"
+# Accept client v1 as array or {items:[]}
+C_LIST="$(printf '%s' "$C_RAW" | jq -c '( .items // .products // (if type=="array" then . else []) )')"
+C_CA="$(printf '%s' "$C_LIST" | jq '[.[]|select((.country // .countryOffered // "NULL")|ascii_upcase=="CA")] | length')"
+C_US="$(printf '%s' "$C_LIST" | jq '[.[]|select((.country // .countryOffered // "NULL")|ascii_upcase=="US")] | length')"
+echo "Client v1: CA=$C_CA US=$C_US"
+[ "$C_CA" -eq "$EXPECT_CA" ] && [ "$C_US" -eq "$EXPECT_US" ] \
+  && echo "✅ Client cache now matches Staff V1 (17 CA / 25 US)." \
+  || echo "⚠️ Still divergent. Check the 500 body above and server logs for a schema/parse error."

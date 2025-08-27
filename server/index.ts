@@ -1424,17 +1424,21 @@ app.use((req, res, next) => {
       const { getAll } = await import('./services/lenderProductsCache');
       const products = getAll();
       
-      // Transform to v1 format - direct array with normalized fields
+      // Transform to v1 format - direct array with canonical Client field names
       const v1Products = products.map((product: any) => ({
         id: product.id,
-        productName: product.name,
-        lenderName: product.lender_name,
-        countryOffered: product.country,
-        productCategory: product.category,
-        minimumLendingAmount: product.min_amount,
-        maximumLendingAmount: product.max_amount,
-        isActive: product.active,
-        required_documents: []
+        name: product.name,
+        lender_name: product.lender_name,
+        country: product.country,
+        category: product.category,
+        min_amount: product.min_amount,
+        max_amount: product.max_amount,
+        active: product.active,
+        updated_at: product.updated_at,
+        min_time_in_business: product.min_time_in_business,
+        min_monthly_revenue: product.min_monthly_revenue,
+        excluded_industries: product.excluded_industries || [],
+        required_documents: product.required_documents || []
       }));
       
       console.log(`✅ Served ${v1Products.length} products via v1 API from in-memory catalog`);
