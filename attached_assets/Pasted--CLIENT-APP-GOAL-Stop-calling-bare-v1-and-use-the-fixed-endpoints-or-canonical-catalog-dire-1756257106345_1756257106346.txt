@@ -1,0 +1,86 @@
+[CLIENT APP]
+
+# GOAL: Stop calling bare /v1/* and use the fixed endpoints (or canonical catalog directly)
+# so Lenders & Products tabs always populate with the same data as Staff.
+
+# 1) API HELPERS  (FILE: client/src/lib/api.ts)
+export type CatalogProduct = {
+  id: string;
+  name: string;
+  lender_name: string;
+  lender_id?: string;
+  country: string;        // "US" | "CA"
+  category: string;
+  min_amount: number;
+  max_amount: number;
+  active: boolean;
+};
+
+export async function fetchCatalogProducts(): Promise<CatalogProduct[]> {
+  // Prefer canonical; fallback to v1/products; never call bare /v1/*
+  try {
+    const r = await fetch("/api/catalog/export-products?includeInactive=1", { credentials: "include" });
+    if (r.ok) {
+      const j = await r.json();
+      return (j.products ?? []).map((p: any) => ({
+        id: p.id,
+        name: p.name ?? p.productName,
+        lender_name: p.lender_name ?? p.lenderName,
+        lender_id: p.lender_id ?? p.lenderId,
+        country: String(p.country ?? p.countryOffered ?? "").toUpperCase(),
+        category: p.category ?? p.productCategory ?? "Working Capital",
+        min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0),
+        max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? Number.MAX_SAFE_INTEGER),
+        active: (p.active ?? p.isActive) !== false,
+      }));
+    }
+  } catch {}
+  // fallback: legacy v1/products (array)
+  const r2 = await fetch("/api/v1/products", { credentials: "include" });
+  const arr = await r2.json();
+  return (arr ?? []).map((p: any) => ({
+    id: p.id,
+    name: p.productName ?? p.name,
+    lender_name: p.lenderName ?? p.lender_name,
+    country: String(p.countryOffered ?? p.country ?? "").toUpperCase(),
+    category: p.productCategory ?? p.category ?? "Working Capital",
+    min_amount: Number(p.minimumLendingAmount ?? p.min_amount ?? 0),
+    max_amount: Number(p.maximumLendingAmount ?? p.max_amount ?? Number.MAX_SAFE_INTEGER),
+    active: (p.isActive ?? p.active) !== false,
+  }));
+}
+
+export type UILender = { id: string; name: string; product_count: number };
+
+export async function fetchUILenders(): Promise<UILender[]> {
+  // Prefer staff’s parity endpoint (already aggregated). If missing, aggregate locally.
+  try {
+    const r = await fetch("/api/v1/lenders", { credentials: "include" });
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j?.lenders)) return j.lenders;
+    }
+  } catch {}
+  const prods = await fetchCatalogProducts();
+  const by = new Map<string, UILender>();
+  for (const p of prods) {
+    const id = p.lender_id || p.lender_name;
+    const cur = by.get(id) ?? { id, name: p.lender_name, product_count: 0 };
+    cur.product_count += 1;
+    by.set(id, cur);
+  }
+  return Array.from(by.values()).sort((a,b)=>b.product_count-a.product_count);
+}
+
+# 2) PRODUCTS TAB  (FILE: client/src/pages/ProductsPage.tsx)
+# Replace any /v1/* calls with the helper:
+# const { data } = useQuery(['products'], fetchCatalogProducts);
+
+# 3) LENDERS TAB  (FILE: client/src/pages/LendersPage.tsx)
+# Replace any /v1/lenders calls with:
+# const { data } = useQuery(['lenders'], fetchUILenders);
+
+# 4) QUICK QA (run in browser console or devtools network):
+# fetch('/api/v1/lenders').then(r=>r.json()).then(j=>console.log(j.lenders?.length))
+# fetch('/api/v1/products').then(r=>r.json()).then(a=>console.log(a.length))
+# fetch('/api/catalog/export-products?includeInactive=1').then(r=>r.json()).then(j=>console.log(j.total))
