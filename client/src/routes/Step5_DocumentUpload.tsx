@@ -14,7 +14,7 @@ import { useLocation } from 'wouter';
 
 import { useToast } from '@/hooks/use-toast';
 
-import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequirements';
+import DynamicDocumentRequirements from '@/components/DynamicDocumentRequirements';
 
 import { ProceedBypassBanner } from '@/components/ProceedBypassBanner';
 

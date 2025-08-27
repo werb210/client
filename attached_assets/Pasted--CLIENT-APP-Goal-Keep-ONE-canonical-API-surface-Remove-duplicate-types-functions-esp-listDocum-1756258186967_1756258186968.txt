@@ -1,3 +1,10 @@
+[CLIENT APP]
+
+Goal: Keep ONE canonical API surface. Remove duplicate types/functions (esp. listDocuments, CanonicalProduct). Make Step 2 & Step 5 import from a single place.
+
+What you’ll paste:
+
+// FILE: client/src/lib/api.ts  (replace entire file)
 export type CanonicalProduct = {
   id: string;
   name: string;
@@ -85,7 +92,7 @@ export async function recommendProducts(intake: IntakeInput) {
   const byCategory = ranked.reduce((acc, p) => {
     (acc[p.category] ||= []).push(p);
     return acc;
-  }, {} as Record<string, CanonicalProduct[]>);
+  }, /** @type {Record<string, CanonicalProduct[]>} */({}));
   return { products: ranked, byCategory };
 }
 
@@ -124,3 +131,64 @@ export async function listDocuments(input: RequiredDocsInput) {
   const cat = input.category ?? "Working Capital";
   return DOCS_FALLBACK[cat] ?? DOCS_FALLBACK["Working Capital"];
 }
+
+// FILE: client/src/hooks/useLenderProducts.ts  (replace entire file)
+import { useQuery } from "@tanstack/react-query";
+import { fetchCatalogProducts, type CanonicalProduct } from "@/lib/api";
+
+export function useLenderProducts(params?: { country?: "CA" | "US"; amount?: number }) {
+  return useQuery<CanonicalProduct[]>({
+    queryKey: ["catalogProducts", params?.country, params?.amount],
+    queryFn: () => fetchCatalogProducts({ country: params?.country, amount: params?.amount }),
+  });
+}
+
+// FILE: client/src/hooks/useRecommendations.ts  (replace entire file)
+import { useQuery } from "@tanstack/react-query";
+import { recommendProducts, type IntakeInput } from "@/lib/api";
+
+export function useRecommendations(intake: IntakeInput | null) {
+  return useQuery({
+    queryKey: ["recommendations", intake],
+    enabled: !!intake,
+    queryFn: () => recommendProducts(intake as IntakeInput),
+  });
+}
+
+// FILE: client/src/components/DynamicDocumentRequirements.tsx  (replace entire file)
+import { useEffect, useState } from "react";
+import { listDocuments, type RequiredDocsInput } from "@/lib/api";
+
+type Item = { key: string; label: string; required: boolean; months?: number };
+
+export default function DynamicDocumentRequirements(props: RequiredDocsInput) {
+  const [docs, setDocs] = useState<Item[]>([]);
+  useEffect(() => {
+    listDocuments(props).then(arr => {
+      const normalized = (arr ?? []).map((d: any, i: number) =>
+        typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
+      );
+      setDocs(normalized);
+    });
+  }, [props.category, props.country, props.amount, props.lenderId]);
+
+  return (
+    <div>
+      <h3 className="text-lg font-semibold">Required Documents</h3>
+      <ul className="mt-2 space-y-2">
+        {docs.map(d => (
+          <li key={d.key} className="flex items-center gap-2">
+            <input type="checkbox" defaultChecked={d.required} disabled />
+            <span>{d.label}{d.months ? ` (${d.months} months)` : ""}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// FILE: client/_dedupe_cleanup.txt  (paste & run these in your shell after saving files)
+// sh
+rm -f client/src/lib/catalog.ts client/src/types/enhancedLenderProduct.ts client/src/lib/finalizedLenderSync.ts 2>/dev/null
+find client/src -type f -name 'DynamicDocumentRequirements*.tsx' ! -path '*/components/DynamicDocumentRequirements.tsx' -delete 2>/dev/null
+find client/src -type f -name '*catalog*dump*.tsx' -name '*copy*' -delete 2>/dev/null

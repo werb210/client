@@ -1,44 +1,30 @@
-import React from "react";
-import { listDocuments, type RequiredDoc, type RequiredDocsInput } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { listDocuments, type RequiredDocsInput } from "@/lib/api";
 
-type Props = {
-  context: RequiredDocsInput; // must include category; country/amount optional
-};
+type Item = { key: string; label: string; required: boolean; months?: number };
 
-export function DynamicDocumentRequirements({ context }: Props) {
-  const [docs, setDocs] = React.useState<RequiredDoc[]>([]);
-  const [loading, setLoading] = React.useState(false);
-  const [err, setErr] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true); setErr(null);
-      try {
-        const d = await listDocuments(context);
-        if (mounted) setDocs(d);
-      } catch (e: any) {
-        if (mounted) setErr(e?.message ?? "Failed to load document list");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => { mounted = false; };
-  }, [context.category, context.country, context.amount, context.lenderId, context.timeInBusinessMonths, context.monthlyRevenue, context.creditScore]);
-
-  if (loading) return <div>Loading required documents…</div>;
-  if (err) return <div style={{ color: "crimson" }}>{err}</div>;
-
-  const items = docs.map((d, i) => (typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d));
+export default function DynamicDocumentRequirements(props: RequiredDocsInput) {
+  const [docs, setDocs] = useState<Item[]>([]);
+  useEffect(() => {
+    listDocuments(props).then(arr => {
+      const normalized = (arr ?? []).map((d: any, i: number) =>
+        typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
+      );
+      setDocs(normalized);
+    });
+  }, [props.category, props.country, props.amount, props.lenderId]);
 
   return (
-    <div style={{ display: "grid", gap: 8 }}>
-      {items.map(d => (
-        <label key={d.key} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <input type="checkbox" defaultChecked={false} aria-label={d.label} />
-          <span>{d.label}{d.required ? " *" : ""}{(d as any).months ? ` (${(d as any).months} months)` : ""}</span>
-        </label>
-      ))}
+    <div>
+      <h3 className="text-lg font-semibold">Required Documents</h3>
+      <ul className="mt-2 space-y-2">
+        {docs.map(d => (
+          <li key={d.key} className="flex items-center gap-2">
+            <input type="checkbox" defaultChecked={d.required} disabled />
+            <span>{d.label}{d.months ? ` (${d.months} months)` : ""}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
