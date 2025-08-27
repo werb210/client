@@ -1,30 +1,26 @@
-import { useEffect, useState } from "react";
-import { listDocuments, type RequiredDocsInput } from "@/lib/api";
+import React from "react";
+import { listDocuments, RequiredDoc } from "@/lib/api";
 
-type Item = { key: string; label: string; required: boolean; months?: number };
+type Props = { category: string; country: string; amount: number };
 
-export default function DynamicDocumentRequirements(props: RequiredDocsInput) {
-  const [docs, setDocs] = useState<Item[]>([]);
-  useEffect(() => {
-    listDocuments(props).then(arr => {
-      const normalized = (arr ?? []).map((d: any, i: number) =>
-        typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
-      );
-      setDocs(normalized);
-    });
-  }, [props.category, props.country, props.amount, props.lenderId]);
+export default function DynamicDocumentRequirements({ category, country, amount }: Props) {
+  const [docs, setDocs] = React.useState<RequiredDoc[]>([]);
+  React.useEffect(() => {
+    listDocuments({ category, country, amount }).then(setDocs).catch(() => setDocs([]));
+  }, [category, country, amount]);
+
+  const items = (docs ?? []).map((d, i) =>
+    typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
+  );
 
   return (
-    <div>
-      <h3 className="text-lg font-semibold">Required Documents</h3>
-      <ul className="mt-2 space-y-2">
-        {docs.map(d => (
-          <li key={d.key} className="flex items-center gap-2">
-            <input type="checkbox" defaultChecked={d.required} disabled />
-            <span>{d.label}{d.months ? ` (${d.months} months)` : ""}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className="space-y-2">
+      {items.map((d: any) => (
+        <li key={d.key} className="text-sm">
+          <span className="font-medium">{d.label}</span>
+          {d.required ? <span className="ml-2 text-red-600">(required)</span> : null}
+        </li>
+      ))}
+    </ul>
   );
 }

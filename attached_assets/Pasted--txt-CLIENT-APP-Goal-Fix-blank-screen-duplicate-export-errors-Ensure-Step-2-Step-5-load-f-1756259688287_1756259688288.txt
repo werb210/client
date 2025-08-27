@@ -1,3 +1,30 @@
+```txt
+[CLIENT APP]
+
+Goal: Fix blank screen + duplicate export errors. Ensure Step 2 & Step 5 load from ONE API surface and the app mounts correctly.
+
+1) FILE: client/src/main.tsx  (REPLACE ENTIRE FILE)
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+// IMPORTANT: no top-level await; load guard as a side-effect and ignore failures
+import("./lib/fetch-guard").catch(console.warn);
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+2) FILE: client/src/lib/fetch-guard.ts  (CREATE/REPLACE – side-effect only)
+(() => {
+  // Put any fetch/interceptor/polyfill setup here.
+  // Must not throw; keeps main bundle from failing at startup.
+})();
+
+3) FILE: client/src/lib/api.ts  (UNIFY & DEDUPE – PASTE BELOW AT TOP OF FILE, KEEPING ONLY ONE listDocuments/export)
 export type CanonicalProduct = {
   id: string;
   name: string;
@@ -141,3 +168,89 @@ export async function listDocuments(input: RequiredDocsInput): Promise<RequiredD
   const cat = input.category ?? "Working Capital";
   return DOCS_FALLBACK[cat] ?? DOCS_FALLBACK["Working Capital"];
 }
+
+4) FILE: client/src/components/DynamicDocumentRequirements.tsx  (REPLACE EXPORT & NORMALIZATION ONLY)
+import React from "react";
+import { listDocuments, RequiredDoc } from "@/lib/api";
+
+type Props = { category: string; country: string; amount: number };
+
+export default function DynamicDocumentRequirements({ category, country, amount }: Props) {
+  const [docs, setDocs] = React.useState<RequiredDoc[]>([]);
+  React.useEffect(() => {
+    listDocuments({ category, country, amount }).then(setDocs).catch(() => setDocs([]));
+  }, [category, country, amount]);
+
+  const items = (docs ?? []).map((d, i) =>
+    typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
+  );
+
+  return (
+    <ul className="space-y-2">
+      {items.map((d: any) => (
+        <li key={d.key} className="text-sm">
+          <span className="font-medium">{d.label}</span>
+          {d.required ? <span className="ml-2 text-red-600">(required)</span> : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+5) FILE: client/scripts/qa.sh  (NEW quick check – optional)
+#!/usr/bin/env bash
+set -e
+echo "== Catalog (expects 200 via legacy fallback) =="; curl -sS /api/lender-products | jq '.products|length'
+echo "== Recommendations (US $100k) =="; node -e 'import("./src/lib/api.ts").then(async m=>console.log((await m.recommendProducts({amount:100000,country:"US"})).map(x=>[x.category,x.products.length])))'
+echo "== Docs fallback =="; curl -sS -X POST /api/required-docs -H 'Content-Type: application/json' -d '{"category":"Working Capital"}' | jq '.status? // "fallback"'
+
+
+AFTER PASTE:
+• Delete any older duplicates you may still have:
+  - client/src/lib/catalog.ts
+  - client/src/types/enhancedLenderProduct.ts
+  - client/src/lib/finalizedLenderSync.ts
+• npm run build && reload the browser.
+```
+
+```txt
+[STAFF APP]
+
+Goal: Stop 404s on Marketing → Google Ads and provide OAuth + accounts/campaigns + AI helpers (copy/audience/budget).
+
+1) .env (ensure secrets exist)
+GADS_DEVELOPER_TOKEN=__FILL_ME__
+GADS_OAUTH_CLIENT_ID=__FILL_ME__
+GADS_OAUTH_CLIENT_SECRET=__FILL_ME__
+GADS_LOGIN_CUSTOMER_ID=__MANAGER_ID_NO_DASHES__
+APP_BASE_URL=https://staff.boreal.financial
+OPENAI_API_KEY=__FILL_ME__
+# Optional
+GADS_REFRESH_TOKEN=
+
+2) FILE: server/boot.ts  (ADD MOUNT BEFORE STRICT AUTH)
+import googleAds from "./routes/google-ads.mjs";
+app.use(googleAds);
+
+3) FILE: server/routes/google-ads.mjs  (CREATE – full OAuth + endpoints)
+# Use the exact file provided in my previous message. Paste it verbatim.
+
+4) Optional UI hook-up:
+- Add a simple page at staff/src/pages/marketing/GoogleAds.tsx (from my previous message) and route:
+  { path: "/staff/marketing/google-ads", element: <GoogleAds /> }
+
+AFTER PASTE:
+• Restart staff app. Visit /api/ads/google/status (should show {connected:false/true}).
+• Click “Connect Google Ads Account” → complete OAuth → status becomes connected.
+• /api/ads/google/accounts and /api/ads/google/campaigns?customerId=XXXX should return data.
+• AI helpers: POST to /api/ads/google/ai/copy | /ai/audiences | /ai/budget.
+```
+
+**Why this fixes your blank screen + duplicates:**
+
+* Removes the top-level `await` that blocked React from mounting.
+* Enforces a single `listDocuments` + single canonical fetch path.
+* Normalizes both legacy and catalog product shapes to avoid Step 2/5 drift.
+* Staff Ads endpoints eliminate the 404 spam and enable the AI features you asked for.
+
+If anything still throws in the console after this, tell me the first red error line and the file path—I’ll zero in on it.

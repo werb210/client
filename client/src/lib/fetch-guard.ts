@@ -11,3 +11,5 @@ if (import.meta.env.DEV) {
   // eslint-disable-next-line no-console
   console.info("[fetch-guard] dev external fetch blocking is ACTIVE");
 }
+
+export {}; // Make this a module
