@@ -75,12 +75,12 @@
             if (finalId) {
                 log('✅ Final result: Step 4 → Step 6 flow WORKS');
                 log('   ApplicationId available: ' + finalId);
-//                 log('   SignNow would work');
+                log('   SignNow would work');
                 log('   No error panel');
             } else {
                 log('❌ Final result: Step 4 → Step 6 flow BROKEN');
                 log('   No applicationId available');
-//                 log('   SignNow would fail');
+                log('   SignNow would fail');
                 log('   Error panel would appear');
             }
             

@@ -954,11 +954,11 @@ app.use((req, res, next) => {
     }
   });
 
-//   // Step 6: SignNow Initiation endpoint
+  // Step 6: SignNow Initiation endpoint
   app.post('/api/public/signnow/initiate/:applicationId', async (req, res) => {
     try {
       const { applicationId } = req.params;
-//       console.log(`📝 [SERVER] Step 6: Initiating SignNow for application ${applicationId}`);
+      console.log(`📝 [SERVER] Step 6: Initiating SignNow for application ${applicationId}`);
       
       const response = await fetch(`${cfg.staffApiUrl}/api/public/signnow/initiate/${applicationId}`, {
         method: 'POST',
@@ -970,16 +970,16 @@ app.use((req, res, next) => {
         body: JSON.stringify(req.body)
       });
       
-//       console.log(`📝 [SERVER] Staff backend SignNow response: ${response.status} ${response.statusText}`);
+      console.log(`📝 [SERVER] Staff backend SignNow response: ${response.status} ${response.statusText}`);
       
       if (!response.ok) {
         const errorData = await response.text();
-//         console.error('❌ [SERVER] Staff backend SignNow error:', errorData);
+        console.error('❌ [SERVER] Staff backend SignNow error:', errorData);
         
         // NO FALLBACK - Return error status  
         res.status(503).json({
           status: 'error',
-//           error: 'SignNow service unavailable',
+          error: 'SignNow service unavailable',
           message: 'Document signing service is temporarily unavailable. Please try again later.',
           applicationId: applicationId
         });
@@ -987,16 +987,16 @@ app.use((req, res, next) => {
       }
       
       const data = await response.json();
-//       console.log('✅ [SERVER] Staff backend SignNow success:', data);
+      console.log('✅ [SERVER] Staff backend SignNow success:', data);
       
       res.json(data);
     } catch (error) {
-//       console.error('❌ [SERVER] SignNow initiation failed:', error);
+      console.error('❌ [SERVER] SignNow initiation failed:', error);
       
       // NO FALLBACK - Return error status
       res.status(503).json({
         status: 'error',
-//         error: 'SignNow service unavailable',
+        error: 'SignNow service unavailable',
         message: 'Document signing service is temporarily unavailable. Please try again later.',
         applicationId: req.params.applicationId
       });
@@ -1005,7 +1005,7 @@ app.use((req, res, next) => {
 
 
 
-//   // SignNow signing status endpoint for Step 6
+  // SignNow signing status endpoint for Step 6
   app.get('/api/public/applications/:id/signing-status', async (req, res) => {
     try {
       const { id } = req.params;
@@ -1028,7 +1028,7 @@ app.use((req, res, next) => {
         // NO FALLBACK - Return error status
         res.status(503).json({
           status: 'error',
-//           error: 'SignNow service unavailable',
+          error: 'SignNow service unavailable',
           message: 'Document signing service is temporarily unavailable. Please try again later.',
           applicationId: id
         });
@@ -1045,7 +1045,7 @@ app.use((req, res, next) => {
       // NO FALLBACK - Return error status
       res.status(503).json({
         status: 'error',
-//         error: 'SignNow service unavailable',
+        error: 'SignNow service unavailable',
         message: 'Document signing service is temporarily unavailable. Please try again later.',
         applicationId: req.params.id
       });
@@ -1089,12 +1089,12 @@ app.use((req, res, next) => {
     }
   });
 
-//   // SignNow signature status polling endpoint
-//   // Fixed SignNow polling endpoint as specified
+  // SignNow signature status polling endpoint
+  // Fixed SignNow polling endpoint as specified
   app.get('/api/public/signnow/status/:applicationId', async (req, res) => {
     try {
       const { applicationId } = req.params;
-//       console.log(`📡 [SERVER] Polling SignNow status for application ${applicationId}`);
+      console.log(`📡 [SERVER] Polling SignNow status for application ${applicationId}`);
       
       const response = await fetch(`${cfg.staffApiUrl}/public/signnow/status/${applicationId}`, {
         method: 'GET',
@@ -1104,16 +1104,16 @@ app.use((req, res, next) => {
         }
       });
       
-//       console.log(`📡 [SERVER] Staff backend SignNow polling response: ${response.status} ${response.statusText}`);
+      console.log(`📡 [SERVER] Staff backend SignNow polling response: ${response.status} ${response.statusText}`);
       
       if (!response.ok) {
         const errorData = await response.text();
-//         console.warn('⚠️ [SERVER] Staff backend SignNow polling error:', errorData);
+        console.warn('⚠️ [SERVER] Staff backend SignNow polling error:', errorData);
         
         // NO FALLBACK - Return error status
         res.status(503).json({
           status: 'error',
-//           error: 'SignNow service unavailable',
+          error: 'SignNow service unavailable',
           message: 'Document signing service is temporarily unavailable. Please try again later.',
           applicationId: applicationId
         });
@@ -1121,7 +1121,7 @@ app.use((req, res, next) => {
       }
       
       const data = await response.json();
-//       console.log('📡 [SERVER] Staff backend SignNow polling success:', data);
+      console.log('📡 [SERVER] Staff backend SignNow polling success:', data);
       
       // Return response with guaranteed status field
       const responseData = {
@@ -1133,12 +1133,12 @@ app.use((req, res, next) => {
       
       res.json(responseData);
     } catch (error) {
-//       console.warn('⚠️ [SERVER] SignNow status polling failed:', error);
+      console.warn('⚠️ [SERVER] SignNow status polling failed:', error);
       
       // NO FALLBACK - Return error status
       res.status(503).json({
         status: 'error',
-//         error: 'SignNow service unavailable',
+        error: 'SignNow service unavailable',
         message: 'Document signing service is temporarily unavailable. Please try again later.',
         applicationId: req.params.applicationId
       });
@@ -2368,22 +2368,22 @@ app.use((req, res, next) => {
     }
   });
 
-//   // SignNow CORS Preflight Handler
+  // SignNow CORS Preflight Handler
   app.options('/api/applications/:id/signnow', (req, res) => {
-//     console.log(`[SIGNNOW] CORS preflight for ${req.params.id} from origin:`, req.headers.origin);
+    console.log(`[SIGNNOW] CORS preflight for ${req.params.id} from origin:`, req.headers.origin);
     res.status(204).end();
   });
 
-//   // SignNow API Proxy - Route to Staff Backend
+  // SignNow API Proxy - Route to Staff Backend
   app.get('/api/applications/:id/signnow', async (req, res) => {
     try {
       const { id } = req.params;
       const staffApiUrl = cfg.staffApiUrl + '/api';
       
       // Enhanced logging for CORS and request debugging
-//       console.log(`[SIGNNOW] Incoming request headers.origin:`, req.headers.origin);
-//       console.log(`[SIGNNOW] Routing GET /api/applications/${id}/signnow to staff backend`);
-//       console.log(`[SIGNNOW] Target URL: ${staffApiUrl}/applications/${id}/signnow`);
+      console.log(`[SIGNNOW] Incoming request headers.origin:`, req.headers.origin);
+      console.log(`[SIGNNOW] Routing GET /api/applications/${id}/signnow to staff backend`);
+      console.log(`[SIGNNOW] Target URL: ${staffApiUrl}/applications/${id}/signnow`);
       
       const response = await fetch(`${staffApiUrl}/applications/${id}/signnow`, {
         method: 'GET',
@@ -2399,16 +2399,16 @@ app.use((req, res, next) => {
       
       if (response.ok && isJson) {
         const data = await response.json();
-// //         console.log(`[SIGNNOW] ✅ Staff backend returned SignNow data for application ${id}`);
+        console.log(`[SIGNNOW] ✅ Staff backend returned SignNow data for application ${id}`);
         res.json(data);
       } else {
-//         console.log(`[SIGNNOW] Staff backend error (${response.status}) for application ${id}`);
-//         console.log(`[SIGNNOW] Content-Type: ${contentType}, isJson: ${isJson}`);
+        console.log(`[SIGNNOW] Staff backend error (${response.status}) for application ${id}`);
+        console.log(`[SIGNNOW] Content-Type: ${contentType}, isJson: ${isJson}`);
         
         // NO FALLBACK - Return error status
         res.status(503).json({
           status: 'error',
-//           error: 'SignNow service unavailable',
+          error: 'SignNow service unavailable',
           message: 'Document signing service is temporarily unavailable. Please try again later.',
           applicationId: id
         });
@@ -2421,17 +2421,17 @@ app.use((req, res, next) => {
         });
       }
     } catch (error) {
-//       console.error(`[SIGNNOW] ❌ Connection failed for application ${req.params.id}:`, error);
+      console.error(`[SIGNNOW] ❌ Connection failed for application ${req.params.id}:`, error);
       
       // If the error is because staff backend returned HTML (404 page), activate emergency solution
       if (error instanceof Error && error.message.includes('Unexpected token')) {
-//         console.log(`[SIGNNOW] 🔧 Staff backend returned HTML (likely 404), activating emergency solution...`);
+        console.log(`[SIGNNOW] 🔧 Staff backend returned HTML (likely 404), activating emergency solution...`);
         
         const templateId = 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5';
         const signNowDocId = `doc_${req.params.id}_${Date.now()}`;
         const signingUrl = `https://app.signnow.com/webapp/document/${signNowDocId}/invite?token=temp_${templateId.slice(0, 8)}`;
         
-// //         console.log(`[SIGNNOW] ✅ Generated working SignNow URL for application ${req.params.id}`);
+        console.log(`[SIGNNOW] ✅ Generated working SignNow URL for application ${req.params.id}`);
         
         return res.json({
           success: true,
@@ -2453,7 +2453,7 @@ app.use((req, res, next) => {
     }
   });
 
-//   // Signing status endpoint - proper SignNow API v2 integration
+  // Signing status endpoint - proper SignNow API v2 integration
   app.get('/api/public/applications/:id/signing-status', async (req, res) => {
     try {
       const { id } = req.params;
@@ -2576,7 +2576,7 @@ app.use((req, res, next) => {
     }
   });
 
-//   // Legacy SignNow endpoint (for compatibility)
+  // Legacy SignNow endpoint (for compatibility)
   app.post('/api/signnow/create', async (req, res) => {
     try {
       const { applicationId } = req.body;
@@ -2585,7 +2585,7 @@ app.use((req, res, next) => {
       }
       
       const staffApiUrl = cfg.staffApiUrl + '/api';
-//       console.log(`[SIGNNOW] Legacy route - redirecting to /api/applications/${applicationId}/signnow`);
+      console.log(`[SIGNNOW] Legacy route - redirecting to /api/applications/${applicationId}/signnow`);
       
       const response = await fetch(`${staffApiUrl}/applications/${applicationId}/signnow`, {
         method: 'POST',
@@ -2603,20 +2603,20 @@ app.use((req, res, next) => {
       
       if (response.ok) {
         const data = await response.json();
-//         console.log(`[SIGNNOW] ✅ Legacy route success for application ${applicationId}`);
+        console.log(`[SIGNNOW] ✅ Legacy route success for application ${applicationId}`);
         res.json(data);
       } else {
-//         console.log(`[SIGNNOW] Legacy route error (${response.status}) for application ${applicationId}`);
+        console.log(`[SIGNNOW] Legacy route error (${response.status}) for application ${applicationId}`);
         
-//         // TEMPORARY WORKING SOLUTION: Generate functional SignNow response
+        // TEMPORARY WORKING SOLUTION: Generate functional SignNow response
         if (response.status === 404 || response.status === 501 || response.status === 500) {
-// //           console.log(`[SIGNNOW] 🔧 Legacy route generating temporary SignNow document...`);
+          console.log(`[SIGNNOW] 🔧 Legacy route generating temporary SignNow document...`);
           
           const templateId = req.body.templateId || 'e7ba8b894c644999a7b38037ea66f4cc9cc524f5';
           const signNowDocId = `doc_${applicationId}_${Date.now()}`;
           const signingUrl = `https://app.signnow.com/webapp/document/${signNowDocId}/invite?token=temp_${templateId.slice(0, 8)}`;
           
-// //           console.log(`[SIGNNOW] ✅ Legacy route generated working SignNow URL for application ${applicationId}`);
+          console.log(`[SIGNNOW] ✅ Legacy route generated working SignNow URL for application ${applicationId}`);
           
           res.json({
             success: true,
@@ -2634,15 +2634,15 @@ app.use((req, res, next) => {
         res.status(response.status).json({
           error: `Staff backend returned ${response.status}`,
           applicationId,
-//           message: 'SignNow API error - check staff backend configuration'
+          message: 'SignNow API error - check staff backend configuration'
         });
       }
     } catch (error) {
-//       console.error(`[SIGNNOW] ❌ Legacy route failed:`, error);
+      console.error(`[SIGNNOW] ❌ Legacy route failed:`, error);
       res.status(502).json({
         error: 'Staff backend connection failed',
         details: error instanceof Error ? error.message : 'Connection failed',
-//         endpoint: 'SignNow API proxy'
+        endpoint: 'SignNow API proxy'
       });
     }
   });

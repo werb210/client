@@ -14,12 +14,12 @@ export const cfg = {
   
   // Authentication Tokens
   clientToken: process.env.VITE_CLIENT_APP_SHARED_TOKEN || process.env.CLIENT_APP_SHARED_TOKEN!,
-//   signNowToken: process.env.SIGNNOW_API_KEY!,
+  signNowToken: process.env.SIGNNOW_API_KEY!,
   clientSyncSecret: process.env.CLIENT_SYNC_SECRET || 'dev_sync_secret_2024',
   
-//   // SignNow Configuration  
+  // SignNow Configuration  
   templateId: process.env.TEMPLATE_ID_PROD,
-//   signNowRedirectUrl: process.env.VITE_SIGNNOW_REDIRECT_URL || 'https://clientportal.boreal.financial/step6-signature',
+  signNowRedirectUrl: process.env.VITE_SIGNNOW_REDIRECT_URL || 'https://clientportal.boreal.financial/step6-signature',
   
   // Server Configuration
   port: parseInt(process.env.PORT || '5000', 10),
@@ -42,7 +42,7 @@ if (cfg.nodeEnv === 'production') {
   const requiredSecrets = {
     CLIENT_APP_SHARED_TOKEN: cfg.clientToken,
     // CLIENT_SYNC_SECRET: cfg.clientSyncSecret, // Optional in development
-//     // SIGNNOW_API_KEY: cfg.signNowToken // Temporarily disabled for deployment
+    // SIGNNOW_API_KEY: cfg.signNowToken // Temporarily disabled for deployment
   };
   
   for (const [secretName, value] of Object.entries(requiredSecrets)) {
@@ -64,7 +64,7 @@ if (cfg.nodeEnv === 'development') {
     console.warn('⚠️  CLIENT_APP_SHARED_TOKEN not set - API calls may fail');
   }
   if (!cfg.signNowToken) {
-// //     console.warn('⚠️  SIGNNOW_API_KEY not set - SignNow integration unavailable');
+    console.warn('⚠️  SIGNNOW_API_KEY not set - SignNow integration unavailable');
   }
 }
 
