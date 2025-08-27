@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+# CLIENT E2E TRUTH CHECKS — Verifies Step 2 (constraints) & Step 5 (docs) use Staff V1.
+# Fails with exit code 1 if any gating check fails.
+# Requirements: curl, jq
+
+set -euo pipefail
+need(){ command -v "$1" >/dev/null || { echo "Missing $1"; exit 1; }; }
+need curl; need jq
+
+CLIENT_BASE="${CLIENT_BASE:-http://localhost:5000}"
+STAFF_BASE="${STAFF_BASE:-https://staff.boreal.financial}"
+
+pass=0; fail=0
+ok(){ echo "✅ $*"; ((pass++)); }
+bad(){ echo "❌ $*"; ((fail++)); }
+
+# --- 0) Pull fresh data into the client cache (idempotent) ---
+for ep in "$CLIENT_BASE/internal/pull-staff-products" "$CLIENT_BASE/pull-products"; do
+  curl -sS -X POST "$ep" -H 'content-type: application/json' -d '{}' >/dev/null || true
+done
+
+# --- 1) Snapshot Staff truth & Client canonical ---
+S_RAW="$(curl -fsS "$STAFF_BASE/api/v1/products")" || { echo "Cannot reach Staff V1"; exit 1; }
+C_RAW="$(curl -fsS "$CLIENT_BASE/api/v1/products")" || { echo "Cannot reach Client V1"; exit 1; }
+
+S_LIST="$S_RAW"   # Staff V1 is a direct array per your reports
+C_LIST="$C_RAW"   # Client V1 returns canonical array
+
+S_TOT=$(echo "$S_LIST" | jq 'length')
+C_TOT=$(echo "$C_LIST" | jq 'length')
+
+# --- 2) Distribution must mirror Staff (17 CA / 25 US / 42 total) ---
+S_CA=$(echo "$S_LIST" | jq '[.[]|select(.countryOffered=="CA")]|length')
+S_US=$(echo "$S_LIST" | jq '[.[]|select(.countryOffered=="US")]|length')
+C_CA=$(echo "$C_LIST" | jq '[.[]|select(.country=="CA")]|length')
+C_US=$(echo "$C_LIST" | jq '[.[]|select(.country=="US")]|length')
+
+echo "Staff:  CA=$S_CA US=$S_US Total=$S_TOT"
+echo "Client: CA=$C_CA US=$C_US Total=$C_TOT"
+
+if [[ "$C_CA" -eq "$S_CA" && "$C_US" -eq "$S_US" && "$C_TOT" -eq "$S_TOT" ]]; then
+  ok "Client catalog mirrors Staff V1 distribution."
+else
+  bad "Client catalog diverges from Staff V1 distribution."
+fi
+
+# --- helpers to pick products by capability ---
+pick_by(){ # $1=jq filter on Staff list -> product id
+  echo "$S_LIST" | jq -r "$1 | .id" | head -n 1
+}
+
+#  country test candidate (prefer US, else CA)
+PID_COUNTRY="$(pick_by '.[] | select(.countryOffered=="US")')"
+[[ -z "$PID_COUNTRY" || "$PID_COUNTRY" == "null" ]] && PID_COUNTRY="$(pick_by '.[] | select(.countryOffered=="CA")')"
+
+# TIB / Revenue / Amount / Docs candidates
+PID_TIB="$(pick_by '.[] | select((.min_time_in_business//0) > 0)')"
+PID_REV="$(pick_by '.[] | select((.min_monthly_revenue//0) > 0)')"
+PID_AMT="$(pick_by '.[] | select((.minimumLendingAmount!=null) and (.maximumLendingAmount!=null) and (.maximumLendingAmount>.minimumLendingAmount))')"
+PID_DOC="$(pick_by '.[] | select((.required_documents|type)=="array" and (.required_documents|length)>0)')"
+PID_DOC_EMPTY="$(pick_by '.[] | select((.required_documents|type)=="array" and (.required_documents|length)==0)')"
+
+# --- 3) STEP 2 — Country gating must reject cross-country, accept same-country ---
+if [[ -n "$PID_COUNTRY" && "$PID_COUNTRY" != "null" ]]; then
+  S_COUNTRY=$(echo "$S_LIST" | jq -r --arg id "$PID_COUNTRY" '.[]|select(.id==$id)|.countryOffered')
+  WRONG=$( [[ "$S_COUNTRY" == "US" ]] && echo "CA" || echo "US" )
+
+  # expect rejection when country mismatches
+  R_BAD=$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake" \
+           -H 'content-type: application/json' \
+           -d "$(jq -n --arg pid "$PID_COUNTRY" --arg c "$WRONG" '{product_id:$pid, country:$c, amount:25000, timeInBusinessMonths:12, monthlyRevenue:5000, industry:"Technology"}')" )
+  if [[ "$(echo "$R_BAD" | jq -r '.ok // false')" == "false" ]]; then
+    ok "Step 2 rejects country mismatch ($WRONG vs $S_COUNTRY)."
+  else
+    bad "Step 2 failed to reject country mismatch."
+  fi
+
+  # expect acceptance when country matches (with generous values)
+  R_OK=$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake" \
+           -H 'content-type: application/json' \
+           -d "$(jq -n --arg pid "$PID_COUNTRY" --arg c "$S_COUNTRY" '{product_id:$pid, country:$c, amount:25000, timeInBusinessMonths:120, monthlyRevenue:999999, industry:"Technology"}')" )
+  if [[ "$(echo "$R_OK" | jq -r '.ok // false')" == "true" ]]; then
+    ok "Step 2 accepts same-country submissions."
+  else
+    bad "Step 2 failed to accept same-country submission."
+  fi
+else
+  bad "No product found for country gating test."
+fi
+
+# --- 4) STEP 2 — Time-in-business rule (if present) ---
+if [[ -n "$PID_TIB" && "$PID_TIB" != "null" ]]; then
+  REQ_TIB=$(echo "$S_LIST" | jq -r --arg id "$PID_TIB" '.[]|select(.id==$id)|.min_time_in_business')
+  CTRY=$(echo "$S_LIST" | jq -r --arg id "$PID_TIB" '.[]|select(.id==$id)|.countryOffered')
+  LOW=$((REQ_TIB>0 ? REQ_TIB-1 : 0))
+  HIGH=$((REQ_TIB))
+
+  R_LOW=$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake" \
+           -H 'content-type: application/json' \
+           -d "$(jq -n --arg pid "$PID_TIB" --arg c "$CTRY" --argjson tib "$LOW" '{product_id:$pid,country:$c,amount:25000,timeInBusinessMonths:$tib,monthlyRevenue:999999,industry:"Tech"}')" )
+  [[ "$(echo "$R_LOW" | jq -r '.ok // false')" == "false" ]] && ok "Step 2 enforces min_time_in_business (rejects $LOW < $REQ_TIB)" || bad "TIB reject failed"
+
+  R_HIGH=$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake" \
+           -H 'content-type: application/json' \
+           -d "$(jq -n --arg pid "$PID_TIB" --arg c "$CTRY" --argjson tib "$HIGH" '{product_id:$pid,country:$c,amount:25000,timeInBusinessMonths:$tib,monthlyRevenue:999999,industry:"Tech"}')" )
+  [[ "$(echo "$R_HIGH" | jq -r '.ok // false')" == "true" ]] && ok "Step 2 accepts when TIB >= $REQ_TIB" || bad "TIB accept failed"
+else
+  echo "ℹ️ No product with min_time_in_business found — skipping TIB check."
+fi
+
+# --- 5) STEP 2 — Monthly revenue rule (if present) ---
+if [[ -n "$PID_REV" && "$PID_REV" != "null" ]]; then
+  REQ_REV=$(echo "$S_LIST" | jq -r --arg id "$PID_REV" '.[]|select(.id==$id)|.min_monthly_revenue')
+  CTRY=$(echo "$S_LIST" | jq -r --arg id "$PID_REV" '.[]|select(.id==$id)|.countryOffered')
+  LOW=$(( (${REQ_REV%.*})>0 ? ${REQ_REV%.*}-1 : 0 ))
+  HIGH=$(( ${REQ_REV%.*} ))
+
+  R_LOW=$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake" \
+           -H 'content-type: application/json' \
+           -d "$(jq -n --arg pid "$PID_REV" --arg c "$CTRY" --argjson rev "$LOW" '{product_id:$pid,country:$c,amount:25000,timeInBusinessMonths:120,monthlyRevenue:$rev,industry:"Tech"}')" )
+  [[ "$(echo "$R_LOW" | jq -r '.ok // false')" == "false" ]] && ok "Step 2 enforces min_monthly_revenue (rejects $LOW < $REQ_REV)" || bad "Revenue reject failed"
+
+  R_HIGH=$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake" \
+           -H 'content-type: application/json' \
+           -d "$(jq -n --arg pid "$PID_REV" --arg c "$CTRY" --argjson rev "$HIGH" '{product_id:$pid,country:$c,amount:25000,timeInBusinessMonths:120,monthlyRevenue:$rev,industry:"Tech"}')" )
+  [[ "$(echo "$R_HIGH" | jq -r '.ok // false')" == "true" ]] && ok "Step 2 accepts when revenue >= $REQ_REV" || bad "Revenue accept failed"
+else
+  echo "ℹ️ No product with min_monthly_revenue found — skipping revenue check."
+fi
+
+# --- 6) STEP 2 — Amount range rule (if present) ---
+if [[ -n "$PID_AMT" && "$PID_AMT" != "null" ]]; then
+  MIN=$(echo "$S_LIST" | jq -r --arg id "$PID_AMT" '.[]|select(.id==$id)|.minimumLendingAmount')
+  MAX=$(echo "$S_LIST" | jq -r --arg id "$PID_AMT" '.[]|select(.id==$id)|.maximumLendingAmount')
+  CTRY=$(echo "$S_LIST" | jq -r --arg id "$PID_AMT" '.[]|select(.id==$id)|.countryOffered')
+  BELOW=$(( ${MIN%.*} - 1 )); ABOVE=$(( ${MAX%.*} + 1 )); MID=$(( (${MIN%.*}+${MAX%.*})/2 ))
+
+  rej_below=$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake" \
+               -H 'content-type: application/json' \
+               -d "$(jq -n --arg pid "$PID_AMT" --arg c "$CTRY" --argjson amt "$BELOW" '{product_id:$pid,country:$c,amount:$amt,timeInBusinessMonths:120,monthlyRevenue:999999,industry:"Tech"}')" )
+  [[ "$(echo "$rej_below" | jq -r '.ok // false')" == "false" ]] && ok "Step 2 rejects amount below $MIN" || bad "Amount-below reject failed"
+
+  rej_above=$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake" \
+               -H 'content-type: application/json' \
+               -d "$(jq -n --arg pid "$PID_AMT" --arg c "$CTRY" --argjson amt "$ABOVE" '{product_id:$pid,country:$c,amount:$amt,timeInBusinessMonths:120,monthlyRevenue:999999,industry:"Tech"}')" )
+  [[ "$(echo "$rej_above" | jq -r '.ok // false')" == "false" ]] && ok "Step 2 rejects amount above $MAX" || bad "Amount-above reject failed"
+
+  accept_mid=$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake" \
+                 -H 'content-type: application/json' \
+                 -d "$(jq -n --arg pid "$PID_AMT" --arg c "$CTRY" --argjson amt "$MID" '{product_id:$pid,country:$c,amount:$amt,timeInBusinessMonths:120,monthlyRevenue:999999,industry:"Tech"}')" )
+  [[ "$(echo "$accept_mid" | jq -r '.ok // false')" == "true" ]] && ok "Step 2 accepts amount within [$MIN,$MAX]" || bad "Amount in-range accept failed"
+else
+  echo "ℹ️ No product with non-null min/max amounts — skipping amount checks."
+fi
+
+# --- 7) STEP 5 — Required documents must equal Staff for products that have them ---
+if [[ -n "$PID_DOC" && "$PID_DOC" != "null" ]]; then
+  # Staff docs
+  S_DOCS="$(echo "$S_LIST" | jq -c --arg id "$PID_DOC" '.[]|select(.id==$id)|.required_documents')"
+  # Client docs (canonical)
+  C_DOCS="$(echo "$C_LIST" | jq -c --arg id "$PID_DOC" '.[]|select(.id==$id)|.required_documents')"
+  if [[ "$S_DOCS" == "$C_DOCS" && "$S_DOCS" != "null" ]]; then
+    ok "Step 5 uses Staff required_documents exactly (product $PID_DOC)."
+  else
+    bad "Step 5 docs mismatch for product $PID_DOC.
+Staff:  $S_DOCS
+Client: $C_DOCS"
+  fi
+else
+  echo "ℹ️ No product with non-empty required_documents on Staff — verifying no invention:"
+  # Ensure client does not invent docs when Staff provides []
+  EMPTY_MISM=$(jq -n --argjson S "$S_LIST" --argjson C "$C_LIST" '
+    [ $S[] as $s
+      | select(($s.required_documents|type)=="array" and ($s.required_documents|length)==0)
+      | $C[] | select(.id==$s.id)
+      | select((.required_documents|type)=="array" and (.required_documents|length)>0)
+    ] | length')
+  if [[ "$EMPTY_MISM" -eq 0 ]]; then
+    ok "Client does not invent documents when Staff provides empty []."
+  else
+    bad "Client invented documents for some products where Staff has []."
+  fi
+fi
+
+echo
+[[ $fail -eq 0 ]] && { echo "✅ READY FOR GO-LIVE: All gating checks passed ($pass/$(($pass+$fail)))."; exit 0; } \
+                  || { echo "❌ BLOCK GO-LIVE: $fail checks failed ($pass/$(($pass+$fail))) — fix before launch."; exit 1; }
