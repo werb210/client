@@ -6,7 +6,7 @@ type Props = {
   onSelectProduct?: (p: any) => void;
 };
 
-export default function Step2RecommendationEngine({ intake, onSelectProduct }: Props) {
+function Step2RecommendationEngine({ intake, onSelectProduct }: Props) {
   const [groups, setGroups] = React.useState<CategoryRecommendation[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
@@ -50,3 +50,6 @@ export default function Step2RecommendationEngine({ intake, onSelectProduct }: P
     </div>
   );
 }
+
+export default Step2RecommendationEngine;
+export { Step2RecommendationEngine };
