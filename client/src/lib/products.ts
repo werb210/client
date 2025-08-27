@@ -1,3 +1,5 @@
+import { withDiagUrl, wantDiag, mergeClientProv, summarizeProv, downloadJSON } from "./diag";
+
 export type CanonicalProduct = {
   id: string;
   name: string;
@@ -51,14 +53,29 @@ function fromLegacy(p:any): CanonicalProduct {
 export async function fetchProducts(): Promise<CanonicalProduct[]> {
   // v1 first
   try {
-    const r = await fetch("/api/v1/products", { credentials: "include" });
+    const r = await fetch(withDiagUrl("/api/v1/products"), { credentials: "include" });
     if (r.ok) {
       const j = await r.json();
       if (Array.isArray(j)) return j.map(fromV1);
     }
   } catch {}
   // legacy fallback
-  const r2 = await fetch("/api/lender-products");
+  const r2 = await fetch(withDiagUrl("/api/lender-products"));
   const j2 = await r2.json();
   return (j2.products ?? []).map(fromLegacy);
+}
+
+/** QA helper: pulls staff products with ?diag=1 (if enabled) and logs provenance. */
+export async function qaProvenance(): Promise<void> {
+  try {
+    const url = withDiagUrl("/api/lender-products"); // your client fetch proxy -> staff
+    const res = await fetch(url, { credentials: "include" });
+    const list = await res.json(); // legacy array
+    if (!Array.isArray(list)) { console.warn("Unexpected shape", list); return; }
+    const counts = summarizeProv(list);
+    if (typeof window !== 'undefined') {
+      console.table(counts);
+      if (wantDiag()) downloadJSON("client_provenance_legacy.json", { counts, sample: list.slice(0,5) });
+    }
+  } catch (e) { console.warn("qaProvenance error", e); }
 }
