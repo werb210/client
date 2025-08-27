@@ -10,9 +10,9 @@ if (import.meta?.env?.PROD) {
   console.debug = () => {};
 }
 
-// Block external fetch calls in dev only
+// Block external fetch calls in dev only - moved to avoid top-level await
 if (import.meta.env.DEV) {
-  await import("./lib/fetch-guard");
+  import("./lib/fetch-guard").catch(console.warn);
 }
 import "./lib/quiet-console";
 
