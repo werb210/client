@@ -216,22 +216,15 @@ export function MainLayout() {
 /* commented route */
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-/* commented route */
-
+      <Route path="/apply/step-1" component={Step1FinancialProfile} />
+      <Route path="/apply/step-2" component={Step2RecommendationsRoute} />
+      <Route path="/apply/step-3" component={Step3BusinessDetailsComplete} />
+      <Route path="/apply/step-4" component={() => <Suspense fallback={<div>Loading...</div>}><Step4ApplicantInfoComplete /></Suspense>} />
+      <Route path="/apply/step-5" component={() => <Suspense fallback={<div>Loading...</div>}><Step5DocumentUpload /></Suspense>} />
+      <Route path="/apply/step-6" component={() => <Suspense fallback={<div>Loading...</div>}><Step6TypedSignature /></Suspense>} />
       
       {/* Dashboard */}
-/* commented route */
+      <Route path="/dashboard" component={SimpleDashboard} />
       
       {/* Staff Application Routes */}
 /* commented route */
@@ -322,7 +315,8 @@ export function MainLayout() {
 /* commented route */
       
       {/* Default Route - Landing Page */}
-      <Route component={LandingPage} />
+      <Route path="/" component={LandingPage} />
+      <Route component={NotFound} />
       </Switch>
       </Suspense>
       
