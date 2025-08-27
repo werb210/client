@@ -24,7 +24,7 @@ import { StepHeader } from '@/components/StepHeader';
 import { getDocumentRequirementsAggregation } from '@/lib/documentAggregation';
 import { normalizeDocumentName } from '@shared/documentTypes';
 import { getStoredApplicationId, validateApplicationIdForAPI } from '@/lib/uuidUtils';
-import { listDocuments } from '@/lib/api';
+import { listDocuments, getRequiredDocuments } from '@/lib/api';
 
 import { useDebouncedCallback } from 'use-debounce';
 
@@ -141,7 +141,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
 
       try {
         console.log(`📂 [STEP5-RELOAD] Fetching uploaded documents for application ${applicationId}`);
-        const uploadedDocs = await listDocuments({ category: 'Working Capital', country: 'US' });
+        const uploadedDocs = await getRequiredDocuments(applicationId);
         const response = { ok: true, status: 200 }; // Wrapper handles errors
         
         // Wrapper handles errors, uploadedDocs is already parsed

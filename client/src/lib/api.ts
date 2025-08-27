@@ -194,3 +194,31 @@ export async function listDocuments(input: RequiredDocsInput): Promise<RequiredD
   const cat = input.category ?? "Working Capital";
   return normalizeDocs(DOCS_FALLBACK[cat] ?? DOCS_FALLBACK["Working Capital"]);
 }
+
+// ---- Staff App Integration Endpoints -----------------------------------------------
+
+export const createApplication = async (data: FormData) => {
+  const res = await fetch(`/api/applications`, {
+    method: "POST",
+    body: data,
+    credentials: "include"
+  });
+  if (!res.ok) throw new Error("Failed to create application");
+  return res.json();
+};
+
+export const getRecommendations = async (id: string) => {
+  const res = await fetch(`/api/applications/${id}/recommendations`, {
+    credentials: "include"
+  });
+  if (!res.ok) throw new Error("Failed to get recommendations");
+  return res.json();
+};
+
+export const getRequiredDocuments = async (id: string) => {
+  const res = await fetch(`/api/applications/${id}/required-documents`, {
+    credentials: "include"
+  });
+  if (!res.ok) throw new Error("Failed to fetch required documents");
+  return res.json();
+};

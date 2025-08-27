@@ -1,0 +1,70 @@
+# ==============================================================
+# CLIENT APP OIB — FIX FORM CONTINUITY & DOCUMENT API HANDOFF
+# ==============================================================
+# GOAL:
+# 1. Remove all hardcoded fields in Steps 1 & 2.
+# 2. Ensure Step 1 data → Step 2 recommendation engine.
+# 3. Ensure Steps 1–4 → Step 5 required documents builder.
+# 4. Use correct API: POST /api/applications + /documents/upload.
+# ==============================================================
+
+# ==== FILES TO UPDATE ====
+# Client App Repo: https://github.com/werb210/client
+src/routes/Step1_BusinessBasics.tsx
+src/routes/Step2_LenderRecommendations.tsx
+src/routes/Step3_ApplicantInfo.tsx
+src/routes/Step4_FinancialDetails.tsx
+src/routes/Step5_DocumentUpload.tsx
+src/utils/api.ts
+
+# ==== PATCH ====
+# 1. In Step1_BusinessBasics.tsx:
+#    - Collect all inputs into a single FormData object.
+#    - Save returned `applicationId` in global state.
+
+# 2. In Step2_LenderRecommendations.tsx:
+#    - Remove static lender data.
+#    - Call /api/applications/:id/recommendations using saved `applicationId`.
+#    - Display dynamic lender recommendations.
+
+# 3. In Step5_DocumentUpload.tsx:
+#    - Fetch required document list from:
+#      GET /api/applications/:id/required-documents
+#    - Render each required doc type dynamically.
+
+# 4. Update api.ts to use correct Staff App endpoints:
+export const createApplication = async (data: FormData) => {
+  const res = await fetch(`/api/applications`, {
+    method: "POST",
+    body: data,
+    credentials: "include"
+  });
+  if (!res.ok) throw new Error("Failed to create application");
+  return res.json();
+};
+
+export const getRecommendations = async (id: string) => {
+  const res = await fetch(`/api/applications/${id}/recommendations`, {
+    credentials: "include"
+  });
+  if (!res.ok) throw new Error("Failed to get recommendations");
+  return res.json();
+};
+
+export const getRequiredDocuments = async (id: string) => {
+  const res = await fetch(`/api/applications/${id}/required-documents`, {
+    credentials: "include"
+  });
+  if (!res.ok) throw new Error("Failed to fetch required documents");
+  return res.json();
+};
+
+# ==== RESTART ====
+npm run build
+npm run preview
+
+# ==== VERIFICATION ====
+# 1. Complete Step 1 form → confirm valid `applicationId` returned.
+# 2. Check Step 2 → dynamic recommendations populate.
+# 3. Verify Step 5 renders the required document list based on prior steps.
+# 4. Upload docs → confirm files go to S3 (Staff App API).
