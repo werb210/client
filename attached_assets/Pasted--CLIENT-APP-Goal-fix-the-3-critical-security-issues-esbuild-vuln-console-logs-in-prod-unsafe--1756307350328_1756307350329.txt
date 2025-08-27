@@ -1,0 +1,178 @@
+\[CLIENT APP]
+
+Goal: fix the 3 critical security issues (esbuild vuln, console logs in prod, unsafe innerHTML) and ship a clean, production-safe build.
+
+1. FILE: package.json  (EDIT)
+
+* Pin esbuild ≥0.24.3 via **overrides** (npm) and add a small security script.
+
+```json
+{
+  "overrides": {
+    "esbuild": "^0.24.4",
+    "@esbuild/*": "^0.24.4"
+  },
+  "scripts": {
+    "sec:audit": "npm audit --omit=dev || true",
+    "sec:audit:fix": "npm audit fix --force || true",
+    "sec:check": "node -e \"try{console.log('esbuild',require('esbuild').version)}catch(e){console.log('esbuild not direct dep')};\" && rg -n \"\\binnerHTML\\b\" client/src || true && rg -n \"console\\.(log|debug|info)\\(\" client/src || true"
+  }
+}
+```
+
+2. FILE: vite.config.ts  (EDIT)
+
+* Strip `console.log/info/debug` from **production** bundles and drop comments.
+
+```ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig(({ mode }) => ({
+  plugins: [react()],
+  build: {
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        // keep warn/error; strip the rest
+        pure_funcs: ["console.log", "console.debug", "console.info"]
+      },
+      format: { comments: false }
+    }
+  }
+}));
+```
+
+3. FILE: client/src/lib/console-guard.ts  (CREATE)
+
+* Runtime guard so logs never leak at runtime even if a dev build slips through.
+
+```ts
+// Silences noisy consoles only in production; keeps warn/error for observability.
+if (import.meta.env.PROD) {
+  const noop = () => {};
+  console.log = noop;
+  console.info = noop;
+  console.debug = noop;
+}
+```
+
+4. FILE: client/src/main.tsx  (EDIT)
+
+* Load the guard before anything else mounts.
+
+```ts
+import "./lib/console-guard"; // keep as first import
+// ...existing imports below
+```
+
+5. FILE: client/src/lib/safeHtml.tsx  (CREATE)
+
+* Central, safe replacement for any previous `element.innerHTML = ...`.
+
+```tsx
+import DOMPurify from "dompurify";
+
+export function sanitize(html: string) {
+  return DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true },
+  });
+}
+
+export function setSafeHtml(el: HTMLElement, html: string) {
+  // Prefer text only if you don't need markup
+  if (!/<[a-z][\s\S]*>/i.test(html)) {
+    el.textContent = html;
+    return;
+  }
+  el.innerHTML = sanitize(html);
+}
+
+export function SafeHtml({ html }: { html: string }) {
+  return <div dangerouslySetInnerHTML={{ __html: sanitize(html) }} />;
+}
+```
+
+6. FILE: package.json  (EDIT – add dependency)
+
+```json
+{
+  "dependencies": {
+    "dompurify": "^3.0.8"
+  }
+}
+```
+
+7. FILE: client/scripts/replace-innerhtml.sh  (CREATE)
+
+* One-shot helper to eliminate **all** raw innerHTML writes in your codebase.
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+echo "🔎 Finding innerHTML writes…"
+rg -n "\.innerHTML\s*=" client/src || true
+
+echo "ℹ️ Where markup is required, replace with SafeHtml or setSafeHtml:"
+echo "  // Before: el.innerHTML = html"
+echo "  import { setSafeHtml } from '@/lib/safeHtml'"
+echo "  setSafeHtml(el, html)"
+echo "  // For React render: <SafeHtml html={html} />"
+```
+
+> Run this script, then manually update the listed call sites (PWA widgets, cache manager, etc.) to use `setSafeHtml`/`SafeHtml`.
+
+8. FILE: client/scripts/sec-qa.sh  (CREATE)
+
+* Single command to validate all three fixes.
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+echo "🔐 Security QA…"
+
+echo "1) esbuild version (should be >= 0.24.3):"
+npm ls esbuild || true
+
+echo "2) Build (terser should strip console.*):"
+npm run build >/dev/null 2>&1 || (echo "❌ build failed" && exit 1)
+COUNT=$(rg -o "console\.(log|info|debug)\(" dist -n | wc -l | tr -d ' ')
+echo "   console.* in dist: ${COUNT}"
+test "${COUNT}" -eq 0 && echo "   ✅ no console leaks" || echo "   ❌ console calls remain"
+
+echo "3) innerHTML scan (should be 0 remaining):"
+IH=$(rg -n "\binnerHTML\b" client/src | wc -l | tr -d ' ')
+echo "   innerHTML refs: ${IH}"
+test "${IH}" -eq 0 && echo "   ✅ no unsafe innerHTML" || echo "   ❌ replace remaining with safeHtml helpers"
+
+echo "4) Quick runtime smoke (optional):"
+node -e "console.log('PROD?', process.env.NODE_ENV||'n/a')"
+echo "✅ QA complete"
+```
+
+Make it executable:
+
+```bash
+chmod +x client/scripts/sec-qa.sh client/scripts/replace-innerhtml.sh
+```
+
+9. QUICK CHECKS
+
+```bash
+# update deps and lock esbuild
+npm install
+npm run sec:audit
+npm run sec:audit:fix
+
+# build & verify the three fixes
+./client/scripts/sec-qa.sh
+
+# spot-check a page that used to inject HTML
+rg -n "\binnerHTML\b" client/src        # expect no results
+```
+
+Outcomes:
+• **esbuild** is pinned to a safe version (0.24.4), removing the dev-server exposure.
+• **console.log/info/debug** are stripped from production bundles and no-oped at runtime.
+• All **innerHTML** writes are replaced by `setSafeHtml`/`SafeHtml` (sanitized), eliminating XSS risk.
+• `./client/scripts/sec-qa.sh` reports **0** console leaks and **0** innerHTML occurrences, and a successful production build.
