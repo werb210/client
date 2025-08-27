@@ -3,6 +3,8 @@
  * Handles PWA installation, offline functionality, and push notifications
  */
 
+import { setSafeHtml } from './safeHtml';
+
 // PWA Installation Support
 export class PWAInstaller {
   private deferredPrompt: any = null;
@@ -83,7 +85,7 @@ export class PWAInstaller {
     const prompt = document.createElement('div');
     prompt.id = 'pwa-install-prompt';
     prompt.className = 'fixed bottom-4 left-4 right-4 bg-teal-600 text-white p-4 rounded-lg shadow-lg z-50 flex items-center justify-between';
-    prompt.innerHTML = `
+    setSafeHtml(prompt, `
       <div class="flex items-center space-x-3">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
@@ -100,7 +102,7 @@ export class PWAInstaller {
           </svg>
         </button>
       </div>
-    `;
+    `);
 
     document.body.appendChild(prompt);
 

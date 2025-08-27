@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SafeHtml } from '@/lib/safeHtml';
 import { Search, FileText, MessageSquare, Briefcase, Clock, TrendingUp, ArrowLeft } from "lucide-react";
 
 type SearchResult = { 
@@ -276,9 +277,9 @@ export default function MySearch() {
                           )}
                         </div>
                         {result.snippet && (
-                          <div 
+                          <SafeHtml 
+                            html={result.snippet}
                             className="text-sm text-gray-600 line-clamp-2"
-                            dangerouslySetInnerHTML={{ __html: result.snippet }}
                           />
                         )}
                       </div>

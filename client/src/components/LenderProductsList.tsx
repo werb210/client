@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
 import Play from 'lucide-react/dist/esm/icons/play';
+import { safeOpen } from '@/lib/safeOpen';
 
 interface ProductsByCountry {
   [country: string]: {
@@ -109,7 +110,7 @@ function ProductCard({ product }: { product: LenderProduct }) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.open(product.video_url, '_blank')}
+            onClick={() => safeOpen(product.video_url)}
             className="w-full"
           >
             <Play className="w-4 h-4 mr-2" />

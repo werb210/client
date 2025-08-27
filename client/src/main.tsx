@@ -1,3 +1,4 @@
+import './lib/console-guard';
 // MUST be first so Tailwind base resets apply
 import "./index.css";
 import "./lib/production-console";
