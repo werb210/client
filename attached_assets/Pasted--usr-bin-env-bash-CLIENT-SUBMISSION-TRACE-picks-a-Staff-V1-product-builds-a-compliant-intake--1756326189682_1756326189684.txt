@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# CLIENT SUBMISSION TRACE — picks a Staff V1 product, builds a compliant intake,
+# validates via Client, submits via Client, and saves a machine-readable trace for Staff verification.
+# Requirements: curl, jq
+set -euo pipefail
+need(){ command -v "$1" >/dev/null || { echo "Missing $1"; exit 1; }; }
+need curl; need jq
+
+# Endpoints (override if needed)
+CLIENT_BASE="${CLIENT_BASE:-http://localhost:5000}"
+STAFF_BASE="${STAFF_BASE:-https://staff.boreal.financial}"
+
+# Output bundle consumed by the STAFF script
+TRACE="${TRACE:-/tmp/submission_continuity.json}"
+
+echo "== Fetch Staff V1 catalog (source of truth) =="
+S_RAW="$(curl -fsS "$STAFF_BASE/api/v1/products")"
+S_TOT=$(echo "$S_RAW" | jq 'length')
+echo "Staff products: $S_TOT"
+
+# Prefer a US product (more common), fallback to CA
+PID="$(echo "$S_RAW" | jq -r '[.[]|select(.countryOffered=="US")][0].id // [.[]|select(.countryOffered=="CA")][0].id')"
+[[ -z "$PID" || "$PID" == "null" ]] && { echo "No product found."; exit 1; }
+
+SPROD="$(echo "$S_RAW" | jq --arg id "$PID" -c '.[]|select(.id==$id)')"
+SCNTRY="$(echo "$SPROD" | jq -r '.countryOffered')"
+SMIN="$(echo "$SPROD" | jq -r '.minimumLendingAmount // empty')"
+SMAX="$(echo "$SPROD" | jq -r '.maximumLendingAmount // empty')"
+STIB="$(echo "$SPROD" | jq -r '.min_time_in_business // empty')"
+SREV="$(echo "$SPROD" | jq -r '.min_monthly_revenue // empty')"
+
+# Choose compliant values derived from Staff constraints (no defaults/invention)
+AMOUNT="${AMOUNT:-}"
+if [[ -n "${SMIN:-}" && -n "${SMAX:-}" && "${SMIN//[^0-9]}" != "" && "${SMAX//[^0-9]}" != "" ]]; then
+  AMOUNT="$(( ( ${SMIN%.*:-0} + ${SMAX%.*:-0} ) / 2 ))"
+else
+  AMOUNT="${AMOUNT:-25000}"
+fi
+TIB="${TIB:-$([ -n "${STIB:-}" ] && echo "${STIB%.*}" || echo 120)}"
+REV="${REV:-$([ -n "${SREV:-}" ] && echo "${SREV%.*}" || echo 100000)}"
+INDUSTRY="${INDUSTRY:-Technology}"
+
+echo "== Build intended intake payload (what client SHOULD send) =="
+INTAKE="$(jq -n --arg pid "$PID" --arg c "$SCNTRY" --argjson amt "$AMOUNT" \
+              --argjson tib "$TIB" --argjson rev "$REV" \
+              --arg ind "$INDUSTRY" \
+'{
+  product_id: $pid,
+  country: $c,
+  amount: $amt,
+  timeInBusinessMonths: $tib,
+  monthlyRevenue: $rev,
+  industry: $ind
+}')"
+echo "$INTAKE" | jq .
+
+echo "== Preflight validation via Client (/api/applications/validate-intake) =="
+VRESP="$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake?diag=1" \
+  -H 'content-type: application/json' -d "$INTAKE")"
+echo "$VRESP" | jq .
+[[ "$(echo "$VRESP" | jq -r '.ok // false')" == "true" ]] || { echo "Validation failed."; exit 1; }
+
+echo "== Submit via Client (/api/applications) =="
+SRESP="$(curl -s -X POST "$CLIENT_BASE/api/applications" \
+  -H 'content-type: application/json' -d "$INTAKE")"
+echo "$SRESP" | jq .
+APP_ID="$(echo "$SRESP" | jq -r '.id // .application_id // empty')"
+[[ -n "$APP_ID" ]] || { echo "No application id returned."; exit 1; }
+
+echo "== Save continuity trace for Staff verification =="
+jq -n \
+  --arg app_id "$APP_ID" \
+  --argjson intake "$INTAKE" \
+  --argjson staff_product "$SPROD" \
+  --arg client_base "$CLIENT_BASE" \
+  --arg staff_base "$STAFF_BASE" \
+'{
+  meta:{timestamp:(now|todate), client_base:$client_base, staff_base:$staff_base},
+  app_id:$app_id,
+  intake:$intake,
+  staff_product_at_submit:$staff_product
+}' > "$TRACE"
+echo "Wrote $TRACE"
+echo "APP_ID=$APP_ID"
