@@ -1,5 +1,5 @@
 import express from "express";
-import { replaceAll, getAll } from "../services/lenderProductsCache.js";
+import { replaceAll, getAll, pullFromStaffBackend } from "../services/lenderProductsCache.js";
 
 const router = express.Router();
 
@@ -42,6 +42,18 @@ router.get("/api/lender-products", (_req, res) => {
   } catch (e: any) {
     console.error("❌ Failed to serve products:", e?.message || e);
     res.status(500).json({ success: false, error: String(e?.message || e) });
+  }
+});
+
+// Pull endpoint to fetch products from staff backend  
+router.post("/internal/pull-staff-products", async (_req, res) => {
+  try {
+    const result = await pullFromStaffBackend();
+    console.log(`✅ Manual pull completed: ${result.saved} products (CA: ${result.CA}, US: ${result.US})`);
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    console.error("❌ Manual pull failed:", error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
