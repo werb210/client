@@ -295,6 +295,26 @@ app.use((req, res, next) => {
     }
   });
 
+  // Manual pull trigger endpoint (local execution, not routed to staff)
+  app.post('/pull-products', async (req, res) => {
+    try {
+      const cache = await import('./services/lenderProductsCache.js');
+      const result = await cache.pullFromStaffBackend();
+      res.json({
+        success: true,
+        result,
+        message: `Successfully pulled ${result.saved} products (CA: ${result.CA}, US: ${result.US})`
+      });
+    } catch (error: any) {
+      console.error('❌ Manual pull failed:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Pull failed',
+        message: error.message
+      });
+    }
+  });
+
   // Preflight validation for 1:1 Staff submission pipeline
   app.post('/api/applications/validate-intake', async (req, res) => {
     const intake = req.body;
