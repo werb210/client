@@ -29,3 +29,6 @@ if (import.meta.env.PROD) {
     }
   };
 }
+
+// Prevents it from polluting the global scope
+export {};
