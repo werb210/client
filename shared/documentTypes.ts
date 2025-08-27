@@ -1,10 +1,22 @@
-// Complete List of 22 Supported Document Types from Staff Application
+// Complete List of Document Types from Staff Application
 // Updated July 18, 2025 - Staff Application Verified
+// Aligned with staff v1 API requirements
 
 export function normalizeDocumentName(label: string): string {
   return label.trim().toLowerCase().replace(/\s+/g, '_');
 }
 
+// Staff v1 API required document type enums
+export const STAFF_DOCUMENT_TYPES = [
+  'bank_statements',
+  'financials', 
+  'tax_returns',
+  'invoices',
+  'contracts',
+  'signed_application'
+] as const;
+
+// Extended document types for client app compatibility
 export const SUPPORTED_DOCUMENT_TYPES = [
   'accounts_payable',
   'accounts_receivable',
@@ -22,9 +34,12 @@ export const SUPPORTED_DOCUMENT_TYPES = [
   'drivers_license_front_back',
   'equipment_quote',
   'financial_statements',
+  'financials',
   'income_statement',
   'invoice_samples',
+  'invoices',
   'lease_agreements',
+  'contracts',
   'other',
   'personal_financial_statement',
   'personal_guarantee',
@@ -39,6 +54,25 @@ export const SUPPORTED_DOCUMENT_TYPES = [
 ] as const;
 
 export type DocumentType = typeof SUPPORTED_DOCUMENT_TYPES[number];
+export type StaffDocumentType = typeof STAFF_DOCUMENT_TYPES[number];
+
+// Mapping function to convert client document types to staff API types
+export function mapToStaffDocumentType(clientType: DocumentType): StaffDocumentType {
+  const mapping: Record<string, StaffDocumentType> = {
+    'financial_statements': 'financials',
+    'account_prepared_financials': 'financials',
+    'balance_sheet': 'financials',
+    'income_statement': 'financials',
+    'profit_and_loss_statement': 'financials',
+    'cash_flow_statement': 'financials',
+    'invoice_samples': 'invoices',
+    'purchase_orders': 'contracts',
+    'lease_agreements': 'contracts',
+    'supplier_agreement': 'contracts',
+  };
+  
+  return mapping[clientType] || (STAFF_DOCUMENT_TYPES.includes(clientType as StaffDocumentType) ? clientType as StaffDocumentType : 'contracts');
+}
 
 // Document type display names for UI
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
@@ -71,11 +105,14 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   'supplier_agreement': 'Supplier Agreement',
   'tax_returns': 'Tax Returns',
   'trade_references': 'Trade References',
-  'void_pad': 'Voided Check/PAD'
+  'void_pad': 'Voided Check/PAD',
+  'financials': 'Financial Statements',
+  'invoices': 'Invoices',
+  'contracts': 'Contracts'
 };
 
 // Document type descriptions for user guidance
-export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
+export const DOCUMENT_TYPE_DESCRIPTIONS: any = {
   'accounts_payable': 'Outstanding bills and invoices owed to suppliers',
   'accounts_receivable': 'Outstanding invoices from customers',
   'account_prepared_financials': 'Professional financial statements (P&L, Balance Sheet, Cash Flow) - 3 documents required',

@@ -890,8 +890,8 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
       <div data-document-upload>
         <DynamicDocumentRequirements
           category="Working Capital"
-          country="US"
-          amount={100000}
+          country={state.step1?.headquarters || 'US'}
+          amount={state.step1?.fundingAmount || 100000}
         />
       </div>
 

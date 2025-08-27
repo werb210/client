@@ -3,24 +3,24 @@
 
 export type LenderProduct = {
   id: string;
-  name: string;
+  product_name: string;
   lender_id: string;
   lender_name?: string;
   tenant_id: string;
   country: 'US' | 'CA';
-  category:
-    | 'Business Line of Credit'
-    | 'Term Loan'
-    | 'Equipment Financing'
-    | 'Invoice Factoring'
-    | 'Purchase Order Financing'
-    | 'Working Capital'
-    | 'Asset-Based Lending'
-    | 'SBA Loan';
+  category: 'factoring' | 'term_loan' | 'loc' | 'other';
   min_amount: number | null;
   max_amount: number | null;
+  interest_rate_min: number | null;
+  interest_rate_max: number | null;
+  term_min: number | null;
+  term_max: number | null;
+  custom_requirements?: string;
   active: boolean;
   variant_sig?: string; // optional, useful for debugging variants
+  
+  // Legacy fields for backward compatibility
+  name?: string; // maps to product_name
 };
 
 export type LenderCount = {

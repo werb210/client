@@ -109,7 +109,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
   } catch {/* fall back */}
   
   // Legacy fallback
-  const r2 = await fetch("/api/lender-products", { credentials: "include" });
+  const r2 = await fetch("/api/v1/products", { credentials: "include" });
   const j2 = await r2.json();
   const items2 = j2?.products ?? [];
   const mapped = (items2 as any[]).map((p: any) => ({
@@ -177,13 +177,15 @@ const DOCS_FALLBACK: Record<string, RequiredDoc[]> = {
   ],
 };
 
-export async function listDocuments(input: RequiredDocsInput): Promise<RequiredDoc[]> {
+export async function listDocuments(input: RequiredDocsInput & { applicationId?: string }): Promise<RequiredDoc[]> {
   try {
-    const r = await fetch("/api/required-docs", {
-      method: "POST",
+    // Use v1 API endpoint or application-specific endpoint
+    const endpoint = input.applicationId ? `/api/v1/applications/${input.applicationId}/required-documents` : "/api/v1/required-docs";
+    const r = await fetch(endpoint, {
+      method: input.applicationId ? "GET" : "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(input),
+      body: input.applicationId ? undefined : JSON.stringify(input),
     });
     if (r.ok) {
       const j = await r.json();
@@ -195,10 +197,18 @@ export async function listDocuments(input: RequiredDocsInput): Promise<RequiredD
   return normalizeDocs(DOCS_FALLBACK[cat] ?? DOCS_FALLBACK["Working Capital"]);
 }
 
-// ---- Staff App Integration Endpoints -----------------------------------------------
+// ---- Staff App Integration Endpoints (v1 API) -----------------------------------------------
+
+export const getLenderProducts = async () => {
+  const res = await fetch(`/api/v1/products`, {
+    credentials: "include"
+  });
+  if (!res.ok) throw new Error("Failed to fetch lender products");
+  return res.json();
+};
 
 export const createApplication = async (data: FormData) => {
-  const res = await fetch(`/api/applications`, {
+  const res = await fetch(`/api/v1/applications`, {
     method: "POST",
     body: data,
     credentials: "include"
@@ -207,6 +217,29 @@ export const createApplication = async (data: FormData) => {
   return res.json();
 };
 
+export const getApplication = async (id: string) => {
+  const res = await fetch(`/api/v1/applications/${id}`, {
+    credentials: "include"
+  });
+  if (!res.ok) throw new Error("Failed to get application details");
+  return res.json();
+};
+
+export const uploadDocument = async (applicationId: string, file: File, documentType: 'bank_statements' | 'financials' | 'tax_returns' | 'invoices' | 'contracts' | 'signed_application') => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('document_type', documentType);
+  
+  const res = await fetch(`/api/v1/applications/${applicationId}/docs`, {
+    method: "POST",
+    body: formData,
+    credentials: "include"
+  });
+  if (!res.ok) throw new Error("Failed to upload document");
+  return res.json();
+};
+
+// Legacy endpoints for backward compatibility during migration
 export const getRecommendations = async (id: string) => {
   const res = await fetch(`/api/applications/${id}/recommendations`, {
     credentials: "include"
