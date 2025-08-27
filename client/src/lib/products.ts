@@ -1,107 +1,118 @@
-// Fix pack 1 — Types aligned to Staff V1
-export type V1Product = {
+export type CanonicalProduct = {
   id: string;
-  productName: string;
-  lenderName: string;
-  countryOffered: string | null;        // no 'US' default
-  productCategory: string | null;       // no 'Working Capital' default
-  minimumLendingAmount: number | null;  // no 0 default
-  maximumLendingAmount: number | null;  // no MAX default
-  isActive: boolean | null;
-  min_time_in_business: number | null;  // NEW
-  min_monthly_revenue: number | null;   // NEW
-  excluded_industries: string[];        // NEW
-  required_documents: string[] | null;  // NEW
+  name: string;             // from productName/name
+  lender_name?: string|null;
+  country: "CA"|"US"|null;
+  category: string|null;
+  min_amount: number|null;
+  max_amount: number|null;
+  active: boolean;
+  required_documents: string[];
+  min_time_in_business: number|null;
+  min_monthly_revenue: number|null;
+  excluded_industries?: string[]|null;
 };
 
-// Fix pack 2 — Single-source fetch (V1 first, legacy only if V1 unavailable)
-function normCountry(c: any): string | null {
-  const v = typeof c === "string" ? c.trim().toUpperCase() : "";
-  return v || null;
+function normCountry(x:any): "CA"|"US"|null {
+  const v = (x??"").toString().trim().toUpperCase();
+  return v==="CA"||v==="US" ? v as any : null;
 }
-function normalize(list: V1Product[]): V1Product[] {
-  return list.map(p => ({
-    ...p,
-    countryOffered: normCountry(p.countryOffered),
-    productCategory: (p.productCategory?.trim() || null),
-    minimumLendingAmount: p.minimumLendingAmount ?? null,
-    maximumLendingAmount: p.maximumLendingAmount ?? null,
-  }));
-}
-export async function fetchProductsV1(): Promise<V1Product[]> {
-  const hit = async (url: string) => {
-    const r = await fetch(url, { credentials: "include" });
-    if (!r.ok) throw new Error(`${url} ${r.status}`);
-    return r.json();
+
+function toCanonicalFromV1(p:any): CanonicalProduct {
+  return {
+    id: p.id,
+    name: p.productName ?? p.name ?? "",
+    lender_name: p.lenderName ?? null,
+    country: normCountry(p.countryOffered ?? p.country),
+    category: p.productCategory ?? p.category ?? null,
+    min_amount: p.minimumLendingAmount ?? p.min_amount ?? null,
+    max_amount: p.maximumLendingAmount ?? p.max_amount ?? null,
+    active: (p.isActive ?? p.active ?? true) === true,
+    required_documents: Array.isArray(p.required_documents) ? p.required_documents : [],
+    min_time_in_business: p.min_time_in_business ?? null,
+    min_monthly_revenue: p.min_monthly_revenue ?? null,
+    excluded_industries: Array.isArray(p.excluded_industries) ? p.excluded_industries : null,
   };
-  try {
-    const v1 = await hit("/api/v1/products") as V1Product[];
-    return normalize(v1);
-  } catch {
-    const legacy = await hit("/api/lender-products") as { products: any[] };
-    const v1ish = (legacy.products ?? []).map(p => ({
-      id: p.id,
-      productName: p.name ?? p.productName ?? "",
-      lenderName: p.lender_name ?? p.lenderName ?? p.name ?? "",
-      countryOffered: p.country ?? p.countryOffered ?? null,
-      productCategory: p.category ?? p.productCategory ?? null,
-      minimumLendingAmount: p.min_amount ?? p.minimumLendingAmount ?? null,
-      maximumLendingAmount: p.max_amount ?? p.maximumLendingAmount ?? null,
-      isActive: typeof p.active === "boolean" ? p.active :
-                typeof p.isActive === "boolean" ? p.isActive : null,
-      min_time_in_business: p.min_time_in_business ?? null,
-      min_monthly_revenue: p.min_monthly_revenue ?? null,
-      excluded_industries: p.excluded_industries ?? [],
-      required_documents: p.required_documents ?? null,
-    })) as V1Product[];
-    return normalize(v1ish);
-  }
 }
 
-// Alias for backward compatibility
-export const fetchProductsStable = fetchProductsV1;
+function toCanonicalFromLegacy(p:any): CanonicalProduct {
+  return {
+    id: p.id,
+    name: p.name ?? p.productName ?? "",
+    lender_name: p.lender_name ?? p.lenderName ?? null,
+    country: normCountry(p.country ?? p.countryOffered),
+    category: p.category ?? p.productCategory ?? null,
+    min_amount: p.min_amount ?? p.minimumLendingAmount ?? null,
+    max_amount: p.max_amount ?? p.maximumLendingAmount ?? null,
+    active: (p.active ?? p.isActive ?? true) === true,
+    required_documents: Array.isArray(p.required_documents) ? p.required_documents : [],
+    min_time_in_business: p.min_time_in_business ?? null,
+    min_monthly_revenue: p.min_monthly_revenue ?? null,
+    excluded_industries: Array.isArray(p.excluded_industries) ? p.excluded_industries : null,
+  };
+}
 
-// Fix pack 3 — Step 2 uses Staff constraints (no guesses)
+export async function fetchProducts(): Promise<CanonicalProduct[]> {
+  // 1) try v1 (preferred)
+  try {
+    const r = await fetch("/api/v1/products", { credentials: "include" });
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j)) {
+        return j.map(toCanonicalFromV1);
+      }
+    }
+  } catch {}
+  // 2) fallback legacy
+  const r2 = await fetch("/api/lender-products", { credentials: "include" });
+  if (!r2.ok) throw new Error("Failed to load products");
+  const j2 = await r2.json();
+  const list = Array.isArray(j2?.products) ? j2.products : [];
+  return list.map(toCanonicalFromLegacy);
+}
+
+// Legacy exports for backward compatibility
+export type V1Product = CanonicalProduct;
+export const fetchProductsV1 = fetchProducts;
 export type RecommendationIntake = {
-  country: "US" | "CA";
+  country: "CA" | "US";
   amount: number;
   timeInBusinessMonths?: number;
   monthlyRevenue?: number;
   industry?: string;
 };
-export function recommend(intake: RecommendationIntake, products: V1Product[]) {
+
+// Legacy recommendation function - will be replaced by new recommend.ts
+export function recommend(intake: RecommendationIntake, products: CanonicalProduct[]) {
   const tib = intake.timeInBusinessMonths ?? 0;
   const rev = intake.monthlyRevenue ?? 0;
   return products.filter(p => {
-    if (p.isActive === false) return false;
-    if (p.countryOffered && p.countryOffered !== intake.country) return false;
-    if (p.minimumLendingAmount != null && intake.amount < p.minimumLendingAmount) return false;
-    if (p.maximumLendingAmount != null && intake.amount > p.maximumLendingAmount) return false;
+    if (p.active === false) return false;
+    if (p.country && p.country !== intake.country) return false;
+    if (p.min_amount != null && intake.amount < p.min_amount) return false;
+    if (p.max_amount != null && intake.amount > p.max_amount) return false;
     if (p.min_time_in_business != null && tib < p.min_time_in_business) return false;
     if (p.min_monthly_revenue != null && rev < p.min_monthly_revenue) return false;
     if (intake.industry && (p.excluded_industries || []).includes(intake.industry)) return false;
     return true;
   }).sort((a,b) => {
-    const ac = ((a.minimumLendingAmount ?? intake.amount) + (a.maximumLendingAmount ?? intake.amount))/2;
-    const bc = ((b.minimumLendingAmount ?? intake.amount) + (b.maximumLendingAmount ?? intake.amount))/2;
+    const ac = ((a.min_amount ?? intake.amount) + (a.max_amount ?? intake.amount))/2;
+    const bc = ((b.min_amount ?? intake.amount) + (b.max_amount ?? intake.amount))/2;
     return Math.abs(ac - intake.amount) - Math.abs(bc - intake.amount);
   });
 }
 
-// Fix pack 4 — Step 5 uses Staff docs; tiny fallback only if missing
-export function requiredDocsFor(p: V1Product): string[] {
+// Legacy required docs function - will be replaced by new requiredDocs.ts
+export function requiredDocsFor(p: CanonicalProduct): string[] {
   if (Array.isArray(p.required_documents) && p.required_documents.length > 0) return p.required_documents;
-  return ["Last 6 months bank statements"]; // minimal baseline only if Staff provided none
+  return ["Bank Statements (6 months)", "Business Tax Returns"];
 }
 
-// Fix pack 5 — cache/version guard to purge any stale "US-only" data
-export const CATALOG_SCHEMA_VERSION = "v1.3-country-nullable+staff-docs";
-export function needCacheReset(stored?: string) { return stored !== CATALOG_SCHEMA_VERSION; }
+export function resolveDocs(p: CanonicalProduct): string[] {
+  return requiredDocsFor(p);
+}
 
-// PURPOSE: Keep the submission payload 1:1 with Staff data. No defaulting country/category/amounts.
-// Preflight validation against /api/applications/validate-intake before enabling Submit.
-// Include product SNAPSHOT fields the UI actually used.
-
+// Submission types for backward compatibility
 export type Intake = {
   product_id: string;
   country: "US" | "CA";
@@ -117,17 +128,9 @@ async function getJSON<T>(url: string, init?: RequestInit): Promise<T> {
   return r.json();
 }
 
-// Enhanced fetchProductsV1 with proper normalization (updated version)
-
-// Step 5 docs: prefer Staff-provided docs, minimal fallback otherwise
-export function resolveDocs(p: V1Product): string[] {
-  if (Array.isArray(p.required_documents) && p.required_documents.length) return p.required_documents;
-  return ["Last 6 months bank statements"];
-}
-
 // Preflight validation before enabling Submit
 export async function validateIntake(intake: Intake) {
-  return getJSON<{ok:boolean; errors?:string[]; product?:V1Product; required_documents?:string[]}>(
+  return getJSON<{ok:boolean; errors?:string[]; product?:CanonicalProduct; required_documents?:string[]}>(
     "/api/applications/validate-intake",
     { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify(intake) }
   );
@@ -144,10 +147,14 @@ export async function submitApplication(intake: Intake) {
   return r.id;
 }
 
+// Fix pack 5 — cache/version guard to purge any stale "US-only" data
+export const CATALOG_SCHEMA_VERSION = "v1.3-country-nullable+staff-docs";
+export function needCacheReset(stored?: string) { return stored !== CATALOG_SCHEMA_VERSION; }
+
 // Quick QA (optional)
 export async function qa() {
-  const items = await fetchProductsV1();
+  const items = await fetchProducts();
   console.log("Products:", items.length);
-  console.log("By country:", Object.entries(items.reduce((m,x)=>{const k=x.countryOffered??"NULL";m[k]=(m[k]||0)+1;return m;},{} as Record<string,number>)));
-  if (items.some(x => x.maximumLendingAmount === 9007199254740991)) throw new Error("MAX_SAFE_INTEGER leak detected");
+  console.log("By country:", Object.entries(items.reduce((m,x)=>{const k=x.country??"NULL";m[k]=(m[k]||0)+1;return m;},{} as Record<string,number>)));
+  if (items.some(x => x.max_amount === 9007199254740991)) throw new Error("MAX_SAFE_INTEGER leak detected");
 }
