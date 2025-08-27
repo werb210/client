@@ -184,15 +184,31 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
   // Calculate document requirements on component mount using AGGREGATION logic
   useEffect(() => {
     const calculateDocumentRequirements = async () => {
-      // ✅ STEP 1: Ensure Step 2 saves user selections (ChatGPT Instructions)
+      // ✅ STEP 1: Collect ALL user data from Steps 1-4
       const selectedCategory = state.step2?.selectedCategory || '';
       const selectedCountry = state.step1?.businessLocation || '';
       const requestedAmount = state.step1?.fundingAmount || 0;
       
-      console.log(`📋 [STEP5-AGGREGATION] Document aggregation for:`, {
+      // ✅ NEW: Access Step 3 business details
+      const businessStructure = state.step3?.businessStructure || '';
+      const businessStartDate = state.step3?.businessStartDate || '';
+      const legalName = state.step3?.legalName || '';
+      const operatingName = state.step3?.operatingName || '';
+      
+      // ✅ NEW: Access Step 4 applicant info
+      const ownershipPercentage = state.step4?.ownershipPercentage || 0;
+      const applicantSSN = state.step4?.applicantSSN || '';
+      const hasPartner = state.step4?.hasPartner || false;
+      
+      console.log(`📋 [STEP5-AGGREGATION] Document aggregation with COMPLETE user profile:`, {
         selectedCategory,
         selectedCountry,
-        requestedAmount
+        requestedAmount,
+        businessStructure,
+        businessStartDate,
+        ownershipPercentage,
+        applicantSSN: applicantSSN ? 'provided' : 'not provided',
+        hasPartner
       });
       
       // Validate that we have all required Step 2 selections
@@ -216,10 +232,20 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
       try {
         console.log('🔍 [STEP5-AGGREGATION] Calling document aggregation function...');
         
+        // ✅ NEW: Pass complete user profile to document aggregation
         const results = await getDocumentRequirementsAggregation(
           selectedCategory,
           selectedCountry, 
-          requestedAmount
+          requestedAmount,
+          {
+            businessStructure,
+            businessStartDate,
+            ownershipPercentage,
+            applicantSSN,
+            hasPartner,
+            legalName,
+            operatingName
+          }
         );
 
         console.log(`📋 [STEP5-AGGREGATION] Aggregation results:`, results);
@@ -268,7 +294,17 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
     };
 
     calculateDocumentRequirements();
-  }, [state.step2?.selectedCategory, state.step1?.businessLocation, state.step1?.fundingAmount, toast]);
+  }, [
+    state.step1?.businessLocation, 
+    state.step1?.fundingAmount, 
+    state.step2?.selectedCategory, 
+    state.step3?.businessStructure,
+    state.step3?.businessStartDate,
+    state.step4?.ownershipPercentage,
+    state.step4?.applicantSSN,
+    state.step4?.hasPartner,
+    toast
+  ]);
 
   // FIX #6: Clear Step 5 state when navigating back
   useEffect(() => {

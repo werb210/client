@@ -33,13 +33,30 @@ interface DocumentAggregationResult {
  * Get document requirements using aggregation logic (union of all eligible products)
  * Following ChatGPT team specifications for complete document collection
  */
+interface UserProfile {
+  businessStructure?: string;
+  businessStartDate?: string;
+  ownershipPercentage?: number;
+  applicantSSN?: string;
+  hasPartner?: boolean;
+  legalName?: string;
+  operatingName?: string;
+}
+
 export async function getDocumentRequirementsAggregation(
   selectedCategory: string,
   selectedCountry: string,
-  requestedAmount: number
+  requestedAmount: number,
+  userProfile: UserProfile = {}
 ): Promise<DocumentAggregationResult> {
   
   console.log(`🔍 [AGGREGATION] Starting document aggregation for: "${selectedCategory}" in ${selectedCountry} for $${requestedAmount.toLocaleString()}`);
+  console.log(`🔍 [AGGREGATION] User profile:`, {
+    businessStructure: userProfile.businessStructure || 'not provided',
+    ownershipPercentage: userProfile.ownershipPercentage || 'not provided',
+    hasSSN: userProfile.applicantSSN ? 'yes' : 'no',
+    hasPartner: userProfile.hasPartner || false
+  });
   
   try {
     // Fetch all lender products from staff API - FIXED ENDPOINT
@@ -145,12 +162,68 @@ export async function getDocumentRequirementsAggregation(
       return info.label;
     });
     
-    console.log(`✅ [AGGREGATION] Successfully aggregated ${transformedDocuments.length} document requirements from ${eligibleProducts.length} eligible products`);
+    // ✅ ENHANCED: Add business structure-specific documents
+    const getBusinessStructureDocuments = (structure: string): string[] => {
+      const structureDocs: Record<string, string[]> = {
+        'llc': ['Operating Agreement', 'Articles of Organization', 'Member Resolution'],
+        'corporation': ['Corporate Bylaws', 'Articles of Incorporation', 'Board Resolution', 'Stock Certificates'],
+        'partnership': ['Partnership Agreement', 'Partnership Registration'],
+        'sole_proprietorship': ['DBA Filing', 'Personal Financial Statement'],
+        'sole proprietorship': ['DBA Filing', 'Personal Financial Statement']
+      };
+      return structureDocs[structure?.toLowerCase()] || [];
+    };
+
+    // ✅ ENHANCED: Add ownership-based documents  
+    const getOwnershipDocuments = (ownershipPercentage: number): string[] => {
+      if (ownershipPercentage >= 50) {
+        return ['Personal Guarantee', 'Personal Financial Statement', 'Personal Credit Report Authorization'];
+      }
+      return [];
+    };
+
+    // ✅ ENHANCED: Add SSN/identity documents
+    const getIdentityDocuments = (hasSSN: boolean): string[] => {
+      if (hasSSN) {
+        return ['Driver License', 'Social Security Card Copy'];
+      }
+      return ['Government ID', 'Proof of Identity'];
+    };
+
+    // ✅ NEW: Add user profile-based documents
+    const profileBasedDocs = new Set<string>();
+    
+    if (userProfile.businessStructure) {
+      getBusinessStructureDocuments(userProfile.businessStructure).forEach(doc => 
+        profileBasedDocs.add(doc)
+      );
+      console.log(`🏢 [PROFILE] Added ${getBusinessStructureDocuments(userProfile.businessStructure).length} business structure documents for ${userProfile.businessStructure}`);
+    }
+    
+    if (userProfile.ownershipPercentage && userProfile.ownershipPercentage > 0) {
+      getOwnershipDocuments(userProfile.ownershipPercentage).forEach(doc => 
+        profileBasedDocs.add(doc)
+      );
+      console.log(`👤 [PROFILE] Added ${getOwnershipDocuments(userProfile.ownershipPercentage).length} ownership documents for ${userProfile.ownershipPercentage}% ownership`);
+    }
+    
+    if (userProfile.applicantSSN !== undefined) {
+      getIdentityDocuments(!!userProfile.applicantSSN).forEach(doc => 
+        profileBasedDocs.add(doc)
+      );
+      console.log(`🆔 [PROFILE] Added ${getIdentityDocuments(!!userProfile.applicantSSN).length} identity documents`);
+    }
+
+    // Combine lender-based and profile-based documents
+    const finalDocuments = [...transformedDocuments, ...Array.from(profileBasedDocs)];
+    const uniqueDocuments = [...new Set(finalDocuments)]; // Remove duplicates
+    
+    console.log(`✅ [AGGREGATION] Combined ${transformedDocuments.length} lender docs + ${profileBasedDocs.size} profile docs = ${uniqueDocuments.length} total unique documents`);
     
     return {
       eligibleProducts,
-      requiredDocuments: transformedDocuments,
-      message: `Documents required across ${eligibleProducts.length} eligible ${selectedCategory} lenders`,
+      requiredDocuments: uniqueDocuments,
+      message: `Documents required across ${eligibleProducts.length} eligible ${selectedCategory} lenders${profileBasedDocs.size > 0 ? ` plus ${profileBasedDocs.size} profile-specific documents` : ''}`,
       hasMatches: true
     };
     
