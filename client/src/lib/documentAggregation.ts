@@ -150,16 +150,37 @@ export async function getDocumentRequirementsAggregation(
     
     // ✅ STEP 2: Aggregate and deduplicate required documents (UNION) - ENHANCED WITH NORMALIZATION
     // Following user specifications for canonical document type normalization
-    const { extractDocRequirements, getCanonicalDocumentInfo } = await import('./docNormalization');
-    const canonicalDocTypes = extractDocRequirements(eligibleProducts);
+    const { mapToBackendDocumentType } = await import('./docNormalization');
     
+    // Extract and normalize document requirements from all eligible products
+    const allDocuments = new Set<string>();
+    eligibleProducts.forEach(product => {
+      const docRequirements = product.doc_requirements || 
+                            product.documentRequirements || 
+                            product.requiredDocuments || 
+                            product.required_documents || 
+                            [];
+      
+      docRequirements.forEach((doc: string) => {
+        if (doc && typeof doc === 'string') {
+          const normalized = mapToBackendDocumentType(doc);
+          allDocuments.add(normalized);
+        }
+      });
+    });
+    
+    const canonicalDocTypes = Array.from(allDocuments);
     console.log(`🔍 [AGGREGATION] Normalized to ${canonicalDocTypes.length} canonical document types:`, canonicalDocTypes);
     
     // Convert canonical types to display labels for UI
-    const transformedDocuments = canonicalDocTypes.map(docType => {
-      const info = getCanonicalDocumentInfo(docType);
-      console.log(`✅ [AGGREGATION] Canonical document: ${docType} → "${info.label}"`);
-      return info.label;
+    const transformedDocuments = canonicalDocTypes.map((docType: string) => {
+      // Convert backend type to display label
+      const displayLabel = docType.split('_').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ');
+      
+      console.log(`✅ [AGGREGATION] Canonical document: ${docType} → "${displayLabel}"`);
+      return displayLabel;
     });
     
     // ✅ ENHANCED: Add business structure-specific documents
