@@ -1,0 +1,117 @@
+```bash
+[CLIENT APP]
+
+Goal: Verify the security fixes AND the end-to-end flow (Step 1→2→5→submission) in PROD, with special focus on Canada vs US products.
+
+# A) QUICK SECURITY VERIFICATION (terminal)
+node -e "console.log('esbuild:',require('esbuild/package.json').version)"     # expect >= 0.25.0
+node client/scripts/sec-qa.js                                                # expect:
+#  • innerHTML refs: 0 (or only in safeHtml.tsx)
+#  • dangerouslySetInnerHTML refs: 0
+#  • console.log/info/debug refs in dist: 0
+#  • build succeeds; dist size reported (≈ < 900KB good)
+
+# B) RUNTIME SANITY (browser)
+# 1) Hard refresh (Cmd/Ctrl+Shift+R) on PROD URL
+# 2) Open DevTools → Console:
+#    • No noisy console.log/info/debug (warn/error allowed)
+#    • No CSP/XSS warnings
+# 3) Network tab:
+#    • /api/lender-products or /api/catalog/* requests succeed (200/JSON)
+
+# C) DATA PARITY QUICK CHECK (browser or terminal)
+# Canada vs US counts rendered in client (or via API):
+# 1) Confirm CAN products appear (at least the 17 CA items from staff catalog)
+# 2) Confirm US products appear (≈25)
+# If your UI has /debug/catalog-dump:
+#    Visit /debug/catalog-dump and verify "country" column shows both CA and US.
+
+# D) E2E FLOW TESTS (max 8 submissions) — run these in the PROD client
+# Use unique emails per run so staff receives distinct applications.
+
+# 1) CA • Working Capital • $50,000
+#    Step 1:
+#      Country: Canada
+#      Amount: 50,000
+#      Time in business: 24+ months
+#      Monthly revenue: 40,000+
+#      Credit score: 650+
+#    Expect (Step 2):
+#      • Products shown include Canadian lines/working capital (not US-only).
+#    Step 5:
+#      • Required docs include “Last 6 months bank statements”.
+#      • Submit → Staff app shows new application under Canadian lane.
+
+# 2) CA • Equipment Financing • $300,000
+#    Step 1:
+#      Country: Canada
+#      Amount: 300,000
+#      Need: Equipment
+#    Expect (Step 2): Equipment Financing (CA) options (e.g., Stride, Accord, Meridian OneCap).
+#    Step 5: Bank statements baseline present. Submit → visible in staff.
+
+# 3) US • Working Capital • $100,000
+#    Step 1:
+#      Country: United States
+#      Amount: 100,000
+#    Expect (Step 2): Multiple US Working Capital/LOC options (Revenued/Quantum/etc.).
+#    Step 5: Bank statements baseline. Submit → visible in staff.
+
+# 4) US • Purchase Order Financing • $1,000,000
+#    Step 1:
+#      Country: United States
+#      Amount: 1,000,000
+#      Need: Purchase Order Financing
+#    Expect (Step 2): PO financing options (e.g., Brookridge).
+#    Step 5: Baseline docs present. Submit → visible in staff.
+
+# 5) CA • Invoice Factoring • $2,000,000
+#    Step 1:
+#      Country: Canada
+#      Amount: 2,000,000
+#      Need: Invoice/AR factoring
+#    Expect (Step 2): Baker Garrington (CA) factoring options.
+#    Step 5: Baseline docs present. Submit → visible in staff.
+
+# 6) US • Term Loan • $200,000
+#    Step 1:
+#      Country: United States
+#      Amount: 200,000
+#      Need: Term Loan
+#    Expect (Step 2): US Term Loan variants (Pearl/Quantum).
+#    Step 5: Baseline docs present. Submit → visible in staff.
+
+# 7) CA • Business Line of Credit • $150,000
+#    Step 1:
+#      Country: Canada
+#      Amount: 150,000
+#      Need: Line of Credit
+#    Expect (Step 2): Accord/Pathward/Quantum (CA) LOC options.
+#    Step 5: Baseline docs present. Submit → visible in staff.
+
+# 8) US • Equipment Financing • $1,200,000
+#    Step 1:
+#      Country: United States
+#      Amount: 1,200,000
+#      Need: Equipment
+#    Expect (Step 2): US Equipment Financing options (BG, Dynamic, etc.).
+#    Step 5: Baseline docs present. Submit → visible in staff.
+
+# E) WHAT TO WATCH FOR (fail-fast checks)
+# • If CA shows 0 results for CA scenarios → category/country normalization broke in client.
+#   Fix: Ensure legacy→canonical mapping (countryOffered→country, productCategory→category) still applied.
+# • If Step 5 shows no docs → staff /api/required-docs may 501; client must fall back to baseline.
+# • If submission fails → capture the POST payload and staff response (status + JSON) for the failing case.
+
+# F) REPORT BACK (paste these 6 facts per test)
+# 1) Scenario ID (1–8)
+# 2) Step 2: #products shown + example product names (2–3)
+# 3) Step 2: Country mix observed (CA/US as expected?)
+# 4) Step 5: Docs list included “Last 6 months bank statements”? (Y/N)
+# 5) Submission status code + message
+# 6) Staff app: application visible (Y/N) and lane
+
+# Questions (answer briefly inside this block):
+# • Confirm the exact PROD URL for the client app (so I match paths like /debug/catalog-dump if present).
+# • Confirm the staff app URL receiving submissions (to match status in staff after each test).
+```
