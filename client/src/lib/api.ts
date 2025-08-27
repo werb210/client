@@ -239,7 +239,7 @@ export const uploadDocument = async (applicationId: string, file: File, document
   return res.json();
 };
 
-// Legacy endpoints for backward compatibility during migration
+// Deprecated endpoints - will be removed in future versions
 export const getRecommendations = async (id: string) => {
   const res = await fetch(`/api/applications/${id}/recommendations`, {
     credentials: "include"

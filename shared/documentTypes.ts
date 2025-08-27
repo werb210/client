@@ -142,7 +142,10 @@ export const DOCUMENT_TYPE_DESCRIPTIONS: any = {
   'supplier_agreement': 'Contracts with key suppliers',
   'tax_returns': 'Business tax returns (typically 2-3 years)',
   'trade_references': 'Business references from suppliers and vendors',
-  'void_pad': 'Voided check for bank account verification'
+  'void_pad': 'Voided check for bank account verification',
+  'financials': 'Complete financial statements and reports',
+  'invoices': 'Customer invoices and billing documents', 
+  'contracts': 'Legal agreements and contractual documents'
 };
 
 // Document quantity requirements
@@ -176,7 +179,10 @@ export const DOCUMENT_QUANTITIES: Record<DocumentType, number> = {
   'supplier_agreement': 1,
   'tax_returns': 3, // Tax returns require 3 years
   'trade_references': 3, // Typically 3 references
-  'void_pad': 1
+  'void_pad': 1,
+  'financials': 3,
+  'invoices': 3,
+  'contracts': 1
 };
 
 // Utility functions
