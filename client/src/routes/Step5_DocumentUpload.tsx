@@ -866,7 +866,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
       />
 
       {/* Document Upload Status */}
-      {verificationResult && Object.keys(verificationResult).length > 0 ? (
+      {verificationResult && typeof verificationResult === 'object' && 'documents' in verificationResult ? (
         <DocumentUploadStatus
           verificationResult={verificationResult}
           localUploadedFiles={uploadedFiles}

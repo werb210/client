@@ -65,12 +65,7 @@ export const useDocumentVerification = (applicationId: string | null) => {
     retry: false,
     refetchInterval: false,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    onError: (err: any) => {
-      if (err?.response?.status === 501) {
-        console.warn("Document verification not implemented yet.");
-      }
-    }
+    refetchOnMount: false
   });
 
   // Manual verification function
@@ -97,7 +92,13 @@ export const useDocumentVerification = (applicationId: string | null) => {
 
       console.log(`✅ [DOCUMENT-VERIFICATION] Manual verification complete:`, result.data);
       
-      return result.data;
+      return result.data || {
+        documents: [],
+        requiredDocuments: [],
+        missingDocuments: [],
+        isComplete: false,
+        hasUploadedDocuments: false
+      };
     } finally {
       setIsVerifying(false);
     }
@@ -106,8 +107,8 @@ export const useDocumentVerification = (applicationId: string | null) => {
   // Check if navigation to Step 6 is safe
   const canProceedToStep6 = useCallback((localUploadedFiles: any[] = []): boolean => {
     // Priority 1: Backend verified documents
-    if (verificationResult?.hasUploadedDocuments) {
-      console.log(`✅ [DOCUMENT-VERIFICATION] Can proceed: ${verificationResult.documents.length} documents verified on backend`);
+    if (verificationResult && 'hasUploadedDocuments' in verificationResult && verificationResult.hasUploadedDocuments) {
+      console.log(`✅ [DOCUMENT-VERIFICATION] Can proceed: ${verificationResult.documents?.length || 0} documents verified on backend`);
       return true;
     }
 
