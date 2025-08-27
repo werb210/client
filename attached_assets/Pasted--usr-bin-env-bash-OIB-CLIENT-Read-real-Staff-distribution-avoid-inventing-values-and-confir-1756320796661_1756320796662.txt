@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# OIB: CLIENT — Read real Staff distribution, avoid inventing values, and confirm V1-first fetch
+# is aligned. Idempotent; non-destructive; verification-only.
+set -euxo pipefail
+
+echo "=== UNIVERSAL RULES ==="
+echo "• Do exactly what's instructed; no autonomous changes"
+echo "• Idempotent; non-destructive; show console output"
+echo "• No SignNow refs; use existing endpoints only"
+echo "• Client consumes Staff as source of truth; no country/category/amount defaults"
+
+echo "=== 0) PRECHECKS ==="
+node -v || true
+echo "[health] best-effort"
+curl -fsS http://localhost:5173/__version || true
+
+echo "=== 1) PULL LIVE STAFF DATA (LEGACY + V1) ==="
+echo "[legacy] /api/lender-products ⇒ countryOffered counts"
+curl -fsS https://staff.boreal.financial/api/lender-products \
+ | jq '[(.[]?.countryOffered // .country // null) // "NULL"]
+       | map(ascii_upcase)
+       | group_by(.) | map({k: .[0], n: length})'
+
+echo "[v1] /api/v1/products ⇒ .items[].country counts"
+curl -fsS https://staff.boreal.financial/api/v1/products \
+ | jq '{total: (.items|length),
+        by_country: ([.items[]?.country // .items[]?.countryOffered // "NULL"]
+        | map(ascii_upcase)
+        | group_by(.)
+        | map({k: .[0], n: length}))}' || true
+
+echo "=== 2) CLIENT QA: sanity compare and print Staff distribution ==="
+node - <<'NODE'
+const { execSync } = require('node:child_process');
+function sh(cmd){ return execSync(cmd, {stdio:['ignore','pipe','pipe']}).toString(); }
+try {
+  const raw = sh(`curl -fsS https://staff.boreal.financial/api/lender-products`);
+  const items = JSON.parse(raw);
+  const map = new Map();
+  for (const p of items) {
+    const c = String((p.countryOffered ?? p.country ?? 'NULL')).toUpperCase();
+    map.set(c, (map.get(c)||0)+1);
+  }
+  console.log("Client QA – Staff legacy distribution:", Array.from(map.entries()));
+} catch(e) {
+  console.error("Client QA failed:", e.message);
+  process.exit(0);
+}
+NODE
+
+echo "=== 3) RESULT INTERPRETATION ==="
+echo "• If you see US:42, CA:0 => Staff currently has no CA rows exposed. Client must NOT default country."
+echo "• When Staff adds CA rows (or unmasks mapping), rerun to see CA>0 without client code changes."
+echo "• Your V1-first client fetchers should already be using nullable fields (no defaults)."
+
+echo "=== DONE: CLIENT OIB completed. No code changes performed; verification only. ==="
