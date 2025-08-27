@@ -204,12 +204,12 @@ function generateTrainingExamples(products: any[]): TrainingExample[] {
 
     // Geography questions
     const allCountries = Array.from(new Set(categoryProducts.flatMap((p: any) => 
-      p.geography && Array.isArray(p.geography) ? p.geography : [p.country || 'US']
+      p.geography && Array.isArray(p.geography) ? p.geography : [p.country].filter(Boolean)
     )));
 
     allCountries.forEach(country => {
       const countryProducts = categoryProducts.filter((p: any) => {
-        const geography = p.geography && Array.isArray(p.geography) ? p.geography : [p.country || 'US'];
+        const geography = p.geography && Array.isArray(p.geography) ? p.geography : [p.country].filter(Boolean);
         return geography.includes(country);
       });
 

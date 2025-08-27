@@ -20,15 +20,19 @@ const normCountry = (c = "") =>
     .replace("UNITED STATES","US");
 
 function toCanonical(p: any): Canonical {
+  // IMPORTANT: never force 'US' on missing/empty values
+  const countryRaw = p.country ?? p.countryOffered ?? "";
+  const country = normCountry(countryRaw);
+  
   return {
     id: String(p.id),
-    name: p.name ?? "",
-    lender_name: p.lender_name || p.name || "", // Use name as fallback for lender_name
-    country: normCountry(p.country ?? ""),
-    category: p.category ?? "",
-    min_amount: Number(p.min_amount ?? 0),
-    max_amount: Number(p.max_amount ?? 0),
-    active: Boolean(p.active ?? true),
+    name: p.name ?? p.productName ?? "",
+    lender_name: p.lender_name ?? p.lenderName ?? p.name ?? "", // Staff uses 'name' as lender name
+    country: country || null, // Keep null for missing countries, don't default to US
+    category: p.category ?? p.productCategory ?? "Working Capital",
+    min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0),
+    max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? 0),
+    active: Boolean(p.active ?? p.isActive ?? true),
     updated_at: new Date().toISOString()
   };
 }
@@ -39,8 +43,8 @@ function signature(items: Canonical[]): string {
 }
 
 export function replaceAll(incoming: any[]): { saved: number; CA: number; US: number; sig: string } {
-  const canon = (Array.isArray(incoming) ? incoming : []).map(toCanonical)
-    .filter(p => p.name && p.lender_name && p.country && p.category);
+  const normalized = (Array.isArray(incoming) ? incoming : []).map(toCanonical);
+  const canon = normalized.filter(p => p.name && p.lender_name && p.category);
 
   const CA = canon.filter(p => p.country === "CA").length;
   const US = canon.filter(p => p.country === "US").length;
