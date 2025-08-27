@@ -1,0 +1,44 @@
+# ===========================
+# CLIENT APP — FINAL INSTRUCTIONS (RUN ME)
+# ===========================
+set -euo pipefail
+command -v curl >/dev/null || { echo "curl required"; exit 1; }
+command -v jq   >/dev/null || { echo "jq required";   exit 1; }
+
+CLIENT_BASE="${CLIENT_BASE:-http://localhost:5000}"
+STAFF_BASE="${STAFF_BASE:-https://staff.boreal.financial}"
+TRACE="${TRACE:-/tmp/submission_continuity.json}"
+
+echo "== CLIENT: refresh -> verify -> validate -> submit =="
+# 1) (best-effort) refresh local cache from Staff
+curl -fsS -X POST "$CLIENT_BASE/internal/pull-staff-products" -H 'content-type: application/json' -d '{}' >/dev/null || true
+
+# 2) sanity: products present
+C_RAW="$(curl -fsS "$CLIENT_BASE/api/v1/products")"
+C_LIST="$(echo "$C_RAW" | jq -c 'if type=="array" then . else .items // [] end')"
+echo "$C_LIST" | jq 'length as $n | {total:$n, split:( group_by(.country // .countryOffered // "NULL") | map({country: (.[0].country // .[0].countryOffered // "NULL"), count:length}) )}'
+
+# 3) pick Staff product (prefer US else CA else first)
+S_RAW="$(curl -fsS "$STAFF_BASE/api/v1/products")"
+PID="$(echo "$S_RAW" | jq -r '([.[]|select((.countryOffered // .country_offered // .country)=="US")][0].id) // ([.[]|select((.countryOffered // .country_offered // .country)=="CA")][0].id) // .[0].id')"
+SPROD="$(echo "$S_RAW" | jq -c --arg id "$PID" '.[]|select(.id==$id)')"
+SCNTRY="$(echo "$SPROD" | jq -r '.countryOffered // .country_offered // .country // "US"')"
+
+# 4) build intake (no breaking placeholders)
+AMOUNT="${AMOUNT:-25000}"; TIB="${TIB:-120}"; REV="${REV:-100000}"
+INTAKE="$(jq -n --arg pid "$PID" --arg c "$SCNTRY" --argjson amt "$AMOUNT" --argjson tib "$TIB" --argjson rev "$REV" --arg ind "Technology" \
+ '{product_id:$pid,country:$c,amount:$amt,timeInBusinessMonths:$tib,monthlyRevenue:$rev,industry:$ind}')"
+echo "$INTAKE" | jq '._preview="client-intake"'
+
+# 5) validate then submit
+curl -fsS -X POST "$CLIENT_BASE/api/applications/validate-intake" -H 'content-type: application/json' -d "$INTAKE" | jq .
+APP="$(curl -fsS -X POST "$CLIENT_BASE/api/applications" -H 'content-type: application/json' -d "$INTAKE")"
+APP_ID="$(echo "$APP" | jq -r '.id // .application_id // .applicationId // empty')"
+[ -n "$APP_ID" ] || { echo "no application id returned"; echo "$APP" | jq .; exit 1; }
+
+# 6) write continuity trace for Staff
+jq -n --arg app_id "$APP_ID" --argjson intake "$INTAKE" --argjson staff_product "$SPROD" \
+      --arg client_base "$CLIENT_BASE" --arg staff_base "$STAFF_BASE" \
+      '{meta:{timestamp:(now|todate),client_base:$client_base,staff_base:$staff_base},app_id:$app_id,intake:$intake,staff_product_at_submit:$staff_product}' \
+      > "$TRACE"
+echo "✅ CLIENT DONE: wrote $TRACE (APP_ID=$APP_ID)"
