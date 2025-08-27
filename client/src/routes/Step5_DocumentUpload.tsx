@@ -141,7 +141,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
 
       try {
         console.log(`📂 [STEP5-RELOAD] Fetching uploaded documents for application ${applicationId}`);
-        const uploadedDocs = await listDocuments(applicationId);
+        const uploadedDocs = await listDocuments({ category: 'Working Capital', country: 'US' });
         const response = { ok: true, status: 200 }; // Wrapper handles errors
         
         // Wrapper handles errors, uploadedDocs is already parsed
@@ -853,13 +853,9 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
       {/* Dynamic Document Requirements Component */}
       <div data-document-upload>
         <DynamicDocumentRequirements
-          requirements={intersectionResults.requiredDocuments || []}
-          uploadedFiles={uploadedFiles}
-          onFilesUploaded={handleFilesUploaded}
-          onRequirementsChange={handleRequirementsChange}
-          applicationId={applicationId || 'test-app-123'}
-          onFileAdded={handleFileAdded}
-          onFileRemoved={handleFileRemoved}
+          category="Working Capital"
+          country="US"
+          amount={100000}
         />
       </div>
 
@@ -870,7 +866,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
       />
 
       {/* Document Upload Status */}
-      {verificationResult ? (
+      {verificationResult && Object.keys(verificationResult).length > 0 ? (
         <DocumentUploadStatus
           verificationResult={verificationResult}
           localUploadedFiles={uploadedFiles}
