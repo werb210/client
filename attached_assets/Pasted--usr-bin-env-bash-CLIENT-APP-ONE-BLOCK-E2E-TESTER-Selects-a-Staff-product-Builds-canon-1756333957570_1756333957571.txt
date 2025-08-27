@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+# CLIENT APP — ONE-BLOCK E2E TESTER
+# - Selects a Staff product
+# - Builds canonical intake
+# - (Best-effort) validates + submits application
+# - (Best-effort) probes document upload endpoints
+# - Writes /tmp/submission_continuity.json for Staff verification
+
+set -euo pipefail
+need(){ command -v "$1" >/dev/null || { echo "Missing $1"; exit 1; }; }
+need curl; need jq
+
+# ---------- Config (override as needed) ----------
+CLIENT_BASE="${CLIENT_BASE:-http://localhost:5000}"
+STAFF_BASE="${STAFF_BASE:-https://staff.boreal.financial}"
+TRACE="${TRACE:-/tmp/submission_continuity.json}"
+
+echo "== CLIENT: fetch Staff catalog =="
+S_RAW="$(curl -fsS "$STAFF_BASE/api/v1/products")"
+S_LIST="$(echo "$S_RAW" | jq -c 'if type=="array" then . else .items // [] end')"
+TOTAL="$(echo "$S_LIST" | jq 'length')"
+[ "$TOTAL" -gt 0 ] || { echo "No Staff products available"; exit 1; }
+
+# Prefer US, then CA, else first
+PID="$(echo "$S_LIST" | jq -r '
+  ([.[]|select((.countryOffered // .country_offered // .country)=="US")][0].id) //
+  ([.[]|select((.countryOffered // .country_offered // .country)=="CA")][0].id) //
+  .[0].id
+')"
+
+SPROD="$(echo "$S_LIST" | jq -c --arg id "$PID" '.[] | select(.id==$id)')"
+SCNTRY="$(echo "$SPROD" | jq -r '.countryOffered // .country_offered // .country // "US"')"
+
+# Derive constraints safely
+SMIN="$(echo "$SPROD" | jq -r '.minimumLendingAmount // .min_amount // empty')"
+SMAX="$(echo "$SPROD" | jq -r '.maximumLendingAmount // .max_amount // empty')"
+if [[ -n "${SMIN:-}" && -n "${SMAX:-}" && "${SMIN//[^0-9.]}" != "" && "${SMAX//[^0-9.]}" != "" ]]; then
+  AMOUNT="$(( ( ${SMIN%.*:-0} + ${SMAX%.*:-0} ) / 2 ))"
+else
+  AMOUNT="${AMOUNT:-25000}"
+fi
+STIB="$(echo "$SPROD" | jq -r '.min_time_in_business // empty')"
+SREV="$(echo "$SPROD" | jq -r '.min_monthly_revenue // empty')"
+TIB="${TIB:-$([ -n "${STIB:-}" ] && echo "${STIB%.*}" || echo 120)}"
+REV="${REV:-$([ -n "${SREV:-}" ] && echo "${SREV%.*}" || echo 100000)}"
+IND="${IND:-Technology}"
+
+echo "== CLIENT: build intake =="
+INTAKE="$(jq -n --arg pid "$PID" --arg c "$SCNTRY" \
+  --argjson amt "$AMOUNT" --argjson tib "$TIB" --argjson rev "$REV" \
+  --arg ind "$IND" \
+  '{product_id:$pid,country:$c,amount:$amt,timeInBusinessMonths:$tib,monthlyRevenue:$rev,industry:$ind}')"
+echo "$INTAKE" | jq .
+
+echo "== CLIENT: validate intake (best-effort) =="
+VRESP="$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake?diag=1" \
+  -H 'content-type: application/json' -d "$INTAKE" 2>/dev/null || echo '{}')"
+echo "$VRESP" | jq '{ok}'
+
+echo "== CLIENT: submit application =="
+SRESP="$(curl -fsS -X POST "$CLIENT_BASE/api/applications" -H 'content-type: application/json' -d "$INTAKE")"
+APP_ID="$(echo "$SRESP" | jq -r '.id // .application_id // .applicationId // empty')"
+[ -n "$APP_ID" ] || { echo "No application id returned"; echo "$SRESP" | jq .; exit 1; }
+echo "Application ID: $APP_ID"
+
+echo "== CLIENT: (best-effort) try two small document uploads =="
+mkdir -p /tmp/test_docs
+printf "Example bank statement for %s\n" "$APP_ID" > /tmp/test_docs/bank_statement.txt
+printf "Example tax return for %s\n" "$APP_ID" > /tmp/test_docs/tax_return.txt
+
+UPLOADED='[]'
+try_upload(){ # endpoint file dtype
+  local ep="$1" file="$2" dtype="$3"
+  resp="$(curl -s -w '\n%{http_code}' -X POST "$CLIENT_BASE$ep" \
+    -F "file=@${file}" -F "doc_type=${dtype}" -F "application_id=${APP_ID}" 2>/dev/null || echo -e "{}\n000")"
+  code="$(echo "$resp" | tail -n1)"
+  if [[ "$code" == "200" || "$code" == "201" ]]; then
+    echo "  ✅ Uploaded $dtype to $ep"
+    UPLOADED="$(jq -c --arg t "$dtype" --arg f "$(basename "$file")" '. + [{type:$t,file:$f}]' <<<"$UPLOADED")"
+    return 0
+  else
+    echo "  ⚠️ Upload failed at $ep (HTTP $code) — OK if Staff doc API not implemented"
+    return 1
+  fi
+}
+
+echo " - Bank statement:"
+for ep in "/api/applications/$APP_ID/documents" "/api/applications/$APP_ID/files" "/api/documents" "/api/upload"; do
+  try_upload "$ep" "/tmp/test_docs/bank_statement.txt" "bank_statements" && break || true
+done
+echo " - Tax return:"
+for ep in "/api/applications/$APP_ID/documents" "/api/applications/$APP_ID/files" "/api/documents" "/api/upload"; do
+  try_upload "$ep" "/tmp/test_docs/tax_return.txt" "tax_returns" && break || true
+done
+
+REQ_DOCS="$(echo "$SPROD" | jq -c '.required_documents // []')"
+
+echo "== CLIENT: write continuity trace =="
+jq -n \
+  --arg app_id "$APP_ID" \
+  --argjson intake "$INTAKE" \
+  --argjson staff_product "$SPROD" \
+  --arg client_base "$CLIENT_BASE" \
+  --arg staff_base "$STAFF_BASE" \
+  --arg timestamp "$(date -Iseconds)" \
+  --argjson required_documents "$REQ_DOCS" \
+  --argjson uploaded_documents "$UPLOADED" \
+  '{ meta:{timestamp:$timestamp, client_base:$client_base, staff_base:$staff_base, test:"client_one_block_e2e"},
+     app_id:$app_id, intake:$intake, staff_product_at_submit:$staff_product,
+     required_documents:$required_documents, uploaded_documents:$uploaded_documents }' > "$TRACE"
+
+echo ""
+echo "🎉 CLIENT BLOCK COMPLETE"
+echo "  App ID: $APP_ID"
+echo "  Trace : $TRACE"
+echo "  Docs uploaded (best-effort): $(echo "$UPLOADED" | jq 'length')"
