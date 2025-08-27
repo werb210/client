@@ -1328,6 +1328,40 @@ app.use((req, res, next) => {
     }
   });
 
+  // ✅ V1 PRODUCTS API - Direct product array format (no wrapper)
+  app.get('/api/v1/products', async (req: Request, res: Response) => {
+    try {
+      const { getLenderProducts } = await import('./services/lenderProductsCache');
+      const staffProducts = await getLenderProducts();
+      
+      if (staffProducts && staffProducts.length > 0) {
+        // Transform to v1 format - direct array with normalized fields
+        const v1Products = staffProducts.map((product: any) => ({
+          id: product.id?.toString(),
+          productName: product.name,
+          lenderName: product.name,
+          countryOffered: product.country,
+          productCategory: product.category,
+          minimumLendingAmount: product.min_amount,
+          maximumLendingAmount: product.max_amount,
+          minimumAverageMonthlyRevenue: product.min_monthly_revenue,
+          isActive: true,
+          required_documents: product.required_documents || []
+        }));
+        
+        console.log(`✅ Served ${v1Products.length} products via v1 API`);
+        return res.status(200).json(v1Products);
+      } else {
+        console.warn('⚠️ No products available for v1 API');
+        return res.status(200).json([]);
+      }
+      
+    } catch (err) {
+      console.error('❌ Failed to serve v1 products API:', err);
+      return res.status(500).json([]);
+    }
+  });
+
   // ✅ COMPLETE LENDERS ENDPOINT - All lenders from staff app database
   app.get('/api/lenders', async (req: Request, res: Response) => {
     try {

@@ -63,8 +63,29 @@ function normalizeDocs(docs: RequiredDoc[] = []): RequiredDoc[] {
   return uniqBy(withMinimum, d => `${(d as any).key || ""}|${(d as any).label?.toLowerCase?.()||""}`);
 }
 
-// ---- Canonical fetch with safe fallback (catalog → legacy) -----------------
+// ---- Canonical fetch with safe fallback (v1 → catalog → legacy) -----------------
 export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
+  try {
+    const r = await fetch('/api/v1/products', { credentials: 'include' });
+    if (r.ok) {
+      const v1 = await r.json();
+      if (Array.isArray(v1) && v1.length) {
+        const mapped = v1.map((p: any) => ({
+          id: p.id,
+          name: p.productName,
+          lender_name: p.lenderName,
+          country: String(p.countryOffered || '').toUpperCase(),   // ← no default
+          category: p.productCategory || '',
+          min_amount: Number(p.minimumLendingAmount || 0),
+          max_amount: Number(p.maximumLendingAmount || Number.MAX_SAFE_INTEGER),
+          active: p.isActive !== false,
+          required_documents: p.required_documents,
+        }));
+        return dedupeProducts(mapped);
+      }
+    }
+  } catch {/* fall back */}
+  
   try {
     const r = await fetch("/api/catalog/export-products?includeInactive=1", { credentials: "include" });
     if (r.ok) {
@@ -76,7 +97,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
           name: p.name ?? p.productName,
           lender_name: p.lender_name ?? p.lenderName,
           country: String(p.country ?? p.countryOffered ?? "").toUpperCase(),
-          category: p.category ?? p.productCategory ?? "Working Capital",
+          category: p.category ?? p.productCategory ?? "",
           min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0),
           max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? Number.MAX_SAFE_INTEGER),
           active: (p.active ?? p.isActive) !== false,
@@ -86,6 +107,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
       }
     }
   } catch {/* fall back */}
+  
   // Legacy fallback
   const r2 = await fetch("/api/lender-products", { credentials: "include" });
   const j2 = await r2.json();
@@ -95,7 +117,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
     name: p.productName ?? p.name,
     lender_name: p.lenderName ?? p.lender_name,
     country: String(p.countryOffered ?? p.country ?? "").toUpperCase(),
-    category: p.productCategory ?? p.category ?? "Working Capital",
+    category: p.productCategory ?? p.category ?? "",
     min_amount: Number(p.minimumLendingAmount ?? p.min_amount ?? 0),
     max_amount: Number(p.maximumLendingAmount ?? p.max_amount ?? Number.MAX_SAFE_INTEGER),
     active: (p.isActive ?? p.active) !== false,
@@ -113,7 +135,7 @@ export async function recommendProducts(intake: IntakeInput): Promise<CategoryRe
   const cc = String(intake.country).toUpperCase();
 
   const eligible = all.filter(p =>
-    (p.country?.toUpperCase() === cc) &&
+    (p.country === cc) &&  // ← strict country match
     p.active &&
     p.min_amount <= amt && amt <= p.max_amount
   );
