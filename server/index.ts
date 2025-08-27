@@ -295,8 +295,159 @@ app.use((req, res, next) => {
     }
   });
 
+  // Preflight validation for 1:1 Staff submission pipeline
+  app.post('/api/applications/validate-intake', async (req, res) => {
+    const intake = req.body;
+    
+    // Basic intake structure validation
+    if (!intake.product_id || !intake.country || !intake.amount) {
+      return res.json({
+        ok: false,
+        errors: ['Missing required fields: product_id, country, amount']
+      });
+    }
+    
+    try {
+      // Get products via V1 endpoint to verify product exists and constraints
+      const productsUrl = '/api/v1/products';
+      const products = await fetch(`${req.protocol}://${req.get('host')}${productsUrl}`, {
+        headers: { 'Cookie': req.headers.cookie || '' }
+      }).then(r => r.json());
+      
+      const product = products.find((p: any) => p.id === intake.product_id);
+      if (!product) {
+        return res.json({
+          ok: false,
+          errors: [`Product not found: ${intake.product_id}`]
+        });
+      }
+      
+      // Validate against Staff constraints
+      const errors: string[] = [];
+      const tib = intake.timeInBusinessMonths ?? 0;
+      const rev = intake.monthlyRevenue ?? 0;
+      
+      if (product.isActive === false) errors.push('Product is not active');
+      if (product.countryOffered && product.countryOffered !== intake.country) {
+        errors.push(`Product not available in ${intake.country}`);
+      }
+      if (product.minimumLendingAmount != null && intake.amount < product.minimumLendingAmount) {
+        errors.push(`Amount below minimum: $${product.minimumLendingAmount}`);
+      }
+      if (product.maximumLendingAmount != null && intake.amount > product.maximumLendingAmount) {
+        errors.push(`Amount above maximum: $${product.maximumLendingAmount}`);
+      }
+      if (product.min_time_in_business != null && tib < product.min_time_in_business) {
+        errors.push(`Minimum ${product.min_time_in_business} months in business required`);
+      }
+      if (product.min_monthly_revenue != null && rev < product.min_monthly_revenue) {
+        errors.push(`Minimum $${product.min_monthly_revenue} monthly revenue required`);
+      }
+      if (intake.industry && (product.excluded_industries || []).includes(intake.industry)) {
+        errors.push(`Industry "${intake.industry}" not eligible`);
+      }
+      
+      if (errors.length > 0) {
+        return res.json({ ok: false, errors });
+      }
+      
+      // Success - return validated product snapshot and docs
+      res.json({
+        ok: true,
+        product,
+        required_documents: product.required_documents || ["Last 6 months bank statements"]
+      });
+      
+    } catch (error) {
+      console.error('❌ [VALIDATE-INTAKE] Error:', error);
+      res.json({
+        ok: false,
+        errors: ['Validation service temporarily unavailable']
+      });
+    }
+  });
+
+  // New streamlined /api/applications endpoint for 1:1 Staff submission (Intake format)
+  app.post('/api/applications', async (req, res) => {
+    const intake = req.body;
+    
+    // Basic validation - must be Intake format
+    if (!intake.product_id || !intake.country || !intake.amount) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Invalid intake format - missing product_id, country, or amount'
+      });
+    }
+    
+    try {
+      // Re-validate intake to ensure constraints are met
+      const validationUrl = '/api/applications/validate-intake';
+      const validation = await fetch(`${req.protocol}://${req.get('host')}${validationUrl}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': req.headers.cookie || ''
+        },
+        body: JSON.stringify(intake)
+      }).then(r => r.json());
+      
+      if (!validation.ok) {
+        return res.status(400).json({
+          ok: false,
+          error: validation.errors.join('; ')
+        });
+      }
+      
+      // Prepare Staff submission payload with product snapshot preservation
+      const staffPayload = {
+        intake,
+        product_snapshot: validation.product, // Preserve exact Staff product data used
+        required_documents: validation.required_documents,
+        submission_timestamp: new Date().toISOString(),
+        client_version: "v1.3-1to1-intake"
+      };
+      
+      // Submit to Staff backend with product snapshot  
+      const staffUrl = `${cfg.staffApiUrl.replace('/api/lender-products', '')}/api/applications`;
+      const response = await fetch(staffUrl, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
+        },
+        body: JSON.stringify(staffPayload)
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ [INTAKE-SUBMIT] 1:1 application submitted successfully');
+        res.json({
+          ok: true,
+          id: data.applicationId || data.id,
+          message: data.message || 'Application submitted successfully'
+        });
+      } else {
+        const errorData = await response.text();
+        console.error('❌ [INTAKE-SUBMIT] Staff submission failed:', response.status, errorData);
+        res.status(response.status).json({
+          ok: false,
+          error: 'Staff submission failed',
+          message: errorData
+        });
+      }
+    } catch (error) {
+      console.error('❌ [INTAKE-SUBMIT] Network error:', error);
+      res.status(500).json({
+        ok: false,
+        error: 'Network error',
+        message: 'Failed to submit application'
+      });
+    }
+  });
+
   // Legacy /api/applications endpoint for auto-save compatibility (CSRF protected)
-  app.post('/api/applications', requireCsrf, async (req, res) => {
+  app.post('/api/applications/legacy', requireCsrf, async (req, res) => {
     // Legacy auto-save conversion
     
     // Convert flat format to step-based format for Staff API

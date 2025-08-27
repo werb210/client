@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import fs from 'fs';
+import path from 'path';
 
 export type Canonical = {
   id: string;
@@ -67,7 +69,34 @@ export function replaceAll(incoming: any[]): { saved: number; CA: number; US: nu
 }
 
 export function getAll(): Canonical[] {
+  // If cache is empty, try to load from file
+  if (STATE.data.length === 0) {
+    loadFromFile();
+  }
   return STATE.data;
+}
+
+// Load products from file into in-memory cache
+function loadFromFile(): void {
+  try {
+    const PRODUCTS_PATH = path.join(process.cwd(), "data", "lenderProducts.json");
+    
+    if (fs.existsSync(PRODUCTS_PATH)) {
+      const content = fs.readFileSync(PRODUCTS_PATH, 'utf8');
+      const products = JSON.parse(content);
+      
+      if (Array.isArray(products) && products.length > 0) {
+        const result = replaceAll(products);
+        console.log(`✅ Loaded ${result.saved} products from file into memory (CA: ${result.CA}, US: ${result.US})`);
+      } else {
+        console.log('❌ Products file exists but is empty or invalid format');
+      }
+    } else {
+      console.log('❌ Products file does not exist at:', PRODUCTS_PATH);
+    }
+  } catch (error) {
+    console.error('❌ Failed to load products from file:', error);
+  }
 }
 
 export function getCacheStats() {

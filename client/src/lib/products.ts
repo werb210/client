@@ -62,14 +62,14 @@ export async function fetchProductsV1(): Promise<V1Product[]> {
 export const fetchProductsStable = fetchProductsV1;
 
 // Fix pack 3 — Step 2 uses Staff constraints (no guesses)
-export type Intake = {
+export type RecommendationIntake = {
   country: "US" | "CA";
   amount: number;
   timeInBusinessMonths?: number;
   monthlyRevenue?: number;
   industry?: string;
 };
-export function recommend(intake: Intake, products: V1Product[]) {
+export function recommend(intake: RecommendationIntake, products: V1Product[]) {
   const tib = intake.timeInBusinessMonths ?? 0;
   const rev = intake.monthlyRevenue ?? 0;
   return products.filter(p => {
@@ -97,6 +97,52 @@ export function requiredDocsFor(p: V1Product): string[] {
 // Fix pack 5 — cache/version guard to purge any stale "US-only" data
 export const CATALOG_SCHEMA_VERSION = "v1.3-country-nullable+staff-docs";
 export function needCacheReset(stored?: string) { return stored !== CATALOG_SCHEMA_VERSION; }
+
+// PURPOSE: Keep the submission payload 1:1 with Staff data. No defaulting country/category/amounts.
+// Preflight validation against /api/applications/validate-intake before enabling Submit.
+// Include product SNAPSHOT fields the UI actually used.
+
+export type Intake = {
+  product_id: string;
+  country: "US" | "CA";
+  amount: number;
+  timeInBusinessMonths?: number;
+  monthlyRevenue?: number;
+  industry?: string;
+};
+
+async function getJSON<T>(url: string, init?: RequestInit): Promise<T> {
+  const r = await fetch(url, { credentials: "include", ...init });
+  if (!r.ok) throw new Error(`${url} ${r.status}`);
+  return r.json();
+}
+
+// Enhanced fetchProductsV1 with proper normalization (updated version)
+
+// Step 5 docs: prefer Staff-provided docs, minimal fallback otherwise
+export function resolveDocs(p: V1Product): string[] {
+  if (Array.isArray(p.required_documents) && p.required_documents.length) return p.required_documents;
+  return ["Last 6 months bank statements"];
+}
+
+// Preflight validation before enabling Submit
+export async function validateIntake(intake: Intake) {
+  return getJSON<{ok:boolean; errors?:string[]; product?:V1Product; required_documents?:string[]}>(
+    "/api/applications/validate-intake",
+    { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify(intake) }
+  );
+}
+
+// Final submit (server re-validates & stores product snapshot)
+export async function submitApplication(intake: Intake) {
+  const v = await validateIntake(intake);
+  if (!v.ok) throw new Error((v.errors||["validation failed"]).join("; "));
+  const r = await getJSON<{ok:boolean; id:string}>(
+    "/api/applications",
+    { method: "POST", headers: { "Content-Type":"application/json" }, body: JSON.stringify(intake) }
+  );
+  return r.id;
+}
 
 // Quick QA (optional)
 export async function qa() {
