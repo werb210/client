@@ -33,8 +33,11 @@ import supportRouter from "./routes/support";
 // Auth router removed - client app is public
 import leadsRouter from "./routes/leads";
 // V1 single-source endpoints + legacy shim + sanity
+// @ts-ignore - .mjs files don't have type declarations
 import v1Router from "./routes/v1-parity.mjs";
+// @ts-ignore - .mjs files don't have type declarations
 import legacyLenderProducts from "./routes/lender-products.mjs";
+// @ts-ignore - .mjs files don't have type declarations
 import catalogSanity from "./routes/catalog-sanity.mjs";
 import { issueCsrf, requireCsrf } from "./security/csrf";
 import { securityHeaders } from "./security/headers";
