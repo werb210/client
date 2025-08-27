@@ -1,71 +1,44 @@
-// AFTER: strictly Staff API
 import React from "react";
-import { listDocumentsFor, getDocumentViewUrl, setDocumentStatus, type LenderProduct, type RequiredDoc } from "@/lib/api";
+import { listDocuments, type RequiredDoc, type RequiredDocsInput } from "@/lib/api";
 
-function normalizeDocs(docs: RequiredDoc[]) {
-  return (docs ?? []).map((d, i) =>
-    typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
-  );
-}
+type Props = {
+  context: RequiredDocsInput; // must include category; country/amount optional
+};
 
-export function DynamicDocumentRequirements({ applicationId }: { applicationId: string }) {
-  const [docs, setDocs] = React.useState<any[]>([]);
+export default function DynamicDocumentRequirements({ context }: Props) {
+  const [docs, setDocs] = React.useState<RequiredDoc[]>([]);
   const [loading, setLoading] = React.useState(false);
+  const [err, setErr] = React.useState<string | null>(null);
 
-  async function refresh() {
-    setLoading(true);
-    try {
-      // Example usage with product object:
-      const sampleProduct: LenderProduct = { 
-        id: applicationId, 
-        name: "Sample Product", 
-        lender_name: "Sample Lender",
-        category: "Working Capital", 
-        country: "US", 
-        min_amount: 50000,
-        max_amount: 5000000,
-        active: true
-      };
-      const rawDocs = await listDocumentsFor(sampleProduct);
-      // rawDocs is Guaranteed to include "Last 6 months bank statements"
-      const items = normalizeDocs(rawDocs);
-      setDocs(items);
-    } finally {
-      setLoading(false);
-    }
-  }
-  React.useEffect(() => { refresh(); }, [applicationId]);
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true); setErr(null);
+      try {
+        const d = await listDocuments(context);
+        if (mounted) setDocs(d);
+      } catch (e: any) {
+        if (mounted) setErr(e?.message ?? "Failed to load document list");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [context.category, context.country, context.amount, context.lenderId, context.timeInBusinessMonths, context.monthlyRevenue, context.creditScore]);
 
-  async function view(docId: string) {
-    const { url } = await getDocumentViewUrl(docId);
-    if (url) window.open(url, "_blank", "noopener,noreferrer");
-  }
-  async function accept(docId: string) {
-    await setDocumentStatus(docId, "accepted");
-    refresh();
-  }
-  async function reject(docId: string) {
-    await setDocumentStatus(docId, "rejected");
-    refresh();
-  }
+  if (loading) return <div>Loading required documents…</div>;
+  if (err) return <div style={{ color: "crimson" }}>{err}</div>;
 
-  if (loading) return <div>Loading documents…</div>;
+  const items = docs.map((d, i) => (typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d));
+
   return (
-    <div className="space-y-2">
-      {docs.map(d => (
-        <div key={d.key || d.id} className="flex items-center justify-between gap-2 border p-2 rounded">
-          <div>
-            <div className="font-medium">{d.label || d.file_name}</div>
-            <div className="text-xs text-gray-500">{d.required ? 'Required' : 'Optional'} · {d.status || 'pending'}</div>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => view(d.key || d.id)} className="btn btn-light">View</button>
-            <button onClick={() => accept(d.key || d.id)} className="btn btn-success">Accept</button>
-            <button onClick={() => reject(d.key || d.id)} className="btn btn-danger">Reject</button>
-          </div>
-        </div>
+    <div style={{ display: "grid", gap: 8 }}>
+      {items.map(d => (
+        <label key={d.key} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input type="checkbox" defaultChecked={false} aria-label={d.label} />
+          <span>{d.label}{d.required ? " *" : ""}{(d as any).months ? ` (${(d as any).months} months)` : ""}</span>
+        </label>
       ))}
-      {docs.length === 0 && <div className="text-sm text-gray-500">No documents yet.</div>}
     </div>
   );
 }

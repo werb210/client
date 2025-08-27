@@ -415,3 +415,104 @@ export async function fetchCatalogDump(limit = 500): Promise<DumpResponse> {
     return { canonical_fields, products };
   }
 }
+
+export type IntakeInput = {
+  amount: number;
+  country: "CA" | "US";
+  timeInBusinessMonths?: number;
+  monthlyRevenue?: number;
+  creditScore?: number;
+  category?: string; // optional pre-selected category
+};
+
+export type CategoryRecommendation = {
+  category: string;
+  products: CanonicalProduct[];
+};
+
+const DOCS_FALLBACK: Record<string, RequiredDoc[]> = {
+  "Working Capital": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  "Business Line of Credit": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  "Term Loan": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  "Equipment Financing": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  "Invoice Factoring": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+  "Purchase Order Financing": [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }],
+};
+
+export async function recommendProducts(input: IntakeInput): Promise<CategoryRecommendation[]> {
+  const { products } = await fetchCatalogDump(500); // trusts canonical category when available
+  const amt = Number(input.amount || 0);
+  const cc = String(input.country || "").toUpperCase();
+
+  // 1) Filter by country + amount window
+  const matches = products.filter(p =>
+    p.country === cc &&
+    (Number.isFinite(p.min_amount) ? p.min_amount <= amt : true) &&
+    (Number.isFinite(p.max_amount) ? amt <= p.max_amount : true) &&
+    p.active !== false
+  );
+
+  // 2) Simple relevance scoring (closest max_amount first; then higher max)
+  const scored = matches
+    .map(p => ({
+      score: Math.abs((p.max_amount ?? Number.MAX_SAFE_INTEGER) - amt),
+      p,
+    }))
+    .sort((a, b) => a.score - b.score || (b.p.max_amount ?? 0) - (a.p.max_amount ?? 0))
+    .map(x => x.p);
+
+  // 3) Group by canonical category
+  const byCat = new Map<string, CanonicalProduct[]>();
+  for (const p of scored) {
+    const cat = p.category || "Working Capital";
+    if (!byCat.has(cat)) byCat.set(cat, []);
+    byCat.get(cat)!.push(p);
+  }
+
+  // 4) If caller specified a category, surface it first
+  const result: CategoryRecommendation[] = [];
+  const order = Array.from(byCat.keys());
+  if (input.category && byCat.has(input.category)) {
+    result.push({ category: input.category, products: byCat.get(input.category)! });
+  }
+  for (const c of order) {
+    if (!input.category || c !== input.category) {
+      result.push({ category: c, products: byCat.get(c)! });
+    }
+  }
+  return result;
+}
+
+export type RequiredDocsInput = {
+  category?: string;
+  country?: "CA" | "US";
+  amount?: number;
+  lenderId?: string;
+  timeInBusinessMonths?: number;
+  monthlyRevenue?: number;
+  creditScore?: number;
+};
+
+export async function listDocuments(input: RequiredDocsInput): Promise<RequiredDoc[]> {
+  // Prefer Staff endpoint; fall back to baseline (6-month bank statements) per category.
+  try {
+    const r = await fetch("/api/required-docs", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      credentials: "include",
+      body: JSON.stringify(input),
+    });
+    if (r.ok) {
+      const j = await r.json();
+      const docs = j?.documents ?? j?.requiredDocs ?? j?.data ?? [];
+      if (Array.isArray(docs) && docs.length) {
+        return docs.map((d: any, i: number) =>
+          typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
+        );
+      }
+    }
+  } catch { /* noop → fallback */ }
+
+  const cat = input.category || "Working Capital";
+  return DOCS_FALLBACK[cat] ?? DOCS_FALLBACK["Working Capital"];
+}
