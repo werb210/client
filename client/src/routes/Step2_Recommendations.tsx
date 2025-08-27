@@ -56,21 +56,33 @@ export default function Step2Recommendations() {
 
         <div className="max-w-4xl mx-auto mt-8">
           <Step2RecommendationEngine
-            formData={{
-              ...state,
-              ...state.step1,
-              // Ensure required fields are available for filtering
-              headquarters: state.headquarters || state.step1?.headquarters || 'CA',
-              lookingFor: state.lookingFor || state.step1?.lookingFor || 'capital', 
-              fundingAmount: state.fundingAmount || state.step1?.fundingAmount || 50000,
-              accountsReceivableBalance: state.accountsReceivableBalance || state.step1?.accountsReceivableBalance || 0,
-              fundsPurpose: state.fundsPurpose || state.step1?.fundsPurpose || 'working_capital'
+            intake={{
+              amount: state.fundingAmount || state.step1?.fundingAmount || 50000,
+              country: state.headquarters || state.step1?.headquarters || 'CA',
+              timeInBusinessMonths: state.timeInBusinessMonths || state.step1?.timeInBusinessMonths,
+              monthlyRevenue: state.monthlyRevenue || state.step1?.monthlyRevenue,
+              creditScore: state.creditScore || state.step1?.creditScore,
+              category: state.lookingFor || state.step1?.lookingFor || 'Working Capital'
             }}
-            selectedProduct={state.selectedProduct || ''}
-            onProductSelect={handleProductSelect}
-            onContinue={handleContinue}
-            onPrevious={handleBack}
+            onSelectProduct={handleProductSelect}
           />
+          
+          {/* Navigation buttons */}
+          <div className="flex justify-between mt-8">
+            <button 
+              onClick={handleBack}
+              className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Back
+            </button>
+            <button 
+              onClick={handleContinue}
+              className="px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700"
+              disabled={!state.selectedProduct}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       </div>
     </div>
