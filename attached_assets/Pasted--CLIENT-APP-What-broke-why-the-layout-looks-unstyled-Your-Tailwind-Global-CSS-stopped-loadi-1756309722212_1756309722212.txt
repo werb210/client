@@ -1,0 +1,58 @@
+[CLIENT APP]
+
+What broke (why the layout looks “unstyled”):
+- Your Tailwind/Global CSS stopped loading. The page is rendering plain HTML because the CSS bundle isn’t being applied.
+- This happened right after the rollback + edits to `main.tsx` (console-guard/fetch-guard). In that shuffle, the critical CSS import likely got dropped or Tailwind’s content globs no longer match your files—both result in **zero utilities emitted** (classic “everything looks default HTML” symptom).
+
+Root causes to fix (do all 4 — they’re fast):
+1) FILE: client/src/main.tsx  (restore CSS import at the very top)
+   // MUST be first so Tailwind base resets apply
+   import "./index.css";
+   import "./lib/console-guard"; // ok to keep
+   import React from "react";
+   import ReactDOM from "react-dom/client";
+   // ...rest unchanged
+
+   // If console-guard is a bare script, ensure it’s a module:
+   // add at bottom of client/src/lib/console-guard.ts
+   export {}; // prevents it from polluting the global scope
+
+2) FILE: client/src/index.css  (ensure Tailwind directives are present, in this exact order)
+   @tailwind base;
+   @tailwind components;
+   @tailwind utilities;
+
+3) FILE: client/tailwind.config.(js|ts)  (fix content globs so JIT sees your classes)
+   module.exports = {
+     content: [
+       "./index.html",
+       "./src/**/*.{js,ts,jsx,tsx}",
+     ],
+     theme: { extend: {} },
+     plugins: [],
+   };
+   // If you keep UI outside src (e.g., /pages, /v2-design-system), add them explicitly:
+   // "./src/pages/**/*.{ts,tsx,jsx,js}",
+   // "./src/v2-design-system/**/*.{ts,tsx,jsx,js}",
+
+4) FILE: client/index.html  (sanity check)
+   - Has <div id="root"></div>
+   - Has <meta name="viewport" content="width=device-width, initial-scale=1" />
+   // No inline <style> or CSP that would block styles
+
+Quick validation (what you should see immediately after rebuild):
+- Network tab: a CSS asset like `/assets/index-*.css` with 200 status.
+- Elements tab: body has Tailwind classes (e.g., `bg-…`, `text-…`) and computed styles no longer default.
+- Visual: headings use your site font, spacing restored, cards/buttons styled again.
+
+Why I’m confident this is it:
+- The screenshot shows “default” typography/spacing—classic when Tailwind utilities vanish.
+- We just touched `main.tsx` multiple times; losing `import "./index.css"` is a common regression.
+- Rollback can also revert `tailwind.config` content globs; if they don’t match your moved files, Tailwind emits an empty stylesheet in prod and near-empty in dev.
+
+If after this the layout is still off:
+- Check DevTools → Console for “Refused to apply style …” (CSP/mime) or 404 on the CSS file.
+- If you see only warnings like “Unrecognized feature: oversized-images” (from the Replit iframe), those are benign and not the cause.
+
+Outcome:
+- Restoring the CSS import + correct Tailwind globs will bring back the full design system, fixing the “broken HTML” look without touching your pages/components.
