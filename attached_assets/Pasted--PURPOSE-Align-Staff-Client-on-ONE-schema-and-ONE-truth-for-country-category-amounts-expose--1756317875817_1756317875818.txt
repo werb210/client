@@ -1,0 +1,175 @@
+# PURPOSE
+# Align Staff & Client on ONE schema and ONE truth for country/category/amounts,
+# expose the missing Staff fields, remove dangerous fallbacks, and guarantee the
+# Client receives the exact same distribution (CA/US, categories, amounts).
+#
+# This patch:
+#  1) Hardens the canonical SQL view (no fake defaults; nulls stay null).
+#  2) Extends the V1 transform to EXPOSE the 3 missing Staff fields:
+#       - min_time_in_business, min_monthly_revenue, excluded_industries
+#     …and required_documents (pass-through).
+#  3) Fixes legacy shim so it NEVER invents defaults (no 'US', no 0, no MAX_SAFE_INTEGER).
+#  4) Adds a sanity endpoint for country/category/range counts.
+#  5) Ensures the “Sync to Client” push includes the expanded fields unchanged.
+
+set -euo pipefail
+: "${DATABASE_URL:?Set DATABASE_URL}"
+
+echo "== 1) Canonical view (idempotent) with no magic defaults =="
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+CREATE OR REPLACE VIEW crm_lender_products_canon AS
+SELECT
+  p.id,
+  COALESCE(p.name, p.product_name)                                   AS name,
+  NULLIF(UPPER(COALESCE(p.country, p.country_offered)), '')          AS country,   -- never invent 'US'
+  NULLIF(p.category::text, '')                                       AS category,
+  p.lender_id,
+  /* preserve real numbers; DO NOT default to 0/MAX */
+  COALESCE(p.min_amount, p.amount_min, p.minimum_lending_amount)     AS min_amount,
+  COALESCE(p.max_amount, p.amount_max, p.maximum_lending_amount)     AS max_amount,
+  COALESCE(p.active, p.is_active)                                    AS active,
+  /* expose critical Staff-only fields */
+  p.min_time_in_business,
+  p.min_monthly_revenue,
+  COALESCE(p.excluded_industries, '{}'::text[])                      AS excluded_industries,
+  /* pass through docs if present */
+  COALESCE(p.required_documents, p.documents_required)               AS required_documents,
+  p.tenant_id,
+  p.created_at,
+  p.updated_at
+FROM lender_products p;
+SQL
+
+echo "== 2) V1 parity router (single source) exposes missing fields verbatim =="
+mkdir -p server/routes
+
+cat > server/routes/v1-parity.mjs <<'JS'
+import express from "express";
+import { Pool } from "pg";
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const r = express.Router();
+
+/* Helpers */
+const toV1 = (row) => ({
+  id: row.id,
+  productName: row.name ?? "",
+  lenderName: row.lender_name ?? row.name ?? "",
+  countryOffered: row.country ?? "",           // never default to 'US'
+  productCategory: row.category ?? "",
+  minimumLendingAmount: row.min_amount ?? null,
+  maximumLendingAmount: row.max_amount ?? null,
+  isActive: typeof row.active === "boolean" ? row.active : null,
+
+  /* NEW: expose Staff fields */
+  min_time_in_business: row.min_time_in_business ?? null,
+  min_monthly_revenue: row.min_monthly_revenue ?? null,
+  excluded_industries: row.excluded_industries ?? [],
+  required_documents: row.required_documents ?? null,
+});
+
+r.get("/api/v1/products", async (_req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT * FROM crm_lender_products_canon ORDER BY name NULLS LAST"
+    );
+    res.json(rows.map(toV1));
+  } catch (e) {
+    res.status(500).json({ error: "v1 products failed", detail: String(e.message || e) });
+  }
+});
+
+r.get("/api/v1/lenders", async (_req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT COALESCE(lender_id,'unknown') AS id, COUNT(*) AS n FROM crm_lender_products_canon GROUP BY 1 ORDER BY 2 DESC"
+    );
+    res.json({ lenders: rows.map(x => ({ id: x.id, name: x.id, product_count: Number(x.n) })) });
+  } catch (e) {
+    res.status(500).json({ error: "v1 lenders failed", detail: String(e.message || e) });
+  }
+});
+
+export default r;
+JS
+
+echo "== 3) Legacy shim returns CANONICAL values (no invention) =="
+cat > server/routes/lender-products.mjs <<'JS'
+import express from "express";
+import { Pool } from "pg";
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const r = express.Router();
+
+r.get("/api/lender-products", async (_req, res) => {
+  try {
+    const { rows } = await pool.query("SELECT * FROM crm_lender_products_canon ORDER BY name NULLS LAST");
+    const products = rows.map(x => ({
+      /* canonical */
+      id: x.id,
+      name: x.name ?? "",
+      country: x.country ?? null,
+      category: x.category ?? null,
+      min_amount: x.min_amount ?? null,
+      max_amount: x.max_amount ?? null,
+      active: typeof x.active === "boolean" ? x.active : null,
+      /* legacy aliases (for old clients) */
+      countryOffered: x.country ?? null,
+      productCategory: x.category ?? null,
+      minimumLendingAmount: x.min_amount ?? null,
+      maximumLendingAmount: x.max_amount ?? null,
+      isActive: typeof x.active === "boolean" ? x.active : null,
+      /* pass-through Staff fields */
+      min_time_in_business: x.min_time_in_business ?? null,
+      min_monthly_revenue: x.min_monthly_revenue ?? null,
+      excluded_industries: x.excluded_industries ?? [],
+      required_documents: x.required_documents ?? null,
+    }));
+    res.json({ products, total: products.length });
+  } catch (e) {
+    res.status(500).json({ error: "legacy lender-products failed", detail: String(e.message || e) });
+  }
+});
+
+export default r;
+JS
+
+echo "== 4) Catalog sanity endpoint (country/category/range) =="
+cat > server/routes/catalog-sanity.mjs <<'JS'
+import express from "express";
+import { Pool } from "pg";
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const r = express.Router();
+
+r.get("/api/catalog/sanity", async (_req, res) => {
+  try {
+    const [countries, categories, ranges] = await Promise.all([
+      pool.query(`SELECT COALESCE(country,'NULL') AS k, COUNT(*) AS n FROM crm_lender_products_canon GROUP BY 1 ORDER BY 2 DESC, 1`),
+      pool.query(`SELECT COALESCE(category,'NULL') AS k, COUNT(*) AS n FROM crm_lender_products_canon GROUP BY 1 ORDER BY 2 DESC, 1`),
+      pool.query(`SELECT MIN(min_amount) AS min_min, MAX(min_amount) AS max_min, MIN(max_amount) AS min_max, MAX(max_amount) AS max_max FROM crm_lender_products_canon`)
+    ]);
+    res.json({ total: countries.rows.reduce((a,r)=>a+Number(r.n||0),0),
+      by_country:countries.rows, by_category:categories.rows, ranges:ranges.rows[0] });
+  } catch (e) {
+    res.status(500).json({ error: "sanity failed", detail: String(e.message || e) });
+  }
+});
+
+export default r;
+JS
+
+echo "== 5) Mount routes BEFORE auth (single source of truth) =="
+BOOT="server/boot.ts"
+grep -q 'v1-parity.mjs' "$BOOT" 2>/dev/null || cat >> "$BOOT" <<'JS'
+// V1 single-source endpoints + legacy shim + sanity
+import v1Router from "./routes/v1-parity.mjs";
+import legacyLenderProducts from "./routes/lender-products.mjs";
+import catalogSanity from "./routes/catalog-sanity.mjs";
+app.use(v1Router);
+app.use(legacyLenderProducts);
+app.use(catalogSanity);
+JS
+
+echo "== 6) Quick checks =="
+curl -s http://localhost:5000/api/v1/products | jq 'length'
+curl -s http://localhost:5000/api/v1/products | jq 'group_by(.countryOffered)|map({k:.[0].countryOffered,n:length})'
+curl -s http://localhost:5000/api/lender-products | jq '.total'
+curl -s http://localhost:5000/api/catalog/sanity | jq .

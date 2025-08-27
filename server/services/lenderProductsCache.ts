@@ -10,6 +10,11 @@ export type Canonical = {
   max_amount: number;
   active: boolean;
   updated_at: string;
+  // NEW: expose Staff fields that were previously lost
+  min_time_in_business?: number;
+  min_monthly_revenue?: number;
+  excluded_industries?: string[];
+  required_documents?: string[];
 };
 
 const STATE: { data: Canonical[]; ts: number; sig: string } = { data: [], ts: 0, sig: "" };
@@ -33,7 +38,12 @@ function toCanonical(p: any): Canonical {
     min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0),
     max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? 0),
     active: Boolean(p.active ?? p.isActive ?? true),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    // NEW: preserve Staff fields that were previously lost
+    min_time_in_business: p.min_time_in_business ?? null,
+    min_monthly_revenue: p.min_monthly_revenue ?? null,
+    excluded_industries: p.excluded_industries ?? null,
+    required_documents: p.required_documents ?? null,
   };
 }
 

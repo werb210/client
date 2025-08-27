@@ -32,6 +32,10 @@ import clientMessagesRouter from "./routes/clientMessages";
 import supportRouter from "./routes/support";
 // Auth router removed - client app is public
 import leadsRouter from "./routes/leads";
+// V1 single-source endpoints + legacy shim + sanity
+import v1Router from "./routes/v1-parity.mjs";
+import legacyLenderProducts from "./routes/lender-products.mjs";
+import catalogSanity from "./routes/catalog-sanity.mjs";
 import { issueCsrf, requireCsrf } from "./security/csrf";
 import { securityHeaders } from "./security/headers";
 import { rlGeneral, rlUpload, rlChatbot } from "./security/rate";
@@ -1409,6 +1413,11 @@ app.use((req, res, next) => {
   app.use('/api/loan-products', documentRequirementsRouter);
 
   app.use('/api/admin', dataIngestionRouter);
+  
+  // V1 single-source endpoints + legacy shim + sanity (before auth middleware)
+  app.use(v1Router);
+  app.use(legacyLenderProducts);
+  app.use(catalogSanity);
   
   // Chat request-staff endpoint for Socket.IO integration
   app.post('/api/chat/request-staff', async (req, res) => {
