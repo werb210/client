@@ -1,0 +1,118 @@
+# PURPOSE
+# Ensure Client *never* re-defaults country to "US", always consumes Staff v1 truth,
+# and clears any stale caches so the CA/US distribution matches Staff immediately.
+
+set -euo pipefail
+
+echo "== 1) Single source of truth: consume /api/v1/products =="
+mkdir -p client/src/lib
+cat > client/src/lib/products.ts <<'TS'
+export type CanonicalProduct = {
+  id: string;
+  name: string;
+  lender_name?: string|null;
+  country: "CA"|"US"|null;
+  category: string|null;
+  min_amount: number|null;
+  max_amount: number|null;
+  active: boolean;
+  required_documents: string[];
+  min_time_in_business: number|null;
+  min_monthly_revenue: number|null;
+};
+
+const up = (s:any)=> (s??"").toString().trim().toUpperCase();
+
+function fromV1(p:any): CanonicalProduct {
+  const cc = up(p.countryOffered);
+  return {
+    id: p.id,
+    name: p.productName ?? "",
+    lender_name: p.lenderName ?? null,
+    country: (cc === "CA" || cc === "US") ? (cc as any) : null,
+    category: p.productCategory ?? null,
+    min_amount: p.minimumLendingAmount ?? null,
+    max_amount: p.maximumLendingAmount ?? null,
+    active: (p.isActive ?? true) === true,
+    required_documents: Array.isArray(p.required_documents) ? p.required_documents : [],
+    min_time_in_business: p.min_time_in_business ?? null,
+    min_monthly_revenue: p.min_monthly_revenue ?? null,
+  };
+}
+
+function fromLegacy(p:any): CanonicalProduct {
+  const cc = up(p.country ?? p.countryOffered);
+  return {
+    id: p.id,
+    name: p.name ?? p.productName ?? "",
+    lender_name: p.lender_name ?? p.lenderName ?? null,
+    country: (cc === "CA" || cc === "US") ? (cc as any) : null,
+    category: p.category ?? p.productCategory ?? null,
+    min_amount: p.min_amount ?? p.minimumLendingAmount ?? null,
+    max_amount: p.max_amount ?? p.maximumLendingAmount ?? null,
+    active: (p.active ?? p.isActive ?? true) === true,
+    required_documents: Array.isArray(p.required_documents) ? p.required_documents : [],
+    min_time_in_business: p.min_time_in_business ?? null,
+    min_monthly_revenue: p.min_monthly_revenue ?? null,
+  };
+}
+
+export async function fetchProducts(): Promise<CanonicalProduct[]> {
+  // v1 first
+  try {
+    const r = await fetch("/api/v1/products", { credentials: "include" });
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j)) return j.map(fromV1);
+    }
+  } catch {}
+  // legacy fallback
+  const r2 = await fetch("/api/lender-products");
+  const j2 = await r2.json();
+  return (j2.products ?? []).map(fromLegacy);
+}
+TS
+
+echo "== 2) Step 2 & 5 must not re-default country =="
+cat > client/src/lib/recommend.ts <<'TS'
+import type { CanonicalProduct } from "./products";
+
+export type Intake = { country: "CA"|"US"; amount: number; timeInBusinessMonths?: number; monthlyRevenue?: number; };
+
+export function recommend(products: CanonicalProduct[], intake: Intake) {
+  // Strict country match; products with null country are excluded.
+  const eligible = products.filter(p =>
+    p.active !== false &&
+    p.country === intake.country &&
+    (p.min_amount == null || p.min_amount <= intake.amount) &&
+    (p.max_amount == null || p.max_amount >= intake.amount) &&
+    (intake.timeInBusinessMonths == null || p.min_time_in_business == null || p.min_time_in_business <= intake.timeInBusinessMonths) &&
+    (intake.monthlyRevenue == null || p.min_monthly_revenue == null || p.min_monthly_revenue <= intake.monthlyRevenue)
+  );
+  // Score by closeness to requested amount
+  return eligible
+    .map(p => ({ p, score: Math.abs((p.max_amount ?? intake.amount) - intake.amount) }))
+    .sort((a,b)=> a.score - b.score)
+    .map(x=>x.p);
+}
+TS
+
+echo "== 3) QA helpers (verify distribution matches Staff) =="
+cat > client/scripts/qa-country.sh <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+echo "Client v1:"
+curl -s http://localhost:5000/api/v1/products | jq 'length as $n | {total:$n, by_country:(group_by(.countryOffered)|map({k:.[0].countryOffered, n:length}))}'
+echo "Client legacy:"
+curl -s http://localhost:5000/api/lender-products | jq '{total, by_country:(.products|group_by(.country)|map({k:.[0].country, n:length}))}'
+SH
+chmod +x client/scripts/qa-country.sh
+
+echo "== 4) Clear any stale caches (if you run a cache layer) =="
+# If you maintain an in-memory catalog, expose and call a clear endpoint; else skip.
+# curl -s -X POST http://localhost:5000/api/sync/clear-cache | jq .
+
+echo "== 5) Smoke test =="
+client/scripts/qa-country.sh || true
+
+echo "== Client ready (no US fallbacks, strict Staff v1 consumption) =="
