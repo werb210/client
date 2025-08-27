@@ -233,8 +233,19 @@ export default function Step1FinancialProfile() {
         fixedAssetsValue: data.fixedAssetsValue || 0,
         equipmentValue: data.equipmentValue || 0,
       };
+
+      // Create canonical format for Step 2 compatibility
+      const canonical = {
+        product_id: null,
+        country: step1Payload.headquarters,
+        amount: step1Payload.fundingAmount,
+        timeInBusinessMonths: 120, // Derived from salesHistory if needed
+        monthlyRevenue: step1Payload.averageMonthlyRevenue,
+        ...step1Payload // Include all original fields including industry
+      };
       
       console.log("🔧 Dispatching to context:", step1Payload);
+      console.log("🔧 Canonical format for Step 2:", canonical);
       
       // Store data in step1 object structure for validation
       dispatch({
@@ -246,6 +257,14 @@ export default function Step1FinancialProfile() {
         type: 'MARK_STEP_COMPLETE',
         payload: 1
       });
+
+      // Persist backup so Step 2 can recover even if navigation state is lost
+      try { 
+        localStorage.setItem("apply.form", JSON.stringify(canonical)); 
+        logger.log('✅ Form data backed up to localStorage');
+      } catch (e) {
+        logger.warn('⚠️ Could not backup to localStorage:', e);
+      }
 
       logger.log('✅ Form data dispatched to context');
 
