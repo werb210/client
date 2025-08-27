@@ -34,6 +34,35 @@ export type RequiredDoc =
   | { key: string; label: string; required: boolean; reason?: string; months?: number }
   | string;
 
+// --- DEDUPE HELPERS ---
+function uniqBy<T>(arr: T[], key: (x: T) => string): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const x of arr) {
+    const k = key(x);
+    if (!seen.has(k)) { seen.add(k); out.push(x); }
+  }
+  return out;
+}
+
+function dedupeProducts(products: CanonicalProduct[]): CanonicalProduct[] {
+  // 1) strict by id, 2) soft by signature (name+lender+country+category+range)
+  const strict = uniqBy(products, p => p.id);
+  return uniqBy(strict, p =>
+    `${(p.name||"").toLowerCase()}|${(p.lender_name||"").toLowerCase()}|${(p.country||"").toUpperCase()}|${(p.category||"").toLowerCase()}|${p.min_amount}|${p.max_amount}`
+  );
+}
+
+function normalizeDocs(docs: RequiredDoc[] = []): RequiredDoc[] {
+  // collapse strings → objects, lower-case by key/label, keep first required
+  const asObjs = docs.map((d, i) =>
+    typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
+  );
+  // guarantee bank_6m present exactly once
+  const withMinimum = [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }, ...asObjs];
+  return uniqBy(withMinimum, d => `${(d as any).key || ""}|${(d as any).label?.toLowerCase?.()||""}`);
+}
+
 // ---- Canonical fetch with safe fallback (catalog → legacy) -----------------
 export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
   try {
@@ -42,7 +71,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
       const j = await r.json();
       const items = j?.products ?? j ?? [];
       if (Array.isArray(items) && items.length) {
-        return items.map((p: any) => ({
+        const mapped = items.map((p: any) => ({
           id: p.id,
           name: p.name ?? p.productName,
           lender_name: p.lender_name ?? p.lenderName,
@@ -53,6 +82,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
           active: (p.active ?? p.isActive) !== false,
           required_documents: p.required_documents,
         }));
+        return dedupeProducts(mapped);
       }
     }
   } catch {/* fall back */}
@@ -60,7 +90,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
   const r2 = await fetch("/api/lender-products", { credentials: "include" });
   const j2 = await r2.json();
   const items2 = j2?.products ?? [];
-  return (items2 as any[]).map((p: any) => ({
+  const mapped = (items2 as any[]).map((p: any) => ({
     id: p.id,
     name: p.productName ?? p.name,
     lender_name: p.lenderName ?? p.lender_name,
@@ -71,6 +101,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
     active: (p.isActive ?? p.active) !== false,
     required_documents: p.required_documents,
   }));
+  return dedupeProducts(mapped);
 }
 
 // ---- Step 2: recommendations ------------------------------------------------
@@ -139,5 +170,5 @@ export async function listDocuments(input: RequiredDocsInput): Promise<RequiredD
     }
   } catch { /* fall through */ }
   const cat = input.category ?? "Working Capital";
-  return DOCS_FALLBACK[cat] ?? DOCS_FALLBACK["Working Capital"];
+  return normalizeDocs(DOCS_FALLBACK[cat] ?? DOCS_FALLBACK["Working Capital"]);
 }
