@@ -1,0 +1,23 @@
+index-z4YusbrL.js:55 Error Info: 
+{componentStack: '\n    at s5 (https://dfab1952-ea3f-4ab8-a1f0-afc6b3…dev/assets/index-z4YusbrL.js:234:15357)\n    at RI'}
+componentStack
+: 
+"\n    at s5 (https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/assets/index-z4YusbrL.js:234:183418)\n    at div\n    at div\n    at div\n    at l5 (https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/assets/index-z4YusbrL.js:234:184601)\n    at ja (https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/assets/index-z4YusbrL.js:49:3331)\n    at T4 (https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/assets/index-z4YusbrL.js:49:4144)\n    at Suspense\n    at ZR (https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/assets/index-z4YusbrL.js:251:41337)\n    at l4 (https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/assets/index-z4YusbrL.js:41:104140)\n    at o4 (https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/assets/index-z4YusbrL.js:41:102587)\n    at J_ (https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/assets/index-z4YusbrL.js:41:97399)\n    at j_ (https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/assets/index-z4YusbrL.js:41:93111)\n    at NE (https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/assets/index-z4YusbrL.js:234:14063)\n    at PE (https://dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/assets/index-z4YusbrL.js:234:15357)\n    at RI"
+[[Prototype]]
+: 
+Object
+error	@	index-z4YusbrL.js:55
+componentDidCatch	@	index-z4YusbrL.js:234
+Xv.v.componentDidCatch.u.callback	@	index-z4YusbrL.js:41
+Cv	@	index-z4YusbrL.js:39
+$y	@	index-z4YusbrL.js:41
+Sy	@	index-z4YusbrL.js:41
+jC	@	index-z4YusbrL.js:41
+VC	@	index-z4YusbrL.js:41
+xi	@	index-z4YusbrL.js:41
+Ey	@	index-z4YusbrL.js:41
+Co	@	index-z4YusbrL.js:39
+(anonymous)	@	index-z4YusbrL.js:41
+
+﻿
+
