@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# CLIENT STEP-FLOW TESTS
+# - Scans for hardcoded values in Step 2/5 code
+# - Submits 2 end-to-end applications (US & CA) using distinct Step-1 inputs
+# - Writes traces for Staff verification
+
+set -euo pipefail
+need(){ command -v "$1" >/dev/null || { echo "Missing $1"; exit 1; }; }
+need curl; need jq
+if ! command -v rg >/dev/null 2>&1; then echo "ripgrep (rg) not found; skipping code scan"; fi
+
+CLIENT_BASE="${CLIENT_BASE:-http://localhost:5000}"
+STAFF_BASE="${STAFF_BASE:-https://staff.boreal.financial}"
+TRACE_DIR="${TRACE_DIR:-/tmp/flow_traces}"
+mkdir -p "$TRACE_DIR"
+
+echo "== 0) QUICK CODE HARD-CODE SCAN (Step 2/5) =="
+if command -v rg >/dev/null 2>&1; then
+  echo "-- Suspicious literal usages (amount/revenue/tib/country/industry) --"
+  rg -n --hidden -S \
+    -e 'amount\s*[:=]\s*(\d{4,}|[\"\x27]\d{2,}[\"\x27])' \
+    -e 'monthlyRevenue\s*[:=]\s*(\d{4,}|[\"\x27]\d{2,}[\"\x27])' \
+    -e 'timeInBusiness(Months)?\s*[:=]\s*(\d{1,3})' \
+    -e 'country\s*[:=]\s*["\x27](CA|US)["\x27]' \
+    -e 'industry\s*[:=]\s*["\x27][A-Za-z ]+["\x27]' \
+    client/src/components client/src/lib client/src/context || true
+  echo "-- Direct .toLocaleString() on maybe-null numbers (can crash) --"
+  rg -n --hidden -S '\?\.toLocaleString\(\)|\.toLocaleString\(\)' client/src || true
+else
+  echo "(rg not installed; skip scan)"
+fi
+
+echo
+echo "== 1) Refresh client cache & show counts =="
+curl -sS -X POST "$CLIENT_BASE/internal/pull-staff-products" -H 'content-type: application/json' -d '{}' >/dev/null || true
+C="$(curl -fsS "$CLIENT_BASE/api/v1/products" || echo '[]')"
+if echo "$C" | jq -e 'type=="array"' >/dev/null 2>&1; then
+  CLIST="$C"
+else
+  CLIST="$(echo "$C" | jq -c '.items // []')"
+fi
+CTOTAL="$(echo "$CLIST" | jq 'length')"
+CCA="$(echo "$CLIST" | jq '[.[]|select((.country // .countryOffered // "NULL")|ascii_upcase=="CA")]|length')"
+CUS="$(echo "$CLIST" | jq '[.[]|select((.country // .countryOffered // "NULL")|ascii_upcase=="US")]|length')"
+echo "Client totals: $CTOTAL (CA=$CCA, US=$CUS)"
+
+echo
+echo "== 2) Pull Staff truth & pick 1 US and 1 CA product (for Step-5 doc checks) =="
+S="$(curl -fsS "$STAFF_BASE/api/v1/products")"
+if echo "$S" | jq -e 'type=="array"' >/dev/null 2>&1; then SLIST="$S"; else SLIST="$(echo "$S" | jq -c '.items // []')"; fi
+PID_US="$(echo "$SLIST" | jq -r '[.[]|select((.countryOffered // .country_offered // .country)=="US")][0].id // empty')"
+PID_CA="$(echo "$SLIST" | jq -r '[.[]|select((.countryOffered // .country_offered // .country)=="CA")][0].id // empty')"
+[ -n "$PID_US" ] || PID_US="$(echo "$SLIST" | jq -r '.[0].id')"
+[ -n "$PID_CA" ] || PID_CA="$(echo "$SLIST" | jq -r '.[1].id // .[0].id')"
+
+get_country(){ echo "$SLIST" | jq -r --arg id "$1" '.[]|select(.id==$id)|(.countryOffered // .country_offered // .country // "US")'; }
+CN_US="$(get_country "$PID_US")"
+CN_CA="$(get_country "$PID_CA")"
+
+# Two distinct Step-1 profiles to detect any hardcoding:
+# (A) US / Construction / lower revenue & shorter TIB / higher amount
+# (B) CA / Retail / higher revenue & longer TIB / lower amount
+declare -A PIDA=(["pid"]="$PID_US" ["country"]="$CN_US" ["amount"]="150000" ["tib"]="6"  ["rev"]="25000"  ["industry"]="Construction")
+declare -A PIDB=(["pid"]="$PID_CA" ["country"]="$CN_CA" ["amount"]="25000"  ["tib"]="120" ["rev"]="100000" ["industry"]="Retail")
+
+run_case () {
+  local label="$1"; shift
+  declare -n ref="$1"
+
+  echo
+  echo "== 3) $label — Build Step-2 intake from Step-1 values =="
+  INTAKE="$(jq -n \
+    --arg pid "${ref[pid]}" \
+    --arg c   "${ref[country]}" \
+    --argjson amt "${ref[amount]}" \
+    --argjson tib "${ref[tib]}" \
+    --argjson rev "${ref[rev]}" \
+    --arg ind "${ref[industry]}" \
+    '{product_id:$pid,country:$c,amount:$amt,timeInBusinessMonths:$tib,monthlyRevenue:$rev,industry:$ind}')"
+  echo "$INTAKE" | jq '.'
+
+  echo "-- Step 2 validation (should reflect our inputs; watch for any overrides) --"
+  VRESP="$(curl -s -X POST "$CLIENT_BASE/api/applications/validate-intake?diag=1" \
+    -H 'content-type: application/json' -d "$INTAKE")"
+  echo "$VRESP" | jq '{ok, received: {country, amount, timeInBusinessMonths, monthlyRevenue, industry}}' 2>/dev/null || echo "$VRESP" | jq '.'
+
+  if [ "$(echo "$VRESP" | jq -r '.ok // false')" != "true" ]; then
+    echo "❌ Validation failed for $label"; exit 1
+  fi
+
+  echo "-- Submit application (Step 3/4 → Step 5) --"
+  SRESP="$(curl -s -X POST "$CLIENT_BASE/api/applications" \
+    -H 'content-type: application/json' -d "$INTAKE")"
+  echo "$SRESP" | jq '.'
+  APP_ID="$(echo "$SRESP" | jq -r '.id // .application_id // .applicationId // empty')"
+  [ -n "$APP_ID" ] || { echo "❌ No application id returned for $label"; exit 1; }
+
+  # Save machine-readable trace for Staff verification
+  SPROD="$(echo "$SLIST" | jq -c --arg id "${ref[pid]}" '.[]|select(.id==$id)')"
+  TRACE_FILE="$TRACE_DIR/${label// /_}.json"
+  jq -n --arg app_id "$APP_ID" \
+        --argjson intake "$INTAKE" \
+        --argjson staff_product "$SPROD" \
+        --arg client_base "$CLIENT_BASE" \
+        --arg staff_base "$STAFF_BASE" \
+        '{meta:{timestamp:(now|todate),client_base:$client_base,staff_base:$staff_base,label:"'"$label"'"},app_id:$app_id,intake:$intake,staff_product_at_submit:$staff_product}' \
+        > "$TRACE_FILE"
+  echo "✅ Wrote trace: $TRACE_FILE"
+}
+
+run_case "CASE_A_US_Construct" PIDA
+run_case "CASE_B_CA_Retail"    PIDB
+
+echo
+echo "== 4) Summary =="
+ls -1 "$TRACE_DIR"
+echo "Now run the STAFF block using these traces to verify Step-5 required_documents and full continuity."
