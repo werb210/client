@@ -140,20 +140,51 @@ export default function Step1FinancialProfile() {
   const [location, setLocation] = useLocation();
   const { submitApplication, isSubmitting, error } = useSubmitApplication();
 
-  // Initialize application ID and clear any cached form data
+  // Initialize application ID and completely clear all form data
   useEffect(() => {
-    // Clear localStorage form data to prevent prefilled values
+    // Clear ALL localStorage form data to prevent prefilled values
     localStorage.removeItem('formData');
     localStorage.removeItem('financialFormData');
     localStorage.removeItem('apply.form');
-    // Cleared cached form data from localStorage
+    localStorage.removeItem('applicationData');
+    localStorage.removeItem('intake');
+    // Cleared all cached form data from localStorage
     
-    // Clear FormDataContext step1 state to prevent prefilled values
+    // COMPLETELY reset FormDataContext to initial clean state
     dispatch({
-      type: 'UPDATE_STEP1',
-      payload: {}
+      type: 'LOAD_FROM_STORAGE',
+      payload: {
+        step1: {},
+        step3: {},
+        step4: {},
+        currentStep: 1,
+        isComplete: false,
+        applicationId: state.applicationId || '',
+        signingUrl: '',
+        step1Completed: false,
+        step2Completed: false,
+        step3Completed: false,
+        step4Completed: false,
+        step5Completed: false,
+        step6Completed: false,
+        step5DocumentUpload: { uploadedFiles: [] },
+        step6Signature: {},
+        step6Authorization: {
+          typedName: '',
+          agreements: {
+            creditCheck: false,
+            dataSharing: false,
+            termsAccepted: false,
+            electronicSignature: false,
+            accurateInformation: false
+          },
+          timestamp: '',
+          userAgent: '',
+          stepCompleted: false
+        }
+      }
     });
-    // Cleared step1 context state
+    // Completely reset context state to prevent prefilled values
     
     const applicationId = initializeApplicationId();
     
@@ -164,7 +195,7 @@ export default function Step1FinancialProfile() {
         payload: applicationId
       });
     }
-  }, [dispatch, state.applicationId]);
+  }, []);
 
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),

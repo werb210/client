@@ -325,20 +325,18 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Load from localStorage on initialization (DISABLED to prevent prefilled values)
-  // useEffect(() => {
-  //   loadFromStorage();
-  // }, []);
+  // Auto-loading from localStorage PERMANENTLY DISABLED to prevent prefilled values
+  // This prevents any cached data from being automatically restored
 
-  // Auto-save to localStorage whenever state changes
-  useEffect(() => {
-    if (state.step1 && Object.keys(state.step1).length > 0 || 
-        state.step3 && Object.keys(state.step3).length > 0 || 
-        state.step4 && Object.keys(state.step4).length > 0) {
-      // Auto-save to localStorage (logging disabled)
-      saveToStorage();
-    }
-  }, [state]);
+  // Auto-save DISABLED to prevent prefilled values from being immediately restored
+  // useEffect(() => {
+  //   if (state.step1 && Object.keys(state.step1).length > 0 || 
+  //       state.step3 && Object.keys(state.step3).length > 0 || 
+  //       state.step4 && Object.keys(state.step4).length > 0) {
+  //     // Auto-save to localStorage (logging disabled)
+  //     saveToStorage();
+  //   }
+  // }, [state]);
 
   const saveToStorage = () => {
     try {
