@@ -140,8 +140,14 @@ export default function Step1FinancialProfile() {
   const [location, setLocation] = useLocation();
   const { submitApplication, isSubmitting, error } = useSubmitApplication();
 
-  // Initialize application ID once in Step 1
+  // Initialize application ID and clear any cached form data
   useEffect(() => {
+    // Clear localStorage form data to prevent prefilled values
+    localStorage.removeItem('formData');
+    localStorage.removeItem('financialFormData');
+    localStorage.removeItem('apply.form');
+    console.log('🧹 Cleared cached form data from localStorage');
+    
     const applicationId = initializeApplicationId();
     
     // Store in FormData context if not already set
@@ -189,19 +195,19 @@ export default function Step1FinancialProfile() {
     dispatch({
       type: 'UPDATE_STEP1',
       payload: {
-        businessLocation: data.businessLocation || 'US',
-        headquarters: data.headquarters || 'US',
-        headquartersState: data.headquartersState || '',
-        industry: data.industry || 'other',
-        lookingFor: data.lookingFor || 'capital',
-        fundingAmount: data.fundingAmount || 0,
-        fundsPurpose: data.fundsPurpose || 'working_capital',
-        salesHistory: data.salesHistory || '<1yr',
-        revenueLastYear: data.revenueLastYear || 0,
-        averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
-        accountsReceivableBalance: data.accountsReceivableBalance || 0,
-        fixedAssetsValue: data.fixedAssetsValue || 0,
-        equipmentValue: data.equipmentValue || 0,
+        businessLocation: data.businessLocation,
+        headquarters: data.headquarters,
+        headquartersState: data.headquartersState,
+        industry: data.industry,
+        lookingFor: data.lookingFor,
+        fundingAmount: data.fundingAmount,
+        fundsPurpose: data.fundsPurpose,
+        salesHistory: data.salesHistory,
+        revenueLastYear: data.revenueLastYear,
+        averageMonthlyRevenue: data.averageMonthlyRevenue,
+        accountsReceivableBalance: data.accountsReceivableBalance,
+        fixedAssetsValue: data.fixedAssetsValue,
+        equipmentValue: data.equipmentValue,
       },
     });
     logger.log('💾 Step 1 - Auto-saved form data to step1 object');
@@ -220,20 +226,20 @@ export default function Step1FinancialProfile() {
     
     try {
       const step1Payload = {
-        businessLocation: data.businessLocation || 'US',
-        headquarters: data.headquarters || 'US',
-        headquartersState: data.headquartersState || '',
-        industry: data.industry || 'other',
-        lookingFor: data.lookingFor || 'capital',
-        fundingAmount: data.fundingAmount || 50000,
-        requestedAmount: data.fundingAmount || 50000, // Add for compatibility
-        fundsPurpose: data.fundsPurpose || 'working_capital',
-        salesHistory: data.salesHistory || '<1yr',
-        revenueLastYear: data.revenueLastYear || 0,
-        averageMonthlyRevenue: data.averageMonthlyRevenue || 0,
-        accountsReceivableBalance: data.accountsReceivableBalance || 0,
-        fixedAssetsValue: data.fixedAssetsValue || 0,
-        equipmentValue: data.equipmentValue || 0,
+        businessLocation: data.businessLocation,
+        headquarters: data.headquarters,
+        headquartersState: data.headquartersState,
+        industry: data.industry,
+        lookingFor: data.lookingFor,
+        fundingAmount: data.fundingAmount,
+        requestedAmount: data.fundingAmount, // Add for compatibility
+        fundsPurpose: data.fundsPurpose,
+        salesHistory: data.salesHistory,
+        revenueLastYear: data.revenueLastYear,
+        averageMonthlyRevenue: data.averageMonthlyRevenue,
+        accountsReceivableBalance: data.accountsReceivableBalance,
+        fixedAssetsValue: data.fixedAssetsValue,
+        equipmentValue: data.equipmentValue,
       };
 
       // Convert salesHistory to months for Step 2 compatibility
@@ -252,7 +258,7 @@ export default function Step1FinancialProfile() {
         product_id: null,
         country: step1Payload.headquarters,
         amount: step1Payload.fundingAmount,
-        timeInBusinessMonths: convertSalesHistoryToMonths(step1Payload.salesHistory),
+        timeInBusinessMonths: step1Payload.salesHistory ? convertSalesHistoryToMonths(step1Payload.salesHistory) : 0,
         monthlyRevenue: step1Payload.averageMonthlyRevenue,
         ...step1Payload // Include all original fields including industry
       };
@@ -284,7 +290,7 @@ export default function Step1FinancialProfile() {
         amount: step1Payload.fundingAmount,
         country: step1Payload.headquarters as 'CA' | 'US',
         monthlyRevenue: step1Payload.averageMonthlyRevenue,
-        timeInBusinessMonths: convertSalesHistoryToMonths(step1Payload.salesHistory),
+        timeInBusinessMonths: step1Payload.salesHistory ? convertSalesHistoryToMonths(step1Payload.salesHistory) : 0,
         industry: step1Payload.industry
       };
       saveIntake(intake);
