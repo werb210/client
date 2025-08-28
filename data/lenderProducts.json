@@ -408,5 +408,44 @@
     "min_monthly_revenue": 833,
     "required_documents": [],
     "excluded_industries": []
+  },
+  {
+    "id": "ca-business-growth-001",
+    "name": "Business Growth Line of Credit",
+    "lender_name": "Canadian Business Bank",
+    "country": "CA",
+    "category": "Working Capital",
+    "min_amount": 25000,
+    "max_amount": 250000,
+    "min_time_in_business": 24,
+    "min_monthly_revenue": 25000,
+    "required_documents": ["Bank Statements", "Financial Statements"],
+    "excluded_industries": []
+  },
+  {
+    "id": "ca-professional-funding-001",
+    "name": "Professional Services Funding",
+    "lender_name": "Professional Finance Corp",
+    "country": "CA",
+    "category": "Working Capital",
+    "min_amount": 30000,
+    "max_amount": 300000,
+    "min_time_in_business": 24,
+    "min_monthly_revenue": 30000,
+    "required_documents": ["Bank Statements", "Financial Statements", "Contracts"],
+    "excluded_industries": []
+  },
+  {
+    "id": "ca-alberta-term-loan-001",
+    "name": "Small Business Term Loan",
+    "lender_name": "Alberta Credit Union",
+    "country": "CA",
+    "category": "Working Capital",
+    "min_amount": 50000,
+    "max_amount": 500000,
+    "min_time_in_business": 36,
+    "min_monthly_revenue": 35000,
+    "required_documents": ["Bank Statements", "Financial Statements", "Tax Returns"],
+    "excluded_industries": []
   }
 ]
