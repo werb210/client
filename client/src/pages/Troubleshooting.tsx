@@ -202,7 +202,7 @@ export default function Troubleshooting() {
                 <a href="tel:+18254511768">Call Tech Support</a>
               </Button>
               <Button variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50">
-                <a href="mailto:tech@boreal.financial">Email Tech Team</a>
+                <a href="mailto:info@boreal.financial">Email Tech Team</a>
               </Button>
             </div>
             <p className="text-xs text-gray-500 mt-4">

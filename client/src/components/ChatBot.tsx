@@ -680,7 +680,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
             <Button
               onClick={() => {
                 addBotMessage("I'll help you report an issue. Please describe what's happening and I'll make sure our team gets your feedback.");
-                addBotMessage("You can also email us directly at support@boreal.financial with any technical issues.");
+                addBotMessage("You can also email us directly at info@boreal.financial with any technical issues.");
               }}
               variant="outline"
               size="sm"
@@ -745,7 +745,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
               <Button
                 onClick={() => {
                   setShowUploadModal(false);
-                  addBotMessage("Document upload feature will be available soon. For now, please email documents to docs@boreal.financial");
+                  addBotMessage("Document upload feature will be available soon. For now, please email documents to info@boreal.financial");
                 }}
                 className="flex-1"
               >

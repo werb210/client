@@ -180,7 +180,7 @@ export default function ApplicationSuccess() {
                   Email Support
                 </h4>
                 <div className="space-y-2 text-sm">
-                  <p><strong>General:</strong> info@boreal.finance</p>
+                  <p><strong>General:</strong> info@boreal.financial</p>
                   
                   <p><strong>Response Time:</strong> Within 4 hours</p>
                 </div>

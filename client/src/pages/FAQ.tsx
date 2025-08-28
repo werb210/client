@@ -120,7 +120,7 @@ export default function FAQ() {
               <a href="tel:+18254511768" className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors">
                 Call (825) 451‑1768
               </a>
-              <a href="mailto:support@boreal.financial" className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors">
+              <a href="mailto:info@boreal.financial" className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors">
                 Email Support
               </a>
             </div>

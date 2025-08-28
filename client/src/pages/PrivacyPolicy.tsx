@@ -145,7 +145,7 @@ export function PrivacyPolicy() {
               If you have questions about this Privacy Policy or wish to exercise your rights, please contact us:
             </p>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-gray-700"><strong>Email:</strong> privacy@boreal.financial</p>
+              <p className="text-gray-700"><strong>Email:</strong> info@boreal.financial</p>
               <p className="text-gray-700"><strong>Phone:</strong> (825) 451‑1768</p>
               <p className="text-gray-700"><strong>Address:</strong> Boreal Financial Privacy Office</p>
             </div>
