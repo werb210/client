@@ -6,6 +6,7 @@ import { normalizeIntake, loadIntake, type Intake } from '@/utils/normalizeIntak
 import { fetchLenderProducts } from '@/api/lenderProducts';
 import { useQuery } from '@tanstack/react-query';
 import { getStoredApplicationId } from '@/lib/uuidUtils';
+import { getProductRecommendations } from '@/lib/strictRecommendationEngine';
 
 // Intake type now imported from normalizeIntake utility
 
@@ -55,22 +56,51 @@ function Step2RecommendationEngine(props: Props) {
     queryFn: fetchLenderProducts
   });
 
-  // Extract form data for filtering
-  const requestedAmount = intake.amount || 50000;
-  const selectedCategory = 'Working Capital'; // Default category
-
-  // Filter products based on criteria
-  const filteredProducts = useMemo(() => {
+  // Use your sophisticated recommendation engine!
+  const recommendations = useMemo(() => {
     if (!products?.products) return [];
     
-    return products.products.filter((p: any) => {
-      const matchesCategory = p.category === selectedCategory;
-      const matchesAmount = requestedAmount >= p.minAmount && requestedAmount <= p.maxAmount;
-      const isActive = p.isActive !== false;
+    // Map intake data to recommendation filters
+    const filters = {
+      country: intake.country as 'CA' | 'US',
+      fundingAmount: intake.amount || 50000,
+      lookingFor: (intake.industry === 'equipment' ? 'equipment' : 
+                   intake.industry === 'both' ? 'both' : 'capital') as 'capital' | 'equipment' | 'both',
+      accountsReceivableBalance: intake.accountsReceivableBalance || 0,
+      fundsPurpose: intake.fundsPurpose as 'inventory' | 'expansion' | 'equipment' | 'working_capital' | 'other'
+    };
+
+    console.log('🎯 Using advanced recommendation engine with filters:', filters);
+    
+    // Transform products to LenderProduct format for the engine
+    const lenderProducts = products.products.map((p: any) => ({
+      id: p.id,
+      name: p.productName || p.name,
+      lender: p.lender || p.lender_name,
+      category: p.category?.toLowerCase().replace(/\s+/g, '_') as any,
+      country: p.countryOffered || p.country,
+      minAmount: p.minAmount || p.min_amount || 0,
+      maxAmount: p.maxAmount || p.max_amount || 999999999,
+      minRevenue: p.minRevenue || 0,
+      isActive: p.isActive !== false
+    })).filter(p => p.isActive);
+
+    try {
+      // Use your built recommendation engine!
+      const scoredRecommendations = getProductRecommendations(lenderProducts, filters);
       
-      return matchesCategory && matchesAmount && isActive;
-    });
-  }, [products, requestedAmount, selectedCategory]);
+      console.log(`🏆 Generated ${scoredRecommendations.length} scored recommendations`);
+      return scoredRecommendations;
+    } catch (error) {
+      console.warn('⚠️ Fallback to simple filtering:', error);
+      // Fallback to simple filtering if recommendation engine fails
+      return lenderProducts.filter(p => 
+        p.country === filters.country && 
+        filters.fundingAmount >= p.minAmount && 
+        filters.fundingAmount <= p.maxAmount
+      ).map(p => ({ product: p, matchScore: 50, recommendationLevel: 'good' as const }));
+    }
+  }, [products, intake]);
 
   if (isLoading) {
     return (
@@ -120,8 +150,8 @@ function Step2RecommendationEngine(props: Props) {
     );
   }
 
-  // Ready state - show filtered products
-  if (filteredProducts && filteredProducts.length > 0) {
+  // Ready state - show scored recommendations
+  if (recommendations && recommendations.length > 0) {
     // Display dynamic recommendations from Staff API
     return (
       <Card className="max-w-4xl mx-auto">
@@ -136,24 +166,46 @@ function Step2RecommendationEngine(props: Props) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredProducts.map((p: any) => (
-              <Card key={p.id} className="border hover:bg-gray-50">
+            {recommendations.map((rec: any) => (
+              <Card key={rec.product.id} className={`border hover:bg-gray-50 ${
+                rec.recommendationLevel === 'excellent' ? 'border-green-300 bg-green-50' :
+                rec.recommendationLevel === 'good' ? 'border-blue-300 bg-blue-50' :
+                'border-gray-300'
+              }`}>
                 <CardHeader>
-                  <CardTitle>{p.productName}</CardTitle>
-                  <CardDescription>Offered by {p.lender}</CardDescription>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        {rec.product.name}
+                        {rec.recommendationLevel === 'excellent' && <span className="text-green-600 text-sm">⭐ Excellent Match</span>}
+                        {rec.recommendationLevel === 'good' && <span className="text-blue-600 text-sm">✓ Good Match</span>}
+                      </CardTitle>
+                      <CardDescription>Offered by {rec.product.lender}</CardDescription>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-gray-700">
+                        {rec.matchScore}% Match
+                      </div>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex justify-between items-center">
+                  <div className="space-y-2">
                     <div className="text-sm text-gray-600">
-                      Amount: ${p.minAmount?.toLocaleString()} - ${p.maxAmount?.toLocaleString()}
+                      Amount: ${rec.product.minAmount?.toLocaleString()} - ${rec.product.maxAmount?.toLocaleString()}
                     </div>
-                    <Button 
-                      onClick={() => props.onProductSelect?.(p.id)}
-                      variant={props.selectedProduct === p.id ? "default" : "outline"}
-                      size="sm"
-                    >
-                      {props.selectedProduct === p.id ? "Selected" : "Select"}
-                    </Button>
+                    <div className="text-xs text-gray-500">
+                      {rec.matchReasons?.slice(0, 2).join(' • ')}
+                    </div>
+                    <div className="flex justify-end">
+                      <Button 
+                        onClick={() => props.onProductSelect?.(rec.product.id)}
+                        variant={props.selectedProduct === rec.product.id ? "default" : "outline"}
+                        size="sm"
+                      >
+                        {props.selectedProduct === rec.product.id ? "Selected" : "Select"}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

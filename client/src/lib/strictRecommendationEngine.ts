@@ -1,9 +1,21 @@
-import { LenderProduct } from '../types/lenderProduct';
+import { LenderProduct as ImportedLenderProduct } from '../types/lenderProduct';
 
 /**
  * Strict recommendation engine that only operates on validated LenderProduct data
  * No string matching or guessing - relies on validated enums and structured data
  */
+
+export interface LenderProduct {
+  id: string;
+  name: string;
+  lender: string;
+  category: 'working_capital' | 'equipment_financing' | 'invoice_factoring' | 'line_of_credit' | 'term_loan' | 'purchase_order_financing' | 'asset_based_lending' | 'sba_loan';
+  country: 'CA' | 'US';
+  minAmount: number;
+  maxAmount: number;
+  minRevenue?: number;
+  isActive: boolean;
+}
 
 export interface RecommendationFilters {
   country: LenderProduct['country'];
@@ -29,8 +41,8 @@ export function getProductRecommendations(
   filters: RecommendationFilters
 ): ProductRecommendation[] {
   
-  // console.log(`[RECOMMENDATION] Filtering ${products.length} validated products`);
-  // console.log('[RECOMMENDATION] Filters:', filters);
+  console.log(`[RECOMMENDATION] Filtering ${products.length} validated products`);
+  console.log('[RECOMMENDATION] Filters:', filters);
   
   // Validate that all products have required fields
   validateProductData(products);
@@ -42,7 +54,7 @@ export function getProductRecommendations(
            matchesProductType(product, filters);
   });
   
-  // console.log(`[RECOMMENDATION] ${eligibleProducts.length} products passed hard filters`);
+  console.log(`[RECOMMENDATION] ${eligibleProducts.length} products passed hard filters`);
   
   // Step 2: Score and rank eligible products
   const recommendations = eligibleProducts.map(product => {
@@ -61,7 +73,7 @@ export function getProductRecommendations(
   // Sort by score (highest first)
   recommendations.sort((a, b) => b.matchScore - a.matchScore);
   
-  // console.log(`[RECOMMENDATION] Generated ${recommendations.length} recommendations`);
+  console.log(`[RECOMMENDATION] Generated ${recommendations.length} recommendations`);
   return recommendations;
 }
 
