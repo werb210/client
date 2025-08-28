@@ -849,7 +849,7 @@ export default function Step4ApplicantInfoComplete() {
                       <FormLabel>Phone Number *</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={isCanadian ? "+1 (XXX) XXX-XXXX" : "(XXX) XXX-XXXX"}
+                          placeholder={isCanadian ? "+1 (555) 123-4567" : "(555) 123-4567"}
                           value={applicantPhoneDisplay || field.value || ''}
                           onChange={(e) => {
                             const input = e.target.value;
@@ -1132,7 +1132,7 @@ export default function Step4ApplicantInfoComplete() {
                         <FormLabel>Partner Phone</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder={isCanadian ? "+1 (XXX) XXX-XXXX" : "(XXX) XXX-XXXX"}
+                            placeholder={isCanadian ? "+1 (555) 123-4567" : "(555) 123-4567"}
                             value={partnerPhoneDisplay || field.value || ''}
                             onChange={(e) => {
                               const input = e.target.value;

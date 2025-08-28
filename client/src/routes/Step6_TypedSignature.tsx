@@ -177,7 +177,7 @@ export default function Step6_TypedSignature() {
       // ✅ Apply strict validation when NOT bypassed
       console.log('📋 [STEP6] Validating document uploads via staff backend for applicationId:', validatedApplicationId);
       
-      const documentData = await listDocuments(validatedApplicationId);
+      const documentData = await listDocuments({ applicationId: validatedApplicationId });
       const response = { ok: true, status: 200 }; // Wrapper handles errors
       
       if (response.status === 404) {
@@ -216,7 +216,7 @@ export default function Step6_TypedSignature() {
       //   return false;
       // }
 
-      const uploadedDocuments = documentData.documents || [];
+      const uploadedDocuments = documentData || [];
       
       console.log('📄 [STEP6] Staff backend document validation result:', {
         applicationId: validatedApplicationId,
@@ -313,19 +313,7 @@ export default function Step6_TypedSignature() {
   // Helper function to check for local upload evidence
   const checkLocalUploadEvidence = (): boolean => {
     try {
-      // 🟨 TASK 1: Add logging to check local document evidence - REPLIT MUST DO
-      console.log("[STEP6] Upload Evidence Debug:");
-      console.log("uploadedFiles from context:", state.step5DocumentUpload?.uploadedFiles);
-      console.log("files from context:", state.step5DocumentUpload?.files);
-      console.log("localStorage backup:", localStorage.getItem('boreal-formData'));
-      
-      // COMPREHENSIVE DEBUG: Log the entire state structure
-      console.log('🧪 [STEP6] COMPREHENSIVE STATE DEBUG:', {
-        fullState: state,
-        step5DocumentUpload: state.step5DocumentUpload,
-        hasStep5: !!state.step5DocumentUpload,
-        step5Keys: state.step5DocumentUpload ? Object.keys(state.step5DocumentUpload) : []
-      });
+      // Check for uploaded documents evidence
       
       // Check multiple sources and arrays for upload evidence
       const contextFiles = state.step5DocumentUpload?.files || [];

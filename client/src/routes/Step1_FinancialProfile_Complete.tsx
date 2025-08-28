@@ -216,8 +216,7 @@ export default function Step1FinancialProfile() {
     logger.log('✅ Step 1 - Form submitted successfully!');
     logger.log('Form Data:', data);
     
-    console.log("🔧 STEP 1 SAVE DEBUG:");
-    console.log("🔧 Step 1 saved", data);
+    // Form submitted successfully
     
     try {
       const step1Payload = {

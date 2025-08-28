@@ -69,7 +69,7 @@ export const getRegionalLabels = (isCanadian: boolean) => {
       country: "Canada",
       currency: "CAD",
       currencySymbol: "C$",
-      phoneFormat: "(XXX) XXX-XXXX",
+      phoneFormat: "(555) 123-4567",
       phoneExample: "(416) 555-0123",
       businessStructures: [
         { value: "sole_proprietorship", label: "Sole Proprietorship" },
@@ -94,7 +94,7 @@ export const getRegionalLabels = (isCanadian: boolean) => {
       country: "United States",
       currency: "USD",
       currencySymbol: "$",
-      phoneFormat: "(XXX) XXX-XXXX",
+      phoneFormat: "(555) 123-4567",
       phoneExample: "(555) 123-4567",
       businessStructures: [
         { value: "sole_proprietorship", label: "Sole Proprietorship" },
@@ -106,7 +106,7 @@ export const getRegionalLabels = (isCanadian: boolean) => {
       ],
       industryTerms: {
         taxId: "Tax ID / EIN",
-        taxIdFormat: "XX-XXXXXXX",
+        taxIdFormat: "12-3456789",
         revenue: "Annual Revenue",
         employees: "Number of Employees"
       }

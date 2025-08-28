@@ -381,19 +381,11 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Global debug function for application state inspection (dev only)
+  // Debug function available in development mode
   useEffect(() => {
-    (window as any).debugApplication = () => {
-      if (import.meta.env.DEV) {
-        console.log("🔧 GLOBAL APPLICATION STATE DEBUG:");
-        console.log("🔧 Current state:", state);
-        console.log("🔧 Step 1 data:", state.step1);
-        console.log("🔧 Step 3 data:", state.step3);
-        console.log("🔧 Step 4 data:", state.step4);
-        console.log("🔧 localStorage formData:", localStorage.getItem('formData'));
-      }
-      return state;
-    };
+    if (import.meta.env.DEV) {
+      (window as any).debugApplication = () => state;
+    }
   }, [state]);
 
   return (

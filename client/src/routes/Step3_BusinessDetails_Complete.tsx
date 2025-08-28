@@ -211,12 +211,10 @@ export default function Step3BusinessDetailsComplete() {
 
   // Testing mode validation bypass
   const canContinue = () => {
-    return true; // Testing mode - allow progression without full validation
-    // TODO: For production, restore validation:
-    // const values = form.getValues();
-    // return values.businessName && values.businessAddress && values.businessCity && 
-    //        values.businessState && values.businessZipCode && values.businessPhone &&
-    //        values.businessStructure && values.businessStartDate && values.employeeCount;
+    const values = form.getValues();
+    return values.operatingName && values.businessStreetAddress && values.businessCity && 
+           values.businessState && values.businessPostalCode && values.businessPhone &&
+           values.businessStructure && values.businessStartDate && values.employeeCount;
   };
 
   return (
@@ -423,7 +421,7 @@ export default function Step3BusinessDetailsComplete() {
                         <FormLabel className="text-base font-semibold">Business Phone *</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder={isCanadian ? "+1 (XXX) XXX-XXXX" : "(XXX) XXX-XXXX"}
+                            placeholder={isCanadian ? "+1 (555) 123-4567" : "(555) 123-4567"}
                             value={phoneDisplay || field.value || ''}
                             onChange={(e) => {
                               const input = e.target.value;

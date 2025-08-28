@@ -45,7 +45,7 @@ export async function debugRecommendationFiltering(
 ): Promise<RecommendationDebugResult> {
   const startTime = performance.now();
   
-  console.log('🧪 [RECOMMENDATION DEBUG] Starting analysis with:', input);
+  // Analyzing recommendation filtering process
   
   const passedProducts: FilterTestResult[] = [];
   const failedProducts: FilterTestResult[] = [];
