@@ -1,0 +1,248 @@
+Here’s everything in **one copy/paste block**. It’s a complete, best-practice fix set for the **client app** (not the staff app): push path, offline queue, SW, routing, and quick tests. Paste this in a ticket/PR description or a README patch.
+
+```txt
+CLIENT APP — PUSH + OFFLINE FIX PLAN (single block)
+===================================================
+
+SCOPE
+-----
+Applies to the CLIENT APP only (the app that produced the report). The STAFF app remains unchanged and simply receives queued payloads when the client’s Service Worker (SW) flushes.
+
+ENV
+---
+Create or update .env:
+  VITE_STAFF_API=https://staff.boreal.financial/api
+
+───────────────────────────────────────────────────────────────────────────────
+1) PUSH NOTIFICATIONS — FIX PATH
+───────────────────────────────────────────────────────────────────────────────
+
+FILE: src/pwa/push.ts
+---------------------
+export function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+export async function getVapidKey(): Promise<Uint8Array> {
+  const res = await fetch('/api/vapid-public-key', { credentials: 'same-origin' });
+  if (!res.ok) throw new Error(`Failed to fetch VAPID key: ${res.status}`);
+  return urlBase64ToUint8Array(await res.text());
+}
+
+OPTIONAL BACKWARD-COMPAT (client app server):
+---------------------------------------------
+Express alias so old builds keep working:
+  app.get('/api/push/vapid-public-key', (req, res) => res.redirect(308, '/api/vapid-public-key'));
+
+(If Next.js, add an API route that 308-redirects to /api/vapid-public-key.)
+
+───────────────────────────────────────────────────────────────────────────────
+2) API CLIENTS — KEEP STAFF CALLS SEPARATE FROM LOCAL PWA CALLS
+───────────────────────────────────────────────────────────────────────────────
+
+FILE: src/lib/http.ts
+---------------------
+import axios from 'axios';
+
+export const staffApi = axios.create({
+  baseURL: import.meta.env.VITE_STAFF_API || 'https://staff.boreal.financial/api',
+  withCredentials: true,
+});
+
+// Local-only namespace that the Service Worker will intercept (/_pwa/*)
+export const localApi = axios.create({
+  baseURL: '/',          // same-origin
+  withCredentials: true,
+});
+
+───────────────────────────────────────────────────────────────────────────────
+3) FRONTEND PWA HELPERS — QUEUE + MANUAL SYNC TRIGGER
+───────────────────────────────────────────────────────────────────────────────
+
+FILE: src/pwa/offline.ts
+------------------------
+import { localApi } from '@/lib/http';
+
+export async function enqueueForRetry(payload: any) {
+  await localApi.post('/_pwa/queue', payload); // intercepted by SW, never leaves device
+}
+
+export async function triggerSync() {
+  await localApi.post('/_pwa/sync'); // tells SW to drain queue now
+}
+
+───────────────────────────────────────────────────────────────────────────────
+4) SERVICE WORKER — HANDLE LOCAL NAMESPACE & FLUSH TO STAFF
+───────────────────────────────────────────────────────────────────────────────
+
+FILE: public/sw.js   (or src/sw.ts and ensure it builds to /sw.js)
+------------------------------------------------------------------
+/* eslint-disable no-restricted-globals */
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+
+const DB_NAME = 'bf-offline';
+const STORE = 'retry-queue';
+
+// Configure your staff backend endpoint(s)
+const STAFF_API = 'https://staff.boreal.financial/api';
+const SYNC_ENDPOINT = '/offline/intake'; // change to your actual intake endpoint
+
+// --- IndexedDB utilities (no external libs) ---
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { autoIncrement: true });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function idbAdd(val) {
+  return openDb().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).add(val);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+  }));
+}
+
+function idbAll() {
+  return openDb().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const store = tx.objectStore(STORE);
+    const out = [];
+    const req = store.openCursor();
+    req.onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (cursor) { out.push({ key: cursor.key, value: cursor.value }); cursor.continue(); }
+      else resolve(out);
+    };
+    req.onerror = () => reject(req.error);
+  }));
+}
+
+function idbDelete(key) {
+  return openDb().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(key);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+  }));
+}
+
+// --- Local namespace handlers ---
+async function handleQueue(event) {
+  const body = await event.request.clone().json();
+  await idbAdd(body);
+  try { await self.registration.sync.register('bf-sync'); } catch (_) {}
+  return new Response(JSON.stringify({ queued: true }), {
+    status: 201, headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+async function runSync() {
+  const items = await idbAll();
+  const results = [];
+  for (const { key, value } of items) {
+    try {
+      const res = await fetch(STAFF_API + SYNC_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(value),
+      });
+      if (res.ok) await idbDelete(key);
+      results.push({ key, ok: res.ok });
+    } catch (err) {
+      results.push({ key, ok: false });
+    }
+  }
+  return new Response(JSON.stringify({ synced: true, results }), {
+    status: 200, headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+self.addEventListener('fetch', (event) => {
+  const { pathname } = new URL(event.request.url);
+
+  // Local-only endpoints — never forward to network; handle inside SW
+  if (pathname === '/_pwa/queue' && event.request.method === 'POST') {
+    event.respondWith(handleQueue(event)); return;
+  }
+  if (pathname === '/_pwa/sync' && event.request.method === 'POST') {
+    event.respondWith(runSync()); return;
+  }
+});
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'bf-sync') event.waitUntil(runSync());
+});
+
+───────────────────────────────────────────────────────────────────────────────
+5) REGISTER THE SERVICE WORKER
+───────────────────────────────────────────────────────────────────────────────
+
+FILE: src/main.tsx (or your entry)
+----------------------------------
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js');
+  });
+}
+
+───────────────────────────────────────────────────────────────────────────────
+6) ROUTING/PROXY — DO NOT FORWARD /_pwa/* TO STAFF
+───────────────────────────────────────────────────────────────────────────────
+
+Nginx example (client app vhost):
+  # Serve SW and keep /_pwa/* on the client origin
+  location = /sw.js { try_files $uri =404; add_header Cache-Control "no-cache"; }
+  location ^~ /_pwa/ { default_type application/json; return 404; } # handled by SW; 404 if SW absent
+  # Your staff proxy should NOT match /_pwa/
+
+Vite devServer example (vite.config.ts):
+  server: {
+    proxy: {
+      // DO proxy staff API:
+      '/api': { target: 'https://staff.boreal.financial', changeOrigin: true, rewrite: p => p.replace(/^\/api/, '/api') },
+      // Do NOT proxy /_pwa/* (leave it alone)
+    }
+  }
+
+Static hosts (Netlify/Vercel): ensure no rewrite rule forwards /_pwa/* to staff.
+
+───────────────────────────────────────────────────────────────────────────────
+7) QUICK VERIFICATION CHECKLIST (DEVTOOLS)
+───────────────────────────────────────────────────────────────────────────────
+
+A. Push path
+  - Hard refresh.
+  - Call getVapidKey(); expect 200 from /api/vapid-public-key.
+  - Subscribe: navigator.serviceWorker.ready.then(r => r.pushManager.getSubscription()) returns an object.
+
+B. Offline queue
+  - DevTools → Application → Service Workers: verify sw.js is active.
+  - Network → set Offline.
+  - Trigger code that calls enqueueForRetry(payload). Expect 201 (from ServiceWorker) on /_pwa/queue.
+  - Go Online; call triggerSync(); expect 200 and queue drains.
+  - Confirm staff backend received payloads at SYNC_ENDPOINT.
+
+C. No leakage to staff
+  - Ensure no /_pwa/* requests appear going to https://staff… in Network tab (they should be “(from ServiceWorker)”).
+
+───────────────────────────────────────────────────────────────────────────────
+NOTES
+-----
+• This keeps your existing staff integration intact; only PWA features are re-wired to be truly local.
+• If you need different staff endpoints when flushing, update SYNC_ENDPOINT in sw.js.
+• For older clients in the wild, keep the 308 redirect for /api/push/vapid-public-key for one release cycle.
+```

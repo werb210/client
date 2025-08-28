@@ -1810,6 +1810,11 @@ app.use((req, res, next) => {
     }
   });
 
+  // Backward compatibility redirect for old push endpoints
+  app.get('/api/push/vapid-public-key', (req, res) => {
+    res.redirect(308, '/api/vapid-public-key');
+  });
+
   // Test push notification endpoint for diagnostics
   app.post('/api/notifications/test', async (req, res) => {
     try {

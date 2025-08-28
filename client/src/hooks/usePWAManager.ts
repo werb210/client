@@ -50,7 +50,7 @@ export function usePWAManager() {
     }
 
     try {
-      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      const registration = await navigator.serviceWorker.register('/sw.js');
       
       if (import.meta.env.DEV) {
         console.log('✅ Service worker registered');
