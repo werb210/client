@@ -325,10 +325,10 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Load from localStorage on initialization  
-  useEffect(() => {
-    loadFromStorage();
-  }, []);
+  // Load from localStorage on initialization (DISABLED to prevent prefilled values)
+  // useEffect(() => {
+  //   loadFromStorage();
+  // }, []);
 
   // Auto-save to localStorage whenever state changes
   useEffect(() => {
