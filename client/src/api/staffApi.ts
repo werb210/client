@@ -1,6 +1,6 @@
 // Staff API client for application submission and SignNow integration
 
-const STAFF_API_URL = ""; // Same-origin only
+const STAFF_API_URL = ""; // Same-origin API calls - routed to staff backend
 
 // ✅ Required Fields Validation Configuration
 const REQUIRED_FIELDS = {

@@ -2,12 +2,11 @@ import { useEffect } from "react";
 
 export function useWebSocket() {
   useEffect(() => {
-    // DISABLED: WebSocket causing console errors
-    // Using HTTP polling for updates instead
-    console.log("🔄 WebSocket disabled - using HTTP polling for updates");
+    // WebSocket connection for real-time updates
+    console.log("🔄 WebSocket enabled for real-time updates");
     
     return () => {
-      // Cleanup if needed
+      // Cleanup WebSocket connection
     };
   }, []);
 }

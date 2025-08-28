@@ -48,14 +48,9 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 function App() {
-  // DISABLED: useWebSocket causing console errors
-  // useWebSocket(); // ✅ Enables live updates globally
+  useWebSocket(); // ✅ Enables live updates globally
   
-  // DISABLED: Verbose environment logging causing console clutter
-  // console.log("🔧 STAFF API:", import.meta.env.VITE_API_BASE_URL);
-  // console.log("🔧 ENV MODE:", import.meta.env.MODE);
-  // console.log("🔧 ENV DEV:", import.meta.env.DEV);
-  // console.log("🔧 ALL ENV VARS:", Object.keys(import.meta.env));
+  // Environment configuration loaded
   
   return (
     <AppShell>

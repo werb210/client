@@ -2,7 +2,7 @@
  * Application Service - Handles submission and document uploads to Staff API
  */
 
-const STAFF_API_URL = ""; // Same-origin only
+const STAFF_API_URL = ""; // Same-origin API calls - routed to staff backend
 
 export interface ApplicationPayload {
   step1?: {

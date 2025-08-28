@@ -41,20 +41,7 @@ export default function Step6_TypedSignature() {
   
   const businessName = state.step3?.operatingName || state.step3?.legalName || (state as any).operatingName || (state as any).legalName || 'Your Business';
 
-  // Debug logging to check what's in state
-  console.log('🔍 [STEP6] Debug state check:', {
-    'state.step4': state.step4,
-    'step4.applicantFirstName': state.step4?.applicantFirstName,
-    'step4.applicantLastName': state.step4?.applicantLastName,
-    'step4.firstName': state.step4?.firstName,
-    'step4.lastName': state.step4?.lastName,
-    'root.applicantFirstName': (state as any).applicantFirstName,
-    'root.applicantLastName': (state as any).applicantLastName,
-    'root.firstName': (state as any).firstName,
-    'root.lastName': (state as any).lastName,
-    'applicantName': applicantName,
-    'businessName': businessName
-  });
+  // Applicant name and business name resolved from form data
 
   const handleAuthorization = async (authData: AuthorizationData) => {
     setIsLoading(true);
@@ -70,11 +57,7 @@ export default function Step6_TypedSignature() {
         }
       });
 
-      console.log('🖊️ [STEP6] Electronic signature completed:', {
-        signedName: authData.typedName,
-        timestamp: authData.timestamp,
-        agreementsCount: Object.values(authData.agreements).filter(Boolean).length
-      });
+      // Electronic signature completed successfully
 
       // ✅ ENHANCED: Determine submission mode and handle accordingly
       const hasUploads =
@@ -84,24 +67,18 @@ export default function Step6_TypedSignature() {
       const submissionMode = state.step5DocumentUpload?.submissionMode || (hasUploads ? 'with_documents' : 'without_documents');
       const hasDocuments = state.step5DocumentUpload?.hasDocuments || hasUploads;
 
-      console.log('🔍 [STEP6] Submission mode check:', {
-        hasUploads,
-        hasDocuments,
-        submissionMode,
-        uploadedFilesCount: state.step5DocumentUpload?.uploadedFiles?.length || 0,
-        filesCount: state.step5DocumentUpload?.files?.length || 0
-      });
+      // Determine submission mode based on document uploads
 
       // ✅ ALWAYS ALLOW FINALIZATION - No document validation blocking
       if (submissionMode === 'without_documents') {
-        console.log("📤 [STEP6] Submission without documents mode - staff backend will handle notifications");
+        // Submission without documents - staff backend handles notifications
         toast({
           title: "Ready to Submit",
           description: "Application will be submitted. Document upload will be available after submission.",
           variant: "default"
         });
       } else {
-        console.log("📤 [STEP6] Submission with documents mode - standard processing");
+        // Submission with documents - standard processing
         toast({
           title: "Ready to Submit",
           description: "Application will be submitted with uploaded documents.",
@@ -114,7 +91,7 @@ export default function Step6_TypedSignature() {
       const hasRetryItems = retryQueue.length > 0;
       
       if (hasRetryItems) {
-        console.log(`🔄 [STEP6] Found ${retryQueue.length} items in retry queue`, retryQueue);
+        // Found retry queue items
         toast({
           title: "Upload Retry Available",
           description: `${retryQueue.length} document(s) queued for retry when staff backend is available. Application can proceed.`,
@@ -123,7 +100,7 @@ export default function Step6_TypedSignature() {
       }
 
       // ✅ SKIP document validation - allow submission regardless of document status
-      console.log('📤 [STEP6] Skipping document validation - proceeding with final submission');
+      // Skipping document validation - proceeding with final submission
 
       // Submit the final application
       await submitFinalApplication();
@@ -159,14 +136,14 @@ export default function Step6_TypedSignature() {
 
       // Validate the application ID format
       const validatedApplicationId = validateApplicationIdForAPI(applicationId);
-      console.log('🔍 [STEP6] Using validated applicationId:', validatedApplicationId);
+      // Using validated applicationId for submission
 
       // ✅ Check bypass flag from Step 5 first
       const bypassDocuments = state.bypassDocuments || false;
-      console.log('🔍 [STEP6] Checking bypass status from Step 5:', { bypassDocuments });
+      // Checking bypass status from Step 5
       
       if (bypassDocuments) {
-        console.log('✅ [STEP6] Document validation bypassed - allowing finalization based on Step 5 bypass flag');
+        // Document validation bypassed based on Step 5 bypass flag
         toast({
           title: "Documents Bypassed",
           description: "Proceeding with application finalization as requested in Step 5.",
@@ -175,20 +152,20 @@ export default function Step6_TypedSignature() {
       }
 
       // ✅ Apply strict validation when NOT bypassed
-      console.log('📋 [STEP6] Validating document uploads via staff backend for applicationId:', validatedApplicationId);
+      // Validating document uploads via staff backend
       
       const documentData = await listDocuments({ applicationId: validatedApplicationId });
       const response = { ok: true, status: 200 }; // Wrapper handles errors
       
       if (response.status === 404) {
-        console.log('⚠️ [STEP6] Application not found in staff backend - checking for local upload evidence (duplicate email scenario)');
+        // Application not found in staff backend - checking local evidence
         
         // For duplicate email cases where applicationId was generated client-side, 
         // check if we have local evidence of successful uploads
         const localUploadsExist = checkLocalUploadEvidence();
         
         if (localUploadsExist) {
-          console.log('✅ [STEP6] Local upload evidence found - allowing finalization for duplicate email case');
+          // Debug logging removed for production
           toast({
             title: "Documents Verified",
             description: "Your documents have been uploaded successfully. Proceeding with finalization.",
@@ -233,11 +210,11 @@ export default function Step6_TypedSignature() {
       // Strict validation: must have at least 1 document from staff backend (mandatory for non-bypassed applications)
       if (!uploadedDocuments || uploadedDocuments.length === 0) {
         console.error('❌ [STEP6] Document verification failed: No documents returned from staff server');
-        console.log('🔍 [STEP6] Checking local upload evidence as fallback');
+        // Debug logging removed for production
         
         const hasLocalEvidence = checkLocalUploadEvidence();
         if (hasLocalEvidence) {
-          console.log('✅ [STEP6] Local upload evidence found - allowing finalization');
+          // Debug logging removed for production
           toast({
             title: "Documents Detected",
             description: "Your uploaded documents have been detected. Proceeding with application finalization.",
@@ -260,7 +237,7 @@ export default function Step6_TypedSignature() {
       );
       
       if (confirmedDocuments.length < uploadedDocuments.length) {
-        console.log('⚠️ [STEP6] Some documents not yet confirmed - blocking finalization');
+        // Debug logging removed for production
         const unconfirmedCount = uploadedDocuments.length - confirmedDocuments.length;
         toast({
           title: "Documents Processing",
@@ -270,7 +247,7 @@ export default function Step6_TypedSignature() {
         return false;
       }
       
-      console.log('✅ [STEP6] All documents validated and confirmed via staff backend - finalization allowed');
+      // Debug logging removed for production
       return true;
       
     } catch (error) {
@@ -278,11 +255,11 @@ export default function Step6_TypedSignature() {
       
       // Check if this is a 404 error (application not found in staff backend)
       if (error instanceof Error && error.message.includes('404')) {
-        console.log('🔍 [STEP6] Document validation returned 404 - checking local upload evidence');
+        // Debug logging removed for production
         const hasLocalEvidence = checkLocalUploadEvidence();
         
         if (hasLocalEvidence) {
-          console.log('✅ [STEP6] Local upload evidence found - allowing finalization despite 404');
+          // Debug logging removed for production
           toast({
             title: "Documents Detected",
             description: "Your uploaded documents have been detected. Proceeding with application finalization.",
@@ -290,7 +267,7 @@ export default function Step6_TypedSignature() {
           });
           return true;
         } else {
-          console.log('❌ [STEP6] No local upload evidence found');
+          // Debug logging removed for production
           toast({
             title: "Documents Required",
             description: "Please upload all required documents before finalizing your application.",
@@ -341,7 +318,7 @@ export default function Step6_TypedSignature() {
             allTopLevelKeys: Object.keys(parsed)
           });
         } catch (e) {
-          console.log('⚠️ [STEP6] Could not parse localStorage data:', e);
+          // Debug logging removed for production
         }
       }
       
@@ -369,9 +346,9 @@ export default function Step6_TypedSignature() {
       
       // If we have evidence, show success; if not, show the full debug info
       if (hasUploads) {
-        console.log('✅ [STEP6] Local upload evidence found - allowing finalization');
+        // Debug logging removed for production
       } else {
-        console.log('❌ [STEP6] No local upload evidence found');
+        // Debug logging removed for production
         console.log('🔍 [STEP6] Full debug data:', {
           contextState: state,
           localStorageData: localStorageRaw
@@ -391,7 +368,7 @@ export default function Step6_TypedSignature() {
   };
 
   const resubmitApplicationData = async (applicationId: string) => {
-    console.log('🔄 [STEP6] Resubmitting application form_data via PATCH...');
+    // Debug logging removed for production
 
     const formDataPayload = {
       step1: state.step1,
@@ -400,7 +377,7 @@ export default function Step6_TypedSignature() {
       step6: state.step6Authorization
     };
 
-    console.log('📋 [STEP6] Form data resubmission payload:', JSON.stringify(formDataPayload, null, 2));
+    // Debug logging removed for production
 
     try {
       const response = await fetch(`/api/public/applications/${applicationId}`, {
@@ -419,7 +396,7 @@ export default function Step6_TypedSignature() {
       }
 
       const result = await response.json();
-      console.log('✅ [STEP6] Form data resubmitted successfully:', result);
+      // Debug logging removed for production
       return result;
     } catch (error) {
       console.error('❌ [STEP6] Form data resubmission error:', error);
@@ -443,7 +420,7 @@ export default function Step6_TypedSignature() {
       const hasDocuments = state.step5DocumentUpload?.hasDocuments || false;
       const submissionStatus = hasDocuments ? 'submitted' : 'submitted_no_docs';
       
-      console.log(`📤 [STEP6] Submission status: ${submissionStatus} (mode: ${submissionMode})`);
+      // Debug logging removed for production
 
       // Prepare the final application data
       const finalApplicationData = {
@@ -460,7 +437,7 @@ export default function Step6_TypedSignature() {
       // 🟨 STEP 3: Confirm finalize is called - REPLIT MUST DO
       console.log("🟨 STEP 3: /api/public/applications/:id/finalize IS BEING CALLED");
       console.log("Finalizing application ID:", applicationId);
-      console.log(`📤 [STEP6] Submitting final application (attempt ${retryCount + 1}):`, finalApplicationData);
+      // Debug logging removed for production
 
       const response = await fetch(`/api/public/applications/${applicationId}/finalize`, {
         method: 'PATCH',
@@ -496,7 +473,7 @@ export default function Step6_TypedSignature() {
         
         // Check if this is a form_data empty error - need to resubmit form data
         if (response.status === 400 && errorText.includes('form_data')) {
-          console.log('🔄 [STEP6] Empty form_data detected - resubmitting application data');
+          // Debug logging removed for production
           await resubmitApplicationData(applicationId);
           
           // Retry finalization after resubmitting form data
@@ -515,7 +492,7 @@ export default function Step6_TypedSignature() {
           }
           
           const retryResult = await retryResponse.json();
-          console.log('✅ [STEP6] Application finalized successfully after form_data resubmission:', retryResult);
+          // Debug logging removed for production
           
           // ✅ REQUIRED CLIENT APPLICATION LOGGING
           console.log("[CLIENT] Final submission result:", retryResult);
@@ -531,7 +508,7 @@ export default function Step6_TypedSignature() {
           
           // Ensure applicationId is stored in localStorage for future document uploads
           localStorage.setItem('applicationId', applicationId);
-          console.log('💾 [STEP6] ApplicationId stored for future document uploads:', applicationId);
+          // Debug logging removed for production
           
           setLocation('/application-success');
           return retryResult;
@@ -539,7 +516,7 @@ export default function Step6_TypedSignature() {
         
         // Retry on 503 errors if we haven't exceeded max retries
         if (response.status === 503 && retryCount < maxRetries) {
-          console.log(`🔄 [STEP6] Retrying submission in 3 seconds... (${retryCount + 1}/${maxRetries})`);
+          // Debug logging removed for production
           await new Promise(resolve => setTimeout(resolve, 3000));
           return submitFinalApplication(retryCount + 1);
         }
@@ -572,7 +549,7 @@ export default function Step6_TypedSignature() {
       }
 
       const result = await response.json();
-      console.log('✅ [STEP6] Application submitted successfully:', result);
+      // Debug logging removed for production
       
       // ✅ REQUIRED CLIENT APPLICATION LOGGING
       console.log("[CLIENT] Final submission result:", result);
@@ -583,7 +560,7 @@ export default function Step6_TypedSignature() {
       // Ensure applicationId is stored in localStorage for future document uploads
       if (applicationId) {
         localStorage.setItem('applicationId', applicationId);
-        console.log('💾 [STEP6] ApplicationId stored for future document uploads:', applicationId);
+        // Debug logging removed for production
       }
 
       // ✅ Show appropriate success message based on submission mode
@@ -593,7 +570,7 @@ export default function Step6_TypedSignature() {
           description: "Application submitted. Document upload will be available after submission.",
           variant: "default"
         });
-        console.log('📤 [STEP6] Document upload notification handled by staff backend');
+        // Debug logging removed for production
       } else {
         toast({
           title: "Application submitted!",

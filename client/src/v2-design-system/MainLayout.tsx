@@ -103,7 +103,7 @@ import ProductDataInspector from "@/pages/ProductDataInspector";
 import ListLenderCategories from "@/pages/ListLenderCategories";
 import EquipmentFinancingFixTest from "@/pages/EquipmentFinancingFixTest";
 import FullApplicationSubmissionTest from "@/pages/FullApplicationSubmissionTest";
-import AutoSubmitApplicationTest from "@/pages/AutoSubmitApplicationTest";
+// Debug page removed
 import LenderProductSyncDemo from "@/pages/LenderProductSyncDemo";
 
 // import BackendRequestTest from "@/pages/BackendRequestTest";
@@ -120,7 +120,7 @@ import Step2ProductsAvailabilityTest from "@/pages/Step2ProductsAvailabilityTest
 
 import ClientVerificationDiagnostic from "@/pages/ClientVerificationDiagnostic";
 import { FetchWindowTest } from "@/pages/FetchWindowTest";
-import FetchWindowDebugRoute from "@/pages/FetchWindowDebugRoute";
+// Debug page removed
 // import DocumentNormalizationTest from "@/pages/DocumentNormalizationTest";
 // Development pages temporarily removed
 // import DevDocumentMapping from "@/pages/DevDocumentMapping";
