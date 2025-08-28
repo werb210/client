@@ -38,7 +38,7 @@ import FAQ from "@/pages/FAQ";
 import Troubleshooting from "@/pages/Troubleshooting";
 import KycMock from "@/pages/KycMock";
 import PrivacyComplianceDemo from "@/pages/PrivacyComplianceDemo";
-import MockSign from "@/pages/MockSign";
+// import MockSign from "@/pages/MockSign";
 import DocumentPacksDemo from "@/pages/DocumentPacksDemo";
 import NotificationsClient from "@/pages/NotificationsClient";
 import NotificationsDemo from "@/pages/NotificationsDemo";
@@ -60,7 +60,7 @@ import StaffApiTest from "@/pages/StaffApiTest";
 // import ApiTest from "@/pages/ApiTest"; // Removed
 import SyncMonitor from "@/pages/SyncMonitor";
 import LenderProductsByCountry from "@/routes/LenderProductsByCountry";
-import CompleteWorkflowTest from "@/test/CompleteWorkflowTest";
+// import CompleteWorkflowTest from "@/test/CompleteWorkflowTest";
 import StageMonitorTest from "@/test/StageMonitorTest";
 
 import Step5Test from "@/pages/Step5Test";
@@ -73,15 +73,15 @@ import UnifiedDocumentTest from "@/pages/UnifiedDocumentTest";
 import LenderProductMatcher from "@/pages/LenderProductMatcher";
 import StrictValidationTest from "@/pages/StrictValidationTest";
 import DataIngestionInterface from "@/pages/DataIngestionInterface";
-import TypedApiDemo from "@/pages/TypedApiDemo";
+// import TypedApiDemo from "@/pages/TypedApiDemo";
 import CanadianProductTest from "@/pages/CanadianProductTest";
 import CanadianFilteringTest from "@/pages/CanadianFilteringTest";
 // import ApiDiagnostic from "@/pages/ApiDiagnostic"; // Removed
 // import SyncedProductsTest from "@/pages/SyncedProductsTest";
-import WorkflowTest from "@/pages/WorkflowTest";
+// import WorkflowTest from "@/pages/WorkflowTest";
 import LenderProductsCatalog from "@/pages/LenderProductsCatalog";
 // import BankingDocumentTest from "@/pages/BankingDocumentTest";
-import ApplicationIdFlowTest from "@/pages/ApplicationIdFlowTest";
+// import ApplicationIdFlowTest from "@/pages/ApplicationIdFlowTest";
 import CriticalFixesValidation from "@/pages/CriticalFixesValidation";
 // import ComprehensiveE2ETest from "@/pages/ComprehensiveE2ETest";
 // import ComprehensiveE2ETestPage from "@/pages/ComprehensiveE2ETestPage";
@@ -106,13 +106,13 @@ import FullApplicationSubmissionTest from "@/pages/FullApplicationSubmissionTest
 import AutoSubmitApplicationTest from "@/pages/AutoSubmitApplicationTest";
 import LenderProductSyncDemo from "@/pages/LenderProductSyncDemo";
 
-import BackendRequestTest from "@/pages/BackendRequestTest";
+// import BackendRequestTest from "@/pages/BackendRequestTest";
 import WorkflowTestPage from "@/routes/WorkflowTestPage";
 import DocumentUploadTestPage from "@/pages/DocumentUploadTestPage";
-import ValidationTestPage from "@/pages/ValidationTestPage";
+// import ValidationTestPage from "@/pages/ValidationTestPage";
 import InitialCacheSetup from "@/pages/InitialCacheSetup";
 import CacheManagement from "@/pages/CacheManagement";
-import UUIDTestPage from "@/pages/UUIDTestPage";
+// import UUIDTestPage from "@/pages/UUIDTestPage";
 // import EnvTest from "@/pages/EnvTest";
 
 import Step2ProductsAvailabilityTest from "@/pages/Step2ProductsAvailabilityTest";
@@ -325,7 +325,7 @@ export function MainLayout() {
       
       {/* Global ChatBot - Available on all pages - Centered Bottom */}
       <div className="finbot-wrapper">
-        <Suspense fallback={<div className="h-16 w-16 animate-pulse bg-teal-100 rounded-full"></div>}>
+        <Suspense fallback={<div className="fixed bottom-4 right-4 h-12 w-12 animate-pulse bg-teal-100 rounded-full"></div>}>
           <ChatBot 
             isOpen={isOpen}
             onToggle={toggleChat}

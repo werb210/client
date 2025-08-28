@@ -39,12 +39,18 @@ export function useChatBot() {
     });
   };
 
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleChat = () => {
+    setIsOpen(prev => !prev);
+  };
+
   return {
     currentStep,
     setCurrentStep,
     applicationData,
     setApplicationData: updateApplicationData,
-    isOpen: false, // Add missing property
-    toggleChat: () => {}, // Add missing function
+    isOpen,
+    toggleChat,
   };
 }
