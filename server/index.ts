@@ -281,7 +281,8 @@ app.use((req, res, next) => {
       }
       
       // Submit ONLY to staff backend - no fallback
-      const staffUrl = `${cfg.staffApiUrl.replace('/api/lender-products', '')}/public/applications`;
+      const baseUrl = cfg.staffApiUrl.replace('/api/lender-products', '').replace('/api', '');
+      const staffUrl = `${baseUrl}/api/public/applications`;
       
       console.log(`🎯 [SERVER] Submitting to staff backend: ${staffUrl}`);
       console.log(`🔑 [SERVER] Using authorization token: ${cfg.clientToken ? 'Present' : 'Missing'}`);
