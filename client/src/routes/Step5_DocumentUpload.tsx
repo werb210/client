@@ -34,6 +34,7 @@ import { DocumentUploadStatus } from '@/components/DocumentUploadStatus';
 import { useDocumentVerification } from '@/hooks/useDocumentVerification';
 import { StrictDocumentValidation } from '@/components/StrictDocumentValidation';
 import { validateStrictDocumentRequirements } from '@/utils/strictDocumentValidation';
+import { useUploadDocuments } from '@/hooks/useUploadDocuments';
 
 import type { UploadedFile } from '@/types/uploadedFile';
 
@@ -46,6 +47,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
   const { state, dispatch } = useFormDataContext();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { uploadFile, uploadMultipleFiles, uploads, isUploading } = useUploadDocuments();
   
   // ✅ Handle redirect mode - load app ID from URL query param
   const redirected = props.fromRedirect || false;

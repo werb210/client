@@ -5,17 +5,19 @@
 const STAFF_API_URL = ""; // Same-origin only
 
 export interface ApplicationPayload {
-  step1: any;
-  step3: any;
-  step4: any;
-  uploadedDocuments: Array<{
+  requested_amount: number;        // Required - integer amount
+  product_id: string;             // Required - selected product ID  
+  country: 'CA' | 'US';          // Required - enum from DB
+  step1?: any;                    // Optional - additional step1 data
+  step3?: any;                    // Optional - business details
+  step4?: any;                    // Optional - applicant info
+  uploadedDocuments?: Array<{     // Optional - uploaded docs
     id: string;
     name: string;
     documentType: string;
     size: number;
     type: string;
   }>;
-  productId: string;
 }
 
 export interface ApplicationResponse {
@@ -35,25 +37,32 @@ export interface DocumentUploadResponse {
 }
 
 /**
- * Submit application data to Staff API
+ * Create new application with required backend fields
  */
-export async function submitApplication(data: ApplicationPayload): Promise<ApplicationResponse> {
+export async function createApplication(data: ApplicationPayload): Promise<ApplicationResponse> {
   try {
-    console.log('📤 [APPLICATION_SERVICE] Submitting application to staff API...');
+    console.log('📤 [APPLICATION_SERVICE] Creating application...');
     console.log('🔗 [APPLICATION_SERVICE] API URL:', `${STAFF_API_URL}/api/applications`);
     console.log('📋 [APPLICATION_SERVICE] Payload structure:', {
+      requested_amount: data.requested_amount,
+      product_id: data.product_id,
+      country: data.country,
       step1Fields: Object.keys(data.step1 || {}).length,
       step3Fields: Object.keys(data.step3 || {}).length,
       step4Fields: Object.keys(data.step4 || {}).length,
-      documentsCount: data.uploadedDocuments?.length || 0,
-      productId: data.productId
+      documentsCount: data.uploadedDocuments?.length || 0
     });
+
+    // Validate required fields before sending
+    if (!data.requested_amount || !data.product_id || !data.country) {
+      throw new Error('Missing required fields: requested_amount, product_id, country');
+    }
 
     const response = await fetch(`${STAFF_API_URL}/api/applications`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+        'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || ''}`
       },
       body: JSON.stringify(data),
     });
@@ -76,19 +85,73 @@ export async function submitApplication(data: ApplicationPayload): Promise<Appli
     console.log('✅ [APPLICATION_SERVICE] Application submitted successfully:', result);
     
     return {
-      applicationId: result.applicationId,
+      applicationId: result.applicationId || result.id,
       status: 'submitted',
       message: result.message
     };
 
   } catch (error) {
-    console.error('❌ [APPLICATION_SERVICE] Submission error:', error);
+    console.error('❌ [APPLICATION_SERVICE] Creation error:', error);
     
     // Return structured error response
     return {
       applicationId: '',
       status: 'error',
-      error: error instanceof Error ? error.message : 'Unknown submission error'
+      error: error instanceof Error ? error.message : 'Unknown creation error'
+    };
+  }
+}
+
+/**
+ * Submit completed application (legacy function - kept for compatibility)
+ */
+export async function submitApplication(data: ApplicationPayload): Promise<ApplicationResponse> {
+  return createApplication(data);
+}
+
+/**
+ * Submit final application for processing
+ */
+export async function submitFinalApplication(applicationId: string): Promise<ApplicationResponse> {
+  try {
+    console.log('📤 [APPLICATION_SERVICE] Submitting final application:', applicationId);
+
+    const response = await fetch(`${STAFF_API_URL}/api/applications/${applicationId}/submit`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || ''}`
+      },
+    });
+
+    console.log('📊 [APPLICATION_SERVICE] Final submit response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ [APPLICATION_SERVICE] Final submission failed:', {
+        status: response.status,
+        errorText
+      });
+      
+      throw new Error(`Final submission failed: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ [APPLICATION_SERVICE] Final application submitted successfully:', result);
+    
+    return {
+      applicationId: applicationId,
+      status: 'submitted',
+      message: result.message || 'Application submitted successfully'
+    };
+
+  } catch (error) {
+    console.error('❌ [APPLICATION_SERVICE] Final submission error:', error);
+    
+    return {
+      applicationId: applicationId,
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Unknown final submission error'
     };
   }
 }

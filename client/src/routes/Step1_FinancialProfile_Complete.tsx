@@ -18,6 +18,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import { StepHeader } from '@/components/StepHeader';
 import { initializeApplicationId, getStoredApplicationId } from '@/lib/uuidUtils';
 import { saveIntake } from '@/utils/normalizeIntake';
+import { useSubmitApplication } from '@/hooks/useSubmitApplication';
 
 // Currency formatting utilities
 const formatCurrency = (value: string): string => {
@@ -137,6 +138,7 @@ const fixedAssetsOptions = [
 export default function Step1FinancialProfile() {
   const { state, dispatch } = useFormDataContext();
   const [location, setLocation] = useLocation();
+  const { submitApplication, isSubmitting, error } = useSubmitApplication();
 
   // Initialize application ID once in Step 1
   useEffect(() => {
@@ -277,7 +279,6 @@ export default function Step1FinancialProfile() {
       } catch (e) {
         logger.warn('⚠️ Could not backup to localStorage:', e);
       }
-      };
 
       // Save intake data for Step 2 using new normalizer
       const intake = {
@@ -292,8 +293,22 @@ export default function Step1FinancialProfile() {
 
       logger.log('✅ Form data dispatched to context');
 
+      // Create application in backend before proceeding
+      console.log('🚀 Creating application in backend...');
+      const applicationResult = await submitApplication(
+        step1Payload.fundingAmount || 50000,
+        'default-product', // Will be updated in Step 2 after product selection
+        step1Payload.headquarters as 'CA' | 'US'
+      );
+
+      if (applicationResult.status === 'error') {
+        throw new Error(applicationResult.error || 'Failed to create application');
+      }
+
+      console.log('✅ Application created with ID:', applicationResult.applicationId);
+
       // Emit GTM step_completed event
-      const applicationId = getStoredApplicationId();
+      const applicationId = applicationResult.applicationId;
       window.dataLayer = window.dataLayer || [];
       window.dataLayer.push({ 
         event: 'step_completed', 
