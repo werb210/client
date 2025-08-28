@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useApplication } from '@/context/ApplicationContext';
-import PenTool from 'lucide-react/dist/esm/icons/pen-tool';
+import { PenTool } from 'lucide-react';
 
 const signatureSchema = z.object({
   termsAccepted: z.boolean().refine(val => val === true, {
