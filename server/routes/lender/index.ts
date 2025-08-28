@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "../../db";
 import { sql } from "drizzle-orm";
 import { lenderAuth } from "./mw";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+// AWS S3 imports removed - handled by staff backend
 
 const router = Router();
 
@@ -117,22 +117,8 @@ router.post("/upload", async (req: any, res) => {
     // For demo purposes, create a mock S3 key without actual upload
     const s3Key = `lender/${appId}/${Date.now()}_${String(filename).replace(/\s+/g, "_")}`;
     
-    // If S3 is configured, perform actual upload
-    if (process.env.AWS_REGION && process.env.S3_BUCKET) {
-      try {
-        const s3 = new S3Client({ region: process.env.AWS_REGION });
-        const buffer = Buffer.from(String(contentB64), "base64");
-        
-        await s3.send(new PutObjectCommand({ 
-          Bucket: process.env.S3_BUCKET, 
-          Key: s3Key, 
-          Body: buffer, 
-          ContentType: "application/octet-stream" 
-        }));
-      } catch (s3Error) {
-        console.warn("S3 upload failed, storing metadata only:", s3Error);
-      }
-    }
+    // S3 upload removed - handled by staff backend
+    console.log("📝 [LENDER] Document upload metadata stored:", { s3Key, filename, category });
     
     // Store document metadata in database
     await db.execute(sql`
