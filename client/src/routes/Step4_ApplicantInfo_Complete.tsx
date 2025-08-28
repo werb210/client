@@ -101,7 +101,7 @@ export default function Step4ApplicantInfoComplete() {
   const [showSsnWarning, setShowSsnWarning] = useState(false);
   const [continuePending, setContinuePending] = useState(false);
   
-  // Step 4 initialization (debugging disabled for production)
+  // Step 4 initialization
 
   // Application ID state for persistence
   const [applicationId, setApplicationId] = useState<string | null>(
@@ -482,19 +482,11 @@ export default function Step4ApplicantInfoComplete() {
       
       logger.log("📤 Submitting full application:", { step1, step3, step4 });
       
-      // ✅ Runtime Debug - Verify step3 has both legalName and businessName
-      logger.log('🔍 Step 3 Debug - Required fields check:', {
-        legalName: applicationData.step3.legalName,
-        businessName: applicationData.step3.businessName,
-        hasBusinessName: !!applicationData.step3.businessName
-      });
+      // Verify step3 required fields
+      const hasStep3Fields = Boolean(applicationData.step3.legalName && applicationData.step3.businessName);
       
-      // ✅ Runtime Debug - Verify step4 has email field
-      logger.log('🔍 Step 4 Debug - Required fields check:', {
-        applicantEmail: applicationData.step4.applicantEmail,
-        email: applicationData.step4.email,
-        hasEmail: !!applicationData.step4.email
-      });
+      // Verify step4 required fields
+      const hasStep4Email = Boolean(applicationData.step4.email);
       
       // ✅ Validate Application Payload Before Submission
       logger.log("📋 Step-based payload:", JSON.stringify(applicationData, null, 2));

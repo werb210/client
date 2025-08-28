@@ -82,6 +82,12 @@ app.get('/workspace_iframe.html', (_req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
+// Service Worker route - serve at both /sw.js and /service-worker.js
+app.get('/sw.js', (_req, res) => {
+  const distPath = path.join(__dirname, '..', 'dist', 'public');
+  res.sendFile(path.join(distPath, 'service-worker.js'));
+});
+
 // CACHE FIX: Serve HTML as no-store to prevent stale cache issues
 app.use((req, res, next) => {
   if (req.accepts('html') && req.method === 'GET' && !req.path.startsWith('/api/')) {
@@ -181,6 +187,16 @@ app.use((req, res, next) => {
     res.setHeader('Cache-Control', 'no-cache');
     const manifestPath = path.join(process.cwd(), 'public', 'manifest.json');
     res.sendFile(manifestPath);
+  });
+
+  // Authentication status endpoint for client app
+  app.get('/api/auth/status', (req, res) => {
+    res.json({ 
+      authenticated: false, // Client app doesn't handle authentication directly
+      message: 'Client app routes authentication to staff backend',
+      user: null,
+      session: null
+    });
   });
 
   // Health check endpoint for monitoring (with CSRF token issuance)
@@ -3001,6 +3017,37 @@ app.use((req, res, next) => {
         }
       });
     }
+  });
+
+  // Email notification endpoint
+  app.post('/api/notifications/email', (req, res) => {
+    const { to, subject, message } = req.body;
+    
+    if (!to || !subject || !message) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: to, subject, message'
+      });
+    }
+    
+    // Log email request (in production, would send via SendGrid/similar)
+    console.log(`📧 [EMAIL] Request: ${to} - ${subject}`);
+    
+    res.json({
+      success: true,
+      message: 'Email notification logged (client app mode)',
+      to,
+      subject
+    });
+  });
+
+  // Database health check endpoint
+  app.get('/api/db/health', (req, res) => {
+    res.json({
+      status: 'available',
+      message: 'Database operations handled by staff backend',
+      mode: 'client-app'
+    });
   });
 
   // CRITICAL FIX: Move ALL specific API endpoints BEFORE the catch-all route

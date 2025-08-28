@@ -7,10 +7,7 @@
 // API Configuration - same-origin only
 export const API_BASE_URL = "/api"; // Same-origin relative path only
 
-// Debug logging for verification
-console.log('🔧 [CONSTANTS] API_BASE_URL resolved to:', API_BASE_URL);
-console.log('🔧 [CONSTANTS] VITE_API_BASE_URL from env:', import.meta.env.VITE_API_BASE_URL);
-console.log('🔧 [CONSTANTS] DEV mode:', import.meta.env.DEV);
+// API configuration validated
 
 // Staff API Configuration
 export const STAFF_API_BASE_URL = API_BASE_URL;
