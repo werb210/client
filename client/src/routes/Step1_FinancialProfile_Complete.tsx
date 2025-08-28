@@ -212,7 +212,7 @@ export default function Step1FinancialProfile() {
     debouncedSave(watchedValues);
   }, [watchedValues, debouncedSave]);
 
-  const onSubmit = (data: FinancialProfileFormData) => {
+  const onSubmit = async (data: FinancialProfileFormData) => {
     logger.log('✅ Step 1 - Form submitted successfully!');
     logger.log('Form Data:', data);
     
