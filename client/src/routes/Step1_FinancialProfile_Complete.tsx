@@ -297,8 +297,9 @@ export default function Step1FinancialProfile() {
       console.log('🚀 Creating application in backend...');
       const applicationResult = await submitApplication(
         step1Payload.fundingAmount || 50000,
-        'default-product', // Will be updated in Step 2 after product selection
-        step1Payload.headquarters as 'CA' | 'US'
+        step1Payload.fundsPurpose || 'working_capital',
+        step1Payload.headquarters as 'CA' | 'US',
+        step1Payload.industry || 'other'
       );
 
       if (applicationResult.status === 'error') {

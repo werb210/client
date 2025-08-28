@@ -12,8 +12,9 @@ export function useSubmitApplication() {
 
   const submitApplication = async (
     requestedAmount: number,
-    productId: string,
-    country: 'CA' | 'US'
+    fundsPurpose: string,
+    businessLocation: 'CA' | 'US',
+    industry: string
   ): Promise<ApplicationResponse> => {
     setIsSubmitting(true);
     setError(null);
@@ -21,18 +22,24 @@ export function useSubmitApplication() {
     try {
       console.log('🚀 [SUBMIT_HOOK] Creating application with:', {
         requestedAmount,
-        productId,
-        country
+        fundsPurpose,
+        businessLocation,
+        industry
       });
 
       const payload: ApplicationPayload = {
-        requested_amount: requestedAmount,
-        product_id: productId,
-        country: country,
-        step1: state.step1,
-        step3: state.step3,
-        step4: state.step4,
-        uploadedDocuments: state.step5DocumentUpload?.uploadedFiles || []
+        step1: {
+          requestedAmount: requestedAmount,
+          fundingAmount: requestedAmount,
+          use_of_funds: fundsPurpose,
+          businessLocation: businessLocation,
+          industry: industry
+        },
+        metadata: {
+          source: 'client-portal',
+          testSubmission: true,
+          requestedAmount: requestedAmount
+        }
       };
 
       const result = await createApplication(payload);

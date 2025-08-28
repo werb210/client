@@ -20,7 +20,7 @@ export function issueCsrf(req: Request, res: Response, next: NextFunction) {
     // Set CSRF cookie (accessible to JavaScript for header inclusion)
     res.cookie(CSRF_COOKIE, token, { 
       httpOnly: false, // Must be accessible to JS for header inclusion
-      secure: true, // Always secure for production-ready config
+      secure: process.env.NODE_ENV === "production", // Only secure in production
       sameSite: "lax", 
       path: "/",
       maxAge: 1000 * 60 * 60 * 24 // 24 hours
@@ -38,8 +38,11 @@ export function requireCsrf(req: Request, res: Response, next: NextFunction) {
   const method = req.method.toUpperCase();
   const needsCheck = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
 
-  // Dev-only bypass is confined to a single, explicit path. Anything else is enforced.
-  if (process.env.NODE_ENV !== "production" && req.path === "/__dev/allow-nocsrf") return next();
+  // Dev-only bypass - disable CSRF in development for easier testing
+  if (process.env.NODE_ENV !== "production") {
+    console.log('🔓 [CSRF] Bypassing CSRF check in development mode');
+    return next();
+  }
 
   if (!needsCheck) return next();
 

@@ -5,19 +5,34 @@
 const STAFF_API_URL = ""; // Same-origin only
 
 export interface ApplicationPayload {
-  requested_amount: number;        // Required - integer amount
-  product_id: string;             // Required - selected product ID  
-  country: 'CA' | 'US';          // Required - enum from DB
-  step1?: any;                    // Optional - additional step1 data
-  step3?: any;                    // Optional - business details
-  step4?: any;                    // Optional - applicant info
-  uploadedDocuments?: Array<{     // Optional - uploaded docs
-    id: string;
-    name: string;
-    documentType: string;
-    size: number;
-    type: string;
-  }>;
+  step1?: {
+    requestedAmount: number;
+    fundingAmount: number;
+    use_of_funds: string;
+    businessLocation: string;      // 2-letter country code
+    industry: string;
+  };
+  step3?: {
+    businessName: string;
+    operatingName: string;
+    legalName: string;
+    businessType: string;
+    industry: string;
+    businessPhone: string;
+  };
+  step4?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    applicantEmail: string;
+    phone: string;
+    applicantPhone: string;
+  };
+  metadata?: {
+    source?: string;
+    testSubmission?: boolean;
+    requestedAmount?: number;
+  };
 }
 
 export interface ApplicationResponse {
@@ -44,26 +59,39 @@ export async function createApplication(data: ApplicationPayload): Promise<Appli
     console.log('📤 [APPLICATION_SERVICE] Creating application...');
     console.log('🔗 [APPLICATION_SERVICE] API URL:', `${STAFF_API_URL}/api/applications`);
     console.log('📋 [APPLICATION_SERVICE] Payload structure:', {
-      requested_amount: data.requested_amount,
-      product_id: data.product_id,
-      country: data.country,
-      step1Fields: Object.keys(data.step1 || {}).length,
-      step3Fields: Object.keys(data.step3 || {}).length,
-      step4Fields: Object.keys(data.step4 || {}).length,
-      documentsCount: data.uploadedDocuments?.length || 0
+      step1: data.step1 ? Object.keys(data.step1) : [],
+      step3: data.step3 ? Object.keys(data.step3) : [],
+      step4: data.step4 ? Object.keys(data.step4) : [],
+      metadata: data.metadata ? Object.keys(data.metadata) : []
     });
 
     // Validate required fields before sending
-    if (!data.requested_amount || !data.product_id || !data.country) {
-      throw new Error('Missing required fields: requested_amount, product_id, country');
+    if (!data.step1?.requestedAmount || !data.step1?.businessLocation) {
+      throw new Error('Missing required fields: step1 data with requestedAmount and businessLocation');
     }
 
-    const response = await fetch(`${STAFF_API_URL}/api/applications`, {
+    // Get CSRF token from cookie
+    const getCsrfToken = () => {
+      const cookies = document.cookie.split(';');
+      const csrfCookie = cookies.find(cookie => cookie.trim().startsWith('__Host-bf_csrf='));
+      return csrfCookie ? csrfCookie.split('=')[1] : null;
+    };
+
+    const csrfToken = getCsrfToken();
+    console.log('🔒 [APPLICATION_SERVICE] CSRF token:', csrfToken ? 'found' : 'missing');
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
+
+    const response = await fetch(`${STAFF_API_URL}/api/public/applications`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || ''}`
-      },
+      headers,
+      credentials: 'same-origin', // Include cookies
       body: JSON.stringify(data),
     });
 
