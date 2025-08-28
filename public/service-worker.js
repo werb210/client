@@ -1,14 +1,20 @@
-const CACHE_NAME = 'boreal-financial-v2';
+const CACHE_NAME = 'boreal-financial-v3';
 const OFFLINE_URL = '/offline/index.html';
 
-// Essential files for offline functionality
+// Enhanced cache strategy for better PWA performance
 const CACHE_URLS = [
   '/',
   '/offline/index.html',
   '/manifest.json',
   '/icons/icon-192x192.svg',
-  '/icons/icon-512x512.svg'
+  '/icons/icon-512x512.svg',
+  '/application/step-1',
+  '/assets/index.js',
+  '/assets/index.css'
 ];
+
+// Background sync for offline application submissions
+const BACKGROUND_SYNC_TAG = 'boreal-background-sync';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -72,3 +78,72 @@ self.addEventListener('notificationclick', (event) => {
     clients.openWindow(url)
   );
 });
+
+// Background sync for offline submissions
+self.addEventListener('sync', (event) => {
+  if (event.tag === BACKGROUND_SYNC_TAG) {
+    event.waitUntil(syncOfflineSubmissions());
+  }
+});
+
+// Enhanced offline submission sync
+async function syncOfflineSubmissions() {
+  try {
+    // Check indexedDB for pending submissions
+    const db = await openDB();
+    const pendingSubmissions = await getAllPendingSubmissions(db);
+    
+    for (const submission of pendingSubmissions) {
+      try {
+        const response = await fetch('/api/public/applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(submission.data)
+        });
+        
+        if (response.ok) {
+          await removePendingSubmission(db, submission.id);
+        }
+      } catch (error) {
+        // Will retry on next sync
+      }
+    }
+  } catch (error) {
+    // Background sync failed
+  }
+}
+
+// IndexedDB helpers for offline submissions
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('BorealOffline', 1);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains('submissions')) {
+        db.createObjectStore('submissions', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+  });
+}
+
+async function getAllPendingSubmissions(db) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['submissions'], 'readonly');
+    const store = transaction.objectStore('submissions');
+    const request = store.getAll();
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result || []);
+  });
+}
+
+async function removePendingSubmission(db, id) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['submissions'], 'readwrite');
+    const store = transaction.objectStore('submissions');
+    const request = store.delete(id);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}

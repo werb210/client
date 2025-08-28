@@ -56,14 +56,7 @@ export interface DocumentUploadResponse {
  */
 export async function createApplication(data: ApplicationPayload): Promise<ApplicationResponse> {
   try {
-    console.log('📤 [APPLICATION_SERVICE] Creating application...');
-    console.log('🔗 [APPLICATION_SERVICE] API URL:', `${STAFF_API_URL}/public/applications`);
-    console.log('📋 [APPLICATION_SERVICE] Payload structure:', {
-      step1: data.step1 ? Object.keys(data.step1) : [],
-      step3: data.step3 ? Object.keys(data.step3) : [],
-      step4: data.step4 ? Object.keys(data.step4) : [],
-      metadata: data.metadata ? Object.keys(data.metadata) : []
-    });
+    // Creating application with validated payload
 
     // Validate all required fields as specified by staff backend
     const missingFields = [];

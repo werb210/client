@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import path from "path";
 import { createServer } from "http";
-// DISABLED: Socket.IO import removed to eliminate console errors
+import { Server as SocketIOServer } from "socket.io";
 import multer from "multer";
 import cookieParser from "cookie-parser";
 import { setupVite, serveStatic, log } from "./vite";
@@ -3049,8 +3049,45 @@ app.use((req, res, next) => {
     await setupVite(app, httpServer);
   }
   
-  // DISABLED: Socket.IO server completely removed to eliminate console errors
-  log('Socket.IO disabled - using HTTP polling for chat');
+  // Initialize Socket.IO server for real-time features
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: cfg.nodeEnv === 'production' 
+        ? ["https://apply.boreal.financial", "https://boreal.financial"] 
+        : ["http://localhost:5000", "http://127.0.0.1:5000"],
+      credentials: true
+    },
+    transports: ['websocket', 'polling']
+  });
+
+  // Socket.IO connection handling
+  io.on('connection', (socket) => {
+    log(`🔌 Client connected: ${socket.id}`);
+    
+    // Handle chat events
+    socket.on('chat-message', (data) => {
+      log(`💬 Chat message from ${socket.id}: ${data.message}`);
+      // Echo back for now - in production this would integrate with AI backend
+      socket.emit('chat-response', {
+        message: `Received: ${data.message}`,
+        timestamp: Date.now(),
+        id: Math.random().toString(36).substr(2, 9)
+      });
+    });
+    
+    // Handle real-time application updates
+    socket.on('application-update', (data) => {
+      log(`📋 Application update from ${socket.id}`);
+      // Broadcast to all connected clients (room-based in production)
+      socket.broadcast.emit('application-status', data);
+    });
+    
+    socket.on('disconnect', () => {
+      log(`🔌 Client disconnected: ${socket.id}`);
+    });
+  });
+
+  log('✅ Socket.IO server initialized with WebSocket and polling support');
 
   // Use PORT environment variable for Replit deployments, fallback to 5000 for development
   const port = cfg.port; // This uses process.env.PORT || '5000' from config
@@ -3060,7 +3097,7 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`Client app serving on port ${port} - API calls will route to staff backend`);
-    log(`HTTP polling enabled for chat (Socket.IO disabled)`);
+    log(`✅ Socket.IO enabled for real-time WebSocket communication`);
     
     // Show deployment-specific info
     if (cfg.nodeEnv === 'production') {

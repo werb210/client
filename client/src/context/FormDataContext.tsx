@@ -376,7 +376,7 @@ export function FormDataProvider({ children }: { children: ReactNode }) {
       }
       return null;
     } catch (error) {
-      console.error('Failed to load data from localStorage:', error);
+      // Failed to load data from localStorage
       return null;
     }
   };

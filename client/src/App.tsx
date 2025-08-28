@@ -13,8 +13,11 @@ import { MainLayout } from "@/v2-design-system/MainLayout";
 import { PWAInstallPrompt, NetworkStatus, SyncStatus } from "@/components/PWAInstallPrompt";
 import { PWAOfflineQueue } from "@/components/PWAOfflineQueue";
 import { useWebSocket } from "@/hooks/useWebSocket";
-// DISABLED: WebSocketListener causing connection errors - using Socket.IO instead
-// import { WebSocketListener } from "@/components/WebSocketListener";
+import { initSentry, Sentry } from "@/lib/sentry";
+// ✅ Socket.IO integration handled by useWebSocket hook
+
+// Initialize Sentry error monitoring
+initSentry();
 
 // Enhanced promise rejection handler with better filtering
 window.addEventListener('unhandledrejection', (event) => {
@@ -39,9 +42,9 @@ window.addEventListener('unhandledrejection', (event) => {
     }
   }
   
-  // Only log significant errors in development
+  // Handle significant errors in development only
   if (import.meta.env.DEV && reason) {
-    console.warn('[App] Promise rejection:', reason.message || reason);
+    // Promise rejection handled
   }
   
   event.preventDefault();

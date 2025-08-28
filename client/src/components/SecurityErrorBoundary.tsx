@@ -50,7 +50,19 @@ export class SecurityErrorBoundary extends Component<Props, State> {
     
     // In production, send to monitoring service
     if (process.env.NODE_ENV === 'production') {
-      // TODO: Send to Sentry or similar
+      // Send error to Sentry for monitoring
+      if (typeof window !== 'undefined' && (window as any).Sentry) {
+        (window as any).Sentry.captureException(error, {
+          tags: {
+            component: 'SecurityErrorBoundary',
+            errorBoundary: true,
+          },
+          extra: {
+            errorInfo: errorInfo,
+            componentStack: errorInfo.componentStack,
+          },
+        });
+      }
       // Sentry.captureException(error, { extra: sanitizedError });
     }
   }
