@@ -1,0 +1,62 @@
+[
+  {
+    "feature": "Staff Healthcheck",
+    "url": "https://staff.boreal.financial/api/_int/health",
+    "status": 500,
+    "ok": false
+  },
+  {
+    "feature": "Application Submissions",
+    "url": "https://staff.boreal.financial/api/public/applications",
+    "status": 500,
+    "ok": false
+  },
+  {
+    "feature": "Chatbot API",
+    "url": "https://staff.boreal.financial/api/chat",
+    "status": 500,
+    "ok": false
+  },
+  {
+    "feature": "S3 Upload Route",
+    "url": "https://staff.boreal.financial/api/s3-documents-new/upload",
+    "status": 500,
+    "ok": false
+  },
+  {
+    "feature": "SignNow Init",
+    "url": "https://staff.boreal.financial/api/public/signnow/initiate/123",
+    "status": 500,
+    "ok": false
+  },
+  {
+    "feature": "Lender Products",
+    "url": "https://staff.boreal.financial/api/lender-products",
+    "status": 500,
+    "ok": false
+  },
+  {
+    "feature": "Home Page",
+    "url": "http://localhost:5000/",
+    "status": 200,
+    "ok": true
+  },
+  {
+    "feature": "Application Submit",
+    "url": "http://localhost:5000/api/public/applications",
+    "status": 400,
+    "ok": false
+  },
+  {
+    "feature": "Document Upload",
+    "url": "http://localhost:5000/api/applications/123/documents/upload",
+    "status": 400,
+    "ok": false
+  },
+  {
+    "feature": "Chatbot API",
+    "url": "http://localhost:5000/api/chat",
+    "status": 501,
+    "ok": false
+  }
+]
