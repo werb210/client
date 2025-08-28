@@ -100,7 +100,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
   );
   
   // Track upload progress
-  const [isUploading, setIsUploading] = useState(false);
+  const [isLocalUploading, setIsLocalUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   
   // State for tracking uploaded files and requirements completion
