@@ -298,23 +298,11 @@ export default function Step1FinancialProfile() {
 
       logger.log('✅ Form data dispatched to context');
 
-      // Create application in backend before proceeding
-      console.log('🚀 Creating application in backend...');
-      const applicationResult = await submitApplication(
-        step1Payload.fundingAmount || 50000,
-        step1Payload.fundsPurpose || 'working_capital',
-        step1Payload.headquarters as 'CA' | 'US',
-        step1Payload.industry || 'other'
-      );
-
-      if (applicationResult.status === 'error') {
-        throw new Error(applicationResult.error || 'Failed to create application');
-      }
-
-      console.log('✅ Application created with ID:', applicationResult.applicationId);
+      // Just proceed to Step 2 without submitting application
+      console.log('✅ Step 1 data saved, proceeding to Step 2');
 
       // Emit GTM step_completed event
-      const applicationId = applicationResult.applicationId;
+      const applicationId = getStoredApplicationId();
       window.dataLayer = window.dataLayer || [];
       window.dataLayer.push({ 
         event: 'step_completed', 
