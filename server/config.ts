@@ -63,9 +63,10 @@ if (cfg.nodeEnv === 'development') {
   if (!cfg.clientToken) {
     console.warn('⚠️  CLIENT_APP_SHARED_TOKEN not set - API calls may fail');
   }
-  if (!cfg.signNowToken) {
-// //     console.warn('⚠️  SIGNNOW_API_KEY not set - SignNow integration unavailable');
-  }
+  // SignNow token check disabled for client app
+  // if (!cfg.signNowToken) {
+  //   console.warn('⚠️  SIGNNOW_API_KEY not set - SignNow integration unavailable');
+  // }
 }
 
 export default cfg;
