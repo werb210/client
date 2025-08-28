@@ -235,6 +235,17 @@ export default function Step1FinancialProfile() {
         equipmentValue: data.equipmentValue || 0,
       };
 
+      // Convert salesHistory to months for Step 2 compatibility
+      const convertSalesHistoryToMonths = (salesHistory: string): number => {
+        switch (salesHistory) {
+          case '<1yr': return 6;  // 6 months average for less than 1 year
+          case '1-3yr': return 24; // 2 years average for 1-3 years
+          case '3-5yr': return 48; // 4 years average for 3-5 years
+          case '5+yr': return 72;  // 6 years average for 5+ years
+          default: return 24;     // Default to 2 years
+        }
+      };
+
       // Create canonical format for Step 2 compatibility
       const canonical = {
         product_id: null,
@@ -266,16 +277,6 @@ export default function Step1FinancialProfile() {
       } catch (e) {
         logger.warn('⚠️ Could not backup to localStorage:', e);
       }
-
-      // Convert salesHistory to months for Step 2
-      const convertSalesHistoryToMonths = (salesHistory: string): number => {
-        switch (salesHistory) {
-          case '<1yr': return 6;  // 6 months average for less than 1 year
-          case '1-3yr': return 24; // 2 years average for 1-3 years  
-          case '3-5yr': return 48; // 4 years average for 3-5 years
-          case '5+ years': return 84; // 7 years average for 5+ years
-          default: return 24; // Default to 2 years if unknown
-        }
       };
 
       // Save intake data for Step 2 using new normalizer
