@@ -117,8 +117,8 @@ export default function FAQ() {
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Still have questions?</h3>
             <p className="text-gray-600 mb-4">Our support team is here to help you through the application process</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="tel:1-800-555-0123" className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors">
-                Call (800) 555-0123
+              <a href="tel:+18254511768" className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors">
+                Call (825) 451‑1768
               </a>
               <a href="mailto:support@boreal.financial" className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors">
                 Email Support

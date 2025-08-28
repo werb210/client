@@ -146,7 +146,7 @@ export function PrivacyPolicy() {
             </p>
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-gray-700"><strong>Email:</strong> privacy@boreal.financial</p>
-              <p className="text-gray-700"><strong>Phone:</strong> 1-800-BOREAL-1</p>
+              <p className="text-gray-700"><strong>Phone:</strong> (825) 451‑1768</p>
               <p className="text-gray-700"><strong>Address:</strong> Boreal Financial Privacy Office</p>
             </div>
           </section>

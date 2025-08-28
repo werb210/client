@@ -199,7 +199,7 @@ export default function Troubleshooting() {
             <p className="text-gray-600 mb-4">Our technical support team is available to help resolve any problems</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button className="bg-teal-600 hover:bg-teal-700">
-                <a href="tel:1-800-555-0123">Call Tech Support</a>
+                <a href="tel:+18254511768">Call Tech Support</a>
               </Button>
               <Button variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50">
                 <a href="mailto:tech@boreal.financial">Email Tech Team</a>

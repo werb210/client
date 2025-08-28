@@ -171,7 +171,7 @@ export function TermsOfService() {
             </p>
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-gray-700"><strong>Email:</strong> legal@boreal.financial</p>
-              <p className="text-gray-700"><strong>Phone:</strong> 1-800-BOREAL-1</p>
+              <p className="text-gray-700"><strong>Phone:</strong> (825) 451‑1768</p>
               <p className="text-gray-700"><strong>Address:</strong> Boreal Financial Legal Department</p>
             </div>
           </section>
