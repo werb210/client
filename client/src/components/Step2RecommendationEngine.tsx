@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Target, ArrowRight, Loader2 } from 'lucide-react';
 import { normalizeIntake, loadIntake, type Intake } from '@/utils/normalizeIntake';
-import { getRecommendations } from '@/lib/api';
+import { fetchLenderProducts } from '@/api/lenderProducts';
+import { useQuery } from '@tanstack/react-query';
 import { getStoredApplicationId } from '@/lib/uuidUtils';
 
 // Intake type now imported from normalizeIntake utility
@@ -49,35 +50,29 @@ function Step2RecommendationEngine(props: Props) {
   // Helper function for safe number formatting
   const fmt = (n: number) => (Number.isFinite(n) ? n.toLocaleString() : '—');
 
-  const [state, setState] = useState<
-    { status: "idle" | "pending" | "ready" | "error"; data?: any; error?: any }
-  >({ status: "pending" });
+  const { data: products, isLoading, error } = useQuery({
+    queryKey: ["lenderProducts"],
+    queryFn: fetchLenderProducts
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        // Get applicationId to fetch recommendations
-        const applicationId = getStoredApplicationId();
-        if (!applicationId) {
-          if (!cancelled) setState({ status: "error", error: "No application ID found" });
-          return;
-        }
+  // Extract form data for filtering
+  const requestedAmount = intake.amount || 50000;
+  const selectedCategory = 'Working Capital'; // Default category
 
-        // Call Staff App API for dynamic recommendations
-        const recommendations = await getRecommendations(applicationId);
-        if (!cancelled) setState({ status: "ready", data: recommendations });
-      } catch (e) {
-        console.warn('Failed to load recommendations from Staff API:', String(e));
-        // Fallback to ready state with manual matching message
-        if (!cancelled) setState({ status: "ready", data: null });
-      }
-    })();
+  // Filter products based on criteria
+  const filteredProducts = useMemo(() => {
+    if (!products?.products) return [];
+    
+    return products.products.filter((p: any) => {
+      const matchesCategory = p.category === selectedCategory;
+      const matchesAmount = requestedAmount >= p.minAmount && requestedAmount <= p.maxAmount;
+      const isActive = p.isActive !== false;
+      
+      return matchesCategory && matchesAmount && isActive;
+    });
+  }, [products, requestedAmount, selectedCategory]);
 
-    return () => { cancelled = true; };
-  }, [intake]);
-
-  if (state.status === "pending") {
+  if (isLoading) {
     return (
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
@@ -99,7 +94,7 @@ function Step2RecommendationEngine(props: Props) {
     );
   }
 
-  if (state.status === "error") {
+  if (error) {
     return (
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
@@ -125,8 +120,8 @@ function Step2RecommendationEngine(props: Props) {
     );
   }
 
-  // Ready state - show dynamic recommendations or fallback message
-  if (state.data && state.data.recommendations && state.data.recommendations.length > 0) {
+  // Ready state - show filtered products
+  if (filteredProducts && filteredProducts.length > 0) {
     // Display dynamic recommendations from Staff API
     return (
       <Card className="max-w-4xl mx-auto">
@@ -141,28 +136,27 @@ function Step2RecommendationEngine(props: Props) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {state.data.recommendations.map((rec: any, index: number) => (
-              <div key={index} className="p-4 border rounded-lg hover:bg-gray-50">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-lg">{rec.productName || rec.name}</h3>
-                    <p className="text-gray-600">{rec.lenderName || rec.lender_name}</p>
-                    <p className="text-sm text-gray-500 mt-1">{rec.description}</p>
-                    {rec.interestRateMin && rec.interestRateMax && (
-                      <p className="text-sm text-gray-700 mt-2">
-                        Rate: {rec.interestRateMin}% - {rec.interestRateMax}%
-                      </p>
-                    )}
+            {filteredProducts.map((p: any) => (
+              <Card key={p.id} className="border hover:bg-gray-50">
+                <CardHeader>
+                  <CardTitle>{p.productName}</CardTitle>
+                  <CardDescription>Offered by {p.lender}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-gray-600">
+                      Amount: ${p.minAmount?.toLocaleString()} - ${p.maxAmount?.toLocaleString()}
+                    </div>
+                    <Button 
+                      onClick={() => props.onProductSelect?.(p.id)}
+                      variant={props.selectedProduct === p.id ? "default" : "outline"}
+                      size="sm"
+                    >
+                      {props.selectedProduct === p.id ? "Selected" : "Select"}
+                    </Button>
                   </div>
-                  <Button 
-                    onClick={() => props.onProductSelect?.(rec.id || rec.productId)}
-                    variant={props.selectedProduct === (rec.id || rec.productId) ? "default" : "outline"}
-                    size="sm"
-                  >
-                    {props.selectedProduct === (rec.id || rec.productId) ? "Selected" : "Select"}
-                  </Button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
             <div className="flex space-x-3 pt-4">
               <Button onClick={props.onPrevious} variant="outline">

@@ -122,6 +122,10 @@ export default function Step7Submit() {
         signatureTimestamp: state.step6Signature?.signedAt || '',
         signNowDocumentId: state.step6Signature?.documentId || '',
         
+        // Step 2: Selected product information
+        lenderProductId: state.selectedProduct,
+        lenderId: state.selectedLenderId,
+        
         // Submission metadata
         submissionTimestamp: new Date().toISOString(),
         termsAccepted: true,

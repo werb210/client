@@ -1,10 +1,11 @@
 export interface LenderProduct {
   id: string;
-  lenderName: string;
+  lender: string;
+  lenderId: string;
   productName: string;
-  productCategory: string;
-  minimumLendingAmount: number;
-  maximumLendingAmount: number;
+  category: string;
+  minAmount: number;
+  maxAmount: number;
   countryOffered: string;
   isActive: boolean;
 }
@@ -16,21 +17,26 @@ export interface LenderProductsResponse {
 }
 
 // API functions for lender products
-export const fetchLenderProducts = async (): Promise<LenderProductsResponse> => {
-  try {
-    const response = await fetch('/api/v1/products');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching lender products:', error);
-    return {
-      success: false,
-      products: [],
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
+export const fetchLenderProducts = async () => {
+  const res = await fetch("/api/lender-products");
+  const data = await res.json();
+  
+  // Transform backend schema to unified client schema
+  if (data.products) {
+    data.products = data.products.map((p: any) => ({
+      id: p.id,
+      lender: p.lender_name || p.lender,
+      lenderId: p.lender_id || p.id?.split('-')[0] || p.id, // Extract lender ID or use product ID
+      productName: p.name || p.productName,
+      category: p.category,
+      minAmount: p.min_amount || p.minAmount || 0,
+      maxAmount: p.max_amount || p.maxAmount || Number.MAX_SAFE_INTEGER,
+      countryOffered: p.country || p.countryOffered,
+      isActive: p.active !== false
+    }));
   }
+  
+  return data;
 };
 
 export const filterProductsByCategory = (
@@ -40,8 +46,8 @@ export const filterProductsByCategory = (
   country?: string
 ): LenderProduct[] => {
   return products.filter(product => {
-    const matchesCategory = product.productCategory === category;
-    const matchesAmount = !amount || (amount >= product.minimumLendingAmount && amount <= product.maximumLendingAmount);
+    const matchesCategory = product.category === category;
+    const matchesAmount = !amount || (amount >= product.minAmount && amount <= product.maxAmount);
     const matchesCountry = !country || product.countryOffered === country || product.countryOffered === 'United States' || product.countryOffered === 'US';
     const isActive = product.isActive !== false;
     
