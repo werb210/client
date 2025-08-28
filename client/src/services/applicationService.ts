@@ -57,7 +57,7 @@ export interface DocumentUploadResponse {
 export async function createApplication(data: ApplicationPayload): Promise<ApplicationResponse> {
   try {
     console.log('📤 [APPLICATION_SERVICE] Creating application...');
-    console.log('🔗 [APPLICATION_SERVICE] API URL:', `${STAFF_API_URL}/api/applications`);
+    console.log('🔗 [APPLICATION_SERVICE] API URL:', `${STAFF_API_URL}/public/applications`);
     console.log('📋 [APPLICATION_SERVICE] Payload structure:', {
       step1: data.step1 ? Object.keys(data.step1) : [],
       step3: data.step3 ? Object.keys(data.step3) : [],
@@ -65,9 +65,24 @@ export async function createApplication(data: ApplicationPayload): Promise<Appli
       metadata: data.metadata ? Object.keys(data.metadata) : []
     });
 
-    // Validate required fields before sending
-    if (!data.step1?.requestedAmount || !data.step1?.businessLocation) {
-      throw new Error('Missing required fields: step1 data with requestedAmount and businessLocation');
+    // Validate all required fields as specified by staff backend
+    const missingFields = [];
+    
+    // Check step1 required fields
+    if (!data.step1?.requestedAmount) missingFields.push('amountRequested');
+    if (!data.step1?.businessLocation) missingFields.push('businessLocation');
+    
+    // Check step3 required fields
+    if (!data.step3?.businessName) missingFields.push('businessName');
+    if (!data.step3?.businessType) missingFields.push('businessType');
+    
+    // Check step4 required fields
+    if (!data.step4?.firstName) missingFields.push('firstName');
+    if (!data.step4?.lastName) missingFields.push('lastName');
+    if (!data.step4?.email) missingFields.push('email');
+    
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
     }
 
     // Get CSRF token from cookie
@@ -88,7 +103,7 @@ export async function createApplication(data: ApplicationPayload): Promise<Appli
       headers['X-CSRF-Token'] = csrfToken;
     }
 
-    const response = await fetch(`${STAFF_API_URL}/api/public/applications`, {
+    const response = await fetch(`${STAFF_API_URL}/public/applications`, {
       method: 'POST',
       headers,
       credentials: 'same-origin', // Include cookies
@@ -98,7 +113,14 @@ export async function createApplication(data: ApplicationPayload): Promise<Appli
     console.log('📊 [APPLICATION_SERVICE] Response status:', response.status, response.statusText);
 
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorText;
+      try {
+        const errorData = await response.json();
+        errorText = errorData.message || errorData.error || `HTTP ${response.status}`;
+      } catch {
+        errorText = await response.text();
+      }
+      
       console.error('❌ [APPLICATION_SERVICE] Submission failed:', {
         status: response.status,
         statusText: response.statusText,
@@ -144,7 +166,7 @@ export async function submitFinalApplication(applicationId: string): Promise<App
   try {
     console.log('📤 [APPLICATION_SERVICE] Submitting final application:', applicationId);
 
-    const response = await fetch(`${STAFF_API_URL}/api/applications/${applicationId}/submit`, {
+    const response = await fetch(`${STAFF_API_URL}/public/applications/${applicationId}/submit`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -194,12 +216,12 @@ export async function uploadDocument(
 ): Promise<DocumentUploadResponse> {
   try {
     console.log(`📤 [DOCUMENT_SERVICE] Uploading document: ${file.name} (${category})`);
-    console.log('🔗 [DOCUMENT_SERVICE] API URL:', `${STAFF_API_URL}/api/applications/${applicationId}/documents`);
+    console.log('🔗 [DOCUMENT_SERVICE] API URL:', `${STAFF_API_URL}/public/applications/${applicationId}/documents`);
     
     // Create FormData with proper field names
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('category', category);
+    formData.append('documentType', category);
     
     console.log('📋 [DOCUMENT_SERVICE] FormData prepared:', {
       fileName: file.name,
@@ -209,7 +231,7 @@ export async function uploadDocument(
       applicationId
     });
 
-    const response = await fetch(`${STAFF_API_URL}/api/applications/${applicationId}/documents`, {
+    const response = await fetch(`${STAFF_API_URL}/public/applications/${applicationId}/documents`, {
       method: 'POST',
       body: formData,
       headers: {
@@ -220,7 +242,14 @@ export async function uploadDocument(
     console.log('📊 [DOCUMENT_SERVICE] Response status:', response.status, response.statusText);
 
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorText;
+      try {
+        const errorData = await response.json();
+        errorText = errorData.message || errorData.error || `HTTP ${response.status}`;
+      } catch {
+        errorText = await response.text();
+      }
+      
       console.error('❌ [DOCUMENT_SERVICE] Upload failed:', {
         status: response.status,
         statusText: response.statusText,

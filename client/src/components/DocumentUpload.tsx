@@ -103,11 +103,11 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     acceptedFiles.forEach(file => {
-      // Validate file size (25MB limit)
-      if (file.size > 25 * 1024 * 1024) {
+      // Validate file size (10MB limit as required by staff backend)
+      if (file.size > 10 * 1024 * 1024) {
         toast({
           title: "File too large",
-          description: `${file.name} exceeds the 25MB size limit.`,
+          description: `${file.name} exceeds the 10MB size limit.`,
           variant: "destructive",
         });
         return;
@@ -136,6 +136,7 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
       'image/jpeg': ['.jpg', '.jpeg'],
       'image/png': ['.png'],
+      'image/tiff': ['.tiff', '.tif'],
     },
     multiple: true,
   });
@@ -164,7 +165,7 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
               {isDragActive ? 'Drop files here' : 'Drop files here or click to upload'}
             </p>
             <p className="text-sm text-gray-500">
-              PDF, DOC, DOCX, JPG, PNG up to 25MB each
+              PDF, DOC, DOCX, JPG, PNG, TIFF up to 10MB each
             </p>
           </div>
         </div>

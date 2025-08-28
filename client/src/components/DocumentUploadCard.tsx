@@ -40,12 +40,21 @@ export function DocumentUploadCard({
 
     const file = files[0];
     
-    // Validate file type (PDF, images)
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    // Validate file type (PDF, DOC, DOCX, JPEG, PNG, TIFF as required by staff backend)
+    const allowedTypes = [
+      'application/pdf', 
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg', 
+      'image/png', 
+      'image/jpg',
+      'image/tiff',
+      'image/tif'
+    ];
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Invalid File Type",
-        description: "Please upload PDF, JPEG, or PNG files only.",
+        description: "Please upload PDF, DOC, DOCX, JPEG, PNG, or TIFF files only.",
         variant: "destructive",
       });
       return;
@@ -78,7 +87,7 @@ export function DocumentUploadCard({
       formData.append('applicationId', appId);
 
       // Upload to staff backend API (use correct endpoint)
-      const response = await fetch(`/api/public/upload/${appId}`, {
+      const response = await fetch(`/public/applications/${appId}/documents`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -210,7 +219,7 @@ export function DocumentUploadCard({
               <input
                 id={`file-input-${docType}`}
                 type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.tiff,.tif"
                 onChange={handleFileSelect}
                 className="hidden"
               />

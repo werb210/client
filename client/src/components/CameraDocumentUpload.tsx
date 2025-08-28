@@ -18,7 +18,7 @@ interface CameraDocumentUploadProps {
 export function CameraDocumentUpload({ 
   onFileCapture, 
   onClose, 
-  acceptedTypes = "image/*,application/pdf",
+  acceptedTypes = ".pdf,.doc,.docx,.jpg,.jpeg,.png,.tiff,.tif",
   maxSizeMB = 10 
 }: CameraDocumentUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -124,7 +124,7 @@ export function CameraDocumentUpload({
         </div>
         
         <div className="text-center text-sm text-gray-600">
-          <p>Supported formats: PDF, JPG, PNG</p>
+          <p>Supported formats: PDF, DOC, DOCX, JPG, PNG, TIFF</p>
           <p>Maximum size: {maxSizeMB}MB</p>
           {isMobile && (
             <p className="text-teal-600 font-medium mt-2">
