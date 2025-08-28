@@ -508,7 +508,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
       }
     } catch (error) {
       console.error('Human handoff error:', error);
-      addBotMessage("I'll connect you with our team. A human agent will be notified and will reach out to you soon. You can also email us at info@boreal.financial or call 1-800-BOREAL.");
+      addBotMessage("I'll connect you with our team. A human agent will be notified and will reach out to you soon. You can also email us at info@boreal.financial or call (825) 451‑1768.");
       setHumanRequestStatus('idle');
     }
 
