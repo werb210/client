@@ -28,7 +28,7 @@ export function useChatbot(options: UseChatbotOptions = {}) {
   // Start chat session
   const startChatMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch('/api/chat/start', {
+      const response = await fetch('/api/public/chat/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -63,7 +63,7 @@ export function useChatbot(options: UseChatbotOptions = {}) {
     mutationFn: async (message: string) => {
       if (!session) throw new Error('No active chat session');
 
-      const response = await fetch('/api/chat/message', {
+      const response = await fetch('/api/public/chat/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -124,7 +124,7 @@ export function useChatbot(options: UseChatbotOptions = {}) {
     mutationFn: async (reason: string) => {
       if (!session) throw new Error('No active chat session');
 
-      const response = await fetch('/api/chat/escalate', {
+      const response = await fetch('/api/public/chat/escalate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -163,7 +163,7 @@ export function useChatbot(options: UseChatbotOptions = {}) {
     queryFn: async () => {
       if (!session) return null;
 
-      const response = await fetch(`/api/chat/history/${session.sessionId}`);
+      const response = await fetch(`/api/public/chat/history/${session.sessionId}`);
       if (!response.ok) {
         throw new Error('Failed to get chat history');
       }

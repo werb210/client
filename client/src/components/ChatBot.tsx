@@ -207,7 +207,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
         throw new Error('CSRF token not available');
       }
 
-      const response = await fetch('/api/leads', {
+      const response = await fetch('/api/public/leads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -482,8 +482,8 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     try {
       setHumanRequestStatus('requesting');
       
-      // Use the local chat escalation API instead of staff backend
-      const response = await fetch('/api/chat/escalate', {
+      // Route to staff backend for chat escalation
+      const response = await fetch('/api/public/chat/escalate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
