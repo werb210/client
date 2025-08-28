@@ -427,11 +427,8 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
   // Quick action handlers
   const handleStartApplication = () => {
-    const prefillParams = new URLSearchParams({
-      name: leadData.name,
-      email: leadData.email
-    });
-    window.location.href = `/apply?prefill=${prefillParams.toString()}`;
+    // Navigate to application page
+    window.location.href = '/application/step-1';
     
     // Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -441,6 +438,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
   const handleUploadDocs = () => {
     setShowUploadModal(true);
+    addBotMessage("For document uploads, please email your documents to info@boreal.financial or use our secure document upload portal after submitting your application!");
     
     // Analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -450,24 +448,8 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
 
   const handleBookMeeting = async () => {
     try {
-      const staffApiUrl = process.env.VITE_STAFF_API_URL || process.env.VITE_API_URL?.replace('/api', '');
-      if (!staffApiUrl) {
-        addBotMessage("Meeting booking is currently unavailable. Please contact us directly.");
-        return;
-      }
-
-      // Try to get available slots (simplified - would integrate with O365 in production)
-      const response = await fetch(`${staffApiUrl}/api/calendar/available`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (response.ok) {
-        setShowMeetingModal(true);
-        addBotMessage(currentStrings.meetingBooked);
-      } else {
-        addBotMessage("Please contact us directly to schedule a meeting: info@boreal.financial");
-      }
+      setShowMeetingModal(true);
+      addBotMessage("To book a meeting with our team:\n📧 Email: info@boreal.financial\n📞 Phone: (825) 451-1768\n\nOur team will coordinate a convenient time for you!");
     } catch (error) {
       addBotMessage("Please contact us directly to schedule a meeting: info@boreal.financial");
     }
@@ -482,33 +464,13 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     try {
       setHumanRequestStatus('requesting');
       
-      // Route to staff backend for chat escalation
-      const response = await fetch('/api/public/chat/escalate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          reason: 'User requested human assistance',
-          applicationId: currentStep?.toString() || 'unknown',
-          user_input: `Customer ${leadData.name} (${leadData.email}) requested to speak with a human agent from page: ${window.location.pathname}`
-        })
-      });
-
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
-        setHumanRequestStatus('connected');
-        addBotMessage(currentStrings.humanRequested);
-        // Add the escalation message from the server
-        if (data.message) {
-          setTimeout(() => addBotMessage(data.message), 1000);
-        }
-      } else {
-        throw new Error(data.error || 'Escalation failed');
-      }
+      // Simplified human contact - no API call needed
+      setHumanRequestStatus('connected');
+      addBotMessage(currentStrings.humanRequested);
+      addBotMessage("You can reach our team directly at:\n📧 Email: info@boreal.financial\n📞 Phone: (825) 451-1768\n\nOr continue chatting here and I'll help you as best I can!");
     } catch (error) {
       console.error('Human handoff error:', error);
-      addBotMessage("I'll connect you with our team. A human agent will be notified and will reach out to you soon. You can also email us at info@boreal.financial or call (825) 451‑1768.");
+      addBotMessage("Contact our team directly at info@boreal.financial or call (825) 451-1768.");
       setHumanRequestStatus('idle');
     }
 
