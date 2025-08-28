@@ -117,7 +117,7 @@ export default function Step6_TypedSignature() {
         console.log(`🔄 [STEP6] Found ${retryQueue.length} items in retry queue`, retryQueue);
         toast({
           title: "Upload Retry Available",
-          description: `${retryQueue.length} document(s) queued for retry when staff backend S3 is available. Application can proceed.`,
+          description: `${retryQueue.length} document(s) queued for retry when staff backend is available. Application can proceed.`,
           variant: "default"
         });
       }

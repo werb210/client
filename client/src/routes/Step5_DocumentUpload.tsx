@@ -425,7 +425,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
     
     // Group uploaded files by normalized document type
     const filesByType = files.reduce((acc, file) => {
-      // ✅ Accept multiple upload states for S3 compatibility
+      // ✅ Accept multiple upload states for staff backend compatibility
       const isValidFile = file.status === 'completed' || file.status === 'uploading' || (file as any).uploadedAt;
       if (isValidFile && file.documentType) {
         const normalizedType = normalizeDocumentName(file.documentType);

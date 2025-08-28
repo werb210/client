@@ -168,12 +168,12 @@ export function ClientAppAudit() {
       updateResult('BackendSubmission', 'PARTIAL', 'Backend submission needs runtime testing with actual application data');
     }
 
-    // S3 UPLOADS TEST
-    updateResult('S3Uploads', 'TESTING', 'Testing S3 upload capability...');
+    // DOCUMENT UPLOADS TEST
+    updateResult('DocumentUploads', 'TESTING', 'Testing document upload capability...');
     try {
-      updateResult('S3Uploads', 'PARTIAL', 'S3 upload infrastructure configured - requires document upload testing');
+      updateResult('DocumentUploads', 'PARTIAL', 'Document upload infrastructure configured - requires runtime testing');
     } catch (error) {
-      updateResult('S3Uploads', 'PARTIAL', 'S3 uploads need runtime testing with actual files');
+      updateResult('DocumentUploads', 'PARTIAL', 'Document uploads need runtime testing with actual files');
     }
 
     setIsRunning(false);

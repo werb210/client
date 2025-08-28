@@ -1,6 +1,6 @@
 /**
  * Uploaded Document List Component
- * Displays uploaded documents with preview and download functionality via S3
+ * Displays uploaded documents with preview and download functionality
  */
 
 import React from 'react';

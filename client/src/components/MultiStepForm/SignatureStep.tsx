@@ -48,13 +48,13 @@ export function SignatureStep({ onNext, onBack }: SignatureStepProps) {
   const handleSignDocument = async () => {
     setIsSigningInProgress(true);
     
-    // In a real implementation, this would integrate with SignNow or another e-signature service
+    // Staff backend handles e-signature integration
     // For now, we'll simulate the signing process
     try {
-      // TODO: Integrate with SignNow API
+      // NOTE: E-signature service is handled by staff backend
       // 1. Create document from application data
       // 2. Send for signature
-      // 3. Poll signature status (webhooks only go to backend, not browser clients)
+      // 3. Poll signature status
       
       // Simulated delay for signing process
       await new Promise(resolve => setTimeout(resolve, 2000)).catch(error => {
