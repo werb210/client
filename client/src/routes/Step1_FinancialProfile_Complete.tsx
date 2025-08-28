@@ -140,15 +140,18 @@ export default function Step1FinancialProfile() {
   const [location, setLocation] = useLocation();
   const { submitApplication, isSubmitting, error } = useSubmitApplication();
 
-  // Initialize application ID and completely clear all form data
+  // Initialize application ID and restore autosave data
   useEffect(() => {
-    // Clear ALL localStorage form data to prevent prefilled values
-    localStorage.removeItem('formData');
-    localStorage.removeItem('financialFormData');
-    localStorage.removeItem('apply.form');
-    localStorage.removeItem('applicationData');
-    localStorage.removeItem('intake');
-    // Cleared all cached form data from localStorage
+    // Restore autosave data if available
+    const savedFormData = localStorage.getItem('apply.form');
+    if (savedFormData) {
+      try {
+        const parsed = JSON.parse(savedFormData);
+        console.log('✅ Restoring autosaved form data:', parsed);
+      } catch (e) {
+        console.warn('⚠️ Could not parse saved form data:', e);
+      }
+    }
     
     // COMPLETELY reset FormDataContext to initial clean state
     dispatch({
@@ -197,23 +200,36 @@ export default function Step1FinancialProfile() {
     }
   }, []);
 
+  // Get saved form data for restoration
+  const getSavedFormData = () => {
+    try {
+      const saved = localStorage.getItem('apply.form');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const savedData = getSavedFormData();
+  console.log('💾 Restoring autosaved data:', savedData);
+
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
-      // Always start with empty values to prevent prefilled data
-      businessLocation: undefined,
-      headquarters: undefined,
-      headquartersState: undefined,
-      industry: undefined,
-      lookingFor: undefined,
-      fundingAmount: undefined,
-      fundsPurpose: undefined,
-      salesHistory: undefined,
-      revenueLastYear: undefined,
-      averageMonthlyRevenue: undefined,
-      accountsReceivableBalance: undefined,
-      fixedAssetsValue: undefined,
-      equipmentValue: undefined,
+      // Restore autosaved data if available
+      businessLocation: savedData?.businessLocation || state.step1?.businessLocation,
+      headquarters: savedData?.headquarters || state.step1?.headquarters,
+      headquartersState: savedData?.headquartersState || state.step1?.headquartersState,
+      industry: savedData?.industry || state.step1?.industry,
+      lookingFor: savedData?.lookingFor || state.step1?.lookingFor,
+      fundingAmount: savedData?.amount || savedData?.fundingAmount || state.step1?.fundingAmount,
+      fundsPurpose: savedData?.fundsPurpose || state.step1?.fundsPurpose,
+      salesHistory: savedData?.salesHistory || state.step1?.salesHistory,
+      revenueLastYear: savedData?.revenueLastYear || state.step1?.revenueLastYear,
+      averageMonthlyRevenue: savedData?.monthlyRevenue || savedData?.averageMonthlyRevenue || state.step1?.averageMonthlyRevenue,
+      accountsReceivableBalance: savedData?.accountsReceivableBalance || state.step1?.accountsReceivableBalance,
+      fixedAssetsValue: savedData?.fixedAssetsValue || state.step1?.fixedAssetsValue,
+      equipmentValue: savedData?.equipmentValue || state.step1?.equipmentValue,
     },
     mode: 'onChange',
   });
