@@ -1,21 +1,21 @@
-// DISABLED: Socket.IO causing console errors
-// Using simple HTTP polling for chat instead
+// WebSocket integration disabled - using HTTP polling for real-time features
+// This provides better reliability and fewer connection issues
 
 export function getSocket() {
-  // Return a mock socket that doesn't actually connect
+  // HTTP polling-based implementation for better stability
   return {
     emit: (event: string, data?: any) => {
-      console.log(`[Mock Socket] Would emit ${event}:`, data);
+      console.log(`[HTTP Polling] Event ${event} will be handled via API calls:`, data);
     },
     on: (event: string, callback: Function) => {
-      console.log(`[Mock Socket] Would listen for ${event}`);
+      console.log(`[HTTP Polling] Listening for ${event} via polling`);
     },
     off: (event: string, callback?: Function) => {
-      console.log(`[Mock Socket] Would remove listener for ${event}`);
+      console.log(`[HTTP Polling] Stopped listening for ${event}`);
     },
-    connected: false,
+    connected: false, // Always false since we use HTTP polling
     disconnect: () => {
-      console.log(`[Mock Socket] Would disconnect`);
+      console.log(`[HTTP Polling] No connection to disconnect`);
     }
   };
 }

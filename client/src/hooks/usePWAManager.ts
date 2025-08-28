@@ -193,16 +193,15 @@ export function usePWAManager() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
 
-    // Setup push notifications after service worker is ready
-    const timer = setTimeout(() => {
+    // Setup push notifications when service worker is ready (no arbitrary delay)
+    if (status.serviceWorkerReady) {
       setupPushNotifications();
-    }, 1000);
+    }
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as any);
-      clearTimeout(timer);
     };
   }, [checkInstallStatus, checkOfflineStorage, registerServiceWorker, setupPushNotifications]);
 
