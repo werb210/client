@@ -260,17 +260,7 @@ app.use((req, res, next) => {
     }
   });
 
-  // Mock local storage for applications and documents
-  const mockStorage = {
-    applications: new Map<string, any>(),
-    documents: new Map<string, any[]>(),
-    nextId: 1000
-  };
-
-  // Generate realistic application ID
-  const generateApplicationId = () => {
-    return `APP-${Date.now()}-${mockStorage.nextId++}`;
-  };
+  // Applications now submit ONLY to staff backend
 
   // Application submission endpoint - with mock implementation fallback
   app.post('/api/public/applications', requireCsrf, async (req, res) => {
@@ -290,62 +280,54 @@ app.use((req, res, next) => {
         });
       }
       
-      // Try staff backend first with timeout
+      // Submit ONLY to staff backend - no fallback
       const staffUrl = `${cfg.staffApiUrl.replace('/api/lender-products', '')}/public/applications`;
       
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+      console.log(`🎯 [SERVER] Submitting to staff backend: ${staffUrl}`);
+      console.log(`🔑 [SERVER] Using authorization token: ${cfg.clientToken ? 'Present' : 'Missing'}`);
+      
+      const response = await fetch(staffUrl, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cfg.clientToken}`
+        },
+        body: JSON.stringify(req.body)
+      });
+      
+      console.log(`📡 [SERVER] Staff backend response: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ [SERVER] Staff backend error:', errorText);
         
-        const response = await fetch(staffUrl, {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${cfg.clientToken}`
-          },
-          body: JSON.stringify(req.body),
-          signal: controller.signal
+        return res.status(response.status).json({
+          success: false,
+          error: 'Staff backend error',
+          message: `Application submission failed: ${response.status} ${response.statusText}`,
+          staffBackendUrl: staffUrl,
+          staffBackendError: errorText,
+          troubleshooting: {
+            required_endpoint: 'POST /public/applications',
+            required_headers: ['Content-Type: application/json', 'Authorization: Bearer <token>'],
+            expected_response_format: { success: true, data: { id: 'string', status: 'string' } },
+            common_issues: [
+              'Staff backend not running',
+              'Endpoint not implemented: POST /public/applications',
+              'CORS not configured for client domain',
+              'Authorization token mismatch'
+            ]
+          }
         });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log('✅ [SERVER] Staff backend responded successfully');
-          return res.json({ success: true, data });
-        } else {
-          console.log('⚠️ [SERVER] Staff backend error, falling back to mock');
-        }
-      } catch (error) {
-        console.log('⚠️ [SERVER] Staff backend unavailable, using mock implementation');
       }
       
-      // Mock implementation fallback
-      const applicationId = generateApplicationId();
-      const applicationData = {
-        id: applicationId,
-        ...req.body,
-        status: 'submitted',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        documents: []
-      };
-      
-      // Store in mock storage
-      mockStorage.applications.set(applicationId, applicationData);
-      mockStorage.documents.set(applicationId, []);
-      
-      console.log(`✅ [MOCK] Application created: ${applicationId}`);
+      const data = await response.json();
+      console.log('✅ [SERVER] Staff backend success:', data);
       
       res.json({
         success: true,
-        data: {
-          id: applicationId,
-          status: 'submitted',
-          message: 'Application submitted successfully (mock mode)',
-          next_step: 'document_upload'
-        }
+        data
       });
       
     } catch (error: any) {
@@ -382,8 +364,8 @@ app.use((req, res, next) => {
       console.log('⚠️ [SERVER] Staff backend unavailable, using mock application data');
     }
     
-    // Mock fallback
-    const applicationData = mockStorage.applications.get(id);
+    // No mock fallback - staff backend only
+    const applicationData = null;
     if (applicationData) {
       res.json({
         success: true,
@@ -436,11 +418,8 @@ app.use((req, res, next) => {
       status: 'uploaded'
     };
     
-    // Store in mock storage
-    if (!mockStorage.documents.has(id)) {
-      mockStorage.documents.set(id, []);
-    }
-    mockStorage.documents.get(id)!.push(document);
+    // Document storage handled by staff backend only
+    // This endpoint should not be used - documents go to staff backend
     
     console.log(`✅ [MOCK] Document uploaded: ${documentId}`);
     
@@ -456,7 +435,7 @@ app.use((req, res, next) => {
     const { id } = req.params;
     console.log(`📋 [MOCK] Fetching documents for application ${id}`);
     
-    const documents = mockStorage.documents.get(id) || [];
+    const documents: any[] = []; // No local storage - staff backend only
     console.log(`✅ [MOCK] Retrieved ${documents.length} documents for application ${id}`);
     
     res.json({
