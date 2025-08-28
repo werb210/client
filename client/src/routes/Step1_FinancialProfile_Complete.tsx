@@ -148,6 +148,13 @@ export default function Step1FinancialProfile() {
     localStorage.removeItem('apply.form');
     console.log('🧹 Cleared cached form data from localStorage');
     
+    // Clear FormDataContext step1 state to prevent prefilled values
+    dispatch({
+      type: 'UPDATE_STEP1',
+      payload: {}
+    });
+    console.log('🧹 Cleared step1 context state');
+    
     const applicationId = initializeApplicationId();
     
     // Store in FormData context if not already set
