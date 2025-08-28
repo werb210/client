@@ -381,54 +381,55 @@ export default function Step1FinancialProfile() {
       application_id: applicationId 
     });
     
-    // Auto-detect user's country if not already set
-    if (!state.step1?.businessLocation || !state.step1?.headquarters) {
-      fetchUserCountry().then(countryCode => {
-        if (countryCode) {
-          const businessLocation = countryCodeToBusinessLocation(countryCode);
-          const headquarters = countryCode; // CA or US
-          
-          if (businessLocation && headquarters) {
-            logger.log(`🌍 Auto-detected country: ${countryCode} (${businessLocation})`);
-            
-            // Update form values
-            if (!state.step1?.businessLocation) {
-              form.setValue('businessLocation', headquarters);
-            }
-            if (!state.step1?.headquarters) {
-              form.setValue('headquarters', headquarters);
-            }
-            
-            // Update context
-            dispatch({
-              type: 'UPDATE_FORM_DATA',
-              payload: {
-                businessLocation: businessLocation,
-                headquarters: headquarters,
-              },
-            });
-          }
-        } else {
-          // Default to US when location detection fails
-          logger.log('🇺🇸 Location detection failed, defaulting to US');
-          if (!state.step1?.businessLocation) {
-            form.setValue('businessLocation', 'US');
-          }
-          if (!state.step1?.headquarters) {
-            form.setValue('headquarters', 'US');
-          }
-        }
-      }).catch(error => {
-        logger.log('Country detection failed, defaulting to US:', error?.message || 'Unknown error');
-        // Default to US when location detection fails
-        if (!state.step1?.businessLocation) {
-          form.setValue('businessLocation', 'US');
-        }
-        if (!state.step1?.headquarters) {
-          form.setValue('headquarters', 'US');
-        }
-      });
-    }
+    // AUTO-LOCATION DETECTION COMPLETELY DISABLED to prevent prefilled values
+    // Country detection and auto-filling has been disabled to ensure form starts empty
+    // if (!state.step1?.businessLocation || !state.step1?.headquarters) {
+    //   fetchUserCountry().then(countryCode => {
+    //     if (countryCode) {
+    //       const businessLocation = countryCodeToBusinessLocation(countryCode);
+    //       const headquarters = countryCode; // CA or US
+    //       
+    //       if (businessLocation && headquarters) {
+    //         logger.log(`🌍 Auto-detected country: ${countryCode} (${businessLocation})`);
+    //         
+    //         // Update form values
+    //         if (!state.step1?.businessLocation) {
+    //           form.setValue('businessLocation', headquarters);
+    //         }
+    //         if (!state.step1?.headquarters) {
+    //           form.setValue('headquarters', headquarters);
+    //         }
+    //         
+    //         // Update context
+    //         dispatch({
+    //           type: 'UPDATE_FORM_DATA',
+    //           payload: {
+    //             businessLocation: businessLocation,
+    //             headquarters: headquarters,
+    //           },
+    //         });
+    //       }
+    //     } else {
+    //       // Default to US when location detection fails
+    //       logger.log('🇺🇸 Location detection failed, defaulting to US');
+    //       if (!state.step1?.businessLocation) {
+    //         form.setValue('businessLocation', 'US');
+    //       }
+    //       if (!state.step1?.headquarters) {
+    //         form.setValue('headquarters', 'US');
+    //       }
+    //     }
+    //   }).catch(error => {
+    //     logger.log('Country detection failed, defaulting to US:', error?.message || 'Unknown error');
+    //     // Default to US when location detection fails
+    //     if (!state.step1?.businessLocation) {
+    //       form.setValue('businessLocation', 'US');
+    //     }
+    //     if (!state.step1?.headquarters) {
+    //       form.setValue('headquarters', 'US');
+    //     }
+    //   });
+    // }
   }, [state.step1?.businessLocation, state.step1?.headquarters, form, dispatch]);
 
   return (
@@ -453,7 +454,7 @@ export default function Step1FinancialProfile() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>What are you looking for?</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger className="h-12">
                             <SelectValue placeholder="Select funding type" />
@@ -561,7 +562,7 @@ export default function Step1FinancialProfile() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Industry</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger className="h-12">
                             <SelectValue placeholder="Select industry" />
@@ -587,7 +588,7 @@ export default function Step1FinancialProfile() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Purpose of funds</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger className="h-12">
                             <SelectValue placeholder="Select purpose of funds" />
@@ -613,7 +614,7 @@ export default function Step1FinancialProfile() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>How many years of sales history does the business have?</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange}>
                         <FormControl>
                           <SelectTrigger className="h-12">
                             <SelectValue placeholder="Select sales history" />
@@ -641,7 +642,7 @@ export default function Step1FinancialProfile() {
                       <FormLabel>What was your business revenue in the last 12 months?</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString()}
+
                       >
                         <FormControl>
                           <SelectTrigger className="h-12">
@@ -670,7 +671,7 @@ export default function Step1FinancialProfile() {
                       <FormLabel>Average monthly revenue (last 3 months)</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString()}
+
                       >
                         <FormControl>
                           <SelectTrigger className="h-12">
@@ -699,7 +700,7 @@ export default function Step1FinancialProfile() {
                       <FormLabel>Current Account Receivable balance</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString()}
+
                       >
                         <FormControl>
                           <SelectTrigger className="h-12">
@@ -728,7 +729,7 @@ export default function Step1FinancialProfile() {
                       <FormLabel>Fixed assets value for loan security</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
-                        defaultValue={field.value?.toString()}
+
                       >
                         <FormControl>
                           <SelectTrigger className="h-12">
