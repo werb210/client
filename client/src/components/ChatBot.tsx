@@ -482,31 +482,33 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
     try {
       setHumanRequestStatus('requesting');
       
-      const staffApiUrl = process.env.VITE_STAFF_API_URL || process.env.VITE_API_URL?.replace('/api', '');
-      if (!staffApiUrl) {
-        throw new Error('Staff API not configured');
-      }
-
-      const response = await fetch(`${staffApiUrl}/api/chat/request-staff`, {
+      // Use the local chat escalation API instead of staff backend
+      const response = await fetch('/api/chat/escalate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId,
-          name: leadData.name,
-          email: leadData.email,
-          currentPage: window.location.pathname
+          reason: 'User requested human assistance',
+          applicationId: currentStep?.toString() || 'unknown',
+          user_input: `Customer ${leadData.name} (${leadData.email}) requested to speak with a human agent from page: ${window.location.pathname}`
         })
       });
 
-      if (response.ok) {
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
         setHumanRequestStatus('connected');
         addBotMessage(currentStrings.humanRequested);
+        // Add the escalation message from the server
+        if (data.message) {
+          setTimeout(() => addBotMessage(data.message), 1000);
+        }
       } else {
-        throw new Error('Request failed');
+        throw new Error(data.error || 'Escalation failed');
       }
     } catch (error) {
       console.error('Human handoff error:', error);
-      addBotMessage("I'll connect you with our team. Please email us at info@boreal.financial or call 1-800-BOREAL.");
+      addBotMessage("I'll connect you with our team. A human agent will be notified and will reach out to you soon. You can also email us at info@boreal.financial or call 1-800-BOREAL.");
       setHumanRequestStatus('idle');
     }
 
