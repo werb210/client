@@ -1,122 +1,120 @@
-// Boreal Financial PWA Service Worker
-// Basic service worker for PWA functionality
+/* eslint-disable no-restricted-globals */
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
-const CACHE_NAME = 'boreal-financial-v1';
-const urlsToCache = [
-  '/',
-  '/static/css/main.css',
-  '/static/js/main.js',
-  '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
-];
+const DB_NAME = 'bf-offline';
+const STORE = 'retry-queue';
 
-// Install Service Worker
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        // Only cache existing resources to avoid errors
-        return Promise.allSettled(
-          urlsToCache.map(url => 
-            cache.add(url).catch(error => {
-              console.log(`Failed to cache ${url}:`, error);
-            })
-          )
-        );
-      })
-  );
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
-});
+// Configure your staff backend endpoint(s)
+const STAFF_API = 'https://staff.boreal.financial/api';
+const SYNC_ENDPOINT = '/offline/intake'; // change to your actual intake endpoint
 
-// Activate Service Worker
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  // Take control of all clients
-  return self.clients.claim();
-});
-
-// Fetch Event - Network First Strategy
-self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') {
-    return;
-  }
-
-  // Skip chrome-extension and other non-http requests
-  if (!event.request.url.startsWith('http')) {
-    return;
-  }
-
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // If request is successful, clone and cache the response
-        if (response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME)
-            .then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-        }
-        return response;
-      })
-      .catch(() => {
-        // If network fails, try to serve from cache
-        return caches.match(event.request)
-          .then((response) => {
-            return response || new Response('Offline', { 
-              status: 200, 
-              statusText: 'OK',
-              headers: new Headers({
-                'Content-Type': 'text/html'
-              })
-            });
-          });
-      })
-  );
-});
-
-// Background Sync
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'form-submission') {
-    event.waitUntil(syncFormSubmissions());
-  }
-});
-
-// Sync form submissions when online
-async function syncFormSubmissions() {
-  try {
-    // This would integrate with IndexedDB to sync offline form submissions
-    console.log('Background sync: Form submissions');
-    
-    // Send message to main thread about sync success
-    const clients = await self.clients.matchAll();
-    clients.forEach(client => {
-      client.postMessage({ type: 'SYNC_SUCCESS' });
-    });
-  } catch (error) {
-    console.error('Background sync failed:', error);
-  }
+// --- IndexedDB utilities (no external libs) ---
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { autoIncrement: true });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
 }
 
-// Push Notification Handler
+function idbAdd(val) {
+  return openDb().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).add(val);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+  }));
+}
+
+function idbAll() {
+  return openDb().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const store = tx.objectStore(STORE);
+    const out = [];
+    const req = store.openCursor();
+    req.onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (cursor) { out.push({ key: cursor.key, value: cursor.value }); cursor.continue(); }
+      else resolve(out);
+    };
+    req.onerror = () => reject(req.error);
+  }));
+}
+
+function idbDelete(key) {
+  return openDb().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(key);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+  }));
+}
+
+// --- Local namespace handlers ---
+async function handleQueue(event) {
+  const body = await event.request.clone().json();
+  await idbAdd(body);
+  try { await self.registration.sync.register('bf-sync'); } catch (_) {}
+  return new Response(JSON.stringify({ queued: true }), {
+    status: 201, headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+async function runSync() {
+  const items = await idbAll();
+  const results = [];
+  for (const { key, value } of items) {
+    try {
+      const res = await fetch(STAFF_API + SYNC_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(value),
+      });
+      if (res.ok) await idbDelete(key);
+      results.push({ key, ok: res.ok });
+    } catch (err) {
+      results.push({ key, ok: false });
+    }
+  }
+  return new Response(JSON.stringify({ synced: true, results }), {
+    status: 200, headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+self.addEventListener('fetch', (event) => {
+  const { pathname } = new URL(event.request.url);
+
+  // Local-only endpoints — never forward to network; handle inside SW
+  if (pathname === '/_pwa/queue' && event.request.method === 'POST') {
+    event.respondWith(handleQueue(event)); return;
+  }
+  if (pathname === '/_pwa/sync' && event.request.method === 'POST') {
+    event.respondWith(runSync()); return;
+  }
+});
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'bf-sync') event.waitUntil(runSync());
+});
+
+// Push notification handling
 self.addEventListener('push', (event) => {
   const options = {
-    body: 'You have new updates from Boreal Financial',
+    body: 'You have a new notification from Boreal Financial',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-192x192.png',
+    tag: 'boreal-notification',
+    renotify: true,
+    actions: [
+      { action: 'open', title: 'Open App' },
+      { action: 'close', title: 'Dismiss' }
+    ],
     data: {
       url: '/'
     }
@@ -133,11 +131,26 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// Notification Click Handler
+// Notification click handling
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
+  if (event.action === 'close') {
+    return;
+  }
+
+  const url = event.notification.data?.url || '/';
+  
   event.waitUntil(
-    self.clients.openWindow(event.notification.data?.url || '/')
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url === url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
   );
 });
