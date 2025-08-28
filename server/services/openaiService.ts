@@ -208,7 +208,7 @@ Be helpful, professional, and guide users through their lending journey while ma
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: formattedMessages,
-        max_tokens: 500,
+        max_completion_tokens: 500,
         temperature: 0.7
       });
 
@@ -275,7 +275,7 @@ Be helpful, professional, and guide users through their lending journey while ma
             content: conversation
           }
         ],
-        max_tokens: 250
+        max_completion_tokens: 250
       });
 
       return response.choices[0].message.content || 'Conversation summary unavailable.';
