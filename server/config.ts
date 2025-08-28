@@ -9,8 +9,8 @@ console.log('Using environment variables directly (production mode)');
 export const cfg = {
   nodeEnv: process.env.NODE_ENV || (process.env.REPLIT_ENVIRONMENT === 'production' ? 'production' : 'development'),
   
-  // API Configuration - Force local staff backend (override any environment variables)
-  staffApiUrl: 'http://localhost:5000/api',
+  // API Configuration - Use external staff backend
+  staffApiUrl: 'https://staff.boreal.financial/api',
   
   // Authentication Tokens
   clientToken: process.env.VITE_CLIENT_APP_SHARED_TOKEN || process.env.CLIENT_APP_SHARED_TOKEN!,
