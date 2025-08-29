@@ -175,23 +175,48 @@ class StaffApiClient {
     const url = `${this.baseUrl}${endpoint}`;
     
     try {
-      // Get the bearer token from environment
+      // Get the bearer token from environment - enhanced token handling
       const bearerToken = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN;
+      
+      // Enhanced headers with better auth handling
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Origin': window.location.origin,
+        'Referer': window.location.href,
+        'X-Client-Version': '1.0.0',
+        'X-Request-Source': 'client-app',
+        ...(options.headers as Record<string, string> || {}),
+      };
+      
+      // Only add Authorization header if token exists
+      if (bearerToken && bearerToken.trim()) {
+        headers['Authorization'] = `Bearer ${bearerToken.trim()}`;
+      }
       
       const response = await fetch(url, {
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': bearerToken ? `Bearer ${bearerToken}` : '',
-          'Origin': window.location.origin,
-          'Referer': window.location.href,
-          ...options.headers,
-        },
+        headers,
         ...options,
       });
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => 'Unknown error');
+        
+        // Enhanced error handling for specific status codes
+        if (response.status === 401) {
+          console.warn('[STAFF_API] Authentication failed - token may be invalid or expired');
+          throw new Error(`Authentication failed: Invalid or expired bearer token`);
+        } else if (response.status === 403) {
+          console.warn('[STAFF_API] Access forbidden - insufficient permissions');
+          throw new Error(`Access forbidden: Insufficient permissions for this operation`);
+        } else if (response.status === 404) {
+          console.warn('[STAFF_API] Resource not found');
+          throw new Error(`Resource not found: ${endpoint}`);
+        } else if (response.status >= 500) {
+          console.warn('[STAFF_API] Server error detected');
+          throw new Error(`Staff backend error: Service temporarily unavailable`);
+        }
+        
         throw new Error(`Staff API error: ${response.status} - ${errorText}`);
       }
 
