@@ -1,6 +1,41 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
-import { filterProducts, RecommendationFormData } from '@/lib/recommendation';
+import { recommend } from '@/lib/reco/engine';
+import { normalizeProducts } from '@/lib/products/normalize';
+
+export interface RecommendationFormData {
+  headquarters: string;
+  fundingAmount: number;
+  lookingFor: 'capital' | 'equipment' | 'both';
+  accountsReceivableBalance: number;
+  fundsPurpose: string;
+}
+
+// Adapter function to maintain compatibility
+function filterProducts(products: any[], formData: Partial<RecommendationFormData>): any[] {
+  if (!products || products.length === 0) return [];
+  
+  const hasRealFormData = formData && Object.keys(formData).length > 0 && 
+    (formData.lookingFor || formData.fundingAmount || formData.headquarters);
+  
+  if (!hasRealFormData) {
+    return products.filter(product => product.active !== false);
+  }
+  
+  // Convert to new engine format
+  const normalizedProducts = normalizeProducts(products);
+  const filters = {
+    country: formData.headquarters === 'united_states' ? 'US' : 'CA',
+    fundingAmount: formData.fundingAmount || 50000,
+    productPreference: (formData.lookingFor || 'capital') as 'capital' | 'equipment' | 'both',
+    hasAR: (formData.accountsReceivableBalance || 0) > 0,
+    purpose: formData.fundsPurpose || 'general'
+  };
+  
+  // Use new recommendation engine and return all eligible products
+  const recommendations = recommend(normalizedProducts, filters, 50);
+  return recommendations.map(r => r.product);
+}
 import { LenderProduct } from '@/types/lenderProduct';
 
 export interface ProductCategory {

@@ -3,7 +3,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
-import { filterProducts } from '@/lib/recommendation';
+import { recommend } from '@/lib/reco/engine';
+import { normalizeProducts } from '@/lib/products/normalize';
+
+// Adapter function to maintain compatibility
+function filterProducts(products: any[], formData: any): any[] {
+  if (!products || products.length === 0) return [];
+  
+  const normalizedProducts = normalizeProducts(products);
+  const filters = {
+    country: formData.businessLocation === 'CA' ? 'CA' : 'US',
+    fundingAmount: formData.fundingAmount || 50000,
+    productPreference: (formData.lookingFor || 'capital') as 'capital' | 'equipment' | 'both',
+    hasAR: (formData.accountsReceivableBalance || 0) > 0,
+    purpose: formData.fundsPurpose || 'general'
+  };
+  
+  const recommendations = recommend(normalizedProducts, filters, 50);
+  return recommendations.map(r => r.product);
+}
 
 export default function CanadianWorkingCapitalTest() {
   const { data: lenderProducts, isLoading, error } = usePublicLenders();
