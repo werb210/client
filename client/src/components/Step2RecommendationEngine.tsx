@@ -8,6 +8,14 @@ import { useQuery } from '@tanstack/react-query';
 import { getStoredApplicationId } from '@/lib/uuidUtils';
 import { getProductRecommendations } from '@/lib/strictRecommendationEngine';
 
+// Utility function for formatting currency
+const fmt = (amount: number) => new Intl.NumberFormat('en-US', { 
+  style: 'currency', 
+  currency: 'USD',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0 
+}).format(amount);
+
 // Intake type now imported from normalizeIntake utility
 
 type Props = {
@@ -66,8 +74,8 @@ function Step2RecommendationEngine(props: Props) {
       fundingAmount: intake.amount || 50000,
       lookingFor: (intake.industry === 'equipment' ? 'equipment' : 
                    intake.industry === 'both' ? 'both' : 'capital') as 'capital' | 'equipment' | 'both',
-      accountsReceivableBalance: intake.accountsReceivableBalance || 0,
-      fundsPurpose: intake.fundsPurpose as 'inventory' | 'expansion' | 'equipment' | 'working_capital' | 'other'
+      accountsReceivableBalance: (intake as any).accountsReceivableBalance || 0,
+      fundsPurpose: ((intake as any).fundsPurpose || 'working_capital') as 'inventory' | 'expansion' | 'equipment' | 'working_capital' | 'other'
     };
 
     console.log('🎯 Using advanced recommendation engine with filters:', filters);
@@ -83,7 +91,7 @@ function Step2RecommendationEngine(props: Props) {
       maxAmount: p.max_amount === 0 ? Number.MAX_SAFE_INTEGER : (p.max_amount || p.maxAmount || 999999999), // API uses 'max_amount', 0 means unlimited
       minRevenue: p.minRevenue || 0,
       isActive: p.isActive !== false
-    })).filter(p => p.isActive);
+    })).filter((p: any) => p.isActive);
 
     try {
       // Use your built recommendation engine!
@@ -94,11 +102,11 @@ function Step2RecommendationEngine(props: Props) {
     } catch (error) {
       console.warn('⚠️ Fallback to simple filtering:', error);
       // Fallback to simple filtering if recommendation engine fails
-      return lenderProducts.filter(p => 
+      return lenderProducts.filter((p: any) => 
         p.country === filters.country && 
         filters.fundingAmount >= p.minAmount && 
         filters.fundingAmount <= p.maxAmount
-      ).map(p => ({ product: p, matchScore: 50, recommendationLevel: 'good' as const }));
+      ).map((p: any) => ({ product: p, matchScore: 50, recommendationLevel: 'good' as const }));
     }
   }, [products, intake]);
 
