@@ -1,0 +1,353 @@
+{
+  "when": "2025-08-29T23:32:16.350Z",
+  "env": {
+    "VITE_STAFF_API_URL": "https://staff.boreal.financial/api",
+    "hasToken": true
+  },
+  "db": {
+    "tech": "sqlite",
+    "dexieStores": [],
+    "prismaModels": [],
+    "createTables": []
+  },
+  "requiredDocs": {
+    "probableTables": [],
+    "codeRefs": [
+      {
+        "file": "/home/runner/workspace/api-endpoint-diagnostic.js",
+        "excerpt": "/applications/test-app-id/submit', description: 'Final submission endpoint' },\n  { method: 'GET', path: '/loan-products/required-documents/working_capital', description: 'Document requirements endpoint' },\n  { method: 'GET', path: '/public/"
+      },
+      {
+        "file": "/home/runner/workspace/browser-console-test.js",
+        "excerpt": "ep 5 document deduplication\n    const allDocs = new Set();\n    factoringProducts.forEach(product => {\n      if (product.requiredDocuments && Array.isArray(product.requiredDocuments)) {\n        product.requiredDocuments.forEach(doc => allDoc"
+      },
+      {
+        "file": "/home/runner/workspace/check-matching-products.js",
+        "excerpt": "unt Range: $${product.amountMin?.toLocaleString()} - $${product.amountMax?.toLocaleString()}`);\n        console.log(`   Required Documents: ${product.requiredDocuments?.length || 0} documents`);\n        if (product.requiredDocuments?.length"
+      },
+      {
+        "file": "/home/runner/workspace/client/scripts/trainChatbot.ts",
+        "excerpt": "mber;\n  maxAmount?: number;\n  amountMin?: number;\n  amountMax?: number;\n  amount_min?: number;\n  amount_max?: number;\n  requiredDocuments?: string[];\n  doc_requirements?: string[];\n  documentRequirements?: string[];\n}\n\ninterface TrainingExa"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/api/__generated__/staff.d.ts",
+        "excerpt": "?: number;\n      rateType?: 'fixed' | 'variable';\n      interestFrequency?: 'monthly' | 'quarterly' | 'annually';\n      requiredDocs: string[];\n      \n      // OPTIONAL EXISTING FIELDS\n      minRevenue?: number;\n      industries?: string[];"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/api/applicationHooks.ts",
+        "excerpt": "ror: patchMutation.error,\n    lastSaved: patchMutation.isSuccess\n  };\n};\n\n// Document categories helper\nexport const getRequiredDocuments = (businessType?: string, loanType?: string) => {\n  // Base required documents for all applications\n  "
+      },
+      {
+        "file": "/home/runner/workspace/client/src/api/staffApi.ts",
+        "excerpt": "ts: Array<{\n      id: string;\n      documentType: string;\n      fileName: string;\n      uploadedAt: string;\n    }>;\n    requiredDocuments: string[];\n    missingDocuments: string[];\n    isComplete: boolean;\n  }> {\n    try {\n      console.log"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/DocumentUploadStatus.tsx",
+        "excerpt": " verificationResult,\n  localUploadedFiles,\n  isLoading,\n  onRetryUpload,\n  onRefreshStatus\n}) => {\n  const { documents, requiredDocuments, missingDocuments, hasUploadedDocuments } = verificationResult;\n  \n  // ✅ Safety checks to prevent .ma"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/DocumentWarningBanner.tsx",
+        "excerpt": "sName=\"block bg-yellow-50 p-3 text-center text-sm text-yellow-800 hover:bg-yellow-100 transition-colors\"\n    >\n      📑 Required documents pending – click here to upload\n    </Link>\n  );\n}"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/DynamicDocumentRequirements.tsx",
+        "excerpt": "import React from \"react\";\nimport { listDocuments, RequiredDoc } from \"@/lib/api\";\n\ntype Props = { category: string; country: string; amount: number };\n\nexport default fun"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/MultiStepForm/DocumentStep.tsx",
+        "excerpt": "trash-2';\n\ninterface DocumentStepProps {\n  onNext: () => void;\n  onBack: () => void;\n  applicationId?: number;\n}\n\nconst requiredDocuments = [\n  {\n    name: 'Business Financial Statements',\n    description: 'Last 2 years of profit & loss sta"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/ProceedBypassBanner.tsx",
+        "excerpt": "rder border-orange-300 bg-orange-50 p-6\">\n    <p className=\"mb-4 text-sm text-orange-900\">\n      If you do not have the required documents ready at this time you can\n      proceed, but understand this will greatly delay your application as "
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/RuntimeAlertPanel.tsx",
+        "excerpt": ",\n      icon: <FileText className=\"w-4 h-4\" />,\n      title: 'No Documents Uploaded',\n      description: 'Please upload required documents in Step 5 before proceeding.',\n      action: currentStep !== 5 ? { label: 'Go to Step 5', onClick: ()"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/Step5Documents.tsx",
+        "excerpt": " [, setLocation] = useLocation();\n  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);\n  const [allRequiredDocsComplete, setAllRequiredDocsComplete] = useState(false);\n  const [totalRequiredDocs, setTotalRequiredDocs] ="
+      },
+      {
+        "file": "/home/runner/workspace/client/src/constants.ts",
+        "excerpt": "MENT = import.meta.env.DEV;\n\n// API Endpoints\nexport const API_ENDPOINTS = {\n  LENDER_PRODUCTS: '/api/loan-products',\n  REQUIRED_DOCUMENTS: '/api/loan-products/required-documents',\n  APPLICATIONS: '/api/applications',\n  UPLOAD: '/api/upload"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/hooks/useDocumentVerification.ts",
+        "excerpt": " {\n  documents: Array<{\n    id: string;\n    documentType: string;\n    fileName: string;\n    uploadedAt: string;\n  }>;\n  requiredDocuments: string[];\n  missingDocuments: string[];\n  isComplete: boolean;\n  hasUploadedDocuments: boolean;\n}\n\nex"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/hooks/useTypedLenderProducts.ts",
+        "excerpt": "t),\n    rateType: product.rateType || 'Not specified',\n    frequency: product.interestFrequency || 'Not specified',\n    requiredDocs: product.requiredDocs,\n    description: product.description,\n    isActive: product.isActive,\n  };\n}\n\n/**\n *"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/lib/api.ts",
+        "excerpt": ";\n  country: \"US\" | \"CA\" | string;\n  category: string;\n  min_amount: number;\n  max_amount: number;\n  active: boolean;\n  required_documents?: RequiredDoc[];\n  // keep optional rate/term fields if you already use them\n};\n\nexport type IntakeIn"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/lib/devUtils.ts",
+        "excerpt": "amount?: number;\n  fundingMin?: number;\n  fundingMax?: number;\n  // Document requirement fields (multiple variations)\n  requiredDocuments?: string[];\n  document_requirements?: string[];\n  doc_requirements?: string[];\n  documentRequirements?"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/lib/documentAggregation.ts",
+        "excerpt": "/**\n * Document Aggregation Logic for Step 5\n * Implements union of all required documents across eligible lender products\n * Based on ChatGPT team specifications\n */\n\n// Document aggregation "
+      }
+    ],
+    "stateLiterals": [
+      {
+        "file": "/home/runner/workspace/__tests__/lender-products-contract.test.js",
+        "excerpt": " else if (data.source === 'local_cache') {\n      console.log('⏳ FALLBACK: Using cached products - staff API integration pending');\n    }\n    \n    return data;\n  } catch (error) {\n    console.error('❌ Transfer validation failed:', error);\n  "
+      },
+      {
+        "file": "/home/runner/workspace/api-endpoint-diagnostic.js",
+        "excerpt": "d.length}`);\n  console.log(`🔥 Network errors: ${errors.length}`);\n  \n  if (notFound.length > 0) {\n    console.log('\\n❌ MISSING ENDPOINTS:');\n    notFound.forEach(r => console.log(`   - ${r.endpoint}`));\n  }\n  \n  if (errors.length > 0) {\n  "
+      },
+      {
+        "file": "/home/runner/workspace/application-status-validation-test.js",
+        "excerpt": "'validateApplicationPayload', validation.isValid, \n          `Validation: ${validation.isValid ? 'PASSED' : 'FAILED'} - Missing: ${JSON.stringify(validation.missingFields)}`);\n      }\n\n    } catch (error) {\n      this.log(`❌ ValidationError"
+      },
+      {
+        "file": "/home/runner/workspace/automated-document-upload-test.js",
+        "excerpt": "ew failed document types above');\n  console.log('2. Test UI dropdown presence for each type');\n  console.log('3. Verify uploaded files appear in correct categories');\n  console.log('4. Run manual UI tests for validation');\n}\n\n// Run the tes"
+      },
+      {
+        "file": "/home/runner/workspace/automated-e2e-workflow-test.js",
+        "excerpt": "ly', 'success');\n        this.log(`📋 Application ID: ${this.applicationId}`);\n        this.log('📋 Form data structure verified:', 'info');\n        console.log('Step 1 fields:', applicationData.step1);\n        console.log('Step 3 fields:',"
+      },
+      {
+        "file": "/home/runner/workspace/browser-bank-upload-test.js",
+        "excerpt": "esponse: ${JSON.stringify(responseBody, null, 2)}`);\n      \n      if (response.ok) {\n        console.log(`✅ ${fileName} uploaded successfully`);\n      } else {\n        console.log(`❌ ${fileName} upload failed`);\n      }\n      \n    } catch ("
+      },
+      {
+        "file": "/home/runner/workspace/browser-console-validation.js",
+        "excerpt": "th > 0) {\n        localStorageValid = true;\n        console.log('✅ PASS: localStorage has', localUploadedFiles.length, 'uploaded files');\n        \n        // Show first few files\n        localUploadedFiles.slice(0, 3).forEach((file, i) => {"
+      },
+      {
+        "file": "/home/runner/workspace/browser-qa-test.js",
+        "excerpt": "ocalhost' || window.location.hostname.includes('replit');\n  \n  addChatGPTReport(\n    'Step 1: Application Status',\n    'Verified application is running and accessible in browser',\n    null,\n    'Direct browser access check',\n    appRunning "
+      },
+      {
+        "file": "/home/runner/workspace/check-actual-browser-config.js",
+        "excerpt": ";\n  \n  console.log('\\n📊 ACTUAL RESULTS:');\n  console.log('Environment API URL:', import.meta.env.VITE_API_BASE_URL || 'MISSING');\n  console.log('API endpoint resolves to:', apiUrl || 'FAILED');\n  console.log('Form submission works:', formR"
+      },
+      {
+        "file": "/home/runner/workspace/check_specific_app_id.js",
+        "excerpt": "ully moved to 'Off to Lender' stage\"`);\n\n// This was the application that was confirmed to have:\n// - 6 bank statements uploaded successfully \n// - Status moved to \"Off to Lender\"\n// - Complete workflow validated\n\nconsole.log(`\\n✅ CONFIRMED"
+      },
+      {
+        "file": "/home/runner/workspace/check_test_execution.js",
+        "excerpt": "tatus}`);\n\n        if (uploadResponse.ok) {\n          results.documentsUploaded++;\n          console.log(`✅ ${doc.name} uploaded successfully`);\n        } else {\n          const error = await uploadResponse.text();\n          results.errors."
+      },
+      {
+        "file": "/home/runner/workspace/client/public/service-worker.js",
+        "excerpt": "(body);\n  try { await self.registration.sync.register('bf-sync'); } catch (_) {}\n  return new Response(JSON.stringify({ queued: true }), {\n    status: 201, headers: { 'Content-Type': 'application/json' }\n  });\n}\n\nasync function runSync() {\n"
+      },
+      {
+        "file": "/home/runner/workspace/client/public/sw.js",
+        "excerpt": "(body);\n  try { await self.registration.sync.register('bf-sync'); } catch (_) {}\n  return new Response(JSON.stringify({ queued: true }), {\n    status: 201, headers: { 'Content-Type': 'application/json' }\n  });\n}\n\nasync function runSync() {\n"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/api/staffApi.ts",
+        "excerpt": "ne/offline status\n    window.addEventListener('online', () => {\n      console.log('[STAFF_API] Back online - processing queued requests');\n      this.processOfflineQueue();\n    });\n\n    window.addEventListener('offline', () => {\n      conso"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/AIDocumentAnalyzer.tsx",
+        "excerpt": "ex items-center space-x-2\">\n                <AlertTriangle className=\"h-4 w-4 text-orange-500\" />\n                <span>Missing Documents ({analysis.missingDocuments.length})</span>\n              </h4>\n              \n              {analysis"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/AIInsightsDashboard.tsx",
+        "excerpt": "tionData.businessType ? 'default' : 'destructive'}>\n                      {applicationData.businessType ? 'Complete' : 'Missing'}\n                    </Badge>\n                  </div>\n                  <div className=\"flex items-center just"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/ApplicationStatusModal.tsx",
+        "excerpt": "pplication has been approved. You cannot resubmit finalized applications.',\n          icon: '🎉'\n        };\n      case 'rejected':\n        return {\n          title: 'Application Rejected',\n          message: 'This application has been rejec"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/BusinessLogicValidationTest.tsx",
+        "excerpt": "ired\",\n      passed: !!businessName,\n      details: businessName ? `Business name: ${businessName}` : \"Business name is missing\",\n      critical: true\n    });\n\n    // Test 3: Applicant information completeness\n    const hasApplicantInfo = !"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/CameraDocumentUpload.tsx",
+        "excerpt": "n-600 flex items-center justify-center space-x-2\">\n            <Check className=\"w-5 h-5\" />\n            <span>Document uploaded successfully!</span>\n          </div>\n        )}\n        \n        {uploadStatus === 'error' && (\n          <div"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/ChatBotDashboard.tsx",
+        "excerpt": "\n  sessionId: string;\n  userMessage: string;\n  chatHistory: any[];\n  sentiment: string;\n  timestamp: string;\n  status: 'pending' | 'assigned' | 'completed';\n  assignedAgent?: string;\n}\n\nexport function ChatBotDashboard() {\n  const [handoffQ"
+      }
+    ]
+  },
+  "polling": {
+    "codeRefs": [
+      {
+        "file": "/home/runner/workspace/automated-e2e-workflow-test.js",
+        "excerpt": "nNow Initiation', false, error.message);\n      return { success: false, error: error.message };\n    }\n  }\n\n  // Step 6: Poll signing status\n  async pollSigningStatus(maxAttempts = 5) {\n    this.log(`🔄 Step 6: Polling signing status (max ${"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/ChatBotDashboard.tsx",
+        "excerpt": "ns']\n  });\n\n  useEffect(() => {\n    fetchHandoffQueue();\n    const interval = setInterval(fetchHandoffQueue, 10000); // Poll every 10 seconds\n    return () => clearInterval(interval);\n  }, []);\n\n  const fetchHandoffQueue = async () => {\n   "
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/CookieManager.tsx",
+        "excerpt": "    } catch (error) {\n        // Silently ignore cookie errors in production\n      }\n    };\n\n    // PRODUCTION: Disable polling - check only once\n    checkConsent();\n    \n    // DISABLED: Polling disabled for production\n    // const interva"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/MultiStepForm/SignatureStep.tsx",
+        "excerpt": "s handled by staff backend\n      // 1. Create document from application data\n      // 2. Send for signature\n      // 3. Poll signature status\n      \n      // Simulated delay for signing process\n      await new Promise(resolve => setTimeout("
+      },
+      {
+        "file": "/home/runner/workspace/client/src/hooks/useApplicationStatus.ts",
+        "excerpt": " { useQuery } from \"@tanstack/react-query\";\nimport { apiFetch } from \"@/lib/api\";\n\n/**\n * ✅ ENABLED: Application status polling hook\n * Polls application status instead of fetching lender products\n */\nexport const useApplicationStatus = (ap"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/hooks/useReliableLenderProducts.ts",
+        "excerpt": "Time: 5 * 60 * 1000, // 5 minutes as per CLIENT INSTRUCTIONS\n    refetchInterval: false, // DISABLED: Prevent automatic polling causing promise rejections\n    refetchOnWindowFocus: false, // DISABLED: Prevent refetch on focus\n    refetchOnM"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/hooks/useWebSocket.ts",
+        "excerpt": "\n  \n  useEffect(() => {\n    // Initialize Socket.IO connection\n    const socket = io({\n      transports: ['websocket', 'polling'],\n      timeout: 20000,\n      retries: 3\n    });\n    \n    socketRef.current = socket;\n    \n    socket.on('conne"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/pages/FetchWindowTest.tsx",
+        "excerpt": "w info update interval causing promise rejections\n  // Update window info only on component mount to prevent continuous polling\n  useEffect(() => {\n    setWindowInfo(getFetchWindowInfo());\n    // Note: Removed setInterval to prevent promise"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/pages/IndexedDBTest.tsx",
+        "excerpt": "cStatus, forceSync, refreshStatus } = useLenderProductsSync();\n\n  // DISABLED: Load sync status on component mount - no polling for cache-only system\n  React.useEffect(() => {\n    // console.log('[IndexedDBTest] Legacy polling disabled - us"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/tests/production-integration.test.ts",
+        "excerpt": "{\n          method: 'POST',\n          body: expect.any(FormData),\n        })\n      );\n    });\n  });\n\n  describe('Step 6 Polling Logic', () => {\n    it('should poll until signing_status equals signed', async () => {\n      const mockFetch = v"
+      },
+      {
+        "file": "/home/runner/workspace/comprehensive-field-population-test.js",
+        "excerpt": "sult('SignNow Field Population', false, error.message);\n      return false;\n    }\n  }\n\n  // Test 4: Test SignNow status polling\n  async testSignNowStatusPolling() {\n    this.log('🔄 Testing SignNow status polling');\n    \n    if (!this.appli"
+      },
+      {
+        "file": "/home/runner/workspace/cypress/e2e/mobile-desktop-production.cy.ts",
+        "excerpt": "etItem('appId', 'app_prod_test123');\n      });\n      \n      cy.visit(`${baseUrl}/apply/step-6`);\n      \n      // Verify polling for signing URL\n      cy.intercept('POST', '/api/applications/*/initiate-signing').as('initiateSigning');\n      "
+      },
+      {
+        "file": "/home/runner/workspace/final-endpoint-verification.js",
+        "excerpt": "lic/signnow/initiate/:id - SignNow initiation');\n    console.log('✅ Step 6: GET /api/public/signnow/status/:id - Status polling (signing_status)');\n    console.log('✅ Step 7: POST /api/public/applications/:id/finalize - Application finaliza"
+      },
+      {
+        "file": "/home/runner/workspace/scripts/test-production-deployment.js",
+        "excerpt": " {\n        cssStatus: response.status,\n        assetsWorking: response.ok\n      };\n    }\n  },\n  \n  {\n    name: '📡 HTTP Polling Connection (Socket.IO Disabled)',\n    test: async () => {\n      // Socket.IO disabled - testing HTTP polling ins"
+      },
+      {
+        "file": "/home/runner/workspace/server/index.ts",
+        "excerpt": "    : [\"http://localhost:5000\", \"http://127.0.0.1:5000\"],\n      credentials: true\n    },\n    transports: ['websocket', 'polling']\n  });\n\n  // Socket.IO connection handling\n  io.on('connection', (socket) => {\n    log(`🔌 Client connected: ${"
+      },
+      {
+        "file": "/home/runner/workspace/signnow-field-population-test.js",
+        "excerpt": "/**\n * SIGNNOW FIELD POPULATION TEST\n * Tests the corrected field mapping and status polling fixes\n * Date: July 14, 2025\n */\n\nconsole.log('🔧 SIGNNOW FIELD POPULATION & STATUS POLLING TEST');\nconsole.log("
+      },
+      {
+        "file": "/home/runner/workspace/signnow-status-polling-test.js",
+        "excerpt": "/**\n * SIGNNOW STATUS POLLING TEST\n * Tests the corrected status polling logic for \"user.document.fieldinvite.signed\"\n * Date: July 14, 2025\n "
+      },
+      {
+        "file": "/home/runner/workspace/step4-7-test-monitor.js",
+        "excerpt": "ccess' : 'error');\n        }\n        \n        if (url.includes('/signature-status')) {\n          this.log(`📡 Signature polling: ${response.status} - Status: ${this.signingStatus}`, 'info');\n        }\n        \n        return response;\n     "
+      },
+      {
+        "file": "/home/runner/workspace/step6-auto-redirect-test.js",
+        "excerpt": "/**\n * STEP 6 AUTO-REDIRECT TEST\n * Tests the complete Step 6 polling and auto-redirect functionality after signing\n * Date: July 14, 2025\n */\n\nclass Step6AutoRedirectTest {\n  constr"
+      },
+      {
+        "file": "/home/runner/workspace/test-signature-polling.js",
+        "excerpt": "/**\n * SIGNATURE STATUS POLLING TEST\n * Run this in browser console to test the polling implementation\n */\n\nasync function testSignaturePolling("
+      }
+    ],
+    "intervalRefs": [
+      {
+        "file": "/home/runner/workspace/api-endpoint-diagnostic.js",
+        "excerpt": "Endpoint(endpoint);\n    results.push(result);\n    \n    // Small delay between requests\n    await new Promise(resolve => setTimeout(resolve, 100));\n  }\n  \n  console.log('\\n📊 SUMMARY REPORT');\n  console.log('=================');\n  \n  const w"
+      },
+      {
+        "file": "/home/runner/workspace/automated-document-upload-test.js",
+        "excerpt": ";\n      failureCount++;\n    }\n    \n    // Small delay to avoid overwhelming the server\n    await new Promise(resolve => setTimeout(resolve, 100));\n  }\n\n  console.log('\\n📋 DETAILED RESULTS MATRIX:');\n  console.log('='.repeat(70));\n  console"
+      },
+      {
+        "file": "/home/runner/workspace/automated-e2e-workflow-test.js",
+        "excerpt": "ing to poll`, 'info');\n            \n            if (attempt < maxAttempts) {\n              await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay\n            }\n          }\n        } else {\n          this.log(`❌ Status po"
+      },
+      {
+        "file": "/home/runner/workspace/browser-bank-upload-test.js",
+        "excerpt": " {\n    console.log('📍 Navigating to Step 5...');\n    window.location.href = '/step5';\n    await new Promise(resolve => setTimeout(resolve, 3000));\n  }\n  \n  // Create test bank statement files\n  const bankStatements = [\n    'April_2025_Bank"
+      },
+      {
+        "file": "/home/runner/workspace/browser-qa-test.js",
+        "excerpt": "')) {\n    console.log('Navigating to Step 5...');\n    window.location.href = '/step5';\n    await new Promise(resolve => setTimeout(resolve, 2000));\n  }\n  \n  // Check if file collection elements exist\n  const fileCollectionExists = document."
+      },
+      {
+        "file": "/home/runner/workspace/browser-upload-test.js",
+        "excerpt": "ge: error.message\n      });\n    }\n    \n    // Small delay to avoid overwhelming server\n    await new Promise(resolve => setTimeout(resolve, 100));\n  }\n  \n  console.log('\\n📊 UPLOAD TEST MATRIX:');\n  console.log('='.repeat(60));\n  console.lo"
+      },
+      {
+        "file": "/home/runner/workspace/check_test_execution.js",
+        "excerpt": "e}: ${error.substring(0, 50)}`);\n        }\n\n        // Brief delay between uploads\n        await new Promise(resolve => setTimeout(resolve, 400));\n\n      } catch (error) {\n        results.errors.push(`Upload error for ${doc.name}: ${error.m"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/api/__generated__/staffClient.ts",
+        "excerpt": "end(key, String(value));\n        }\n      });\n    }\n\n    const controller = new AbortController();\n    const timeoutId = setTimeout(() => controller.abort(), this.timeout);\n\n    try {\n      const response = await fetch(url.toString(), {\n    "
+      },
+      {
+        "file": "/home/runner/workspace/client/src/api/applicationHooks.ts",
+        "excerpt": "ata: Partial<ApplicationForm>, delay: number = 2000) => {\n    // Debounced auto-save to prevent excessive API calls\n    setTimeout(() => {\n      if (Object.keys(formData).length > 0) {\n        patchMutation.mutate(formData);\n      }\n    }, "
+      },
+      {
+        "file": "/home/runner/workspace/client/src/api/staffApi.ts",
+        "excerpt": "w(),\n      ttl: ttlMs\n    });\n  }\n\n  private async sleep(ms: number): Promise<void> {\n    return new Promise(resolve => setTimeout(resolve, ms));\n  }\n\n  private async makeRequestWithRetry<T>(\n    endpoint: string,\n    options: RequestInit ="
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/AICoPilot.tsx",
+        "excerpt": "   setProactiveMessage(null);\n    setShowProactive(false);\n    \n    // Re-enable proactive messages after 5 minutes\n    setTimeout(() => setShowProactive(true), 5 * 60 * 1000);\n  };\n\n  const getMessageTypeIcon = (type: string) => {\n    swit"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/BusinessLogicValidationTest.tsx",
+        "excerpt": "issing step structure\",\n      critical: true\n    });\n\n    // Simulate async validation\n    await new Promise(resolve => setTimeout(resolve, 1000));\n\n    setResults(tests);\n    setIsRunning(false);\n\n    // Log results for debugging\n    conso"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/CameraDocumentUpload.tsx",
+        "excerpt": "than ${maxSizeMB}MB`);\n      return;\n    }\n\n    setIsUploading(true);\n    \n    try {\n      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate processing\n      onFileCapture(file);\n      setUploadStatus('success');\n      \n  "
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/ChatBot.tsx",
+        "excerpt": "();\n  }, [messages]);\n\n  // Focus input when chat opens\n  useEffect(() => {\n    if (isOpen && inputRef.current) {\n      setTimeout(() => inputRef.current?.focus(), 100);\n    }\n  }, [isOpen]);\n\n  // Initialize chat on open - SELF-STARTING, N"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/ChatBotDashboard.tsx",
+        "excerpt": " 'Product Selection', 'Eligibility Questions']\n  });\n\n  useEffect(() => {\n    fetchHandoffQueue();\n    const interval = setInterval(fetchHandoffQueue, 10000); // Poll every 10 seconds\n    return () => clearInterval(interval);\n  }, []);\n\n  c"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/ChatbotInterface.tsx",
+        "excerpt": ") return;\n    \n    sendMessage(inputMessage.trim());\n    setInputMessage('');\n    \n    // Focus input after sending\n    setTimeout(() => {\n      inputRef.current?.focus();\n    }, 100);\n  };\n\n  const handleKeyPress = (e: React.KeyboardEvent)"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/CookieManager.tsx",
+        "excerpt": "ing - check only once\n    checkConsent();\n    \n    // DISABLED: Polling disabled for production\n    // const interval = setInterval(checkConsent, 1000);\n    // return () => clearInterval(interval);\n  }, []);\n\n  return (\n    <>\n      {showBa"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/DocumentUpload.tsx",
+        "excerpt": "c ({ file, fileId }: { file: File; fileId: string }) => {\n      // Update progress with timeout\n      const timeoutId = setTimeout(() => {\n        setUploadingFiles(prev => \n          prev.map(f => f.id === fileId ? { \n            ...f, \n  "
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/DocumentUploadCard.tsx",
+        "excerpt": "name}. Please try again.`,\n        variant: \"destructive\",\n      });\n    } finally {\n      setIsUploading(false);\n      setTimeout(() => setUploadProgress(0), 2000); // Reset progress after 2s\n    }\n  };\n\n  const removeFile = (fileIndex: nu"
+      },
+      {
+        "file": "/home/runner/workspace/client/src/components/MultiStepForm/SignatureStep.tsx",
+        "excerpt": "     // 3. Poll signature status\n      \n      // Simulated delay for signing process\n      await new Promise(resolve => setTimeout(resolve, 2000)).catch(error => {\n        logger.error('[SIGNATURE_STEP] Delay failed:', error);\n      });\n   "
+      }
+    ]
+  },
+  "staffApi": {
+    "productsCount": 0,
+    "sampleProductId": null,
+    "requiredDocsUsedEndpoint": null,
+    "requiredDocsCount": null,
+    "requiredDocsSample": null
+  }
+}

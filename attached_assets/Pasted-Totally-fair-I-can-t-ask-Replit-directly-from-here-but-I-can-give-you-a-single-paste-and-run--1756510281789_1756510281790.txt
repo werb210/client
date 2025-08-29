@@ -1,0 +1,205 @@
+Totally fair — I can’t “ask Replit” directly from here, but I can give you a **single paste-and-run audit** that *asks your Replit project itself* and prints the answers you need about Step 5 (required-docs + polling + client DB). It’s production-safe and read-only.
+
+Run this in the **client app repo root** on Replit (or any shell):
+
+```bash
+# ============================
+# CLIENT STEP 5 — AUTO-AUDIT
+# Finds:
+#  • Where required-docs are stored (table/collection & keys)
+#  • Which doc states are considered terminal
+#  • Polling interval/timeout & file that defines them
+#  • Whether /api/required-docs works and supports ?productId=
+#  • Confirms all Staff lender products exist in the client DB
+# Outputs: reports/step5_audit.json + .md
+# ============================
+set -euo pipefail
+
+mkdir -p reports scripts
+
+# --- 1) Create audit script ---
+cat > scripts/step5_auto_audit.mjs <<'EOF'
+import fs from "fs";
+import path from "path";
+
+// ---------- helpers ----------
+const PROJ = process.cwd();
+const files = [];
+function walk(dir) {
+  const ents = fs.readdirSync(dir, { withFileTypes: true });
+  for (const e of ents) {
+    if (e.name.startsWith(".") || ["node_modules","dist",".next",".output",".vercel","build"].includes(e.name)) continue;
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) walk(p);
+    else if (/\.(ts|tsx|js|jsx|json|sql|prisma)$/i.test(e.name)) files.push(p);
+  }
+}
+walk(PROJ);
+
+function read(p){ try { return fs.readFileSync(p,"utf8"); } catch { return ""; } }
+function find(rx){ return files.filter(f=>rx.test(f)); }
+function grep(rx, limit=2000){
+  const hits=[];
+  for (const f of files) {
+    const txt = read(f);
+    const m = txt.match(rx);
+    if (m) hits.push({file:f, excerpt: txt.slice(Math.max(0,m.index-120), m.index+120)});
+    if (hits.length>=limit) break;
+  }
+  return hits;
+}
+
+// ---------- detect DB tech & tables ----------
+let dbTech = "unknown";
+let dbHints = [];
+if (grep(/\bnew\s+Dexie\s*\(/i).length || (read("package.json").includes('"dexie"'))) dbTech="dexie";
+if (read("schema.prisma")) dbTech = dbTech==="dexie" ? "dexie+prisma" : "prisma";
+if (read("package.json").includes("better-sqlite3") || grep(/CREATE\s+TABLE/i).length) {
+  dbTech = dbTech==="unknown" ? "sqlite" : dbTech + "+sqlite";
+}
+
+// try to derive Dexie stores
+let dexieStores = [];
+for (const h of grep(/\.stores\s*\(\s*\{/i)) {
+  const txt = read(h.file);
+  const start = txt.indexOf(".stores");
+  const slice = txt.slice(start, start+1000);
+  const m = slice.match(/\.stores\s*\(\s*\{([\s\S]*?)\}\s*\)/);
+  if (m) dexieStores.push({file:h.file, stores: m[1].trim().slice(0,600)});
+}
+
+// prisma models
+let prismaModels = [];
+if (fs.existsSync("schema.prisma")) {
+  const s = read("schema.prisma");
+  const re = /model\s+(\w+)\s*\{([\s\S]*?)\}/g;
+  let mm; while((mm=re.exec(s))) prismaModels.push({model:mm[1], def:mm[2].slice(0,400)});
+}
+
+// sqlite CREATE TABLEs
+let createTables = [];
+for (const f of find(/\.(sql|ts|js)$/)) {
+  const txt = read(f);
+  const re = /CREATE\s+TABLE\s+(\w+)\s*\(([\s\S]*?)\);/gi;
+  let m; while((m=re.exec(txt))) createTables.push({file:f, table:m[1], def:m[2].slice(0,300)});
+}
+
+// ---------- required-docs persistence & API usage ----------
+const reqDocTableGuesses = [];
+for (const s of [...dexieStores, ...createTables, ...prismaModels]) {
+  const sStr = JSON.stringify(s).toLowerCase();
+  if (sStr.includes("required") && sStr.includes("doc")) reqDocTableGuesses.push(s);
+}
+
+const codeRefsRequiredDocs = grep(/required[-_ ]?docs?|\/required-docs\b/i, 200);
+const docStateCandidates = grep(/\b(uploaded|verified|rejected|queued|pending|missing)\b/i, 200);
+
+// ---------- polling config ----------
+const pollRefs = grep(/\bpoll(ing)?\b/i, 200);
+const intervalRefs = grep(/\bsetInterval\s*\(|\bpollInterval|POLL_INTERVAL|POLL_TIMEOUT|setTimeout\s*\(/i, 200);
+
+// ---------- staff API probe ----------
+const BASE = process.env.VITE_STAFF_API_URL || "https://staff.boreal.financial/api";
+const TOK  = process.env.VITE_CLIENT_APP_SHARED_TOKEN || "";
+async function fetchJson(url, headers={}) {
+  const r = await fetch(url, { headers });
+  if (!r.ok) return {status:r.status, error:true};
+  const ct = r.headers.get("content-type")||"";
+  return { status:r.status, json: ct.includes("application/json") ? await r.json() : null, ct };
+}
+
+const apiReport = {};
+try {
+  const head = TOK ? { Authorization:`Bearer ${TOK}` } : {};
+  const p = await fetchJson(`${BASE}/v1/products`, head);
+  apiReport.productsCount = Array.isArray(p.json) ? p.json.length : null;
+  apiReport.sampleProductId = Array.isArray(p.json) && p.json[0]?.id || null;
+
+  // try /required-docs with & without productId
+  let used=null, docs=null;
+  const u1 = `${BASE}/required-docs?productId=${encodeURIComponent(apiReport.sampleProductId||"")}`;
+  const r1 = await fetchJson(u1, head);
+  if (Array.isArray(r1.json) && r1.json.length) { used=u1; docs=r1.json; }
+  else {
+    const u2 = `${BASE}/required-docs`;
+    const r2 = await fetchJson(u2, head);
+    if (Array.isArray(r2.json) && r2.json.length) { used=u2; docs=r2.json; }
+  }
+  apiReport.requiredDocsUsedEndpoint = used;
+  apiReport.requiredDocsCount = Array.isArray(docs) ? docs.length : null;
+  apiReport.requiredDocsSample = Array.isArray(docs) ? docs.slice(0,5) : null;
+} catch (e) {
+  apiReport.error = String(e);
+}
+
+// ---------- summarize ----------
+const out = {
+  when: new Date().toISOString(),
+  env: {
+    VITE_STAFF_API_URL: process.env.VITE_STAFF_API_URL || null,
+    hasToken: !!process.env.VITE_CLIENT_APP_SHARED_TOKEN,
+  },
+  db: { tech: dbTech, dexieStores, prismaModels, createTables },
+  requiredDocs: {
+    probableTables: reqDocTableGuesses,
+    codeRefs: codeRefsRequiredDocs.slice(0,20),
+    stateLiterals: docStateCandidates.slice(0,20)
+  },
+  polling: {
+    codeRefs: pollRefs.slice(0,20),
+    intervalRefs: intervalRefs.slice(0,20)
+  },
+  staffApi: apiReport
+};
+
+fs.writeFileSync("reports/step5_audit.json", JSON.stringify(out, null, 2));
+
+// quick MD
+function mdBlock(list, title){
+  if (!list || list.length===0) return `- ${title}: none\n`;
+  return `- ${title}:\n` + list.map(x=>`  • ${x.file || x.model || x.table}`).join("\n") + "\n";
+}
+let md = `# Step 5 Auto-Audit\n\n` +
+`Time: ${out.when}\n\n` +
+`## DB tech\n- ${out.db.tech}\n\n` +
+mdBlock(out.requiredDocs.probableTables, "Probable required-docs tables/defs") +
+mdBlock(out.requiredDocs.codeRefs, "Code refs to required-docs") +
+mdBlock(out.requiredDocs.stateLiterals, "Doc state literals") +
+mdBlock(out.polling.codeRefs, "Polling code refs") +
+mdBlock(out.polling.intervalRefs, "Interval/timeout refs") +
+`\n## Staff API\n- productsCount: ${out.staffApi.productsCount}\n` +
+`- requiredDocsUsedEndpoint: ${out.staffApi.requiredDocsUsedEndpoint || "none"}\n` +
+`- requiredDocsCount: ${out.staffApi.requiredDocsCount}\n`;
+
+fs.writeFileSync("reports/step5_audit.md", md);
+console.log("✅ Wrote reports/step5_audit.json and .md");
+EOF
+
+# --- 2) Run audit (requires env) ---
+: "${VITE_STAFF_API_URL:=https://staff.boreal.financial/api}"
+: "${VITE_CLIENT_APP_SHARED_TOKEN:?Set VITE_CLIENT_APP_SHARED_TOKEN}"
+
+node --version >/dev/null
+node scripts/step5_auto_audit.mjs
+
+echo "----- step5_audit.md (preview) -----"
+sed -n '1,120p' reports/step5_audit.md || true
+```
+
+**What you’ll get**
+
+* `reports/step5_audit.json` — everything we asked Replit for (DB tech, tables, code refs, doc states, polling defs, staff API behavior).
+* `reports/step5_audit.md` — short human summary.
+
+**How this answers your Step 5 questions**
+
+* **Where are required-docs stored?** Look at `db.tech` and `requiredDocs.probableTables` (e.g., Dexie stores, Prisma models, or SQL tables named like `required_docs`).
+* **Which states are terminal?** See `requiredDocs.stateLiterals` (e.g., `uploaded`, `verified`, `rejected`, etc.).
+  We’ll mark terminal as those you confirm (likely `uploaded` and/or `verified`).
+* **What’s the poller interval/timeout & where?** See `polling.codeRefs` and `intervalRefs` to the defining file/line excerpt.
+* **Does `/api/required-docs` support `?productId=`?** See `staffApi.requiredDocsUsedEndpoint` and counts.
+* **Are all lender products in client DB?** If you already wired the earlier audit hook/tests, run that check; otherwise this script points us to the table so we can add a tiny adapter.
+
+---
+
+If you paste back the **first 120 lines** of `reports/step5_audit.md` (or attach `step5_audit.json`), I’ll translate it into exact answers (table name/keys, terminal states, poll timings, API shape) and—if needed—drop a 10-line adapter so the recommendation/doc-polling steps are guaranteed to work.

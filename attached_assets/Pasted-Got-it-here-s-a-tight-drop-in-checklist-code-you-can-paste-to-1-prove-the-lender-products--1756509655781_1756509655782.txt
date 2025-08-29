@@ -1,0 +1,239 @@
+Got it — here’s a tight, drop-in checklist + code you can paste to (1) prove the **lender products** schema/API are good, (2) confirm **all products are present in the client app DB**, and (3) verify the **recommendation engine** consumes them correctly.
+
+I assumed Node 18+, Playwright already installed (you mentioned the smoke pack), and that your Staff API is live at `https://staff.boreal.financial/api` with the shared bearer.
+
+---
+
+# 1) Verify API schema for lender products (staff side)
+
+**Create (client repo):** `scripts/check_lender_products_schema.js`
+
+```js
+// Node 18+ (global fetch). Validates shape from Staff API.
+const BASE = process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial/api';
+const TOK  = process.env.VITE_CLIENT_APP_SHARED_TOKEN || '';
+
+const required = ['id','lender_id','name','country','amount_min','amount_max','active'];
+
+(async () => {
+  const res = await fetch(`${BASE}/v1/products`, { headers: { Authorization: `Bearer ${TOK}` }});
+  if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error('Expected array');
+
+  const bad = [];
+  for (const [i,p] of data.entries()) {
+    const missing = required.filter(k => !(k in p));
+    if (missing.length) bad.push({ index:i, id:p?.id, missing });
+  }
+
+  console.log(JSON.stringify({
+    ok: bad.length === 0,
+    count: data.length,
+    sample: data.slice(0,3),
+    missingSummary: bad.slice(0,5),
+  }, null, 2));
+
+  if (bad.length) process.exit(2);
+})();
+```
+
+**Run:**
+
+```bash
+VITE_STAFF_API_URL=https://staff.boreal.financial/api \
+VITE_CLIENT_APP_SHARED_TOKEN=*** \
+node scripts/check_lender_products_schema.js
+```
+
+**Pass criteria:** `ok: true`, `count: 44`, and no missing fields.
+
+---
+
+# 2) Expose a minimal client-DB audit hook (client side)
+
+This lets us read the **actual products stored in the client app DB** at runtime and compare with the Staff API list.
+
+**Create (client repo):** `src/auditHook.ts`
+
+```ts
+// Attach a read-only audit function in dev/audit mode.
+// Implement resolveClientProducts() to return the array from your client DB.
+async function resolveClientProducts(): Promise<any[]> {
+  // TODO: replace this with your real client DB access (Dexie/IndexedDB/SQLite/Prisma service).
+  // Example Dexie:
+  //   import { db } from './db';
+  //   return await db.lender_products.toArray();
+  // Temporary fallback so the file compiles:
+  return (window as any).__FAKE_PRODUCTS__ ?? [];
+}
+
+export async function installAuditHook() {
+  if ((import.meta as any).env?.VITE_AUDIT !== '1') return;
+  (window as any).__audit_getLenderProducts = async () => {
+    const items = await resolveClientProducts();
+    return items.map(p => ({
+      id: p.id, lender_id: p.lender_id, name: p.name,
+      country: p.country, amount_min: p.amount_min, amount_max: p.amount_max, active: p.active
+    }));
+  };
+  console.info('[AUDIT] __audit_getLenderProducts installed');
+}
+```
+
+**Wire it once** (e.g., in your app bootstrap, *before* render):
+
+```ts
+// src/main.tsx (or equivalent)
+import { installAuditHook } from './auditHook';
+installAuditHook();
+```
+
+> This hook is gated by `VITE_AUDIT=1` and is no-op otherwise.
+
+---
+
+# 3) Compare Staff API vs Client DB counts & IDs (Playwright)
+
+**Create (client repo):** `tests/products.sync.spec.ts`
+
+```ts
+import { test, expect, request } from '@playwright/test';
+
+const STAFF_API = process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial/api';
+const TOKEN     = process.env.VITE_CLIENT_APP_SHARED_TOKEN || '';
+const CLIENT_URL= process.env.CLIENT_URL || 'http://localhost:5173'; // your dev URL
+
+test('Client DB has all lender products in sync with Staff API', async ({ page }) => {
+  // 1) Staff API fetch
+  const api = await request.newContext({
+    baseURL: STAFF_API,
+    extraHTTPHeaders: { Authorization: `Bearer ${TOKEN}` }
+  });
+  const res = await api.get('/v1/products');
+  expect(res.ok()).toBeTruthy();
+  const serverProducts: any[] = await res.json();
+  expect(Array.isArray(serverProducts)).toBeTruthy();
+  expect(serverProducts.length).toBeGreaterThanOrEqual(44); // allow growth
+
+  // 2) Client DB via audit hook
+  await page.goto(CLIENT_URL, { waitUntil: 'domcontentloaded' });
+  const hasHook = await page.evaluate(() => typeof (window as any).__audit_getLenderProducts === 'function');
+  expect(hasHook).toBeTruthy();
+
+  const clientProducts = await page.evaluate(async () => await (window as any).__audit_getLenderProducts());
+  expect(Array.isArray(clientProducts)).toBeTruthy();
+
+  // 3) Compare counts
+  expect(clientProducts.length).toBeGreaterThanOrEqual(serverProducts.length);
+
+  // 4) Compare ID sets (server must be subset of client DB)
+  const serverIds = new Set(serverProducts.map(p => p.id));
+  const clientIds = new Set(clientProducts.map((p:any) => p.id));
+  const missingInClient = [...serverIds].filter(id => !clientIds.has(id));
+
+  // Emit a friendly diff if mismatched
+  if (missingInClient.length) {
+    console.error('Missing in client DB:', missingInClient.slice(0,10));
+  }
+  expect(missingInClient.length, 'Every staff product should exist in client DB').toBe(0);
+});
+```
+
+**Run:**
+
+```bash
+VITE_AUDIT=1 \
+VITE_STAFF_API_URL=https://staff.boreal.financial/api \
+VITE_CLIENT_APP_SHARED_TOKEN=*** \
+CLIENT_URL=http://localhost:5173 \
+npx playwright test -g "Client DB has all lender products"
+```
+
+---
+
+# 4) Recommendation engine handshake (uses lender products)
+
+**Add a tiny contract test** proving the engine consumes the **same shape** we validated and returns a sensible recommendation.
+
+**Create (client repo):** `tests/reco.engine.spec.ts`
+
+```ts
+import { test, expect } from '@playwright/test';
+
+// TODO: update this import to your actual engine module:
+import * as Engine from '../src/reco/engine'; // e.g., export function recommend(answers, products){...}
+
+type LenderProduct = {
+  id: string;
+  lender_id: string;
+  name: string;
+  country: string;        // "US" | "CA"
+  amount_min: number;
+  amount_max: number;
+  active: boolean;
+};
+
+test('engine selects eligible product based on amount & country', async () => {
+  const products: LenderProduct[] = [
+    { id:'p1', lender_id:'L1', name:'A', country:'US', amount_min:10000, amount_max:250000, active:true },
+    { id:'p2', lender_id:'L2', name:'B', country:'CA', amount_min:5000,  amount_max:75000,  active:true },
+    { id:'p3', lender_id:'L3', name:'Inactive', country:'US', amount_min:1000, amount_max:10000, active:false },
+  ];
+
+  const answersUS = { country:'US', amountRequested:50000 };
+  const answersCA = { country:'CA', amountRequested:30000 };
+  const answersTooHigh = { country:'CA', amountRequested:999999 };
+
+  // replace with your real function name/signature:
+  const pickUS = (Engine as any).recommend(answersUS, products);
+  const pickCA = (Engine as any).recommend(answersCA, products);
+  const pickFail= (Engine as any).recommend(answersTooHigh, products);
+
+  expect(pickUS?.id).toBe('p1');
+  expect(pickCA?.id).toBe('p2');
+  expect(pickFail).toBeNull(); // or expect an object with ok:false
+});
+```
+
+> If your engine returns a ranked list instead of a single product, assert `list[0].id` and that all returned items satisfy `(active && country && min/max)`.
+
+---
+
+# 5) Pass/Fail definitions
+
+* **API schema good:** script in step 1 prints `ok: true` and sample objects with the required fields.
+* **Client DB in sync:** Playwright test in step 3 passes (no missing IDs) and count in client ≥ count on server.
+* **Engine wired to products:** step 4 passes; the engine respects `country`, `amount_min/max`, `active`.
+
+---
+
+# 6) If anything fails, here’s how to fix quickly
+
+* **Schema mismatch:** add a small mapping layer when ingesting products so the client model matches:
+
+  ```ts
+  // e.g., country_offered → country; min_amount → amount_min; etc.
+  function normalize(p:any){
+    return {
+      id: p.id,
+      lender_id: p.lender_id,
+      name: p.name,
+      country: p.country || p.country_offered,
+      amount_min: p.amount_min ?? p.min_amount,
+      amount_max: p.amount_max ?? p.max_amount,
+      active: Boolean(p.active),
+    };
+  }
+  ```
+* **Missing rows in client DB:** trigger a resync from Staff `/v1/products` before running the engine; log counts.
+* **Engine using stale source:** ensure the engine’s source is the **client DB lender\_products** table/collection, not an old cache.
+
+---
+
+## Two quick questions (answer in one line each, so I can tailor the adapter precisely):
+
+1. What storage does the **client app DB** use for `lender_products`? (IndexedDB/Dexie, SQLite file path, Prisma/SQLite, something else?)
+2. What’s the **module + export** for your recommendation engine function? (e.g., `src/reco/engine.ts` → `export function recommend(...)`)
+
+If you reply with those, I’ll drop in the exact adapter to read your client DB and a ready-to-run test that directly calls your engine with the live product set.
