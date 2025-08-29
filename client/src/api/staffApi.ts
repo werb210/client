@@ -1,6 +1,6 @@
 // Staff API client for application submission and SignNow integration
 
-const STAFF_API_URL = ""; // Same-origin API calls - routed to staff backend
+const STAFF_API_URL = import.meta.env.VITE_STAFF_API_URL || ""; // Single source of truth for all staff API calls
 
 // ✅ Required Fields Validation Configuration
 const REQUIRED_FIELDS = {
@@ -300,7 +300,7 @@ class StaffApiClient {
       }
       
       const response = await fetch(url, {
-        credentials: 'include',
+        credentials: 'include', // Always include cookies/session for normal auth flow
         headers,
         signal: AbortSignal.timeout(15000), // 15 second timeout
         ...options,
@@ -362,7 +362,7 @@ class StaffApiClient {
 
       // Use public upload endpoint without Authorization headers
       const uploadUrl = applicationId 
-        ? `${this.baseUrl}/api/applications/${applicationId}/documents`
+        ? `${this.baseUrl}/applications/${applicationId}/documents`
         : `${this.baseUrl}/uploads`;
       
       const response = await fetch(uploadUrl, {
