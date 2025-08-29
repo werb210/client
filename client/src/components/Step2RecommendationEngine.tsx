@@ -78,9 +78,9 @@ function Step2RecommendationEngine(props: Props) {
       name: p.productName || p.name,
       lender: p.lender || p.lender_name,
       category: p.category?.toLowerCase().replace(/\s+/g, '_') as any,
-      country: p.countryOffered || p.country,
-      minAmount: p.minAmount || p.min_amount || 0,
-      maxAmount: p.maxAmount || p.max_amount || 999999999,
+      country: p.country, // API returns 'country' not 'countryOffered'
+      minAmount: p.min_amount || p.minAmount || 0, // API uses 'min_amount'
+      maxAmount: p.max_amount === 0 ? Number.MAX_SAFE_INTEGER : (p.max_amount || p.maxAmount || 999999999), // API uses 'max_amount', 0 means unlimited
       minRevenue: p.minRevenue || 0,
       isActive: p.isActive !== false
     })).filter(p => p.isActive);
