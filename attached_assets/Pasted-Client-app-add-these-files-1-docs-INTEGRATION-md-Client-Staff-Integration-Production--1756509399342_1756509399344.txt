@@ -1,3 +1,56 @@
+Client app — add these files
+
+1) docs/INTEGRATION.md
+
+# Client ↔ Staff Integration (Production)
+
+## Required environment
+- `VITE_STAFF_API_URL=https://staff.boreal.financial/api`
+- `VITE_CLIENT_APP_SHARED_TOKEN=<same as STAFF CLIENT_SHARED_BEARER>`
+
+## Endpoints used by client
+- `/v1/products` (GET) → expect ≥44 items
+- `/lenders` (GET) → expect ≥30 items
+- `/applications/validate-intake` (POST, preferred)
+  - Success → **200** `{ ok:true, validated:true, details }`
+  - Missing/invalid → **400** `{ ok:false, errors:[…], details? }`
+
+**All requests** send `Authorization: Bearer <token>`; include `credentials: "include"` if sessions are used.
+
+## Pre-deploy smoke
+```bash
+VITE_STAFF_API_URL=https://staff.boreal.financial/api \
+VITE_CLIENT_APP_SHARED_TOKEN=*** \
+npx playwright test -g "Client↔Staff API smoke"
+# or
+VITE_STAFF_API_URL=https://staff.boreal.financial/api \
+VITE_CLIENT_APP_SHARED_TOKEN=*** \
+./scripts/smoke.client.sh
+
+
+**2) `scripts/smoke.client.sh`**
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+BASE="${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+TOK="${VITE_CLIENT_APP_SHARED_TOKEN:-}"
+
+[ -n "$TOK" ] || { echo "❌ VITE_CLIENT_APP_SHARED_TOKEN missing"; exit 1; }
+
+echo "Products (>=44):"
+curl -sS -H "Authorization: Bearer $TOK" "$BASE/v1/products" | jq 'length'
+
+echo "Lenders (>=30):"
+curl -sS -H "Authorization: Bearer $TOK" "$BASE/lenders" | jq 'length'
+
+echo "Validate (new schema → ok boolean or errors):"
+curl -sS -H "Authorization: Bearer $TOK" -H "Content-Type: application/json" \
+  -X POST "$BASE/applications/validate-intake" \
+  -d '{"business":{"name":"Co"}, "owners":[{"name":"A"}], "amountRequested":50000}' | jq '.'
+
+
+3) tests/api.smoke.spec.ts (Playwright API tests)
+
 import { test, expect, request } from '@playwright/test';
 
 const BASE = process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial/api';
@@ -38,3 +91,13 @@ test.describe('Client↔Staff API smoke', () => {
     expect(typeof body).toBe('object');
   });
 });
+
+
+(optional) add npm script:
+
+// package.json
+{
+  "scripts": {
+    "test:playwright": "playwright test"
+  }
+}
