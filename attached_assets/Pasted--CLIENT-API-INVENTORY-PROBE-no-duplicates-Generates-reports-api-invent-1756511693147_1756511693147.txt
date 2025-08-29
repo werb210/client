@@ -1,0 +1,135 @@
+# ┏━━━━━━━━ CLIENT: API INVENTORY & PROBE (no duplicates) ━━━━━━━━┓
+# • Generates reports/api_inventory_client.{json,md}
+# • Probes Staff API from the client env/token
+# • Confirms only canonical paths are used
+# • Deletes any older duplicate scanner scripts
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+set -euo pipefail
+
+echo "== CLIENT INVENTORY: env =="
+echo "VITE_STAFF_API_URL=${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+echo "VITE_CLIENT_APP_SHARED_TOKEN set? $([ -n "${VITE_CLIENT_APP_SHARED_TOKEN:-}" ] && echo yes || echo no)"
+
+# Clean dupes (NO-DUP policy)
+rm -f scripts/scan_endpoints.client.old.mjs scripts/api_probe_client.mjs scripts/api_inventory_client.mjs 2>/dev/null || true
+mkdir -p scripts reports
+
+# Create scanner (Node 18+)
+cat > scripts/scan_endpoints.client.mjs <<'JS'
+/* CLIENT API INVENTORY SCAN (hits Staff with client env) */
+import fs from 'fs';
+
+const BASE = (process.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial/api').replace(/\/+$/,'');
+const TOK  = process.env.VITE_CLIENT_APP_SHARED_TOKEN || '';
+const HEADERS = TOK ? { Authorization: `Bearer ${TOK}` } : {};
+
+async function jfetch(url, opt={}) {
+  const r = await fetch(url, {...opt, headers: { ...(opt.headers||{}), ...HEADERS }});
+  const ct = r.headers.get('content-type') || '';
+  let body = null;
+  try { body = ct.includes('application/json') ? await r.json() : await r.text(); } catch {}
+  return { url, status: r.status, ok: r.ok, ct, body };
+}
+function pickSample(v) {
+  if (Array.isArray(v)) return v.slice(0,1)[0] ?? null;
+  if (v && typeof v==='object') return Object.fromEntries(Object.entries(v).slice(0,8));
+  return v ?? null;
+}
+
+const endpoints = [
+  { name:'products_v1',  method:'GET', path:'/v1/products', expect:'array' },
+  { name:'lenders',      method:'GET', path:'/lenders', expect:'array' },
+  { name:'required_docs',method:'GET', path:'/required-docs', expect:'array', note:'also tries ?productId=' },
+  { name:'validate_new', method:'POST',path:'/applications/validate-intake', body:{ business:{name:'Co'}, owners:[{name:'A'}], amountRequested:50000 }, expect:'json' },
+  { name:'validate_old', method:'POST',path:'/applications/validate-intake', body:{ product_id:'TEST_ID', country:'US', amount:25000 }, expect:'json' },
+  { name:'uploads_pre',  method:'OPTIONS', path:'/uploads', preflight:{ method:'POST', origin: 'https://client.boreal.financial' } },
+  { name:'lenders_pre',  method:'OPTIONS', path:'/lenders', preflight:{ method:'GET', origin: 'https://client.boreal.financial' } },
+];
+
+const report = { base: BASE, when: new Date().toISOString(), results: [] };
+
+async function run() {
+  // get a productId (if any)
+  let pid = null;
+  {
+    const r = await jfetch(`${BASE}/v1/products`);
+    if (Array.isArray(r.body) && r.body.length) pid = String(r.body[0].id || r.body[0].ID || r.body[0].pk || '');
+  }
+
+  for (const ep of endpoints) {
+    const url = `${BASE}${ep.path}`;
+    try {
+      if (ep.method === 'OPTIONS') {
+        const r = await fetch(url, { method:'OPTIONS', headers:{ Origin: ep.preflight?.origin || 'https://client.boreal.financial', 'Access-Control-Request-Method': ep.preflight?.method || 'GET' }});
+        report.results.push({
+          name: ep.name, method: ep.method, path: ep.path, url,
+          status: r.status, ok: r.ok,
+          cors: {
+            allowOrigin: r.headers.get('access-control-allow-origin'),
+            allowMethods: r.headers.get('access-control-allow-methods')
+          }
+        });
+        continue;
+      }
+      if (ep.name === 'required_docs' && pid) {
+        const r1 = await jfetch(`${url}?productId=${encodeURIComponent(pid)}`);
+        const r2 = (!Array.isArray(r1.body) || r1.body.length===0) ? await jfetch(url) : null;
+        const pick = (r1 && Array.isArray(r1.body) && r1.body.length) ? r1 : r2 || r1;
+        report.results.push({
+          name: ep.name, method: ep.method, path: ep.path, url: pick.url,
+          status: pick.status, ok: pick.ok, ct: pick.ct,
+          count: Array.isArray(pick.body) ? pick.body.length : null,
+          sample: pickSample(pick.body)
+        });
+        continue;
+      }
+      if (ep.method === 'GET') {
+        const r = await jfetch(url);
+        report.results.push({ name: ep.name, method: ep.method, path: ep.path, url, status: r.status, ok: r.ok, ct: r.ct, count: Array.isArray(r.body)?r.body.length:null, sample: pickSample(r.body) });
+        continue;
+      }
+      if (ep.method === 'POST') {
+        const body = JSON.parse(JSON.stringify(ep.body||{}));
+        if (body && typeof body==='object' && body.product_id==='TEST_ID' && pid) body.product_id = pid;
+        const r = await jfetch(url, { method:'POST', headers:{'Content-Type':'application/json', ...HEADERS}, body: JSON.stringify(body) });
+        let okField = null; try { okField = r.body && typeof r.body==='object' ? r.body.ok ?? null : null; } catch {}
+        report.results.push({ name: ep.name, method: ep.method, path: ep.path, url, status: r.status, ok: r.ok, ct: r.ct, okField, sample: pickSample(r.body) });
+        continue;
+      }
+    } catch (e) {
+      report.results.push({ name: ep.name, method: ep.method, path: ep.path, url, error: String(e) });
+    }
+  }
+
+  fs.writeFileSync('reports/api_inventory_client.json', JSON.stringify(report, null, 2));
+
+  // Markdown
+  let md = `# Client→Staff API Inventory\n\n- Base: ${report.base}\n- When: ${report.when}\n\n| name | method | path | status | ok | ct | count/sample |\n|---|---|---|---:|:--:|---|---|\n`;
+  for (const r of report.results) {
+    const countOrSample = (r.count ?? (r.sample ? '`sample`' : ''));
+    md += `| ${r.name} | ${r.method} | \`${r.path}\` | ${r.status ?? ''} | ${r.ok ? '✅' : '❌'} | ${r.ct ?? ''} | ${countOrSample} |\n`;
+  }
+  fs.writeFileSync('reports/api_inventory_client.md', md);
+  console.log('✅ Wrote reports/api_inventory_client.json and .md');
+}
+run().catch(e => { console.error(e); process.exit(1); });
+JS
+
+node --version >/dev/null
+node scripts/scan_endpoints.client.mjs
+
+echo "== CLIENT VERIFY (peek) =="
+sed -n '1,80p' reports/api_inventory_client.md || true
+
+# Enforce single canonical path usage (no legacy endpoints)
+if command -v rg >/dev/null 2>&1; then
+  echo "== SCAN CODE for legacy endpoints =="
+  if rg -n "/lender-products|/api/products(?!/v1)" src; then
+    echo "❌ Found legacy endpoint references above. Replace with '/v1/products' only."
+    exit 2
+  else
+    echo "✔ No legacy endpoint references detected."
+  fi
+fi
+
+echo "✅ Client inventory generated & canonical paths enforced."

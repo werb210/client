@@ -1,0 +1,87 @@
+{
+  "base": "https://staff.boreal.financial/api",
+  "when": "2025-08-29T23:55:35.465Z",
+  "results": [
+    {
+      "name": "products_v1",
+      "method": "GET",
+      "path": "/v1/products",
+      "url": "https://staff.boreal.financial/api/v1/products",
+      "status": 200,
+      "ok": true,
+      "ct": "application/json; charset=utf-8",
+      "count": 0,
+      "sample": null
+    },
+    {
+      "name": "lenders",
+      "method": "GET",
+      "path": "/lenders",
+      "url": "https://staff.boreal.financial/api/lenders",
+      "status": 200,
+      "ok": true,
+      "ct": "application/json; charset=utf-8",
+      "count": 0,
+      "sample": null
+    },
+    {
+      "name": "required_docs",
+      "method": "GET",
+      "path": "/required-docs",
+      "url": "https://staff.boreal.financial/api/required-docs",
+      "status": 404,
+      "ok": false,
+      "ct": "application/json; charset=utf-8",
+      "count": null,
+      "sample": {
+        "error": "API endpoint not found"
+      }
+    },
+    {
+      "name": "validate_new",
+      "method": "POST",
+      "path": "/applications/validate-intake",
+      "url": "https://staff.boreal.financial/api/applications/validate-intake",
+      "status": 404,
+      "ok": false,
+      "ct": "text/html; charset=utf-8",
+      "okField": null,
+      "sample": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot POST /api/applications/validate-intake</pre>\n</body>\n</html>\n"
+    },
+    {
+      "name": "validate_old",
+      "method": "POST",
+      "path": "/applications/validate-intake",
+      "url": "https://staff.boreal.financial/api/applications/validate-intake",
+      "status": 404,
+      "ok": false,
+      "ct": "text/html; charset=utf-8",
+      "okField": null,
+      "sample": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot POST /api/applications/validate-intake</pre>\n</body>\n</html>\n"
+    },
+    {
+      "name": "uploads_pre",
+      "method": "OPTIONS",
+      "path": "/uploads",
+      "url": "https://staff.boreal.financial/api/uploads",
+      "status": 401,
+      "ok": false,
+      "cors": {
+        "allowOrigin": null,
+        "allowMethods": null
+      }
+    },
+    {
+      "name": "lenders_pre",
+      "method": "OPTIONS",
+      "path": "/lenders",
+      "url": "https://staff.boreal.financial/api/lenders",
+      "status": 200,
+      "ok": true,
+      "cors": {
+        "allowOrigin": null,
+        "allowMethods": null
+      }
+    }
+  ]
+}
