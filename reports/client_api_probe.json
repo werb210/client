@@ -1,0 +1,852 @@
+[
+  {
+    "source": "staff",
+    "endpoint": "/api/v1/products",
+    "testUrl": "https://staff.boreal.financial/api/api/v1/products",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.082Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/v1/products",
+    "testUrl": "http://localhost:5000/api/v1/products",
+    "method": "GET",
+    "status": 200,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "[{\"id\":\"65-1756244277839-90n6q7rsa\",\"name\":\"Accord - AccordAccess\",\"lender_name\":\"Accord\",\"country\":\"CA\",\"category\":\"Working Capital\",\"min_amount\":0,\"max_amount\":0,\"active\":true,\"updated_at\":\"2025-08-",
+    "time": "2025-08-29T22:16:53.092Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/lenders",
+    "testUrl": "https://staff.boreal.financial/api/api/lenders",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.159Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/lenders",
+    "testUrl": "http://localhost:5000/api/lenders",
+    "method": "GET",
+    "status": 200,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"success\":true,\"lenders\":[{\"name\":\"Accord\",\"isActive\":false,\"productCount\":0},{\"name\":\"Accord Financial Corp.\",\"isActive\":false,\"productCount\":0},{\"name\":\"Baker Garrington Capital\",\"isActive\":false,\"",
+    "time": "2025-08-29T22:16:53.163Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/applications",
+    "testUrl": "https://staff.boreal.financial/api/api/applications",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.208Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/applications",
+    "testUrl": "https://staff.boreal.financial/api/api/applications",
+    "method": "POST",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.277Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/applications",
+    "testUrl": "http://localhost:5000/api/applications",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/applications\",\"note\":\"Endpoint not implemented on staff backend\"}",
+    "time": "2025-08-29T22:16:53.280Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/applications",
+    "testUrl": "http://localhost:5000/api/applications",
+    "method": "POST",
+    "status": 400,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"ok\":false,\"error\":\"Invalid intake format - missing product_id, country, or amount\"}",
+    "time": "2025-08-29T22:16:53.301Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/applications/validate-intake",
+    "testUrl": "https://staff.boreal.financial/api/api/applications/validate-intake",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.350Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/applications/validate-intake",
+    "testUrl": "https://staff.boreal.financial/api/api/applications/validate-intake",
+    "method": "POST",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.396Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/applications/validate-intake",
+    "testUrl": "http://localhost:5000/api/applications/validate-intake",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/applications/validate-intake\",\"note\":\"Endpoint not implemented on staff",
+    "time": "2025-08-29T22:16:53.399Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/applications/validate-intake",
+    "testUrl": "http://localhost:5000/api/applications/validate-intake",
+    "method": "POST",
+    "status": 200,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"ok\":false,\"errors\":[\"Missing required fields: product_id, country, amount\"]}",
+    "time": "2025-08-29T22:16:53.401Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/required-docs",
+    "testUrl": "https://staff.boreal.financial/api/api/required-docs",
+    "method": "POST",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.446Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/required-docs",
+    "testUrl": "http://localhost:5000/api/required-docs",
+    "method": "POST",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/required-docs\",\"note\":\"Endpoint not implemented on staff backend\"}",
+    "time": "2025-08-29T22:16:53.448Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/uploads",
+    "testUrl": "https://staff.boreal.financial/api/api/uploads",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.493Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/uploads",
+    "testUrl": "https://staff.boreal.financial/api/api/uploads",
+    "method": "POST",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.535Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/uploads",
+    "testUrl": "http://localhost:5000/api/uploads",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/uploads\",\"note\":\"Endpoint not implemented on staff backend\"}",
+    "time": "2025-08-29T22:16:53.538Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/uploads",
+    "testUrl": "http://localhost:5000/api/uploads",
+    "method": "POST",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/uploads\",\"note\":\"Endpoint not implemented on staff backend\"}",
+    "time": "2025-08-29T22:16:53.540Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/public/applications/{id}/documents",
+    "testUrl": "https://staff.boreal.financial/api/api/public/applications/test-12345/documents",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.607Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/public/applications/{id}/documents",
+    "testUrl": "https://staff.boreal.financial/api/api/public/applications/test-12345/documents",
+    "method": "POST",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.676Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/public/applications/{id}/documents",
+    "testUrl": "http://localhost:5000/api/public/applications/test-12345/documents",
+    "method": "GET",
+    "status": 200,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"success\":true,\"documents\":[],\"message\":\"No documents found or service unavailable\"}",
+    "time": "2025-08-29T22:16:53.790Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/public/applications/{id}/documents",
+    "testUrl": "http://localhost:5000/api/public/applications/test-12345/documents",
+    "method": "POST",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/public/applications/test-12345/documents\",\"note\":\"Endpoint not implemen",
+    "time": "2025-08-29T22:16:53.792Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/public/upload/{id}",
+    "testUrl": "https://staff.boreal.financial/api/api/public/upload/test-12345",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.838Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/public/upload/{id}",
+    "testUrl": "https://staff.boreal.financial/api/api/public/upload/test-12345",
+    "method": "POST",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.885Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/public/upload/{id}",
+    "testUrl": "http://localhost:5000/api/public/upload/test-12345",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/public/upload/test-12345\",\"note\":\"Endpoint not implemented on staff bac",
+    "time": "2025-08-29T22:16:53.887Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/public/upload/{id}",
+    "testUrl": "http://localhost:5000/api/public/upload/test-12345",
+    "method": "POST",
+    "status": 400,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"success\":false,\"error\":\"No document file provided\"}",
+    "time": "2025-08-29T22:16:53.889Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/analytics/recommendation-log",
+    "testUrl": "https://staff.boreal.financial/api/api/analytics/recommendation-log",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.930Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/analytics/recommendation-log",
+    "testUrl": "http://localhost:5000/api/analytics/recommendation-log",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/analytics/recommendation-log\",\"note\":\"Endpoint not implemented on staff",
+    "time": "2025-08-29T22:16:53.933Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/s3-documents-new/document-url",
+    "testUrl": "https://staff.boreal.financial/api/api/s3-documents-new/document-url",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:53.975Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/s3-documents-new/document-url",
+    "testUrl": "http://localhost:5000/api/s3-documents-new/document-url",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/s3-documents-new/document-url\",\"note\":\"Endpoint not implemented on staf",
+    "time": "2025-08-29T22:16:53.977Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/public/signnow/initiate/{id}",
+    "testUrl": "https://staff.boreal.financial/api/api/public/signnow/initiate/test-12345",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:54.018Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/public/signnow/initiate/{id}",
+    "testUrl": "http://localhost:5000/api/public/signnow/initiate/test-12345",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/public/signnow/initiate/test-12345\",\"note\":\"Endpoint not implemented on",
+    "time": "2025-08-29T22:16:54.020Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/chat/request-staff",
+    "testUrl": "https://staff.boreal.financial/api/api/chat/request-staff",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:54.066Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/chat/request-staff",
+    "testUrl": "https://staff.boreal.financial/api/api/chat/request-staff",
+    "method": "POST",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:54.111Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/chat/request-staff",
+    "testUrl": "http://localhost:5000/api/chat/request-staff",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/chat/request-staff\",\"note\":\"Endpoint not implemented on staff backend\"}",
+    "time": "2025-08-29T22:16:54.120Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/chat/request-staff",
+    "testUrl": "http://localhost:5000/api/chat/request-staff",
+    "method": "POST",
+    "status": 400,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"error\":\"Session ID is required\"}",
+    "time": "2025-08-29T22:16:54.122Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/crm/contacts/auto-create",
+    "testUrl": "https://staff.boreal.financial/api/api/crm/contacts/auto-create",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:54.167Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/crm/contacts/auto-create",
+    "testUrl": "http://localhost:5000/api/crm/contacts/auto-create",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/crm/contacts/auto-create\",\"note\":\"Endpoint not implemented on staff bac",
+    "time": "2025-08-29T22:16:54.169Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/ai/report-issue",
+    "testUrl": "https://staff.boreal.financial/api/api/ai/report-issue",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:54.210Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/ai/report-issue",
+    "testUrl": "http://localhost:5000/api/ai/report-issue",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/ai/report-issue\",\"note\":\"Endpoint not implemented on staff backend\"}",
+    "time": "2025-08-29T22:16:54.212Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/chat/log-contact",
+    "testUrl": "https://staff.boreal.financial/api/api/chat/log-contact",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:54.256Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/chat/log-contact",
+    "testUrl": "https://staff.boreal.financial/api/api/chat/log-contact",
+    "method": "POST",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:54.301Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/chat/log-contact",
+    "testUrl": "http://localhost:5000/api/chat/log-contact",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/chat/log-contact\",\"note\":\"Endpoint not implemented on staff backend\"}",
+    "time": "2025-08-29T22:16:54.304Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/chat/log-contact",
+    "testUrl": "http://localhost:5000/api/chat/log-contact",
+    "method": "POST",
+    "status": 200,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"success\":true,\"message\":\"Contact information logged successfully\"}",
+    "time": "2025-08-29T22:16:54.372Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/vapid-public-key",
+    "testUrl": "https://staff.boreal.financial/api/api/vapid-public-key",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:54.417Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/vapid-public-key",
+    "testUrl": "http://localhost:5000/api/vapid-public-key",
+    "method": "GET",
+    "status": 200,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"publicKey\":\"BL1sZq2ofT-1_ZqZCUq7k1ADpFlFsxjsSbe7H267C7o6LewpNDbuisGsDcfLgiSwBZBhsAxpFLtpx0EH_f7ej9M\"}",
+    "time": "2025-08-29T22:16:54.419Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/notifications/test",
+    "testUrl": "https://staff.boreal.financial/api/api/notifications/test",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:54.459Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/notifications/test",
+    "testUrl": "http://localhost:5000/api/notifications/test",
+    "method": "GET",
+    "status": 501,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"message\":\"This client app routes API calls to staff backend.\",\"staffBackend\":\"https://staff.boreal.financial/api\",\"endpoint\":\"/notifications/test\",\"note\":\"Endpoint not implemented on staff backend\"}",
+    "time": "2025-08-29T22:16:54.461Z"
+  },
+  {
+    "source": "staff",
+    "endpoint": "/api/health",
+    "testUrl": "https://staff.boreal.financial/api/api/health",
+    "method": "GET",
+    "status": 403,
+    "ok": true,
+    "error": null,
+    "errorType": "invalid_token",
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": null
+    },
+    "bodySnippet": "{\"error\":\"invalid_token\"}",
+    "time": "2025-08-29T22:16:54.504Z"
+  },
+  {
+    "source": "proxy",
+    "endpoint": "/api/health",
+    "testUrl": "http://localhost:5000/api/health",
+    "method": "GET",
+    "status": 200,
+    "ok": true,
+    "error": null,
+    "errorType": null,
+    "dataCount": null,
+    "cors": {
+      "allowOrigin": null,
+      "allowMethods": "GET,PUT,POST,DELETE,OPTIONS"
+    },
+    "bodySnippet": "{\"status\":\"ok\",\"message\":\"Client app serving - API calls route to staff backend\",\"timestamp\":\"2025-08-29T22:16:54.505Z\"}",
+    "time": "2025-08-29T22:16:54.506Z"
+  }
+]
