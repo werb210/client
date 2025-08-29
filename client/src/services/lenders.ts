@@ -14,6 +14,6 @@ api.interceptors.request.use((config) => {
 });
 
 export async function getLenderProducts() {
-  const res = await api.get('/lender-products');
+  const res = await api.get('/v1/products');
   return res.data;
 }

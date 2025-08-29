@@ -66,8 +66,8 @@ function normalizeDocs(docs: RequiredDoc[] = []): RequiredDoc[] {
 // ---- Canonical fetch using working local catalog endpoint -----------------
 export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
   try {
-    // Use the working local catalog endpoint (confirmed HTTP 200 with 42 products)
-    const r = await fetch('/api/lender-products', { credentials: 'include' });
+    // Use the unified v1/products endpoint
+    const r = await fetch('/api/v1/products', { credentials: 'include' });
     if (r.ok) {
       const response = await r.json();
       const products = response.products || response;
@@ -265,7 +265,7 @@ export const getRecommendations = async (id: string) => {
 export const getRequiredDocuments = async (id: string) => {
   try {
     // Try canonical Staff API endpoint first
-    const res = await fetch(`https://staff.boreal.financial/api/lender-products/${id}/required-documents`, {
+    const res = await fetch(`https://staff.boreal.financial/api/v1/products/${id}/required-documents`, {
       credentials: "include"
     });
     if (res.ok) return res.json();

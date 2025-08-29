@@ -18,7 +18,7 @@ export interface LenderProductsResponse {
 
 // API functions for lender products
 export const fetchLenderProducts = async () => {
-  const res = await fetch("/api/lender-products");
+  const res = await fetch("/api/v1/products");
   const data = await res.json();
   
   // Transform backend schema to unified client schema

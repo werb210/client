@@ -59,8 +59,8 @@ export async function fetchProducts(): Promise<CanonicalProduct[]> {
       if (Array.isArray(j)) return j.map(fromV1);
     }
   } catch {}
-  // legacy fallback
-  const r2 = await fetch(withDiagUrl("/api/lender-products"));
+  // fallback to legacy format handling
+  const r2 = await fetch(withDiagUrl("/api/v1/products"));
   const j2 = await r2.json();
   return (j2.products ?? []).map(fromLegacy);
 }
@@ -68,7 +68,7 @@ export async function fetchProducts(): Promise<CanonicalProduct[]> {
 /** QA helper: pulls staff products with ?diag=1 (if enabled) and logs provenance. */
 export async function qaProvenance(): Promise<void> {
   try {
-    const url = withDiagUrl("/api/lender-products"); // your client fetch proxy -> staff
+    const url = withDiagUrl("/api/v1/products"); // unified endpoint for staff
     const res = await fetch(url, { credentials: "include" });
     const list = await res.json(); // legacy array
     if (!Array.isArray(list)) { console.warn("Unexpected shape", list); return; }
