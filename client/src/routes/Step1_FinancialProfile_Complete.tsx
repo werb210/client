@@ -352,14 +352,6 @@ export default function Step1FinancialProfile() {
       saveIntake(intake);
       logger.log('✅ Intake data saved for Step 2');
 
-      // CRITICAL: Save using the new normalized intake approach with SPA navigation
-      import('@/context/FormDataContext').then(({ onStep1Submit }) => {
-        onStep1Submit(step1Payload, () => {
-          setLocation('/step2');  // SPA navigation — no full reload
-        });
-        logger.log('✅ Normalized intake persisted for Step 2');
-      });
-
       // CRITICAL: Save to new FormDataContext for Step 2
       saveToNewContext({
         requestedAmount: step1Payload.fundingAmount,
@@ -369,10 +361,22 @@ export default function Step1FinancialProfile() {
       });
       logger.log('✅ Data saved to new FormDataContext');
 
-      logger.log('✅ Form data dispatched to context');
+      // CRITICAL: Save using the normalized intake approach synchronously
+      const { onStep1Submit } = await import('@/context/FormDataContext');
+      onStep1Submit(step1Payload, () => {
+        // Navigation callback - will be called after persistence
+        logger.log('✅ Normalized intake persisted, navigating to Step 2');
+        
+        // DEBUG: Verify storage immediately before navigation
+        console.log('🔍 [STEP1] Pre-navigation storage check:', {
+          sessionIntake: sessionStorage.getItem('bf:intake'),
+          localIntake: localStorage.getItem('bf:intake')
+        });
+        
+        setLocation('/apply/step-2');  // SPA navigation to correct route
+      });
 
-      // SPA navigation handled in onStep1Submit - no separate navigation needed
-      console.log('✅ Step 1 data saved, SPA navigation will proceed to Step 2');
+      logger.log('✅ Form data dispatched to context');
 
       // Emit GTM step_completed event
       const applicationId = getStoredApplicationId();
@@ -383,10 +387,6 @@ export default function Step1FinancialProfile() {
         application_id: applicationId, 
         product_type: data.lookingFor || 'not_selected' 
       });
-
-      // Navigate to Step 2
-      logger.log('✅ Navigating to Step 2...');
-      setLocation('/apply/step-2');
     } catch (error) {
       logger.error('❌ Error submitting form:', error);
       console.error('🔧 Step 1 save error:', error);

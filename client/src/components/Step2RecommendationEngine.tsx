@@ -42,10 +42,36 @@ export default function Step2RecommendationEngine(props: Props){
 
   const intake = requireIntake();
 
-  // Early diagnostics into window
-  (window as any).__step2 = { ...(window as any).__step2, loading, error, intake, productsCount: products.length };
+  // Early diagnostics into window with detailed storage info
+  (window as any).__step2 = { 
+    ...(window as any).__step2, 
+    loading, 
+    error, 
+    intake, 
+    productsCount: products.length,
+    // Debug storage directly
+    sessionStorage: {
+      'bf:intake': sessionStorage.getItem('bf:intake'),
+      'bf:intake:v2': sessionStorage.getItem('bf:intake:v2')
+    },
+    localStorage: {
+      'bf:intake': localStorage.getItem('bf:intake'),
+      'apply.form': localStorage.getItem('apply.form')
+    }
+  };
 
-  if (!intake) return <Pending msg="Missing Step 1 data. Please complete Step 1." />;
+  // Detailed console logging for debugging
+  console.log('🔍 [STEP2] Storage debug:', {
+    sessionIntake: sessionStorage.getItem('bf:intake'),
+    localIntake: localStorage.getItem('bf:intake'),
+    parsedIntake: intake,
+    productsLoaded: products.length
+  });
+
+  if (!intake) {
+    console.warn('🚨 [STEP2] No intake data found in storage!');
+    return <Pending msg="Missing Step 1 data. Please complete Step 1 first." />;
+  }
 
   // Normalize once
   const amount = failSafeNumber(intake.amountRequested);
