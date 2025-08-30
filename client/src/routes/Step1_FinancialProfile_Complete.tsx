@@ -352,6 +352,12 @@ export default function Step1FinancialProfile() {
       saveIntake(intake);
       logger.log('✅ Intake data saved for Step 2');
 
+      // CRITICAL: Save using the new normalized intake approach
+      import('@/context/FormDataContext').then(({ onStep1Submit }) => {
+        onStep1Submit(step1Payload);
+        logger.log('✅ Normalized intake persisted for Step 2');
+      });
+
       // CRITICAL: Save to new FormDataContext for Step 2
       saveToNewContext({
         requestedAmount: step1Payload.fundingAmount,

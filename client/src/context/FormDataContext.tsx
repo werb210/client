@@ -15,6 +15,19 @@ export type ApplicationForm = {
   // ...any other fields you actually use in the matcher
 };
 
+export type Intake = {
+  country: 'US' | 'CA';
+  amountRequested: number;     // normalized number
+  industry?: string;
+  yearsInBusiness?: number;
+  revenue12m?: number;
+  avgMonthlyRevenue?: number;
+  purpose?: string;
+  arBalance?: number;
+  collateralValue?: number;
+  // ...other fields your matcher expects
+};
+
 const KEY = "bf:intake:v2";
 
 function toNum(x: any) {
@@ -23,6 +36,35 @@ function toNum(x: any) {
   // strip $, commas, spaces
   const n = Number(String(x).replace(/[$, ]/g, ""));
   return Number.isFinite(n) ? n : undefined;
+}
+
+const toNumber = (v:any) => typeof v === 'number' ? v : Number(String(v ?? '').replace(/[^0-9.]/g,''));
+
+export function normalizeIntake(raw:any): Intake {
+  return {
+    country: raw.country ?? raw.headquarters ?? raw.businessLocation ?? 'US',
+    amountRequested: toNumber(raw.fundingAmount ?? raw.requestedAmount ?? raw.amountRequested),
+    industry: raw.industry ?? raw.naics,
+    yearsInBusiness: toNumber(raw.yearsInBusiness ?? raw.businessAgeYears),
+    revenue12m: toNumber(raw.revenueLast12Months ?? raw.annualRevenue ?? raw.revenueLastYear),
+    avgMonthlyRevenue: toNumber(raw.avgMonthlyRevenue ?? raw.monthlyRevenue ?? raw.averageMonthlyRevenue),
+    purpose: raw.purposeOfFunds ?? raw.purpose ?? raw.fundsPurpose,
+    arBalance: toNumber(raw.currentARBalance ?? raw.accountsReceivable ?? raw.accountsReceivableBalance),
+    collateralValue: toNumber(raw.fixedAssetsValue ?? raw.collateralValue ?? raw.fixedAssetsValue),
+  };
+}
+
+function persistIntake(i: Intake) {
+  sessionStorage.setItem('bf:intake', JSON.stringify(i));
+  localStorage.setItem('bf:intake', JSON.stringify(i)); // belt-and-suspenders
+  (window as any).__step2 = { ...(window as any).__step2, intake: i };
+}
+
+// Call this when Step-1 completes:
+export function onStep1Submit(raw:any){
+  const intake = normalizeIntake(raw);
+  persistIntake(intake);
+  // …navigate to Step-2
 }
 
 export function normalize(raw: Partial<ApplicationForm>): ApplicationForm {

@@ -1,29 +1,14 @@
-import { API_BASE, SHARED_TOKEN, USE_API_FIRST, MAY_FALLBACK } from "@/lib/env";
+// client/src/api/products.ts
+const BASE = import.meta.env.VITE_STAFF_API_URL!;
+const TOK  = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN!;
 
 export async function fetchProducts() {
-  if (USE_API_FIRST) {
-    try {
-      const res = await fetch(`${API_BASE}/v1/products`, {
-        headers: { Authorization: `Bearer ${SHARED_TOKEN}` },
-      });
-      if (res.ok) return await res.json();
-      console.warn("API /v1/products failed", res.status);
-    } catch (e) {
-      console.warn("API /v1/products error", e);
-    }
-  }
-  if (MAY_FALLBACK) {
-    // Use working local API with 42 products as fallback
-    try {
-      const res = await fetch('/api/v1/products');
-      if (res.ok) {
-        const data = await res.json();
-        return Array.isArray(data) ? data : (data.products || data);
-      }
-      console.warn("Local API /api/v1/products failed", res.status);
-    } catch (e) {
-      console.warn("Local API error", e);
-    }
-  }
-  throw new Error("Products unavailable (both APIs failed).");
+  const res = await fetch(`${BASE}/v1/products`, {
+    headers: { Authorization: `Bearer ${TOK}` },
+  });
+  (window as any).__step2 = { ...(window as any).__step2, lastFetch: { url: `${BASE}/v1/products`, authorized: !!TOK } };
+  if (!res.ok) throw new Error(`products_fetch_failed_${res.status}`);
+  const data = await res.json();
+  (window as any).__step2 = { ...(window as any).__step2, source: 'staff', products: data, productsCount: data.length };
+  return data;
 }

@@ -1,74 +1,93 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from 'react';
+import { fetchProducts } from '@/api/products';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Target, ArrowRight, Loader2 } from 'lucide-react';
-import { useFormDataContext } from "@/context/FormDataContext";
-import { fetchProducts } from "@/api/products";
+import { Target, ArrowRight } from 'lucide-react';
+
+const requireIntake = (): any => {
+  const s = sessionStorage.getItem('bf:intake') || localStorage.getItem('bf:intake');
+  return s ? JSON.parse(s) : null;
+};
+
+const failSafeNumber = (n:any) => (typeof n === 'number' && !Number.isNaN(n)) ? n : 0;
 
 type Props = {
   formData?: any;
-  intake?: any;
-  selectedProduct?: string;
-  onProductSelect?: (product: string) => void;
+  onProductSelect?: (productId: string) => void;
   onContinue?: () => void;
   onPrevious?: () => void;
 };
 
-export default function Step2RecommendationEngine(props: Props) {
-  const { state } = useFormDataContext();
-  const [products, setProducts] = useState<any[] | null>(null);
-  const [reason, setReason] = useState<string | null>(null);
+export default function Step2RecommendationEngine(props: Props){
+  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  // Check if Step 1 data exists
-  const step1Data = state?.step1 || {};
-  const hasStep1Data = step1Data.fundingAmount && step1Data.fundingAmount > 0;
+  useEffect(()=>{
+    (async ()=>{
+      try{
+        const data = await fetchProducts();
+        setProducts(Array.isArray(data) ? data : []);
+      }catch(e:any){
+        setError(e?.message || 'fetch_failed');
+      }finally{
+        setLoading(false);
+      }
+    })();
+  }, []);
 
-  useEffect(() => {
-    if (!hasStep1Data) {
-      setReason("Missing Step 1 data (funding amount required)");
-      return;
-    }
-    fetchProducts()
-      .then((p) => setProducts(p))
-      .catch((e) => setReason(`Failed to load products: ${e}`));
-  }, [hasStep1Data]);
+  const intake = requireIntake();
 
-  // expose quick debug in dev
-  (window as any).__step2 = { 
-    step1Data, 
-    hasStep1Data, 
-    productsCount: products?.length, 
-    reason,
-    fullState: state 
-  };
+  // Early diagnostics into window
+  (window as any).__step2 = { ...(window as any).__step2, loading, error, intake, productsCount: products.length };
 
-  if (!hasStep1Data || !products) {
-    return (
-      <div className="mx-auto max-w-xl">
-        <div className="rounded-lg border p-4">
-          <div className="font-medium">Product Matching Pending</div>
-          <div className="text-sm text-muted-foreground">
-            {reason ?? "Loading…"}
-          </div>
-          <div className="mt-2 text-xs text-gray-400">
-            Debug: hasStep1Data={String(hasStep1Data)}, products={products?.length ?? 'null'}, reason={reason}
-            <br/>Step1: fundingAmount={step1Data.fundingAmount || 'missing'}
-          </div>
-        </div>
-      </div>
-    );
+  // Guard: if intake missing, show explicit message (not generic "pending")
+  if (!intake) return <Pending msg="Missing Step 1 data. Please complete Step 1." />;
+
+  // Normalize once
+  const amount = failSafeNumber(intake.amountRequested);
+  const country = intake.country;
+
+  // Minimal eligibility to avoid "all filtered out" when strings slip through
+  const eligible = useMemo(()=>{
+    const list = products.filter(p=>{
+      // accept broad country matches; treat undefined as global
+      const okCountry = !p.country || p.country === country;
+      // robust numeric comparisons
+      const min = failSafeNumber(p.min_amount || p.minAmount);
+      const max = failSafeNumber(p.max_amount || p.maxAmount);
+      const okAmount = (!min || amount >= min) && (!max || amount <= max || max === 0);
+      const isActive = p.active !== false && p.isActive !== false;
+      return okCountry && okAmount && isActive;
+    });
+    (window as any).__step2 = { ...(window as any).__step2, eligibleCount: list.length, lastFilter: { amount, country } };
+    return list;
+  }, [products, amount, country]);
+
+  if (loading) return <Pending msg="Loading live products…" />;
+  if (error)   return <Pending msg={`Products error: ${error}`} />;
+
+  if (!eligible.length) {
+    return <Pending msg="No eligible products after filters. Adjust amount or check intake fields." />;
   }
 
-  // Simple filtering for eligible products
-  const eligibleProducts = products.filter((p: any) => {
-    const requestedAmount = step1Data?.fundingAmount || 0;
-    const matchesAmount = requestedAmount === 0 || 
-                         (requestedAmount >= (p.min_amount || 0) && 
-                          requestedAmount <= (p.max_amount || Number.MAX_SAFE_INTEGER));
-    const isActive = p.active !== false;
-    return matchesAmount && isActive;
-  });
+  return <ProductList products={eligible} intake={intake} onProductSelect={props.onProductSelect} onContinue={props.onContinue} />; // your real renderer
+}
 
+function Pending({msg}:{msg:string}) {
+  return (
+    <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
+      {msg}
+    </div>
+  );
+}
+
+function ProductList({ products, intake, onProductSelect, onContinue }: { 
+  products: any[], 
+  intake: any, 
+  onProductSelect?: (productId: string) => void,
+  onContinue?: () => void 
+}) {
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
@@ -77,45 +96,41 @@ export default function Step2RecommendationEngine(props: Props) {
           <CardTitle>Recommended Loan Products</CardTitle>
         </div>
         <CardDescription>
-          Found {eligibleProducts.length} matching products for ${(step1Data?.fundingAmount || 0).toLocaleString()}
+          Found {products.length} matching products for ${intake.amountRequested?.toLocaleString() || 'N/A'}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {eligibleProducts.slice(0, 5).map((product: any) => (
+          {products.slice(0, 5).map((product: any) => (
             <div key={product.id} className="rounded-xl border p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start">
                 <div>
                   <div className="font-medium text-lg">{product.name}</div>
-                  <div className="text-sm text-gray-600">{product.lender_name}</div>
+                  <div className="text-sm text-gray-600">{product.lender_name || product.lender}</div>
                   <div className="text-sm text-gray-500">{product.category}</div>
                   <div className="text-xs text-gray-400 mt-1">
-                    ${(product.min_amount || 0).toLocaleString()} - ${(product.max_amount || 999999999).toLocaleString()}
+                    ${((product.min_amount || product.minAmount) || 0).toLocaleString()} - ${((product.max_amount || product.maxAmount) || 999999999).toLocaleString()}
                   </div>
                 </div>
                 <Button 
-                  onClick={() => props.onProductSelect?.(product.id)}
+                  onClick={() => onProductSelect?.(product.id)}
                   className="bg-[#FF8C00] hover:bg-[#E07B00]"
                 >
                   Select
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
           ))}
         </div>
-        
-        <div className="flex justify-between mt-6">
-          <Button onClick={props.onPrevious} variant="outline">
-            Previous Step
-          </Button>
-          <Button onClick={props.onContinue} className="bg-[#FF8C00] hover:bg-[#E07B00]">
-            Continue
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
+        {onContinue && (
+          <div className="mt-6 flex justify-center">
+            <Button onClick={onContinue} className="bg-teal-600 hover:bg-teal-700">
+              Continue to Next Step
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 }
-
-export { Step2RecommendationEngine };
