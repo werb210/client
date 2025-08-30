@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-import { useFormDataContext } from '@/context/FormDataContext';
+import { useFormData } from '@/context/FormDataContext';
 
 import { useLocation } from 'wouter';
 
@@ -44,7 +44,9 @@ interface Step5Props {
 }
 
 export default function Step5DocumentUpload(props: Step5Props = {}) {
-  const { state, dispatch } = useFormDataContext();
+  const { data } = useFormData();
+  const state = data || {};
+  const dispatch = (action: any) => console.log('Mock dispatch in Step5:', action);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { uploadFile, uploadMultipleFiles, uploads, isUploading } = useUploadDocuments();

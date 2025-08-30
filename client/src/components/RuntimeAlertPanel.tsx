@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useFormDataContext } from '@/context/FormDataContext';
+import { useFormData } from '@/context/FormDataContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
@@ -17,7 +17,8 @@ export function RuntimeAlertPanel({ currentStep }: RuntimeAlertPanelProps) {
   // Only show in development mode
   const isDevelopment = import.meta.env.DEV || import.meta.env.NODE_ENV === 'development';
   
-  const { state } = useFormDataContext();
+  const { data } = useFormData();
+  const state = data || {};
   const [, setLocation] = useLocation();
   const [isVisible, setIsVisible] = useState(true);
   const [documentsUploaded, setDocumentsUploaded] = useState<number>(0);

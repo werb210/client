@@ -32,7 +32,8 @@ const focusedSteps = [
 ];
 
 export default function SideBySideApplication() {
-  const { state } = useFormData();
+  const { data } = useFormData();
+  const state = data || {};
   const [viewMode, setViewMode] = useState<'focused' | 'full'>('focused'); // Start with focused view
   const [visibleSteps, setVisibleSteps] = useState(3); // Show 3 steps at a time
   const [startIndex, setStartIndex] = useState(0);

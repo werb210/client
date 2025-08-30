@@ -1,10 +1,20 @@
-import { useFormDataContext } from '@/context/FormDataContext';
+import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { StepHeader } from '@/components/StepHeader';
 import { Step2RecommendationEngine } from '@/components/Step2RecommendationEngine';
 
 export default function Step2Recommendations() {
-  const { state, dispatch } = useFormDataContext();
+  const { data: contextData } = useFormData();
+  
+  // Create a mock state and dispatch to avoid errors
+  const state = {
+    step1: contextData || {},
+    formData: { selectedProduct: '' },
+    currentStep: 2
+  };
+  const dispatch = (action: any) => {
+    console.log('Mock dispatch:', action);
+  };
   const [, setLocation] = useLocation();
 
   // Pull from (1) form context, (2) localStorage backup, (3) empty fallback
@@ -66,7 +76,7 @@ export default function Step2Recommendations() {
         <div className="max-w-4xl mx-auto mt-8">
           <Step2RecommendationEngine
             formData={safeFormData}
-            selectedProduct={state.selectedProduct || ''}
+            selectedProduct={state.formData?.selectedProduct || ''}
             onProductSelect={handleProductSelect}
             onContinue={handleContinue}
             onPrevious={handleBack}

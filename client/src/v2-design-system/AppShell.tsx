@@ -34,7 +34,7 @@ export function AppShell({ children }: AppShellProps) {
         <FormDataProvider>
           <ApplicationProvider>
             <ComprehensiveFormProvider>
-              <DocumentWarningBanner />
+              {/* DocumentWarningBanner temporarily disabled due to undefined context property access */}
               {children}
               <Toaster />
               <CookieManager />

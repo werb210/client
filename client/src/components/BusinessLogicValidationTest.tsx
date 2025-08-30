@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { useFormDataContext } from '@/context/FormDataContext';
+import { useFormData } from '@/context/FormDataContext';
 import Play from 'lucide-react/dist/esm/icons/play';
 import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
 import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
@@ -17,7 +17,8 @@ interface ValidationResult {
 }
 
 export function BusinessLogicValidationTest() {
-  const { state } = useFormDataContext();
+  const { data } = useFormData();
+  const state = data || {};
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<ValidationResult[]>([]);
 

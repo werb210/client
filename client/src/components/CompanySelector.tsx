@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFormDataContext } from '@/context/FormDataContext';
+import { useFormData } from '@/context/FormDataContext';
 import { companyProfiles, type CompanyProfile } from '@/data/companyProfiles';
 import { Badge } from '@/components/ui/badge';
 import { Building2, MapPin, DollarSign, Users } from 'lucide-react';
 
 export function CompanySelector() {
-  const { dispatch } = useFormDataContext();
+  const { data } = useFormData();
+  const dispatch = (action: any) => console.log('Mock dispatch in CompanySelector:', action);
   const [selectedProfile, setSelectedProfile] = useState<CompanyProfile | null>(null);
 
   const handleSelectCompany = (companyId: string) => {

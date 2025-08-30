@@ -33,7 +33,8 @@ interface Step3Props {
 
 export function Step3BusinessDetails({ onNext, onBack }: Step3Props) {
   const form = useFormContext();
-  const { state } = useFormData();
+  const { data } = useFormData();
+  const state = data || {};
   
   // Get business location from Step 1 FormDataContext to determine regional field definitions
   const businessLocation = state.step1FinancialProfile?.businessLocation || 'united-states';

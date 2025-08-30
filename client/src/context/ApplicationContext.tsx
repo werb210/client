@@ -161,6 +161,14 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
   );
 }
 
+export function useApplicationContext() {
+  const context = useContext(ApplicationContext);
+  if (!context) {
+    throw new Error('useApplicationContext must be used within an ApplicationProvider');
+  }
+  return context;
+}
+
 export function useApplication() {
   const context = useContext(ApplicationContext);
   if (context === undefined) {

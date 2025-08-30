@@ -33,6 +33,7 @@ function Pending({msg}:{msg:string}) {
 
 type Props = {
   formData?: any;
+  selectedProduct?: string;
   onProductSelect?: (productId: string) => void;
   onContinue?: () => void;
   onPrevious?: () => void;

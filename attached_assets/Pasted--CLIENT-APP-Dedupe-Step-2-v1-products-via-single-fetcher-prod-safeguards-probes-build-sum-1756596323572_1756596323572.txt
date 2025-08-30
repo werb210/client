@@ -1,0 +1,179 @@
+# CLIENT APP - Dedupe, Step 2 → /v1/products via single fetcher, prod safeguards, probes, build, summary
+set -euo pipefail
+
+AUDIT_AT="$(date +%F_%H-%M-%S)"
+R="reports/client-dedupe-align-$AUDIT_AT"
+TRASH=".trash-client-$AUDIT_AT"
+mkdir -p "$R" "$TRASH"
+
+PASS_STEPS=()
+FAIL_STEPS=()
+note_pass(){ PASS_STEPS+=("$1"); echo "STEP $1: PASS" | tee -a "$R/summary.txt"; }
+note_fail(){ FAIL_STEPS+=("$1"); echo "STEP $1: FAIL" | tee -a "$R/summary.txt"; }
+
+echo "=== CLIENT DEDUPE & ALIGN @ $AUDIT_AT ===" | tee "$R/00_context.txt"
+echo "VITE_STAFF_API_URL=${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}" | tee -a "$R/00_context.txt"
+echo -n "VITE_CLIENT_APP_SHARED_TOKEN fp: " | tee -a "$R/00_context.txt"
+node -e 'const c=require("crypto");const s=process.env.VITE_CLIENT_APP_SHARED_TOKEN||"";console.log(c.createHash("sha256").update(s).digest("hex").slice(0,12))' 2>/dev/null | tee -a "$R/00_context.txt"
+
+# 1) Inventory & quarantine duplicate/test/backup files (non-destructive)
+{
+  rg -nI -S "(copy|backup|legacy|old|temp|bak)\.|\.bak|\.old|__test__|\.spec\." client || true > "$R/10_suspects.txt"
+  # Parallel extensions in client src
+  find client -type f \( -name '*.tsx' -o -name '*.ts' -o -name '*.js' -o -name '*.mjs' \) \
+    | sed -E 's/\.(tsx|ts|js|mjs)$//' | sort | uniq -d > "$R/11_parallel_ext_bases.txt" || true
+  moved=0
+  while IFS= read -r base; do
+    for ext in mjs js; do
+      f="${base}.${ext}"
+      ts="${base}.ts"
+      tsx="${base}.tsx"
+      if [ -f "$f" ] && { [ -f "$ts" ] || [ -f "$tsx" ]; }; then
+        mkdir -p "$TRASH/$(dirname "$f")"
+        mv "$f" "$TRASH/$f"
+        echo "Moved parallel duplicate: $f" | tee -a "$R/31_quarantine.txt"
+        moved=$((moved+1))
+      fi
+    done
+  done < "$R/11_parallel_ext_bases.txt"
+  echo "Quarantined: $moved files"
+} || true
+note_pass "1/8 Inventory & quarantine duplicates"
+
+# 2) Ensure single fetcher module for products at client/src/api/products.ts
+{
+  mkdir -p client/src/api
+  FETCHER="client/src/api/products.ts"
+  cat > "$FETCHER" <<'TS'
+export type Product = {
+  id?: string|number;
+  productName?: string;
+  category?: string;
+  country?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  [k: string]: any;
+};
+
+const BASE = (import.meta.env.VITE_STAFF_API_URL || "https://staff.boreal.financial/api").replace(/\/+$/,'');
+const TOKEN = (import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || "");
+
+export async function fetchProducts(): Promise<Product[]> {
+  const res = await fetch(`${BASE}/v1/products`, {
+    headers: TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {},
+    credentials: "include",
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.items || []);
+}
+
+export async function fetchRequiredDocs(): Promise<any[]> {
+  const res = await fetch(`${BASE}/required-docs`, { credentials: "include" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.items || []);
+}
+
+export default { fetchProducts, fetchRequiredDocs };
+TS
+  echo "Wrote $FETCHER" | tee -a "$R/20_actions.txt"
+  note_pass "2/8 Create/refresh products fetcher"
+}
+
+# 3) Rewire Step 2 components to use fetcher (replace /lenders or direct calls with fetchProducts)
+{
+  # Heuristic: replace direct references to '/lenders' or '/v1/products' with fetcher import+usage.
+  TARGETS="$(rg -l --hidden -S '/lenders|/v1/products|fetchProducts\(' client/src 2>/dev/null || true)"
+  echo "$TARGETS" | tr ' ' '\n' | sort -u > "$R/12_step2_targets.txt"
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    # Inject import if missing
+    node - <<'NODE' "$f"
+const fs=require('fs'); const p=process.argv[2]; let s=fs.readFileSync(p,'utf8'), orig=s;
+if(!/from\s+["']..\/api\/products["']/.test(s) && !/from\s+["']\.{1,2}\/api\/products["']/.test(s)){
+  const inject='import { fetchProducts } from "../api/products";\n';
+  if(/^\s*import /.test(s)) s=s.replace(/^\s*import [\s\S]*?;\s*/m, m=>m+inject);
+  else s=inject+s;
+}
+s=s.replace(/fetch\([^)]*\/lenders[^)]*\)[^;]*;?/g, '/* rewired */');
+s=s.replace(/fetch\([^)]*\/v1\/products[^)]*\)[^;]*;?/g, '/* rewired */');
+if(!/await\s+fetchProducts\(\)/.test(s) && /Step\s*2|Recommendation|Product|Lender/i.test(s)){
+  s=s.replace(/(\basync\b[^{]*\{)/, '$1 /* ensure products fetched */ ');
+  if(!/const\s+products\s*=/.test(s)) s=s.replace(/return\s*\(/, 'const products = await fetchProducts();\nreturn (');
+}
+if(s!==orig){ fs.writeFileSync(p,s); console.log('Rewired',p); }
+NODE
+  done < "$R/12_step2_targets.txt"
+  note_pass "3/8 Rewire Step 2 to fetcher"
+}
+
+# 4) Production safeguards (do not edit env; write what must be set)
+{
+  echo "EXPECTED PROD ENV (do not set here; configure in Secrets/Deploy):" | tee "$R/25_env_expected.txt"
+  echo "VITE_LOCAL_FALLBACK=false" | tee -a "$R/25_env_expected.txt"
+  echo "NODE_ENV=production" | tee -a "$R/25_env_expected.txt"
+  echo "VITE_STAFF_API_URL=${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}" | tee -a "$R/25_env_expected.txt"
+  echo "VITE_CLIENT_APP_SHARED_TOKEN=<REDACTED>" | tee -a "$R/25_env_expected.txt"
+  note_pass "4/8 Record expected prod env"
+}
+
+# 5) Live probes to Staff API using env
+{
+  BASE="${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+  TOK="${VITE_CLIENT_APP_SHARED_TOKEN:-}"
+  echo "Probing BASE=$BASE" | tee "$R/30_live.txt"
+  code_p=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOK" "$BASE/v1/products" || echo 000)
+  code_d=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/required-docs" || echo 000)
+  cnt_p=$(curl -s -H "Authorization: Bearer $TOK" "$BASE/v1/products" | jq 'if type=="array" then length else (.items|length // 0) end' 2>/dev/null || echo 0)
+  cnt_d=$(curl -s "$BASE/required-docs" | jq 'if type=="array" then length else (.items|length // 0) end' 2>/dev/null || echo 0)
+  echo "GET /v1/products -> $code_p (count: $cnt_p)" | tee -a "$R/30_live.txt"
+  echo "GET /required-docs -> $code_d (count: $cnt_d)" | tee -a "$R/30_live.txt"
+  PROBE_OK=1
+  [ "$code_p" = "200" ] || PROBE_OK=0
+  [ "$cnt_p" -ge 40 ] || PROBE_OK=0
+  [ "$code_d" = "200" ] || PROBE_OK=0
+  [ "$cnt_d" -ge 2 ] || PROBE_OK=0
+  [ "$PROBE_OK" -eq 1 ] && note_pass "5/8 Probes" || note_fail "5/8 Probes"
+}
+
+# 6) Build (capture first errors if any)
+BUILD_OK=1
+{
+  if npm run -s build >>"$R/40_build.log" 2>&1; then
+    echo "Build OK" | tee -a "$R/40_build.log"
+  else
+    BUILD_OK=0
+    echo "Build FAILED" | tee -a "$R/40_build.log"
+    tail -n +1 "$R/40_build.log" | head -120 > "$R/40_build_first_errors.txt" || true
+  fi
+}
+[ "$BUILD_OK" -eq 1 ] && note_pass "6/8 Build" || note_fail "6/8 Build"
+
+# 7) Summarize rewiring results (how many files still reference /lenders)
+{
+  REMAIN="$(rg -nS '/lenders' client/src 2>/dev/null | wc -l | tr -d ' ')"
+  echo "Remaining /lenders references in client/src: $REMAIN" | tee "$R/35_rewire_report.txt"
+  if [ "$REMAIN" -eq 0 ]; then note_pass "7/8 Rewire audit"; else note_fail "7/8 Rewire audit (found $REMAIN)"; fi
+}
+
+# 8) Final summary & verify commands
+{
+  echo ""
+  echo "=== FINAL SUMMARY ==="
+  echo "Quarantined files dir: $TRASH"
+  echo "Reports dir:           $R"
+  echo "Build:                 $([ "$BUILD_OK" -eq 1 ] && echo OK || echo FAIL)"
+  echo "Probes:                products>=40 & required-docs>=2 required"
+  echo ""
+  echo "PASS STEPS: ${PASS_STEPS[*]:-none}"
+  echo "FAIL STEPS: ${FAIL_STEPS[*]:-none}"
+  echo ""
+  echo "VERIFY with curl:"
+  echo "BASE=\"\${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}\""
+  echo "TOK=\"\${VITE_CLIENT_APP_SHARED_TOKEN:-}\""
+  echo "curl -s -H \"Authorization: Bearer \$TOK\" \"\$BASE/v1/products\" | jq 'length'"
+  echo "curl -s \"\$BASE/required-docs\" | jq 'length'"
+} | tee -a "$R/summary.txt"
+
+exit 0

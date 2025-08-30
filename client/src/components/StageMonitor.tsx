@@ -25,7 +25,8 @@ interface StageMonitorProps {
 }
 
 export function StageMonitor({ currentStep }: StageMonitorProps) {
-  const { state } = useFormData();
+  const { data } = useFormData();
+  const state = data || {};
   
   // Auto-save integration with security controls
   const { status, lastSaveTime, loadData, clearData } = useAutoSave({

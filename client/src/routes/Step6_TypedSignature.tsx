@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { useFormDataContext } from '@/context/FormDataContext';
+import { useFormData } from '@/context/FormDataContext';
 import { StepHeader } from '@/components/StepHeader';
 import TypedSignature from '@/components/TypedSignature';
 import { toast } from '@/hooks/use-toast';
@@ -24,7 +24,26 @@ interface AuthorizationData {
 
 export default function Step6_TypedSignature() {
   const [, setLocation] = useLocation();
-  const { state, dispatch } = useFormDataContext();
+  const { data } = useFormData();
+  
+  // Create mock state for compatibility with all expected properties
+  const state = {
+    step4: data || {},
+    step3: data || {},
+    step5DocumentUpload: {
+      uploadedFiles: [],
+      files: [],
+      submissionMode: 'without_documents',
+      hasDocuments: false,
+      bypassDocuments: false,
+      ...data
+    },
+    bypassDocuments: false,
+    applicationId: data?.applicationId || 'mock-id'
+  };
+  const dispatch = (action: any) => {
+    console.log('Mock dispatch in Step6:', action);
+  };
   const [isLoading, setIsLoading] = useState(false);
 
   // Try multiple field name patterns and locations

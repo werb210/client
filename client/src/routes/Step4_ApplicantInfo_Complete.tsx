@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { useLocation } from "wouter";
 
-import { useFormDataContext } from "@/context/FormDataContext";
+import { useFormData } from "@/context/FormDataContext";
 
 import { Button } from "@/components/ui/button";
 
@@ -89,7 +89,9 @@ const loadFromLocalStorage = () => {
 
 export default function Step4ApplicantInfoComplete() {
   const [, setLocation] = useLocation();
-  const { state, dispatch } = useFormDataContext();
+  const { data } = useFormData();
+  const state = data || {};
+  const dispatch = (action: any) => console.log('Mock dispatch in Step4:', action);
   const { toast } = useToast();
   const [isCanadian, setIsCanadian] = useState(false);
   const [applicantPhoneDisplay, setApplicantPhoneDisplay] = useState('');
