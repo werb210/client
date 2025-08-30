@@ -1,14 +1,18 @@
-node:internal/modules/cjs/loader:1215
-  throw err;
-  ^
-
-Error: Cannot find module '/home/runner/workspace/scripts/alignment.mjs'
-    at Module._resolveFilename (node:internal/modules/cjs/loader:1212:15)
-    at Module._load (node:internal/modules/cjs/loader:1043:27)
-    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
-    at node:internal/main/run_main_module:28:49 {
-  code: 'MODULE_NOT_FOUND',
-  requireStack: []
+{
+  "base": "https://staff.boreal.financial/api",
+  "my_token_fp": "fe1af4f8b32f",
+  "expected_token_fp": "0944508707a9",
+  "token_fp_match": false,
+  "x_db_host": null,
+  "expected_db_host": "ep-morning-mode-a58uk90g.us-east-2.aws.neon.tech",
+  "db_host_match": false,
+  "products_status": 200,
+  "products_count": 0,
+  "expected_products": 44,
+  "lenders_status": 200,
+  "lenders_peek_count": 0,
+  "expected_lenders_min": 5,
+  "required_docs_status": 404,
+  "required_docs_count": null,
+  "expected_min_required_docs": 3
 }
-
-Node.js v20.19.3
