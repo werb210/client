@@ -59,7 +59,8 @@ function normalizeDocs(docs: RequiredDoc[] = []): RequiredDoc[] {
     typeof d === "string" ? { key: `doc_${i}`, label: d, required: true } : d
   );
   // guarantee bank_6m present exactly once
-  const withMinimum = [{ key: "bank_6m", label: "Last 6 months bank statements", required: true, months: 6 }, ...asObjs];
+  // Use dynamic fetchRequiredDocs() instead of hardcoded lists
+  const withMinimum = asObjs;
   return uniqBy(withMinimum, d => `${(d as any).key || ""}|${(d as any).label?.toLowerCase?.()||""}`);
 }
 
