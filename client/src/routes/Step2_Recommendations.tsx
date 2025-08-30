@@ -16,10 +16,15 @@ export default function Step2Recommendations() {
     } catch { return null; }
   })();
 
-  const safeFormData = fromState.step1 ?? fromState ?? fromStorage ?? {};
+  // Try to get data from multiple sources and merge
+  const step1Data = fromState.step1 ?? fromState ?? fromStorage?.step1 ?? {};
+  const globalData = fromState ?? fromStorage ?? {};
+  const safeFormData = { ...globalData, ...step1Data };
 
   // Debug: Log form data received from Step 1 (safe)
   console.log('🔍 [STEP2] Form data received (safe):', safeFormData);
+  console.log('🔍 [STEP2] Step1 data:', step1Data);
+  console.log('🔍 [STEP2] Global data:', globalData);
 
   const handleProductSelect = (product: string) => {
     dispatch({

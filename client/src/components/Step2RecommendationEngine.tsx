@@ -52,9 +52,19 @@ function PendingCard() {
 function Step2RecommendationEngine(props: Props) {
   // Use new normalizer to get intake data from props or sessionStorage
   const raw = props.intake ?? props.formData ?? {};
+  
+  // Debug logging to understand data structure
+  console.log('🔍 [Step2Engine] Raw props data:', raw);
+  console.log('🔍 [Step2Engine] Attempting to normalize:', raw);
+  
   const intake: Intake | null = normalizeIntake(raw) ?? normalizeIntake(loadIntake());
+  
+  console.log('🔍 [Step2Engine] Normalized intake:', intake);
 
-  if (!intake) return <PendingCard />;
+  if (!intake) {
+    console.warn('⚠️ [Step2Engine] No intake data available - showing pending card');
+    return <PendingCard />;
+  }
 
   // Helper function for safe number formatting
   const fmt = (n: number) => (Number.isFinite(n) ? n.toLocaleString() : '—');

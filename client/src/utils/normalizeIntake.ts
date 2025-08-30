@@ -24,15 +24,25 @@ const toCountry = (v: unknown): Intake['country'] | null => {
 /** Accepts {intake}, {formData}, or a raw object; returns a safe Intake or null. */
 export function normalizeIntake(raw: any): Intake | null {
   const src = raw?.intake ?? raw?.formData ?? raw ?? {};
-  const country = toCountry(src.country);
+  
+  // Support multiple country field names including ApplicationForm
+  const country = toCountry(src.country ?? src.headquarters);
   if (!country) return null;
 
-  const amount = toNum(src.amount ?? src.fundingAmount ?? src.loanAmount);
-  const monthlyRevenue = toNum(src.monthlyRevenue ?? src.monthly_revenue);
+  // Support multiple amount field names including ApplicationForm
+  const amount = toNum(src.amount ?? src.fundingAmount ?? src.loanAmount ?? src.requestedAmount);
+  const monthlyRevenue = toNum(src.monthlyRevenue ?? src.monthly_revenue ?? src.averageMonthlyRevenue);
+  
+  // Convert salesHistory to approximate months in business
   const timeInBusinessMonths = toNum(
-    src.timeInBusinessMonths ?? src.time_in_business_months
+    src.timeInBusinessMonths ?? src.time_in_business_months ??
+    (src.salesHistory === '<1yr' ? 6 : 
+     src.salesHistory === '1-3yr' ? 24 : 
+     src.salesHistory === '3+yr' ? 48 : 0)
   );
-  const industry = String(src.industry ?? '').trim();
+  
+  // Support multiple industry field names
+  const industry = String(src.industry ?? src.fundsPurpose ?? src.use_of_funds ?? '').trim();
 
   return {
     country,
