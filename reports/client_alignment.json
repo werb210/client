@@ -1,16 +1,16 @@
 {
   "base": "https://staff.boreal.financial/api",
   "my_token_fp": "fe1af4f8b32f",
-  "expected_token_fp": "fe1af4f8b32f",
-  "token_fp_match": true,
+  "expected_token_fp": "0944508707a9",
+  "token_fp_match": false,
   "products_status": 200,
   "products_count": 0,
-  "expected_products": 0,
+  "expected_products": 44,
   "x_db_host": null,
-  "expected_db_host": "unknown",
-  "db_host_match": true,
+  "expected_db_host": "ep-morning-mode-a58uk90g.us-east-2.aws.neon.tech",
+  "db_host_match": false,
   "x_instance": null,
   "required_docs_status": 404,
   "required_docs_count": null,
-  "expected_min_required_docs": 1
+  "expected_min_required_docs": 3
 }

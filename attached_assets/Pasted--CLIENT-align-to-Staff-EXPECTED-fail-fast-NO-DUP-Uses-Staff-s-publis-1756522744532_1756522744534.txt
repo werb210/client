@@ -1,0 +1,104 @@
+# ┏━━━━━━━━ CLIENT: align to Staff EXPECTED_* & fail fast (NO-DUP) ━━━━━━━━┓
+# • Uses Staff’s published EXPECTED_* values to verify instance/token/headers
+# • Your current report shows:
+#     - token_fp = fe1af4f8b32f  (≠ Staff 0944508707a9)
+#     - products = 0             (≠ Staff 44)
+#     - required-docs = 404      (≠ Staff 200 with >=3)
+#     - X-DB-Host = unknown      (≠ Staff ep-morning-mode-... )
+# • This script pinpoints which setting is off and tells you exactly how to fix it.
+# • NO-DUP: removes any old recon scripts to keep one source of truth.
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+set -euo pipefail
+
+echo "== CLIENT ENV =="
+echo "VITE_STAFF_API_URL=${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+echo "VITE_CLIENT_APP_SHARED_TOKEN set? $([ -n "${VITE_CLIENT_APP_SHARED_TOKEN:-}" ] && echo yes || echo no)"
+BASE="${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+
+# Paste the EXACT lines from Staff reports/EXPECTED_FOR_CLIENT.env (non-secrets):
+export EXPECTED_DB_HOST="ep-morning-mode-a58uk90g.us-east-2.aws.neon.tech"
+export EXPECTED_TOKEN_FP="0944508707a9"
+export EXPECTED_PRODUCTS="44"
+export EXPECTED_LENDERS="30"
+export EXPECTED_MIN_REQUIRED_DOCS="3"
+
+mkdir -p scripts reports
+rm -f scripts/check_alignment.mjs 2>/dev/null || true
+
+cat > scripts/check_alignment.mjs <<'JS'
+import crypto from "crypto";
+const BASE=(process.env.VITE_STAFF_API_URL||"https://staff.boreal.financial/api").replace(/\/+$/,'');
+const TOK =process.env.VITE_CLIENT_APP_SHARED_TOKEN||"";
+
+const EXP_DB   = process.env.EXPECTED_DB_HOST||"";
+const EXP_FP   = process.env.EXPECTED_TOKEN_FP||"";
+const EXP_PROD = Number(process.env.EXPECTED_PRODUCTS||"0");
+const EXP_REQ  = Number(process.env.EXPECTED_MIN_REQUIRED_DOCS||"0");
+
+const fp = s => crypto.createHash("sha256").update(s).digest("hex").slice(0,12);
+
+async function req(p,opt={}) {
+  // add a cache-buster to avoid any intermediate cache
+  const url = `${BASE}${p}${p.includes("?")?"&":"?"}t=${Date.now()}`;
+  const r=await fetch(url,{...opt,headers:{Authorization:`Bearer ${TOK}`,...(opt.headers||{})}});
+  const headers=Object.fromEntries([...r.headers.entries()].map(([k,v])=>[k.toLowerCase(),v]));
+  let body=null; const ct=r.headers.get("content-type")||"";
+  try{ body=ct.includes("json")? await r.json() : await r.text(); }catch{}
+  return { url, status:r.status, headers, body };
+}
+
+(async()=>{
+  const prod=await req("/v1/products");
+  const docs=await req("/required-docs");
+
+  const myFp = fp(TOK);
+  const count = Array.isArray(prod.body) ? prod.body.length : null;
+  const hdrHost = prod.headers["x-db-host"]||null;
+  const hdrInst = prod.headers["x-instance"]||null;
+
+  const summary = {
+    base: BASE,
+    my_token_fp: myFp,
+    expected_token_fp: EXP_FP,
+    token_fp_match: myFp===EXP_FP,
+    products_status: prod.status,
+    products_count: count,
+    expected_products: EXP_PROD,
+    x_db_host: hdrHost,
+    expected_db_host: EXP_DB,
+    db_host_match: hdrHost===EXP_DB,
+    x_instance: hdrInst,
+    required_docs_status: docs.status,
+    required_docs_count: Array.isArray(docs.body) ? docs.body.length : null,
+    expected_min_required_docs: EXP_REQ
+  };
+  console.log(JSON.stringify(summary,null,2));
+
+  // Hard fail if any critical alignment check fails
+  if (prod.status!==200) process.exit(2);
+  if (myFp!==EXP_FP) process.exit(2);
+  if (hdrHost!==EXP_DB) process.exit(2);
+  if (!(typeof count==="number" && count>=EXP_PROD)) process.exit(2);
+  if (!(summary.required_docs_status===200 && (summary.required_docs_count??0) >= EXP_REQ)) process.exit(2);
+})();
+JS
+
+# Run and capture
+node scripts/check_alignment.mjs | tee reports/client_alignment.json || {
+  echo ""
+  echo "❌ Not aligned with Staff snapshot. Fix in this order:"
+  echo "1) TOKEN: Your token fingerprint must equal ${EXPECTED_TOKEN_FP}"
+  echo "   - Current client token FP: $(node -e 'const c=require("crypto");const f=s=>c.createHash("sha256").update(s).digest("hex").slice(0,12);console.log(f(process.env.VITE_CLIENT_APP_SHARED_TOKEN||""))')"
+  echo "   - Action: Set VITE_CLIENT_APP_SHARED_TOKEN to Staff’s CLIENT_SHARED_BEARER (exact string), rebuild/restart."
+  echo "2) INSTANCE: You must see header X-DB-Host=${EXPECTED_DB_HOST} from /v1/products"
+  echo "   - If header is missing/unknown, you’re hitting the wrong instance or a stale proxy."
+  echo "   - Actions:"
+  echo "     • Ensure VITE_STAFF_API_URL=https://staff.boreal.financial/api"
+  echo "     • Bypass caches: our request adds ?t=timestamp and server sends Cache-Control: no-store"
+  echo "     • Disable any service worker / local proxy / VPN rewriting API"
+  echo "3) REQUIRED DOCS: Must be 200 with >= ${EXPECTED_MIN_REQUIRED_DOCS}"
+  echo "   - If 404, you’re not on the updated Staff build; re-check base URL/headers and auth."
+  exit 2
+}
+
+echo "✅ Client aligned with Staff (token FP, DB host header, products >= ${EXPECTED_PRODUCTS}, required-docs >= ${EXPECTED_MIN_REQUIRED_DOCS})."
