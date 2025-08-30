@@ -63,7 +63,6 @@ function comprehensiveFormReducer(
 
 interface ComprehensiveFormContextValue {
   state: ComprehensiveFormState;
-  dispatch: React.Dispatch<ComprehensiveFormAction>;
   updateFormData: (data: Partial<ApplicationForm>) => void;
   setCurrentStep: (step: number) => void;
   markStepComplete: (step: number) => void;
@@ -117,7 +116,6 @@ export function ComprehensiveFormProvider({ children }: { children: ReactNode })
 
   const value: ComprehensiveFormContextValue = {
     state,
-    dispatch,
     updateFormData,
     setCurrentStep,
     markStepComplete,

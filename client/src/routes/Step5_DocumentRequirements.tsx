@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useComprehensiveForm } from '@/context/ComprehensiveFormContext';
+import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { StepHeader } from '@/components/StepHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,16 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, FileText, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useLenderProducts } from '@/hooks/useLenderProducts';
+import { useLenderProduct } from '@/hooks/useLenderProducts';
 
 export default function Step5DocumentRequirements() {
-  const { state, dispatch } = useComprehensiveForm();
+  const { state, dispatch } = useFormData();
   const [, setLocation] = useLocation();
 
-  // Get selected product from Step 2 - check multiple possible field names  
-  const selectedProductId = state.selectedProduct || state.step2?.selectedProduct || state.step2?.selectedCategory;
-  const productsQuery = useLenderProducts();
-  const selectedProduct = productsQuery.data?.find((p: any) => p.id === selectedProductId);
+  // Get selected product from Step 2
+  const selectedProductId = state.step2?.selectedCategory; // This would be product ID in real implementation
+  const selectedProduct = useLenderProduct(selectedProductId);
 
   // Get required documents from selected product
   const requiredDocs = selectedProduct?.requiredDocuments || [
@@ -49,10 +48,10 @@ export default function Step5DocumentRequirements() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
       <div className="container mx-auto px-4 py-8">
         <StepHeader
-          stepNumber={5}
+          step={5}
           totalSteps={7}
           title="Document Requirements"
-          description="Required documents for your selected lender product"
+          subtitle="Required documents for your selected lender product"
         />
 
         <div className="max-w-4xl mx-auto mt-8">
@@ -96,7 +95,7 @@ export default function Step5DocumentRequirements() {
                     Required Documents ({requiredDocs.length})
                   </h3>
                   <div className="grid gap-3">
-                    {requiredDocs.map((doc: string, index: number) => (
+                    {requiredDocs.map((doc, index) => (
                       <div key={index} className="flex items-center gap-3 p-3 bg-white rounded border">
                         <div className="w-6 h-6 border-2 border-gray-300 rounded flex items-center justify-center text-xs font-semibold">
                           {index + 1}
@@ -133,7 +132,7 @@ export default function Step5DocumentRequirements() {
                 <div className="mt-4">
                   <h3 className="font-semibold mb-3">General Document Requirements:</h3>
                   <div className="grid gap-2">
-                    {requiredDocs.map((doc: string, index: number) => (
+                    {requiredDocs.map((doc, index) => (
                       <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
                         <div className="w-5 h-5 border border-gray-400 rounded flex items-center justify-center text-xs">
                           {index + 1}

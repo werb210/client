@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-import { useComprehensiveForm } from '@/context/ComprehensiveFormContext';
+import { useFormDataContext } from '@/context/FormDataContext';
 
 import { useLocation } from 'wouter';
 
@@ -44,7 +44,7 @@ interface Step5Props {
 }
 
 export default function Step5DocumentUpload(props: Step5Props = {}) {
-  const { state, dispatch } = useComprehensiveForm();
+  const { state, dispatch } = useFormDataContext();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { uploadFile, uploadMultipleFiles, uploads, isUploading } = useUploadDocuments();
@@ -105,7 +105,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
   
   // State for tracking uploaded files and requirements completion
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
-    (state.step5DocumentUpload?.uploadedFiles || []).map((doc: any) => ({
+    (state.step5DocumentUpload?.uploadedFiles || []).map(doc => ({
       id: doc.id,
       name: doc.name,
       size: doc.size,
