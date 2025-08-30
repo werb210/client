@@ -2,11 +2,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, ArrowRight, Loader2 } from 'lucide-react';
-import { normalizeIntake, loadIntake, type Intake } from '@/utils/normalizeIntake';
-import { fetchLenderProducts } from '@/api/lenderProducts';
+import { normalizeStep1, loadIntake, type Intake } from '@/utils/normalizeIntake';
+import { fetchProducts } from '@/api/products';
+import { eligible, score, type Product } from '@/engine/recommend';
 import { useQuery } from '@tanstack/react-query';
-import { getStoredApplicationId } from '@/lib/uuidUtils';
-import { getProductRecommendations } from '@/lib/strictRecommendationEngine';
 
 // Utility function for formatting currency
 const fmt = (amount: number) => new Intl.NumberFormat('en-US', { 
@@ -57,12 +56,12 @@ function Step2RecommendationEngine(props: Props) {
   console.log('🔍 [Step2Engine] Raw props data:', raw);
   console.log('🔍 [Step2Engine] Attempting to normalize:', raw);
   
-  const intake: Intake | null = normalizeIntake(raw) ?? normalizeIntake(loadIntake());
+  const intake: Intake | null = normalizeStep1(raw) ?? normalizeStep1(loadIntake() ?? {});
   
   console.log('🔍 [Step2Engine] Normalized intake:', intake);
 
-  if (!intake) {
-    console.warn('⚠️ [Step2Engine] No intake data available - showing pending card');
+  if (!intake?.amountRequested || !intake?.country) {
+    console.warn('⚠️ [Step2Engine] Missing key inputs from Step 1 - showing pending card');
     return <PendingCard />;
   }
 
@@ -70,53 +69,26 @@ function Step2RecommendationEngine(props: Props) {
   const fmt = (n: number) => (Number.isFinite(n) ? n.toLocaleString() : '—');
 
   const { data: products, isLoading, error } = useQuery({
-    queryKey: ["lenderProducts"],
-    queryFn: fetchLenderProducts
+    queryKey: ["staffProducts"],
+    queryFn: fetchProducts
   });
 
-  // Use your sophisticated recommendation engine!
+  // Use the new recommendation engine!
   const recommendations = useMemo(() => {
-    if (!products?.products) return [];
+    if (!products?.length) return [];
     
-    // Map intake data to recommendation filters
-    const filters = {
-      country: intake.country as 'CA' | 'US',
-      fundingAmount: intake.amount || 50000,
-      lookingFor: (intake.industry === 'equipment' ? 'equipment' : 
-                   intake.industry === 'both' ? 'both' : 'capital') as 'capital' | 'equipment' | 'both',
-      accountsReceivableBalance: (intake as any).accountsReceivableBalance || 0,
-      fundsPurpose: ((intake as any).fundsPurpose || 'working_capital') as 'inventory' | 'expansion' | 'equipment' | 'working_capital' | 'other'
-    };
-
-    console.log('🎯 Using advanced recommendation engine with filters:', filters);
+    console.log('🎯 Using new recommendation engine with intake:', intake);
     
-    // Transform products to LenderProduct format for the engine
-    const lenderProducts = products.products.map((p: any) => ({
-      id: p.id,
-      name: p.productName || p.name,
-      lender: p.lender || p.lender_name,
-      category: p.category?.toLowerCase().replace(/\s+/g, '_') as any,
-      country: p.country, // API returns 'country' not 'countryOffered'
-      minAmount: p.min_amount || p.minAmount || 0, // API uses 'min_amount'
-      maxAmount: p.max_amount === 0 ? Number.MAX_SAFE_INTEGER : (p.max_amount || p.maxAmount || 999999999), // API uses 'max_amount', 0 means unlimited
-      minRevenue: p.minRevenue || 0,
-      isActive: p.isActive !== false
-    })).filter((p: any) => p.isActive);
-
     try {
-      // Use your built recommendation engine!
-      const scoredRecommendations = getProductRecommendations(lenderProducts, filters);
+      // Filter eligible products and score them
+      const matches = products.filter(p => eligible(p as Product, intake))
+                              .sort((a, b) => score(b as Product, intake) - score(a as Product, intake));
       
-      console.log(`🏆 Generated ${scoredRecommendations.length} scored recommendations`);
-      return scoredRecommendations;
+      console.log(`🏆 Generated ${matches.length} recommendations from ${products.length} products`);
+      return matches.map(p => ({ product: p, matchScore: score(p as Product, intake), recommendationLevel: 'good' as const }));
     } catch (error) {
-      console.warn('⚠️ Fallback to simple filtering:', error);
-      // Fallback to simple filtering if recommendation engine fails
-      return lenderProducts.filter((p: any) => 
-        p.country === filters.country && 
-        filters.fundingAmount >= p.minAmount && 
-        filters.fundingAmount <= p.maxAmount
-      ).map((p: any) => ({ product: p, matchScore: 50, recommendationLevel: 'good' as const }));
+      console.warn('⚠️ Recommendation engine error:', error);
+      return [];
     }
   }, [products, intake]);
 
@@ -129,7 +101,7 @@ function Step2RecommendationEngine(props: Props) {
             <CardTitle>Finding matches...</CardTitle>
           </div>
           <CardDescription>
-            Analyzing your profile: ${fmt(intake.amount)} • Country: {intake.country} • Revenue: ${fmt(intake.monthlyRevenue)}
+            Analyzing your profile: ${fmt(intake.amountRequestedRequested || 0)} • Country: {intake.country} • Revenue: ${fmt(intake.avgMonthlyRevenue || 0)}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -179,7 +151,7 @@ function Step2RecommendationEngine(props: Props) {
             <CardTitle>Recommended Loan Products</CardTitle>
           </div>
           <CardDescription>
-            Based on your profile: ${fmt(intake.amount)} • {intake.industry || 'business'} • {intake.country}
+            Based on your profile: ${fmt(intake.amountRequestedRequested || 0)} • {intake.industry || 'business'} • {intake.country}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -255,7 +227,7 @@ function Step2RecommendationEngine(props: Props) {
           <CardTitle>Product Matching Pending</CardTitle>
         </div>
         <CardDescription>
-          Profile received: ${fmt(intake.amount)} for {intake.industry || 'business'} in {intake.country}
+          Profile received: ${fmt(intake.amountRequested)} for {intake.industry || 'business'} in {intake.country}
         </CardDescription>
       </CardHeader>
       <CardContent>

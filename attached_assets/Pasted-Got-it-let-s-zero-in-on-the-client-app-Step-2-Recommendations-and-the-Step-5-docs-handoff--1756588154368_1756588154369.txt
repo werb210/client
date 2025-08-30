@@ -1,0 +1,346 @@
+Got it—let’s zero-in on the **client app Step 2 (Recommendations)** and the **Step 5 docs handoff**. From your screenshots/logs I see:
+
+* Step 2 shows **“Product Matching Pending”** even after a full Step 1.
+* Console shows service-worker cache errors (not fatal for Step 2), and your client logs say **“\[local] lender products cache is ready / Found 42 products in local cache”** — that means you’re still reading a local cache instead of the Staff API.
+* You recently changed the **lender\_products** schema on Staff. The Step-2 matcher is very likely still reading old field names / shapes and bailing to the “pending” state.
+
+Below is a precise, fix-once set of patches you can drop in. They (1) stop the local cache in production, (2) normalize Step-1 form values, (3) fetch products from Staff with the shared token, (4) match against the **current** product fields, and (5) align Step 5 (required docs) with the new endpoint.
+
+---
+
+# 1) Disable any local/fallback product cache in prod
+
+**.env / Secrets (client)**
+Make sure these are exactly set (you already did some of this, but be strict):
+
+```
+VITE_STAFF_API_URL=https://staff.boreal.financial/api
+VITE_CLIENT_APP_SHARED_TOKEN=<the new token; FP=294b3e442db5>
+VITE_LOCAL_FALLBACK=false
+NODE_ENV=production
+```
+
+**Guard in code** (prevents accidental local cache in prod):
+
+```ts
+// client/src/lib/env.ts
+export const BASE = import.meta.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial/api';
+export const TOKEN = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || '';
+export const USE_LOCAL_PRODUCTS =
+  import.meta.env.VITE_LOCAL_FALLBACK === 'true' && !import.meta.env.PROD; // never true in prod
+```
+
+Anywhere you pick product source, replace “local first” with:
+
+```ts
+import { BASE, TOKEN, USE_LOCAL_PRODUCTS } from '@/lib/env';
+
+export async function fetchProducts(): Promise<Product[]> {
+  if (!USE_LOCAL_PRODUCTS) {
+    const res = await fetch(`${BASE}/v1/products`, {
+      headers: { Authorization: `Bearer ${TOKEN}` , 'Cache-Control': 'no-store' },
+      credentials: 'omit',
+    });
+    if (!res.ok) throw new Error(`Products fetch failed: ${res.status}`);
+    return res.json();
+  }
+  // Dev-only: local cache
+  const local = await import('@/data/products.local.json');
+  return local.default;
+}
+```
+
+That alone removes the “42 local products” message in prod.
+
+---
+
+# 2) Normalize Step-1 form values (currency → numbers, enums → canonical)
+
+Create a tiny normalizer used by Step 2.
+
+```ts
+// client/src/utils/normalizeIntake.ts
+export type Intake = {
+  capitalUse?: string;                 // 'Capital', 'Equipment', etc.
+  amountRequested?: number;
+  country?: 'US' | 'CA';
+  industry?: string;
+  yearsInBusiness?: number;
+  revenue12m?: number;
+  avgMonthlyRevenue?: number;
+  arBalance?: number;
+  fixedAssets?: number;
+};
+
+const toNum = (v: unknown) =>
+  typeof v === 'number' ? v : Number(String(v ?? '').replace(/[^\d.-]/g, '') || 0);
+
+export function normalizeStep1(raw: Record<string, unknown>): Intake {
+  return {
+    capitalUse: String(raw.capitalUse ?? raw.purpose ?? '').trim(),
+    amountRequested: toNum(raw.amountRequested ?? raw['funding'] ?? raw['amount']),
+    country: (String(raw.businessLocation ?? raw.country ?? '').includes('Canada') ? 'CA' : 'US') as 'US'|'CA',
+    industry: String(raw.industry ?? '').trim(),
+    yearsInBusiness: toNum(raw.yearsInBusiness ?? raw['yib']),
+    revenue12m: toNum(raw.revenue12m ?? raw['revenue'] ?? raw['last12mRevenue']),
+    avgMonthlyRevenue: toNum(raw.avgMonthlyRevenue ?? raw['amr']),
+    arBalance: toNum(raw.currentAccountReceivableBalance ?? raw['arBalance']),
+    fixedAssets: toNum(raw.fixedAssetsValue ?? raw['fixedAssets']),
+  };
+}
+```
+
+Use this in Step-1 submit or the shared context so Step-2 always receives a clean `Intake`.
+
+---
+
+# 3) Update the Step-2 matcher to the **current** Staff schema
+
+Assuming Staff’s canonical `lender_products` now exposes:
+
+```
+id, name, active, countries[], purposes[], industries[], 
+minAmount, maxAmount, minYearsInBusiness, minRevenue12m, minAvgMonthlyRevenue,
+requiresDocs[] (codes), ...
+```
+
+Wire a simple, tolerant matcher:
+
+```ts
+// client/src/engine/recommend.ts
+import type { Intake } from '@/utils/normalizeIntake';
+
+export type Product = {
+  id: string;
+  name: string;
+  active?: boolean;
+  countries?: string[];
+  purposes?: string[];
+  industries?: string[];
+  minAmount?: number;
+  maxAmount?: number;
+  minYearsInBusiness?: number;
+  minRevenue12m?: number;
+  minAvgMonthlyRevenue?: number;
+};
+
+export function eligible(p: Product, i: Intake): boolean {
+  if (p.active === false) return false;
+
+  if (p.countries?.length && i.country && !p.countries.includes(i.country)) return false;
+
+  if (p.purposes?.length && i.capitalUse) {
+    const needle = i.capitalUse.toLowerCase();
+    if (!p.purposes.some(x => String(x).toLowerCase() === needle)) return false;
+  }
+
+  if (p.industries?.length && i.industry) {
+    const low = i.industry.toLowerCase();
+    if (!p.industries.some(x => String(x).toLowerCase() === low)) return false;
+  }
+
+  if (p.minAmount && (i.amountRequested ?? 0) < p.minAmount) return false;
+  if (p.maxAmount && (i.amountRequested ?? 0) > p.maxAmount) return false;
+
+  if (p.minYearsInBusiness && (i.yearsInBusiness ?? 0) < p.minYearsInBusiness) return false;
+  if (p.minRevenue12m && (i.revenue12m ?? 0) < p.minRevenue12m) return false;
+  if (p.minAvgMonthlyRevenue && (i.avgMonthlyRevenue ?? 0) < p.minAvgMonthlyRevenue) return false;
+
+  return true;
+}
+
+export function score(p: Product, i: Intake): number {
+  // Simple heuristic; adjust as needed
+  let s = 0;
+  if (p.purposes?.length && i.capitalUse) s += 10;
+  if (p.industries?.length && i.industry) s += 8;
+  if (i.amountRequested && p.minAmount) s += 6;
+  if (i.yearsInBusiness && p.minYearsInBusiness) s += 4;
+  if (i.revenue12m && p.minRevenue12m) s += 4;
+  return s;
+}
+```
+
+Step-2 component:
+
+```tsx
+// client/src/pages/apply/Step2RecommendationEngine.tsx
+import { useEffect, useState } from 'react';
+import { fetchProducts } from '@/data/products';
+import { normalizeStep1 } from '@/utils/normalizeIntake';
+import { eligible, score, type Product } from '@/engine/recommend';
+import { useFormData } from '@/context/FormDataContext';
+
+export default function Step2() {
+  const { step1 } = useFormData();         // whatever your context exposes
+  const [list, setList] = useState<Product[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const intake = normalizeStep1(step1 ?? {});
+        if (!intake.amountRequested || !intake.country) {
+          setErr('Missing key inputs from Step 1'); 
+          setList([]);
+          return;
+        }
+        const products = await fetchProducts();
+        const matches = products.filter(p => eligible(p as Product, intake))
+                                .sort((a, b) => score(b as Product, intake) - score(a as Product, intake));
+        setList(matches);
+      } catch (e:any) {
+        setErr(e.message || 'Match failed');
+        setList([]);
+      }
+    };
+    run();
+  }, [step1]);
+
+  if (!list) return <div className="py-8 text-center">Finding matches…</div>;
+  if (err)  return <div className="py-8 text-center text-red-600">Product matching error: {err}</div>;
+  if (!list.length) return <div className="py-8 text-center">No matches based on your profile.</div>;
+
+  return (
+    <div className="space-y-4">
+      {list.map(p => (
+        <div key={p.id} className="rounded-xl border p-4 bg-white shadow-sm">
+          <div className="font-medium">{p.name}</div>
+          {/* include chips for ranges, countries, etc. */}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+This removes the hard “pending” branch and produces either matches, “no matches”, or a clear error.
+
+---
+
+# 4) Step-5 (Required Docs) alignment
+
+Fetch with the new canonical route and your selected product id:
+
+```ts
+// client/src/api/requiredDocs.ts
+import { BASE, TOKEN } from '@/lib/env';
+
+export async function fetchRequiredDocs(productId: string) {
+  const url = `${BASE}/required-docs?productId=${encodeURIComponent(productId)}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${TOKEN}`, 'Cache-Control': 'no-store' },
+    credentials: 'omit',
+  });
+  if (!res.ok) throw new Error(`required-docs ${res.status}`);
+  return res.json() as Promise<Array<{code:string; title:string; optional?:boolean}>>;
+}
+```
+
+Wire into Step-5:
+
+```ts
+// client/src/pages/apply/Step5Documents.tsx
+import { useEffect, useState } from 'react';
+import { fetchRequiredDocs } from '@/api/requiredDocs';
+
+export default function Step5({ selectedProductId }: { selectedProductId: string }) {
+  const [docs, setDocs] = useState<any[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const d = await fetchRequiredDocs(selectedProductId);
+        setDocs(d);
+      } catch (e:any) {
+        setErr(e.message || 'Failed to load required documents');
+        setDocs([]);
+      }
+    };
+    run();
+  }, [selectedProductId]);
+
+  if (!docs) return <div>Loading required documents…</div>;
+  if (err) return <div className="text-red-600">{err}</div>;
+
+  return (
+    <ul className="space-y-2">
+      {docs.map(doc => (
+        <li key={doc.code} className="rounded-lg border p-3 bg-white">
+          <div className="font-medium">{doc.title}</div>
+          {doc.optional ? <span className="text-xs text-gray-500">Optional</span> : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+---
+
+# 5) Two quick UX papercuts you flagged
+
+* **“Add New Lender” modal too transparent**
+  Give it a solid background so fields are legible:
+
+```css
+/* client/src/styles/app.css */
+.modal-card { background-color: #fff; }   /* ensure bg-white */
+.modal-overlay { backdrop-filter: blur(2px); } /* optional */
+```
+
+…and set those classes on the dialog container.
+
+* **Service-worker console spam (cache addAll failures)**
+  Until you adopt Workbox, stop precaching hashed assets during dev:
+
+```ts
+// public/service-worker.js (or wherever)
+self.addEventListener('install', (e) => {
+  if (self.registration.scope.includes('replit.dev')) { return; } // no-op on preview
+  // …or simply comment out addAll() for now
+});
+```
+
+(Doesn’t affect Step 2; this just declutters the console.)
+
+---
+
+# 6) Sanity checks you can run now
+
+**A. Confirm client is using Staff, not local**
+
+```bash
+# In browser devtools > Network tab when loading Step 2:
+# You should see GET https://staff.boreal.financial/api/v1/products (200)
+# And NO requests to /data/products.local.json
+```
+
+**B. Counts**
+
+```bash
+curl -s -H "Authorization: Bearer $VITE_CLIENT_APP_SHARED_TOKEN" \
+  https://staff.boreal.financial/api/v1/products | jq 'length'   # => 44
+```
+
+**C. Step-1 → Step-2**
+
+* Fill Step-1 with realistic amounts (no \$ or commas needed; normalizer will clean if present).
+* Step-2 should render a list of cards (no “pending”).
+
+**D. Step-5 (docs)**
+
+* After selecting a product, Step-5 should show \~2+ required docs (your Staff currently returns 2).
+
+---
+
+## Why Step 2 broke (root cause)
+
+1. The client kept a **local product cache** path alive in preview/dev, so you weren’t actually using the updated Staff schema.
+2. The **matcher** still assumed the old field names and bailed to the “pending” state when it couldn’t line up inputs with product rules.
+3. Step-5 still pointed at an old “docs” shape.
+
+The patches above remove the fallback in prod, normalize the intake, align the matcher with the current schema, and fix the docs fetch.
+
+If you paste these changes, Step 2 should render real matches again, and Step 5 will show the Staff-driven document checklist.
