@@ -105,7 +105,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
   
   // State for tracking uploaded files and requirements completion
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
-    (state.step5DocumentUpload?.uploadedFiles || []).map(doc => ({
+    (state.step5DocumentUpload?.uploadedFiles || []).map((doc: any) => ({
       id: doc.id,
       name: doc.name,
       size: doc.size,
