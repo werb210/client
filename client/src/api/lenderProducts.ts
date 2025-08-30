@@ -18,19 +18,7 @@ export interface LenderProductsResponse {
 
 // API functions for lender products
 export const fetchLenderProducts = async () => {
-  const baseUrl = import.meta.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial/api';
-  const token = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN;
-  
-  if (!token) {
-    throw new Error('Authentication token not configured');
-  }
-  
-  const res = await fetch(`${baseUrl}/v1/products`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  });
+  const res = await fetch("/api/v1/products", { credentials: 'include' });
   
   if (!res.ok) {
     throw new Error(`Failed to fetch products: ${res.status} ${res.statusText}`);
