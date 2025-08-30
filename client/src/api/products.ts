@@ -13,8 +13,17 @@ export async function fetchProducts() {
     }
   }
   if (MAY_FALLBACK) {
-    const data: any[] = []; // Fallback data if needed
-    return data;
+    // Use working local API with 42 products until Staff API is complete
+    try {
+      const res = await fetch('/api/lender-products');
+      if (res.ok) {
+        const data = await res.json();
+        return data.products || data;
+      }
+      console.warn("Local API /api/lender-products failed", res.status);
+    } catch (e) {
+      console.warn("Local API error", e);
+    }
   }
-  throw new Error("Products unavailable (API failed and fallback disabled).");
+  throw new Error("Products unavailable (both APIs failed).");
 }

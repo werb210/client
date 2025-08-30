@@ -5,8 +5,8 @@ export const SHARED_TOKEN =
   import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ?? "";
 
 const FALLBACK =
-  (import.meta.env.VITE_LOCAL_FALLBACK ?? "false").toLowerCase() === "true";
+  (import.meta.env.VITE_LOCAL_FALLBACK ?? "true").toLowerCase() === "true";
 
-// Safety valve: always try API first; only use local cache *if* API fails.
-export const USE_API_FIRST = true;
-export const MAY_FALLBACK = FALLBACK; // keep the flag if you really want it
+// Since Staff API only has 1 product vs local 42, prefer local until Staff is complete
+export const USE_API_FIRST = false; // Disabled until Staff API has full dataset  
+export const MAY_FALLBACK = true; // Use working local API with 42 products
