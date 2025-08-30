@@ -117,3 +117,6 @@ export const useFormData = () => {
   if (!v) throw new Error("useFormData outside provider");
   return v;
 };
+
+// Legacy compatibility export for existing components
+export const useFormDataContext = useFormData;

@@ -136,10 +136,10 @@ const fixedAssetsOptions = [
 
 
 export default function Step1FinancialProfile() {
+  const { data: contextData, save: saveToNewContext } = useFormData();
   const { state, dispatch } = useFormDataContext();
   const [location, setLocation] = useLocation();
   const { submitApplication, isSubmitting, error } = useSubmitApplication();
-  const { save: saveToNewContext } = useFormData();
 
   // Initialize application ID and restore autosave data
   useEffect(() => {
