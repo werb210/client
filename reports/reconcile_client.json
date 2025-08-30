@@ -1,0 +1,16 @@
+{
+  "env_base": "https://staff.boreal.financial/api",
+  "prod_status": 200,
+  "prod_count": 0,
+  "prod_headers": {
+    "x_db_host": null,
+    "x_instance": null,
+    "x_git_sha": null
+  },
+  "state_status": 403,
+  "state_body": {
+    "error": "invalid_token"
+  },
+  "client_token_fp": "fe1af4f8b32f",
+  "token_fp_match": false
+}
