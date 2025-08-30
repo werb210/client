@@ -9,7 +9,6 @@
   "x_db_host": null,
   "expected_db_host": "ep-morning-mode-a58uk90g.us-east-2.aws.neon.tech",
   "db_host_match": false,
-  "x_instance": null,
   "required_docs_status": 404,
   "required_docs_count": null,
   "expected_min_required_docs": 3
