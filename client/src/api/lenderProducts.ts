@@ -18,25 +18,46 @@ export interface LenderProductsResponse {
 
 // API functions for lender products
 export const fetchLenderProducts = async () => {
-  const res = await fetch("/api/v1/products");
-  const data = await res.json();
+  const baseUrl = import.meta.env.VITE_STAFF_API_URL || 'https://staff.boreal.financial/api';
+  const token = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN;
   
-  // Transform backend schema to unified client schema
-  if (data.products) {
-    data.products = data.products.map((p: any) => ({
-      id: p.id,
-      lender: p.lender_name || p.lender,
-      lenderId: p.lender_id || p.id?.split('-')[0] || p.id, // Extract lender ID or use product ID
-      productName: p.name || p.productName,
-      category: p.category,
-      minAmount: p.min_amount || p.minAmount || 0,
-      maxAmount: p.max_amount || p.maxAmount || Number.MAX_SAFE_INTEGER,
-      countryOffered: p.country || p.countryOffered,
-      isActive: p.active !== false
-    }));
+  if (!token) {
+    throw new Error('Authentication token not configured');
   }
   
-  return data;
+  const res = await fetch(`${baseUrl}/v1/products`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  if (!res.ok) {
+    throw new Error(`Failed to fetch products: ${res.status} ${res.statusText}`);
+  }
+  
+  const data = await res.json();
+  
+  // Transform Staff API response to unified client schema
+  // Staff API returns products directly as an array
+  const products = Array.isArray(data) ? data : (data.products || []);
+  
+  const transformedProducts = products.map((p: any) => ({
+    id: p.id,
+    lender: p.lender_name || p.lender,
+    lenderId: p.lender_id || p.id?.split('-')[0] || p.id,
+    productName: p.name || p.productName,
+    category: p.category,
+    minAmount: p.min_amount || p.minAmount || 0,
+    maxAmount: p.max_amount || p.maxAmount || Number.MAX_SAFE_INTEGER,
+    countryOffered: p.country || p.countryOffered,
+    isActive: p.active !== false
+  }));
+  
+  return {
+    success: true,
+    products: transformedProducts
+  };
 };
 
 export const filterProductsByCategory = (
