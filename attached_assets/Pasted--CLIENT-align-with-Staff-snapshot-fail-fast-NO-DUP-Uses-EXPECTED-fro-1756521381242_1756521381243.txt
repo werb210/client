@@ -1,0 +1,100 @@
+# ┏━━━━━━━━ CLIENT: align with Staff snapshot & fail-fast (NO-DUP) ━━━━━━━━┓
+# • Uses EXPECTED_* from Staff to verify instance, token FP, counts
+# • Fails with actionable tips if misaligned (token/base/instance)
+# • Confirms /v1/products >= EXPECTED_PRODUCTS and /required-docs >= EXPECTED_MIN_REQUIRED_DOCS
+# • Keeps only canonical endpoints; deletes any legacy helpers
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+set -euo pipefail
+
+echo "== CLIENT ENV =="
+echo "VITE_STAFF_API_URL=${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+echo "VITE_CLIENT_APP_SHARED_TOKEN set? $([ -n "${VITE_CLIENT_APP_SHARED_TOKEN:-}" ] && echo yes || echo no)"
+
+# >>> Paste the EXPECTED_* exports from Staff here (non-secrets). Example:
+: "${EXPECTED_DB_HOST:?Paste EXPECTED_DB_HOST from Staff}"
+: "${EXPECTED_TOKEN_FP:?Paste EXPECTED_TOKEN_FP from Staff}"
+: "${EXPECTED_PRODUCTS:?Paste EXPECTED_PRODUCTS from Staff}"
+: "${EXPECTED_LENDERS:?Paste EXPECTED_LENDERS from Staff}"
+: "${EXPECTED_MIN_REQUIRED_DOCS:?Paste EXPECTED_MIN_REQUIRED_DOCS from Staff}"
+
+BASE="${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+mkdir -p scripts reports
+
+# Clean any old recon scripts (NO-DUP)
+rm -f scripts/reconcile_old.mjs 2>/dev/null || true
+
+cat > scripts/check_alignment.mjs <<'JS'
+import crypto from "crypto";
+const BASE=(process.env.VITE_STAFF_API_URL||"https://staff.boreal.financial/api").replace(/\/+$/,'');
+const TOK =process.env.VITE_CLIENT_APP_SHARED_TOKEN||"";
+
+const EXP_DB   = process.env.EXPECTED_DB_HOST||"";
+const EXP_FP   = process.env.EXPECTED_TOKEN_FP||"";
+const EXP_PROD = Number(process.env.EXPECTED_PRODUCTS||"0");
+const EXP_LEND = Number(process.env.EXPECTED_LENDERS||"0");
+const EXP_REQ  = Number(process.env.EXPECTED_MIN_REQUIRED_DOCS||"0");
+
+const fp = s => crypto.createHash("sha256").update(s).digest("hex").slice(0,12);
+
+async function req(p,opt={}) {
+  const r=await fetch(BASE+p,{...opt,headers:{Authorization:`Bearer ${TOK}`,...(opt.headers||{})}});
+  const headers=Object.fromEntries([...r.headers.entries()].map(([k,v])=>[k.toLowerCase(),v]));
+  let body=null; const ct=r.headers.get("content-type")||"";
+  try{ body=ct.includes("json")? await r.json() : await r.text(); }catch{}
+  return { status:r.status, headers, body };
+}
+
+(async()=>{
+  const prod=await req("/v1/products");
+  const docs=await req("/required-docs");
+
+  const myFp = fp(TOK);
+  const count = Array.isArray(prod.body) ? prod.body.length : null;
+  const hdrHost = prod.headers["x-db-host"]||null;
+  const hdrInst = prod.headers["x-instance"]||null;
+
+  const summary = {
+    base: BASE,
+    my_token_fp: myFp, expected_token_fp: EXP_FP, token_fp_match: myFp===EXP_FP,
+    products_status: prod.status, products_count: count, expected_products: EXP_PROD,
+    x_db_host: hdrHost, expected_db_host: EXP_DB, db_host_match: hdrHost===EXP_DB,
+    x_instance: hdrInst,
+    required_docs_status: docs.status,
+    required_docs_count: Array.isArray(docs.body) ? docs.body.length : null,
+    expected_min_required_docs: EXP_REQ
+  };
+  console.log(JSON.stringify(summary,null,2));
+
+  // Hard fail on any mismatch
+  if (prod.status!==200) process.exit(2);
+  if (myFp!==EXP_FP) process.exit(2);
+  if (hdrHost!==EXP_DB) process.exit(2);
+  if (typeof count!=="number" || !(count>=EXP_PROD)) process.exit(2);
+  if (!(summary.required_docs_status===200 && (summary.required_docs_count??0) >= EXP_REQ)) process.exit(2);
+})();
+JS
+
+# Run alignment check
+node scripts/check_alignment.mjs | tee reports/client_alignment.json || {
+  echo ""
+  echo "❌ Client not aligned with Staff. Fix and re-run:"
+  echo "1) Token mismatch:"
+  echo "   STAFF token FP:   ${EXPECTED_TOKEN_FP}"
+  echo "   CLIENT token FP:  $(node -e 'const c=require("crypto");const f=s=>c.createHash("sha256").update(s).digest("hex").slice(0,12);console.log(f(process.env.VITE_CLIENT_APP_SHARED_TOKEN||""))')"
+  echo "   → Set VITE_CLIENT_APP_SHARED_TOKEN to Staff’s CLIENT_SHARED_BEARER (exact). Rebuild/restart."
+  echo "2) Wrong Staff instance:"
+  echo "   Expected X-DB-Host: ${EXPECTED_DB_HOST}"
+  echo "   Got:                $(node -e 'try{console.log(require("./reports/client_alignment.json").x_db_host)}catch{console.log("(unknown)")}')"
+  echo "   → Ensure VITE_STAFF_API_URL=https://staff.boreal.financial/api and no proxy/CDN rewrite."
+  echo "3) Required docs baseline:"
+  echo "   Expected ≥ ${EXPECTED_MIN_REQUIRED_DOCS}; if you see fewer, you’re hitting a different environment."
+  exit 2
+}
+
+# Optional: enforce canonical paths / clean up (should already be clean)
+rm -f src/services/lenderProducts.ts src/services/lender-products.ts 2>/dev/null || true
+if command -v rg >/dev/null 2>&1; then
+  rg -n "/lender-products|/api/products(?!/v1)" src && { echo "❌ Legacy endpoint found. Replace with '/v1/products' only."; exit 2; } || true
+fi
+
+echo "✅ Client aligned with Staff (token FP, DB host, counts, required-docs)."
