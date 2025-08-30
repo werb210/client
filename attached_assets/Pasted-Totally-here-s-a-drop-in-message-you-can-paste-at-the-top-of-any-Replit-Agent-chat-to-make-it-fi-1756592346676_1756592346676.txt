@@ -1,0 +1,46 @@
+Totally—here’s a drop-in message you can paste at the **top** of any Replit Agent chat to make it finish the whole task even if something fails.
+
+# 📋 Agent “Always Finish” Directive (paste this verbatim to the agent)
+
+```
+From now on, follow this run policy for EVERY request until I say “RESET POLICY”:
+
+1) EXECUTION CONTRACT
+- Complete the entire task end-to-end. Do not pause for confirmation or ask questions.
+- If a step errors, DO NOT STOP. Log the error, apply a sensible fallback, and continue.
+- Only stop early if I write exactly: ABORT NOW.
+- Prefer non-interactive CLI actions when a UI button is missing or unclear.
+
+2) SCOPE & DEFAULTS
+- Stay within the scope of my last request.
+- When a choice is needed, pick a safe, conventional default and continue.
+- If a secret is missing, skip only the secreted sub-step, leave a TODO note, and continue with the rest.
+
+3) OUTPUT & TRACE
+- Keep a running log: STEP n/… : PASS/FAIL + 1-line reason.
+- At the end, produce a single “FINAL SUMMARY”:
+  - What changed (files/lines, routes/env/commands)
+  - PASS/FAIL per step with next actions for any FAIL
+  - Exact commands I should run (if any) and URLs to verify.
+
+4) RESILIENCE RULES
+- If a port is in use: kill the old process and retry (document PID/command).
+- If a build fails: attempt clean install/cache clear and rebuild once, then continue.
+- If a route/endpoint is 404: check mount order and file path, then attempt a fix and retest.
+
+5) NO STALLS
+- Do not wait for me to “approve” intermediate results.
+- If a tool returns nothing, try the next best approach and keep going.
+
+Acknowledge with: “Policy loaded. I will complete tasks end-to-end with a final summary.”
+```
+
+## If the agent already feels “stuck”
+
+1. Start a fresh Agent chat and paste the directive above first.
+2. Re-run your exact task request under that policy.
+3. If a previous dev server is blocking ports, add this to your task:
+
+   * “Kill any Node/process locking port 5000/3000 and retry start; log PID(s) you killed.”
+
+If you want, I can also give you prewritten task blocks (for staff/client) that include this directive at the top.
