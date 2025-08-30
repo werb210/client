@@ -13,14 +13,14 @@ export async function fetchProducts() {
     }
   }
   if (MAY_FALLBACK) {
-    // Use working local API with 42 products until Staff API is complete
+    // Use working local API with 42 products as fallback
     try {
-      const res = await fetch('/api/lender-products');
+      const res = await fetch('/api/v1/products');
       if (res.ok) {
         const data = await res.json();
-        return data.products || data;
+        return Array.isArray(data) ? data : (data.products || data);
       }
-      console.warn("Local API /api/lender-products failed", res.status);
+      console.warn("Local API /api/v1/products failed", res.status);
     } catch (e) {
       console.warn("Local API error", e);
     }

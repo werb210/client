@@ -7,6 +7,6 @@ export const SHARED_TOKEN =
 const FALLBACK =
   (import.meta.env.VITE_LOCAL_FALLBACK ?? "true").toLowerCase() === "true";
 
-// Since Staff API only has 1 product vs local 42, prefer local until Staff is complete
-export const USE_API_FIRST = false; // Disabled until Staff API has full dataset  
-export const MAY_FALLBACK = true; // Use working local API with 42 products
+// Respect environment variables properly
+export const USE_API_FIRST = !FALLBACK; // Use Staff API when local fallback is disabled
+export const MAY_FALLBACK = FALLBACK; // Use local API only when fallback is enabled
