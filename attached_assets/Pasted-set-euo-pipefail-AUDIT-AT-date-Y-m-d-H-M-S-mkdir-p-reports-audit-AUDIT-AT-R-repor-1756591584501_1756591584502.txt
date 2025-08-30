@@ -1,0 +1,63 @@
+set -euo pipefail
+AUDIT_AT="$(date +%Y-%m-%d_%H-%M-%S)"
+mkdir -p reports/audit-$AUDIT_AT && R="reports/audit-$AUDIT_AT"
+echo "🔎 Client audit -> $R"
+
+echo "branch: $(git rev-parse --abbrev-ref HEAD)" | tee "$R/00_context.txt"
+echo "last commit: $(git log -1 --pretty=%h'  '%s)" | tee -a "$R/00_context.txt"
+
+# 1) React routes & pages
+{ rg -nS "<Route\\s+path=|createBrowserRouter|Routes\\s*>" client/src || true; } | tee "$R/10_routes_ui.txt" >/dev/null
+{ rg -nS "export default function |export function " client/src/pages client/src/app || true; } | tee "$R/11_pages_exports.txt" >/dev/null
+
+# 2) API calls issued by the UI
+{ rg -nS "fetch\\(|axios\\.|/api/|/v1/" client/src || true; } | tee "$R/20_api_calls.txt" >/dev/null
+
+# Normalize endpoints used (best-effort)
+grep -Eo "/api(/[a-zA-Z0-9_\\-:]+)+" "$R/20_api_calls.txt" | sed 's/\"\|'\''//g' | sort -u | tee "$R/21_endpoints_used.txt" >/dev/null || true
+
+# 3) Duplicates in components/pages
+git ls-files client/src | awk -F/ '{print $NF}' | sort | uniq -d | tee "$R/30_dupe_filenames.txt" >/dev/null || true
+git ls-files client/src | xargs -I{} sh -c 'sha1sum "{}"' | sort | awk '{print $1}' | uniq -d > "$R/.dupe_hashes" || true
+echo "---- content duplicate hashes ----" | tee "$R/31_dupe_content.txt"
+while read -r h; do
+  echo "# $h" >> "$R/31_dupe_content.txt"
+  git ls-files client/src | xargs -I{} sh -c 'sha1sum "{}"' | awk -v H="$h" '$1==H{print $2}' >> "$R/31_dupe_content.txt"
+done < "$R/.dupe_hashes" || true
+rm -f "$R/.dupe_hashes"
+
+# 4) Step 1 -> Step 2 data path (common root-cause for pending screen)
+{ rg -nS "FormDataContext|useFormData|Step2Recommendation|apply/step-2" client/src || true; } | tee "$R/40_step_linkage.txt" >/dev/null
+{ rg -nS "fundingAmount|requestedAmount|amountRequested|business\\s*:\\s*\\{|industry|country" client/src || true; } | tee "$R/41_step_field_names.txt" >/dev/null
+
+# 5) Env & fallbacks that can mask bugs (local cache vs staff API)
+{ rg -nS "VITE_LOCAL_FALLBACK|LOCAL_FALLBACK|VITE_STAFF_API_URL|CLIENT_APP_SHARED_TOKEN" .env* client/src server || true; } | tee "$R/50_env_flags.txt" >/dev/null
+
+# 6) Live probe (what the client would hit for products/docs)
+BASE="${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+TOK="${VITE_CLIENT_APP_SHARED_TOKEN:-$VITE_CLIENT_APP_SHARED_TOKEN}"
+
+echo "BASE=$BASE" | tee "$R/60_live_probe.txt"
+echo "Token fp (sha256/12): $(node -e 'const c=require(\"crypto\");const s=process.env.VITE_CLIENT_APP_SHARED_TOKEN||\"\";console.log(c.createHash(\"sha256\").update(s).digest(\"hex\").slice(0,12))')" | tee -a "$R/60_live_probe.txt"
+
+for p in "/v1/products" "/lenders" "/required-docs"; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOK" "$BASE$p" || echo "000")
+  echo "GET $p -> $code" | tee -a "$R/60_live_probe.txt"
+done
+
+# 7) Human summary
+{
+  echo "### Client audit @ $AUDIT_AT"
+  echo "- UI routes: $R/10_routes_ui.txt"
+  echo "- Page exports: $R/11_pages_exports.txt"
+  echo "- API calls in code: $R/20_api_calls.txt"
+  echo "- Endpoints used (normalized): $R/21_endpoints_used.txt"
+  echo "- Duplicate filenames: $R/30_dupe_filenames.txt"
+  echo "- Duplicate content:  $R/31_dupe_content.txt"
+  echo "- Step1→2 linkage:   $R/40_step_linkage.txt"
+  echo "- Field names scan:  $R/41_step_field_names.txt"
+  echo "- Env flags:         $R/50_env_flags.txt"
+  echo "- Live probe:        $R/60_live_probe.txt"
+} | tee "$R/README.md"
+
+echo "✅ Client audit done. Open $R/README.md"
