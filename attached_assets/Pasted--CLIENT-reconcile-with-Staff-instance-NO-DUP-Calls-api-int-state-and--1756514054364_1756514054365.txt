@@ -1,0 +1,80 @@
+# ┏━━━━━━━━ CLIENT: reconcile with Staff instance (NO-DUP) ━━━━━━━━┓
+# • Calls /api/_int/state and /api/v1/products with client env/token
+# • Compares product/lender counts, DB host, instance headers, token FP
+# • Fails fast if env/token/instance mismatch is detected
+# • Keeps only canonical endpoints; deletes legacy helpers
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+set -euo pipefail
+
+echo "== CLIENT ENV =="
+echo "VITE_STAFF_API_URL=${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+echo "VITE_CLIENT_APP_SHARED_TOKEN set? $([ -n "${VITE_CLIENT_APP_SHARED_TOKEN:-}" ] && echo yes || echo no)"
+BASE="${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+
+mkdir -p scripts reports
+
+# 1) Reconciliation probe (prints a single JSON blob)
+cat > scripts/reconcile_staff_instance.mjs <<'JS'
+import crypto from "crypto";
+const BASE=(process.env.VITE_STAFF_API_URL||"https://staff.boreal.financial/api").replace(/\/+$/,'');
+const TOK =process.env.VITE_CLIENT_APP_SHARED_TOKEN||"";
+
+async function req(u,opt={}) {
+  const r=await fetch(u,{...opt,headers:{Authorization:`Bearer ${TOK}`,...(opt.headers||{})}});
+  const headers=Object.fromEntries([...r.headers.entries()].map(([k,v])=>[k.toLowerCase(),v]));
+  let body=null; const ct=r.headers.get("content-type")||"";
+  try{ body=ct.includes("json")? await r.json() : await r.text(); }catch{}
+  return {status:r.status, headers, body};
+}
+const fp = s => crypto.createHash("sha256").update(s).digest("hex").slice(0,12);
+
+(async()=>{
+  const state = await req(`${BASE}/_int/state`);
+  const prod  = await req(`${BASE}/v1/products`);
+  const count = Array.isArray(prod.body)? prod.body.length : null;
+  const out = {
+    env_base: BASE,
+    products_status: prod.status,
+    products_count: count,
+    products_headers: {
+      x_db_host: prod.headers["x-db-host"]||null,
+      x_instance: prod.headers["x-instance"]||null,
+      x_git_sha: prod.headers["x-git-sha"]||null
+    },
+    state_status: state.status,
+    state_body: state.body || null,
+    client_token_fp: fp(TOK),
+    token_fp_match: !!(state.body && state.body.token_fp && state.body.token_fp===fp(TOK)),
+    counts_match: !!(typeof count==="number" && state.body && count===state.body.products_count)
+  };
+  console.log(JSON.stringify(out, null, 2));
+  // Exit code signals
+  if (prod.status!==200 || state.status!==200) process.exit(2);
+  if (!out.token_fp_match) process.exit(2);
+  if (!out.counts_match) process.exit(2);
+})();
+JS
+
+# 2) Run reconciliation and quick diff summary
+node scripts/reconcile_staff_instance.mjs | tee reports/reconcile_client.json
+
+echo "== QUICK SUMMARY =="
+node -e 'const o=require("./reports/reconcile_client.json"); console.log({base:o.env_base, prod_count:o.products_count, staff_products:o.state_body?.products_count, db_host_hdr:o.products_headers?.x_db_host, staff_db_host:o.state_body?.db_host, instance:o.products_headers?.x_instance, token_fp_match:o.token_fp_match, counts_match:o.counts_match}); if(!o.token_fp_match||!o.counts_match) process.exit(2);'
+
+# 3) Enforce only canonical endpoints; remove legacy helpers (NO-DUP)
+rm -f src/services/lenderProducts.ts src/services/lender-products.ts 2>/dev/null || true
+if command -v rg >/dev/null 2>&1; then
+  echo "Scanning for legacy endpoints…"
+  if rg -n "/lender-products|/api/products(?!/v1)" src; then
+    echo "❌ Found legacy endpoint references above. Replace with '/v1/products' only."; exit 2;
+  else
+    echo "✔ No legacy endpoint references detected."
+  fi
+fi
+
+# 4) Final product & required-docs check (should match Staff now)
+echo "== CLIENT VERIFY =="
+curl -sS -H "Authorization: Bearer ${VITE_CLIENT_APP_SHARED_TOKEN:-}" "$BASE/v1/products" | jq 'length'
+curl -sS -H "Authorization: Bearer ${VITE_CLIENT_APP_SHARED_TOKEN:-}" "$BASE/required-docs" | jq 'length' || true
+
+echo "✅ CLIENT reconciled with Staff instance (counts + db host + token FP)."
