@@ -1,0 +1,55 @@
+### PLAN
+# 1) Lock environment to Staff API (no local fallback)
+# 2) Ensure fetchProducts() and required-docs use Staff URLs
+# 3) Verify debug state & counts
+# 4) Build/Deploy and validate Step 2 renders recommendations
+
+### 1) SET DEPLOYMENT SECRETS (Deployment → Settings → Deployment secrets)
+- Ensure these exist (and only these drive production):
+  NODE_ENV=production
+  VITE_STAFF_API_URL=https://staff.boreal.financial/api
+  VITE_CLIENT_APP_SHARED_TOKEN=<the shared bearer; fp 294b3e442db5>
+  VITE_LOCAL_FALLBACK=false
+
+# Remove/ignore any local cache flags in production.
+
+### 2) FORCE API CALLS TO STAFF (no file/memory source)
+- In the client API layer (e.g., client/src/api/products.ts), normalize to:
+  const BASE = import.meta.env.VITE_STAFF_API_URL;
+  const TOK  = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN;
+  export async function fetchProducts() {
+    const r = await fetch(`${BASE}/v1/products`, { headers: { Authorization: `Bearer ${TOK}` }});
+    if (!r.ok) throw new Error('products_fetch_failed');
+    return r.json();
+  }
+
+- Step 5 (required docs) should use:
+  GET ${BASE}/required-docs
+  (or ${BASE}/v1/required-docs if that’s your path)
+  with the same Authorization header.
+
+- Ensure the Step 2 recommendation engine uses ONLY fetchProducts() above
+  and does not import/read any local JSON, memory cache, or “local API”.
+
+### 3) DEBUG GUARD (non-blocking)
+- In Step 2 page component, keep a debug hook:
+  (window as any).__step2 = { source: 'staff', productsCount, isComplete, lastError };
+- Remove any logic that silently flips back to local cache when Staff returns data.
+- If Staff returns < 10 items, log a warning but still render what’s available.
+
+### 4) BUILD & DEPLOY
+- Deployment settings:
+  Build command: npm run build
+  Run command:   npm run start
+- Deploy → Promote to production
+
+### 5) VERIFY FROM THE CLIENT SHELL (after deploy)
+- Sanity:
+  echo "token_fp:" && node -e 'const c=require("crypto");console.log(c.createHash("sha256").update(process.env.VITE_CLIENT_APP_SHARED_TOKEN||"").digest("hex").slice(0,12))'
+  curl -s -H "Authorization: Bearer $VITE_CLIENT_APP_SHARED_TOKEN" "https://staff.boreal.financial/api/v1/products" | jq 'length'
+
+- In browser console on Step 2:
+  window.__step2   // expect { source: 'staff', productsCount: ~44, isComplete: true }
+
+### DONE
+# Client Step 2 (and Step 5) now use Staff’s canonical API only.

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, ArrowRight, Loader2 } from 'lucide-react';
-import { useFormData } from "@/context/FormDataContext";
+import { useFormDataContext } from "@/context/FormDataContext";
 import { fetchProducts } from "@/api/products";
 
 type Props = {
@@ -15,24 +15,34 @@ type Props = {
 };
 
 export default function Step2RecommendationEngine(props: Props) {
-  const { data, isComplete } = useFormData();
+  const { state } = useFormDataContext();
   const [products, setProducts] = useState<any[] | null>(null);
   const [reason, setReason] = useState<string | null>(null);
 
+  // Check if Step 1 data exists
+  const step1Data = state?.step1 || {};
+  const hasStep1Data = step1Data.fundingAmount && step1Data.fundingAmount > 0;
+
   useEffect(() => {
-    if (!isComplete) {
-      setReason("Missing or unnormalized Step-1 values (amount, etc.)");
+    if (!hasStep1Data) {
+      setReason("Missing Step 1 data (funding amount required)");
       return;
     }
     fetchProducts()
       .then((p) => setProducts(p))
       .catch((e) => setReason(`Failed to load products: ${e}`));
-  }, [isComplete]);
+  }, [hasStep1Data]);
 
   // expose quick debug in dev
-  (window as any).__step2 = { data, isComplete, productsCount: products?.length, reason };
+  (window as any).__step2 = { 
+    step1Data, 
+    hasStep1Data, 
+    productsCount: products?.length, 
+    reason,
+    fullState: state 
+  };
 
-  if (!isComplete || !products) {
+  if (!hasStep1Data || !products) {
     return (
       <div className="mx-auto max-w-xl">
         <div className="rounded-lg border p-4">
@@ -41,7 +51,8 @@ export default function Step2RecommendationEngine(props: Props) {
             {reason ?? "Loading…"}
           </div>
           <div className="mt-2 text-xs text-gray-400">
-            Debug: isComplete={String(isComplete)}, products={products?.length ?? 'null'}, reason={reason}
+            Debug: hasStep1Data={String(hasStep1Data)}, products={products?.length ?? 'null'}, reason={reason}
+            <br/>Step1: fundingAmount={step1Data.fundingAmount || 'missing'}
           </div>
         </div>
       </div>
@@ -50,10 +61,11 @@ export default function Step2RecommendationEngine(props: Props) {
 
   // Simple filtering for eligible products
   const eligibleProducts = products.filter((p: any) => {
-    const matchesAmount = !data?.requestedAmount || !data?.fundingAmount || 
-                         ((data?.requestedAmount || 0) >= (p.minAmount || 0) && 
-                          (data?.requestedAmount || 0) <= (p.maxAmount || Number.MAX_SAFE_INTEGER));
-    const isActive = p.isActive !== false;
+    const requestedAmount = step1Data?.fundingAmount || 0;
+    const matchesAmount = requestedAmount === 0 || 
+                         (requestedAmount >= (p.min_amount || 0) && 
+                          requestedAmount <= (p.max_amount || Number.MAX_SAFE_INTEGER));
+    const isActive = p.active !== false;
     return matchesAmount && isActive;
   });
 
@@ -65,7 +77,7 @@ export default function Step2RecommendationEngine(props: Props) {
           <CardTitle>Recommended Loan Products</CardTitle>
         </div>
         <CardDescription>
-          Found {eligibleProducts.length} matching products for ${(data?.requestedAmount || data?.fundingAmount || 0).toLocaleString()}
+          Found {eligibleProducts.length} matching products for ${(step1Data?.fundingAmount || 0).toLocaleString()}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -74,11 +86,11 @@ export default function Step2RecommendationEngine(props: Props) {
             <div key={product.id} className="rounded-xl border p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="font-medium text-lg">{product.productName || product.name}</div>
-                  <div className="text-sm text-gray-600">{product.lender || product.lender_name}</div>
+                  <div className="font-medium text-lg">{product.name}</div>
+                  <div className="text-sm text-gray-600">{product.lender_name}</div>
                   <div className="text-sm text-gray-500">{product.category}</div>
                   <div className="text-xs text-gray-400 mt-1">
-                    ${(product.minAmount || 0).toLocaleString()} - ${(product.maxAmount || 999999999).toLocaleString()}
+                    ${(product.min_amount || 0).toLocaleString()} - ${(product.max_amount || 999999999).toLocaleString()}
                   </div>
                 </div>
                 <Button 
