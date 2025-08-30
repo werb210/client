@@ -219,7 +219,7 @@ export function MainLayout() {
       <Route path="/apply/step-1" component={Step1FinancialProfile} />
       <Route path="/apply/step-2" component={Step2RecommendationsRoute} />
       <Route path="/apply/step-3" component={Step3BusinessDetailsComplete} />
-      {/* All routes restored - the issue was the global DocumentWarningBanner! */}
+      {/* Testing all steps together */}
       <Route path="/apply/step-4" component={() => <Suspense fallback={<div>Loading...</div>}><Step4ApplicantInfoComplete /></Suspense>} />
       <Route path="/apply/step-5" component={() => <Suspense fallback={<div>Loading...</div>}><Step5DocumentUpload /></Suspense>} />
       <Route path="/apply/step-6" component={() => <Suspense fallback={<div>Loading...</div>}><Step6TypedSignature /></Suspense>} />

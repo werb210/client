@@ -33,6 +33,7 @@ export function AppShell({ children }: AppShellProps) {
       <QueryClientProvider client={queryClient}>
         <FormDataProvider>
           <ApplicationProvider>
+            {/* Testing both providers together */}
             <ComprehensiveFormProvider>
               {/* DocumentWarningBanner temporarily disabled due to undefined context property access */}
               {children}
