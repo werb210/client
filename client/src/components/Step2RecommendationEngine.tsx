@@ -101,7 +101,7 @@ function Step2RecommendationEngine(props: Props) {
             <CardTitle>Finding matches...</CardTitle>
           </div>
           <CardDescription>
-            Analyzing your profile: ${fmt(intake.amountRequestedRequested || 0)} • Country: {intake.country} • Revenue: ${fmt(intake.avgMonthlyRevenue || 0)}
+            Analyzing your profile: ${fmt(intake.amountRequested || 0)} • Country: {intake.country} • Revenue: ${fmt(intake.avgMonthlyRevenue || 0)}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -151,7 +151,7 @@ function Step2RecommendationEngine(props: Props) {
             <CardTitle>Recommended Loan Products</CardTitle>
           </div>
           <CardDescription>
-            Based on your profile: ${fmt(intake.amountRequestedRequested || 0)} • {intake.industry || 'business'} • {intake.country}
+            Based on your profile: ${fmt(intake.amountRequested || 0)} • {intake.industry || 'business'} • {intake.country}
           </CardDescription>
         </CardHeader>
         <CardContent>
