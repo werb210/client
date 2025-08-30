@@ -139,6 +139,7 @@ export default function Step1FinancialProfile() {
   const { state, dispatch } = useFormDataContext();
   const [location, setLocation] = useLocation();
   const { submitApplication, isSubmitting, error } = useSubmitApplication();
+  const { save: saveToNewContext } = useFormData();
 
   // Initialize application ID and restore autosave data
   useEffect(() => {
@@ -350,6 +351,15 @@ export default function Step1FinancialProfile() {
       };
       saveIntake(intake);
       logger.log('✅ Intake data saved for Step 2');
+
+      // CRITICAL: Save to new FormDataContext for Step 2
+      saveToNewContext({
+        requestedAmount: step1Payload.fundingAmount,
+        fundingAmount: step1Payload.fundingAmount,
+        businessLocation: step1Payload.headquarters,
+        industry: step1Payload.industry
+      });
+      logger.log('✅ Data saved to new FormDataContext');
 
       logger.log('✅ Form data dispatched to context');
 
