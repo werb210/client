@@ -110,10 +110,24 @@ export default function Step2RecommendationEngine(props: Props){
   }, [products, amount, country]);
 
   if (loading) return <Pending msg="Loading live products…" />;
-  if (error)   return <Pending msg={`Products error: ${error}`} />;
+  if (error)   return <Pending msg={`Products error: ${error} | Debug: Check console for window.__step2`} />;
+
+  // Debug the filtering issue
+  console.log('🔍 [STEP2] Product filtering debug:', {
+    totalProducts: products.length,
+    eligibleProducts: eligible.length,
+    intake: { amount, country },
+    firstProduct: products[0] ? {
+      name: products[0].name,
+      country: products[0].country,
+      min_amount: products[0].min_amount,
+      max_amount: products[0].max_amount,
+      active: products[0].active
+    } : null
+  });
 
   if (!eligible.length) {
-    return <Pending msg="No eligible products after filters. Adjust amount or check intake fields." />;
+    return <Pending msg={`No eligible products after filters. Found ${products.length} total products but 0 eligible. Check console for filtering details.`} />;
   }
 
   return <ProductList products={eligible} intake={intake} onProductSelect={props.onProductSelect} onContinue={props.onContinue} />; // your real renderer
