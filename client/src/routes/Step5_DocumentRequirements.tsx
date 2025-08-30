@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useFormDataContext } from '@/context/FormDataContext';
+import { useComprehensiveForm } from '@/context/ComprehensiveFormContext';
 import { useLocation } from 'wouter';
 import { StepHeader } from '@/components/StepHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,13 +10,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLenderProducts } from '@/hooks/useLenderProducts';
 
 export default function Step5DocumentRequirements() {
-  const { state, dispatch } = useFormDataContext();
+  const { state, dispatch } = useComprehensiveForm();
   const [, setLocation] = useLocation();
 
-  // Get selected product from Step 2 - check multiple possible field names
+  // Get selected product from Step 2 - check multiple possible field names  
   const selectedProductId = state.selectedProduct || state.step2?.selectedProduct || state.step2?.selectedCategory;
-  const { products } = useLenderProducts();
-  const selectedProduct = products?.find(p => p.id === selectedProductId);
+  const productsQuery = useLenderProducts();
+  const selectedProduct = productsQuery.data?.find((p: any) => p.id === selectedProductId);
 
   // Get required documents from selected product
   const requiredDocs = selectedProduct?.requiredDocuments || [

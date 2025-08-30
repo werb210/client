@@ -1,10 +1,10 @@
-import { useFormDataContext } from '@/context/FormDataContext';
+import { useComprehensiveForm } from '@/context/ComprehensiveFormContext';
 import { useLocation } from 'wouter';
 import { StepHeader } from '@/components/StepHeader';
-import { Step2RecommendationEngine } from '@/components/Step2RecommendationEngine';
+import Step2RecommendationEngine from '@/components/Step2RecommendationEngine';
 
 export default function Step2Recommendations() {
-  const { state, dispatch } = useFormDataContext();
+  const { state, dispatch } = useComprehensiveForm();
   const [, setLocation] = useLocation();
 
   // Pull from (1) form context, (2) localStorage backup, (3) empty fallback
