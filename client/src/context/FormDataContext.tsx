@@ -61,10 +61,10 @@ function persistIntake(i: Intake) {
 }
 
 // Call this when Step-1 completes:
-export function onStep1Submit(raw:any){
+export function onStep1Submit(raw:any, navigateToStep2: () => void){
   const intake = normalizeIntake(raw);
   persistIntake(intake);
-  // …navigate to Step-2
+  navigateToStep2();  // SPA navigation — no full reload
 }
 
 export function normalize(raw: Partial<ApplicationForm>): ApplicationForm {

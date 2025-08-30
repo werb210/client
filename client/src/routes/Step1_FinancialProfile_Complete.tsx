@@ -352,9 +352,11 @@ export default function Step1FinancialProfile() {
       saveIntake(intake);
       logger.log('✅ Intake data saved for Step 2');
 
-      // CRITICAL: Save using the new normalized intake approach
+      // CRITICAL: Save using the new normalized intake approach with SPA navigation
       import('@/context/FormDataContext').then(({ onStep1Submit }) => {
-        onStep1Submit(step1Payload);
+        onStep1Submit(step1Payload, () => {
+          setLocation('/step2');  // SPA navigation — no full reload
+        });
         logger.log('✅ Normalized intake persisted for Step 2');
       });
 
@@ -369,8 +371,8 @@ export default function Step1FinancialProfile() {
 
       logger.log('✅ Form data dispatched to context');
 
-      // Just proceed to Step 2 without submitting application
-      console.log('✅ Step 1 data saved, proceeding to Step 2');
+      // SPA navigation handled in onStep1Submit - no separate navigation needed
+      console.log('✅ Step 1 data saved, SPA navigation will proceed to Step 2');
 
       // Emit GTM step_completed event
       const applicationId = getStoredApplicationId();

@@ -4,12 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Target, ArrowRight } from 'lucide-react';
 
-const requireIntake = (): any => {
+const requireIntake = () => {
   const s = sessionStorage.getItem('bf:intake') || localStorage.getItem('bf:intake');
   return s ? JSON.parse(s) : null;
 };
 
 const failSafeNumber = (n:any) => (typeof n === 'number' && !Number.isNaN(n)) ? n : 0;
+
+function Pending({msg}:{msg:string}) {
+  return <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">{msg}</div>;
+}
 
 type Props = {
   formData?: any;
@@ -41,7 +45,6 @@ export default function Step2RecommendationEngine(props: Props){
   // Early diagnostics into window
   (window as any).__step2 = { ...(window as any).__step2, loading, error, intake, productsCount: products.length };
 
-  // Guard: if intake missing, show explicit message (not generic "pending")
   if (!intake) return <Pending msg="Missing Step 1 data. Please complete Step 1." />;
 
   // Normalize once
@@ -72,14 +75,6 @@ export default function Step2RecommendationEngine(props: Props){
   }
 
   return <ProductList products={eligible} intake={intake} onProductSelect={props.onProductSelect} onContinue={props.onContinue} />; // your real renderer
-}
-
-function Pending({msg}:{msg:string}) {
-  return (
-    <div className="rounded-md border p-6 text-center text-sm text-muted-foreground">
-      {msg}
-    </div>
-  );
 }
 
 function ProductList({ products, intake, onProductSelect, onContinue }: { 

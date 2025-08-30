@@ -15,6 +15,11 @@ import("./lib/fetch-guard").catch(console.warn);
 // Install audit hook for lender products validation
 installAuditHook();
 
+// Disable service worker in dev to prevent state nuking
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
