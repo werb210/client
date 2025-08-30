@@ -14,7 +14,9 @@ const toNum = (v: unknown) =>
   typeof v === 'number' ? v : Number(String(v ?? '').replace(/[^\d.-]/g, '') || 0);
 
 export function normalizeStep1(raw: Record<string, unknown>): Intake {
-  return {
+  console.log('🔧 [normalizeStep1] Raw input:', raw);
+  
+  const result = {
     capitalUse: String(raw.capitalUse ?? raw.purpose ?? raw.lookingFor ?? raw.fundsPurpose ?? '').trim(),
     amountRequested: toNum(raw.amountRequested ?? raw.fundingAmount ?? raw.amount ?? raw.requestedAmount),
     country: (String(raw.businessLocation ?? raw.country ?? raw.headquarters ?? '').includes('Canada') ? 'CA' : 'US') as 'US'|'CA',
@@ -29,6 +31,9 @@ export function normalizeStep1(raw: Record<string, unknown>): Intake {
     arBalance: toNum(raw.currentAccountReceivableBalance ?? raw.arBalance ?? raw.accountsReceivableBalance),
     fixedAssets: toNum(raw.fixedAssetsValue ?? raw.fixedAssets),
   };
+  
+  console.log('🔧 [normalizeStep1] Normalized result:', result);
+  return result;
 }
 
 const KEY = 'bf:intake';

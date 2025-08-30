@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Target, ArrowRight, Loader2 } from 'lucide-react';
 import { normalizeStep1, loadIntake, type Intake } from '@/utils/normalizeIntake';
-import { fetchProducts } from '@/api/products';
-import { eligible, score, type Product } from '@/engine/recommend';
+import { fetchLenderProducts } from '@/api/lenderProducts';
 import { useQuery } from '@tanstack/react-query';
 
 // Utility function for formatting currency
@@ -69,27 +68,30 @@ function Step2RecommendationEngine(props: Props) {
   const fmt = (n: number) => (Number.isFinite(n) ? n.toLocaleString() : '—');
 
   const { data: products, isLoading, error } = useQuery({
-    queryKey: ["staffProducts"],
-    queryFn: fetchProducts
+    queryKey: ["lenderProducts"],
+    queryFn: fetchLenderProducts
   });
 
-  // Use the new recommendation engine!
+  // Use the recommendation engine!
   const recommendations = useMemo(() => {
-    if (!products?.length) return [];
+    if (!products?.products?.length) return [];
     
-    console.log('🎯 Using new recommendation engine with intake:', intake);
+    console.log('🎯 Using recommendation engine with intake:', intake);
+    console.log('🎯 Available products:', products.products.length);
     
-    try {
-      // Filter eligible products and score them
-      const matches = products.filter(p => eligible(p as Product, intake))
-                              .sort((a, b) => score(b as Product, intake) - score(a as Product, intake));
+    // Simple filtering based on country and amount
+    const filtered = products.products.filter((p: any) => {
+      const matchesCountry = !intake.country || p.countryOffered === intake.country || 
+                            (intake.country === 'US' && (p.countryOffered === 'United States' || p.countryOffered === 'US'));
+      const matchesAmount = !intake.amountRequested || 
+                           (intake.amountRequested >= (p.minAmount || 0) && 
+                            intake.amountRequested <= (p.maxAmount || Number.MAX_SAFE_INTEGER));
       
-      console.log(`🏆 Generated ${matches.length} recommendations from ${products.length} products`);
-      return matches.map(p => ({ product: p, matchScore: score(p as Product, intake), recommendationLevel: 'good' as const }));
-    } catch (error) {
-      console.warn('⚠️ Recommendation engine error:', error);
-      return [];
-    }
+      return matchesCountry && matchesAmount && p.isActive !== false;
+    });
+    
+    console.log(`🏆 Generated ${filtered.length} recommendations from ${products.products.length} products`);
+    return filtered.map((p: any) => ({ product: p, matchScore: 80, recommendationLevel: 'good' as const }));
   }, [products, intake]);
 
   if (isLoading) {
