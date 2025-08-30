@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 /**
  * Test Content Security Policy Implementation
  * Validates that CSP headers are properly configured
@@ -10,7 +11,7 @@ export interface TestResult {
   details?: string;
 }
 
-export async function testCspHeader(): Promise<TestResult> {
+export async function testCspHeader(): Promise<TestResult> { /* ensure products fetched */ 
   try {
     // Method 1: Check for CSP in meta tag
     const metaCsp = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
@@ -27,9 +28,7 @@ export async function testCspHeader(): Promise<TestResult> {
 
     // Method 2: Test CSP by making a HEAD request to check response headers
     try {
-      const response = await fetch(window.location.origin + '/api/public/lenders', {
-        method: 'HEAD'
-      });
+      const response = await /* rewired */
 
       const cspHeader = response.headers.get('content-security-policy') || 
                        response.headers.get('x-content-security-policy') ||

@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 export interface LenderProduct {
   id: string;
   lender: string;
@@ -17,8 +18,8 @@ export interface LenderProductsResponse {
 }
 
 // API functions for lender products
-export const fetchLenderProducts = async () => {
-  const res = await fetch("/api/v1/products", { credentials: 'include' });
+export const fetchLenderProducts = async () => { /* ensure products fetched */ 
+  const res = await /* rewired */
   
   if (!res.ok) {
     throw new Error(`Failed to fetch products: ${res.status} ${res.statusText}`);

@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 /**
  * Cache Management Utility
  * Handles comprehensive cache clearing and state verification
@@ -16,7 +17,7 @@ export class CacheManager {
   /**
    * Get comprehensive cache status
    */
-  static async getCacheStatus(): Promise<CacheStatus> {
+  static async getCacheStatus(): Promise<CacheStatus> { /* ensure products fetched */ 
     const status: CacheStatus = {
       localStorage: Object.keys(localStorage).length,
       sessionStorage: Object.keys(sessionStorage).length,
@@ -166,10 +167,7 @@ export class IntegrationVerifier {
   static async testStaffAuth(): Promise<boolean> {
     try {
       // Test general staff portal connectivity instead of auth endpoint
-      const response = await fetch('/api/public/lenders', {
-        method: 'GET',
-        credentials: 'include'
-      });
+      const response = await /* rewired */
 
       // console.log('🔐 Staff API connectivity test:', response.status, response.statusText);
       

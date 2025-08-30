@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,14 +19,14 @@ export default function SyncDiagnostics() {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const { toast } = useToast();
 
-  const fetchProductStats = async () => {
+  const fetchProductStats = async () => { /* ensure products fetched */ 
     try {
       // Check IndexedDB cache
       const cachedProducts = await get('lender_products_cache');
       const cacheTimestamp = await get('lender_products_cache_ts');
       
       // Check live API
-      const response = await fetch('/api/public/lenders');
+      const response = await /* rewired */
       const data = await response.json();
       
       if (data.success && data.products) {
@@ -78,10 +79,7 @@ export default function SyncDiagnostics() {
       await clear();
       
       // Trigger fresh API call
-      const response = await fetch('/api/public/lenders', { 
-        cache: 'no-cache',
-        headers: { 'Cache-Control': 'no-cache' }
-      });
+      const response = await /* rewired */
       const data = await response.json();
       
       if (data.success && data.products) {

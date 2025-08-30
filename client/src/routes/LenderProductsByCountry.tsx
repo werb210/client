@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { fetchProducts } from "../api/products";
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,8 +35,8 @@ interface ProductsByCountry {
   [country: string]: LenderProduct[];
 }
 
-async function fetchLenderProductsByCountry(): Promise<ProductsByCountry> {
-  const response = await fetch('/api/public/lenders');
+async function fetchLenderProductsByCountry(): Promise<ProductsByCountry> { /* ensure products fetched */ 
+  const response = await /* rewired */
   if (!response.ok) {
     throw new Error('Failed to fetch lender products');
   }
@@ -143,7 +144,8 @@ export default function LenderProductsByCountry() {
     Array.from(new Set(Object.values(productsByCountry).flat().map(p => p.type))) : [];
 
   if (isLoading) {
-    return (
+    const products = await fetchProducts();
+return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>

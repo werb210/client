@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 /**
  * OpenAPI schema types for Staff API V2
  * Generated from staff portal expanded lender product schema

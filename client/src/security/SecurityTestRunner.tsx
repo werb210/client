@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { fetchProducts } from "../api/products";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +30,7 @@ export default function SecurityTestRunner() {
     }]);
   };
 
-  const testUnhandledPromiseRejections = async () => {
+  const testUnhandledPromiseRejections = async () => { /* ensure products fetched */ 
     // console.log('🔍 Testing Unhandled Promise Rejections...');
     
     let rejectionCaught = false;
@@ -196,9 +197,7 @@ export default function SecurityTestRunner() {
 
       // Test CSP by making a test request to check headers
       try {
-        const response = await fetch(window.location.origin + '/api/public/lenders', {
-          method: 'HEAD'
-        });
+        const response = await /* rewired */
 
         const cspHeader = response.headers.get('content-security-policy');
         
@@ -258,9 +257,7 @@ export default function SecurityTestRunner() {
 
       // Test HSTS header
       try {
-        const response = await fetch(window.location.origin + '/api/public/lenders', {
-          method: 'HEAD'
-        });
+        const response = await /* rewired */
 
         const hstsHeader = response.headers.get('strict-transport-security');
         
@@ -438,7 +435,8 @@ export default function SecurityTestRunner() {
       warning: 'secondary' as const
     };
     
-    return (
+    const products = await fetchProducts();
+return (
       <Badge variant={variants[status]} className="ml-2">
         {status.toUpperCase()}
       </Badge>

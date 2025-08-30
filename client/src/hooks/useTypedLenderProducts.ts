@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 /**
  * Strongly-typed lender products hook using generated OpenAPI types
  * Provides type-safe access to the V2 lender product schema
@@ -21,7 +22,7 @@ interface LenderProductFilters {
 /**
  * Strongly-typed fetch function for lender products
  */
-async function fetchTypedLenderProducts(filters?: LenderProductFilters): Promise<LenderProductsResponse> {
+async function fetchTypedLenderProducts(filters?: LenderProductFilters): Promise<LenderProductsResponse> { /* ensure products fetched */ 
   const url = new URL('/api/public/lenders', window.location.origin);
   
   // Add filters as query parameters

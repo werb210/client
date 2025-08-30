@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 /**
  * Document Aggregation Logic for Step 5
  * Implements union of all required documents across eligible lender products
@@ -47,7 +48,7 @@ export async function getDocumentRequirementsAggregation(
   selectedCategory: string,
   selectedCountry: string,
   requestedAmount: number,
-  userProfile: UserProfile = {}
+  userProfile: UserProfile = { /* ensure products fetched */ }
 ): Promise<DocumentAggregationResult> {
   
   console.log(`🔍 [AGGREGATION] Starting document aggregation for: "${selectedCategory}" in ${selectedCountry} for $${requestedAmount.toLocaleString()}`);
@@ -60,28 +61,15 @@ export async function getDocumentRequirementsAggregation(
   
   try {
     // Fetch all lender products from staff API - FIXED ENDPOINT
-    const response = await fetch('/api/v1/products');
+    const { fetchProducts } = await import('../api/products');
+    const allProducts = await fetchProducts();
     
-    if (!response.ok) {
+    if (allProducts.length === 0) {
       throw new Error(`Staff API error: ${response.status}`);
     }
     
-    const data = await response.json();
-    
-    console.log(`📊 [AGGREGATION] API response received, processing data...`);
-    
-    // Handle both direct array and wrapped response formats
-    let allProducts;
-    if (Array.isArray(data)) {
-      allProducts = data;
-      console.log(`📦 [AGGREGATION] Direct array response: ${allProducts.length} products`);
-    } else if (data.success && Array.isArray(data.products)) {
-      allProducts = data.products;
-      console.log(`📦 [AGGREGATION] Wrapped response: ${allProducts.length} products`);
-    } else {
-      console.error('❌ [AGGREGATION] Invalid API response format:', data);
-      throw new Error('Invalid API response format');
-    }
+    console.log(`📊 [AGGREGATION] Products fetched successfully, processing data...`);
+    console.log(`📦 [AGGREGATION] Product count: ${allProducts.length} products`);
     
     // ✅ CRITICAL FIX: Map Step 2 category names to backend category names
     const categoryMappings: Record<string, string[]> = {
@@ -293,7 +281,7 @@ export async function validateLenderProductDocumentFields(): Promise<{
   sampleDocumentField: string;
 }> {
   try {
-    const response = await fetch('/api/public/lenders');
+    const response = await /* rewired */
     const data = await response.json();
     
     if (!data.success || !data.products) {

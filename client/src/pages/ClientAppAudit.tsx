@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchProducts } from "../api/products";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -23,7 +24,7 @@ export function ClientAppAudit() {
     });
   };
 
-  const runComprehensiveAudit = async () => {
+  const runComprehensiveAudit = async () => { /* ensure products fetched */ 
     setIsRunning(true);
     setAuditResults([]);
 
@@ -64,7 +65,7 @@ export function ClientAppAudit() {
     // API CONNECTIVITY TEST
     updateResult('APIConnectivity', 'TESTING', 'Testing API connectivity to Staff App...');
     try {
-      const lendersResponse = await fetch('/api/public/lenders');
+      const lendersResponse = await /* rewired */
       if (lendersResponse.ok) {
         const lenders = await lendersResponse.json();
         const lenderCount = Array.isArray(lenders) ? lenders.length : 0;
@@ -219,7 +220,8 @@ export function ClientAppAudit() {
     return JSON.stringify(report, null, 2);
   };
 
-  return (
+  const products = await fetchProducts();
+return (
     <div className="container mx-auto p-6 max-w-6xl">
       <Card className="mb-6">
         <CardHeader>

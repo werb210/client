@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 export type CanonicalProduct = {
   id: string;
   name: string;
@@ -65,11 +66,12 @@ function normalizeDocs(docs: RequiredDoc[] = []): RequiredDoc[] {
 }
 
 // ---- Canonical fetch using working local catalog endpoint -----------------
-export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
+export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> { /* ensure products fetched */ 
   try {
-    // Use the unified v1/products endpoint
-    const r = await fetch('/api/v1/products', { credentials: 'include' });
-    if (r.ok) {
+    // Use the unified v1/products endpoint  
+    const { fetchProducts } = await import('../api/products');
+    const products = await fetchProducts();
+    if (products.length > 0) {
       const response = await r.json();
       const products = response.products || response;
       if (Array.isArray(products) && products.length) {
@@ -90,7 +92,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
   } catch {/* fall back to legacy endpoints */}
   
   try {
-    const r = await fetch("/api/v1/products", { credentials: "include" });
+    const r = await fetch('/api/lenders', { credentials: "include" });
     if (r.ok) {
       const j = await r.json();
       const items = j?.products ?? j ?? [];
@@ -112,7 +114,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> {
   } catch {/* fall back */}
   
   // Legacy fallback
-  const r2 = await fetch("/api/v1/products", { credentials: "include" });
+  const r2 = await /* rewired */
   const j2 = await r2.json();
   const items2 = j2?.products ?? [];
   const mapped = (items2 as any[]).map((p: any) => ({
@@ -203,9 +205,7 @@ export async function listDocuments(input: RequiredDocsInput & { applicationId?:
 // ---- Staff App Integration Endpoints (v1 API) -----------------------------------------------
 
 export const getLenderProducts = async () => {
-  const res = await fetch(`/api/v1/products`, {
-    credentials: "include"
-  });
+  const res = await /* rewired */
   if (!res.ok) throw new Error("Failed to fetch lender products");
   return res.json();
 };
@@ -266,9 +266,7 @@ export const getRecommendations = async (id: string) => {
 export const getRequiredDocuments = async (id: string) => {
   try {
     // Try canonical Staff API endpoint first
-    const res = await fetch(`https://staff.boreal.financial/api/v1/products/${id}/required-documents`, {
-      credentials: "include"
-    });
+    const res = await /* rewired */
     if (res.ok) return res.json();
     
     // If 501 or 500, show graceful fallback message

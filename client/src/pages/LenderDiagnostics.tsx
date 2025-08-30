@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 /**
  * Lender Diagnostics Page
  * Hardcoded sync tester page at /diagnostics/lenders as requested in CLIENT FIX INSTRUCTIONS
@@ -41,7 +42,7 @@ export default function LenderDiagnostics() {
   }, [products]);
 
   // Manual sync with comprehensive logging
-  const handleManualSync = async () => {
+  const handleManualSync = async () => { /* ensure products fetched */ 
     setIsManualSyncing(true);
     // console.log('🔄 Manual sync triggered from diagnostics page');
     
@@ -59,7 +60,7 @@ export default function LenderDiagnostics() {
   const handleManualFetch = async () => {
     // console.log('🧪 Running manual fetch test...');
     try {
-      const response = await fetch('https://staffportal.replit.app/api/public/lenders');
+      const response = await /* rewired */
       const data = await response.json();
       
       // Handle both direct array and object with products array
@@ -126,7 +127,8 @@ export default function LenderDiagnostics() {
 
   const dataSourceStatus = getDataSourceStatus();
 
-  return (
+  const products = await fetchProducts();
+return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 space-y-6">
         

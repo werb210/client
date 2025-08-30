@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 /**
  * CLIENT VERIFICATION DIAGNOSTIC PAGE
  * Tests IndexedDB caching, sync behavior, and Step 2/5 access patterns
@@ -40,7 +41,7 @@ export default function ClientVerificationDiagnostic() {
   };
 
   // Test 1: Verify Cached Product Retrieval
-  const test1_VerifyCache = async () => {
+  const test1_VerifyCache = async () => { /* ensure products fetched */ 
     addLog('🔍 Starting Test 1: Verify Cached Product Retrieval');
     updateTestResult(0, 'running', 'Checking IndexedDB cache...');
     
@@ -74,7 +75,7 @@ export default function ClientVerificationDiagnostic() {
     updateTestResult(1, 'running', 'Attempting to sync with staff API...');
     
     try {
-      const response = await fetch('/api/public/lenders');
+      const response = await /* rewired */
       
       if (!response.ok) {
         addLog(`❌ Staff API not available: ${response.status} ${response.statusText}`);
@@ -279,7 +280,8 @@ export default function ClientVerificationDiagnostic() {
     }
   };
 
-  return (
+  const products = await fetchProducts();
+return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Client Verification Diagnostic</h1>

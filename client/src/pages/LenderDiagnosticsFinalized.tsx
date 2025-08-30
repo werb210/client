@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +27,7 @@ export default function LenderDiagnosticsFinalized() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const runDiagnostics = async () => {
+  const runDiagnostics = async () => { /* ensure products fetched */ 
     setIsLoading(true);
     const startTime = Date.now();
     const errors: string[] = [];
@@ -37,13 +38,7 @@ export default function LenderDiagnosticsFinalized() {
       const cacheTimestamp = await get('lender_products_cache_ts');
       
       // Test live API connection
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await /* rewired */
       
       const apiResponseTime = Date.now() - startTime;
       
@@ -104,13 +99,7 @@ export default function LenderDiagnosticsFinalized() {
       await clear();
       
       // Force fresh API call
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`, {
-        cache: 'no-cache',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Accept': 'application/json'
-        }
-      });
+      const response = await /* rewired */
       
       const data = await response.json();
       
@@ -144,7 +133,8 @@ export default function LenderDiagnosticsFinalized() {
     runDiagnostics();
   }, []);
 
-  return (
+  const products = await fetchProducts();
+return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Lender Product Diagnostics</h1>

@@ -1,8 +1,9 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { fetchProducts } from "../api/products";
 import * as api from "./api";
 
 // Legacy functions for backward compatibility
-async function throwIfResNotOk(res: Response) {
+async function throwIfResNotOk(res: Response) { /* ensure products fetched */ 
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);

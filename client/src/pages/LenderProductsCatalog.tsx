@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { fetchProducts } from "../api/products";
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +46,8 @@ export default function LenderProductsCatalog() {
   });
 
   if (isLoading) {
-    return (
+    const products = await fetchProducts();
+return (
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">

@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 /**
  * Lender Product Sync System
  * Production-ready sync with retry logic, background updates, and data preservation
@@ -34,20 +35,11 @@ function calculateProductHash(products: any[]): string {
 /**
  * Fetch lender products from staff API with comprehensive error handling
  */
-async function fetchFromStaffAPI(): Promise<{ data: any[]; hash: string } | null> {
+async function fetchFromStaffAPI(): Promise<{ /* ensure products fetched */  data: any[]; hash: string } | null> {
   try {
     // console.log('[SYNC] Fetching from staff API: GET /api/public/lenders');
     
-    const response = await fetch('/api/public/lenders', {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      credentials: 'include'
-    }).catch(fetchError => {
-      // Handle fetch failures gracefully
-      console.warn('[SYNC] Network error during fetch:', fetchError.message);
+    const response = await /* rewired */
       throw new Error(`Network error: ${fetchError.message}`);
     });
 

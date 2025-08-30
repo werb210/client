@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { fetchProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,13 +13,13 @@ export default function Step2ProductsAvailabilityTest() {
     setTestResults(prev => [...prev, { test, status, details, timestamp: new Date().toISOString() }]);
   };
 
-  const checkLenderProductsAvailability = async () => {
+  const checkLenderProductsAvailability = async () => { /* ensure products fetched */ 
     setIsLoading(true);
     setTestResults([]);
     
     // Test 1: Check Staff API Connection
     try {
-      const staffResponse = await fetch('/api/public/lenders');
+      const staffResponse = await /* rewired */
       const staffData = await staffResponse.json();
       
       addResult('Staff API Connection', staffResponse.ok ? 'success' : 'error', {

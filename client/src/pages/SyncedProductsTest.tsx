@@ -1,4 +1,5 @@
 import React from 'react';
+import { fetchProducts } from "../api/products";
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,10 +25,9 @@ export default function SyncedProductsTest() {
   // Test synced lender products endpoint
   const { data: products = [], isLoading, error } = useQuery<Product[]>({
     queryKey: ['synced-products-test'],
-    queryFn: async () => {
+    queryFn: async () => { /* ensure products fetched */ 
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`).catch(fetchError => {
-          console.warn('[SYNCED_PRODUCTS_TEST] Network error:', fetchError.message);
+        const res = await /* rewired */
           throw new Error(`Network error: ${fetchError.message}`);
         });
         
@@ -80,7 +80,8 @@ export default function SyncedProductsTest() {
     return <XCircle className="w-5 h-5 text-red-500" />;
   };
 
-  return (
+  const products = await fetchProducts();
+return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-gray-900">Synced Products Integration Test</h1>

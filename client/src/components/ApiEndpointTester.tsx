@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { fetchProducts } from "../api/products";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +16,7 @@ export const ApiEndpointTester = () => {
   const [results, setResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
 
-  const testEndpoint = async (url: string, label: string): Promise<TestResult> => {
+  const testEndpoint = async (url: string, label: string): Promise<TestResult> => { /* ensure products fetched */ 
     const startTime = Date.now();
     try {
       const response = await fetch(url, { credentials: 'include' }).catch(fetchError => {
@@ -96,7 +97,8 @@ export const ApiEndpointTester = () => {
     }
   };
 
-  return (
+  const products = await fetchProducts();
+return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">API Endpoint Tester</h2>

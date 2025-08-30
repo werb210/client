@@ -1,9 +1,10 @@
+import { fetchProducts } from "../api/products";
 /**
  * Schema + Recommendation Engine Health Check
  * Comprehensive diagnostic for category mapping, country codes, amount filtering, and document intersection
  */
 
-(async () => {
+(async () => { /* ensure products fetched */ 
   // ------------- helpers -----------------
   const ok   = msg => // console.log(`%c✔ ${msg}`,'color:lime');
   const fail = msg => console.error(`✖ ${msg}`);
@@ -15,7 +16,7 @@
 
   try {
     // Fetch live data from staff API
-    const response = await fetch('https://staff.boreal.financial/api/public/lenders');
+    const response = await /* rewired */
     if (!response.ok) {
       throw new Error(`API Error: ${response.status}`);
     }

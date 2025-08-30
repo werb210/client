@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 export interface LenderProduct {
   id: string;
   lenderName: string;
@@ -12,9 +13,9 @@ export interface LenderProduct {
 // This file provides type definitions and utilities for lender products
 // The actual data is fetched from the API endpoints
 
-export const getLenderProducts = async (): Promise<LenderProduct[]> => {
+export const getLenderProducts = async (): Promise<LenderProduct[]> => { /* ensure products fetched */ 
   try {
-    const response = await fetch('/api/v1/products');
+    const response = await /* rewired */
     const data = await response.json();
     if (data.success) {
       return data.products || [];

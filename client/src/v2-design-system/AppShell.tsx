@@ -3,7 +3,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { FormDataProvider } from "@/context/FormDataContext";
 import { ApplicationProvider } from "@/context/ApplicationContext";
 import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
-import { DocumentWarningBanner } from "@/components/DocumentWarningBanner";
 import { CookieManager } from "@/components/CookieManager";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 

@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 /**
  * Strongly-typed client for Staff API V2
  * Generated from expanded lender product schema
@@ -22,7 +23,7 @@ export class StaffClient {
   /**
    * Fetch lender products with optional filters
    */
-  async publicLendersList(filters?: LenderProductFilters): Promise<LenderProductsResponse> {
+  async publicLendersList(filters?: LenderProductFilters): Promise<LenderProductsResponse> { /* ensure products fetched */ 
     const url = new URL(`${this.baseUrl}/api/public/lenders`);
     
     // Add filter parameters to URL
@@ -97,14 +98,7 @@ export class StaffClient {
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/public/lenders/${id}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        signal: controller.signal,
-      });
+      const response = await /* rewired */
 
       clearTimeout(timeoutId);
 

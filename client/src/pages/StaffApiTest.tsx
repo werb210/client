@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { fetchProducts } from "../api/products";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,7 @@ export default function StaffApiTest() {
   const [error, setError] = useState<string | null>(null);
   const [lastTested, setLastTested] = useState<Date | null>(null);
 
-  const testStaffApi = async () => {
+  const testStaffApi = async () => { /* ensure products fetched */ 
     setLoading(true);
     setError(null);
     setData(null);
@@ -87,7 +88,8 @@ export default function StaffApiTest() {
     }).format(amount);
   };
 
-  return (
+  const products = await fetchProducts();
+return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">

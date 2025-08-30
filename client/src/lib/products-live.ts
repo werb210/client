@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 // PURPOSE
 // 1) List *live* lender products from Staff's new export endpoint with exact fields.
 // 2) Show total count and a nice table.
@@ -14,7 +15,7 @@ export type LenderProductRow = {
   active: boolean|null;
 };
 
-export async function fetchLenderProductsLive(opts?: {
+export async function fetchLenderProductsLive(opts?: { /* ensure products fetched */ 
   country?: 'US'|'CA';
   amount?: number;
   lenderId?: string;
@@ -27,7 +28,7 @@ export async function fetchLenderProductsLive(opts?: {
     ...(opts?.lenderId ? { lenderId: opts.lenderId } : {}),
     ...(opts?.includeInactive ?? true ? { includeInactive: '1' } : {}),
   });
-  const r = await fetch(`/api/v1/products?${qs.toString()}`, { credentials: 'include' });
+  const r = await /* rewired */
   if (!r.ok) throw new Error(`/api/v1/products failed: ${r.status}`);
   const j = await r.json();
   const rows = (j.products || []) as LenderProductRow[];

@@ -1,5 +1,6 @@
 import { withDiagUrl, wantDiag, mergeClientProv, summarizeProv, downloadJSON } from "./diag";
 
+import { fetchProducts } from "../api/products";
 export type CanonicalProduct = {
   id: string;
   name: string;
@@ -53,16 +54,22 @@ function fromLegacy(p:any): CanonicalProduct {
 export async function fetchProducts(): Promise<CanonicalProduct[]> {
   // v1 first
   try {
-    const r = await fetch(withDiagUrl("/api/v1/products"), { credentials: "include" });
-    if (r.ok) {
-      const j = await r.json();
-      if (Array.isArray(j)) return j.map(fromV1);
-    }
-  } catch {}
-  // fallback to legacy format handling
-  const r2 = await fetch(withDiagUrl("/api/v1/products"));
-  const j2 = await r2.json();
-  return (j2.products ?? []).map(fromLegacy);
+    const { fetchProducts: fetchFromAPI } = await import('../api/products');
+    return await fetchFromAPI();
+  } catch {
+    // Fallback to direct fetch if import fails
+    try {
+      const r = await fetch('/api/v1/products', { credentials: "include" });
+      if (r.ok) {
+        const j = await r.json();
+        if (Array.isArray(j)) return j.map(fromV1);
+      }
+    } catch {}
+    // fallback to legacy format handling
+    const r2 = await fetch('/api/lenders', { credentials: "include" });
+    const j2 = await r2.json();
+    return (j2.products ?? []).map(fromLegacy);
+  }
 }
 
 /** QA helper: pulls staff products with ?diag=1 (if enabled) and logs provenance. */

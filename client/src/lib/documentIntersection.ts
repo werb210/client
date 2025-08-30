@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 /**
  * Document Intersection Logic for Step 5
  * Implements client-side filtering and document intersection as specified
@@ -28,7 +29,7 @@ export async function getDocumentRequirementsIntersection(
   selectedProductType: string,
   businessLocation: string,
   fundingAmount: number
-): Promise<DocumentIntersectionResult> {
+): Promise<DocumentIntersectionResult> { /* ensure products fetched */ 
   
   try {
 
@@ -36,7 +37,7 @@ export async function getDocumentRequirementsIntersection(
     let allLenders: LenderProduct[] = [];
     
     try {
-      const response = await fetch('/api/public/lenders');
+      const response = await /* rewired */
       
       if (!response.ok) {
         throw new Error(`Staff API error: ${response.status}`);

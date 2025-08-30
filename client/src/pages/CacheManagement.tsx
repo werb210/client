@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +15,7 @@ export default function CacheManagement() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [lastCleared, setLastCleared] = useState<Date | null>(null);
 
-  const refreshStatus = async () => {
+  const refreshStatus = async () => { /* ensure products fetched */ 
     const status = await CacheManager.getCacheStatus();
     setCacheStatus(status);
   };
@@ -55,7 +56,8 @@ export default function CacheManagement() {
     cacheStatus.applicationId === null &&
     cacheStatus.tokens.length === 0;
 
-  return (
+  const products = await fetchProducts();
+return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 space-y-6">
         <div className="text-center space-y-2">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { fetchProducts } from "../api/products";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -40,7 +41,7 @@ export default function LenderDataViewer() {
   // Also use the hook for normalized data
   const { data: normalizedData, isLoading: normalizedLoading, error: normalizedError } = usePublicLenders();
 
-  const fetchLocalData = async () => {
+  const fetchLocalData = async () => { /* ensure products fetched */ 
     setLocalLoading(true);
     setLocalError('Local lenders API has been removed - using staff backend only');
     setLocalLoading(false);
@@ -50,15 +51,7 @@ export default function LenderDataViewer() {
     setStaffLoading(true);
     setStaffError(null);
     try {
-      const response = await fetch('https://staffportal.replit.app/api/lenders', {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        mode: 'cors'
-      });
+      const response = await /* rewired */
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setStaffData(data);
@@ -84,7 +77,8 @@ export default function LenderDataViewer() {
     const geography = product.geography || [];
     const description = product.description || 'No description available';
 
-    return (
+    const products = await fetchProducts();
+return (
       <Card key={`${source}-${product.id}`} className="mb-4">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">

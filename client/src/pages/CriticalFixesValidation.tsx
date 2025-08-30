@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchProducts } from "../api/products";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -70,16 +71,13 @@ export default function CriticalFixesValidation() {
     ));
   };
 
-  const testC1APISchema = async () => {
+  const testC1APISchema = async () => { /* ensure products fetched */ 
     updateValidation('C-1', 'testing');
     
     try {
       // console.log('🧪 C-1: Testing API schema fix...');
       
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/public/lenders`, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
-      });
+      const response = await /* rewired */
       
       if (response.ok) {
         const data = await response.json();
@@ -317,7 +315,8 @@ export default function CriticalFixesValidation() {
       }
     };
 
-    return (
+    const products = await fetchProducts();
+return (
       <Card key={item.id} className={`${getStatusBg()} transition-colors`}>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">

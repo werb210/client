@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { fetchProducts } from "../api/products";
 import { fetchLenderProducts } from '@/lib/api';
 import { LenderProduct } from '../../../shared/lenderProductSchema';
 
@@ -7,7 +8,7 @@ export function FallbackTest() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const testFallback = async () => {
+  const testFallback = async () => { /* ensure products fetched */ 
     setIsLoading(true);
     setError(null);
     
@@ -31,7 +32,7 @@ export function FallbackTest() {
     
     try {
       // console.log('📦 [FALLBACK_TEST] Testing direct fallback file...');
-      const response = await fetch('/fallback/lenders.json');
+      const response = await /* rewired */
       if (!response.ok) {
         throw new Error(`Fallback fetch failed: ${response.statusText}`);
       }
@@ -48,7 +49,8 @@ export function FallbackTest() {
     }
   };
 
-  return (
+  const products = await fetchProducts();
+return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">

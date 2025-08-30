@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 export type Lender = {
   id: string; name: string; legal_name?: string|null; slug?: string|null;
   website?: string|null; contact_email?: string|null; contact_phone?: string|null;
@@ -8,7 +9,7 @@ const BASE = (import.meta.env.VITE_STAFF_API_URL || "").replace(/\/+$/,"");
 const TOK  = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || "";
 const ADMIN = import.meta.env.VITE_ADMIN_MUTATION_TOKEN || "";
 
-async function j(path: string, init: RequestInit = {}) {
+async function j(path: string, init: RequestInit = { /* ensure products fetched */ }) {
   const headers: Record<string,string> = { Authorization: `Bearer ${TOK}`, ...(init.headers as any || {}) };
   if (ADMIN && (init.method === "POST" || init.method === "PATCH" || init.method === "DELETE")) {
     headers["X-Admin-Token"] = ADMIN;

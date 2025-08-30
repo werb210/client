@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +26,7 @@ export default function EquipmentFinancingFixTest() {
     );
   };
 
-  const runTest = async () => {
+  const runTest = async () => { /* ensure products fetched */ 
     setIsLoading(true);
     // console.log("🔧 TESTING EQUIPMENT FINANCING FIX");
     // console.log("=".repeat(50));
@@ -41,7 +42,7 @@ export default function EquipmentFinancingFixTest() {
       // console.log("📋 Test Scenario:", testScenario);
       
       // Get all lender products from API
-      const response = await fetch('/api/public/lenders');
+      const response = await /* rewired */
       const data = await response.json();
       
       if (!response.ok || !data.success) {

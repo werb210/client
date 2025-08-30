@@ -31,7 +31,7 @@ export type Intake = {
 const KEY = "bf:intake:v2";
 
 function toNum(x: any) {
-  if (x == null) return undefined;
+  if (x == null || x === undefined) return undefined;
   if (typeof x === "number") return x;
   // strip $, commas, spaces
   const n = Number(String(x).replace(/[$, ]/g, ""));
@@ -41,16 +41,19 @@ function toNum(x: any) {
 const toNumber = (v:any) => typeof v === 'number' ? v : Number(String(v ?? '').replace(/[^0-9.]/g,''));
 
 export function normalizeIntake(raw:any): Intake {
+  // Defensive coding - ensure raw is an object
+  const safeRaw = raw && typeof raw === 'object' ? raw : {};
+  
   return {
-    country: raw.country ?? raw.headquarters ?? raw.businessLocation ?? 'US',
-    amountRequested: toNumber(raw.fundingAmount ?? raw.requestedAmount ?? raw.amountRequested),
-    industry: raw.industry ?? raw.naics,
-    yearsInBusiness: toNumber(raw.yearsInBusiness ?? raw.businessAgeYears),
-    revenue12m: toNumber(raw.revenueLast12Months ?? raw.annualRevenue ?? raw.revenueLastYear),
-    avgMonthlyRevenue: toNumber(raw.avgMonthlyRevenue ?? raw.monthlyRevenue ?? raw.averageMonthlyRevenue),
-    purpose: raw.purposeOfFunds ?? raw.purpose ?? raw.fundsPurpose,
-    arBalance: toNumber(raw.currentARBalance ?? raw.accountsReceivable ?? raw.accountsReceivableBalance),
-    collateralValue: toNumber(raw.fixedAssetsValue ?? raw.collateralValue ?? raw.fixedAssetsValue),
+    country: safeRaw.country ?? safeRaw.headquarters ?? safeRaw.businessLocation ?? 'US',
+    amountRequested: toNumber(safeRaw.fundingAmount ?? safeRaw.requestedAmount ?? safeRaw.amountRequested),
+    industry: safeRaw.industry ?? safeRaw.naics,
+    yearsInBusiness: toNumber(safeRaw.yearsInBusiness ?? safeRaw.businessAgeYears),
+    revenue12m: toNumber(safeRaw.revenueLast12Months ?? safeRaw.annualRevenue ?? safeRaw.revenueLastYear),
+    avgMonthlyRevenue: toNumber(safeRaw.avgMonthlyRevenue ?? safeRaw.monthlyRevenue ?? safeRaw.averageMonthlyRevenue),
+    purpose: safeRaw.purposeOfFunds ?? safeRaw.purpose ?? safeRaw.fundsPurpose,
+    arBalance: toNumber(safeRaw.currentARBalance ?? safeRaw.accountsReceivable ?? safeRaw.accountsReceivableBalance),
+    collateralValue: toNumber(safeRaw.fixedAssetsValue ?? safeRaw.collateralValue ?? safeRaw.fixedAssetsValue),
   };
 }
 

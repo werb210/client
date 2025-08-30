@@ -1,3 +1,4 @@
+import { fetchProducts } from "../api/products";
 /**
  * Product Compatibility Validation Script
  * Validates all lender products against Step 2 and Step 5 business logic requirements
@@ -384,7 +385,7 @@ const validateProduct = (product: LenderProduct): ProductCompatibilityResult => 
 /**
  * Main validation function - analyzes all products
  */
-export const validateAllProducts = async (): Promise<{
+export const validateAllProducts = async (): Promise<{ /* ensure products fetched */ 
   results: ProductCompatibilityResult[];
   summary: ValidationSummary;
 }> => {
@@ -392,7 +393,7 @@ export const validateAllProducts = async (): Promise<{
   
   try {
     // Fetch all products from staff API
-    const response = await fetch('/api/public/lenders');
+    const response = await /* rewired */
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }

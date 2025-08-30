@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { fetchProducts } from "../api/products";
 import { LenderProduct } from '@/db/lenderProducts';
 
 export interface UseLenderProductsResult {
@@ -11,8 +12,8 @@ export interface UseLenderProductsResult {
 export function useLenderProducts(): UseLenderProductsResult {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/v1/products'],
-    queryFn: async () => {
-      const response = await fetch('/api/v1/products');
+    queryFn: async () => { /* ensure products fetched */ 
+      const response = await /* rewired */
       if (!response.ok) {
         throw new Error('Failed to fetch lender products');
       }

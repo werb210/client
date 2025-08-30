@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,14 +11,14 @@ export default function ListLenderCategories() {
   const [categories, setCategories] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const loadCategories = async () => {
+  const loadCategories = async () => { /* ensure products fetched */ 
     setIsLoading(true);
     
     // console.log("📋 LISTING ALL LENDER PRODUCT CATEGORIES");
     // console.log("=".repeat(50));
     
     try {
-      const response = await fetch('/api/public/lenders');
+      const response = await /* rewired */
       const data = await response.json();
       
       if (!response.ok || !data.success) {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { fetchProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -9,10 +10,10 @@ export default function CanadianFilteringTest() {
   const [canadianProducts, setCanadianProducts] = useState<any[]>([]);
   const [directApiTest, setDirectApiTest] = useState<any>(null);
 
-  const fetchRawData = async () => {
+  const fetchRawData = async () => { /* ensure products fetched */ 
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/public/lenders`);
+      const response = await /* rewired */
       const data = await response.json();
       setRawData(data);
       // console.log('Raw API Data:', data);
@@ -109,7 +110,7 @@ export default function CanadianFilteringTest() {
     try {
       // console.log('=== DIRECT API TEST ===');
       
-      const response = await fetch('https://staffportal.replit.app/api/public/lenders');
+      const response = await /* rewired */
       const data = await response.json();
       
       const caCount = data.products?.filter((p: any) => p.country === 'CA').length || 0;
@@ -156,7 +157,8 @@ export default function CanadianFilteringTest() {
     }
   };
 
-  return (
+  const products = await fetchProducts();
+return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-bold">Canadian Product Filtering Test</h1>
       
