@@ -1,263 +1,109 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, ArrowRight, Loader2 } from 'lucide-react';
-import { normalizeStep1, loadIntake, type Intake } from '@/utils/normalizeIntake';
-import { fetchLenderProducts } from '@/api/lenderProducts';
-import { useQuery } from '@tanstack/react-query';
-
-// Utility function for formatting currency
-const fmt = (amount: number) => new Intl.NumberFormat('en-US', { 
-  style: 'currency', 
-  currency: 'USD',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0 
-}).format(amount);
-
-// Intake type now imported from normalizeIntake utility
+import { useFormData } from "@/context/FormDataContext";
+import { fetchProducts } from "@/api/products";
 
 type Props = {
-  // we'll accept either; callers can pass whichever they have
-  formData?: Partial<Intake> | any;
-  intake?: Partial<Intake> | any;
+  formData?: any;
+  intake?: any;
   selectedProduct?: string;
   onProductSelect?: (product: string) => void;
   onContinue?: () => void;
   onPrevious?: () => void;
 };
 
-function PendingCard() {
-  return (
-    <Card className="max-w-xl mx-auto">
-      <CardHeader>
-        <div className="flex items-center space-x-2">
-          <Target className="h-5 w-5 text-orange-500" />
-          <CardTitle>Product Matching Pending</CardTitle>
+export default function Step2RecommendationEngine(props: Props) {
+  const { data, isComplete } = useFormData();
+  const [products, setProducts] = useState<any[] | null>(null);
+  const [reason, setReason] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isComplete) {
+      setReason("Missing or unnormalized Step-1 values (amount, etc.)");
+      return;
+    }
+    fetchProducts()
+      .then((p) => setProducts(p))
+      .catch((e) => setReason(`Failed to load products: ${e}`));
+  }, [isComplete]);
+
+  // expose quick debug in dev
+  (window as any).__step2 = { data, isComplete, productsCount: products?.length, reason };
+
+  if (!isComplete || !products) {
+    return (
+      <div className="mx-auto max-w-xl">
+        <div className="rounded-lg border p-4">
+          <div className="font-medium">Product Matching Pending</div>
+          <div className="text-sm text-muted-foreground">
+            {reason ?? "Loading…"}
+          </div>
+          <div className="mt-2 text-xs text-gray-400">
+            Debug: isComplete={String(isComplete)}, products={products?.length ?? 'null'}, reason={reason}
+          </div>
         </div>
-        <CardDescription>
-          We couldn't read your details from Step 1. Please go back and complete the form.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <a className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2" href="/apply/step-1">
-          Back to Step 1
-        </a>
-      </CardContent>
-    </Card>
-  );
-}
-
-function Step2RecommendationEngine(props: Props) {
-  // Use new normalizer to get intake data from props or sessionStorage
-  const raw = props.intake ?? props.formData ?? {};
-  
-  // Debug logging to understand data structure
-  console.log('🔍 [Step2Engine] Raw props data:', raw);
-  console.log('🔍 [Step2Engine] Attempting to normalize:', raw);
-  
-  const intake: Intake | null = normalizeStep1(raw) ?? normalizeStep1(loadIntake() ?? {});
-  
-  console.log('🔍 [Step2Engine] Normalized intake:', intake);
-
-  if (!intake?.amountRequested || !intake?.country) {
-    console.warn('⚠️ [Step2Engine] Missing key inputs from Step 1 - showing pending card');
-    return <PendingCard />;
+      </div>
+    );
   }
 
-  // Helper function for safe number formatting
-  const fmt = (n: number) => (Number.isFinite(n) ? n.toLocaleString() : '—');
-
-  const { data: products, isLoading, error } = useQuery({
-    queryKey: ["lenderProducts"],
-    queryFn: fetchLenderProducts
+  // Simple filtering for eligible products
+  const eligibleProducts = products.filter((p: any) => {
+    const matchesAmount = !data?.requestedAmount || !data?.fundingAmount || 
+                         ((data?.requestedAmount || 0) >= (p.minAmount || 0) && 
+                          (data?.requestedAmount || 0) <= (p.maxAmount || Number.MAX_SAFE_INTEGER));
+    const isActive = p.isActive !== false;
+    return matchesAmount && isActive;
   });
 
-  // Use the recommendation engine!
-  const recommendations = useMemo(() => {
-    if (!products?.products?.length) return [];
-    
-    console.log('🎯 Using recommendation engine with intake:', intake);
-    console.log('🎯 Available products:', products.products.length);
-    
-    // Simple filtering based on country and amount
-    const filtered = products.products.filter((p: any) => {
-      const matchesCountry = !intake.country || p.countryOffered === intake.country || 
-                            (intake.country === 'US' && (p.countryOffered === 'United States' || p.countryOffered === 'US'));
-      const matchesAmount = !intake.amountRequested || 
-                           (intake.amountRequested >= (p.minAmount || 0) && 
-                            intake.amountRequested <= (p.maxAmount || Number.MAX_SAFE_INTEGER));
-      
-      return matchesCountry && matchesAmount && p.isActive !== false;
-    });
-    
-    console.log(`🏆 Generated ${filtered.length} recommendations from ${products.products.length} products`);
-    return filtered.map((p: any) => ({ product: p, matchScore: 80, recommendationLevel: 'good' as const }));
-  }, [products, intake]);
-
-  if (isLoading) {
-    return (
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <div className="flex items-center justify-center space-x-2">
-            <Loader2 className="h-5 w-5 animate-spin text-teal-600" />
-            <CardTitle>Finding matches...</CardTitle>
-          </div>
-          <CardDescription>
-            Analyzing your profile: ${fmt(intake.amountRequested || 0)} • Country: {intake.country} • Revenue: ${fmt(intake.avgMonthlyRevenue || 0)}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <div className="flex items-center space-x-2">
-            <Target className="h-5 w-5 text-red-500" />
-            <CardTitle>Could not load recommendations</CardTitle>
-          </div>
-          <CardDescription>
-            We'll match you with products after document review.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex space-x-3">
-            <Button onClick={props.onPrevious} variant="outline">
-              Back to Previous Step
-            </Button>
-            <Button onClick={props.onContinue}>
-              Continue to Documents
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Ready state - show scored recommendations
-  if (recommendations && recommendations.length > 0) {
-    // Display dynamic recommendations from Staff API
-    return (
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <div className="flex items-center space-x-2">
-            <Target className="h-5 w-5 text-teal-600" />
-            <CardTitle>Recommended Loan Products</CardTitle>
-          </div>
-          <CardDescription>
-            Based on your profile: ${fmt(intake.amountRequested || 0)} • {intake.industry || 'business'} • {intake.country}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recommendations.map((rec: any) => (
-              <Card key={rec.product.id} className={`border hover:bg-gray-50 ${
-                rec.recommendationLevel === 'excellent' ? 'border-green-300 bg-green-50' :
-                rec.recommendationLevel === 'good' ? 'border-blue-300 bg-blue-50' :
-                'border-gray-300'
-              }`}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {rec.product.name}
-                        {rec.recommendationLevel === 'excellent' && <span className="text-green-600 text-sm">⭐ Excellent Match</span>}
-                        {rec.recommendationLevel === 'good' && <span className="text-blue-600 text-sm">✓ Good Match</span>}
-                      </CardTitle>
-                      <CardDescription>Offered by {rec.product.lender}</CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-semibold text-gray-700">
-                        {rec.matchScore}% Match
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="text-sm text-gray-600">
-                      Amount: ${rec.product.minAmount?.toLocaleString()} - ${rec.product.maxAmount?.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {rec.matchReasons?.slice(0, 2).join(' • ')}
-                    </div>
-                    <div className="flex justify-end">
-                      <Button 
-                        onClick={() => props.onProductSelect?.(rec.product.id)}
-                        variant={props.selectedProduct === rec.product.id ? "default" : "outline"}
-                        size="sm"
-                      >
-                        {props.selectedProduct === rec.product.id ? "Selected" : "Select"}
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            <div className="flex space-x-3 pt-4">
-              <Button onClick={props.onPrevious} variant="outline">
-                Review Information
-              </Button>
-              <Button 
-                onClick={props.onContinue}
-                disabled={!props.selectedProduct}
-              >
-                Continue with Selected Product
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Fallback when no dynamic recommendations available
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <div className="flex items-center space-x-2">
           <Target className="h-5 w-5 text-teal-600" />
-          <CardTitle>Product Matching Pending</CardTitle>
+          <CardTitle>Recommended Loan Products</CardTitle>
         </div>
         <CardDescription>
-          Profile received: ${fmt(intake.amountRequested)} for {intake.industry || 'business'} in {intake.country}
+          Found {eligibleProducts.length} matching products for ${(data?.requestedAmount || data?.fundingAmount || 0).toLocaleString()}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="p-4 bg-teal-50 border border-teal-200 rounded-lg">
-            <p className="text-teal-800">
-              <strong>Next Steps:</strong> Upload your documents and our team will:
-            </p>
-            <ul className="mt-2 text-teal-700 list-disc list-inside">
-              <li>Review your business profile</li>
-              <li>Match you with suitable lenders</li>
-              <li>Present the best financing options</li>
-            </ul>
-          </div>
-          <div className="flex space-x-3">
-            <Button onClick={props.onPrevious} variant="outline">
-              Review Information
-            </Button>
-            <Button onClick={props.onContinue}>
-              Continue to Documents
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
+          {eligibleProducts.slice(0, 5).map((product: any) => (
+            <div key={product.id} className="rounded-xl border p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-medium text-lg">{product.productName || product.name}</div>
+                  <div className="text-sm text-gray-600">{product.lender || product.lender_name}</div>
+                  <div className="text-sm text-gray-500">{product.category}</div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    ${(product.minAmount || 0).toLocaleString()} - ${(product.maxAmount || 999999999).toLocaleString()}
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => props.onProductSelect?.(product.id)}
+                  className="bg-[#FF8C00] hover:bg-[#E07B00]"
+                >
+                  Select
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="flex justify-between mt-6">
+          <Button onClick={props.onPrevious} variant="outline">
+            Previous Step
+          </Button>
+          <Button onClick={props.onContinue} className="bg-[#FF8C00] hover:bg-[#E07B00]">
+            Continue
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-export default Step2RecommendationEngine;
 export { Step2RecommendationEngine };

@@ -1,33 +1,20 @@
-import { BASE, TOKEN, USE_LOCAL_PRODUCTS } from '@/lib/env';
+import { API_BASE, SHARED_TOKEN, USE_API_FIRST, MAY_FALLBACK } from "@/lib/env";
 
-export type Product = {
-  id: string;
-  name: string;
-  active?: boolean;
-  countries?: string[];
-  purposes?: string[];
-  industries?: string[];
-  minAmount?: number;
-  maxAmount?: number;
-  minYearsInBusiness?: number;
-  minRevenue12m?: number;
-  minAvgMonthlyRevenue?: number;
-};
-
-export async function fetchProducts(): Promise<Product[]> {
-  if (!USE_LOCAL_PRODUCTS) {
-    const res = await fetch(`${BASE}/v1/products`, {
-      headers: { 
-        Authorization: `Bearer ${TOKEN}`, 
-        'Cache-Control': 'no-store' 
-      },
-      credentials: 'omit',
-    });
-    if (!res.ok) throw new Error(`Products fetch failed: ${res.status}`);
-    return res.json();
+export async function fetchProducts() {
+  if (USE_API_FIRST) {
+    try {
+      const res = await fetch(`${API_BASE}/v1/products`, {
+        headers: { Authorization: `Bearer ${SHARED_TOKEN}` },
+      });
+      if (res.ok) return await res.json();
+      console.warn("API /v1/products failed", res.status);
+    } catch (e) {
+      console.warn("API /v1/products error", e);
+    }
   }
-  
-  // Dev-only: local cache fallback
-  console.warn('🔧 Using local product cache (dev mode only)');
-  return [];
+  if (MAY_FALLBACK) {
+    const data: any[] = []; // Fallback data if needed
+    return data;
+  }
+  throw new Error("Products unavailable (API failed and fallback disabled).");
 }
