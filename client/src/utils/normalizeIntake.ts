@@ -38,7 +38,17 @@ export function normalizeStep1(raw: Record<string, unknown>): Intake {
 
 const KEY = 'bf:intake';
 export const saveIntake = (obj: unknown) => {
-  try { sessionStorage.setItem(KEY, JSON.stringify(obj)); } catch {}
+  // Normalize the data before saving
+  const normalized = normalizeStep1(obj as Record<string, unknown>);
+  const jsonStr = JSON.stringify(normalized);
+  
+  try { 
+    sessionStorage.setItem(KEY, jsonStr); 
+    localStorage.setItem(KEY, jsonStr); // Belt and suspenders
+    console.log('✅ [saveIntake] Normalized and saved:', normalized);
+  } catch (e) {
+    console.error('❌ [saveIntake] Failed to save:', e);
+  }
 };
 export const loadIntake = () => {
   try { const s = sessionStorage.getItem(KEY); return s ? JSON.parse(s) : null; }

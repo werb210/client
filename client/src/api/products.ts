@@ -24,7 +24,7 @@ export async function fetchProducts() {
   
   // Fallback to local products if Staff API fails
   console.log('🔄 [fetchProducts] Falling back to local products...');
-  const localProducts = await import('../../data/lenderProducts.json');
+  const localProducts = await import('../../../data/lenderProducts.json');
   const products = localProducts.default || localProducts;
   console.log('✅ [fetchProducts] Local fallback loaded:', products.length, 'products');
   (window as any).__step2 = { ...(window as any).__step2, source: 'local_fallback', products, productsCount: products.length };

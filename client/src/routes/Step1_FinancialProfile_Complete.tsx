@@ -341,15 +341,9 @@ export default function Step1FinancialProfile() {
         logger.warn('⚠️ Could not backup to localStorage:', e);
       }
 
-      // Save intake data for Step 2 using new normalizer
-      const intake = {
-        amount: step1Payload.fundingAmount,
-        country: step1Payload.headquarters as 'CA' | 'US',
-        monthlyRevenue: step1Payload.averageMonthlyRevenue,
-        timeInBusinessMonths: step1Payload.salesHistory ? convertSalesHistoryToMonths(step1Payload.salesHistory) : 0,
-        industry: step1Payload.industry
-      };
-      saveIntake(intake);
+      // Save intake data for Step 2 using proper normalization
+      // Pass raw data to saveIntake - let normalizeStep1 handle the field mapping
+      saveIntake(step1Payload);
       logger.log('✅ Intake data saved for Step 2');
 
       // CRITICAL: Save to new FormDataContext for Step 2
