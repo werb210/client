@@ -9,3 +9,6 @@ vite.config.ts.*
 .env
 .env.*
 !.env.example
+
+# Security scanner reports
+reports/

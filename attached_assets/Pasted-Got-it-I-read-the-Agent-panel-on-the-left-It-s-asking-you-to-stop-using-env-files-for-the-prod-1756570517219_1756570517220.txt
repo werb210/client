@@ -1,0 +1,69 @@
+Got it—I read the Agent panel on the left. It’s asking you to stop using `.env.*` files for the production token and set the **exact** Staff token in Replit **Secrets**. Do this:
+
+---
+
+## 🟢 CLIENT APP — set the correct token in Secrets, clean env files, then verify
+
+1. **Get the real Staff token value**
+   From the **Staff** app’s Secrets, copy the full value of `CLIENT_SHARED_BEARER` (not the fingerprint).
+   Target fingerprint we want on the client after saving: `0944508707a9`.
+
+2. **Save it in the Client Replit Secrets**
+   In the Client Repl (you’re already there in the screenshot):
+
+   * Key: `VITE_CLIENT_APP_SHARED_TOKEN`
+   * Value: *(paste the exact `CLIENT_SHARED_BEARER` from Staff)*
+   * Click **Continue** / **Save** in the Secrets panel.
+
+3. **Keep only one source of truth for the token**
+   Remove the token from all checked-in env files so there’s no conflict:
+
+   * Open `.env`, `.env.development`, `.env.production`, `.env.staging`, `.env.test`
+   * Delete any line that sets `VITE_CLIENT_APP_SHARED_TOKEN=...`
+   * Keep (or add) just the Staff base URL somewhere central (Secrets or your prod env file):
+
+     ```
+     VITE_STAFF_API_URL=https://staff.boreal.financial/api
+     ```
+
+4. **(Optional but recommended) silence the Security Scanner noise**
+   Those findings are in `reports/*.json`. Either click **Hide** in the scanner, or stop committing them:
+
+   * Add to `.gitignore`:
+
+     ```
+     reports/
+     ```
+   * Or move them out of the repo.
+
+5. **Bust any PWA/service-worker cache** (your right console shows SW errors)
+   In the browser devtools **Console** run:
+
+   ```js
+   navigator.serviceWorker?.getRegistrations?.().then(rs => rs.forEach(r => r.unregister()));
+   caches?.keys?.().then(keys => keys.forEach(k => caches.delete(k)));
+   location.reload(true);
+   ```
+
+   (Or DevTools → Application → Service Workers → **Unregister**, then hard refresh.)
+
+6. **Verify the token fingerprint from the Client shell**
+
+   ```bash
+   node -e 'const c=require("crypto");const t=process.env.VITE_CLIENT_APP_SHARED_TOKEN||"";console.log(c.createHash("sha256").update(t).digest("hex").slice(0,12))'
+   # should print: 0944508707a9
+   ```
+
+7. **Strict alignment check (will pass once Staff prod is on the new build)**
+
+   ```bash
+   BASE="${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+   TOK="${VITE_CLIENT_APP_SHARED_TOKEN:?missing}"
+   echo "products:" $(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOK" "$BASE/v1/products")
+   echo "lenders :" $(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOK" "$BASE/lenders")
+   echo "reqdocs :" $(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOK" "$BASE/required-docs")
+   ```
+
+   Expect **200/200/200** once Staff’s new build is live. (If `required-docs` is still 404, that’s a Staff deploy issue—your client is configured correctly.)
+
+That’s it—paste the Staff token into **Client Secrets**, remove duplicates from env files, clear the service worker, and run the quick checks.
