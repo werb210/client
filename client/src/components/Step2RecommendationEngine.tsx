@@ -38,7 +38,7 @@ type Props = {
   onPrevious?: () => void;
 };
 
-export default function Step2RecommendationEngine(props: Props){
+export function Step2RecommendationEngine(props: Props){
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -132,6 +132,8 @@ export default function Step2RecommendationEngine(props: Props){
 
   return <ProductList products={eligible} intake={intake} onProductSelect={props.onProductSelect} onContinue={props.onContinue} />; // your real renderer
 }
+
+export default Step2RecommendationEngine;
 
 function ProductList({ products, intake, onProductSelect, onContinue }: { 
   products: any[], 
