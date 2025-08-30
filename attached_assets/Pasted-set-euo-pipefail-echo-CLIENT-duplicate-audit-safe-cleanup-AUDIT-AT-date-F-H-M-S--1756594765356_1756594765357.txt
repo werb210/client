@@ -1,0 +1,174 @@
+set -euo pipefail
+echo "== CLIENT duplicate audit & safe cleanup =="
+AUDIT_AT="$(date +%F_%H-%M-%S)"
+R="reports/client-dup-audit-$AUDIT_AT"
+TRASH=".trash/$AUDIT_AT"
+mkdir -p "$R" "$TRASH"
+
+# 0) Context
+echo "branch: $(git rev-parse --abbrev-ref HEAD || echo '?')" | tee "$R/00_context.txt"
+echo "last:   $(git log -1 --pretty=%h'  '%s 2>/dev/null || echo '?')" | tee -a "$R/00_context.txt"
+
+# 1) Obvious legacy markers & parallel extensions
+rg -nI --hidden -S '\.(old|bak|backup|copy|tmp)\b|legacy|deprecated' -g '!node_modules' \
+  | tee "$R/10_legacy_markers.txt" >/dev/null || true
+
+find client -type f \( -name '*.tsx' -o -name '*.ts' -o -name '*.js' -o -name '*.mjs' \) \
+  | sed -E 's/\.(tsx|ts|js|mjs)$//' | sort | uniq -d \
+  | tee "$R/11_parallel_ext_bases.txt" >/dev/null || true
+
+# 2) Hash-based duplicate detection (exact duplicates across components/pages)
+node - <<'NODE' | tee "$R/12_hash_dups.json" >/dev/null
+const fs=require('fs'), path=require('path'), crypto=require('crypto');
+function hash(p){return crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex')}
+function* files(dir){for(const d of fs.readdirSync(dir,{withFileTypes:true})){
+  const p=path.join(dir,d.name);
+  if(d.isDirectory()){ if(d.name==='node_modules'||d.name.startsWith('.trash')) continue; yield* files(p); }
+  else if(/\.(tsx|ts|js|mjs|css|json)$/.test(d.name)) yield p;
+}}
+const map=new Map();
+for(const f of files('client')){ try{const h=hash(f); if(!map.has(h)) map.set(h,[]); map.get(h).push(f);}catch{} }
+const d=[...map.entries()].filter(([_,arr])=>arr.length>1).map(([h,files])=>({hash:h,files}));
+console.log(JSON.stringify(d,null,2));
+NODE
+
+# 3) Duplicate component names exported in multiple files (can cause render confusion)
+node - <<'NODE' | tee "$R/13_component_name_dups.tsv" >/dev/null
+const fs=require('fs'), path=require('path');
+const re1=/export\s+default\s+function\s+([A-Z][A-Za-z0-9_]*)/g;
+const re2=/export\s+const\s+([A-Z][A-Za-z0-9_]*)\s*=\s*\(/g;
+function* files(dir){for(const d of fs.readdirSync(dir,{withFileTypes:true})){
+  const p=path.join(dir,d.name);
+  if(d.isDirectory()){ if(d.name==='node_modules'||d.name.startsWith('.trash')) continue; yield* files(p); }
+  else if(/\.(tsx|ts)$/.test(d.name)) yield p;
+}}
+const map=new Map();
+for(const f of files('client/src')){ const s=fs.readFileSync(f,'utf8'); let m;
+  while((m=re1.exec(s))){ const k=m[1]; if(!map.has(k)) map.set(k,[]); map.get(k).push(f); }
+  while((m=re2.exec(s))){ const k=m[1]; if(!map.has(k)) map.set(k,[]); map.get(k).push(f); }
+}
+for(const [k,arr] of map){ if(arr.length>1) console.log(`${k}\t${arr.join(',')}`); }
+NODE
+
+# 4) Duplicate route paths across pages (same path rendered by multiple files)
+node - <<'NODE' | tee "$R/14_route_path_dups.tsv" >/dev/null
+const fs=require('fs'), path=require('path');
+const re=/path:\s*['"`]([^'"`]+)['"`]/g;
+function* files(dir){for(const d of fs.readdirSync(dir,{withFileTypes:true})){
+  const p=path.join(dir,d.name);
+  if(d.isDirectory()){ if(d.name==='node_modules'||d.name.startsWith('.trash')) continue; yield* files(p); }
+  else if(/\.(tsx|ts)$/.test(d.name)) yield p;
+}}
+const entries=[];
+for(const f of files('client/src')){ const s=fs.readFileSync(f,'utf8'); let m;
+  while((m=re.exec(s))){ entries.push({path:m[1],file:f}); }
+}
+const groups=new Map();
+for(const e of entries){ if(!groups.has(e.path)) groups.set(e.path,[]); groups.get(e.path).push(e.file); }
+for(const [p,arr] of groups){ if(p && arr.length>1) console.log(`${p}\t${arr.join(',')}`); }
+NODE
+
+# 5) ENV key duplication across client .env*
+ls -1a | grep -E '^\.env' | tee "$R/20_env_files.txt" >/dev/null || true
+node - <<'NODE' | tee "$R/21_env_dups.tsv" >/dev/null
+const fs=require('fs');
+const envs=fs.readdirSync('.').filter(f=>f.startsWith('.env'));
+const map=new Map();
+for(const f of envs){
+  const s=fs.readFileSync(f,'utf8');
+  for(const line of s.split(/\r?\n/)){
+    const m=line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.+)\s*$/); if(!m) continue;
+    const k=m[1]; if(!map.has(k)) map.set(k,[]); map.get(k).push(f);
+  }
+}
+for(const [k,arr] of map){ if(arr.length>1) console.log(`${k}\t${arr.join(',')}`); }
+NODE
+
+# 6) Decide what to quarantine (SAFE rules)
+KEEP_LOG="$R/30_keep.txt"; MV_LOG="$R/31_quarantine.txt"
+
+# 6a) Parallel base: keep .tsx > .ts > .js > .mjs
+while read -r base; do
+  [ -z "$base" ] && continue
+  for ext in tsx ts js mjs; do [ -f "${base}.$ext" ] && { keep="${base}.$ext"; break; } done
+  for ext in tsx ts js mjs; do
+    f="${base}.$ext"
+    [ -f "$f" ] || continue
+    if [ "$f" != "$keep" ]; then
+      mkdir -p "$TRASH/$(dirname "$f")"; git mv -f "$f" "$TRASH/$f" 2>/dev/null || mv -f "$f" "$TRASH/$f"
+      echo "parallel-base -> TRASH: $f (kept $keep)" | tee -a "$MV_LOG"
+    fi
+  done
+  echo "parallel-base KEEP: $keep" >> "$KEEP_LOG"
+done < "$R/11_parallel_ext_bases.txt"
+
+# 6b) Legacy markers (legacy/old/bak/copy/tmp/deprecated)
+rg -nI --hidden -S '\.(old|bak|backup|copy|tmp)\b|legacy|deprecated' client -g '!node_modules' -g '!**/*.d.ts' \
+  | cut -d: -f1 | sort -u | while read -r f; do
+    [ -f "$f" ] || continue
+    mkdir -p "$TRASH/$(dirname "$f")"; git mv -f "$f" "$TRASH/$f" 2>/dev/null || mv -f "$f" "$TRASH/$f"
+    echo "legacy-flag -> TRASH: $f" | tee -a "$MV_LOG"
+  done
+
+# 6c) Duplicate component names: quarantine files in obvious "legacy" folders if a twin exists elsewhere
+awk -F'\t' '{print $0}' "$R/13_component_name_dups.tsv" 2>/dev/null | while read -r line; do
+  name="$(echo "$line" | cut -f1)"
+  files="$(echo "$line" | cut -f2)"
+  # Prefer file under client/src/routes or client/src/components (not legacy/old)
+  keep="$(echo "$files" | tr ',' '\n' | grep -E 'client/src/(routes|components)/' | grep -v -E '(legacy|old|bak|copy|deprecated)' | head -n1)"
+  [ -z "$keep" ] && keep="$(echo "$files" | cut -d',' -f1)"
+  for f in $(echo "$files" | tr ',' '\n'); do
+    [ "$f" = "$keep" ] && continue
+    [ -f "$f" ] || continue
+    if echo "$f" | grep -qiE 'legacy|old|bak|copy|deprecated'; then
+      mkdir -p "$TRASH/$(dirname "$f")"; git mv -f "$f" "$TRASH/$f" 2>/dev/null || mv -f "$f" "$TRASH/$f"
+      echo "component-dupe(${name}) -> TRASH: $f (kept $keep)" | tee -a "$MV_LOG"
+    fi
+  done
+done
+
+# 6d) Duplicate route path files: quarantine those in legacy folders if a canonical remains
+awk -F'\t' '{print $0}' "$R/14_route_path_dups.tsv" 2>/dev/null | while read -r line; do
+  pathseg="$(echo "$line" | cut -f1)"
+  files="$(echo "$line" | cut -f2)"
+  keep="$(echo "$files" | tr ',' '\n' | grep -E 'client/src/routes/' | grep -v -E '(legacy|old|bak|copy|deprecated)' | head -n1)"
+  [ -z "$keep" ] && keep="$(echo "$files" | cut -d',' -f1)"
+  for f in $(echo "$files" | tr ',' '\n'); do
+    [ "$f" = "$keep" ] && continue
+    [ -f "$f" ] || continue
+    if echo "$f" | grep -qiE 'legacy|old|bak|copy|deprecated'; then
+      mkdir -p "$TRASH/$(dirname "$f")"; git mv -f "$f" "$TRASH/$f" 2>/dev/null || mv -f "$f" "$TRASH/$f"
+      echo "route-dupe(${pathseg}) -> TRASH: $f (kept $keep)" | tee -a "$MV_LOG"
+    fi
+  done
+done
+
+# 7) Build; rollback if broken
+ROLLBACK=0
+npm run -s build || ROLLBACK=1
+
+if [ $ROLLBACK -eq 1 ]; then
+  echo "Build failed — rolling back quarantined files…" | tee -a "$R/99_rollback.txt"
+  find "$TRASH" -type f | while read -r f; do
+    rel="${f#"$TRASH/"}"
+    mkdir -p "$(dirname "$rel")"
+    git mv -f "$f" "$rel" 2>/dev/null || mv -f "$f" "$rel"
+  done
+  echo "ROLLBACK COMPLETE. No files removed." | tee -a "$R/99_rollback.txt"
+  EXIT_CODE=1
+else
+  git add -A
+  git commit -m "chore(client): quarantine duplicate/legacy files; prefer canonical components/pages [$AUDIT_AT]" || true
+  EXIT_CODE=0
+fi
+
+echo
+echo "SUMMARY (client)"
+echo "• Quarantined files listed in $R/31_quarantine.txt"
+echo "• Hash duplicates: $R/12_hash_dups.json"
+echo "• Component name dups: $R/13_component_name_dups.tsv"
+echo "• Route path dups:     $R/14_route_path_dups.tsv"
+echo "• Env duplicates:      $R/21_env_dups.tsv"
+echo "• Trash folder:        $TRASH"
+[ ${EXIT_CODE} -eq 0 ] && echo "RESULT: PASS" || echo "RESULT: ROLLED BACK (see $R/99_rollback.txt)"
+exit ${EXIT_CODE}
