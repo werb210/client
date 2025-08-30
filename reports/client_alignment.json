@@ -15,5 +15,5 @@
   "expected_lenders_min": 5,
   "required_docs_status": 404,
   "required_docs_count": null,
-  "expected_min_required_docs": 3
+  "expected_min_required_docs": 6
 }

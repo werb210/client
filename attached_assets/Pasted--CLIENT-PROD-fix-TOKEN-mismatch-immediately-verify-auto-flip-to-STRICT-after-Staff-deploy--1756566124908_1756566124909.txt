@@ -1,0 +1,106 @@
+# ┏ CLIENT (PROD): fix TOKEN mismatch immediately; verify; auto-flip to STRICT after Staff deploy ━┓
+# From your report:
+#  • Current FP = fe1af4f8b32f (wrong); Expected FP = 0944508707a9 (right)
+#  • Canonical endpoints only (/v1/products, /lenders, /required-docs) — good
+# This block:
+#  1) Removes duplicate token definitions; sets the single prod token to match Staff.
+#  2) Verifies fingerprint locally (must be 0944508707a9).
+#  3) Runs alignment in TOKEN_ONLY mode while Staff PROD is on old build.
+#  4) Same script flips to STRICT automatically once Staff republishes EXPECTED_* with headers+44/30/≥6.
+# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+set -euo pipefail
+
+echo "== CLIENT ENV =="
+echo "VITE_STAFF_API_URL=${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+BASE="${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+mkdir -p scripts reports
+
+# 0) ONE SOURCE OF TRUTH — remove duplicates before setting:
+#    Ensure the token is NOT set in multiple places (.env, .env.local, .env.production*, host env).
+#    Keep EXACTLY ONE definition (production).
+#    Example cleanup (adjust to your repo/host):
+#      git rm -f .env.local .env.development 2>/dev/null || true
+
+# 1) Set the EXACT Staff token string (not the fingerprint)
+#    ↳ paste the exact CLIENT_SHARED_BEARER value from Staff here
+export VITE_CLIENT_APP_SHARED_TOKEN='<<PASTE EXACT STAFF TOKEN STRING HERE>>'
+
+# 2) Verify FP == 0944508707a9 (must match)
+node -e 'const c=require("crypto");const t=process.env.VITE_CLIENT_APP_SHARED_TOKEN||"";console.log(JSON.stringify({client_token_fp:c.createHash("sha256").update(t).digest("hex").slice(0,12)},null,2))'
+
+# 3) Persist the ONE token (choose one place ONLY; example below)
+# echo "VITE_CLIENT_APP_SHARED_TOKEN=${VITE_CLIENT_APP_SHARED_TOKEN}" > .env.production
+
+# 4) Paste EXPECTED_* from Staff snapshot (will be empty until Staff deploys latest)
+#    After Staff deploys, they republish — re-run this block; STRICT checks will activate automatically.
+export EXPECTED_DB_HOST=""
+export EXPECTED_TOKEN_FP="0944508707a9"
+export EXPECTED_PRODUCTS="0"
+export EXPECTED_LENDERS="30"
+export EXPECTED_MIN_REQUIRED_DOCS="6"
+
+# 5) Alignment script (replaces old; NO DUPES). TOKEN_ONLY while EXPECTED is empty.
+rm -f scripts/alignment.mjs scripts/check_alignment.mjs 2>/dev/null || true
+cat > scripts/alignment.mjs <<'JS'
+import crypto from "crypto";
+const BASE=(process.env.VITE_STAFF_API_URL||"https://staff.boreal.financial/api").replace(/\/+$/,'');
+const TOK =process.env.VITE_CLIENT_APP_SHARED_TOKEN||"";
+const EXP_DB   = process.env.EXPECTED_DB_HOST||"";
+const EXP_FP   = process.env.EXPECTED_TOKEN_FP||"";
+const EXP_PROD = Number(process.env.EXPECTED_PRODUCTS||"0");
+const EXP_LEND = Number(process.env.EXPECTED_LENDERS||"0");
+const EXP_REQ  = Number(process.env.EXPECTED_MIN_REQUIRED_DOCS||"0");
+const fp = s => crypto.createHash("sha256").update(s).digest("hex").slice(0,12);
+const TOKEN_ONLY = (EXP_DB==="" || EXP_PROD===0);
+
+async function j(p){ const u=`${BASE}${p}${p.includes("?")?"&":"?"}t=${Date.now()}`; const r=await fetch(u,{headers:{Authorization:`Bearer ${TOK}`}}); const h=Object.fromEntries([...r.headers.entries()].map(([k,v])=>[k.toLowerCase(),v])); const ct=r.headers.get("content-type")||""; let b=null; try{ b=ct.includes("json")?await r.json():await r.text(); }catch{}; return {u,status:r.status,headers:h,body:b}; }
+
+(async()=>{
+  const myFp = fp(TOK);
+  const prods = await j("/v1/products");
+  const lends = await j("/lenders?active=true&limit=5");
+  const docs  = await j("/required-docs");
+  const prodCount = Array.isArray(prods.body)? prods.body.length : null;
+  const lendPeek  = Array.isArray(lends.body)? lends.body.length : null;
+  const hdrDb     = prods.headers["x-db-host"]||null;
+  const out = {
+    mode: TOKEN_ONLY ? "TOKEN_ONLY" : "STRICT",
+    base: BASE,
+    my_token_fp: myFp, expected_token_fp: EXP_FP, token_fp_match: myFp===EXP_FP,
+    x_db_host: hdrDb, expected_db_host: EXP_DB, db_host_match: hdrDb===EXP_DB,
+    products_status: prods.status, products_count: prodCount, expected_products: EXP_PROD,
+    lenders_status: lends.status, lenders_peek_count: lendPeek, expected_lenders_min: Math.min(EXP_LEND,5),
+    required_docs_status: docs.status, required_docs_count: Array.isArray(docs.body)? docs.body.length : null, expected_min_required_docs: EXP_REQ
+  };
+  console.log(JSON.stringify(out,null,2));
+
+  if (myFp!==EXP_FP) process.exit(10);           // always enforce token FP
+
+  if (!TOKEN_ONLY) {                              // STRICT after Staff deploys latest & republish EXPECTED_*
+    if (prods.status!==200 || !hdrDb || hdrDb!==EXP_DB) process.exit(20);
+    if (!(typeof prodCount==="number" && prodCount>=EXP_PROD)) process.exit(30);
+    if (!(lends.status===200 && typeof lendPeek==="number" && lendPeek>=1)) process.exit(31);
+    if (!(docs.status===200 && (out.required_docs_count??0) >= EXP_REQ)) process.exit(40);
+  }
+})();
+JS
+
+set +e
+node scripts/alignment.mjs | tee reports/client_alignment.json
+rc=$?; set -e
+
+if [ $rc -ne 0 ]; then
+  echo ""
+  case $rc in
+    10) echo "❌ TOKEN mismatch → set VITE_CLIENT_APP_SHARED_TOKEN to Staff’s CLIENT_SHARED_BEARER so FP=${EXPECTED_TOKEN_FP}."; exit 2;;
+    20) echo "❌ INSTANCE/header mismatch → will resolve after Staff deploys latest & publishes X-DB-Host; clear SW/CDN caches if stale."; exit 2;;
+    30) echo "❌ DATA mismatch (products) → expect 44 after Staff deploy."; exit 2;;
+    31) echo "❌ LENDERS peek < 1 → expect ~${EXPECTED_LENDERS} after Staff deploy."; exit 2;;
+    40) echo "❌ /required-docs < ${EXPECTED_MIN_REQUIRED_DOCS} or 404 → route not deployed yet on Staff."; exit 2;;
+    *)  echo "❌ Alignment failed. Inspect reports/client_alignment.json"; exit 2;;
+  esac
+fi
+
+echo "✅ Client token fixed. Alignment mode printed above:"
+echo "   • TOKEN_ONLY now (until Staff deploys headers+routes+DB)."
+echo "   • STRICT will auto-activate when Staff republishes EXPECTED_* with products=44 & DB host."
