@@ -5,8 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Target, ArrowRight } from 'lucide-react';
 
 const requireIntake = () => {
-  const s = sessionStorage.getItem('bf:intake') || localStorage.getItem('bf:intake');
-  return s ? JSON.parse(s) : null;
+  const sessionData = sessionStorage.getItem('bf:intake');
+  const localData = localStorage.getItem('bf:intake');
+  console.log('🔍 [requireIntake] Raw storage data:', { sessionData, localData });
+  
+  const s = sessionData || localData;
+  if (!s) {
+    console.warn('🚨 [requireIntake] No storage data found');
+    return null;
+  }
+  
+  try {
+    const parsed = JSON.parse(s);
+    console.log('🔍 [requireIntake] Parsed intake:', parsed);
+    return parsed;
+  } catch (e) {
+    console.error('🚨 [requireIntake] JSON parse error:', e);
+    return null;
+  }
 };
 
 const failSafeNumber = (n:any) => (typeof n === 'number' && !Number.isNaN(n)) ? n : 0;

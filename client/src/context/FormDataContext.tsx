@@ -55,16 +55,33 @@ export function normalizeIntake(raw:any): Intake {
 }
 
 function persistIntake(i: Intake) {
-  sessionStorage.setItem('bf:intake', JSON.stringify(i));
-  localStorage.setItem('bf:intake', JSON.stringify(i)); // belt-and-suspenders
+  const jsonStr = JSON.stringify(i);
+  sessionStorage.setItem('bf:intake', jsonStr);
+  localStorage.setItem('bf:intake', jsonStr); // belt-and-suspenders
   (window as any).__step2 = { ...(window as any).__step2, intake: i };
+  
+  // VERIFY storage immediately
+  const verification = {
+    sessionStored: sessionStorage.getItem('bf:intake'),
+    localStored: localStorage.getItem('bf:intake'),
+    canParse: JSON.parse(sessionStorage.getItem('bf:intake') || '{}')
+  };
+  console.log('🔍 [persistIntake] Storage verification:', verification);
 }
 
 // Call this when Step-1 completes:
 export function onStep1Submit(raw:any, navigateToStep2: () => void){
+  console.log('🔍 [onStep1Submit] Raw input:', raw);
   const intake = normalizeIntake(raw);
+  console.log('🔍 [onStep1Submit] Normalized intake:', intake);
   persistIntake(intake);
-  navigateToStep2();  // SPA navigation — no full reload
+  console.log('🔍 [onStep1Submit] Stored to both session+local storage');
+  
+  // Add small delay to ensure storage is complete before navigation
+  setTimeout(() => {
+    console.log('🔍 [onStep1Submit] Navigating to Step 2 after storage delay...');
+    navigateToStep2();  // SPA navigation — no full reload
+  }, 100);
 }
 
 export function normalize(raw: Partial<ApplicationForm>): ApplicationForm {
