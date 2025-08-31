@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchProducts } from '@/api/products';
+import { fetchProducts } from "../api/products";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, ArrowRight } from 'lucide-react';
@@ -46,7 +46,7 @@ export function Step2RecommendationEngine(props: Props){
   useEffect(()=>{
     (async ()=>{
       try{
-        const data = await fetchProducts();
+        const data = await (await getRecommendedProducts()).matches;
         setProducts(Array.isArray(data) ? data : []);
       }catch(e:any){
         setError(e?.message || 'fetch_failed');

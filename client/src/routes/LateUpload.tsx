@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { fetchRequiredDocs } from "../api/products";
+import { useEffect, useState , fetchRequiredDocs} from 'react';
 import { useParams, useLocation } from 'wouter';
 import { apiFetch } from '@/lib/api';
 import { UploadedFile } from '@/types/uploadedFile';
@@ -43,7 +44,8 @@ export default function LateUpload() {
     }
   };
 
-  return (
+  const requiredDocs = await fetchRequiredDocs();
+return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="mx-auto max-w-4xl px-4">
         <div className="mb-8 text-center">

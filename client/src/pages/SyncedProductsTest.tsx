@@ -80,7 +80,7 @@ export default function SyncedProductsTest() {
     return <XCircle className="w-5 h-5 text-red-500" />;
   };
 
-  const products = await fetchProducts();
+  const products = await (await getRecommendedProducts()).matches;
 return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center space-y-2">

@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { fetchProducts , getRecommendedProducts} from "../api/products";
 /**
  * Schema + Recommendation Engine Health Check
  * Comprehensive diagnostic for category mapping, country codes, amount filtering, and document intersection

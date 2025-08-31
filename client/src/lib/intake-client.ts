@@ -1,3 +1,4 @@
+import { fetchRequiredDocs } from "../api/products";
 // CLIENT APP support for:
 // - Step 2: product recommendations from Staff DB
 // - Step 5: required documents based on products & inputs

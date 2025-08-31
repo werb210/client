@@ -27,7 +27,8 @@ interface AppShellProps {
  * applications. This is the single source of truth for app-wide state management.
  */
 export function AppShell({ children }: AppShellProps) {
-  return (
+  // Remove async call from sync component - handled by consuming components
+return (
     <GlobalErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <FormDataProvider>

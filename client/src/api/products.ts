@@ -1,3 +1,4 @@
+// Removed circular import
 export type Product = {
   id?: string|number;
   productName?: string;
@@ -25,3 +26,16 @@ export async function fetchRequiredDocs(): Promise<any[]> {
   return (data as any).items || [];
 }
 export default { fetchProducts, fetchRequiredDocs };
+
+function getStep1(){ try { return JSON.parse(localStorage.getItem("formData")||"null")||{}; } catch { return {}; } }
+export async function getRecommendedProducts(){
+  const raw = await fetchProducts();
+  const { toCanonical } = await import("./normalize");
+  const list = raw.map(toCanonical);
+  const s1:any = getStep1();
+  const amount = Number(s1.amountRequested ?? s1.loanAmount ?? s1.requestedAmount ?? s1.requested_amount ?? s1.amount ?? s1.fundsNeeded ?? s1.fundingAmount ?? s1.loan_size ?? 0) || 0;
+  const cc = (s1.country ?? s1.countryCode ?? s1.applicantCountry ?? s1.region ?? "").toString().toUpperCase();
+  const country = cc==="CANADA"?"CA":(cc==="USA"||cc==="UNITED STATES"?"US":cc);
+  const matches = list.filter(p => (!country || p.country===country) && (!amount || (p.minAmount<=amount && amount<=p.maxAmount)));
+  return { all:list, matches };
+}

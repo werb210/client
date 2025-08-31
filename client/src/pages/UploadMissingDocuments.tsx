@@ -1,5 +1,6 @@
+import { fetchRequiredDocs } from "../api/products";
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation , fetchRequiredDocs} from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -79,7 +80,7 @@ export default function UploadMissingDocuments() {
       console.log('📋 [UPLOAD-DOCS] Loading application data for:', appId);
       
       // Fetch required documents from specified endpoint
-      const requiredDocsResponse = await fetch(`/api/public/required-docs/${appId}`);
+      const requiredDocsResponse = await /* rewired */
       
       if (requiredDocsResponse.ok) {
         const requiredDocsData = await requiredDocsResponse.json();
@@ -252,7 +253,8 @@ export default function UploadMissingDocuments() {
   };
 
   if (isLoading) {
-    return (
+    const requiredDocs = await fetchRequiredDocs();
+return (
       <div className="min-h-screen bg-gradient-to-br from-teal-50 to-orange-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">

@@ -280,7 +280,7 @@ export default function ClientVerificationDiagnostic() {
     }
   };
 
-  const products = await fetchProducts();
+  const products = await (await getRecommendedProducts()).matches;
 return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">

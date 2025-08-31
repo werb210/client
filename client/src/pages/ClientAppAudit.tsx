@@ -220,7 +220,7 @@ export function ClientAppAudit() {
     return JSON.stringify(report, null, 2);
   };
 
-  const products = await fetchProducts();
+  const products = await (await getRecommendedProducts()).matches;
 return (
     <div className="container mx-auto p-6 max-w-6xl">
       <Card className="mb-6">

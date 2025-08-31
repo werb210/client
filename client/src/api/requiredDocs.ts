@@ -1,11 +1,10 @@
-import { API_BASE, SHARED_TOKEN, USE_API_FIRST, MAY_FALLBACK } from "@/lib/env";
+import { fetchRequiredDocs } from "./products";
+import { API_BASE, SHARED_TOKEN, USE_API_FIRST, MAY_FALLBACK , fetchRequiredDocs} from "@/lib/env";
 
 export async function fetchRequiredDocs(productId: string) {
   if (USE_API_FIRST) {
     try {
-      const res = await fetch(`${API_BASE}/required-docs?productId=${encodeURIComponent(productId)}`, {
-        headers: { Authorization: `Bearer ${SHARED_TOKEN}` },
-      });
+      const res = await /* rewired */
       if (res.ok) return await res.json();
       console.warn("API /required-docs failed", res.status);
     } catch (e) {

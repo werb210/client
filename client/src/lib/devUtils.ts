@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { fetchProducts , getRecommendedProducts} from "../api/products";
 /**
  * Product Compatibility Validation Script
  * Validates all lender products against Step 2 and Step 5 business logic requirements
