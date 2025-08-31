@@ -1,0 +1,164 @@
+Yes—please send it. Here’s a clean, copy-paste message for the **client app Replit agent**, plus the tiny bridge util and a quick browser console test.
+
+---
+
+# Message to Replit (client app)
+
+**Goal:** Ensure Step 2 → Step 5 → Step 7 data flows are complete and lender-ready.
+
+## 1) Step 2 must persist full selection
+
+**File:** `client/src/routes/apply/step-2/index.tsx` (or the active Step 2 component)
+
+* On category (or product) select, persist **both** category fields and product fields **to localStorage and app state**.
+
+```ts
+// client/src/lib/appState.ts
+export const saveStep2 = (sel: {
+  selectedCategory: string;
+  selectedCategoryName: string;
+  selectedProductId?: string;
+  selectedProductName?: string;
+  selectedLenderName?: string;
+  matchScore?: number;
+}) => {
+  localStorage.setItem('bf:step2', JSON.stringify(sel));
+  (window as any).__app = (window as any).__app || { state: {} };
+  (window as any).__app.state.step2 = sel;
+};
+```
+
+In Step 2 click handler, call:
+
+```ts
+saveStep2({
+  selectedCategory: category.id,                 // e.g. 'invoice_factoring'
+  selectedCategoryName: category.label,          // 'Invoice Factoring'
+  selectedProductId: product?.id,
+  selectedProductName: product?.name,
+  selectedLenderName: product?.lenderName,
+  matchScore: product?.matchScore ?? category.score
+});
+```
+
+## 2) Step 5 must derive docs from Step 1 + Step 2
+
+**File:** `client/src/routes/apply/step-5/index.tsx` (active Step 5)
+
+* Read Step 1 + Step 2 and build the consolidated required list.
+* Record `bypassedDocuments` when user proceeds without all files.
+
+```ts
+// client/src/lib/requirements.ts
+import { getIntake, getStep2 } from './storage';
+
+export const buildRequirements = () => {
+  const step1 = getIntake();   // fundingAmount, country, etc.
+  const step2 = getStep2();    // selectedCategory, selectedCategoryName, ...
+
+  const base = ['bank_statements', 'financial_statements']; // always
+  const byCategory: Record<string, string[]> = {
+    invoice_factoring: ['ar_aging', 'invoice_samples'],
+    equipment_financing: ['equipment_quote'],
+    term_loan: [],
+    line_of_credit: [],
+    working_capital: [],
+    purchase_order_financing: ['purchase_orders']
+  };
+
+  const extras = byCategory[step2?.selectedCategory || ''] || [];
+  return [...base, ...extras];
+};
+```
+
+* Display the list; when continuing, persist:
+
+```ts
+localStorage.setItem('bf:step5:bypass', JSON.stringify(bypassedTypes)); // string[]
+```
+
+## 3) Step 7 must include the fields in the submission payload
+
+**New file:** `client/src/lib/submissionBridge.ts`
+
+```ts
+export function buildSubmission(appState: any, uploaded: Array<{type:string}>){
+  const step1 = appState.step1;
+  const step2 = appState.step2;
+  const step3 = appState.step3;
+  const step4 = appState.step4;
+  const step5 = appState.step5 || {};
+  const step6 = appState.step6 || {};
+  const bypass = JSON.parse(localStorage.getItem('bf:step5:bypass') || '[]');
+
+  return {
+    // 17 top-level fields
+    step1,
+    step3,
+    step4,
+    signatureComplete: step6.completed ?? false,
+    signatureTimestamp: step6.submittedAt ?? null,
+    signNowDocumentId: step6.documentId ?? null,
+    lenderProductId: step2?.selectedProductId ?? null,
+    lenderId: appState.lenderId ?? null,
+    loanProductCategory: step2?.selectedCategory ?? null,
+    loanProductCategoryLabel: step2?.selectedCategoryName ?? null,
+    submissionTimestamp: new Date().toISOString(),
+    termsAccepted: appState.termsAccepted ?? true,
+    privacyAccepted: appState.privacyAccepted ?? true,
+    applicationId: step6.applicationId ?? appState.id,
+    documentCount: uploaded?.length ?? 0,
+    documentTypes: uploaded?.map(f => f.type) ?? [],
+    bypassDocuments: bypass
+  };
+}
+```
+
+**Wire it in Step 7 submit handler** (before posting):
+
+```ts
+import { buildSubmission } from '@/lib/submissionBridge';
+
+const appState = (window as any).__app?.state || {};
+const payload = buildSubmission(appState, uploadedFiles /* [{type: 'bank_statements'}, ...] */);
+
+const form = new FormData();
+form.append('payload', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+uploadedFiles.forEach(f => form.append('files[]', f.file, f.name));
+
+await fetch('/api/v1/applications', { method: 'POST', body: form });
+```
+
+## 4) Quick browser console test (paste on Step 7 page before submit)
+
+```js
+(() => {
+  const s1 = JSON.parse(localStorage.getItem('bf:intake')||'{}');
+  const s2 = JSON.parse(localStorage.getItem('bf:step2')||'{}');
+  const bypass = JSON.parse(localStorage.getItem('bf:step5:bypass')||'[]');
+  console.table([
+    {key:'Step1 fundingAmount', ok: !!s1.fundingAmount, value:s1.fundingAmount},
+    {key:'Step2 selectedCategory', ok: !!s2.selectedCategory, value:s2.selectedCategory},
+    {key:'Step2 selectedCategoryName', ok: !!s2.selectedCategoryName, value:s2.selectedCategoryName},
+    {key:'Step2 selectedProductId', ok: !!s2.selectedProductId, value:s2.selectedProductId},
+    {key:'Step5 bypassedDocuments', ok: Array.isArray(bypass), value:bypass.join(', ')}
+  ]);
+})();
+```
+
+**PASS criteria (what I will check):**
+
+* Step 2 stores **both** `selectedCategory` **and** `selectedCategoryName` (plus product/lender/matchScore).
+* Step 5 shows category-specific docs and records `bypassedDocuments`.
+* Step 7 submission payload contains:
+
+  * `loanProductCategory` / `loanProductCategoryLabel`
+  * `lenderProductId`, `lenderId` (if chosen)
+  * `documentCount`, `documentTypes`, `bypassDocuments`
+  * `step1`, `step3`, `step4` intact.
+
+If any item is missing, implement the code above exactly and re-run the console test.
+
+---
+
+If you want, I can also include a tiny interceptor to log the **exact** `/api/v1/applications` payload in the browser for visual confirmation.

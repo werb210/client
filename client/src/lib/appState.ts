@@ -24,8 +24,15 @@ export function saveIntake(v: Intake) { localStorage.setItem(K_INTAKE, JSON.stri
 export function getStep2(): Step2Selection | null {
   try { return JSON.parse(localStorage.getItem(K_STEP2) || 'null'); } catch { return null; }
 }
-export function saveStep2(v: Step2Selection) {
-  localStorage.setItem(K_STEP2, JSON.stringify(v));
-  // simple runtime handshake other steps can read
-  (window as any).__step2 = v;
-}
+export const saveStep2 = (sel: {
+  selectedCategory: string;
+  selectedCategoryName: string;
+  selectedProductId?: string;
+  selectedProductName?: string;
+  selectedLenderName?: string;
+  matchScore?: number;
+}) => {
+  localStorage.setItem('bf:step2', JSON.stringify(sel));
+  (window as any).__app = (window as any).__app || { state: {} };
+  (window as any).__app.state.step2 = sel;
+};

@@ -121,12 +121,15 @@ export default function Step2() {
     // Save to shared app state for Step 5 integration
     const category = categories.find(c => c.id === id);
     if (category) {
-      saveStep2({ 
-        categoryId: id as any, 
-        categoryLabel: category.name, 
-        matchScore: category.score 
+      saveStep2({
+        selectedCategory: id,
+        selectedCategoryName: category.name,
+        selectedProductId: undefined, // Will be set when product is selected
+        selectedProductName: undefined,
+        selectedLenderName: undefined,
+        matchScore: category.score
       });
-      console.log("[Step2] Saved category to app state:", { categoryId: id, categoryLabel: category.name });
+      console.log("[Step2] Saved category to app state:", { selectedCategory: id, selectedCategoryName: category.name });
     }
   }
 

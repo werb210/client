@@ -25,6 +25,7 @@ import { ApplicationStatusModal } from '@/components/ApplicationStatusModal';
 
 import { canSubmitApplication } from '@/lib/applicationStatus';
 import { submitApplication, retryOperation, type ApplicationPayload } from '@/services/applicationService';
+import { buildSubmission } from '@/lib/submissionBridge';
 
 
 /**
@@ -113,73 +114,25 @@ export default function Step7Submit() {
 
       logger.log('✅ Application status check passed - proceeding with submission');
 
-      // Continue with submission logic using new ApplicationService
-      // Create FormData for file upload
-      const formData = new FormData();
+      // Use submission bridge for lender-ready payload
+      const appState = (window as any).__app?.state || {};
+      const payload = buildSubmission(appState, uploadedFiles.map(f => ({ type: f.documentType || 'general' })));
       
-      // ✅ CRITICAL FIX: Use existing step-based structure from state
-      if (!state.step1 || !state.step3 || !state.step4) {
-        throw new Error('Missing step-based structure in state. Cannot submit application.');
-      }
-
-      logger.log('📤 Step7_Submit: Using step-based structure from state:', {
-        step1: state.step1,
-        step3: state.step3,
-        step4: state.step4
-      });
-
-      // Get Step 2 selection from app state
-      const step2Selection = JSON.parse(localStorage.getItem('bf:step2') || 'null');
-
-      const applicationData = {
-        step1: state.step1,
-        step3: state.step3,
-        step4: state.step4,
-        // Step 6: Signature Status
-        signatureComplete: !!state.step6Signature?.signedAt,
-        signatureTimestamp: state.step6Signature?.signedAt || '',
-        signNowDocumentId: state.step6Signature?.documentId || '',
-        
-        // Step 2: Selected product information (using app state)
-        lenderProductId: state.selectedProduct,
-        lenderId: state.selectedLenderId,
-        loanProductCategory: step2Selection?.categoryId || 'not_selected',
-        loanProductCategoryLabel: step2Selection?.categoryLabel || 'Not selected',
-        
-        // Submission metadata
-        submissionTimestamp: new Date().toISOString(),
-        termsAccepted: true,
-        privacyAccepted: true,
-        applicationId: state.step4?.applicationId || '',
-        
-        // Document metadata
-        documentCount: uploadedFiles.length,
-        documentTypes: uploadedFiles.map(f => f.documentType).join(', '),
-        bypassDocuments: bypassDocuments
-      };
+      const formData = new FormData();
+      formData.append('payload', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
       
       // ✅ USER REQUIREMENT: Add comprehensive submission logging
-      console.log("📤 Submitting application:", applicationData);
-      console.log("📤 Application Business Name:", applicationData.step3?.businessName || applicationData.step3?.operatingName || 'NOT FOUND');
-      console.log("📤 Application Legal Name:", applicationData.step3?.legalName || applicationData.step3?.businessLegalName || 'NOT FOUND');
-      console.log("📤 Applicant Name:", `${applicationData.step4?.firstName || ''} ${applicationData.step4?.lastName || ''}`.trim() || 'NOT FOUND');
-      console.log("📤 Application ID:", applicationData.applicationId);
+      console.log("📤 Submitting application:", payload);
+      console.log("📤 Application Business Name:", payload.step3?.businessName || payload.step3?.operatingName || 'NOT FOUND');
+      console.log("📤 Application Legal Name:", payload.step3?.legalName || payload.step3?.businessLegalName || 'NOT FOUND');
+      console.log("📤 Applicant Name:", `${payload.step4?.firstName || ''} ${payload.step4?.lastName || ''}`.trim() || 'NOT FOUND');
+      console.log("📤 Application ID:", payload.applicationId);
       console.log("📤 Document Count:", uploadedFiles.length);
-      console.log("📤 Document Upload Bypassed:", bypassDocuments);
+      console.log("📤 Document Upload Bypassed:", payload.bypassDocuments);
       
-      formData.append('applicationData', JSON.stringify(applicationData));
+      uploadedFiles.forEach(f => formData.append('files[]', f.file, f.name));
       
-      // Add actual document files (NOT placeholders)
-      uploadedFiles.forEach((uploadedFile, index) => {
-        if (uploadedFile.file) {
-          // Use actual File object with proper metadata
-          formData.append(`document_${index}`, uploadedFile.file, uploadedFile.name);
-          formData.append(`documentType_${index}`, uploadedFile.documentType || 'general');
-          formData.append(`documentStatus_${index}`, uploadedFile.status || 'completed');
-        }
-      });
-      
-      const submitUrl = `/api/applications/${state.step4?.applicationId}/submit`;
+      const submitUrl = `/api/v1/applications`;
       console.log("📤 Submitting to URL:", submitUrl);
       
       // ✅ USER REQUIREMENT: Wrap fetch in try/catch for comprehensive error handling

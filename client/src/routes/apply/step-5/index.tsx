@@ -1,6 +1,6 @@
 import React from 'react';
 import { getIntake, getStep2 } from '@/lib/appState';
-import { buildRequirements } from '@/lib/docs/requirements';
+import { buildRequirements } from '@/lib/requirements';
 
 export default function Step5_RequiredDocuments() {
   const intake = getIntake();
@@ -17,7 +17,23 @@ export default function Step5_RequiredDocuments() {
     );
   }
 
-  const reqs = buildRequirements({ intake, step2 });
+  const reqs = buildRequirements().map(docType => ({
+    key: docType,
+    label: formatDocumentLabel(docType),
+    required: true
+  }));
+
+  function formatDocumentLabel(docType: string): string {
+    const labels: Record<string, string> = {
+      'bank_statements': 'Bank Statements (last 6 months)',
+      'financial_statements': 'Business Financial Statements (P&L & Balance Sheet)',
+      'ar_aging': 'A/R Aging Report',
+      'invoice_samples': 'Sample Invoices (unpaid)',
+      'equipment_quote': 'Equipment Quote / Spec Sheet',
+      'purchase_orders': 'Purchase Orders'
+    };
+    return labels[docType] || docType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -47,7 +63,14 @@ export default function Step5_RequiredDocuments() {
 
       <div className="flex justify-between">
         <a href="/apply/step-4" className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">Back</a>
-        <a href="/apply/step-6" className="px-4 py-2 rounded bg-emerald-600 text-white">Continue to Final Submission</a>
+        <a href="/apply/step-6" className="px-4 py-2 rounded bg-emerald-600 text-white" onClick={(e) => {
+          // Track bypassed documents when user continues without uploads
+          const bypass = reqs.map(r => r.key).filter(req => 
+            !document.querySelector(`[data-doc-card="${req}"] input[type="file"]`)?.files?.length
+          );
+          localStorage.setItem('bf:step5:bypass', JSON.stringify(bypass));
+          console.log('[Step5] Bypassed documents:', bypass);
+        }}>Continue to Final Submission</a>
       </div>
     </div>
   );
