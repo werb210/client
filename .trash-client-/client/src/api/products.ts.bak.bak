@@ -57,6 +57,6 @@ export async function fetchApplicationStatus(id: string): Promise<any> {
   return await res.json();
 }
 
-// REMOVED: getRecommendedProducts moved to canonical lib/recommendations/engine.ts to avoid conflicts
+// REMOVED: /* removed old engine */ moved to canonical lib/recommendations/engine.ts to avoid conflicts
 
 export default { getProducts, fetchRequiredDocs, fetchApplications, submitApplication, fetchApplicationStatus, fetchLenderProducts, fetchDocumentRequirements };

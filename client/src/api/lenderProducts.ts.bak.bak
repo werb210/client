@@ -1,5 +1,5 @@
 import { fetchProducts } from "./products";
-import { getRecommendedProducts } from "../api/products"
+import {  } from "../api/products"
 export interface LenderProduct {
   id: string;
   lender: string;

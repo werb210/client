@@ -51,7 +51,7 @@ export function Step2RecommendationEngine(props: Props){
         const products = await import('../api/products').then(m => m.getProducts());
         setAllProducts(Array.isArray(products) ? products : []);
         // Initial filter with form data
-        const { getRecommendedProducts } = await import('../lib/recommendations/engine');
+        const { /* removed old engine */ } = await import('../lib/recommendations/engine');
         const formData = requireIntake();
         const data = 
         setFilteredProducts(Array.isArray(data) ? data : []);
@@ -65,7 +65,7 @@ export function Step2RecommendationEngine(props: Props){
 
   const handleCategoryChange = async (categories: string[]) => {
     try {
-      const { getRecommendedProducts } = await import('../lib/recommendations/engine');
+      const { /* removed old engine */ } = await import('../lib/recommendations/engine');
       const formData = requireIntake();
       const data = 
       setFilteredProducts(Array.isArray(data) ? data : []);

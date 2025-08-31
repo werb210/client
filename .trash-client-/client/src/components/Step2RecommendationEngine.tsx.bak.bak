@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, ArrowRight } from 'lucide-react';
@@ -48,10 +48,10 @@ export function Step2RecommendationEngine(props: Props){
   useEffect(()=>{
     (async ()=>{
       try{
-        const products = await import('../api/products').then(m => m.fetchProducts());
+        const products = await import('../api/products').then(m => m.getProducts());
         setAllProducts(Array.isArray(products) ? products : []);
         // Initial filter with form data
-        const { getRecommendedProducts } = await import('../lib/recommendations/engine');
+        const { /* removed old engine */ } = await import('../lib/recommendations/engine');
         const formData = requireIntake();
         const data = 
         setFilteredProducts(Array.isArray(data) ? data : []);
@@ -65,7 +65,7 @@ export function Step2RecommendationEngine(props: Props){
 
   const handleCategoryChange = async (categories: string[]) => {
     try {
-      const { getRecommendedProducts } = await import('../lib/recommendations/engine');
+      const { /* removed old engine */ } = await import('../lib/recommendations/engine');
       const formData = requireIntake();
       const data = 
       setFilteredProducts(Array.isArray(data) ? data : []);

@@ -1,0 +1,295 @@
+# ============================
+# CLIENT APP — STEP 2 CATEGORY MODE (no duplicates)
+# ============================
+set -euo pipefail
+
+AUDIT_AT="$(date +%F_%H-%M-%S)"
+R="reports/client-step2-category-$AUDIT_AT"
+mkdir -p "$R"
+
+echo "== 0) Snapshot current Step 2 imports =="
+rg -nI --hidden -S 'getRecommendedProducts|recommendations/engine|/v1/products|/lenders' client/src \
+  | tee "$R/00_step2_refs.txt" >/dev/null || true
+
+echo "== 1) Extend unified products API with category helpers (idempotent) =="
+mkdir -p client/src/api
+cat > client/src/api/categories.ts <<'TS'
+/**
+ * Category helpers for Step 2.
+ * Canonical categories: term_loan, line_of_credit, equipment_financing, mca, working_capital,
+ * (optional) invoice_factoring, purchase_order_financing
+ */
+export type CanonicalCategory =
+  | "term_loan"
+  | "line_of_credit"
+  | "equipment_financing"
+  | "mca"
+  | "working_capital"
+  | "invoice_factoring"
+  | "purchase_order_financing";
+
+const MAP: Record<string, CanonicalCategory> = {
+  "term loan": "term_loan",
+  "term_loans": "term_loan",
+  "term_loan": "term_loan",
+  "loc": "line_of_credit",
+  "line of credit": "line_of_credit",
+  "line_of_credit": "line_of_credit",
+  "equipment financing": "equipment_financing",
+  "equipment_finance": "equipment_financing",
+  "equipment_financing": "equipment_financing",
+  "mca": "mca",
+  "merchant cash advance": "mca",
+  "working capital": "working_capital",
+  "working_capital": "working_capital",
+  "invoice factoring": "invoice_factoring",
+  "invoice_factoring": "invoice_factoring",
+  "purchase order financing": "purchase_order_financing",
+  "purchase_order_financing": "purchase_order_financing",
+};
+
+export function canonicalizeCategory(raw?: string): CanonicalCategory | undefined {
+  if (!raw) return;
+  const k = String(raw).trim().toLowerCase().replace(/\s+/g, ' ');
+  return MAP[k] ?? MAP[k.replace(/\s/g,'_')];
+}
+
+export type Product = {
+  id: string;
+  name?: string;
+  lender_name?: string;
+  category?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  country?: string;
+};
+
+export type CategorySummary = {
+  key: CanonicalCategory;
+  label: string;
+  count: number;
+  lenders: number;
+  minAmount: number | null;
+  maxAmount: number | null;
+};
+
+export function summarizeCategories(products: Product[]): CategorySummary[] {
+  const byKey = new Map<CanonicalCategory, { setIds:Set<string>, setLenders:Set<string>, min:number|null, max:number|null }>();
+  const label = (k:CanonicalCategory) => ({
+    term_loan: "Term Loan",
+    line_of_credit: "Line of Credit",
+    equipment_financing: "Equipment Financing",
+    mca: "Merchant Cash Advance",
+    working_capital: "Working Capital",
+    invoice_factoring: "Invoice Factoring",
+    purchase_order_financing: "Purchase Order Financing",
+  }[k]);
+
+  for (const p of products) {
+    const key = canonicalizeCategory(p.category);
+    if (!key) continue;
+    if (!byKey.has(key)) byKey.set(key, { setIds:new Set(), setLenders:new Set(), min:null, max:null });
+    const bucket = byKey.get(key)!;
+    bucket.setIds.add(p.id);
+    if (p.lender_name) bucket.setLenders.add(p.lender_name);
+    const lo = typeof p.minAmount === 'number' ? p.minAmount : null;
+    const hi = typeof p.maxAmount === 'number' ? p.maxAmount : null;
+    bucket.min = (bucket.min==null) ? lo : (lo==null ? bucket.min : Math.min(bucket.min, lo));
+    bucket.max = (bucket.max==null) ? hi : (hi==null ? bucket.max : Math.max(bucket.max, hi));
+  }
+
+  return Array.from(byKey.entries()).map(([key, v]) => ({
+    key,
+    label: label(key),
+    count: v.setIds.size,
+    lenders: v.setLenders.size,
+    minAmount: v.min,
+    maxAmount: v.max,
+  })).sort((a,b)=> a.label.localeCompare(b.label));
+}
+TS
+
+echo "== 2) Category-first UI component for Step 2 (no product cards) =="
+mkdir -p client/src/features/step2
+cat > client/src/features/step2/CategoryMode.tsx <<'TS'
+import React, { useEffect, useMemo, useState } from "react";
+import { summarizeCategories, Product, CategorySummary } from "../../api/categories";
+
+// Local-first product loader: prefer your existing fetcher if present.
+async function loadProducts(): Promise<Product[]> {
+  try {
+    const r = await fetch("/api/v1/products", { credentials:"same-origin" });
+    if (r.ok) return r.json();
+  } catch {}
+  // fallback if your API returns a wrapped shape
+  try {
+    const r = await fetch("/api/v1/products", { credentials:"same-origin" });
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j.items)) return j.items;
+    }
+  } catch {}
+  return [];
+}
+
+const LS_KEY = "bf:step2:categories";
+
+export default function CategoryMode() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selected, setSelected] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { return []; }
+  });
+
+  useEffect(() => {
+    loadProducts().then(setProducts);
+  }, []);
+
+  const summaries = useMemo(() => summarizeCategories(products), [products]);
+
+  useEffect(() => {
+    localStorage.setItem(LS_KEY, JSON.stringify(selected));
+    // expose for debugging
+    (window as any).__step2_cat = { selected, available: summaries };
+  }, [selected, summaries]);
+
+  function toggle(key: string) {
+    setSelected(s => s.includes(key) ? s.filter(x=>x!==key) : [...s, key]);
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-6">
+      <h2 className="text-xl font-semibold mb-2">Choose product category</h2>
+      <p className="text-sm text-gray-600 mb-4">
+        Pick one or more categories. We’ll tailor docs (Step 5) and the downstream export accordingly.
+      </p>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {summaries.map(s => (
+          <button
+            key={s.key}
+            onClick={()=>toggle(s.key)}
+            className={[
+              "rounded-xl border p-4 text-left transition",
+              selected.includes(s.key) ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+            ].join(" ")}
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-base font-medium">{s.label}</div>
+              <input type="checkbox" checked={selected.includes(s.key)} readOnly />
+            </div>
+            <div className="mt-2 text-xs text-gray-600">
+              {s.count} products • {s.lenders} lenders
+              { (s.minAmount!=null || s.maxAmount!=null) && (
+                <> • range: ${s.minAmount ?? "?"}–${s.maxAmount ?? "?"}</>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-6 text-sm text-gray-700">
+        Selected: {selected.length ? selected.join(", ") : "None"}
+      </div>
+    </div>
+  );
+}
+TS
+
+echo "== 3) Swap Step 2 page to CategoryMode and remove legacy engine =="
+# Try common step-2 entrypoints; adjust paths as needed in your repo
+STEP2_FILES=$(rg -l "(Step 2|Step2|Lender Recommendations|getRecommendedProducts)" client/src | tr '\n' ' ')
+echo "$STEP2_FILES" | tee "$R/10_step2_candidates.txt" >/dev/null
+
+# Replace engine imports with CategoryMode
+for f in $STEP2_FILES; do
+  sed -i '' -E 's|from .*/recommendations/engine.*$|from "../features/step2/CategoryMode"|g' "$f" 2>/dev/null || true
+  sed -i '' -E 's|getRecommendedProducts|/* removed old engine */|g' "$f" 2>/dev/null || true
+  sed -i '' -E 's|<ProductsList[^>]*>.*</ProductsList>|<CategoryMode />|g' "$f" 2>/dev/null || true
+  sed -i '' -E 's|<Step2[^>]*/>|<CategoryMode />|g' "$f" 2>/dev/null || true
+done
+
+# If there is a clear Step 2 route component, force render CategoryMode
+RG_STEP2=$(rg -l "Lender Recommendations|Step 2" client/src | head -n 1 || true)
+if [ -n "${RG_STEP2}" ]; then
+  awk 'BEGIN{printed=0}
+       /export default function|export default class/ {print; print "  return (<CategoryMode />)"; skip=1; next}
+       skip==1 { next }
+       { print }' "$RG_STEP2" > "$RG_STEP2.tmp" 2>/dev/null || true
+  if [ -s "$RG_STEP2.tmp" ]; then mv "$RG_STEP2.tmp" "$RG_STEP2"; fi
+fi
+
+# Remove legacy engine file(s) to avoid duplicates (keep safe)
+TRASH=".trash-client-$AUDIT_AT"
+mkdir -p "$TRASH"
+for f in $(rg -l "recommendations/engine" client/src || true); do
+  mkdir -p "$TRASH/$(dirname "$f")"; mv "$f" "$TRASH/$f"
+done
+
+echo "== 4) Persist selected categories into submission payload (non-breaking) =="
+# Augment a central submit function if present; otherwise create a tiny shim used by Step 5.
+SUBMIT_SHIM="client/src/api/submit-categories.ts"
+cat > "$SUBMIT_SHIM" <<'TS'
+/**
+ * Attach Step 2 categories to the outgoing application payload without
+ * breaking existing schema. Stores under answers.productCategories (array).
+ */
+export function attachCategories(payload: any){
+  try{
+    const cats = JSON.parse(localStorage.getItem("bf:step2:categories")||"[]");
+    if (!Array.isArray(cats) || !cats.length) return payload;
+    const next = { ...(payload||{}) };
+    next.answers = { ...(next.answers||{}), productCategories: cats };
+    return next;
+  }catch{ return payload; }
+}
+TS
+
+# Attempt to inject shim into a common submit module
+rg -l "submitApplication|useSubmitApplication" client/src | while read -r f; do
+  if ! grep -q "attachCategories" "$f"; then
+    sed -i '' -E '1 i\
+import { attachCategories } from "../api/submit-categories";
+' "$f" 2>/dev/null || true
+    sed -i '' -E 's|(fetch\([^)]*\/applications[^)]*\)\s*,\s*\{[^}]*body:\s*JSON\.stringify\()|\1attachCategories(|' "$f" 2>/dev/null || true
+    sed -i '' -E 's|JSON\.stringify\(([^)]*)\)\)|JSON.stringify(\1))|g' "$f" 2>/dev/null || true
+  fi
+done
+
+echo "== 5) Build & quick category smoke test =="
+npm run build >/dev/null 2>&1 || (echo "Build failed – check Step 2 swap" && exit 1)
+
+echo "Products per canonical category (from local API):" | tee "$R/20_counts.txt"
+curl -s http://localhost:5000/api/v1/products \
+ | jq -r '
+    def key(c):
+      (c|ascii_downcase|gsub(" "; "_")) as $k
+      | if $k=="term_loan" or $k=="term_loans" then "term_loan"
+        elif $k=="line_of_credit" or $k=="loc" then "line_of_credit"
+        elif $k=="equipment_finance" or $k=="equipment_financing" then "equipment_financing"
+        elif $k=="merchant_cash_advance" or $k=="mca" then "mca"
+        elif $k=="working_capital" then "working_capital"
+        elif $k=="invoice_factoring" or $k=="invoice factoring" then "invoice_factoring"
+        elif $k=="purchase_order_financing" then "purchase_order_financing"
+        else null end;
+    group_by( key(.category) ) | map({k:(.[0].category), n:length})' \
+ | tee -a "$R/20_counts.txt" >/dev/null
+
+cat <<'NOTE'
+
+== BROWSER VERIFY (after restart) ==
+1) Navigate to Step 2. You should see only category cards (no product cards).
+2) Click a few; then in console:  window.__step2_cat
+   Expect: { selected:[...], available:[{key,label,count,lenders,...}, ...] }
+3) Proceed later to Step 5; docs should reflect your selected categories.
+   (Our Step 5 API already reads category for static fallback if needed.)
+
+== GUARANTEES ==
+- No duplicates: old engine files moved to .trash-client-<ts>/ and imports removed.
+- Submission unchanged except we add answers.productCategories (non-breaking).
+- Local-first fetch: avoids staff URL 404s / refresh traps.
+
+Reports:  $R
+Trash:    $TRASH
+NOTE
+
+echo "Done."

@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 /**
  * CLIENT VERIFICATION DIAGNOSTIC PAGE
  * Tests IndexedDB caching, sync behavior, and Step 2/5 access patterns
@@ -280,7 +280,7 @@ export default function ClientVerificationDiagnostic() {
     }
   };
 
-  // REMOVED: Fixed syntax error - getRecommendedProducts call moved inside component
+  // REMOVED: Fixed syntax error -  call moved inside component
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">

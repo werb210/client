@@ -1,63 +1,14 @@
-import { getProducts } from "../api/products";
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { StepHeader } from '@/components/StepHeader';
-import { Step2RecommendationEngine } from '@/components/Step2RecommendationEngine';
-import CategoryPicker from '@/components/CategoryPicker';
+import CategoryMode from '@/features/step2/CategoryMode';
+import { Button } from '@/components/ui/button';
 
 export default function Step2Recommendations() {
   const { data: contextData } = useFormData();
-  
-  // Create a mock state and dispatch to avoid errors
-  const state = {
-    step1: contextData || {},
-    formData: { selectedProduct: '' },
-    currentStep: 2
-  };
-  const dispatch = (action: any) => {
-    console.log('Mock dispatch:', action);
-  };
   const [, setLocation] = useLocation();
 
-  // Pull from (1) form context, (2) localStorage backup, (3) empty fallback
-  const fromState = state ?? {};
-  const fromStorage = (() => {
-    try {
-      const s = localStorage.getItem("apply.form");
-      return s ? JSON.parse(s) : null;
-    } catch { return null; }
-  })();
-
-  // Try to get data from multiple sources and merge
-  const step1Data = fromState.step1 ?? fromState ?? fromStorage?.step1 ?? {};
-  const globalData = fromState ?? fromStorage ?? {};
-  const safeFormData = { ...globalData, ...step1Data };
-
-  // Debug: Log form data received from Step 1 (safe)
-  console.log('🔍 [STEP2] Form data received (safe):', safeFormData);
-  console.log('🔍 [STEP2] Step1 data:', step1Data);
-  console.log('🔍 [STEP2] Global data:', globalData);
-
-  const handleProductSelect = (product: string) => {
-    dispatch({
-      type: 'UPDATE_FORM_DATA',
-      payload: {
-        selectedProduct: product
-      }
-    });
-  };
-
   const handleContinue = () => {
-    // Save the selected product to step2 data
-    dispatch({
-      type: 'UPDATE_FORM_DATA',
-      payload: {
-        step2: {
-          selectedProduct: state.formData.selectedProduct,
-          completed: true,
-        },
-      },
-    });
     setLocation('/step3');
   };
 
@@ -71,31 +22,23 @@ export default function Step2Recommendations() {
         <StepHeader
           stepNumber={2}
           totalSteps={7}
-          title="Lender Recommendations"
-          description="Based on your financial profile, here are the best loan products for you"
+          title="Choose Product Categories"
+          description="Select the types of financing you're interested in"
         />
 
         <div className="max-w-4xl mx-auto mt-8">
-          <Step2RecommendationEngine
-            formData={safeFormData}
-            selectedProduct={state.formData?.selectedProduct || ''}
-            onProductSelect={handleProductSelect}
-            onContinue={handleContinue}
-            onPrevious={handleBack}
-          />
+          <CategoryMode />
+          
+          <div className="flex justify-between mt-8">
+            <Button variant="outline" onClick={handleBack}>
+              Previous
+            </Button>
+            <Button onClick={handleContinue}>
+              Continue
+            </Button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-// injected: local-first products fetch
-import { getProducts, loadSelectedCategories } from "../api/products";
-/* injected load on mount (pseudo):
-useEffect(() => { (async () => {
-  const cats = loadSelectedCategories();
-  const products = await getProducts({ useCacheFirst: true });
-  // apply category filter if present
-  const selected = cats && cats.length ? products.filter(p => cats.includes((p.category||"").toLowerCase())) : products;
-  setState({ products: selected });
-})(); }, []);
-*/

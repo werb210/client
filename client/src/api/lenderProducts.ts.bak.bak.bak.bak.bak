@@ -1,5 +1,4 @@
 import { fetchProducts } from "./products";
-import { getRecommendedProducts } from "../api/products";
 export interface LenderProduct {
   id: string;
   lender: string;
