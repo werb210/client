@@ -1,3 +1,4 @@
+import { getRecommendedProducts } from '../lib/recommendations/engine';
 import { useState } from 'react';
 import { fetchProducts } from "../api/products";
 import { Button } from '@/components/ui/button';

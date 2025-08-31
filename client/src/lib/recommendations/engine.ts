@@ -1,3 +1,4 @@
+import { getRecommendedProducts } from './engine';
 /* canonical recommendation engine (no duplicates); exports named+default */
 // Define CanonicalProduct type directly since types file doesn't exist
 type CanonicalProduct = {

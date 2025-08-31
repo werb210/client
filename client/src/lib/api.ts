@@ -1,3 +1,4 @@
+import { getRecommendedProducts } from './recommendations/engine';
 import { attachTrace, getTraceId } from "../telemetry/lineage";
 import { fetchProducts } from "../api/products";
 export type CanonicalProduct = {

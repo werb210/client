@@ -1,3 +1,4 @@
+import { getRecommendedProducts } from '../lib/recommendations/engine';
 import React from 'react';
 import { fetchProducts } from "../api/products";
 import { useQuery } from '@tanstack/react-query';

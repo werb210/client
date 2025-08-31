@@ -1,3 +1,4 @@
+import { getRecommendedProducts } from '../lib/recommendations/engine';
 import React, { useState, useEffect } from 'react';
 import { fetchProducts } from "../api/products";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
