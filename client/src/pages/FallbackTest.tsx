@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 import { fetchLenderProducts } from '@/lib/api';
 import { LenderProduct } from '../../../shared/lenderProductSchema';
 
@@ -49,7 +49,7 @@ export function FallbackTest() {
     }
   };
 
-  const products = await fetchProducts();
+  const products = await getProducts();
 return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">

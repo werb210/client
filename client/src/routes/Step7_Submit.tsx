@@ -1,4 +1,4 @@
-import { fetchProducts } from "../../api/products";
+import { getProducts } from "../../api/products";
 import { attachTrace, getTraceId } from "../telemetry/lineage";
 import React, { useState } from 'react';
 import { logger } from '@/lib/utils';
@@ -496,3 +496,14 @@ export default function Step7Submit() {
     </div>
   );
 }
+// injected: local-first products fetch
+import { getProducts, loadSelectedCategories } from "../api/products";
+/* injected load on mount (pseudo):
+useEffect(() => { (async () => {
+  const cats = loadSelectedCategories();
+  const products = await getProducts({ useCacheFirst: true });
+  // apply category filter if present
+  const selected = cats && cats.length ? products.filter(p => cats.includes((p.category||"").toLowerCase())) : products;
+  setState({ products: selected });
+})(); }, []);
+*/

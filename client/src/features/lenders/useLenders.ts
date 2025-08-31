@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchProducts } from "../../api/products";
+import { getProducts } from "../../api/products";
 
 export type Lender = {
   id: string; name: string; legal_name?: string|null; slug?: string|null;
@@ -11,7 +11,7 @@ export function useLenders(params?: { q?: string; country?: string; active?: boo
   const [data,setData]=useState<Lender[]|null>(null); const [err,setErr]=useState<Error|null>(null);
   useEffect(()=>{ let on=true; (async()=>{
     try {
-      const products = await fetchProducts();
+      const products = await getProducts();
       // Convert products to lender format for compatibility
       const lenders = products.map(p => ({
         id: p.id || p.name || 'unknown',

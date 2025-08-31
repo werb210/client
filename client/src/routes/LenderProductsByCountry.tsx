@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +36,7 @@ interface ProductsByCountry {
 }
 
 async function fetchLenderProductsByCountry(): Promise<ProductsByCountry> {
-  const products = await fetchProducts();
+  const products = await getProducts();
   const data = { products: products.map(p => ({
     id: p.id || 'unknown',
     name: p.name || p.productName || 'Unknown Product',
@@ -155,7 +155,7 @@ export default function LenderProductsByCountry() {
     Array.from(new Set(Object.values(productsByCountry).flat().map(p => p.type))) : [];
 
   if (isLoading) {
-    const products = await fetchProducts();
+    const products = await getProducts();
 return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="text-center py-12">

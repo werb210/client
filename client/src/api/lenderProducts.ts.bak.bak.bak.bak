@@ -1,0 +1,79 @@
+import { getProducts } from "./products";
+import { getRecommendedProducts } from "../api/products";
+export interface LenderProduct {
+  id: string;
+  lender: string;
+  lenderId: string;
+  productName: string;
+  category: string;
+  minAmount: number;
+  maxAmount: number;
+  countryOffered: string;
+  isActive: boolean;
+}
+
+export interface LenderProductsResponse {
+  success: boolean;
+  products: LenderProduct[];
+  error?: string;
+}
+
+// API functions for lender products
+export const fetchLenderProducts = async () => { /* ensure products fetched */ 
+  const res = await fetch('https://staff.boreal.financial/api/v1/products')
+  
+  if (!res.ok) {
+    throw new Error(`Failed to fetch products: ${res.status} ${res.statusText}`);
+  }
+  
+  const data = await res.json();
+  
+  // Transform Staff API response to unified client schema
+  // Staff API returns products directly as an array
+  const products = Array.isArray(data) ? data : (data.products || []);
+  
+  const transformedProducts = products.map((p: any) => ({
+    id: p.id,
+    lender: p.lender_name || p.lender,
+    lenderId: p.lender_id || p.id?.split('-')[0] || p.id,
+    productName: p.name || p.productName,
+    category: p.category,
+    minAmount: p.min_amount || p.minAmount || 0,
+    maxAmount: p.max_amount || p.maxAmount || Number.MAX_SAFE_INTEGER,
+    countryOffered: p.country || p.countryOffered,
+    isActive: p.active !== false
+  }));
+  
+  return {
+    success: true,
+    products: transformedProducts
+  };
+};
+
+export const filterProductsByCategory = (
+  products: LenderProduct[], 
+  category: string,
+  amount?: number,
+  country?: string
+): LenderProduct[] => {
+  return products.filter(product => {
+    const matchesCategory = product.category === category;
+    const matchesAmount = !amount || (amount >= product.minAmount && amount <= product.maxAmount);
+    const matchesCountry = !country || product.countryOffered === country || product.countryOffered === 'United States' || product.countryOffered === 'US';
+    const isActive = product.isActive !== false;
+    
+    return matchesCategory && matchesAmount && matchesCountry && isActive;
+  });
+};
+
+export const getRecommendations = async (
+  category: string = 'Working Capital', 
+  amount: number = 50000,
+  country: string = 'US'
+): Promise<LenderProduct[]> => {
+  const response = await fetchLenderProducts();
+  if (response.success) {
+    return filterProductsByCategory(response.products, category, amount, country);
+  }
+  return [];
+};

@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 /**
  * Strongly-typed client for Staff API V2
  * Generated from expanded lender product schema

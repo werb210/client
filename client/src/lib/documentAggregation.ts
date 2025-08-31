@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 /**
  * Document Aggregation Logic for Step 5
  * Implements union of all required documents across eligible lender products
@@ -61,8 +61,8 @@ export async function getDocumentRequirementsAggregation(
   
   try {
     // Fetch all lender products from staff API - FIXED ENDPOINT
-    const { fetchProducts } = await import('../api/products');
-    const allProducts = await fetchProducts();
+    const { getProducts } = await import('../api/products');
+    const allProducts = await getProducts();
     
     if (allProducts.length === 0) {
       throw new Error(`Staff API error: ${response.status}`);
@@ -281,8 +281,8 @@ export async function validateLenderProductDocumentFields(): Promise<{
   sampleDocumentField: string;
 }> {
   try {
-    const { fetchProducts } = await import('../api/products');
-    const allProducts = await fetchProducts();
+    const { getProducts } = await import('../api/products');
+    const allProducts = await getProducts();
     
     if (!allProducts || allProducts.length === 0) {
       throw new Error('Failed to fetch products');
@@ -333,3 +333,14 @@ export async function validateLenderProductDocumentFields(): Promise<{
     };
   }
 }
+// injected: local-first products fetch
+import { getProducts, loadSelectedCategories } from "../api/products";
+/* injected load on mount (pseudo):
+useEffect(() => { (async () => {
+  const cats = loadSelectedCategories();
+  const products = await getProducts({ useCacheFirst: true });
+  // apply category filter if present
+  const selected = cats && cats.length ? products.filter(p => cats.includes((p.category||"").toLowerCase())) : products;
+  setState({ products: selected });
+})(); }, []);
+*/

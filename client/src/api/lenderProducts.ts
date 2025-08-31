@@ -1,5 +1,5 @@
-import { fetchProducts } from "./products";
-import { getRecommendedProducts } from "../lib/recommendations/engine";
+import { getProducts } from "./products";
+
 export interface LenderProduct {
   id: string;
   lender: string;

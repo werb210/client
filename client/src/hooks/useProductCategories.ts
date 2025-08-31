@@ -1,4 +1,4 @@
-import { fetchProducts } from "../../api/products";
+import { getProducts } from "../../api/products";
 import { useQuery } from '@tanstack/react-query';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
 import { recommend } from '@/lib/reco/engine';

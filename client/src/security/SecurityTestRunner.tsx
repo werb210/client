@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -435,7 +435,7 @@ export default function SecurityTestRunner() {
       warning: 'secondary' as const
     };
     
-    const products = await fetchProducts();
+    const products = await getProducts();
 return (
       <Badge variant={variants[status]} className="ml-2">
         {status.toUpperCase()}

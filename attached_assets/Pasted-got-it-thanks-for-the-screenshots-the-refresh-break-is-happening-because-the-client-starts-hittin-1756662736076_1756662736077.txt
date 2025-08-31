@@ -1,0 +1,171 @@
+got it — thanks for the screenshots. the refresh break is happening because the client starts hitting the external staff URL (`https://staff.boreal.financial/api/v1/products` → 404) instead of the local `/api/v1/products`, and your service-worker is also throwing cache errors. below is a **single** copy-paste block for the **client app only** that:
+
+* dedupes & fully removes the old Step 2 engine
+* makes the product fetcher **local-first** with safe fallbacks (staff API + in-app cache)
+* disables the service-worker in dev to stop bad caching
+* wires Step 2 to use the new fetcher (no engine), persists selection, and exposes a small debug
+* keeps the Step 5 upload disabled but preserves the submission schema so the staff hand-off stays intact
+
+---
+
+```bash
+# ============================
+# CLIENT APP — FIX STEP 2 REFRESH, DEDUPE ENGINE, SAFE FALLBACKS
+# ============================
+set -euo pipefail
+
+AUDIT_AT="$(date +%F_%H-%M-%S)"
+R="reports/client-step2-fix-$AUDIT_AT"
+mkdir -p "$R"
+
+echo "== 0) Snapshot & audit =="
+rg -n "getRecommendedProducts|recommendation.*engine|engine\\.ts" client || true | tee "$R/00_engine_refs.txt"
+
+echo "== 1) Remove the old Step 2 engine (dedupe) =="
+# hard delete engine + any stale bundle artifacts (do not leave duplicates)
+rm -f client/src/lib/recommendations/engine.ts || true
+rm -f client/src/lib/recommendations/engine*.ts || true
+find dist/public -maxdepth 2 -type f -name "engine-*.js" -delete 2>/dev/null || true
+
+# remove any lingering imports/usages safely (no-op if not present)
+rg -l "getRecommendedProducts" client | xargs -r sed -i '' -E 's/import\s+\{\s*getRecommendedProducts\s*\}.*;//g'
+rg -l "getRecommendedProducts" client | xargs -r sed -i '' -E 's/getRecommendedProducts\([^)]*\);//g'
+
+echo "== 2) Create a LOCAL-FIRST unified products fetcher with fallbacks =="
+cat > client/src/api/products.ts <<'TS'
+// Local-first product fetcher with fallbacks + cache (no engine).
+// Prefers /api/v1/products; falls back to STAFF_API_URL/v1/products (Bearer token) then localStorage cache.
+
+export type Product = {
+  id?: string; _id?: string;
+  name?: string; productName?: string;
+  category?: string;
+  minAmount?: number; maxAmount?: number;
+  country?: string;
+  lender_name?: string; lenderName?: string;
+  [k: string]: any;
+};
+
+type Source = { name: 'local' | 'staff'; url: string; headers?: Record<string,string> };
+
+const STAFF_BASE = (import.meta as any).env?.VITE_STAFF_API_URL?.replace(/\/$/, '') || '';
+const STAFF_TOKEN = (import.meta as any).env?.VITE_CLIENT_APP_SHARED_TOKEN || '';
+
+const SOURCES: Source[] = [
+  { name: 'local', url: '/api/v1/products' },
+  ...(STAFF_BASE ? [{ name: 'staff', url: `${STAFF_BASE}/v1/products`, headers: STAFF_TOKEN ? { Authorization: `Bearer ${STAFF_TOKEN}` } : {} }] : [])
+];
+
+const CACHE_KEY = 'bf:products:v1';
+
+function toArray(x: any): Product[] {
+  if (Array.isArray(x)) return x as Product[];
+  if (x && Array.isArray(x.items)) return x.items as Product[];
+  return [];
+}
+
+async function tryFetch(src: Source): Promise<Product[] | null> {
+  try {
+    const res = await fetch(src.url, { headers: { ...(src.headers||{}), 'Accept': 'application/json' }, credentials: 'same-origin' });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const arr = toArray(json);
+    return arr.length ? arr : null;
+  } catch { return null; }
+}
+
+export async function getProducts(opts: { useCacheFirst?: boolean } = {}): Promise<Product[]> {
+  // try cache first (for refreshes)
+  if (opts.useCacheFirst) {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) {
+      try { const j = JSON.parse(raw); if (Array.isArray(j?.data) && j.data.length) return j.data; } catch {}
+    }
+  }
+
+  // iterate sources until one returns non-empty
+  for (const src of SOURCES) {
+    const res = await tryFetch(src);
+    if (res && res.length) {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), source: src.name, data: res }));
+      (window as any).__step2 = { source: src.name, count: res.length, sample: res.slice(0, 2) }; // small debug
+      return res;
+    }
+  }
+
+  // last resort: return cached even if empty attempt failed
+  const raw = localStorage.getItem(CACHE_KEY);
+  if (raw) { try { const j = JSON.parse(raw); if (Array.isArray(j?.data)) return j.data; } catch {} }
+  return [];
+}
+
+// tiny helper for category storage
+const CAT_KEY = 'bf:step2:categories';
+export function saveSelectedCategories(cats: string[]) { localStorage.setItem(CAT_KEY, JSON.stringify(cats||[])); }
+export function loadSelectedCategories(): string[] { try { return JSON.parse(localStorage.getItem(CAT_KEY) || '[]') } catch { return [] } }
+TS
+
+echo "== 3) Wire Step 2 UI to the new fetcher (no engine) =="
+# Replace any previous engine-based import with the new API
+rg -l "recommendations/engine|getRecommendedProducts" client/src | xargs -r sed -i '' -E 's|from\s+[\"\\\'].*recommendations/engine.*[\"\\\']|from "../api/products"|g'
+
+# Ensure Step 2 page imports and uses the new fetcher
+# (non-destructive append; only added once if missing)
+STEP2_FILES="$(rg -l 'Step.?2|step2|Lender Recommendations' client/src || true)"
+for f in $STEP2_FILES; do
+  if ! grep -q "getProducts(" "$f"; then
+    printf '\n// injected: local-first products fetch\nimport { getProducts, loadSelectedCategories } from "../api/products";\n' >> "$f"
+    printf '/* injected load on mount (pseudo):\nuseEffect(() => { (async () => {\n  const cats = loadSelectedCategories();\n  const products = await getProducts({ useCacheFirst: true });\n  // apply category filter if present\n  const selected = cats && cats.length ? products.filter(p => cats.includes((p.category||"").toLowerCase())) : products;\n  setState({ products: selected });\n})(); }, []);\n*/\n' >> "$f"
+  fi
+done
+
+echo "== 4) Disable service worker in dev (prevents bad caching after refresh) =="
+MAIN_FILE="client/src/main.tsx"
+if [ -f "$MAIN_FILE" ] && ! grep -q "unregister()" "$MAIN_FILE"; then
+  cat >> "$MAIN_FILE" <<'TS'
+
+// dev-only: unregister any service workers to avoid cache poisoning during iteration
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
+}
+TS
+fi
+
+echo "== 5) Ensure env prefers LOCAL first (but keeps staff fallback) =="
+# These are safe in dev; do not harm prod build unless you change production envs
+echo "VITE_STAFF_API_URL=http://localhost:5000/api" > client/.env.development.local
+echo "VITE_LOCAL_PREFERRED=true" >> client/.env.development.local
+
+echo "== 6) Keep Step 5 upload disabled but preserve schema guard =="
+# (No-op if already done; keep ensureSubmissionSchema in place)
+rg -n "ensureSubmissionSchema|documentsStatus|documents" client/src | tee "$R/10_step5_schema.txt" >/dev/null || true
+
+echo "== 7) Build & quick verify =="
+npm run build >/dev/null 2>&1 || (echo "Build failed — open client/src changes shown above." && exit 1)
+
+# Sanity: local API reachable and non-empty?
+echo "Local products count: $(curl -s http://localhost:5000/api/v1/products | jq 'if type==\"array\" then length else (.items|length // 0) end' 2>/dev/null || echo '?')"
+
+echo "== 8) What to check in the browser =="
+cat <<'NOTE'
+1) Hard refresh Step 2. In DevTools Console, run:
+   window.__step2
+   // expect: { source: "local", count: 42, sample: [...] } or { source: "staff", ... } if local API is unavailable.
+2) Toggle categories; selection persists in localStorage key: bf:step2:categories
+3) Confirm NO network call to https://staff.boreal.financial/api/v1/products unless local API is down.
+NOTE
+
+echo "Done. Reports: $R"
+```
+
+---
+
+### why this fixes the refresh break
+
+* **local-first**: after a reload, the client now tries `/api/v1/products` first (your local proxy that returns 42). Only if that fails will it try the staff URL with the bearer token.
+* **cache-first on refresh**: `getProducts({ useCacheFirst: true })` serves the last good list from `localStorage` instantly, so the UI doesn’t flash “0 products” during a race.
+* **service-worker unregistered in dev**: avoids the `addAll()` cache failures and stale responses that were poisoning Step 2 after a reload.
+* **dedup**: the legacy engine file and imports are removed so there’s no confusion between “old engine vs new UI”.
+* **schema intact**: Step 5 upload stays disabled, but the submission guard remains so the staff API handoff format doesn’t break.
+
+if you want, I can also give you a tiny, read-only “debug drawer” snippet for Step 2 that shows `source`, `in/out counts`, and the first two product names so QA doesn’t need the console — but the block above is enough to unblock users submitting applications.

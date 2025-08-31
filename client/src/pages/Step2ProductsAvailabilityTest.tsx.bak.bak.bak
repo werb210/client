@@ -1,0 +1,215 @@
+import { useState, useEffect } from 'react';
+import { getRecommendedProducts } from "../api/products"
+import { fetchProducts } from "../api/products";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
+export default function Step2ProductsAvailabilityTest() {
+  const [testResults, setTestResults] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [summary, setSummary] = useState<any>({});
+
+  const addResult = (test: string, status: 'success' | 'error' | 'info', details: any) => {
+    setTestResults(prev => [...prev, { test, status, details, timestamp: new Date().toISOString() }]);
+  };
+
+  const checkLenderProductsAvailability = async () => { /* ensure products fetched */ 
+    setIsLoading(true);
+    setTestResults([]);
+    
+    // Test 1: Check Staff API Connection
+    try {
+      const staffResponse = await fetch('https://staff.boreal.financial/api/v1/products')
+      const staffData = await staffResponse.json();
+      
+      addResult('Staff API Connection', staffResponse.ok ? 'success' : 'error', {
+        status: staffResponse.status,
+        statusText: staffResponse.statusText,
+        productCount: staffData.products?.length || 0,
+        data: staffData
+      });
+    } catch (error) {
+      addResult('Staff API Connection', 'error', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        type: 'Network Error'
+      });
+    }
+
+    // Test 2: Check for Removed Local API
+    addResult('Local API Status', 'info', {
+      message: 'Local lenders API has been removed - using staff backend only',
+      status: 'Removed as requested'
+    });
+
+    // Test 3: Check Step 2 API Endpoint
+    try {
+      const step2Response = await fetch('/api/loan-products/categories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          businessLocation: 'Canada',
+          fundingAmount: 50000,
+          lookingFor: 'capital',
+          accountsReceivable: 'zero_to_100k'
+        })
+      });
+      
+      const step2Data = await step2Response.json();
+      
+      addResult('Step 2 Categories API', step2Response.ok ? 'success' : 'error', {
+        status: step2Response.status,
+        categories: step2Data.categories || [],
+        totalProducts: step2Data.totalProducts || 0,
+        data: step2Data
+      });
+    } catch (error) {
+      addResult('Step 2 Categories API', 'error', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        type: 'API Error'
+      });
+    }
+
+    // Test 4: Direct Browser IndexedDB Check
+    try {
+      const dbName = 'LenderProductsDB';
+      const storeName = 'products';
+      
+      const request = indexedDB.open(dbName, 1);
+      
+      request.onsuccess = () => {
+        const db = request.result;
+        const transaction = db.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
+        const getAllRequest = store.getAll();
+        
+        getAllRequest.onsuccess = () => {
+          const products = getAllRequest.result;
+          addResult('Direct IndexedDB Check', 'success', {
+            productCount: products.length,
+            sampleProducts: products.slice(0, 3).map(p => ({
+              id: p.id,
+              productName: p.productName,
+              lender: p.lender,
+              geography: p.geography
+            }))
+          });
+        };
+      };
+      
+      request.onerror = () => {
+        addResult('Direct IndexedDB Check', 'error', {
+          error: 'IndexedDB access failed',
+          type: 'Database Error'
+        });
+      };
+    } catch (error) {
+      addResult('Direct IndexedDB Check', 'error', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        type: 'IndexedDB Error'
+      });
+    }
+
+    // Generate summary
+    setTimeout(() => {
+      const summary = {
+        totalTests: testResults.length,
+        passed: testResults.filter(r => r.status === 'success').length,
+        failed: testResults.filter(r => r.status === 'error').length,
+        warnings: testResults.filter(r => r.status === 'info').length
+      };
+      setSummary(summary);
+      setIsLoading(false);
+    }, 2000);
+  };
+
+  return (
+    <div className="container mx-auto p-6 max-w-6xl">
+      <Card>
+        <CardHeader>
+          <CardTitle>Step 2 Lender Products Availability Test</CardTitle>
+          <CardDescription>
+            Check how many lender products are available to Step 2 recommendation engine
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Button 
+            onClick={checkLenderProductsAvailability}
+            disabled={isLoading}
+            className="w-full"
+          >
+            {isLoading ? 'Testing Product Availability...' : 'Check Lender Products Availability'}
+          </Button>
+
+          {Object.keys(summary).length > 0 && (
+            <Card className="bg-blue-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Test Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="flex gap-4">
+                <Badge variant="outline" className="bg-green-100">
+                  ✅ Passed: {summary.passed}
+                </Badge>
+                <Badge variant="outline" className="bg-red-100">
+                  ❌ Failed: {summary.failed}
+                </Badge>
+                <Badge variant="outline" className="bg-yellow-100">
+                  ⚠️ Warnings: {summary.warnings}
+                </Badge>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="space-y-4">
+            {testResults.map((result, index) => (
+              <Card key={index} className={`border-l-4 ${
+                result.status === 'success' ? 'border-l-green-500' :
+                result.status === 'error' ? 'border-l-red-500' :
+                'border-l-blue-500'
+              }`}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    {result.status === 'success' ? '✅' : 
+                     result.status === 'error' ? '❌' : 'ℹ️'}
+                    {result.test}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {result.timestamp}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40">
+                    {JSON.stringify(result.details, null, 2)}
+                  </pre>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-8 p-4 bg-amber-50 rounded-lg">
+            <h3 className="font-semibold mb-2">Expected Results:</h3>
+            <ul className="text-sm space-y-1">
+              <li>✅ Staff API: Should return 41+ products from live database</li>
+              <li>✅ IndexedDB: Should have cached products from previous sync</li>
+              <li>✅ Step 2 API: Should return filtered categories for Canadian $50K request</li>
+              <li>✅ Direct IndexedDB: Should show products stored in browser</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+// injected: local-first products fetch
+import { getProducts, loadSelectedCategories } from "../api/products";
+/* injected load on mount (pseudo):
+useEffect(() => { (async () => {
+  const cats = loadSelectedCategories();
+  const products = await getProducts({ useCacheFirst: true });
+  // apply category filter if present
+  const selected = cats && cats.length ? products.filter(p => cats.includes((p.category||"").toLowerCase())) : products;
+  setState({ products: selected });
+})(); }, []);
+*/

@@ -1,4 +1,4 @@
-import { fetchProducts } from "../../api/products";
+import { getProducts } from "../../api/products";
 
 export type Lender = {
   id: string; name: string; legal_name?: string|null; slug?: string|null;
@@ -8,7 +8,7 @@ export type Lender = {
 
 // All lender operations now route through the unified products fetcher
 export async function listLenders(params?: { q?: string; country?: string; active?: boolean; limit?: number; offset?: number }): Promise<Lender[]> {
-  const products = await fetchProducts();
+  const products = await getProducts();
   // Convert products to lender format
   let lenders = products.map(p => ({
     id: p.id || p.name || 'unknown',

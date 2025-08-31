@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 /**
  * Test Content Security Policy Implementation
  * Validates that CSP headers are properly configured

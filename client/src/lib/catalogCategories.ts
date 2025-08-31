@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 // PURPOSE
 // Make the client's "$50,000 in Canada — what categories could match?" call succeed,
 // regardless of auth state and while the backend stabilizes.

@@ -1,4 +1,4 @@
-import { fetchProducts } from "../../api/products";
+import { getProducts } from "../../api/products";
 import { LenderProduct as ImportedLenderProduct } from '../types/lenderProduct';
 
 /**
@@ -281,3 +281,14 @@ export function getAvailableCategories(products: LenderProduct[]): LenderProduct
   const categories = new Set(products.map(product => product.category));
   return Array.from(categories);
 }
+// injected: local-first products fetch
+import { getProducts, loadSelectedCategories } from "../api/products";
+/* injected load on mount (pseudo):
+useEffect(() => { (async () => {
+  const cats = loadSelectedCategories();
+  const products = await getProducts({ useCacheFirst: true });
+  // apply category filter if present
+  const selected = cats && cats.length ? products.filter(p => cats.includes((p.category||"").toLowerCase())) : products;
+  setState({ products: selected });
+})(); }, []);
+*/

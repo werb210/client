@@ -1,4 +1,4 @@
-import { fetchProducts } from "../../api/products";
+import { getProducts } from "../../api/products";
 /**
  * ❌ DISABLED: Advanced recommendation engine is not allowed on client
  * All recommendation processing is handled server-side by Staff App

@@ -1,5 +1,5 @@
-import { fetchProducts } from "../api/products";
-import { getRecommendedProducts } from "./recommendations/engine";
+import { getProducts } from "../api/products";
+
 /**
  * Product Compatibility Validation Script
  * Validates all lender products against Step 2 and Step 5 business logic requirements
@@ -543,3 +543,14 @@ ${results
     console.error('Validation failed:', error);
   }
 };
+// injected: local-first products fetch
+import { getProducts, loadSelectedCategories } from "../api/products";
+/* injected load on mount (pseudo):
+useEffect(() => { (async () => {
+  const cats = loadSelectedCategories();
+  const products = await getProducts({ useCacheFirst: true });
+  // apply category filter if present
+  const selected = cats && cats.length ? products.filter(p => cats.includes((p.category||"").toLowerCase())) : products;
+  setState({ products: selected });
+})(); }, []);
+*/

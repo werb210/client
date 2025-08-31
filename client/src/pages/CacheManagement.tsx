@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +56,7 @@ export default function CacheManagement() {
     cacheStatus.applicationId === null &&
     cacheStatus.tokens.length === 0;
 
-  const products = await fetchProducts();
+  const products = await getProducts();
 return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 space-y-6">

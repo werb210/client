@@ -1,8 +1,8 @@
-import { fetchProductsStable } from "./products";
+import { getProductsStable } from "./products";
 export type UILender = { id:string; name:string; product_count:number };
 
 export async function fetchUILenders(): Promise<UILender[]> {
-  const prods = await fetchProductsStable();
+  const prods = await getProductsStable();
   const by = new Map<string,UILender>();
   for (const p of prods) {
     const id = p.lenderName || 'Unknown';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -114,7 +114,7 @@ export default function Step5IntersectionTest() {
   const successCount = testResults.filter(r => r.success).length;
   const totalTests = testResults.length;
 
-  const products = await fetchProducts();
+  const products = await getProducts();
 return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <Card>

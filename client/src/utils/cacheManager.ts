@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 /**
  * Cache Management Utility
  * Handles comprehensive cache clearing and state verification

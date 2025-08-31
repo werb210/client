@@ -1,5 +1,5 @@
 import { usePublicLenders } from '@/hooks/usePublicLenders';
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 interface LenderProduct {
   id: string;
   product_name: string;
@@ -45,7 +45,7 @@ export default function TestLenderAPI() {
     return labels[type as keyof typeof labels] || type;
   };
 
-  const products = await fetchProducts();
+  const products = await getProducts();
 return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">

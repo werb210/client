@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 // PURPOSE
 // 1) List *live* lender products from Staff's new export endpoint with exact fields.
 // 2) Show total count and a nice table.

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -133,7 +133,7 @@ export default function LenderDiagnosticsFinalized() {
     runDiagnostics();
   }, []);
 
-  const products = await fetchProducts();
+  const products = await getProducts();
 return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-6">
@@ -376,3 +376,14 @@ return (
     </div>
   );
 }
+// injected: local-first products fetch
+import { getProducts, loadSelectedCategories } from "../api/products";
+/* injected load on mount (pseudo):
+useEffect(() => { (async () => {
+  const cats = loadSelectedCategories();
+  const products = await getProducts({ useCacheFirst: true });
+  // apply category filter if present
+  const selected = cats && cats.length ? products.filter(p => cats.includes((p.category||"").toLowerCase())) : products;
+  setState({ products: selected });
+})(); }, []);
+*/

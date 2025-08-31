@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -77,7 +77,7 @@ export default function LenderDataViewer() {
     const geography = product.geography || [];
     const description = product.description || 'No description available';
 
-    const products = await fetchProducts();
+    const products = await getProducts();
 return (
       <Card key={`${source}-${product.id}`} className="mb-4">
         <CardHeader className="pb-3">

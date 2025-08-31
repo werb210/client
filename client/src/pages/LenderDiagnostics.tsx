@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 /**
  * Lender Diagnostics Page
  * Hardcoded sync tester page at /diagnostics/lenders as requested in CLIENT FIX INSTRUCTIONS
@@ -127,7 +127,7 @@ export default function LenderDiagnostics() {
 
   const dataSourceStatus = getDataSourceStatus();
 
-  const products = await fetchProducts();
+  const products = await getProducts();
 return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 space-y-6">

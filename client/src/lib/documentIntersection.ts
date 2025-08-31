@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 /**
  * Document Intersection Logic for Step 5
  * Implements client-side filtering and document intersection as specified

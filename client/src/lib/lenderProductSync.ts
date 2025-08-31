@@ -1,4 +1,4 @@
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 /**
  * Lender Product Sync System
  * Production-ready sync with retry logic, background updates, and data preservation

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -315,7 +315,7 @@ export default function CriticalFixesValidation() {
       }
     };
 
-    const products = await fetchProducts();
+    const products = await getProducts();
 return (
       <Card key={item.id} className={`${getStatusBg()} transition-colors`}>
         <CardHeader className="pb-3">

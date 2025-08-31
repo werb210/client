@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 import * as api from "./api";
 
 // Legacy functions for backward compatibility
@@ -42,7 +42,7 @@ export const getQueryFn: (options: {
         return await api.fetchRequiredDocuments(category || '');
       } else if (endpoint.startsWith('/api/products/requirements')) {
         // Route to unified products fetcher
-        return await fetchProducts();
+        return await getProducts();
       }
       
       throw new Error(`No API function mapped for endpoint: ${endpoint}`);

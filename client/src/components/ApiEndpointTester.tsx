@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fetchProducts } from "../api/products";
+import { getProducts } from "../api/products";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -97,7 +97,7 @@ export const ApiEndpointTester = () => {
     }
   };
 
-  const products = await fetchProducts();
+  const products = await getProducts();
 return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
