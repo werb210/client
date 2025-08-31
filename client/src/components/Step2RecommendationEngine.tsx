@@ -9,17 +9,14 @@ const requireIntake = () => {
   const sessionData = sessionStorage.getItem('bf:intake');
   const localData = localStorage.getItem('bf:intake');
   const applyFormData = localStorage.getItem('apply.form');
-  console.log('🔍 [requireIntake] Raw storage data:', { sessionData, localData, applyFormData });
   
   const s = sessionData || localData || applyFormData;
   if (!s) {
-    console.warn('🚨 [requireIntake] No storage data found in any location');
     return null;
   }
   
   try {
     const parsed = JSON.parse(s);
-    console.log('🔍 [requireIntake] Parsed intake:', parsed);
     return parsed;
   } catch (e) {
     console.error('🚨 [requireIntake] JSON parse error:', e);
@@ -79,16 +76,8 @@ export function Step2RecommendationEngine(props: Props){
     }
   };
 
-  // Detailed console logging for debugging
-  console.log('🔍 [STEP2] Storage debug:', {
-    sessionIntake: sessionStorage.getItem('bf:intake'),
-    localIntake: localStorage.getItem('bf:intake'),
-    parsedIntake: intake,
-    productsLoaded: products.length
-  });
 
   if (!intake) {
-    console.warn('🚨 [STEP2] No intake data found in storage!');
     return <Pending msg="Missing Step 1 data. Please complete Step 1 first." />;
   }
 
@@ -115,19 +104,6 @@ export function Step2RecommendationEngine(props: Props){
   if (loading) return <Pending msg="Loading live products…" />;
   if (error)   return <Pending msg={`Products error: ${error} | Debug: Check console for window.__step2`} />;
 
-  // Debug the filtering issue
-  console.log('🔍 [STEP2] Product filtering debug:', {
-    totalProducts: products.length,
-    eligibleProducts: eligible.length,
-    intake: { amount, country },
-    firstProduct: products[0] ? {
-      name: products[0].name,
-      country: products[0].country,
-      min_amount: products[0].min_amount,
-      max_amount: products[0].max_amount,
-      active: products[0].active
-    } : null
-  });
 
   if (!eligible.length) {
     return <Pending msg={`No eligible products after filters. Found ${products.length} total products but 0 eligible. Check console for filtering details.`} />;

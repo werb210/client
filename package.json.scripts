@@ -1,5 +1,0 @@
-"scripts": {
-  "schema:check": "tsx scripts/check-schema-integrity.ts check",
-  "schema:generate": "tsx scripts/check-schema-integrity.ts generate",
-  "audit:production": "curl -s https://staff.boreal.financial/api/lender-products | jq '.lenders[] | select(.name == null or .name == \"\")'"
-}

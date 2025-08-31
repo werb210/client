@@ -14,9 +14,6 @@ const toNum = (v: unknown) =>
   typeof v === 'number' ? v : Number(String(v ?? '').replace(/[^\d.-]/g, '') || 0);
 
 export function normalizeStep1(raw: Record<string, unknown>): Intake {
-  console.log('🔧 [normalizeStep1] Raw input:', raw);
-  console.log('🔧 [normalizeStep1] Raw input keys:', Object.keys(raw || {}));
-  
   const result = {
     capitalUse: String(raw.capitalUse ?? raw.purpose ?? raw.lookingFor ?? raw.fundsPurpose ?? '').trim(),
     amountRequested: toNum(raw.amountRequested ?? raw.fundingAmount ?? raw.amount ?? raw.requestedAmount),
@@ -33,8 +30,6 @@ export function normalizeStep1(raw: Record<string, unknown>): Intake {
     fixedAssets: toNum(raw.fixedAssetsValue ?? raw.fixedAssets),
   };
   
-  console.log('🔧 [normalizeStep1] Normalized result:', result);
-  console.log('🔧 [normalizeStep1] Expected by Step 2 - amountRequested:', result.amountRequested, 'country:', result.country);
   return result;
 }
 
@@ -47,7 +42,6 @@ export const saveIntake = (obj: unknown) => {
   try { 
     sessionStorage.setItem(KEY, jsonStr); 
     localStorage.setItem(KEY, jsonStr); // Belt and suspenders
-    console.log('✅ [saveIntake] Normalized and saved:', normalized);
   } catch (e) {
     console.error('❌ [saveIntake] Failed to save:', e);
   }
