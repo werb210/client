@@ -1,3 +1,4 @@
+import { attachTrace, getTraceId } from "../telemetry/lineage";
 import React, { useState } from 'react';
 import { logger } from '@/lib/utils';
 import { useLocation } from 'wouter';
@@ -181,8 +182,8 @@ export default function Step7Submit() {
         // Submit to staff API with multipart/form-data
         response = await fetch(submitUrl, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
+          headers:{
+            'Authorization': `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN, 'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client'}`
           },
           body: formData, // FormData automatically sets correct Content-Type
           credentials: 'include'

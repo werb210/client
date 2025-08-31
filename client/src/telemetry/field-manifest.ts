@@ -1,4 +1,4 @@
-// AUTO-GENERATED — CANONICAL FIELD MANIFEST (Steps 1–4)
+// AUTO-GENERATED — CANONICAL FIELD MANIFEST (Steps 1–5)
 export const FIELD_MANIFEST = {
   "byStep": {
     "step1": [
