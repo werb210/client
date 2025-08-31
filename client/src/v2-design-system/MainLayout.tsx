@@ -16,7 +16,7 @@ import Step3BusinessDetailsComplete from "@/routes/Step3_BusinessDetails_Complet
 
 // 🚀 PERFORMANCE OPTIMIZATION: Lazy load heavy components (1000+ lines)
 const Step4ApplicantInfoComplete = lazy(() => import("@/routes/Step4_ApplicantInfo_Complete"));
-const Step5DocumentUpload = lazy(() => import("@/routes/Step5_DocumentUpload"));
+const Step5DocumentUpload = lazy(() => import("@/routes/apply/step-5"));
 const Step6TypedSignature = lazy(() => import("@/routes/Step6_TypedSignature"));
 const ChatBot = lazy(() => import("@/components/ChatBot").then(module => ({ default: module.ChatBot })));
 

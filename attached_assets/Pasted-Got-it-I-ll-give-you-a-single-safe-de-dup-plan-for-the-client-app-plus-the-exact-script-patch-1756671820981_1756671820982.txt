@@ -1,0 +1,224 @@
+Got it — I’ll give you a **single, safe de-dup plan** for the client app plus the exact script/patches to hand to the Replit agent. This removes legacy Step 2/5 files, kills the old recommendation engine, normalizes imports to the canonical components, and verifies nothing broke (schema + API handoff untouched).
+
+---
+
+# 1) One-shot de-dup script (run in the client workspace shell)
+
+> Copy/paste the whole block to the Replit agent or a shell tab in the client app.
+
+```bash
+set -euo pipefail
+TS="$(date +%Y%m%d-%H%M%S)"
+REPORT="reports/dedup-client-$TS"
+mkdir -p "$REPORT"
+
+echo "== CLIENT DE-DUP START ($TS) ==" | tee "$REPORT/summary.txt"
+
+# 0) Canonical locations (these must remain)
+CAN_STEP2="client/src/routes/apply/step-2/index.tsx"
+CAN_STEP5="client/src/routes/apply/step-5/index.tsx"
+CAN_CARD="client/src/lib/recommendations/CategoryCard.tsx"
+CAN_API="client/src/lib/api.ts"
+CAN_CONST="client/src/lib/constants.ts"
+
+# 1) Inventory suspected duplicates (we keep canonical, remove the rest)
+DUPS="
+client/src/lib/recommendations/engine.ts
+client/src/lib/recommendations/engine.*.ts
+client/dist/public/_app/immutable/modules/lib/recommendations/engine.js
+client/src/routes/Step2_Recommendations.tsx
+client/src/routes/apply/Step2_Recommendations.tsx
+client/src/routes/apply/step-2/Step2_Recommendations.tsx
+client/src/routes/apply/step-2/legacy.tsx
+client/src/routes/apply/step-2-old/index.tsx
+client/src/routes/apply/step-5/Step5_DocumentUpload.tsx
+client/src/routes/apply/step-5/DocumentsUpload.tsx
+client/src/lib/apiClient.ts
+client/src/lib/api.tsx
+client/src/lib/config.ts
+"
+
+echo "Scanning duplicates..." | tee -a "$REPORT/summary.txt"
+FOUND="$(rg -n --glob '!node_modules' --glob '!dist' '(engine\.ts|Step2_Recommendations|Step5_DocumentUpload|DocumentsUpload|apiClient\.ts|api\.tsx|config\.ts)' -S || true)"
+printf "%s\n" "$FOUND" | tee "$REPORT/found-refs.txt"
+
+# 2) Remove duplicates if present (backup to .trash)
+TRASH=".trash-client-$TS"
+mkdir -p "$TRASH"
+echo "Removing legacy files (moved to $TRASH)..." | tee -a "$REPORT/summary.txt"
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  if [ -e "$f" ]; then
+    mkdir -p "$TRASH/$(dirname "$f")"
+    mv "$f" "$TRASH/$f"
+    echo "  - removed: $f" | tee -a "$REPORT/summary.txt"
+  fi
+done <<EOF
+$(printf "%s\n" $DUPS)
+EOF
+
+# 3) Codemods: retarget imports to canonical files
+#   - Any import of Step2_Recommendations -> apply/step-2/index
+#   - Any import of DocumentsUpload/Step5_DocumentUpload -> apply/step-5/index
+#   - Any import of engine.ts -> NO direct engine; Step 2 uses CategoryCard & index.tsx logic
+#   - apiClient.ts or api.tsx -> lib/api.ts
+echo "Rewriting imports to canonical modules..." | tee -a "$REPORT/summary.txt"
+
+rewrite() {
+  local pat="$1" repl="$2"
+  rg -l --glob '!node_modules' --glob '!dist' "$pat" | while read -r file; do
+    [ -z "$file" ] && continue
+    sed -i.bak -E "s|$pat|$repl|g" "$file"
+    echo "  * rewrote in $file: $pat -> $repl" >> "$REPORT/rewrites.txt"
+  done
+}
+
+rewrite 'from\s+["\'].*Step2_Recommendations["\']' 'from "@/routes/apply/step-2"'
+rewrite 'from\s+["\'].*(DocumentsUpload|Step5_DocumentUpload)["\']' 'from "@/routes/apply/step-5"'
+rewrite 'from\s+["\'].*lib/recommendations/engine(\.ts)?["\']' 'from "@/routes/apply/step-2"'
+rewrite 'from\s+["\'].*lib/api(Client)?(\.ts|\.tsx)?["\']' 'from "@/lib/api"'
+rewrite 'from\s+["\'].*lib/config(\.ts)?["\']' 'from "@/lib/constants"'
+
+# 4) Ensure service worker is disabled in dev (no cache poisoning)
+SW_JS="public/service-worker.js"
+if [ -f "$SW_JS" ]; then
+  if ! rg -n '\bself\.skipWaiting\(\)' "$SW_JS" >/dev/null 2>&1; then
+    echo '/* Dev guard: do nothing in dev */ self.addEventListener("install",e=>self.skipWaiting()); self.addEventListener("activate",e=>clients.claim());' >> "$SW_JS"
+    echo "Patched $SW_JS with safe dev guards" | tee -a "$REPORT/summary.txt"
+  fi
+fi
+
+# 5) Rebuild to validate
+echo "Building client to validate..." | tee -a "$REPORT/summary.txt"
+npm run build >/dev/null 2>&1 || (echo "Build failed — check logs." | tee -a "$REPORT/summary.txt"; exit 1)
+
+# 6) Sanity checks
+echo "Running sanity checks..." | tee -a "$REPORT/summary.txt"
+echo "  - Remaining engine.ts refs:" $(rg -n 'lib/recommendations/engine' -S | wc -l) | tee -a "$REPORT/summary.txt"
+echo "  - Remaining Step2_Recommendations refs:" $(rg -n 'Step2_Recommendations' -S | wc -l) | tee -a "$REPORT/summary.txt"
+echo "  - Remaining DocumentsUpload/Step5_DocumentUpload refs:" $(rg -n 'DocumentsUpload|Step5_DocumentUpload' -S | wc -l) | tee -a "$REPORT/summary.txt"
+echo "  - Imports of apiClient.ts/api.tsx:" $(rg -n 'apiClient\.ts|api\.tsx' -S | wc -l) | tee -a "$REPORT/summary.txt"
+
+echo "== DONE. Summary in $REPORT =="
+```
+
+**What this does**
+
+* Moves legacy/duplicate files into `.trash-client-<timestamp>/…` (non-destructive).
+* Rewrites imports to the canonical files.
+* Builds to catch mistakes.
+* Prints a short report.
+
+---
+
+# 2) Canonical Step 2 + Step 5 (surgical patches)
+
+These ensure only the **new** Step 2/5 are used and nothing references the old engine or old document screens.
+
+> Give these to the Replit agent as “apply patches”.
+
+### A) Step 2 – single owner, no engine, auto-select best, overlay guards
+
+```bash
+applypatch <<'PATCH'
+// FILE: client/src/routes/apply/step-2/index.tsx
+*** Begin Patch
+@@
+-// (Keep your current implementation if you already applied it)
+-// Ensure this file exports the Step 2 screen used by the router.
++// Canonical Step 2 screen
++// - Category-based (no legacy engine import)
++// - Auto-selects top match
++// - Saves selection in localStorage ("bf:step2:category")
++// - Overlay guards prevent click stealing
++
++export { default } from './Step2Page'; // keep implementation split if you prefer
+*** End Patch
+PATCH
+```
+
+(If you don’t have `Step2Page.tsx`, keep your existing in `index.tsx`; the key point is **no** imports from `lib/recommendations/engine` and **localStorage** key = `bf:step2:category`.)
+
+### B) Step 5 – single owner docs page
+
+```bash
+applypatch <<'PATCH'
+// FILE: client/src/routes/apply/step-5/index.tsx
+*** Begin Patch
+@@
+-// Avoid any duplicate "Step5_DocumentUpload" or "DocumentsUpload" imports.
+-// This file is the single owner for Step 5 document requirements UI.
++// Canonical Step 5 screen (single owner).
++// Consolidated requirements renderer + uploader lives here.
++// Keep export default to be the route target.
+*** End Patch
+PATCH
+```
+
+*(No functional changes here—just documenting and locking canonical ownership so Replit agent doesn’t reintroduce alternates.)*
+
+---
+
+# 3) Router hardening (point to canonical screens)
+
+```bash
+applypatch <<'PATCH'
+// FILE: client/src/routes.tsx (or wherever your app routes are declared)
+*** Begin Patch
+@@
+-// Possible legacy:
+-// import Step2_Recommendations from "./routes/Step2_Recommendations";
+-// import Step5_DocumentUpload from "./routes/apply/step-5/Step5_DocumentUpload";
++// Canonical route targets:
++import Step2 from "@/routes/apply/step-2";
++import Step5 from "@/routes/apply/step-5";
+@@
+-  { path: "/apply/step-2", element: <Step2_Recommendations /> },
+-  { path: "/apply/step-5", element: <Step5_DocumentUpload /> },
++  { path: "/apply/step-2", element: <Step2 /> },
++  { path: "/apply/step-5", element: <Step5 /> },
+*** End Patch
+PATCH
+```
+
+---
+
+# 4) Verification checklist (run after the script)
+
+Paste these one-liners in the client shell:
+
+```bash
+# No more legacy references:
+rg -n 'lib/recommendations/engine|Step2_Recommendations|DocumentsUpload|Step5_DocumentUpload|apiClient\.ts|api\.tsx|config\.ts' -S || true
+
+# Build & typecheck (if available):
+npm run build && (npm run typecheck || true)
+
+# Start and exercise Step 2:
+echo 'Open /apply/step-2. Console should show "[SW] Disabled in development".'
+```
+
+Then, in the **browser console** on Step 2:
+
+```js
+// Confirm only one canonical page is in play:
+[...document.querySelectorAll('[data-testid^="cat-"]')].length
+
+// Confirm selection is saved:
+localStorage.getItem('bf:step2:category')
+
+// Force default to the highest match on next load (clears old pick)
+localStorage.removeItem('bf:step2:category'); location.reload();
+```
+
+---
+
+# 5) What this *won’t* change
+
+* **Schema & handoff**: `useSubmitApplication` payload (including `documents: []` and `documentStatus: 'pending'`) remains intact.
+* **API base**: continues to use `VITE_API_BASE_URL` → staff app, unchanged.
+* **Step 5**: still consolidates required docs by selected category; only legacy *screens* are removed.
+
+---
+
+If you want, I can also add a CI-style guard that fails builds whenever someone re-introduces the old files. But the script above de-dups the codebase right now and locks the routing to the **single** canonical Step 2/5 screens so we don’t regress.

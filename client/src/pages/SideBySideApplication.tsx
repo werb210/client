@@ -11,10 +11,10 @@ import { CompanySelector } from '@/components/CompanySelector';
 
 // Import all step components
 import Step1FinancialProfile from '@/routes/Step1_FinancialProfile_Complete';
-import Step2Recommendations from '@/routes/Step2_Recommendations';
+import Step2Recommendations from '@/routes/apply/step-2';
 import Step3BusinessDetails from '@/routes/Step3_BusinessDetails_Complete';
 import Step4ApplicantDetails from '@/routes/Step4_ApplicantInfo_Complete';
-import Step5DocumentUpload from '@/routes/Step5_DocumentUpload';
+import Step5DocumentUpload from '@/routes/apply/step-5';
 
 
 const steps = [
