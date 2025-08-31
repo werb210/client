@@ -26,11 +26,11 @@ export default function Step2Recommendations() {
   }, []);
 
   const handleContinue = () => {
-    setLocation('/step3');
+    setLocation('/apply/step-3');
   };
 
   const handleBack = () => {
-    setLocation('/step1');
+    setLocation('/apply/step-1');
   };
 
   return (
