@@ -1,0 +1,315 @@
+# CLIENT APP — “Ask Replit” Rulebook Request & Extractor
+# Objective: Extract ALL rules used by the CLIENT application for:
+#   • Step 2 (Recommendations / product matching)
+#   • Step 5 (Documents / required-docs, upload constraints)
+#
+# Principles:
+#   • NON-DESTRUCTIVE and DEDUP-SAFE — writes reports/tests only, does not edit app code.
+#   • NO DUPLICATES — reuses/overwrites the same report dir for this run; test files overwrite in place.
+#   • MACHINE-READABLE + HUMAN-READABLE outputs for new engine parity work.
+#
+# Outputs (all under reports/):
+#   reports/client-rulebook-<TS>/
+#     - 10_step2_candidates.txt, 11_step5_candidates.txt
+#     - products.json (optional, if API reachable), required_docs.json (optional)
+#     - forms.json (fixture with Step 1 variants for Step 2)
+#     - 20_rules_step2.json + rulebook_step2.md
+#     - 21_rules_step5.json + rulebook_step5.md
+#     - rulebook.md (combined)
+#   client/src/lib/__tests_rule_parity__/  (tests only, overwrite safely)
+#     - _products.json, _forms.json, _rules_step2.json, _rules_step5.json
+#     - step2_parity.spec.ts, step5_parity.spec.ts
+#
+# Run from repo root (where /client exists). Requires: bash, rg (ripgrep), jq, node.
+
+set -euo pipefail
+
+TS="$(date +%F_%H-%M-%S)"
+R="reports/client-rulebook-$TS"
+mkdir -p "$R"
+
+echo "== CLIENT RULEBOOK (Step 2 + Step 5) @ $TS ==" | tee "$R/00_log.txt"
+echo "Mode: non-destructive, dedup-safe (reports + tests only)" | tee -a "$R/00_log.txt"
+
+################################################################################
+# 1) Discover client modules for Step 2 and Step 5
+################################################################################
+echo "STEP 1: Discovering client modules..." | tee -a "$R/00_log.txt"
+
+rg -nI --hidden -S -g '!node_modules' \
+  '(getRecommendedProducts|Step2.*Engine|recommendation.*engine|recommend.*(products|engine))' \
+  client/src \
+  | awk -F: '{print $1}' | sort -u | tee "$R/10_step2_candidates.txt" >/dev/null || true
+
+rg -nI --hidden -S -g '!node_modules' \
+  '(Step5|RequiredDocs|required[-_ ]?docs|Document(Collector|Uploader|Warning|Banner)|useRequiredDocs|doc.*engine|requiredDocsEngine)' \
+  client/src \
+  | awk -F: '{print $1}' | sort -u | tee "$R/11_step5_candidates.txt" >/dev/null || true
+
+echo "Step-2 candidate files: $(wc -l < "$R/10_step2_candidates.txt" 2>/dev/null || echo 0)" | tee -a "$R/00_log.txt"
+echo "Step-5 candidate files: $(wc -l < "$R/11_step5_candidates.txt" 2>/dev/null || echo 0)" | tee -a "$R/00_log.txt"
+
+################################################################################
+# 2) Optional fixtures from API (helps Step 2 extraction) + forms fixture
+################################################################################
+echo "STEP 2: Preparing fixtures..." | tee -a "$R/00_log.txt"
+
+BASE="${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+TOK="${VITE_CLIENT_APP_SHARED_TOKEN:-${CLIENT_SHARED_BEARER:-}}"
+PROD_JSON="$R/products.json"
+DOCS_JSON="$R/required_docs.json"
+
+# Try staff API first; else fall back to local dev; else empty.
+if curl -sf -H "Authorization: Bearer $TOK" "$BASE/v1/products" >/dev/null; then
+  curl -s -H "Authorization: Bearer $TOK" "$BASE/v1/products" \
+  | jq 'if type=="array" then . else (.items//[]) end
+        | map({id,
+               name:(.name//.productName),
+               lender:(.lender_name//.lenderName),
+               category,
+               country,
+               province:(.province//.state),
+               minAmount, maxAmount,
+               industries,
+               timeInBusinessMin, revenueMin, creditScoreMin, dscrMin})' > "$PROD_JSON"
+else
+  echo "WARN: $BASE/v1/products not reachable; trying local /api/v1/products" | tee -a "$R/00_log.txt"
+  (curl -sf "http://localhost:5000/api/v1/products" \
+   | jq 'map({id,
+              name:(.name//.productName),
+              lender:(.lender_name//.lenderName),
+              category,
+              country,
+              province:(.province//.state),
+              minAmount, maxAmount,
+              industries,
+              timeInBusinessMin, revenueMin, creditScoreMin, dscrMin})' > "$PROD_JSON") \
+   || echo "[]" > "$PROD_JSON"
+fi
+
+# Required-docs shape (optional, often staff-driven; we record for context only)
+curl -s -H "Authorization: Bearer $TOK" "$BASE/required-docs" -o "$DOCS_JSON" \
+  || echo '{"required_documents":[]}' > "$DOCS_JSON"
+
+# Forms fixture with common Step-1 field variants (for Step-2 engines to consume)
+cat > "$R/forms.json" <<'JSON'
+[
+  {"loanAmount":500000,"amountRequested":500000,"requestedAmount":500000,"country":"CA","province":"ON","industry":"Technology","revenue":2500000,"timeInBusinessMonths":48,"creditScore":680,"dscr":1.3,"employees":25},
+  {"loanAmount":250000,"amountRequested":250000,"country":"CA","province":"BC","industry":"Construction","revenue":750000,"timeInBusinessMonths":18,"creditScore":620,"employees":8},
+  {"requestedAmount":900000,"country":"US","state":"CA","industry":"Retail","revenue":2000000,"timeInBusinessMonths":60,"creditScore":700,"employees":40},
+  {"loanAmount":100000,"country":"US","industry":"Hospitality","revenue":300000,"timeInBusinessMonths":12,"creditScore":580,"dscr":1.05,"employees":12}
+]
+JSON
+
+################################################################################
+# 3) Runtime extraction — Step 2 (recommendations)
+################################################################################
+echo "STEP 3: Extracting Step-2 rules (runtime + proxy field tracking)..." | tee -a "$R/00_log.txt"
+
+node - <<'NODE'
+const fs=require('fs'), vm=require('vm');
+
+const products = JSON.parse(fs.readFileSync(process.env.PROD_JSON,'utf8'));
+const forms = JSON.parse(fs.readFileSync(process.env.FORMS_JSON,'utf8'));
+const files = (fs.existsSync(process.env.LIST_STEP2)? fs.readFileSync(process.env.LIST_STEP2,'utf8'):'')
+  .split('\n').filter(Boolean);
+const out=[];
+
+function proxyLog(obj, bag, pre=''){
+  if(obj===null || typeof obj!=='object') return obj;
+  return new Proxy(obj,{
+    get(t,k){
+      const kk = pre ? `${pre}.${String(k)}` : String(k);
+      bag.add(kk);
+      const v = t[k];
+      return (v && typeof v==='object' && !Array.isArray(v)) ? proxyLog(v, bag, kk) : v;
+    }
+  });
+}
+function callMaybe(fn, form, prods){
+  try { return fn(form, prods); } catch {}
+  try { return fn(form); } catch { return []; }
+}
+
+for(const f of files){
+  let src=''; try{ src=fs.readFileSync(f,'utf8'); }catch{ continue; }
+  const ctx={ module:{}, exports:{}, require, process, console };
+  vm.createContext(ctx);
+  try{
+    // Try to expose default or named getRecommendedProducts
+    let patched = src;
+    patched += `
+      if (typeof module !== 'undefined' && module.exports) {
+        module.exports = (module.exports.getRecommendedProducts
+          || module.exports.default
+          || (typeof getRecommendedProducts !== 'undefined' ? getRecommendedProducts : module.exports));
+      }
+    `;
+    vm.runInContext(patched, ctx, {filename:f, timeout:2000});
+    const eng = ctx.module.exports || ctx.exports;
+    if (typeof eng !== 'function') { out.push({file:f, ok:false, reason:'no callable'}); continue; }
+
+    const usedForm=new Set(), usedProd=new Set(), samples=[];
+    for(const formRaw of forms){
+      const bf=new Set(), bp=new Set();
+      const form=proxyLog(formRaw, bf, 'form');
+      const prods=products.map(p=>proxyLog(p, bp, 'prod'));
+      const res = callMaybe(eng, form, prods) || [];
+      const ids = Array.isArray(res) ? res.map(x=>x?.id||x?.name||x?.productId).filter(Boolean).slice(0,8) : [];
+      samples.push(ids);
+      bf.forEach(k=>usedForm.add(k.replace(/^form\./,'')));
+      bp.forEach(k=>usedProd.add(k.replace(/^prod\./,'')));
+    }
+
+    // Rule hints (regex scan)
+    const hints=[];
+    const scan=(name,re)=>{ if(re.test(src)) hints.push(name) };
+    scan('amount-range', /\b(minAmount|maxAmount|loanAmount|amountRequested|requestedAmount)\b/g);
+    scan('country/region', /\b(country|province|state|countryCode)\b/g);
+    scan('industry', /\bindustry|industries|naics|sic\b/g);
+    scan('revenue/timeInBusiness', /\brevenue(Min)?|timeInBusiness(Months|Years|Min)?\b/g);
+    scan('credit/DSCR', /\bcredit(S|)core(Min)?|fico|dscr(Min)?\b/g);
+    scan('allow/deny', /\b(allowList|denyList|blacklist|whitelist|lender(Ids|Allow|Deny))\b/g);
+    scan('sorting/score', /\bsort|order(By)?|score\b/g);
+
+    out.push({
+      file:f, ok:true,
+      fieldsUsed:{ form:[...usedForm].sort(), product:[...usedProd].sort() },
+      hints:hints.sort(),
+      samples
+    });
+  }catch(e){
+    out.push({file:f, ok:false, error:String(e?.message||e)});
+  }
+}
+
+fs.writeFileSync(process.env.OUT_JSON, JSON.stringify(out,null,2));
+let md='# Client Step-2 Rulebook (extracted)\n\n';
+for(const s of out){
+  md += `## ${s.file}\n- ok: ${s.ok}\n`;
+  if(s.ok){
+    md += `- form fields: \`${s.fieldsUsed.form.join('`, `')||'—'}\`\n`;
+    md += `- product fields: \`${s.fieldsUsed.product.join('`, `')||'—'}\`\n`;
+    md += `- hints: \`${(s.hints||[]).join('`, `')||'—'}\`\n\n`;
+  }else{
+    md += `- reason: ${s.reason||s.error}\n\n`;
+  }
+}
+fs.writeFileSync(process.env.OUT_MD, md);
+NODE PROD_JSON="$PROD_JSON" FORMS_JSON="$R/forms.json" LIST_STEP2="$R/10_step2_candidates.txt" OUT_JSON="$R/20_rules_step2.json" OUT_MD="$R/rulebook_step2.md"
+
+################################################################################
+# 4) Static extraction — Step 5 (documents)
+################################################################################
+echo "STEP 4: Extracting Step-5 rules (static scan)..." | tee -a "$R/00_log.txt"
+
+node - <<'NODE'
+const fs=require('fs');
+const files = (fs.existsSync(process.env.LIST_STEP5)? fs.readFileSync(process.env.LIST_STEP5,'utf8'):'')
+  .split('\n').filter(Boolean);
+const out=[];
+for(const f of files){
+  let src=''; try{ src=fs.readFileSync(f,'utf8'); }catch{ continue; }
+  const hints=[];
+  const push=(name,re)=>{ if(re.test(src)) hints.push(name) };
+
+  push('required-docs arrays', /required[_- ]?docs?\s*[:=]\s*(\{[\s\S]*?\}|\[[\s\S]*?\])/gi);
+  push('mimetypes/extensions', /(mime|accept|ext(ension)?s)\s*[:=]\s*(\[[^\]]+\])/gi);
+  push('size limits', /(max|limit).*?(size|bytes)\s*[:=]\s*[0-9_]+/gi);
+  push('conditional rules', /(if|switch).{0,60}(loanAmount|revenue|industry|country|credit|dscr)/gi);
+
+  // Heuristic referenced fields
+  const fields=[...src.matchAll(/\b(form|answers|application|applicant|business)\.[a-zA-Z0-9_\.]+/g)]
+    .map(m=>m[0]);
+  const uniq=[...new Set(fields)].slice(0,200);
+
+  out.push({file:f, hints:hints.sort(), fieldsUsed:uniq});
+}
+fs.writeFileSync(process.env.OUT_JSON, JSON.stringify(out,null,2));
+let md='# Client Step-5 Rulebook (extracted)\n\n';
+for(const s of out){
+  md += `## ${s.file}\n- hints: \`${(s.hints||[]).join('`, `')||'—'}\`\n- fields (sample):\n`;
+  s.fieldsUsed.slice(0,60).forEach(f=> md+=`  - \`${f}\`\n`);
+  md+='\n';
+}
+fs.writeFileSync(process.env.OUT_MD, md);
+NODE LIST_STEP5="$R/11_step5_candidates.txt" OUT_JSON="$R/21_rules_step5.json" OUT_MD="$R/rulebook_step5.md"
+
+################################################################################
+# 5) Parity test scaffolding (overwrite-in-place; no duplicates)
+################################################################################
+echo "STEP 5: Generating parity tests (overwrite safely)..." | tee -a "$R/00_log.txt"
+
+TEST_DIR="client/src/lib/__tests_rule_parity__"
+mkdir -p "$TEST_DIR"
+
+jq '.' "$PROD_JSON"        > "$TEST_DIR/_products.json"
+jq '.' "$R/forms.json"     > "$TEST_DIR/_forms.json"
+jq '.' "$R/20_rules_step2.json" > "$TEST_DIR/_rules_step2.json"
+jq '.' "$R/21_rules_step5.json" > "$TEST_DIR/_rules_step5.json"
+
+cat > "$TEST_DIR/step2_parity.spec.ts" <<'TS'
+// Parity smoke test for NEW Step-2 engine vs extracted legacy rules.
+// Overwrites safely; tests only; NO code duplication in engines.
+import { describe, it, expect } from 'vitest';
+import forms from './_forms.json';
+import products from './_products.json';
+import rules from './_rules_step2.json';
+
+let canon:any = null;
+try { canon = require('../recommendations/engine').getRecommendedProducts; } catch {}
+
+describe('Step-2 parity scaffolding', () => {
+  it('has legacy rule candidates listed', () => {
+    expect((rules as any[]).length).toBeGreaterThan(0);
+  });
+  it('canonical engine presence (TODO ok)', () => {
+    if (!canon) console.warn('TODO: implement client/src/lib/recommendations/engine.ts');
+    expect(true).toBe(true);
+  });
+  it('canonical returns array for a sample (if present)', () => {
+    if (!canon) return;
+    const out = canon((forms as any[])[0], products as any[]);
+    expect(Array.isArray(out)).toBe(true);
+  });
+});
+TS
+
+cat > "$TEST_DIR/step5_parity.spec.ts" <<'TS'
+// Parity smoke test for NEW Step-5 docs engine vs extracted legacy rules.
+// Overwrites safely; tests only; NO code duplication in engines.
+import { describe, it, expect } from 'vitest';
+import rules5 from './_rules_step5.json';
+
+let canonDocs:any = null;
+try { canonDocs = require('../documents/engine').getRequiredDocs; } catch {}
+
+describe('Step-5 parity scaffolding', () => {
+  it('has step-5 rule candidates', () => {
+    expect((rules5 as any[]).length).toBeGreaterThan(0);
+  });
+  it('canonical docs engine presence (TODO ok)', () => {
+    if (!canonDocs) console.warn('TODO: implement client/src/lib/documents/engine.ts');
+    expect(true).toBe(true);
+  });
+});
+TS
+
+################################################################################
+# 6) Combined human rulebook
+################################################################################
+echo "STEP 6: Writing combined rulebook.md..." | tee -a "$R/00_log.txt"
+cat "$R/rulebook_step2.md" "$R/rulebook_step5.md" > "$R/rulebook.md"
+
+################################################################################
+# 7) Summary
+################################################################################
+echo "== DONE ==" | tee -a "$R/00_log.txt"
+echo "Artifacts:" | tee -a "$R/00_log.txt"
+echo "  $R/10_step2_candidates.txt" | tee -a "$R/00_log.txt"
+echo "  $R/11_step5_candidates.txt" | tee -a "$R/00_log.txt"
+echo "  $PROD_JSON (optional), $DOCS_JSON (optional)" | tee -a "$R/00_log.txt"
+echo "  $R/20_rules_step2.json, $R/rulebook_step2.md" | tee -a "$R/00_log.txt"
+echo "  $R/21_rules_step5.json, $R/rulebook_step5.md" | tee -a "$R/00_log.txt"
+echo "  $R/rulebook.md (combined)" | tee -a "$R/00_log.txt"
+echo "Tests (local): npx vitest run -c || npm test" | tee -a "$R/00_log.txt"
