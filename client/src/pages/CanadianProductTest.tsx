@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import React from 'react';
 import { useRecommendations } from '@/hooks/useRecommendations';
 

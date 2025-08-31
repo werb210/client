@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';

@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

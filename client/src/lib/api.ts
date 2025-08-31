@@ -93,7 +93,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> { /* e
   } catch {/* fall back to legacy endpoints */}
   
   try {
-    const r = await fetch('/api/lenders', { credentials: "include" });
+    const r = await fetchProducts();
     if (r.ok) {
       const j = await r.json();
       const items = j?.products ?? j ?? [];
@@ -115,7 +115,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> { /* e
   } catch {/* fall back */}
   
   // Legacy fallback
-  const r2 = await fetch('/api/lenders', { credentials: "include" });
+  const r2 = await fetchProducts();
   const j2 = await r2.json();
   const items2 = j2?.products ?? [];
   const mapped = (items2 as any[]).map((p: any) => ({

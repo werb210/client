@@ -1,0 +1,195 @@
+# CLIENT APP — single-run, idempotent dedupe + Step2/5 field checks + unified products fetcher + probes + build (no duplicates created)
+set -euo pipefail
+
+AUDIT_AT="$(date +%F_%H-%M-%S)"
+R="reports/client-dedupe-align-$AUDIT_AT"
+TRASH=".trash-client-$AUDIT_AT"
+mkdir -p "$R" "$TRASH"
+
+PASS_STEPS=(); FAIL_STEPS=()
+pass(){ PASS_STEPS+=("$1"); echo "STEP $1: PASS" | tee -a "$R/summary.txt"; }
+fail(){ FAIL_STEPS+=("$1"); echo "STEP $1: FAIL" | tee -a "$R/summary.txt"; }
+
+STAFF_API="${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+SHARED="${VITE_CLIENT_APP_SHARED_TOKEN:-}"
+ENV_LOCAL_FALLBACK="${VITE_LOCAL_FALLBACK:-}"
+ENV_NODE_ENV="${NODE_ENV:-}"
+
+echo "=== CLIENT APP DEDUPE & ALIGN @ $AUDIT_AT ===" | tee "$R/summary.txt"
+echo "STAFF_API=$STAFF_API" | tee -a "$R/summary.txt"
+
+# 1) Inventory duplicates (non-destructive)
+{
+  rg -nI --hidden -S '\.(old|bak|backup|copy|tmp)\b|legacy|deprecated' -g '!node_modules' client | tee "$R/10_legacy_markers.txt" >/dev/null || true
+  find client -type f \( -name '*.tsx' -o -name '*.ts' -o -name '*.js' -o -name '*.mjs' \) | sed -E 's/\.(tsx|ts|js|mjs)$//' | sort | uniq -d | tee "$R/11_parallel_ext_bases.txt" >/dev/null || true
+} && pass "1/10 Inventory duplicates" || fail "1/10 Inventory"
+
+# 2) Quarantine obvious legacy/parallel files (prefer TS/TSX)
+{
+  if [ -s "$R/11_parallel_ext_bases.txt" ]; then
+    while IFS= read -r base; do
+      for ext in mjs js; do
+        f="${base}.${ext}"; [ -f "$f" ] || continue
+        ts="${base}.ts"; tsx="${base}.tsx"
+        if [ -f "$ts" ] || [ -f "$tsx" ]; then
+          mkdir -p "$TRASH/$(dirname "$f")"
+          mv "$f" "$TRASH/$f"
+          echo "TRASH(parallel): $f" | tee -a "$R/31_quarantine.txt"
+        fi
+      done
+    done < "$R/11_parallel_ext_bases.txt"
+  fi
+  echo "Quarantined: $(wc -l < "$R/31_quarantine.txt" 2>/dev/null || echo 0)" | tee -a "$R/30_stats.txt"
+} && pass "2/10 Quarantine duplicates (safe)" || fail "2/10 Quarantine"
+
+# 3) Enforce ONE unified products fetcher (client/src/api/products.ts), rewire Step 2 and remove /lenders uses (no duplicates)
+{
+  CANON="client/src/api/products.ts"
+  mkdir -p "$(dirname "$CANON")"
+  if [ ! -f "$CANON" ]; then
+    cat > "$CANON" <<'TS'
+export type CanonicalProduct = { id?: string; name?: string; productName?: string; category?: string; lender_name?: string; lenderName?: string; country?: string; minAmount?: number; maxAmount?: number; };
+const STAFF_API = import.meta?.env?.VITE_STAFF_API_URL || (process?.env?.VITE_STAFF_API_URL) || 'https://staff.boreal.financial/api';
+const TOKEN     = import.meta?.env?.VITE_CLIENT_APP_SHARED_TOKEN || (process?.env?.VITE_CLIENT_APP_SHARED_TOKEN) || '';
+export async function fetchProducts(): Promise<CanonicalProduct[]>{
+  const url = `${STAFF_API.replace(/\/+$/,'')}/v1/products`;
+  const res = await fetch(url, { headers: TOKEN? { Authorization: `Bearer ${TOKEN}` } : {} });
+  if(!res.ok) throw new Error(`Products fetch failed ${res.status}`);
+  const data = await res.json();
+  const items = Array.isArray(data) ? data : (Array.isArray(data.items)? data.items : []);
+  return items as CanonicalProduct[];
+}
+TS
+    echo "Created canonical fetcher: $CANON" | tee -a "$R/20_actions.txt"
+  fi
+
+  # Find Step 2/Recommendation components and rewire to use fetcher
+  rg -nI --hidden -S "(Step2|Recommend|Recommendations).*" -g 'client/**' > "$R/12_step2_candidates.txt" || true
+  rg -nI --hidden -S "/lenders\b|/v1/products\b|fetch\s*\(" client/src  | tee "$R/13_fetch_refs.txt" >/dev/null || true
+
+  # Simple import+usage patch (idempotent): add "import { fetchProducts } from 'client/src/api/products';"
+  while IFS= read -r file; do
+    [ -f "$file" ] || continue
+    if ! rg -q "from ['\"].*api/products" "$file"; then
+      sed -i '1i import { fetchProducts } from "../../api/products";' "$file" 2>/dev/null || true
+    fi
+    # Replace direct fetch('/lenders'|'/v1/products') with fetchProducts() best-effort
+    sed -i -E "s@fetch\([^)]*/(lenders|v1/products)[^)]*\)@fetchProducts()@g" "$file" 2>/dev/null || true
+  done < <(rg -l "(Step2|Recommendation|Recommend)" client/src 2>/dev/null || true)
+
+  # After rewiring, if any legacy local fetcher duplicates exist, quarantine them
+  for f in client/src/api/products.{js,mjs} client/src/lib/products.{js,mjs,ts}; do
+    if [ -f "$f" ] && [ "$f" != "$CANON" ]; then mkdir -p "$TRASH/$(dirname "$f")"; mv "$f" "$TRASH/$f"; echo "TRASH(legacy-fetcher): $f" | tee -a "$R/31_quarantine.txt"; fi
+  done
+} && pass "3/10 Unified products fetcher & Step2 rewiring" || fail "3/10 Fetcher/rewire"
+
+# 4) Field lineage STATIC check — Step1 keys vs Step2 & Step5 consumption (fails if mismatches)
+{
+  node - <<'NODE' | tee "reports_field_lineage_static.json" > /dev/null
+const fs=require('fs'), path=require('path');
+function walk(d){let out=[]; for(const e of fs.readdirSync(d,{withFileTypes:true})){ const p=path.join(d,e.name); if(e.isDirectory()&&e.name!=='node_modules'&&!e.name.startsWith('.trash')) out=out.concat(walk(p)); else if(e.isFile()&&/\.(tsx|ts|js|mjs)$/.test(e.name)) out.push(p);} return out;}
+const files = fs.existsSync('client/src')? walk('client/src') : [];
+const src = (p)=>{try{return fs.readFileSync(p,'utf8')}catch{return ''}};
+const set = (arr)=>Array.from(new Set(arr)).sort();
+
+const step1Keys=[], step2Use=[], step5Use=[];
+for(const f of files){
+  const s=src(f);
+  // Step1: typical registration patterns: register('field'), setValue('field'), defaultValues: { field: ... }
+  s.replace(/register\(\s*['"`]([^'"`]+)['"`]\s*\)/g,(_,k)=>{step1Keys.push(k); return ''});
+  s.replace(/setValue\(\s*['"`]([^'"`]+)['"`]/g,(_,k)=>{step1Keys.push(k); return ''});
+  s.replace(/defaultValues\s*:\s*\{([\s\S]*?)\}/g,(_,body)=>{ (body.match(/['"`]([A-Za-z0-9_.-]+)['"`]\s*:/g)||[]).forEach(m=>step1Keys.push(m.slice(1,-2))); return ''});
+
+  // Step2 consumption: answers.field / data.field / product filters using field
+  if(/Step2|Recommend|Recommendation/i.test(f)){
+    (s.match(/\b(answers|data|formData)\.([A-Za-z0-9_]+)\b/g)||[]).forEach(m=>{ const k=m.split('.').pop(); step2Use.push(k); });
+  }
+  // Step5 docs consumption: required-docs, uploads, KYC fields
+  if(/Step5|Document|Upload|RequiredDocs/i.test(f)){
+    (s.match(/\b(answers|data|formData)\.([A-Za-z0-9_]+)\b/g)||[]).forEach(m=>{ const k=m.split('.').pop(); step5Use.push(k); });
+  }
+}
+const uniq1=set(step1Keys), uniq2=set(step2Use), uniq5=set(step5Use);
+const miss2=uniq2.filter(k=>!uniq1.includes(k));
+const miss5=uniq5.filter(k=>!uniq1.includes(k));
+const unused=uniq1.filter(k=>!uniq2.includes(k)&&!uniq5.includes(k));
+const out={ counts:{step1:uniq1.length, step2:uniq2.length, step5:uniq5.length}, missing_in_step2:miss2, missing_in_step5:miss5, unused_in_steps_2_5:unused };
+fs.writeFileSync('reports/client-dedupe-align-'+(process.env.AUDIT_AT||'now')+'/41_field_lineage_static.json', JSON.stringify(out,null,2));
+console.log(JSON.stringify(out));
+NODE
+  ) || true
+  jq -r '.counts|tostring +" | missing_in_step2="+(.missing_in_step2|length|tostring)+" | missing_in_step5="+(.missing_in_step5|length|tostring)' "reports/client-dedupe-align-$AUDIT_AT/41_field_lineage_static.json" | tee -a "$R/summary.txt" || true
+  M2="$(jq '.missing_in_step2|length' "reports/client-dedupe-align-$AUDIT_AT/41_field_lineage_static.json" 2>/dev/null || echo 0)"
+  M5="$(jq '.missing_in_step5|length' "reports/client-dedupe-align-$AUDIT_AT/41_field_lineage_static.json" 2>/dev/null || echo 0)"
+  if [ "${M2:-0}" -gt 0 ] || [ "${M5:-0}" -gt 0 ]; then fail "4/10 Field lineage (static mismatches: step2=$M2 step5=$M5)"; else pass "4/10 Field lineage (static)"; fi
+}
+
+# 5) Production expectations (do not mutate secrets)
+{
+  {
+    echo "EXPECTED PRODUCTION ENV (do not set here):"
+    echo "VITE_LOCAL_FALLBACK=false"
+    echo "NODE_ENV=production"
+    echo "VITE_STAFF_API_URL=$STAFF_API"
+    echo "VITE_CLIENT_APP_SHARED_TOKEN=(redacted)"
+  } | tee "$R/20_env_expectations.txt"
+  echo "Local env detected: VITE_LOCAL_FALLBACK=${ENV_LOCAL_FALLBACK:-unset} NODE_ENV=${ENV_NODE_ENV:-unset}" | tee -a "$R/summary.txt"
+} && pass "5/10 Env expectations recorded" || fail "5/10 Env"
+
+# 6) Live probes to Staff API (/v1/products ≈44, /required-docs ≥2)
+{
+  auth=()
+  [ -n "$SHARED" ] && auth=(-H "Authorization: Bearer $SHARED")
+  P_JSON="$(curl -s "${STAFF_API%/}/v1/products" "${auth[@]}" || true)"
+  D_JSON="$(curl -s "${STAFF_API%/}/required-docs" "${auth[@]}" || true)"
+  P_COUNT="$(echo "$P_JSON" | jq 'if type=="array" then length else (.items|length // 0) end' 2>/dev/null || echo 0)"
+  D_COUNT="$(echo "$D_JSON" | jq 'if type=="array" then length else (.required_documents|length // (.items|length // 0)) end' 2>/dev/null || echo 0)"
+  echo "products: $P_COUNT  required-docs: $D_COUNT" | tee "$R/31_live.txt"
+  [ "$P_COUNT" -ge 40 ] && [ "$D_COUNT" -ge 2 ] && touch "$R/OK_live" || true
+} && pass "6/10 Staff API probes" || fail "6/10 Probes"
+
+# 7) Build (capture first error lines if fails)
+{
+  if npm run -s build >"$R/50_build.out" 2>&1; then
+    echo "Build successful" | tee -a "$R/summary.txt"
+    pass "7/10 Build"
+  else
+    echo "Build failed — first 120 lines:" | tee -a "$R/summary.txt"
+    head -120 "$R/50_build.out" | tee "$R/50_build_error.txt" >/dev/null || true
+    fail "7/10 Build"
+  fi
+}
+
+# 8) OPTIONAL runtime lineage probe (if Step 1→submit hooks exist): verify Step 2/5 consumption at runtime via code scan proxy (non-breaking)
+{
+  # This non-invasive check re-runs the static scan to ensure no new duplicates appeared, and re-confirms unified fetcher singularity.
+  DUP_FETCHERS=$(rg -l "fetchProducts" client/src | wc -l | tr -d ' ')
+  if [ "$DUP_FETCHERS" -gt 20 ]; then echo "WARNING: too many fetchProducts references; verify rewiring" | tee -a "$R/summary.txt"; fi
+  # assert single fetcher module file
+  OTHER_FETCH="$( (ls client/src/api/products.* 2>/dev/null || true) | grep -v 'products.ts$' || true )"
+  if [ -n "$OTHER_FETCH" ]; then echo "ERROR: multiple products fetchers remain: $OTHER_FETCH" | tee -a "$R/summary.txt"; fail "8/10 Unified fetcher uniqueness"; else pass "8/10 Unified fetcher uniqueness"; fi
+}
+
+# 9) Final summary + verify commands
+{
+  echo "" | tee -a "$R/summary.txt"
+  echo "=== FINAL SUMMARY — CLIENT DEDUPE & ALIGN ===" | tee -a "$R/summary.txt"
+  echo "Timestamp: $AUDIT_AT" | tee -a "$R/summary.txt"
+  echo "Quarantine: $TRASH" | tee -a "$R/summary.txt"
+  echo "Reports:    $R" | tee -a "$R/summary.txt"
+  if [ -f "$R/41_field_lineage_static.json" ]; then
+    echo "Field lineage (static):" | tee -a "$R/summary.txt"
+    jq -r '. | "  step1=\(.counts.step1) step2=\(.counts.step2) step5=\(.counts.step5)  missing step2=\(.missing_in_step2|length) missing step5=\(.missing_in_step5|length)"' "$R/41_field_lineage_static.json" | tee -a "$R/summary.txt" || true
+  fi
+  echo "" | tee -a "$R/summary.txt"
+  echo "STEPS PASSED: ${PASS_STEPS[*]:-none}" | tee -a "$R/summary.txt"
+  echo "STEPS FAILED: ${FAIL_STEPS[*]:-none}" | tee -a "$R/summary.txt"
+  echo "" | tee -a "$R/summary.txt"
+  echo "VERIFY COMMANDS:" | tee -a "$R/summary.txt"
+  echo "curl -s \"${STAFF_API%/}/v1/products\" ${SHARED:+-H \"Authorization: Bearer \$VITE_CLIENT_APP_SHARED_TOKEN\"} | jq 'length'    # expect ≈44" | tee -a "$R/summary.txt"
+  echo "curl -s \"${STAFF_API%/}/required-docs\" | jq '.required_documents|length // length'                                   # expect ≥2" | tee -a "$R/summary.txt"
+  echo "rg -n \"/lenders\\b\" client/src                                                                                   # should show 0 in Step 2" | tee -a "$R/summary.txt"
+  echo "jq '.missing_in_step2, .missing_in_step5' $R/41_field_lineage_static.json                                            # expect [] or small set" | tee -a "$R/summary.txt"
+  cat "$R/summary.txt"
+}
+echo "DONE (client). Review $R and $TRASH"

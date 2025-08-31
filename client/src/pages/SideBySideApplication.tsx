@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import { useState, useEffect } from 'react';
 import { useFormData } from '@/context/FormDataContext';
 import { Button } from '@/components/ui/button';

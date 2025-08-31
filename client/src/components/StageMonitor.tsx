@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import React, { useEffect } from 'react';
 import Building from 'lucide-react/dist/esm/icons/building';
 import Target from 'lucide-react/dist/esm/icons/target';

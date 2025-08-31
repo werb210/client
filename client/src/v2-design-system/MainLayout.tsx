@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import { Switch, Route } from "wouter";
 import { lazy, Suspense } from "react";
 // import { ChatBotTest } from "@/components/ChatBotTest";

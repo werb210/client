@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import { getTraceId, flatten } from "../telemetry/lineage";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 

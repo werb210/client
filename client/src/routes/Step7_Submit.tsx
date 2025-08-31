@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import { attachTrace, getTraceId } from "../telemetry/lineage";
 import React, { useState } from 'react';
 import { logger } from '@/lib/utils';

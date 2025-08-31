@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 /**
  * Product Compatibility Validation Test Page
  * Temporary page for testing the product validation script

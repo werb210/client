@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import React from 'react';
 import { useFormData } from '@/context/FormDataContext';
 import { Step2ProductionSimple } from '@/components/Step2ProductionSimple';

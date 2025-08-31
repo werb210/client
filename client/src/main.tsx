@@ -1,4 +1,4 @@
-import { qaProvenance } from "./lib/products";
+import { fetchProducts } from "./api/products";
 import './lib/console-guard';
 import "./styles/hotfix.css";
 // MUST be first so Tailwind base resets apply
@@ -28,6 +28,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 
 try {
   if (localStorage.getItem("CATALOG_DIAG") === "1") {
-    qaProvenance();
+    console.log("Products available via fetchProducts()");
   }
 } catch {}

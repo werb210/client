@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';

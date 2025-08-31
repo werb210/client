@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import OpenAI from 'openai';
 
 const openai = new OpenAI({

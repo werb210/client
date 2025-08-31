@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import React, { useState, useEffect } from 'react';
 import { fetchCatalog } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';

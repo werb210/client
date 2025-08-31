@@ -1,3 +1,4 @@
+import { fetchProducts } from "../../api/products";
 import { LenderProduct as ImportedLenderProduct } from '../types/lenderProduct';
 
 /**
