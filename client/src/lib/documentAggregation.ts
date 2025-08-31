@@ -281,14 +281,14 @@ export async function validateLenderProductDocumentFields(): Promise<{
   sampleDocumentField: string;
 }> {
   try {
-    const response = await /* rewired */
-    const data = await response.json();
+    const { fetchProducts } = await import('../api/products');
+    const allProducts = await fetchProducts();
     
-    if (!data.success || !data.products) {
+    if (!allProducts || allProducts.length === 0) {
       throw new Error('Failed to fetch products');
     }
     
-    const products = data.products;
+    const products = allProducts;
     const totalProducts = products.length;
     
     let productsWithDocuments = 0;

@@ -72,22 +72,21 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> { /* e
     const { fetchProducts } = await import('../api/products');
     const products = await fetchProducts();
     if (products.length > 0) {
-      const response = await r.json();
-      const products = response.products || response;
-      if (Array.isArray(products) && products.length) {
-        const mapped = products.map((p: any) => ({
-          id: p.id,
-          name: p.name || p.productName,
-          lender_name: p.lender_name || p.lenderName,
-          country: String(p.country || p.countryOffered || '').toUpperCase(),
-          category: p.category || p.productCategory || '',
-          min_amount: Number(p.min_amount || p.minimumLendingAmount || 0),
-          max_amount: Number(p.max_amount || p.maximumLendingAmount || Number.MAX_SAFE_INTEGER),
-          active: (p.active ?? p.isActive) !== false,
-          required_documents: p.required_documents,
-        }));
-        return dedupeProducts(mapped);
-      }
+      // Convert Product[] to CanonicalProduct[]
+      const canonical = products.map((p: any) => ({
+        id: p.id,
+        name: p.productName || p.name || '',
+        lender_name: p.lenderName || p.lender_name || '',
+        country: String(p.country || '').toUpperCase(),
+        category: p.category || '',
+        min_amount: Number(p.minAmount || p.min_amount || 0),
+        max_amount: Number(p.maxAmount || p.max_amount || Number.MAX_SAFE_INTEGER),
+        active: (p.active ?? true) !== false,
+        required_documents: p.required_documents || [],
+        min_time_in_business: p.min_time_in_business || null,
+        min_monthly_revenue: p.min_monthly_revenue || null,
+      }));
+      return dedupeProducts(canonical);
     }
   } catch {/* fall back to legacy endpoints */}
   
@@ -114,7 +113,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> { /* e
   } catch {/* fall back */}
   
   // Legacy fallback
-  const r2 = await /* rewired */
+  const r2 = await fetch('/api/lenders', { credentials: "include" });
   const j2 = await r2.json();
   const items2 = j2?.products ?? [];
   const mapped = (items2 as any[]).map((p: any) => ({
@@ -205,9 +204,8 @@ export async function listDocuments(input: RequiredDocsInput & { applicationId?:
 // ---- Staff App Integration Endpoints (v1 API) -----------------------------------------------
 
 export const getLenderProducts = async () => {
-  const res = await /* rewired */
-  if (!res.ok) throw new Error("Failed to fetch lender products");
-  return res.json();
+  const { fetchProducts } = await import('../api/products');
+  return await fetchProducts();
 };
 
 export const createApplication = async (data: FormData) => {
@@ -266,24 +264,29 @@ export const getRecommendations = async (id: string) => {
 export const getRequiredDocuments = async (id: string) => {
   try {
     // Try canonical Staff API endpoint first
-    const res = await /* rewired */
-    if (res.ok) return res.json();
+    const { fetchRequiredDocs } = await import('../api/products');
+    const docs = await fetchRequiredDocs();
+    if (docs.length > 0) return { success: true, documents: docs };
     
-    // If 501 or 500, show graceful fallback message
-    if (res.status === 501 || res.status === 500) {
-      return {
-        success: false,
-        message: "Documents unavailable, please contact support",
-        fallback: true,
-        documents: [
-          { key: "bank_6m", label: "Last 6 months bank statements", required: true },
-          { key: "financials", label: "Financial statements", required: false },
-          { key: "tax_returns", label: "Business tax returns", required: false }
-        ]
-      };
-    }
+    // If no docs available, show graceful fallback message
+    return {
+      success: false,
+      message: "Documents unavailable, please contact support",
+      fallback: true,
+      documents: [
+        { key: "bank_6m", label: "Last 6 months bank statements", required: true },
+        { key: "financials", label: "Financial statements", required: false },
+        { key: "tax_returns", label: "Business tax returns", required: false }
+      ]
+    };
   } catch (error) {
     console.warn('Staff API unavailable for required documents:', error);
+    return {
+      success: false,
+      message: "Documents unavailable, please contact support",
+      fallback: true,
+      documents: []
+    };
   }
   
   // Graceful fallback with standard document list
