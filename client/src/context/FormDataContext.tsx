@@ -5,13 +5,23 @@ export type ApplicationForm = {
   requestedAmount?: number;      // preferred
   fundingAmount?: number;        // legacy
   businessLocation?: string;
+  headquarters?: string;         // Step 1 field
+  headquartersState?: string;    // Step 1 field
   industry?: string;
   purpose?: string;
+  lookingFor?: string;           // Step 1 field
+  fundsPurpose?: string;         // Step 1 field
+  salesHistory?: string;         // Step 1 field
   yearsInBusiness?: string | number;
   last12moRevenue?: number | string;
+  revenueLastYear?: number | string;  // Step 1 field
   avgMonthlyRevenue?: number | string;
+  averageMonthlyRevenue?: number | string; // Step 1 field
   arBalance?: number | string;
+  accountsReceivableBalance?: number | string; // Step 1 field
   fixedAssets?: number | string;
+  fixedAssetsValue?: number | string;  // Step 1 field
+  equipmentValue?: number | string;    // Step 1 field
   // ...any other fields you actually use in the matcher
 };
 
