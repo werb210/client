@@ -39,7 +39,7 @@ describe('Production Integration Tests', () => {
       });
 
       // Test that form data is stored in localStorage
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith();
+      expect(mockLocalStorage.setItem).toHaveBeenCalled();
       expect(mockLocalStorage.getItem).toHaveBeenCalled();
     });
   });

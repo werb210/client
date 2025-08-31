@@ -1,3 +1,4 @@
+import { getTraceId, flatten } from "../telemetry/lineage";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export type ApplicationForm = {
@@ -128,6 +129,7 @@ export function FormDataProvider({ children }: { children: React.ReactNode }) {
   const save = (raw: Partial<ApplicationForm>) => {
     const merged = normalize({ ...(data ?? {}), ...raw });
     setData(merged);
+try{ const tid=getTraceId(); const snap=JSON.stringify({tid, at:Date.now(), data: typeof data!=='undefined'?data:formData}); localStorage.setItem("__formDataSnapshot", snap);}catch{}
   };
 
   const clear = () => setData(null);

@@ -1,0 +1,216 @@
+# CLIENT APP — END-TO-END FIELD LINEAGE (capture Step 1 fields → attach trace → verify Step 2 & 5 usage)
+# Goal: Track every application-form field in the client, attach a trace to the submission payload,
+# and verify that Step 2 (recommendations) & Step 5 (required docs) consume the right shapes.
+# Zero-duplicate policy: modify in place; only create a module if truly missing.
+# Reports: reports/client-lineage-<ts>/ ; No permanent deletes unless NUKE=1.
+
+set -euo pipefail
+
+TS="$(date +%F_%H-%M-%S)"
+R="reports/client-lineage-$TS"
+TRASH=".trash-client-$TS"
+mkdir -p "$R" "$TRASH"
+
+command -v rg >/dev/null || alias rg='grep -R'
+
+# ------------------------------------------------------------------------------
+# 0) Locate existing files to PATCH (no duplicates)
+# ------------------------------------------------------------------------------
+FORM_CTX_FILE=""
+for f in client/src/context/FormDataContext.tsx client/src/context/formData.tsx client/src/context/ComprehensiveFormProvider.tsx; do
+  [ -f "$f" ] && FORM_CTX_FILE="$f" && break
+done
+
+SUBMIT_FILE=""
+# Heuristic: submission API module
+for f in client/src/api/submitApplication.ts client/src/api/applications.ts client/src/lib/api.ts client/src/api/index.ts; do
+  [ -f "$f" ] && SUBMIT_FILE="$f" && break
+done
+
+STEP2_FILE=""
+rg -n --glob "client/src/**/*.{tsx,ts}" -S "Step2|Recommendation|ProductList" -l | head -1 | while read -r p; do STEP2_FILE="$p"; done
+
+STEP5_FILE=""
+rg -n --glob "client/src/**/*.{tsx,ts}" -S "Step5|RequiredDocs|Document" -l | head -1 | while read -r p; do STEP5_FILE="$p"; done
+
+# Create lineage module path (only if missing)
+LINEAGE_MOD="client/src/telemetry/lineage.ts"
+
+# ------------------------------------------------------------------------------
+# 1) Create/Patch lineage module (TRACING ONLY IF MISSING; else patch in-place)
+#    - getTraceId() stable within a session
+#    - flatten() to capture all keys
+#    - attachTrace(payload) → { ...payload, _trace:{ id, version, fields[] } }
+# ------------------------------------------------------------------------------
+if [ -f "$LINEAGE_MOD" ]; then
+  node - <<'NODE' "$LINEAGE_MOD"
+const fs=require('fs'), p=process.argv[2]; let s=fs.readFileSync(p,'utf8'), o=s, changed=false;
+if(!/export\s+function\s+getTraceId/.test(s)){
+  s += `
+let __tid: string | null = null;
+export function getTraceId():string{ if(__tid) return __tid;
+  try{ __tid = (crypto?.randomUUID?.() || Math.random().toString(36).slice(2)); }catch{ __tid = Math.random().toString(36).slice(2); }
+  try{ localStorage.setItem("__traceId", __tid); }catch{}
+  return __tid;
+}
+`; changed=true;
+}
+if(!/export\s+function\s+flatten/.test(s)){
+  s += `
+export function flatten(obj:any, prefix:string[]=[]): Record<string,any>{
+  const out:Record<string,any> = {};
+  const isObj = (v:any)=> v && typeof v==='object' && !Array.isArray(v);
+  const walk=(o:any, pre:string[])=>{
+    if(Array.isArray(o)){ o.forEach((v,i)=> walk(v,[...pre,String(i)])); return; }
+    if(isObj(o)){ Object.entries(o).forEach(([k,v])=> walk(v,[...pre,k])); return; }
+    out[pre.join('.')] = o;
+  };
+  walk(obj, prefix);
+  return out;
+}
+`; changed=true;
+}
+if(!/export\s+function\s+attachTrace/.test(s)){
+  s += `
+export function attachTrace(payload:any, formData:any){
+  const id = getTraceId();
+  let fields:string[] = [];
+  try{ const flat = flatten(formData||{}); fields = Object.keys(flat).sort(); }catch{}
+  return { ...(payload||{}), _trace:{ id, version:"1.0", fields } };
+}
+`; changed=true;
+}
+if(changed){fs.writeFileSync(p,s);console.log("Patched lineage:",p)}
+NODE
+else
+  mkdir -p "$(dirname "$LINEAGE_MOD")"
+  cat > "$LINEAGE_MOD" <<'TS'
+let __tid: string | null = null;
+export function getTraceId():string{
+  if(__tid) return __tid;
+  try{ __tid = (crypto?.randomUUID?.() || Math.random().toString(36).slice(2)); }catch{ __tid = Math.random().toString(36).slice(2); }
+  try{ localStorage.setItem("__traceId", __tid); }catch{}
+  return __tid;
+}
+export function flatten(obj:any, prefix:string[]=[]): Record<string,any>{
+  const out:Record<string,any> = {};
+  const isObj = (v:any)=> v && typeof v==='object' && !Array.isArray(v);
+  const walk=(o:any, pre:string[])=>{
+    if(Array.isArray(o)){ o.forEach((v,i)=> walk(v,[...pre,String(i)])); return; }
+    if(isObj(o)){ Object.entries(o).forEach(([k,v])=> walk(v,[...pre,k])); return; }
+    out[pre.join('.')] = o;
+  };
+  walk(obj, prefix);
+  return out;
+}
+export function attachTrace(payload:any, formData:any){
+  const id = getTraceId();
+  let fields:string[] = [];
+  try{ const flat = flatten(formData||{}); fields = Object.keys(flat).sort(); }catch{}
+  return { ...(payload||{}), _trace:{ id, version:"1.0", fields } };
+}
+export default { getTraceId, flatten, attachTrace };
+TS
+  echo "Created $LINEAGE_MOD" | tee -a "$R/log.txt"
+fi
+
+# ------------------------------------------------------------------------------
+# 2) Patch FormData provider to snapshot current formData for debugging (no duplicates)
+# ------------------------------------------------------------------------------
+if [ -n "$FORM_CTX_FILE" ] && [ -f "$FORM_CTX_FILE" ]; then
+  node - <<'NODE' "$FORM_CTX_FILE" "$LINEAGE_MOD"
+const fs=require('fs'), path=require('path'); const [p,mod]=process.argv.slice(2);
+let s=fs.readFileSync(p,'utf8'), o=s, changed=false;
+const rel=(()=>{let r=path.relative(path.dirname(p),mod).replace(/\\/g,'/'); if(!/^\.\.?\//.test(r)) r='./'+r; return r.replace(/\.ts$/,'');})();
+if(!/from\s+['"][^'"]*telemetry\/lineage['"]/.test(s)){ s = `import { getTraceId, flatten } from "${rel}";\n` + s; changed=true; }
+if(!/localStorage\.setItem\("__formDataSnapshot"/.test(s)){
+  // install effect-ish snapshot near where form state changes (heuristic)
+  if(/setData\(/.test(s) || /setFormData\(/.test(s)){
+    s = s.replace(/(set(Data|FormData)\([^\)]*\)\s*;)/, `$1\ntry{ const tid=getTraceId(); const snap=JSON.stringify({tid, at:Date.now(), data: typeof data!=='undefined'?data:formData}); localStorage.setItem("__formDataSnapshot", snap);}catch{}`); changed=true;
+  }
+}
+if(changed && s!==o){ fs.writeFileSync(p,s); console.log("Patched form context:",p); }
+NODE
+else
+  echo "WARN: FormData provider not found; skipping snapshot patch" | tee -a "$R/log.txt"
+fi
+
+# ------------------------------------------------------------------------------
+# 3) Patch submission API to attach trace (_trace + headers) — modify in place
+# ------------------------------------------------------------------------------
+if [ -n "$SUBMIT_FILE" ] && [ -f "$SUBMIT_FILE" ]; then
+  node - <<'NODE' "$SUBMIT_FILE" "$LINEAGE_MOD"
+const fs=require('fs'), path=require('path'); const [p,mod]=process.argv.slice(2);
+let s=fs.readFileSync(p,'utf8'), o=s, changed=false;
+const rel=(()=>{let r=path.relative(path.dirname(p),mod).replace(/\\/g,'/'); if(!/^\.\.?\//.test(r)) r='./'+r; return r.replace(/\.ts$/,'');})();
+if(!/attachTrace\(/.test(s)){ s = `import { attachTrace, getTraceId } from "${rel}";\n` + s; changed=true; }
+const postRe = /fetch\s*\(\s*[^,]+,\s*\{\s*method:\s*['"]POST['"][\s\S]*?\}\s*\)/g;
+s = s.replace(postRe, m=>{
+  if(/_trace/.test(m) && /X-Trace-Id/i.test(m)) return m; // already patched
+  // inject header + body wrapper (assumes body: JSON.stringify(payload))
+  let m2 = m.replace(/headers:\s*\{([^}]*)\}/, (hh,inside)=>`headers:{${inside}, 'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client'}`);
+  m2 = m2.replace(/JSON\.stringify\(\s*([^)]+)\s*\)/, 'JSON.stringify(attachTrace($1, (typeof formData!=="undefined"?formData:(typeof data!=="undefined"?data:{}))))');
+  if(m2===m){ // if shapes differ, do a minimal append
+    m2 = m.replace(/\{\s*method:\s*['"]POST['"]/, `{ method:'POST', headers:{'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client' }`);
+    m2 = m2.replace(/JSON\.stringify\(\s*([^)]+)\s*\)/, 'JSON.stringify(attachTrace($1, (typeof formData!=="undefined"?formData:(typeof data!=="undefined"?data:{}))))');
+  }
+  return m2;
+});
+if(s!==o){ fs.writeFileSync(p,s); changed=true; }
+if(changed){ console.log("Patched submission api:",p); }
+NODE
+else
+  echo "ERROR: submission API file not found; no code patched" | tee -a "$R/log.txt"
+fi
+
+# ------------------------------------------------------------------------------
+# 4) Verification unit: ensure Step 2 & 5 see normalized shapes (no new deps)
+# ------------------------------------------------------------------------------
+mkdir -p client/tests
+cat > client/tests/lineage-step2-5.spec.ts <<'TS'
+import assert from "node:assert/strict";
+import { flatten, attachTrace } from "../src/telemetry/lineage";
+const sampleS1 = { amountRequested: "$500,000", country: "Canada", industry: "SaaS" };
+const payload = { applicant:{name:"Acme"}, answers:{loanAmount:500000, country:"CA"} };
+const withTrace = attachTrace(payload, sampleS1);
+it("attaches _trace.id and fields[]", ()=>{
+  assert.ok(withTrace._trace?.id);
+  assert.ok(Array.isArray(withTrace._trace.fields));
+  assert.ok(withTrace._trace.fields.includes("amountRequested"));
+});
+it("flatten traverses all keys", ()=>{
+  const f = flatten({a:{b:1}, c:[{d:2}]});
+  assert.equal(f["a.b"],1);
+  assert.equal(f["c.0.d"],2);
+});
+TS
+
+TEST_OK=1
+if npx --yes vitest -v >/dev/null 2>&1; then (cd client && npx --yes vitest run --reporter=basic) | tee "$R/test.log" || TEST_OK=0
+elif npx --yes jest -v >/dev/null 2>&1; then (cd client && npx --yes jest --runInBand) | tee "$R/test.log" || TEST_OK=0
+else npx --yes tsx -e 'import("./client/tests/lineage-step2-5.spec.ts").catch(e=>{console.error(e);process.exit(1)})' 2>&1 | tee "$R/test.log" || TEST_OK=0
+fi
+
+# ------------------------------------------------------------------------------
+# 5) Build; no deletions unless tests+build succeed
+# ------------------------------------------------------------------------------
+BUILD_OK=1
+npm run -s build >>"$R/build.log" 2>&1 || BUILD_OK=0
+
+if [ "$TEST_OK" -ne 1 ] || [ "$BUILD_OK" -ne 1 ]; then
+  echo "⛔ Client lineage patch: tests or build failed. See $R/." | tee -a "$R/result.txt"
+  exit 1
+fi
+
+# ------------------------------------------------------------------------------
+# 6) Optional cleanup of legacy duplicates ONLY after success
+# ------------------------------------------------------------------------------
+# (We do not create duplicates; if older lineage files exist in parallel, quarantine them)
+for f in client/src/telemetry/trace.ts client/src/telemetry/lineage.old.ts; do
+  [ -f "$f" ] || continue
+  mkdir -p "$TRASH/$(dirname "$f")"; mv "$f" "$TRASH/$f"
+  echo "QUARANTINED legacy telemetry: $f" | tee -a "$R/removed.txt"
+done
+
+echo "✅ Client field lineage installed. Reports: $R  Trash: $TRASH"
+echo "Verify in browser console: localStorage.getItem('__formDataSnapshot')"

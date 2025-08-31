@@ -1,3 +1,4 @@
+import { attachTrace, getTraceId } from "../telemetry/lineage";
 import { fetchProducts } from "../api/products";
 export type CanonicalProduct = {
   id: string;
@@ -209,8 +210,7 @@ export const getLenderProducts = async () => {
 };
 
 export const createApplication = async (data: FormData) => {
-  const res = await fetch(`/api/v1/applications`, {
-    method: "POST",
+  const res = await fetch(`/api/v1/applications`, { method:'POST', headers:{'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client' },
     body: data,
     credentials: "include"
   });
@@ -231,8 +231,7 @@ export const uploadDocument = async (applicationId: string, file: File, document
   formData.append('file', file);
   formData.append('document_type', documentType);
   
-  const res = await fetch(`/api/v1/applications/${applicationId}/docs`, {
-    method: "POST",
+  const res = await fetch(`/api/v1/applications/${applicationId}/docs`, { method:'POST', headers:{'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client' },
     body: formData,
     credentials: "include"
   });
