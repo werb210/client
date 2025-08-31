@@ -1,7 +1,7 @@
 export type Intake = {
   capitalUse?: string;                 // 'Capital', 'Equipment', etc.
   amountRequested?: number;
-  country?: 'US' | 'CA';
+  country?: 'US' | 'Canada';
   industry?: string;
   yearsInBusiness?: number;
   revenue12m?: number;
@@ -19,7 +19,7 @@ export function normalizeStep1(raw: Record<string, unknown>): Intake {
   const result = {
     capitalUse: String(raw.capitalUse ?? raw.purpose ?? raw.lookingFor ?? raw.fundsPurpose ?? '').trim(),
     amountRequested: toNum(raw.amountRequested ?? raw.fundingAmount ?? raw.amount ?? raw.requestedAmount),
-    country: (String(raw.businessLocation ?? raw.country ?? raw.headquarters ?? '').includes('Canada') ? 'CA' : 'US') as 'US'|'CA',
+    country: (String(raw.businessLocation ?? raw.country ?? raw.headquarters ?? '').includes('Canada') ? 'Canada' : 'US') as 'US'|'Canada',
     industry: String(raw.industry ?? '').trim(),
     yearsInBusiness: toNum(raw.yearsInBusiness ?? raw.yib ?? (
       raw.salesHistory === '<1yr' ? 0.5 : 
