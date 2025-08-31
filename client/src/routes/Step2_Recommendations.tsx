@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { StepHeader } from '@/components/StepHeader';
@@ -7,11 +7,21 @@ import { Button } from '@/components/ui/button';
 import type { Product } from '@/api/products';
 
 const PRODUCTS_URL = "/api/v1/products";
+const LS_CATEGORY = "bf:step2:category";
 
 export default function Step2Recommendations() {
-  const { data: contextData } = useFormData();
+  const { data: contextData, save } = useFormData();
   const [, setLocation] = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedCategory = localStorage.getItem(LS_CATEGORY);
+      if (savedCategory) setSelectedCategory(savedCategory);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -25,8 +35,21 @@ export default function Step2Recommendations() {
     })();
   }, []);
 
+  const handleCategorySelect = useCallback((category: string, products: Product[]) => {
+    setSelectedCategory(category);
+    try { 
+      localStorage.setItem(LS_CATEGORY, category); 
+      // Update form context with selected category
+      save({ selectedCategory: category });
+    } catch {}
+  }, [save]);
+
+  const canContinue = useMemo(() => Boolean(selectedCategory), [selectedCategory]);
+
   const handleContinue = () => {
-    setLocation('/apply/step-3');
+    if (canContinue) {
+      setLocation('/apply/step-3');
+    }
   };
 
   const handleBack = () => {
@@ -46,23 +69,18 @@ export default function Step2Recommendations() {
         <div className="max-w-4xl mx-auto mt-8">
           <CategoryCards 
             intake={contextData || {}} 
-            onSelect={(category, products) => {
-              console.log('Selected category:', category, 'with', products.length, 'products');
-              // Save selection to localStorage for Step 3 validation
-              localStorage.setItem('bf:step2:category', category);
-              // Update form context with selected category
-              localStorage.setItem('bf:intake', JSON.stringify({
-                ...(contextData || {}),
-                selectedCategory: category
-              }));
-            }} 
+            onSelect={handleCategorySelect}
           />
           
           <div className="flex justify-between mt-8">
             <Button variant="outline" onClick={handleBack}>
               Previous
             </Button>
-            <Button onClick={handleContinue}>
+            <Button 
+              onClick={handleContinue}
+              disabled={!canContinue}
+              className={!canContinue ? "opacity-50 cursor-not-allowed" : ""}
+            >
               Continue
             </Button>
           </div>

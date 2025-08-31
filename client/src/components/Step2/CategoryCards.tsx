@@ -45,9 +45,9 @@ export default function CategoryCards({ intake, onSelect }: Props) {
             onClick={() => { 
               setSelectedCategory(c.category); 
               onSelect(c.category, c.products);
-              // Ensure localStorage persistence
+              // Ensure localStorage persistence matches categoryEngine
               try { 
-                localStorage.setItem('bf:step2:category', JSON.stringify(c.category)); 
+                localStorage.setItem('bf:step2:category', c.category); 
               } catch {}
             }}
             className={[

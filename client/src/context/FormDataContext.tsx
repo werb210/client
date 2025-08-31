@@ -25,6 +25,9 @@ export type ApplicationForm = {
   fixedAssetsValue?: number | string;  // Step 1 field
   equipmentValue?: number | string;    // Step 1 field
   
+  // Step 2 Product Category selection
+  selectedCategory?: string;
+  
   // Step 3 Business Details fields
   operatingName?: string;
   legalName?: string;

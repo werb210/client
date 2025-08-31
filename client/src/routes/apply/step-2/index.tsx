@@ -18,7 +18,7 @@ export default function Step2() {
       if (raw) setAnswers(JSON.parse(raw));
       
       const savedCategory = localStorage.getItem(LS_CATEGORY);
-      if (savedCategory) setSelectedCategory(JSON.parse(savedCategory));
+      if (savedCategory) setSelectedCategory(savedCategory);
     } catch {}
   }, []);
 
@@ -38,7 +38,7 @@ export default function Step2() {
     const categoryString = String(category);
     setSelectedCategory(categoryString);
     try { 
-      localStorage.setItem(LS_CATEGORY, JSON.stringify(categoryString)); 
+      localStorage.setItem(LS_CATEGORY, categoryString); 
       // Also update the main form data
       const currentAnswers = { ...answers, selectedCategory: categoryString };
       localStorage.setItem(LS_FORM, JSON.stringify(currentAnswers));
