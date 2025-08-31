@@ -1,12 +1,29 @@
+import React, { useEffect, useState } from "react";
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { StepHeader } from '@/components/StepHeader';
-import CategoryMode from '@/features/step2/CategoryMode';
+import CategoryPicker from '@/components/CategoryPicker';
 import { Button } from '@/components/ui/button';
+import type { Product } from '@/lib/categories';
+
+const PRODUCTS_URL = "/api/v1/products";
 
 export default function Step2Recommendations() {
   const { data: contextData } = useFormData();
   const [, setLocation] = useLocation();
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch(PRODUCTS_URL);
+        if (r.ok) {
+          const json = await r.json();
+          setProducts(Array.isArray(json.items) ? json.items : json);
+        }
+      } catch {}
+    })();
+  }, []);
 
   const handleContinue = () => {
     setLocation('/step3');
@@ -22,12 +39,12 @@ export default function Step2Recommendations() {
         <StepHeader
           stepNumber={2}
           totalSteps={7}
-          title="Choose Product Categories"
-          description="Select the types of financing you're interested in"
+          title="Choose Product Category"
+          description="Select the type of financing that best fits your business needs"
         />
 
         <div className="max-w-4xl mx-auto mt-8">
-          <CategoryMode />
+          <CategoryPicker products={products} answers={contextData || {}} />
           
           <div className="flex justify-between mt-8">
             <Button variant="outline" onClick={handleBack}>

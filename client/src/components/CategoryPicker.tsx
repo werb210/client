@@ -1,69 +1,47 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from "react";
+import CategoryCard from "./CategoryCard";
+import { groupByCategory, CATEGORY_LABEL, type Category, type Product } from "../lib/categories";
 
-type Props = {
-  products: Array<{ category?: string }>
-  onChange?: (cats: string[]) => void
-}
+const LS_KEY = "bf:step2:category";
 
-export default function CategoryPicker({ products, onChange }: Props) {
-  const categories = useMemo(() => {
-    const s = new Set<string>()
-    for (const p of products) if (p.category) s.add(p.category)
-    return Array.from(s).sort()
-  }, [products])
-
-  const [selected, setSelected] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem('bf:step2:categories')
-      return raw ? JSON.parse(raw) : []
-    } catch { return [] }
-  })
+export default function CategoryPicker(props: {
+  products: Product[];
+  answers: { country?: string; amountRequested?: number; loanAmount?: number };
+  onPicked?: (cat: Category) => void;
+}) {
+  const amount = (props.answers.amountRequested ?? props.answers.loanAmount) as number | undefined;
+  const groups = useMemo(
+    () => groupByCategory(props.products, { country: props.answers.country, amount }),
+    [props.products, props.answers.country, amount]
+  );
+  const [picked, setPicked] = useState<Category | null>(null);
 
   useEffect(() => {
-    localStorage.setItem('bf:step2:categories', JSON.stringify(selected))
-    onChange?.(selected)
-  }, [selected, onChange])
+    const prev = window.localStorage.getItem(LS_KEY);
+    if (prev && CATEGORY_LABEL[prev as Category]) setPicked(prev as Category);
+  }, []);
 
-  if (!categories.length) return null
+  useEffect(() => {
+    if (picked) {
+      window.localStorage.setItem(LS_KEY, picked);
+      props.onPicked?.(picked);
+    }
+  }, [picked]);
 
-  function toggle(cat: string) {
-    setSelected(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])
+  if (!groups.length) {
+    return <div className="text-sm text-gray-500">No categories available for your profile.</div>;
   }
 
   return (
-    <div style={{margin:'8px 0', padding:'8px', border:'1px solid #e5e7eb', borderRadius:8}}>
-      <strong>Filter by product category</strong>
-      <div style={{display:'flex', flexWrap:'wrap', gap:8, marginTop:8}}>
-        {categories.map(cat => (
-          <button
-            key={cat}
-            type="button"
-            onClick={() => toggle(cat)}
-            style={{
-              padding:'6px 10px',
-              borderRadius:999,
-              border: selected.includes(cat) ? '2px solid #111' : '1px solid #d1d5db',
-              background: selected.includes(cat) ? '#f3f4f6' : '#fff',
-              cursor:'pointer'
-            }}
-            aria-pressed={selected.includes(cat)}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
+    <div>
+      {groups.map(g =>
+        <CategoryCard
+          key={g.key}
+          group={g}
+          selected={picked === g.key}
+          onSelect={(k) => setPicked(k as Category)}
+        />
+      )}
     </div>
-  )
+  );
 }
-
-// injected: local-first products fetch
-import { getProducts, loadSelectedCategories } from "../api/products";
-/* injected load on mount (pseudo):
-useEffect(() => { (async () => {
-  const cats = loadSelectedCategories();
-  const products = await getProducts({ useCacheFirst: true });
-  // apply category filter if present
-  const selected = cats && cats.length ? products.filter(p => cats.includes((p.category||"").toLowerCase())) : products;
-  setState({ products: selected });
-})(); }, []);
-*/

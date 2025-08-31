@@ -1,0 +1,135 @@
+Short answer: **not yet**. The code I gave uses your app’s default utility styles, so the **colors and type won’t exactly match** the screenshots (blue section title, green/amber panels, Inter font). Here’s a tiny, **dedupe-safe theme patch** to make Step 2 and Step 5 look like the screenshots.
+
+```bash
+# CLIENT APP — THEME PATCH (colors + font like your screenshots)
+# - No duplicates: edits existing globals and the two new pages only.
+
+# 1) Add/extend your global stylesheet (pick the one you already have):
+#    client/src/app.css  OR  client/src/styles.css
+#    If neither exists, create client/src/app.css and ensure it's imported in main.tsx.
+cat >> client/src/app.css <<'CSS'
+
+/* === Boreal UI theme (matches screenshots) === */
+@font-face{
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: local("Inter"), url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS0Y.woff2) format("woff2");
+}
+
+:root{
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  --c-primary: #2563eb;          /* Step title blue */
+  --c-text:    #111827;          /* Gray 900 */
+  --c-muted:   #6b7280;          /* Gray 500 */
+  --c-card:    #e5e7eb;          /* Gray 200 border */
+
+  --c-success:    #16a34a;       /* Green 600 */
+  --c-success-bg: #ecfdf5;       /* Green 50 */
+  --c-success-br: #bbf7d0;       /* Green 200 */
+
+  --c-warn:       #f59e0b;       /* Amber 500 */
+  --c-warn-bg:    #fff7ed;       /* Orange/Amber 50 */
+  --c-warn-br:    #fed7aa;       /* Amber 200 */
+}
+
+html,body{ font-family: var(--font-sans); color: var(--c-text); }
+.text-primary{ color: var(--c-primary) !important; }
+
+.panel-success{
+  background: var(--c-success-bg);
+  border: 1px solid var(--c-success-br);
+  color: var(--c-success);
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.panel-warn{
+  background: var(--c-warn-bg);
+  border: 1px solid var(--c-warn-br);
+  color: #92400e; /* warm brown text, like screenshot */
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.card{
+  border: 1px solid var(--c-card);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.badge{
+  border-radius: 9999px;
+  padding: .25rem .6rem;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.badge-success{ background: var(--c-success-bg); color: var(--c-success); border: 1px solid var(--c-success-br); }
+.badge-muted{ color: var(--c-muted); background: #f9fafb; border: 1px solid #e5e7eb; }
+CSS
+```
+
+Now apply the classes in the two pages we added (no new files, just tweak classes).
+
+**Step 2** (`client/src/routes/apply/step-2/index.tsx`) — change only the classNames:
+
+* Title → add `text-primary`.
+* “Geographic Filter Active” box → replace container with `panel-success`.
+* “Select Your Preferred Loan Product” box → replace container with `panel-warn`.
+* Category cards already look correct; they get the global font + border color from `.card`.
+
+```diff
+- <h1 className="text-2xl font-bold mb-4">Step 2: Product Recommendations</h1>
++ <h1 className="text-2xl font-bold mb-4 text-primary">Step 2: Product Recommendations</h1>
+
+- <section className="rounded-2xl border p-4 mb-4">
++ <section className="panel-success mb-4">
+  ...
+- <section className="rounded-2xl border p-4">
++ <section className="panel-warn">
+  <h2 className="font-semibold mb-2">Select Your Preferred Loan Product</h2>
+  <CategoryPicker ... />
+</section>
+```
+
+You can also wrap the `CategoryCard`’s root `<button>` with the `card` utility:
+
+```diff
+- className={`w-full text-left rounded-2xl border p-4 mb-3 transition ...`}
++ className={`w-full text-left card mb-3 transition ...`}
+```
+
+**Step 5** (`client/src/routes/apply/step-5/index.tsx`) — light polish:
+
+```diff
+- <h1 className="text-2xl font-bold mb-4">Step 5: Required Documents</h1>
++ <h1 className="text-2xl font-bold mb-4 text-primary">Step 5: Required Documents</h1>
+
+- <section className="rounded-2xl border p-4 mb-4">
++ <section className="panel-success mb-4">
+
+- <div key={k} className="rounded-2xl border p-4">
++ <div key={k} className="card">
+    <h3 className="font-semibold mb-2">{DOC_LABEL[k]}</h3>
+-   <div className="text-sm text-gray-500 mb-2">Required</div>
++   <span className="badge badge-muted mr-2">Required</span>
+    <div className="rounded-xl border border-dashed p-6 text-center text-gray-400">
+      Upload disabled for this build
+    </div>
+  </div>
+```
+
+**Fonts**
+
+* The CSS above self-loads Inter (display: swap). If you already inject Inter elsewhere, you can remove the `@font-face` block to avoid duplication.
+
+**Result**
+
+* Section headings = **blue** like your shots.
+* “Geographic Filter Active” = **soft green panel**.
+* “Select Your Preferred Loan Product” = **soft amber panel**.
+* Cards/badges and body text match the **clean Inter** look in your screenshots.
+
+If you want me to tint the category **percentage pill** to the same green “95% Match” chip you showed, I can add a small `badge-success` span next to each category title.

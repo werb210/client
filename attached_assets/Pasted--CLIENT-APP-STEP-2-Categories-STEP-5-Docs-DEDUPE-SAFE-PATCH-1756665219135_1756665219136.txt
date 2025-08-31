@@ -1,0 +1,445 @@
+# ===========================
+# CLIENT APP — STEP 2 (Categories) & STEP 5 (Docs) — DEDUPE-SAFE PATCH
+# ===========================
+# Goals
+# 1) Remove old Step 2 "recommendation engine" and Step 5 legacy upload logic (no duplicates left behind)
+# 2) Implement category selection (Line of Credit, Term Loan, Equipment Financing, Invoice Factoring, Purchase Order Financing, Working Capital)
+# 3) Implement category-based required docs on Step 5
+# 4) Preserve submission schema & staff handoff:
+#    - include selectedCategory
+#    - include documents[] (can be empty) and documentStatus ('pending'|'complete')
+#    - field normalization for amountRequested/loanAmount stays intact
+# 5) Keep products API usage local-first ( /api/v1/products ), with external fallback if configured
+
+set -euo pipefail
+TS="$(date +%Y%m%d-%H%M%S)"
+R=".patch-reports/client-categories-$TS"
+TRASH=".trash-client-$TS"
+mkdir -p "$R" "$TRASH"
+
+echo "== 1) DEDUPE: quarantine old engines & legacy uploads ==" | tee -a "$R/summary.txt"
+
+# Quarantine any prior recommendation engines & product card views
+# (adjust globs if your repo differs; this is safe 'mv' quarantine, not rm)
+for p in \
+  "client/src/lib/recommendations" \
+  "client/src/lib/recommendation" \
+  "client/src/routes/apply/step-2/engine*" \
+  "client/src/components/Step2*Product*Card*" \
+  "client/src/pages/apply/Step2*Product*" \
+  "client/src/v2-design-system/Step2*Product*"
+do
+  if [ -e "$p" ]; then
+    mkdir -p "$TRASH/$(dirname "$p")" && git mv -f "$p" "$TRASH/$p" 2>/dev/null || mv -f "$p" "$TRASH/$p"
+    echo " • quarantined: $p" | tee -a "$R/summary.txt"
+  fi
+done
+
+# Quarantine any Step 5 legacy multi-uploader implementations if present
+for p in \
+  "client/src/routes/apply/step-5/DocumentUpload*.*" \
+  "client/src/components/Step5*Upload*.*" \
+  "client/src/v2-design-system/Step5*Upload*.*"
+do
+  if [ -e "$p" ]; then
+    mkdir -p "$TRASH/$(dirname "$p")" && git mv -f "$p" "$TRASH/$p" 2>/dev/null || mv -f "$p" "$TRASH/$p"
+    echo " • quarantined: $p" | tee -a "$R/summary.txt"
+  fi
+done
+
+echo "== 2) CORE: category model & grouping util ==" | tee -a "$R/summary.txt"
+mkdir -p client/src/lib
+
+cat > client/src/lib/categories.ts <<'TS'
+export type Category =
+  | "line_of_credit"
+  | "term_loan"
+  | "equipment_financing"
+  | "invoice_factoring"
+  | "purchase_order_financing"
+  | "working_capital";
+
+export const CATEGORY_LABEL: Record<Category,string> = {
+  line_of_credit: "Business Line of Credit",
+  term_loan: "Term Loan",
+  equipment_financing: "Equipment Financing",
+  invoice_factoring: "Invoice Factoring",
+  purchase_order_financing: "Purchase Order Financing",
+  working_capital: "Working Capital",
+};
+
+export interface Product {
+  id: string;
+  name: string;
+  category: Category | string; // tolerate unknowns but we’ll filter to known
+  country?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  lender_name?: string;
+}
+
+export interface CategoryGroup {
+  key: Category;
+  label: string;
+  products: Product[];
+  percentage: number;      // share of all eligible
+  matchScore?: number;     // optional UI stat
+}
+
+export function normalizeCategory(raw: string): Category | null {
+  const s = (raw || "").toLowerCase().replace(/\s+/g, "_");
+  const map: Record<string,Category> = {
+    line_of_credit: "line_of_credit",
+    loc: "line_of_credit",
+    term_loan: "term_loan",
+    equipment_financing: "equipment_financing",
+    invoice_factoring: "invoice_factoring",
+    factoring: "invoice_factoring",
+    purchase_order_financing: "purchase_order_financing",
+    po_financing: "purchase_order_financing",
+    working_capital: "working_capital",
+    mca: "working_capital", // map MCA -> working capital bucket per request
+  };
+  return (map[s] ?? null);
+}
+
+export function groupByCategory(all: Product[], opts?: {country?: string; amount?: number}) : CategoryGroup[] {
+  const known: Record<Category, Product[]> = {
+    line_of_credit: [],
+    term_loan: [],
+    equipment_financing: [],
+    invoice_factoring: [],
+    purchase_order_financing: [],
+    working_capital: [],
+  };
+
+  const eligible: Product[] = all.filter(p => {
+    const cat = normalizeCategory(String(p.category));
+    if (!cat) return false;
+
+    // country/amount filtering (conservative; keep if unknown bounds)
+    if (opts?.country && p.country && p.country !== opts.country) return false;
+    const amount = opts?.amount ?? undefined;
+    if (amount != null) {
+      const minOk = p.minAmount == null || amount >= p.minAmount!;
+      const maxOk = p.maxAmount == null || amount <= p.maxAmount!;
+      if (!minOk || !maxOk) return false;
+    }
+    return true;
+  });
+
+  eligible.forEach(p => {
+    const cat = normalizeCategory(String(p.category))!;
+    known[cat].push(p);
+  });
+
+  const total = eligible.length || 1;
+  const out: CategoryGroup[] = (Object.keys(known) as Category[]).map(key => ({
+    key,
+    label: CATEGORY_LABEL[key],
+    products: known[key],
+    percentage: Math.round((known[key].length / total) * 100),
+  }));
+
+  // sort most populated first
+  out.sort((a,b) => b.products.length - a.products.length);
+  return out;
+}
+TS
+
+echo "== 3) Step 2 UI: CategoryPicker component and page wiring ==" | tee -a "$R/summary.txt"
+mkdir -p client/src/components client/src/routes/apply/step-2
+
+cat > client/src/components/CategoryCard.tsx <<'TSX'
+import React from "react";
+import type { CategoryGroup } from "../lib/categories";
+
+type Props = {
+  group: CategoryGroup;
+  selected?: boolean;
+  onSelect: (key: string) => void;
+};
+export default function CategoryCard({ group, selected, onSelect }: Props) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(group.key)}
+      className={`w-full text-left rounded-2xl border p-4 mb-3 transition
+        ${selected ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-200 hover:border-gray-300"}`}
+      aria-pressed={selected}
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">{group.label}</h3>
+        <span className="text-sm text-gray-500">{group.percentage}% match</span>
+      </div>
+      <p className="text-sm text-gray-600 mt-1">
+        {group.products.length} products available
+      </p>
+    </button>
+  );
+}
+TSX
+
+cat > client/src/components/CategoryPicker.tsx <<'TSX'
+import React, { useEffect, useMemo, useState } from "react";
+import CategoryCard from "./CategoryCard";
+import { groupByCategory, CATEGORY_LABEL, type Category, type Product } from "../lib/categories";
+
+const LS_KEY = "bf:step2:category";
+
+export default function CategoryPicker(props: {
+  products: Product[];
+  answers: { country?: string; amountRequested?: number; loanAmount?: number };
+  onPicked?: (cat: Category) => void;
+}) {
+  const amount = (props.answers.amountRequested ?? props.answers.loanAmount) as number | undefined;
+  const groups = useMemo(
+    () => groupByCategory(props.products, { country: props.answers.country, amount }),
+    [props.products, props.answers.country, amount]
+  );
+  const [picked, setPicked] = useState<Category | null>(null);
+
+  useEffect(() => {
+    const prev = window.localStorage.getItem(LS_KEY);
+    if (prev && CATEGORY_LABEL[prev as Category]) setPicked(prev as Category);
+  }, []);
+
+  useEffect(() => {
+    if (picked) {
+      window.localStorage.setItem(LS_KEY, picked);
+      props.onPicked?.(picked);
+    }
+  }, [picked]);
+
+  if (!groups.length) {
+    return <div className="text-sm text-gray-500">No categories available for your profile.</div>;
+  }
+
+  return (
+    <div>
+      {groups.map(g =>
+        <CategoryCard
+          key={g.key}
+          group={g}
+          selected={picked === g.key}
+          onSelect={(k) => setPicked(k as Category)}
+        />
+      )}
+    </div>
+  );
+}
+TSX
+
+# Replace Step 2 page to use categories
+cat > client/src/routes/apply/step-2/index.tsx <<'TSX'
+import React, { useEffect, useState } from "react";
+import CategoryPicker from "../../../components/CategoryPicker";
+import type { Product } from "../../../lib/categories";
+
+const PRODUCTS_URL = "/api/v1/products";
+const LS_FORM = "bf:intake";
+
+export default function Step2() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [answers, setAnswers] = useState<any>({});
+
+  useEffect(() => {
+    // Step 1 answers come from context or localStorage (fallback)
+    try {
+      const raw = window.localStorage.getItem(LS_FORM);
+      if (raw) setAnswers(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch(PRODUCTS_URL);
+        if (r.ok) {
+          const json = await r.json();
+          setProducts(Array.isArray(json.items) ? json.items : json);
+        }
+      } catch {}
+    })();
+  }, []);
+
+  return (
+    <main className="max-w-4xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Step 2: Product Recommendations</h1>
+
+      <section className="rounded-2xl border p-4 mb-4">
+        <h2 className="font-semibold mb-2">Your Profile Summary</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700">
+          <div><div className="text-gray-500">Headquarters:</div>{answers.country || "—"}</div>
+          <div><div className="text-gray-500">Funding Amount:</div>${answers.amountRequested ?? answers.loanAmount ?? "—"}</div>
+          <div><div className="text-gray-500">Looking For:</div>{answers.lookingFor || "—"}</div>
+          <div><div className="text-gray-500">Industry:</div>{answers.industry || "—"}</div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border p-4">
+        <h2 className="font-semibold mb-2">Select Your Preferred Loan Product</h2>
+        <CategoryPicker products={products} answers={answers} />
+      </section>
+    </main>
+  );
+}
+TSX
+
+echo "== 4) Step 5: category-based doc buckets (simple, required list) ==" | tee -a "$R/summary.txt"
+mkdir -p client/src/lib client/src/routes/apply/step-5
+
+cat > client/src/lib/docRules.ts <<'TS'
+import type { Category } from "./categories";
+
+export type DocKey =
+  | "bank_statements_6m"
+  | "financial_statements"
+  | "tax_returns_3y"
+  | "equipment_quote"
+  | "ar_aging"
+  | "invoice_samples"
+  | "po_documents"
+  | "personal_financial_statement";
+
+export const DOC_LABEL: Record<DocKey,string> = {
+  bank_statements_6m: "Bank Statements (last 6 months)",
+  financial_statements: "Financial Statements (P&L + Balance Sheet)",
+  tax_returns_3y: "Business Tax Returns (last 3 years)",
+  equipment_quote: "Equipment Quote",
+  ar_aging: "A/R Aging",
+  invoice_samples: "Invoice Samples",
+  po_documents: "Purchase Orders & Customer Credit Info",
+  personal_financial_statement: "Personal Financial Statement (if ≥50% owner)",
+};
+
+const CORE: DocKey[] = ["bank_statements_6m","financial_statements","tax_returns_3y"];
+
+const BY_CATEGORY: Record<Category, DocKey[]> = {
+  line_of_credit: [],
+  term_loan: [],
+  equipment_financing: ["equipment_quote"],
+  invoice_factoring: ["ar_aging","invoice_samples"],
+  purchase_order_financing: ["po_documents"],
+  working_capital: [],
+};
+
+export function docsForCategory(cat: Category | null | undefined): DocKey[] {
+  const extra = cat ? (BY_CATEGORY[cat] || []) : [];
+  return Array.from(new Set([...CORE, ...extra]));
+}
+TS
+
+# Minimal Step 5 that reads category & lists required docs (upload control can remain disabled or swapped later)
+cat > client/src/routes/apply/step-5/index.tsx <<'TSX'
+import React, { useEffect, useMemo, useState } from "react";
+import { DOC_LABEL, docsForCategory } from "../../../lib/docRules";
+
+const LS_CAT = "bf:step2:category";
+const LS_FORM = "bf:intake";
+
+export default function Step5() {
+  const [answers, setAnswers] = useState<any>({});
+  const [category, setCategory] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(LS_FORM);
+      if (raw) setAnswers(JSON.parse(raw));
+    } catch {}
+    const c = window.localStorage.getItem(LS_CAT);
+    if (c) setCategory(c);
+  }, []);
+
+  const required = useMemo(() => docsForCategory(category as any), [category]);
+
+  return (
+    <main className="max-w-4xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Step 5: Required Documents</h1>
+
+      <section className="rounded-2xl border p-4 mb-4">
+        <div className="text-sm text-gray-700">
+          Consolidated from all matching lender products for your selected category.
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {required.map((k) => (
+          <div key={k} className="rounded-2xl border p-4">
+            <h3 className="font-semibold mb-2">{DOC_LABEL[k]}</h3>
+            <div className="text-sm text-gray-500 mb-2">Required</div>
+            <div className="rounded-xl border border-dashed p-6 text-center text-gray-400">
+              {/* Keep disabled for now as requested — wiring to uploader can be added later */}
+              Upload disabled for this build
+            </div>
+          </div>
+        ))}
+      </section>
+    </main>
+  );
+}
+TSX
+
+echo "== 5) Submission schema guard (no change if already present) ==" | tee -a "$R/summary.txt"
+
+# If ensureSubmissionSchema doesn’t exist yet, create a tiny guard to ensure documents & status exist.
+mkdir -p client/src/lib
+if [ ! -f client/src/lib/ensureSubmissionSchema.ts ]; then
+cat > client/src/lib/ensureSubmissionSchema.ts <<'TS'
+export type Submission = {
+  selectedCategory?: string;
+  documents?: Array<{type: string; id?: string; name?: string}>;
+  documentStatus?: "pending" | "complete";
+  [k: string]: any;
+};
+
+export function ensureSubmissionSchema(input: any): Submission {
+  const out: Submission = { ...(input || {}) };
+  if (!Array.isArray(out.documents)) out.documents = [];
+  if (!out.documentStatus) out.documentStatus = "pending";
+  return out;
+}
+TS
+fi
+
+echo "== 6) Wiring: store selectedCategory into submission when Step 2 is confirmed =="
+# NOTE: Wire this where your 'continue to next step' handler runs on Step 2.
+# Example snippet to paste into your Step 2 navigation handler:
+
+cat > "$R/step2-submit-snippet.txt" <<'SNIPPET'
+import { ensureSubmissionSchema } from "../../lib/ensureSubmissionSchema";
+const LS_CAT = "bf:step2:category";
+const LS_FORM = "bf:intake";
+
+function onContinueToStep3() {
+  const raw = window.localStorage.getItem(LS_FORM);
+  const form = raw ? JSON.parse(raw) : {};
+  const cat = window.localStorage.getItem(LS_CAT);
+  const submission = ensureSubmissionSchema({
+    ...form,
+    selectedCategory: cat || form.selectedCategory || null,
+  });
+  window.localStorage.setItem(LS_FORM, JSON.stringify(submission));
+  // navigate("/apply/step-3"); // your existing nav
+}
+SNIPPET
+
+echo "== 7) Cache hardening: ensure no stale SW interferes ==" | tee -a "$R/summary.txt"
+# Optional but recommended: disable any dev service worker to avoid stale JS after refresh during QA
+if [ -f client/public/service-worker.js ]; then
+  mkdir -p "$TRASH/client-public-sw"
+  git mv -f client/public/service-worker.js "$TRASH/client-public-sw/service-worker.js" 2>/dev/null || mv -f client/public/service-worker.js "$TRASH/client-public-sw/service-worker.js"
+  echo " • dev service worker quarantined" | tee -a "$R/summary.txt"
+fi
+
+echo "== 8) Build & sanity check ==" | tee -a "$R/summary.txt"
+npm run build --silent || (echo "Build failed — check the TS hints in the files above" && exit 1)
+
+echo ""
+echo "DONE. Old engines/uploads quarantined in: $TRASH"
+echo "New files & snippets logged in: $R"
+echo ""
+echo "Verify:"
+echo " • Step 2 shows category cards (counts & %), selection persists"
+echo " • Step 5 lists doc buckets based on selected category"
+echo " • Submission includes { selectedCategory, documents:[], documentStatus:'pending' }"
