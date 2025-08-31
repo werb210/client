@@ -106,6 +106,12 @@ app.get('/__version', (_req, res) => res.json({
   dev: DEV 
 }));
 
+// SPA fallback for client application routes (prevents in-app 404 on refresh)
+app.get(['/apply/*'], (req, res) => {
+  const distPath = path.join(__dirname, '..', 'dist', 'public');
+  res.sendFile(path.join(distPath, 'index.html'));
+});
+
 // Production-ready CORS configuration (without conflicting security headers)
 app.use((req, res, next) => {
   const origin = req.headers.origin;

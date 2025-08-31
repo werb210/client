@@ -62,15 +62,15 @@ const step3Schema = z.object({
 type BusinessDetailsFormData = z.infer<typeof step3Schema>;
 
 export default function Step3BusinessDetailsComplete() {
-  const { state, dispatch } = useFormData();
+  const { data: state, setData: setFormData } = useFormData();
   const [, setLocation] = useLocation();
 
   // Get business location from unified state to determine regional formatting
-  const businessLocation = state.step1?.businessLocation || 'US';
+  const businessLocation = state?.businessLocation || 'US';
   const isCanadian = isCanadianBusiness(businessLocation);
   const countryCode = getCountryFromBusinessLocation(businessLocation);
   
-  logger.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`, { state: state.step1?.businessLocation, detected: isCanadian });
+  logger.log(`[STEP3] Business Location: ${businessLocation}, Is Canadian: ${isCanadian}`, { state: state?.businessLocation, detected: isCanadian });
   
   const regionalLabels = getRegionalLabels(isCanadian);
   const stateProvinceOptions = getStateProvinceOptions(isCanadian);
@@ -80,24 +80,24 @@ export default function Step3BusinessDetailsComplete() {
   
   // Date state for business start date
   const [businessStartDate, setBusinessStartDate] = useState<Date | null>(
-    state.step3?.businessStartDate ? new Date(state.step3.businessStartDate) : null
+    state?.businessStartDate ? new Date(state.businessStartDate) : null
   );
 
   const form = useForm<BusinessDetailsFormData>({
     resolver: zodResolver(step3Schema),
     defaultValues: {
-      operatingName: state.step3?.operatingName || 'S E T Inc.',
-      legalName: state.step3?.legalName || 'SITE ENGINEERING TECHNOLOGY INC.',
-      businessStreetAddress: state.step3?.businessStreetAddress || 'PO BOX 20056',
-      businessCity: state.step3?.businessCity || 'Red Deer',
-      businessState: state.step3?.businessState || 'AB',
-      businessPostalCode: state.step3?.businessPostalCode || 'T4N 6X5',
-      businessPhone: state.step3?.businessPhone || '+15878881837',
-      businessWebsite: state.step3?.businessWebsite || '',
-      businessStartDate: state.step3?.businessStartDate || '2018-01-01',
-      businessStructure: state.step3?.businessStructure || 'corporation',
-      employeeCount: state.step3?.employeeCount || 8,
-      estimatedYearlyRevenue: state.step3?.estimatedYearlyRevenue || 1200000,
+      operatingName: state?.operatingName || 'S E T Inc.',
+      legalName: state?.legalName || 'SITE ENGINEERING TECHNOLOGY INC.',
+      businessStreetAddress: state?.businessStreetAddress || 'PO BOX 20056',
+      businessCity: state?.businessCity || 'Red Deer',
+      businessState: state?.businessState || 'AB',
+      businessPostalCode: state?.businessPostalCode || 'T4N 6X5',
+      businessPhone: state?.businessPhone || '+15878881837',
+      businessWebsite: state?.businessWebsite || '',
+      businessStartDate: state?.businessStartDate || '2018-01-01',
+      businessStructure: state?.businessStructure || 'corporation',
+      employeeCount: state?.employeeCount || 8,
+      estimatedYearlyRevenue: state?.estimatedYearlyRevenue || 1200000,
     },
   });
 
