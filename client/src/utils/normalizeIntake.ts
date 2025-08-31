@@ -15,6 +15,7 @@ const toNum = (v: unknown) =>
 
 export function normalizeStep1(raw: Record<string, unknown>): Intake {
   console.log('🔧 [normalizeStep1] Raw input:', raw);
+  console.log('🔧 [normalizeStep1] Raw input keys:', Object.keys(raw || {}));
   
   const result = {
     capitalUse: String(raw.capitalUse ?? raw.purpose ?? raw.lookingFor ?? raw.fundsPurpose ?? '').trim(),
@@ -33,6 +34,7 @@ export function normalizeStep1(raw: Record<string, unknown>): Intake {
   };
   
   console.log('🔧 [normalizeStep1] Normalized result:', result);
+  console.log('🔧 [normalizeStep1] Expected by Step 2 - amountRequested:', result.amountRequested, 'country:', result.country);
   return result;
 }
 
