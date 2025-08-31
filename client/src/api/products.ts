@@ -18,7 +18,7 @@ const STAFF_TOKEN = (import.meta as any).env?.VITE_CLIENT_APP_SHARED_TOKEN || ''
 
 const SOURCES: Source[] = [
   { name: 'local', url: '/api/v1/products' },
-  ...(STAFF_BASE ? [{ name: 'staff', url: `${STAFF_BASE}/v1/products`, headers: STAFF_TOKEN ? { Authorization: `Bearer ${STAFF_TOKEN}` } : {} }] : [])
+  ...(STAFF_BASE ? [{ name: 'staff' as const, url: `${STAFF_BASE}/v1/products`, headers: STAFF_TOKEN ? { Authorization: `Bearer ${STAFF_TOKEN}` } : {} }] : [])
 ];
 
 const CACHE_KEY = 'bf:products:v1';
