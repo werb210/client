@@ -35,12 +35,23 @@ interface ProductsByCountry {
   [country: string]: LenderProduct[];
 }
 
-async function fetchLenderProductsByCountry(): Promise<ProductsByCountry> { /* ensure products fetched */ 
-  const response = await /* rewired */
-  if (!response.ok) {
-    throw new Error('Failed to fetch lender products');
-  }
-  const data = await response.json();
+async function fetchLenderProductsByCountry(): Promise<ProductsByCountry> {
+  const products = await fetchProducts();
+  const data = { products: products.map(p => ({
+    id: p.id || 'unknown',
+    name: p.name || p.productName || 'Unknown Product',
+    type: p.category || 'general',
+    description: null,
+    min_amount: String(p.minAmount || 0),
+    max_amount: String(p.maxAmount || 1000000),
+    interest_rate_min: null,
+    interest_rate_max: null,
+    term_min: null,
+    term_max: null,
+    requirements: null,
+    video_url: null,
+    active: true
+  })) };
   
   // Group products by geography (simulate country assignment)
   const productsByCountry: ProductsByCountry = {
@@ -75,7 +86,7 @@ export default function LenderProductsByCountry() {
   const [selectedType, setSelectedType] = useState<string>('all');
 
   const { data: productsByCountry, isLoading, error } = useQuery({
-    queryKey: ['/api/lenders/by-country'],
+    queryKey: ['/api/products/by-country'],
     queryFn: fetchLenderProductsByCountry,
   });
 

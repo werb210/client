@@ -40,10 +40,9 @@ export const getQueryFn: (options: {
         const params = new URLSearchParams(endpoint.split('?')[1] || '');
         const category = params.get('category');
         return await api.fetchRequiredDocuments(category || '');
-      } else if (endpoint.startsWith('/api/lenders/requirements')) {
-        const params = new URLSearchParams(endpoint.split('?')[1] || '');
-        const category = params.get('category');
-        return await api.getLenderProducts(category || undefined);
+      } else if (endpoint.startsWith('/api/products/requirements')) {
+        // Route to unified products fetcher
+        return await fetchProducts();
       }
       
       throw new Error(`No API function mapped for endpoint: ${endpoint}`);
