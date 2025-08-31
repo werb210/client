@@ -21,6 +21,14 @@ export default function Step2() {
         const products = await response.json();
         console.log("[Step2] Loaded", products.length, "products");
         
+        // Get user's Step 1 intake for intelligent scoring
+        const intake = JSON.parse(localStorage.getItem('bf:intake') || '{}');
+        const amount = Number(intake.amountRequested || 0);
+        const industry = String(intake.industry || '').toLowerCase();
+        const country = String(intake.country || '').toLowerCase();
+        
+        console.log("[Step2] Scoring with profile:", { amount, industry, country });
+
         // Group by category
         const grouped = new Map<string, Category>();
         for (const p of products) {
@@ -36,7 +44,37 @@ export default function Step2() {
           }
           const g = grouped.get(cat)!;
           g.products += 1;
-          g.score += 60; // Simple scoring
+          
+          // Smart scoring based on user profile
+          let score = 40; // Base score
+          
+          // Amount-based scoring
+          if (amount >= 100000) {
+            if (cat.includes('term_loan') || cat.includes('equipment')) score += 25;
+            if (cat.includes('line_of_credit')) score += 20;
+          } else if (amount >= 25000) {
+            if (cat.includes('working_capital') || cat.includes('line_of_credit')) score += 25;
+            if (cat.includes('invoice_factoring')) score += 15;
+          } else {
+            if (cat.includes('working_capital') || cat.includes('short_term')) score += 20;
+          }
+          
+          // Industry-based scoring
+          if (industry.includes('construction') || industry.includes('contractor')) {
+            if (cat.includes('equipment') || cat.includes('invoice_factoring')) score += 20;
+          }
+          if (industry.includes('retail') || industry.includes('e-commerce')) {
+            if (cat.includes('inventory') || cat.includes('working_capital')) score += 20;
+          }
+          if (industry.includes('manufacturing')) {
+            if (cat.includes('equipment') || cat.includes('term_loan')) score += 20;
+          }
+          
+          // Product availability bonus
+          if (country === 'ca' && p.country?.includes('CA')) score += 10;
+          if (country === 'us' && p.country?.includes('US')) score += 10;
+          
+          g.score += Math.min(100, score); // Cap at 100
         }
         
         const list = [...grouped.values()]
