@@ -28,7 +28,8 @@ function ensureSubmissionSchema(payload:any){
 export function useSubmitApplication() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { state, dispatch } = useFormDataContext();
+  const formContext = useFormDataContext();
+  const dispatch = formContext.dispatch;
 
   const submitApplication = async (
     requestedAmount: number,

@@ -3,6 +3,7 @@ import { fetchProducts } from "../api/products";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Target, ArrowRight } from 'lucide-react';
+import CategoryPicker from '@/components/CategoryPicker';
 
 const requireIntake = () => {
   // Try multiple storage keys to find Step 1 data
@@ -40,17 +41,20 @@ type Props = {
 
 export function Step2RecommendationEngine(props: Props){
   const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<any[]>([]);
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(()=>{
     (async ()=>{
       try{
         const products = await import('../api/products').then(m => m.fetchProducts());
+        setAllProducts(Array.isArray(products) ? products : []);
+        // Initial filter with form data
         const { getRecommendedProducts } = await import('../lib/recommendations/engine');
         const formData = requireIntake();
         const data = getRecommendedProducts(formData, products);
-        setProducts(Array.isArray(data) ? data : []);
+        setFilteredProducts(Array.isArray(data) ? data : []);
       }catch(e:any){
         setError(e?.message || 'fetch_failed');
       }finally{
@@ -58,6 +62,17 @@ export function Step2RecommendationEngine(props: Props){
       }
     })();
   }, []);
+
+  const handleCategoryChange = async (categories: string[]) => {
+    try {
+      const { getRecommendedProducts } = await import('../lib/recommendations/engine');
+      const formData = requireIntake();
+      const data = getRecommendedProducts(formData, allProducts, { categories });
+      setFilteredProducts(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error('Category filter error:', e);
+    }
+  };
 
   const intake = requireIntake();
 
@@ -88,31 +103,40 @@ export function Step2RecommendationEngine(props: Props){
   const amount = failSafeNumber(intake.amountRequested);
   const country = intake.country;
 
-  // Minimal eligibility to avoid "all filtered out" when strings slip through
-  const eligible = useMemo(()=>{
-    const list = products.filter(p=>{
-      // accept broad country matches; treat undefined as global
-      const okCountry = !p.country || p.country === country;
-      // robust numeric comparisons
-      const min = failSafeNumber(p.min_amount || p.minAmount);
-      const max = failSafeNumber(p.max_amount || p.maxAmount);
-      const okAmount = (!min || amount >= min) && (!max || amount <= max || max === 0);
-      const isActive = p.active !== false && p.isActive !== false;
-      return okCountry && okAmount && isActive;
-    });
-    (window as any).__step2 = { ...(window as any).__step2, eligibleCount: list.length, lastFilter: { amount, country } };
-    return list;
-  }, [products, amount, country]);
+  // Update debug info
+  (window as any).__step2 = { 
+    ...(window as any).__step2, 
+    loading, 
+    error, 
+    intake, 
+    allProductsCount: allProducts.length,
+    filteredCount: filteredProducts.length,
+    // Debug storage directly
+    sessionStorage: {
+      'bf:intake': sessionStorage.getItem('bf:intake'),
+      'bf:intake:v2': sessionStorage.getItem('bf:intake:v2')
+    },
+    localStorage: {
+      'bf:intake': localStorage.getItem('bf:intake'),
+      'apply.form': localStorage.getItem('apply.form'),
+      'bf:step2:categories': localStorage.getItem('bf:step2:categories')
+    }
+  };
 
   if (loading) return <Pending msg="Loading live products…" />;
   if (error)   return <Pending msg={`Products error: ${error} | Debug: Check console for window.__step2`} />;
 
-
-  if (!eligible.length) {
-    return <Pending msg={`No eligible products after filters. Found ${products.length} total products but 0 eligible. Check console for filtering details.`} />;
-  }
-
-  return <ProductList products={eligible} intake={intake} onProductSelect={props.onProductSelect} onContinue={props.onContinue} />; // your real renderer
+  return (
+    <div>
+      <CategoryPicker products={allProducts} onChange={handleCategoryChange} />
+      
+      {!filteredProducts.length ? (
+        <Pending msg={`No products match your filters. Found ${allProducts.length} total products. Try selecting different categories above.`} />
+      ) : (
+        <ProductList products={filteredProducts} intake={intake} onProductSelect={props.onProductSelect} onContinue={props.onContinue} />
+      )}
+    </div>
+  );
 }
 
 export default Step2RecommendationEngine;

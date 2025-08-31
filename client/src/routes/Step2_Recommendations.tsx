@@ -3,6 +3,7 @@ import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { StepHeader } from '@/components/StepHeader';
 import { Step2RecommendationEngine } from '@/components/Step2RecommendationEngine';
+import CategoryPicker from '@/components/CategoryPicker';
 
 export default function Step2Recommendations() {
   const { data: contextData } = useFormData();
