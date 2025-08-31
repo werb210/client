@@ -1,4 +1,5 @@
-import { fetchProducts , getRecommendedProducts} from "../api/products";
+import { fetchProducts } from "../api/products";
+import { getRecommendedProducts } from "../lib/recommendations/engine";
 /**
  * Schema + Recommendation Engine Health Check
  * Comprehensive diagnostic for category mapping, country codes, amount filtering, and document intersection
@@ -16,7 +17,7 @@ import { fetchProducts , getRecommendedProducts} from "../api/products";
 
   try {
     // Fetch live data from staff API
-    const response = await /* rewired */
+    const response = await fetch('https://staff.boreal.financial/api/v1/products')
     if (!response.ok) {
       throw new Error(`API Error: ${response.status}`);
     }

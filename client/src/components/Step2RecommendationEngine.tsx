@@ -46,8 +46,9 @@ export function Step2RecommendationEngine(props: Props){
   useEffect(()=>{
     (async ()=>{
       try{
-        const { getRecommendedProducts } = await import('../api/products');
-        const data = await (await getRecommendedProducts()).matches;
+        const products = await import('../api/products').then(m => m.fetchProducts());
+        const { getRecommendedProducts } = await import('../lib/recommendations/engine');
+        const data = getRecommendedProducts(intake, products);
         setProducts(Array.isArray(data) ? data : []);
       }catch(e:any){
         setError(e?.message || 'fetch_failed');

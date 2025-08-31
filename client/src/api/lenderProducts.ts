@@ -1,5 +1,5 @@
-import { fetchProducts } from "../../api/products";
-import { fetchProducts , getRecommendedProducts} from "./products";
+import { fetchProducts } from "./products";
+import { getRecommendedProducts } from "../lib/recommendations/engine";
 export interface LenderProduct {
   id: string;
   lender: string;
@@ -20,7 +20,7 @@ export interface LenderProductsResponse {
 
 // API functions for lender products
 export const fetchLenderProducts = async () => { /* ensure products fetched */ 
-  const res = await /* rewired */
+  const res = await fetch('https://staff.boreal.financial/api/v1/products')
   
   if (!res.ok) {
     throw new Error(`Failed to fetch products: ${res.status} ${res.statusText}`);

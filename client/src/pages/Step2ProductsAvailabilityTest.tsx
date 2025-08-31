@@ -1,4 +1,5 @@
-import { useState, useEffect , getRecommendedProducts} from 'react';
+import { useState, useEffect } from 'react';
+import { getRecommendedProducts } from '../lib/recommendations/engine';
 import { fetchProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +20,7 @@ export default function Step2ProductsAvailabilityTest() {
     
     // Test 1: Check Staff API Connection
     try {
-      const staffResponse = await /* rewired */
+      const staffResponse = await fetch('https://staff.boreal.financial/api/v1/products')
       const staffData = await staffResponse.json();
       
       addResult('Staff API Connection', staffResponse.ok ? 'success' : 'error', {

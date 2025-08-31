@@ -1,0 +1,180 @@
+```bash
+# CLIENT APP — Step 2 “getRecommendedProducts is not defined” hard fix
+# - Creates/repairs ONE canonical engine (no duplicates)
+# - Quarantines parallel .js/.mjs siblings
+# - Patches Step 2 call sites to import correctly (idempotent)
+# - Normalizes Step-1 field names so Step 2 won’t 0-out on drift
+# - Builds and prints quick verification tips
+
+set -euo pipefail
+AUDIT_AT="$(date +%F_%H-%M-%S)"
+R="reports/client-step2-fix-$AUDIT_AT"
+TRASH=".trash-client-$AUDIT_AT"
+ENGINE_PATH="client/src/lib/recommendations/engine.ts"
+mkdir -p "$R" "$TRASH" "$(dirname "$ENGINE_PATH")"
+
+echo "== 1) Quarantine any parallel engine files to avoid duplicates =="
+for f in "${ENGINE_PATH%.*}.js" "${ENGINE_PATH%.*}.mjs"; do
+  if [ -f "$f" ]; then
+    mkdir -p "$TRASH/$(dirname "$f")"
+    mv "$f" "$TRASH/$f"
+    echo "Moved legacy parallel engine: $f -> $TRASH/$f" | tee -a "$R/summary.txt"
+  fi
+done
+
+echo "== 2) Create/patch canonical engine with named + default export =="
+node - <<'NODE'
+const fs=require('fs'), path=require('path');
+const enginePath=process.env.ENGINE_PATH||'client/src/lib/recommendations/engine.ts';
+const dir=path.dirname(enginePath);
+fs.mkdirSync(dir,{recursive:true});
+
+const template = `/* canonical recommendation engine (single source) */
+type AnyObj = Record<string, any>;
+export type CanonicalProduct = {
+  id?: string;
+  name?: string;
+  category?: string;
+  lender_name?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  country?: string;
+  industries?: string[];
+};
+
+function normalizeForm(raw: AnyObj){
+  const f = raw || {};
+  const amount = Number(
+    f.amountRequested ?? f.loanAmount ?? f.requestedAmount ?? f.amount ?? 0
+  ) || 0;
+  const country = String(
+    f.country ?? f.countryCode ?? f.location?.country ?? ''
+  ).toUpperCase().slice(0,2) || 'CA';
+  const province = f.province ?? f.state ?? f.region ?? null;
+  const industry = f.industry ?? f.naics ?? f.naicsCode ?? null;
+  return { amount, country, province, industry, raw:f };
+}
+
+function pickProducts(form: ReturnType<typeof normalizeForm>, products: CanonicalProduct[] = []){
+  const list = Array.isArray(products) ? products : [];
+  const within = (p:any)=>{
+    const min = Number(p.minAmount ?? 0) || 0;
+    const max = Number(p.maxAmount ?? 9e12) || 9e12;
+    return form.amount >= min && form.amount <= max;
+  };
+  const countryOk = (p:any)=>{
+    const pc = String(p.country ?? p.countryCode ?? '').toUpperCase().slice(0,2);
+    return !pc || pc === form.country;
+  };
+  const score = (p:any)=>{
+    let s=0;
+    if (within(p)) s+=2;
+    if (countryOk(p)) s+=2;
+    if (form.industry && p.industries?.includes?.(form.industry)) s+=1;
+    return s;
+  };
+  return list
+    .filter(p=> within(p) && countryOk(p))
+    .map(p=> ({...p, score: score(p)}))
+    .sort((a,b)=>(b.score||0)-(a.score||0));
+}
+
+/** Accept (form, products) or (products, form) defensively */
+export function getRecommendedProducts(a:any,b:any){
+  let form:any, products:any;
+  if (Array.isArray(a)) { products=a; form=b; } else { form=a; products=b; }
+  const nf = normalizeForm(form);
+  const out = pickProducts(nf, products);
+  try { if (typeof window!=='undefined') (window as any).__step2 = {
+    form:nf, inCount:Array.isArray(products)?products.length:0, outCount:out.length, sample:out.slice(0,3)
+  }; } catch {}
+  return out;
+}
+export default getRecommendedProducts;
+`;
+
+let s='';
+if (fs.existsSync(enginePath)) {
+  s = fs.readFileSync(enginePath,'utf8');
+  // Ensure named export exists
+  if (!/export\s+(async\s+)?function\s+getRecommendedProducts\b/.test(s) &&
+      !/export\s+const\s+getRecommendedProducts\b/.test(s)) {
+    s += `\n${template}\n`;
+  }
+  // Ensure default export exists
+  if (!/export\s+default\s+getRecommendedProducts\b/.test(s)) {
+    s += `\nexport default getRecommendedProducts;\n`;
+  }
+  fs.writeFileSync(enginePath,s);
+} else {
+  fs.writeFileSync(enginePath, template);
+}
+console.log("Engine ready:", enginePath);
+NODE
+
+echo "== 3) Patch Step 2 call sites to import correctly (idempotent) =="
+node - <<'NODE'
+const fs=require('fs'), path=require('path');
+const root='client/src';
+const enginePath=process.env.ENGINE_PATH||'client/src/lib/recommendations/engine.ts';
+const engineNoExt=enginePath.replace(/\.ts$/, '');
+function posixRel(from,to){
+  let rel=path.posix.relative(path.posix.dirname(from), to);
+  if (!rel.startsWith('.')) rel='./'+rel;
+  return rel;
+}
+
+function needsImport(src){
+  return !/import\s+\{\s*getRecommendedProducts\s*\}\s+from\s+['"][^'"]+['"]/.test(src)
+      && !/import\s+getRecommendedProducts\s+from\s+['"][^'"]+['"]/.test(src);
+}
+
+function insertImport(src, importPath){
+  // insert at top, but avoid duplicating if present
+  const line=`import { getRecommendedProducts } from '${importPath}';`;
+  if (src.startsWith('import ')) return line+'\n'+src;
+  return line+'\n'+src;
+}
+
+function walk(dir){
+  for (const e of fs.readdirSync(dir,{withFileTypes:true})){
+    const p=path.join(dir,e.name);
+    if (e.isDirectory()){
+      if (e.name==='node_modules') continue;
+      walk(p);
+    } else if (/\.(tsx?|mts|cts)$/.test(e.name)){
+      let src=fs.readFileSync(p,'utf8');
+      if (/\bgetRecommendedProducts\s*\(/.test(src) && needsImport(src)){
+        const rel = posixRel(p.replace(/\\/g,'/'), engineNoExt.replace(/\\/g,'/'));
+        const next = insertImport(src, rel);
+        fs.writeFileSync(p,next);
+        console.log('Fixed import:', p, '->', rel);
+      }
+    }
+  }
+}
+walk(root);
+NODE
+
+echo "== 4) Sanity: count engine references (should not explode with duplicates) =="
+rg -nS "getRecommendedProducts" client/src | wc -l | tee -a "$R/summary.txt"
+
+echo "== 5) Build client =="
+if npm run -s build >/dev/null 2>&1; then
+  echo "Build PASS" | tee -a "$R/summary.txt"
+else
+  echo "Build FAIL — showing first 80 lines" | tee -a "$R/summary.txt"
+  npm run build 2>&1 | head -80 | tee "$R/build_error.txt"
+  exit 1
+fi
+
+echo "== 6) Verify at runtime =="
+cat > "$R/verify.txt" <<'TXT'
+• Reload Step 2 and in DevTools Console run:  window.__step2
+  → Expect: { form: { amount, country, ... }, inCount, outCount, sample: [...] }
+• If outCount=0 but inCount>0, it’s a data/filter issue (amount/country bounds).
+• If ReferenceError returns, search offending file for missing import and re-run this block.
+TXT
+
+echo "DONE. Reports: $R | Quarantined (safe): $TRASH"
+```

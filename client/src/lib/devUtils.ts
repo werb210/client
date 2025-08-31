@@ -1,4 +1,5 @@
-import { fetchProducts , getRecommendedProducts} from "../api/products";
+import { fetchProducts } from "../api/products";
+import { getRecommendedProducts } from "./recommendations/engine";
 /**
  * Product Compatibility Validation Script
  * Validates all lender products against Step 2 and Step 5 business logic requirements
@@ -393,7 +394,7 @@ export const validateAllProducts = async (): Promise<{ /* ensure products fetche
   
   try {
     // Fetch all products from staff API
-    const response = await /* rewired */
+    const response = await fetch('https://staff.boreal.financial/api/v1/products')
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
