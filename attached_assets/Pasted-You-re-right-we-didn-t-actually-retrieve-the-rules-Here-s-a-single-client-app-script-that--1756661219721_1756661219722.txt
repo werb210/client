@@ -1,0 +1,160 @@
+You're right — we didn’t actually retrieve the *rules*. Here’s a single **client-app** script that *extracts and prints the current Step 2 & Step 5 rules from your codebase* (no code mods, no duplicates; just reports). Paste it in your Replit shell and run.
+
+```bash
+# CLIENT APP — EXTRACT STEP 2 & STEP 5 RULES (read-only, no duplicates created)
+# What it does:
+# - Scans client/src for Step 2 recommendation engine + Step 5 documents logic
+# - Extracts filters, scoring, thresholds, and referenced Step 1 field names
+# - Builds human-readable reports + machine-readable rules.json
+# - DOES NOT modify source files (reports only). Safe & idempotent.
+
+set -euo pipefail
+
+TS="$(date +%F_%H-%M-%S)"
+R="reports/client-rules-extract-$TS"
+mkdir -p "$R"
+
+echo "[1/7] Locate probable Step 2 engine & Step 5 docs sources"
+rg -n --hidden -S "(recommendation|engine).*\\.(ts|js|mjs|tsx)$" client/src -g '!node_modules' -g '!dist' | tee "$R/10_step2_candidates.txt" || true
+rg -n --hidden -S "(step5|document|required[-_ ]?doc|requiredDocs|documents).*\\.(ts|tsx|js|mjs|svelte)$" client/src -g '!node_modules' -g '!dist' | tee "$R/11_step5_candidates.txt" || true
+
+echo "[2/7] Extract Step 2 rules: filters, scoring, field usage"
+# Gather lines that likely define rules/logic
+rg -n --hidden -S "(getRecommendedProducts|score|weight|boost|threshold|minAmount|maxAmount|country|province|state|industry|revenue|timeInBusiness|fico|credit|years|collateral)" \
+  -g '!node_modules' -g '!dist' client/src | tee "$R/20_step2_logic_lines.txt" || true
+
+# Try to capture full function bodies for getRecommendedProducts
+rg -n --hidden -S "getRecommendedProducts" -g '!node_modules' -g '!dist' client/src | cut -d: -f1 | sort -u | while read -r f; do
+  [ -f "$f" ] || continue
+  echo "==== $f ====" >> "$R/21_step2_function_bodies.txt"
+  # Print 120 lines around the match to approximate the function body
+  rg -n --hidden -n "getRecommendedProducts" "$f" | while IFS=: read -r _file _line _rest; do
+    start=$((_line-20)); [ $start -lt 1 ] && start=1
+    end=$((_line+100))
+    nl -ba "$f" | sed -n "${start},${end}p" >> "$R/21_step2_function_bodies.txt"
+    echo -e "\n" >> "$R/21_step2_function_bodies.txt"
+  done
+done
+
+# Heuristic parse via Node to summarize Step 2 inputs/filters/scoring
+node - <<'NODE' > "$R/22_step2_rules.json"
+const fs=require('fs'), path=require('path');
+const root='client/src';
+const allow=/\.(ts|tsx|js|mjs|svelte)$/;
+const files=[];
+function walk(d){ for(const e of fs.readdirSync(d,{withFileTypes:true})){ if(e.name==='node_modules'||e.name==='dist'||e.name.startsWith('.trash')) continue;
+  const p=path.join(d,e.name); if(e.isDirectory()) walk(p); else if(allow.test(e.name)) files.push(p); } }
+walk(root);
+const hits=files.filter(f=>/recommend|engine/i.test(f));
+const text = hits.map(f=>fs.readFileSync(f,'utf8')).join('\n');
+function uniq(a){return [...new Set(a)].sort();}
+const inputs = uniq((text.match(/\b(amountRequested|loanAmount|amount|country|province|state|industry|naics|revenue|annualRevenue|timeInBusiness|yearsInBusiness|employees|creditScore|fico|useOfFunds)\b/g)||[]));
+const filters = uniq((text.match(/\b(minAmount|maxAmount|country|province|state|industry|revenue|creditScore|fico|collateral|entityType|term|apr|rate|lender|category|region|currency)\b/g)||[]));
+const scoring = uniq((text.match(/\b(score|weight|boost|rank|priority|tieBreaker|sort|penalty|bonus)\b/g)||[]));
+const thresholds = uniq((text.match(/\b(>=|<=|>|<)\s*\d[\d_,.]*/g)||[]));
+const emits = uniq((text.match(/\b(id|name|productName|category|lender(Name|_name)?|apr|term|maxAmount|minAmount)\b/g)||[]));
+const fnExports = uniq((text.match(/export\s+(?:const|function)\s+(getRecommendedProducts[^\n]*)/g)||[]));
+const result = { files: hits, inputs, filters, scoring, thresholds, emits, exports: fnExports };
+process.stdout.write(JSON.stringify(result,null,2));
+NODE
+
+echo "[3/7] Extract Step 5 document rules: required docs, gating, analysis"
+rg -n --hidden -S "(required[-_ ]?docs|documentTypes|requiredDocuments|upload|uploader|ocr|bank|statement|nsf|csv|pdf|kyc|id|proof|void|cheque|cheque|cheque)" \
+  -g '!node_modules' -g '!dist' client/src | tee "$R/30_step5_logic_lines.txt" || true
+
+# Summarize Step 5 with Node
+node - <<'NODE' > "$R/31_step5_rules.json"
+const fs=require('fs'), path=require('path');
+const root='client/src';
+const allow=/\.(ts|tsx|js|mjs|svelte)$/;
+const files=[];
+function walk(d){ for(const e of fs.readdirSync(d,{withFileTypes:true})){ if(e.name==='node_modules'||e.name==='dist'||e.name.startsWith('.trash')) continue;
+  const p=path.join(d,e.name); if(e.isDirectory()) walk(p); else if(allow.test(e.name)) files.push(p); } }
+walk(root);
+const docFiles = files.filter(f=>/(step5|document|required[-_]?docs|upload|uploader|documents)/i.test(f));
+const txt = docFiles.map(f=>fs.readFileSync(f,'utf8')).join('\n');
+function uniq(a){return [...new Set(a)].sort();}
+const requiredArrays = uniq((txt.match(/\b(requiredDocs|requiredDocuments|documentTypes)\s*[:=]\s*\[/g)||[]));
+const docKeys = uniq((txt.match(/\b(bank|statement|csv|pdf|id|passport|license|void|cheque|cheque|tax|financial|notice|articles|lease|insurance|paystub|A/R|A\/R|balance|transactions?)\b/gi)||[]).map(s=>s.toLowerCase()));
+const gates = uniq((txt.match(/\b(country|province|state|industry|loanAmount|amount|revenue|creditScore|fico|timeInBusiness|employees)\b/g)||[]));
+const ocr = /\bocr|extractText|tesseract|pdf-parse|csv-parse|papaparse\b/i.test(txt);
+const banking = /\b(nsfs?|average\s*balance|credits?|debits?|transactions?)\b/i.test(txt);
+const uploadApis = uniq((txt.match(/fetch\([^)]*\/(upload|uploads|required-docs)[^)]*\)/g)||[]));
+const result = { files: docFiles, arrays: requiredArrays, docKeywords: docKeys, gates, features: { ocr, banking }, uploadApis };
+process.stdout.write(JSON.stringify(result,null,2));
+NODE
+
+echo "[4/7] Detect duplicate engines / doc rule definitions (read-only)"
+# Parallel extension bases:
+find client/src -type f \( -name "engine.*" -o -iname "*recommend*" -o -iname "*required*doc*" -o -iname "*documents*" \) \
+  | sed -E 's/\.(ts|tsx|js|mjs|svelte)$//' \
+  | sort | uniq -d | tee "$R/40_parallel_bases.txt" || true
+# Exact content duplicates by hash:
+( find client/src -type f \( -name "engine.*" -o -iname "*recommend*" -o -iname "*required*doc*" -o -iname "*documents*" \) -print0 \
+  | xargs -0 -I{} sh -c 'printf "%s  " "$(sha1sum "{}" | cut -d" " -f1)"; echo "{}"' \
+  | sort ) > "$R/41_hashes.txt" || true
+awk '{h=$1;f=$2;arr[h]=arr[h]?arr[h]","f:f}END{for(k in arr){split(arr[k],a,","); if(length(a)>1) print k,arr[k];}}' "$R/41_hashes.txt" | tee "$R/42_exact_dupes.txt" || true
+
+echo "[5/7] Build human-readable reports"
+# STEP 2 human report
+{
+  echo "# Step 2 — Recommendation Engine Rules (discovered)"
+  echo
+  echo "## Candidate files"; sed 's/^/- /' "$R/10_step2_candidates.txt" || true
+  echo
+  echo "## Exported entrypoints"; jq -r '.exports[]? | "- " + .' "$R/22_step2_rules.json" || true
+  echo
+  echo "## Input fields referenced (Step 1)"; jq -r '.inputs[]? | "- " + .' "$R/22_step2_rules.json" || true
+  echo
+  echo "## Filters / gates"; jq -r '.filters[]? | "- " + .' "$R/22_step2_rules.json" || true
+  echo
+  echo "## Scoring terms"; jq -r '.scoring[]? | "- " + .' "$R/22_step2_rules.json" || true
+  echo
+  echo "## Threshold literals seen"; jq -r '.thresholds[]? | "- " + .' "$R/22_step2_rules.json" || true
+  echo
+  echo "## Emits / output fields"; jq -r '.emits[]? | "- " + .' "$R/22_step2_rules.json" || true
+} > "$R/50_step2_rules.md"
+
+# STEP 5 human report
+{
+  echo "# Step 5 — Document Rules (discovered)"
+  echo
+  echo "## Candidate files"; sed 's/^/- /' "$R/11_step5_candidates.txt" || true
+  echo
+  echo "## Arrays that look like required-doc sets"; jq -r '.arrays[]? | "- " + .' "$R/31_step5_rules.json" || true
+  echo
+  echo "## Document keywords referenced"; jq -r '.docKeywords[]? | "- " + .' "$R/31_step5_rules.json" || true
+  echo
+  echo "## Gating fields (conditionals found)"; jq -r '.gates[]? | "- " + .' "$R/31_step5_rules.json" || true
+  echo
+  echo "## Features detected"; jq -r '.features | to_entries[] | "- \(.key): \(.value)"' "$R/31_step5_rules.json" || true
+  echo
+  echo "## Upload/API calls seen"; jq -r '.uploadApis[]? | "- " + .' "$R/31_step5_rules.json" || true
+} > "$R/51_step5_rules.md"
+
+# Combined machine-readable summary:
+jq -n --slurpfile s2 "$R/22_step2_rules.json" --slurpfile s5 "$R/31_step5_rules.json" \
+  '{ step2: $s2[0], step5: $s5[0], duplicates: {
+      parallel_bases: (try input_filename as $f | input? // empty), 
+      exact: (try input_filename as $f | input? // empty)
+    }}' <(jq -R -s -c 'split("\n")|map(select(length>0))' "$R/40_parallel_bases.txt") \
+      <(jq -R -s -c 'split("\n")|map(select(length>0))' "$R/42_exact_dupes.txt") \
+  > "$R/60_rules.json"
+
+echo "[6/7] Quick on-disk sanity"
+echo "Reports created under: $R"
+ls -1 "$R" | sed 's/^/ - /'
+
+echo "[7/7] Final summary"
+echo "================================================="
+echo "STEP 2 RULES: $R/50_step2_rules.md"
+echo "STEP 5 RULES: $R/51_step5_rules.md"
+echo "MACHINE JSON: $R/60_rules.json"
+echo "DUPLICATES  : $R/40_parallel_bases.txt (bases) / $R/42_exact_dupes.txt (exact)"
+echo "================================================="
+echo
+echo "VERIFY:"
+echo "  sed -n '1,120p' $R/50_step2_rules.md"
+echo "  sed -n '1,120p' $R/51_step5_rules.md"
+echo "  jq '.step2.inputs,.step2.filters,.step5.arrays' $R/60_rules.json"
+```
