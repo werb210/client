@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { normalizeProducts } from '@/lib/products/normalize';
 import { recommend } from '@/lib/reco/engine';
-import { eligibleProductsForDocs, computeRequiredDocs } from "../api/docs"
-import { allRequiredDocsComplete } from "../api/docs"
+import { eligibleProductsForDocs, computeRequiredDocs } from '@/lib/docs/requirements';
+import { allRequiredDocsComplete } from '@/lib/docs/validate';
 
 it('recommend + docs union follows rules', () => {
   const raw = [

@@ -11,7 +11,7 @@ export type Product = {
 const BASE = (import.meta.env.VITE_STAFF_API_URL || "https://staff.boreal.financial/api").replace(/\/+$/,'');
 const TOKEN = (import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || "");
 
-export async function fetchProducts(): Promise<Product[]> {
+export async function getProducts(): Promise<Product[]> {
   const res = await fetch(`${BASE}/v1/products`, { 
     headers: TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {},
     credentials: "include" 
@@ -29,7 +29,7 @@ export async function fetchRequiredDocs(): Promise<any[]> {
   return (data as any).items || [];
 }
 // Aliases for compatibility with existing code
-export const fetchLenderProducts = fetchProducts;
+export const fetchLenderProducts = getProducts;
 export const fetchDocumentRequirements = fetchRequiredDocs;
 
 // Additional API functions for complete app coverage
@@ -59,4 +59,4 @@ export async function fetchApplicationStatus(id: string): Promise<any> {
 
 // REMOVED: getRecommendedProducts moved to canonical lib/recommendations/engine.ts to avoid conflicts
 
-export default { fetchProducts, fetchRequiredDocs, fetchApplications, submitApplication, fetchApplicationStatus, fetchLenderProducts, fetchDocumentRequirements };
+export default { getProducts, fetchRequiredDocs, fetchApplications, submitApplication, fetchApplicationStatus, fetchLenderProducts, fetchDocumentRequirements };
