@@ -5,6 +5,26 @@ import { useState } from 'react';
 import { createApplication, type ApplicationPayload, type ApplicationResponse } from '@/services/applicationService';
 import { useFormDataContext } from '@/context/FormDataContext';
 
+// --- injected: ensureSubmissionSchema (keep API payload coherent) ---
+function ensureSubmissionSchema(payload:any){
+  const p = {...payload}
+  const answers = p.answers ?? p.form ?? p
+  // normalize amount & country fields (aliases)
+  const amount = answers.amountRequested ?? answers.loanAmount ?? answers.amount
+  if (amount != null) { answers.loanAmount = amount; answers.amountRequested = amount }
+  if (answers.countryCode && !answers.country) answers.country = answers.countryCode
+  // documents: keep key & status even when Step 5 disabled
+  if (!Array.isArray(p.documents)) p.documents = []
+  if (!p.documentStatus) p.documentStatus = 'pending'
+  // trace passthrough if present
+  if (p._trace && typeof p._trace === 'object') {
+    p._trace.version = p._trace.version ?? 'v1.0'
+  }
+  p.answers = answers
+  return p
+}
+// -------- end injected helper --------
+
 export function useSubmitApplication() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +47,7 @@ export function useSubmitApplication() {
         industry
       });
 
-      const payload: ApplicationPayload = {
+      const payload: ApplicationPayload = ensureSubmissionSchema({
         step1: {
           requestedAmount: requestedAmount,
           fundingAmount: requestedAmount,
@@ -40,7 +60,7 @@ export function useSubmitApplication() {
           testSubmission: true,
           requestedAmount: requestedAmount
         }
-      };
+      });
 
       const result = await createApplication(payload);
 
