@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Target, ArrowRight } from 'lucide-react';
 
 const requireIntake = () => {
+  // Try multiple storage keys to find Step 1 data
   const sessionData = sessionStorage.getItem('bf:intake');
   const localData = localStorage.getItem('bf:intake');
-  console.log('🔍 [requireIntake] Raw storage data:', { sessionData, localData });
+  const applyFormData = localStorage.getItem('apply.form');
+  console.log('🔍 [requireIntake] Raw storage data:', { sessionData, localData, applyFormData });
   
-  const s = sessionData || localData;
+  const s = sessionData || localData || applyFormData;
   if (!s) {
-    console.warn('🚨 [requireIntake] No storage data found');
+    console.warn('🚨 [requireIntake] No storage data found in any location');
     return null;
   }
   
