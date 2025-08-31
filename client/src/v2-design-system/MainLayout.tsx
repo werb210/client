@@ -9,7 +9,8 @@ import { PwaPrompt } from "@/components/PwaPrompt";
 
 // V1 Route Components (Source of Truth)
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
-import Step2RecommendationsRoute from "@/routes/Step2_Recommendations";
+// Canonical Step 2 implementation
+const Step2ChooseCategory = lazy(() => import("@/routes/apply/step-2"));
 // NEW: Separated Step 3 & 4 Route Components (July 3, 2025)
 import Step3BusinessDetailsComplete from "@/routes/Step3_BusinessDetails_Complete";
 
@@ -218,7 +219,7 @@ export function MainLayout() {
 
       {/* Primary Application Flow - V1 Routes (Source of Truth) */}
       <Route path="/apply/step-1" component={Step1FinancialProfile} />
-      <Route path="/apply/step-2" component={Step2RecommendationsRoute} />
+      <Route path="/apply/step-2" component={() => <Suspense fallback={<div>Loading...</div>}><Step2ChooseCategory /></Suspense>} />
       <Route path="/apply/step-3" component={Step3BusinessDetailsComplete} />
       {/* Testing all steps together */}
       <Route path="/apply/step-4" component={() => <Suspense fallback={<div>Loading...</div>}><Step4ApplicantInfoComplete /></Suspense>} />

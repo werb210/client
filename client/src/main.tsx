@@ -1,7 +1,8 @@
-import { unregisterServiceWorker } from './serviceWorker';
+import { disableSWInDev } from './dev/sw-off';
 import { getProducts } from "./api/products";
 import './lib/console-guard';
 import "./styles/hotfix.css";
+import "./styles/step2.css";
 // MUST be first so Tailwind base resets apply
 import "./index.css";
 import "./lib/production-console";
@@ -16,8 +17,8 @@ import("./lib/fetch-guard").catch(console.warn);
 // Install audit hook for lender products validation
 installAuditHook();
 
-// Disable SW in this environment
-unregisterServiceWorker();
+// Disable SW in development
+disableSWInDev();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

@@ -1,0 +1,11 @@
+/* Step 2 click-through hardening */
+[data-step="2"] .click-shield,
+[data-step="2"] .overlay,
+[data-step="2"] [data-overlay="true"] {
+  pointer-events: none !important;
+}
+[data-step="2"] button[data-testid^="cat-"] {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto !important;
+}
