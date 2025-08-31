@@ -45,7 +45,22 @@ interface Step5Props {
 
 export default function Step5DocumentUpload(props: Step5Props = {}) {
   const { data } = useFormData();
-  const state = data as any || {};
+  let state = data as any || {};
+  
+  // Add storage fallback like Step 2 - try multiple sources
+  const fromStorage = (() => {
+    try {
+      const applyForm = localStorage.getItem("apply.form");
+      const intake = localStorage.getItem("bf:intake");
+      return applyForm ? JSON.parse(applyForm) : (intake ? JSON.parse(intake) : null);
+    } catch { return null; }
+  })();
+  
+  // Merge state with storage backup for resilience
+  if (fromStorage) {
+    state = { ...state, step1: { ...fromStorage, ...state.step1 } };
+  }
+  
   const dispatch = (action: any) => console.log('Mock dispatch in Step5:', action);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -522,8 +537,8 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
     setTotalRequirements(total);
   };
 
-  // Get selected product from previous steps for document categorization
-  const selectedProduct = state.step1?.selectedProductId || '';
+  // Get selected product from Step 2 (not Step 1) for document categorization
+  const selectedProduct = state.step2?.selectedProduct || state.formData?.selectedProduct || '';
   
   // Navigation handlers
   const handlePrevious = () => {
@@ -896,8 +911,8 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
       <div data-document-upload>
         <DynamicDocumentRequirements
           category="Working Capital"
-          country={state.step1?.headquarters || 'US'}
-          amount={state.step1?.fundingAmount || 100000}
+          country={state.step1?.headquarters || state.step1?.businessLocation || 'US'}
+          amount={state.step1?.fundingAmount || state.step1?.requestedAmount || 100000}
         />
       </div>
 
