@@ -31,9 +31,9 @@ export default function Step2() {
 
   return (
     <main className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Step 2: Product Recommendations</h1>
+      <h1 className="text-2xl font-bold mb-4 text-primary">Step 2: Product Recommendations</h1>
 
-      <section className="rounded-2xl border p-4 mb-4">
+      <section className="panel-success mb-4">
         <h2 className="font-semibold mb-2">Your Profile Summary</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700">
           <div><div className="text-gray-500">Headquarters:</div>{answers.country || "—"}</div>
@@ -43,7 +43,7 @@ export default function Step2() {
         </div>
       </section>
 
-      <section className="rounded-2xl border p-4">
+      <section className="panel-warn">
         <h2 className="font-semibold mb-2">Select Your Preferred Loan Product</h2>
         <CategoryPicker products={products} answers={answers} />
       </section>

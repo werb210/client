@@ -11,8 +11,8 @@ export default function CategoryCard({ group, selected, onSelect }: Props) {
     <button
       type="button"
       onClick={() => onSelect(group.key)}
-      className={`w-full text-left rounded-2xl border p-4 mb-3 transition
-        ${selected ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-200 hover:border-gray-300"}`}
+      className={`w-full text-left card mb-3 transition
+        ${selected ? "border-blue-500 ring-2 ring-blue-200" : "hover:border-gray-300"}`}
       aria-pressed={selected}
     >
       <div className="flex items-center justify-between">

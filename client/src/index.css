@@ -524,3 +524,63 @@ h1, h2, h3, h4, h5, h6 {
     height: var(--device-height);
   }
 }
+
+/* === Boreal UI theme (matches screenshots) === */
+@font-face{
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: local("Inter"), url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS0Y.woff2) format("woff2");
+}
+
+:root{
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  --c-primary: #2563eb;          /* Step title blue */
+  --c-text:    #111827;          /* Gray 900 */
+  --c-muted:   #6b7280;          /* Gray 500 */
+  --c-card:    #e5e7eb;          /* Gray 200 border */
+
+  --c-success:    #16a34a;       /* Green 600 */
+  --c-success-bg: #ecfdf5;       /* Green 50 */
+  --c-success-br: #bbf7d0;       /* Green 200 */
+
+  --c-warn:       #f59e0b;       /* Amber 500 */
+  --c-warn-bg:    #fff7ed;       /* Orange/Amber 50 */
+  --c-warn-br:    #fed7aa;       /* Amber 200 */
+}
+
+html,body{ font-family: var(--font-sans); color: var(--c-text); }
+.text-primary{ color: var(--c-primary) !important; }
+
+.panel-success{
+  background: var(--c-success-bg);
+  border: 1px solid var(--c-success-br);
+  color: var(--c-success);
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.panel-warn{
+  background: var(--c-warn-bg);
+  border: 1px solid var(--c-warn-br);
+  color: #92400e; /* warm brown text, like screenshot */
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.card{
+  border: 1px solid var(--c-card);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.badge{
+  border-radius: 9999px;
+  padding: .25rem .6rem;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.badge-success{ background: var(--c-success-bg); color: var(--c-success); border: 1px solid var(--c-success-br); }
+.badge-muted{ color: var(--c-muted); background: #f9fafb; border: 1px solid #e5e7eb; }
