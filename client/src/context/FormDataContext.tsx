@@ -1,4 +1,4 @@
-import { getProducts } from "../../api/products";
+import { getProducts } from "../api/products";
 import { getTraceId, flatten } from "../telemetry/lineage";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
@@ -168,7 +168,7 @@ export const useFormData = () => {
 // Legacy compatibility export for existing components
 export const useFormDataContext = useFormData;
 // injected: local-first products fetch
-import { getProducts, loadSelectedCategories } from "../api/products";
+import { loadSelectedCategories } from "../api/products";
 /* injected load on mount (pseudo):
 useEffect(() => { (async () => {
   const cats = loadSelectedCategories();

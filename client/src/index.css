@@ -51,6 +51,12 @@
   .hover\:bg-cbf-orange-dark:hover { background-color: var(--cbf-orange-dark); }
 }
 
+/* --- Clickability hardening for Step 2 --- */
+.category-card-wrapper { position: relative; }
+.category-card-wrapper::before { content: none; } /* kill any pseudo overlay */
+.category-card-wrapper * { pointer-events: auto; }
+.sticky-footer, .toast-container, .modal-backdrop { pointer-events: none; } /* only if they overlap inadvertently */
+
 /* FinBot Chat Button Positioning - Bottom Right */
 .finbot-wrapper {
   position: fixed;

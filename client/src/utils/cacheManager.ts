@@ -167,7 +167,10 @@ export class IntegrationVerifier {
   static async testStaffAuth(): Promise<boolean> {
     try {
       // Test general staff portal connectivity instead of auth endpoint
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/health', {
+        method: 'GET',
+        credentials: 'include'
+      });
 
       // console.log('🔐 Staff API connectivity test:', response.status, response.statusText);
       

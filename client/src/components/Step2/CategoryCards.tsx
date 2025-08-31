@@ -37,33 +37,51 @@ export default function CategoryCards({ intake, onSelect }: Props) {
   return (
     <div className="space-y-4">
       {clusters.map((c) => (
-        <div key={c.category} className="rounded-xl border border-gray-200 shadow-sm p-5">
-          <div className="flex items-start gap-4 justify-between">
-            <div>
-              <h3 className="text-lg font-semibold">{c.category}</h3>
-              <div className="mt-1 text-sm text-gray-600">
-                <strong>{c.count}</strong> product{c.count===1?'':'s'} available &middot; Market share ~{c.percentage}% &middot; Match score {c.matchScore}%
+        <div key={c.category} className="category-card-wrapper relative">
+          <button
+            type="button"
+            data-testid={`cat-${c.category}`}
+            aria-pressed={selected === c.category}
+            onClick={() => { 
+              setSelectedCategory(c.category); 
+              onSelect(c.category, c.products);
+              // Ensure localStorage persistence
+              try { 
+                localStorage.setItem('bf:step2:category', JSON.stringify(c.category)); 
+              } catch {}
+            }}
+            className={[
+              "w-full text-left rounded-xl border transition shadow-sm",
+              "px-5 py-4",
+              selected === c.category
+                ? "border-emerald-400 ring-2 ring-emerald-300 bg-emerald-50"
+                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50",
+              "pointer-events-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+            ].join(' ')}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-slate-900 font-semibold text-lg">{c.category}</div>
+                <div className="mt-1 text-gray-600 text-sm">
+                  <strong>{c.count}</strong> product{c.count===1?'':'s'} available · Market share ~{c.percentage}% · Match score {c.matchScore}%
+                </div>
+                <ul className="mt-2 text-sm text-emerald-700 list-disc ml-5">
+                  <li>Matches your funding requirement</li>
+                  <li>Available in your region ({(intake.country ?? 'CA').toUpperCase()})</li>
+                </ul>
               </div>
-              <ul className="mt-2 list-disc pl-5 text-sm text-emerald-700">
-                <li>Matches your funding requirement</li>
-                <li>Available in your region ({(intake.country ?? 'CA').toUpperCase()})</li>
-              </ul>
+              <div>
+                <span
+                  className={[
+                    "inline-flex items-center rounded-full px-3 py-1 text-sm",
+                    selected === c.category ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-700"
+                  ].join(' ')}
+                >
+                  {selected === c.category ? 'Selected' : 'Select'}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 text-sm px-3 py-1">
-                {c.matchScore}% Match
-              </span>
-              <button
-                className={`px-4 py-2 rounded-lg text-sm font-medium border ${
-                  selected === c.category ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-emerald-700 border-emerald-600'
-                }`}
-                onClick={() => { setSelectedCategory(c.category); onSelect(c.category, c.products) }}
-                aria-label={`Select ${c.category}`}
-              >
-                {selected === c.category ? 'Selected' : 'Select'}
-              </button>
-            </div>
-          </div>
+          </button>
         </div>
       ))}
     </div>
