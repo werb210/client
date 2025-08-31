@@ -48,6 +48,13 @@ export default function Step2Recommendations() {
             intake={contextData || {}} 
             onSelect={(category, products) => {
               console.log('Selected category:', category, 'with', products.length, 'products');
+              // Save selection to localStorage for Step 3 validation
+              localStorage.setItem('bf:step2:category', category);
+              // Update form context with selected category
+              localStorage.setItem('bf:intake', JSON.stringify({
+                ...(contextData || {}),
+                selectedCategory: category
+              }));
             }} 
           />
           
