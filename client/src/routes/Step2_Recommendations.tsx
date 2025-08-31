@@ -1,4 +1,4 @@
-import { fetchProducts } from "../../api/products";
+import { fetchProducts } from "../api/products";
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { StepHeader } from '@/components/StepHeader';
