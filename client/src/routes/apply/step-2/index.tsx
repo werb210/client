@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import CategoryCard from "@/lib/recommendations/CategoryCard";
+import { saveStep2 } from '@/lib/appState';
 
 type Category = { id: string; name: string; score: number; products: number; };
 const STORAGE_KEY = "bf:step2:category";
@@ -53,6 +54,15 @@ export default function Step2() {
         if (pick) {
           setSelected(pick);
           localStorage.setItem(STORAGE_KEY, pick);
+          // Also save to app state for auto-selection
+          const category = list.find(c => c.id === pick);
+          if (category) {
+            saveStep2({ 
+              categoryId: pick as any, 
+              categoryLabel: category.name, 
+              matchScore: category.score 
+            });
+          }
           console.log("[Step2] Auto-selected category:", pick);
         }
       } catch (error) {
@@ -69,7 +79,17 @@ export default function Step2() {
   function selectCategory(id: string) {
     setSelected(id);
     localStorage.setItem(STORAGE_KEY, id);
-    console.log("[Step2] Saved category:", id);
+    
+    // Save to shared app state for Step 5 integration
+    const category = categories.find(c => c.id === id);
+    if (category) {
+      saveStep2({ 
+        categoryId: id as any, 
+        categoryLabel: category.name, 
+        matchScore: category.score 
+      });
+      console.log("[Step2] Saved category to app state:", { categoryId: id, categoryLabel: category.name });
+    }
   }
 
   // Capture-phase click handler for ultimate overlay protection

@@ -129,6 +129,9 @@ export default function Step7Submit() {
         step4: state.step4
       });
 
+      // Get Step 2 selection from app state
+      const step2Selection = JSON.parse(localStorage.getItem('bf:step2') || 'null');
+
       const applicationData = {
         step1: state.step1,
         step3: state.step3,
@@ -138,9 +141,11 @@ export default function Step7Submit() {
         signatureTimestamp: state.step6Signature?.signedAt || '',
         signNowDocumentId: state.step6Signature?.documentId || '',
         
-        // Step 2: Selected product information
+        // Step 2: Selected product information (using app state)
         lenderProductId: state.selectedProduct,
         lenderId: state.selectedLenderId,
+        loanProductCategory: step2Selection?.categoryId || 'not_selected',
+        loanProductCategoryLabel: step2Selection?.categoryLabel || 'Not selected',
         
         // Submission metadata
         submissionTimestamp: new Date().toISOString(),
