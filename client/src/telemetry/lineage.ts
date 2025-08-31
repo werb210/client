@@ -21,6 +21,6 @@ export function attachTrace(payload:any, formData:any){
   const id = getTraceId();
   let fields:string[] = [];
   try{ const flat = flatten(formData||{}); fields = Object.keys(flat).sort(); }catch{}
-  return { ...(payload||{}), _trace:{ id, version:"1.0", fields } };
+  return { ...(payload||{}), _trace:{ id, version:"1.2", fields } };
 }
 export default { getTraceId, flatten, attachTrace };

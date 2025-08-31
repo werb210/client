@@ -1,0 +1,226 @@
+# CLIENT APP — E2E FIELD COHERENCE TEST (Steps 1–4 → submit → Staff Test Intake)
+# Ensures: (a) ALL Step1–4 fields are captured; (b) submission payload includes full field set with trace;
+# (c) Step 2 & Step 5 consumers reference fields that exist; (d) round-trip to Staff /api/test/intake returns coherent coverage.
+# Idempotent. No duplicates: modifies in place, creates ONE manifest module, quarantines only if replacing.
+# Reports: reports/client-e2e-coherence-<ts>/
+
+set -euo pipefail
+
+TS="$(date +%F_%H-%M-%S)"
+R="reports/client-e2e-coherence-$TS"
+TRASH=".trash-client-$TS"
+mkdir -p "$R" "$TRASH"
+
+command -v rg >/dev/null || alias rg='grep -R'
+command -v jq >/dev/null || { echo "jq required"; exit 1; }
+
+BASE="${VITE_STAFF_API_URL:-https://staff.boreal.financial/api}"
+TOK="${VITE_CLIENT_APP_SHARED_TOKEN:-}"
+
+log(){ echo "$@" | tee -a "$R/log.txt"; }
+pass(){ echo "STEP $1: PASS" | tee -a "$R/summary.txt"; }
+fail(){ echo "STEP $1: FAIL" | tee -a "$R/summary.txt"; }
+
+# --------------------------------------------------------------------------------
+# 0) Locate key files (modify in place; NO duplicates)
+# --------------------------------------------------------------------------------
+SUBMIT_FILE=""
+for f in client/src/api/submitApplication.ts client/src/api/applications.ts client/src/lib/api.ts client/src/api/index.ts; do
+  [ -f "$f" ] && SUBMIT_FILE="$f" && break
+done
+
+[ -n "$SUBMIT_FILE" ] || { fail "0/8 locate submit API"; echo "Submission API file not found"; exit 1; }
+log "SUBMIT=$SUBMIT_FILE"
+
+# --------------------------------------------------------------------------------
+# 1) Build CANONICAL FIELD MANIFEST by scanning Steps 1–4
+# --------------------------------------------------------------------------------
+SCAN_ROOT="client/src"
+MAN_MOD_TS="client/src/telemetry/field-manifest.ts"
+mkdir -p "$(dirname "$MAN_MOD_TS")"
+
+node - <<'NODE' "$SCAN_ROOT" "$R/manifest.raw.json" "$MAN_MOD_TS"
+const fs=require('fs'), path=require('path');
+const [root,outRaw,outTs]=process.argv.slice(2);
+const glob=(d)=>{const out=[];const walk=(x)=>{for(const e of fs.readdirSync(x,{withFileTypes:true})){const p=path.join(x,e.name);
+if(e.isDirectory()){ if(e.name==='node_modules'||e.name.startsWith('.trash')) continue; walk(p); }
+else if(/\.(tsx?|jsx?)$/.test(e.name)) out.push(p);} }; walk(d); return out; };
+const stepOf=(f)=>{const s=f.toLowerCase(); if(/step1/.test(s))return'step1'; if(/step2|recommend/.test(s))return'step2';
+ if(/step3/.test(s))return'step3'; if(/step4/.test(s))return'step4'; if(/step5|doc/.test(s))return'step5'; return'other';};
+const rx={ register:/\bregister\s*\(\s*['"]([^'"]+)['"]/g, getValues:/\bgetValues\s*\(\s*['"]([^'"]+)['"]/g,
+ formDot:/\b(formData|data|values|answers)\.([A-Za-z0-9_]+)\b/g, nameAttr:/\bname\s*=\s*['"]([^'"]+)['"]/g,
+ zod:/\bz\.object\s*\(\s*\{([\s\S]*?)\}\s*\)/g };
+const files=glob(root).filter(p=>/client[\/\\]src/.test(p));
+const byStep={step1:new Set(),step2:new Set(),step3:new Set(),step4:new Set(),step5:new Set(),other:new Set()};
+for(const f of files){ const step = byStep[stepOf(f)]? stepOf(f):'other'; let s=''; try{s=fs.readFileSync(f,'utf8');}catch{}
+ for(const [key,re] of Object.entries(rx)){ let m; re.lastIndex=0;
+  while((m=re.exec(s))){ if(key==='formDot'){ byStep[step].add(m[2]); continue; }
+    if(key==='zod'){ const block=m[1]; const keys=[...block.matchAll(/\b([A-Za-z0-9_]+)\s*:/g)].map(x=>x[1]); keys.forEach(k=>byStep[step].add(k)); continue; }
+    byStep[step].add(m[1]); } } }
+const toArr=o=>Object.fromEntries(Object.entries(o).map(([k,v])=>[k,[...v].sort()]));
+const out={byStep:toArr(byStep), all:[...new Set([].concat(...Object.values(byStep).map(s=>[...s])))].sort()};
+try{fs.writeFileSync(outRaw,JSON.stringify(out,null,2));}catch{}
+const header=`// AUTO-GENERATED — CANONICAL FIELD MANIFEST (Steps 1–4)
+export const FIELD_MANIFEST = ${JSON.stringify(out,null,2)} as const;
+export type FieldName = typeof FIELD_MANIFEST.all[number];
+export default FIELD_MANIFEST;`;
+fs.writeFileSync(outTs,header);
+console.log("Generated manifest:",outTs,"total fields:",out.all.length);
+NODE
+
+jq '.all|length as $n | "fields=\($n)"' "$R/manifest.raw.json" | tee -a "$R/log.txt" || true
+pass "1/8 scan & manifest"
+
+# --------------------------------------------------------------------------------
+# 2) Ensure lineage helper exists & unions manifest + runtime; attach in submit API
+# --------------------------------------------------------------------------------
+LINEAGE_MOD="client/src/telemetry/lineage.ts"
+if [ ! -f "$LINEAGE_MOD" ]; then
+  cat > "$LINEAGE_MOD" <<'TS'
+import { FIELD_MANIFEST } from "./field-manifest";
+let __tid: string | null = null;
+export function getTraceId():string{ if(__tid) return __tid;
+  try{ __tid = (crypto?.randomUUID?.()||Math.random().toString(36).slice(2)); }catch{ __tid = Math.random().toString(36).slice(2); }
+  try{ localStorage.setItem("__traceId", __tid); }catch{} return __tid; }
+export function flatten(obj:any,prefix:string[]=[]):Record<string,any>{
+  const out:Record<string,any>={}; const isObj=(v:any)=> v && typeof v==='object' && !Array.isArray(v);
+  const walk=(o:any,pre:string[])=>{ if(Array.isArray(o)){ o.forEach((v,i)=>walk(v,[...pre,String(i)])); return; }
+    if(isObj(o)){ Object.entries(o).forEach(([k,v])=>walk(v,[...pre,k])); return; }
+    out[pre.join('.')]=o; }; walk(obj??{},prefix); return out; }
+export function attachTrace(payload:any,runtime:any){
+  const id=getTraceId(); let runtimeFields:string[]=[]; try{ runtimeFields=Object.keys(flatten(runtime||{})); }catch{}
+  const union=Array.from(new Set([...(FIELD_MANIFEST?.all||[]),...runtimeFields])).sort();
+  return { ...(payload||{}), _trace:{ id, version:"1.2", fields: union } };
+}
+export default { getTraceId, attachTrace, flatten };
+TS
+else
+  node - <<'NODE' "$LINEAGE_MOD"
+const fs=require('fs'),p=process.argv[2]; let s=fs.readFileSync(p,'utf8'),o=s,changed=false;
+if(!/FIELD_MANIFEST/.test(s)){ s=`import { FIELD_MANIFEST } from "./field-manifest";\n`+s; changed=true; }
+if(!/attachTrace\(/.test(s)){ s+=`\nexport function attachTrace(payload:any,runtime:any){ const union=(FIELD_MANIFEST?.all||[]); return { ...(payload||{}), _trace:{ id:'no-trace', version:'1.2', fields: union } }; }\n`; changed=true; }
+if(changed && s!==o){ fs.writeFileSync(p,s); console.log("Patched lineage:",p); }
+NODE
+fi
+
+# Attach in submit API (safe rewrite)
+node - <<'NODE' "$SUBMIT_FILE"
+const fs=require('fs'), p=process.argv[2]; let s=fs.readFileSync(p,'utf8'), o=s, changed=false;
+if(!/telemetry\/lineage/.test(s)){ s = `import { attachTrace, getTraceId } from "../telemetry/lineage";\n` + s; changed=true; }
+if(!/JSON\.stringify\(\s*attachTrace\(/.test(s)){
+  s = s.replace(/JSON\.stringify\(\s*([^)]+)\s*\)/g,
+    'JSON.stringify(attachTrace($1, (typeof formData!=="undefined"?formData:(typeof data!=="undefined"?data:{}))))'); changed=true; }
+if(!/X-Trace-Id/i.test(s)){
+  if(/headers\s*:\s*\{/.test(s)){
+    s = s.replace(/headers\s*:\s*\{([^}]*)\}/,
+      (m,inside)=>`headers:{${inside}, 'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client'}`); }
+  else { s = s.replace(/\{\s*method\s*:\s*['"]POST['"]/,
+      `{ method:'POST', headers:{'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client' }`); }
+  changed=true;
+}
+if(changed && s!==o){ fs.writeFileSync(p,s); console.log("Patched submit:",p); }
+NODE
+pass "2/8 lineage + submit patched"
+
+# --------------------------------------------------------------------------------
+# 3) Generate SYNTHETIC FULL FORM PAYLOAD with ALL fields (heuristics)
+# --------------------------------------------------------------------------------
+node - <<'NODE' "$R/manifest.raw.json" "$R/payload.json"
+const fs=require('fs'); const [manifestPath,out]=process.argv.slice(2);
+const m=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+const names=m.all; const now=new Date(); const iso=now.toISOString();
+const sampleFor=(k)=>{
+  const K=k.toLowerCase();
+  if(/date/.test(K)) return iso.split('T')[0];
+  if(/amount|loan|revenue|income|sales|rent|payroll|debt|balance|requested/.test(K)) return 500000;
+  if(/months|years|term/.test(K)) return 12;
+  if(/email/.test(K)) return "applicant@example.com";
+  if(/phone|tel/.test(K)) return "+1-555-010-1212";
+  if(/country/.test(K)) return "CA";
+  if(/province|state/.test(K)) return "AB";
+  if(/postal|zip/.test(K)) return "T5A 0A1";
+  if(/name/.test(K)) return "Acme Corp";
+  if(/address/.test(K)) return "123 Main St";
+  if(/city/.test(K)) return "Edmonton";
+  if(/bool|consent|agree|accept|opt/.test(K)) return true;
+  return "sample";
+};
+const form = Object.fromEntries(names.map(k=>[k,sampleFor(k)]));
+const payload = {
+  applicationDate: iso.split('T')[0],
+  applicant: { legalName: form.legalName || "Acme Corp" },
+  answers: form
+};
+fs.writeFileSync(out, JSON.stringify(payload,null,2));
+console.log("payload fields:",Object.keys(form).length);
+NODE
+jq '.answers|keys|length as $n | "form_fields=\($n)"' "$R/payload.json" | tee -a "$R/log.txt" || true
+pass "3/8 synthetic payload"
+
+# --------------------------------------------------------------------------------
+# 4) Static check: Step 2 & Step 5 consumer references ⊆ manifest.all
+# --------------------------------------------------------------------------------
+CONSUMERS_JSON="$R/consumers.json"
+node - <<'NODE' "$SCAN_ROOT" "$CONSUMERS_JSON" "$R/manifest.raw.json"
+const fs=require('fs'), path=require('path'); const [root,out,man]=process.argv.slice(2);
+const m=JSON.parse(fs.readFileSync(man,'utf8')); const all=new Set(m.all);
+const glob=(d)=>{const out=[];const walk=(x)=>{for(const e of fs.readdirSync(x,{withFileTypes:true})){const p=path.join(x,e.name);
+if(e.isDirectory()){ if(e.name==='node_modules'||e.name.startsWith('.trash')) continue; walk(p);} else if(/\.(tsx?|jsx?)$/.test(e.name)) out.push(p);} }; walk(d); return out; };
+const files=glob(root).filter(p=>/client[\/\\]src/.test(p));
+const step2=[], step5=[];
+for(const f of files){ const s=fs.readFileSync(f,'utf8'); const refs=[...s.matchAll(/\b(formData|data|answers)\.([A-Za-z0-9_]+)\b/g)].map(x=>x[2]);
+ if(/step2|recommend/i.test(f)) step2.push(...refs); if(/step5|requireddoc|document/i.test(f)) step5.push(...refs); }
+const uniq=(a)=>[...new Set(a)];
+const bad=(arr)=>uniq(arr).filter(k=>!all.has(k));
+fs.writeFileSync(out, JSON.stringify({
+  step2: { used: uniq(step2), missingFromManifest: bad(step2) },
+  step5: { used: uniq(step5), missingFromManifest: bad(step5) },
+},null,2));
+NODE
+jq . "$CONSUMERS_JSON" | tee -a "$R/consumers.pretty.json" >/dev/null || true
+pass "4/8 static consumer check"
+
+# --------------------------------------------------------------------------------
+# 5) POST payload → Staff /api/test/intake (created by Staff block) and capture coverage
+# --------------------------------------------------------------------------------
+TRACE_ID="$(node -e 'console.log((typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)))' 2>/dev/null || echo "trace-$TS")"
+HDR_AUTH=()
+[ -n "$TOK" ] && HDR_AUTH=(-H "Authorization: Bearer $TOK")
+curl -s -X POST "${HDR_AUTH[@]}" -H "Content-Type: application/json" \
+  -H "X-Trace-Id: $TRACE_ID" \
+  -d @"$R/payload.json" \
+  "${BASE%/api}/api/test/intake" | tee "$R/staff_response.json" >/dev/null || true
+if jq -e '.ok==true' "$R/staff_response.json" >/dev/null 2>&1; then
+  pass "5/8 staff intake response ok"
+else
+  fail "5/8 staff intake failed (see $R/staff_response.json)"
+fi
+
+# --------------------------------------------------------------------------------
+# 6) Pull coverage summary back (if provided)
+# --------------------------------------------------------------------------------
+jq '.coverage // {}' "$R/staff_response.json" 2>/dev/null | tee "$R/coverage.json" >/dev/null || true
+pass "6/8 coverage extracted"
+
+# --------------------------------------------------------------------------------
+# 7) Build client to ensure telemetry compiles
+# --------------------------------------------------------------------------------
+BUILD_OK=1
+npm run -s build >>"$R/build.log" 2>&1 || BUILD_OK=0
+[ "$BUILD_OK" -eq 1 ] && pass "7/8 build" || fail "7/8 build (see $R/build.log)"
+
+# --------------------------------------------------------------------------------
+# 8) Zero-dup cleanup — quarantine any legacy telemetry artifacts
+# --------------------------------------------------------------------------------
+for f in client/src/telemetry/trace.ts client/src/telemetry/field-manifest.json client/src/telemetry/lineage.old.ts; do
+  [ -f "$f" ] || continue
+  mkdir -p "$TRASH/$(dirname "$f")"; mv "$f" "$TRASH/$f"
+  echo "QUARANTINED legacy telemetry: $f" | tee -a "$R/removed.txt"
+done
+pass "8/8 dedupe"
+
+echo
+echo "=== VERIFY ==="
+echo "Trace ID: $TRACE_ID"
+echo "Open staff coverage (if Staff block applied): curl -s ${BASE%/api}/api/test/intake/last | jq"
+echo "Client reports: $R"

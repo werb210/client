@@ -1,5 +1,4 @@
-// AUTO-GENERATED — CANONICAL FIELD MANIFEST (do not hand-edit)
-// Built from static scan of Steps 1–4 at build-time.
+// AUTO-GENERATED — CANONICAL FIELD MANIFEST (Steps 1–4)
 export const FIELD_MANIFEST = {
   "byStep": {
     "step1": [
@@ -80,6 +79,23 @@ export const FIELD_MANIFEST = {
       "partnerState",
       "partnerZipCode"
     ],
+    "step5": [
+      "accountsReceivableBalance",
+      "append",
+      "application",
+      "applicationId",
+      "businessLocation",
+      "documentType",
+      "file",
+      "form_data",
+      "fundingAmount",
+      "headquarters",
+      "lookingFor",
+      "products",
+      "selectedProducts",
+      "success",
+      "useOfFunds"
+    ],
     "other": [
       "/service-worker.js",
       "/sw.js",
@@ -96,8 +112,6 @@ export const FIELD_MANIFEST = {
       "applicantSSN",
       "applicantState",
       "applicantStreetAddress",
-      "application",
-      "applicationId",
       "assistantId",
       "businessAge",
       "businessCity",
@@ -116,7 +130,6 @@ export const FIELD_MANIFEST = {
       "csrf-token",
       "currentStep",
       "data",
-      "documentType",
       "documents",
       "email",
       "employeeCount",
@@ -124,10 +137,8 @@ export const FIELD_MANIFEST = {
       "escalated",
       "estimatedYearlyRevenue",
       "existingDebt",
-      "file",
       "forEach",
       "form-submission",
-      "form_data",
       "fundingAmount",
       "fundsPurpose",
       "headquarters",
@@ -171,7 +182,6 @@ export const FIELD_MANIFEST = {
       "revenue",
       "rules",
       "selectedProduct",
-      "selectedProducts",
       "session",
       "sessionId",
       "sessions",
