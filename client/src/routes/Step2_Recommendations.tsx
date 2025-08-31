@@ -51,7 +51,7 @@ export default function Step2Recommendations() {
       type: 'UPDATE_FORM_DATA',
       payload: {
         step2: {
-          selectedProduct: state.selectedProduct,
+          selectedProduct: state.formData.selectedProduct,
           completed: true,
         },
       },

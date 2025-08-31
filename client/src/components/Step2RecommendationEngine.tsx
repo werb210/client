@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { fetchProducts } from "../api/products";
 import { fetchProducts } from '@/api/products';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
