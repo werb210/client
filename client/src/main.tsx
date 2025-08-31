@@ -1,3 +1,4 @@
+import { unregisterServiceWorker } from './serviceWorker';
 import { getProducts } from "./api/products";
 import './lib/console-guard';
 import "./styles/hotfix.css";
@@ -15,10 +16,8 @@ import("./lib/fetch-guard").catch(console.warn);
 // Install audit hook for lender products validation
 installAuditHook();
 
-// Disable service worker in dev to prevent state nuking
-if (import.meta.env.DEV && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
-}
+// Disable SW in this environment
+unregisterServiceWorker();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
