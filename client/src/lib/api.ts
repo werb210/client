@@ -191,7 +191,7 @@ export async function listDocuments(input: RequiredDocsInput & { applicationId?:
       method: input.applicationId ? "GET" : "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: input.applicationId ? undefined : JSON.stringify(input),
+      body: input.applicationId ? undefined : JSON.stringify(attachTrace(input, input)),
     });
     if (r.ok) {
       const j = await r.json();

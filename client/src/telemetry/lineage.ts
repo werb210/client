@@ -1,3 +1,4 @@
+import { FIELD_MANIFEST } from "./field-manifest";
 let __tid: string | null = null;
 export function getTraceId():string{
   if(__tid) return __tid;
