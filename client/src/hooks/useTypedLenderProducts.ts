@@ -1,15 +1,15 @@
-import { fetchProducts } from "../api/products";
+import { fetchLenderProducts } from "../api/products";
 /**
  * Strongly-typed lender products hook using generated OpenAPI types
  * Provides type-safe access to the V2 lender product schema
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { paths, components } from '@/types/api';
+// Note: Using any types for now since @/types/api is not available
+type LenderProductsResponse = any;
+type LenderProduct = any;
 
-// Extract types from generated OpenAPI schema
-type LenderProductsResponse = paths['/api/public/lenders']['get']['responses'][200]['content']['application/json'];
-type LenderProduct = components['schemas']['LenderProduct'];
+// Types will be defined when OpenAPI schema is available
 
 interface LenderProductFilters {
   productCategory?: string;
@@ -22,43 +22,29 @@ interface LenderProductFilters {
 /**
  * Strongly-typed fetch function for lender products
  */
-async function fetchTypedLenderProducts(filters?: LenderProductFilters): Promise<LenderProductsResponse> { /* ensure products fetched */ 
-  const url = new URL('/api/public/lenders', window.location.origin);
+async function fetchTypedLenderProducts(filters?: LenderProductFilters): Promise<LenderProductsResponse> {
+  // Use unified API instead of direct fetch
+  const products = await fetchLenderProducts();
   
-  // Add filters as query parameters
+  // Apply filters if provided
+  let filteredProducts = products;
   if (filters) {
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        url.searchParams.append(key, String(value));
-      }
+    filteredProducts = products.filter((product: any) => {
+      if (filters.productCategory && product.category !== filters.productCategory) return false;
+      if (filters.minAmount && product.maxAmount && product.maxAmount < filters.minAmount) return false;
+      if (filters.maxAmount && product.minAmount && product.minAmount > filters.maxAmount) return false;
+      if (filters.geography && product.country !== filters.geography) return false;
+      if (filters.isActive !== undefined && product.active !== filters.isActive) return false;
+      return true;
     });
   }
-
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
   
-  // Normalize response format to match OpenAPI schema
-  if (Array.isArray(data)) {
-    return {
-      success: true,
-      products: data,
-      count: data.length,
-      total: data.length
-    };
-  }
-  
-  return data;
+  return {
+    success: true,
+    products: filteredProducts,
+    count: filteredProducts.length,
+    total: filteredProducts.length
+  };
 }
 
 /**

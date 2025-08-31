@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchLenderProducts } from "@/lib/api";
+import { fetchLenderProducts } from "../api/products";
 
 /**
  * Custom hook for fetching lender products with IndexedDB caching
@@ -12,7 +12,7 @@ export function usePublicLenders() {
     queryKey: ['public-lenders'],
     queryFn: async () => {
       try {
-        const { fetchLenderProducts } = await import('../lib/api');
+        const { fetchLenderProducts } = await import('../api/products');
         const products = await fetchLenderProducts();
         console.log(`[usePublicLenders] Fetched ${products.length} products`);
         return products;
@@ -32,7 +32,7 @@ export function usePublicLenderStats() {
     queryKey: ["public-lender-stats"],
     queryFn: async () => {
       try {
-        const { fetchLenderProducts } = await import('../lib/api');
+        const { fetchLenderProducts } = await import('../api/products');
         const products = await fetchLenderProducts();
         
         const stats = {
