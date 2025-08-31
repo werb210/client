@@ -1,4 +1,4 @@
-import { disableSWInDev } from './dev/sw-off';
+import { setupDevServiceWorkerGuard } from './serviceWorker';
 import { getProducts } from "./api/products";
 import './lib/console-guard';
 import "./styles/hotfix.css";
@@ -18,7 +18,7 @@ import("./lib/fetch-guard").catch(console.warn);
 installAuditHook();
 
 // Disable SW in development
-disableSWInDev();
+setupDevServiceWorkerGuard();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
