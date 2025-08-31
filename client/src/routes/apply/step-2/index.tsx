@@ -2,120 +2,101 @@ import React, { useEffect, useMemo, useState } from "react";
 import CategoryCard from "@/lib/recommendations/CategoryCard";
 import { useFormData } from "@/context/FormDataContext";
 
-type Category = {
-  id: string;              // "line_of_credit" etc.
-  name: string;            // "Line of Credit"
-  score: number;           // 0–100 (computed)
-  products: number;        // count within category
-  subtitle?: string;
-};
-
+type Category = { id: string; name: string; score: number; products: number; subtitle?: string; };
 const STORAGE_KEY = "bf:step2:category";
 
 export default function Step2() {
-  const { data, save } = useFormData(); // ensure Continue reads from here
+  const { save } = useFormData();
   const [categories, setCategories] = useState<Category[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
 
-  // Build categories once from the unified products list
   useEffect(() => {
-    let alive = true;
+    let done = false;
     (async () => {
       try {
         const response = await fetch("/api/v1/products");
         if (!response.ok) throw new Error("Failed to load products");
-        const products = await response.json();
-        
-        // group → score → sort
-        const map = new Map<string, Category>();
+        const products = await response.json();                    // 42 items expected
+        const grouped = new Map<string, Category>();
         for (const p of products) {
-          const cat = p.category as string;   // e.g., "line_of_credit"
+          const cat = String(p.category || "").trim();
           if (!cat) continue;
-          if (!map.has(cat)) {
-            map.set(cat, { id: cat, name: titleize(cat), score: 0, products: 0 });
-          }
-          const entry = map.get(cat)!;
-          entry.products += 1;
-          entry.score += scoreProduct(p);     // simple additive scoring from your rules
+          if (!grouped.has(cat)) grouped.set(cat, { id: cat, name: titleize(cat), score: 0, products: 0 });
+          const g = grouped.get(cat)!;
+          g.products += 1;
+          g.score += scoreProduct(p);
         }
-        const list = [...map.values()]
+        const list = [...grouped.values()]
           .map(c => ({ ...c, score: Math.round(c.score / Math.max(1, c.products)) }))
           .sort((a, b) => b.score - a.score);
 
-        if (!alive) return;
+        if (done) return;
         setCategories(list);
 
-        // Default selection: storage if valid, else highest score
         const saved = localStorage.getItem(STORAGE_KEY);
-        const valid = saved && list.some(c => c.id === saved) ? saved! : null;
+        const valid = saved && list.some(c => c.id === saved) ? saved : null;
         const pick = valid ?? (list[0]?.id ?? null);
-        if (pick) {
-          selectCategory(pick, list, false); // no toast/log on first mount
-        }
+        if (pick) applySelection(pick, list, false);
       } catch (error) {
         console.error("[Step2] Failed to load products:", error);
       }
     })();
-    return () => { alive = false; };
+    return () => { done = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function selectCategory(id: string, list = categories, announce = true) {
+  function applySelection(id: string, list = categories, log = true) {
     setSelected(id);
     localStorage.setItem(STORAGE_KEY, id);
-    // Update FormData context so Step 3+ can read it
-    save({ selectedCategory: id });
-    if (announce) console.log("[Step2] Saved category:", id);
+    save({ selectedCategory: id });               // what Step 3 reads
+    if (log) console.log("[Step2] Saved category:", id);
   }
 
-  // Safety net: capture-phase click handler to defeat any remaining overlays
+  // ULTRA-DEFENSIVE: capture-phase click delegation (wins over overlays)
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const el = (e.target as HTMLElement)?.closest('[data-testid^="cat-"]');
-      if (el) {
-        const id = el.getAttribute('data-testid')!.replace('cat-','');
-        selectCategory(id);
-        e.stopPropagation();
-      }
+    const h = (e: MouseEvent) => {
+      const el = (e.target as HTMLElement)?.closest<HTMLElement>("[data-step2-card]");
+      if (!el) return;
+      const id = el.dataset.step2Card!;
+      applySelection(id, categories);
+      e.stopPropagation();
     };
-    document.addEventListener('click', handler, true); // capture phase
-    return () => document.removeEventListener('click', handler, true);
+    document.addEventListener("click", h, true);
+    return () => document.removeEventListener("click", h, true);
   }, [categories]);
 
-  const cards = useMemo(() => categories.map(c => (
-    <CategoryCard
-      key={c.id}
-      id={c.id}
-      title={c.name}
-      subtitle={`${c.products} products available`}
-      scorePct={c.score}
-      selected={selected === c.id}
-      onSelect={(id) => selectCategory(id)}
-    />
-  )), [categories, selected]);
+  const cards = useMemo(() =>
+    categories.map(c => (
+      <CategoryCard
+        key={c.id}
+        id={c.id}
+        title={c.name}
+        subtitle={`${c.products} products available (Match score ${c.score}%)`}
+        scorePct={c.score}
+        selected={selected === c.id}
+        onSelect={(id) => applySelection(id)}
+      />
+    )), [categories, selected]);
 
   return (
     <>
       {/* CSS guards to prevent overlay interference */}
       <style>{`
         /* Step 2: never let invisible layers eat clicks */
-        .step2-card [data-overlay],
-        .step2-overlay {
-          pointer-events: none !important;
-        }
+        .step2-card .step2-content * { pointer-events: none !important; }
+        .step2-card .step2-hit { pointer-events: auto !important; }
 
-        /* Make sure our full-card button stays on top in any layout */
-        .step2-card button[type="button"] {
-          position: absolute;
-          z-index: 50;             /* above any stray overlays (z: 0–40 commonly used) */
-          pointer-events: auto !important;
+        /* Catch any explicit "overlay" elements if they exist */
+        [data-overlay], .page-mask, .shimmer, .modal-backdrop {
+          pointer-events: none !important;
         }
       `}</style>
       
-      <div className="container max-w-3xl mx-auto">
+      <div id="step2-root" className="container max-w-3xl mx-auto">
         <h2 className="text-2xl font-semibold text-slate-900">Step 2: Choose Product Category</h2>
         <p className="mt-2 text-slate-600">Select the type of financing that best fits your business needs.</p>
 
-        <ul className="mt-6 space-y-4 relative step2-overlay">{cards}</ul>
+        <ul className="mt-6 space-y-4">{cards}</ul>
 
         <div className="mt-6 flex justify-end">
           <a
@@ -131,15 +112,11 @@ export default function Step2() {
   );
 }
 
-function titleize(s: string) {
-  return s.replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
-}
-
+function titleize(s: string) { return s.replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase()); }
 function scoreProduct(p: any) {
-  // Mirror your simple scoring (amount/country/industry) or keep it 95/90/etc.
   let s = 0;
   if (p.amountMatch) s += 40;
   if (p.countryMatch) s += 40;
   if (p.industryMatch) s += 20;
-  return s || 60; // ensure something non-zero so we can rank
+  return s || 60;
 }
