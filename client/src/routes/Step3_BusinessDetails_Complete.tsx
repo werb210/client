@@ -62,7 +62,7 @@ const step3Schema = z.object({
 type BusinessDetailsFormData = z.infer<typeof step3Schema>;
 
 export default function Step3BusinessDetailsComplete() {
-  const { data: state, setData: setFormData } = useFormData();
+  const { data: state, save } = useFormData();
   const [, setLocation] = useLocation();
 
   // Get business location from unified state to determine regional formatting
@@ -103,11 +103,11 @@ export default function Step3BusinessDetailsComplete() {
 
   // Initialize phone display state
   useEffect(() => {
-    const businessPhone = state.step3?.businessPhone;
+    const businessPhone = state?.businessPhone;
     if (businessPhone && !phoneDisplay) {
       setPhoneDisplay(formatPhoneDisplay(businessPhone, countryCode));
     }
-  }, [state.step3?.businessPhone, phoneDisplay, countryCode]);
+  }, [state?.businessPhone, phoneDisplay, countryCode]);
 
   // Auto-save functionality with enhanced debugging
   useEffect(() => {
@@ -155,16 +155,13 @@ export default function Step3BusinessDetailsComplete() {
 
       // Only dispatch if we have actual data to save
       if (Object.keys(stepData).length > 0) {
-        dispatch({
-          type: 'UPDATE_STEP3',
-          payload: stepData
-        });
+        save(stepData);
         // Data dispatched to FormDataContext
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [form, dispatch]);
+  }, [form, save]);
 
   const onSubmit = (data: BusinessDetailsFormData) => {
     logger.log('[STEP3] Form submitted with data:', data);
@@ -179,15 +176,9 @@ export default function Step3BusinessDetailsComplete() {
     // Step 3 data processing complete
     
     // Update context with step3 object structure for validation
-    dispatch({
-      type: 'UPDATE_STEP3',
-      payload: processedData
-    });
+    save(processedData);
 
-    dispatch({
-      type: 'MARK_STEP_COMPLETE',
-      payload: 3
-    });
+    // Step completion tracking removed - using navigation as completion signal
 
     // State persistence complete
     

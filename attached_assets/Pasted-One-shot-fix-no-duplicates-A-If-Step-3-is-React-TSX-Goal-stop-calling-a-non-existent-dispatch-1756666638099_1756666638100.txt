@@ -1,0 +1,94 @@
+One-shot fix (no duplicates)
+A) If Step 3 is React (TSX)
+
+Goal: stop calling a non-existent dispatch and use the new useFormData() + a guard if the category is missing.
+
+// client/src/pages/apply/step-3.tsx  (or wherever Step 3 lives)
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useFormData } from '@/context/FormDataContext'; // <- your new API
+
+export default function Step3() {
+  const navigate = useNavigate();
+  const { data, setData } = useFormData(); // <- no dispatch here
+
+  // Read intake + category from context or localStorage
+  const intake = data ?? JSON.parse(localStorage.getItem('bf:intake') || '{}');
+  const category =
+    intake?.selectedCategory ||
+    localStorage.getItem('bf:step2:category') ||
+    '';
+
+  // Guard: if Step 2 wasn’t completed, send them back
+  useEffect(() => {
+    if (!category) {
+      navigate('/apply/step-2');
+    }
+  }, [category, navigate]);
+
+  // Safe update helper to replace old dispatch calls
+  const update = (patch: Record<string, unknown>) => {
+    setData(prev => ({ ...(prev || {}), ...patch }));
+    // keep localStorage in sync for refresh safety
+    const next = { ...(intake || {}), ...patch };
+    localStorage.setItem('bf:intake', JSON.stringify(next));
+  };
+
+  // 🔁 Replace every old:  dispatch({ type: 'SET', payload: {...} })
+  //     with:               update({ ... })
+
+  // … render the form …
+}
+
+
+Search in this file for dispatch( and replace each usage with update({...}). Do not keep both—it creates drift.
+
+Also make sure Step 3 is inside the same providers as Step 2 (e.g., ApplicationProvider / ComprehensiveFormProvider). If Step 3 was accidentally rendered outside the provider, useFormData() will throw or be undefined.
+
+B) If Step 3 is Svelte (+page.svelte)
+
+Goal: declare the dispatcher (if you need it) and guard category.
+
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher(); // <- REQUIRED if you call dispatch()
+
+  let intake = {};
+  let category = '';
+
+  onMount(() => {
+    intake = JSON.parse(localStorage.getItem('bf:intake') || '{}');
+    category = intake.selectedCategory || localStorage.getItem('bf:step2:category') || '';
+    if (!category) goto('/apply/step-2');
+  });
+
+  function update(patch: Record<string, unknown>) {
+    intake = { ...intake, ...patch };
+    localStorage.setItem('bf:intake', JSON.stringify(intake));
+    // If you were emitting events before, you can dispatch safely now
+    // dispatch('updated', { intake });
+  }
+</script>
+
+<h1 class="step-title">Step 3: Business Details</h1>
+<!-- form goes here -->
+
+
+Search the file for any dispatch( usage and ensure the createEventDispatcher line exists. If you’re not using events, remove dispatch(...) calls entirely.
+
+Quick checklist (what else could it be?)
+
+ Missing provider: Step 3 must render under the same provider tree as Step 2 (the one that exposes useFormData()).
+
+ Slug mismatch: If the route component differs (/apply/step-3 vs /apply/step3), Step 2 may navigate to a page you didn’t patch (and that page still uses dispatch). Confirm the file you edited is the one your router mounts.
+
+ Intake guard loop: If Step 3 immediately redirects due to missing category, and your error boundary renders after unmount, it can look like a crash. Check the console:
+localStorage.getItem('bf:step2:category') should be non-empty after Step 2.
+
+ Old import survives: Ensure import { useFormDataContext } (or any dispatch import) is removed from Step 3 to avoid dead code paths.
+
+ Service worker: In dev, keep SW disabled. It won’t cause the dispatch error, but it can mask hot changes. (You already disabled it—good.)
+
+If you tell me whether Step 3 is React or Svelte in your repo, I’ll tailor the exact file paths and provide a ready-to-paste patch for that file.

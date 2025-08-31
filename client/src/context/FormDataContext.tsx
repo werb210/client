@@ -24,6 +24,20 @@ export type ApplicationForm = {
   fixedAssets?: number | string;
   fixedAssetsValue?: number | string;  // Step 1 field
   equipmentValue?: number | string;    // Step 1 field
+  
+  // Step 3 Business Details fields
+  operatingName?: string;
+  legalName?: string;
+  businessStreetAddress?: string;
+  businessCity?: string;
+  businessState?: string;
+  businessPostalCode?: string;
+  businessPhone?: string;
+  businessWebsite?: string;
+  businessStartDate?: string;
+  businessStructure?: string;
+  employeeCount?: number;
+  estimatedYearlyRevenue?: number;
   // ...any other fields you actually use in the matcher
 };
 
