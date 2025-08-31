@@ -46,6 +46,7 @@ export function Step2RecommendationEngine(props: Props){
   useEffect(()=>{
     (async ()=>{
       try{
+        const { getRecommendedProducts } = await import('../api/products');
         const data = await (await getRecommendedProducts()).matches;
         setProducts(Array.isArray(data) ? data : []);
       }catch(e:any){

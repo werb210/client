@@ -1,5 +1,4 @@
-import { fetchProducts } from "../../api/products";
-// Removed circular import
+// Main products API - no circular imports
 export type Product = {
   id?: string|number;
   productName?: string;
@@ -13,7 +12,10 @@ const BASE = (import.meta.env.VITE_STAFF_API_URL || "https://staff.boreal.financ
 const TOKEN = (import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || "");
 
 export async function fetchProducts(): Promise<Product[]> {
-  const res = await fetchProducts();
+  const res = await fetch(`${BASE}/v1/products`, { 
+    headers: TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {},
+    credentials: "include" 
+  });
   if (!res.ok) return [];
   const data = await res.json();
   return Array.isArray(data) ? data : (data.items || []);
