@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useFormData } from '@/context/FormDataContext';
 import { useLocation } from 'wouter';
 import { StepHeader } from '@/components/StepHeader';
-import CategoryPicker from '@/components/CategoryPicker';
+import CategoryCards from '@/components/Step2/CategoryCards';
 import { Button } from '@/components/ui/button';
-import type { Product } from '@/lib/categories';
+import type { Product } from '@/api/products';
 
 const PRODUCTS_URL = "/api/v1/products";
 
@@ -44,7 +44,12 @@ export default function Step2Recommendations() {
         />
 
         <div className="max-w-4xl mx-auto mt-8">
-          <CategoryPicker products={products} answers={contextData || {}} />
+          <CategoryCards 
+            intake={contextData || {}} 
+            onSelect={(category, products) => {
+              console.log('Selected category:', category, 'with', products.length, 'products');
+            }} 
+          />
           
           <div className="flex justify-between mt-8">
             <Button variant="outline" onClick={handleBack}>

@@ -1,0 +1,209 @@
+Got it — Step 2 → Step 3 is showing an in-app 404. That almost always means **the route isn’t registered** (or is registered under a different slug), **navigation isn’t wired**, or the **SPA fallback** is intercepting incorrectly.
+
+Below is a **single copy-and-paste instruction block for the CLIENT APP only**. It (1) normalizes routes, (2) wires the Step-2 “Continue” to Step-3, (3) adds a resilient SPA fallback, and (4) adds a browser test so we don’t regress. It **does not create duplicates**—it edits existing files when found and adds only what’s missing.
+
+---
+
+# CLIENT APP — FIX “STEP 2 → STEP 3” NAVIGATION (no duplicates)
+
+```bash
+# =============================
+# 0) SAFETY + DIAGNOSTICS
+# =============================
+set -euo pipefail
+echo "▶ Checking for existing Step routes…"
+rg -n "apply\/step[-_ ]?([0-9])" client/src || true
+rg -n "Route.*apply\/step" client/src 2>/dev/null || true
+rg -n "goto\(|navigate\(|useNavigate\(" client/src | rg "step-2|step-3" || true
+
+# =============================
+# 1) ROUTER: REGISTER /apply/step-3
+#    (supports both React Router and SvelteKit; only the matching block will patch)
+# =============================
+
+# 1A) React Router v6 style (TSX) — ensure Step3 route exists exactly as /apply/step-3
+if rg -n "react-router" client/src 2>/dev/null | rg -q .; then
+  FILE="$(rg -l 'Routes|BrowserRouter' client/src | head -n1 || true)"
+  [ -n "${FILE:-}" ] && python3 - <<'PY' "$FILE"
+import io, sys, re, pathlib
+p=pathlib.Path(sys.argv[1]); s=p.read_text()
+# Add import if missing
+if re.search(r'from\s+[\'"]\./pages/apply/step-3[\'"]', s) is None:
+    s=re.sub(r'(import\s+.*Step2.*?;\s*)',
+             r"\1\nimport Step3 from './pages/apply/step-3';",
+             s, flags=re.S)
+# Add Route if missing
+if re.search(r'path=["\']/apply/step-3["\']', s) is None:
+    s=re.sub(r'(\s*</Routes>)',
+             r'\n  <Route path="/apply/step-3" element={<Step3 />} />\n\1',
+             s)
+p.write_text(s)
+print(f"Patched React routes in {p}")
+PY
+fi
+
+# 1B) SvelteKit — ensure folder exists: src/routes/apply/step-3/+page.svelte
+if [ -d client/src/routes ] && rg -q "routes/apply" client/src; then
+  mkdir -p client/src/routes/apply/step-3
+  cat > client/src/routes/apply/step-3/+page.svelte <<'SVELTE'
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
+  // guard: require Step 2 to have set a category or intake
+  onMount(() => {
+    const intake = localStorage.getItem('bf:intake');
+    if (!intake) goto('/apply/step-1');
+  });
+</script>
+
+<h1 class="step-title">Step 3: Business Details</h1>
+<p class="muted">Collect additional details before documents.</p>
+SVELTE
+  echo "Ensured SvelteKit /apply/step-3 page exists."
+fi
+
+# =============================
+# 2) STEP 2: WIRE THE “CONTINUE” BUTTON
+#    (supports React or SvelteKit; only one applies)
+# =============================
+
+# 2A) React Step-2 page: add onContinue that persists category + navigates
+REACT_STEP2="$(rg -l '/apply/step-2|step-2' client/src | rg '\.tsx$' | head -n1 || true)"
+if [ -n "$REACT_STEP2" ]; then
+  python3 - "$REACT_STEP2" <<'PY'
+import sys, re, pathlib
+p=pathlib.Path(sys.argv[1]); s=p.read_text()
+# Ensure useNavigate import
+if re.search(r'useNavigate', s) is None and 'react-router' in s:
+    s=re.sub(r"(from\s+['\"]react-router.*?['\"];)",
+             r"\1\nimport { useNavigate } from 'react-router-dom';",
+             s, flags=re.S)
+# Add handler if missing
+if 'function onContinue' not in s and 'const onContinue' not in s:
+    s=re.sub(r'(export default function .*?\{)',
+             r"""\1
+  const navigate = typeof useNavigate === 'function' ? useNavigate() : undefined;
+  const onContinue = async () => {
+    try {
+      // persist selection (already set by category picker)
+      const category = localStorage.getItem('bf:step2:category') || '';
+      // (optional) merge into draft
+      const draft = JSON.parse(localStorage.getItem('bf:intake') || '{}');
+      if (category) draft.selectedCategory = category;
+      localStorage.setItem('bf:intake', JSON.stringify(draft));
+      // navigate
+      if (navigate) navigate('/apply/step-3');
+    } catch (e) {
+      console.error('[STEP2] continue failed', e);
+    }
+  };
+""", s, flags=re.S)
+# Attach handler to Continue button if we can find it
+s = re.sub(r'(<Button[^>]*data-testid=["\']continue["\'][^>]*)(>)',
+           r'\1 onClick={onContinue}\2', s)
+p.write_text(s); print(f"Patched Step-2 React page: {p}")
+PY
+fi
+
+# 2B) SvelteKit Step-2 page: add goto('/apply/step-3') to continue action
+if [ -d client/src/routes/apply/step-2 ]; then
+  STEP2_SVELTE="client/src/routes/apply/step-2/+page.svelte"
+  if [ -f "$STEP2_SVELTE" ]; then
+    python3 - "$STEP2_SVELTE" <<'PY'
+import sys, re, pathlib
+p=pathlib.Path(sys.argv[1]); s=p.read_text()
+if 'goto(' not in s:
+    s=re.sub(r'<script[^>]*>\s*', r'<script lang="ts">\n  import { goto } from "$app/navigation";\n', s, count=1)
+if 'const continueToStep3' not in s:
+    s=s.replace('</script>', '''
+  const continueToStep3 = () => {
+    try {
+      const cat = localStorage.getItem('bf:step2:category') || '';
+      const draft = JSON.parse(localStorage.getItem('bf:intake') || '{}');
+      if (cat) draft.selectedCategory = cat;
+      localStorage.setItem('bf:intake', JSON.stringify(draft));
+      goto('/apply/step-3');
+    } catch (e) { console.error('[STEP2] continue failed', e); }
+  };
+</script>''')
+# add on:click to button with data-testid="continue"
+s=re.sub(r'(<button[^>]*data-testid=["\']continue["\'][^>]*)(>)',
+         r'\1 on:click={continueToStep3}\2', s)
+p.write_text(s); print(f"Patched Step-2 Svelte page: {p}")
+PY
+  fi
+fi
+
+# =============================
+# 3) SPA FALLBACK: SERVE index.html FOR /apply/* (prevents 404 after refresh/deep-link)
+# =============================
+
+SERVER_FILE="$(rg -l 'express.*static|serve-static' server | head -n1 || true)"
+if [ -n "${SERVER_FILE:-}" ]; then
+  python3 - "$SERVER_FILE" <<'PY'
+import sys, re, pathlib, os
+p=pathlib.Path(sys.argv[1]); s=p.read_text()
+# ensure path module
+if re.search(r"require\(['\"]path['\"]\)", s) is None and 'from "path"' not in s:
+    s = "const path = require('path');\n" + s
+# ensure fallback handler for SPA routes under /apply/*
+if '/apply/*' not in s:
+    s += """
+
+// SPA fallback for client application routes (prevents in-app 404 on refresh)
+try {
+  const dist = path.join(__dirname, '../dist/public');
+  app.get(['/apply/*'], (req, res) => {
+    res.sendFile(path.join(dist, 'index.html'));
+  });
+} catch (e) {
+  console.warn('[SPA Fallback] not applied:', e?.message);
+}
+"""
+p.write_text(s); print(f"SPA fallback ensured in {p}")
+PY
+fi
+
+# =============================
+# 4) QUICK E2E CHECK (headless browser)
+# =============================
+node - <<'NODE' || true
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage();
+  await p.addInitScript(() => {
+    localStorage.setItem('bf:intake', JSON.stringify({ country: 'CA', amountRequested: 40000 }));
+    localStorage.setItem('bf:step2:category', 'Working Capital');
+  });
+  await p.goto('http://localhost:5000/apply/step-2', { waitUntil: 'domcontentloaded' });
+  // Click the Continue (by testid if present; else fallback to last primary button)
+  const btn = await p.$('[data-testid="continue"], button:has-text("Continue")');
+  if (btn) await btn.click();
+  await p.waitForTimeout(500);
+  const url = p.url();
+  console.log('Navigated URL:', url);
+  if (!/\/apply\/step-3/.test(url)) {
+    console.error('❌ Did not reach /apply/step-3');
+    process.exit(2);
+  }
+  console.log('✅ Step 2 → Step 3 OK');
+  await b.close();
+})();
+NODE
+
+echo "Done."
+```
+
+**What this does**
+
+* Registers **`/apply/step-3`** (React *or* SvelteKit—only the matching framework is touched).
+* Wires Step-2’s **Continue** to persist the category and **navigate to Step-3**.
+* Adds an **Express SPA fallback** so refresh/deep-links under `/apply/*` never show the in-app 404.
+* Adds a **headless browser check** that clicks Continue and asserts URL is `/apply/step-3`.
+
+**Why this fixes the screenshot you shared**
+
+* Your UI 404 (“Page Not Found”) indicates the router didn’t match `/apply/step-3`. Either the route was missing or the click didn’t navigate; this patch covers both, plus the server-side fallback to prevent 404s on refresh.
+
+If your step URLs use a different slug (e.g., `/apply/step3` without the dash), tell me which exact path you want and I’ll adjust the patch.
