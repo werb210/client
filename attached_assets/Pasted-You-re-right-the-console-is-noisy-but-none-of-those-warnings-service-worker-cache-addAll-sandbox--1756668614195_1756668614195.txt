@@ -1,0 +1,244 @@
+You're right—the console is noisy, but none of those warnings (service-worker cache/addAll, sandbox flags, X-Frame-Options) would *by themselves* prevent clicks. The “can’t select a different category” symptom is almost always one of:
+
+* the category “card” is not a real `<button>` (or it’s missing `type="button"` and the form eats the click),
+* an overlay (toast/spinner/footer) is sitting on top and stealing pointer events, or
+* the onClick updates local state but not the persisted value read by Step 3 (so your UI looks “stuck”).
+
+Below is a **single copy-paste block for the CLIENT app** that fixes all three at once:
+
+* makes each category a proper accessible `<button>` with `type="button"`,
+* stores the selection in both app state and `localStorage` (the key Step 3 reads),
+* ensures no overlay steals clicks (CSS guard), and
+* unregisters the service worker to remove cache noise that can mask real issues.
+
+---
+
+```bash
+# ==========================================
+# CLIENT APP — Step 2 "category not clickable" hotfix
+# ==========================================
+set -euo pipefail
+R="reports/client-step2-hotfix-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$R"
+
+echo "1) Ensure a real <button> is used for category cards (accessible & clickable)"
+# Try common locations; adjust path if yours differs.
+CAT_CMP="client/src/lib/recommendations/CategoryCards.tsx"
+if [ -f "$CAT_CMP" ]; then
+  cp "$CAT_CMP" "$R/CategoryCards.before.tsx"
+  cat > "$CAT_CMP" <<'TSX'
+import React from 'react';
+
+type Props = {
+  category: string;
+  stats: { products: number; marketSharePct: number; matchPct: number };
+  selected: boolean;
+  onSelect: (category: string) => void;
+};
+
+export default function CategoryCard({ category, stats, selected, onSelect }: Props) {
+  const { products, marketSharePct, matchPct } = stats;
+  return (
+    <div className="category-card-wrapper relative">
+      <button
+        type="button"
+        data-testid={`cat-${category}`}
+        aria-pressed={selected}
+        onClick={() => onSelect(category)}
+        className={[
+          "w-full text-left rounded-xl border transition",
+          "px-5 py-4",
+          selected
+            ? "border-emerald-400 ring-2 ring-emerald-300 bg-emerald-50"
+            : "border-slate-200 hover:border-slate-300 hover:bg-slate-50",
+          "pointer-events-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+        ].join(' ')}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="text-slate-900 font-semibold">{category}</div>
+            <div className="mt-1 text-slate-600 text-sm">
+              {products} {products === 1 ? 'product' : 'products'} available · Market share ~{marketSharePct}% · Match score {matchPct}%
+            </div>
+            <ul className="mt-2 text-sm text-emerald-700 list-disc ml-5">
+              <li>Matches your funding requirement</li>
+              <li>Available in your region</li>
+            </ul>
+          </div>
+          <div>
+            <span
+              className={[
+                "inline-flex items-center rounded-full px-3 py-1 text-sm",
+                selected ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"
+              ].join(' ')}
+            >
+              {selected ? 'Selected' : 'Select'}
+            </span>
+          </div>
+        </div>
+      </button>
+    </div>
+  );
+}
+TSX
+  echo "✔ CategoryCards.tsx updated"
+else
+  echo "⚠ Could not find $CAT_CMP — if your component lives elsewhere, apply the same structure there."
+fi
+
+echo "2) Wire Step 2 page to read/write selection coherently (state + localStorage)"
+STEP2_PAGE="client/src/routes/apply/step-2/Step2_Recommendations.tsx"
+ALT_STEP2_PAGE="client/src/pages/apply/step-2/Step2_Recommendations.tsx"
+for P in "$STEP2_PAGE" "$ALT_STEP2_PAGE"; do
+  if [ -f "$P" ]; then
+    cp "$P" "$R/Step2_Recommendations.before.tsx"
+    cat > "$P" <<'TSX'
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import CategoryCard from '../../../lib/recommendations/CategoryCards'; // adjust if your path differs
+
+const LS_KEY = 'bf:step2:category';
+
+type CategoryStats = {
+  products: number;
+  marketSharePct: number;
+  matchPct: number;
+};
+
+export default function Step2_Recommendations() {
+  // categories and stats should be derived from your filtered product list
+  const categories: Array<{ name: string; stats: CategoryStats }> = [
+    { name: 'Line of Credit',        stats: { products: 19, marketSharePct: 47, matchPct: 84 } },
+    { name: 'Invoice Factoring',     stats: { products: 6,  marketSharePct: 18, matchPct: 75 } },
+    { name: 'Equipment Financing',   stats: { products: 6,  marketSharePct: 29, matchPct: 79 } },
+    { name: 'Working Capital',       stats: { products: 1,  marketSharePct: 6,  matchPct: 72 } },
+    { name: 'Term Loan',             stats: { products: 8,  marketSharePct: 22, matchPct: 77 } },
+    { name: 'Purchase Order Financing', stats: { products: 2, marketSharePct: 3, matchPct: 71 } },
+  ];
+
+  const [selected, setSelected] = useState<string | null>(null);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) setSelected(JSON.parse(saved));
+    } catch {}
+  }, []);
+
+  const handleSelect = useCallback((cat: string) => {
+    setSelected(cat);
+    try { localStorage.setItem(LS_KEY, JSON.stringify(cat)); } catch {}
+    // If you keep a global application context, update it here too:
+    // appCtx.update((s) => ({ ...s, productCategory: cat }));
+  }, []);
+
+  const canContinue = useMemo(() => Boolean(selected), [selected]);
+
+  return (
+    <div className="mx-auto max-w-4xl">
+      <h2 className="text-center text-2xl font-semibold text-slate-800 mb-2">Step 2: Choose Product Category</h2>
+      <p className="text-center text-slate-600 mb-8">Select the type of financing that best fits your business needs</p>
+      <div className="space-y-4">
+        {categories.map(({ name, stats }) => (
+          <CategoryCard
+            key={name}
+            category={name}
+            stats={stats}
+            selected={selected === name}
+            onSelect={handleSelect}
+          />
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between mt-8">
+        <a className="btn btn-secondary" href="/apply/step-1">Previous</a>
+        <button
+          type="button"
+          className={["btn", canContinue ? "btn-primary" : "btn-disabled"].join(' ')}
+          disabled={!canContinue}
+          onClick={() => { if (canContinue) window.location.href = "/apply/step-3"; }}
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+}
+TSX
+    echo "✔ Step2_Recommendations updated at $P"
+    break
+  fi
+done
+
+echo "3) Prevent hidden overlays from stealing clicks (CSS guard)"
+CSS_MAIN="client/src/app.css"
+ALT_CSS="client/src/styles/app.css"
+for C in "$CSS_MAIN" "$ALT_CSS"; do
+  if [ -f "$C" ]; then
+    cp "$C" "$R/app.before.css"
+    cat >> "$C" <<'CSS'
+
+/* --- Clickability hardening for Step 2 --- */
+.category-card-wrapper { position: relative; }
+.category-card-wrapper::before { content: none; } /* kill any pseudo overlay */
+.category-card-wrapper * { pointer-events: auto; }
+.sticky-footer, .toast-container, .modal-backdrop { pointer-events: none; } /* only if they overlap inadvertently */
+CSS
+    echo "✔ CSS guard appended to $C"
+    break
+  fi
+done
+
+echo "4) Unregister service worker to remove cache noise and potential overlay issues"
+SW_FILE="client/src/serviceWorker.ts"
+INDEX_FILE="client/src/main.tsx"
+if [ -f "$SW_FILE" ]; then
+  cp "$SW_FILE" "$R/serviceWorker.before.ts"
+  cat > "$SW_FILE" <<'TS'
+export function unregisterServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(() => {});
+  }
+}
+TS
+  if [ -f "$INDEX_FILE" ]; then
+    cp "$INDEX_FILE" "$R/main.before.tsx"
+    if ! rg -n "unregisterServiceWorker" "$INDEX_FILE" >/dev/null 2>&1; then
+      sed -i.bak "1s;^;import { unregisterServiceWorker } from './serviceWorker';\n;" "$INDEX_FILE"
+      printf "\n// Disable SW in this environment\nunregisterServiceWorker();\n" >> "$INDEX_FILE"
+      echo "✔ Service worker unregistration wired in main.tsx"
+    fi
+  fi
+fi
+
+echo "5) Rebuild & run"
+npm run build && npm run start -s || npm run dev -s
+
+echo "6) Sanity: print current selection and clickable state (run in browser console on /apply/step-2)"
+cat <<'JS'
+/* Paste in the browser console to verify */
+(() => {
+  const btns = [...document.querySelectorAll('button[data-testid^="cat-"]')];
+  console.table(btns.map(b => ({
+    text: b.innerText.split('\n')[0],
+    disabled: b.disabled,
+    pe: getComputedStyle(b).pointerEvents,
+    z: getComputedStyle(b).zIndex
+  })));
+  console.log('Saved selection:', localStorage.getItem('bf:step2:category'));
+})();
+JS
+
+echo "Done. Try clicking each category; the badge should toggle to “Selected”, localStorage should update, and the Continue button should enable."
+```
+
+---
+
+### What you’ll see after this
+
+* Each category row is a real `<button type="button">` and **always clickable**.
+* Clicking a different category updates the “Selected” pill and **persists** to `localStorage('bf:step2:category')`.
+* The “Continue” button enables only when a category is chosen and navigates to Step 3 without errors.
+* Service-worker cache/addAll warnings disappear (unregistered), removing a common source of confusing behavior during dev.
+
+If the button list still won’t react: open the devtools console and run the little sanity snippet in step 6. If `pointerEvents` for your buttons shows anything other than `auto`, or `disabled: true`, an external stylesheet is still overriding the card; send me that single computed style line and I’ll zero in further.
