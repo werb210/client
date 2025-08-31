@@ -65,6 +65,28 @@ export default function Step3BusinessDetailsComplete() {
   const { data: state, save } = useFormData();
   const [, setLocation] = useLocation();
 
+  // Read intake + category from context or localStorage
+  const intake = state ?? JSON.parse(localStorage.getItem('bf:intake') || '{}');
+  const category =
+    intake?.selectedCategory ||
+    localStorage.getItem('bf:step2:category') ||
+    '';
+
+  // Guard: if Step 2 wasn't completed, send them back
+  useEffect(() => {
+    if (!category) {
+      setLocation('/apply/step-2');
+    }
+  }, [category, setLocation]);
+
+  // Safe update helper to replace old dispatch calls
+  const update = (patch: Record<string, unknown>) => {
+    save(patch);
+    // keep localStorage in sync for refresh safety
+    const next = { ...(intake || {}), ...patch };
+    localStorage.setItem('bf:intake', JSON.stringify(next));
+  };
+
   // Get business location from unified state to determine regional formatting
   const businessLocation = state?.businessLocation || 'US';
   const isCanadian = isCanadianBusiness(businessLocation);
@@ -155,13 +177,13 @@ export default function Step3BusinessDetailsComplete() {
 
       // Only dispatch if we have actual data to save
       if (Object.keys(stepData).length > 0) {
-        save(stepData);
+        update(stepData);
         // Data dispatched to FormDataContext
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [form, save]);
+  }, [form, update]);
 
   const onSubmit = (data: BusinessDetailsFormData) => {
     logger.log('[STEP3] Form submitted with data:', data);
@@ -176,7 +198,7 @@ export default function Step3BusinessDetailsComplete() {
     // Step 3 data processing complete
     
     // Update context with step3 object structure for validation
-    save(processedData);
+    update(processedData);
 
     // Step completion tracking removed - using navigation as completion signal
 
