@@ -17,7 +17,12 @@ export function normalizeStep1(raw: Record<string, unknown>): Intake {
   const result = {
     capitalUse: String(raw.capitalUse ?? raw.purpose ?? raw.lookingFor ?? raw.fundsPurpose ?? '').trim(),
     amountRequested: toNum(raw.amountRequested ?? raw.fundingAmount ?? raw.amount ?? raw.requestedAmount),
-    country: (String(raw.businessLocation ?? raw.country ?? raw.headquarters ?? '').includes('Canada') ? 'Canada' : 'US') as 'US'|'Canada',
+    country: (() => {
+      const loc = String(raw.businessLocation ?? raw.country ?? raw.headquarters ?? raw.applicantCountry ?? raw.region ?? '').trim().toUpperCase();
+      if (loc.includes('CANADA') || loc === 'CA') return 'Canada';
+      if (loc.includes('UNITED STATES') || loc === 'USA' || loc === 'US' || loc.includes('U.S.')) return 'US';
+      return 'US'; // Default fallback
+    })() as 'US'|'Canada',
     industry: String(raw.industry ?? '').trim(),
     yearsInBusiness: toNum(raw.yearsInBusiness ?? raw.yib ?? (
       raw.salesHistory === '<1yr' ? 0.5 : 
