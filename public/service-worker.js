@@ -1,53 +1,23 @@
-const CACHE_NAME = 'boreal-financial-v3';
-const OFFLINE_URL = '/offline/index.html';
-
-// Enhanced cache strategy for better PWA performance
-const CACHE_URLS = [
-  '/',
-  '/offline/index.html',
-  '/manifest.json',
-  '/icons/icon-192x192.svg',
-  '/icons/icon-512x512.svg',
-  '/application/step-1',
-  '/assets/index.js',
-  '/assets/index.css'
-];
-
-// Background sync for offline application submissions
-const BACKGROUND_SYNC_TAG = 'boreal-background-sync';
+// Service worker disabled in development to prevent cache errors
+console.log('Service worker disabled in development environment');
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(CACHE_URLS))
-      .then(() => self.skipWaiting())
-  );
+  // Skip caching in development
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+  // Clear all caches in development
   event.waitUntil(
     caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      )
+      Promise.all(cacheNames.map((name) => caches.delete(name)))
     ).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(OFFLINE_URL))
-    );
-  } else {
-    event.respondWith(
-      caches.match(event.request)
-        .then((response) => response || fetch(event.request))
-    );
-  }
+  // No caching in development - pass through all requests
+  event.respondWith(fetch(event.request));
 });
 
 // Push notification handling
