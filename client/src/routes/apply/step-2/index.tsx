@@ -123,7 +123,13 @@ export default function Step2() {
           ))}
         </ul>
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-between">
+          <a
+            href="/apply/step-1"
+            className="px-4 py-2 rounded-md font-medium transition bg-gray-200 text-gray-700 hover:bg-gray-300"
+          >
+            Back
+          </a>
           <a
             href="/apply/step-3"
             className={`px-4 py-2 rounded-md font-medium transition ${
