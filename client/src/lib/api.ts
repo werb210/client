@@ -71,6 +71,7 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> { /* e
   try {
     // Use the unified v1/products endpoint  
     const { fetchProducts } = await import('../api/products');
+    const { getRecommendedProducts } = await import('../api/products');
     const products = await (await getRecommendedProducts()).matches;
     if (products.length > 0) {
       // Convert Product[] to CanonicalProduct[]
@@ -206,6 +207,7 @@ export async function listDocuments(input: RequiredDocsInput & { applicationId?:
 
 export const getLenderProducts = async () => {
   const { fetchProducts } = await import('../api/products');
+  const { getRecommendedProducts } = await import('../api/products');
   return await (await getRecommendedProducts()).matches;
 };
 

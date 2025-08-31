@@ -129,7 +129,7 @@ export function FormDataProvider({ children }: { children: React.ReactNode }) {
   const save = (raw: Partial<ApplicationForm>) => {
     const merged = normalize({ ...(data ?? {}), ...raw });
     setData(merged);
-try{ const tid=getTraceId(); const snap=JSON.stringify({tid, at:Date.now(), data: typeof data!=='undefined'?data:formData}); localStorage.setItem("__formDataSnapshot", snap);}catch{}
+try{ const tid=getTraceId(); const snap=JSON.stringify({tid, at:Date.now(), data: typeof data!=='undefined'?data:(typeof data!=='undefined'?data:{})}); localStorage.setItem("__formDataSnapshot", snap);}catch{}
   };
 
   const clear = () => setData(null);
