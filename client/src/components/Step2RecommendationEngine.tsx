@@ -1,4 +1,3 @@
-import { getRecommendedProducts } from '../lib/recommendations/engine';
 import { useEffect, useMemo, useState } from 'react';
 import { fetchProducts } from "../api/products";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -49,7 +48,8 @@ export function Step2RecommendationEngine(props: Props){
       try{
         const products = await import('../api/products').then(m => m.fetchProducts());
         const { getRecommendedProducts } = await import('../lib/recommendations/engine');
-        const data = getRecommendedProducts(intake, products);
+        const formData = requireIntake();
+        const data = getRecommendedProducts(formData, products);
         setProducts(Array.isArray(data) ? data : []);
       }catch(e:any){
         setError(e?.message || 'fetch_failed');
