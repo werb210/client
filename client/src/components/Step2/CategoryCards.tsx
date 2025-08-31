@@ -11,7 +11,14 @@ export default function CategoryCards({ intake, onSelect }: Props) {
   const [loading, setLoading] = React.useState(true)
   const [clusters, setClusters] = React.useState<ReturnType<typeof computeCategories>>([])
   const [error, setError] = React.useState<string | null>(null)
-  const selected = getSelectedCategory()
+  // Use local state for selection that syncs with localStorage
+  const [selected, setSelected] = React.useState<string | null>(null)
+  
+  // Sync with localStorage on mount
+  React.useEffect(() => {
+    const saved = getSelectedCategory()
+    if (saved) setSelected(saved)
+  }, [])
 
   React.useEffect(() => {
     let alive = true
@@ -30,6 +37,9 @@ export default function CategoryCards({ intake, onSelect }: Props) {
     return () => { alive = false }
   }, [JSON.stringify(intake)])
 
+  // Force state update when selection changes
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0)
+
   if (loading) return <div>Loading categories…</div>
   if (error) return <div className="text-red-600">{error}</div>
   if (!clusters.length) return <div>No eligible categories found for your profile.</div>
@@ -42,12 +52,17 @@ export default function CategoryCards({ intake, onSelect }: Props) {
             type="button"
             data-testid={`cat-${c.category}`}
             aria-pressed={selected === c.category}
-            onClick={() => { 
+            onClick={(e) => { 
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Category clicked:', c.category);
+              setSelected(c.category); // Update local state
               setSelectedCategory(c.category); 
               onSelect(c.category, c.products);
               // Ensure localStorage persistence matches categoryEngine
               try { 
                 localStorage.setItem('bf:step2:category', c.category); 
+                console.log('Saved to localStorage:', c.category);
               } catch {}
             }}
             className={[
