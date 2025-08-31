@@ -85,7 +85,10 @@ const OverlayGuards: React.FC = () => (
     .step2-scope .vite-dev-overlay,
     .step2-scope .dev-ui-overlay,
     .step2-scope .preview-topbar,
-    .step2-scope .preview-surface-blocker {
+    .step2-scope .preview-surface-blocker,
+    .step2-scope .app-overlay,
+    .step2-scope .shim-overlay,
+    .step2-scope .screen-blocker {
       pointer-events: none !important;
     }
     .step2-scope .CategoryCard button {
@@ -93,6 +96,8 @@ const OverlayGuards: React.FC = () => (
       z-index: 2;
       pointer-events: auto !important;
     }
+    /* Ensure cards themselves sit above any accidental siblings */
+    .step2-scope .CategoryCard { position: relative; z-index: 2; }
   `}</style>
 );
 
@@ -182,11 +187,11 @@ const Step2: React.FC = () => {
         const grouped = groupByCategory(p);
         setBuckets(grouped);
 
-        // restore or default to highest scored category
-        const saved = localStorage.getItem(LS_KEY);
-        const initial =
-          (saved && grouped.find(g => g.id === saved)?.id) ||
-          (grouped[0]?.id ?? null);
+        // Always choose the BEST bucket on load.
+        // If a saved value exists but isn't the current best, override it with the best.
+        const saved = localStorage.getItem(LS_KEY) || null;
+        const best = grouped[0]?.id ?? null;
+        const initial = best ?? saved;
         if (initial) {
           setSelected(initial);
           localStorage.setItem(LS_KEY, initial);
@@ -221,7 +226,7 @@ const Step2: React.FC = () => {
   };
 
   return (
-    <div className="step2-scope">
+    <div className="step2-scope" data-testid="step2-root" style={{position:'relative', isolation:'isolate', zIndex:1}}>
       <OverlayGuards />
       <div className="max-w-3xl mx-auto">
         <h2 className="text-center text-2xl font-bold text-slate-800 mt-6">
