@@ -45,7 +45,7 @@ interface Step5Props {
 
 export default function Step5DocumentUpload(props: Step5Props = {}) {
   const { data } = useFormData();
-  const state = data || {};
+  const state = data as any || {};
   const dispatch = (action: any) => console.log('Mock dispatch in Step5:', action);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -78,7 +78,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
   console.log("Step 5 using ID:", applicationId);
   
   logger.log('🔍 [STEP5] Application ID check:', {
-    fromState: state.applicationId,
+    fromState: (state as any).applicationId,
     fromLocalStorage: localStorage.getItem('applicationId'),
     finalId: applicationId
   });
@@ -98,7 +98,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
   
   // ✅ USER SPECIFICATION: Collect files during Step 5
   const [files, setFiles] = useState<{ file: File; type: string; category: string }[]>(
-    state.step5DocumentUpload?.files || []
+(state as any).step5DocumentUpload?.files || []
   );
   
   // Track upload progress
@@ -107,7 +107,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
   
   // State for tracking uploaded files and requirements completion
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(
-    (state.step5DocumentUpload?.uploadedFiles || []).map(doc => ({
+((state as any).step5DocumentUpload?.uploadedFiles || []).map((doc: any) => ({
       id: doc.id,
       name: doc.name,
       size: doc.size,
@@ -149,10 +149,11 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
         const response = { ok: true, status: 200 }; // Wrapper handles errors
         
         // Wrapper handles errors, uploadedDocs is already parsed
-        console.log(`✅ [STEP5-RELOAD] Loaded ${uploadedDocs.length} documents:`, uploadedDocs);
+        const docsArray = Array.isArray(uploadedDocs) ? uploadedDocs : [];
+        console.log(`✅ [STEP5-RELOAD] Loaded ${docsArray.length} documents:`, docsArray);
           
           // Convert server response to UploadedFile format
-          const reloadedFiles: UploadedFile[] = uploadedDocs.map((doc: any) => ({
+          const reloadedFiles: UploadedFile[] = docsArray.map((doc: any) => ({
             id: doc.documentId || doc.id,
             name: doc.fileName || doc.name,
             size: doc.fileSize || doc.size,
@@ -170,7 +171,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
             type: 'UPDATE_FORM_DATA',
             payload: {
               step5DocumentUpload: {
-                ...state.step5DocumentUpload,
+                ...(state as any).step5DocumentUpload,
                 uploadedFiles: reloadedFiles
               }
             }
@@ -189,20 +190,21 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
   useEffect(() => {
     const calculateDocumentRequirements = async () => {
       // ✅ STEP 1: Collect ALL user data from Steps 1-4
-      const selectedCategory = state.step2?.selectedCategory || '';
-      const selectedCountry = state.step1?.businessLocation || '';
-      const requestedAmount = state.step1?.fundingAmount || 0;
+      const safeState = state as any;
+      const selectedCategory = safeState.step2?.selectedCategory || '';
+      const selectedCountry = safeState.step1?.businessLocation || '';
+      const requestedAmount = safeState.step1?.fundingAmount || 0;
       
       // ✅ NEW: Access Step 3 business details
-      const businessStructure = state.step3?.businessStructure || '';
-      const businessStartDate = state.step3?.businessStartDate || '';
-      const legalName = state.step3?.legalName || '';
-      const operatingName = state.step3?.operatingName || '';
+      const businessStructure = safeState.step3?.businessStructure || '';
+      const businessStartDate = safeState.step3?.businessStartDate || '';
+      const legalName = safeState.step3?.legalName || '';
+      const operatingName = safeState.step3?.operatingName || '';
       
       // ✅ NEW: Access Step 4 applicant info
-      const ownershipPercentage = state.step4?.ownershipPercentage || 0;
-      const applicantSSN = state.step4?.applicantSSN || '';
-      const hasPartner = state.step4?.hasPartner || false;
+      const ownershipPercentage = safeState.step4?.ownershipPercentage || 0;
+      const applicantSSN = safeState.step4?.applicantSSN || '';
+      const hasPartner = safeState.step4?.hasPartner || false;
       
       console.log(`📋 [STEP5-AGGREGATION] Document aggregation with COMPLETE user profile:`, {
         selectedCategory,
@@ -299,14 +301,14 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
 
     calculateDocumentRequirements();
   }, [
-    state.step1?.businessLocation, 
-    state.step1?.fundingAmount, 
-    state.step2?.selectedCategory, 
-    state.step3?.businessStructure,
-    state.step3?.businessStartDate,
-    state.step4?.ownershipPercentage,
-    state.step4?.applicantSSN,
-    state.step4?.hasPartner,
+    (state as any).step1?.businessLocation, 
+    (state as any).step1?.fundingAmount, 
+    (state as any).step2?.selectedCategory, 
+    (state as any).step3?.businessStructure,
+    (state as any).step3?.businessStartDate,
+    (state as any).step4?.ownershipPercentage,
+    (state as any).step4?.applicantSSN,
+    (state as any).step4?.hasPartner,
     toast
   ]);
 
@@ -696,7 +698,7 @@ export default function Step5DocumentUpload(props: Step5Props = {}) {
       });
 
       // ✅ TASK 1: Persist bypass flag to backend if sync is enabled
-      const currentApplicationId = applicationId || state.applicationId || localStorage.getItem('applicationId');
+      const currentApplicationId = applicationId || (state as any).applicationId || localStorage.getItem('applicationId');
       if (currentApplicationId) {
         try {
           await fetch(`/api/public/applications/${currentApplicationId}`, {
