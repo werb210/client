@@ -51,7 +51,7 @@ export default function LenderDataViewer() {
     setStaffLoading(true);
     setStaffError(null);
     try {
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       setStaffData(data);
@@ -77,8 +77,8 @@ export default function LenderDataViewer() {
     const geography = product.geography || [];
     const description = product.description || 'No description available';
 
-    const products = await getProducts();
-return (
+    
+    return (
       <Card key={`${source}-${product.id}`} className="mb-4">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">

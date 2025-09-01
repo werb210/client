@@ -14,7 +14,7 @@ export default function CanadianFilteringTest() {
   const fetchRawData = async () => { /* ensure products fetched */ 
     setLoading(true);
     try {
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       const data = await response.json();
       setRawData(data);
       // console.log('Raw API Data:', data);
@@ -111,7 +111,7 @@ export default function CanadianFilteringTest() {
     try {
       // console.log('=== DIRECT API TEST ===');
       
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       const data = await response.json();
       
       const caCount = data.products?.filter((p: any) => p.country === 'CA').length || 0;

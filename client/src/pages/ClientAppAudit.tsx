@@ -66,7 +66,7 @@ export function ClientAppAudit() {
     // API CONNECTIVITY TEST
     updateResult('APIConnectivity', 'TESTING', 'Testing API connectivity to Staff App...');
     try {
-      const lendersResponse = await /* rewired */
+      const lendersResponse = await fetch('/api/v1/products');
       if (lendersResponse.ok) {
         const lenders = await lendersResponse.json();
         const lenderCount = Array.isArray(lenders) ? lenders.length : 0;

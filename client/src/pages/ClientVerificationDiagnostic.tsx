@@ -75,7 +75,7 @@ export default function ClientVerificationDiagnostic() {
     updateTestResult(1, 'running', 'Attempting to sync with staff API...');
     
     try {
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       
       if (!response.ok) {
         addLog(`❌ Staff API not available: ${response.status} ${response.statusText}`);

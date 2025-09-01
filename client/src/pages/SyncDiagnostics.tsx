@@ -26,7 +26,7 @@ export default function SyncDiagnostics() {
       const cacheTimestamp = await get('lender_products_cache_ts');
       
       // Check live API
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       const data = await response.json();
       
       if (data.success && data.products) {
@@ -79,7 +79,7 @@ export default function SyncDiagnostics() {
       await clear();
       
       // Trigger fresh API call
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       const data = await response.json();
       
       if (data.success && data.products) {

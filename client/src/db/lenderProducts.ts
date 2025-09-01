@@ -13,9 +13,9 @@ export interface LenderProduct {
 // This file provides type definitions and utilities for lender products
 // The actual data is fetched from the API endpoints
 
-export const getLenderProducts = async (): Promise<LenderProduct[]> => { /* ensure products fetched */ 
+export const getLenderProducts = async (): Promise<LenderProduct[]> => { 
   try {
-    const response = await /* rewired */
+    const response = await fetch('/api/v1/products');
     const data = await response.json();
     if (data.success) {
       return data.products || [];

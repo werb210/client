@@ -42,7 +42,7 @@ export default function EquipmentFinancingFixTest() {
       // console.log("📋 Test Scenario:", testScenario);
       
       // Get all lender products from API
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       const data = await response.json();
       
       if (!response.ok || !data.success) {

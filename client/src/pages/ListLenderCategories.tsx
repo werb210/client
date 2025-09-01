@@ -18,7 +18,7 @@ export default function ListLenderCategories() {
     // console.log("=".repeat(50));
     
     try {
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       const data = await response.json();
       
       if (!response.ok || !data.success) {

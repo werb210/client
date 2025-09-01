@@ -37,7 +37,7 @@ export async function getDocumentRequirementsIntersection(
     let allLenders: LenderProduct[] = [];
     
     try {
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       
       if (!response.ok) {
         throw new Error(`Staff API error: ${response.status}`);

@@ -28,7 +28,7 @@ export async function testCspHeader(): Promise<TestResult> { /* ensure products 
 
     // Method 2: Test CSP by making a HEAD request to check response headers
     try {
-      const response = await /* rewired */
+      const response = await fetch('/', { method: 'HEAD' });
 
       const cspHeader = response.headers.get('content-security-policy') || 
                        response.headers.get('x-content-security-policy') ||

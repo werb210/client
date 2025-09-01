@@ -32,7 +32,7 @@ export function FallbackTest() {
     
     try {
       // console.log('📦 [FALLBACK_TEST] Testing direct fallback file...');
-      const response = await /* rewired */
+      const response = await fetch('/fallback.json');
       if (!response.ok) {
         throw new Error(`Fallback fetch failed: ${response.statusText}`);
       }
@@ -49,8 +49,8 @@ export function FallbackTest() {
     }
   };
 
-  const products = await getProducts();
-return (
+  
+  return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">

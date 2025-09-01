@@ -197,7 +197,7 @@ export default function SecurityTestRunner() {
 
       // Test CSP by making a test request to check headers
       try {
-        const response = await /* rewired */
+        const response = await fetch('/');
 
         const cspHeader = response.headers.get('content-security-policy');
         
@@ -259,7 +259,8 @@ export default function SecurityTestRunner() {
       try {
         const response = await /* rewired */
 
-        const hstsHeader = response.headers.get('strict-transport-security');
+        const response2 = await fetch('/');
+        const hstsHeader = response2.headers.get('strict-transport-security');
         
         if (hstsHeader) {
           addResult({

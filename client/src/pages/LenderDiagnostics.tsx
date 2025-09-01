@@ -60,7 +60,7 @@ export default function LenderDiagnostics() {
   const handleManualFetch = async () => {
     // console.log('🧪 Running manual fetch test...');
     try {
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       const data = await response.json();
       
       // Handle both direct array and object with products array

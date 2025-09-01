@@ -38,7 +38,7 @@ export default function LenderDiagnosticsFinalized() {
       const cacheTimestamp = await get('lender_products_cache_ts');
       
       // Test live API connection
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       
       const apiResponseTime = Date.now() - startTime;
       
@@ -99,7 +99,7 @@ export default function LenderDiagnosticsFinalized() {
       await clear();
       
       // Force fresh API call
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       
       const data = await response.json();
       

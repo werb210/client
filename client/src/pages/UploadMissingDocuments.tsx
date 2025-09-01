@@ -80,7 +80,7 @@ export default function UploadMissingDocuments() {
       console.log('📋 [UPLOAD-DOCS] Loading application data for:', appId);
       
       // Fetch required documents from specified endpoint
-      const requiredDocsResponse = await /* rewired */
+      const requiredDocsResponse = await fetch(`/api/required-docs/${appId}`);
       
       if (requiredDocsResponse.ok) {
         const requiredDocsData = await requiredDocsResponse.json();

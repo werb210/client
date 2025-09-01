@@ -13,7 +13,7 @@ export function useLenderProducts(): UseLenderProductsResult {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/v1/products'],
     queryFn: async () => { /* ensure products fetched */ 
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       if (!response.ok) {
         throw new Error('Failed to fetch lender products');
       }

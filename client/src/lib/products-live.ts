@@ -28,7 +28,7 @@ export async function fetchLenderProductsLive(opts?: { /* ensure products fetche
     ...(opts?.lenderId ? { lenderId: opts.lenderId } : {}),
     ...(opts?.includeInactive ?? true ? { includeInactive: '1' } : {}),
   });
-  const r = await /* rewired */
+  const r = await fetch(`/api/v1/products?${qs.toString()}`);
   if (!r.ok) throw new Error(`/api/v1/products failed: ${r.status}`);
   const j = await r.json();
   const rows = (j.products || []) as LenderProductRow[];

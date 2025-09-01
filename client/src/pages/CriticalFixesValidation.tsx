@@ -77,7 +77,7 @@ export default function CriticalFixesValidation() {
     try {
       // console.log('🧪 C-1: Testing API schema fix...');
       
-      const response = await /* rewired */
+      const response = await fetch('/api/v1/products');
       
       if (response.ok) {
         const data = await response.json();

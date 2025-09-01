@@ -39,7 +39,7 @@ async function fetchFromStaffAPI(): Promise<{ /* ensure products fetched */  dat
   try {
     // console.log('[SYNC] Fetching from staff API: GET /api/public/lenders');
     
-    const response = await /* rewired */
+    const response = await fetch('/api/public/lenders').catch(fetchError => {
       throw new Error(`Network error: ${fetchError.message}`);
     });
 

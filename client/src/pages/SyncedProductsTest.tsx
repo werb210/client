@@ -1,12 +1,9 @@
 
 import React from 'react';
-import { getProducts } from "../api/products";
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import { CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -28,7 +25,7 @@ export default function SyncedProductsTest() {
     queryKey: ['synced-products-test'],
     queryFn: async () => { /* ensure products fetched */ 
       try {
-        const res = await /* rewired */
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/products`).catch(fetchError => {
           throw new Error(`Network error: ${fetchError.message}`);
         });
         
@@ -81,8 +78,8 @@ export default function SyncedProductsTest() {
     return <XCircle className="w-5 h-5 text-red-500" />;
   };
 
-  const products = await (await ()).matches;
-return (
+  
+  return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-gray-900">Synced Products Integration Test</h1>
@@ -247,14 +244,3 @@ return (
     </div>
   );
 }
-// injected: local-first products fetch
-import { getProducts, loadSelectedCategories } from "../api/products";
-/* injected load on mount (pseudo):
-useEffect(() => { (async () => {
-  const cats = loadSelectedCategories();
-  const products = await getProducts({ useCacheFirst: true });
-  // apply category filter if present
-  const selected = cats && cats.length ? products.filter(p => cats.includes((p.category||"").toLowerCase())) : products;
-  setState({ products: selected });
-})(); }, []);
-*/
