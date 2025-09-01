@@ -3097,10 +3097,15 @@ app.use((req, res, next) => {
 
   // Use PORT environment variable for Replit deployments, fallback to 5000 for development
   const port = cfg.port; // This uses process.env.PORT || '5000' from config
+  // Add error handling for server startup
+  httpServer.on('error', (err) => {
+    console.error('❌ Server error:', err);
+    process.exit(1);
+  });
+
   httpServer.listen({
     port,
-    host: "0.0.0.0",
-    reusePort: true,
+    host: "0.0.0.0"
   }, () => {
     log(`Client app serving on port ${port} - API calls will route to staff backend`);
     log(`✅ Socket.IO enabled for real-time WebSocket communication`);
@@ -3110,7 +3115,18 @@ app.use((req, res, next) => {
       log(`🚀 PRODUCTION DEPLOYMENT: Server ready for Replit deployment on port ${port}`);
     }
   });
+  
+  // Health endpoint for deployment monitoring
+  app.get("/_health", (_req, res) => res.status(200).json({ ok:true, ts:new Date().toISOString() }));
 })();
 
-// Dev health endpoint
-app.get("/_health", (_req, res) => res.status(200).json({ ok:true, ts:new Date().toISOString() }));
+// Add global error handlers for deployment
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});

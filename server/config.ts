@@ -13,7 +13,7 @@ export const cfg = {
   staffApiUrl: 'https://staff.boreal.financial/api',
   
   // Authentication Tokens
-  clientToken: process.env.VITE_CLIENT_APP_SHARED_TOKEN || process.env.CLIENT_APP_SHARED_TOKEN!,
+  clientToken: process.env.VITE_CLIENT_APP_SHARED_TOKEN || process.env.CLIENT_APP_SHARED_TOKEN || undefined,
 //   signNowToken: process.env.SIGNNOW_API_KEY!,
   clientSyncSecret: process.env.CLIENT_SYNC_SECRET || 'dev_sync_secret_2024',
   
