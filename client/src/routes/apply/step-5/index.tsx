@@ -1,10 +1,9 @@
 import React from 'react';
-import { getIntake, getStep2 } from '@/lib/appState';
-import { buildRequirements } from '@/lib/requirements';
+import { useApp } from '@/store/app';
+import { buildRequirements } from '@/lib/docRequirements';
 
 export default function Step5_RequiredDocuments() {
-  const intake = getIntake();
-  const step2  = getStep2();
+  const { intake, step2, documents, set } = useApp();
 
   if (!step2) {
     console.error('[Step5] No Step 2 selection in storage – sending user back.');
@@ -17,11 +16,7 @@ export default function Step5_RequiredDocuments() {
     );
   }
 
-  const reqs = buildRequirements().map(docType => ({
-    key: docType,
-    label: formatDocumentLabel(docType),
-    required: true
-  }));
+  const reqs = buildRequirements(intake, step2);
 
   function formatDocumentLabel(docType: string): string {
     const labels: Record<string, string> = {
@@ -42,17 +37,17 @@ export default function Step5_RequiredDocuments() {
           Required Documents – Authentic Lender Requirements
         </div>
         <div className="text-emerald-700 text-sm">
-          Based on your profile (amount: <b>${(intake?.amountRequested ?? 0).toLocaleString()}</b>, country: <b>{intake?.country ?? '—'}</b>) and your selected category <b>{step2.categoryLabel}</b>.
+          Based on your profile (amount: <b>${(intake?.fundingAmount ?? 0).toLocaleString()}</b>, country: <b>{intake?.country ?? '—'}</b>) and your selected category <b>{step2?.selectedCategoryName ?? '—'}</b>.
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         {reqs.map(r => (
-          <div key={r.key} data-doc-card={r.key} className="rounded-xl border p-4">
+          <div key={r.id} data-doc-card={r.id} className="rounded-xl border p-4">
             <div className="flex items-center justify-between">
               <div className="font-medium">{r.label}</div>
-              <span className={`text-xs px-2 py-1 rounded ${r.required ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}`}>
-                {r.required ? 'Required' : 'Optional'}
+              <span className={`text-xs px-2 py-1 rounded ${!r.optional ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}`}>
+                {!r.optional ? 'Required' : 'Optional'}
               </span>
             </div>
             {/* hook your existing uploader here; leaving as placeholder */}
@@ -65,11 +60,19 @@ export default function Step5_RequiredDocuments() {
         <a href="/apply/step-4" className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">Back</a>
         <a href="/apply/step-6" className="px-4 py-2 rounded bg-emerald-600 text-white" onClick={(e) => {
           // Track bypassed documents when user continues without uploads
-          const bypass = reqs.map(r => r.key).filter(req => {
+          const bypass = reqs.map(r => r.id).filter(req => {
             const input = document.querySelector(`[data-doc-card="${req}"] input[type="file"]`) as HTMLInputElement;
             return !input?.files?.length;
           });
-          localStorage.setItem('bf:step5:bypass', JSON.stringify(bypass));
+          
+          // Update documents state in Zustand store
+          set({
+            documents: {
+              ...documents,
+              bypassedDocuments: bypass
+            }
+          });
+          
           console.log('[Step5] Bypassed documents:', bypass);
         }}>Continue to Final Submission</a>
       </div>

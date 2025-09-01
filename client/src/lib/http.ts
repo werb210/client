@@ -1,22 +1,30 @@
-import axios from 'axios';
+const API_PREFIX = '/api';
 
-export const staffApi = axios.create({
-  baseURL: import.meta.env.VITE_STAFF_API || 'https://staff.boreal.financial/api',
-  withCredentials: true,
-});
+const toSameOrigin = (p: string) => {
+  if (!p) return API_PREFIX;
+  try { 
+    if (/^https?:\/\//i.test(p)) { 
+      const u = new URL(p); 
+      return u.pathname + u.search; 
+    } 
+  } catch {}
+  return p.startsWith('/') ? p : `/${p}`;
+};
 
-// Local-only namespace that the Service Worker will intercept (/_pwa/*)
-export const localApi = axios.create({
-  baseURL: '/',          // same-origin
-  withCredentials: true,
-});
-
-// Legacy API function for backward compatibility
-export async function api(path: string, init: RequestInit = {}) {
-  const url = path.startsWith("/api") ? path : `/api${path}`;
-  const res = await fetch(url, { ...init, headers: { Accept: "application/json", ...(init.headers||{}) } });
-  const ct = res.headers.get("content-type") || "";
-  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
-  if (!ct.includes("application/json")) throw new Error("Non-JSON response");
-  return res.json();
+export async function api<T = any>(path: string, init: RequestInit = {}): Promise<T> {
+  const norm = toSameOrigin(path).replace(/^\/api(?!\/)/, '/api/');
+  const res = await fetch(norm, { 
+    credentials: 'include', 
+    headers: { 
+      'Content-Type': 'application/json', 
+      ...(init.headers || {}) 
+    }, 
+    ...init 
+  });
+  
+  if (!res.ok) {
+    throw new Error(`[api] ${res.status} ${res.statusText} for ${norm}`);
+  }
+  
+  return res.json() as Promise<T>;
 }

@@ -5,7 +5,7 @@ export type RequiredDoc = {
   allowed_mime?: string[]|null; min_count?: number|null; max_count?: number|null; meta?: any;
   source?: "product"|"lender"|"master";
 };
-const BASE = (import.meta.env.VITE_STAFF_API_URL || "https://staff.boreal.financial/api").replace(/\/+$/,"");
+const BASE = "/api";
 const TOK  = import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN || "";
 export async function fetchRequiredDocs(opts: { productId?: string; lenderId?: string }): Promise<RequiredDoc[]> {
   const params = new URLSearchParams();

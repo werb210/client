@@ -20,7 +20,7 @@ const byCategory: Record<string, DocRequirement[]> = {
 
 export async function getRequiredDocsForCategory(category: string): Promise<DocRequirement[]> {
   // Try staff endpoint if available (external shape may vary)
-  const extUrl = (import.meta.env.VITE_STAFF_API_URL ?? 'https://staff.boreal.financial/api') + '/required-docs'
+  const extUrl = '/api/required-docs'
   try {
     const res = await fetch(extUrl)
     if (res.ok) {
