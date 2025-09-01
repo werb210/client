@@ -65,9 +65,10 @@ export default function Step5_RequiredDocuments() {
         <a href="/apply/step-4" className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">Back</a>
         <a href="/apply/step-6" className="px-4 py-2 rounded bg-emerald-600 text-white" onClick={(e) => {
           // Track bypassed documents when user continues without uploads
-          const bypass = reqs.map(r => r.key).filter(req => 
-            !document.querySelector(`[data-doc-card="${req}"] input[type="file"]`)?.files?.length
-          );
+          const bypass = reqs.map(r => r.key).filter(req => {
+            const input = document.querySelector(`[data-doc-card="${req}"] input[type="file"]`) as HTMLInputElement;
+            return !input?.files?.length;
+          });
           localStorage.setItem('bf:step5:bypass', JSON.stringify(bypass));
           console.log('[Step5] Bypassed documents:', bypass);
         }}>Continue to Final Submission</a>

@@ -95,10 +95,13 @@ export default function Step2() {
           // Also save to app state for auto-selection
           const category = list.find(c => c.id === pick);
           if (category) {
-            saveStep2({ 
-              categoryId: pick as any, 
-              categoryLabel: category.name, 
-              matchScore: category.score 
+            saveStep2({
+              selectedCategory: pick,
+              selectedCategoryName: category.name,
+              selectedProductId: undefined,
+              selectedProductName: undefined,
+              selectedLenderName: undefined,
+              matchScore: category.score
             });
           }
           console.log("[Step2] Auto-selected category:", pick);
