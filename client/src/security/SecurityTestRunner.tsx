@@ -4,11 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import XCircle from 'lucide-react/dist/esm/icons/x-circle';
-import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
-import Play from 'lucide-react/dist/esm/icons/play';
-import Shield from 'lucide-react/dist/esm/icons/shield';
+import { CheckCircle, XCircle, AlertTriangle, Play, Shield } from 'lucide-react';
 
 interface SecurityTestResult {
   testName: string;
@@ -44,7 +40,7 @@ export default function SecurityTestRunner() {
         return;
       }
       // Let other handlers process non-test rejections
-      if (originalHandler) originalHandler(event);
+      if (originalHandler) originalHandler.call(window, event);
     };
 
     try {
@@ -434,8 +430,8 @@ export default function SecurityTestRunner() {
       warning: 'secondary' as const
     };
     
-    const products = await getProducts();
-return (
+    
+    return (
       <Badge variant={variants[status]} className="ml-2">
         {status.toUpperCase()}
       </Badge>
