@@ -1,9 +1,8 @@
 import React from 'react';
-import { useApp } from '@/store/app';
-import { buildRequirements } from '@/lib/docRequirements';
+import { buildRequirements } from './requirements';
 
 export default function Step5_RequiredDocuments() {
-  const { intake, step2, documents, set } = useApp();
+  const { intake, step2, required } = buildRequirements();
 
   if (!step2) {
     console.error('[Step5] No Step 2 selection in storage – sending user back.');
@@ -16,7 +15,11 @@ export default function Step5_RequiredDocuments() {
     );
   }
 
-  const reqs = buildRequirements(intake, step2);
+  const reqs = required.map((label, index) => ({
+    id: `doc_${index}`,
+    label,
+    optional: false
+  }));
 
   function formatDocumentLabel(docType: string): string {
     const labels: Record<string, string> = {
@@ -65,13 +68,9 @@ export default function Step5_RequiredDocuments() {
             return !input?.files?.length;
           });
           
-          // Update documents state in Zustand store
-          set({
-            documents: {
-              ...documents,
-              bypassedDocuments: bypass
-            }
-          });
+          // Save document state to localStorage
+          const docs = { uploadedDocuments: [], bypassedDocuments: bypass };
+          localStorage.setItem('bf:docs', JSON.stringify(docs));
           
           console.log('[Step5] Bypassed documents:', bypass);
         }}>Continue to Final Submission</a>

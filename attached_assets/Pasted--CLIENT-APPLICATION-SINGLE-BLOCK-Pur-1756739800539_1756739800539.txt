@@ -1,0 +1,179 @@
+============================== CLIENT APPLICATION — SINGLE BLOCK =============================
+# Purpose: keep Step 2 → Step 5 → Step 7 data flow intact, force SAME-ORIGIN calls, and remove
+# duplicate/legacy files (no second engines, no alternate step pages).
+
+set -euo pipefail
+
+echo "== Client App: create/overwrite helper files =="
+
+# 0) Disable service worker in development (avoid stale cached JS)
+mkdir -p client/src
+cat > client/src/serviceWorker.ts <<'TS'
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+  console.info('[SW] Disabled in development');
+}
+TS
+
+# 1) SAME-ORIGIN API helper (use for any fetch; do NOT hardcode hosts)
+mkdir -p client/src/lib
+cat > client/src/lib/http.ts <<'TS'
+const API_PREFIX = '/api';
+
+const toSameOrigin = (p: string) => {
+  if (!p) return API_PREFIX;
+  try {
+    if (/^https?:\/\//i.test(p)) {
+      const u = new URL(p);
+      return u.pathname + u.search; // strip foreign origin
+    }
+  } catch {}
+  return p.startsWith('/') ? p : `/${p}`;
+};
+
+export async function api<T = any>(path: string, init: RequestInit = {}): Promise<T> {
+  const norm = toSameOrigin(path).replace(/^\/api(?!\/)/, '/api/');
+  const res = await fetch(norm, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...(init.headers || {}) },
+    ...init,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`[api] ${res.status} ${res.statusText} for ${norm}\n${text}`);
+  }
+  return res.json() as Promise<T>;
+}
+TS
+
+# 2) DE-DUP — keep ONLY canonical step routes; remove alternates/backups
+echo "== Client App: scan for duplicates =="
+rg -n "Step2_Recommendations|Step5_DocumentRequirements|DocumentsUpload" client || true
+cat <<'TXT'
+• Keep ONLY these files (one per step):
+  client/src/routes/apply/step-1/index.tsx
+  client/src/routes/apply/step-2/index.tsx
+  client/src/routes/apply/step-3/index.tsx
+  client/src/routes/apply/step-4/index.tsx
+  client/src/routes/apply/step-5/index.tsx
+  client/src/routes/apply/step-6/index.tsx
+  client/src/routes/apply/step-7/index.tsx
+• Remove legacy/duplicate pages such as:
+  client/src/routes/Step2_Recommendations*.tsx
+  client/src/routes/Step5_DocumentRequirements*.tsx
+  client/src/routes/DocumentsUpload*/**
+(Manually delete ONLY duplicates; do NOT remove the apply/step-x canonical files.)
+TXT
+
+# 3) Ensure Step 2 persists selection (bf:step2) — SAMPLE UTIL
+mkdir -p client/src/routes/apply/step-2
+cat > client/src/routes/apply/step-2/persist.ts <<'TS'
+export type Step2Selection = {
+  selectedCategory: string;
+  selectedCategoryName: string;
+  selectedProductId?: string;
+  selectedProductName?: string;
+  selectedLenderName?: string;
+  matchScore?: number;
+};
+const KEY = 'bf:step2';
+
+export function saveStep2(sel: Step2Selection) {
+  localStorage.setItem(KEY, JSON.stringify(sel));
+  console.log('[Step2] saved', sel);
+}
+export function readStep2(): Step2Selection | null {
+  const raw = localStorage.getItem(KEY);
+  try { return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
+TS
+
+# 4) Ensure Step 5 reads Step 1 + Step 2 to build doc list — SAMPLE UTIL
+mkdir -p client/src/routes/apply/step-5
+cat > client/src/routes/apply/step-5/requirements.ts <<'TS'
+type Intake = { fundingAmount?: number; country?: string; [k:string]: any; };
+type Step2 = { selectedCategory?: string; selectedCategoryName?: string; [k:string]: any; };
+
+export function readIntake(): Intake | null {
+  try { return JSON.parse(localStorage.getItem('bf:intake') || 'null'); } catch { return null; }
+}
+export function readStep2(): Step2 | null {
+  try { return JSON.parse(localStorage.getItem('bf:step2') || 'null'); } catch { return null; }
+}
+
+// Minimal rules: always require core docs; add category-specific docs + amount rules
+export function buildRequirements() {
+  const intake = readIntake() || {};
+  const step2  = readStep2()  || {};
+  const base = [
+    'Bank Statements (3–6 months)',
+    'Business Tax Returns (2–3 years)',
+    'Financial Statements (P&L and Balance Sheet)',
+    'Business Registration / License'
+  ];
+  const cat = (step2.selectedCategory || '').toLowerCase();
+  const extra: string[] = [];
+  if (cat.includes('invoice') || cat.includes('factoring')) {
+    extra.push('A/R Aging', 'Invoice Samples');
+  }
+  if (cat.includes('equipment')) {
+    extra.push('Equipment Quote');
+  }
+  if (cat.includes('term') || cat.includes('working') || cat.includes('line of credit')) {
+    if ((intake.fundingAmount || 0) >= 25000) {
+      extra.push('Personal Financial Statement', 'Personal Guarantee Authorization');
+    }
+  }
+  const required = Array.from(new Set([...base, ...extra]));
+  return { intake, step2, required };
+}
+TS
+
+# 5) Ensure Step 7 payload includes category + documents — SAMPLE BRIDGE
+mkdir -p client/src/routes/apply/step-7
+cat > client/src/routes/apply/step-7/payload.ts <<'TS'
+type AnyObj = Record<string, any>;
+const read = (k:string) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } };
+
+export function buildSubmissionPayload(): AnyObj {
+  const step1 = read('bf:intake') || {};
+  const step2 = read('bf:step2')  || {};
+  const step3 = read('bf:step3')  || {};
+  const step4 = read('bf:step4')  || {};
+  const docs  = read('bf:docs')   || { uploadedDocuments: [], bypassedDocuments: [] };
+
+  const payload: AnyObj = {
+    step1, step3, step4,
+    loanProductCategory:       step2.selectedCategory || null,
+    loanProductCategoryLabel:  step2.selectedCategoryName || null,
+    lenderProductId:           step2.selectedProductId || null,
+    lenderId:                  step2.selectedLenderName ? step2.selectedLenderName : null,
+    documentCount:             Array.isArray(docs.uploadedDocuments) ? docs.uploadedDocuments.length : 0,
+    documentTypes:             (docs.uploadedDocuments || []).map((d:any) => d?.type || d?.name).filter(Boolean),
+    bypassDocuments:           docs.bypassedDocuments || [],
+    submissionTimestamp:       new Date().toISOString(),
+    termsAccepted:             true,
+    privacyAccepted:           true,
+  };
+  console.log('[Step7] payload', payload);
+  return payload;
+}
+TS
+
+echo "== Client App: SAME-ORIGIN sanity scan =="
+rg -n "https?://" client | grep -viE "localhost|127\\.0\\.0\\.1" || true
+
+cat <<'TXT'
+
+Manual checks (browser):
+1) Import and call client/src/serviceWorker.ts once at app bootstrap (to unregister SW in dev).
+2) Step 2 (/apply/step-2):
+   - Click a category → check localStorage.getItem('bf:step2') shows selectedCategory + names (+ optional product/lender).
+3) Step 5 (/apply/step-5):
+   - Confirm required docs reflect Step 2 category and Step 1 amount (A/R Aging for factoring, Equipment Quote for equipment, PFS/PG ≥ $25k, etc).
+4) Step 7 (/apply/step-7):
+   - Ensure buildSubmissionPayload() is used to submit; payload includes:
+     loanProductCategory, loanProductCategoryLabel, lenderProductId, lenderId,
+     documentCount, documentTypes, bypassDocuments, plus nested step1/3/4 objects.
+TXT
+# End Client block

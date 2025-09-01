@@ -1,4 +1,4 @@
-import { fetchRequiredDocs } from "../../api/products";
+// Removed circular import
 export type RequiredDoc = {
   key: string; name: string; description?: string|null;
   required: boolean; category?: string|null;

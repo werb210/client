@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import CategoryCard from "@/lib/recommendations/CategoryCard";
-import { useApp } from '@/store/app';
+import { saveStep2 } from './persist';
 import { api } from '@/lib/http';
 
 type Category = { id: string; name: string; score: number; products: number; };
 const STORAGE_KEY = "bf:step2:category";
 
 export default function Step2() {
-  const { intake, step2, set } = useApp();
   const [categories, setCategories] = useState<Category[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +21,7 @@ export default function Step2() {
         console.log("[Step2] Loaded", products.length, "products");
         
         // Get user's Step 1 intake for intelligent scoring
+        const intake = JSON.parse(localStorage.getItem('bf:intake') || '{}');
         const amount = Number(intake.amountRequested || 0);
         const industry = String(intake.industry || '').toLowerCase();
         const country = String(intake.country || '').toLowerCase();
@@ -91,18 +91,16 @@ export default function Step2() {
         if (pick) {
           setSelected(pick);
           localStorage.setItem(STORAGE_KEY, pick);
-          // Also save to app state for auto-selection
+          // Save to Step 2 persistence
           const category = list.find(c => c.id === pick);
           if (category) {
-            set({
-              step2: {
-                selectedCategory: pick,
-                selectedCategoryName: category.name,
-                selectedProductId: undefined,
-                selectedProductName: undefined,
-                selectedLenderName: undefined,
-                matchScore: category.score
-              }
+            saveStep2({
+              selectedCategory: pick,
+              selectedCategoryName: category.name,
+              selectedProductId: undefined,
+              selectedProductName: undefined,
+              selectedLenderName: undefined,
+              matchScore: category.score
             });
           }
           console.log("[Step2] Auto-selected category:", pick);
@@ -122,20 +120,18 @@ export default function Step2() {
     setSelected(id);
     localStorage.setItem(STORAGE_KEY, id);
     
-    // Save to shared app state for Step 5 integration
+    // Save to Step 2 persistence for Step 5 integration
     const category = categories.find(c => c.id === id);
     if (category) {
-      set({
-        step2: {
-          selectedCategory: id,
-          selectedCategoryName: category.name,
-          selectedProductId: undefined, // Will be set when product is selected
-          selectedProductName: undefined,
-          selectedLenderName: undefined,
-          matchScore: category.score
-        }
+      saveStep2({
+        selectedCategory: id,
+        selectedCategoryName: category.name,
+        selectedProductId: undefined, // Will be set when product is selected
+        selectedProductName: undefined,
+        selectedLenderName: undefined,
+        matchScore: category.score
       });
-      console.log("[Step2] Saved category to app state:", { selectedCategory: id, selectedCategoryName: category.name });
+      console.log("[Step2] Saved category:", { selectedCategory: id, selectedCategoryName: category.name });
     }
   }
 

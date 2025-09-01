@@ -1,14 +1,11 @@
-import { useApp } from '@/store/app';
-import { buildSubmissionPayload } from '@/lib/buildSubmission';
+import { buildSubmissionPayload } from './payload';
 import { api } from '@/lib/http';
 
 export default function Step7() {
-  const { intake, step2, documents, signature, consents } = useApp();
 
   const handleSubmit = async () => {
     try {
       const payload = buildSubmissionPayload();
-      console.log('[Step7 payload]', payload);
       await api('/api/v1/applications', { 
         method: 'POST', 
         body: JSON.stringify(payload) 
@@ -20,6 +17,10 @@ export default function Step7() {
       alert('Failed to submit application. Please try again.');
     }
   };
+  
+  // Get current state for display
+  const step2 = JSON.parse(localStorage.getItem('bf:step2') || '{}');
+  const docs = JSON.parse(localStorage.getItem('bf:docs') || '{"uploadedDocuments":[],"bypassedDocuments":[]}');
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -28,10 +29,10 @@ export default function Step7() {
       
       <div className="bg-gray-50 p-4 rounded mb-6">
         <h3 className="font-semibold mb-2">Application Summary:</h3>
-        <p>Selected Product: {step2.selectedProductName || 'Not selected'}</p>
+        <p>Selected Category: {step2.selectedCategoryName || 'Not selected'}</p>
         <p>Lender: {step2.selectedLenderName || 'Not selected'}</p>
-        <p>Documents Uploaded: {documents.uploadedDocuments.length}</p>
-        <p>Signature Status: {signature.completed ? 'Completed' : 'Pending'}</p>
+        <p>Documents Uploaded: {docs.uploadedDocuments.length}</p>
+        <p>Bypassed Documents: {docs.bypassedDocuments.length}</p>
       </div>
       
       <button 

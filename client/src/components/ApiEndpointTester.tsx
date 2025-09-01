@@ -59,8 +59,8 @@ export const ApiEndpointTester = () => {
 
     const tests = [
 
-      { url: 'https://staffportal.replit.app/api/public/lenders', label: 'Staff Public API - 43 Products (Production)' },
-      { url: 'https://staffportal.replit.app/api/lenders/products', label: 'Staff Direct API - All Products' },
+      { url: '/api/public/lenders', label: 'Staff Public API - 43 Products (Production)' },
+      { url: '/api/lenders/products', label: 'Staff Direct API - All Products' },
     ];
 
     const testResults: TestResult[] = [];
@@ -113,7 +113,7 @@ return (
         <p><strong>Expected Behavior:</strong></p>
         <ul className="list-disc ml-4 mt-2">
           <li>Development: Local API endpoints have been removed - using staff backend only</li>
-          <li>Production: Should use staff endpoints (https://staffportal.replit.app/api/public/lenders)</li>
+          <li>Production: Should use staff endpoints (/api/public/lenders)</li>
         </ul>
       </div>
 
