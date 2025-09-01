@@ -10,6 +10,9 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { installAuditHook } from "./auditHook";
+import { enableProgressiveEnhancement } from './utils/loadingStates';
+import { addSkipLink } from './utils/accessibility';
+import { PWAInstallManager } from './utils/pwaTestSuite';
 
 // IMPORTANT: no top-level await; load guard as a side-effect and ignore failures
 import("./lib/fetch-guard").catch(console.warn);
@@ -19,6 +22,16 @@ installAuditHook();
 
 // Disable SW in development
 setupDevServiceWorkerGuard();
+
+// Initialize PWA and accessibility features
+document.addEventListener('DOMContentLoaded', () => {
+  addSkipLink();
+  enableProgressiveEnhancement();
+  
+  if ('serviceWorker' in navigator) {
+    new PWAInstallManager();
+  }
+});
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

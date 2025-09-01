@@ -192,7 +192,7 @@ export function DocumentUpload({ applicationId, onDocumentsChange, className }: 
 
         // Validate image dimensions
         await new Promise<void>((resolve, reject) => {
-          const img = new (window as any).Image();
+          const img = new Image();
           img.onload = () => {
             if (img.width < 100 || img.height < 100) {
               errors.push('Image resolution too low (minimum 100x100px)');

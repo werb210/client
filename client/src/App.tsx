@@ -14,6 +14,7 @@ import { PWAInstallPrompt, NetworkStatus, SyncStatus } from "@/components/PWAIns
 import { PWAOfflineQueue } from "@/components/PWAOfflineQueue";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { initSentry, Sentry } from "@/lib/sentry";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 // ✅ Socket.IO integration handled by useWebSocket hook
 
 // Initialize Sentry error monitoring
@@ -56,13 +57,15 @@ function App() {
   // Environment configuration loaded
   
   return (
-    <AppShell>
-      <NetworkStatus />
-      <SyncStatus />
-      <MainLayout />
-      <PWAInstallPrompt />
-      <PWAOfflineQueue />
-    </AppShell>
+    <ErrorBoundary>
+      <AppShell>
+        <NetworkStatus />
+        <SyncStatus />
+        <MainLayout />
+        <PWAInstallPrompt />
+        <PWAOfflineQueue />
+      </AppShell>
+    </ErrorBoundary>
   );
 }
 

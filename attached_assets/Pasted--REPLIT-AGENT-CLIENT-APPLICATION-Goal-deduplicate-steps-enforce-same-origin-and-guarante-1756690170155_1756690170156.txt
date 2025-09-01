@@ -1,0 +1,179 @@
+=== REPLIT AGENT — CLIENT APPLICATION ===
+Goal: deduplicate steps, enforce same-origin, and guarantee Step-2 → Step-5 → Step-7 data flow.
+
+1) Add single same-origin API helper and use it
+  - File: client/src/lib/http.ts
+    ----------------------------------------------------------------
+    const API_PREFIX = '/api';
+    const toSameOrigin = (p: string) => {
+      if (!p) return API_PREFIX;
+      try { if (/^https?:\/\//i.test(p)) { const u = new URL(p); return u.pathname + u.search; } } catch {}
+      return p.startsWith('/') ? p : `/${p}`;
+    };
+    export async function api<T=any>(path: string, init: RequestInit = {}): Promise<T> {
+      const norm = toSameOrigin(path).replace(/^\/api(?!\/)/, '/api/');
+      const res = await fetch(norm, { credentials:'include', headers:{ 'Content-Type':'application/json', ...(init.headers||{}) }, ...init });
+      if (!res.ok) throw new Error(`[api] ${res.status} ${res.statusText} for ${norm}`);
+      return res.json() as Promise<T>;
+    }
+    ----------------------------------------------------------------
+
+2) Keep ONE route per step and remove all duplicates
+  - Keep (canonical):
+      client/src/routes/apply/step-1/index.tsx
+      client/src/routes/apply/step-2/index.tsx
+      client/src/routes/apply/step-3/index.tsx
+      client/src/routes/apply/step-4/index.tsx
+      client/src/routes/apply/step-5/index.tsx
+      client/src/routes/apply/step-6/index.tsx
+      client/src/routes/apply/step-7/index.tsx
+  - Delete/rename (legacy/dups):
+      client/src/routes/Step2_Recommendations*.tsx
+      client/src/routes/Step5_DocumentRequirements*.tsx
+      client/src/routes/DocumentsUpload*/**
+      any step-2-*/ step-5-*/ variants
+
+3) Create a single shared state store used by all steps
+  - File: client/src/store/app.ts
+    ----------------------------------------------------------------
+    import { create } from 'zustand';
+    type Intake = Record<string, any>;
+    type Step2  = {
+      selectedCategory?: string;
+      selectedCategoryName?: string;
+      selectedProductId?: string;
+      selectedProductName?: string;
+      selectedLenderName?: string;
+      matchScore?: number;
+    };
+    type Documents = { uploadedDocuments: any[]; bypassedDocuments: string[]; };
+    type Signature = { completed?: boolean; signedAt?: string; documentId?: string; signUrl?: string; };
+    type Consents = { communicationConsent?: boolean; documentMaintenanceConsent?: boolean; };
+
+    type AppState = {
+      intake: Intake;
+      step2: Step2;
+      documents: Documents;
+      signature: Signature;
+      consents: Consents;
+      set: (p: Partial<AppState>) => void;
+    };
+
+    export const useApp = create<AppState>((set)=>({
+      intake: {}, step2: {}, documents:{ uploadedDocuments:[], bypassedDocuments:[] },
+      signature:{}, consents:{}, set: (p)=>set(p),
+    }));
+    ----------------------------------------------------------------
+  - Step-2 MUST write BOTH category + product/lender fields into `step2`.
+
+4) Central document-requirements engine used by Step-5
+  - File: client/src/lib/docRequirements.ts
+    ----------------------------------------------------------------
+    export type Requirement = { id:string; label:string; optional?:boolean; };
+    export function buildRequirements(intake: any, step2: any): Requirement[] {
+      const base: Requirement[] = [
+        { id:'bank_statements_3m', label:'Bank Statements (last 3 months)' },
+        { id:'financials_y2',      label:'Financial Statements (last 2 years)' },
+      ];
+      const out = [...base];
+      if (step2?.selectedCategory === 'invoice_factoring') {
+        out.push({ id:'ar_aging', label:'A/R Aging Report' });
+        out.push({ id:'invoice_samples', label:'Recent Invoice Samples' });
+      }
+      const amt = Number(intake?.fundingAmount ?? 0);
+      if (amt >= 25000) out.push({ id:'personal_financial_stmt', label:'Personal Financial Statement' });
+      return out;
+    }
+    ----------------------------------------------------------------
+  - File: client/src/routes/apply/step-5/index.tsx  (use it)
+    ----------------------------------------------------------------
+    import { useApp } from '@/store/app';
+    import { buildRequirements } from '@/lib/docRequirements';
+    // ...
+    const { intake, step2, documents, set } = useApp();
+    const reqs = buildRequirements(intake, step2);
+    // render reqs; update documents.bypassedDocuments[] and documents.uploadedDocuments[]
+    ----------------------------------------------------------------
+
+5) Unified submission payload builder used by Step-7
+  - File: client/src/lib/buildSubmission.ts
+    ----------------------------------------------------------------
+    import { useApp } from '@/store/app';
+    export function buildSubmissionPayload() {
+      const { intake: step1, step2, documents, signature, consents } = useApp.getState();
+      return {
+        step1,
+        step3: step1?.businessDetails ?? {},      // map your 11 fields here
+        step4: step1?.applicants ?? {},           // map your 28 fields here
+        signatureComplete: !!signature.completed,
+        signatureTimestamp: signature.signedAt ?? null,
+        signNowDocumentId: signature.documentId ?? null,
+        lenderProductId: step2.selectedProductId ?? null,
+        lenderId: step2.selectedLenderName ?? null,
+        loanProductCategory: step2.selectedCategory ?? null,
+        loanProductCategoryLabel: step2.selectedCategoryName ?? null,
+        submissionTimestamp: new Date().toISOString(),
+        termsAccepted: !!consents.communicationConsent,
+        privacyAccepted: !!consents.documentMaintenanceConsent,
+        applicationId: step1?.applicationId ?? null,
+        documentCount: documents.uploadedDocuments.length,
+        documentTypes: documents.uploadedDocuments.map((d:any)=>d.type).filter(Boolean),
+        bypassDocuments: documents.bypassedDocuments,
+      };
+    }
+    ----------------------------------------------------------------
+  - File: client/src/routes/apply/step-7/index.tsx  (use it)
+    ----------------------------------------------------------------
+    import { buildSubmissionPayload } from '@/lib/buildSubmission';
+    import { api } from '@/lib/http';
+    async function onSubmit() {
+      const payload = buildSubmissionPayload();
+      await api('/api/v1/applications', { method:'POST', body: JSON.stringify(payload) });
+      // handle success
+    }
+    ----------------------------------------------------------------
+
+6) Disable service worker in dev (avoid stale UI)
+  - File: client/src/serviceWorker.ts
+    ----------------------------------------------------------------
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+      console.info('[SW] Disabled in development');
+    }
+    ----------------------------------------------------------------
+  - Import once in client bootstrap.
+
+7) Remove duplicates & any hardcoded hosts
+  - Guard checks (run in client repo):
+    ----------------------------------------------------------------
+    rg -n "Step2_Recommendations|Step5_DocumentRequirements|DocumentsUpload" client || true
+    rg -n "https?://" client | grep -vE "localhost|127\\.0\\.0\\.1" || true
+    ----------------------------------------------------------------
+  - Results should be empty; delete any offenders.
+
+8) Quick verifications
+  - On /apply/step-2 (browser console):
+    ----------------------------------------------------------------
+    (() => console.log('step2 before:', localStorage.getItem('bf:step2')))();
+    ----------------------------------------------------------------
+    (select a different category)
+    ----------------------------------------------------------------
+    (() => console.log('step2 after:', localStorage.getItem('bf:step2')))();
+    ----------------------------------------------------------------
+  - On /apply/step-5 confirm category-specific docs render.
+  - On /apply/step-7 temporarily:
+    ----------------------------------------------------------------
+    import { buildSubmissionPayload } from '@/lib/buildSubmission';
+    console.log('[Step7 payload]', buildSubmissionPayload());
+    ----------------------------------------------------------------
+  - Ensure `loanProductCategory/Label`, `lenderProductId`, and document counts/types are present.
+
+# End of instructions
+
+
+
+
+
+
+
+Ask ChatGPT
