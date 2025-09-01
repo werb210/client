@@ -97,8 +97,8 @@ export const ApiEndpointTester = () => {
     }
   };
 
-  const products = await getProducts();
-return (
+  // Remove async products call - not needed in render
+  return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">API Endpoint Tester</h2>

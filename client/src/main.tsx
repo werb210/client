@@ -1,4 +1,4 @@
-import { setupDevServiceWorkerGuard } from './serviceWorker';
+import './serviceWorker';
 import { getProducts } from "./api/products";
 import './lib/console-guard';
 import "./styles/hotfix.css";
@@ -20,8 +20,7 @@ import("./lib/fetch-guard").catch(console.warn);
 // Install audit hook for lender products validation
 installAuditHook();
 
-// Disable SW in development
-setupDevServiceWorkerGuard();
+// SW disabled automatically via import
 
 // Initialize PWA and accessibility features
 document.addEventListener('DOMContentLoaded', () => {
