@@ -8,8 +8,8 @@ export function useWebSocket() {
     // Initialize Socket.IO connection
     const socket = io({
       transports: ['websocket', 'polling'],
-      timeout: 20000,
-      retries: 3
+      timeout: 5000,
+      retries: 1
     });
     
     socketRef.current = socket;
