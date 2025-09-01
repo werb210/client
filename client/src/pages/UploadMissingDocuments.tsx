@@ -1,13 +1,13 @@
-import { fetchRequiredDocs } from "../api/products";
+// Removed unused import
 import React, { useState, useEffect } from 'react';
-import { useLocation , fetchRequiredDocs} from 'wouter';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { CloudUpload, CheckCircle, AlertTriangle, ArrowLeft, FileText, Info } from 'lucide-react';
-import { DynamicDocumentRequirements } from '@/components/DynamicDocumentRequirements';
+import DynamicDocumentRequirements from '@/components/DynamicDocumentRequirements';
 import { UploadedDocumentList, type DocumentItem } from '@/components/UploadedDocumentList';
 import { FallbackStatusBanner } from '@/components/FallbackStatusBanner';
 import { ENHANCED_DOCUMENT_REQUIREMENTS } from '../../../shared/documentMapping';
@@ -45,18 +45,10 @@ export default function UploadMissingDocuments() {
     // Try multiple sources for application ID
     const finalId = urlId || hashId || storageId;
     
-    console.log('🔍 [UPLOAD-DOCS] Enhanced application ID detection:', {
-      fromURL: urlId,
-      fromHash: hashId,
-      fromLocalStorage: storageId,
-      finalId,
-      fullURL: window.location.href,
-      search: window.location.search,
-      hash: window.location.hash
-    });
+    // Application ID detection and validation
 
     if (!finalId) {
-      console.warn('⚠️ [UPLOAD-DOCS] No application ID found in any source');
+      // No application ID warning handled
       toast({
         title: "Missing Application",
         description: "Please start an application before uploading documents.",
@@ -68,7 +60,7 @@ export default function UploadMissingDocuments() {
 
     // Store the found ID in localStorage for future use
     localStorage.setItem('applicationId', finalId);
-    console.log(`✅ [UPLOAD-DOCS] Application ID set: ${finalId}`);
+    // Application ID validated and stored
     
     setApplicationId(finalId);
     loadApplicationData(finalId);
@@ -77,14 +69,14 @@ export default function UploadMissingDocuments() {
   const loadApplicationData = async (appId: string) => {
     try {
       setIsLoading(true);
-      console.log('📋 [UPLOAD-DOCS] Loading application data for:', appId);
+      // Loading application data
       
       // Fetch required documents from specified endpoint
       const requiredDocsResponse = await fetch(`/api/required-docs/${appId}`);
       
       if (requiredDocsResponse.ok) {
         const requiredDocsData = await requiredDocsResponse.json();
-        console.log('✅ [UPLOAD-DOCS] Required documents loaded:', requiredDocsData);
+        // Required documents loaded from API
         setRequiredDocTypes(requiredDocsData.documents || []);
       } else {
         // Fallback: fetch application data to determine category
@@ -95,7 +87,7 @@ export default function UploadMissingDocuments() {
         }
 
         const data = await response.json();
-        console.log('✅ [UPLOAD-DOCS] Application data loaded (fallback):', data);
+        // Application data loaded via fallback method
         
         setApplicationData(data.application || data);
         
@@ -107,19 +99,19 @@ export default function UploadMissingDocuments() {
                                data.application?.form_data?.step1?.fundsPurpose ||
                                data.form_data?.step1?.fundsPurpose;
 
-        console.log('🔍 [UPLOAD-DOCS] Product category determined:', productCategory);
+        // Product category determined for document requirements
         
         const requiredDocs = getRequiredDocuments(productCategory);
         setRequiredDocTypes(requiredDocs);
       }
       
-      console.log('📋 [UPLOAD-DOCS] Final required document types:', requiredDocTypes);
+      // Required document types finalized
       
       // Load existing uploaded documents if any
       await loadUploadedDocuments(appId);
       
     } catch (error) {
-      console.error('❌ [UPLOAD-DOCS] Error loading application:', error);
+      // Application loading error handled
       toast({
         title: "Error Loading Application",
         description: "Could not load application data. Please try again.",
@@ -253,8 +245,7 @@ export default function UploadMissingDocuments() {
   };
 
   if (isLoading) {
-    const requiredDocs = await fetchRequiredDocs();
-return (
+    return (
       <div className="min-h-screen bg-gradient-to-br from-teal-50 to-orange-50 flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">
@@ -392,7 +383,6 @@ return (
             </CardHeader>
             <CardContent>
               <DynamicDocumentRequirements
-                applicationId={applicationId}
                 requirements={requiredDocTypes}
                 uploadedFiles={uploadedFiles}
                 onFilesUploaded={setUploadedFiles}
