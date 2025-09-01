@@ -257,10 +257,8 @@ export default function SecurityTestRunner() {
 
       // Test HSTS header
       try {
-        const response = await /* rewired */
-
-        const response2 = await fetch('/');
-        const hstsHeader = response2.headers.get('strict-transport-security');
+        const response = await fetch('/');
+        const hstsHeader = response.headers.get('strict-transport-security');
         
         if (hstsHeader) {
           addResult({
