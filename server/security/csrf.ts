@@ -38,11 +38,7 @@ export function requireCsrf(req: Request, res: Response, next: NextFunction) {
   const method = req.method.toUpperCase();
   const needsCheck = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
 
-  // Dev-only bypass - disable CSRF in development for easier testing
-  if (process.env.NODE_ENV !== "production") {
-    console.log('🔓 [CSRF] Bypassing CSRF check in development mode');
-    return next();
-  }
+  // CSRF protection now enabled in all environments for security
 
   if (!needsCheck) return next();
 

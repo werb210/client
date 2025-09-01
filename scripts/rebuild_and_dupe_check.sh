@@ -99,8 +99,8 @@ section "API smoke test"
 have_jq(){ command -v jq >/dev/null 2>&1; }
 
 BASE="http://localhost:5000"
-EMAIL="todd.w@boreal.financial"
-PASS="1Sucker1!"
+EMAIL="${TEST_EMAIL:-test@example.com}"
+PASS="${TEST_PASSWORD:-test-password}"
 
 # Try to obtain a token via login (handles MFA-bypass if enabled)
 TOKEN="$(curl -s -X POST "$BASE/api/auth/login" -H 'Content-Type: application/json' \
@@ -112,9 +112,10 @@ if [ -z "$TOKEN" ]; then
   TOKEN="$(curl -s "$BASE/api/_diag/token" | (have_jq && jq -r '.token // empty' || cat))" || true
 fi
 if [ -z "$TOKEN" ]; then
-  # Last resort: sign a dev token if server accepts dev secret
-  SECRET="${JWT_SECRET:-dev-secret-change-me}"
-  TOKEN="$(node -e "const jwt=require('jsonwebtoken'); console.log(jwt.sign({sub:'test-user',email:'$EMAIL',role:'admin',tenantId:'bf'}, '$SECRET', {issuer:'bf.staff',audience:'bf.staff.web',expiresIn:'1h'}));" 2>/dev/null || true)"
+  # Last resort: sign a dev token if JWT_SECRET is available
+  if [ -n "$JWT_SECRET" ]; then
+    TOKEN="$(node -e "const jwt=require('jsonwebtoken'); console.log(jwt.sign({sub:'test-user',email:'$EMAIL',role:'admin',tenantId:'bf'}, '$JWT_SECRET', {issuer:'bf.staff',audience:'bf.staff.web',expiresIn:'1h'}));" 2>/dev/null || true)"
+  fi
 fi
 
 if [ -z "$TOKEN" ]; then

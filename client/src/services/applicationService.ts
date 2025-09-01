@@ -87,7 +87,7 @@ export async function createApplication(data: ApplicationPayload): Promise<Appli
     };
 
     const csrfToken = getCsrfToken();
-    console.log('🔒 [APPLICATION_SERVICE] CSRF token:', csrfToken ? 'found' : 'missing');
+    // CSRF token validation
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ export async function createApplication(data: ApplicationPayload): Promise<Appli
       body: JSON.stringify(data),
     });
 
-    console.log('📊 [APPLICATION_SERVICE] Response status:', response.status, response.statusText);
+    // Response status logged
 
     if (!response.ok) {
       let errorText;
@@ -115,18 +115,13 @@ export async function createApplication(data: ApplicationPayload): Promise<Appli
         errorText = await response.text();
       }
       
-      console.error('❌ [APPLICATION_SERVICE] Submission failed:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorText,
-        url: response.url
-      });
+      // Submission error logged
       
       throw new Error(`Application submission failed: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
-    console.log('✅ [APPLICATION_SERVICE] Application submitted successfully:', result);
+    // Application submitted successfully
     
     return {
       applicationId: result.applicationId || result.id,
@@ -135,7 +130,7 @@ export async function createApplication(data: ApplicationPayload): Promise<Appli
     };
 
   } catch (error) {
-    console.error('❌ [APPLICATION_SERVICE] Creation error:', error);
+    // Creation error handled
     
     // Return structured error response
     return {

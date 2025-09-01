@@ -48,8 +48,7 @@ router.post('/translate', async (req, res) => {
 
     const translatedText = completion.choices[0].message.content || text;
     
-    // Log translation for monitoring
-    console.log(`[TRANSLATE] Session: ${sessionId}, ${sourceLanguage} → ${toLang}: "${text.substring(0, 30)}..." → "${translatedText.substring(0, 30)}..."`);
+    // Translation monitoring removed for production
 
     res.json({ 
       translatedText,
@@ -58,10 +57,10 @@ router.post('/translate', async (req, res) => {
       toLang
     });
   } catch (error) {
-    console.error('Translation error:', error);
+    // Translation error handled
     res.status(500).json({ 
       error: 'Translation failed',
-      translatedText: text // Return original text as fallback
+      translatedText: req.body.text // Return original text as fallback
     });
   }
 });

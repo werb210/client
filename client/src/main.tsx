@@ -15,7 +15,7 @@ import { addSkipLink } from './utils/accessibility';
 import { PWAInstallManager } from './utils/pwaTestSuite';
 
 // IMPORTANT: no top-level await; load guard as a side-effect and ignore failures
-import("./lib/fetch-guard").catch(console.warn);
+import("./lib/fetch-guard").catch(() => {});
 
 // Install audit hook for lender products validation
 installAuditHook();
@@ -40,6 +40,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 
 try {
   if (localStorage.getItem("CATALOG_DIAG") === "1") {
-    console.log("Products available via getProducts()");
+    // Products diagnostic removed
   }
 } catch {}

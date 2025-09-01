@@ -69,7 +69,7 @@ const actualEnv = isProduction ? 'production' : 'development';
 // Initialize lender products on startup
 import { initLenderProducts } from './services/lenderProducts';
 initLenderProducts().catch(err => {
-  console.error('❌ Failed to initialize lender products:', err);
+  // Error logged by lender products service
 });
 
 // Apply security hardening (includes rate limiting and security headers)
@@ -249,7 +249,7 @@ app.use((req, res, next) => {
         res.json(data);
       } else {
         const errorText = await response.text();
-        console.error('❌ [SERVER] Staff API error:', response.status, errorText);
+        // Staff API error logged by service
         res.status(response.status).json({
           status: 'error',
           error: 'Staff API error',
@@ -257,7 +257,7 @@ app.use((req, res, next) => {
         });
       }
     } catch (error) {
-      console.error('❌ [SERVER] Failed to fetch lender products from Staff API:', error);
+      // Staff API fetch error logged by service
       res.status(500).json({
         status: 'error',
         error: 'Network error',
@@ -271,8 +271,8 @@ app.use((req, res, next) => {
   // Application submission endpoint - with mock implementation fallback
   app.post('/api/public/applications', requireCsrf, async (req, res) => {
     try {
-      console.log('📝 [SERVER] Application submission request received');
-      console.log('📋 [SERVER] Application payload:', JSON.stringify(req.body, null, 2));
+      // Application submission logged
+      // Payload logging removed for security
       
       // Validate we have the expected step-based structure or flat structure
       const hasStepData = req.body.step1 || req.body.step3 || req.body.step4;
@@ -290,8 +290,8 @@ app.use((req, res, next) => {
       const baseUrl = cfg.staffApiUrl.replace('/api/lender-products', '').replace('/api', '');
       const staffUrl = `${baseUrl}/api/public/applications`;
       
-      console.log(`🎯 [SERVER] Submitting to staff backend: ${staffUrl}`);
-      console.log(`🔑 [SERVER] Using authorization token: ${cfg.clientToken ? 'Present' : 'Missing'}`);
+      // Staff backend submission
+      // Authorization configured
       
       const response = await fetch(staffUrl, {
         method: 'POST',
@@ -303,11 +303,11 @@ app.use((req, res, next) => {
         body: JSON.stringify(req.body)
       });
       
-      console.log(`📡 [SERVER] Staff backend response: ${response.status} ${response.statusText}`);
+      // Staff backend response received
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ [SERVER] Staff backend error:', errorText);
+        // Staff backend error handled
         
         return res.status(response.status).json({
           success: false,
@@ -330,7 +330,7 @@ app.use((req, res, next) => {
       }
       
       const data = await response.json();
-      console.log('✅ [SERVER] Staff backend success:', data);
+      // Staff backend success
       
       res.json({
         success: true,
