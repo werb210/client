@@ -53,10 +53,7 @@ const step1Schema = ApplicationFormSchema.pick({
   accountsReceivableBalance: true,
   fixedAssetsValue: true,
   equipmentValue: true,
-}).extend({
-  years_in_business: z.number().min(12, "Minimum 12 months in business required"),
-  monthly_revenue: z.number().min(15000, "Minimum $15,000 monthly revenue required"),
-}).partial(); // Keep fields optional for flexible workflow
+}); // Keep fields optional for flexible workflow
 
 type FinancialProfileFormData = z.infer<typeof step1Schema>;
 
@@ -252,8 +249,6 @@ export default function Step1FinancialProfile() {
       accountsReceivableBalance: undefined,
       fixedAssetsValue: undefined,
       equipmentValue: undefined,
-      years_in_business: undefined,
-      monthly_revenue: undefined,
     },
     mode: 'onChange',
   });
@@ -292,8 +287,6 @@ export default function Step1FinancialProfile() {
         accountsReceivableBalance: data.accountsReceivableBalance,
         fixedAssetsValue: data.fixedAssetsValue,
         equipmentValue: data.equipmentValue,
-        years_in_business: data.years_in_business, // Required for API validation
-        monthly_revenue: data.monthly_revenue,     // Required for API validation
       };
 
       // Convert salesHistory to months for Step 2 compatibility
@@ -771,63 +764,6 @@ export default function Step1FinancialProfile() {
                   )}
                 />
 
-                {/* Years in Business - Required for API validation */}
-                <FormField
-                  control={form.control}
-                  name="years_in_business"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>How long has your business been operating? *</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        value={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-12">
-                            <SelectValue placeholder="Select business age" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {yearsInBusinessOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value.toString()}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Monthly Revenue - Required for API validation */}
-                <FormField
-                  control={form.control}
-                  name="monthly_revenue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current average monthly revenue *</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                        value={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-12">
-                            <SelectValue placeholder="Select monthly revenue" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {averageMonthlyRevenueOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value.toString()}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
               </div>
 
