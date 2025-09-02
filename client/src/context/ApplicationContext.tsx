@@ -60,7 +60,7 @@ function applicationReducer(state: ApplicationState, action: ApplicationAction):
         formData: {
           ...state.formData,
           [action.payload.section]: {
-            ...state.formData[action.payload.section as keyof typeof state.formData],
+            ...(state.formData[action.payload.section as keyof typeof state.formData] || {}),
             ...action.payload.data,
           },
         },
