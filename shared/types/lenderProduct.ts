@@ -3,24 +3,29 @@
 
 export type LenderProduct = {
   id: string;
-  product_name: string;
-  lender_id: string;
-  lender_name?: string;
-  tenant_id: string;
-  country: 'US' | 'CA';
-  category: 'factoring' | 'term_loan' | 'loc' | 'other';
-  min_amount: number | null;
-  max_amount: number | null;
-  interest_rate_min: number | null;
-  interest_rate_max: number | null;
-  term_min: number | null;
-  term_max: number | null;
-  custom_requirements?: string;
+  name: string; // Primary product name field (matches API)
+  lender_name: string;
+  country: 'US' | 'CA' | string | null;
+  category: string;
+  min_amount: number;
+  max_amount: number;
   active: boolean;
-  variant_sig?: string; // optional, useful for debugging variants
+  updated_at: string;
+  min_time_in_business?: number | null;
+  min_monthly_revenue?: number | null;
+  excluded_industries?: string[];
+  required_documents?: string[];
   
-  // Legacy fields for backward compatibility
-  name?: string; // maps to product_name
+  // Legacy fields for backward compatibility with old schema
+  product_name?: string; // maps to name
+  lender_id?: string;
+  tenant_id?: string;
+  interest_rate_min?: number | null;
+  interest_rate_max?: number | null;
+  term_min?: number | null;
+  term_max?: number | null;
+  custom_requirements?: string;
+  variant_sig?: string;
 };
 
 export type LenderCount = {

@@ -1,6 +1,4 @@
-import { getProducts } from "@/api/products";
 import { useQuery } from '@tanstack/react-query';
-import { usePublicLenders } from '@/hooks/usePublicLenders';
 
 export interface RecommendationFormData {
   headquarters: string;
@@ -46,23 +44,48 @@ export interface ProductCategory {
 }
 
 export function useProductCategories(formData: RecommendationFormData) {
-  // Use the updated usePublicLenders hook
-  const { data: products = [], isLoading: productsLoading, error: productsError } = usePublicLenders();
+  // Use local cache for products instead of API calls
+  const loadProductsFromCache = async () => {
+    const cacheKey = 'bf:products:v1';
+    const cachedData = localStorage.getItem(cacheKey);
+    
+    if (cachedData) {
+      try {
+        const parsed = JSON.parse(cachedData);
+        const products = parsed.data || parsed;
+        if (Array.isArray(products) && products.length > 0) {
+          return products;
+        }
+      } catch (error) {
+        console.warn('Cache parse error:', error);
+      }
+    }
+    
+    // If cache empty, fetch once and cache
+    const response = await fetch('/api/v1/products');
+    const products = await response.json();
+    const productArray = Array.isArray(products) ? products : [];
+    
+    // Cache for future use
+    localStorage.setItem(cacheKey, JSON.stringify({ 
+      at: Date.now(), 
+      source: 'api', 
+      data: productArray 
+    }));
+    
+    return productArray;
+  };
 
   return useQuery({
     queryKey: ['product-categories', formData],
     queryFn: async () => {
       try {
+        const products = await loadProductsFromCache();
         console.log(`🔍 [useProductCategories] Starting with ${products.length} products`);
         console.log(`🔍 [useProductCategories] FormData received:`, formData);
         
-        if (productsError) {
-          console.warn('[useProductCategories] Products error:', productsError);
-          return [];
-        }
-        
         if (!products || products.length === 0) {
-          console.warn('[useProductCategories] No products available - will retry when products load');
+          console.warn('[useProductCategories] No products available');
           return [];
         }
       
@@ -104,20 +127,20 @@ export function useProductCategories(formData: RecommendationFormData) {
         const categoryGroups: Record<string, LenderProduct[]> = {};
         const productsToProcess = filteredProducts.length > 0 ? filteredProducts : products;
         productsToProcess.forEach((product: any) => {
-          const category = product.category || product.productCategory;
+          const category = product.category;
           if (!categoryGroups[category]) {
             categoryGroups[category] = [];
           }
           categoryGroups[category].push(product);
           
           // Debug: Log product categorization for Accord products
-          if (product.product_name?.includes('Accord') || product.lender_name?.includes('Accord')) {
-            console.log(`🔍 [CATEGORIZATION] ${product.product_name} → Category: "${product.category}"`);
+          if (product.name?.includes('Accord') || product.lender_name?.includes('Accord')) {
+            console.log(`🔍 [CATEGORIZATION] ${product.name} → Category: "${product.category}"`);
           }
           
           // Debug: Log all Working Capital products being categorized
           if (product.category === 'Working Capital') {
-            console.log(`💼 [WORKING_CAPITAL] Adding product: ${product.product_name} (${product.lender_name}) - ID: ${product.id}`);
+            console.log(`💼 [WORKING_CAPITAL] Adding product: ${product.name} (${product.lender_name}) - ID: ${product.id}`);
           }
         });
 

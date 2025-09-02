@@ -1,18 +1,17 @@
-import { loadLenderProducts } from "../utils/lenderCache";
 /**
  * Document Intersection Logic for Step 5
- * Implements client-side filtering and document intersection as specified
+ * Uses local cache to avoid API calls during application process
  */
 
 interface LenderProduct {
   id: string;
   name: string;
-  lenderName: string;
+  lender_name: string;
   category: string;
   country: string;
-  amountMin: number;
-  amountMax: number;
-  requiredDocuments: string[];
+  min_amount: number;
+  max_amount: number;
+  required_documents: string[];
 }
 
 interface DocumentIntersectionResult {
@@ -33,32 +32,59 @@ export async function getDocumentRequirementsIntersection(
   
   try {
 
-    // B. Use local cached lender products (no API calls)
-    const cachedProducts = await loadLenderProducts();
+    // B. Use local cache - first try localStorage, then API if cache empty
+    let allLenders: LenderProduct[] = [];
     
-    if (!cachedProducts || cachedProducts.length === 0) {
+    // Try localStorage cache first
+    const cacheKey = 'bf:products:v1';
+    const cachedData = localStorage.getItem(cacheKey);
+    
+    if (cachedData) {
+      try {
+        const parsed = JSON.parse(cachedData);
+        const products = parsed.data || parsed;
+        if (Array.isArray(products) && products.length > 0) {
+          allLenders = products;
+          console.log(`📦 [Step5] Using ${allLenders.length} products from localStorage cache`);
+        }
+      } catch (error) {
+        console.warn('Cache parse error:', error);
+      }
+    }
+    
+    // If cache empty, fetch once and cache
+    if (allLenders.length === 0) {
+      console.log('📡 [Step5] Cache empty, fetching products once...');
+      const response = await fetch('/api/v1/products');
+      
+      if (!response.ok) {
+        return {
+          eligibleLenders: [],
+          requiredDocuments: [],
+          message: "Unable to load lender products. Please try again later.",
+          hasMatches: false
+        };
+      }
+      
+      const products = await response.json();
+      allLenders = Array.isArray(products) ? products : [];
+      
+      // Cache for future use
+      localStorage.setItem(cacheKey, JSON.stringify({ 
+        at: Date.now(), 
+        source: 'api', 
+        data: allLenders 
+      }));
+      console.log(`💾 [Step5] Cached ${allLenders.length} products for future use`);
+    }
+    
+    if (allLenders.length === 0) {
       return {
         eligibleLenders: [],
         requiredDocuments: [],
-        message: "No lender products available in local cache. Please refresh the application.",
+        message: "No lender products available.",
         hasMatches: false
       };
-    }
-    
-    // Convert cached products to expected format
-    const allLenders: LenderProduct[] = cachedProducts.map(product => ({
-      id: product.id,
-      name: product.name,
-      lenderName: product.lenderName || product.lender_name,
-      category: product.category,
-      country: product.country,
-      amountMin: product.minAmount || 0,
-      amountMax: product.maxAmount || Number.MAX_SAFE_INTEGER,
-      requiredDocuments: product.docRequirements || []
-    }));
-    
-    if (allLenders.length === 0) {
-      throw new Error('No lender products available');
     }
 
     // Map business location to country code
@@ -88,8 +114,8 @@ export async function getDocumentRequirementsIntersection(
       const countryMatch = product.country === countryCode;
       
       // Amount range match - handle undefined/null amounts gracefully
-      const minAmount = product.amountMin || 0;
-      const maxAmount = product.amountMax || Number.MAX_SAFE_INTEGER;
+      const minAmount = product.min_amount || 0;
+      const maxAmount = product.max_amount || Number.MAX_SAFE_INTEGER;
       const amountMatch = minAmount <= fundingAmount && maxAmount >= fundingAmount;
 
       // Product filtering logic applied
