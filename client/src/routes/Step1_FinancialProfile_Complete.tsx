@@ -53,6 +53,9 @@ const step1Schema = ApplicationFormSchema.pick({
   accountsReceivableBalance: true,
   fixedAssetsValue: true,
   equipmentValue: true,
+}).extend({
+  years_in_business: z.number().min(1, "Years in business is required"),
+  monthly_revenue: z.number().min(1000, "Monthly revenue must be at least $1,000"),
 }).partial(); // Keep fields optional for flexible workflow
 
 type FinancialProfileFormData = z.infer<typeof step1Schema>;
@@ -88,6 +91,17 @@ const salesHistoryOptions = [
   { value: '<1yr', label: 'Less than 1 year' },
   { value: '1-3yr', label: '1 to 3 years' },
   { value: '3+yr', label: 'Over 3 years' },
+];
+
+const yearsInBusinessOptions = [
+  { value: 6, label: '6 months' },
+  { value: 12, label: '1 year' },
+  { value: 18, label: '1.5 years' },
+  { value: 24, label: '2 years' },
+  { value: 36, label: '3 years' },
+  { value: 48, label: '4 years' },
+  { value: 60, label: '5 years' },
+  { value: 120, label: '10+ years' },
 ];
 
 const lastYearRevenueOptions = [
@@ -243,6 +257,8 @@ export default function Step1FinancialProfile() {
       accountsReceivableBalance: savedData?.accountsReceivableBalance || state.step1?.accountsReceivableBalance,
       fixedAssetsValue: savedData?.fixedAssetsValue || state.step1?.fixedAssetsValue,
       equipmentValue: savedData?.equipmentValue || state.step1?.equipmentValue,
+      years_in_business: savedData?.years_in_business || state.step1?.years_in_business,
+      monthly_revenue: savedData?.monthly_revenue || state.step1?.monthly_revenue,
     },
     mode: 'onChange',
   });
@@ -276,6 +292,8 @@ export default function Step1FinancialProfile() {
         accountsReceivableBalance: data.accountsReceivableBalance,
         fixedAssetsValue: data.fixedAssetsValue,
         equipmentValue: data.equipmentValue,
+        years_in_business: data.years_in_business,
+        monthly_revenue: data.monthly_revenue,
       },
     });
     logger.log('💾 Step 1 - Auto-saved form data to step1 object');
@@ -308,6 +326,8 @@ export default function Step1FinancialProfile() {
         accountsReceivableBalance: data.accountsReceivableBalance,
         fixedAssetsValue: data.fixedAssetsValue,
         equipmentValue: data.equipmentValue,
+        years_in_business: data.years_in_business, // Required for API validation
+        monthly_revenue: data.monthly_revenue,     // Required for API validation
       };
 
       // Convert salesHistory to months for Step 2 compatibility
@@ -784,6 +804,59 @@ export default function Step1FinancialProfile() {
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Years in Business - Required for API validation */}
+                <FormField
+                  control={form.control}
+                  name="years_in_business"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>How long has your business been operating? *</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder="Select business age" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {yearsInBusinessOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value.toString()}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Monthly Revenue - Required for API validation */}
+                <FormField
+                  control={form.control}
+                  name="monthly_revenue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current average monthly revenue *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="e.g., 25000"
+                          value={field.value ? formatCurrency(field.value.toString()) : ''}
+                          onChange={(e) => {
+                            const numericValue = parseCurrencyString(e.target.value);
+                            field.onChange(numericValue);
+                          }}
+                          className="h-12"
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

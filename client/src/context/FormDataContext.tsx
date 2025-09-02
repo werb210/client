@@ -15,10 +15,12 @@ export type ApplicationForm = {
   fundsPurpose?: string;         // Step 1 field
   salesHistory?: string;         // Step 1 field
   yearsInBusiness?: string | number;
+  years_in_business?: number;    // Required for submission validation
   last12moRevenue?: number | string;
   revenueLastYear?: number | string;  // Step 1 field
   avgMonthlyRevenue?: number | string;
   averageMonthlyRevenue?: number | string; // Step 1 field
+  monthly_revenue?: number;      // Required for submission validation
   arBalance?: number | string;
   accountsReceivableBalance?: number | string; // Step 1 field
   fixedAssets?: number | string;
@@ -49,8 +51,10 @@ export type Intake = {
   amountRequested: number;     // normalized number
   industry?: string;
   yearsInBusiness?: number;
+  years_in_business?: number;  // Required for submission
   revenue12m?: number;
   avgMonthlyRevenue?: number;
+  monthly_revenue?: number;    // Required for submission
   purpose?: string;
   arBalance?: number;
   collateralValue?: number;
@@ -78,8 +82,10 @@ export function normalizeIntake(raw:any): Intake {
     amountRequested: toNumber(safeRaw.fundingAmount ?? safeRaw.requestedAmount ?? safeRaw.amountRequested),
     industry: safeRaw.industry ?? safeRaw.naics,
     yearsInBusiness: toNumber(safeRaw.yearsInBusiness ?? safeRaw.businessAgeYears),
+    years_in_business: toNumber(safeRaw.years_in_business ?? safeRaw.yearsInBusiness ?? safeRaw.businessAgeYears),
     revenue12m: toNumber(safeRaw.revenueLast12Months ?? safeRaw.annualRevenue ?? safeRaw.revenueLastYear),
     avgMonthlyRevenue: toNumber(safeRaw.avgMonthlyRevenue ?? safeRaw.monthlyRevenue ?? safeRaw.averageMonthlyRevenue),
+    monthly_revenue: toNumber(safeRaw.monthly_revenue ?? safeRaw.avgMonthlyRevenue ?? safeRaw.monthlyRevenue ?? safeRaw.averageMonthlyRevenue),
     purpose: safeRaw.purposeOfFunds ?? safeRaw.purpose ?? safeRaw.fundsPurpose,
     arBalance: toNumber(safeRaw.currentARBalance ?? safeRaw.accountsReceivable ?? safeRaw.accountsReceivableBalance),
     collateralValue: toNumber(safeRaw.fixedAssetsValue ?? safeRaw.collateralValue ?? safeRaw.fixedAssetsValue),

@@ -1,21 +1,72 @@
-import { attachCategories } from "../api/submit-categories";
-import type { CanonicalProduct } from "./products";
+/**
+ * Application submission logic with proper business criteria and CSRF handling
+ */
+import { ensureCsrf } from './csrf';
 
-export type ApplicationPayload = {
-  applicant: { name: string; email: string; phone?: string };
-  business: { legalName: string; country: "CA"|"US"; monthlyRevenue?: number; timeInBusinessMonths?: number };
-  request: { amount: number; category?: string|null };
-  product: Pick<CanonicalProduct,"id"|"name"|"lender_name"|"country"|"category"|"min_amount"|"max_amount">;
-  documents: Array<{ key:string; url?:string; filename?:string }>;
+export type ApplicationState = {
+  country: "CA" | "US" | null;
+  amount: number;
+  product_id: string | null;
+  years_in_business: number | null;
+  monthly_revenue: number | null;
 };
 
-export async function submitApplication(apiBase:string, token:string|undefined, payload: ApplicationPayload) {
-  const r = await fetch(`${apiBase}/api/applications`, {
+export type BusinessProfile = {
+  business_legal_name: string;
+  industry: string;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string;
+};
+
+export type DocumentInfo = {
+  type: string;
+  url?: string;
+};
+
+export async function submitApplication(
+  state: ApplicationState, 
+  profile: BusinessProfile, 
+  documents: DocumentInfo[]
+) {
+  if (!state.product_id) throw new Error("No product selected");
+  if (!state.country) throw new Error("Country is required");
+  if (!state.years_in_business || !state.monthly_revenue) {
+    throw new Error("Business criteria missing");
+  }
+
+  await ensureCsrf();
+
+  const body = {
+    product_id: state.product_id,
+    country: state.country,
+    amount: state.amount,
+    years_in_business: state.years_in_business,
+    monthly_revenue: state.monthly_revenue,
+    business_legal_name: profile.business_legal_name,
+    industry: profile.industry,
+    contact_name: profile.contact_name,
+    contact_email: profile.contact_email,
+    contact_phone: profile.contact_phone,
+    documents,
+    client_session_id: crypto.randomUUID(),
+  };
+
+  const response = await fetch(`${import.meta.env.VITE_STAFF_API}/v1/applications`, {
     method: "POST",
-    headers: { "Content-Type":"application/json", ...(token?{Authorization:`Bearer ${token}`}:{}) },
-    body: JSON.stringify(payload),
-    credentials: "include"
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
-  if (!r.ok) throw new Error(`Submission failed: ${r.status}`);
-  return r.json();
+
+  if (response.status === 400) {
+    const errorData = await response.json();
+    // Show inline field errors from errorData.errors
+    throw new Error((errorData.errors?.map((e: any) => e.message).join(" ")) || "Validation failed");
+  }
+  if (!response.ok) {
+    throw new Error(`Submission failed (HTTP ${response.status})`);
+  }
+
+  return response.json(); // { ok: true, submission_id, status: "QUEUED" }
 }
