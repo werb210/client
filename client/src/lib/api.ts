@@ -1,6 +1,5 @@
 
 import { attachTrace, getTraceId } from "../telemetry/lineage";
-import { getProducts } from "../api/products";
 export type CanonicalProduct = {
   id: string;
   name: string;
@@ -93,43 +92,29 @@ export async function fetchCatalogProducts(): Promise<CanonicalProduct[]> { /* e
   } catch {/* fall back to legacy endpoints */}
   
   try {
-    const r = await getProducts();
-    if (r.ok) {
-      const j = await r.json();
-      const items = j?.products ?? j ?? [];
-      if (Array.isArray(items) && items.length) {
-        const mapped = items.map((p: any) => ({
-          id: p.id,
-          name: p.name ?? p.productName,
-          lender_name: p.lender_name ?? p.lenderName,
-          country: String(p.country ?? p.countryOffered ?? "").toUpperCase(),
-          category: p.category ?? p.productCategory ?? "",
-          min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0),
-          max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? Number.MAX_SAFE_INTEGER),
-          active: (p.active ?? p.isActive) !== false,
-          required_documents: p.required_documents,
-        }));
-        return dedupeProducts(mapped);
-      }
+    // getProducts() returns Product[] directly, not a Response object
+    const items = await getProducts();
+    if (Array.isArray(items) && items.length) {
+      const mapped = items.map((p: any) => ({
+        id: p.id,
+        name: p.name ?? p.productName,
+        lender_name: p.lender_name ?? p.lenderName,
+        country: String(p.country ?? p.countryOffered ?? "").toUpperCase(),
+        category: p.category ?? p.productCategory ?? "",
+        min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0),
+        max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? Number.MAX_SAFE_INTEGER),
+        active: (p.active ?? p.isActive) !== false,
+        required_documents: p.required_documents,
+      }));
+      return dedupeProducts(mapped);
     }
-  } catch {/* fall back */}
+  } catch (error) {
+    console.warn('Primary product fetch failed:', error);
+  }
   
-  // Legacy fallback
-  const r2 = await getProducts();
-  const j2 = await r2.json();
-  const items2 = j2?.products ?? [];
-  const mapped = (items2 as any[]).map((p: any) => ({
-    id: p.id,
-    name: p.productName ?? p.name,
-    lender_name: p.lenderName ?? p.lender_name,
-    country: String(p.countryOffered ?? p.country ?? "").toUpperCase(),
-    category: p.productCategory ?? p.category ?? "",
-    min_amount: Number(p.minimumLendingAmount ?? p.min_amount ?? 0),
-    max_amount: Number(p.maximumLendingAmount ?? p.max_amount ?? Number.MAX_SAFE_INTEGER),
-    active: (p.isActive ?? p.active) !== false,
-    required_documents: p.required_documents,
-  }));
-  return dedupeProducts(mapped);
+  // Fallback: return empty array if all fetches fail
+  console.warn('All product fetch attempts failed');
+  return [];
 }
 
 // ---- Step 2: recommendations ------------------------------------------------

@@ -1,8 +1,6 @@
-import { getProducts } from "../../api/products";
+import { getProducts } from "@/api/products";
 import { useQuery } from '@tanstack/react-query';
 import { usePublicLenders } from '@/hooks/usePublicLenders';
-import { recommend } from '@/lib/reco/engine';
-import { normalizeProducts } from '@/lib/products/normalize';
 
 export interface RecommendationFormData {
   headquarters: string;
@@ -23,19 +21,20 @@ function filterProducts(products: any[], formData: Partial<RecommendationFormDat
     return products.filter(product => product.active !== false);
   }
   
-  // Convert to new engine format
-  const normalizedProducts = normalizeProducts(products);
-  const filters = {
-    country: formData.headquarters === 'united_states' ? 'US' : 'CA',
-    fundingAmount: formData.fundingAmount || 0,
-    productPreference: (formData.lookingFor || 'capital') as 'capital' | 'equipment' | 'both',
-    hasAR: (formData.accountsReceivableBalance || 0) > 0,
-    purpose: formData.fundsPurpose || 'general'
-  };
+  // Simple filtering based on country and funding amount
+  const country = formData.headquarters === 'united_states' ? 'US' : 'CA';
+  const fundingAmount = formData.fundingAmount || 0;
   
-  // Use new recommendation engine and return all eligible products
-  const recommendations = recommend(normalizedProducts, filters, 50);
-  return recommendations.map(r => r.product);
+  return products.filter(product => {
+    // Country match
+    if (product.country !== country) return false;
+    
+    // Amount range (if available)
+    if (product.min_amount && fundingAmount < product.min_amount) return false;
+    if (product.max_amount && product.max_amount > 0 && fundingAmount > product.max_amount) return false;
+    
+    return product.active !== false;
+  });
 }
 import { LenderProduct } from '@/types/lenderProduct';
 
@@ -104,7 +103,7 @@ export function useProductCategories(formData: RecommendationFormData) {
         // Group products by category
         const categoryGroups: Record<string, LenderProduct[]> = {};
         const productsToProcess = filteredProducts.length > 0 ? filteredProducts : products;
-        productsToProcess.forEach(product => {
+        productsToProcess.forEach((product: any) => {
           const category = product.category || product.productCategory;
           if (!categoryGroups[category]) {
             categoryGroups[category] = [];
@@ -112,13 +111,13 @@ export function useProductCategories(formData: RecommendationFormData) {
           categoryGroups[category].push(product);
           
           // Debug: Log product categorization for Accord products
-          if (product.productName?.includes('Accord') || product.lenderName?.includes('Accord')) {
-            console.log(`🔍 [CATEGORIZATION] ${product.productName} → Category: "${product.productCategory}"`);
+          if (product.product_name?.includes('Accord') || product.lender_name?.includes('Accord')) {
+            console.log(`🔍 [CATEGORIZATION] ${product.product_name} → Category: "${product.category}"`);
           }
           
           // Debug: Log all Working Capital products being categorized
-          if ((product.category || product.productCategory) === 'Working Capital') {
-            console.log(`💼 [WORKING_CAPITAL] Adding product: ${product.name || product.productName} (${product.lender_name || product.lenderName}) - ID: ${product.id}`);
+          if (product.category === 'Working Capital') {
+            console.log(`💼 [WORKING_CAPITAL] Adding product: ${product.product_name} (${product.lender_name}) - ID: ${product.id}`);
           }
         });
 
