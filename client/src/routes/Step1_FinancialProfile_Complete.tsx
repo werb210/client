@@ -180,16 +180,16 @@ export default function Step1FinancialProfile() {
       }
     }
     
-    // COMPLETELY reset FormDataContext to initial clean state
+    // Clear context state to prevent prefilled values - remove all default data
     dispatch({
       type: 'LOAD_FROM_STORAGE',
       payload: {
-        step1: {},
+        step1: {}, // Empty step1 data
         step3: {},
         step4: {},
         currentStep: 1,
         isComplete: false,
-        applicationId: state.applicationId || '',
+        applicationId: '',
         signingUrl: '',
         step1Completed: false,
         step2Completed: false,
@@ -214,7 +214,6 @@ export default function Step1FinancialProfile() {
         }
       }
     });
-    // Completely reset context state to prevent prefilled values
     
     const applicationId = initializeApplicationId();
     
@@ -227,38 +226,43 @@ export default function Step1FinancialProfile() {
     }
   }, []);
 
-  // Get saved form data for restoration
-  const getSavedFormData = () => {
+  // Clear any existing form data to ensure clean start
+  const clearExistingData = () => {
     try {
-      const saved = localStorage.getItem('apply.form');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
+      localStorage.removeItem('apply.form');
+      localStorage.removeItem('bf:intake');
+      localStorage.removeItem('bf:step2');
+      localStorage.removeItem('bf:step3');
+      localStorage.removeItem('bf:docs');
+      sessionStorage.clear();
+      console.log('🧹 Cleared all saved form data for clean start');
+    } catch (error) {
+      console.warn('Could not clear storage:', error);
     }
   };
 
-  const savedData = getSavedFormData();
-  console.log('💾 Restoring autosaved data:', savedData);
+  // Clear data on component mount for clean form
+  clearExistingData();
 
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),
     defaultValues: {
-      // Restore autosaved data if available
-      businessLocation: savedData?.businessLocation || state.step1?.businessLocation,
-      headquarters: savedData?.headquarters || state.step1?.headquarters,
-      headquartersState: savedData?.headquartersState || state.step1?.headquartersState,
-      industry: savedData?.industry || state.step1?.industry,
-      lookingFor: savedData?.lookingFor || state.step1?.lookingFor,
-      fundingAmount: savedData?.amount || savedData?.fundingAmount || state.step1?.fundingAmount,
-      fundsPurpose: savedData?.fundsPurpose || state.step1?.fundsPurpose,
-      salesHistory: savedData?.salesHistory || state.step1?.salesHistory,
-      revenueLastYear: savedData?.revenueLastYear || state.step1?.revenueLastYear,
-      averageMonthlyRevenue: savedData?.monthlyRevenue || savedData?.averageMonthlyRevenue || state.step1?.averageMonthlyRevenue,
-      accountsReceivableBalance: savedData?.accountsReceivableBalance || state.step1?.accountsReceivableBalance,
-      fixedAssetsValue: savedData?.fixedAssetsValue || state.step1?.fixedAssetsValue,
-      equipmentValue: savedData?.equipmentValue || state.step1?.equipmentValue,
-      years_in_business: savedData?.years_in_business || state.step1?.years_in_business,
-      monthly_revenue: savedData?.monthly_revenue || state.step1?.monthly_revenue,
+      // Start with completely empty form
+      businessLocation: undefined,
+      headquarters: undefined,
+      headquartersState: undefined,
+      industry: undefined,
+      lookingFor: undefined,
+      fundingAmount: undefined,
+      fundsPurpose: undefined,
+      salesHistory: undefined,
+      revenueLastYear: undefined,
+      averageMonthlyRevenue: undefined,
+      accountsReceivableBalance: undefined,
+      fixedAssetsValue: undefined,
+      equipmentValue: undefined,
+      years_in_business: undefined,
+      monthly_revenue: undefined,
     },
     mode: 'onChange',
   });
