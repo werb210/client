@@ -2,28 +2,32 @@
  * Hook for submitting applications with business criteria and CSRF handling
  */
 import { useState } from 'react';
-import { submitApplication as submitApp, type ApplicationState, type BusinessProfile, type DocumentInfo } from '@/lib/submitApplication';
+import { submitApplication as submitApp } from '@/lib/submitApplication';
 
 export function useSubmitApplication() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const submitApplication = async (
-    state: ApplicationState, 
-    profile: BusinessProfile, 
-    documents: DocumentInfo[]
-  ) => {
+  const submitApplication = async (payload: {
+    product_id: string;
+    country: "CA"|"US";
+    amount: number;
+    years_in_business: number;
+    monthly_revenue: number;
+    business_legal_name: string;
+    industry: string;
+    contact_name: string;
+    contact_email: string;
+    contact_phone: string;
+    documents: { type: string; url?: string }[];
+  }) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      console.log('🚀 [SUBMIT_HOOK] Submitting application with:', {
-        state,
-        profile,
-        documents: documents.length
-      });
+      console.log('🚀 [SUBMIT_HOOK] Submitting application with:', payload);
 
-      const result = await submitApp(state, profile, documents);
+      const result = await submitApp(payload);
       
       console.log('✅ [SUBMIT_HOOK] Application submitted:', result);
       return result;

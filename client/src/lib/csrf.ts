@@ -3,15 +3,7 @@
  */
 
 export async function ensureCsrf() {
-  const seen = sessionStorage.getItem("csrf:bootstrapped");
-  if (seen) return;
-  
-  try {
-    await fetch(`${import.meta.env.VITE_STAFF_API || ''}/csrf-token`, { 
-      credentials: "include" 
-    });
-    sessionStorage.setItem("csrf:bootstrapped", "1");
-  } catch (error) {
-    console.warn('CSRF bootstrap failed:', error);
-  }
+  if (sessionStorage.getItem("csrf:ok")) return;
+  await fetch(`${import.meta.env.VITE_STAFF_API}/csrf-token`, { credentials: "include" });
+  sessionStorage.setItem("csrf:ok", "1");
 }

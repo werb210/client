@@ -54,8 +54,8 @@ const step1Schema = ApplicationFormSchema.pick({
   fixedAssetsValue: true,
   equipmentValue: true,
 }).extend({
-  years_in_business: z.number().min(1, "Years in business is required"),
-  monthly_revenue: z.number().min(1000, "Monthly revenue must be at least $1,000"),
+  years_in_business: z.number().min(12, "Minimum 12 months in business required"),
+  monthly_revenue: z.number().min(15000, "Minimum $15,000 monthly revenue required"),
 }).partial(); // Keep fields optional for flexible workflow
 
 type FinancialProfileFormData = z.infer<typeof step1Schema>;

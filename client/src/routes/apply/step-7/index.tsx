@@ -1,6 +1,5 @@
 import { useSubmitApplication } from '@/hooks/useSubmitApplication';
 import { useState } from 'react';
-import type { ApplicationState, BusinessProfile, DocumentInfo } from '@/lib/submitApplication';
 
 export default function Step7() {
   const { submitApplication, isSubmitting, error } = useSubmitApplication();
@@ -16,33 +15,27 @@ export default function Step7() {
       const docsData = JSON.parse(localStorage.getItem('bf:docs') || '{"uploadedDocuments":[]}');
       const step2Data = JSON.parse(localStorage.getItem('bf:step2') || '{}');
 
-      // Build application state
-      const state: ApplicationState = {
+      // Build payload according to user specifications
+      const payload = {
+        product_id: step2Data.selectedProductId || '',
         country: step1Data.country || 'US',
         amount: step1Data.amountRequested || 0,
-        product_id: step2Data.selectedProductId || null,
-        years_in_business: step1Data.years_in_business || null,
-        monthly_revenue: step1Data.monthly_revenue || null,
-      };
-
-      // Build business profile
-      const profile: BusinessProfile = {
+        years_in_business: step1Data.years_in_business || 0,
+        monthly_revenue: step1Data.monthly_revenue || 0,
         business_legal_name: step3Data.legalName || step3Data.businessLegalName || '',
         industry: step1Data.industry || '',
         contact_name: step3Data.contactName || '',
         contact_email: step3Data.contactEmail || '',
         contact_phone: step3Data.contactPhone || '',
+        documents: docsData.uploadedDocuments.map((doc: any) => ({
+          type: doc.type || 'document',
+          url: doc.url,
+        })),
       };
 
-      // Build documents array
-      const documents: DocumentInfo[] = docsData.uploadedDocuments.map((doc: any) => ({
-        type: doc.type || 'document',
-        url: doc.url,
-      }));
+      console.log('🚀 [STEP7] Submitting with payload:', payload);
 
-      console.log('🚀 [STEP7] Submitting with payload:', { state, profile, documents });
-
-      const result = await submitApplication(state, profile, documents);
+      const result = await submitApplication(payload);
       
       // Handle success
       alert(`Application submitted successfully! ID: ${result.submission_id || 'Generated'}`);
@@ -85,8 +78,9 @@ export default function Step7() {
 
       {(submitError || error) && (
         <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-6">
-          <p className="font-semibold">Submission Error:</p>
+          <p className="font-semibold">Validation Error:</p>
           <p>{submitError || error}</p>
+          <p className="text-sm mt-2 text-red-600">Please check that years in business ≥ 12 months and monthly revenue ≥ $15,000</p>
         </div>
       )}
       
