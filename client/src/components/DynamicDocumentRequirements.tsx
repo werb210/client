@@ -1,9 +1,27 @@
 import React from "react";
 import { listDocuments, RequiredDoc } from "@/lib/api";
 
-type Props = { category: string; country: string; amount: number };
+type Props = { 
+  applicationId?: string;
+  requirements?: string[];
+  uploadedFiles?: any[];
+  onFilesUploaded?: (files: any[]) => void;
+  onRequirementsChange?: () => void;
+  category?: string; 
+  country?: string; 
+  amount?: number; 
+};
 
-export default function DynamicDocumentRequirements({ category, country, amount }: Props) {
+export default function DynamicDocumentRequirements({ 
+  applicationId,
+  requirements = [],
+  uploadedFiles = [],
+  onFilesUploaded,
+  onRequirementsChange,
+  category, 
+  country, 
+  amount 
+}: Props) {
   const [docs, setDocs] = React.useState<RequiredDoc[]>([]);
   React.useEffect(() => {
     listDocuments({ category, country, amount }).then(setDocs).catch(() => setDocs([]));

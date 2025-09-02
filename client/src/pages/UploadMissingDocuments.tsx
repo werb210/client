@@ -383,6 +383,7 @@ export default function UploadMissingDocuments() {
             </CardHeader>
             <CardContent>
               <DynamicDocumentRequirements
+                applicationId={applicationId}
                 requirements={requiredDocTypes}
                 uploadedFiles={uploadedFiles}
                 onFilesUploaded={setUploadedFiles}
