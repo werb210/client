@@ -16,6 +16,8 @@ const Step4ApplicantInfoComplete = lazy(() => import("@/routes/Step4_ApplicantIn
 const Step5DocumentUpload = lazy(() => import("@/routes/apply/step-5"));
 const Step6TypedSignature = lazy(() => import("@/routes/Step6_TypedSignature"));
 const ChatBot = lazy(() => import("@/components/ChatBot").then(module => ({ default: module.ChatBot })));
+const CompleteApplicationTest = lazy(() => import("@/test/CompleteApplicationTest"));
+const EndToEndFlowTest = lazy(() => import("@/test/EndToEndFlowTest"));
 
 
 /**
@@ -41,6 +43,10 @@ export function MainLayout() {
         
         {/* Dashboard */}
         <Route path="/dashboard" component={SimpleDashboard} />
+        
+        {/* Testing Routes */}
+        <Route path="/test/complete-application" component={() => <Suspense fallback={<div>Loading test...</div>}><CompleteApplicationTest /></Suspense>} />
+        <Route path="/test/end-to-end" component={() => <Suspense fallback={<div>Loading test...</div>}><EndToEndFlowTest /></Suspense>} />
         
         {/* Default Route - Landing Page */}
         <Route path="/" component={LandingPage} />
