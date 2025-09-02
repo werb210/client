@@ -807,18 +807,23 @@ export default function Step1FinancialProfile() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Current average monthly revenue *</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
-                          placeholder="e.g., 25000"
-                          value={field.value ? formatCurrency(field.value.toString()) : ''}
-                          onChange={(e) => {
-                            const numericValue = parseCurrencyString(e.target.value);
-                            field.onChange(numericValue);
-                          }}
-                          className="h-12"
-                        />
-                      </FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder="Select monthly revenue" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {averageMonthlyRevenueOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value.toString()}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
