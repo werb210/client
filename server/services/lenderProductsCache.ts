@@ -37,15 +37,15 @@ function toCanonical(p: any): Canonical {
     lender_name: p.lender_name ?? p.lenderName ?? "", // Fixed: don't fallback to p.name
     country: country || null, // Keep original country value from normCountry
     category: p.category ?? p.productCategory ?? "Working Capital",
-    min_amount: Number(p.min_amount ?? p.minimumLendingAmount ?? 0),
-    max_amount: Number(p.max_amount ?? p.maximumLendingAmount ?? 0),
+    min_amount: Number(p.min_amount ?? p.amount_min ?? p.minimumLendingAmount ?? 0),
+    max_amount: Number(p.max_amount ?? p.amount_max ?? p.maximumLendingAmount ?? 0),
     active: Boolean(p.active ?? p.isActive ?? true),
     updated_at: new Date().toISOString(),
     // NEW: preserve Staff fields that were previously lost
     min_time_in_business: p.min_time_in_business ?? null,
-    min_monthly_revenue: p.min_monthly_revenue ?? null,
+    min_monthly_revenue: p.min_monthly_revenue ?? p.revenue_min ?? null,
     excluded_industries: p.excluded_industries ?? null,
-    required_documents: p.required_documents ?? null,
+    required_documents: p.required_documents ?? p.doc_requirements ?? null,
   };
 }
 
