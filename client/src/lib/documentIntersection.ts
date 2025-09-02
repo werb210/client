@@ -1,4 +1,4 @@
-import { getProducts } from "../api/products";
+import { loadLenderProducts } from "../utils/lenderCache";
 /**
  * Document Intersection Logic for Step 5
  * Implements client-side filtering and document intersection as specified
@@ -33,26 +33,29 @@ export async function getDocumentRequirementsIntersection(
   
   try {
 
-    // B. Use local cached lender products (as designed - no API calls needed)
-    let allLenders: LenderProduct[] = [];
+    // B. Use local cached lender products (no API calls)
+    const cachedProducts = await loadLenderProducts();
     
-    try {
-      const response = await fetch('/api/v1/products');
-      
-      if (!response.ok) {
-        throw new Error(`Staff API error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.success && data.products && Array.isArray(data.products)) {
-        allLenders = data.products;
-      } else {
-        throw new Error('Invalid API response format');
-      }
-    } catch (apiError) {
-      throw new Error(`Staff API unavailable: ${apiError.message}`);
+    if (!cachedProducts || cachedProducts.length === 0) {
+      return {
+        eligibleLenders: [],
+        requiredDocuments: [],
+        message: "No lender products available in local cache. Please refresh the application.",
+        hasMatches: false
+      };
     }
+    
+    // Convert cached products to expected format
+    const allLenders: LenderProduct[] = cachedProducts.map(product => ({
+      id: product.id,
+      name: product.name,
+      lenderName: product.lenderName || product.lender_name,
+      category: product.category,
+      country: product.country,
+      amountMin: product.minAmount || 0,
+      amountMax: product.maxAmount || Number.MAX_SAFE_INTEGER,
+      requiredDocuments: product.docRequirements || []
+    }));
     
     if (allLenders.length === 0) {
       throw new Error('No lender products available');
