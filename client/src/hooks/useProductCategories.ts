@@ -27,7 +27,7 @@ function filterProducts(products: any[], formData: Partial<RecommendationFormDat
   const normalizedProducts = normalizeProducts(products);
   const filters = {
     country: formData.headquarters === 'united_states' ? 'US' : 'CA',
-    fundingAmount: formData.fundingAmount || 50000,
+    fundingAmount: formData.fundingAmount || 0,
     productPreference: (formData.lookingFor || 'capital') as 'capital' | 'equipment' | 'both',
     hasAR: (formData.accountsReceivableBalance || 0) > 0,
     purpose: formData.fundsPurpose || 'general'

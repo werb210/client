@@ -129,8 +129,8 @@ export default function Step4ApplicantInfoComplete() {
       applicantState: state.step4?.applicantState || "",
       applicantZipCode: state.step4?.applicantZipCode || "",
       applicantDateOfBirth: state.step4?.applicantDateOfBirth || "",
-      applicantSSN: state.step4?.applicantSSN || "", // Optional field
-      ownershipPercentage: state.step4?.ownershipPercentage || 100,
+      applicantSSN: state.step4?.applicantSSN || "",
+      ownershipPercentage: state.step4?.ownershipPercentage || undefined,
       hasPartner: state.step4?.hasPartner || false,
       partnerFirstName: state.step4?.partnerFirstName || "",
       partnerLastName: state.step4?.partnerLastName || "",
@@ -142,7 +142,7 @@ export default function Step4ApplicantInfoComplete() {
       partnerZipCode: state.step4?.partnerZipCode || "",
       partnerDateOfBirth: state.step4?.partnerDateOfBirth || "",
       partnerSSN: state.step4?.partnerSSN || "",
-      partnerOwnershipPercentage: state.step4?.partnerOwnershipPercentage || 0,
+      partnerOwnershipPercentage: state.step4?.partnerOwnershipPercentage || undefined,
     },
   });
 
@@ -233,8 +233,8 @@ export default function Step4ApplicantInfoComplete() {
     const processedData = {
       ...data,
       ownershipPercentage: typeof data.ownershipPercentage === "string" 
-        ? parseFloat(data.ownershipPercentage) || 100 
-        : data.ownershipPercentage || 100,
+        ? parseFloat(data.ownershipPercentage) || undefined 
+        : data.ownershipPercentage || undefined,
       partnerOwnershipPercentage: typeof data.partnerOwnershipPercentage === "string"
         ? parseFloat(data.partnerOwnershipPercentage) || 0
         : data.partnerOwnershipPercentage || 0,
@@ -373,7 +373,7 @@ export default function Step4ApplicantInfoComplete() {
         applicantZipCode: processedData.applicantZipCode || '',
         applicantDateOfBirth: processedData.applicantDateOfBirth || '',
         applicantSSN: processedData.applicantSSN || '',
-        ownershipPercentage: processedData.ownershipPercentage || 100,
+        ownershipPercentage: processedData.ownershipPercentage,
         
         // Contact mapping for backend compatibility
         firstName: processedData.applicantFirstName || '',
