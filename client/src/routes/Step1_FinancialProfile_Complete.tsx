@@ -167,18 +167,9 @@ export default function Step1FinancialProfile() {
   const [location, setLocation] = useLocation();
   const { submitApplication, isSubmitting, error } = useSubmitApplication();
 
-  // Initialize application ID and restore autosave data
+  // Initialize application ID without any data restoration
   useEffect(() => {
-    // Restore autosave data if available
-    const savedFormData = localStorage.getItem('apply.form');
-    if (savedFormData) {
-      try {
-        const parsed = JSON.parse(savedFormData);
-        console.log('✅ Restoring autosaved form data:', parsed);
-      } catch (e) {
-        console.warn('⚠️ Could not parse saved form data:', e);
-      }
-    }
+    // No autosave restoration - form starts completely clean
     
     // Clear context state to prevent prefilled values - remove all default data
     dispatch({
@@ -277,36 +268,7 @@ export default function Step1FinancialProfile() {
   // Watch all form values for autosave
   const watchedValues = form.watch();
 
-  // Auto-save with 2-second delay
-  const debouncedSave = useDebouncedCallback((data: FinancialProfileFormData) => {
-    // Store data in step1 object structure for validation
-    dispatch({
-      type: 'UPDATE_STEP1',
-      payload: {
-        businessLocation: data.businessLocation,
-        headquarters: data.headquarters,
-        headquartersState: data.headquartersState,
-        industry: data.industry,
-        lookingFor: data.lookingFor,
-        fundingAmount: data.fundingAmount,
-        fundsPurpose: data.fundsPurpose,
-        salesHistory: data.salesHistory,
-        revenueLastYear: data.revenueLastYear,
-        averageMonthlyRevenue: data.averageMonthlyRevenue,
-        accountsReceivableBalance: data.accountsReceivableBalance,
-        fixedAssetsValue: data.fixedAssetsValue,
-        equipmentValue: data.equipmentValue,
-        years_in_business: data.years_in_business,
-        monthly_revenue: data.monthly_revenue,
-      },
-    });
-    logger.log('💾 Step 1 - Auto-saved form data to step1 object');
-  }, 2000);
-
-  // Trigger autosave when form values change
-  useEffect(() => {
-    debouncedSave(watchedValues);
-  }, [watchedValues, debouncedSave]);
+  // Disabled autosave to prevent pre-filled data - form stays clean until submit
 
   const onSubmit = async (data: FinancialProfileFormData) => {
     logger.log('✅ Step 1 - Form submitted successfully!');
@@ -370,12 +332,8 @@ export default function Step1FinancialProfile() {
       });
 
       // Persist backup so Step 2 can recover even if navigation state is lost
-      try { 
-        localStorage.setItem("apply.form", JSON.stringify(canonical)); 
-        logger.log('✅ Form data backed up to localStorage');
-      } catch (e) {
-        logger.warn('⚠️ Could not backup to localStorage:', e);
-      }
+      // No localStorage backup to prevent pre-filled data on refresh
+      logger.log('✅ Form data processed without localStorage backup');
 
       // Save intake data for Step 2 using proper normalization
       // Pass raw data to saveIntake - let normalizeStep1 handle the field mapping

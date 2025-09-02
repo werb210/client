@@ -1,0 +1,69 @@
+================================================================================
+CLIENT APP — E2E SUBMISSION TEST (WITH DOCUMENTS)
+================================================================================
+REPLACE ALL PLACEHOLDERS FIRST:
+  <CLIENT_APP_URL>  e.g., https://client.example.com
+  <STAFF_API_URL>   e.g., https://staff.boreal.financial/api
+
+GOAL
+  Prove an applicant can complete Steps 1→7, attach docs, and receive a 202 + submission_id.
+
+PREP (IN ORDER)
+  1) Close all existing tabs of the client app.
+  2) Open a fresh Private/Incognito window.
+  3) Visit <CLIENT_APP_URL>/__health (if present) → ensure OK.
+  4) Visit <CLIENT_APP_URL> → DevTools → Application → Clear Storage → Clear site data.
+  5) Hard refresh (Cmd/Ctrl+Shift+R).
+
+TEST DOCS (CREATE THESE 6 FILES LOCALLY — UPLOAD IN THIS EXACT ORDER IN STEP 5)
+  1) bank-statements-6mo.pdf
+  2) business-tax-returns.pdf
+  3) financial-statements.pdf
+  4) voided-check.jpg
+  5) certificate-of-incorporation.pdf
+  6) drivers-license-front.jpg
+
+RUN THE FLOW (IN ORDER)
+  STEP 1 — /apply/step-1
+    - Country: CA (or US)
+    - Funding amount: 100000
+    - Business legal name: Acme Manufacturing Inc.
+    - Industry: Manufacturing
+    - Continue
+  STEP 2 — Category (uses locally cached products — NO staff DB calls)
+    - Pick: Working Capital (or any that matches your amount/country)
+    - Continue
+  STEP 3 — Business Details (INCLUDES REQUIRED VALIDATION FIELDS)
+    - Years in business: 24
+    - Monthly revenue: 50000
+    - Contact name: Jane Doe
+    - Contact email: jane@example.com
+    - Contact phone: +1-555-123-4567
+    - Continue
+  STEP 4 — Owners/Additional Info
+    - Fill minimal valid values
+    - Continue
+  STEP 5 — Document Requirements (UPLOAD THE 6 FILES ABOVE IN THE EXACT ORDER)
+    - Ensure each file shows as attached and recognized
+    - Continue
+  STEP 6 — Review & Terms
+    - Verify data, accept terms
+    - Continue
+  STEP 7 — Submit
+    - Click Submit
+    - DevTools → Network → filter “applications”
+    EXPECTED REQUEST:
+      - Method: POST
+      - URL: <STAFF_API_URL>/v1/applications
+    EXPECTED RESPONSE:
+      - HTTP 202 Accepted
+      - Body JSON: { "ok": true, "submission_id": "app_...", "status": "QUEUED" }
+    - COPY the submission_id for the Staff App test
+
+PASS CRITERIA (ALL MUST PASS)
+  - No router/CSP errors blocking Steps 1–7
+  - Step 5 shows lender-specific doc list (not just a generic baseline)
+  - Step 7 returns HTTP 202 + non-empty submission_id
+
+WHAT TO RETURN AFTER THIS BLOCK
+  - The exact submission_id value you received

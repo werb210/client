@@ -147,7 +147,8 @@ const Ctx = createContext<Ctx | null>(null);
 
 export function FormDataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<ApplicationForm | null>(() => {
-    try { return JSON.parse(sessionStorage.getItem(KEY) || "null"); } catch { return null; }
+    // Start with completely clean state - no restoration from storage
+    return null;
   });
 
   const save = (raw: Partial<ApplicationForm>) => {
