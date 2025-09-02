@@ -30,7 +30,7 @@ export function useSubmitApplication() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const formContext = useFormDataContext();
-  const dispatch = formContext.dispatch;
+  const dispatch = formContext?.dispatch;
 
   const submitApplication = async (
     requestedAmount: number,
