@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { getProducts } from "../api/products";
-import { fetchLenderProducts } from '@/lib/api';
+import { getLenderProducts } from '@/lib/api';
 import { LenderProduct } from '../../../shared/lenderProductSchema';
 
 export function FallbackTest() {
@@ -14,7 +14,7 @@ export function FallbackTest() {
     
     try {
       // console.log('🧪 [FALLBACK_TEST] Testing fallback system...');
-      const data = await fetchLenderProducts();
+      const data = await getLenderProducts();
       setProducts(data);
       // console.log(`✅ [FALLBACK_TEST] Success! Got ${data.length} products`);
     } catch (err) {
