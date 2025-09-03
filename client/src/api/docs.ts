@@ -6,7 +6,7 @@
 export type RequiredDocsResponse = { required_documents?: string[] } | string[];
 
 // env
-const STAFF_BASE = (import.meta as any).env?.VITE_STAFF_API_URL?.replace(/\/$/, '') || '';
+const STAFF_BASE = (import.meta as any).env?.VITE_STAFF_API_BASE?.replace(/\/$/, '') || '';
 const STAFF_TOKEN = (import.meta as any).env?.VITE_CLIENT_APP_SHARED_TOKEN || '';
 const DOC_UPLOAD_ENABLED = ((import.meta as any).env?.VITE_DOC_UPLOAD_ENABLED || 'false') === 'true';
 

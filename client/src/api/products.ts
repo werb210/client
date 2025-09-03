@@ -13,7 +13,7 @@ export type Product = {
 
 type Source = { name: 'local' | 'staff'; url: string; headers?: Record<string,string> };
 
-const STAFF_BASE = (import.meta as any).env?.VITE_STAFF_API_URL?.replace(/\/$/, '') || '';
+const STAFF_BASE = (import.meta as any).env?.VITE_STAFF_API_BASE?.replace(/\/$/, '') || '';
 const STAFF_TOKEN = (import.meta as any).env?.VITE_CLIENT_APP_SHARED_TOKEN || '';
 
 const SOURCES: Source[] = [

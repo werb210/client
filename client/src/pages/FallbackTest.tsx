@@ -61,7 +61,7 @@ export function FallbackTest() {
           <h2 className="text-xl font-semibold mb-4">Environment Check</h2>
           <div className="space-y-2 text-sm font-mono">
             <div>🌍 VITE_API_BASE_URL: {import.meta.env.VITE_API_BASE_URL}</div>
-            <div>🌍 VITE_STAFF_API_URL: {import.meta.env.VITE_STAFF_API_URL}</div>
+            <div>🌍 VITE_STAFF_API_BASE: {import.meta.env.VITE_STAFF_API_BASE}</div>
           </div>
         </div>
 

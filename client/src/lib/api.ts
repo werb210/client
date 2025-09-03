@@ -171,7 +171,7 @@ const DOCS_FALLBACK: Record<string, RequiredDoc[]> = {
 export async function listDocuments(input: RequiredDocsInput & { applicationId?: string }): Promise<RequiredDoc[]> {
   try {
     // Use v1 API endpoint or application-specific endpoint
-    const endpoint = input.applicationId ? `/api/v1/applications/${input.applicationId}/required-documents` : "/api/v1/required-docs";
+    const endpoint = input.applicationId ? `${import.meta.env.VITE_STAFF_API_BASE}/v1/applications/${input.applicationId}/required-documents` : `${import.meta.env.VITE_STAFF_API_BASE}/v1/required-docs`;
     const r = await fetch(endpoint, {
       method: input.applicationId ? "GET" : "POST",
       headers: { "Content-Type": "application/json" },
@@ -196,7 +196,7 @@ export const getLenderProducts = async () => {
 };
 
 export const createApplication = async (data: FormData) => {
-  const res = await fetch(`/api/v1/applications`, { method:'POST', headers:{'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client' },
+  const res = await fetch(`${import.meta.env.VITE_STAFF_API_BASE}/v1/applications`, { method:'POST', headers:{'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client' },
     body: data,
     credentials: "include"
   });
@@ -205,7 +205,7 @@ export const createApplication = async (data: FormData) => {
 };
 
 export const getApplication = async (id: string) => {
-  const res = await fetch(`/api/v1/applications/${id}`, {
+  const res = await fetch(`${import.meta.env.VITE_STAFF_API_BASE}/v1/applications/${id}`, {
     credentials: "include"
   });
   if (!res.ok) throw new Error("Failed to get application details");
@@ -217,7 +217,7 @@ export const uploadDocument = async (applicationId: string, file: File, document
   formData.append('files', file);
   formData.append('document_type', documentType);
   
-  const res = await fetch(`/api/v1/applications/${applicationId}/docs`, { method:'POST', headers:{'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client' },
+  const res = await fetch(`${import.meta.env.VITE_STAFF_API_BASE}/v1/applications/${applicationId}/docs`, { method:'POST', headers:{'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client' },
     body: formData,
     credentials: "include"
   });
@@ -249,7 +249,7 @@ export const getRecommendations = async (id: string) => {
 export const getRequiredDocuments = async (id: string) => {
   try {
     // Try Staff API endpoint for required documents
-    const res = await fetch(`/api/v1/applications/${id}/required-documents`, {
+    const res = await fetch(`${import.meta.env.VITE_STAFF_API_BASE}/v1/applications/${id}/required-documents`, {
       credentials: "include"
     });
     if (res.ok) {

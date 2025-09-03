@@ -405,7 +405,7 @@ export function ChatBot({ isOpen, onToggle, currentStep, applicationData }: Chat
   // Log user message to staff (non-blocking)
   const logUserMessage = async (message: string) => {
     try {
-      const staffApiUrl = process.env.VITE_STAFF_API_URL || process.env.VITE_API_URL?.replace('/api', '');
+      const staffApiUrl = process.env.VITE_STAFF_API_BASE || process.env.VITE_API_URL?.replace('/api', '');
       if (!staffApiUrl) return;
 
       await fetch(`${staffApiUrl}/api/chat/user-message`, {

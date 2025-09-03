@@ -1,0 +1,77 @@
+# ====== CONFIG (edit if needed) ======
+# If you’re testing prod/staging, set your Staff API base here:
+API_BASE="https://staff.boreal.financial/api"
+# For local dev, use:
+# API_BASE="http://localhost:5000/api"
+
+# Paths to your test documents (replace with your real files)
+DOC1="./docs/2022_FS.pdf"
+DOC2="./docs/2023_FS.pdf"
+DOC3="./docs/2024_FS.pdf"
+DOC4="./docs/Bank_Apr_2025.pdf"
+DOC5="./docs/AR_Aging.pdf"
+DOC6="./docs/AP_Aging.pdf"
+
+# ====== 1) GET CSRF TOKEN (captures cookie + header) ======
+rm -f cookies.txt
+CSRF=$(
+  curl -i -s -c cookies.txt "${API_BASE%/}/csrf-token" \
+  | awk -F': ' '/^x-csrf-token:/{gsub("\r","");print $2}'
+)
+echo "CSRF=${CSRF:-<none>}"
+
+# ====== 2) SUBMIT APPLICATION JSON ======
+CREATE_RES=$(
+curl -s -b cookies.txt \
+  -H "Content-Type: application/json" \
+  -H "x-csrf-token: ${CSRF}" \
+  -X POST "${API_BASE%/}/v1/applications" \
+  -d '{
+    "product_id":"accord-working-capital-001",
+    "country":"CA",
+    "amount":100000,
+    "years_in_business":24,
+    "monthly_revenue":50000,
+    "business_legal_name":"Acme Manufacturing Inc.",
+    "industry":"Manufacturing",
+    "contact_name":"Jane Doe",
+    "contact_email":"jane@example.com",
+    "contact_phone":"+1-555-123-4567",
+    "documents":[{"type":"Bank Statements (6 months)"}]
+  }'
+)
+echo "$CREATE_RES" | jq . || echo "$CREATE_RES"
+
+SUB_ID=$(echo "$CREATE_RES" | jq -r '.submission_id // empty')
+if [ -z "$SUB_ID" ] || [ "$SUB_ID" = "null" ]; then
+  echo "❌ No submission_id returned. Check errors above."
+  exit 1
+fi
+echo "✅ submission_id: $SUB_ID"
+
+# ====== 3) UPLOAD MULTIPLE DOCUMENTS (field name MUST be 'files') ======
+UPLOAD_RES=$(
+curl -s -b cookies.txt \
+  -H "x-csrf-token: ${CSRF}" \
+  -X POST "${API_BASE%/}/v1/applications/${SUB_ID}/docs" \
+  -F "files=@${DOC1}" \
+  -F "files=@${DOC2}" \
+  -F "files=@${DOC3}" \
+  -F "files=@${DOC4}" \
+  -F "files=@${DOC5}" \
+  -F "files=@${DOC6}"
+)
+echo "$UPLOAD_RES" | jq . || echo "$UPLOAD_RES"
+
+COUNT=$(echo "$UPLOAD_RES" | jq -r '.count // 0')
+if [ "$COUNT" -lt 1 ]; then
+  echo "❌ Upload did not accept files. Ensure the field is 'files' and paths exist."
+  exit 1
+fi
+echo "✅ ${COUNT} file(s) uploaded."
+
+# ====== 4) VERIFY FROM CLIENT SIDE (optional quick check via GET) ======
+VERIFY_RES=$(
+curl -s "${API_BASE%/}/v1/applications/${SUB_ID}"
+)
+echo "$VERIFY_RES" | jq '.application | {id, status, files_count: (.files|length), first_file: .files[0]}'

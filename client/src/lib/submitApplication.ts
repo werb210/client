@@ -18,7 +18,7 @@ export async function submitApplication(payload: {
 }) {
   await ensureCsrf();
 
-  const r = await fetch(`${import.meta.env.VITE_STAFF_API}/v1/applications`, {
+  const r = await fetch(`${import.meta.env.VITE_STAFF_API_BASE}/v1/applications`, {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },

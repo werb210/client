@@ -1,5 +1,5 @@
 export const API_BASE =
-  import.meta.env.VITE_STAFF_API_URL ?? "https://staff.boreal.financial/api";
+  import.meta.env.VITE_STAFF_API_BASE ?? "https://staff.boreal.financial/api";
 
 export const SHARED_TOKEN =
   import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN ?? "";

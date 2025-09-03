@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Use your staff backend API base URL
-const API_BASE = import.meta.env.VITE_STAFF_API_URL;
+const API_BASE = import.meta.env.VITE_STAFF_API_BASE;
 
 export const createApplication = async (formData: any) => {
   const res = await axios.post(`${API_BASE}/api/applications`, formData, {

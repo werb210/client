@@ -109,7 +109,7 @@ export const ApiEndpointTester = () => {
 
       <div className="text-sm text-gray-600 mb-4">
         <p><strong>Development Mode:</strong> {import.meta.env.DEV ? 'Yes' : 'No'}</p>
-        <p><strong>Staff API URL:</strong> {import.meta.env.VITE_STAFF_API_URL || 'Not set'}</p>
+        <p><strong>Staff API URL:</strong> {import.meta.env.VITE_STAFF_API_BASE || 'Not set'}</p>
         <p><strong>Expected Behavior:</strong></p>
         <ul className="list-disc ml-4 mt-2">
           <li>Development: Local API endpoints have been removed - using staff backend only</li>
