@@ -281,11 +281,13 @@ export default function Step1FinancialProfile() {
   // Autosave and sync to canonical store every 2 seconds when values change
   const debouncedAutosave = useDebouncedCallback((values: FinancialProfileFormData) => {
     try {
+      console.log('🔧 [DEBUG] Autosaving values:', values);
+      
       // Save to localStorage for recovery (legacy)
       localStorage.setItem('bf:step1-autosave', JSON.stringify(values));
       
       // Sync to canonical store
-      canonicalStore.setMany({
+      const canonicalData = {
         country: values.businessLocation,
         industry: values.industry,
         amount: values.fundingAmount,
@@ -296,7 +298,16 @@ export default function Step1FinancialProfile() {
         accountsReceivableBalance: values.accountsReceivableBalance,
         fixedAssetsValue: values.fixedAssetsValue,
         equipmentValue: values.equipmentValue,
-      });
+      };
+      
+      console.log('🔧 [DEBUG] Syncing to canonical store:', canonicalData);
+      canonicalStore.setMany(canonicalData);
+      
+      // Verify it was saved
+      setTimeout(() => {
+        console.log('🔧 [DEBUG] Canonical store after save:', canonicalStore.getState().data);
+        console.log('🔧 [DEBUG] localStorage bf:canonical after save:', localStorage.getItem('bf:canonical'));
+      }, 100);
       
       console.log('💾 Step 1 autosaved and synced to canonical store:', Object.keys(values).length, 'fields');
     } catch (error) {
@@ -313,10 +324,15 @@ export default function Step1FinancialProfile() {
 
   // Restore data from canonical store and legacy autosave
   useEffect(() => {
+    console.log('🔧 [DEBUG] Step 1 restoration starting...');
     try {
       // Priority: Canonical store > Legacy autosave > Empty form
       const canonicalData = canonicalStore.data;
       const legacyData = JSON.parse(localStorage.getItem('bf:step1-autosave') || '{}');
+      
+      console.log('🔧 [DEBUG] Canonical store data:', canonicalData);
+      console.log('🔧 [DEBUG] Legacy autosave data:', legacyData);
+      console.log('🔧 [DEBUG] All localStorage keys:', Object.keys(localStorage));
       
       const restoredData = {
         businessLocation: canonicalData.country || legacyData.businessLocation || '',
@@ -335,11 +351,17 @@ export default function Step1FinancialProfile() {
         lookingFor: legacyData.lookingFor || '',
       };
       
+      console.log('🔧 [DEBUG] Restored data to apply:', restoredData);
+      
       // Only restore if we have meaningful data
       const hasData = Object.values(restoredData).some(v => v && String(v).trim());
+      console.log('🔧 [DEBUG] Has data to restore:', hasData);
+      
       if (hasData) {
         form.reset(restoredData);
         console.log('🔄 Step 1 restored from canonical store + legacy data');
+      } else {
+        console.log('🔧 [DEBUG] No data found to restore, form remains empty');
       }
     } catch (error) {
       console.warn('⚠️ Could not restore Step 1 data:', error);

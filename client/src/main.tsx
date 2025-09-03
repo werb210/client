@@ -60,7 +60,15 @@ installAuditHook();
     if (Object.keys(seed).length > 0) {
       setMany(seed);
       console.log('📦 Canonical store bootstrapped with', Object.keys(seed).length, 'fields:', seed);
+    } else {
+      console.log('📦 Canonical store bootstrap found no existing data to migrate');
     }
+    
+    // Debug: Check what's actually in localStorage
+    console.log('🔧 [BOOTSTRAP DEBUG] localStorage keys:', Object.keys(localStorage));
+    console.log('🔧 [BOOTSTRAP DEBUG] bf:canonical content:', localStorage.getItem('bf:canonical'));
+    console.log('🔧 [BOOTSTRAP DEBUG] bf:intake content:', localStorage.getItem('bf:intake'));
+    console.log('🔧 [BOOTSTRAP DEBUG] bf:step1-autosave content:', localStorage.getItem('bf:step1-autosave'));
   } catch (e) {
     console.warn('⚠️ Failed to bootstrap canonical store:', e);
   }
