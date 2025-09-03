@@ -22,21 +22,21 @@ export default function Step2() {
         const products = await api<any[]>("/api/v1/products");
         console.log("[Step2] Loaded", products.length, "products");
         
-        // Get user's Step 1 data from canonical store (primary) and fallback to legacy intake
-        const canonical = canonicalStore.data;
-        const legacyIntake = JSON.parse(localStorage.getItem('bf:intake') || '{}');
+        // Get user's Step 1 data from localStorage intake
+        const intake = JSON.parse(localStorage.getItem('bf:intake') || '{}');
         
-        const amount = Number(canonical.amount || legacyIntake.amountRequested || 0);
-        const industry = String(canonical.industry || legacyIntake.industry || '').toLowerCase();
-        const country = String(canonical.country || legacyIntake.country || '').toLowerCase();
-        const fundsPurpose = String(canonical.useOfFunds || legacyIntake.capitalUse || legacyIntake.fundsPurpose || '').toLowerCase();
-        const accountsReceivableBalance = Number(canonical.accountsReceivableBalance || legacyIntake.arBalance || 0);
+        const amount = Number(intake.fundingAmount || 0);
+        const industry = String(intake.industry || '').toLowerCase();
+        const country = String(intake.businessLocation || '').toLowerCase();
+        const fundsPurpose = String(intake.fundsPurpose || '').toLowerCase();
+        const accountsReceivableBalance = Number(intake.accountsReceivableBalance || 0);
+        const lookingFor = String(intake.lookingFor || '').toLowerCase();
         
-        console.log("[Step2] Business rules data from canonical store:", { 
+        console.log("[Step2] Business rules data from localStorage:", { 
           fundsPurpose, 
           accountsReceivableBalance,
-          canonical,
-          legacyIntake 
+          lookingFor,
+          intake 
         });
         
         console.log("[Step2] Scoring with profile:", { amount, industry, country, fundsPurpose, accountsReceivableBalance });
@@ -47,13 +47,13 @@ export default function Step2() {
           const cat = String(p.category || "").trim();
           if (!cat) continue;
           
-          // Business Rule: Only show equipment finance categories if user selected "Equipment Purchase" in Step 1
+          // Business Rule: Hide equipment financing when lookingFor is "capital"
           const isEquipmentCategory = cat.toLowerCase().includes('equipment') || 
                                      cat.toLowerCase().includes('asset') ||
                                      cat.toLowerCase().includes('equipment_financing');
           
-          if (isEquipmentCategory && fundsPurpose !== 'equipment') {
-            console.log("[Step2] Filtered out equipment category:", cat, "- fundsPurpose:", fundsPurpose);
+          if (isEquipmentCategory && lookingFor === 'capital') {
+            console.log("[Step2] Filtered out equipment category:", cat, "- lookingFor:", lookingFor);
             continue; // Skip this product/category
           }
           

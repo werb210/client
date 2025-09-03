@@ -15,6 +15,7 @@ import { PWAOfflineQueue } from "@/components/PWAOfflineQueue";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { initSentry, Sentry } from "@/lib/sentry";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import CookieBanner from "@/components/CookieBanner";
 // ✅ Socket.IO integration handled by useWebSocket hook
 
 // Initialize Sentry error monitoring
@@ -65,6 +66,7 @@ function App() {
         <PWAInstallPrompt />
         <PWAOfflineQueue />
       </AppShell>
+      <CookieBanner />
     </ErrorBoundary>
   );
 }

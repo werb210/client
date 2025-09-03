@@ -20,8 +20,7 @@ import { StepHeader } from '@/components/StepHeader';
 import { initializeApplicationId, getStoredApplicationId } from '@/lib/uuidUtils';
 import { saveIntake } from '@/utils/normalizeIntake';
 import { useSubmitApplication } from '@/hooks/useSubmitApplication';
-import { useCanonField } from '@/canonical/hook';
-import { useCanon } from '@/canonical/store';
+import { useAutosave } from '@/lib/useAutosave';
 
 // Currency formatting utilities
 const formatCurrency = (value: string): string => {
@@ -262,8 +261,8 @@ export default function Step1FinancialProfile() {
   const accountsReceivableValue = form.watch('accountsReceivableBalance');
   const fixedAssetsValue = form.watch('fixedAssetsValue');
 
-  // Canonical fields - these will sync with the unified store
-  const canonicalStore = useCanon();
+  // Get current form values for autosave
+  const currentFormValues = form.getValues();
   
   // Get existing form data from both legacy sources and canonical store
   const existingFormData = form.getValues();
@@ -275,51 +274,19 @@ export default function Step1FinancialProfile() {
     }
   })();
 
-  // Watch all form values for autosave AND canonical store sync
-  const watchedValues = form.watch();
-
-  // Autosave and sync to canonical store every 2 seconds when values change
-  const debouncedAutosave = useDebouncedCallback((values: FinancialProfileFormData) => {
-    try {
-      console.log('🔧 [DEBUG] Autosaving values:', values);
-      
-      // Save to localStorage for recovery (legacy)
-      localStorage.setItem('bf:step1-autosave', JSON.stringify(values));
-      
-      // Sync to canonical store
-      const canonicalData = {
-        country: values.businessLocation,
-        industry: values.industry,
-        amount: values.fundingAmount,
-        useOfFunds: values.fundsPurpose,
-        salesHistoryYears: values.salesHistory,
-        annualRevenue: values.revenueLastYear,
-        monthlyRevenue: values.averageMonthlyRevenue,
-        accountsReceivableBalance: values.accountsReceivableBalance,
-        fixedAssetsValue: values.fixedAssetsValue,
-        equipmentValue: values.equipmentValue,
-      };
-      
-      console.log('🔧 [DEBUG] Syncing to canonical store:', canonicalData);
-      canonicalStore.setMany(canonicalData);
-      
-      // Verify it was saved  
-      setTimeout(() => {
-        console.log('🔧 [DEBUG] localStorage bf:canonical after save:', localStorage.getItem('bf:canonical'));
-      }, 100);
-      
-      console.log('💾 Step 1 autosaved and synced to canonical store:', Object.keys(values).length, 'fields');
-    } catch (error) {
-      console.warn('⚠️ Step 1 autosave failed:', error);
-    }
-  }, 2000);
-
-  // Trigger autosave when form values change
+  // 1) hydrate from previous autosave, once
   useEffect(() => {
-    if (Object.keys(watchedValues).length > 0) {
-      debouncedAutosave(watchedValues);
-    }
-  }, [watchedValues, debouncedAutosave]);
+    try {
+      const raw = localStorage.getItem("bf:intake");
+      if (raw) {
+        const saved = JSON.parse(raw);
+        form.reset({ ...form.getValues(), ...saved });
+      }
+    } catch {}
+  }, []);
+
+  // 2) persist on every change
+  useAutosave("bf:intake", currentFormValues);
 
   // Restore data from canonical store and legacy autosave
   useEffect(() => {
@@ -879,6 +846,12 @@ export default function Step1FinancialProfile() {
                     e.preventDefault();
                     logger.log('🔘 Button clicked - submitting form manually');
                     const formData = form.getValues();
+                    
+                    // Flush autosave before navigation
+                    try { 
+                      localStorage.setItem("bf:intake", JSON.stringify(formData)); 
+                    } catch {}
+                    
                     onSubmit(formData);
                   }}
                 >
