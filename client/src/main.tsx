@@ -22,9 +22,7 @@ import("./lib/fetch-guard").catch(() => {});
 // Install audit hook for lender products validation
 installAuditHook();
 
-// Basic execution test
-console.log('🔥 MAIN.TSX LOADED');
-console.error('🔥 MAIN.TSX ERROR LOG');
+// Application loaded successfully
 (window as any).BOREAL_DEBUG = { mainExecuted: true, timestamp: Date.now() };
 
 // SW disabled automatically via import
