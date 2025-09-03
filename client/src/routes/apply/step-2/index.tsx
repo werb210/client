@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import CategoryCard from "@/lib/recommendations/CategoryCard";
 import { saveStep2 } from './persist';
 import { api } from '@/lib/http';
-import { useCanon } from '@/canonical/store';
+import { useCanon } from '@/providers/CanonProvider';
 
 type Category = { id: string; name: string; score: number; products: number; };
 const STORAGE_KEY = "bf:step2:category";
@@ -11,7 +11,7 @@ export default function Step2() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const canonicalStore = useCanon();
+  const { canon } = useCanon();
 
   useEffect(() => {
     let mounted = true;
@@ -22,21 +22,19 @@ export default function Step2() {
         const products = await api<any[]>("/api/v1/products");
         console.log("[Step2] Loaded", products.length, "products");
         
-        // Always hydrate from autosave (works after banner interactions)
-        const intake = JSON.parse(localStorage.getItem('bf:intake') || '{}');
+        // Read from canonical store - unified state management
+        const amount = Number(canon.fundingAmount || 0);
+        const industry = String(canon.industry || '').toLowerCase();
+        const country = String(canon.businessLocation || '').toLowerCase();
+        const fundsPurpose = String(canon.fundsPurpose || '').toLowerCase();
+        const accountsReceivableBalance = Number(canon.accountsReceivableBalance || 0);
+        const lookingFor = String(canon.lookingFor || '').toLowerCase();
         
-        const amount = Number(intake.fundingAmount || 0);
-        const industry = String(intake.industry || '').toLowerCase();
-        const country = String(intake.businessLocation || '').toLowerCase();
-        const fundsPurpose = String(intake.fundsPurpose || '').toLowerCase();
-        const accountsReceivableBalance = Number(intake.accountsReceivableBalance || 0);
-        const lookingFor = String(intake.lookingFor || '').toLowerCase();
-        
-        console.log("[Step2] Business rules data from localStorage:", { 
+        console.log("[Step2] Business rules data from canonical store:", { 
           fundsPurpose, 
           accountsReceivableBalance,
           lookingFor,
-          intake 
+          canon 
         });
         
         console.log("[Step2] Scoring with profile:", { amount, industry, country, fundsPurpose, accountsReceivableBalance });

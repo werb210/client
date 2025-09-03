@@ -4,6 +4,7 @@ import { FormDataProvider } from "@/context/FormDataContext";
 import { ApplicationProvider } from "@/context/ApplicationContext";
 import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
+import { CanonProvider } from "@/providers/CanonProvider";
 
 // Create query client instance
 const queryClient = new QueryClient({
@@ -30,16 +31,18 @@ export function AppShell({ children }: AppShellProps) {
 return (
     <GlobalErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <FormDataProvider>
-          <ApplicationProvider>
-            {/* Testing both providers together */}
-            <ComprehensiveFormProvider>
-              {/* DocumentWarningBanner temporarily disabled due to undefined context property access */}
-              {children}
-              <Toaster />
-            </ComprehensiveFormProvider>
-          </ApplicationProvider>
-        </FormDataProvider>
+        <CanonProvider>
+          <FormDataProvider>
+            <ApplicationProvider>
+              {/* Testing both providers together */}
+              <ComprehensiveFormProvider>
+                {/* DocumentWarningBanner temporarily disabled due to undefined context property access */}
+                {children}
+                <Toaster />
+              </ComprehensiveFormProvider>
+            </ApplicationProvider>
+          </FormDataProvider>
+        </CanonProvider>
       </QueryClientProvider>
     </GlobalErrorBoundary>
   );
