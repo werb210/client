@@ -1,0 +1,90 @@
+# =========================
+# CLIENT APP — E2E SUBMISSION (DATA + DOCUMENTS)  ✅ COPY/PASTE THIS BLOCK
+# Uses the exact Staff API contract your client app is configured for.
+# Requirements: bash, curl, jq; replace the DOC paths below with your files.
+# =========================
+
+set -euo pipefail
+
+# --- CONFIG ---
+API_BASE="${API_BASE:-https://staff.boreal.financial/api}"   # matches VITE_STAFF_API_BASE
+TMP_COOKIES="$(mktemp)"
+DOCS=(
+  "/path/to/2022_FS.pdf"
+  "/path/to/2023_FS.pdf"
+  "/path/to/2024_FS.pdf"
+  "/path/to/Apr_2025_Bank.pdf"
+  "/path/to/AR_Aging.pdf"
+  "/path/to/AP_Aging.pdf"
+)
+
+# --- 1) CSRF BOOTSTRAP ---
+# Returns cookie + (optionally) token JSON; we send x-csrf-token if present.
+CSRF_JSON="$(curl -s -c "$TMP_COOKIES" "${API_BASE%/}/csrf-token" || true)"
+CSRF="$(printf '%s' "$CSRF_JSON" | jq -r '(.token // .csrf // empty)' || true)"
+
+# --- 2) SUBMIT APPLICATION (POST /v1/applications) ---
+read -r -d '' PAYLOAD <<'JSON'
+{
+  "product_id": "accord-working-capital-001",
+  "country": "CA",
+  "amount": 100000,
+  "years_in_business": 24,
+  "monthly_revenue": 50000,
+  "business_legal_name": "Acme Manufacturing Inc.",
+  "industry": "Manufacturing",
+  "contact_name": "Jane Doe",
+  "contact_email": "jane@example.com",
+  "contact_phone": "+1-555-123-4567",
+  "documents": [
+    {"type":"Financial Statements"},
+    {"type":"Financial Statements"},
+    {"type":"Financial Statements"},
+    {"type":"Bank Statements (6 months)"},
+    {"type":"Accounts Receivable Aging"},
+    {"type":"Accounts Payable Aging"}
+  ]
+}
+JSON
+
+SUB_RESP="$(
+  curl -s -b "$TMP_COOKIES" -c "$TMP_COOKIES" \
+    -H "Content-Type: application/json" \
+    ${CSRF:+-H "x-csrf-token: $CSRF"} \
+    -X POST "${API_BASE%/}/v1/applications" \
+    -d "$PAYLOAD"
+)"
+echo "$SUB_RESP" | jq .
+SUB_ID="$(echo "$SUB_RESP" | jq -r '.submission_id // .id // empty')"
+test -n "$SUB_ID" || { echo "❌ No submission_id returned"; exit 1; }
+echo "🔗 SUBMISSION_ID: $SUB_ID"
+
+# --- 3) UPLOAD DOCUMENTS (POST /v1/applications/:id/docs) ---
+for f in "${DOCS[@]}"; do
+  test -f "$f" || { echo "❌ Missing file: $f"; exit 1; }
+  curl -s -b "$TMP_COOKIES" -c "$TMP_COOKIES" \
+    ${CSRF:+-H "x-csrf-token: $CSRF"} \
+    -F "files=@${f}" \
+    "${API_BASE%/}/v1/applications/${SUB_ID}/docs" >/dev/null
+done
+echo "📤 Uploaded ${#DOCS[@]} document(s)"
+
+# --- 4) VERIFY (GET /v1/applications/:id) ---
+APP_JSON="$(curl -s -b "$TMP_COOKIES" "${API_BASE%/}/v1/applications/${SUB_ID}")"
+echo "$APP_JSON" | jq .
+
+# Basic pass/fail checks
+STATUS_OK="$(echo "$APP_JSON" | jq -r '.ok // true')"
+FILES_COUNT="$(echo "$APP_JSON" | jq -r '(.application.files | length) // (.files | length) // 0')"
+AMOUNT="$(echo "$APP_JSON" | jq -r '.application.amount // .amount // 0')"
+YIB="$(echo "$APP_JSON" | jq -r '.application.years_in_business // .years_in_business // 0')"
+MMR="$(echo "$APP_JSON" | jq -r '.application.monthly_revenue // .monthly_revenue // 0')"
+
+test "$STATUS_OK" = "true" || { echo "❌ GET returned ok=false"; exit 1; }
+test "$AMOUNT" -ge 100000 || { echo "❌ Amount not persisted"; exit 1; }
+test "$YIB" -ge 24 || { echo "❌ years_in_business not persisted"; exit 1; }
+test "$MMR" -ge 50000 || { echo "❌ monthly_revenue not persisted"; exit 1; }
+test "$FILES_COUNT" -ge 2 || { echo "❌ Fewer than 2 files visible in response"; exit 1; }
+
+echo "✅ CLIENT E2E PASS — submission + ${#DOCS[@]} docs stored and retrievable (SUBMISSION_ID: $SUB_ID)"
+rm -f "$TMP_COOKIES"
