@@ -1,26 +1,25 @@
 import { useEffect, useRef } from "react";
 
 export function useAutosave<T>(key: string, data: T, delay = 300) {
-  const t = useRef<number | undefined>(undefined);
+  const t = useRef<number>();
   const last = useRef<string>("");
-
-  function writeNow(obj: T) {
-    const s = JSON.stringify(obj);
-    if (s === last.current) return;
-    last.current = s;
-    localStorage.setItem(key, s);
-  }
-
-  useEffect(() => {
-    // debounce
-    window.clearTimeout(t.current);
-    // @ts-ignore
-    t.current = window.setTimeout(() => writeNow(data), delay);
-    return () => window.clearTimeout(t.current);
+  
+  const write = () => {
+    const s = JSON.stringify(data);
+    if (s !== last.current) { 
+      last.current = s; 
+      localStorage.setItem(key, s); 
+    }
+  };
+  
+  useEffect(() => { 
+    clearTimeout(t.current); 
+    t.current = window.setTimeout(write, delay) as any; 
+    return () => clearTimeout(t.current); 
   }, [key, data, delay]);
-
+  
   useEffect(() => {
-    const flush = () => writeNow(data);
+    const flush = () => write();
     window.addEventListener("visibilitychange", flush);
     window.addEventListener("pagehide", flush);
     return () => {

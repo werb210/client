@@ -1,0 +1,257 @@
+Thanks for the dump — this explains the behavior. You’ve got **two separate issues**:
+
+1. **Two cookie banners + remounts** → your app state is getting blown away, so Step-2 reads empty Step-1 data and shows products it should hide.
+2. **Broken CSP meta** → lots of warnings, sometimes blocks resources, but mainly it’s just noise that makes debugging harder.
+
+Below is a *surgical* fix pack you can paste in. It keeps your current flows and just makes them reliable.
+
+---
+
+# 1) Kill the duplicate banner & stop remounts
+
+### A) Guard so your banner can only mount once
+
+Add a tiny guard and persist the decision (no reloads):
+
+```tsx
+// client/src/components/CookieBanner.tsx
+import { useEffect, useState } from "react";
+const LS_KEY = "bf:cookieConsent";
+
+export default function CookieBanner() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    // Prevent duplicate mounts across layouts/portals
+    if ((window as any).__BF_COOKIE_BANNER_MOUNTED) return;
+    (window as any).__BF_COOKIE_BANNER_MOUNTED = true;
+
+    const v = localStorage.getItem(LS_KEY);
+    setOpen(v !== "accepted" && v !== "declined");
+  }, []);
+
+  if (!open) return null;
+
+  const set = (val: "accepted" | "declined") => {
+    try {
+      localStorage.setItem(LS_KEY, val);
+      document.cookie = `cookie_consent=${val}; path=/; max-age=31536000; SameSite=Lax`;
+    } catch {}
+    setOpen(false);               // ✅ no reloads, no routing, no remounts
+  };
+
+  return (
+    <div data-cookie-banner="bf" className="fixed inset-x-0 bottom-0 z-50 bg-white border-t shadow p-4">
+      <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
+        <span className="text-sm">We use cookies to enhance your experience.</span>
+        <div className="flex gap-2">
+          <button onClick={() => set("declined")} className="px-3 py-2 rounded border">Decline Optional</button>
+          <button onClick={() => set("accepted")} className="px-3 py-2 rounded bg-black text-white">Accept All Cookies</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+Mount it **once** (below your routes) and remove any other banner mounts:
+
+```tsx
+// client/src/App.tsx
+import CookieBanner from "@/components/CookieBanner";
+export default function App() {
+  return (
+    <>
+      {/* your Router/Routes */}
+      <CookieBanner />
+    </>
+  );
+}
+```
+
+### B) Remove the *other* banner
+
+Search and delete (or disable) any vendor/banner scripts:
+
+* `index.html`: look for `<script ... cookie>` / OneTrust / Cookiebot / Klaro / “consent” snippets.
+* Any layout/component named `Cookie`, `Consent`, `Privacy`, etc.
+
+**Quick console check** (on any page):
+
+```js
+[...document.querySelectorAll('[data-cookie-banner],[id*="cookie"],[class*="cookie"]')]
+  .map(n => ({tag:n.tagName, id:n.id, cls:n.className, text:n.textContent?.slice(0,80)}))
+```
+
+You should see **only one** (the one with `data-cookie-banner="bf"`).
+
+---
+
+# 2) Make autosave & back/forward bulletproof
+
+Add a robust autosave (no re-renders, flush on navigation):
+
+```ts
+// client/src/lib/useAutosave.ts
+import { useEffect, useRef } from "react";
+export function useAutosave<T>(key: string, data: T, delay = 300) {
+  const t = useRef<number>();
+  const last = useRef<string>("");
+  const write = () => {
+    const s = JSON.stringify(data);
+    if (s !== last.current) { last.current = s; localStorage.setItem(key, s); }
+  };
+  useEffect(() => { clearTimeout(t.current); t.current = window.setTimeout(write, delay) as any; return () => clearTimeout(t.current); });
+  useEffect(() => {
+    const flush = () => write();
+    window.addEventListener("visibilitychange", flush);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      window.removeEventListener("visibilitychange", flush);
+      window.removeEventListener("pagehide", flush);
+    };
+  });
+}
+```
+
+Use it in **Step-1**:
+
+```tsx
+// client/src/routes/Step1_FinancialProfile_Complete.tsx
+import { useAutosave } from "@/lib/useAutosave";
+
+export default function Step1() {
+  const [form, setForm] = useState<Step1Form>(/* your init */);
+
+  // hydrate once
+  useEffect(() => {
+    try { const raw = localStorage.getItem("bf:intake"); if (raw) setForm(prev => ({...prev, ...JSON.parse(raw)})); } catch {}
+  }, []);
+
+  // persist all edits
+  useAutosave("bf:intake", form);
+
+  const onContinue = () => {
+    try { localStorage.setItem("bf:intake", JSON.stringify(form)); } catch {}
+    navigate("/apply/step-2");
+  };
+
+  // ...
+}
+```
+
+Now hitting Back/Forward or toggling the banner won’t lose values, and the banner won’t reappear.
+
+---
+
+# 3) Fix Step-2 filtering (read from saved Step-1 every time)
+
+```tsx
+// client/src/routes/apply/step-2/index.tsx
+type Intake = {
+  lookingFor?: string;
+  accountsReceivableBalance?: string;
+  fixedAssetsValue?: string;
+  equipmentValue?: string;
+};
+
+const EXCLUDES: Record<string, string[]> = {
+  // Your rule: when “Capital”, hide these:
+  Capital: ["Equipment Financing", "Invoice Factoring"]
+};
+
+function hasValue(x?: string) { return !!(x && /[1-9]/.test(String(x))); }
+
+export default function Step2() {
+  const [intake, setIntake] = useState<Intake>({});
+  const [products, setProducts] = useState<ProductSummary[]>([]); // your current list
+
+  // Always hydrate from autosave (works after banner interactions)
+  useEffect(() => {
+    try { setIntake(JSON.parse(localStorage.getItem("bf:intake") || "{}")); } catch {}
+    // Also react to edits if another component updates localStorage:
+    const onStorage = (e: StorageEvent) => { if (e.key === "bf:intake" && e.newValue) setIntake(JSON.parse(e.newValue)); };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const filtered = useMemo(() => {
+    let list = products.slice();
+    const excludes = EXCLUDES[intake.lookingFor || ""] || [];
+    list = list.filter(p => !excludes.includes(p.categoryName));
+
+    // Capability checks
+    list = list.filter(p => {
+      if (p.categoryName === "Invoice Factoring") return hasValue(intake.accountsReceivableBalance);
+      if (p.categoryName === "Equipment Financing") return hasValue(intake.fixedAssetsValue) || hasValue(intake.equipmentValue);
+      return true;
+    });
+    return list;
+  }, [products, intake]);
+
+  // render `filtered`
+}
+```
+
+Result: select **Capital** → **Equipment Financing** & **Invoice Factoring** won’t appear; going Back/Forward keeps the choice and the banner stays hidden.
+
+---
+
+# 4) Fix your CSP so it stops yelling (and never reloads you)
+
+Those errors are from an invalid **meta Content-Security-Policy**. You’ve put things in `default-src` that don’t belong (e.g., `'unsafe-dynamic'`, `report-uri`, and a **path with query**).
+
+Replace your CSP with this minimal, valid one (good for your Replit preview):
+
+```html
+<!-- index.html (HEAD) -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline';
+  style-src  'self' 'unsafe-inline' https://fonts.googleapis.com;
+  img-src    'self' data: blob:;
+  font-src   'self' https://fonts.gstatic.com data:;
+  connect-src 'self' https://*.replit.com https://sp.replit.com https://staff.boreal.financial https://api.launchdarkly.com https://events.launchdarkly.com;
+  frame-ancestors 'self' https://replit.com https://*.replit.com;
+  frame-src 'self' https://*.replit.com;
+  report-to csp-endpoint; report-uri https://example.com/csp-report;
+">
+```
+
+Notes:
+
+* **Removed** `'unsafe-dynamic'` (not allowed in `default-src`).
+* **Moved** `report-uri` to be a directive, not a source.
+* **Removed** any **paths**/queries from sources (only origins are valid).
+* Add any extra origins you really need to `connect-src` as you discover them.
+
+The font 404s are harmless (wrong variant); CSP wasn’t causing the Step-2 bug.
+
+---
+
+## Quick self-check (copy/paste)
+
+1. **One banner only**:
+
+```js
+[...document.querySelectorAll('[data-cookie-banner]')].length
+```
+
+→ `1`
+
+2. **Autosave**:
+
+```js
+localStorage.getItem('bf:intake')?.length > 10
+```
+
+→ `true` after you change Step-1.
+
+3. **Step-2 filter**:
+
+* Set Step-1 “What are you looking for?” = **Capital**
+* Go to Step-2 → list should **not** include “Equipment Financing” or “Invoice Factoring”.
+
+---
+
+If you want, I can also give you a tiny **unit test** to drop into Step-2 that asserts the two categories are filtered when `lookingFor==="Capital"`.

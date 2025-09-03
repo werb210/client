@@ -22,7 +22,7 @@ export default function Step2() {
         const products = await api<any[]>("/api/v1/products");
         console.log("[Step2] Loaded", products.length, "products");
         
-        // Get user's Step 1 data from localStorage intake
+        // Always hydrate from autosave (works after banner interactions)
         const intake = JSON.parse(localStorage.getItem('bf:intake') || '{}');
         
         const amount = Number(intake.fundingAmount || 0);
@@ -47,13 +47,10 @@ export default function Step2() {
           const cat = String(p.category || "").trim();
           if (!cat) continue;
           
-          // Business Rule: Hide equipment financing when lookingFor is "capital"
-          const isEquipmentCategory = cat.toLowerCase().includes('equipment') || 
-                                     cat.toLowerCase().includes('asset') ||
-                                     cat.toLowerCase().includes('equipment_financing');
-          
-          if (isEquipmentCategory && lookingFor === 'capital') {
-            console.log("[Step2] Filtered out equipment category:", cat, "- lookingFor:", lookingFor);
+          // Business Rule: Hide specific categories when "Capital" is selected
+          const excludedForCapital = ["Equipment Financing", "Invoice Factoring"];
+          if (lookingFor === 'capital' && excludedForCapital.includes(cat)) {
+            console.log("[Step2] Filtered out category for Capital:", cat, "- lookingFor:", lookingFor);
             continue; // Skip this product/category
           }
           
