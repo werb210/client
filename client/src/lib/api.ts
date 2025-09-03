@@ -214,7 +214,7 @@ export const getApplication = async (id: string) => {
 
 export const uploadDocument = async (applicationId: string, file: File, documentType: 'bank_statements' | 'financials' | 'tax_returns' | 'invoices' | 'contracts' | 'signed_application') => {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('files', file);
   formData.append('document_type', documentType);
   
   const res = await fetch(`/api/v1/applications/${applicationId}/docs`, { method:'POST', headers:{'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client' },
