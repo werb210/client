@@ -164,24 +164,8 @@ export default function Step1FinancialProfile() {
   const [location, setLocation] = useLocation();
   const { submitApplication, isSubmitting, error } = useSubmitApplication();
 
-  // Initialize application ID and restore autosaved data if available
+  // Initialize application ID
   useEffect(() => {
-    // Restore autosaved data if available
-    try {
-      const autosavedData = localStorage.getItem('bf:step1-autosave');
-      if (autosavedData) {
-        const parsed = JSON.parse(autosavedData);
-        // Only restore if form is currently empty to avoid overwriting user input
-        const currentValues = form.getValues();
-        const isEmpty = Object.values(currentValues).every(v => !v || v === '');
-        if (isEmpty) {
-          form.reset(parsed);
-          console.log('🔄 Step 1 restored from autosave:', Object.keys(parsed).length, 'fields');
-        }
-      }
-    } catch (error) {
-      console.warn('⚠️ Could not restore Step 1 autosave:', error);
-    }
     
     // Clear context state to prevent prefilled values - remove all default data
     dispatch({
@@ -229,7 +213,7 @@ export default function Step1FinancialProfile() {
     }
   }, []);
 
-  // Clear any existing form data to ensure clean start
+  // Clear only specific form data to preserve autosave and cookie consent
   const clearExistingData = () => {
     try {
       localStorage.removeItem('apply.form');
@@ -237,15 +221,18 @@ export default function Step1FinancialProfile() {
       localStorage.removeItem('bf:step2');
       localStorage.removeItem('bf:step3');
       localStorage.removeItem('bf:docs');
-      sessionStorage.clear();
-      console.log('🧹 Cleared all saved form data for clean start');
+      // DON'T clear sessionStorage or bf:step1-autosave - preserves cookie consent and autosave
+      console.log('🧹 Cleared specific form data (preserved autosave and cookies)');
     } catch (error) {
       console.warn('Could not clear storage:', error);
     }
   };
 
-  // Clear data on component mount for clean form
-  clearExistingData();
+  // Clear data on component mount only for new applications
+  const shouldClearData = !localStorage.getItem('bf:step1-autosave');
+  if (shouldClearData) {
+    clearExistingData();
+  }
 
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),
@@ -295,6 +282,25 @@ export default function Step1FinancialProfile() {
       debouncedAutosave(watchedValues);
     }
   }, [watchedValues, debouncedAutosave]);
+
+  // Restore autosaved data after form is initialized
+  useEffect(() => {
+    try {
+      const autosavedData = localStorage.getItem('bf:step1-autosave');
+      if (autosavedData) {
+        const parsed = JSON.parse(autosavedData);
+        // Only restore if form is currently empty to avoid overwriting user input
+        const currentValues = form.getValues();
+        const isEmpty = Object.values(currentValues).every(v => !v || v === '');
+        if (isEmpty) {
+          form.reset(parsed);
+          console.log('🔄 Step 1 restored from autosave:', Object.keys(parsed).length, 'fields');
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not restore Step 1 autosave:', error);
+    }
+  }, []); // Run only once after component mount
 
   const onSubmit = async (data: FinancialProfileFormData) => {
     logger.log('✅ Step 1 - Form submitted successfully!');
