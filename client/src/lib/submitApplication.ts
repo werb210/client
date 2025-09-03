@@ -23,7 +23,17 @@ export async function submitApplication(payload: {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify((()=>{ /*LOSSLESS_PAYLOAD*/ try{ const snap=(typeof window!=="undefined" && (window as any).__APP_STATE__)||{}; const payloadExt:any={...payload}; payloadExt.payload = getFormSnapshot(snap); payloadExt.formFields = payloadExt.payload; return payloadExt; }catch(_){ return payload; }})()),
+    body: JSON.stringify((()=>{ /* LOSSLESS_WRAP */
+  try{
+    if (import.meta.env?.VITE_LOSSLESS_SUBMIT === "0") return payload;
+    const snap=(typeof window!=="undefined" && (window as any).__APP_STATE__)||{};
+    const out:any={...payload};
+    const snapshot=getFormSnapshot(snap);
+    out.payload = snapshot;
+    out.formFields = snapshot; // Staff Zod passthrough
+    return out;
+  }catch(_){ return payload; }
+})()),
   });
 
   if (r.status === 400) {
