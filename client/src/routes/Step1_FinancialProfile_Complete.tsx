@@ -261,8 +261,8 @@ export default function Step1FinancialProfile() {
   const accountsReceivableValue = form.watch('accountsReceivableBalance');
   const fixedAssetsValue = form.watch('fixedAssetsValue');
 
-  // Get current form values for autosave
-  const currentFormValues = form.getValues();
+  // Watch all form values for autosave (reactive to changes)
+  const currentFormValues = form.watch();
   
   // Get existing form data from both legacy sources and canonical store
   const existingFormData = form.getValues();
@@ -288,51 +288,11 @@ export default function Step1FinancialProfile() {
   // 2) persist on every change
   useAutosave("bf:intake", currentFormValues);
 
-  // Restore data from canonical store and legacy autosave
+  // Debug logging to see what's happening
   useEffect(() => {
-    console.log('🔧 [DEBUG] Step 1 restoration starting...');
-    try {
-      // Priority: Canonical store > Legacy autosave > Empty form
-      const canonicalData = canonicalStore.data;
-      const legacyData = JSON.parse(localStorage.getItem('bf:step1-autosave') || '{}');
-      
-      console.log('🔧 [DEBUG] Canonical store data:', canonicalData);
-      console.log('🔧 [DEBUG] Legacy autosave data:', legacyData);
-      console.log('🔧 [DEBUG] All localStorage keys:', Object.keys(localStorage));
-      
-      const restoredData = {
-        businessLocation: canonicalData.country || legacyData.businessLocation || '',
-        industry: canonicalData.industry || legacyData.industry || '',
-        fundingAmount: canonicalData.amount || legacyData.fundingAmount || '',
-        fundsPurpose: canonicalData.useOfFunds || legacyData.fundsPurpose || '',
-        salesHistory: canonicalData.salesHistoryYears || legacyData.salesHistory || '',
-        revenueLastYear: canonicalData.annualRevenue || legacyData.revenueLastYear || '',
-        averageMonthlyRevenue: canonicalData.monthlyRevenue || legacyData.averageMonthlyRevenue || '',
-        accountsReceivableBalance: canonicalData.accountsReceivableBalance || legacyData.accountsReceivableBalance || '',
-        fixedAssetsValue: canonicalData.fixedAssetsValue || legacyData.fixedAssetsValue || '',
-        equipmentValue: canonicalData.equipmentValue || legacyData.equipmentValue || '',
-        // Keep other fields from legacy or defaults
-        headquarters: legacyData.headquarters || '',
-        headquartersState: legacyData.headquartersState || '',
-        lookingFor: legacyData.lookingFor || '',
-      };
-      
-      console.log('🔧 [DEBUG] Restored data to apply:', restoredData);
-      
-      // Only restore if we have meaningful data
-      const hasData = Object.values(restoredData).some(v => v && String(v).trim());
-      console.log('🔧 [DEBUG] Has data to restore:', hasData);
-      
-      if (hasData) {
-        form.reset(restoredData);
-        console.log('🔄 Step 1 restored from canonical store + legacy data');
-      } else {
-        console.log('🔧 [DEBUG] No data found to restore, form remains empty');
-      }
-    } catch (error) {
-      console.warn('⚠️ Could not restore Step 1 data:', error);
-    }
-  }, []); // Run only once after component mount
+    console.log('🔧 [DEBUG] Form values changed:', currentFormValues);
+    console.log('🔧 [DEBUG] localStorage bf:intake:', localStorage.getItem('bf:intake'));
+  }, [currentFormValues]);
 
   const onSubmit = async (data: FinancialProfileFormData) => {
     logger.log('✅ Step 1 - Form submitted successfully!');

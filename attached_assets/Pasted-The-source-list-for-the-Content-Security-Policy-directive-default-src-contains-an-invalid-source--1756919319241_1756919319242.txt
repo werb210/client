@@ -1,0 +1,632 @@
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.Understand this error
+10The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?Understand this error
+10The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.Understand this error
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.Understand this error
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?Understand this error
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.Understand this error
+client:1 The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.Understand this error
+client:1 The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?Understand this error
+client:1 The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.Understand this error
+_app-f068e4db5ebfa29e.js:38 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+_app-f068e4db5ebfa29e.js:38 [LaunchDarkly] LaunchDarkly client initialized
+client:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+_app-f068e4db5ebfa29e.js:38 [Violation] Added non-passive event listener to a scroll-blocking 'wheel' event. Consider marking event handler as 'passive' to make the page more responsive. See https://www.chromestatus.com/feature/5745543795965952
+(anonymous) @ _app-f068e4db5ebfa29e.js:38
+(anonymous) @ _app-f068e4db5ebfa29e.js:38
+(anonymous) @ 9038-f854aad3b9b1b024.js:1
+oO @ framework-bab46e4890870d81.js:1
+uB @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uO @ framework-bab46e4890870d81.js:1
+u_ @ framework-bab46e4890870d81.js:1
+r6 @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+framework-bab46e4890870d81.js:1 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this error
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'battery'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'layout-animations'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'navigation-override'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'oversized-images'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'publickey-credentials'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+framework-bab46e4890870d81.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-bab46e4890870d81.js:1
+(anonymous) @ framework-bab46e4890870d81.js:1
+uD @ framework-bab46e4890870d81.js:1
+uI @ framework-bab46e4890870d81.js:1
+uM @ framework-bab46e4890870d81.js:1
+uS @ framework-bab46e4890870d81.js:1
+C @ framework-bab46e4890870d81.js:1
+z @ framework-bab46e4890870d81.js:1Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.Understand this error
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'ambient-light-sensor'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'battery'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'execution-while-not-rendered'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'execution-while-out-of-viewport'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'layout-animations'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'legacy-image-formats'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'navigation-override'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'oversized-images'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'publickey-credentials'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'speaker-selection'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'unoptimized-images'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Unrecognized feature: 'unsized-media'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Allow attribute will take precedence over 'allowfullscreen'.Understand this warning
+dfab1952-ea3f-4ab8-a1f0-afc6b34a3c32-00-3fudsxq1yjl2.janeway.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Arac%3A:32 Allow attribute will take precedence over 'allowpaymentrequest'.Understand this warning
+attached_assets/Screenshot%202025-09-03%20at%2010.35.27%E2%80%AFAM_1756917329750.png:1  GET https://replit.com/@toddw1/attached_assets/Screenshot%202025-09-03%20at%2010.35.27%E2%80%AFAM_1756917329750.png 404 (Not Found)
+Image
+_ @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1Understand this error
+VM9 eruda.js:2 [Violation] Added non-passive event listener to a scroll-blocking 'wheel' event. Consider marking event handler as 'passive' to make the page more responsive. See https://www.chromestatus.com/feature/5745543795965952
+add @ VM9 eruda.js:2
+(anonymous) @ VM9 eruda.js:2
+t @ VM9 eruda.js:2
+(anonymous) @ VM9 eruda.js:2
+on @ VM9 eruda.js:2
+value @ VM9 eruda.js:2
+t @ VM9 eruda.js:2
+value @ VM9 eruda.js:2
+t @ VM9 eruda.js:2
+_initDevTools @ VM9 eruda.js:2
+init @ VM9 eruda.js:2
+(anonymous) @ VM11 injected.js:2
+(anonymous) @ VM11 injected.js:307
+VM9 eruda.js:2 [SW] Disabled in development
+index-BLoEG9Wj.css:1  GET https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS0Y.woff2 net::ERR_ABORTED 404 (Not Found)Understand this error
+Screenshot%202025-09-03%20at%2010.35.42%E2%80%AFAM_1756917344791.png:1  GET https://replit.com/@toddw1/attached_assets/Screenshot%202025-09-03%20at%2010.35.42%E2%80%AFAM_1756917344791.png 404 (Not Found)
+Image
+_ @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1
+oq @ framework-bab46e4890870d81.js:1
+oQ @ framework-bab46e4890870d81.js:1Understand this error
+DevTools.js:316 [Violation] Added non-passive event listener to a scroll-blocking 'wheel' event. Consider marking event handler as 'passive' to make the page more responsive. See https://www.chromestatus.com/feature/5745543795965952
+add @ delegate.js:81
+(anonymous) @ $event.js:17
+t @ each.js:8
+(anonymous) @ $event.js:16
+on @ $.js:42
+value @ index.js:144
+t @ index.js:17
+value @ DevTools.js:316
+t @ DevTools.js:58
+_initDevTools @ eruda.js:244
+init @ eruda.js:51
+(anonymous) @ injected.js:2
+(anonymous) @ injected.js:307
+Console.js:61 [SW] Disabled in development
+index-BLoEG9Wj.css:1  GET https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS0Y.woff2 404 (Not Found)Understand this error
