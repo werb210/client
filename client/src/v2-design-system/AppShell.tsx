@@ -3,7 +3,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { FormDataProvider } from "@/context/FormDataContext";
 import { ApplicationProvider } from "@/context/ApplicationContext";
 import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
-import { CookieManager } from "@/components/CookieManager";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 
 // Create query client instance
@@ -38,7 +37,6 @@ return (
               {/* DocumentWarningBanner temporarily disabled due to undefined context property access */}
               {children}
               <Toaster />
-              <CookieManager />
             </ComprehensiveFormProvider>
           </ApplicationProvider>
         </FormDataProvider>
