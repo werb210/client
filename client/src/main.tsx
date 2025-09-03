@@ -25,54 +25,31 @@ import("./lib/fetch-guard").catch(() => {});
 // Install audit hook for lender products validation
 installAuditHook();
 
-// Bootstrap canonical data store from existing localStorage
-(() => {
-  try {
-    const ls = (k: string) => {
-      try {
-        return JSON.parse(localStorage.getItem(k) || "{}");
-      } catch {
-        return {};
-      }
-    };
-    const sources = [
-      ls("bf:intake"), 
-      ls("bf:step1-autosave"),
-      ls("bf:step2"), 
-      ls("bf:step3"), 
-      ls("bf:step4"), 
-      ls("bf:docs"), 
-      (window as any).__APP_STATE__ || {}
-    ];
-    const setMany = useCanon.getState().setMany;
-    const seed: any = {};
-    
-    (Object.keys(ALIASES) as (keyof typeof ALIASES)[]).forEach((canon) => {
-      for (const p of ALIASES[canon]) {
-        const val = sources.map(s => deepGet(s, p)).find(present);
-        if (present(val)) { 
-          seed[canon] = val; 
-          break; 
-        }
-      }
-    });
-    
-    if (Object.keys(seed).length > 0) {
-      setMany(seed);
-      console.log('📦 Canonical store bootstrapped with', Object.keys(seed).length, 'fields:', seed);
-    } else {
-      console.log('📦 Canonical store bootstrap found no existing data to migrate');
-    }
-    
-    // Debug: Check what's actually in localStorage
-    console.log('🔧 [BOOTSTRAP DEBUG] localStorage keys:', Object.keys(localStorage));
-    console.log('🔧 [BOOTSTRAP DEBUG] bf:canonical content:', localStorage.getItem('bf:canonical'));
-    console.log('🔧 [BOOTSTRAP DEBUG] bf:intake content:', localStorage.getItem('bf:intake'));
-    console.log('🔧 [BOOTSTRAP DEBUG] bf:step1-autosave content:', localStorage.getItem('bf:step1-autosave'));
-  } catch (e) {
-    console.warn('⚠️ Failed to bootstrap canonical store:', e);
-  }
-})();
+// Bootstrap canonical data store - simplified for debugging
+console.log('🔧 [MAIN] Starting canonical store bootstrap...');
+
+try {
+  console.log('🔧 [MAIN] Importing canonical store...');
+  
+  // Test the import first
+  console.log('🔧 [MAIN] useCanon imported:', typeof useCanon);
+  console.log('🔧 [MAIN] ALIASES imported:', typeof ALIASES);
+  
+  // Simple test - just try to use the store
+  const testStore = useCanon.getState();
+  console.log('🔧 [MAIN] Store accessed successfully:', testStore);
+  
+  // Try a simple set/get
+  useCanon.getState().set('country', 'test');
+  console.log('🔧 [MAIN] Test set successful');
+  
+  console.log('📦 Canonical store basic functionality working!');
+  
+} catch (e) {
+  console.error('❌ [MAIN] Canonical store bootstrap failed:', e);
+  console.error('❌ [MAIN] Error details:', e instanceof Error ? e.message : String(e));
+  console.error('❌ [MAIN] Stack trace:', e instanceof Error ? e.stack : 'No stack trace');
+}
 
 // SW disabled automatically via import
 
