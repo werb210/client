@@ -261,34 +261,25 @@ export default function Step1FinancialProfile() {
   const accountsReceivableValue = form.watch('accountsReceivableBalance');
   const fixedAssetsValue = form.watch('fixedAssetsValue');
 
-  // Watch all form values for changes
-  const watchedValues = form.watch();
-
   // 1) hydrate from previous autosave, once
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("bf:intake");
-      if (raw) {
+    const raw = localStorage.getItem("bf:intake");
+    if (raw) {
+      try {
         const saved = JSON.parse(raw);
-        console.log('🔧 [DEBUG] Restoring form data:', saved);
         form.reset(saved);
-      }
-    } catch {}
+      } catch {}
+    }
   }, []);
 
-  // 2) persist on every form change
+  // 2) Auto-save on every field change
+  const formValues = form.watch();
   useEffect(() => {
-    // Only save if we have actual form data
-    const hasData = Object.values(watchedValues).some(v => v && String(v).trim());
+    const hasData = Object.values(formValues).some(v => v && String(v).trim());
     if (hasData) {
-      console.log('🔧 [DEBUG] Form changed, saving:', watchedValues);
-      try {
-        localStorage.setItem("bf:intake", JSON.stringify(watchedValues));
-      } catch (e) {
-        console.warn('Failed to save form data:', e);
-      }
+      localStorage.setItem("bf:intake", JSON.stringify(formValues));
     }
-  }, [watchedValues]);
+  }, [formValues]);
 
   const onSubmit = async (data: FinancialProfileFormData) => {
     logger.log('✅ Step 1 - Form submitted successfully!');
