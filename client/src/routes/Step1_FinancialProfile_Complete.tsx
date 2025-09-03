@@ -149,7 +149,9 @@ const fixedAssetsOptions = [
 
 
 export default function Step1FinancialProfile() {
+  console.log("🔥 STEP 1 COMPONENT MOUNTED - BASIC CHECK");
   const { data: contextData, save: saveToNewContext } = useFormData();
+  console.log("🔥 FORM DATA CONTEXT:", contextData);
   
   // Create a mock state and dispatch to avoid errors
   const state = {
