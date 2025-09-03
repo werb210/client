@@ -1,0 +1,228 @@
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.Understand this error
+10The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?Understand this error
+10The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.Understand this error
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.Understand this error
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?Understand this error
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.Understand this error
+client:1 The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.Understand this error
+client:1 The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?Understand this error
+client:1 The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.Understand this error
+_app-fb59155de99a746e.js:38 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+_app-fb59155de99a746e.js:38 [LaunchDarkly] LaunchDarkly client initialized
+client:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+framework-cc5b76d46a594bdb.js:1 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this error
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'battery'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'layout-animations'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'navigation-override'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'oversized-images'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'publickey-credentials'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+framework-cc5b76d46a594bdb.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uD @ framework-cc5b76d46a594bdb.js:1
+uI @ framework-cc5b76d46a594bdb.js:1
+uM @ framework-cc5b76d46a594bdb.js:1
+uS @ framework-cc5b76d46a594bdb.js:1
+C @ framework-cc5b76d46a594bdb.js:1
+z @ framework-cc5b76d46a594bdb.js:1Understand this warning
+workspace_iframe.html:32 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.Understand this error
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'battery'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.Understand this warning
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.Understand this warning
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.Understand this warning
+_app-fb59155de99a746e.js:38 [Violation] Added non-passive event listener to a scroll-blocking 'wheel' event. Consider marking event handler as 'passive' to make the page more responsive. See https://www.chromestatus.com/feature/5745543795965952
+(anonymous) @ _app-fb59155de99a746e.js:38
+(anonymous) @ _app-fb59155de99a746e.js:38
+(anonymous) @ 9038-846dcd72936d1f15.js:1
+oO @ framework-cc5b76d46a594bdb.js:1
+uB @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+uO @ framework-cc5b76d46a594bdb.js:1
+u_ @ framework-cc5b76d46a594bdb.js:1
+r6 @ framework-cc5b76d46a594bdb.js:1
+(anonymous) @ framework-cc5b76d46a594bdb.js:1
+VM11 eruda.js:2 [Violation] Added non-passive event listener to a scroll-blocking 'wheel' event. Consider marking event handler as 'passive' to make the page more responsive. See https://www.chromestatus.com/feature/5745543795965952
+add @ VM11 eruda.js:2
+(anonymous) @ VM11 eruda.js:2
+t @ VM11 eruda.js:2
+(anonymous) @ VM11 eruda.js:2
+on @ VM11 eruda.js:2
+value @ VM11 eruda.js:2
+t @ VM11 eruda.js:2
+value @ VM11 eruda.js:2
+t @ VM11 eruda.js:2
+_initDevTools @ VM11 eruda.js:2
+init @ VM11 eruda.js:2
+(anonymous) @ VM10 injected.js:2
+(anonymous) @ VM10 injected.js:307
+VM11 eruda.js:2 [SW] Disabled in development
+index-5NFtNpcC.css:1  GET https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS0Y.woff2 net::ERR_ABORTED 404 (Not Found)Understand this error
+DevTools.js:316 [Violation] Added non-passive event listener to a scroll-blocking 'wheel' event. Consider marking event handler as 'passive' to make the page more responsive. See https://www.chromestatus.com/feature/5745543795965952
+add @ delegate.js:81
+(anonymous) @ $event.js:17
+t @ each.js:8
+(anonymous) @ $event.js:16
+on @ $.js:42
+value @ index.js:144
+t @ index.js:17
+value @ DevTools.js:316
+t @ DevTools.js:58
+_initDevTools @ eruda.js:244
+init @ eruda.js:51
+(anonymous) @ injected.js:2
+(anonymous) @ injected.js:307
+Console.js:61 [SW] Disabled in development
+index-5NFtNpcC.css:1  GET https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS0Y.woff2 net::ERR_ABORTED 404 (Not Found)Understand this error

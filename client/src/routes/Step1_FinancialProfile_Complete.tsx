@@ -303,9 +303,8 @@ export default function Step1FinancialProfile() {
       console.log('🔧 [DEBUG] Syncing to canonical store:', canonicalData);
       canonicalStore.setMany(canonicalData);
       
-      // Verify it was saved
+      // Verify it was saved  
       setTimeout(() => {
-        console.log('🔧 [DEBUG] Canonical store after save:', canonicalStore.getState().data);
         console.log('🔧 [DEBUG] localStorage bf:canonical after save:', localStorage.getItem('bf:canonical'));
       }, 100);
       
