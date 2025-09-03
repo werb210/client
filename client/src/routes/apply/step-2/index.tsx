@@ -26,8 +26,9 @@ export default function Step2() {
         const industry = String(intake.industry || '').toLowerCase();
         const country = String(intake.country || '').toLowerCase();
         const fundsPurpose = String(intake.capitalUse || intake.fundsPurpose || '').toLowerCase();
+        const accountsReceivableBalance = Number(intake.arBalance || 0);
         
-        console.log("[Step2] Scoring with profile:", { amount, industry, country, fundsPurpose });
+        console.log("[Step2] Scoring with profile:", { amount, industry, country, fundsPurpose, accountsReceivableBalance });
 
         // Group by category
         const grouped = new Map<string, Category>();
@@ -42,6 +43,16 @@ export default function Step2() {
           
           if (isEquipmentCategory && fundsPurpose !== 'equipment') {
             console.log("[Step2] Filtered out equipment category:", cat, "- fundsPurpose:", fundsPurpose);
+            continue; // Skip this product/category
+          }
+          
+          // Business Rule: Don't show Invoice Factoring if user has no account receivables
+          const isInvoiceFactoringCategory = cat.toLowerCase().includes('invoice') || 
+                                            cat.toLowerCase().includes('factoring') ||
+                                            cat.toLowerCase().includes('receivables');
+          
+          if (isInvoiceFactoringCategory && accountsReceivableBalance === 0) {
+            console.log("[Step2] Filtered out invoice factoring category:", cat, "- no account receivables");
             continue; // Skip this product/category
           }
           if (!grouped.has(cat)) {
