@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import CategoryCard from "@/lib/recommendations/CategoryCard";
 import { saveStep2 } from './persist';
 import { api } from '@/lib/http';
+import { useCanon } from '@/canonical/store';
 
 type Category = { id: string; name: string; score: number; products: number; };
 const STORAGE_KEY = "bf:step2:category";
@@ -10,6 +11,7 @@ export default function Step2() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const canonicalStore = useCanon();
 
   useEffect(() => {
     let mounted = true;
@@ -20,18 +22,21 @@ export default function Step2() {
         const products = await api<any[]>("/api/v1/products");
         console.log("[Step2] Loaded", products.length, "products");
         
-        // Get user's Step 1 intake for intelligent scoring
-        const intake = JSON.parse(localStorage.getItem('bf:intake') || '{}');
-        const amount = Number(intake.amountRequested || 0);
-        const industry = String(intake.industry || '').toLowerCase();
-        const country = String(intake.country || '').toLowerCase();
-        const fundsPurpose = String(intake.capitalUse || intake.fundsPurpose || '').toLowerCase();
-        const accountsReceivableBalance = Number(intake.arBalance || 0);
+        // Get user's Step 1 data from canonical store (primary) and fallback to legacy intake
+        const canonical = canonicalStore.data;
+        const legacyIntake = JSON.parse(localStorage.getItem('bf:intake') || '{}');
         
-        console.log("[Step2] Business rules data:", { 
+        const amount = Number(canonical.amount || legacyIntake.amountRequested || 0);
+        const industry = String(canonical.industry || legacyIntake.industry || '').toLowerCase();
+        const country = String(canonical.country || legacyIntake.country || '').toLowerCase();
+        const fundsPurpose = String(canonical.useOfFunds || legacyIntake.capitalUse || legacyIntake.fundsPurpose || '').toLowerCase();
+        const accountsReceivableBalance = Number(canonical.accountsReceivableBalance || legacyIntake.arBalance || 0);
+        
+        console.log("[Step2] Business rules data from canonical store:", { 
           fundsPurpose, 
           accountsReceivableBalance,
-          rawIntake: intake 
+          canonical,
+          legacyIntake 
         });
         
         console.log("[Step2] Scoring with profile:", { amount, industry, country, fundsPurpose, accountsReceivableBalance });
