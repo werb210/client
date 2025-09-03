@@ -261,38 +261,35 @@ export default function Step1FinancialProfile() {
   const accountsReceivableValue = form.watch('accountsReceivableBalance');
   const fixedAssetsValue = form.watch('fixedAssetsValue');
 
-  // Watch all form values for autosave (reactive to changes)
-  const currentFormValues = form.watch();
-  
-  // Get existing form data from both legacy sources and canonical store
-  const existingFormData = form.getValues();
-  const legacyAutosave = (() => {
-    try {
-      return JSON.parse(localStorage.getItem('bf:step1-autosave') || '{}');
-    } catch {
-      return {};
-    }
-  })();
-
   // 1) hydrate from previous autosave, once
   useEffect(() => {
     try {
       const raw = localStorage.getItem("bf:intake");
       if (raw) {
         const saved = JSON.parse(raw);
-        form.reset({ ...form.getValues(), ...saved });
+        console.log('🔧 [DEBUG] Restoring form data:', saved);
+        form.reset(saved);
       }
     } catch {}
   }, []);
 
-  // 2) persist on every change
-  useAutosave("bf:intake", currentFormValues);
-
-  // Debug logging to see what's happening
+  // 2) persist on every form change using subscription
   useEffect(() => {
-    console.log('🔧 [DEBUG] Form values changed:', currentFormValues);
-    console.log('🔧 [DEBUG] localStorage bf:intake:', localStorage.getItem('bf:intake'));
-  }, [currentFormValues]);
+    const subscription = form.watch((data) => {
+      // Only save if we have actual form data
+      const hasData = Object.values(data).some(v => v && String(v).trim());
+      if (hasData) {
+        console.log('🔧 [DEBUG] Form changed, saving:', data);
+        try {
+          localStorage.setItem("bf:intake", JSON.stringify(data));
+        } catch (e) {
+          console.warn('Failed to save form data:', e);
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const onSubmit = async (data: FinancialProfileFormData) => {
     logger.log('✅ Step 1 - Form submitted successfully!');
