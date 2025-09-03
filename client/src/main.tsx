@@ -24,6 +24,8 @@ installAuditHook();
 
 // Test basic main.tsx execution first
 console.log('🔧 [MAIN] main.tsx is executing!');
+(window as any).BOREAL_DEBUG = { mainExecuted: true, timestamp: Date.now() };
+console.log('🔧 [MAIN] Window debug object set:', (window as any).BOREAL_DEBUG);
 
 // Test canonical imports dynamically to avoid breaking main.tsx
 console.log('🔧 [MAIN] Testing canonical store imports...');
