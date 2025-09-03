@@ -44,12 +44,10 @@ export const CookieManager = () => {
       }
     };
 
-    // PRODUCTION: Disable polling - check only once
+    // Check immediately and then poll every 2 seconds to catch consent changes
     checkConsent();
-    
-    // DISABLED: Polling disabled for production
-    // const interval = setInterval(checkConsent, 1000);
-    // return () => clearInterval(interval);
+    const interval = setInterval(checkConsent, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
