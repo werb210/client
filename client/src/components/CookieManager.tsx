@@ -15,6 +15,7 @@ export const CookieManager = () => {
   useEffect(() => {
     // Check if user has already given consent
     const hasConsent = Cookies.get("borealCookieConsent");
+    console.log('🍪 Initial consent check:', hasConsent);
     
     // Show banner only if no consent has been given
     setShowBanner(!hasConsent);
@@ -44,9 +45,9 @@ export const CookieManager = () => {
       }
     };
 
-    // Check immediately and then poll every 2 seconds to catch consent changes
+    // Check immediately and then poll every 1 second to catch consent changes faster
     checkConsent();
-    const interval = setInterval(checkConsent, 2000);
+    const interval = setInterval(checkConsent, 1000);
     return () => clearInterval(interval);
   }, []);
 

@@ -15,7 +15,7 @@ const toNum = (v: unknown) =>
 
 export function normalizeStep1(raw: Record<string, unknown>): Intake {
   const result = {
-    capitalUse: String(raw.capitalUse ?? raw.purpose ?? raw.lookingFor ?? raw.fundsPurpose ?? '').trim(),
+    capitalUse: String(raw.fundsPurpose ?? raw.capitalUse ?? raw.purpose ?? raw.lookingFor ?? '').trim(),
     amountRequested: toNum(raw.amountRequested ?? raw.fundingAmount ?? raw.amount ?? raw.requestedAmount),
     country: (() => {
       const loc = String(raw.businessLocation ?? raw.country ?? raw.headquarters ?? raw.applicantCountry ?? raw.region ?? '').trim().toUpperCase();

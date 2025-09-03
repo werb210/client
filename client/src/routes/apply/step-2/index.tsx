@@ -28,6 +28,12 @@ export default function Step2() {
         const fundsPurpose = String(intake.capitalUse || intake.fundsPurpose || '').toLowerCase();
         const accountsReceivableBalance = Number(intake.arBalance || 0);
         
+        console.log("[Step2] Business rules data:", { 
+          fundsPurpose, 
+          accountsReceivableBalance,
+          rawIntake: intake 
+        });
+        
         console.log("[Step2] Scoring with profile:", { amount, industry, country, fundsPurpose, accountsReceivableBalance });
 
         // Group by category

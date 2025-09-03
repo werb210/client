@@ -287,13 +287,10 @@ export default function Step1FinancialProfile() {
       const autosavedData = localStorage.getItem('bf:step1-autosave');
       if (autosavedData) {
         const parsed = JSON.parse(autosavedData);
-        // Only restore if form is currently empty to avoid overwriting user input
-        const currentValues = form.getValues();
-        const isEmpty = Object.values(currentValues).every(v => !v || v === '');
-        if (isEmpty) {
-          form.reset(parsed);
-          console.log('🔄 Step 1 restored from autosave:', Object.keys(parsed).length, 'fields');
-        }
+        console.log('🔄 Attempting to restore autosave:', parsed);
+        // Reset form with parsed data - don't check if empty, always restore autosaved data
+        form.reset(parsed);
+        console.log('🔄 Step 1 restored from autosave:', Object.keys(parsed).length, 'fields');
       }
     } catch (error) {
       console.warn('⚠️ Could not restore Step 1 autosave:', error);
