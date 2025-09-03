@@ -22,46 +22,10 @@ import("./lib/fetch-guard").catch(() => {});
 // Install audit hook for lender products validation
 installAuditHook();
 
-// Test basic main.tsx execution first
-console.log('🔧 [MAIN] main.tsx is executing!');
+// Basic execution test
+console.log('🔥 MAIN.TSX LOADED');
+console.error('🔥 MAIN.TSX ERROR LOG');
 (window as any).BOREAL_DEBUG = { mainExecuted: true, timestamp: Date.now() };
-console.log('🔧 [MAIN] Window debug object set:', (window as any).BOREAL_DEBUG);
-
-// Test canonical imports dynamically to avoid breaking main.tsx
-console.log('🔧 [MAIN] Testing canonical store imports...');
-
-async function testCanonicalImports() {
-  try {
-    console.log('🔧 [MAIN] Attempting dynamic import of canonical store...');
-    const { useCanon } = await import("@/canonical/store");
-    console.log('🔧 [MAIN] useCanon imported successfully:', typeof useCanon);
-    
-    const { ALIASES } = await import("@/canonical/aliases");
-    console.log('🔧 [MAIN] ALIASES imported successfully:', typeof ALIASES);
-    
-    const { deepGet, present } = await import("@/canonical/utils");
-    console.log('🔧 [MAIN] Utils imported successfully:', typeof deepGet, typeof present);
-    
-    // Test store functionality
-    const testStore = useCanon.getState();
-    console.log('🔧 [MAIN] Store accessed successfully:', testStore);
-    
-    useCanon.getState().set('country', 'test');
-    console.log('🔧 [MAIN] Test set successful');
-    
-    console.log('📦 Canonical store system is fully working!');
-    
-    return true;
-  } catch (e) {
-    console.error('❌ [MAIN] Canonical store import failed:', e);
-    console.error('❌ [MAIN] Error details:', e instanceof Error ? e.message : String(e));
-    console.error('❌ [MAIN] Stack trace:', e instanceof Error ? e.stack : 'No stack trace');
-    return false;
-  }
-}
-
-// Run the test
-testCanonicalImports();
 
 // SW disabled automatically via import
 

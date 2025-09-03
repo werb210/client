@@ -149,9 +149,7 @@ const fixedAssetsOptions = [
 
 
 export default function Step1FinancialProfile() {
-  console.log("🔥 STEP 1 COMPONENT MOUNTED - BASIC CHECK");
   const { data: contextData, save: saveToNewContext } = useFormData();
-  console.log("🔥 FORM DATA CONTEXT:", contextData);
   
   // Create a mock state and dispatch to avoid errors
   const state = {
@@ -277,14 +275,9 @@ export default function Step1FinancialProfile() {
   // 2) Auto-save on every field change
   const formValues = form.watch();
   useEffect(() => {
-    console.log("🚀 Step1 form values changed:", formValues);
     const hasData = Object.values(formValues).some(v => v && String(v).trim());
     if (hasData) {
-      console.log("💾 Saving to localStorage:", formValues);
       localStorage.setItem("bf:intake", JSON.stringify(formValues));
-      console.log("✅ Saved. localStorage now has:", localStorage.getItem("bf:intake"));
-    } else {
-      console.log("❌ No data to save");
     }
   }, [formValues]);
 
