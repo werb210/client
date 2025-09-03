@@ -1,0 +1,90 @@
+CLIENT APP — SUBMISSION TEST (with your documents)
+
+GOAL
+Prove the client app can submit a complete application (with documents) and get a 202 + submission_id from the Staff app, using only the local product cache during Steps 1/2/5.
+
+PREREQS
+- Staff app running and reachable at: https://staff.boreal.financial/api
+- Client app running (this app = public application form)
+- Products already seeded locally in the client (IndexedDB: lenderProducts, length = 42)
+- You have 6 test files ready on your machine (names can vary; map them to the required doc types in Step 5):
+  • 2022_FS.pdf (financial-statements)
+  • 2023_FS.pdf (financial-statements)
+  • 2024_FS.pdf (financial-statements)
+  • Bank_Apr_2025.pdf (bank-statements)
+  • AR_Aging.pdf (accounts-receivable)
+  • AP_Aging.pdf (accounts-payable)
+
+TEST STEPS (UI flow)
+1) OPEN STEP 1 — Financial Profile
+   - Country: CA
+   - Funding amount: 100000
+   - Business legal name: Acme Manufacturing Inc.
+   - Industry: Manufacturing
+   - Save/Continue
+
+2) STEP 2 — Product Category (NO staff API calls allowed here)
+   - Verify products are shown from local cache (DevTools → Network: expect ZERO /api/v1/products calls)
+   - Choose category: Working Capital
+   - Pick a product that matches (e.g., “Accord - Working Capital Line”)
+
+3) STEP 3 — Business Details (collect what Staff validates)
+   - Years in business (months): 24
+   - Monthly revenue: 50000
+   - Contact: Jane Doe / jane@example.com / +1-555-123-4567
+   - Save/Continue
+
+4) STEP 4 — Owners/Additional
+   - Fill minimal valid values (do not leave required fields empty)
+   - Save/Continue
+
+5) STEP 5 — Documents (match WHAT the chosen product requires)
+   - Upload the 6 files listed in PREREQS
+   - For each upload, set the “type” to match the lender requirement:
+     financial-statements (for 2022/2023/2024)
+     bank-statements (for Bank_Apr_2025.pdf)
+     accounts-receivable (for AR_Aging.pdf)
+     accounts-payable (for AP_Aging.pdf)
+   - Verify the checklist shows all required_documents satisfied
+   - Save/Continue
+
+6) STEP 6 — Review & Terms
+   - Review consolidated data, check Terms checkbox
+   - Continue
+
+7) STEP 7 — SUBMIT
+   - Click Submit
+   - EXPECT: Success banner with { ok: true, submission_id: "...", status: "QUEUED" }
+   - Copy the submission_id for Staff-side verification
+
+NEGATIVE CHECK (optional)
+- Re-run Step 3 with: years_in_business=6, monthly_revenue=12000 → submit
+- EXPECT: Inline errors from Staff: “Minimum 12 months…” and “Minimum $15000…”
+
+FALLBACK CURL (if you want a direct POST in addition to UI)
+- Get CSRF cookie/token from Staff first (see Staff block), then:
+  curl -s -X POST "https://staff.boreal.financial/api/v1/applications" \
+    -H "Content-Type: application/json" \
+    -H "x-csrf-token: <CSRF_TOKEN>" \
+    -d '{
+      "product_id":"accord-working-capital-001",
+      "country":"CA","amount":100000,
+      "years_in_business":24,"monthly_revenue":50000,
+      "business_legal_name":"Acme Manufacturing Inc.",
+      "industry":"Manufacturing",
+      "contact_name":"Jane Doe","contact_email":"jane@example.com",
+      "contact_phone":"+1-555-123-4567",
+      "documents":[
+        {"name":"2022_FS.pdf","type":"financial-statements","size":45632},
+        {"name":"2023_FS.pdf","type":"financial-statements","size":47891},
+        {"name":"2024_FS.pdf","type":"financial-statements","size":48205},
+        {"name":"Bank_Apr_2025.pdf","type":"bank-statements","size":23456},
+        {"name":"AR_Aging.pdf","type":"accounts-receivable","size":12789},
+        {"name":"AP_Aging.pdf","type":"accounts-payable","size":11234}
+      ]
+    }'
+
+PASS CRITERIA (Client)
+- Steps 1→7 complete, no network call to /api/v1/products during steps (after initial seed)
+- Submit returns 202 with { ok:true, submission_id, status:"QUEUED" }
+- Negative test returns HTTP 400 with both business-rule messages
