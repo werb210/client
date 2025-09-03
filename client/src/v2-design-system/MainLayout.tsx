@@ -18,6 +18,7 @@ const Step6TypedSignature = lazy(() => import("@/routes/Step6_TypedSignature"));
 const ChatBot = lazy(() => import("@/components/ChatBot").then(module => ({ default: module.ChatBot })));
 const CompleteApplicationTest = lazy(() => import("@/test/CompleteApplicationTest"));
 const EndToEndFlowTest = lazy(() => import("@/test/EndToEndFlowTest"));
+const FieldCountAnalysis = lazy(() => import("@/pages/FieldCountAnalysis"));
 
 
 /**
@@ -47,6 +48,7 @@ export function MainLayout() {
         {/* Testing Routes */}
         <Route path="/test/complete-application" component={() => <Suspense fallback={<div>Loading test...</div>}><CompleteApplicationTest /></Suspense>} />
         <Route path="/test/end-to-end" component={() => <Suspense fallback={<div>Loading test...</div>}><EndToEndFlowTest /></Suspense>} />
+        <Route path="/test/field-analysis" component={() => <Suspense fallback={<div>Loading analysis...</div>}><FieldCountAnalysis /></Suspense>} />
         
         {/* Default Route - Landing Page */}
         <Route path="/" component={LandingPage} />
