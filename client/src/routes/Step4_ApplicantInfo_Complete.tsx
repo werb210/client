@@ -112,7 +112,9 @@ export default function Step4ApplicantInfoComplete() {
 
   // Detect region from Step 1 business location
   useEffect(() => {
-    setIsCanadian(state.step1?.businessLocation === "CA");
+    const newIsCanadian = state.step1?.businessLocation === "CA";
+    console.log('🏢 Business location detected:', state.step1?.businessLocation, 'isCanadian:', newIsCanadian);
+    setIsCanadian(newIsCanadian);
   }, [state.step1?.businessLocation]);
 
   const countryCode = getCountryFromBusinessLocation(state.step1?.businessLocation || 'US');
@@ -917,7 +919,7 @@ export default function Step4ApplicantInfoComplete() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{isCanadian ? "Province" : "State"} *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value} key={`applicant-state-${isCanadian}`}>
                           <FormControl>
                             <SelectTrigger className="h-12">
                               <SelectValue placeholder="Select..." />
@@ -1146,6 +1148,94 @@ export default function Step4ApplicantInfoComplete() {
                               }
                             }}
                             className="h-12"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Partner Address Fields */}
+                <div className="grid grid-cols-1 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="partnerAddress"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Address</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-12" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="partnerCity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner City</FormLabel>
+                        <FormControl>
+                          <Input 
+                            {...field} 
+                            className="h-12" 
+                            autoCapitalize="words"
+                            onChange={(e) => {
+                              const capitalizedValue = e.target.value
+                                .split(' ')
+                                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                                .join(' ');
+                              field.onChange(capitalizedValue);
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="partnerState"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner {isCanadian ? "Province" : "State"}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} key={`partner-state-${isCanadian}`}>
+                          <FormControl>
+                            <SelectTrigger className="h-12">
+                              <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {getStateOptions().map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="partnerZipCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner {getPostalLabel()}</FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            className="h-12"
+                            onChange={(e) => {
+                              const formatted = formatPostalCode(e.target.value);
+                              field.onChange(formatted);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />

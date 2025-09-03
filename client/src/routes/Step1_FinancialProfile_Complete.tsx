@@ -164,9 +164,24 @@ export default function Step1FinancialProfile() {
   const [location, setLocation] = useLocation();
   const { submitApplication, isSubmitting, error } = useSubmitApplication();
 
-  // Initialize application ID without any data restoration
+  // Initialize application ID and restore autosaved data if available
   useEffect(() => {
-    // No autosave restoration - form starts completely clean
+    // Restore autosaved data if available
+    try {
+      const autosavedData = localStorage.getItem('bf:step1-autosave');
+      if (autosavedData) {
+        const parsed = JSON.parse(autosavedData);
+        // Only restore if form is currently empty to avoid overwriting user input
+        const currentValues = form.getValues();
+        const isEmpty = Object.values(currentValues).every(v => !v || v === '');
+        if (isEmpty) {
+          form.reset(parsed);
+          console.log('🔄 Step 1 restored from autosave:', Object.keys(parsed).length, 'fields');
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not restore Step 1 autosave:', error);
+    }
     
     // Clear context state to prevent prefilled values - remove all default data
     dispatch({
@@ -263,7 +278,23 @@ export default function Step1FinancialProfile() {
   // Watch all form values for autosave
   const watchedValues = form.watch();
 
-  // Disabled autosave to prevent pre-filled data - form stays clean until submit
+  // Autosave form data every 2 seconds when values change
+  const debouncedAutosave = useDebouncedCallback((values: FinancialProfileFormData) => {
+    try {
+      // Save to localStorage for recovery
+      localStorage.setItem('bf:step1-autosave', JSON.stringify(values));
+      console.log('💾 Step 1 autosaved:', Object.keys(values).length, 'fields');
+    } catch (error) {
+      console.warn('⚠️ Step 1 autosave failed:', error);
+    }
+  }, 2000);
+
+  // Trigger autosave when form values change
+  useEffect(() => {
+    if (Object.keys(watchedValues).length > 0) {
+      debouncedAutosave(watchedValues);
+    }
+  }, [watchedValues, debouncedAutosave]);
 
   const onSubmit = async (data: FinancialProfileFormData) => {
     logger.log('✅ Step 1 - Form submitted successfully!');
