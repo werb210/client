@@ -248,30 +248,16 @@ export const getRecommendations = async (id: string) => {
 
 export const getRequiredDocuments = async (id: string) => {
   try {
-    // Try canonical Staff API endpoint first
-    const { fetchRequiredDocs } = await import('../api/products');
-    const docs = await fetchRequiredDocs();
-    if (docs.length > 0) return { success: true, documents: docs };
-    
-    // If no docs available, show graceful fallback message
-    return {
-      success: false,
-      message: "Documents unavailable, please contact support",
-      fallback: true,
-      documents: [
-        { key: "bank_6m", label: "Last 6 months bank statements", required: true },
-        { key: "financials", label: "Financial statements", required: false },
-        { key: "tax_returns", label: "Business tax returns", required: false }
-      ]
-    };
+    // Try Staff API endpoint for required documents
+    const res = await fetch(`/api/v1/applications/${id}/required-documents`, {
+      credentials: "include"
+    });
+    if (res.ok) {
+      const docs = await res.json();
+      return { success: true, documents: docs };
+    }
   } catch (error) {
     console.warn('Staff API unavailable for required documents:', error);
-    return {
-      success: false,
-      message: "Documents unavailable, please contact support",
-      fallback: true,
-      documents: []
-    };
   }
   
   // Graceful fallback with standard document list
