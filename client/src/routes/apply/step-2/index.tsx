@@ -25,14 +25,25 @@ export default function Step2() {
         const amount = Number(intake.amountRequested || 0);
         const industry = String(intake.industry || '').toLowerCase();
         const country = String(intake.country || '').toLowerCase();
+        const fundsPurpose = String(intake.capitalUse || intake.fundsPurpose || '').toLowerCase();
         
-        console.log("[Step2] Scoring with profile:", { amount, industry, country });
+        console.log("[Step2] Scoring with profile:", { amount, industry, country, fundsPurpose });
 
         // Group by category
         const grouped = new Map<string, Category>();
         for (const p of products) {
           const cat = String(p.category || "").trim();
           if (!cat) continue;
+          
+          // Business Rule: Only show equipment finance categories if user selected "Equipment Purchase" in Step 1
+          const isEquipmentCategory = cat.toLowerCase().includes('equipment') || 
+                                     cat.toLowerCase().includes('asset') ||
+                                     cat.toLowerCase().includes('equipment_financing');
+          
+          if (isEquipmentCategory && fundsPurpose !== 'equipment') {
+            console.log("[Step2] Filtered out equipment category:", cat, "- fundsPurpose:", fundsPurpose);
+            continue; // Skip this product/category
+          }
           if (!grouped.has(cat)) {
             grouped.set(cat, { 
               id: cat, 
