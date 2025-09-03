@@ -5,6 +5,7 @@ import { ApplicationProvider } from "@/context/ApplicationContext";
 import { ComprehensiveFormProvider } from "@/context/ComprehensiveFormContext";
 import { CookieManager } from "@/components/CookieManager";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
+import { DebugStorage } from "@/components/DebugStorage";
 
 // Create query client instance
 const queryClient = new QueryClient({
@@ -39,6 +40,7 @@ return (
               {children}
               <Toaster />
               <CookieManager />
+              <DebugStorage />
             </ComprehensiveFormProvider>
           </ApplicationProvider>
         </FormDataProvider>
