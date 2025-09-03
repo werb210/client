@@ -13,8 +13,8 @@ export function harden(app: Express) {
     : ["'self'", "https://replit.com", "https://*.replit.dev"];
 
   app.use(helmet({
-    // X-Frame-Options blocks embedding; disable and rely on CSP below
-    frameguard: false,
+    // X-Frame-Options for compatibility (CSP frame-ancestors is more secure)
+    frameguard: { action: isProd ? 'deny' : 'sameorigin' },
     crossOriginEmbedderPolicy: false, // needed for some dev toolchains
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
     contentSecurityPolicy: {
@@ -36,13 +36,7 @@ export function harden(app: Express) {
     }
   }));
 
-  // Extra safety: if Helmet or a proxy still adds X-Frame-Options, strip it in dev
-  if (!isProd) {
-    app.use((_req, res, next) => {
-      res.removeHeader('X-Frame-Options');
-      next();
-    });
-  }
+  // X-Frame-Options now managed by helmet frameguard above
 
   // Rate limiting - more restrictive for security
   app.use(rateLimit({
