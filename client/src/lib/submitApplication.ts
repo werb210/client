@@ -1,3 +1,4 @@
+import { getFormSnapshot } from "./getFormSnapshot";
 /**
  * Application submission logic with business criteria and CSRF handling
  */
@@ -22,7 +23,7 @@ export async function submitApplication(payload: {
     method: "POST",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify((()=>{ /*LOSSLESS_PAYLOAD*/ try{ const snap=(typeof window!=="undefined" && (window as any).__APP_STATE__)||{}; const payloadExt:any={...payload}; payloadExt.payload = getFormSnapshot(snap); payloadExt.formFields = payloadExt.payload; return payloadExt; }catch(_){ return payload; }})()),
   });
 
   if (r.status === 400) {

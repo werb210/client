@@ -43,3 +43,6 @@ try {
     // Products diagnostic removed
   }
 } catch {}
+
+// Expose minimal form state if available (dev-safe)
+try{ (window as any).__APP_STATE__ = (window as any).__APP_STATE__ || (window as any).__FORM_STATE__ || (window as any).__store || {}; }catch{ }
