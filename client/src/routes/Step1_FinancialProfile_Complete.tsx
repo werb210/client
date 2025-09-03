@@ -213,25 +213,22 @@ export default function Step1FinancialProfile() {
     }
   }, []);
 
-  // Clear only legacy form data to preserve autosave, intake, and cookie consent
+  // DISABLED: Clear existing data - let's preserve everything for debugging
   const clearExistingData = () => {
-    try {
-      localStorage.removeItem('apply.form');
-      localStorage.removeItem('bf:step2');
-      localStorage.removeItem('bf:step3');
-      localStorage.removeItem('bf:docs');
-      // DON'T clear bf:intake, sessionStorage, or bf:step1-autosave - preserves data flow
-      console.log('🧹 Cleared legacy form data (preserved autosave, intake, and cookies)');
-    } catch (error) {
-      console.warn('Could not clear storage:', error);
-    }
+    console.log('🔍 [DEBUG] clearExistingData called - but DISABLED to preserve storage');
+    // Temporarily disabled all clearing to debug storage issues
   };
 
-  // Clear data on component mount only for new applications
-  const shouldClearData = !localStorage.getItem('bf:step1-autosave');
-  if (shouldClearData) {
-    clearExistingData();
-  }
+  // DISABLED: Don't clear any data to debug storage persistence
+  // const shouldClearData = !localStorage.getItem('bf:step1-autosave');
+  // if (shouldClearData) {
+  //   clearExistingData();
+  // }
+  console.log('🔍 [DEBUG] Step1 mounted, current storage:', {
+    autosave: !!localStorage.getItem('bf:step1-autosave'),
+    intake: !!localStorage.getItem('bf:intake'),
+    cookies: document.cookie.includes('borealCookieConsent')
+  });
 
   const form = useForm<FinancialProfileFormData>({
     resolver: zodResolver(step1Schema),
@@ -269,7 +266,7 @@ export default function Step1FinancialProfile() {
     try {
       // Save to localStorage for recovery
       localStorage.setItem('bf:step1-autosave', JSON.stringify(values));
-      console.log('💾 Step 1 autosaved:', Object.keys(values).length, 'fields');
+      console.log('💾 [DEBUG] Step 1 autosaved:', Object.keys(values).length, 'fields', JSON.stringify(values, null, 2));
     } catch (error) {
       console.warn('⚠️ Step 1 autosave failed:', error);
     }
@@ -286,15 +283,21 @@ export default function Step1FinancialProfile() {
   useEffect(() => {
     try {
       const autosavedData = localStorage.getItem('bf:step1-autosave');
+      console.log('🔄 [DEBUG] Checking for autosaved data:', !!autosavedData);
       if (autosavedData) {
         const parsed = JSON.parse(autosavedData);
         // Only restore if form is currently empty to avoid overwriting user input
         const currentValues = form.getValues();
         const isEmpty = Object.values(currentValues).every(v => !v || v === '');
+        console.log('🔄 [DEBUG] Form is empty:', isEmpty, 'Current values:', currentValues);
         if (isEmpty) {
           form.reset(parsed);
-          console.log('🔄 Step 1 restored from autosave:', Object.keys(parsed).length, 'fields');
+          console.log('🔄 [DEBUG] Step 1 restored from autosave:', Object.keys(parsed).length, 'fields', parsed);
+        } else {
+          console.log('🔄 [DEBUG] Form not empty, skipping restore to avoid overwriting user input');
         }
+      } else {
+        console.log('🔄 [DEBUG] No autosaved data found');
       }
     } catch (error) {
       console.warn('⚠️ Could not restore Step 1 autosave:', error);
