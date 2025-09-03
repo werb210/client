@@ -213,16 +213,15 @@ export default function Step1FinancialProfile() {
     }
   }, []);
 
-  // Clear only specific form data to preserve autosave and cookie consent
+  // Clear only legacy form data to preserve autosave, intake, and cookie consent
   const clearExistingData = () => {
     try {
       localStorage.removeItem('apply.form');
-      localStorage.removeItem('bf:intake');
       localStorage.removeItem('bf:step2');
       localStorage.removeItem('bf:step3');
       localStorage.removeItem('bf:docs');
-      // DON'T clear sessionStorage or bf:step1-autosave - preserves cookie consent and autosave
-      console.log('🧹 Cleared specific form data (preserved autosave and cookies)');
+      // DON'T clear bf:intake, sessionStorage, or bf:step1-autosave - preserves data flow
+      console.log('🧹 Cleared legacy form data (preserved autosave, intake, and cookies)');
     } catch (error) {
       console.warn('Could not clear storage:', error);
     }
