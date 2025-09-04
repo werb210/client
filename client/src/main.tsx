@@ -10,6 +10,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { installAuditHook } from "./auditHook";
+import { installSubmitInterceptor } from "./dev/submitInterceptor";
 import { enableProgressiveEnhancement } from './utils/loadingStates';
 import { addSkipLink } from './utils/accessibility';
 import { PWAInstallManager } from './utils/pwaTestSuite';
@@ -21,6 +22,11 @@ import("./lib/fetch-guard").catch(() => {});
 
 // Install audit hook for lender products validation
 installAuditHook();
+
+// Install submit interceptor for development debugging
+if (import.meta.env.DEV) {
+  installSubmitInterceptor();
+}
 
 // Application loaded successfully
 (window as any).BOREAL_DEBUG = { mainExecuted: true, timestamp: Date.now() };

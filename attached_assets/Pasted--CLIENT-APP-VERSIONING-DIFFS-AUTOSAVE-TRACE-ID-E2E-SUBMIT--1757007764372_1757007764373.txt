@@ -1,0 +1,186 @@
+# =========================
+# CLIENT APP: VERSIONING, DIFFS, AUTOSAVE, TRACE-ID, E2E SUBMIT
+# =========================
+# Run from CLIENT repo root. Requires Node 18+ and bash.
+set -euo pipefail
+
+export CLIENT_BASE="${CLIENT_BASE:-http://localhost:5173}"
+export STAFF_BASE="${STAFF_BASE:-http://localhost:5000}"
+export TMP_DIR="${TMP_DIR:-.tmp_field_checks}"
+mkdir -p "$TMP_DIR"
+
+# ---------- 1) VERSIONING: add version + trace headers on submit ----------
+# Patch createApplication to include version + trace id and to log payload keys.
+# (Adjust path if your API helper differs.)
+if rg -n "createApplication" client/src >/dev/null 2>&1; then
+  :
+else
+  echo "Ensure path to submission helper is correct before patching." >&2
+fi
+
+# Add a tiny trace util (idempotent)
+mkdir -p client/src/lib
+cat > client/src/lib/trace.ts <<'TS'
+export function getTraceId() {
+  try {
+    return crypto.randomUUID?.() || Math.random().toString(36).slice(2);
+  } catch { return Math.random().toString(36).slice(2) }
+}
+TS
+
+# Patch API submit to append version & emit debug keys
+perl -0777 -pe '
+  s|(export const createApplication\s*=\s*async\s*\(\s*data:\s*FormData\s*\)\s*=>\s*\{\s*const res = await fetch\()|\1|s;
+' -i client/src/lib/api.ts 2>/dev/null || true
+
+# Ensure version added where FormData is built (safe re-append)
+rg -n "new FormData|formData\.append" client/src -g "*.{ts,tsx,js,jsx}" | awk '{print $1}' | while read -r f; do
+  if ! rg -n "formData\.append\(['\"]version['\"]" "$f" >/dev/null 2>&1; then
+    # Append version near other appends (best-effort)
+    sed -i '/formData\.append/s//$0\n  formData.append("version","ApplicationV1");/' "$f" || true
+  fi
+done
+
+# Ensure headers include X-App-Schema & X-Trace-Id in createApplication
+perl -0777 -pe '
+  s/headers:\s*\{([^}]*)\}/"headers":{ $1, "X-App-Schema":"ApplicationV1", "X-Trace-Id": (typeof getTraceId==="function"?getTraceId(): "client-trace") }/s
+' -i client/src/lib/api.ts || true
+# Import getTraceId if missing
+if ! rg -n "getTraceId" client/src/lib/api.ts >/dev/null 2>&1; then
+  sed -i '1 i import { getTraceId } from "./trace";' client/src/lib/api.ts
+fi
+
+# ---------- 2) Telemetry: canonical snapshot size/hash log on submit ----------
+# Lightweight interceptor to print FormData keys & canonical hash during submit.
+mkdir -p client/src/dev
+cat > client/src/dev/submitInterceptor.ts <<'TS'
+export function installSubmitInterceptor() {
+  const _fetch = window.fetch;
+  window.fetch = async (url: any, opts: any) => {
+    if (typeof url === "string" && /\/v1\/applications$/.test(url) && opts?.method === "POST") {
+      try {
+        if (opts.body instanceof FormData) {
+          const keys = Array.from(opts.body.keys());
+          console.log("📦 FormData keys ("+keys.length+"):", keys);
+          const canonRaw = localStorage.getItem("bf:canon:v1") || "{}";
+          const size = new Blob([canonRaw]).size;
+          const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonRaw));
+          const hash = Array.from(new Uint8Array(hashBuffer)).slice(0,8).map(b=>b.toString(16).padStart(2,"0")).join("");
+          console.log(`🔎 Canon snapshot size=${size}B hash=${hash}`);
+        }
+      } catch(e){ console.warn("submitInterceptor error", e); }
+    }
+    return _fetch(url, opts);
+  };
+  console.log("✅ submitInterceptor installed");
+}
+TS
+
+# Mount interceptor in your root (AppShell or main.tsx) once in development.
+if rg -n "installSubmitInterceptor" client/src >/dev/null 2>&1; then :; else
+  sed -i '1 i import { installSubmitInterceptor } from "@/dev/submitInterceptor";' client/src/main.tsx 2>/dev/null || true
+  sed -i 's/const root =/if (import.meta.env.DEV) installSubmitInterceptor();\nconst root =/' client/src/main.tsx 2>/dev/null || true
+fi
+
+# ---------- 3) DIFFS: schema keys vs submission keys ----------
+# Grep the form schema file for keys (adjust path if needed).
+SCHEMA_FILE="${SCHEMA_FILE:-shared/schema.ts}"
+
+# Extract ApplicationFormSchema keys (best-effort; update if different export name)
+node - <<'JS' | tee "$TMP_DIR/client_form_keys.json" >/dev/null
+const fs=require("fs");
+const p=process.env.SCHEMA_FILE||"shared/schema.ts";
+const s=fs.readFileSync(p,"utf8");
+const m=s.match(/export\s+const\s+ApplicationFormSchema[\s\S]*?z\.object\s*\(\s*\{([\s\S]*?)\}\s*\)/);
+if(!m){console.error("Schema not found"); process.exit(1);}
+const body=m[1];
+const keys=[...body.matchAll(/^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:/gm)].map(x=>x[1]);
+console.log(JSON.stringify([...new Set(keys)].sort()));
+JS
+
+# Extract keys appended to FormData across app
+node - <<'JS' | tee "$TMP_DIR/client_submission_keys.json" >/dev/null
+const fs=require("fs"); const {execSync}=require("child_process");
+let files=execSync('rg -l "formData\\.append\\(" client/src -g "*.{ts,tsx,js,jsx}"',{encoding:"utf8"}).trim().split("\n").filter(Boolean);
+const keys=new Set();
+for(const f of files){
+  const s=fs.readFileSync(f,"utf8");
+  for(const m of s.matchAll(/formData\.append\(\s*['"]([a-zA-Z_][a-zA-Z0-9_]*)['"]/g)){ keys.add(m[1]); }
+}
+console.log(JSON.stringify([...keys].sort()));
+JS
+
+# Compute diffs & CSV
+node - <<'JS' | tee "$TMP_DIR/client_form_vs_submit.csv"
+const fs=require("fs");
+const a=JSON.parse(fs.readFileSync(".tmp_field_checks/client_form_keys.json","utf8"));
+const b=JSON.parse(fs.readFileSync(".tmp_field_checks/client_submission_keys.json","utf8"));
+const setA=new Set(a), setB=new Set(b);
+const missing=[...a.filter(k=>!setB.has(k))];
+const extra=[...b.filter(k=>!setA.has(k))];
+console.log("type,key");
+for(const k of missing) console.log(`missing_in_submit,${k}`);
+for(const k of extra) console.log(`unexpected_in_submit,${k}`);
+JS
+
+# ---------- 4) AUTOSAVE/STEP LINK: quick runtime console helpers ----------
+cat > "$TMP_DIR/console_step_check.txt" <<'JS'
+// Paste in browser console on Step 1 then Step 2
+localStorage.setItem('bf:canon:debug','1');
+const _set=localStorage.setItem.bind(localStorage);
+localStorage.setItem=(k,v)=>{console.log("[setItem]",k,JSON.parse(v||"null")); return _set(k,v);};
+JSON.parse(localStorage.getItem('bf:canon:v1')||"{}");
+JS
+echo "Open $TMP_DIR/console_step_check.txt and paste into devtools console."
+
+# ---------- 5) CSP/CORS HEADERS from client perspective ----------
+echo "=== OPTIONS + POST preflight headers to STAFF ==="
+curl -s -D - -o /dev/null -X OPTIONS "${STAFF_BASE}/api/applications"
+echo "---"
+echo "Check VITE_STAFF_API_BASE in client env:"
+rg -n "VITE_STAFF_API_BASE" -S || true
+
+# ---------- 6) (Optional) Playwright E2E to fill + submit ----------
+# Installs Playwright and creates a skeleton test you can adapt to your selectors.
+npm -s i -D @playwright/test >/dev/null 2>&1 || true
+npx playwright install chromium >/dev/null 2>&1 || true
+
+cat > "$TMP_DIR/e2e.spec.ts" <<'TS'
+import { test, expect } from "@playwright/test";
+const CLIENT = process.env.CLIENT_BASE || "http://localhost:5173";
+const STAFF = process.env.STAFF_BASE || "http://localhost:5000";
+
+test("Full fill ➜ submit ➜ staff presence", async ({ page, request }) => {
+  // Step 1 fill (UPDATE SELECTORS to your actual inputs)
+  await page.goto(`${CLIENT}/apply/step-1`);
+  await page.locator('[name="industry"]').fill("manufacturing");
+  await page.locator('[name="lookingFor"]').selectOption("capital");
+  await page.locator('[name="fundingAmount"]').fill("250000");
+  await page.waitForTimeout(250); // allow autosave
+
+  // Navigate to Step 2 to ensure rules consume Step 1
+  await page.goto(`${CLIENT}/apply/step-2`);
+  // Expect excluded categories not visible if lookingFor=='capital' (customize)
+  // await expect(page.getByText("Invoice Factoring")).toHaveCount(0);
+
+  // Jump to final submit page & submit (customize route/button)
+  await page.goto(`${CLIENT}/apply/submit`);
+  const [resp] = await Promise.all([
+    page.waitForResponse(r => /\/v1\/applications$/.test(r.url()) && r.request().method() === "POST"),
+    page.getByRole("button", { name: /submit/i }).click()
+  ]);
+  expect(resp.ok()).toBeTruthy();
+
+  // Verify presence report via staff API (edit to real endpoint)
+  const list = await request.get(`${STAFF}/api/applications?limit=1`);
+  expect(list.ok()).toBeTruthy();
+});
+TS
+
+echo 'Add a script:  "test:e2e": "playwright test .tmp_field_checks/e2e.spec.ts"'
+echo "Run: CLIENT_BASE=$CLIENT_BASE STAFF_BASE=$STAFF_BASE npm run test:e2e"
+
+# ---------- 7) OUTPUT ARTIFACTS ----------
+echo "Artifacts:"
+ls -la "$TMP_DIR"
+echo "Done (CLIENT). Review CSV diff and console logs on submit."

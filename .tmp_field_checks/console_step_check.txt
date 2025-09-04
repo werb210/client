@@ -1,0 +1,5 @@
+// Paste in browser console on Step 1 then Step 2
+localStorage.setItem('bf:canon:debug','1');
+const _set=localStorage.setItem.bind(localStorage);
+localStorage.setItem=(k,v)=>{console.log("[setItem]",k,JSON.parse(v||"null")); return _set(k,v);};
+JSON.parse(localStorage.getItem('bf:canon:v1')||"{}");

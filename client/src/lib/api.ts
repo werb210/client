@@ -217,8 +217,10 @@ export const createApplication = async (canon: ApplicationV1) => {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
-      'X-Trace-Id': getTraceId(), 
-      'X-Client-App': 'boreal-client' 
+      'X-Trace-Id': crypto.randomUUID?.() || Math.random().toString(36).slice(2), 
+      'X-Client-App': 'boreal-client',
+      'X-App-Schema': 'ApplicationV1',
+      'X-App-Version': 'v1.0.0'
     },
     credentials: 'include',
     body: JSON.stringify(completePayload)
