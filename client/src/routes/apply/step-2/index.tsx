@@ -11,7 +11,7 @@ export default function Step2() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { canon } = useCanon();
+  const { canon, setCanon } = useCanon();
 
   useEffect(() => {
     console.log("[Step2] Canon state on mount:", canon);
@@ -167,6 +167,9 @@ export default function Step2() {
       });
       console.log("[Step2] Saved category:", { selectedCategory: id, selectedCategoryName: category.name });
     }
+    
+    // Also update canonical state
+    setCanon({ selectedCategory: id });
   }
 
   // Capture-phase click handler for ultimate overlay protection

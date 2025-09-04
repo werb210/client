@@ -272,7 +272,23 @@ export default function Step1FinancialProfile() {
   // 1) hydrate from canonical store, once
   useEffect(() => {
     if (Object.keys(canon).length > 0) {
-      form.reset(canon);
+      // Type-safe reset - only pass fields that match form schema
+      const formData: Partial<FinancialProfileFormData> = {
+        businessLocation: canon.businessLocation as "US" | "CA" | undefined,
+        headquarters: canon.headquarters as "US" | "CA" | undefined,
+        headquartersState: canon.headquartersState,
+        industry: canon.industry,
+        lookingFor: canon.lookingFor as "capital" | "equipment" | "both" | undefined,
+        fundingAmount: canon.fundingAmount,
+        fundsPurpose: canon.fundsPurpose as "equipment" | "working_capital" | "inventory" | "expansion" | undefined,
+        salesHistory: canon.salesHistory as "<1yr" | "1-3yr" | "3+yr" | undefined,
+        revenueLastYear: canon.revenueLastYear,
+        averageMonthlyRevenue: canon.averageMonthlyRevenue,
+        accountsReceivableBalance: canon.accountsReceivableBalance,
+        fixedAssetsValue: canon.fixedAssetsValue,
+        equipmentValue: canon.equipmentValue
+      };
+      form.reset(formData);
     }
   }, []);
 

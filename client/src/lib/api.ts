@@ -195,7 +195,9 @@ export const getLenderProducts = async () => {
   return await getProducts();
 };
 
-export const createApplication = async (canon: any) => {
+import { ApplicationV1 } from '../../../shared/ApplicationV1';
+
+export const createApplication = async (canon: ApplicationV1) => {
   console.log("[API] Creating application with JSON payload:", canon);
   console.log("[API] Fetch call details:", {
     method: 'POST',

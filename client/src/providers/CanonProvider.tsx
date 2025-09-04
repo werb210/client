@@ -1,34 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-
-type Canon = {
-  intent?: { fundingType?: string; amount?: number };
-  business?: { country?: string; industry?: string };
-  metrics?: { revenue12m?: string; monthlyRevenue?: string; yearsHistory?: string };
-  // Complete Step 1 fields for compatibility - exact form types
-  businessLocation?: "US" | "CA";
-  headquarters?: "US" | "CA";
-  headquartersState?: string;
-  industry?: string;
-  lookingFor?: "capital" | "equipment" | "both";
-  fundingAmount?: number;
-  fundsPurpose?: "equipment" | "working_capital" | "inventory" | "expansion";
-  salesHistory?: "<1yr" | "1-3yr" | "3+yr";
-  revenueLastYear?: number;
-  averageMonthlyRevenue?: number;
-  accountsReceivableBalance?: number;
-  fixedAssetsValue?: number;
-  equipmentValue?: number;
-};
+import { ApplicationV1 } from '../../../shared/ApplicationV1';
 
 const KEY = 'bf:canon:v1';
 
 const Ctx = createContext<{
-  canon: Canon;
-  setCanon: (patch: Partial<Canon>) => void;
+  canon: ApplicationV1;
+  setCanon: (patch: Partial<ApplicationV1>) => void;
 }>({ canon: {}, setCanon: () => {} });
 
 export function CanonProvider({ children }: { children: React.ReactNode }) {
-  const [canon, setCanonState] = useState<Canon>(() => {
+  const [canon, setCanonState] = useState<ApplicationV1>(() => {
     try { 
       // Also try to migrate from old bf:intake key
       const legacy = localStorage.getItem('bf:intake');
@@ -45,7 +26,7 @@ export function CanonProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  const setCanon = (patch: Partial<Canon>) =>
+  const setCanon = (patch: Partial<ApplicationV1>) =>
     setCanonState(prev => ({ ...prev, ...patch }));
 
   // persist on change

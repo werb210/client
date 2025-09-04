@@ -1,0 +1,92 @@
+Client app — fixes (Step 1 ➜ Canon ➜ Step 2 ➜ Submit JSON)
+1) Bridge Step 1 form into Canon (continuous autosave)
+
+File: client/src/lib/useCanonFormBridge.ts
+
+import { useEffect } from 'react';
+import { useCanon } from '@/providers/CanonProvider';
+import type { UseFormReturn } from 'react-hook-form';
+import type { ApplicationV1 } from '../../shared/ApplicationV1';
+
+export function useCanonFormBridge(form: UseFormReturn<ApplicationV1>) {
+  const { setCanon } = useCanon();
+
+  useEffect(() => {
+    const sub = form.watch((values) => {
+      // normalize currency-like strings to numbers as needed
+      const toNum = (v: any) => typeof v === 'string' ? Number(v.replace(/[^\d]/g, '')) || 0 : (v ?? 0);
+
+      const patch: Partial<ApplicationV1> = {
+        businessLocation: values.businessLocation,
+        headquarters: values.headquarters,
+        headquartersState: values.headquartersState,
+        industry: values.industry,
+        lookingFor: values.lookingFor?.toLowerCase(),
+        fundingAmount: toNum(values.fundingAmount),
+        fundsPurpose: values.fundsPurpose,
+        salesHistory: values.salesHistory,
+        revenueLastYear: toNum(values.revenueLastYear),
+        averageMonthlyRevenue: toNum(values.averageMonthlyRevenue),
+        accountsReceivableBalance: toNum(values.accountsReceivableBalance),
+        fixedAssetsValue: toNum(values.fixedAssetsValue),
+        equipmentValue: toNum(values.equipmentValue),
+      };
+
+      setCanon(patch); // CanonProvider already persists to localStorage
+    });
+    return () => sub.unsubscribe();
+  }, [form, setCanon]);
+}
+
+
+Wire it in Step 1
+File: client/src/routes/Step1_FinancialProfile_Complete.tsx
+
+import { useCanonFormBridge } from '@/lib/useCanonFormBridge';
+// ...
+export default function Step1() {
+  const form = useForm<ApplicationV1>({ /* resolver, defaults… */ });
+  useCanonFormBridge(form); // ⬅️ add this line
+  // ...
+}
+
+2) Ensure Step 2 only reads Canon
+
+(Your Step 2 already reads canon. Keep the existing filters; ensure logs show the bridged values.)
+Expected console on Step 2 mount:
+
+[Step2] Business rules data from canonical store: {
+  lookingFor: "capital",
+  accountsReceivableBalance: 0,
+  // …
+}
+[Step2] Filtered out category for Capital: Equipment Financing
+[Step2] Filtered out category for Capital: Invoice Factoring
+
+3) Submit JSON to the server /api/applications
+
+File: client/src/lib/api.ts
+
+import type { ApplicationV1 } from '../../shared/ApplicationV1';
+import { getTraceId } from './trace';
+
+export const createApplication = async (canon: ApplicationV1) => {
+  const res = await fetch(`${import.meta.env.VITE_STAFF_API_BASE}/api/applications`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Trace-Id': getTraceId(),
+      'X-Client-App': 'boreal-client',
+    },
+    credentials: 'include',
+    body: JSON.stringify(canon),
+  });
+  if (!res.ok) throw new Error(`Failed to create application (${res.status})`);
+  return res.json();
+};
+
+
+If you still need document uploads later, keep those as multipart on their own endpoints (/api/applications/:id/docs). Creation should stay JSON.
+
+4) Environment: point to the right base
+VITE_STAFF_API_BASE=https://<staff-host>   // client will call /api/applications
