@@ -1,0 +1,122 @@
+0) CHECK (copy/paste)
+# Where am I?
+git rev-parse --show-toplevel && node -v && npm -v
+
+# Schema keys (form) vs bridges in steps
+grep -n "ApplicationFormSchema" -R shared | head
+grep -n "useCanonFormBridge" -R client/src | cat
+
+# Step-2 rules reading canon?
+grep -n "useCanon" client/src/routes/apply/step-2/index.tsx
+
+# Submit path uses submitCanon?
+grep -n "submitCanon" -R client/src
+
+1) APPLY PATCH (copy/paste)
+
+A. Ensure every step uses the bridge
+In each step route file (Step1_*.tsx, Step3_*.tsx, Step4_*.tsx, Step5_*.tsx, Step6_*.tsx, Step7_*.tsx):
+
+// top
+import { useCanonFormBridge } from '@/providers/CanonProvider';
+
+// inside component
+useCanonFormBridge(form.watch); // watches all fields; debounced 200ms in provider
+
+
+B. Normalize keys that Step-2 depends on
+
+// client/src/routes/apply/step-2/index.tsx
+- const lookingFor = String(canon.lookingFor || '').toLowerCase();
++ const lookingFor = String(canon.lookingFor || canon.product?.lookingFor || '').trim().toLowerCase();
++ const fundsPurpose = String(canon.fundsPurpose || canon.financial?.useOfFunds || '').trim().toLowerCase();
++ const accountsReceivableBalance = Number(canon.accountsReceivableBalance ?? canon.financial?.accountsReceivableBalance ?? 0);
+
+
+C. Versioned submit (trace + canon payload)
+client/src/lib/submitCanon.ts (ensure exists/updated):
+
+export async function submitCanon(fullCanon:any){
+  const traceId = (crypto as any)?.randomUUID?.() || `${Date.now()}-trace`;
+  const body = {
+    ...fullCanon,                      // legacy compat if server still accepts flat
+    application_canon: fullCanon,      // ← canonical
+    application_canon_version: 'v1'
+  };
+  const res = await fetch(`${import.meta.env.VITE_STAFF_API_BASE}/v1/applications`,{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'X-Trace-Id': traceId,
+      'X-App-Schema': 'ApplicationV1',
+      'X-App-Version': 'v1.0.0'
+    },
+    credentials:'include',
+    body: JSON.stringify(body)
+  });
+  if(!res.ok) throw new Error('submit failed');
+  return { traceId, json: await res.json() };
+}
+
+
+D. Final submit route/button
+
+// client/src/routes/FinalSubmit.tsx
+import { useCanon } from '@/providers/CanonProvider';
+import { submitCanon } from '@/lib/submitCanon';
+export default function FinalSubmit(){
+  const { canon } = useCanon();
+  return <button onClick={async()=>{
+    const { traceId } = await submitCanon(canon);
+    console.log('TRACE', traceId, 'CANON_KEYS', Object.keys(canon).length);
+  }}>Submit Application</button>;
+}
+
+
+E. CSP fixes (client index.html)
+
+<!-- index.html -->
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self'; connect-src 'self' https://api.sentry.io https://*.replit.dev; img-src 'self' https: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:;">
+<!-- Do NOT put report-uri inside default-src -->
+
+
+Remove invalid sandbox flag anywhere in client:
+
+- sandbox="allow-scripts allow-same-origin allow-downloads-without-user-activation"
++ sandbox="allow-scripts allow-same-origin"
+
+2) VERIFY (copy/paste)
+// In browser console on Step-1
+localStorage.setItem('bf:canon:debug','1');
+const _set = localStorage.setItem.bind(localStorage);
+localStorage.setItem=(k,v)=>{try{console.log('[setItem]',k,JSON.parse(v))}catch{console.log('[setItem]',k,v)};return _set(k,v)};
+JSON.parse(localStorage.getItem('bf:canon:v1')||"{}");
+
+// Submission interceptor (dev)
+(()=>{const _f=window.fetch;window.fetch=async(u,o)=>{if(String(u).endsWith('/v1/applications')&&o?.method==='POST'){const b=JSON.parse(o.body||'{}');console.log('SUBMIT_KEYS',Object.keys(b).length);console.log('CANON_KEYS',Object.keys(b.application_canon||{}).length);}return _f(u,o)};console.log('submit interceptor ON')})();
+
+3) GOTCHAS
+
+Step-2 must only read from canonical. Any local component state must be derived from canon on mount.
+
+Keep autosave debounce ≥ 200ms to avoid Step-1→Step-2 race.
+
+Normalize currency fields to numbers before persisting to canon.
+
+4) ROLLBACK
+git reset --hard HEAD~1 && git clean -fd
+
+5) SUCCESS CRITERIA
+
+Filling Steps 1–7 grows bf:canon:v1 key count; Step-2 logs correct values.
+
+Final submit logs SUBMIT_KEYS ≥ form keys and server presence shows booleans = true for selectedCategory, applicant.email, business.country, annual_revenue.
+
+No CSP console spam about 'unsafe-dynamic' or invalid sandbox flags.
+
+(Optional) ONE-COMMAND E2E
+# From client root (Playwright or your runner)
+node .tmp_field_checks/complete_browser_console_test.js  # if you kept the helper
+# Then verify on staff:
+curl -s http://localhost:5000/api/applications/latest/presence | jq

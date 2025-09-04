@@ -26,13 +26,13 @@ export default function Step2() {
         const products = await api<any[]>("/api/v1/products");
         console.log("[Step2] Loaded", products.length, "products");
         
-        // Read from canonical store - unified state management
+        // Read from canonical store - unified state management with normalization
         const amount = Number(canon.fundingAmount || 0);
         const industry = String(canon.industry || '').toLowerCase();
         const country = String(canon.businessLocation || '').toLowerCase();
-        const fundsPurpose = String(canon.fundsPurpose || '').toLowerCase();
-        const accountsReceivableBalance = Number(canon.accountsReceivableBalance || 0);
-        const lookingFor = String(canon.lookingFor || '').toLowerCase();
+        const fundsPurpose = String(canon.fundsPurpose || canon.financial?.useOfFunds || '').trim().toLowerCase();
+        const accountsReceivableBalance = Number(canon.accountsReceivableBalance ?? canon.financial?.accountsReceivableBalance ?? 0);
+        const lookingFor = String(canon.lookingFor || canon.product?.lookingFor || '').trim().toLowerCase();
         
         console.log("[Step2] Business rules data from canonical store:", { 
           fundsPurpose, 
