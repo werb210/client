@@ -23,12 +23,18 @@ export const securityHeaders = (): RequestHandler[] => [
           "'unsafe-inline'", 
           "'unsafe-eval'",
           "https://www.googletagmanager.com",
-          "https://www.google-analytics.com", 
+          "https://www.google-analytics.com",
+          "https://sdk.twilio.com",
+          "https://media.twiliocdn.com", 
+          "https://static.twilio.com",
+          "https://www.recaptcha.net",
+          "https://www.gstatic.com",
+          "https://www.google.com",
           "https://replit.com"
-        ],  // Allow external analytics and Replit scripts
-        "style-src":  ["'self'", "'unsafe-inline'"],  // Allow inline styles for CSS-in-JS
+        ],  // Allow external analytics, Twilio, reCAPTCHA, and Replit scripts
+        "style-src":  ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],  // Allow inline styles + Google Fonts
         "img-src":    ["'self'", "data:", "blob:", "https:"],   // Allow https images
-        "font-src":   ["'self'", "data:", "https:"],            // Allow external fonts
+        "font-src":   ["'self'", "https://fonts.gstatic.com", "data:", "https:"],   // Allow Google Fonts
         "connect-src":[
           "'self'", 
           process.env.STAFF_API_URL ?? "", 
@@ -36,8 +42,13 @@ export const securityHeaders = (): RequestHandler[] => [
           "wss:", 
           "https:", 
           "https://www.google-analytics.com",
-          "https://www.googletagmanager.com"
-        ].filter(Boolean), // Add analytics connections
+          "https://www.googletagmanager.com",
+          "https://www.recaptcha.net",
+          "https://www.google.com",
+          "https://www.gstatic.com",
+          "https://*.twilio.com",
+          "wss://*.twilio.com"
+        ].filter(Boolean), // Add analytics, reCAPTCHA, and Twilio connections
         
         // ✅ A+ Security in prod, dev-friendly iframe support in dev
         "frame-ancestors": frameAncestors,
@@ -45,7 +56,7 @@ export const securityHeaders = (): RequestHandler[] => [
         "object-src": ["'none'"],
         "base-uri":   ["'self'"],
         "form-action": ["'self'"],
-        "frame-src":   ["https://www.googletagmanager.com"],  // Allow Google Tag Manager iframe
+        "frame-src":   ["'self'", "https://www.googletagmanager.com", "https://www.google.com", "https://www.recaptcha.net"],  // Allow GTM and reCAPTCHA iframes
         "worker-src":  ["'self'", "blob:"],         // Allow service workers
         "manifest-src": ["'self'"]                  // Allow PWA manifest
       }
@@ -61,7 +72,7 @@ export const securityHeaders = (): RequestHandler[] => [
   ((req, res, next) => {
     res.setHeader(
       "Permissions-Policy",
-      "camera=(), microphone=(), geolocation=(), payment=(), accelerometer=(), autoplay=(), usb=()"
+      "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=*, geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), usb=()"
     );
     next();
   }) as RequestHandler
