@@ -1,0 +1,71 @@
+Context
+- Goal: Prove end-to-end field fidelity on the client: count fields per step, verify autosave → canonical store → API payload, confirm versioning/trace-ID headers, and emit diffs/artifacts.
+- Reality from latest report: Vite+React app; Canonical state (bf:canon:v1) with debounced autosave; /submit route present; headers X-Trace-Id, X-App-Schema=ApplicationV1, X-App-Version=v1.0.0; full canonical JSON submitted.
+
+Your Tasks (do all)
+1) Enumerate & Count Form Fields
+   - Print the list of keys and counts for each step (Step1..Step7) from `shared/schema.ts` (ApplicationFormSchema).
+   - Output:
+     - Per-step key list + count
+     - Total unique form keys across all steps
+
+2) Verify Canonical Autosave & Bridges
+   - Confirm which steps are wired via the canon form bridge (e.g., Steps 1,3,4 reported as active).
+   - Show evidence that each bridged field is written to `bf:canon:v1` on change (console proof).
+
+3) Inspect Final Submit Payload
+   - Intercept the POST to `/api/applications` and print:
+     - Payload top-level keys (count + names)
+     - `application_canon` JSON keys (count + names)
+     - Version headers actually sent (X-Trace-Id, X-App-Schema, X-App-Version)
+   - Confirm the payload includes the full canonical snapshot (no loss).
+
+4) Diff: Form vs Submit
+   - Emit a CSV with three columns: `field`, `in_form`, `in_submit_payload`.
+   - Mark `in_form`/`in_submit_payload` as TRUE/FALSE per field.
+   - Include a summary line with totals and % coverage.
+
+5) Step-2 Business Rules Readiness
+   - Print the exact canonical keys Step-2 reads (e.g., `lookingFor`, `fundingAmount`, `businessLocation`, `fundsPurpose`, `accountsReceivableBalance`).
+   - Confirm they are present in the autosaved canon before Step-2 mounts.
+
+6) CSP/CORS (client perspective)
+   - From the browser, print the active CSP (if any) and note dev console CSP errors/warnings.
+   - Confirm no CSP/CORS errors block autosave or fetch.
+
+7) One-click E2E (client half)
+   - Script: auto-fill all steps with deterministic sample data, wait for autosave, then submit once.
+   - On submit, log:
+     - `traceId`
+     - payload size (bytes) and SHA-256 hash of `application_canon`
+     - counts of payload keys vs form keys
+
+Exact Commands to Run (suggested)
+- Count per-step keys
+  `sed -n '1,240p' shared/schema.ts | awk '/const ApplicationFormSchema/{flag=1} flag{print} /};/{if(flag){exit}}' | sed -n '1,300p'`
+  (Extract, then grep/awk to list keys per step and totals.)
+
+- Install/Use the provided submit interceptor (dev only)
+  Paste in browser console (Step-1 page):
+localStorage.setItem('bf:canon:debug','1');
+const _set = localStorage.setItem.bind(localStorage);
+localStorage.setItem = (k,v)=>{ try{console.log('[setItem]',k,JSON.parse(v||'null'));}catch{console.log('[setItem]',k,v)}; return _set(k,v) };
+(function(){
+const _fetch = window.fetch;
+window.fetch = async (url, opts)=>{
+if (typeof url==='string' && //api/applications$/.test(url) && opts?.method==='POST') {
+try{
+const body = JSON.parse(opts.body||'{}');
+console.log("🚀 SUBMIT KEYS ("+Object.keys(body).length+")", Object.keys(body));
+const canon = JSON.parse(body.application_canon||'{}');
+console.log("🚀 CANON KEYS ("+Object.keys(canon).length+")", Object.keys(canon));
+console.log("🔎 HEADERS", opts.headers);
+}catch(e){ console.warn('inspect error', e); }
+}
+return _fetch(url, opts);
+};
+console.log("✅ Submission interceptor installed");
+})();
+
+markdown
+Copy code
