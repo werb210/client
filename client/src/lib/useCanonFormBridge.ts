@@ -1,47 +1,34 @@
 import { useEffect } from 'react';
-import { UseFormReturn } from 'react-hook-form';
 import { useCanon } from '@/providers/CanonProvider';
+import type { UseFormReturn } from 'react-hook-form';
+import type { ApplicationV1 } from '../../../shared/ApplicationV1';
 
-/**
- * Bridge between React Hook Form and Canonical Store
- * Watches form values and syncs them to canonical state with proper normalization
- */
 export function useCanonFormBridge<T extends Record<string, any>>(form: UseFormReturn<T>) {
   const { setCanon } = useCanon();
-  
-  // Watch all form values
-  const formValues = form.watch();
-  
+
   useEffect(() => {
-    // Normalize currency strings to numbers for canonical storage
-    const normalizedValues: any = { ...formValues };
-    
-    // Convert currency fields from formatted strings to numbers
-    const currencyFields = [
-      'fundingAmount',
-      'revenueLastYear', 
-      'averageMonthlyRevenue',
-      'accountsReceivableBalance',
-      'fixedAssetsValue',
-      'equipmentValue'
-    ];
-    
-    currencyFields.forEach(field => {
-      if (normalizedValues[field] && typeof normalizedValues[field] === 'string') {
-        // Extract numbers from formatted currency string
-        const numbers = String(normalizedValues[field]).replace(/\D/g, '');
-        normalizedValues[field] = numbers === '' ? 0 : parseInt(numbers);
-      }
+    const sub = form.watch((values) => {
+      // normalize currency-like strings to numbers as needed
+      const toNum = (v: any) => typeof v === 'string' ? Number(v.replace(/[^\d]/g, '')) || 0 : (v ?? 0);
+
+      const patch: Partial<ApplicationV1> = {
+        businessLocation: values.businessLocation as string,
+        headquarters: values.headquarters as string,
+        headquartersState: values.headquartersState,
+        industry: values.industry,
+        lookingFor: values.lookingFor as string,
+        fundingAmount: toNum(values.fundingAmount),
+        fundsPurpose: values.fundsPurpose,
+        salesHistory: values.salesHistory,
+        revenueLastYear: toNum(values.revenueLastYear),
+        averageMonthlyRevenue: toNum(values.averageMonthlyRevenue),
+        accountsReceivableBalance: toNum(values.accountsReceivableBalance),
+        fixedAssetsValue: toNum(values.fixedAssetsValue),
+        equipmentValue: toNum(values.equipmentValue),
+      };
+
+      setCanon(patch); // CanonProvider already persists to localStorage
     });
-    
-    // Only update canon if we have actual data
-    const hasData = Object.values(normalizedValues).some(v => 
-      v !== undefined && v !== null && v !== '' && v !== 0
-    );
-    
-    if (hasData) {
-      setCanon(normalizedValues);
-      console.log('[useCanonFormBridge] Updated canon with normalized values:', normalizedValues);
-    }
-  }, [formValues, setCanon]);
+    return () => sub.unsubscribe();
+  }, [form, setCanon]);
 }
