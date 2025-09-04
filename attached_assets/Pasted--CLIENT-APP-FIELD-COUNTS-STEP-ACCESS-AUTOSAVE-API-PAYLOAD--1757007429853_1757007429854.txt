@@ -1,0 +1,112 @@
+# =========================
+# CLIENT APP: FIELD COUNTS, STEP ACCESS, AUTOSAVE, API PAYLOAD
+# =========================
+
+# 0) Context: run from repo root of CLIENT app
+node -v && npm -v
+
+# 1) How many fields are in the APPLICATION FORM (all steps)?
+#    Parse ApplicationFormSchema in shared/schema.ts (adjust path if different).
+echo "=== ApplicationFormSchema field count ==="
+awk '
+  /export const ApplicationFormSchema.*z\.object\s*\(\s*\{/ {inobj=1}
+  inobj && /}\s*\)\s*/ {inobj=0}
+  inobj { 
+    if ($0 ~ /^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*\s*:/) {
+      gsub(/^[[:space:]]*/,"",$0); 
+      key=$0; sub(/:.*/,"",key); 
+      print key 
+    }
+  }
+' shared/schema.ts | sort -u | tee /tmp/client_form_fields.txt
+echo "COUNT:" $(wc -l </tmp/client_form_fields.txt)
+
+# 2) STEP-LEVEL COUNTS (what Step 1/2/3/4 read/write)
+#    Grep step components for controlled fields and canonical writes/reads.
+echo "=== Step 1 fields written ==="
+rg -n "register\\(|setValue\\(|handleChange\\(|canon\\." client/src/routes/Step1_* client/src/routes/apply/step-1* -g "*.{tsx,ts}" \
+ | sed -E 's/.*(register|setValue|canon)\\(\\s*\\\"?([a-zA-Z_][a-zA-Z0-9_]*)\\\"?.*/\\2/' \
+ | sort -u | tee /tmp/client_step1_fields.txt
+echo "COUNT:" $(wc -l </tmp/client_step1_fields.txt)
+
+echo "=== Step 2 fields read ==="
+rg -n "canon\\.[a-zA-Z_][a-zA-Z0-9_]*|selected(Category|Product|Lender|Name)" client/src/routes/apply/step-2 -g "*.{tsx,ts}" \
+ | sed -E 's/.*canon\\.([a-zA-Z_][a-zA-Z0-9_]*).*/\\1/' \
+ | sort -u | tee /tmp/client_step2_fields.txt
+echo "COUNT:" $(wc -l </tmp/client_step2_fields.txt)
+
+echo "=== Other steps fields (3/4/5/...) ==="
+rg -n "register\\(|canon\\." client/src/routes/apply/step-3 client/src/routes/apply/step-4 client/src/routes/apply/step-5 -g "*.{tsx,ts}" \
+ | sed -E 's/.*canon\\.([a-zA-Z_][a-zA-Z0-9_]*).*/\\1/' \
+ | sort -u | tee /tmp/client_steps_3plus_fields.txt
+echo "COUNT:" $(wc -l </tmp/client_steps_3plus_fields.txt)
+
+# 3) How many fields are actually SENT VIA API to the STAFF app?
+#    Count FormData appends and/or ApplicationV1 shape used during submission.
+echo "=== API payload fields (FormData.append) ==="
+rg -no --pcre2 "formData\\.append\\(\\s*['\\\"]([a-zA-Z_][a-zA-Z0-9_]*)['\\\"]" client/src \
+ | sed -E "s/.*append\\(\\s*'([^']*)'.*/\\1/" \
+ | sort -u | tee /tmp/client_api_payload_fields.txt
+echo "COUNT:" $(wc -l </tmp/client_api_payload_fields.txt)
+
+# 4) Verify AUTOSAVE + CANONICAL STORE connectivity Step1 ➜ Step2
+#    a) Ensure CanonProvider is mounted once in AppShell and writes to localStorage.
+echo "=== CanonProvider mount & key ==="
+rg -n "CanonProvider|bf:canon:v1|localStorage" client/src -g "*.{tsx,ts}"
+
+#    b) Runtime check (open devtools > console on Step 1 page) — paste the following:
+cat <<'JS'
+/*** PASTE IN BROWSER CONSOLE (Step 1 page) ***/
+// 1) Observe autosave events
+localStorage.setItem('bf:canon:debug','1');
+const _setItem = localStorage.setItem.bind(localStorage);
+localStorage.setItem = (k,v)=>{console.log("[localStorage.setItem]",k,JSON.parse(v||"null")); return _setItem(k,v);};
+
+// 2) Inspect canonical snapshot after typing a few fields:
+JSON.parse(localStorage.getItem('bf:canon:v1')||"{}");
+
+// 3) Navigate to Step 2 and confirm reads:
+console.log("Step2 canon read:", window.__CANON_LAST_READ__||"install a console.log in Step2 useEffect to set window.__CANON_LAST_READ__");
+JS
+
+# 5) Runtime interception to PRINT EXACT SUBMISSION KEYS (devtools on Step 7 submit)
+cat <<'JS'
+/*** PASTE IN BROWSER CONSOLE (before submitting) ***/
+(() => {
+  const _fetch = window.fetch;
+  window.fetch = async (url, opts) => {
+    if (typeof url === 'string' && /\/v1\/applications$/.test(url) && opts?.method === 'POST') {
+      try {
+        const fd = opts.body instanceof FormData ? opts.body : null;
+        if (fd) {
+          const keys = [...fd.keys()];
+          console.log("SUBMISSION FormData KEYS ("+keys.length+"):", keys);
+        } else {
+          const body = JSON.parse(opts.body || '{}');
+          console.log("SUBMISSION JSON KEYS ("+Object.keys(body).length+"):", Object.keys(body));
+        }
+      } catch(e){ console.warn("payload inspect error", e); }
+    }
+    return _fetch(url, opts);
+  };
+  console.log("✅ Submission interceptor installed");
+})();
+JS
+
+# 6) Verify Step 2 business RULES obey Step 1 values
+#    Look for filtering of categories when lookingFor==='capital' and receivables==0.
+echo "=== Step 2 rule hooks ==="
+rg -n "excludedForCapital|accountsReceivableBalance|lookingFor" client/src/routes/apply/step-2 -g "*.{tsx,ts}"
+
+# 7) Verify each client feature reads the NEW canonical format (client-side)
+echo "=== Canonical access verification (client) ==="
+rg -n "useCanon\\(|canon\\." client/src -g "*.{tsx,ts}"
+
+# 8) EXTRA QUESTIONS FOR CLIENT APP (print & answer inline):
+cat <<'TXT'
+[Ask & Answer]
+- Are ALL ApplicationFormSchema fields mapped into canonical state (bf:canon:v1)? If not, list missing keys.
+- Does createApplication() add EVERY canonical key to FormData (or JSON body)? Provide the diff: canonical keys minus submission keys.
+- Does Step 2 read ONLY from canonical (no legacy contexts/local keys)? List any stragglers.
+- Is autosave debounced and reliable across route changes & cookie banner interactions? Provide evidence (console logs of setItem and beforeunload handlers).
+TXT
