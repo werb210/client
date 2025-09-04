@@ -1,0 +1,47 @@
+# ── 0) Runtime sanity
+pwd && node -v && npm -v
+jq -r '.name, .scripts.dev' package.json || true
+
+# ── 1) Exact form field count from Zod
+npx tsx -e "import { ApplicationFormSchema } from './shared/schema.ts'; \
+ const s=ApplicationFormSchema as any; const keys=Object.keys(s.shape||{}); \
+ console.log('FORM_FIELDS_COUNT',keys.length); console.log(JSON.stringify(keys,null,2));"
+
+# ── 2) ApplicationV1 interface field count
+awk '/export interface ApplicationV1/,/}/ {print}' shared/ApplicationV1.ts \
+ | grep -Eo '^[[:space:]]*[a-zA-Z_][a-zA-Z0-9_]*\??:' \
+ | sed 's/[:? ]//g' | sort -u | tee /tmp/appv1.keys \
+ | wc -l | xargs echo "APPLICATION_V1_FIELDS_COUNT"
+echo "keys:"; cat /tmp/appv1.keys | jq -R . | jq -s .
+
+# ── 3) Install submission+autosave tracer in browser (Step 1 page)
+# Paste into DevTools console:
+localStorage.setItem('bf:canon:debug','1');
+(() => {
+  const _set = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = (k,v)=>{try{console.log('[ls.set]',k,Object.keys(JSON.parse(v||'{}')).length)}catch(e){console.log('[ls.set]',k,String(v).length)}; return _set(k,v);};
+  const _fetch = window.fetch;
+  window.fetch = async (url, opts) => {
+    const isApp = typeof url==='string' && /\/v1\/applications$/.test(url) && opts?.method==='POST';
+    if (isApp) {
+      try {
+        const body = JSON.parse(opts.body||'{}');
+        const canon = JSON.parse(body.application_canon||'{}');
+        console.log('SUBMIT_TOTAL_KEYS', Object.keys(body).length);
+        console.log('SUBMIT_KEYS_LIST', Object.keys(body));
+        console.log('SUBMIT_CANON_KEYS', Object.keys(canon).length);
+        console.log('SUBMIT_CANON_KEYS_LIST', Object.keys(canon));
+        console.log('SCHEMA_VERSION', body.application_canon_version || '(missing)');
+      } catch(e){ console.warn('inspect error', e); }
+    }
+    return _fetch(url, opts);
+  };
+  console.log('✅ client tracer installed');
+})();
+
+# ── 4) Confirm Step-2 rules use canonical
+# In Step-2 console:
+console.log('[step2] canon snapshot size', JSON.stringify(JSON.parse(localStorage.getItem('bf:canon:v1')||'{}')).length);
+
+# ── 5) Endpoint confirm (no secrets)
+grep -RIn "VITE_STAFF_API_BASE" client/src || true
