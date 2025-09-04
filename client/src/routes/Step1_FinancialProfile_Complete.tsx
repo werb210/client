@@ -22,6 +22,7 @@ import { saveIntake } from '@/utils/normalizeIntake';
 import { useSubmitApplication } from '@/hooks/useSubmitApplication';
 import { useAutosave } from '@/lib/useAutosave';
 import { useCanon } from '@/providers/CanonProvider';
+import { useCanonFormBridge } from '@/lib/useCanonFormBridge';
 
 // Currency formatting utilities
 const formatCurrency = (value: string): string => {
@@ -263,7 +264,10 @@ export default function Step1FinancialProfile() {
   const fixedAssetsValue = form.watch('fixedAssetsValue');
 
   // Use canonical store for unified state management
-  const { canon, setCanon } = useCanon();
+  const { canon } = useCanon();
+
+  // Bridge form to canonical store with proper normalization
+  useCanonFormBridge(form);
 
   // 1) hydrate from canonical store, once
   useEffect(() => {
@@ -271,15 +275,6 @@ export default function Step1FinancialProfile() {
       form.reset(canon);
     }
   }, []);
-
-  // 2) Auto-save to canonical store on every field change
-  const formValues = form.watch();
-  useEffect(() => {
-    const hasData = Object.values(formValues).some(v => v && String(v).trim());
-    if (hasData) {
-      setCanon(formValues);
-    }
-  }, [formValues, setCanon]);
 
   const onSubmit = async (data: FinancialProfileFormData) => {
     logger.log('✅ Step 1 - Form submitted successfully!');

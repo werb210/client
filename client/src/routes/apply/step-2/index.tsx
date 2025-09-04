@@ -14,6 +14,10 @@ export default function Step2() {
   const { canon } = useCanon();
 
   useEffect(() => {
+    console.log("[Step2] Canon state on mount:", canon);
+  }, []);
+
+  useEffect(() => {
     let mounted = true;
     
     async function loadCategories() {

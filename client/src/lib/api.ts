@@ -195,11 +195,26 @@ export const getLenderProducts = async () => {
   return await getProducts();
 };
 
-export const createApplication = async (data: FormData) => {
-  const res = await fetch(`${import.meta.env.VITE_STAFF_API_BASE}/v1/applications`, { method:'POST', headers:{'X-Trace-Id': getTraceId(), 'X-Client-App':'boreal-client' },
-    body: data,
-    credentials: "include"
+export const createApplication = async (canon: any) => {
+  console.log("[API] Creating application with JSON payload:", canon);
+  console.log("[API] Fetch call details:", {
+    method: 'POST',
+    url: `${import.meta.env.VITE_STAFF_API_BASE}/api/applications`,
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include'
   });
+  
+  const res = await fetch(`${import.meta.env.VITE_STAFF_API_BASE}/api/applications`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-Trace-Id': getTraceId(), 
+      'X-Client-App': 'boreal-client' 
+    },
+    credentials: 'include',
+    body: JSON.stringify(canon)
+  });
+  
   if (!res.ok) throw new Error("Failed to create application");
   return res.json();
 };
