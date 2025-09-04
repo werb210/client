@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -61,7 +62,10 @@ router.get('/status/:applicationId?', async (req, res) => {
     const statusIndex = applicationId.length % mockStatuses.length;
     const applicationStatus = mockStatuses[statusIndex];
 
-    console.log(`[STATUS] Application ${applicationId}: ${applicationStatus.status}`);
+    logger.auditLog('status_check', undefined, { 
+      applicationId: '[REDACTED]', 
+      status: applicationStatus.status 
+    });
 
     res.json({
       applicationId,
@@ -71,7 +75,7 @@ router.get('/status/:applicationId?', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Status check error:', error);
+    logger.error('Status check error', error);
     res.status(500).json({ 
       error: 'Status check failed',
       status: 'unknown',

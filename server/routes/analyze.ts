@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import OpenAI from 'openai';
+import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -44,12 +45,17 @@ router.post('/analyze', async (req, res) => {
 
     const analysis = JSON.parse(completion.choices[0].message.content || '{}');
     
-    // Log analysis for monitoring
-    console.log(`[SENTIMENT] Session: ${sessionId}, Text: "${text.substring(0, 50)}...", Analysis:`, analysis);
+    // Log analysis for monitoring (sanitized for production)
+    logger.debug('[SENTIMENT] Analysis completed', { 
+      sessionId: '[REDACTED]', 
+      textLength: text.length,
+      sentiment: analysis.sentiment,
+      intent: analysis.intent 
+    });
 
     res.json(analysis);
   } catch (error) {
-    console.error('Sentiment analysis error:', error);
+    logger.error('Sentiment analysis error', error);
     res.status(500).json({ 
       error: 'Analysis failed',
       sentiment: 'neutral',

@@ -44,6 +44,7 @@ import { securityHeaders } from "./security/headers";
 import { rlGeneral, rlUpload, rlChatbot } from "./security/rate";
 import { harden } from "./security";
 import healthRoutes from "./routes/health";
+import { logger, safeConsole } from './utils/logger';
 
 // A+ Security: Fail-fast environment validation
 import { Env } from "./config/env";
@@ -338,7 +339,7 @@ app.use((req, res, next) => {
       });
       
     } catch (error: any) {
-      console.error('❌ [SERVER] Application submission failed:', error);
+      logger.error('Application submission failed', error);
       res.status(500).json({
         success: false,
         error: error?.message || 'Application submission failed'
@@ -349,7 +350,7 @@ app.use((req, res, next) => {
   // Mock application retrieval endpoint
   app.get('/api/public/applications/:id', async (req, res) => {
     const { id } = req.params;
-    console.log(`📋 [SERVER] Getting application data for: ${id}`);
+    logger.auditLog('get_application', undefined, { applicationId: '[REDACTED]' });
     
     // Try staff backend first
     try {
@@ -364,11 +365,11 @@ app.use((req, res, next) => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ [SERVER] Staff backend application retrieved');
+        logger.debug('Staff backend application retrieved');
         return res.json(data);
       }
     } catch (error) {
-      console.log('⚠️ [SERVER] Staff backend unavailable, using mock application data');
+      logger.warn('Staff backend unavailable, using mock application data', { error: error instanceof Error ? error.message : String(error) });
     }
     
     // No mock fallback - staff backend only
@@ -402,8 +403,11 @@ app.use((req, res, next) => {
     const file = req.file;
     const documentType = req.body.document_type || 'general';
     
-    console.log(`📤 [MOCK] Document upload for application ${id}`);
-    console.log(`📤 [MOCK] File: ${file?.originalname}, Size: ${file?.size} bytes`);
+    logger.auditLog('document_upload', undefined, { 
+      applicationId: '[REDACTED]', 
+      filename: '[REDACTED]', 
+      fileSize: file?.size 
+    });
     
     if (!file) {
       return res.status(400).json({
@@ -428,7 +432,7 @@ app.use((req, res, next) => {
     // Document storage handled by staff backend only
     // This endpoint should not be used - documents go to staff backend
     
-    console.log(`✅ [MOCK] Document uploaded: ${documentId}`);
+    logger.debug('Document upload completed', { documentId: '[REDACTED]' });
     
     res.json({
       success: true,
@@ -440,10 +444,10 @@ app.use((req, res, next) => {
   // Mock document retrieval endpoint
   app.get('/api/applications/:id/documents', async (req, res) => {
     const { id } = req.params;
-    console.log(`📋 [MOCK] Fetching documents for application ${id}`);
+    logger.auditLog('get_documents', undefined, { applicationId: '[REDACTED]' });
     
     const documents: any[] = []; // No local storage - staff backend only
-    console.log(`✅ [MOCK] Retrieved ${documents.length} documents for application ${id}`);
+    logger.debug('Documents retrieved', { count: documents.length });
     
     res.json({
       success: true,
