@@ -1,0 +1,4 @@
+localStorage.setItem('bf:canon:debug','1');
+const _set = localStorage.setItem.bind(localStorage);
+localStorage.setItem = (k,v)=>{ try{console.log('[setItem]',k,JSON.parse(v||'null'));}catch{console.log('[setItem]',k,v)}; return _set(k,v) };
+console.log('Current canon:', JSON.parse(localStorage.getItem('bf:canon:v1')||'{}'));

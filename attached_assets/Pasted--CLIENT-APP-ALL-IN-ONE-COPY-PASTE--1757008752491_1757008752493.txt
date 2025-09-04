@@ -1,0 +1,116 @@
+# ===========================
+# CLIENT APP — ALL-IN-ONE COPY/PASTE
+# ===========================
+
+# 1) deps & folder
+npm i uuid && mkdir -p .tmp_field_checks client/src/lib client/src/dev client/src/routes
+
+# 2) versioned submit wrapper with trace-id
+cat > client/src/lib/submitCanon.ts <<'TS'
+import { v4 as uuidv4 } from 'uuid';
+export async function submitCanon(canon: Record<string, any>, base: string) {
+  const version = 'v1';
+  const traceId = uuidv4();
+  const payload = {
+    ...canon,                                   // legacy-compat if server still reads flat keys
+    application_canon: JSON.stringify(canon),   // canonical JSON
+    application_canon_version: version,
+  };
+  const res = await fetch(`${base}/api/applications`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Trace-Id': traceId,
+      'X-App-Schema': 'ApplicationV1',
+      'X-App-Version': 'v1.0.0',
+    },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Submit failed ${res.status}`);
+  return { traceId, json: await res.json() };
+}
+TS
+
+# 3) final submit route (uses CanonProvider state)
+cat > client/src/routes/FinalSubmit.tsx <<'TSX'
+import React from 'react';
+import { useCanon } from '@/providers/CanonProvider';
+import { submitCanon } from '@/lib/submitCanon';
+export default function FinalSubmit() {
+  const { canon } = useCanon();
+  const base = import.meta.env.VITE_STAFF_API_BASE;
+  async function onSubmit() {
+    const { traceId, json } = await submitCanon(canon, base);
+    console.log('[submit] traceId', traceId, 'response', json);
+    alert(`Submitted! traceId=${traceId}`);
+  }
+  return <button onClick={onSubmit}>Submit Application</button>;
+}
+TSX
+
+# 4) dev submit interceptor (runtime payload/key inspection)
+cat > client/src/dev/installSubmitInterceptor.ts <<'TS'
+export function installSubmitInterceptor() {
+  const _fetch = window.fetch;
+  window.fetch = async (url: any, opts: any) => {
+    if (typeof url === 'string' && /\/api\/applications$/.test(url) && opts?.method === 'POST') {
+      try {
+        const body = JSON.parse(opts.body || '{}');
+        const canon = JSON.parse(body.application_canon || '{}');
+        console.log('🚀 SUBMIT BODY KEYS:', Object.keys(body).length, Object.keys(body));
+        console.log('🚀 CANON KEYS:', Object.keys(canon).length, Object.keys(canon));
+      } catch(e) { console.warn('inspect error', e); }
+    }
+    return _fetch(url, opts);
+  };
+  console.log('✅ submit interceptor installed');
+}
+TS
+#   In client/src/main.tsx (DEV only):
+: <<'PATCH_MAIN'
+import { installSubmitInterceptor } from '@/dev/installSubmitInterceptor';
+if (import.meta.env.DEV && typeof window !== 'undefined') installSubmitInterceptor();
+PATCH_MAIN
+
+# 5) autosave console helpers (paste in browser console when on Step 1)
+cat > .tmp_field_checks/console_autosave.txt <<'TXT'
+localStorage.setItem('bf:canon:debug','1');
+const _set = localStorage.setItem.bind(localStorage);
+localStorage.setItem = (k,v)=>{ try{console.log('[setItem]',k,JSON.parse(v||'null'));}catch{console.log('[setItem]',k,v)}; return _set(k,v) };
+console.log('Current canon:', JSON.parse(localStorage.getItem('bf:canon:v1')||'{}'));
+TXT
+
+# 6) (optional) quick diff script: form keys vs canon keys at submit
+cat > client/tools/form_vs_submit_diff.template.ts <<'TS'
+/** Run in a browser context or adapt to load saved canon JSON. */
+const schemaText = `/* paste shared/schema.ts here or load via fetch in dev */`;
+const formKeys = Array.from(new Set((schemaText.match(/\b([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g) || []).map(s => s.replace(/[:\s]/g,''))));
+const canon = JSON.parse(localStorage.getItem('bf:canon:v1')||'{}');
+const submitKeys = Object.keys(canon);
+const missing = formKeys.filter(k => !submitKeys.includes(k));
+console.log(`form keys: ${formKeys.length} submit keys: ${submitKeys.length}`);
+console.log(`missing in submit: ${missing.length}`, missing);
+TS
+
+# 7) minimal E2E (Playwright) — adjust selectors/paths as needed
+mkdir -p client/e2e && cat > client/e2e/apply.spec.ts <<'TS'
+import { test, expect } from '@playwright/test';
+test('canonical submit happy path', async ({ page }) => {
+  await page.goto('http://localhost:5173/apply/step-1');
+  await page.fill('[name="businessLocation"]','US');
+  await page.fill('[name="industry"]','manufacturing');
+  await page.fill('[name="fundingAmount"]','250000');
+  await page.click('text=Next'); // step 2
+  await page.goto('http://localhost:5173/submit'); // a route that renders <FinalSubmit/>
+  const [resp] = await Promise.all([
+    page.waitForResponse(/\/api\/applications$/),
+    page.click('text=Submit Application'),
+  ]);
+  expect(resp.ok()).toBeTruthy();
+});
+TS
+
+# 8) sanity checks
+echo; echo "== ENV =="; grep -RIn "VITE_STAFF_API_BASE" client/src | wc -l
+echo; echo "Open the app, go to /submit and click 'Submit Application'. Dev console will print BODY and CANON keys."

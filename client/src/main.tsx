@@ -10,7 +10,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { installAuditHook } from "./auditHook";
-import { installSubmitInterceptor } from "./dev/submitInterceptor";
+import { installSubmitInterceptor } from "./dev/installSubmitInterceptor";
 import { enableProgressiveEnhancement } from './utils/loadingStates';
 import { addSkipLink } from './utils/accessibility';
 import { PWAInstallManager } from './utils/pwaTestSuite';

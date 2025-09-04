@@ -6,6 +6,7 @@ import { PwaPrompt } from "@/components/PwaPrompt";
 // Core Application Routes - Essential Components Only
 import Step1FinancialProfile from "@/routes/Step1_FinancialProfile_Complete";
 import Step3BusinessDetailsComplete from "@/routes/Step3_BusinessDetails_Complete";
+import FinalSubmit from "@/routes/FinalSubmit";
 import LandingPage from "@/pages/LandingPage";
 import SimpleDashboard from "@/pages/SimpleDashboard";
 import NotFound from "@/pages/NotFound";
@@ -42,6 +43,9 @@ export function MainLayout() {
         <Route path="/apply/step-4" component={() => <Suspense fallback={<div>Loading...</div>}><Step4ApplicantInfoComplete /></Suspense>} />
         <Route path="/apply/step-5" component={() => <Suspense fallback={<div>Loading...</div>}><Step5DocumentUpload /></Suspense>} />
         <Route path="/apply/step-6" component={() => <Suspense fallback={<div>Loading...</div>}><Step6TypedSignature /></Suspense>} />
+        
+        {/* Final Submit */}
+        <Route path="/submit" component={FinalSubmit} />
         
         {/* Dashboard */}
         <Route path="/dashboard" component={SimpleDashboard} />
