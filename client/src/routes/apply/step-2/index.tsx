@@ -41,6 +41,8 @@ export default function Step2() {
           canon 
         });
         
+        console.log("[Step2] Will filter Equipment Financing?", lookingFor === 'capital', "lookingFor:", lookingFor);
+        
         console.log("[Step2] Scoring with profile:", { amount, industry, country, fundsPurpose, accountsReceivableBalance });
 
         // Group by category
@@ -146,7 +148,7 @@ export default function Step2() {
 
     loadCategories();
     return () => { mounted = false; };
-  }, []);
+  }, [canon]);
 
   function selectCategory(id: string) {
     setSelected(id);
