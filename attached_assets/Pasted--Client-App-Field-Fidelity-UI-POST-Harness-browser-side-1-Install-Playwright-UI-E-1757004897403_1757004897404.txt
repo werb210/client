@@ -1,0 +1,130 @@
+# --- Client App: Field-Fidelity UI & POST Harness (browser-side) ---
+
+# 1) Install Playwright (UI E2E)
+npm i -D @playwright/test
+npx playwright install --with-deps
+
+# 2) Create the same ApplicationV1 fixture here
+mkdir -p fixtures e2e
+cat > fixtures/application.v1.json <<'JSON'
+{
+  "applicationId": "TEST-E2E-0001",
+  "businessLocation": "US",
+  "headquarters": "Seattle",
+  "headquartersState": "WA",
+  "industry": "Software",
+  "lookingFor": "capital",
+  "fundingAmount": 73000,
+  "fundsPurpose": "Marketing + hiring",
+  "salesHistory": "36_months",
+  "revenueLastYear": 850000,
+  "averageMonthlyRevenue": 72000,
+  "accountsReceivableBalance": 0,
+  "fixedAssetsValue": 120000,
+  "equipmentValue": 40000,
+  "selectedCategory": "Working Capital"
+}
+JSON
+
+# 3) Playwright config (minimal)
+cat > playwright.config.ts <<'TS'
+import { defineConfig } from '@playwright/test';
+export default defineConfig({
+  testDir: './e2e',
+  timeout: 120000,
+  use: {
+    baseURL: process.env.CLIENT_URL || 'http://localhost:5173',
+    headless: true
+  },
+});
+TS
+
+# 4) E2E spec:
+# - Fills Step 1
+# - Verifies Step 2 rules (Capital hides Equipment Financing + Invoice Factoring)
+# - Installs in-page fetch interceptor to collect FormData keys/values before POST
+cat > e2e/field-fidelity.spec.ts <<'TS'
+import { test, expect } from '@playwright/test';
+import fixture from '../fixtures/application.v1.json';
+
+// Helper: install an in-page fetch interceptor that captures FormData/JSON into window.__LAST_SUBMISSION__
+async function installInterceptor(page) {
+  await page.addInitScript(() => {
+    const _fetch = window.fetch;
+    (window as any).__LAST_SUBMISSION__ = null;
+    window.fetch = async (url: any, opts: any = {}) => {
+      try {
+        const method = (opts.method || 'GET').toUpperCase();
+        const isSubmit = method === 'POST' && /\/(api|v1)\/applications$/.test(String(url));
+        if (isSubmit) {
+          const snapshot: Record<string, any> = { url, method, headers: opts.headers || {}, fields: {} };
+          if (opts.body instanceof FormData) {
+            (opts.body as FormData).forEach((v, k) => {
+              snapshot.fields[k] = typeof v === 'string' ? v : (v && (v as any).name) || '[binary]';
+            });
+          } else if (typeof opts.body === 'string') {
+            try { snapshot.fields = JSON.parse(opts.body); } catch { snapshot.fields = { _raw: opts.body }; }
+          } else if (opts.body) {
+            snapshot.fields = opts.body as any;
+          }
+          (window as any).__LAST_SUBMISSION__ = snapshot;
+        }
+      } catch {}
+      return _fetch(url as any, opts);
+    };
+  });
+}
+
+test('Step1 → autosave → Step2 rules → submit includes all fields', async ({ page }) => {
+  await installInterceptor(page);
+  await page.goto('/');
+
+  // --- Fill Step 1 (adjust selectors to your actual labels/ids/placeholders) ---
+  await page.getByLabel(/country/i).selectOption(fixture.businessLocation);
+  await page.getByLabel(/headquarters city|city/i).fill(fixture.headquarters);
+  await page.getByLabel(/state|province/i).fill(fixture.headquartersState);
+  await page.getByLabel(/industry/i).fill(fixture.industry);
+  await page.getByLabel(/looking for/i).selectOption(fixture.lookingFor);
+  await page.getByLabel(/requested amount|amount/i).fill(String(fixture.fundingAmount));
+  await page.getByLabel(/purpose/i).fill(fixture.fundsPurpose);
+  await page.getByLabel(/sales history/i).selectOption(fixture.salesHistory);
+  await page.getByLabel(/revenue last year/i).fill(String(fixture.revenueLastYear));
+  await page.getByLabel(/avg(.*)monthly revenue|average monthly revenue/i).fill(String(fixture.averageMonthlyRevenue));
+  await page.getByLabel(/accounts? receivable/i).fill(String(fixture.accountsReceivableBalance));
+  await page.getByLabel(/fixed assets/i).fill(String(fixture.fixedAssetsValue));
+  await page.getByLabel(/equipment value/i).fill(String(fixture.equipmentValue));
+
+  // Continue to Step 2
+  await page.getByRole('button', { name: /continue|next/i }).click();
+
+  // --- Step 2 rules: "capital" hides Equipment Financing + Invoice Factoring ---
+  await expect(page.getByText(/equipment financing/i)).toHaveCount(0);
+  await expect(page.getByText(/invoice factoring/i)).toHaveCount(0);
+
+  // Choose a category if the UI requires it to enable submit (best-effort)
+  const hasCategory = await page.getByRole('button', { name: /select|choose/i }).count();
+  if (hasCategory) await page.getByRole('button', { name: /select|choose/i }).first().click();
+
+  // Submit
+  const submitBtn = await page.getByRole('button', { name: /submit|apply|finish/i });
+  if (await submitBtn.count()) await submitBtn.click();
+
+  // Read captured submission
+  const snap = await page.evaluate(() => (window as any).__LAST_SUBMISSION__);
+  expect(snap).toBeTruthy();
+
+  // Validate that every fixture key is present in the submitted fields snapshot
+  const fields = snap.fields || {};
+  for (const key of Object.keys(fixture)) {
+    expect(Object.keys(fields)).toContain(key);
+  }
+});
+TS
+
+# 5) Add npm scripts
+npm set-script e2e:client "playwright test e2e/field-fidelity.spec.ts"
+
+echo
+echo "✅ Client app harness ready."
+echo "Run the client dev server (e.g., npm run dev), ensure it’s on http://localhost:5173"
+echo "Then run:  CLIENT_URL=http://localhost:5173 npm run e2e:client"

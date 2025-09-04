@@ -1,0 +1,17 @@
+{
+  "applicationId": "TEST-E2E-0001",
+  "businessLocation": "US",
+  "headquarters": "Seattle",
+  "headquartersState": "WA",
+  "industry": "Software",
+  "lookingFor": "capital",
+  "fundingAmount": 73000,
+  "fundsPurpose": "Marketing + hiring",
+  "salesHistory": "36_months",
+  "revenueLastYear": 850000,
+  "averageMonthlyRevenue": 72000,
+  "accountsReceivableBalance": 0,
+  "fixedAssetsValue": 120000,
+  "equipmentValue": 40000,
+  "selectedCategory": "Working Capital"
+}
