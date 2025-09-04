@@ -1,0 +1,115 @@
+Prompt for Client App (paste into the client Replit agent)
+
+Goal: Produce a precise map of the app’s file layout and the Step1 → autosave → Step2 data flow.
+
+Mode: Read-only audit. Do not modify code.
+
+What to return (structured):
+
+app: client
+node_version:
+next_version:
+router: pages|app
+root_entry: <path to _app.tsx or app/layout.tsx>
+global_provider_file: <path or "missing">
+state_library: zustand|redux|context|other
+canonical_store_file: <path or "missing">
+canonical_store_key: <localStorage key if any>
+autosave:
+  implemented: true|false
+  impl_paths: [<files>]
+  debounce_ms: <number or "none">
+  writes_to_localStorage: true|false
+  reads_on_mount: true|false
+step1:
+  component_path: <path>
+  fields_written: [<top-level field names>]
+step2:
+  component_path: <path>
+  reads_from: <store path read e.g. canon.intent.fundingType>
+  rules_source_files: [<files housing filtering/business rules>]
+  categories_hidden_when_capital: true|false (and why)
+submission:
+  api_client_file: <path>
+  submit_function: <name>
+  endpoint: <HTTP method + path>
+  payload_built_in: <file:line>
+  sample_payload_keys: [<keys>]
+cookie_banner:
+  file: <path>
+  causes_reload_or_state_reset: true|false
+  notes: <one sentence>
+CSP:
+  config_file: next.config.js present: true|false
+  meta_tags_file: pages/_document.tsx or app/head.tsx
+  has_unsafe_dynamic: true|false
+  notes: <one sentence>
+
+
+Commands to run (and include outputs inline in your report):
+
+Environment + framework
+
+node -v && npm -v
+
+cat package.json (only name, scripts, dependencies, next version)
+
+test -f next.config.js && sed -n '1,200p' next.config.js || echo "no next.config.js"
+
+Layout
+
+ls -la
+
+test -d pages && tree -L 3 pages || echo "no /pages"
+
+test -d app && tree -L 3 app || echo "no /app"
+
+test -d src && tree -L 3 src || echo "no /src"
+
+State/store & autosave
+
+grep -RIn "create.*(.*zustand" -n || true
+
+grep -RIn "configureStore" -n || true
+
+grep -RIn "localStorage" -n src pages app || true
+
+grep -RIn "useEffect" src pages app | head -n 50
+
+Step components & rules
+
+grep -RIn "Step 1" -n src pages app || true
+
+grep -RIn "Step 2" -n src pages app || true
+
+grep -RIn "recommend" -n src pages app || true
+
+grep -RIn "fundingType" -n src pages app || true
+
+Submission path
+
+grep -RIn "fetch(" -n src pages app | head -n 50
+
+grep -RIn "/applications" -n src pages app || true
+
+Cookie/CMP & CSP
+
+grep -RIn "cookie" -n src pages app || true
+
+grep -RIn "Content-Security-Policy" -n src pages app || true
+
+test -f pages/_document.tsx && sed -n '1,200p' pages/_document.tsx || echo "no _document.tsx"
+
+test -f app/head.tsx && sed -n '1,200p' app/head.tsx || echo "no app/head.tsx"
+
+Also include small code excerpts (first ~60 lines) for:
+
+The global provider file (if any).
+
+The Step 1 component.
+
+The Step 2 component and the function that computes/filters categories.
+
+The submit function that posts to the staff API.
+
+Acceptance criteria: Your response must fill every YAML field above (use "missing" when unknown) and attach the command outputs/excerpts so we can verify paths and names.
