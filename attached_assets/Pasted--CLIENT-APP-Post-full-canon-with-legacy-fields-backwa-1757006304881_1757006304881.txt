@@ -1,0 +1,41 @@
+# =========================================
+# CLIENT APP: Post full canon with legacy fields (backward compatible)
+# Files touched:
+# - client/src/lib/canon.ts (NEW)
+# - client/src/lib/api.ts (EDIT createApplication to attach canon)
+# - OPTIONAL: add light debounce to autosave if you see Step1→Step2 race
+# =========================================
+
+# 1) Tiny helper to read the canonical store
+mkdir -p client/src/lib
+cat > client/src/lib/canon.ts <<'TS'
+export const CANON_KEY = 'bf:canon:v1';
+export function readCanon(): Record<string, any> {
+  try { return JSON.parse(localStorage.getItem(CANON_KEY) || '{}'); }
+  catch { return {}; }
+}
+TS
+
+# 2) Attach full canon to the submission payload (keeps existing 15 fields too)
+api_file='client/src/lib/api.ts'
+if grep -q "createApplication" "$api_file"; then
+  perl -0777 -pe "s|(export const createApplication = async \(data: FormData\) => \{[\s\S]*?fetch\()|\$canon_marker|s" -i "$api_file"
+
+  # Insert our canon attach lines before fetch call
+  perl -0777 -pe "s|\$canon_marker|export const createApplication = async (data: FormData) => {\n  const { readCanon } = await import('./canon');\n  const canon = readCanon();\n  try { data.set('application_canon', JSON.stringify(canon)); } catch {}\n  data.set('application_canon_version', 'v1');\n  data.set('application_field_count', String(Object.keys(canon).length));\n\n  return await fetch(|s" -i "$api_file"
+else
+  echo "⚠️  Could not find createApplication in $api_file — add the canon.set lines before the fetch() that posts to /v1/applications."
+fi
+
+# 3) OPTIONAL: debounce autosave 200ms to avoid race conditions
+debounce_file='client/src/providers/CanonProvider.tsx'
+if [ -f "$debounce_file" ]; then
+  if ! grep -q "useDebouncedCallback" "$debounce_file"; then
+    perl -0777 -pe "s|from \"react\";|from \"react\";\nimport { useDebouncedCallback } from 'use-debounce';|s" -i "$debounce_file"
+  fi
+  perl -0777 -pe "s|localStorage\.setItem\(KEY, JSON\.stringify\(canon\)\);|(\n  useDebouncedCallback((c:any)=>{\n    localStorage.setItem(KEY, JSON.stringify(c));\n    try { localStorage.setItem('bf:intake', JSON.stringify(c)); } catch {}\n  }, 200))(canon);\n|s" -i "$debounce_file"
+fi
+
+echo "-------------------------------------------"
+echo "CLIENT APP block applied. Rebuild and submit an application."
+echo "The payload now includes application_canon (JSON), version, and field_count."

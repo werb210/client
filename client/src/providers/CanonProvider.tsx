@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
 import { ApplicationV1 } from '../../../shared/ApplicationV1';
 
 const KEY = 'bf:canon:v1';
@@ -29,14 +30,19 @@ export function CanonProvider({ children }: { children: React.ReactNode }) {
   const setCanon = (patch: Partial<ApplicationV1>) =>
     setCanonState(prev => ({ ...prev, ...patch }));
 
-  // persist on change
-  useEffect(() => {
+  // Debounced persistence to prevent race conditions
+  const debouncedPersist = useDebouncedCallback((canonData: ApplicationV1) => {
     try { 
-      localStorage.setItem(KEY, JSON.stringify(canon));
+      localStorage.setItem(KEY, JSON.stringify(canonData));
       // Also maintain bf:intake for backward compatibility
-      localStorage.setItem('bf:intake', JSON.stringify(canon));
+      localStorage.setItem('bf:intake', JSON.stringify(canonData));
     } catch {}
-  }, [canon]);
+  }, 200);
+
+  // persist on change with debounce
+  useEffect(() => {
+    debouncedPersist(canon);
+  }, [canon, debouncedPersist]);
 
   // visible, unmistakable boot log
   useEffect(() => {

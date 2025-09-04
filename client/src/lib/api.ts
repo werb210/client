@@ -198,13 +198,20 @@ export const getLenderProducts = async () => {
 import { ApplicationV1 } from '../../../shared/ApplicationV1';
 
 export const createApplication = async (canon: ApplicationV1) => {
-  console.log("[API] Creating application with JSON payload:", canon);
-  console.log("[API] Fetch call details:", {
-    method: 'POST',
-    url: `${import.meta.env.VITE_STAFF_API_BASE}/api/applications`,
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include'
-  });
+  const { readCanon } = await import('./canon');
+  const fullCanon = readCanon();
+  
+  // Merge provided canon with full canonical state for complete payload
+  const completePayload = {
+    ...fullCanon,
+    ...canon,
+    application_canon: JSON.stringify(fullCanon),
+    application_canon_version: 'v1',
+    application_field_count: String(Object.keys(fullCanon).length)
+  };
+  
+  console.log("[API] Creating application with complete canonical payload:", completePayload);
+  console.log("[API] Field count:", Object.keys(fullCanon).length);
   
   const res = await fetch(`${import.meta.env.VITE_STAFF_API_BASE}/api/applications`, {
     method: 'POST',
@@ -214,7 +221,7 @@ export const createApplication = async (canon: ApplicationV1) => {
       'X-Client-App': 'boreal-client' 
     },
     credentials: 'include',
-    body: JSON.stringify(canon)
+    body: JSON.stringify(completePayload)
   });
   
   if (!res.ok) throw new Error("Failed to create application");
