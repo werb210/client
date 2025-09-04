@@ -34,6 +34,8 @@ import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 import { StepHeader } from "@/components/StepHeader";
+import { useCanon } from '@/providers/CanonProvider';
+import { useCanonFormBridge } from '@/lib/useCanonFormBridge';
 
 import { ValidationErrorModal } from "@/components/ValidationErrorModal";
 import { SsnWarningModal } from "@/components/SsnWarningModal";
@@ -112,51 +114,54 @@ export default function Step4ApplicantInfoComplete() {
 
   // Detect region from Step 1 business location
   useEffect(() => {
-    const newIsCanadian = state.step1?.businessLocation === "CA";
-    console.log('🏢 Business location detected:', state.step1?.businessLocation, 'isCanadian:', newIsCanadian);
+    const newIsCanadian = state.businessLocation === "CA";
+    console.log('🏢 Business location detected:', state.businessLocation, 'isCanadian:', newIsCanadian);
     setIsCanadian(newIsCanadian);
-  }, [state.step1?.businessLocation]);
+  }, [state.businessLocation]);
 
-  const countryCode = getCountryFromBusinessLocation(state.step1?.businessLocation || 'US');
+  const countryCode = getCountryFromBusinessLocation(state.businessLocation || 'US');
 
   const form = useForm<Step4FormData>({
     resolver: zodResolver(step4Schema),
     defaultValues: {
-      applicantFirstName: state.step4?.applicantFirstName || "",
-      applicantLastName: state.step4?.applicantLastName || "",
-      applicantEmail: state.step4?.applicantEmail || "",
-      applicantPhone: state.step4?.applicantPhone || "",
-      applicantAddress: state.step4?.applicantAddress || "",
-      applicantCity: state.step4?.applicantCity || "",
-      applicantState: state.step4?.applicantState || "",
-      applicantZipCode: state.step4?.applicantZipCode || "",
-      applicantDateOfBirth: state.step4?.applicantDateOfBirth || "",
-      applicantSSN: state.step4?.applicantSSN || "",
-      ownershipPercentage: state.step4?.ownershipPercentage || undefined,
-      hasPartner: state.step4?.hasPartner || false,
-      partnerFirstName: state.step4?.partnerFirstName || "",
-      partnerLastName: state.step4?.partnerLastName || "",
-      partnerEmail: state.step4?.partnerEmail || "",
-      partnerPhone: state.step4?.partnerPhone || "",
-      partnerAddress: state.step4?.partnerAddress || "",
-      partnerCity: state.step4?.partnerCity || "",
-      partnerState: state.step4?.partnerState || "",
-      partnerZipCode: state.step4?.partnerZipCode || "",
-      partnerDateOfBirth: state.step4?.partnerDateOfBirth || "",
-      partnerSSN: state.step4?.partnerSSN || "",
-      partnerOwnershipPercentage: state.step4?.partnerOwnershipPercentage || undefined,
+      applicantFirstName: state.firstName || "",
+      applicantLastName: state.lastName || "",
+      applicantEmail: state.personalEmail || "",
+      applicantPhone: state.personalPhone || "",
+      applicantAddress: state.applicantAddress || "",
+      applicantCity: state.applicantCity || "",
+      applicantState: state.applicantState || "",
+      applicantZipCode: state.applicantPostalCode || "",
+      applicantDateOfBirth: state.dateOfBirth || "",
+      applicantSSN: state.socialSecurityNumber || "",
+      ownershipPercentage: Number(state.ownershipPercentage) || undefined,
+      hasPartner: !!state.partnerFirstName || false,
+      partnerFirstName: state.partnerFirstName || "",
+      partnerLastName: state.partnerLastName || "",
+      partnerEmail: state.partnerEmail || "",
+      partnerPhone: state.partnerPhone || "",
+      partnerAddress: state.partnerAddress || "",
+      partnerCity: state.partnerCity || "",
+      partnerState: state.partnerState || "",
+      partnerZipCode: state.partnerPostalCode || "",
+      partnerDateOfBirth: state.partnerDateOfBirth || "",
+      partnerSSN: state.partnerSinSsn || "",
+      partnerOwnershipPercentage: Number(state.partnerOwnershipPercentage) || undefined,
     },
   });
 
+  // Bridge form to canonical store
+  useCanonFormBridge(form);
+
   // Initialize phone display states
   useEffect(() => {
-    if (state.step4?.applicantPhone && !applicantPhoneDisplay) {
-      setApplicantPhoneDisplay(formatPhoneDisplay(state.step4.applicantPhone, countryCode));
+    if (state.personalPhone && !applicantPhoneDisplay) {
+      setApplicantPhoneDisplay(formatPhoneDisplay(state.personalPhone, countryCode));
     }
-    if (state.step4?.partnerPhone && !partnerPhoneDisplay) {
-      setPartnerPhoneDisplay(formatPhoneDisplay(state.step4.partnerPhone, countryCode));
+    if (state.partnerPhone && !partnerPhoneDisplay) {
+      setPartnerPhoneDisplay(formatPhoneDisplay(state.partnerPhone, countryCode));
     }
-  }, [state.step4?.applicantPhone, state.step4?.partnerPhone, applicantPhoneDisplay, partnerPhoneDisplay, countryCode]);
+  }, [state.personalPhone, state.partnerPhone, applicantPhoneDisplay, partnerPhoneDisplay, countryCode]);
 
   const watchedValues = form.watch();
   const hasPartner = form.watch("hasPartner");
@@ -261,34 +266,48 @@ export default function Step4ApplicantInfoComplete() {
       // 🚨 CRITICAL FIX: Complete Step 1 payload with all required fields
       const step1 = {
         // Core funding request data
-        fundingAmount: state.step1?.fundingAmount || state.step1?.requestedAmount || 0,
-        requestedAmount: state.step1?.requestedAmount || state.step1?.fundingAmount || 0,
-        use_of_funds: state.step1?.use_of_funds || state.step1?.lookingFor || state.step1?.fundsPurpose || '',
-        lookingFor: state.step1?.lookingFor || state.step1?.use_of_funds || state.step1?.fundsPurpose || '',
-        fundsPurpose: state.step1?.fundsPurpose || state.step1?.lookingFor || state.step1?.use_of_funds || '',
+        fundingAmount: state.fundingAmount || 0,
+        requestedAmount: state.fundingAmount || 0,
+        use_of_funds: state.fundsPurpose || state.lookingFor || '',
+        lookingFor: state.lookingFor || state.fundsPurpose || '',
+        fundsPurpose: state.fundsPurpose || state.lookingFor || '',
         
         // Business location and context
-        businessLocation: state.step1?.businessLocation || 'US',
-        industry: state.step1?.industry || '',
+        businessLocation: state.businessLocation || 'US',
+        industry: state.industry || '',
         
         // Financial metrics
-        salesHistory: state.step1?.salesHistory || '',
-        lastYearRevenue: state.step1?.lastYearRevenue || '',
-        averageMonthlyRevenue: state.step1?.averageMonthlyRevenue || '',
-        accountsReceivableBalance: state.step1?.accountsReceivableBalance || 0,
-        fixedAssetsValue: state.step1?.fixedAssetsValue || 0,
+        salesHistory: state.salesHistory || '',
+        lastYearRevenue: state.revenueLastYear || '',
+        averageMonthlyRevenue: state.averageMonthlyRevenue || '',
+        accountsReceivableBalance: state.accountsReceivableBalance || 0,
+        fixedAssetsValue: state.fixedAssetsValue || 0,
         
         // Equipment specific (if applicable)
-        equipment_value: state.step1?.equipment_value || state.step1?.equipmentValue || 0,
-        equipmentValue: state.step1?.equipmentValue || state.step1?.equipment_value || 0,
+        equipment_value: state.equipmentValue || 0,
+        equipmentValue: state.equipmentValue || 0,
         
         // Step 2 integration
-        selectedCategory: state.step2?.selectedCategory || state.step2?.selectedCategoryName || ''
+        selectedCategory: state.selectedCategory || state.selectedCategoryName || ''
       };
 
-      // 🔧 Fix validation logic - Replace reliance on state.step3 if it's not hydrated
+      // 🔧 Fix validation logic - Use direct state fields from ApplicationForm
       const storedData = loadFromLocalStorage();
-      const businessFields = state.step3 || storedData?.step3 || {};
+      const businessFields = {
+        businessName: state.businessName || '',
+        businessAddress: state.businessAddress || '',
+        businessCity: state.businessCity || '',
+        businessState: state.businessState || '',
+        businessZipCode: state.businessZipCode || '',
+        businessPhone: state.businessPhone || '',
+        businessEmail: state.businessEmail || '',
+        businessWebsite: state.businessWebsite || '',
+        businessStartDate: state.businessStartDate || '',
+        businessStructure: state.businessStructure || '',
+        employeeCount: state.employeeCount || 0,
+        estimatedYearlyRevenue: state.estimatedYearlyRevenue || 0,
+        industry: state.industry || ''
+      };
       
       // 🔧 Enhanced validation check for Step 3 data
       if (!businessFields.operatingName || !businessFields.businessPhone || !businessFields.businessState) {
@@ -324,8 +343,8 @@ export default function Step4ApplicantInfoComplete() {
         // ✅ REQUIRED FIELD: businessType (mapped from businessStructure)
         businessType: businessFields.businessStructure || '',
         
-        // ✅ REQUIRED FIELD: industry (from Step 1 or Step 3)
-        industry: businessFields.industry || state.step1?.industry || '',
+        // ✅ REQUIRED FIELD: industry (from Step 1)
+        industry: businessFields.industry || state.industry || '',
         
         // Business address
         businessAddress: businessFields.businessStreetAddress || businessFields.businessAddress || '',

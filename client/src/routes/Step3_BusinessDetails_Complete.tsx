@@ -41,6 +41,8 @@ import {
   getCountryFromBusinessLocation
 } from '@/lib/phoneUtils';
 import { StepHeader } from '@/components/StepHeader';
+import { useCanon } from '@/providers/CanonProvider';
+import { useCanonFormBridge } from '@/lib/useCanonFormBridge';
 
 
 // Step 3 Schema - All fields required as requested
@@ -64,6 +66,7 @@ type BusinessDetailsFormData = z.infer<typeof step3Schema>;
 export default function Step3BusinessDetailsComplete() {
   const { data: state, save } = useFormData();
   const [, setLocation] = useLocation();
+  const { canon } = useCanon();
 
   // Read intake + category from context or localStorage
   const intake = state ?? JSON.parse(localStorage.getItem('bf:intake') || '{}');
@@ -122,6 +125,9 @@ export default function Step3BusinessDetailsComplete() {
       estimatedYearlyRevenue: state?.estimatedYearlyRevenue || undefined,
     },
   });
+
+  // Bridge form to canonical store
+  useCanonFormBridge(form);
 
   // Initialize phone display state
   useEffect(() => {

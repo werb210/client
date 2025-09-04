@@ -1,7 +1,7 @@
 {
   "applicationId": "TEST-E2E-0001",
   "businessLocation": "US",
-  "headquarters": "Seattle",
+  "headquarters": "Seattle", 
   "headquartersState": "WA",
   "industry": "Software",
   "lookingFor": "capital",
@@ -13,5 +13,20 @@
   "accountsReceivableBalance": 0,
   "fixedAssetsValue": 120000,
   "equipmentValue": 40000,
-  "selectedCategory": "Working Capital"
+  "selectedCategory": "Working Capital",
+  "selectedProductId": "PROD-001",
+  "selectedProductName": "Working Capital Loan",
+  "selectedLenderName": "Boreal Financial",
+  "businessName": "Tech Startup Inc",
+  "businessAddress": "123 Tech Street",
+  "businessCity": "Seattle",
+  "businessState": "WA",
+  "businessZipCode": "98101",
+  "businessPhone": "2065551234",
+  "businessEmail": "contact@techstartup.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "personalEmail": "john@techstartup.com",
+  "personalPhone": "2065551234",
+  "ownershipPercentage": "100"
 }

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import fixture from '../fixtures/application.v1.json';
+import fixture from '../fixtures/application.v1.json' assert { type: 'json' };
 
 // Helper: install an in-page fetch interceptor that captures FormData/JSON into window.__LAST_SUBMISSION__
 async function installInterceptor(page) {
