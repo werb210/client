@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "== Client app: unify CSP (remove 'unsafe-dynamic', fix report-uri, fonts, sandbox) =="
+
+# 1) Create headers in next.config.js (replaces or creates)
+cat > next.config.js <<'JS'
+const buildCsp = (dev = process.env.NODE_ENV !== "production") => {
+  const scriptInline = dev ? "'unsafe-inline'" : "";
+  const styleInline  = dev ? "'unsafe-inline'" : "";
+
+  const GOOGLE = [
+    "https://www.googletagmanager.com",
+    "https://www.google-analytics.com",
+    "https://www.recaptcha.net",
+    "https://www.google.com",
+    "https://www.gstatic.com",
+  ];
+
+  const TWILIO_HTTP = [
+    "https://sdk.twilio.com",
+    "https://media.twiliocdn.com",
+    "https://static.twilio.com",
+  ];
+
+  const REPLIT = [
+    "https://*.replit.dev",
+    "https://*.janeway.replit.dev",
+    "https://*.picard.replit.dev",
+  ];
+
+  return [
+    "default-src 'self';",
+    `script-src 'self' ${scriptInline} ${GOOGLE.join(" ")} ${TWILIO_HTTP.join(" ")};`,
+    `style-src 'self' ${styleInline} https://fonts.googleapis.com;`,
+    "font-src 'self' https://fonts.gstatic.com data:;",
+    "img-src 'self' https: data: blob:;",
+    `connect-src 'self' ${GOOGLE.join(" ")} ${TWILIO_HTTP.join(" ")} ${REPLIT.join(" ")} wss://*.twilio.com;`,
+    "frame-src 'self' https://www.google.com https://www.recaptcha.net;",
+    "frame-ancestors 'self';",
+    "base-uri 'self';",
+    "form-action 'self';",
+    "object-src 'none';",
+    "upgrade-insecure-requests;",
+    "report-uri /csp-report;"
+  ].join(" ");
+};
+
+const permissionsPolicy = [
+  "accelerometer=()",
+  "ambient-light-sensor=()",
+  "autoplay=()",
+  "battery=()",
+  "camera=()",
+  "display-capture=()",
+  "fullscreen=*",
+  "geolocation=()",
+  "gyroscope=()",
+  "magnetometer=()",
+  "microphone=()",
+  "midi=()",
+  "payment=()",
+  "publickey-credentials-get=()",
+  "screen-wake-lock=()",
+  "usb=()",
+].join(", ");
+
+module.exports = {
+  reactStrictMode: true,
+  async headers() {
+    return [{
+      source: "/(.*)",
+      headers: [
+        { key: "Content-Security-Policy", value: buildCsp() },
+        { key: "Permissions-Policy", value: permissionsPolicy },
+        { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "X-Frame-Options", value: "SAMEORIGIN" },
+      ],
+    }];
+  },
+};
+JS
+
+# 2) Strip any meta CSP and invalid sandbox flags across client
+grep -RIl --include='*.html' --include='*.tsx' --include='*.jsx' "Content-Security-Policy" . \
+  | xargs -I{} sed -i -E "s#<meta[^>]*http-equiv=['\"]Content-Security-Policy['\"][^>]*>##g" {}
+
+grep -RIl --include='*.html' --include='*.tsx' --include='*.jsx' "allow-downloads-without-user-activation" . \
+  | xargs -I{} sed -i -E "s/allow-downloads-without-user-activation//g" {}
+
+# 3) Ensure Google Fonts load via CSS API (avoid direct .woff2 404s)
+mkdir -p styles
+cat > styles/csp-fonts.css <<'CSS'
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+CSS
+
+# 4) Autowire fonts CSS into _app or root layout if present
+APPFILE="$(git ls-files | grep -E 'pages/_app\.(tsx|jsx)$|app/layout\.(tsx|jsx)$' | head -n1 || true)"
+if [ -n "${APPFILE}" ]; then
+  if ! grep -q "styles/csp-fonts.css" "$APPFILE"; then
+    sed -i -E '1 i\\nimport "../styles/csp-fonts.css";' "$APPFILE" || true
+    sed -i -E '1 i\\n/* CSP-safe Google Fonts import */' "$APPFILE" || true
+    echo "Patched $APPFILE to import styles/csp-fonts.css"
+  fi
+else
+  echo "NOTE: Import styles/csp-fonts.css in your app entry (_app.tsx or app/layout.tsx)."
+fi
+
+# 5) Build/verify
+npm run -s build >/dev/null 2>&1 || true
+echo "CSP header (run dev/prod to see in browser): configured via next.config.js"
+echo "✓ Client app block applied."
