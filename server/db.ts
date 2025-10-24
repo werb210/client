@@ -5,7 +5,7 @@ if (process.env.NODE_ENV !== "production") {
   console.warn("[client] Using DB stub — skipping real database connection");
 }
 
-// Export fake DB interface so imports elsewhere don’t break
+// Fake DB interface
 export const db = {
   query: async () => [],
   insert: async () => {},
