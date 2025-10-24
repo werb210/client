@@ -1,0 +1,20 @@
+{
+  "project": "Boreal Client Application",
+  "mode": "audit-repair",
+  "scanPaths": ["client/src", "client/tests", "client/public"],
+  "reportPath": "reports/codex-feature-report.json",
+  "autoRepair": true,
+  "checks": {
+    "UI": true,
+    "API": true,
+    "Forms": true,
+    "OCR": true,
+    "OTP": true,
+    "RetryQueue": true,
+    "TransmissionLogger": true,
+    "PWA": true,
+    "Accessibility": true,
+    "TypeSafety": true,
+    "Security": true
+  }
+}
