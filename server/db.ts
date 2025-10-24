@@ -5,10 +5,11 @@ if (process.env.NODE_ENV !== "production") {
   console.warn("[client] Using DB stub — skipping real database connection");
 }
 
-// Dummy pool to satisfy legacy imports
+// Dummy pool object to satisfy legacy imports
 export const pool = {
-  query: async () => ({ rows: [] }),
+  query: async (_q?: string, _p?: any[]) => ({ rows: [] }),
   connect: async () => ({ release: () => {} }),
+  end: async () => {},
 };
 
 // Minimal fake db interface
