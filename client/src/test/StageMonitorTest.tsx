@@ -2,18 +2,19 @@ import { getProducts } from "../../api/products";
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
-import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+
+
 import { StageMonitor } from '@/components/StageMonitor';
 import { AutoSaveIndicator } from '@/components/AutoSaveIndicator';
 import { ProgressMonitor } from '@/components/ProgressMonitor';
-import Building from 'lucide-react/dist/esm/icons/building';
-import Target from 'lucide-react/dist/esm/icons/target';
-import User from 'lucide-react/dist/esm/icons/user';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import Upload from 'lucide-react/dist/esm/icons/upload';
-import FileSignature from 'lucide-react/dist/esm/icons/file-signature';
 
+
+
+
+
+
+
+import {ArrowLeft, ArrowRight, Building, FileSignature, FileText, Target, Upload, User} from 'lucide-react';
 const steps = [
   { title: "Financial Profile", icon: Building },
   { title: "Recommendations", icon: Target },

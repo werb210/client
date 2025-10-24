@@ -2,6 +2,6 @@
 import { uploadDocument } from "@/lib/api";
 
 export async function uploadDocumentToStaff(appId: string, file: File, documentType: string) {
-  return uploadDocument(appId, file, documentType);
+  return uploadDocument(appId, file, documentType as any);
 }
 export default uploadDocumentToStaff;

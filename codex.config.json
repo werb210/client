@@ -1,0 +1,21 @@
+{
+  "project": "Boreal Client App",
+  "mode": "audit",
+  "scanPaths": ["client/src", "client/tests", "client/public"],
+  "reportPath": "reports/codex-feature-audit.json",
+  "checks": {
+    "UI": true,
+    "API": true,
+    "Forms": true,
+    "OCR": true,
+    "OTP": true,
+    "RetryQueue": true,
+    "TransmissionLogger": true,
+    "PWA": true,
+    "Accessibility": true,
+    "TypeSafety": true,
+    "Security": true,
+    "Twilio": false,
+    "SendGrid": false
+  }
+}

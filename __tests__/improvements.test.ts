@@ -2,12 +2,38 @@
  * Test suite for all the improvements implemented
  */
 
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, beforeAll, beforeEach, afterEach } from 'vitest';
+import { JSDOM } from 'jsdom';
 import { runAccessibilityAudit } from '../client/src/utils/accessibility';
 import { runSecurityAudit } from '../client/src/utils/securityValidation';
-import { testPWAFunctionality } from '../client/src/utils/pwaTestSuite';
 import { validationSchemas } from '../client/src/utils/formValidationEnhanced';
 import { getConnectionInfo, getLoadingStrategy } from '../client/src/utils/loadingStates';
+
+beforeAll(() => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    const dom = new JSDOM('<!doctype html><html><body></body></html>', {
+      url: 'http://localhost'
+    });
+    globalThis.window = dom.window as unknown as Window & typeof globalThis;
+    globalThis.document = dom.window.document;
+    globalThis.navigator = dom.window.navigator as Navigator;
+    globalThis.location = dom.window.location as Location;
+    globalThis.localStorage = dom.window.localStorage;
+    globalThis.sessionStorage = dom.window.sessionStorage;
+  }
+});
+
+beforeEach(() => {
+  document.body.innerHTML = '';
+  document.head.innerHTML = '';
+  localStorage.clear();
+  sessionStorage.clear();
+});
+
+afterEach(() => {
+  localStorage.clear();
+  sessionStorage.clear();
+});
 
 describe('Application Improvements', () => {
   test('accessibility audit should identify issues', async () => {
@@ -25,10 +51,21 @@ describe('Application Improvements', () => {
   });
 
   test('security validation should check for vulnerabilities', async () => {
+    document.body.innerHTML = `
+      <form>
+        <input type="text" name="account" />
+      </form>
+      <script>console.log('inline');</script>
+    `;
+
+    localStorage.setItem('user_token', 'abc123');
+    sessionStorage.setItem('sessionSecret', 'xyz');
+
     const result = await runSecurityAudit();
     expect(result).toHaveProperty('score');
     expect(result).toHaveProperty('vulnerabilities');
     expect(result).toHaveProperty('compliance');
+    expect(result.vulnerabilities.some(v => v.category === 'Data Storage')).toBe(true);
   });
 
   test('form validation should provide helpful error messages', () => {

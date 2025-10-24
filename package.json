@@ -10,8 +10,8 @@
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
-    "test": "vitest run --config tsconfig.test.json || vitest run",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
+    "test": "vitest run",
     "test:playwright": "playwright test --reporter=list",
     "preview": "vite preview --host 127.0.0.1 --port 5173"
   },

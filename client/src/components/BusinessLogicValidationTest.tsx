@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useFormData } from '@/context/FormDataContext';
-import Play from 'lucide-react/dist/esm/icons/play';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
-import X from 'lucide-react/dist/esm/icons/x';
+
+
+
+
 
 interface ValidationResult {
   test: string;
@@ -205,6 +205,7 @@ export function BusinessLogicValidationTest() {
 }
 // injected: local-first products fetch
 import { getProducts, loadSelectedCategories } from "../api/products";
+import {AlertTriangle, CheckCircle, Play, X} from 'lucide-react';
 /* injected load on mount (pseudo):
 useEffect(() => { (async () => {
   const cats = loadSelectedCategories();

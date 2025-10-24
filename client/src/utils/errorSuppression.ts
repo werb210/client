@@ -44,19 +44,23 @@ console.warn = (...args: any[]) => {
 };
 
 // Additional global error event listener for window errors
-window.addEventListener('error', (event) => {
-  const message = event.message || '';
-  
-  if (message.includes('dfab1952') ||
-      message.includes('beacon') ||
-      message.includes('blocked') ||
-      message.includes('replit') ||
-      message.includes('tracking') ||
-      message.includes('analytics') ||
-      message.match(/[a-f0-9]{8}/)) {
-    event.preventDefault();
-    return false;
-  }
-});
+if (typeof window !== 'undefined') {
+  window.addEventListener('error', (event) => {
+    const message = event.message || '';
+
+    if (message.includes('dfab1952') ||
+        message.includes('beacon') ||
+        message.includes('blocked') ||
+        message.includes('replit') ||
+        message.includes('tracking') ||
+        message.includes('analytics') ||
+        message.match(/[a-f0-9]{8}/)) {
+      event.preventDefault();
+      return false;
+    }
+
+    return undefined;
+  });
+}
 
 export { };

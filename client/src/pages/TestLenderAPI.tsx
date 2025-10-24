@@ -15,13 +15,14 @@ interface LenderProduct {
 }
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import Database from 'lucide-react/dist/esm/icons/database';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import Play from 'lucide-react/dist/esm/icons/play';
+
+
+
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+import {AlertCircle, CheckCircle, Database, Play} from 'lucide-react';
 export default function TestLenderAPI() {
   const { data: products, isLoading, error } = usePublicLenders();
 

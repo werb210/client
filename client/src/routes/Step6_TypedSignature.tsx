@@ -1,5 +1,4 @@
-import { attachCategories } from "../api/submit-categories";
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
 import { useFormData } from '@/context/FormDataContext';
 import { StepHeader } from '@/components/StepHeader';
@@ -8,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { getStoredApplicationId, validateApplicationIdForAPI } from '@/lib/uuidUtils';
 import { listDocuments } from '@/lib/api';
 import { addToRetryQueue, getRetryQueue } from '@/utils/applicationRetryQueue';
+import type { ApplicationForm, UploadedDocument } from '@/types/application';
 
 interface AuthorizationData {
   typedName: string;
@@ -25,67 +25,103 @@ interface AuthorizationData {
 
 export default function Step6_TypedSignature() {
   const [, setLocation] = useLocation();
-  const { data } = useFormData();
-  
-  // Create mock state for compatibility with all expected properties
-  const state = {
-    step4: data || {},
-    step3: data || {},
-    step5DocumentUpload: {
-      uploadedFiles: [],
-      files: [],
-      submissionMode: 'without_documents',
-      hasDocuments: false,
-      bypassDocuments: false,
-      ...data
-    },
-    bypassDocuments: false,
-    applicationId: data?.applicationId || 'mock-id'
-  };
-  const dispatch = (action: any) => {
-    console.log('Mock dispatch in Step6:', action);
-  };
+  const { data: rawFormData, save } = useFormData();
+  const formData: ApplicationForm = useMemo(() => rawFormData ?? {}, [rawFormData]);
+
+  const documentState = formData.step5DocumentUpload ?? {};
+  const uploadedFiles: UploadedDocument[] = useMemo(() => {
+    if (Array.isArray(formData.uploadedFiles)) {
+      return formData.uploadedFiles;
+    }
+
+    const nested = documentState.uploadedFiles ?? documentState.files;
+    return Array.isArray(nested) ? nested : [];
+  }, [documentState, formData.uploadedFiles]);
+
+  const supplementalFiles: UploadedDocument[] = Array.isArray(documentState.files) ? documentState.files : [];
+  const hasUploads = uploadedFiles.length > 0 || supplementalFiles.length > 0;
+  const submissionMode = documentState.submissionMode ?? (hasUploads ? 'with_documents' : 'without_documents');
+  const hasDocuments = formData.hasDocuments ?? documentState.hasDocuments ?? hasUploads;
+  const bypassDocuments = formData.bypassDocuments ?? documentState.bypassDocuments ?? false;
+
+  const applicationId = formData.applicationId ?? formData.step4?.applicationId ?? '';
+  const applicantFirstName = formData.applicantFirstName
+    ?? formData.firstName
+    ?? formData.step4?.applicantFirstName
+    ?? formData.step4?.firstName
+    ?? '';
+  const applicantLastName = formData.applicantLastName
+    ?? formData.lastName
+    ?? formData.step4?.applicantLastName
+    ?? formData.step4?.lastName
+    ?? '';
+  const applicantName = `${applicantFirstName} ${applicantLastName}`.trim() || 'Applicant';
+  const businessName = formData.operatingName
+    ?? formData.businessName
+    ?? formData.legalName
+    ?? formData.step3?.operatingName
+    ?? formData.step3?.legalName
+    ?? 'Your Business';
+  const step1Snapshot = useMemo(() => {
+    if (formData.step1 && typeof formData.step1 === 'object') {
+      return formData.step1 as Record<string, unknown>;
+    }
+
+    return {
+      businessLocation: formData.businessLocation,
+      fundingAmount: formData.fundingAmount,
+      fundsPurpose: formData.fundsPurpose,
+      revenueLastYear: formData.revenueLastYear,
+      industry: formData.industry,
+    } as Record<string, unknown>;
+  }, [formData.businessLocation, formData.fundingAmount, formData.fundsPurpose, formData.industry, formData.revenueLastYear, formData.step1]);
+
+  const step3Snapshot = useMemo(() => {
+    if (formData.step3 && typeof formData.step3 === 'object') {
+      return formData.step3 as Record<string, unknown>;
+    }
+
+    return {
+      operatingName: formData.operatingName,
+      legalName: formData.legalName,
+      businessStructure: formData.businessStructure,
+      businessPhone: formData.businessPhone,
+    } as Record<string, unknown>;
+  }, [formData.businessPhone, formData.businessStructure, formData.legalName, formData.operatingName, formData.step3]);
+
+  const step4Snapshot = useMemo(() => {
+    if (formData.step4 && typeof formData.step4 === 'object') {
+      return {
+        ...formData.step4,
+        applicationId: formData.step4?.applicationId ?? applicationId,
+      } as Record<string, unknown>;
+    }
+
+    return {
+      applicationId,
+      firstName: applicantFirstName,
+      lastName: applicantLastName,
+      email: formData.applicantEmail ?? formData.email,
+      phone: formData.applicantPhone ?? formData.phone,
+    } as Record<string, unknown>;
+  }, [applicationId, applicantFirstName, applicantLastName, formData.applicantEmail, formData.applicantPhone, formData.email, formData.phone, formData.step4]);
+
+  const step6Snapshot = (formData as { step6Authorization?: Record<string, unknown> }).step6Authorization ?? {};
   const [isLoading, setIsLoading] = useState(false);
-
-  // Try multiple field name patterns and locations
-  const applicantName = (
-    // First try step4 with new field names
-    `${state.step4?.applicantFirstName || ''} ${state.step4?.applicantLastName || ''}`.trim() ||
-    // Then try step4 with legacy field names
-    `${state.step4?.firstName || ''} ${state.step4?.lastName || ''}`.trim() ||
-    // Then try root level with new field names
-    `${(state as any).applicantFirstName || ''} ${(state as any).applicantLastName || ''}`.trim() ||
-    // Finally try root level with legacy field names
-    `${(state as any).firstName || ''} ${(state as any).lastName || ''}`.trim()
-  );
-  
-  const businessName = state.step3?.operatingName || state.step3?.legalName || (state as any).operatingName || (state as any).legalName || 'Your Business';
-
-  // Applicant name and business name resolved from form data
 
   const handleAuthorization = async (authData: AuthorizationData) => {
     setIsLoading(true);
 
     try {
-      // Store authorization data in application state
-      dispatch({
-        type: 'UPDATE_STEP6_AUTHORIZATION',
-        payload: {
+      const ipAddress = await getClientIP();
+      save({
+        signatureCompleted: true,
+        step6Authorization: {
           ...authData,
-          ipAddress: await getClientIP(),
-          stepCompleted: true
-        }
+          ipAddress,
+          stepCompleted: true,
+        },
       });
-
-      // Electronic signature completed successfully
-
-      // ✅ ENHANCED: Determine submission mode and handle accordingly
-      const hasUploads =
-        (state.step5DocumentUpload?.uploadedFiles?.length ?? 0) > 0 ||
-        (state.step5DocumentUpload?.files?.length ?? 0) > 0;
-      
-      const submissionMode = state.step5DocumentUpload?.submissionMode || (hasUploads ? 'with_documents' : 'without_documents');
-      const hasDocuments = state.step5DocumentUpload?.hasDocuments || hasUploads;
 
       // Determine submission mode based on document uploads
 
@@ -159,10 +195,10 @@ export default function Step6_TypedSignature() {
       // Using validated applicationId for submission
 
       // ✅ Check bypass flag from Step 5 first
-      const bypassDocuments = state.bypassDocuments || false;
+      const bypassDocumentsFlag = bypassDocuments;
       // Checking bypass status from Step 5
       
-      if (bypassDocuments) {
+      if (bypassDocumentsFlag) {
         // Document validation bypassed based on Step 5 bypass flag
         toast({
           title: "Documents Bypassed",
@@ -309,18 +345,22 @@ export default function Step6_TypedSignature() {
 
   // Helper function to check for local upload evidence
   const checkLocalUploadEvidence = (): boolean => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
     try {
       // Check for uploaded documents evidence
       
       // Check multiple sources and arrays for upload evidence
-      const contextFiles = state.step5DocumentUpload?.files || [];
-      const contextUploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
-      
+      const contextFiles = supplementalFiles;
+      const contextUploadedFiles = uploadedFiles;
+
       // Also check any other possible locations where files might be stored
-      const rootUploadedFiles = (state as any).uploadedFiles || [];
-      const rootFiles = (state as any).files || [];
+      const rootUploadedFiles = Array.isArray((formData as any).uploadedFiles) ? (formData as any).uploadedFiles : [];
+      const rootFiles = Array.isArray((formData as any).files) ? (formData as any).files : [];
       
-      const localStorageData = localStorage.getItem('formData') || localStorage.getItem('financialFormData');
+      const localStorageData = window.localStorage?.getItem('formData') || window.localStorage?.getItem('financialFormData');
       let localStorageFiles = [];
       let localStorageUploadedFiles = [];
       let localStorageRaw = null;
@@ -370,7 +410,7 @@ export default function Step6_TypedSignature() {
       } else {
         // Debug logging removed for production
         console.log('🔍 [STEP6] Full debug data:', {
-          contextState: state,
+          contextState: formData,
           localStorageData: localStorageRaw
         });
       }
@@ -381,7 +421,7 @@ export default function Step6_TypedSignature() {
       console.error('❌ [STEP6] Full error details:', {
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
         errorStack: error instanceof Error ? error.stack : 'No stack trace',
-        currentState: state
+        currentState: formData
       });
       return false;
     }
@@ -391,10 +431,10 @@ export default function Step6_TypedSignature() {
     // Debug logging removed for production
 
     const formDataPayload = {
-      step1: state.step1,
-      step3: state.step3,
-      step4: state.step4,
-      step6: state.step6Authorization
+      step1: step1Snapshot,
+      step3: step3Snapshot,
+      step4: step4Snapshot,
+      step6: step6Snapshot,
     };
 
     // Debug logging removed for production
@@ -436,22 +476,22 @@ export default function Step6_TypedSignature() {
       const applicationId = validateApplicationIdForAPI(storedApplicationId);
 
       // ✅ Determine submission status based on document presence
-      const submissionMode = state.step5DocumentUpload?.submissionMode || 'with_documents';
-      const hasDocuments = state.step5DocumentUpload?.hasDocuments || false;
+      const submissionModeFinal = submissionMode || 'with_documents';
+      const hasDocumentsFinal = hasDocuments;
       const submissionStatus = hasDocuments ? 'submitted' : 'submitted_no_docs';
       
       // Debug logging removed for production
 
       // Prepare the final application data
       const finalApplicationData = {
-        step1: state.step1,
-        step3: state.step3,
-        step4: state.step4,
-        step6: state.step6Authorization,
+        step1: step1Snapshot,
+        step3: step3Snapshot,
+        step4: step4Snapshot,
+        step6: step6Snapshot,
         applicationId,
         status: submissionStatus,
-        submissionMode: submissionMode,
-        hasDocuments: hasDocuments
+        submissionMode: submissionModeFinal,
+        hasDocuments: hasDocumentsFinal,
       };
 
       // 🟨 STEP 3: Confirm finalize is called - REPLIT MUST DO
@@ -526,8 +566,9 @@ export default function Step6_TypedSignature() {
             description: "Your financing application has been submitted for review. You'll receive updates via email."
           });
           
-          // Ensure applicationId is stored in localStorage for future document uploads
-          localStorage.setItem('applicationId', applicationId);
+          if (typeof window !== 'undefined') {
+            window.localStorage?.setItem('applicationId', applicationId);
+          }
           // Debug logging removed for production
           
           setLocation('/application-success');
@@ -578,8 +619,8 @@ export default function Step6_TypedSignature() {
       console.log("✅ Application finalized:", applicationId);
 
       // Ensure applicationId is stored in localStorage for future document uploads
-      if (applicationId) {
-        localStorage.setItem('applicationId', applicationId);
+      if (applicationId && typeof window !== 'undefined') {
+        window.localStorage?.setItem('applicationId', applicationId);
         // Debug logging removed for production
       }
 
@@ -600,13 +641,15 @@ export default function Step6_TypedSignature() {
       }
 
       // Emit GTM step_completed event
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({ 
-        event: 'step_completed', 
-        step: 6, 
-        application_id: applicationId, 
-        product_type: 'signature_complete' 
-      });
+      if (typeof window !== 'undefined') {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: 'step_completed',
+          step: 6,
+          application_id: applicationId,
+          product_type: 'signature_complete'
+        });
+      }
 
       // Navigate to success page
       setLocation('/application-success');
@@ -615,11 +658,13 @@ export default function Step6_TypedSignature() {
       console.error('❌ [STEP6] Final submission failed:', error);
       
       // Emit GTM error event
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({ 
-        event: 'error_occurred', 
-        message: error instanceof Error ? error.message : 'Step 6 signature submission error' 
-      });
+      if (typeof window !== 'undefined') {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: 'error_occurred',
+          message: error instanceof Error ? error.message : 'Step 6 signature submission error'
+        });
+      }
       
       // Add network/fetch errors to retry queue
       const storedApplicationId = getStoredApplicationId();
@@ -628,10 +673,10 @@ export default function Step6_TypedSignature() {
         addToRetryQueue({
           applicationId: errorApplicationId,
           payload: {
-            step1: state.step1,
-            step3: state.step3,
-            step4: state.step4,
-            step6: state.step6Authorization,
+            step1: step1Snapshot,
+            step3: step3Snapshot,
+            step4: step4Snapshot,
+            step6: step6Snapshot,
             applicationId: errorApplicationId
           },
           type: 'finalization',
@@ -709,7 +754,7 @@ export default function Step6_TypedSignature() {
             <p className="text-blue-800">
               <strong>Applicant:</strong> {applicantName}<br />
               <strong>Business:</strong> {businessName}<br />
-              <strong>Application ID:</strong> {state.applicationId}
+              <strong>Application ID:</strong> {applicationId || 'Pending assignment'}
             </p>
           </div>
 

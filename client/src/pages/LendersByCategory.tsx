@@ -2,12 +2,13 @@ import { usePublicLenders } from '@/hooks/usePublicLenders';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
-import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
-import MapPin from 'lucide-react/dist/esm/icons/map-pin';
-import Building2 from 'lucide-react/dist/esm/icons/building-2';
+
+
+
+
 import { LenderProduct } from '@/api/lenderProducts';
 
+import {Building2, DollarSign, Loader2, MapPin} from 'lucide-react';
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

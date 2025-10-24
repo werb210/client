@@ -7,10 +7,11 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
 
+
+
+
+import {AlertCircle, CheckCircle, Loader2} from 'lucide-react';
 export default function InitialCacheSetup() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);

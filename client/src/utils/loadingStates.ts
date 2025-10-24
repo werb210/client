@@ -22,9 +22,17 @@ export interface ConnectionInfo {
  * Detect connection speed and adjust loading behavior
  */
 export function getConnectionInfo(): ConnectionInfo {
-  const connection = (navigator as any).connection || 
-                    (navigator as any).mozConnection || 
-                    (navigator as any).webkitConnection;
+  if (typeof navigator === 'undefined') {
+    return {
+      effectiveType: 'unknown',
+      downlink: 0,
+      rtt: 0,
+      saveData: false
+    };
+  }
+
+  const nav = navigator as any;
+  const connection = nav?.connection || nav?.mozConnection || nav?.webkitConnection;
 
   if (connection) {
     return {
@@ -127,6 +135,8 @@ export function SmartLoader({
  * Progressive enhancement for slow connections
  */
 export function enableProgressiveEnhancement(): void {
+  if (typeof document === 'undefined') return;
+
   const connectionInfo = getConnectionInfo();
   const strategy = getLoadingStrategy(connectionInfo);
 
@@ -147,6 +157,7 @@ export function enableProgressiveEnhancement(): void {
 
   // Show connection-aware messaging
   if (connectionInfo.saveData) {
+    if (!document.body) return;
     const dataSaverNotice = document.createElement('div');
     dataSaverNotice.className = 'bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 text-sm';
     dataSaverNotice.textContent = 'Data saver mode detected. Some features may be limited to reduce data usage.';

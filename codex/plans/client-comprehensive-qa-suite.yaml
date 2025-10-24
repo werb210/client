@@ -1,0 +1,31 @@
+name: Client Comprehensive QA Suite
+repos:
+  - werb210/client
+tasks:
+  - name: Broken imports and duplicates
+    run: detect-duplicates && unused-imports
+  - name: Type integrity audit
+    run: typecheck --full
+  - name: API endpoint validation
+    run: api-audit
+  - name: Offline-mode simulation
+    run: test offline
+  - name: Build-size analysis
+    run: analyze build-size
+  - name: E2E smoke tests
+    run: test e2e --scope=client
+  - name: PWA manifest and caching validation
+    run: audit pwa
+  - name: Security headers and CORS scan
+    run: check security
+  - name: AI Recommendation Engine test
+    run: test ai-match
+  - name: Production build verification
+    run: build-check --mode=production
+report:
+  format: summary
+  output: codex/reports/client_full_audit.txt
+  include:
+    - "✅ Passed checks"
+    - "⚠️ Warnings"
+    - "❌ Errors"

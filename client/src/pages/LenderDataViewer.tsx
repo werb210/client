@@ -4,15 +4,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
-import Database from 'lucide-react/dist/esm/icons/database';
-import Globe from 'lucide-react/dist/esm/icons/globe';
-import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
-import MapPin from 'lucide-react/dist/esm/icons/map-pin';
-import Building2 from 'lucide-react/dist/esm/icons/building-2';
-import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+
+
+
+
+
+
+
 import { usePublicLenders } from '@/hooks/usePublicLenders';
 
+import {Building2, Database, DollarSign, Globe, Loader2, MapPin, RefreshCw} from 'lucide-react';
 interface RawApiData {
   products: any[];
   total: number;

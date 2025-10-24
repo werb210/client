@@ -4,11 +4,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 
-import FileText from 'lucide-react/dist/esm/icons/file-text';
 
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import X from 'lucide-react/dist/esm/icons/x';
 
+
+
+
+import {CheckCircle, FileText, X} from 'lucide-react';
 interface RuntimeAlertPanelProps {
   currentStep: 5 | 7;
 }

@@ -1,42 +1,44 @@
 // Common lucide-react icons used throughout the application
-export { default as Check } from 'lucide-react/dist/esm/icons/check';
-export { default as ChevronDown } from 'lucide-react/dist/esm/icons/chevron-down';
-export { default as ChevronLeft } from 'lucide-react/dist/esm/icons/chevron-left';
-export { default as ChevronRight } from 'lucide-react/dist/esm/icons/chevron-right';
-export { default as Upload } from 'lucide-react/dist/esm/icons/upload';
-export { default as FileText } from 'lucide-react/dist/esm/icons/file-text';
-export { default as Calendar } from 'lucide-react/dist/esm/icons/calendar';
-export { default as MapPin } from 'lucide-react/dist/esm/icons/map-pin';
-export { default as Phone } from 'lucide-react/dist/esm/icons/phone';
-export { default as Mail } from 'lucide-react/dist/esm/icons/mail';
-export { default as Building } from 'lucide-react/dist/esm/icons/building';
-export { default as User } from 'lucide-react/dist/esm/icons/user';
-export { default as DollarSign } from 'lucide-react/dist/esm/icons/dollar-sign';
-export { default as CreditCard } from 'lucide-react/dist/esm/icons/credit-card';
-export { default as Shield } from 'lucide-react/dist/esm/icons/shield';
-export { default as AlertCircle } from 'lucide-react/dist/esm/icons/alert-circle';
-export { default as CheckCircle } from 'lucide-react/dist/esm/icons/check-circle';
-export { default as X } from 'lucide-react/dist/esm/icons/x';
-export { default as Plus } from 'lucide-react/dist/esm/icons/plus';
-export { default as Minus } from 'lucide-react/dist/esm/icons/minus';
-export { default as Edit } from 'lucide-react/dist/esm/icons/edit';
-export { default as Trash2 } from 'lucide-react/dist/esm/icons/trash-2';
-export { default as Eye } from 'lucide-react/dist/esm/icons/eye';
-export { default as EyeOff } from 'lucide-react/dist/esm/icons/eye-off';
-export { default as Search } from 'lucide-react/dist/esm/icons/search';
-export { default as Filter } from 'lucide-react/dist/esm/icons/filter';
-export { default as Download } from 'lucide-react/dist/esm/icons/download';
-export { default as Home } from 'lucide-react/dist/esm/icons/home';
-export { default as Settings } from 'lucide-react/dist/esm/icons/settings';
-export { default as LogOut } from 'lucide-react/dist/esm/icons/log-out';
-export { default as Menu } from 'lucide-react/dist/esm/icons/menu';
-export { default as Users } from 'lucide-react/dist/esm/icons/users';
-export { default as Clock } from 'lucide-react/dist/esm/icons/clock';
-export { default as Star } from 'lucide-react/dist/esm/icons/star';
-export { default as ArrowRight } from 'lucide-react/dist/esm/icons/arrow-right';
-export { default as ArrowLeft } from 'lucide-react/dist/esm/icons/arrow-left';
-export { default as TrendingUp } from 'lucide-react/dist/esm/icons/trending-up';
-export { default as BarChart3 } from 'lucide-react/dist/esm/icons/bar-chart-3';
-export { default as FileCheck } from 'lucide-react/dist/esm/icons/file-check';
-export { default as Loader2 } from 'lucide-react/dist/esm/icons/loader-2';
-export { default as Info } from 'lucide-react/dist/esm/icons/info';
+export {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  BarChart3,
+  Building,
+  Calendar,
+  Check,
+  CheckCircle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  CreditCard,
+  DollarSign,
+  Download,
+  Edit,
+  Eye,
+  EyeOff,
+  FileCheck,
+  FileText,
+  Filter,
+  Home,
+  Info,
+  Loader2,
+  LogOut,
+  Mail,
+  MapPin,
+  Menu,
+  Minus,
+  Phone,
+  Plus,
+  Search,
+  Settings,
+  Shield,
+  Star,
+  Trash2,
+  TrendingUp,
+  Upload,
+  User,
+  Users,
+  X,
+} from 'lucide-react';

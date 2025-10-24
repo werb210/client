@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { fetchCatalog } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+
+
 
 interface Step2Props {
   formData: any;
@@ -281,6 +281,7 @@ export function Step2ProductionSimple({
 }
 // injected: local-first products fetch
 import { getProducts, loadSelectedCategories } from "../api/products";
+import {ArrowRight, CheckCircle} from 'lucide-react';
 /* injected load on mount (pseudo):
 useEffect(() => { (async () => {
   const cats = loadSelectedCategories();

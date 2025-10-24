@@ -1,6 +1,23 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiFetch } from '@/lib/api';
-import { ApplicationForm, FinalizeResponse, DocStatus } from '@/types/ApplicationForm';
+import type { ApplicationForm } from '@/types/application';
+
+type FinalizeResponse = {
+  status: string;
+  signUrl?: string;
+};
+
+async function apiFetch(input: RequestInfo | URL, init: RequestInit = {}) {
+  const response = await fetch(input, {
+    credentials: 'include',
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init.headers ?? {}),
+    },
+  });
+
+  return response;
+}
 
 /**
  * React Query hooks for Steps 3-6 workflow

@@ -17,10 +17,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import Play from 'lucide-react/dist/esm/icons/play';
+
+
 import { safeOpen } from '@/lib/safeOpen';
 
+import {AlertCircle, Play} from 'lucide-react';
 interface ProductsByCountry {
   [country: string]: {
     [category: string]: LenderProduct[];
