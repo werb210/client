@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import fixture from '../fixtures/application.v1.json' assert { type: 'json' };
 
-// Helper: install an in-page fetch interceptor that captures FormData/JSON into window.__LAST_SUBMISSION__
 async function installInterceptor(page) {
   await page.addInitScript(() => {
     const _fetch = window.fetch;
@@ -33,13 +32,38 @@ test('Step1 → autosave → Step2 rules → submit includes all fields', async 
   await installInterceptor(page);
   await page.goto('/');
 
-  // --- Fill Step 1 (safe multi-selector fallback) ---
-  const countrySelector = /country|select country|country of incorporation/i;
-  const countryField = await page.getByLabel(countrySelector).catch(async () => {
-    const placeholder = await page.getByPlaceholder(countrySelector);
-    return placeholder;
-  });
-  await countryField.selectOption(fixture.businessLocation);
+  // --- Find country dropdown robustly ---
+  const businessLocation = fixture.businessLocation;
+  let countryField = null;
+
+  // 1. Try label first
+  try {
+    countryField = await page.getByLabel(/country/i);
+  } catch {}
+
+  // 2. If not found, try placeholder
+  if (!countryField) {
+    try {
+      countryField = await page.getByPlaceholder(/country/i);
+    } catch {}
+  }
+
+  // 3. Last resort: find <select> with id/name containing “country”
+  if (!countryField) {
+    const candidates = await page.locator('select').all();
+    for (const c of candidates) {
+      const id = await c.getAttribute('id');
+      const name = await c.getAttribute('name');
+      if ((id && /country/i.test(id)) || (name && /country/i.test(name))) {
+        countryField = c;
+        break;
+      }
+    }
+  }
+
+  if (!countryField) throw new Error('Country field not found in Step 1');
+
+  await countryField.selectOption(businessLocation);
 
   await page.getByLabel(/headquarters city|city/i).fill(fixture.headquarters);
   await page.getByLabel(/state|province/i).fill(fixture.headquartersState);
@@ -57,23 +81,19 @@ test('Step1 → autosave → Step2 rules → submit includes all fields', async 
   // Continue to Step 2
   await page.getByRole('button', { name: /continue|next/i }).click();
 
-  // --- Step 2 rules: "capital" hides Equipment Financing + Invoice Factoring ---
+  // --- Step 2 rules ---
   await expect(page.getByText(/equipment financing/i)).toHaveCount(0);
   await expect(page.getByText(/invoice factoring/i)).toHaveCount(0);
 
-  // Choose a category if the UI requires it to enable submit (best-effort)
   const hasCategory = await page.getByRole('button', { name: /select|choose/i }).count();
   if (hasCategory) await page.getByRole('button', { name: /select|choose/i }).first().click();
 
-  // Submit
   const submitBtn = await page.getByRole('button', { name: /submit|apply|finish/i });
   if (await submitBtn.count()) await submitBtn.click();
 
-  // Read captured submission
   const snap = await page.evaluate(() => (window as any).__LAST_SUBMISSION__);
   expect(snap).toBeTruthy();
 
-  // Validate that every fixture key is present in the submitted fields snapshot
   const fields = snap.fields || {};
   for (const key of Object.keys(fixture)) {
     expect(Object.keys(fields)).toContain(key);
