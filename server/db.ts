@@ -5,7 +5,13 @@ if (process.env.NODE_ENV !== "production") {
   console.warn("[client] Using DB stub — skipping real database connection");
 }
 
-// Fake DB interface
+// Dummy pool to satisfy legacy imports
+export const pool = {
+  query: async () => ({ rows: [] }),
+  connect: async () => ({ release: () => {} }),
+};
+
+// Minimal fake db interface
 export const db = {
   query: async () => [],
   insert: async () => {},
@@ -13,5 +19,4 @@ export const db = {
   delete: async () => {},
 };
 
-// Prevent DATABASE_URL errors
 export const DATABASE_URL = process.env.DATABASE_URL || "local-dev-db";
