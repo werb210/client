@@ -5,7 +5,7 @@ if (process.env.NODE_ENV !== "production") {
   console.warn("[client] Using DB stub — skipping real database connection");
 }
 
-// Export a fake DB interface so imports elsewhere don’t break
+// Export fake DB interface so imports elsewhere don’t break
 export const db = {
   query: async () => [],
   insert: async () => {},
@@ -13,5 +13,5 @@ export const db = {
   delete: async () => {},
 };
 
-// This line prevents “DATABASE_URL must be set” errors
+// Prevent DATABASE_URL errors
 export const DATABASE_URL = process.env.DATABASE_URL || "local-dev-db";
