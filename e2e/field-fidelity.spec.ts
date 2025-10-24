@@ -33,9 +33,13 @@ test('Step1 → autosave → Step2 rules → submit includes all fields', async 
   await installInterceptor(page);
   await page.goto('/');
 
-  // --- Fill Step 1 (more flexible label detection) ---
+  // --- Fill Step 1 (safe multi-selector fallback) ---
   const countrySelector = /country|select country|country of incorporation/i;
-  await page.getByLabel(countrySelector).or(page.getByPlaceholder(countrySelector)).selectOption(fixture.businessLocation);
+  const countryField = await page.getByLabel(countrySelector).catch(async () => {
+    const placeholder = await page.getByPlaceholder(countrySelector);
+    return placeholder;
+  });
+  await countryField.selectOption(fixture.businessLocation);
 
   await page.getByLabel(/headquarters city|city/i).fill(fixture.headquarters);
   await page.getByLabel(/state|province/i).fill(fixture.headquartersState);
