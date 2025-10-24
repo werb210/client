@@ -25,6 +25,11 @@ function normalizeProductData(rawProduct: any): LenderProduct {
 
   const minAmount = Number(rawProduct.min_amount ?? rawProduct.amountMin ?? 0);
   const maxAmount = Number(rawProduct.max_amount ?? rawProduct.amountMax ?? 0);
+  const geography = Array.isArray(rawProduct.geography)
+    ? rawProduct.geography
+    : rawProduct.geography
+      ? [rawProduct.geography]
+      : undefined;
 
   return {
     id: String(rawProduct.id ?? ''),
@@ -51,6 +56,7 @@ function normalizeProductData(rawProduct: any): LenderProduct {
     term_max: rawProduct.term_max ?? null,
     custom_requirements: rawProduct.custom_requirements,
     variant_sig: rawProduct.variant_sig,
+    geography,
   };
 }
 

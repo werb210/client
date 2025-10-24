@@ -15,7 +15,8 @@ export type LenderProduct = {
   min_monthly_revenue?: number | null;
   excluded_industries?: string[];
   required_documents?: string[];
-  
+  geography?: string[] | string | null;
+
   // Legacy fields for backward compatibility with old schema
   product_name?: string; // maps to name
   lender_id?: string;
