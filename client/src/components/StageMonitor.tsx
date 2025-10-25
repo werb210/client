@@ -1,16 +1,17 @@
 import { getProducts } from "../../api/products";
 import React, { useEffect } from 'react';
-import Building from 'lucide-react/dist/esm/icons/building';
-import Target from 'lucide-react/dist/esm/icons/target';
-import User from 'lucide-react/dist/esm/icons/user';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import Upload from 'lucide-react/dist/esm/icons/upload';
-import FileSignature from 'lucide-react/dist/esm/icons/file-signature';
+
+
+
+
+
+
 import { useFormData } from '@/context/FormDataContext';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { ProgressMonitor } from './ProgressMonitor';
 import { AutoSaveIndicator } from './AutoSaveIndicator';
 
+import {Building, FileSignature, FileText, Target, Upload, User} from 'lucide-react';
 // Steps configuration matching our 6-step workflow
 const steps = [
   { title: "Financial Profile", icon: Building },

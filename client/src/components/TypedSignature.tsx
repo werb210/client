@@ -5,11 +5,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import ShieldIcon from 'lucide-react/dist/esm/icons/shield';
-import FileTextIcon from 'lucide-react/dist/esm/icons/file-text';
-import UsersIcon from 'lucide-react/dist/esm/icons/users';
 
+
+
+
+
+import {AlertCircle, FileTextIcon, ShieldIcon, UsersIcon} from 'lucide-react';
 interface TypedSignatureProps {
   applicantName: string;
   businessName: string;

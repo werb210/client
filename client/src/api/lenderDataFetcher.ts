@@ -3,7 +3,7 @@
  * Ensures products are only retrieved from local cache
  */
 
-import { LenderProduct } from '../types/lenderProduct';
+import type { LenderProduct } from '../types/lenderProduct';
 
 interface LenderDataResponse {
   success: boolean;
@@ -17,28 +17,47 @@ interface LenderDataResponse {
  * Normalize raw product data to match our schema
  */
 function normalizeProductData(rawProduct: any): LenderProduct {
-  try {
-    return {
-      id: rawProduct.id,
-      name: rawProduct.product_name || rawProduct.name,
-      lenderName: rawProduct.lender_name || rawProduct.lenderName,
-      geography: Array.isArray(rawProduct.geography) ? rawProduct.geography : [rawProduct.country || ''].filter(Boolean),
-      country: rawProduct.country || rawProduct.countryOffered || null,
-      category: rawProduct.category || rawProduct.product_type || 'term_loan',
-      minAmount: rawProduct.min_amount || rawProduct.amountMin || 0,
-      maxAmount: rawProduct.max_amount || rawProduct.amountMax || 0,
-      minRevenue: rawProduct.min_revenue || rawProduct.requirements?.minMonthlyRevenue || 0,
-      interestRateMin: rawProduct.interest_rate_min,
-      interestRateMax: rawProduct.interest_rate_max,
-      termMin: rawProduct.term_min,
-      termMax: rawProduct.term_max,
-      docRequirements: rawProduct.doc_requirements || getDocRequirementsForCategory(rawProduct.category),
-      description: rawProduct.description || '',
-      industries: rawProduct.industries || rawProduct.requirements?.industries || ['general']
-    };
-  } catch (error) {
-    throw error;
-  }
+  const requiredDocuments = Array.isArray(rawProduct.required_documents)
+    ? rawProduct.required_documents
+    : Array.isArray(rawProduct.doc_requirements)
+      ? rawProduct.doc_requirements
+      : undefined;
+
+  const minAmount = Number(rawProduct.min_amount ?? rawProduct.amountMin ?? 0);
+  const maxAmount = Number(rawProduct.max_amount ?? rawProduct.amountMax ?? 0);
+  const geography = Array.isArray(rawProduct.geography)
+    ? rawProduct.geography
+    : rawProduct.geography
+      ? [rawProduct.geography]
+      : undefined;
+
+  return {
+    id: String(rawProduct.id ?? ''),
+    name: String(rawProduct.name ?? rawProduct.product_name ?? 'Unknown Product'),
+    lender_name: String(rawProduct.lender_name ?? rawProduct.lenderName ?? 'Unknown Lender'),
+    country: (rawProduct.country ?? rawProduct.countryOffered ?? null) as LenderProduct['country'],
+    category: String(rawProduct.category ?? rawProduct.product_type ?? 'term_loan'),
+    min_amount: Number.isFinite(minAmount) ? minAmount : 0,
+    max_amount: Number.isFinite(maxAmount) ? maxAmount : 0,
+    active: Boolean(rawProduct.active ?? true),
+    updated_at: String(rawProduct.updated_at ?? new Date().toISOString()),
+    min_time_in_business: rawProduct.min_time_in_business ?? null,
+    min_monthly_revenue: rawProduct.min_monthly_revenue ?? rawProduct.requirements?.minMonthlyRevenue ?? null,
+    excluded_industries: Array.isArray(rawProduct.excluded_industries)
+      ? rawProduct.excluded_industries
+      : undefined,
+    required_documents: requiredDocuments,
+    product_name: rawProduct.product_name ?? rawProduct.name,
+    lender_id: rawProduct.lender_id,
+    tenant_id: rawProduct.tenant_id,
+    interest_rate_min: rawProduct.interest_rate_min ?? null,
+    interest_rate_max: rawProduct.interest_rate_max ?? null,
+    term_min: rawProduct.term_min ?? null,
+    term_max: rawProduct.term_max ?? null,
+    custom_requirements: rawProduct.custom_requirements,
+    variant_sig: rawProduct.variant_sig,
+    geography,
+  };
 }
 
 /**
@@ -70,30 +89,31 @@ export async function fetchLenderProducts(): Promise<LenderDataResponse> {
     const source = await loadCacheSource();
     const lastFetched = await loadLastFetchTime();
     
-    if (cached?.length) {
+    if (Array.isArray(cached) && cached.length) {
+      const products = cached.map(normalizeProductData);
       return {
         success: true,
-        products: cached,
-        count: cached.length,
+        products,
+        count: products.length,
         source: 'staff_api',
         timestamp: lastFetched ? new Date(lastFetched).toISOString() : new Date().toISOString()
       };
     }
-    
+
     return {
       success: false,
       products: [],
       count: 0,
-      source: 'cache_empty',
+      source: 'fallback',
       timestamp: new Date().toISOString()
     };
-    
+
   } catch (error) {
     return {
       success: false,
       products: [],
       count: 0,
-      source: 'cache_error',
+      source: 'fallback',
       timestamp: new Date().toISOString()
     };
   }
@@ -129,7 +149,7 @@ export async function getProductsByCountry(country: string): Promise<LenderProdu
  */
 export async function getMaximumFunding(): Promise<number> {
   const response = await fetchLenderProducts();
-  return Math.max(...response.products.map(p => p.maxAmount));
+  return Math.max(...response.products.map(p => p.max_amount ?? 0));
 }
 
 /**
@@ -145,5 +165,5 @@ export async function getAvailableCategories(): Promise<string[]> {
  */
 export async function getAvailableCountries(): Promise<string[]> {
   const response = await fetchLenderProducts();
-  return [...new Set(response.products.map(p => p.country))];
+  return [...new Set(response.products.map(p => p.country).filter((country): country is string => typeof country === 'string' && country.length > 0))];
 }

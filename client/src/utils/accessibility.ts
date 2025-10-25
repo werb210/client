@@ -1,3 +1,5 @@
+import { dedupeBy } from './dedupe';
+
 /**
  * Accessibility utilities for financial industry compliance
  */
@@ -20,11 +22,26 @@ export interface AccessibilityIssue {
  * Run comprehensive accessibility audit
  */
 export async function runAccessibilityAudit(): Promise<AccessibilityAuditResult> {
+  if (!isBrowserEnvironment()) {
+    return {
+      score: 0,
+      issues: [{
+        severity: 'info',
+        element: 'environment',
+        description: 'Accessibility audit requires a browser-like DOM.',
+        wcagLevel: 'A',
+        rule: 'ENVIRONMENT'
+      }],
+      recommendations: ['Run the accessibility audit in a DOM-enabled environment']
+    };
+  }
+
   const issues: AccessibilityIssue[] = [];
   let score = 100;
+  const doc = document;
 
   // Check for missing alt text on images
-  const images = document.querySelectorAll('img');
+  const images = doc.querySelectorAll('img');
   images.forEach((img, index) => {
     if (!img.alt) {
       issues.push({
@@ -39,7 +56,7 @@ export async function runAccessibilityAudit(): Promise<AccessibilityAuditResult>
   });
 
   // Check for proper heading hierarchy
-  const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
   let lastHeadingLevel = 0;
   headings.forEach((heading, index) => {
     const level = parseInt(heading.tagName.charAt(1));
@@ -67,7 +84,7 @@ export async function runAccessibilityAudit(): Promise<AccessibilityAuditResult>
   });
 
   // Check for proper form labels
-  const inputs = document.querySelectorAll('input, select, textarea');
+  const inputs = doc.querySelectorAll('input, select, textarea');
   inputs.forEach((input, index) => {
     const hasLabel = input.getAttribute('aria-label') || 
                     input.getAttribute('aria-labelledby') ||
@@ -86,12 +103,14 @@ export async function runAccessibilityAudit(): Promise<AccessibilityAuditResult>
   });
 
   // Check color contrast (simplified)
-  const elementsToCheck = document.querySelectorAll('button, a, input, select, textarea');
+  const elementsToCheck = doc.querySelectorAll('button, a, input, select, textarea');
   elementsToCheck.forEach((element, index) => {
-    const styles = window.getComputedStyle(element);
-    const bgColor = styles.backgroundColor;
-    const textColor = styles.color;
-    
+    const styles = typeof window.getComputedStyle === 'function'
+      ? window.getComputedStyle(element)
+      : null;
+    const bgColor = styles?.backgroundColor;
+    const textColor = styles?.color;
+
     // Basic contrast check (simplified)
     if (bgColor && textColor && !hasGoodContrast(bgColor, textColor)) {
       issues.push({
@@ -106,7 +125,7 @@ export async function runAccessibilityAudit(): Promise<AccessibilityAuditResult>
   });
 
   // Check for keyboard navigation
-  const focusableElements = document.querySelectorAll(
+  const focusableElements = doc.querySelectorAll(
     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
   );
   
@@ -121,13 +140,18 @@ export async function runAccessibilityAudit(): Promise<AccessibilityAuditResult>
     score -= 10;
   }
 
-  const recommendations = generateRecommendations(issues);
-  
+  const uniqueIssues = dedupeBy(issues, issue => `${issue.rule}|${issue.element}|${issue.description}`);
+  const recommendations = generateRecommendations(uniqueIssues);
+
   return {
     score: Math.max(0, score),
-    issues,
+    issues: uniqueIssues,
     recommendations
   };
+}
+
+function isBrowserEnvironment(): boolean {
+  return typeof window !== 'undefined' && typeof document !== 'undefined';
 }
 
 function hasGoodContrast(bgColor: string, textColor: string): boolean {
@@ -211,6 +235,8 @@ export function isFocusable(element: Element): boolean {
  * Add skip link for keyboard navigation
  */
 export function addSkipLink(): void {
+  if (typeof document === 'undefined' || !document.body) return;
+
   const skipLink = document.createElement('a');
   skipLink.href = '#main-content';
   skipLink.textContent = 'Skip to main content';

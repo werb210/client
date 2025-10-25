@@ -4,14 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
-import Upload from 'lucide-react/dist/esm/icons/upload';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import Building from 'lucide-react/dist/esm/icons/building';
-import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
-import Calendar from 'lucide-react/dist/esm/icons/calendar';
-import MapPin from 'lucide-react/dist/esm/icons/map-pin';
+
+
+
+
+
+
+
+
 
 interface TestResult {
   success: boolean;
@@ -414,6 +414,7 @@ export default function BankingDocumentTest() {
 }
 // injected: local-first products fetch
 import { getProducts, loadSelectedCategories } from "../api/products";
+import {AlertCircle, Building, Calendar, CheckCircle, DollarSign, FileText, MapPin, Upload} from 'lucide-react';
 /* injected load on mount (pseudo):
 useEffect(() => { (async () => {
   const cats = loadSelectedCategories();

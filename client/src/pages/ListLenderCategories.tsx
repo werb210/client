@@ -3,10 +3,11 @@ import { getProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import List from 'lucide-react/dist/esm/icons/list';
-import Database from 'lucide-react/dist/esm/icons/database';
-import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
 
+
+
+
+import {AlertTriangle, Database, List} from 'lucide-react';
 export default function ListLenderCategories() {
   const [categories, setCategories] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);

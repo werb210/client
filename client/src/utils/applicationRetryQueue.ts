@@ -24,6 +24,34 @@ const STORAGE_KEY = 'boreal_application_retry_queue';
 const MAX_RETRY_ATTEMPTS = 5;
 const BASE = ""; // same-origin only
 
+const isBrowser = typeof window !== 'undefined';
+
+function readQueue(): QueuedApplication[] {
+  if (!isBrowser) {
+    return [];
+  }
+
+  try {
+    const stored = window.localStorage?.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('❌ [RETRY QUEUE] Failed to read queue:', error);
+    return [];
+  }
+}
+
+function writeQueue(queue: QueuedApplication[]): void {
+  if (!isBrowser) {
+    return;
+  }
+
+  try {
+    window.localStorage?.setItem(STORAGE_KEY, JSON.stringify(queue));
+  } catch (error) {
+    console.error('❌ [RETRY QUEUE] Failed to persist queue:', error);
+  }
+}
+
 /**
  * Retry submitting application using Staff API
  */
@@ -43,23 +71,28 @@ export async function retrySubmitApplication(payload: any) {
  * Add failed application/upload attempt to retry queue
  */
 export function addToRetryQueue(item: Omit<QueuedApplication, 'id' | 'timestamp' | 'retryCount'>): void {
+  if (!isBrowser) {
+    logger.warn('⚠️ [RETRY QUEUE] Skipping queue update outside browser runtime');
+    return;
+  }
+
   try {
-    const queue = getRetryQueue();
+    const queue = readQueue();
     const queueItem: QueuedApplication = {
       ...item,
-      id: `retry_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `retry_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
       timestamp: new Date().toISOString(),
-      retryCount: 0
+      retryCount: 0,
     };
-    
+
     queue.push(queueItem);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
-    
+    writeQueue(queue);
+
     logger.log(`🔄 [RETRY QUEUE] Added ${item.type} to retry queue:`, {
       applicationId: item.applicationId,
       type: item.type,
       fileName: item.fileName,
-      queueSize: queue.length
+      queueSize: queue.length,
     });
   } catch (error) {
     console.error('❌ [RETRY QUEUE] Failed to add item to queue:', error);
@@ -70,24 +103,22 @@ export function addToRetryQueue(item: Omit<QueuedApplication, 'id' | 'timestamp'
  * Get all items in retry queue
  */
 export function getRetryQueue(): QueuedApplication[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    console.error('❌ [RETRY QUEUE] Failed to read queue:', error);
-    return [];
-  }
+  return readQueue();
 }
 
 /**
  * Remove item from retry queue
  */
 export function removeFromRetryQueue(itemId: string): void {
+  if (!isBrowser) {
+    return;
+  }
+
   try {
-    const queue = getRetryQueue();
-    const updatedQueue = queue.filter(item => item.id !== itemId);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedQueue));
-    
+    const queue = readQueue();
+    const updatedQueue = queue.filter((item) => item.id !== itemId);
+    writeQueue(updatedQueue);
+
     logger.log(`✅ [RETRY QUEUE] Removed item from queue:`, { itemId, remainingItems: updatedQueue.length });
   } catch (error) {
     console.error('❌ [RETRY QUEUE] Failed to remove item:', error);
@@ -98,25 +129,29 @@ export function removeFromRetryQueue(itemId: string): void {
  * Update retry attempt for item
  */
 export function updateRetryAttempt(itemId: string, error?: string): void {
+  if (!isBrowser) {
+    return;
+  }
+
   try {
-    const queue = getRetryQueue();
-    const itemIndex = queue.findIndex(item => item.id === itemId);
-    
+    const queue = readQueue();
+    const itemIndex = queue.findIndex((item) => item.id === itemId);
+
     if (itemIndex !== -1) {
       queue[itemIndex].retryCount += 1;
       queue[itemIndex].lastAttempt = new Date().toISOString();
       if (error) queue[itemIndex].error = error;
-      
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
-      
+
+      writeQueue(queue);
+
       logger.log(`🔄 [RETRY QUEUE] Updated retry attempt:`, {
         itemId,
         retryCount: queue[itemIndex].retryCount,
-        error
+        error,
       });
     }
-  } catch (error) {
-    console.error('❌ [RETRY QUEUE] Failed to update retry attempt:', error);
+  } catch (caughtError) {
+    console.error('❌ [RETRY QUEUE] Failed to update retry attempt:', caughtError);
   }
 }
 
@@ -305,7 +340,7 @@ async function retryApplicationFinalization(item: QueuedApplication): Promise<bo
 export function exportDebugLogs(): string {
   const queue = getRetryQueue();
   const summary = getRetryQueueSummary();
-  
+
   const debugData = {
     timestamp: new Date().toISOString(),
     summary,
@@ -321,19 +356,32 @@ export function exportDebugLogs(): string {
       documentType: item.documentType
     })),
     system: {
-      userAgent: navigator.userAgent,
-      url: window.location.href,
-      apiBaseUrl: import.meta.env.VITE_API_BASE_URL
+      userAgent: isBrowser ? navigator.userAgent : 'unknown',
+      url: isBrowser ? window.location.href : 'n/a',
+      apiBaseUrl: (import.meta as any).env?.VITE_API_BASE_URL ?? 'n/a'
     }
   };
-  
-  return JSON.stringify(debugData, null, 2);
+
+  try {
+    return JSON.stringify(debugData, null, 2);
+  } catch (error) {
+    console.error('❌ [RETRY QUEUE] Failed to serialize debug logs:', error);
+    return JSON.stringify({ timestamp: new Date().toISOString(), summary, error: 'serialization_failed' });
+  }
 }
 
 /**
  * Clear all retry queue items (for debugging)
  */
 export function clearRetryQueue(): void {
-  localStorage.removeItem(STORAGE_KEY);
-  logger.log('🗑️ [RETRY QUEUE] Cleared all retry queue items');
+  if (!isBrowser) {
+    return;
+  }
+
+  try {
+    window.localStorage?.removeItem(STORAGE_KEY);
+    logger.log('🗑️ [RETRY QUEUE] Cleared all retry queue items');
+  } catch (error) {
+    console.error('❌ [RETRY QUEUE] Failed to clear queue:', error);
+  }
 }

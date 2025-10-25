@@ -1,190 +1,238 @@
-import { getProducts } from "../api/products";
-import { getTraceId, flatten } from "../telemetry/lineage";
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import type { ApplicationForm, ApplicationFormUpdate, UploadedDocument } from '@/types/application';
 
-export type ApplicationForm = {
-  // keep both names to survive older forms/agents
-  requestedAmount?: number;      // preferred
-  fundingAmount?: number;        // legacy
-  businessLocation?: string;
-  headquarters?: string;         // Step 1 field
-  headquartersState?: string;    // Step 1 field
-  industry?: string;
-  purpose?: string;
-  lookingFor?: string;           // Step 1 field
-  fundsPurpose?: string;         // Step 1 field
-  salesHistory?: string;         // Step 1 field
-  yearsInBusiness?: string | number;
-  years_in_business?: number;    // Required for submission validation
-  last12moRevenue?: number | string;
-  revenueLastYear?: number | string;  // Step 1 field
-  avgMonthlyRevenue?: number | string;
-  averageMonthlyRevenue?: number | string; // Step 1 field
-  monthly_revenue?: number;      // Required for submission validation
-  arBalance?: number | string;
-  accountsReceivableBalance?: number | string; // Step 1 field
-  fixedAssets?: number | string;
-  fixedAssetsValue?: number | string;  // Step 1 field
-  equipmentValue?: number | string;    // Step 1 field
-  
-  // Step 2 Product Category selection
-  selectedCategory?: string;
-  
-  // Step 3 Business Details fields
-  operatingName?: string;
-  legalName?: string;
-  businessStreetAddress?: string;
-  businessCity?: string;
-  businessState?: string;
-  businessPostalCode?: string;
-  businessPhone?: string;
-  businessWebsite?: string;
-  businessStartDate?: string;
-  businessStructure?: string;
-  employeeCount?: number;
-  estimatedYearlyRevenue?: number;
-  // ...any other fields you actually use in the matcher
-};
+const FORM_DATA_STORAGE_KEY = 'bf:form-data';
+const INTAKE_STORAGE_KEY = 'bf:intake:v2';
 
 export type Intake = {
-  country: 'US' | 'CA';
-  amountRequested: number;     // normalized number
+  country?: 'US' | 'CA' | string;
+  amountRequested?: number;
   industry?: string;
   yearsInBusiness?: number;
-  years_in_business?: number;  // Required for submission
   revenue12m?: number;
   avgMonthlyRevenue?: number;
-  monthly_revenue?: number;    // Required for submission
   purpose?: string;
   arBalance?: number;
   collateralValue?: number;
-  // ...other fields your matcher expects
 };
 
-const KEY = "bf:intake:v2";
-
-function toNum(x: any) {
-  if (x == null || x === undefined) return undefined;
-  if (typeof x === "number") return x;
-  // strip $, commas, spaces
-  const n = Number(String(x).replace(/[$, ]/g, ""));
-  return Number.isFinite(n) ? n : undefined;
-}
-
-const toNumber = (v:any) => typeof v === 'number' ? v : Number(String(v ?? '').replace(/[^0-9.]/g,''));
-
-export function normalizeIntake(raw:any): Intake {
-  // Defensive coding - ensure raw is an object
-  const safeRaw = raw && typeof raw === 'object' ? raw : {};
-  
-  return {
-    country: safeRaw.country ?? safeRaw.headquarters ?? safeRaw.businessLocation ?? 'US',
-    amountRequested: toNumber(safeRaw.fundingAmount ?? safeRaw.requestedAmount ?? safeRaw.amountRequested),
-    industry: safeRaw.industry ?? safeRaw.naics,
-    yearsInBusiness: toNumber(safeRaw.yearsInBusiness ?? safeRaw.businessAgeYears),
-    years_in_business: toNumber(safeRaw.years_in_business ?? safeRaw.yearsInBusiness ?? safeRaw.businessAgeYears),
-    revenue12m: toNumber(safeRaw.revenueLast12Months ?? safeRaw.annualRevenue ?? safeRaw.revenueLastYear),
-    avgMonthlyRevenue: toNumber(safeRaw.avgMonthlyRevenue ?? safeRaw.monthlyRevenue ?? safeRaw.averageMonthlyRevenue),
-    monthly_revenue: toNumber(safeRaw.monthly_revenue ?? safeRaw.avgMonthlyRevenue ?? safeRaw.monthlyRevenue ?? safeRaw.averageMonthlyRevenue),
-    purpose: safeRaw.purposeOfFunds ?? safeRaw.purpose ?? safeRaw.fundsPurpose,
-    arBalance: toNumber(safeRaw.currentARBalance ?? safeRaw.accountsReceivable ?? safeRaw.accountsReceivableBalance),
-    collateralValue: toNumber(safeRaw.fixedAssetsValue ?? safeRaw.collateralValue ?? safeRaw.fixedAssetsValue),
-  };
-}
-
-function persistIntake(i: Intake) {
-  const jsonStr = JSON.stringify(i);
-  sessionStorage.setItem('bf:intake', jsonStr);
-  localStorage.setItem('bf:intake', jsonStr); // belt-and-suspenders
-  (window as any).__step2 = { ...(window as any).__step2, intake: i };
-  
-  // VERIFY storage immediately
-  const verification = {
-    sessionStored: sessionStorage.getItem('bf:intake'),
-    localStored: localStorage.getItem('bf:intake'),
-    canParse: JSON.parse(sessionStorage.getItem('bf:intake') || '{}')
-  };
-  console.log('🔍 [persistIntake] Storage verification:', verification);
-}
-
-// Call this when Step-1 completes:
-export function onStep1Submit(raw:any, navigateToStep2: () => void){
-  console.log('🔍 [onStep1Submit] Raw input:', raw);
-  const intake = normalizeIntake(raw);
-  console.log('🔍 [onStep1Submit] Normalized intake:', intake);
-  persistIntake(intake);
-  console.log('🔍 [onStep1Submit] Stored to both session+local storage');
-  
-  // Add small delay to ensure storage is complete before navigation
-  setTimeout(() => {
-    console.log('🔍 [onStep1Submit] Navigating to Step 2 after storage delay...');
-    navigateToStep2();  // SPA navigation — no full reload
-  }, 100);
-}
-
-export function normalize(raw: Partial<ApplicationForm>): ApplicationForm {
-  return {
-    requestedAmount: toNum(raw.requestedAmount ?? raw.fundingAmount ?? (raw as any).howMuchFunding),
-    fundingAmount:   toNum(raw.fundingAmount ?? raw.requestedAmount),
-    businessLocation: raw.businessLocation ?? (raw as any).location,
-    industry: raw.industry,
-    purpose: raw.purpose ?? (raw as any).purposeOfFunds,
-    yearsInBusiness: raw.yearsInBusiness ?? (raw as any).yearsHistory,
-    last12moRevenue: toNum(raw.last12moRevenue ?? (raw as any).last12MonthsRevenue),
-    avgMonthlyRevenue: toNum(raw.avgMonthlyRevenue ?? (raw as any).avgMonthly),
-    arBalance: toNum(raw.arBalance ?? (raw as any).currentAR),
-    fixedAssets: toNum(raw.fixedAssets ?? (raw as any).fixedAssetsValue),
-  };
-}
-
-type Ctx = {
-  data: ApplicationForm | null;
-  save: (d: Partial<ApplicationForm>) => void;
+type FormDataContextValue = {
+  data: ApplicationForm;
+  formData: ApplicationForm;
+  save: (update: ApplicationFormUpdate) => void;
   clear: () => void;
   isComplete: boolean;
 };
-const Ctx = createContext<Ctx | null>(null);
 
-export function FormDataProvider({ children }: { children: React.ReactNode }) {
-  const [data, setData] = useState<ApplicationForm | null>(() => {
-    // Start with completely clean state - no restoration from storage
+const FormDataContext = createContext<FormDataContextValue | undefined>(undefined);
+
+const emptyForm: ApplicationForm = {};
+
+const jsonReplacer = (_: string, value: unknown) => {
+  if (value === undefined) {
     return null;
-  });
+  }
 
-  const save = (raw: Partial<ApplicationForm>) => {
-    const merged = normalize({ ...(data ?? {}), ...raw });
-    setData(merged);
-try{ const tid=getTraceId(); const snap=JSON.stringify({tid, at:Date.now(), data: typeof data!=='undefined'?data:(typeof data!=='undefined'?data:{})}); localStorage.setItem("__formDataSnapshot", snap);}catch{}
-  };
+  if (typeof File !== 'undefined' && value instanceof File) {
+    return {
+      name: value.name,
+      size: value.size,
+      type: value.type,
+    };
+  }
 
-  const clear = () => setData(null);
-
-  useEffect(() => {
-    if (data) sessionStorage.setItem(KEY, JSON.stringify(data));
-    else sessionStorage.removeItem(KEY);
-  }, [data]);
-
-  const isComplete = !!(data?.requestedAmount ?? data?.fundingAmount);
-
-  const value = useMemo(() => ({ data, save, clear, isComplete }), [data, isComplete]);
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
-}
-export const useFormData = () => {
-  const v = useContext(Ctx);
-  if (!v) throw new Error("useFormData outside provider");
-  return v;
+  return value;
 };
 
-// Legacy compatibility export for existing components
+const toNumber = (value: unknown): number | undefined => {
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  const numeric = Number(String(value).replace(/[$,\s]/g, ''));
+  return Number.isFinite(numeric) ? numeric : undefined;
+};
+
+const readSafely = <T,>(key: string): T | undefined => {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  const storages: (Storage | null | undefined)[] = [window.localStorage, window.sessionStorage];
+
+  for (const storage of storages) {
+    if (!storage) {
+      continue;
+    }
+
+    try {
+      const raw = storage.getItem(key);
+      if (!raw) {
+        continue;
+      }
+
+      const parsed = JSON.parse(raw) as T;
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+    } catch (error) {
+      console.warn(`[FormDataContext] Failed to read persisted value for ${key}`, error);
+    }
+  }
+
+  return undefined;
+};
+
+const persistSafely = (key: string, value: unknown) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    const serialized = JSON.stringify(value, jsonReplacer);
+    window.localStorage?.setItem(key, serialized);
+    window.sessionStorage?.setItem(key, serialized);
+  } catch (error) {
+    console.warn(`[FormDataContext] Failed to persist ${key}`, error);
+  }
+};
+
+const removeSafely = (key: string) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage?.removeItem(key);
+    window.sessionStorage?.removeItem(key);
+  } catch (error) {
+    console.warn(`[FormDataContext] Failed to clear ${key}`, error);
+  }
+};
+
+const extractDocuments = (form: ApplicationForm): UploadedDocument[] => {
+  if (Array.isArray(form.uploadedFiles)) {
+    return form.uploadedFiles;
+  }
+
+  const fromStep = (form.step5DocumentUpload?.uploadedFiles ?? form.step5DocumentUpload?.files);
+  return Array.isArray(fromStep) ? fromStep : [];
+};
+
+export function normalizeIntake(raw: Partial<ApplicationForm>): Intake {
+  const safeRaw = raw ?? {};
+
+  return {
+    country: (safeRaw.country as Intake['country']) ?? (safeRaw.businessLocation as Intake['country']),
+    amountRequested: toNumber(safeRaw.amountRequested ?? safeRaw.fundingAmount),
+    industry: typeof safeRaw.industry === 'string' ? safeRaw.industry : undefined,
+    yearsInBusiness: toNumber((safeRaw as Record<string, unknown>).yearsInBusiness),
+    revenue12m: toNumber((safeRaw as Record<string, unknown>).revenueLastYear ?? (safeRaw as Record<string, unknown>).last12moRevenue),
+    avgMonthlyRevenue: toNumber((safeRaw as Record<string, unknown>).avgMonthlyRevenue),
+    purpose: typeof safeRaw.fundsPurpose === 'string' ? safeRaw.fundsPurpose : undefined,
+    arBalance: toNumber((safeRaw as Record<string, unknown>).accountsReceivableBalance),
+    collateralValue: toNumber((safeRaw as Record<string, unknown>).fixedAssetsValue),
+  };
+}
+
+export function onStep1Submit(raw: Partial<ApplicationForm>, navigateToStep2: () => void) {
+  const intake = normalizeIntake(raw);
+  persistSafely(INTAKE_STORAGE_KEY, intake);
+
+  navigateToStep2();
+}
+
+export function FormDataProvider({ children }: { children: React.ReactNode }) {
+  const [data, setData] = useState<ApplicationForm>(() => {
+    const stored = readSafely<ApplicationForm>(FORM_DATA_STORAGE_KEY);
+    return stored ?? emptyForm;
+  });
+
+  const save = useCallback((update: ApplicationFormUpdate) => {
+    setData((previous) => {
+      const next = { ...previous, ...update };
+      persistSafely(FORM_DATA_STORAGE_KEY, next);
+      return next;
+    });
+  }, []);
+
+  const clear = useCallback(() => {
+    setData(emptyForm);
+    removeSafely(FORM_DATA_STORAGE_KEY);
+    removeSafely(INTAKE_STORAGE_KEY);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const stored = readSafely<ApplicationForm>(FORM_DATA_STORAGE_KEY);
+    if (stored) {
+      setData((current) => (Object.keys(current).length === 0 ? stored : current));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== FORM_DATA_STORAGE_KEY) {
+        return;
+      }
+
+      if (event.newValue) {
+        try {
+          const parsed = JSON.parse(event.newValue) as ApplicationForm;
+          if (parsed && typeof parsed === 'object') {
+            setData(parsed);
+          }
+        } catch (error) {
+          console.warn('[FormDataContext] Failed to parse storage event payload', error);
+        }
+      } else {
+        setData(emptyForm);
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  const value = useMemo<FormDataContextValue>(() => {
+    const completedSteps = Array.isArray(data.completedSteps)
+      ? data.completedSteps
+      : extractDocuments(data).length
+        ? ['Financial Profile', 'Product Recommendations', 'Business Details', 'Applicant Information', 'Document Upload']
+        : [];
+
+    return {
+      data,
+      formData: data,
+      save,
+      clear,
+      isComplete: Boolean(data.applicationId && completedSteps.length >= 4),
+    };
+  }, [data, save, clear]);
+
+  return <FormDataContext.Provider value={value}>{children}</FormDataContext.Provider>;
+}
+
+export function useFormData(): FormDataContextValue {
+  const context = useContext(FormDataContext);
+
+  if (!context) {
+    throw new Error('useFormData must be used within a FormDataProvider');
+  }
+
+  return context;
+}
+
+// Legacy compatibility export
 export const useFormDataContext = useFormData;
-// injected: local-first products fetch
-import { loadSelectedCategories } from "../api/products";
-/* injected load on mount (pseudo):
-useEffect(() => { (async () => {
-  const cats = loadSelectedCategories();
-  const products = await getProducts({ useCacheFirst: true });
-  // apply category filter if present
-  const selected = cats && cats.length ? products.filter(p => cats.includes((p.category||"").toLowerCase())) : products;
-  setState({ products: selected });
-})(); }, []);
-*/

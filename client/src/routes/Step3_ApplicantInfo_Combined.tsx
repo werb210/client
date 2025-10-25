@@ -11,16 +11,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFormData } from '@/context/FormDataContext';
 import { useToast } from '@/hooks/use-toast';
-import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
-import Building from 'lucide-react/dist/esm/icons/building';
-import User from 'lucide-react/dist/esm/icons/user';
-import MapPin from 'lucide-react/dist/esm/icons/map-pin';
-import Phone from 'lucide-react/dist/esm/icons/phone';
-import Mail from 'lucide-react/dist/esm/icons/mail';
-import Calendar from 'lucide-react/dist/esm/icons/calendar';
-import Users from 'lucide-react/dist/esm/icons/users';
-import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
 
+
+
+
+
+
+
+
+
+
+import {ArrowLeft, Building, Calendar, DollarSign, Mail, MapPin, Phone, User, Users} from 'lucide-react';
 // Step 3 Schema for combined business + applicant info
 const step3Schema = z.object({
   // Business Details

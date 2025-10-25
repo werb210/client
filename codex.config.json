@@ -1,9 +1,16 @@
 {
+<<<<<<< HEAD
+  "project": "Boreal Client App",
+  "mode": "audit",
+  "scanPaths": ["client/src", "client/tests", "client/public"],
+  "reportPath": "reports/codex-feature-audit.json",
+=======
   "project": "Boreal Client Application",
   "mode": "audit-repair",
   "scanPaths": ["client/src", "client/tests", "client/public"],
   "reportPath": "reports/codex-feature-report.json",
   "autoRepair": true,
+>>>>>>> main
   "checks": {
     "UI": true,
     "API": true,
@@ -15,6 +22,12 @@
     "PWA": true,
     "Accessibility": true,
     "TypeSafety": true,
+<<<<<<< HEAD
+    "Security": true,
+    "Twilio": false,
+    "SendGrid": false
+=======
     "Security": true
+>>>>>>> main
   }
 }

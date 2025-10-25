@@ -1,3 +1,5 @@
+import { dedupeBy } from './dedupe';
+
 /**
  * Security validation utilities for financial applications
  */
@@ -28,12 +30,35 @@ export interface ComplianceCheck {
  * Run comprehensive security audit
  */
 export async function runSecurityAudit(): Promise<SecurityAuditResult> {
+  const doc = typeof document !== 'undefined' ? document : null;
+  const loc = typeof window !== 'undefined' && window.location
+    ? window.location
+    : typeof location !== 'undefined'
+      ? location
+      : null;
+  const local = typeof window !== 'undefined' ? window.localStorage : (globalThis as any).localStorage;
+  const session = typeof window !== 'undefined' ? window.sessionStorage : (globalThis as any).sessionStorage;
+
+  if (!doc || !loc) {
+    return {
+      score: 0,
+      vulnerabilities: [{
+        severity: 'low',
+        category: 'Environment',
+        description: 'Security audit requires browser APIs (document/location).',
+        recommendation: 'Run the security audit in a DOM-enabled environment'
+      }],
+      recommendations: ['Run the security audit in a DOM-enabled environment'],
+      compliance: []
+    };
+  }
+
   const vulnerabilities: SecurityVulnerability[] = [];
   const compliance: ComplianceCheck[] = [];
   let score = 100;
 
   // Check HTTPS enforcement
-  if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+  if (loc.protocol !== 'https:' && loc.hostname !== 'localhost') {
     vulnerabilities.push({
       severity: 'critical',
       category: 'Transport Security',
@@ -44,7 +69,7 @@ export async function runSecurityAudit(): Promise<SecurityAuditResult> {
   }
 
   // Check Content Security Policy
-  const cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+  const cspMeta = doc.querySelector('meta[http-equiv="Content-Security-Policy"]');
   if (!cspMeta) {
     vulnerabilities.push({
       severity: 'high',
@@ -57,13 +82,16 @@ export async function runSecurityAudit(): Promise<SecurityAuditResult> {
 
   // Check for sensitive data in localStorage/sessionStorage
   const sensitivePatterns = ['password', 'token', 'secret', 'key', 'ssn', 'sin'];
-  const storageKeys = [...Object.keys(localStorage), ...Object.keys(sessionStorage)];
-  
+  const storageKeys = [
+    ...safeStorageKeys(local),
+    ...safeStorageKeys(session)
+  ];
+
   sensitivePatterns.forEach(pattern => {
-    const foundKeys = storageKeys.filter(key => 
+    const foundKeys = storageKeys.filter(key =>
       key.toLowerCase().includes(pattern.toLowerCase())
     );
-    
+
     if (foundKeys.length > 0) {
       vulnerabilities.push({
         severity: 'medium',
@@ -76,7 +104,7 @@ export async function runSecurityAudit(): Promise<SecurityAuditResult> {
   });
 
   // Check for inline scripts (XSS risk)
-  const inlineScripts = document.querySelectorAll('script:not([src])');
+  const inlineScripts = doc.querySelectorAll('script:not([src])');
   if (inlineScripts.length > 0) {
     vulnerabilities.push({
       severity: 'medium',
@@ -91,26 +119,26 @@ export async function runSecurityAudit(): Promise<SecurityAuditResult> {
   compliance.push({
     standard: 'PCI DSS',
     requirement: 'Secure transmission of payment data',
-    status: location.protocol === 'https:' ? 'pass' : 'fail',
+    status: loc.protocol === 'https:' ? 'pass' : 'fail',
     details: 'HTTPS enforcement for secure data transmission'
   });
 
   compliance.push({
     standard: 'PIPEDA (Canada)',
     requirement: 'Privacy policy and consent',
-    status: document.querySelector('[data-privacy-policy]') ? 'pass' : 'warning',
+    status: doc.querySelector('[data-privacy-policy]') ? 'pass' : 'warning',
     details: 'Privacy policy link and consent mechanisms'
   });
 
   compliance.push({
     standard: 'GDPR',
     requirement: 'Cookie consent',
-    status: document.querySelector('[data-cookie-consent]') ? 'pass' : 'warning',
+    status: doc.querySelector('[data-cookie-consent]') ? 'pass' : 'warning',
     details: 'Cookie consent banner implementation'
   });
 
   // Check form security
-  const forms = document.querySelectorAll('form');
+  const forms = doc.querySelectorAll('form');
   forms.forEach((form, index) => {
     // Check for CSRF protection
     const csrfToken = form.querySelector('input[name="_token"], input[name="csrf_token"]');
@@ -141,14 +169,34 @@ export async function runSecurityAudit(): Promise<SecurityAuditResult> {
     });
   });
 
-  const recommendations = generateSecurityRecommendations(vulnerabilities);
+  const uniqueVulnerabilities = dedupeBy(
+    vulnerabilities,
+    vulnerability => `${vulnerability.category}|${vulnerability.description}|${vulnerability.location ?? ''}`
+  );
+  const recommendations = generateSecurityRecommendations(uniqueVulnerabilities);
 
   return {
     score: Math.max(0, score),
-    vulnerabilities,
+    vulnerabilities: uniqueVulnerabilities,
     recommendations,
     compliance
   };
+}
+
+function safeStorageKeys(storage: Storage | undefined): string[] {
+  if (!storage) return [];
+
+  const keys: string[] = [];
+  try {
+    for (let i = 0; i < storage.length; i += 1) {
+      const key = storage.key(i);
+      if (key) keys.push(key);
+    }
+  } catch (error) {
+    return [];
+  }
+
+  return keys;
 }
 
 function generateSecurityRecommendations(vulnerabilities: SecurityVulnerability[]): string[] {
@@ -177,8 +225,11 @@ function generateSecurityRecommendations(vulnerabilities: SecurityVulnerability[
  * Validate CSRF token
  */
 export function validateCSRFToken(token: string): boolean {
-  // Basic token validation - in production, verify against server
-  return token && token.length >= 32 && /^[a-zA-Z0-9+/=]+$/.test(token);
+  if (typeof token !== 'string') {
+    return false;
+  }
+
+  return /^[A-Za-z0-9_-]{20,}$/.test(token);
 }
 
 /**

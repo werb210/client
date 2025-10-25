@@ -2,6 +2,7 @@ import { attachCategories } from "../api/submit-categories";
 // Staff API client for application submission and SignNow integration
 
 const STAFF_API_URL = import.meta.env.VITE_STAFF_API_BASE || ""; // Single source of truth for all staff API calls
+const hasWindow = typeof window !== 'undefined';
 
 // ✅ Required Fields Validation Configuration
 const REQUIRED_FIELDS = {
@@ -169,10 +170,16 @@ class StaffApiClient {
 
   constructor() {
     this.baseUrl = STAFF_API_URL;
-    this.initializeOfflineHandling();
+    if (hasWindow) {
+      this.initializeOfflineHandling();
+    }
   }
 
   private initializeOfflineHandling() {
+    if (!hasWindow) {
+      return;
+    }
+
     // Monitor online/offline status
     window.addEventListener('online', () => {
       console.log('[STAFF_API] Back online - processing queued requests');
@@ -288,12 +295,15 @@ class StaffApiClient {
       // Enhanced headers with better auth handling
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'Origin': window.location.origin,
-        'Referer': window.location.href,
         'X-Client-Version': '1.0.0',
         'X-Request-Source': 'client-app',
         ...(options.headers as Record<string, string> || {}),
       };
+
+      if (hasWindow) {
+        headers['Origin'] = window.location.origin;
+        headers['Referer'] = window.location.href;
+      }
       
       // Only add Authorization header if token exists
       if (bearerToken && bearerToken.trim()) {

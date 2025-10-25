@@ -3,14 +3,15 @@ import { getProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
-import Database from 'lucide-react/dist/esm/icons/database';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+
+
+
+
 import { get, set, clear } from 'idb-keyval';
 import { useToast } from '@/hooks/use-toast';
 import { validateV2Schema, normalizeProduct, type ProductStats } from '@/types/enhancedLenderProduct';
 
+import {AlertCircle, CheckCircle, Database, RefreshCw} from 'lucide-react';
 // ProductStats now imported from enhancedLenderProduct.ts
 
 export default function SyncDiagnostics() {

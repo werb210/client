@@ -1,4 +1,4 @@
-import { getProducts } from "../api/products";
+import { getProducts } from "../products";
 /**
  * OpenAPI schema types for Staff API V2
  * Generated from staff portal expanded lender product schema

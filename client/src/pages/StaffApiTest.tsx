@@ -3,12 +3,13 @@ import { getProducts } from "../api/products";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
-import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import XCircle from 'lucide-react/dist/esm/icons/x-circle';
-import Database from 'lucide-react/dist/esm/icons/database';
 
+
+
+
+
+
+import {CheckCircle, Database, Loader2, RefreshCw, XCircle} from 'lucide-react';
 interface ApiResponse {
   products?: any[];
   total?: number;

@@ -2,11 +2,12 @@ import React from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
-import Building from 'lucide-react/dist/esm/icons/building';
-import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
 
+
+
+
+
+import {ArrowRight, Building, CreditCard, FileText} from 'lucide-react';
 export default function SimpleApplication() {
   const [, setLocation] = useLocation();
 

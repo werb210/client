@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatCategoryName } from '../utils/formatters';
-import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
-import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+
+
 
 export default function Step2Test() {
   const [testData, setTestData] = useState({
@@ -172,6 +172,7 @@ export default function Step2Test() {
 }
 // injected: local-first products fetch
 import { getProducts, loadSelectedCategories } from "../api/products";
+import {AlertTriangle, Loader2} from 'lucide-react';
 /* injected load on mount (pseudo):
 useEffect(() => { (async () => {
   const cats = loadSelectedCategories();

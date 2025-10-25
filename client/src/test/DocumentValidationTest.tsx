@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import XCircle from 'lucide-react/dist/esm/icons/x-circle';
 
+
+
+import {CheckCircle, XCircle} from 'lucide-react';
 // Mock uploaded files for testing
 const mockUploadedFiles = [
   {

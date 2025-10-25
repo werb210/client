@@ -1,31 +1,21 @@
-import { attachCategories } from "../api/submit-categories";
-import { attachTrace, getTraceId } from "../telemetry/lineage";
-import React, { useState } from 'react';
-import { logger } from '@/lib/utils';
+import React, { useMemo, useState } from 'react';
 import { useLocation } from 'wouter';
-
-import { useFormData } from '@/context/FormDataContext';
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-import { Button } from '@/components/ui/button';
-
-import { Checkbox } from '@/components/ui/checkbox';
-
 import type { CheckedState } from '@radix-ui/react-checkbox';
-
-import { Alert, AlertDescription } from '@/components/ui/alert';
-
-import { Badge } from '@/components/ui/badge';
-
-import { CheckCircle, AlertTriangle, FileText, Send, ArrowLeft, Clock, Shield, Users } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { AlertTriangle, ArrowLeft, CheckCircle, Clock, FileText, Send, Shield } from 'lucide-react';
 
 import { ApplicationStatusModal } from '@/components/ApplicationStatusModal';
-
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useFormData } from '@/context/FormDataContext';
+import { useToast } from '@/hooks/use-toast';
 import { canSubmitApplication } from '@/lib/applicationStatus';
-import { submitApplication, retryOperation, type ApplicationPayload } from '@/services/applicationService';
 import { buildSubmission } from '@/lib/submissionBridge';
+import { logger } from '@/lib/utils';
+import { getTraceId } from '@/telemetry/lineage';
+import type { ApplicationForm, UploadedDocument } from '@/types/application';
 
 
 /**
@@ -34,24 +24,109 @@ import { buildSubmission } from '@/lib/submissionBridge';
  * Displays complete application summary, terms and conditions, and handles
  * final submission of all data and actual document files to staff API.
  */
+type DocumentSection = {
+  uploadedFiles?: UploadedDocument[];
+  files?: UploadedDocument[];
+  hasDocuments?: boolean;
+};
+
+type FormDataShape = ApplicationForm & {
+  step5DocumentUpload?: DocumentSection | null;
+};
+
 export default function Step7Submit() {
-  const { data } = useFormData();
-  const state = {
-    step5DocumentUpload: {
-      uploadedFiles: [],
-      hasDocuments: false,
-      submissionMode: 'without_documents',
-      ...data
-    },
-    step4Completed: false,
-    step6Signature: {},
-    applicationId: data?.applicationId || 'mock-id',
-    ...data
-  };
-  const dispatch = (action: any) => console.log('Mock dispatch in Step7:', action);
+  const { data: rawFormData } = useFormData();
+  const formData = useMemo<FormDataShape>(() => ({ ...(rawFormData ?? {}) } as FormDataShape), [rawFormData]);
+  const documentSection = formData.step5DocumentUpload ?? null;
+
+  const uploadedFiles: UploadedDocument[] = useMemo(() => {
+    if (Array.isArray(formData.uploadedFiles)) {
+      return formData.uploadedFiles;
+    }
+
+    const nestedFiles = documentSection?.uploadedFiles ?? documentSection?.files;
+    return Array.isArray(nestedFiles) ? nestedFiles : [];
+  }, [documentSection, formData.uploadedFiles]);
+
+  const bypassDocuments = useMemo(() => {
+    if (typeof formData.bypassDocuments === 'boolean') {
+      return formData.bypassDocuments;
+    }
+
+    if (typeof formData.hasDocuments === 'boolean') {
+      return !formData.hasDocuments;
+    }
+
+    const nestedHasDocs = documentSection?.hasDocuments;
+    if (typeof nestedHasDocs === 'boolean') {
+      return !nestedHasDocs;
+    }
+
+    return false;
+  }, [documentSection?.hasDocuments, formData.bypassDocuments, formData.hasDocuments]);
+
+  const applicationId = formData.applicationId ?? '';
+  const applicantFirstName = formData.applicantFirstName ?? formData.firstName ?? '';
+  const applicantLastName = formData.applicantLastName ?? formData.lastName ?? '';
+  const applicantEmail = formData.applicantEmail ?? formData.email ?? '';
+  const applicantPhone = formData.applicantPhone ?? formData.phone ?? '';
+  const selectedCategory = formData.selectedCategory ?? 'not_selected';
+  const businessLocation = formData.businessLocation ?? formData.country ?? 'not_specified';
+  const fundingAmount = formData.fundingAmount ?? formData.amountRequested;
+  const fundsPurpose = formData.fundsPurpose ?? formData.purpose ?? 'Not provided';
+  const revenueLastYear = formData.revenueLastYear ?? formData.last12moRevenue ?? 'Not provided';
+  const industry = formData.industry ?? 'Not provided';
+  const operatingName = formData.operatingName ?? formData.businessName ?? formData.legalName ?? 'Not provided';
+  const businessStructure = formData.businessStructure ?? 'Not provided';
+
+  const completedSteps = useMemo(() => {
+    if (Array.isArray(formData.completedSteps) && formData.completedSteps.length > 0) {
+      return formData.completedSteps;
+    }
+
+    const derived: string[] = [];
+
+    if (fundingAmount) {
+      derived.push('Financial Profile');
+    }
+
+    if (selectedCategory && selectedCategory !== 'not_selected') {
+      derived.push('Product Recommendations');
+    }
+
+    if (operatingName && operatingName !== 'Not provided') {
+      derived.push('Business Details');
+    }
+
+    if (applicantFirstName || applicantLastName || applicantEmail) {
+      derived.push('Applicant Information');
+    }
+
+    if (uploadedFiles.length > 0 || bypassDocuments) {
+      derived.push(bypassDocuments ? 'Document Upload (Bypassed)' : 'Document Upload');
+    }
+
+    if (formData.signatureCompleted === true) {
+      derived.push('Electronic Signature');
+    }
+
+    return derived;
+  }, [
+    applicantEmail,
+    applicantFirstName,
+    applicantLastName,
+    bypassDocuments,
+    formData.completedSteps,
+    formData.signatureCompleted,
+    fundingAmount,
+    operatingName,
+    selectedCategory,
+    uploadedFiles,
+  ]);
+
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
+
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -68,20 +143,6 @@ export default function Step7Submit() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionComplete, setSubmissionComplete] = useState(false);
 
-  // Get uploaded files from state
-  const uploadedFiles = state.step5DocumentUpload?.uploadedFiles || [];
-  const bypassDocuments = state.step5DocumentUpload?.hasDocuments === false || false;
-  
-  // Calculate completion status
-  const completedSteps = [
-    state.step1Completed ? 'Financial Profile' : null,
-    state.step2Completed ? 'Product Recommendations' : null,
-    state.step3Completed ? 'Business Details' : null,
-    state.step4Completed ? 'Applicant Information' : null,
-    (uploadedFiles.length > 0 || bypassDocuments) ? (bypassDocuments ? 'Document Upload (Bypassed)' : 'Document Upload') : null,
-    state.step6Signature?.signedAt ? 'Electronic Signature' : null
-  ].filter(Boolean);
-
   const handleSubmit = async () => {
     if (!termsAccepted || !privacyAccepted) {
       toast({
@@ -96,7 +157,6 @@ export default function Step7Submit() {
 
     try {
       // ✅ Check application status before submission
-      const applicationId = state.step4?.applicationId;
       if (!applicationId) {
         throw new Error('No application ID found. Cannot check status.');
       }
@@ -115,11 +175,11 @@ export default function Step7Submit() {
       logger.log('✅ Application status check passed - proceeding with submission');
 
       // Use submission bridge for lender-ready payload
-      const appState = (window as any).__app?.state || {};
+      const appState = typeof window !== 'undefined' ? ((window as any).__app?.state || {}) : {};
       const payload = buildSubmission(appState, uploadedFiles.map(f => ({ type: f.documentType || 'general' })));
-      
-      const formData = new FormData();
-      formData.append('payload', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+
+      const payloadFormData = new FormData();
+      payloadFormData.append('payload', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
       
       // ✅ USER REQUIREMENT: Add comprehensive submission logging
       console.log("📤 Submitting application:", payload);
@@ -130,7 +190,11 @@ export default function Step7Submit() {
       console.log("📤 Document Count:", uploadedFiles.length);
       console.log("📤 Document Upload Bypassed:", payload.bypassDocuments);
       
-      uploadedFiles.forEach(f => formData.append('files[]', f.file, f.name));
+      uploadedFiles.forEach((file) => {
+        if (file?.file instanceof File) {
+          payloadFormData.append('files[]', file.file, file.name);
+        }
+      });
       
       const submitUrl = `/api/v1/applications`;
       console.log("📤 Submitting to URL:", submitUrl);
@@ -146,7 +210,7 @@ export default function Step7Submit() {
             'X-Trace-Id': getTraceId(),
             'X-Client-App': 'boreal-client'
           },
-          body: formData, // FormData automatically sets correct Content-Type
+          body: payloadFormData, // FormData automatically sets correct Content-Type
           credentials: 'include'
         });
         
@@ -177,12 +241,12 @@ export default function Step7Submit() {
             "Authorization": `Bearer ${import.meta.env.VITE_CLIENT_APP_SHARED_TOKEN}`
           },
           body: JSON.stringify({
-            firstName: state.step4?.firstName || "",
-            lastName: state.step4?.lastName || "",
-            email: state.step4?.email || "",
-            phone: state.step4?.phone || "",
+            firstName: applicantFirstName || "",
+            lastName: applicantLastName || "",
+            email: applicantEmail || "",
+            phone: applicantPhone || "",
             source: "application",
-            applicationId: state.step4?.applicationId || "",
+            applicationId: applicationId || "",
           }),
         });
         
@@ -197,20 +261,16 @@ export default function Step7Submit() {
         // Don't fail the main submission for CRM issues
       }
       
-      // Emit GTM event to dataLayer
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({
-        event: 'application_submitted',
-        application_id: applicationId,
-        product_type: state.step2?.selectedCategory || 'not_selected',
-        country: state.step1?.businessLocation || 'not_specified',
-      });
-      
-      // Update state with submission success
-      dispatch({
-        type: 'MARK_COMPLETE'
-      });
-      
+      if (typeof window !== 'undefined') {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: 'application_submitted',
+          application_id: applicationId,
+          product_type: selectedCategory || 'not_selected',
+          country: businessLocation || 'not_specified',
+        });
+      }
+
       setSubmissionComplete(true);
       
       toast({
@@ -290,20 +350,20 @@ export default function Step7Submit() {
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Business Information</h4>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p><strong>Business:</strong> {state.step3?.operatingName || 'Not provided'}</p>
-                  <p><strong>Industry:</strong> {state.step1?.industry || 'Not provided'}</p>
-                  <p><strong>Location:</strong> {state.step1?.businessLocation || 'Not provided'}</p>
-                  <p><strong>Structure:</strong> {state.step3?.businessStructure || 'Not provided'}</p>
+                  <p><strong>Business:</strong> {operatingName}</p>
+                  <p><strong>Industry:</strong> {industry}</p>
+                  <p><strong>Location:</strong> {businessLocation || 'Not provided'}</p>
+                  <p><strong>Structure:</strong> {businessStructure}</p>
                 </div>
               </div>
               
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Funding Request</h4>
                 <div className="space-y-1 text-sm text-gray-600">
-                  <p><strong>Amount:</strong> {state.step1?.fundingAmount || 'Not provided'}</p>
-                  <p><strong>Purpose:</strong> {state.step1?.fundsPurpose || 'Not provided'}</p>
-                  <p><strong>Product Type:</strong> {state.step2?.selectedCategory || 'Not selected'}</p>
-                  <p><strong>Revenue:</strong> {state.step1?.revenueLastYear || 'Not provided'}</p>
+                  <p><strong>Amount:</strong> {fundingAmount ?? 'Not provided'}</p>
+                  <p><strong>Purpose:</strong> {fundsPurpose}</p>
+                  <p><strong>Product Type:</strong> {selectedCategory || 'Not selected'}</p>
+                  <p><strong>Revenue:</strong> {revenueLastYear}</p>
                 </div>
               </div>
             </div>

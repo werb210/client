@@ -1,4 +1,3 @@
-import { getProducts } from "../api/products";
 /**
  * Strongly-typed client for Staff API V2
  * Generated from expanded lender product schema
@@ -98,7 +97,15 @@ export class StaffClient {
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
     try {
-      const response = await /* rewired */
+      const response = await fetch(`${this.baseUrl}/api/public/lenders/${encodeURIComponent(id)}` , {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        signal: controller.signal,
+      });
 
       clearTimeout(timeoutId);
 

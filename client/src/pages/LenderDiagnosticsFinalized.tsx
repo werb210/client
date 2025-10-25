@@ -3,11 +3,11 @@ import { getProducts } from "../api/products";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
-import Database from 'lucide-react/dist/esm/icons/database';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+
+
+
+
+
 import { get, set, clear } from 'idb-keyval';
 import { useToast } from '@/hooks/use-toast';
 
@@ -378,6 +378,7 @@ return (
 }
 // injected: local-first products fetch
 import { getProducts, loadSelectedCategories } from "../api/products";
+import {AlertCircle, AlertTriangle, CheckCircle, Database, RefreshCw} from 'lucide-react';
 /* injected load on mount (pseudo):
 useEffect(() => { (async () => {
   const cats = loadSelectedCategories();

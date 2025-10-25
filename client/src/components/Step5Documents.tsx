@@ -3,9 +3,9 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
-import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
-import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+
+
+
 import { DynamicDocumentRequirements } from './DynamicDocumentRequirements';
 
 // Define the UploadedFile type to match DynamicDocumentRequirements
@@ -184,6 +184,7 @@ export const Step5Documents: React.FC = () => {
 };
 // injected: local-first products fetch
 import { getProducts, loadSelectedCategories } from "../api/products";
+import {AlertCircle, ArrowRight, CheckCircle} from 'lucide-react';
 /* injected load on mount (pseudo):
 useEffect(() => { (async () => {
   const cats = loadSelectedCategories();

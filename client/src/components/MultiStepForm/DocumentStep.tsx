@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { useApplication } from '@/context/ApplicationContext';
+import {File, Trash2} from 'lucide-react';
 // Document interface
 interface Document {
   id: string;
@@ -11,8 +12,8 @@ interface Document {
   fileSize: number;
   uploadedAt: string;
 }
-import File from 'lucide-react/dist/esm/icons/file';
-import Trash2 from 'lucide-react/dist/esm/icons/trash-2';
+
+
 
 interface DocumentStepProps {
   onNext: () => void;

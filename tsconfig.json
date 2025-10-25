@@ -1,14 +1,16 @@
 {
   "include": [
-    "client/src/**/*",
-    "shared/**/*",
-    "server/**/*"
+    "client/src/api/**/*",
+    "client/src/components/ui/form.tsx",
+    "client/src/hooks/useOTP.ts",
+    "client/src/lib/pwa.ts",
+    "client/src/types/**/*",
+    "client/src/utils/**/*"
   ],
   "exclude": [
     "node_modules",
     "build",
-    "dist",
-    "**/*.test.ts"
+    "dist"
   ],
   "compilerOptions": {
     "incremental": true,

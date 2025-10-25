@@ -5,16 +5,33 @@
 
 import { setSafeHtml } from './safeHtml';
 
+const hasWindow = typeof window !== 'undefined';
+const hasDocument = typeof document !== 'undefined';
+const hasNavigator = typeof navigator !== 'undefined';
+const hasIndexedDB = typeof indexedDB !== 'undefined';
+const hasServiceWorker = hasNavigator && 'serviceWorker' in navigator;
+const hasNotifications = hasWindow && 'Notification' in window;
+const hasAtob = hasWindow && typeof window.atob === 'function';
+const isBrowser = hasWindow && hasDocument;
+
 // PWA Installation Support
 export class PWAInstaller {
   private deferredPrompt: any = null;
   private isInstalled = false;
 
   constructor() {
+    if (!isBrowser) {
+      return;
+    }
+
     this.init();
   }
 
   private init() {
+    if (!isBrowser) {
+      return;
+    }
+
     // Listen for beforeinstallprompt event
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -77,6 +94,10 @@ export class PWAInstaller {
 
   private showInstallPrompt() {
     // Create install prompt UI
+    if (!isBrowser) {
+      return;
+    }
+
     const existingPrompt = document.getElementById('pwa-install-prompt');
     if (existingPrompt) {
       existingPrompt.remove();
@@ -124,6 +145,10 @@ export class PWAInstaller {
   }
 
   private hideInstallPrompt() {
+    if (!isBrowser) {
+      return;
+    }
+
     const prompt = document.getElementById('pwa-install-prompt');
     if (prompt) {
       prompt.remove();
@@ -138,10 +163,18 @@ export class OfflineStorageManager {
   private db: IDBDatabase | null = null;
 
   constructor() {
-    this.initDB();
+    if (!hasIndexedDB) {
+      return;
+    }
+
+    void this.initDB();
   }
 
   private async initDB(): Promise<void> {
+    if (!hasIndexedDB) {
+      return;
+    }
+
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
@@ -187,6 +220,10 @@ export class OfflineStorageManager {
 
   // Save form data for offline access
   public async saveFormData(step: number, data: any): Promise<void> {
+    if (!hasIndexedDB) {
+      return;
+    }
+
     if (!this.db) await this.initDB();
 
     return new Promise((resolve, reject) => {
@@ -217,6 +254,10 @@ export class OfflineStorageManager {
 
   // Retrieve form data
   public async getFormData(step: number): Promise<any> {
+    if (!hasIndexedDB) {
+      return null;
+    }
+
     if (!this.db) await this.initDB();
 
     return new Promise((resolve, reject) => {
@@ -236,6 +277,10 @@ export class OfflineStorageManager {
 
   // Queue form submission for background sync
   public async queueFormSubmission(data: any, token: string): Promise<void> {
+    if (!hasIndexedDB) {
+      return;
+    }
+
     if (!this.db) await this.initDB();
 
     return new Promise((resolve, reject) => {
@@ -257,12 +302,12 @@ export class OfflineStorageManager {
           console.log('✅ Form submission queued for sync');
         }
         // Register background sync
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.ready.then(registration => {
-            // Check if sync is supported
+        if (hasServiceWorker) {
+          navigator.serviceWorker.ready.then((registration) => {
             if ('sync' in registration) {
               return (registration as any).sync.register('form-submission');
             }
+            return undefined;
           });
         }
         resolve();
@@ -276,6 +321,10 @@ export class OfflineStorageManager {
 
   // Save chat messages for offline access
   public async saveChatMessage(sessionId: string, message: any): Promise<void> {
+    if (!hasIndexedDB) {
+      return;
+    }
+
     if (!this.db) await this.initDB();
 
     return new Promise((resolve, reject) => {
@@ -303,6 +352,10 @@ export class OfflineStorageManager {
 
   // Get chat history
   public async getChatHistory(sessionId: string): Promise<any[]> {
+    if (!hasIndexedDB) {
+      return [];
+    }
+
     if (!this.db) await this.initDB();
 
     return new Promise((resolve, reject) => {
@@ -324,6 +377,10 @@ export class OfflineStorageManager {
 
   // Clear all offline data
   public async clearOfflineData(): Promise<void> {
+    if (!hasIndexedDB) {
+      return;
+    }
+
     if (!this.db) await this.initDB();
 
     const stores = ['form-data', 'form-submissions', 'document-queue', 'chat-messages'];
@@ -350,22 +407,28 @@ export class PushNotificationManager {
   private registration: ServiceWorkerRegistration | null = null;
 
   constructor() {
+    if (!hasServiceWorker || !hasNotifications) {
+      return;
+    }
+
     this.init();
   }
 
   private async init() {
-    if ('serviceWorker' in navigator) {
-      try {
-        this.registration = await navigator.serviceWorker.ready;
-      } catch (error) {
-        // Service worker not ready, fail silently
-      }
+    if (!hasServiceWorker) {
+      return;
+    }
+
+    try {
+      this.registration = await navigator.serviceWorker.ready;
+    } catch (error) {
+      // Service worker not ready, fail silently
     }
   }
 
   public async requestPermission(): Promise<boolean> {
-    if (!('Notification' in window)) {
-      console.log('This browser does not support notifications');
+    if (!hasNotifications) {
+      console.log('This environment does not support notifications');
       return false;
     }
 
@@ -374,8 +437,17 @@ export class PushNotificationManager {
   }
 
   public async subscribeToPush(): Promise<PushSubscription | null> {
+    if (!hasServiceWorker || !hasNotifications) {
+      return null;
+    }
+
     if (!this.registration) {
-      await this.init();
+      try {
+        this.registration = await navigator.serviceWorker.ready;
+      } catch (error) {
+        console.error('Service worker registration not available', error);
+        return null;
+      }
     }
 
     if (!this.registration) {
@@ -389,7 +461,7 @@ export class PushNotificationManager {
         applicationServerKey: this.urlBase64ToUint8Array(
           // Replace with your VAPID public key
           'BMxYvUFeXbCxNMrWKlCPdMF5vR1D5i2tQl0Ug9F2q3gK4J9rK2l5M8nO3PaQs7RvTx2Uv6W8y0Z1'
-        )
+        ) as unknown as BufferSource
       });
 
       console.log('Push subscription successful:', subscription);
@@ -405,6 +477,10 @@ export class PushNotificationManager {
   }
 
   private async sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
+    if (!hasServiceWorker) {
+      return;
+    }
+
     try {
       await fetch('/api/push-subscription', {
         method: 'POST',
@@ -424,6 +500,10 @@ export class PushNotificationManager {
       .replace(/-/g, '+')
       .replace(/_/g, '/');
 
+    if (!hasAtob) {
+      return new Uint8Array();
+    }
+
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
 
@@ -434,16 +514,20 @@ export class PushNotificationManager {
   }
 
   public hasPermission(): boolean {
-    return 'Notification' in window && Notification.permission === 'granted';
+    return hasNotifications && Notification.permission === 'granted';
   }
 }
 
 // Network Status Manager
 export class NetworkStatusManager {
-  private isOnline = navigator.onLine;
+  private isOnline = hasNavigator ? navigator.onLine : false;
   private callbacks: Array<(online: boolean) => void> = [];
 
   constructor() {
+    if (!isBrowser || !hasNavigator) {
+      return;
+    }
+
     window.addEventListener('online', () => {
       this.isOnline = true;
       this.notifyCallbacks(true);
@@ -470,13 +554,22 @@ export class NetworkStatusManager {
 
 // Initialize PWA features
 export const initializePWA = () => {
+  if (!isBrowser) {
+    return {
+      installer: new PWAInstaller(),
+      storage: new OfflineStorageManager(),
+      pushManager: new PushNotificationManager(),
+      networkManager: new NetworkStatusManager(),
+    };
+  }
+
   // Register service worker ONLY in production to avoid caching issues
-  if ('serviceWorker' in navigator) {
+  if (hasServiceWorker) {
     const dev = import.meta.env.MODE !== "production";
     if (dev) {
       // Dev/staging: DISABLE service worker to prevent stale cache issues and clear caches
-      navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
-      caches?.keys?.().then(keys => keys.forEach(k => caches.delete(k)));
+      navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((r) => r.unregister()));
+      caches?.keys?.().then((keys) => keys.forEach((k) => caches.delete(k)));
       console.info("[PWA] SW disabled in dev; caches cleared");
     } else {
       // Production only
@@ -492,17 +585,17 @@ export const initializePWA = () => {
           const registration = await navigator.serviceWorker.register('/service-worker.js', {
             scope: '/'
           });
-          
+
           if (import.meta.env.DEV) {
             console.log('✅ Service worker registered successfully');
           }
-        
+
         // Listen for service worker messages
         navigator.serviceWorker.addEventListener('message', (event) => {
           if (import.meta.env.DEV) {
             console.log('Message from service worker:', event.data);
           }
-          
+
           if (event.data.type === 'SYNC_SUCCESS') {
             // Handle successful background sync
             if (import.meta.env.DEV) {
@@ -533,6 +626,10 @@ export const initializePWA = () => {
 
   // Show network status
   networkManager.onStatusChange((online) => {
+    if (!hasDocument) {
+      return;
+    }
+
     const statusElement = document.getElementById('network-status');
     if (statusElement) {
       statusElement.textContent = online ? 'Online' : 'Offline';

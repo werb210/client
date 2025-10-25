@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useApplication } from '@/context/ApplicationContext';
-import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
-import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
-import FileText from 'lucide-react/dist/esm/icons/file-text';
+
+
+
 import { useQuery } from '@tanstack/react-query';
 
+import {CreditCard, FileText, TrendingUp} from 'lucide-react';
 interface LenderRecommendationsProps {
   onNext: () => void;
   onBack: () => void;
