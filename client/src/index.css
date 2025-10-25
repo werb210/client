@@ -3,7 +3,25 @@
 @tailwind components;
 @tailwind utilities;
 
-/* === v4 token mapping for Tailwind utilities === */
+/* === Tailwind v4 variable + theme fix === */
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --radius: var(--radius);
+  --ring: hsl(var(--ring));
+}
+
+/* === Design Variables (Boreal) === */
 :root {
   --background: 0 0% 100%;
   --foreground: 210 20% 25%;
@@ -15,309 +33,72 @@
   --card-foreground: 210 20% 25%;
   --border: 214 32% 91%;
   --input: 214 32% 91%;
-  --primary: 195 53% 65%;
+  --primary: 43 90% 58%;             /* Boreal orange */
   --primary-foreground: 0 0% 100%;
-  --secondary: 43 74% 66%;
+  --secondary: 195 53% 40%;          /* Boreal teal */
   --secondary-foreground: 0 0% 100%;
-  --accent: 43 74% 66%;
+  --accent: 43 90% 58%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 60 9.1% 97.8%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
   --ring: 195 53% 65%;
   --radius: 0.75rem;
-
-  /* Boreal Financial Brand Colors */
-  --cbf-teal: hsl(195, 53%, 65%);
-  --cbf-teal-dark: hsl(195, 53%, 55%);
-  --cbf-teal-light: hsl(195, 53%, 95%);
-  --cbf-orange: hsl(43, 74%, 66%);
-  --cbf-orange-dark: hsl(43, 74%, 56%);
-  --cbf-orange-light: hsl(43, 74%, 95%);
-  --cbf-text-primary: hsl(210, 20%, 25%);
-  --cbf-text-secondary: hsl(215, 16%, 47%);
-  --cbf-background: hsl(0, 0%, 100%);
-  --cbf-gray-50: hsl(210, 40%, 98%);
-  --cbf-gray-100: hsl(214, 32%, 91%);
 }
 
-/* Map to Tailwind v4 tokens */
-@theme {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --ring: hsl(var(--ring));
-  --radius: var(--radius);
-}
-
-/* Custom Tailwind utility classes for Boreal Financial brand */
-@layer utilities {
-  .bg-cbf-teal { background-color: var(--cbf-teal); }
-  .bg-cbf-teal-light { background-color: var(--cbf-teal-light); }
-  .bg-cbf-orange { background-color: var(--cbf-orange); }
-  .bg-cbf-orange-light { background-color: var(--cbf-orange-light); }
-  .text-cbf-primary { color: var(--cbf-text-primary); }
-  .text-cbf-secondary { color: var(--cbf-text-secondary); }
-  .border-cbf-teal { border-color: var(--cbf-teal); }
-  .hover\:bg-cbf-teal-dark:hover { background-color: var(--cbf-teal-dark); }
-  .hover\:bg-cbf-orange-dark:hover { background-color: var(--cbf-orange-dark); }
-}
-
-/* --- Step 2 clickability hardening --- */
-.categories-layer { position: relative; z-index: 50; }
-.categories-layer, .categories-layer * { pointer-events: auto !important; }
-.category-card-wrapper { position: relative; z-index: 51; }
-.category-card-wrapper::before { content: none !important; }
-
-.toast-container, .modal-backdrop, .sticky-footer, .floating-chat { pointer-events: none !important; }
-
-/* FinBot Chat Button Positioning */
-.finbot-wrapper {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  z-index: 1000;
-  pointer-events: none;
-}
-.finbot-wrapper > * { pointer-events: auto; }
-
-/* Enhanced Chat Button Styling */
-.chat-button {
-  padding: 12px 16px;
-  border-radius: 999px;
-  background-color: #007A3D;
-  color: white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  font-weight: bold;
-  border: none;
-}
-.chat-button:hover { background-color: #005D2E; }
-
-/* Mobile spacing enhancement */
-@media (max-width: 480px) {
-  .finbot-wrapper { bottom: 0; }
-}
-
-/* Typography */
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
-  color: var(--cbf-text-primary);
-  line-height: 1.6;
-}
-h1, h2, h3, h4, h5, h6 {
-  color: var(--cbf-text-primary);
-  font-weight: 600;
-  line-height: 1.3;
-}
-.hero-gradient {
-  background: linear-gradient(135deg, var(--cbf-teal) 0%, var(--cbf-teal-dark) 100%);
-}
-
-/* React DatePicker */
-.react-datepicker-wrapper, .react-datepicker__input-container { width: 100%; }
-.react-datepicker {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--background);
-  color: var(--foreground);
-  font-family: inherit;
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-}
-.react-datepicker__header {
-  background: var(--muted);
-  border-bottom: 1px solid var(--border);
-  border-top-left-radius: var(--radius);
-  border-top-right-radius: var(--radius);
-}
-.react-datepicker__current-month,
-.react-datepicker__day-name {
-  color: var(--foreground);
-  font-weight: 600;
-}
-.react-datepicker__day {
-  color: var(--foreground);
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-.react-datepicker__day:hover { background: var(--muted); }
-.react-datepicker__day--selected,
-.react-datepicker__day--keyboard-selected {
-  background: var(--cbf-teal) !important;
-  color: white !important;
-}
-.react-datepicker__day--disabled {
-  color: var(--muted-foreground);
-  opacity: 0.5;
-}
-.react-datepicker__month-dropdown,
-.react-datepicker__year-dropdown {
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--foreground);
-}
-.react-datepicker__month-option,
-.react-datepicker__year-option { color: var(--foreground); }
-.react-datepicker__month-option:hover,
-.react-datepicker__year-option:hover { background: var(--muted); }
-.react-datepicker__month-option--selected,
-.react-datepicker__year-option--selected {
-  background: var(--cbf-teal);
-  color: white;
-}
-
-/* Dark mode */
-.dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --border: 240 3.7% 15.9%;
-  --primary: 207 90% 54%;
-  --primary-foreground: 211 100% 99%;
-  --ring: 240 4.9% 83.9%;
-  --radius: 0.5rem;
-}
-
-/* === Base Layer === */
+/* === Global Base Reset === */
 @layer base {
   * { border-color: hsl(var(--border)); }
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: hsl(var(--background));
+    background: hsl(var(--background));
     color: hsl(var(--foreground));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  body.chatbot-fullscreen {
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: 100vh;
-  }
 }
 
-/* === Components === */
-@layer components {
-  .btn-primary {
-    background-color: hsl(var(--primary));
-    color: white;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    transition: background-color 200ms;
-  }
-  .btn-primary:hover {
-    background-color: hsl(var(--primary) / 0.9);
-  }
-  .btn-secondary {
-    background-color: hsl(210 40% 96%);
-    color: hsl(215 16% 47%);
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    transition: background-color 200ms;
-  }
-  .btn-secondary:hover { background-color: hsl(210 40% 94%); }
-  .card-shadow {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-  }
-  .card-shadow-hover {
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
-  }
+/* === Boreal Brand Enhancements === */
+.text-cbf-primary { color: hsl(var(--foreground)); }
+.bg-cbf-orange { background: hsl(var(--primary)); }
+.bg-cbf-orange:hover { background: hsl(var(--primary) / 0.9); }
+.bg-cbf-teal { background: hsl(var(--secondary)); }
+.bg-cbf-teal:hover { background: hsl(var(--secondary) / 0.9); }
+.border-cbf-teal { border-color: hsl(var(--secondary)); }
+
+/* === Button + Highlight Overrides === */
+.btn-primary {
+  background-color: hsl(var(--primary));
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s ease-in-out;
+}
+.btn-primary:hover {
+  background-color: hsl(var(--primary) / 0.9);
 }
 
-/* === Utilities === */
-@layer utilities {
-  .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .focus-ring:focus {
-    outline: 2px solid hsl(var(--primary));
-    outline-offset: 2px;
-  }
-  .space-y-18 > :not([hidden]) ~ :not([hidden]) {
-    --tw-space-y-reverse: 0;
-    margin-top: calc(4.5rem * calc(1 - var(--tw-space-y-reverse)));
-    margin-bottom: calc(4.5rem * var(--tw-space-y-reverse));
-  }
-  .text-balance { text-wrap: balance; }
+/* === Hero + Section Headers === */
+.hero-gradient {
+  background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(var(--secondary) / 0.85) 100%);
+}
+h1, h2, h3, h4, h5, h6 {
+  color: hsl(var(--foreground));
+  font-weight: 700;
 }
 
-/* === Chatbot Mobile Support === */
-:root { --device-height: 100vh; --keyboard-height: 0px; }
+/* === Feature icons + colors === */
+.section-highlight:nth-child(1) { background: hsl(var(--primary) / 0.08); }
+.section-highlight:nth-child(2) { background: hsl(var(--secondary) / 0.08); }
+.section-highlight:nth-child(3) { background: hsl(var(--ring) / 0.08); }
 
-@media (max-width: 600px) {
-  .chat-widget.fullscreen-mobile {
-    position: fixed !important;
-    top: 0; left: 0;
-    width: 100vw;
-    height: calc(var(--device-height) - var(--keyboard-height));
-    border-radius: 0 !important;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-  }
-  .chat-widget.fullscreen-mobile .chat-header { padding-top: env(safe-area-inset-top); }
-  .chat-widget.fullscreen-mobile .chat-body { flex: 1; overflow-y: auto; }
-  body.chatbot-fullscreen {
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    height: var(--device-height);
-  }
-}
-
-/* === Boreal UI theme === */
-:root {
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
-  --c-primary: #2563eb;
-  --c-text: #111827;
-  --c-muted: #6b7280;
-  --c-card: #e5e7eb;
-  --c-success: #16a34a;
-  --c-success-bg: #ecfdf5;
-  --c-success-br: #bbf7d0;
-  --c-warn: #f59e0b;
-  --c-warn-bg: #fff7ed;
-  --c-warn-br: #fed7aa;
-}
-
-html, body { font-family: var(--font-sans); color: var(--c-text); }
-.text-primary { color: var(--c-primary) !important; }
-
-.panel-success {
-  background: var(--c-success-bg);
-  border: 1px solid var(--c-success-br);
-  color: var(--c-success);
-  border-radius: 1rem;
-  padding: 0.75rem 1rem;
-}
-.panel-warn {
-  background: var(--c-warn-bg);
-  border: 1px solid var(--c-warn-br);
-  color: #92400e;
-  border-radius: 1rem;
-  padding: 0.75rem 1rem;
-}
+/* === Cards, Badges, Shadows === */
 .card {
-  border: 1px solid var(--c-card);
-  border-radius: 1rem;
-  padding: 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
 }
 .badge {
   border-radius: 9999px;
@@ -326,12 +107,45 @@ html, body { font-family: var(--font-sans); color: var(--c-text); }
   font-weight: 600;
 }
 .badge-success {
-  background: var(--c-success-bg);
-  color: var(--c-success);
-  border: 1px solid var(--c-success-br);
+  background: hsl(155 70% 90%);
+  color: hsl(155 40% 25%);
 }
-.badge-muted {
-  color: var(--c-muted);
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+
+/* === Chatbot Styles (Preserve) === */
+.finbot-wrapper {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 9999;
+}
+.finbot-wrapper > * { pointer-events: auto; }
+.chat-button {
+  padding: 12px 16px;
+  border-radius: 999px;
+  background-color: hsl(var(--secondary));
+  color: white;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+.chat-button:hover { background-color: hsl(var(--secondary) / 0.85); }
+
+/* === Animations === */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+
+/* === Dark mode === */
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --primary: 207 90% 54%;
+  --secondary: 43 90% 58%;
+  --ring: 240 4.9% 83.9%;
+}
+
+/* === Mobile fixes === */
+@media (max-width: 600px) {
+  .finbot-wrapper { bottom: env(safe-area-inset-bottom, 1rem); right: env(safe-area-inset-right, 1rem); }
+  input, textarea { font-size: 16px; }
 }
