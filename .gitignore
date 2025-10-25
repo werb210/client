@@ -12,3 +12,6 @@ vite.config.ts.*
 
 # Security scanner reports
 reports/
+!codex/
+!reports/
+!scripts/

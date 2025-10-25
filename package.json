@@ -4,6 +4,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
+<<<<<<< HEAD
     "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
@@ -14,6 +15,13 @@
     "test": "vitest run",
     "test:playwright": "playwright test --reporter=list",
     "preview": "vite preview --host 127.0.0.1 --port 5173"
+=======
+    "dev": "vite --host 127.0.0.1 --port 5000",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 5000",
+    "test": "vitest run",
+    "test:playwright": "playwright test --reporter=list"
+>>>>>>> main
   },
   "dependencies": {
     "@eslint/js": "^9.33.0",

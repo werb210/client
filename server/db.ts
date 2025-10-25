@@ -1,15 +1,23 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
-import * as lenderSchema from "@shared/lenderSchema";
+// client/server/db.ts
+// Stubbed DB module for client app — no database required
 
-neonConfig.webSocketConstructor = ws;
-
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+if (process.env.NODE_ENV !== "production") {
+  console.warn("[client] Using DB stub — skipping real database connection");
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema: lenderSchema });
+// Dummy pool object to satisfy legacy imports
+export const pool = {
+  query: async (_q?: string, _p?: any[]) => ({ rows: [] }),
+  connect: async () => ({ release: () => {} }),
+  end: async () => {},
+};
+
+// Minimal fake db interface
+export const db = {
+  query: async () => [],
+  insert: async () => {},
+  update: async () => {},
+  delete: async () => {},
+};
+
+export const DATABASE_URL = process.env.DATABASE_URL || "local-dev-db";
