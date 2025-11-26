@@ -1,1 +1,0 @@
-console.log("Clearing all form storage..."); localStorage.clear(); sessionStorage.clear(); document.cookie.split(";").forEach(c => { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); }); console.log("All storage cleared. Page will refresh..."); setTimeout(() => location.reload(), 1000);
