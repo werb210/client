@@ -1,31 +1,14 @@
 {
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist"
-  ],
   "compilerOptions": {
-    "incremental": true,
-    "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
-    "noEmit": true,
-    "module": "NodeNext",
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
     "strict": true,
-    "lib": [
-      "ES2022"
-    ],
+    "jsx": "react-jsx",
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "allowImportingTsExtensions": true,
-    "moduleResolution": "NodeNext",
-    "baseUrl": ".",
-    "types": [
-      "node"
-    ],
-    "paths": {
-      "@shared/*": [
-        "./shared/*"
-      ]
-    },
-    "target": "ES2022"
-  }
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["client-app"]
 }
