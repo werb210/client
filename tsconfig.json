@@ -1,12 +1,4 @@
 {
-  "include": [
-    "client/src/api/**/*",
-    "client/src/components/ui/form.tsx",
-    "client/src/hooks/useOTP.ts",
-    "client/src/lib/pwa.ts",
-    "client/src/types/**/*",
-    "client/src/utils/**/*"
-  ],
   "exclude": [
     "node_modules",
     "build",
@@ -31,15 +23,9 @@
     "baseUrl": ".",
     "types": [
       "node",
-      "vite/client",
-      "cypress",
-      "jest",
-      "@testing-library/cypress"
+      "jest"
     ],
     "paths": {
-      "@/*": [
-        "./client/src/*"
-      ],
       "@shared/*": [
         "./shared/*"
       ]
