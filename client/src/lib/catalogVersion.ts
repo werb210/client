@@ -1,1 +1,0 @@
-export const CATALOG_VERSION = "catalog-v3"; // bump to invalidate old caches

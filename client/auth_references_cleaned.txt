@@ -1,8 +1,0 @@
-src/components/TestingChecklist.tsx:337:          <p>• Authentication errors should redirect to /api/login</p>
-src/pages/BackendFallback.tsx:106:      const response = await fetch('https://staffportal.replit.app/api/auth/login', {
-src/pages/ConnectivitySummary.tsx:85:        const loginResponse = await fetch(`${baseUrl}/auth/login`, {
-src/pages/BackendDiagnosticPage.tsx:47:      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
-src/pages/BackendDiagnosticPage.tsx:79:      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
-src/pages/BackendDiagnosticPage.tsx:240:                <li>If HTML responses: Ensure /auth/login endpoint returns JSON, not HTML pages</li>
-src/App.old.tsx:59:        <Route path="/login" component={PhoneLogin} />
-src/App.old.tsx:61:        <Route path="/verify-otp" component={VerifyOtp} />
