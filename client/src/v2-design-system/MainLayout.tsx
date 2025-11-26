@@ -1,4 +1,5 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Router } from "wouter";
+import { useHashLocation } from "wouter/use-hash-location";
 import { lazy, Suspense } from "react";
 import { useChatBot } from "@/hooks/useChatBot";
 import { PwaPrompt } from "@/components/PwaPrompt";
@@ -31,9 +32,10 @@ const SnapshotTest = lazy(() => import("@/test/SnapshotTest"));
  */
 export function MainLayout() {
   const { isOpen, currentStep, applicationData, toggleChat } = useChatBot();
-  
+  const hashLocation = useHashLocation();
+
   return (
-    <>
+    <Router hook={hashLocation}>
       <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div></div>}>
       <Switch>
         {/* Primary Application Flow */}
@@ -76,7 +78,7 @@ export function MainLayout() {
           />
         </Suspense>
       </div>
-    </>
+    </Router>
   );
 }
 // Local-first products integration handled by individual components

@@ -57,6 +57,23 @@ function toArray(x: any): Product[] {
   return [];
 }
 
+function normalizeProducts(products: Product[]): Product[] {
+  const seen = new Set<string>();
+
+  return products.filter((product) => {
+    const key = `${product.id || product._id || product.productName || product.name || "unknown"}|${(product.category || "").toLowerCase()}`;
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  }).map((product) => ({
+    ...product,
+    category: (product.category || product.productCategory || "").trim(),
+  }));
+}
+
 async function tryFetch(src: Source): Promise<Product[] | null> {
   try {
     const res = await fetch(src.url, { headers: { ...(src.headers||{}), 'Accept': 'application/json' }, credentials: 'same-origin' });
@@ -80,11 +97,12 @@ export async function getProducts(opts: { useCacheFirst?: boolean } = {}): Promi
   for (const src of SOURCES) {
     const res = await tryFetch(src);
     if (res && res.length) {
-      safeStorage.set(CACHE_KEY, JSON.stringify({ at: Date.now(), source: src.name, data: res }));
+      const cleaned = normalizeProducts(res);
+      safeStorage.set(CACHE_KEY, JSON.stringify({ at: Date.now(), source: src.name, data: cleaned }));
       if (isBrowser) {
-        (window as any).__step2 = { source: src.name, count: res.length, sample: res.slice(0, 2) };
+        (window as any).__step2 = { source: src.name, count: cleaned.length, sample: cleaned.slice(0, 2) };
       }
-      return res;
+      return cleaned;
     }
   }
 

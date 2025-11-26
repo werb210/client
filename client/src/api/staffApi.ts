@@ -1,7 +1,8 @@
 import { attachCategories } from "../api/submit-categories";
 // Staff API client for application submission and SignNow integration
+import { STAFF_API_BASE } from "./httpClient";
 
-const STAFF_API_URL = import.meta.env.VITE_STAFF_API_BASE || ""; // Single source of truth for all staff API calls
+const STAFF_API_URL = STAFF_API_BASE; // Single source of truth for all staff API calls
 const hasWindow = typeof window !== 'undefined';
 
 // ✅ Required Fields Validation Configuration
