@@ -8,22 +8,18 @@
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
     "noEmit": true,
-    "module": "ESNext",
+    "module": "NodeNext",
     "strict": true,
     "lib": [
-      "esnext",
-      "dom",
-      "dom.iterable"
+      "ES2022"
     ],
-    "jsx": "preserve",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "moduleResolution": "bundler",
+    "moduleResolution": "NodeNext",
     "baseUrl": ".",
     "types": [
-      "node",
-      "jest"
+      "node"
     ],
     "paths": {
       "@shared/*": [
