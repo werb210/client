@@ -4,10 +4,22 @@ import { API_BASE } from "@/lib/env";
 const normalizeBaseUrl = (raw?: string): string => {
   const trimmed = (raw || "").trim();
   if (!trimmed) return "/api";
+
   const withoutTrailingSlash = trimmed.replace(/\/$/, "");
-  return withoutTrailingSlash.endsWith("/api")
-    ? withoutTrailingSlash
-    : `${withoutTrailingSlash}/api`;
+
+  const hasApiSegment = (() => {
+    try {
+      const { pathname } = new URL(withoutTrailingSlash);
+      return /(^|\/)api(\/|$)/i.test(pathname);
+    } catch {
+      const normalizedPath = withoutTrailingSlash.startsWith("/")
+        ? withoutTrailingSlash
+        : `/${withoutTrailingSlash}`;
+      return /(^|\/)api(\/|$)/i.test(normalizedPath);
+    }
+  })();
+
+  return hasApiSegment ? withoutTrailingSlash : `${withoutTrailingSlash}/api`;
 };
 
 const staffBaseEnv =
