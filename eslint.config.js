@@ -15,10 +15,6 @@ export default [
         project: './tsconfig.json',
         tsconfigRootDir,
       },
-      globals: {
-        window: 'readonly',
-        document: 'readonly',
-      },
     },
     rules: {
       'no-unused-vars': 'warn',
