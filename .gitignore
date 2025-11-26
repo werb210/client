@@ -1,17 +1,6 @@
-node_modules
-dist
-.DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
-
-# Environment files - never commit secrets
+node_modules/
+dist/
 .env
 .env.*
-!.env.example
-
-# Security scanner reports
-reports/
-!codex/
-!reports/
-!scripts/
+*.local
+.DS_Store
