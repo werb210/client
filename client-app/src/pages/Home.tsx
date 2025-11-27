@@ -1,7 +1,10 @@
-import React from "react";
-
-const Home: React.FC = () => {
-  return <div>Home Page</div>;
+const Home = () => {
+  return (
+    <div>
+      <h2>Welcome to Boreal Financial</h2>
+      <p>This is the home page.</p>
+    </div>
+  );
 };
 
 export default Home;
