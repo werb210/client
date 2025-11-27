@@ -1,22 +1,29 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import Apply from "./pages/Apply";
-import Status from "./pages/Status";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import App from "./app";
 import AppLayout from "./layout/AppLayout";
+import Home from "./pages/Home";
+import ApplyStart from "./pages/ApplyStart";
+import NotFound from "./pages/NotFound";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: (
+      <AppLayout>
+        <App />
+      </AppLayout>
+    ),
+    children: [
+      { index: true, element: <Home /> },
+      { path: "apply", element: <ApplyStart /> },
+      { path: "*", element: <NotFound /> }
+    ],
+  },
+]);
 
 const Router: React.FC = () => {
-  return (
-    <BrowserRouter>
-      <AppLayout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/apply" element={<Apply />} />
-          <Route path="/status" element={<Status />} />
-        </Routes>
-      </AppLayout>
-    </BrowserRouter>
-  );
+  return <RouterProvider router={router} />;
 };
 
 export default Router;
