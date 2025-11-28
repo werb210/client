@@ -19,10 +19,12 @@ export const applicationApi = {
 export async function apiUpdateApplicationDraft({
   applicationId,
   payload,
+  step,
   token,
 }: {
   applicationId: string | null;
   payload: Record<string, any>;
+  step?: number;
   token: string | null;
 }) {
   return axios.post(
@@ -30,6 +32,7 @@ export async function apiUpdateApplicationDraft({
     {
       applicationId,
       data: payload,
+      step,
     },
     {
       headers: { Authorization: `Bearer ${token}` },
