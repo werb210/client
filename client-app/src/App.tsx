@@ -6,7 +6,7 @@ import Dashboard from "./pages/Portal/Dashboard";
 import Documents from "./pages/Portal/Documents";
 import Messages from "./pages/Portal/Messages";
 import Start from "./pages/Start/Start";
-import Step1 from "./pages/Wizard/Step1";
+import Step1 from "./pages/Apply/Step1";
 import Step2 from "./pages/Wizard/Step2";
 import Step3 from "./pages/Wizard/Step3";
 import Step4 from "./pages/Wizard/Step4";
