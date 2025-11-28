@@ -10,6 +10,7 @@ import Step3 from "./pages/Apply/Step3";
 import Step4 from "./pages/Apply/Step4";
 import Step5 from "./pages/Apply/Step5";
 import Step6 from "./pages/Wizard/Step6";
+import BusinessInfo from "./pages/step3-business/BusinessInfo";
 
 function App() {
   return (
@@ -66,6 +67,15 @@ function App() {
               element={
                 <RequireAuth>
                   <Step6 />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/step3-business"
+              element={
+                <RequireAuth>
+                  <BusinessInfo />
                 </RequireAuth>
               }
             />
