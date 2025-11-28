@@ -4,12 +4,15 @@ import { requestOTP, verifyOTP } from "../../api/auth";
 import { useAuthContext } from "../../context/AuthContext";
 import { useSessionStore } from "../../state/sessionStore";
 import { useClientSession } from "@/state/useClientSession";
+import { apiGetApplicationDraft } from "@/api/application";
+import { useApplicationStore } from "@/state/applicationStore";
 
 export default function Start() {
   const nav = useNavigate();
   const { setToken, setUser } = useAuthContext();
   const { setSession } = useSessionStore();
   const { setSession: setClientSession } = useClientSession();
+  const { loadServerDraft } = useApplicationStore();
 
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -43,6 +46,24 @@ export default function Start() {
         "";
 
       setClientSession({ email, token: data.token, applicationId });
+
+      try {
+        const draft = await apiGetApplicationDraft(data.token);
+        if (draft) {
+          loadServerDraft(draft);
+          const targetStep = draft?.step || 1;
+          const routeMap: Record<number, string> = {
+            1: "/step3-business",
+            2: "/step4-applicant",
+            3: "/step5-documents",
+            4: "/step6-terms",
+          };
+          nav(routeMap[targetStep] || "/step3-business");
+          return;
+        }
+      } catch (draftError) {
+        console.warn("Unable to load draft", draftError);
+      }
 
       if (data.user.hasSubmittedApp) {
         nav("/portal");

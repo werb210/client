@@ -6,6 +6,7 @@ import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { FileUploader } from "../../components/ui/FileUploader";
 import { useApplicationStore } from "../../state/applicationStore";
+import { useAutosave } from "@/hooks/useAutosave";
 
 interface RequiredDocument {
   id: string;
@@ -17,13 +18,21 @@ interface RequiredDocument {
 
 export default function RequiredDocuments() {
   const navigate = useNavigate();
-  const { productCategory, setDocuments } = useApplicationStore();
+  const { productCategory, setDocuments, documents, setStep } = useApplicationStore();
 
   const productId = productCategory;
 
   const [docList, setDocList] = useState<RequiredDocument[]>([]);
   const [uploads, setUploads] = useState<Record<string, File | null>>({});
   const [loading, setLoading] = useState(true);
+
+  useAutosave("documents", [documents]);
+
+  useEffect(() => {
+    if (documents) {
+      setUploads(documents);
+    }
+  }, [documents]);
 
   useEffect(() => {
     async function loadDocs() {
@@ -61,7 +70,11 @@ export default function RequiredDocuments() {
   }, [productId]);
 
   function updateFile(docId: string, file: File | null) {
-    setUploads((state) => ({ ...state, [docId]: file }));
+    setUploads((state) => {
+      const next = { ...state, [docId]: file };
+      setDocuments(next);
+      return next;
+    });
   }
 
   function handleNext() {
@@ -73,11 +86,13 @@ export default function RequiredDocuments() {
     }
 
     setDocuments(uploads);
+    setStep(4);
     navigate("/step6-terms");
   }
 
   function handleUploadLater() {
     setDocuments(uploads);
+    setStep(4);
     navigate("/step6-terms");
   }
 

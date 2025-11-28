@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import {
   type ApplicantInfoData,
   useApplicationStore,
 } from "../../state/applicationStore";
+import { useAutosave } from "@/hooks/useAutosave";
+import { useAuthContext } from "@/context/AuthContext";
 
 import { Button } from "../../components/ui/Button";
 import { TextInput } from "../../components/ui/TextInput";
@@ -33,7 +35,9 @@ export const ApplicantSchema: z.ZodType<ApplicantInfoData> = z.object({
 
 export default function ApplicantInfo() {
   const navigate = useNavigate();
-  const { businessInfo, applicantInfo, setApplicantInfo } = useApplicationStore();
+  const { token } = useAuthContext();
+  const { businessInfo, applicantInfo, setApplicantInfo, saveToServer, setStep } =
+    useApplicationStore();
 
   const [form, setForm] = useState<ApplicantInfoData>({
     firstName: applicantInfo.firstName,
@@ -54,8 +58,35 @@ export default function ApplicantInfo() {
     partnerPhone: applicantInfo.partnerPhone,
   });
 
+  useAutosave("applicant", [applicantInfo]);
+
+  useEffect(() => {
+    setForm({
+      firstName: applicantInfo.firstName,
+      lastName: applicantInfo.lastName,
+      phone: applicantInfo.phone,
+      email: applicantInfo.email,
+      homeAddress: applicantInfo.homeAddress,
+      city: applicantInfo.city,
+      province: applicantInfo.province,
+      postalCode: applicantInfo.postalCode,
+      sin: applicantInfo.sin,
+      dateOfBirth: applicantInfo.dateOfBirth,
+      creditScoreBand: applicantInfo.creditScoreBand,
+      hasBusinessPartner: businessInfo.hasBusinessPartner,
+      partnerFirstName: applicantInfo.partnerFirstName,
+      partnerLastName: applicantInfo.partnerLastName,
+      partnerEmail: applicantInfo.partnerEmail,
+      partnerPhone: applicantInfo.partnerPhone,
+    });
+  }, [applicantInfo, businessInfo.hasBusinessPartner]);
+
   function update(field: keyof ApplicantInfoData, value: unknown) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value } as ApplicantInfoData;
+      setApplicantInfo(next);
+      return next;
+    });
   }
 
   function handleNext() {
@@ -66,7 +97,13 @@ export default function ApplicantInfo() {
     }
 
     setApplicantInfo(parsed.data);
+    setStep(3);
     navigate("/step5-documents");
+  }
+
+  async function handleSaveForLater() {
+    await saveToServer(token ?? null);
+    alert("Progress saved");
   }
 
   return (
@@ -207,9 +244,15 @@ export default function ApplicantInfo() {
           Back
         </Button>
 
-        <Button variant="primary" onClick={handleNext}>
-          Next
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="secondary" onClick={handleSaveForLater}>
+            Save for later
+          </Button>
+
+          <Button variant="primary" onClick={handleNext}>
+            Next
+          </Button>
+        </div>
       </div>
     </PageContainer>
   );
