@@ -1,18 +1,18 @@
 import type { PropsWithChildren, ReactNode } from "react";
 
 interface PageContainerProps extends PropsWithChildren {
-  title: string;
+  title?: string;
   description?: ReactNode;
 }
 
 export function PageContainer({ title, description, children }: PageContainerProps) {
   return (
-    <main className="mx-auto max-w-4xl px-4 py-10 space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-        {description && <p className="text-base text-gray-600">{description}</p>}
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="max-w-2xl mx-auto bg-white p-6 shadow-md rounded-lg">
+        {title && <h1 className="text-2xl font-bold mb-2">{title}</h1>}
+        {description && <p className="text-base text-gray-600 mb-4">{description}</p>}
+        {children}
       </div>
-      {children}
-    </main>
+    </div>
   );
 }
