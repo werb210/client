@@ -4,7 +4,7 @@ import AuthProvider from "./context/AuthContext";
 import ApplicationProvider from "./context/ApplicationContext";
 import PortalRoutes from "./routes/PortalRoutes";
 import Start from "./pages/Start/Start";
-import Step1 from "./pages/Apply/Step1";
+import Step1KYC from "./pages/steps/Step1KYC";
 import Step2 from "./pages/Apply/Step2";
 import Step3 from "./pages/Apply/Step3";
 import Step4 from "./pages/Apply/Step4";
@@ -29,7 +29,7 @@ function App() {
               path="/apply/step-1"
               element={
                 <RequireAuth>
-                  <Step1 />
+                  <Step1KYC />
                 </RequireAuth>
               }
             />
