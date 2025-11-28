@@ -5,7 +5,10 @@ import {
   type ApplicantInfoData,
   useApplicationStore,
 } from "../../state/applicationStore";
-import { useAutosave } from "@/hooks/useAutosave";
+
+// FIXED IMPORT — correct relative path
+import { useAutosave } from "../../hooks/useAutosave";
+
 import { useAuthContext } from "@/context/AuthContext";
 
 import { Button } from "../../components/ui/Button";
