@@ -2,7 +2,7 @@ name: Deploy Client App (React) to Azure
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build-and-deploy:
@@ -19,20 +19,19 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./client-app
-        run: npm ci
+        run: npm install
 
       - name: Build client
         working-directory: ./client-app
         run: npm run build
 
       - name: Zip artifact
-        run: |
-          cd client-app/dist
-          zip -r ../../client-app.zip .
+        working-directory: ./client-app/dist
+        run: zip -r ${{ github.workspace }}/client.zip .
 
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ secrets.AZURE_CLIENT_APP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: ./client-app.zip
+          package: ${{ github.workspace }}/client.zip
