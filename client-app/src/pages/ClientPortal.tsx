@@ -4,7 +4,7 @@ import { useClientSession } from "@/state/useClientSession";
 import PortalSidebar from "@/components/portal/PortalSidebar";
 
 export default function ClientPortal() {
-  const { token } = useClientSession();
+  const token = useClientSession((s) => s.token);
 
   if (!token) {
     return <Navigate to="/login" replace />;
