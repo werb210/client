@@ -17,7 +17,7 @@ import ClientPortal from "./pages/ClientPortal";
 import Dashboard from "./pages/portal/Dashboard";
 import DocumentsPage from "./pages/portal/DocumentsPage";
 import StatusPage from "./pages/portal/StatusPage";
-import MessagesPage from "./pages/portal/MessagesPage";
+import MessagingPage from "./pages/portal/MessagingPage";
 import ProfilePage from "./pages/portal/ProfilePage";
 
 function App() {
@@ -118,7 +118,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="documents" element={<DocumentsPage />} />
               <Route path="status" element={<StatusPage />} />
-              <Route path="messages" element={<MessagesPage />} />
+              <Route path="messages" element={<MessagingPage />} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
 

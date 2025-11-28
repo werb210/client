@@ -23,33 +23,37 @@ export default function PortalAssistant() {
       timestamp: new Date().toISOString(),
     },
   ]);
-  const [input, setInput] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   if (!auth) return <PageContainer title="Loading..." />;
 
-  async function send() {
-    if (!input.trim()) return;
+  async function send(text: string) {
+    if (!text.trim()) return;
 
     const clientMessage: AssistantMessage = {
-      text: input,
+      text,
       role: "client",
       timestamp: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, clientMessage]);
+    setIsSending(true);
 
-    const res = await api.post(`/application/${applicationId}/assistant`, {
-      text: input,
-    });
+    try {
+      const res = await api.post(`/application/${applicationId}/assistant`, {
+        text,
+      });
 
-    const botResponse: AssistantMessage = {
-      text: res.data?.message ?? "",
-      role: "bot",
-      timestamp: new Date().toISOString(),
-    };
+      const botResponse: AssistantMessage = {
+        text: res.data?.message ?? "",
+        role: "bot",
+        timestamp: new Date().toISOString(),
+      };
 
-    setMessages((prev) => [...prev, botResponse]);
-    setInput("");
+      setMessages((prev) => [...prev, botResponse]);
+    } finally {
+      setIsSending(false);
+    }
   }
 
   return (
@@ -62,7 +66,11 @@ export default function PortalAssistant() {
         ))}
       </div>
 
-      <ChatInput value={input} onChange={setInput} onSend={send} />
+      <ChatInput
+        placeholder="Ask Boreal AI a question..."
+        onSend={send}
+        disabled={isSending}
+      />
     </PageContainer>
   );
 }
