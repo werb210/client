@@ -1,29 +1,24 @@
-/**
- * From the server, each product includes:
- *
- * {
- *   id: "uuid",
- *   name: "Factoring",
- *   requiredDocuments: [
- *      { category: "bank_statements", label: "6 Months Bank Statements" },
- *      { category: "void_cheque", label: "Void Cheque" },
- *      ...
- *   ]
- * }
- */
+import { LenderProduct, RequiredDoc } from "@/types/Documents";
 
-export interface RequiredDoc {
-  category: string;
-  label: string;
-}
+export function resolveRequiredDocs(product: LenderProduct): RequiredDoc[] {
+  if (!product) return [];
 
-export interface ProductConfig {
-  id: string;
-  name: string;
-  requiredDocuments: RequiredDoc[];
-}
+  // Sort by order field (defined on server)
+  const sorted = [...product.requiredDocuments].sort(
+    (a, b) => (a.order ?? 999) - (b.order ?? 999)
+  );
 
-export function resolveRequiredDocs(product: ProductConfig): RequiredDoc[] {
-  if (!product || !product.requiredDocuments) return [];
-  return product.requiredDocuments;
+  return sorted.map((doc) => ({
+    id: doc.id,
+    category: doc.category,
+    label: doc.label,
+    description: doc.description ?? "",
+    allowedMimeTypes: doc.allowedMimeTypes ?? [
+      "application/pdf",
+      "image/png",
+      "image/jpeg",
+    ],
+    required: doc.required !== false,
+    order: doc.order ?? 999,
+  }));
 }

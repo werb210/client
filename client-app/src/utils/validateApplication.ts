@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { RequiredDoc } from "@/utils/resolveRequiredDocs";
+import { RequiredDoc } from "@/types/Documents";
 import { ClientDocumentMeta } from "@/utils/documentMetadata";
 
 /* ===========================
@@ -65,8 +65,10 @@ function validateDocuments(
   const missing: string[] = [];
 
   for (const req of requiredDocs) {
-    const exists = uploadedDocs.some((doc) => doc.category === req.category);
-    if (!exists) missing.push(req.label);
+    if (req.required) {
+      const exists = uploadedDocs.some((doc) => doc.category === req.category);
+      if (!exists) missing.push(req.label);
+    }
   }
 
   return {
