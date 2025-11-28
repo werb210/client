@@ -11,6 +11,8 @@ import Step4 from "./pages/Apply/Step4";
 import Step5 from "./pages/Apply/Step5";
 import Step6 from "./pages/Wizard/Step6";
 import BusinessInfo from "./pages/step3-business/BusinessInfo";
+import ApplicantInfo from "./pages/step4-applicant/ApplicantInfo";
+import DocumentsUpload from "./pages/step5-documents/DocumentsUpload";
 
 function App() {
   return (
@@ -76,6 +78,22 @@ function App() {
               element={
                 <RequireAuth>
                   <BusinessInfo />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/step4-applicant"
+              element={
+                <RequireAuth>
+                  <ApplicantInfo />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/step5-documents"
+              element={
+                <RequireAuth>
+                  <DocumentsUpload />
                 </RequireAuth>
               }
             />
