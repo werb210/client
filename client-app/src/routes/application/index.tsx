@@ -3,11 +3,12 @@ import "./application.css";
 
 const steps = [
   "KYC Questions",
-  "Choose Product Type",
-  "Business Info",
+  "Business Details",
+  "Product Category",
   "Applicant Info",
-  "Required Documents",
-  "Signature & Submit",
+  "Documents Upload",
+  "Signature",
+  "Review & Submit",
 ];
 
 const ApplicationIndex = () => {
