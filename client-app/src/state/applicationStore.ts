@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { apiGetApplicationDraft, apiUpdateApplicationDraft } from "@/api/application";
+import { ClientDocumentMeta } from "@/utils/documentMetadata";
+import { ProductConfig } from "@/utils/resolveRequiredDocs";
 
 export type ProductCategory =
   | "loc"
@@ -64,6 +66,8 @@ export interface ApplicationState {
   businessInfo: BusinessInfoData;
   applicantInfo: ApplicantInfoData;
   documents: Record<string, File | null>;
+  documentUploads: { meta: ClientDocumentMeta; file: File }[];
+  selectedProduct: ProductConfig | null;
   signature: string | null;
 
   setStep: (n: number) => void;
@@ -78,6 +82,8 @@ export interface ApplicationState {
   setBusinessInfo: (info: BusinessInfoData) => void;
   setApplicantInfo: (info: ApplicantInfoData) => void;
   setDocuments: (docs: Record<string, File | null>) => void;
+  addDocument: (doc: { meta: ClientDocumentMeta; file: File }) => void;
+  setSelectedProduct: (product: ProductConfig | null) => void;
   setSignature: (sig: string | null) => void;
   resetAll: () => void;
   clearApplication: () => void;
@@ -131,6 +137,8 @@ const initialState = {
   businessInfo: { ...emptyBusinessInfo },
   applicantInfo: { ...emptyApplicantInfo },
   documents: {} as Record<string, File | null>,
+  documentUploads: [],
+  selectedProduct: null,
   signature: null as string | null,
 };
 
@@ -250,6 +258,9 @@ export const useApplicationStore = create<ApplicationState>()(
           documents: docs,
           data: { ...state.data, documents: docs },
         })),
+      addDocument: (doc) =>
+        set((state) => ({ documentUploads: [...state.documentUploads, doc] })),
+      setSelectedProduct: (product) => set({ selectedProduct: product }),
       setSignature: (sig) => set({ signature: sig }),
       resetAll: () =>
         set({
