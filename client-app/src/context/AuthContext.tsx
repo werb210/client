@@ -1,21 +1,19 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { ReactNode, createContext, useContext } from "react";
+import { useAuth } from "../state/auth";
 
-const AuthContext = createContext<
-  | {
-      auth: unknown;
-      setAuth: (value: unknown) => void;
-    }
-  | null
->(null);
+type AuthContextValue = ReturnType<typeof useAuth>;
+
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
-  const [auth, setAuth] = useState<unknown>(null);
-
-  return (
-    <AuthContext.Provider value={{ auth, setAuth }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const store = useAuth();
+  return <AuthContext.Provider value={store}>{children}</AuthContext.Provider>;
 }
 
-export const useAuthContext = () => useContext(AuthContext);
+export const useAuthContext = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuthContext must be used within AuthProvider");
+  }
+  return context;
+};
