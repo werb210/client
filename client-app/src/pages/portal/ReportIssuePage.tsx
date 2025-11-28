@@ -1,38 +1,44 @@
-import React, { useState } from "react";
-import { useClientSession } from "@/state/useClientSession";
-import { portalPost } from "@/api/portal";
+import React from "react";
+import { useClientSession } from "../../state/useClientSession";
 
 export default function ReportIssuePage() {
-  const { token, applicationId } = useClientSession();
-  const [text, setText] = useState("");
-
-  async function submit() {
-    if (!text.trim()) return;
-    await portalPost(`issues/${applicationId}`, { text }, token!);
-    setText("");
-    alert("Issue submitted. Our team will follow up.");
-  }
+  const token = useClientSession();
 
   return (
-    <div className="max-w-xl mx-auto space-y-6">
-      <h1 className="text-2xl font-semibold text-slate-900">Report an Issue</h1>
-      <p className="text-sm text-slate-500">
-        Something not working correctly? Tell us and we’ll look into it.
-      </p>
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-4">Report an Issue</h1>
 
-      <textarea
-        className="w-full h-40 border border-slate-300 rounded-lg p-3 text-sm"
-        placeholder="Describe your issue in detail…"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
+      {!token && (
+        <p className="text-red-600 font-semibold">
+          You must be logged in to report an issue.
+        </p>
+      )}
 
-      <button
-        className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2"
-        onClick={submit}
-      >
-        Submit
-      </button>
+      <form className="space-y-4 mt-6 max-w-xl">
+        <div>
+          <label className="block text-sm font-medium mb-1">Subject</label>
+          <input
+            type="text"
+            className="w-full border rounded-md px-3 py-2"
+            placeholder="Brief summary"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Description</label>
+          <textarea
+            className="w-full border rounded-md px-3 py-2 h-32"
+            placeholder="Describe the issue in detail"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium"
+        >
+          Submit
+        </button>
+      </form>
     </div>
   );
 }
