@@ -23,4 +23,5 @@ export interface Step1Payload {
   craDebt: string;
   craDebtAmount?: string;
   bankruptcy: string;
+  productCategory?: string;
 }
