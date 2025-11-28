@@ -1,21 +1,34 @@
-import { api } from "./index";
+export async function portalGet(endpoint: string, token: string) {
+  const resp = await fetch(
+    `${import.meta.env.VITE_STAFF_SERVER}/api/client-portal/${endpoint}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
 
-export const portalApi = {
-  fetchApplication: (applicationId: string) =>
-    api.get(`/application/${applicationId}`),
+  if (!resp.ok) throw new Error("Request failed");
+  return resp.json();
+}
 
-  fetchRequiredDocuments: (applicationId: string) =>
-    api.get(`/application/${applicationId}/required-documents`),
+export async function portalPost(
+  endpoint: string,
+  token: string,
+  data: unknown
+) {
+  const resp = await fetch(
+    `${import.meta.env.VITE_STAFF_SERVER}/api/client-portal/${endpoint}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    }
+  );
 
-  fetchStatusTimeline: (applicationId: string) =>
-    api.get(`/application/${applicationId}/status-timeline`),
-
-  fetchMessages: (applicationId: string) =>
-    api.get(`/application/${applicationId}/messages`),
-
-  sendMessage: (applicationId: string, text: string) =>
-    api.post(`/application/${applicationId}/messages`, { text }),
-
-  assistantChat: (applicationId: string, text: string) =>
-    api.post(`/application/${applicationId}/assistant`, { text }),
-};
+  if (!resp.ok) throw new Error("Request failed");
+  return resp.json();
+}
