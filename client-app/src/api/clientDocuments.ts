@@ -1,8 +1,7 @@
-import axios from "axios";
-import { API_BASE_URL } from "./config";
+import { api } from "./index";
 
 export async function fetchRequiredDocuments(category: string) {
-  const res = await axios.get(`${API_BASE_URL}/public/lenders/products`, {
+  const res = await api.get("/public/lenders/products", {
     params: { category },
   });
 
@@ -27,10 +26,8 @@ export async function uploadClientDocument({
   form.append("documentType", docId);
   form.append("file", file);
 
-  const res = await axios.post(`${API_BASE_URL}/client/upload`, form, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+  const res = await api.post("/client/upload", form, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     onUploadProgress: (evt) => {
       if (evt.total && onProgress) {
         const percent = Math.round((evt.loaded * 100) / evt.total);
