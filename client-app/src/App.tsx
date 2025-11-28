@@ -10,7 +10,7 @@ import {
   Step6,
   Step7,
 } from "routes/application/steps";
-import { ApplicationProvider } from "./state/application";
+import { ApplicationProvider } from "./context/ApplicationContext";
 
 const App = () => {
   return (

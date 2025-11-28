@@ -1,10 +1,7 @@
+import Step3_ProductCategory from "../../../forms/Step3_ProductCategory";
+
 const Step3 = () => {
-  return (
-    <main style={{ padding: "2rem" }}>
-      <h1>Step 3</h1>
-      <p>Placeholder — Codex will implement this next.</p>
-    </main>
-  );
+  return <Step3_ProductCategory />;
 };
 
 export default Step3;
