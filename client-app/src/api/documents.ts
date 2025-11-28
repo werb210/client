@@ -1,16 +1,28 @@
-import { api } from "./index";
+import { ClientDocumentMeta } from "@/utils/documentMetadata";
 
-export const documentsApi = {
-  upload: (applicationId: string, docType: string, file: File) => {
-    const form = new FormData();
-    form.append("file", file);
-    form.append("docType", docType);
+export async function uploadDocument(
+  token: string | null,
+  meta: ClientDocumentMeta,
+  file: File
+) {
+  if (!token) throw new Error("Missing session token.");
 
-    return api.post(`/application/${applicationId}/uploadDocument`, form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  },
+  const form = new FormData();
+  form.append("file", file);
+  form.append("meta", JSON.stringify(meta));
 
-  listUploaded: (applicationId: string) =>
-    api.get(`/application/${applicationId}/uploaded-documents`),
-};
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/client/upload-document`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: form,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error("Upload failed: " + text);
+  }
+
+  return await res.json();
+}
