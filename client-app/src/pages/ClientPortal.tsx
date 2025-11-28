@@ -1,12 +1,14 @@
 import React, { Suspense } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuthContext } from "@/context/AuthContext";
+import { useClientSession } from "@/state/useClientSession";
 import PortalSidebar from "@/components/portal/PortalSidebar";
 
 export default function ClientPortal() {
-  const { token } = useAuthContext();
+  const { token } = useClientSession();
 
-  if (!token) return <Navigate to="/login" replace />;
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="flex h-screen w-full bg-gray-50">
