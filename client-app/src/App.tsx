@@ -13,6 +13,7 @@ import Step6 from "./pages/Wizard/Step6";
 import BusinessInfo from "./pages/step3-business/BusinessInfo";
 import ApplicantInfo from "./pages/step4-applicant/ApplicantInfo";
 import RequiredDocuments from "./pages/step5-documents/RequiredDocuments";
+import SubmitApplication from "./pages/step6-submit/SubmitApplication";
 
 function App() {
   return (
@@ -102,7 +103,7 @@ function App() {
               path="/step6-terms"
               element={
                 <RequireAuth>
-                  <Step6 />
+                  <SubmitApplication />
                 </RequireAuth>
               }
             />
