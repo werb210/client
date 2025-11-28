@@ -1,9 +1,7 @@
-import axios from "axios";
-
-const API_BASE = import.meta.env.VITE_API_BASE;
+import { api } from "./index";
 
 export async function fetchLenderCategories() {
-  const res = await axios.get(`${API_BASE}/lenders/categories`, {
+  const res = await api.get("/lenders/categories", {
     withCredentials: true,
   });
   return res.data;

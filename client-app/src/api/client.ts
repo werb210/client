@@ -1,7 +1,3 @@
-import axios from "axios";
+import { api } from "./index";
 
-const apiClient = axios.create({
-  baseURL: "https://api.example.com"
-});
-
-export default apiClient;
+export default api;

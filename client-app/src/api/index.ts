@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toastError } from "../components/toast/toastService";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://YOUR_STAFF_SERVER_URL.com";
 
@@ -14,11 +15,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+const handleError = (err: any) => {
+  const message = err?.response?.data?.message || "Unexpected error";
+  toastError(message);
+  console.error("API ERROR:", err?.response || err);
+  throw err;
+};
+
 // Global error handler
-api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    console.error("API ERROR:", err?.response || err);
-    throw err;
-  }
-);
+api.interceptors.response.use((res) => res, handleError);
+
+axios.interceptors.response.use((res) => res, handleError);

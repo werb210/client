@@ -21,117 +21,120 @@ import MessagingPage from "./pages/portal/MessagingPage";
 import ProfilePage from "./pages/portal/ProfilePage";
 import ReportIssuePage from "./pages/portal/ReportIssuePage";
 import { SupportWidget } from "./components/support/SupportWidget";
+import { ToastProvider } from "./components/toast/ToastProvider";
 
 function App() {
   return (
-    <AuthProvider>
-      <ApplicationProvider>
-        <BrowserRouter>
-          <Routes>
-            {/* Start → login with email+phone → OTP */}
-            <Route path="/" element={<Start />} />
+    <ToastProvider>
+      <AuthProvider>
+        <ApplicationProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Start → login with email+phone → OTP */}
+              <Route path="/" element={<Start />} />
 
-            {/* Wizard */}
-            <Route
-              path="/apply/step-1"
-              element={
-                <RequireAuth>
-                  <Step1KYC />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/apply/step-2"
-              element={
-                <RequireAuth>
-                  <Step2 />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/apply/step-3"
-              element={
-                <RequireAuth>
-                  <Step3 />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/apply/step-4"
-              element={
-                <RequireAuth>
-                  <Step4 />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/apply/step-5"
-              element={
-                <RequireAuth>
-                  <Step5 />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/apply/step-6"
-              element={
-                <RequireAuth>
-                  <Step6 />
-                </RequireAuth>
-              }
-            />
+              {/* Wizard */}
+              <Route
+                path="/apply/step-1"
+                element={
+                  <RequireAuth>
+                    <Step1KYC />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/apply/step-2"
+                element={
+                  <RequireAuth>
+                    <Step2 />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/apply/step-3"
+                element={
+                  <RequireAuth>
+                    <Step3 />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/apply/step-4"
+                element={
+                  <RequireAuth>
+                    <Step4 />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/apply/step-5"
+                element={
+                  <RequireAuth>
+                    <Step5 />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/apply/step-6"
+                element={
+                  <RequireAuth>
+                    <Step6 />
+                  </RequireAuth>
+                }
+              />
 
-            <Route
-              path="/step3-business"
-              element={
-                <RequireAuth>
-                  <BusinessInfo />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/step4-applicant"
-              element={
-                <RequireAuth>
-                  <ApplicantInfo />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/step5-documents"
-              element={
-                <RequireAuth>
-                  <RequiredDocuments />
-                </RequireAuth>
-              }
-            />
+              <Route
+                path="/step3-business"
+                element={
+                  <RequireAuth>
+                    <BusinessInfo />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/step4-applicant"
+                element={
+                  <RequireAuth>
+                    <ApplicantInfo />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/step5-documents"
+                element={
+                  <RequireAuth>
+                    <RequiredDocuments />
+                  </RequireAuth>
+                }
+              />
 
-            <Route
-              path="/step6-terms"
-              element={
-                <RequireAuth>
-                  <SubmitApplication />
-                </RequireAuth>
-              }
-            />
+              <Route
+                path="/step6-terms"
+                element={
+                  <RequireAuth>
+                    <SubmitApplication />
+                  </RequireAuth>
+                }
+              />
 
-            {/* Portal */}
-            <Route path="/portal" element={<ClientPortal />}>
-              <Route index element={<Dashboard />} />
-              <Route path="documents" element={<DocumentsPage />} />
-              <Route path="status" element={<StatusPage />} />
-              <Route path="messages" element={<MessagingPage />} />
-              <Route path="profile" element={<ProfilePage />} />
-              <Route path="report-issue" element={<ReportIssuePage />} />
-            </Route>
+              {/* Portal */}
+              <Route path="/portal" element={<ClientPortal />}>
+                <Route index element={<Dashboard />} />
+                <Route path="documents" element={<DocumentsPage />} />
+                <Route path="status" element={<StatusPage />} />
+                <Route path="messages" element={<MessagingPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="report-issue" element={<ReportIssuePage />} />
+              </Route>
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          <SupportWidget />
-        </BrowserRouter>
-      </ApplicationProvider>
-    </AuthProvider>
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            <SupportWidget />
+          </BrowserRouter>
+        </ApplicationProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 
