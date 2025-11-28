@@ -45,6 +45,9 @@ export const useClientSession = create<ClientSessionState>()(
         set({ email: null, token: null, applicationId: null });
       }
     }),
-    { name: "client-session" }
+    {
+      name: "client-session",
+      skipHydration: true
+    }
   )
 );
