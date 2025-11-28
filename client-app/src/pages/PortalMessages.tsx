@@ -17,7 +17,6 @@ export default function PortalMessages() {
   const applicationId = auth?.applicationId ?? "";
 
   const [messages, setMessages] = useState<PortalMessage[]>([]);
-  const [text, setText] = useState("");
 
   useEffect(() => {
     if (!applicationId) return;
@@ -29,7 +28,7 @@ export default function PortalMessages() {
 
   if (!auth) return <PageContainer title="Loading..." />;
 
-  async function send() {
+  async function send(text: string) {
     if (!text.trim()) return;
 
     await api.post(`/application/${applicationId}/messages`, { text });
@@ -37,7 +36,6 @@ export default function PortalMessages() {
       ...prev,
       { text, role: "client", timestamp: new Date().toISOString() },
     ]);
-    setText("");
   }
 
   return (
@@ -50,7 +48,10 @@ export default function PortalMessages() {
         ))}
       </div>
 
-      <ChatInput value={text} onChange={setText} onSend={send} />
+      <ChatInput
+        placeholder="Type a message to our team..."
+        onSend={send}
+      />
     </PageContainer>
   );
 }
