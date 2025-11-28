@@ -162,12 +162,13 @@ export const useApplicationStore = create<ApplicationState>()(
       },
 
       saveToServer: async (token) => {
-        const { applicationId, data } = get();
+        const { applicationId, data, step } = get();
         if (!token) return;
 
         await apiUpdateApplicationDraft({
           applicationId,
           payload: data,
+          step,
           token,
         });
       },
