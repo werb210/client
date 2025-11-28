@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { requestOTP, verifyOTP } from "../../api/auth";
 import { useAuthContext } from "../../context/AuthContext";
+import { useSessionStore } from "../../state/sessionStore";
 
 export default function Start() {
   const nav = useNavigate();
   const { setToken, setUser } = useAuthContext();
+  const { setSession } = useSessionStore();
 
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -31,6 +33,7 @@ export default function Start() {
       const { data } = await verifyOTP(email, otp);
       setToken(data.token);
       setUser(data.user);
+      setSession(email, data.token);
 
       if (data.user.hasSubmittedApp) {
         nav("/portal");
