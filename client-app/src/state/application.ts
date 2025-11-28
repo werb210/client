@@ -41,6 +41,23 @@ export interface BusinessPartner {
   ownershipPercentage: string;
 }
 
+export interface RequiredDoc {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  required: boolean;
+}
+
+export interface UploadedDocument {
+  docId: string;
+  fileName: string;
+  fileType: string;
+  sizeBytes: number;
+  serverKey?: string;
+  uploadedAt: string;
+}
+
 interface ApplicationState {
   step1: Step1Data | null;
   business: BusinessInfo | null;
@@ -48,10 +65,17 @@ interface ApplicationState {
   applicant: ApplicantInfo | null;
   partners: BusinessPartner[];
 
+  requiredDocs: RequiredDoc[];
+  uploadedDocs: UploadedDocument[];
+
   setStep1: (data: Step1Data) => void;
   setApplicant: (data: Partial<ApplicantInfo>) => void;
   setBusiness: (data: Partial<BusinessInfo>) => void;
   setPartners: (partners: BusinessPartner[]) => void;
+
+  setRequiredDocs: (docs: RequiredDoc[]) => void;
+  addUploadedDoc: (doc: UploadedDocument) => void;
+  removeUploadedDoc: (docId: string) => void;
 }
 
 export const useApplication = create<ApplicationState>((set) => ({
@@ -59,6 +83,8 @@ export const useApplication = create<ApplicationState>((set) => ({
   business: null,
   applicant: null,
   partners: [],
+  requiredDocs: [],
+  uploadedDocs: [],
 
   setStep1: (data) => set({ step1: data }),
   setApplicant: (data) =>
@@ -72,4 +98,19 @@ export const useApplication = create<ApplicationState>((set) => ({
     })),
 
   setPartners: (partners) => set({ partners }),
+
+  setRequiredDocs: (docs) => set({ requiredDocs: docs }),
+
+  addUploadedDoc: (doc) =>
+    set((state) => ({
+      uploadedDocs: [
+        ...state.uploadedDocs.filter((d) => d.docId !== doc.docId),
+        doc,
+      ],
+    })),
+
+  removeUploadedDoc: (docId) =>
+    set((state) => ({
+      uploadedDocs: state.uploadedDocs.filter((d) => d.docId !== docId),
+    })),
 }));
