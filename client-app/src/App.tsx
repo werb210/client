@@ -22,10 +22,12 @@ import ProfilePage from "./pages/portal/ProfilePage";
 import ReportIssuePage from "./pages/portal/ReportIssuePage";
 import { SupportWidget } from "./components/support/SupportWidget";
 import { ToastProvider } from "./components/toast/ToastProvider";
+import LoadingOverlay from "./components/LoadingOverlay";
 
 function App() {
   return (
     <ToastProvider>
+      <LoadingOverlay />
       <AuthProvider>
         <ApplicationProvider>
           <BrowserRouter>
