@@ -1,13 +1,16 @@
-import axios from "axios";
+import { api } from "./index";
 
-import { Step1Payload } from "../types/application";
+export const applicationApi = {
+  start: () => api.post("/application/start"),
 
-const API_BASE = import.meta.env.VITE_API_BASE;
+  saveStep: (applicationId: string, step: number, data: any) =>
+    api.post(`/application/${applicationId}/step`, { step, data }),
 
-export async function saveStep1(payload: Step1Payload) {
-  const res = await axios.post(`${API_BASE}/application/step-1`, payload, {
-    withCredentials: true
-  });
+  fetchProducts: () => api.get("/lenders/products"),
 
-  return res.data;
-}
+  fetchRequiredDocuments: (productId: string) =>
+    api.get(`/lenders/products/${productId}/documents`),
+
+  submitApplication: (applicationId: string) =>
+    api.post(`/application/${applicationId}/submit`),
+};
