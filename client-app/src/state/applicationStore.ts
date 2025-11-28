@@ -49,14 +49,14 @@ export interface ApplicationStore {
   productCategory: ProductCategory;
   businessInfo: BusinessInfoData;
   applicantInfo: ApplicantInfoData;
-  documents: Record<string, unknown>[];
+  documents: Record<string, File | null>;
   signature: string | null;
   setEmail: (email: string) => void;
   setPhone: (phone: string) => void;
   setProductCategory: (category: ProductCategory) => void;
   setBusinessInfo: (info: BusinessInfoData) => void;
   setApplicantInfo: (info: ApplicantInfoData) => void;
-  setDocuments: (docs: Record<string, unknown>[]) => void;
+  setDocuments: (docs: Record<string, File | null>) => void;
   setSignature: (sig: string | null) => void;
   resetAll: () => void;
 }
@@ -102,7 +102,7 @@ const initialState = {
   productCategory: null as ProductCategory,
   businessInfo: { ...emptyBusinessInfo },
   applicantInfo: { ...emptyApplicantInfo },
-  documents: [] as Record<string, unknown>[],
+  documents: {} as Record<string, File | null>,
   signature: null as string | null,
 };
 
