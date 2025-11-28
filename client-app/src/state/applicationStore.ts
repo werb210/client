@@ -8,6 +8,25 @@ export type ProductCategory =
   | "micro_loan"
   | null;
 
+export type ApplicantInfoData = {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  homeAddress: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  sin: string;
+  dateOfBirth: string;
+  creditScoreBand: string;
+  hasBusinessPartner: boolean;
+  partnerFirstName?: string;
+  partnerLastName?: string;
+  partnerEmail?: string;
+  partnerPhone?: string;
+};
+
 export type BusinessInfoData = {
   businessName: string;
   businessWebsite?: string;
@@ -29,14 +48,14 @@ export interface ApplicationStore {
   phone: string;
   productCategory: ProductCategory;
   businessInfo: BusinessInfoData;
-  applicantInfo: Record<string, unknown>;
+  applicantInfo: ApplicantInfoData;
   documents: Record<string, unknown>[];
   signature: string | null;
   setEmail: (email: string) => void;
   setPhone: (phone: string) => void;
   setProductCategory: (category: ProductCategory) => void;
   setBusinessInfo: (info: BusinessInfoData) => void;
-  setApplicantInfo: (info: Record<string, unknown>) => void;
+  setApplicantInfo: (info: ApplicantInfoData) => void;
   setDocuments: (docs: Record<string, unknown>[]) => void;
   setSignature: (sig: string | null) => void;
   resetAll: () => void;
@@ -58,12 +77,31 @@ export const emptyBusinessInfo: BusinessInfoData = {
   hasBusinessPartner: false,
 };
 
+export const emptyApplicantInfo: ApplicantInfoData = {
+  firstName: "",
+  lastName: "",
+  phone: "",
+  email: "",
+  homeAddress: "",
+  city: "",
+  province: "",
+  postalCode: "",
+  sin: "",
+  dateOfBirth: "",
+  creditScoreBand: "",
+  hasBusinessPartner: false,
+  partnerFirstName: "",
+  partnerLastName: "",
+  partnerEmail: "",
+  partnerPhone: "",
+};
+
 const initialState = {
   email: "",
   phone: "",
   productCategory: null as ProductCategory,
   businessInfo: { ...emptyBusinessInfo },
-  applicantInfo: {} as Record<string, unknown>,
+  applicantInfo: { ...emptyApplicantInfo },
   documents: [] as Record<string, unknown>[],
   signature: null as string | null,
 };
@@ -77,7 +115,12 @@ export const useApplicationStore = create<ApplicationStore>((set) => ({
   setApplicantInfo: (info) => set({ applicantInfo: info }),
   setDocuments: (docs) => set({ documents: docs }),
   setSignature: (sig) => set({ signature: sig }),
-  resetAll: () => set({ ...initialState, businessInfo: { ...emptyBusinessInfo } }),
+  resetAll: () =>
+    set({
+      ...initialState,
+      businessInfo: { ...emptyBusinessInfo },
+      applicantInfo: { ...emptyApplicantInfo },
+    }),
 }));
 
 export default useApplicationStore;
