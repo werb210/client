@@ -1,5 +1,9 @@
 body {
-  font-family: Arial, sans-serif;
-  background: #f6f8fa;
-  color: #222;
+  @apply bg-gray-100 text-gray-900;
+}
+
+input,
+select,
+textarea {
+  @apply border border-gray-300 rounded p-2;
 }

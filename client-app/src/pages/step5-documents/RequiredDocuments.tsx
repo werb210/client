@@ -136,7 +136,7 @@ export default function RequiredDocuments() {
         </Button>
 
         <div className="flex gap-3">
-          <Button variant="outline" onClick={handleUploadLater}>
+          <Button variant="secondary" onClick={handleUploadLater}>
             Upload Later
           </Button>
 
