@@ -1,6 +1,6 @@
 // src/pages/portal/MessagingPage.tsx
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useClientSession } from "@/state/useClientSession";
 import { portalGet, portalPost } from "@/api/portal";
@@ -16,6 +16,7 @@ import {
   UserGroupIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
+import { useLocation } from "react-router-dom";
 
 type Tab = "human" | "ai";
 
@@ -23,6 +24,15 @@ export default function MessagingPage() {
   const { token, applicationId } = useClientSession();
   const [tab, setTab] = useState<Tab>("human");
   const queryClient = useQueryClient();
+  const location = useLocation();
+
+  useEffect(() => {
+    const state = location.state as { tab?: Tab } | undefined;
+
+    if (state?.tab) {
+      setTab(state.tab);
+    }
+  }, [location.state]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["portal-messages", applicationId],
