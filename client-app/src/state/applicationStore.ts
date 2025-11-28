@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { apiUpdateApplicationDraft } from "@/api/application";
+import { apiGetApplicationDraft, apiUpdateApplicationDraft } from "@/api/application";
 
 export type ProductCategory =
   | "loc"
@@ -53,8 +53,10 @@ type ApplicationDraft = {
 
 export interface ApplicationState {
   step: number;
+  currentStep: number;
   data: Record<string, any>;
   applicationId: string | null;
+  isSubmitted: boolean;
 
   email: string;
   phone: string;
@@ -68,6 +70,7 @@ export interface ApplicationState {
   updateField: (section: string, field: string, value: any) => void;
   saveToServer: (token: string | null) => Promise<void>;
   loadServerDraft: (draft: ApplicationDraft) => void;
+  hydrateFromServer: (token: string | null) => Promise<void>;
 
   setEmail: (email: string) => void;
   setPhone: (phone: string) => void;
@@ -117,8 +120,10 @@ export const emptyApplicantInfo: ApplicantInfoData = {
 
 const initialState = {
   step: 1,
+  currentStep: 1,
   data: {},
   applicationId: null as string | null,
+  isSubmitted: false,
 
   email: "",
   phone: "",
@@ -134,7 +139,7 @@ export const useApplicationStore = create<ApplicationState>()(
     (set, get) => ({
       ...initialState,
 
-      setStep: (n) => set({ step: n }),
+      setStep: (n) => set({ step: n, currentStep: n }),
 
       updateField: (section, field, value) => {
         const current = get().data || {};
@@ -183,10 +188,19 @@ export const useApplicationStore = create<ApplicationState>()(
           ...emptyApplicantInfo,
           ...(draftData.applicant || {}),
         };
+        const submitted = Boolean(
+          (draft as { status?: string })?.status === "submitted" ||
+            (draft as { isSubmitted?: boolean })?.isSubmitted ||
+            (draft as { submittedAt?: string | null })?.submittedAt,
+        );
+        const targetStep = draft?.step || 1;
+
         set({
           data: draftData,
           applicationId: draft?.id || null,
-          step: draft?.step || 1,
+          step: targetStep,
+          currentStep: targetStep,
+          isSubmitted: submitted,
           businessInfo: businessDraft,
           applicantInfo: applicantDraft,
           documents: (draftData.documents || {}) as Record<string, File | null>,
@@ -194,6 +208,13 @@ export const useApplicationStore = create<ApplicationState>()(
           phone: draftData.contact?.phone || "",
           productCategory: (draftData.selection?.productCategory || null) as ProductCategory,
         });
+      },
+
+      hydrateFromServer: async (token) => {
+        const draft = await apiGetApplicationDraft(token);
+        if (draft) {
+          get().loadServerDraft(draft);
+        }
       },
 
       setEmail: (email) =>
