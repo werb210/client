@@ -2,7 +2,9 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import RequireAuth from "./components/RequireAuth";
 import AuthProvider from "./context/AuthContext";
 import ApplicationProvider from "./context/ApplicationContext";
-import Portal from "./routes/portal";
+import Assistant from "./pages/portal/Assistant";
+import ClientPortal from "./pages/portal/ClientPortal";
+import Messages from "./pages/portal/Messages";
 import Start from "./pages/Start/Start";
 import Step1 from "./pages/Apply/Step1";
 import Step2 from "./pages/Apply/Step2";
@@ -109,30 +111,9 @@ function App() {
             />
 
             {/* Portal */}
-            <Route
-              path="/portal"
-              element={
-                <RequireAuth>
-                  <Portal />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/portal/documents"
-              element={
-                <RequireAuth>
-                  <Portal />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/portal/messages"
-              element={
-                <RequireAuth>
-                  <Portal />
-                </RequireAuth>
-              }
-            />
+            <Route path="/portal" element={<ClientPortal />} />
+            <Route path="/portal/messages" element={<Messages />} />
+            <Route path="/portal/assistant" element={<Assistant />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
