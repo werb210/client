@@ -68,6 +68,8 @@ interface ApplicationState {
   requiredDocs: RequiredDoc[];
   uploadedDocs: UploadedDocument[];
 
+  selectedProductCategory: string | number | null;
+
   setStep1: (data: Step1Data) => void;
   setApplicant: (data: Partial<ApplicantInfo>) => void;
   setBusiness: (data: Partial<BusinessInfo>) => void;
@@ -76,15 +78,19 @@ interface ApplicationState {
   setRequiredDocs: (docs: RequiredDoc[]) => void;
   addUploadedDoc: (doc: UploadedDocument) => void;
   removeUploadedDoc: (docId: string) => void;
+
+  setSelectedProductCategory: (value: string | number | null) => void;
+  goToNext: () => void;
 }
 
-export const useApplication = create<ApplicationState>((set) => ({
+export const useApplicationStore = create<ApplicationState>((set) => ({
   step1: null,
   business: null,
   applicant: null,
   partners: [],
   requiredDocs: [],
   uploadedDocs: [],
+  selectedProductCategory: null,
 
   setStep1: (data) => set({ step1: data }),
   setApplicant: (data) =>
@@ -113,4 +119,13 @@ export const useApplication = create<ApplicationState>((set) => ({
     set((state) => ({
       uploadedDocs: state.uploadedDocs.filter((d) => d.docId !== docId),
     })),
+
+  setSelectedProductCategory: (value) => set({ selectedProductCategory: value }),
+  goToNext: () => {
+    if (typeof window !== "undefined") {
+      window.location.href = "/application/step3";
+    }
+  },
 }));
+
+export const useApplication = useApplicationStore;
