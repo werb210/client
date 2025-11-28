@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { requestOTP, verifyOTP } from "../../api/auth";
 import { useAuthContext } from "../../context/AuthContext";
 import { useSessionStore } from "../../state/sessionStore";
+import { useClientSession } from "@/state/useClientSession";
 
 export default function Start() {
   const nav = useNavigate();
   const { setToken, setUser } = useAuthContext();
   const { setSession } = useSessionStore();
+  const { setSession: setClientSession } = useClientSession();
 
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -34,6 +36,13 @@ export default function Start() {
       setToken(data.token);
       setUser(data.user);
       setSession(email, data.token);
+
+      const applicationId =
+        (data.user as { applicationId?: string })?.applicationId ||
+        (data.user as { application?: { id?: string } })?.application?.id ||
+        "";
+
+      setClientSession({ email, token: data.token, applicationId });
 
       if (data.user.hasSubmittedApp) {
         nav("/portal");
