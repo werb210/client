@@ -8,7 +8,7 @@ import Messages from "./pages/Portal/Messages";
 import Start from "./pages/Start/Start";
 import Step1 from "./pages/Apply/Step1";
 import Step2 from "./pages/Apply/Step2";
-import Step3 from "./pages/Wizard/Step3";
+import Step3 from "./pages/Apply/Step3";
 import Step4 from "./pages/Wizard/Step4";
 import Step5 from "./pages/Wizard/Step5";
 import Step6 from "./pages/Wizard/Step6";
