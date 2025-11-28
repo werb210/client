@@ -59,6 +59,7 @@ export interface ApplicationStore {
   setDocuments: (docs: Record<string, File | null>) => void;
   setSignature: (sig: string | null) => void;
   resetAll: () => void;
+  clearApplication: () => void;
 }
 
 export const emptyBusinessInfo: BusinessInfoData = {
@@ -116,6 +117,12 @@ export const useApplicationStore = create<ApplicationStore>((set) => ({
   setDocuments: (docs) => set({ documents: docs }),
   setSignature: (sig) => set({ signature: sig }),
   resetAll: () =>
+    set({
+      ...initialState,
+      businessInfo: { ...emptyBusinessInfo },
+      applicantInfo: { ...emptyApplicantInfo },
+    }),
+  clearApplication: () =>
     set({
       ...initialState,
       businessInfo: { ...emptyBusinessInfo },
