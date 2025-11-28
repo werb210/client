@@ -2,9 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import RequireAuth from "./components/RequireAuth";
 import AuthProvider from "./context/AuthContext";
 import ApplicationProvider from "./context/ApplicationContext";
-import Dashboard from "./pages/Portal/Dashboard";
-import Documents from "./pages/Portal/Documents";
-import Messages from "./pages/Portal/Messages";
+import Portal from "./routes/portal";
 import Start from "./pages/Start/Start";
 import Step1 from "./pages/Apply/Step1";
 import Step2 from "./pages/Apply/Step2";
@@ -77,7 +75,7 @@ function App() {
               path="/portal"
               element={
                 <RequireAuth>
-                  <Dashboard />
+                  <Portal />
                 </RequireAuth>
               }
             />
@@ -85,7 +83,7 @@ function App() {
               path="/portal/documents"
               element={
                 <RequireAuth>
-                  <Documents />
+                  <Portal />
                 </RequireAuth>
               }
             />
@@ -93,7 +91,7 @@ function App() {
               path="/portal/messages"
               element={
                 <RequireAuth>
-                  <Messages />
+                  <Portal />
                 </RequireAuth>
               }
             />
