@@ -1,0 +1,79 @@
+.step-container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.step-header {
+  margin-bottom: 12px;
+}
+
+.step-title {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.step-subtitle {
+  font-size: 16px;
+  color: #666;
+  margin-top: 6px;
+}
+
+.step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.step-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step-label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.step-input {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #d7d7d7;
+  font-size: 15px;
+  width: 100%;
+}
+
+.step-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.step-back {
+  background: #e2e2e2;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.step-next {
+  background: #007aff;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.step-next:disabled {
+  background: #9abbf8;
+  cursor: not-allowed;
+}
