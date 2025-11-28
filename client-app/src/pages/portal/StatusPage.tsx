@@ -64,44 +64,66 @@ export default function StatusPage() {
   const currentStatus = data.status;
 
   return (
-    <div className="space-y-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-4">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6">
+      <h1 className="text-2xl font-semibold text-gray-900 mb-6">
         Application Status
       </h1>
 
-      <div className="space-y-6">
-        {STATUS_ORDER.map((status) => {
-          const complete =
-            STATUS_ORDER.indexOf(status) <= STATUS_ORDER.indexOf(currentStatus);
+      <div className="bg-white shadow-sm rounded-xl border border-gray-100 p-5 sm:p-6 space-y-6">
+        <div className="text-sm text-gray-600">
+          We update your status automatically every 30 seconds so you always
+          know where your application stands.
+        </div>
 
-          return (
-            <div key={status} className="flex items-start gap-4">
-              <div>
-                {complete ? (
-                  StatusIcon(status)
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-gray-300" />
-                )}
-              </div>
+        <div className="relative">
+          <div className="absolute left-3 top-3 bottom-3 w-px bg-gray-200" aria-hidden />
 
-              <div>
-                <div
-                  className={
-                    complete
-                      ? "font-medium text-gray-900"
-                      : "font-medium text-gray-400"
-                  }
-                >
-                  {STATUS_LABELS[status]}
+          <div className="space-y-6">
+            {STATUS_ORDER.map((status, index) => {
+              const complete =
+                STATUS_ORDER.indexOf(status) <=
+                STATUS_ORDER.indexOf(currentStatus);
+              const isCurrent = status === currentStatus;
+              const isLast = index === STATUS_ORDER.length - 1;
+
+              return (
+                <div key={status} className="relative flex items-start gap-4 pl-4">
+                  <div className="flex flex-col items-center relative">
+                    {complete ? (
+                      StatusIcon(status)
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-gray-300" />
+                    )}
+                    {!isLast && (
+                      <span
+                        className="w-px flex-1 bg-gray-200"
+                        aria-hidden
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex-1">
+                    <div
+                      className={
+                        complete
+                          ? "font-medium text-gray-900"
+                          : "font-medium text-gray-400"
+                      }
+                    >
+                      {STATUS_LABELS[status]}
+                    </div>
+
+                    {isCurrent && (
+                      <div className="mt-1 inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                        Current stage
+                      </div>
+                    )}
+                  </div>
                 </div>
-
-                {status === currentStatus && (
-                  <div className="text-sm text-blue-600">Current stage</div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
