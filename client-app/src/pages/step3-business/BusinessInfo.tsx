@@ -1,5 +1,5 @@
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
@@ -14,6 +14,7 @@ import {
   type BusinessInfoData,
   useApplicationStore,
 } from "../../state/applicationStore";
+import { useAutosave } from "@/hooks/useAutosave";
 
 export const BusinessInfoSchema = z.object({
   businessName: z.string().trim().min(2, "Legal business name is required."),
@@ -41,7 +42,7 @@ export type BusinessInfoDataSchema = z.infer<typeof BusinessInfoSchema>;
 
 export default function BusinessInfo() {
   const navigate = useNavigate();
-  const { businessInfo, setBusinessInfo } = useApplicationStore();
+  const { businessInfo, setBusinessInfo, setStep } = useApplicationStore();
 
   const [form, setForm] = useState<BusinessInfoData>(() => ({
     ...emptyBusinessInfo,
@@ -49,8 +50,18 @@ export default function BusinessInfo() {
   }));
   const [errors, setErrors] = useState<Partial<Record<keyof BusinessInfoData, string>>>({});
 
+  useAutosave("business", [businessInfo]);
+
+  useEffect(() => {
+    setForm({ ...emptyBusinessInfo, ...businessInfo });
+  }, [businessInfo]);
+
   function update(field: keyof BusinessInfoData, value: string | boolean) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value } as BusinessInfoData;
+      setBusinessInfo(next);
+      return next;
+    });
   }
 
   function handleSubmit(event?: FormEvent<HTMLFormElement>) {
@@ -77,6 +88,7 @@ export default function BusinessInfo() {
 
     setErrors({});
     setBusinessInfo(parsed.data);
+    setStep(2);
     navigate("/step4-applicant");
   }
 

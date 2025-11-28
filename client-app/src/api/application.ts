@@ -1,3 +1,4 @@
+import axios from "axios";
 import { api } from "./index";
 
 export const applicationApi = {
@@ -14,3 +15,37 @@ export const applicationApi = {
   submitApplication: (applicationId: string) =>
     api.post(`/application/${applicationId}/submit`),
 };
+
+export async function apiUpdateApplicationDraft({
+  applicationId,
+  payload,
+  token,
+}: {
+  applicationId: string | null;
+  payload: Record<string, any>;
+  token: string | null;
+}) {
+  return axios.post(
+    `${import.meta.env.VITE_API_URL}/client/application/draft`,
+    {
+      applicationId,
+      data: payload,
+    },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+}
+
+export async function apiGetApplicationDraft(token: string | null) {
+  if (!token) return null;
+
+  const response = await axios.get(
+    `${import.meta.env.VITE_API_URL}/client/application/draft`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  return response.data;
+}
