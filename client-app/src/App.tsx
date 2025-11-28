@@ -23,6 +23,12 @@ import ReportIssuePage from "./pages/portal/ReportIssuePage";
 import { SupportWidget } from "./components/support/SupportWidget";
 import { ToastProvider } from "./components/toast/ToastProvider";
 import LoadingOverlay from "./components/LoadingOverlay";
+import { useResumeStep } from "./hooks/useResumeStep";
+
+function ResumeRouterGuard() {
+  useResumeStep();
+  return null;
+}
 
 function App() {
   return (
@@ -31,9 +37,11 @@ function App() {
       <AuthProvider>
         <ApplicationProvider>
           <BrowserRouter>
+            <ResumeRouterGuard />
             <Routes>
               {/* Start → login with email+phone → OTP */}
               <Route path="/" element={<Start />} />
+              <Route path="/login" element={<Start />} />
 
               {/* Wizard */}
               <Route
@@ -94,7 +102,23 @@ function App() {
                 }
               />
               <Route
+                path="/step1"
+                element={
+                  <RequireAuth>
+                    <BusinessInfo />
+                  </RequireAuth>
+                }
+              />
+              <Route
                 path="/step4-applicant"
+                element={
+                  <RequireAuth>
+                    <ApplicantInfo />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/step2"
                 element={
                   <RequireAuth>
                     <ApplicantInfo />
@@ -109,9 +133,25 @@ function App() {
                   </RequireAuth>
                 }
               />
+              <Route
+                path="/step3"
+                element={
+                  <RequireAuth>
+                    <RequiredDocuments />
+                  </RequireAuth>
+                }
+              />
 
               <Route
                 path="/step6-terms"
+                element={
+                  <RequireAuth>
+                    <SubmitApplication />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/step4"
                 element={
                   <RequireAuth>
                     <SubmitApplication />
