@@ -19,6 +19,8 @@ import DocumentsPage from "./pages/portal/DocumentsPage";
 import StatusPage from "./pages/portal/StatusPage";
 import MessagingPage from "./pages/portal/MessagingPage";
 import ProfilePage from "./pages/portal/ProfilePage";
+import ReportIssuePage from "./pages/portal/ReportIssuePage";
+import { SupportWidget } from "./components/support/SupportWidget";
 
 function App() {
   return (
@@ -120,11 +122,13 @@ function App() {
               <Route path="status" element={<StatusPage />} />
               <Route path="messages" element={<MessagingPage />} />
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="report-issue" element={<ReportIssuePage />} />
             </Route>
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <SupportWidget />
         </BrowserRouter>
       </ApplicationProvider>
     </AuthProvider>
