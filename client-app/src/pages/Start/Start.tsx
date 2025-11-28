@@ -1,129 +1,46 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { requestOTP, verifyOTP } from "../../api/auth";
-import { useAuthContext } from "../../context/AuthContext";
-import { useSessionStore } from "../../state/sessionStore";
-import { useClientSession } from "@/state/useClientSession";
-import { apiGetApplicationDraft } from "@/api/application";
-import { useApplicationStore } from "@/state/applicationStore";
+import React from "react";
+import { Navigate, Link } from "react-router-dom";
+import useClientSession from "../../state/useClientSession";
 
 export default function Start() {
-  const nav = useNavigate();
-  const { setToken, setUser } = useAuthContext();
-  const { setSession } = useSessionStore();
-  const { setSession: setClientSession } = useClientSession();
-  const { loadServerDraft } = useApplicationStore();
+  const token = useClientSession();
 
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [otpStage, setOtpStage] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function sendOTP() {
-    setLoading(true);
-    try {
-      await requestOTP(email, phone);
-      setOtpStage(true);
-    } catch (e) {
-      console.error(e);
-      alert("Error sending OTP");
-    }
-    setLoading(false);
-  }
-
-  async function confirmOTP() {
-    setLoading(true);
-    try {
-      const { data } = await verifyOTP(email, otp);
-      setToken(data.token);
-      setUser(data.user);
-      setSession(email, data.token);
-
-      const applicationId =
-        (data.user as { applicationId?: string })?.applicationId ||
-        (data.user as { application?: { id?: string } })?.application?.id ||
-        "";
-
-      setClientSession({ email, token: data.token, applicationId });
-
-      try {
-        const draft = await apiGetApplicationDraft(data.token);
-        if (draft) {
-          loadServerDraft(draft);
-          const targetStep = draft?.step || 1;
-          const routeMap: Record<number, string> = {
-            1: "/step3-business",
-            2: "/step4-applicant",
-            3: "/step5-documents",
-            4: "/step6-terms",
-          };
-          nav(routeMap[targetStep] || "/step3-business");
-          return;
-        }
-      } catch (draftError) {
-        console.warn("Unable to load draft", draftError);
-      }
-
-      if (data.user.hasSubmittedApp) {
-        nav("/portal");
-      } else {
-        nav("/apply/step-1");
-      }
-    } catch (e) {
-      console.error(e);
-      alert("Invalid OTP");
-    }
-    setLoading(false);
+  if (!token) {
+    return <Navigate to="/login" replace />;
   }
 
   return (
-    <div className="max-w-lg mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-4">Welcome</h1>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-semibold mb-4">Welcome</h1>
 
-      {!otpStage && (
-        <>
-          <input
-            className="border p-3 w-full mb-3"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+        <p className="text-gray-700 mb-6">
+          Choose an action to get started.
+        </p>
 
-          <input
-            className="border p-3 w-full mb-3"
-            placeholder="Mobile phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-
-          <button
-            className="bg-borealBlue text-white p-3 rounded w-full"
-            onClick={sendOTP}
-            disabled={loading}
+        <div className="space-y-4">
+          <Link
+            to="/portal/apply"
+            className="block bg-blue-600 text-white px-4 py-3 rounded-lg shadow hover:bg-blue-700"
           >
-            Get Login Code
-          </button>
-        </>
-      )}
+            Start Application
+          </Link>
 
-      {otpStage && (
-        <>
-          <input
-            className="border p-3 w-full mb-3"
-            placeholder="Enter 6-digit code"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-          />
-          <button
-            className="bg-borealGreen text-white p-3 rounded w-full"
-            onClick={confirmOTP}
-            disabled={loading}
+          <Link
+            to="/portal/profile"
+            className="block bg-white border px-4 py-3 rounded-lg shadow hover:bg-gray-100"
           >
-            Verify Code
-          </button>
-        </>
-      )}
+            View Profile
+          </Link>
+
+          <Link
+            to="/portal/support"
+            className="block bg-white border px-4 py-3 rounded-lg shadow hover:bg-gray-100"
+          >
+            Support / Report an Issue
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
