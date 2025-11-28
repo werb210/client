@@ -13,8 +13,8 @@ export function useApplicationValidator() {
       step3: store.businessInfo,
       step4: store.applicantInfo,
       selectedProduct: store.selectedProduct,
-      documents: store.documents.map((d) => d.meta),
-      requiredDocs: store.selectedProduct?.requiredDocuments ?? [],
+      documents: store.documentUploads.map((d) => d.meta),
+      requiredDocs: store.requiredDocuments,
     };
 
     return validateFullApplication(payload);

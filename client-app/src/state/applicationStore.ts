@@ -2,7 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { apiGetApplicationDraft, apiUpdateApplicationDraft } from "@/api/application";
 import { ClientDocumentMeta } from "@/utils/documentMetadata";
-import { ProductConfig } from "@/utils/resolveRequiredDocs";
+import { resolveRequiredDocs } from "@/utils/resolveRequiredDocs";
+import { LenderProduct, RequiredDoc } from "@/types/Documents";
 
 export type ProductCategory =
   | "loc"
@@ -67,7 +68,8 @@ export interface ApplicationState {
   applicantInfo: ApplicantInfoData;
   documents: Record<string, File | null>;
   documentUploads: { meta: ClientDocumentMeta; file: File }[];
-  selectedProduct: ProductConfig | null;
+  selectedProduct: LenderProduct | null;
+  requiredDocuments: RequiredDoc[];
   signature: string | null;
 
   setStep: (n: number) => void;
@@ -83,7 +85,8 @@ export interface ApplicationState {
   setApplicantInfo: (info: ApplicantInfoData) => void;
   setDocuments: (docs: Record<string, File | null>) => void;
   addDocument: (doc: { meta: ClientDocumentMeta; file: File }) => void;
-  setSelectedProduct: (product: ProductConfig | null) => void;
+  setSelectedProduct: (product: LenderProduct | null) => void;
+  setRequiredDocuments: (docs: RequiredDoc[]) => void;
   setSignature: (sig: string | null) => void;
   resetAll: () => void;
   clearApplication: () => void;
@@ -139,6 +142,7 @@ const initialState = {
   documents: {} as Record<string, File | null>,
   documentUploads: [],
   selectedProduct: null,
+  requiredDocuments: [],
   signature: null as string | null,
 };
 
@@ -260,7 +264,12 @@ export const useApplicationStore = create<ApplicationState>()(
         })),
       addDocument: (doc) =>
         set((state) => ({ documentUploads: [...state.documentUploads, doc] })),
-      setSelectedProduct: (product) => set({ selectedProduct: product }),
+      setSelectedProduct: (product) =>
+        set({
+          selectedProduct: product,
+          requiredDocuments: product ? resolveRequiredDocs(product) : [],
+        }),
+      setRequiredDocuments: (docs) => set({ requiredDocuments: docs }),
       setSignature: (sig) => set({ signature: sig }),
       resetAll: () =>
         set({
