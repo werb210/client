@@ -1,42 +1,38 @@
-name: Deploy boreal-client to Azure
+name: Deploy Client App (React) to Azure
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ "main" ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Use Node.js 20
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 20
 
       - name: Install dependencies
-        working-directory: ./client-app
-        run: npm install
+        working-directory: ./client
+        run: npm ci
 
-      - name: Create .env.production
-        working-directory: ./client-app
-        run: |
-          echo "VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}" >> .env.production
-          echo "VITE_SIGNNOW_CLIENT_ID=${{ secrets.VITE_SIGNNOW_CLIENT_ID }}" >> .env.production
-          echo "VITE_SIGNNOW_REDIRECT_URL=${{ secrets.VITE_SIGNNOW_REDIRECT_URL }}" >> .env.production
-
-      - name: Build client app
-        working-directory: ./client-app
+      - name: Build client
+        working-directory: ./client
         run: npm run build
 
+      - name: Zip artifact
+        run: |
+          cd client/dist
+          zip -r ../../client-release.zip .
+
       - name: Deploy to Azure Web App
-        uses: Azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@v2
         with:
-          app-name: boreal-client
-          package: client-app/dist
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          app-name: ${{ secrets.AZURE_CLIENT_APP_NAME }}
+          publish-profile: ${{ secrets.AZURE_CLIENT_PUBLISH_PROFILE }}
+          package: client-release.zip
