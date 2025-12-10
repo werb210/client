@@ -1,12 +1,18 @@
 import { useApplicationStore } from "../state/useApplicationStore";
-import { RequiredDocsByDefaultCategory, DefaultDocLabels } from "../data/requiredDocs";
+import { DefaultDocLabels } from "../data/requiredDocs";
 import { fileToBase64 } from "../utils/fileToBase64";
+import { ProductSync } from "../lender/productSync";
+import { compileDocs, filterProductsForCategory } from "../lender/compile";
 
 export function Step5_Documents() {
   const { app, update } = useApplicationStore();
 
-  const docsRequired =
-    RequiredDocsByDefaultCategory[app.productCategory || ""] || [];
+  const products = filterProductsForCategory(
+    ProductSync.load(),
+    app.productCategory!
+  );
+
+  const docsRequired = compileDocs(products);
 
   async function handleFile(docType: string, file: File | null) {
     if (!file) return;

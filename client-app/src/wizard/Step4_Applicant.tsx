@@ -1,13 +1,21 @@
 import { useApplicationStore } from "../state/useApplicationStore";
-import { DefaultApplicantQuestions } from "../data/defaultQuestions";
+import { ProductSync } from "../lender/productSync";
+import { filterProductsForCategory, compileQuestions } from "../lender/compile";
 
 export function Step4_Applicant() {
   const { app, update } = useApplicationStore();
 
-  const applicant = { ...DefaultApplicantQuestions, ...app.applicant };
+  const products = filterProductsForCategory(
+    ProductSync.load(),
+    app.productCategory!
+  );
+
+  const { applicantQuestions } = compileQuestions(products);
+
+  const values = { ...app.applicant };
 
   function setField(key: string, value: any) {
-    update({ applicant: { ...applicant, [key]: value } });
+    update({ applicant: { ...values, [key]: value } });
   }
 
   function next() {
@@ -16,20 +24,20 @@ export function Step4_Applicant() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">Step 4: Applicant Information</h1>
+      <h1 className="text-xl font-bold mb-4">Applicant Information</h1>
 
-      {Object.keys(DefaultApplicantQuestions).map((key) => (
-        <label key={key} className="block mb-2 capitalize">
-          {key.replace(/([A-Z])/g, " $1")}
+      {applicantQuestions.map((q) => (
+        <label key={q} className="block mb-2">
+          {q}
           <input
             className="border p-2 w-full"
-            value={(applicant as any)[key] || ""}
-            onChange={(e) => setField(key, e.target.value)}
+            value={values[q] || ""}
+            onChange={(e) => setField(q, e.target.value)}
           />
         </label>
       ))}
 
-      <button className="bg-borealBlue text-white p-2" onClick={next}>
+      <button className="bg-borealBlue text-white p-2 mt-4" onClick={next}>
         Continue
       </button>
     </div>
