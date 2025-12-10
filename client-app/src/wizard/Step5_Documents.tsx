@@ -3,6 +3,10 @@ import { DefaultDocLabels } from "../data/requiredDocs";
 import { ProductSync } from "../lender/productSync";
 import { compileDocs, filterProductsForCategory } from "../lender/compile";
 import { ClientAppAPI } from "../api/clientApp";
+import { StepHeader } from "../components/StepHeader";
+import { Card } from "../components/ui/Card";
+import { Input } from "../components/ui/Input";
+import { Button } from "../components/ui/Button";
 
 export function Step5_Documents() {
   const { app, update } = useApplicationStore();
@@ -44,19 +48,18 @@ export function Step5_Documents() {
   }
 
   return (
-    <div>
-      <h1 className="text-xl font-bold mb-6">Step 5: Required Documents</h1>
+    <div className="max-w-2xl mx-auto">
+      <StepHeader step={5} title="Required Documents" />
 
       {docsRequired.map((doc) => (
-        <div key={doc} className="border p-4 mb-4 rounded bg-white">
+        <Card key={doc} className="mb-3">
           <div className="font-semibold mb-2">
             {DefaultDocLabels[doc] || doc}
           </div>
 
-          <input
+          <Input
             type="file"
-            className="block w-full"
-            onChange={(e) => handleFile(doc, e.target.files?.[0] || null)}
+            onChange={(e: any) => handleFile(doc, e.target.files?.[0] || null)}
           />
 
           {app.documents[doc] && (
@@ -64,17 +67,17 @@ export function Step5_Documents() {
               Uploaded: {app.documents[doc].name}
             </div>
           )}
-        </div>
+        </Card>
       ))}
 
-      <button
-        className={`p-2 text-white ${
-          allDocsPresent() ? "bg-borealBlue" : "bg-gray-400 cursor-not-allowed"
+      <Button
+        className={`w-full md:w-auto ${
+          allDocsPresent() ? "" : "bg-gray-400 cursor-not-allowed"
         }`}
         onClick={next}
       >
         Continue
-      </button>
+      </Button>
     </div>
   );
 }

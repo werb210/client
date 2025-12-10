@@ -1,6 +1,9 @@
 import { useApplicationStore } from "../state/useApplicationStore";
 import { ProductSync } from "../lender/productSync";
 import { filterProductsForEligibility } from "../lender/compile";
+import { StepHeader } from "../components/StepHeader";
+import { Card } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
 
 const CategoryLabels: Record<string, string> = {
   line_of_credit: "Line of Credit",
@@ -31,21 +34,18 @@ export function Step2_Product() {
     return <div>No eligible products found. Adjust your inputs.</div>;
 
   return (
-    <div>
-      <h1 className="text-xl font-bold mb-4">Select Product Category</h1>
+    <div className="max-w-2xl mx-auto">
+      <StepHeader step={2} title="Select Product Category" />
 
       {categories.map((cat) => (
-        <div key={cat} className="border p-4 mb-3 bg-white rounded">
-          <div className="flex justify-between items-center">
-            <div>{CategoryLabels[cat] || cat}</div>
-            <button
-              className="bg-borealBlue text-white px-3 py-1"
-              onClick={() => select(cat)}
-            >
+        <Card key={cat} className="mb-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="font-semibold">{CategoryLabels[cat] || cat}</div>
+            <Button className="w-full md:w-auto" onClick={() => select(cat)}>
               Select
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       ))}
     </div>
   );

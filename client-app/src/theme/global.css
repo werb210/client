@@ -7,3 +7,10 @@ body {
   color: #062238;
   font-family: system-ui, sans-serif;
 }
+
+@media (max-width: 480px) {
+  .mobile-full {
+    width: 100% !important;
+    border-radius: 0 !important;
+  }
+}
