@@ -20,9 +20,13 @@ export function Step6_Review() {
 
     await ClientAppAPI.submit(app.applicationToken!);
 
-    const sn = await ClientAppAPI.getSignNowUrl(app.applicationToken!);
-
-    window.location.href = sn.data.signUrl;
+    try {
+      const sn = await ClientAppAPI.getSignNowUrl(app.applicationToken!);
+      if (!sn.data?.signUrl) throw new Error("Missing signing URL");
+      window.location.href = sn.data.signUrl;
+    } catch (e) {
+      alert("Unable to start signing. Support will contact you.");
+    }
   }
 
   return (

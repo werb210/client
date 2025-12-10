@@ -9,8 +9,11 @@ export const OfflineStore = {
   load() {
     try {
       const raw = localStorage.getItem(KEY);
-      return raw ? JSON.parse(raw) : null;
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && typeof parsed === "object") return parsed;
+      return null;
     } catch {
+      localStorage.removeItem(KEY);
       return null;
     }
   },

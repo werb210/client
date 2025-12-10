@@ -21,6 +21,32 @@ export function Step5_Documents() {
   async function handleFile(docType: string, file: File | null) {
     if (!file) return;
 
+    if (file.size > 15 * 1024 * 1024) {
+      alert("File too large. Max 15 MB.");
+      return;
+    }
+
+    const allowedTypes = [
+      "application/pdf",
+      "image/png",
+      "image/jpeg",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ];
+
+    const fileType = file.type || "";
+    const extension = file.name.toLowerCase();
+    const allowedExtensions = [".pdf", ".png", ".jpg", ".jpeg", ".docx", ".xlsx"];
+
+    const validType =
+      allowedTypes.includes(fileType) ||
+      allowedExtensions.some((ext) => extension.endsWith(ext));
+
+    if (!validType) {
+      alert("Unsupported file type. Allowed: PDF, PNG, JPEG, DOCX, XLSX.");
+      return;
+    }
+
     const form = new FormData();
     form.append("document", file);
     form.append("type", docType);

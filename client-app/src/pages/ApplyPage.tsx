@@ -6,11 +6,17 @@ import { Step4_Applicant } from "../wizard/Step4_Applicant";
 import { Step5_Documents } from "../wizard/Step5_Documents";
 import { Step6_Review } from "../wizard/Step6_Review";
 import { useApplicationStore } from "../state/useApplicationStore";
+import { useTokenGuard } from "../hooks/useTokenGuard";
 
 export function ApplyPage() {
   const { initialized, init } = useApplicationStore();
+  const token = useTokenGuard();
 
   if (!initialized) init(); // builds empty application session
+
+  if (!token && window.location.pathname !== "/apply/step-1") {
+    return <div>Missing application token. Restarting…</div>;
+  }
 
   return (
     <div className="p-4">
