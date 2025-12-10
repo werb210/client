@@ -3,6 +3,6 @@ export interface ApplicationData {
   productCategory: string | null;
   business: any;
   applicant: any;
-  documents: any;
+  documents: Record<string, any>;
   termsAccepted: boolean;
 }
