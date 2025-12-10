@@ -1,6 +1,9 @@
 import { useApplicationStore } from "../state/useApplicationStore";
 import { TERMS_TEXT } from "../data/terms";
 import { ClientAppAPI } from "../api/clientApp";
+import { StepHeader } from "../components/StepHeader";
+import { Card } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -23,36 +26,42 @@ export function Step6_Review() {
   }
 
   return (
-    <div>
-      <h1 className="text-xl font-bold mb-4">Step 6: Review & Submit</h1>
+    <div className="max-w-3xl mx-auto">
+      <StepHeader step={6} title="Review & Submit" />
 
-      <h2 className="font-semibold mb-2">Your Application</h2>
-      <pre className="bg-gray-100 p-3 text-sm mb-4 rounded">
-        {JSON.stringify(app, null, 2)}
-      </pre>
+      <Card className="space-y-4">
+        <div>
+          <h2 className="font-semibold mb-2">Your Application</h2>
+          <pre className="bg-gray-100 p-3 text-sm rounded">
+            {JSON.stringify(app, null, 2)}
+          </pre>
+        </div>
 
-      <h2 className="font-semibold mb-2">Terms & Conditions</h2>
-      <div className="bg-white p-3 border rounded mb-4 text-sm whitespace-pre-line">
-        {TERMS_TEXT}
-      </div>
+        <div>
+          <h2 className="font-semibold mb-2">Terms & Conditions</h2>
+          <div className="bg-white p-3 border rounded text-sm whitespace-pre-line">
+            {TERMS_TEXT}
+          </div>
+        </div>
 
-      <label className="flex items-center gap-2 mb-4">
-        <input
-          type="checkbox"
-          checked={app.termsAccepted}
-          onChange={toggleTerms}
-        />
-        <span>I agree to the Terms & Conditions</span>
-      </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={app.termsAccepted}
+            onChange={toggleTerms}
+          />
+          <span>I agree to the Terms & Conditions</span>
+        </label>
 
-      <button
-        className={`p-2 text-white ${
-          app.termsAccepted ? "bg-borealGreen" : "bg-gray-400 cursor-not-allowed"
-        }`}
-        onClick={submit}
-      >
-        Submit Application
-      </button>
+        <Button
+          className={`w-full md:w-auto ${
+            app.termsAccepted ? "" : "bg-gray-400 cursor-not-allowed"
+          }`}
+          onClick={submit}
+        >
+          Submit Application
+        </Button>
+      </Card>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useChatbot } from "../hooks/useChatbot";
 import { ClientAppAPI } from "../api/clientApp";
 import { OfflineStore } from "../state/offline";
+import { Input } from "./ui/Input";
 
 export function ChatWidget() {
   const [open, setOpen] = useState(false);
@@ -45,17 +46,17 @@ export function ChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 flex flex-col items-end">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end w-full md:w-auto">
       <button
-        className="bg-borealBlue text-white p-2 rounded"
+        className="bg-borealBlue text-white px-4 py-2 rounded-md shadow-sm mobile-full"
         onClick={() => setOpen(!open)}
       >
         {open ? "Close" : "Chat"}
       </button>
 
       {open && (
-        <div className="bg-white border shadow-lg p-3 mt-2 w-80 h-96 flex flex-col">
-          <div className="flex justify-between mb-2">
+        <div className="bg-white border shadow-xl rounded-lg p-4 w-full mobile-full md:w-80 h-[500px] flex flex-col mt-3">
+          <div className="flex justify-between items-center mb-3">
             <strong>Support</strong>
 
             <div className="flex gap-2 text-sm">
@@ -83,23 +84,24 @@ export function ChatWidget() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto mb-2">
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1">
             {messages.map((m, i) => (
-              <div key={i} className="mb-2">
-                <b>{m.from}:</b> {m.text}
+              <div key={i} className="p-2 rounded-md bg-gray-100 text-[14px] leading-tight">
+                <div className="text-[12px] text-gray-600 mb-1">{m.from}</div>
+                <div>{m.text}</div>
               </div>
             ))}
           </div>
 
-          <input
-            className="border p-2 w-full mb-2"
+          <Input
+            className="mb-2"
             placeholder="Type a message…"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e: any) => setText(e.target.value)}
           />
 
           <button
-            className="bg-borealBlue text-white p-2 w-full"
+            className="bg-borealBlue text-white p-2 rounded-md w-full"
             onClick={sendMessage}
           >
             Send
