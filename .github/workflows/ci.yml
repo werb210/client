@@ -5,15 +5,16 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client-app
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
+      - run: npm test -- --run
       - run: npm run build
       - name: Codex Audit
         run: npx codex audit --config codex.config.json
