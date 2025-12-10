@@ -1,11 +1,7 @@
-import React from "react";
-
-const Header: React.FC = () => {
+export function Header() {
   return (
-    <header style={{ padding: "16px", fontWeight: "bold" }}>
-      Boreal Financial
+    <header className="bg-borealBlue text-white p-4 flex items-center justify-between">
+      <div className="font-bold">Boreal Financial</div>
     </header>
   );
-};
-
-export default Header;
+}
