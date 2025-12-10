@@ -1,5 +1,6 @@
 import { useApplicationStore } from "../state/useApplicationStore";
 import { TERMS_TEXT } from "../data/terms";
+import { ClientAppAPI } from "../api/clientApp";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -8,24 +9,17 @@ export function Step6_Review() {
     update({ termsAccepted: !app.termsAccepted });
   }
 
-  function submit() {
+  async function submit() {
     if (!app.termsAccepted) {
       alert("You must accept the Terms & Conditions.");
       return;
     }
 
-    const submissionPayload = {
-      kyc: app.kyc,
-      productCategory: app.productCategory,
-      business: app.business,
-      applicant: app.applicant,
-      documents: app.documents,
-      termsAccepted: true
-    };
+    await ClientAppAPI.submit(app.applicationToken!);
 
-    console.log("FINAL PAYLOAD", submissionPayload);
+    const sn = await ClientAppAPI.getSignNowUrl(app.applicationToken!);
 
-    alert("Submit placeholder — payload logged to console.");
+    window.location.href = sn.data.signUrl;
   }
 
   return (

@@ -1,6 +1,7 @@
 import { useApplicationStore } from "../state/useApplicationStore";
 import { ProductSync } from "../lender/productSync";
 import { filterProductsForCategory, compileQuestions } from "../lender/compile";
+import { ClientAppAPI } from "../api/clientApp";
 
 export function Step4_Applicant() {
   const { app, update } = useApplicationStore();
@@ -18,7 +19,8 @@ export function Step4_Applicant() {
     update({ applicant: { ...values, [key]: value } });
   }
 
-  function next() {
+  async function next() {
+    await ClientAppAPI.update(app.applicationToken!, { applicant: values });
     window.location.href = "/apply/step-5";
   }
 

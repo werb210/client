@@ -1,10 +1,17 @@
 import { useApplicationStore } from "../state/useApplicationStore";
+import { ClientAppAPI } from "../api/clientApp";
 
 export function Step1_KYC() {
   const { app, update } = useApplicationStore();
 
-  function next() {
-    update({ kyc: { ...app.kyc } });
+  async function next() {
+    const payload = app.kyc;
+
+    const res = await ClientAppAPI.start(payload);
+    const token = res.data.token;
+
+    update({ applicationToken: token });
+
     window.location.href = "/apply/step-2";
   }
 

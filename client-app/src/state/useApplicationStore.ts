@@ -9,6 +9,7 @@ const emptyApp: ApplicationData = {
   applicant: {},
   documents: {},
   termsAccepted: false,
+  applicationToken: undefined,
 };
 
 export function useApplicationStore() {
@@ -41,5 +42,16 @@ export function useApplicationStore() {
     OfflineStore.clear();
   }
 
-  return { app, initialized, init, update, reset };
+  return {
+    app,
+    initialized,
+    init,
+    update,
+    reset,
+    applicationToken: app.applicationToken,
+    setToken(token: string) {
+      const next = { ...app, applicationToken: token };
+      update(next);
+    }
+  };
 }
