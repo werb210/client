@@ -41,7 +41,18 @@ export function useChatbot() {
 
     const aiRes = await AIChat.sendMessage(assistantId, th, text);
 
-    const reply = aiRes?.content?.[0]?.text?.value || "I'm here to help.";
+    let reply = aiRes?.content?.[0]?.text?.value || "I'm here to help.";
+
+    if (reply.length > 2000) reply = reply.slice(0, 2000);
+
+    if (
+      reply.toLowerCase().includes("guarantee") ||
+      reply.toLowerCase().includes("legal") ||
+      reply.toLowerCase().includes("financial advice")
+    ) {
+      reply =
+        "I'm here to assist with your application, but I cannot provide legal or financial advice.";
+    }
 
     // Log AI reply to staff server
     if (token) await ClientAppAPI.sendMessage(token, reply);

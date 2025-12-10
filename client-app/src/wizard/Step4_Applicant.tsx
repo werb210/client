@@ -6,6 +6,7 @@ import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
+import { Validate } from "../utils/validate";
 
 export function Step4_Applicant() {
   const { app, update } = useApplicationStore();
@@ -24,6 +25,12 @@ export function Step4_Applicant() {
   }
 
   async function next() {
+    const missing = applicantQuestions.find((q) => !Validate.required(values[q]));
+    if (missing) {
+      alert(`Please complete: ${missing}`);
+      return;
+    }
+
     await ClientAppAPI.update(app.applicationToken!, { applicant: values });
     window.location.href = "/apply/step-5";
   }

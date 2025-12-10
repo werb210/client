@@ -5,12 +5,34 @@ import { Card } from "../components/ui/Card";
 import { Select } from "../components/ui/Select";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
+import { Validate } from "../utils/validate";
+import { ResetApplication } from "../components/ResetApplication";
 
 export function Step1_KYC() {
   const { app, update } = useApplicationStore();
 
   async function next() {
     const payload = app.kyc;
+
+    if (!Validate.required(payload.country)) {
+      alert("Please select your business country.");
+      return;
+    }
+
+    if (!Validate.required(payload.amount) || !Validate.number(payload.amount)) {
+      alert("Please enter a funding amount.");
+      return;
+    }
+
+    if (!Validate.positive(payload.amount)) {
+      alert("Funding amount must be greater than zero.");
+      return;
+    }
+
+    if (!Validate.required(payload.revenueType)) {
+      alert("Please select your revenue type.");
+      return;
+    }
 
     const res = await ClientAppAPI.start(payload);
     const token = res.data.token;
@@ -69,6 +91,10 @@ export function Step1_KYC() {
       <Button className="mt-4 w-full md:w-auto" onClick={next}>
         Continue
       </Button>
+
+      <div className="mt-2">
+        <ResetApplication />
+      </div>
     </div>
   );
 }
