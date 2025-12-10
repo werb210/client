@@ -1,13 +1,21 @@
 import { useApplicationStore } from "../state/useApplicationStore";
-import { DefaultBusinessQuestions } from "../data/defaultQuestions";
+import { ProductSync } from "../lender/productSync";
+import { filterProductsForCategory, compileQuestions } from "../lender/compile";
 
 export function Step3_Business() {
   const { app, update } = useApplicationStore();
 
-  const business = { ...DefaultBusinessQuestions, ...app.business };
+  const products = filterProductsForCategory(
+    ProductSync.load(),
+    app.productCategory!
+  );
+
+  const { businessQuestions } = compileQuestions(products);
+
+  const values = { ...app.business };
 
   function setField(key: string, value: any) {
-    update({ business: { ...business, [key]: value } });
+    update({ business: { ...values, [key]: value } });
   }
 
   function next() {
@@ -16,20 +24,20 @@ export function Step3_Business() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">Step 3: Business Details</h1>
+      <h1 className="text-xl font-bold mb-4">Business Information</h1>
 
-      {Object.keys(DefaultBusinessQuestions).map((key) => (
-        <label key={key} className="block mb-2 capitalize">
-          {key.replace(/([A-Z])/g, " $1")}
+      {businessQuestions.map((q) => (
+        <label key={q} className="block mb-2">
+          {q}
           <input
             className="border p-2 w-full"
-            value={business[key] || ""}
-            onChange={(e) => setField(key, e.target.value)}
+            value={values[q] || ""}
+            onChange={(e) => setField(q, e.target.value)}
           />
         </label>
       ))}
 
-      <button className="bg-borealBlue text-white p-2" onClick={next}>
+      <button className="bg-borealBlue text-white p-2 mt-4" onClick={next}>
         Continue
       </button>
     </div>

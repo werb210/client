@@ -17,8 +17,14 @@ export function useApplicationStore() {
 
   function init() {
     if (initialized) return;
+
     const saved = OfflineStore.load();
     if (saved) setApp(saved);
+
+    // Load lender products into offline cache
+    const { ProductSync } = require("../lender/productSync");
+    ProductSync.sync();
+
     setInitialized(true);
   }
 
