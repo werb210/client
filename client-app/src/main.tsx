@@ -1,16 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import App from "./App";
-import "./styles/tailwind.css";
-import "./styles/global.css";
-
-const queryClient = new QueryClient();
+import { BrowserRouter } from "react-router-dom";
+import App from "./app/App";
+import "./theme/global.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
       <App />
-    </QueryClientProvider>
-  </React.StrictMode>,
+    </BrowserRouter>
+  </React.StrictMode>
 );
