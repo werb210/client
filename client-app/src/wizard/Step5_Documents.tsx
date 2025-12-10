@@ -1,8 +1,8 @@
 import { useApplicationStore } from "../state/useApplicationStore";
 import { DefaultDocLabels } from "../data/requiredDocs";
-import { fileToBase64 } from "../utils/fileToBase64";
 import { ProductSync } from "../lender/productSync";
 import { compileDocs, filterProductsForCategory } from "../lender/compile";
+import { ClientAppAPI } from "../api/clientApp";
 
 export function Step5_Documents() {
   const { app, update } = useApplicationStore();
@@ -17,25 +17,16 @@ export function Step5_Documents() {
   async function handleFile(docType: string, file: File | null) {
     if (!file) return;
 
-    const allowed = [
-      "application/pdf",
-      "image/png",
-      "image/jpeg",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    ];
+    const form = new FormData();
+    form.append("document", file);
+    form.append("type", docType);
 
-    if (!allowed.includes(file.type)) {
-      alert("Invalid file type.");
-      return;
-    }
-
-    const base64 = await fileToBase64(file);
+    await ClientAppAPI.uploadDoc(app.applicationToken!, form);
 
     update({
       documents: {
         ...app.documents,
-        [docType]: { name: file.name, base64 }
+        [docType]: { name: file.name, uploaded: true }
       }
     });
   }
