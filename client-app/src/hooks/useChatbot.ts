@@ -1,63 +1,113 @@
-import { useState } from "react";
-import { AIChat, setAIKey } from "../api/ai";
-import { ClientAppAPI } from "../api/clientApp";
+import { useMemo } from "react";
 import { OfflineStore } from "../state/offline";
+import {
+  FUNDING_INTENT_CATEGORY_MAP,
+  FUNDING_INTENT_LABELS,
+  getAllowedCategories,
+  normalizeFundingIntent,
+} from "../constants/wizard";
+import { DefaultDocLabels } from "../data/requiredDocs";
 
 export function useChatbot() {
-  const cached = OfflineStore.load();
-  const token = cached?.applicationToken;
-
-  const assistantId = import.meta.env.VITE_OPENAI_ASSISTANT_ID;
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-
-  const [threadId, setThreadId] = useState<string | null>(
-    cached?.chatThreadId || null
+  const staticSteps = useMemo(
+    () => [
+      { step: 1, title: "Financial Profile" },
+      { step: 2, title: "Choose Product Category" },
+      { step: 3, title: "Business Details" },
+      { step: 4, title: "Applicant Details" },
+      { step: 5, title: "Required Documents" },
+      { step: 6, title: "Terms & Signature" },
+    ],
+    []
   );
 
-  if (apiKey) setAIKey(apiKey);
+  function getWizardSnapshot() {
+    return OfflineStore.load() || {};
+  }
 
-  async function ensureThread() {
-    if (threadId) return threadId;
+  function describeIntent(intent?: string) {
+    const normalized = normalizeFundingIntent(intent);
+    if (!normalized) return "your selection from Step 1";
+    return FUNDING_INTENT_LABELS[normalized];
+  }
 
-    // Create thread
-    const res = await AIChat.ai.post("/threads", {});
-    const newId = res.data.id;
+  function describeCategories(intent?: string) {
+    const normalized = normalizeFundingIntent(intent);
+    if (!normalized) return [];
+    return FUNDING_INTENT_CATEGORY_MAP[normalized];
+  }
 
-    setThreadId(newId);
+  function describeDocuments(state: any) {
+    const uploaded = Object.keys(state.documents || {}).map(
+      (doc) => DefaultDocLabels[doc] || doc
+    );
+    if (state.documentsDeferred) {
+      return "You chose to upload documents later. You can return to Step 5 to upload required files.";
+    }
+    if (uploaded.length) {
+      return `Uploaded so far: ${uploaded.join(", ")}. The required documents list appears in Step 5 (bank statements are always required).`;
+    }
+    return "Required documents are listed in Step 5. Bank statements for the last 6 months are always required.";
+  }
 
-    OfflineStore.save({
-      ...cached,
-      chatThreadId: newId,
-    });
+  function handleStepQuestion(state: any, message: string) {
+    if (!message.includes("step")) return "";
+    if (message.includes("step 2") || message.includes("step two")) {
+      const intentLabel = describeIntent(state.kyc?.lookingFor);
+      const allowed = getAllowedCategories(state.kyc?.lookingFor);
+      const visible =
+        allowed.length > 0
+          ? allowed.join(", ")
+          : "no categories yet (select a funding intent in Step 1)";
+      return `Step 2 is where you choose a product category. Based on ${intentLabel}, you should see: ${visible}.`;
+    }
+    const currentStep =
+      typeof state.currentStep === "number"
+        ? state.currentStep
+        : "the current step";
+    const stepList = staticSteps
+      .map((step) => `Step ${step.step}: ${step.title}`)
+      .join("; ");
+    return `You are on ${currentStep}. The application steps are: ${stepList}.`;
+  }
 
-    return newId;
+  function handleCategoryQuestion(state: any) {
+    const intentLabel = describeIntent(state.kyc?.lookingFor);
+    const allowed = describeCategories(state.kyc?.lookingFor);
+    if (!allowed.length) {
+      return "You haven't selected a funding intent in Step 1 yet, so no product categories are available.";
+    }
+    return `You selected ${intentLabel} in Step 1, so Step 2 shows only: ${allowed.join(
+      ", "
+    )}.`;
   }
 
   async function send(text: string) {
-    const th = await ensureThread();
-
-    // Log to staff
-    if (token) await ClientAppAPI.sendMessage(token, text);
-
-    const aiRes = await AIChat.sendMessage(assistantId, th, text);
-
-    let reply = aiRes?.content?.[0]?.text?.value || "I'm here to help.";
-
-    if (reply.length > 2000) reply = reply.slice(0, 2000);
+    const state = getWizardSnapshot();
+    const message = text.toLowerCase();
 
     if (
-      reply.toLowerCase().includes("guarantee") ||
-      reply.toLowerCase().includes("legal") ||
-      reply.toLowerCase().includes("financial advice")
+      message.includes("document") ||
+      message.includes("upload") ||
+      message.includes("requirements")
     ) {
-      reply =
-        "I'm here to assist with your application, but I cannot provide legal or financial advice.";
+      return describeDocuments(state);
     }
 
-    // Log AI reply to staff server
-    if (token) await ClientAppAPI.sendMessage(token, reply);
+    if (
+      message.includes("why am i seeing") ||
+      message.includes("why am i seeing this") ||
+      message.includes("why am i seeing these") ||
+      message.includes("why are these") ||
+      message.includes("categories")
+    ) {
+      return handleCategoryQuestion(state);
+    }
 
-    return reply;
+    const stepAnswer = handleStepQuestion(state, message);
+    if (stepAnswer) return stepAnswer;
+
+    return "I can explain each step, why product categories appear in Step 2, or what documents are required. Ask me about Step 2, categories, or document requirements.";
   }
 
   return { send };

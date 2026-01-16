@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { TERMS_TEXT } from "../data/terms";
 import { ClientAppAPI } from "../api/clientApp";
@@ -13,6 +14,7 @@ export function Step6_Review() {
   const { app, update } = useApplicationStore();
   const [submitted, setSubmitted] = useState(false);
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (app.currentStep !== 6) {
@@ -206,17 +208,25 @@ export function Step6_Review() {
           </label>
         </div>
 
-        <Button
-          style={{
-            width: "100%",
-            maxWidth: "240px",
-            marginTop: theme.spacing.sm,
-          }}
-          onClick={submit}
-          disabled={!app.termsAccepted || !app.typedSignature?.trim()}
-        >
-          Submit application
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            variant="secondary"
+            style={{ width: "100%", maxWidth: "160px" }}
+            onClick={() => navigate("/apply/step-5")}
+          >
+            ← Back
+          </Button>
+          <Button
+            style={{
+              width: "100%",
+              maxWidth: "240px",
+            }}
+            onClick={submit}
+            disabled={!app.termsAccepted || !app.typedSignature?.trim()}
+          >
+            Submit application
+          </Button>
+        </div>
       </Card>
     </WizardLayout>
   );

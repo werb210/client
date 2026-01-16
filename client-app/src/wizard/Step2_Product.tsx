@@ -6,24 +6,23 @@ import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { WizardLayout } from "../components/WizardLayout";
 import { theme } from "../styles/theme";
+import {
+  FundingIntent,
+  getAllowedCategories,
+  normalizeFundingIntent,
+} from "../constants/wizard";
 
 const PRODUCT_COUNTS: Record<string, number> = {
   "Working Capital": 1,
   "Equipment Financing": 6,
   "Line of Credit": 19,
-  "Purchase Order Financing": 2,
-  "Term Loan": 8,
 };
 
 const MATCH_BASELINES: Record<string, number> = {
   "Working Capital": 50,
   "Equipment Financing": 48,
   "Line of Credit": 44,
-  "Purchase Order Financing": 40,
-  "Term Loan": 40,
 };
-
-const TERM_LOAN_MIN_REVENUE = 250000;
 
 function toLower(value?: string) {
   return (value || "").toLowerCase();
@@ -38,21 +37,6 @@ function parseYearsInBusiness(value?: string) {
   const numbers = normalized.match(/\d+/g);
   if (!numbers?.length) return 0;
   return Number(numbers[numbers.length - 1]);
-}
-
-function parseRevenueMinimum(value?: string) {
-  const normalized = toLower(value).replace(/,/g, "");
-  if (!normalized) return 0;
-  if (normalized.includes("under")) return 0;
-  const numbers = normalized.match(/\d+/g);
-  if (!numbers?.length) return 0;
-  if (normalized.includes("over")) {
-    return Number(numbers[0]);
-  }
-  if (normalized.includes("to")) {
-    return Number(numbers[0]);
-  }
-  return Number(numbers[0]);
 }
 
 function hasPositiveBalance(value?: string) {
@@ -70,36 +54,33 @@ export function Step2_Product() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
 
+  const allowedCategoryNames = useMemo(
+    () => getAllowedCategories(app.kyc.lookingFor),
+    [app.kyc.lookingFor]
+  );
+
   const categories = useMemo(() => {
     const purpose = toLower(app.kyc.purposeOfFunds);
     const hasWorkingCapitalPurpose =
       purpose.includes("working capital") || purpose.includes("cash flow");
     const hasEquipmentPurpose = purpose.includes("equipment");
-    const hasInventoryPurpose =
-      purpose.includes("inventory") || purpose.includes("purchase order");
 
     const hasAccountsReceivable = hasPositiveBalance(
       app.kyc.accountsReceivable
     );
     const hasFixedAssets = hasPositiveBalance(app.kyc.fixedAssets);
     const hasMonthlyRevenue = Boolean(app.kyc.monthlyRevenue);
-    const hasRevenueHistory = Boolean(app.kyc.revenueLast12Months);
     const yearsInBusiness = parseYearsInBusiness(app.kyc.salesHistory);
-    const revenueMinimum = parseRevenueMinimum(app.kyc.revenueLast12Months);
 
     const workingCapitalAvailable =
       hasWorkingCapitalPurpose || hasAccountsReceivable || hasMonthlyRevenue;
     const equipmentAvailable = hasEquipmentPurpose || hasFixedAssets;
-    const revenueStable = hasMonthlyRevenue && hasRevenueHistory;
-    const lineOfCreditAvailable = yearsInBusiness >= 2 && revenueStable;
-    const purchaseOrderAvailable =
-      hasInventoryPurpose || hasAccountsReceivable;
-    const termLoanAvailable =
-      yearsInBusiness >= 1 && revenueMinimum >= TERM_LOAN_MIN_REVENUE;
+    const lineOfCreditAvailable = yearsInBusiness >= 2 && hasMonthlyRevenue;
 
     const categoryDefinitions = [
       {
         name: "Working Capital",
+        intent: FundingIntent.WORKING_CAPITAL,
         available: workingCapitalAvailable,
         criteria: [
           hasWorkingCapitalPurpose,
@@ -109,28 +90,23 @@ export function Step2_Product() {
       },
       {
         name: "Equipment Financing",
+        intent: FundingIntent.EQUIPMENT,
         available: equipmentAvailable,
         criteria: [hasEquipmentPurpose, hasFixedAssets],
       },
       {
         name: "Line of Credit",
+        intent: FundingIntent.WORKING_CAPITAL,
         available: lineOfCreditAvailable,
-        criteria: [yearsInBusiness >= 2, revenueStable],
-      },
-      {
-        name: "Purchase Order Financing",
-        available: purchaseOrderAvailable,
-        criteria: [hasInventoryPurpose, hasAccountsReceivable],
-      },
-      {
-        name: "Term Loan",
-        available: termLoanAvailable,
-        criteria: [yearsInBusiness >= 1, revenueMinimum >= TERM_LOAN_MIN_REVENUE],
+        criteria: [yearsInBusiness >= 2, hasMonthlyRevenue],
       },
     ];
 
     return categoryDefinitions
-      .filter((category) => category.available)
+      .filter(
+        (category) =>
+          category.available && allowedCategoryNames.includes(category.name)
+      )
       .map((category) => {
         const matches = category.criteria.filter(Boolean).length;
         const baseline = MATCH_BASELINES[category.name] ?? 40;
@@ -145,7 +121,7 @@ export function Step2_Product() {
           productsCount: PRODUCT_COUNTS[category.name] ?? 0,
         };
       });
-  }, [app.kyc]);
+  }, [allowedCategoryNames, app.kyc]);
 
   useEffect(() => {
     if (app.currentStep !== 2) {
@@ -153,29 +129,28 @@ export function Step2_Product() {
     }
   }, [app.currentStep, update]);
 
-  const topMatch = useMemo(() => {
-    return categories.reduce(
-      (best, category) =>
-        !best || category.matchScore > best.matchScore ? category : best,
-      undefined as undefined | (typeof categories)[number]
-    );
-  }, [categories]);
-
   useEffect(() => {
-    if (!categories.length) {
-      if (app.productCategory) {
-        update({ productCategory: null });
-      }
+    const normalizedIntent = normalizeFundingIntent(app.kyc.lookingFor);
+    if (!normalizedIntent && app.productCategory) {
+      update({ productCategory: null });
       return;
     }
 
     const current = categories.find(
       (category) => category.name === app.productCategory
     );
-    if (!current && topMatch) {
-      update({ productCategory: topMatch.name });
+    if (app.productCategory && !current) {
+      update({ productCategory: null });
+      return;
     }
-  }, [app.productCategory, categories, topMatch, update]);
+
+    if (categories.length === 1) {
+      const onlyOption = categories[0].name;
+      if (app.productCategory !== onlyOption) {
+        update({ productCategory: onlyOption });
+      }
+    }
+  }, [app.kyc.lookingFor, app.productCategory, categories, update]);
 
   function select(name: string) {
     update({ productCategory: name });

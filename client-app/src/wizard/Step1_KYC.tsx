@@ -14,6 +14,10 @@ import {
   getCountryCode,
 } from "../utils/location";
 import { theme } from "../styles/theme";
+import {
+  FUNDING_INTENT_OPTIONS,
+  normalizeFundingIntent,
+} from "../constants/wizard";
 
 const MatchCategories = [
   "line_of_credit",
@@ -30,12 +34,6 @@ const MatchBaselines: Record<string, number> = {
   term_loan: 65,
   equipment_financing: 70,
 };
-
-const LookingForOptions = [
-  { value: "capital", label: "Capital" },
-  { value: "equipment", label: "Equipment Financing" },
-  { value: "both", label: "Capital & Equipment" },
-];
 
 const BusinessLocationOptions = ["Canada", "United States", "Other"];
 
@@ -109,19 +107,6 @@ function parseCurrency(value: string) {
   return Number.parseFloat(cleaned);
 }
 
-function normalizeLookingFor(value?: string) {
-  if (!value) return "";
-  if (value === "capital" || value === "equipment" || value === "both") {
-    return value;
-  }
-  const trimmed = value.trim();
-  if (trimmed === "Capital") return "capital";
-  if (trimmed === "Equipment Financing") return "equipment";
-  if (trimmed === "Capital & Equipment") return "both";
-  if (trimmed === "Both Capital & Equipment") return "both";
-  return "";
-}
-
 function buildMatchPercentages(amount: number): Record<string, number> {
   const amountBoost =
     amount >= 500000 ? 10 : amount >= 250000 ? 7 : amount >= 100000 ? 4 : 0;
@@ -150,7 +135,7 @@ export function Step1_KYC() {
   }, [app.currentStep, update]);
 
   useEffect(() => {
-    const normalized = normalizeLookingFor(app.kyc.lookingFor);
+    const normalized = normalizeFundingIntent(app.kyc.lookingFor);
     if (normalized && normalized !== app.kyc.lookingFor) {
       update({ kyc: { ...app.kyc, lookingFor: normalized } });
     }
@@ -242,18 +227,20 @@ export function Step1_KYC() {
             <div>
               <label style={labelStyle}>What are you looking for?</label>
               <Select
-                value={normalizeLookingFor(app.kyc.lookingFor) || ""}
-                onChange={(e: any) =>
+                value={normalizeFundingIntent(app.kyc.lookingFor) || ""}
+                onChange={(e: any) => {
+                  const nextIntent = normalizeFundingIntent(e.target.value);
                   update({
                     kyc: {
                       ...app.kyc,
-                      lookingFor: normalizeLookingFor(e.target.value),
+                      lookingFor: nextIntent,
                     },
-                  })
-                }
+                    productCategory: null,
+                  });
+                }}
               >
                 <option value="">Select…</option>
-                {LookingForOptions.map((option) => (
+                {FUNDING_INTENT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
