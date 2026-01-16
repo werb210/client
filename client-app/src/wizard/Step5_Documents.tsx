@@ -14,7 +14,6 @@ export function Step5_Documents() {
   const navigate = useNavigate();
   const [docsRequired, setDocsRequired] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (app.currentStep !== 5) {
@@ -114,22 +113,13 @@ export function Step5_Documents() {
     navigate("/apply/step-6");
   }
 
-  async function defer() {
-    if (!app.applicationToken) return;
-    setMessage(null);
-    try {
-      await ClientAppAPI.deferDocuments(app.applicationToken);
-      await ClientAppAPI.update(app.applicationToken, {
-        status: "PENDING_DOCUMENTS",
-      });
-      setMessage(
-        "We saved your application and sent a secure upload link by SMS."
-      );
-      update({ documentsDeferred: true });
-    } catch {
-      setMessage("Unable to defer documents. Please try again.");
-    }
-  }
+  const handleUploadLater = () => {
+    update({ documentsDeferred: true });
+    alert(
+      "Warning: your application will stay in pending status until the required documents are received."
+    );
+    navigate("/apply/step-6");
+  };
 
   return (
     <WizardLayout>
@@ -179,7 +169,7 @@ export function Step5_Documents() {
           </p>
           <button
             className="boreal-button boreal-button-secondary mt-3 px-5 h-12"
-            onClick={defer}
+            onClick={handleUploadLater}
           >
             Upload documents later
           </button>
@@ -191,7 +181,6 @@ export function Step5_Documents() {
           )}
         </div>
 
-        {message && <div className="text-sm text-borealBlue">{message}</div>}
       </Card>
 
       <Button

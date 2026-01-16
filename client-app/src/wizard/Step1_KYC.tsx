@@ -16,19 +16,19 @@ import {
 } from "../utils/location";
 
 const MatchCategories = [
-  "working_capital",
   "line_of_credit",
-  "equipment_financing",
-  "purchase_order_financing",
+  "factoring",
+  "po_financing",
   "term_loan",
+  "equipment_financing",
 ];
 
 const MatchBaselines: Record<string, number> = {
-  working_capital: 74,
   line_of_credit: 68,
-  equipment_financing: 70,
-  purchase_order_financing: 62,
+  factoring: 74,
+  po_financing: 62,
   term_loan: 65,
+  equipment_financing: 70,
 };
 
 const LookingForOptions = [
