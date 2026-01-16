@@ -8,7 +8,6 @@ import { Select } from "../components/ui/Select";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { Validate } from "../utils/validate";
-import { ResetApplication } from "../components/ResetApplication";
 import { WizardLayout } from "../components/WizardLayout";
 import {
   formatCurrencyValue,
@@ -488,7 +487,6 @@ export function Step1_KYC() {
           >
             Continue →
           </Button>
-          <ResetApplication />
         </div>
       </WizardLayout>
 
