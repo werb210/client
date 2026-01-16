@@ -18,8 +18,12 @@ export function ChatWidget() {
 
   async function refreshMessages() {
     if (!token) return;
-    const res = await ClientAppAPI.getMessages(token);
-    setMessages(res.data);
+    try {
+      const res = await ClientAppAPI.getMessages(token);
+      setMessages(res.data);
+    } catch (error) {
+      console.error("Chat refresh failed:", error);
+    }
   }
 
   useEffect(() => {
@@ -31,18 +35,22 @@ export function ChatWidget() {
   async function sendMessage() {
     if (!text.trim()) return;
 
-    if (issueMode) {
-      await ClientAppAPI.sendMessage(token, "[ISSUE REPORTED] " + text);
-      setIssueMode(false);
-    } else if (mode === "human") {
-      await ClientAppAPI.sendMessage(token, text);
-    } else {
-      const aiReply = await sendAI(text);
-      await ClientAppAPI.sendMessage(token, aiReply);
-    }
+    try {
+      if (issueMode) {
+        await ClientAppAPI.sendMessage(token, "[ISSUE REPORTED] " + text);
+        setIssueMode(false);
+      } else if (mode === "human") {
+        await ClientAppAPI.sendMessage(token, text);
+      } else {
+        const aiReply = await sendAI(text);
+        await ClientAppAPI.sendMessage(token, aiReply);
+      }
 
-    setText("");
-    refreshMessages();
+      setText("");
+      refreshMessages();
+    } catch (error) {
+      console.error("Chat send failed:", error);
+    }
   }
 
   return (

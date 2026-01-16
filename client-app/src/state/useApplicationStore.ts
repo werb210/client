@@ -49,12 +49,18 @@ export function useApplicationStore() {
   const [initialized, setInitialized] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const canAutosave = app.currentStep > 1;
+
   function init() {
     if (initialized) return;
 
     // Load lender products into offline cache
     const { ProductSync } = require("../lender/productSync");
-    ProductSync.sync();
+    try {
+      ProductSync.sync();
+    } catch (error) {
+      console.error("Product sync failed:", error);
+    }
 
     setInitialized(true);
   }
@@ -69,6 +75,13 @@ export function useApplicationStore() {
   }
 
   useEffect(() => {
+    if (!canAutosave) {
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+      }
+      return;
+    }
+
     if (saveTimer.current) {
       clearTimeout(saveTimer.current);
     }
@@ -89,6 +102,8 @@ export function useApplicationStore() {
           typedSignature: app.typedSignature,
           signatureDate: app.signatureDate,
           currentStep: app.currentStep,
+        }).catch((error) => {
+          console.error("Autosave failed:", error);
         });
       }
     }, 500);
@@ -98,7 +113,7 @@ export function useApplicationStore() {
         clearTimeout(saveTimer.current);
       }
     };
-  }, [app]);
+  }, [app, canAutosave]);
 
   return {
     app,
