@@ -7,6 +7,7 @@ import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { WizardLayout } from "../components/WizardLayout";
+import { theme } from "../styles/theme";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -52,19 +53,36 @@ export function Step6_Review() {
   if (submitted) {
     return (
       <WizardLayout>
-        <Card className="space-y-3 text-center py-10">
-          <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
+        <Card
+          className="space-y-3"
+          style={{ textAlign: "center", padding: theme.spacing.xl }}
+        >
+          <div
+            style={{
+              fontSize: "12px",
+              textTransform: "uppercase",
+              letterSpacing: "0.2em",
+              color: theme.colors.textSecondary,
+            }}
+          >
             Application submitted
           </div>
-          <h1 className="text-2xl font-semibold text-borealBlue">
+          <h1
+            style={{
+              fontSize: theme.typography.h1.fontSize,
+              fontWeight: theme.typography.h1.fontWeight,
+              color: theme.colors.textPrimary,
+              margin: 0,
+            }}
+          >
             Thank you for your submission.
           </h1>
-          <p className="text-sm text-slate-600">
+          <p style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
             We’ve received your application and will notify you about next
             steps. You can also review updates in your client portal.
           </p>
           <Button
-            className="mt-2 w-full md:w-auto"
+            style={{ marginTop: theme.spacing.sm, width: "100%", maxWidth: "260px" }}
             onClick={() =>
               (window.location.href = `/status?token=${app.applicationToken}`)
             }
@@ -83,46 +101,109 @@ export function Step6_Review() {
       <Card className="space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <h2 className="font-semibold mb-2">Terms & Conditions</h2>
-            <div className="bg-white p-4 border border-slate-200 rounded-xl text-sm whitespace-pre-line">
+            <h2
+              style={{
+                fontSize: theme.typography.h2.fontSize,
+                fontWeight: theme.typography.h2.fontWeight,
+                marginBottom: theme.spacing.xs,
+                color: theme.colors.textPrimary,
+              }}
+            >
+              Terms & Conditions
+            </h2>
+            <div
+              style={{
+                background: theme.colors.background,
+                padding: theme.spacing.md,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.layout.radius,
+                fontSize: "14px",
+                color: theme.colors.textSecondary,
+                whiteSpace: "pre-line",
+              }}
+            >
               {TERMS_TEXT}
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Typed signature</label>
+            <label
+              style={{
+                display: "block",
+                fontSize: theme.typography.label.fontSize,
+                fontWeight: theme.typography.label.fontWeight,
+                color: theme.colors.textSecondary,
+              }}
+            >
+              Typed signature
+            </label>
             <Input
               placeholder="Type your full legal name"
               value={app.typedSignature || ""}
               onChange={(e: any) => update({ typedSignature: e.target.value })}
             />
-            <p className="text-xs text-slate-500">
+            <p style={{ fontSize: "12px", color: theme.colors.textSecondary }}>
               By typing your name, you are providing a legally binding signature.
             </p>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Date</label>
+            <label
+              style={{
+                display: "block",
+                fontSize: theme.typography.label.fontSize,
+                fontWeight: theme.typography.label.fontWeight,
+                color: theme.colors.textSecondary,
+              }}
+            >
+              Date
+            </label>
             <Input value={app.signatureDate || today} readOnly />
           </div>
 
-          <label className="flex items-start gap-2 text-sm md:col-span-2">
+          <label
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: theme.spacing.xs,
+              fontSize: theme.typography.label.fontSize,
+              fontWeight: theme.typography.label.fontWeight,
+              color: theme.colors.textPrimary,
+            }}
+            className="md:col-span-2"
+          >
             <input
               type="checkbox"
               checked={app.termsAccepted}
               onChange={toggleTerms}
-              className="mt-1"
+              style={{
+                width: "18px",
+                height: "18px",
+                borderRadius: "4px",
+                border: `1px solid ${theme.colors.border}`,
+                background: app.termsAccepted ? theme.colors.primary : theme.colors.surface,
+                display: "inline-grid",
+                placeContent: "center",
+                appearance: "none",
+                marginTop: "2px",
+                backgroundImage: app.termsAccepted
+                  ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 10.5l3 3 7-7' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")"
+                  : "none",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
+                backgroundSize: "12px",
+              }}
             />
             <span>I agree to the Terms & Conditions</span>
           </label>
         </div>
 
         <Button
-          className={`w-full md:w-auto ${
-            app.termsAccepted && app.typedSignature?.trim()
-              ? ""
-              : "bg-gray-400 cursor-not-allowed"
-          }`}
+          style={{
+            width: "100%",
+            maxWidth: "240px",
+            marginTop: theme.spacing.sm,
+          }}
           onClick={submit}
           disabled={!app.termsAccepted || !app.typedSignature?.trim()}
         >

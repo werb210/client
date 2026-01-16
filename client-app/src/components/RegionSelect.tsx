@@ -1,3 +1,5 @@
+import { Select } from "./ui/Select";
+
 export function RegionSelect({
   country,
   value,
@@ -78,18 +80,14 @@ export function RegionSelect({
         ];
 
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="boreal-input w-full px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-borealLightBlue"
-    >
+    <Select value={value} onChange={(e: any) => onChange(e.target.value)}>
       <option value="">Select</option>
       {options.map((option) => (
         <option key={option} value={option}>
           {option}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }
 

@@ -18,6 +18,7 @@ import {
   getRegionLabel,
 } from "../utils/location";
 import { WizardLayout } from "../components/WizardLayout";
+import { theme } from "../styles/theme";
 
 export function Step3_Business() {
   const { app, update } = useApplicationStore();
@@ -59,6 +60,14 @@ export function Step3_Business() {
     "estimatedRevenue",
   ].every((field) => Validate.required(values[field]));
 
+  const labelStyle = {
+    display: "block",
+    marginBottom: theme.spacing.xs,
+    fontSize: theme.typography.label.fontSize,
+    fontWeight: theme.typography.label.fontWeight,
+    color: theme.colors.textSecondary,
+  };
+
   async function next() {
     const requiredFields = [
       "businessName",
@@ -99,7 +108,7 @@ export function Step3_Business() {
       <Card className="space-y-5">
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block mb-2 font-medium">Business Name (DBA)</label>
+            <label style={labelStyle}>Business Name (DBA)</label>
             <Input
               value={values.businessName || ""}
               onChange={(e: any) => setField("businessName", e.target.value)}
@@ -107,7 +116,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Business Legal Name</label>
+            <label style={labelStyle}>Business Legal Name</label>
             <Input
               value={values.legalName || ""}
               onChange={(e: any) => setField("legalName", e.target.value)}
@@ -115,7 +124,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Business Structure</label>
+            <label style={labelStyle}>Business Structure</label>
             <Select
               value={values.businessStructure || ""}
               onChange={(e: any) =>
@@ -133,7 +142,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Business Address</label>
+            <label style={labelStyle}>Business Address</label>
             <Input
               value={values.address || ""}
               onChange={(e: any) => setField("address", e.target.value)}
@@ -141,14 +150,14 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">City</label>
+            <label style={labelStyle}>City</label>
             <Input
               value={values.city || ""}
               onChange={(e: any) => setField("city", e.target.value)}
             />
           </div>
           <div>
-            <label className="block mb-2 font-medium">{regionLabel}</label>
+            <label style={labelStyle}>{regionLabel}</label>
             <RegionSelect
               country={regionCountry}
               value={values.state || ""}
@@ -156,7 +165,7 @@ export function Step3_Business() {
             />
           </div>
           <div>
-            <label className="block mb-2 font-medium">{postalLabel}</label>
+            <label style={labelStyle}>{postalLabel}</label>
             <Input
               value={formatPostalCode(values.zip || "", countryCode)}
               onChange={(e: any) =>
@@ -166,7 +175,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Business Phone</label>
+            <label style={labelStyle}>Business Phone</label>
             <Input
               value={formatPhoneNumber(values.phone || "", countryCode)}
               onChange={(e: any) =>
@@ -181,9 +190,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">
-              Business Website (optional)
-            </label>
+            <label style={labelStyle}>Business Website (optional)</label>
             <Input
               type="url"
               value={values.website || ""}
@@ -193,7 +200,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Business Start Date</label>
+            <label style={labelStyle}>Business Start Date</label>
             <Input
               type="date"
               value={values.startDate || ""}
@@ -202,10 +209,20 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Number of Employees</label>
+            <label style={labelStyle}>Number of Employees</label>
             <div className="flex items-center gap-3">
               <button
-                className="h-10 w-10 rounded-full border border-slate-200 text-lg"
+                style={{
+                  height: "40px",
+                  width: "40px",
+                  borderRadius: "999px",
+                  border: `1px solid ${theme.colors.border}`,
+                  background: theme.colors.surface,
+                  color: theme.colors.textPrimary,
+                  fontSize: "18px",
+                  outline: "none",
+                  cursor: "pointer",
+                }}
                 onClick={() =>
                   setField(
                     "employees",
@@ -219,12 +236,22 @@ export function Step3_Business() {
               <Input
                 type="number"
                 min="0"
-                className="text-center"
+                style={{ textAlign: "center" }}
                 value={values.employees ?? ""}
                 onChange={(e: any) => setField("employees", e.target.value)}
               />
               <button
-                className="h-10 w-10 rounded-full border border-slate-200 text-lg"
+                style={{
+                  height: "40px",
+                  width: "40px",
+                  borderRadius: "999px",
+                  border: `1px solid ${theme.colors.border}`,
+                  background: theme.colors.surface,
+                  color: theme.colors.textPrimary,
+                  fontSize: "18px",
+                  outline: "none",
+                  cursor: "pointer",
+                }}
                 onClick={() =>
                   setField("employees", Number(values.employees || 0) + 1)
                 }
@@ -236,9 +263,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">
-              Estimated Yearly Revenue
-            </label>
+            <label style={labelStyle}>Estimated Yearly Revenue</label>
             <Input
               value={formatCurrencyValue(
                 values.estimatedRevenue || "",
@@ -257,7 +282,11 @@ export function Step3_Business() {
       </Card>
 
       <Button
-        className="mt-6 w-full md:w-auto"
+        style={{
+          width: "100%",
+          maxWidth: "220px",
+          marginTop: theme.spacing.lg,
+        }}
         onClick={next}
         disabled={!isValid}
       >

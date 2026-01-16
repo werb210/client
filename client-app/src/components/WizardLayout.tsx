@@ -12,19 +12,34 @@ export function WizardLayout({ children }: WizardLayoutProps) {
         minHeight: "100vh",
         background: theme.colors.background,
         color: theme.colors.textPrimary,
-        fontFamily: theme.fonts.base,
+        fontFamily: theme.typography.fontFamily,
         display: "flex",
         justifyContent: "center",
+        padding: theme.layout.pagePadding,
       }}
     >
       <div
         style={{
           width: "100%",
           maxWidth: theme.layout.maxWidth,
-          padding: theme.layout.padding,
+          display: "flex",
+          flexDirection: "column",
+          gap: theme.spacing.lg,
         }}
       >
-        {children}
+        <div
+          style={{
+            background: theme.colors.surface,
+            borderRadius: theme.layout.radius,
+            border: `1px solid ${theme.colors.border}`,
+            padding: theme.layout.surfacePadding,
+            display: "flex",
+            flexDirection: "column",
+            gap: theme.spacing.lg,
+          }}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );
