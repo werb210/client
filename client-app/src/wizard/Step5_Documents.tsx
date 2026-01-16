@@ -102,6 +102,7 @@ export function Step5_Documents() {
   }
 
   function allDocsPresent() {
+    if (app.documentsDeferred) return true;
     return docsRequired.length > 0
       ? docsRequired.every((doc) => Boolean(app.documents[doc]))
       : false;
@@ -115,15 +116,8 @@ export function Step5_Documents() {
     navigate("/apply/step-6");
   }
 
-  const handleUploadLater = async () => {
+  const handleUploadLater = () => {
     update({ documentsDeferred: true });
-    if (app.applicationToken) {
-      try {
-        await ClientAppAPI.deferDocuments(app.applicationToken);
-      } catch {
-        // Allow navigation even if defer request fails.
-      }
-    }
     navigate("/apply/step-6");
   };
 
@@ -132,6 +126,34 @@ export function Step5_Documents() {
       <StepHeader step={5} title="Required Documents" />
 
       <Card className="space-y-4">
+        <div
+          style={{
+            border: `1px solid ${theme.colors.border}`,
+            background: "rgba(220, 38, 38, 0.08)",
+            borderRadius: theme.layout.radius,
+            padding: theme.spacing.md,
+            fontSize: "14px",
+            color: theme.colors.textPrimary,
+          }}
+        >
+          <p>
+            Your application will not be accepted until you supply the required
+            documents. We will send you a link to upload all documents.
+          </p>
+          <Button
+            variant="secondary"
+            style={{ marginTop: theme.spacing.sm, width: "100%" }}
+            onClick={handleUploadLater}
+          >
+            Upload documents later
+          </Button>
+          {app.documentsDeferred && (
+            <p style={{ marginTop: theme.spacing.sm, fontSize: "12px" }}>
+              Warning: your application will stay in pending status until the
+              required documents are received.
+            </p>
+          )}
+        </div>
         <div className="grid md:grid-cols-2 gap-4">
           {docsRequired.map((doc) => (
             <div
@@ -174,36 +196,6 @@ export function Step5_Documents() {
             </div>
           ))}
         </div>
-
-        <div
-          style={{
-            border: `1px solid ${theme.colors.border}`,
-            background: "rgba(220, 38, 38, 0.08)",
-            borderRadius: theme.layout.radius,
-            padding: theme.spacing.md,
-            fontSize: "14px",
-            color: theme.colors.textPrimary,
-          }}
-        >
-          <p>
-            Your application will not be accepted until you supply the required
-            documents. We will send you a link to upload all documents.
-          </p>
-          <Button
-            variant="secondary"
-            style={{ marginTop: theme.spacing.sm, width: "100%" }}
-            onClick={handleUploadLater}
-          >
-            Upload documents later
-          </Button>
-          {app.documentsDeferred && (
-            <p style={{ marginTop: theme.spacing.sm, fontSize: "12px" }}>
-              Warning: your application will stay in pending status until the
-              required documents are received.
-            </p>
-          )}
-        </div>
-
       </Card>
 
       <Button
@@ -213,7 +205,7 @@ export function Step5_Documents() {
           marginTop: theme.spacing.lg,
         }}
         onClick={next}
-        disabled={!allDocsPresent()}
+        disabled={!allDocsPresent() && !app.documentsDeferred}
       >
         Continue
       </Button>

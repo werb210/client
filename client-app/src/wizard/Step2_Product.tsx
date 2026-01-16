@@ -9,14 +9,14 @@ import { WizardLayout } from "../components/WizardLayout";
 import { theme } from "../styles/theme";
 
 const PRODUCT_VISIBILITY_MAP = {
-  Capital: [
+  capital: [
     "Term Loan",
     "Line of Credit",
     "Factoring",
     "Purchase Order Financing",
   ],
-  "Equipment Financing": ["Equipment Financing"],
-  "Capital & Equipment": [
+  equipment: ["Equipment Financing"],
+  both: [
     "Term Loan",
     "Line of Credit",
     "Factoring",
@@ -24,13 +24,6 @@ const PRODUCT_VISIBILITY_MAP = {
     "Equipment Financing",
   ],
 } as const;
-
-const lookingForLabelMap: Record<string, keyof typeof PRODUCT_VISIBILITY_MAP> =
-  {
-    capital: "Capital",
-    equipment: "Equipment Financing",
-    both: "Capital & Equipment",
-  };
 
 const productMatchKeys: Record<string, string> = {
   "Term Loan": "term_loan",
@@ -45,14 +38,11 @@ export function Step2_Product() {
   const navigate = useNavigate();
 
   const categories = useMemo(() => {
-    const rawSelection = app.kyc.lookingFor as string | undefined;
-    const mappedSelection =
-      (rawSelection && lookingForLabelMap[rawSelection]) ||
-      (rawSelection &&
-      Object.prototype.hasOwnProperty.call(PRODUCT_VISIBILITY_MAP, rawSelection)
-        ? (rawSelection as keyof typeof PRODUCT_VISIBILITY_MAP)
-        : undefined);
-    return mappedSelection ? [...PRODUCT_VISIBILITY_MAP[mappedSelection]] : [];
+    const selection = app.kyc.lookingFor as keyof typeof PRODUCT_VISIBILITY_MAP;
+    if (!selection || !PRODUCT_VISIBILITY_MAP[selection]) {
+      return [];
+    }
+    return [...PRODUCT_VISIBILITY_MAP[selection]];
   }, [app.kyc.lookingFor]);
 
   useEffect(() => {
@@ -122,7 +112,7 @@ export function Step2_Product() {
                   cursor: "pointer",
                 }}
               >
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-3">
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       <div
@@ -178,15 +168,6 @@ export function Step2_Product() {
                     ) : (
                       <ProgressPill value={matchInfo.value} />
                     )}
-                    <Button
-                      style={{ width: "100%", maxWidth: "160px" }}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        select(cat);
-                      }}
-                    >
-                      {isSelected ? "Selected" : "Select"}
-                    </Button>
                   </div>
                 </div>
               </Card>

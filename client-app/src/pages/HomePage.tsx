@@ -23,12 +23,6 @@ export default function HomePage() {
             <Button className="px-8" onClick={() => navigate("/apply/step-1")}>
               Start Your Application
             </Button>
-            <button
-              className="boreal-button boreal-button-secondary px-8 h-12"
-              onClick={() => navigate("/apply/step-1")}
-            >
-              Apply Now
-            </button>
           </div>
         </div>
         <div className="boreal-card p-6 space-y-4">

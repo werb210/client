@@ -42,9 +42,17 @@ export function Step6_Review() {
     }
 
     await ClientAppAPI.update(app.applicationToken!, {
-      typedSignature: app.typedSignature,
+      kyc: app.kyc,
+      productCategory: app.productCategory,
+      matchPercentages: app.matchPercentages,
+      business: app.business,
+      applicant: app.applicant,
+      documents: app.documents,
+      documentsDeferred: app.documentsDeferred,
       termsAccepted: app.termsAccepted,
+      typedSignature: app.typedSignature,
       signatureDate: app.signatureDate || today,
+      currentStep: app.currentStep,
     });
     await ClientAppAPI.submit(app.applicationToken!);
     setSubmitted(true);
