@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { ClientAppAPI } from "../api/clientApp";
 import { StepHeader } from "../components/StepHeader";
@@ -10,13 +11,86 @@ import { Validate } from "../utils/validate";
 import {
   formatCurrencyValue,
   formatPostalCode,
+  formatPhoneNumber,
   getCountryCode,
   getPostalLabel,
   getRegionLabel,
 } from "../utils/location";
+import { WizardLayout } from "../components/WizardLayout";
+
+const ProvinceOptions = [
+  "Alberta",
+  "British Columbia",
+  "Manitoba",
+  "New Brunswick",
+  "Newfoundland and Labrador",
+  "Nova Scotia",
+  "Northwest Territories",
+  "Nunavut",
+  "Ontario",
+  "Prince Edward Island",
+  "Quebec",
+  "Saskatchewan",
+  "Yukon",
+];
+
+const StateOptions = [
+  "Alabama",
+  "Alaska",
+  "Arizona",
+  "Arkansas",
+  "California",
+  "Colorado",
+  "Connecticut",
+  "Delaware",
+  "Florida",
+  "Georgia",
+  "Hawaii",
+  "Idaho",
+  "Illinois",
+  "Indiana",
+  "Iowa",
+  "Kansas",
+  "Kentucky",
+  "Louisiana",
+  "Maine",
+  "Maryland",
+  "Massachusetts",
+  "Michigan",
+  "Minnesota",
+  "Mississippi",
+  "Missouri",
+  "Montana",
+  "Nebraska",
+  "Nevada",
+  "New Hampshire",
+  "New Jersey",
+  "New Mexico",
+  "New York",
+  "North Carolina",
+  "North Dakota",
+  "Ohio",
+  "Oklahoma",
+  "Oregon",
+  "Pennsylvania",
+  "Rhode Island",
+  "South Carolina",
+  "South Dakota",
+  "Tennessee",
+  "Texas",
+  "Utah",
+  "Vermont",
+  "Virginia",
+  "Washington",
+  "West Virginia",
+  "Wisconsin",
+  "Wyoming",
+  "District of Columbia",
+];
 
 export function Step3_Business() {
   const { app, update } = useApplicationStore();
+  const navigate = useNavigate();
 
   const values = { ...app.business };
   const countryCode = useMemo(
@@ -25,6 +99,10 @@ export function Step3_Business() {
   );
   const regionLabel = getRegionLabel(countryCode);
   const postalLabel = getPostalLabel(countryCode);
+  const regionOptions = useMemo(
+    () => (countryCode === "CA" ? ProvinceOptions : StateOptions),
+    [countryCode]
+  );
 
   useEffect(() => {
     if (app.currentStep !== 3) {
@@ -45,7 +123,6 @@ export function Step3_Business() {
     "state",
     "zip",
     "phone",
-    "website",
     "startDate",
     "employees",
     "estimatedRevenue",
@@ -61,24 +138,31 @@ export function Step3_Business() {
       "state",
       "zip",
       "phone",
-      "website",
       "startDate",
       "employees",
       "estimatedRevenue",
     ];
 
-    const missing = requiredFields.find((field) => !Validate.required(values[field]));
+    const missing = requiredFields.find(
+      (field) => !Validate.required(values[field])
+    );
     if (missing) {
       alert("Please complete all required business details.");
       return;
     }
 
-    await ClientAppAPI.update(app.applicationToken!, { business: values });
-    window.location.href = "/apply/step-4";
+    if (app.applicationToken) {
+      try {
+        await ClientAppAPI.update(app.applicationToken, { business: values });
+      } catch {
+        // Allow navigation even if the update fails.
+      }
+    }
+    navigate("/apply/step-4");
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
+    <WizardLayout>
       <StepHeader step={3} title="Business Details" />
 
       <Card className="space-y-5">
@@ -134,10 +218,17 @@ export function Step3_Business() {
           </div>
           <div>
             <label className="block mb-2 font-medium">{regionLabel}</label>
-            <Input
+            <Select
               value={values.state || ""}
               onChange={(e: any) => setField("state", e.target.value)}
-            />
+            >
+              <option value="">Select…</option>
+              {regionOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </Select>
           </div>
           <div>
             <label className="block mb-2 font-medium">{postalLabel}</label>
@@ -152,16 +243,27 @@ export function Step3_Business() {
           <div>
             <label className="block mb-2 font-medium">Business Phone</label>
             <Input
-              value={values.phone || ""}
-              onChange={(e: any) => setField("phone", e.target.value)}
+              value={formatPhoneNumber(values.phone || "", countryCode)}
+              onChange={(e: any) =>
+                setField(
+                  "phone",
+                  formatPhoneNumber(e.target.value, countryCode)
+                )
+              }
+              inputMode="tel"
+              placeholder={countryCode === "CA" ? "(555) 555-5555" : "(555) 555-5555"}
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Business Website</label>
+            <label className="block mb-2 font-medium">
+              Business Website (optional)
+            </label>
             <Input
+              type="url"
               value={values.website || ""}
               onChange={(e: any) => setField("website", e.target.value)}
+              placeholder="https://"
             />
           </div>
 
@@ -236,7 +338,7 @@ export function Step3_Business() {
       >
         Continue
       </Button>
-    </div>
+    </WizardLayout>
   );
 }
 

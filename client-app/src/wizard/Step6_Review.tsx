@@ -6,6 +6,7 @@ import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
+import { WizardLayout } from "../components/WizardLayout";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -50,7 +51,7 @@ export function Step6_Review() {
 
   if (submitted) {
     return (
-      <div className="max-w-3xl mx-auto px-6 py-10">
+      <WizardLayout>
         <Card className="space-y-3 text-center py-10">
           <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
             Application submitted
@@ -64,17 +65,19 @@ export function Step6_Review() {
           </p>
           <Button
             className="mt-2 w-full md:w-auto"
-            onClick={() => (window.location.href = `/status?token=${app.applicationToken}`)}
+            onClick={() =>
+              (window.location.href = `/status?token=${app.applicationToken}`)
+            }
           >
             View application status
           </Button>
         </Card>
-      </div>
+      </WizardLayout>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
+    <WizardLayout>
       <StepHeader step={6} title="Terms & Signature" />
 
       <Card className="space-y-4">
@@ -126,7 +129,7 @@ export function Step6_Review() {
           Submit application
         </Button>
       </Card>
-    </div>
+    </WizardLayout>
   );
 }
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { DefaultDocLabels } from "../data/requiredDocs";
 import { ClientAppAPI } from "../api/clientApp";
@@ -6,9 +7,11 @@ import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
+import { WizardLayout } from "../components/WizardLayout";
 
 export function Step5_Documents() {
   const { app, update } = useApplicationStore();
+  const navigate = useNavigate();
   const [docsRequired, setDocsRequired] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -108,7 +111,7 @@ export function Step5_Documents() {
       alert("Please upload all required documents.");
       return;
     }
-    window.location.href = "/apply/step-6";
+    navigate("/apply/step-6");
   }
 
   async function defer() {
@@ -129,7 +132,7 @@ export function Step5_Documents() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
+    <WizardLayout>
       <StepHeader step={5} title="Required Documents" />
 
       <Card className="space-y-4">
@@ -200,7 +203,7 @@ export function Step5_Documents() {
       >
         Continue
       </Button>
-    </div>
+    </WizardLayout>
   );
 }
 

@@ -67,3 +67,19 @@ export function formatIdentityNumber(value: string, countryCode: string) {
   }
   return `${trimmed.slice(0, 3)}-${trimmed.slice(3, 5)}-${trimmed.slice(5)}`;
 }
+
+export function formatPhoneNumber(value: string, countryCode: string) {
+  const digits = value.replace(/\D/g, "");
+  if (countryCode === "CA" || countryCode === "US") {
+    const trimmed = digits.slice(0, 10);
+    if (trimmed.length <= 3) return trimmed;
+    if (trimmed.length <= 6) {
+      return `(${trimmed.slice(0, 3)}) ${trimmed.slice(3)}`;
+    }
+    return `(${trimmed.slice(0, 3)}) ${trimmed.slice(3, 6)}-${trimmed.slice(
+      6
+    )}`;
+  }
+
+  return digits.slice(0, 15);
+}
