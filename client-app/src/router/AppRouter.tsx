@@ -8,6 +8,7 @@ export function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/apply/step-1" element={<ApplyPage />} />
       <Route path="/apply/*" element={<ApplyPage />} />
       <Route path="/resume" element={<ResumePage />} />
       <Route path="/status" element={<StatusPage />} />
