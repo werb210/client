@@ -12,6 +12,7 @@ const emptyApp: ApplicationData = {
   termsAccepted: false,
   typedSignature: "",
   applicationToken: undefined,
+  applicationId: undefined,
 };
 
 function hydrateApplication(saved: ApplicationData | null): ApplicationData {

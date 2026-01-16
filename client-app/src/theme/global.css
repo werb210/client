@@ -2,16 +2,80 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --boreal-blue: #0a3a60;
+  --boreal-blue-dark: #072c49;
+  --boreal-blue-light: #d9ecff;
+  --boreal-accent: #6fb8f5;
+  --boreal-gold: #f3c969;
+  --boreal-gold-soft: #fff4d4;
+  --boreal-green: #1bbe7a;
+  --boreal-gray: #f5f7fa;
+  --boreal-gray-border: #e2e8f0;
+  --boreal-text: #062238;
+  --boreal-text-muted: #5b6b7a;
+  --boreal-radius-card: 18px;
+  --boreal-radius-input: 12px;
+  --boreal-radius-pill: 999px;
+  --boreal-font: "Inter", "SF Pro Text", system-ui, sans-serif;
+}
+
 body {
-  background: #f5f7fa;
-  color: #062238;
-  font-family: "Inter", "SF Pro Text", system-ui, sans-serif;
+  background: var(--boreal-gray);
+  color: var(--boreal-text);
+  font-family: var(--boreal-font);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 a {
   color: inherit;
+}
+
+select option:checked {
+  background: var(--boreal-gold-soft);
+}
+
+.boreal-card {
+  border-radius: var(--boreal-radius-card);
+  border: 1px solid var(--boreal-gray-border);
+  background: white;
+  box-shadow: 0 1px 6px rgba(6, 34, 56, 0.08);
+}
+
+.boreal-input {
+  border-radius: var(--boreal-radius-input);
+  border: 1px solid var(--boreal-gray-border);
+  background: white;
+  font-size: 15px;
+}
+
+.boreal-button {
+  border-radius: var(--boreal-radius-input);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  height: 48px;
+}
+
+.boreal-button-primary {
+  background: var(--boreal-blue);
+  color: white;
+}
+
+.boreal-button-primary:hover {
+  background: var(--boreal-blue-dark);
+}
+
+.boreal-button-secondary {
+  background: white;
+  color: var(--boreal-blue);
+  border: 1px solid var(--boreal-blue);
+}
+
+.boreal-badge-selected {
+  background: var(--boreal-gold-soft);
+  color: #8a6300;
+  border: 1px solid var(--boreal-gold);
 }
 
 @media (max-width: 480px) {

@@ -1,6 +1,4 @@
 import { useApplicationStore } from "../state/useApplicationStore";
-import { ProductSync } from "../lender/productSync";
-import { filterProductsForCategory, compileQuestions } from "../lender/compile";
 import { ClientAppAPI } from "../api/clientApp";
 import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
@@ -11,23 +9,35 @@ import { Validate } from "../utils/validate";
 export function Step4_Applicant() {
   const { app, update } = useApplicationStore();
 
-  const products = filterProductsForCategory(
-    ProductSync.load(),
-    app.productCategory!
-  );
-
-  const { applicantQuestions } = compileQuestions(products);
-
   const values = { ...app.applicant };
+  const partner = values.partner || {};
 
   function setField(key: string, value: any) {
     update({ applicant: { ...values, [key]: value } });
   }
 
+  function setPartnerField(key: string, value: any) {
+    update({ applicant: { ...values, partner: { ...partner, [key]: value } } });
+  }
+
   async function next() {
-    const missing = applicantQuestions.find((q) => !Validate.required(values[q]));
+    const requiredFields = [
+      "firstName",
+      "lastName",
+      "email",
+      "phone",
+      "street",
+      "city",
+      "state",
+      "zip",
+      "dob",
+      "ssn",
+      "ownership",
+    ];
+
+    const missing = requiredFields.find((field) => !Validate.required(values[field]));
     if (missing) {
-      alert(`Please complete: ${missing}`);
+      alert("Please complete all required applicant details.");
       return;
     }
 
@@ -36,21 +46,235 @@ export function Step4_Applicant() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto px-6 py-10">
       <StepHeader step={4} title="Applicant Information" />
 
-      {applicantQuestions.map((q) => (
-        <Card key={q} className="mb-3">
-          <label className="block mb-1 font-medium">{q}</label>
-          <Input
-            value={values[q] || ""}
-            onChange={(e: any) => setField(q, e.target.value)}
-          />
-        </Card>
-      ))}
+      <Card className="space-y-5">
+        <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
+          Primary applicant
+        </div>
 
-      <Button className="mt-4 w-full md:w-auto" onClick={next}>
-        Continue
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-2 font-medium">First Name</label>
+            <Input
+              value={values.firstName || ""}
+              onChange={(e: any) => setField("firstName", e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block mb-2 font-medium">Last Name</label>
+            <Input
+              value={values.lastName || ""}
+              onChange={(e: any) => setField("lastName", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">Email Address</label>
+          <Input
+            type="email"
+            value={values.email || ""}
+            onChange={(e: any) => setField("email", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">Phone Number</label>
+          <Input
+            value={values.phone || ""}
+            onChange={(e: any) => setField("phone", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">Street Address</label>
+          <Input
+            value={values.street || ""}
+            onChange={(e: any) => setField("street", e.target.value)}
+          />
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <div>
+            <label className="block mb-2 font-medium">City</label>
+            <Input
+              value={values.city || ""}
+              onChange={(e: any) => setField("city", e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block mb-2 font-medium">State</label>
+            <Input
+              value={values.state || ""}
+              onChange={(e: any) => setField("state", e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block mb-2 font-medium">ZIP Code</label>
+            <Input
+              value={values.zip || ""}
+              onChange={(e: any) => setField("zip", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-2 font-medium">Date of Birth</label>
+            <Input
+              type="date"
+              value={values.dob || ""}
+              onChange={(e: any) => setField("dob", e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block mb-2 font-medium">SSN</label>
+            <Input
+              value={values.ssn || ""}
+              onChange={(e: any) => setField("ssn", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">Ownership Percentage</label>
+          <Input
+            value={values.ownership || ""}
+            onChange={(e: any) => setField("ownership", e.target.value)}
+            placeholder="%"
+          />
+        </div>
+
+        <label className="flex items-center gap-2 text-sm font-medium text-borealBlue">
+          <input
+            type="checkbox"
+            checked={values.hasMultipleOwners || false}
+            onChange={(e) =>
+              setField("hasMultipleOwners", e.target.checked)
+            }
+          />
+          This business has multiple owners/partners
+        </label>
+
+        {values.hasMultipleOwners && (
+          <div className="space-y-4 border-t border-slate-200 pt-4">
+            <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
+              Partner Information
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-2 font-medium">First Name</label>
+                <Input
+                  value={partner.firstName || ""}
+                  onChange={(e: any) =>
+                    setPartnerField("firstName", e.target.value)
+                  }
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium">Last Name</label>
+                <Input
+                  value={partner.lastName || ""}
+                  onChange={(e: any) =>
+                    setPartnerField("lastName", e.target.value)
+                  }
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-2 font-medium">Email Address</label>
+              <Input
+                type="email"
+                value={partner.email || ""}
+                onChange={(e: any) =>
+                  setPartnerField("email", e.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block mb-2 font-medium">Phone Number</label>
+              <Input
+                value={partner.phone || ""}
+                onChange={(e: any) =>
+                  setPartnerField("phone", e.target.value)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block mb-2 font-medium">Street Address</label>
+              <Input
+                value={partner.street || ""}
+                onChange={(e: any) =>
+                  setPartnerField("street", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <label className="block mb-2 font-medium">City</label>
+                <Input
+                  value={partner.city || ""}
+                  onChange={(e: any) => setPartnerField("city", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium">State</label>
+                <Input
+                  value={partner.state || ""}
+                  onChange={(e: any) => setPartnerField("state", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium">ZIP Code</label>
+                <Input
+                  value={partner.zip || ""}
+                  onChange={(e: any) => setPartnerField("zip", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-2 font-medium">Date of Birth</label>
+                <Input
+                  type="date"
+                  value={partner.dob || ""}
+                  onChange={(e: any) => setPartnerField("dob", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block mb-2 font-medium">SSN</label>
+                <Input
+                  value={partner.ssn || ""}
+                  onChange={(e: any) => setPartnerField("ssn", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-2 font-medium">
+                Ownership Percentage
+              </label>
+              <Input
+                value={partner.ownership || ""}
+                onChange={(e: any) =>
+                  setPartnerField("ownership", e.target.value)
+                }
+                placeholder="%"
+              />
+            </div>
+          </div>
+        )}
+      </Card>
+
+      <Button className="mt-6 w-full md:w-auto" onClick={next}>
+        Continue to Documents →
       </Button>
     </div>
   );

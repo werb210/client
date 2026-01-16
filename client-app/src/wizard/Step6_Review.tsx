@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { TERMS_TEXT } from "../data/terms";
 import { ClientAppAPI } from "../api/clientApp";
@@ -8,6 +9,7 @@ import { Input } from "../components/ui/Input";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
+  const [submitted, setSubmitted] = useState(false);
 
   function toggleTerms() {
     update({ termsAccepted: !app.termsAccepted });
@@ -29,12 +31,37 @@ export function Step6_Review() {
       termsAccepted: app.termsAccepted,
     });
     await ClientAppAPI.submit(app.applicationToken!);
-    window.location.href = `/status?token=${app.applicationToken}`;
+    setSubmitted(true);
+  }
+
+  if (submitted) {
+    return (
+      <div className="max-w-3xl mx-auto px-6 py-10">
+        <Card className="space-y-3 text-center py-10">
+          <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
+            Application submitted
+          </div>
+          <h1 className="text-2xl font-semibold text-borealBlue">
+            Thank you for your submission.
+          </h1>
+          <p className="text-sm text-slate-600">
+            We’ve received your application and will notify you about next
+            steps. You can also review updates in your client portal.
+          </p>
+          <Button
+            className="mt-2 w-full md:w-auto"
+            onClick={() => (window.location.href = `/status?token=${app.applicationToken}`)}
+          >
+            View application status
+          </Button>
+        </Card>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <StepHeader step={6} title="Review & Submit" />
+    <div className="max-w-3xl mx-auto px-6 py-10">
+      <StepHeader step={6} title="Terms & Signature" />
 
       <Card className="space-y-4">
         <div>
@@ -73,6 +100,7 @@ export function Step6_Review() {
               : "bg-gray-400 cursor-not-allowed"
           }`}
           onClick={submit}
+          disabled={!app.termsAccepted || !app.typedSignature?.trim()}
         >
           Submit application
         </Button>

@@ -6,9 +6,9 @@ export function StepHeader({ step, title }: { step: number; title: string }) {
         <span>Step {step} of 6</span>
         <span>{progress}% complete</span>
       </div>
-      <div className="h-2 w-full rounded-full bg-borealLightBlue/60 mb-3">
+      <div className="h-2.5 w-full rounded-full bg-borealLightBlue/70 mb-3">
         <div
-          className="h-2 rounded-full bg-borealBlue"
+          className="h-2.5 rounded-full bg-borealBlue"
           style={{ width: `${progress}%` }}
         />
       </div>
