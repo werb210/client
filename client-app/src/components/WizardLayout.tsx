@@ -15,7 +15,7 @@ export function WizardLayout({ children }: WizardLayoutProps) {
         fontFamily: theme.typography.fontFamily,
         display: "flex",
         justifyContent: "center",
-        padding: theme.layout.pagePadding,
+        padding: theme.layout.padding,
       }}
     >
       <div
@@ -32,7 +32,7 @@ export function WizardLayout({ children }: WizardLayoutProps) {
             background: theme.colors.surface,
             borderRadius: theme.layout.radius,
             border: `1px solid ${theme.colors.border}`,
-            padding: theme.layout.surfacePadding,
+            padding: theme.layout.padding,
             display: "flex",
             flexDirection: "column",
             gap: theme.spacing.lg,

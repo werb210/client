@@ -3,12 +3,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        borealBlue: "#0A3A60",
-        borealLightBlue: "#D9ECFF",
-        borealAccent: "#6FB8F5",
+        borealBlue: "#2563EB",
+        borealLightBlue: "#DBEAFE",
+        borealAccent: "#1D4ED8",
         borealGreen: "#1BBE7A",
-        borealGray: "#F5F7FA",
-        borealDark: "#062238"
+        borealGray: "#F8FAFC",
+        borealDark: "#0F172A"
       }
     }
   },

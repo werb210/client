@@ -114,11 +114,15 @@ export function Step5_Documents() {
     navigate("/apply/step-6");
   }
 
-  const handleUploadLater = () => {
+  const handleUploadLater = async () => {
     update({ documentsDeferred: true });
-    alert(
-      "Warning: your application will stay in pending status until the required documents are received."
-    );
+    if (app.applicationToken) {
+      try {
+        await ClientAppAPI.deferDocuments(app.applicationToken);
+      } catch {
+        // Allow navigation even if defer request fails.
+      }
+    }
     navigate("/apply/step-6");
   };
 

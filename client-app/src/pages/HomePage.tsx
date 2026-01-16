@@ -1,20 +1,9 @@
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { CookieBanner } from "../components/CookieBanner";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get("token");
-
-    if (token) {
-      navigate(`/resume?token=${encodeURIComponent(token)}`, { replace: true });
-    }
-  }, [location.search, navigate]);
 
   return (
     <div className="bg-borealGray">
