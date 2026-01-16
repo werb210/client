@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
@@ -13,10 +14,36 @@ const CategoryLabels: Record<string, string> = {
   term_loan: "Term Loan",
 };
 
+const ProductCategories = [
+  "term_loan",
+  "line_of_credit",
+  "factoring",
+  "equipment_financing",
+];
+
+const EmptyMatchLabelClass =
+  "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-slate-100 text-slate-500";
+
 export function Step2_Product() {
   const { app, update } = useApplicationStore();
-  const matchPercentages = app.matchPercentages ?? {};
-  const categories = ["term_loan", "line_of_credit", "factoring", "equipment_financing"];
+  const categories = ProductCategories;
+
+  const matchByCategory = useMemo(() => {
+    return categories.reduce(
+      (acc, category) => {
+        const rawValue = app.matchPercentages[category];
+        if (typeof rawValue !== "number" || Number.isNaN(rawValue)) {
+          acc[category] = { value: null, label: "—" };
+          return acc;
+        }
+
+        const clamped = Math.max(0, Math.min(100, Math.round(rawValue)));
+        acc[category] = { value: clamped, label: `${clamped}% match` };
+        return acc;
+      },
+      {} as Record<string, { value: number | null; label: string }>
+    );
+  }, [app.matchPercentages, categories]);
 
   function select(cat: string) {
     update({ productCategory: cat });
@@ -30,7 +57,10 @@ export function Step2_Product() {
     <div className="max-w-2xl mx-auto">
       <StepHeader step={2} title="Select Product Category" />
 
-      {categories.map((cat) => (
+      {categories.map((cat) => {
+        const matchInfo =
+          matchByCategory[cat] ?? ({ value: null, label: "—" } as const);
+        return (
         <Card key={cat} className="mb-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col gap-2">
@@ -40,14 +70,19 @@ export function Step2_Product() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <ProgressPill value={matchPercentages[cat] ?? 0} />
+              {matchInfo.value === null ? (
+                <span className={EmptyMatchLabelClass}>{matchInfo.label}</span>
+              ) : (
+                <ProgressPill value={matchInfo.value} />
+              )}
               <Button className="w-full md:w-auto" onClick={() => select(cat)}>
                 Select
               </Button>
             </div>
           </div>
         </Card>
-      ))}
+        );
+      })}
     </div>
   );
 }
