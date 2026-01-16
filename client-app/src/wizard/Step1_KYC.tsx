@@ -136,6 +136,7 @@ function buildMatchPercentages(amount: number): Record<string, number> {
 export function Step1_KYC() {
   const { app, update } = useApplicationStore();
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
   const navigate = useNavigate();
   const countryCode = useMemo(
     () => getCountryCode(app.kyc.businessLocation),
@@ -163,18 +164,21 @@ export function Step1_KYC() {
     }
   }, [app.kyc, countryCode, update]);
 
-  const isValid =
-    Validate.required(app.kyc.lookingFor) &&
-    Validate.required(app.kyc.fundingAmount) &&
-    Validate.required(app.kyc.businessLocation) &&
-    app.kyc.businessLocation !== "Other" &&
-    Validate.required(app.kyc.industry) &&
-    Validate.required(app.kyc.purposeOfFunds) &&
-    Validate.required(app.kyc.salesHistory) &&
-    Validate.required(app.kyc.revenueLast12Months) &&
-    Validate.required(app.kyc.monthlyRevenue) &&
-    Validate.required(app.kyc.accountsReceivable) &&
-    Validate.required(app.kyc.fixedAssets);
+  const fieldErrors = {
+    lookingFor: !Validate.required(app.kyc.lookingFor),
+    fundingAmount: !Validate.required(app.kyc.fundingAmount),
+    businessLocation:
+      !Validate.required(app.kyc.businessLocation) ||
+      app.kyc.businessLocation === "Other",
+    industry: !Validate.required(app.kyc.industry),
+    purposeOfFunds: !Validate.required(app.kyc.purposeOfFunds),
+    salesHistory: !Validate.required(app.kyc.salesHistory),
+    revenueLast12Months: !Validate.required(app.kyc.revenueLast12Months),
+    monthlyRevenue: !Validate.required(app.kyc.monthlyRevenue),
+    accountsReceivable: !Validate.required(app.kyc.accountsReceivable),
+    fixedAssets: !Validate.required(app.kyc.fixedAssets),
+  };
+  const isValid = Object.values(fieldErrors).every((error) => !error);
 
   const labelStyle = {
     display: "block",
@@ -184,61 +188,21 @@ export function Step1_KYC() {
     color: theme.colors.textSecondary,
   };
 
+  const errorStyle = {
+    marginTop: theme.spacing.xs,
+    fontSize: "12px",
+    color: "#dc2626",
+    fontWeight: 500,
+  };
+
   async function next() {
     const payload = app.kyc;
+    setShowErrors(true);
 
-    if (!Validate.required(payload.lookingFor)) {
-      alert("Please select what you are looking for.");
-      return;
-    }
-
-    if (!Validate.required(payload.fundingAmount)) {
-      alert("Please enter how much funding you are seeking.");
-      return;
-    }
-
-    if (!Validate.required(payload.businessLocation)) {
-      alert("Please select your business location.");
-      return;
-    }
-
-    if (!Validate.required(payload.industry)) {
-      alert("Please select your industry.");
-      return;
-    }
-
-    if (!Validate.required(payload.purposeOfFunds)) {
-      alert("Please select the purpose of funds.");
-      return;
-    }
-
-    if (!Validate.required(payload.salesHistory)) {
-      alert("Please select your sales history.");
-      return;
-    }
-
-    if (!Validate.required(payload.revenueLast12Months)) {
-      alert("Please select your last 12 months revenue.");
-      return;
-    }
-
-    if (!Validate.required(payload.monthlyRevenue)) {
-      alert("Please select your average monthly revenue.");
-      return;
-    }
-
-    if (!Validate.required(payload.accountsReceivable)) {
-      alert("Please select your current account receivable balance.");
-      return;
-    }
-
-    if (!Validate.required(payload.fixedAssets)) {
-      alert("Please select your fixed assets value.");
-      return;
-    }
-
-    if (payload.businessLocation === "Other") {
-      setShowLocationModal(true);
+    if (!isValid) {
+      if (payload.businessLocation === "Other") {
+        setShowLocationModal(true);
+      }
       return;
     }
 
@@ -295,6 +259,9 @@ export function Step1_KYC() {
                   </option>
                 ))}
               </Select>
+              {showErrors && fieldErrors.lookingFor && (
+                <div style={errorStyle}>Please select a funding intent.</div>
+              )}
             </div>
             <div>
               <label style={labelStyle}>How much funding are you seeking?</label>
@@ -316,6 +283,9 @@ export function Step1_KYC() {
                 }
                 placeholder={countryCode === "CA" ? "CA$" : "$"}
               />
+              {showErrors && fieldErrors.fundingAmount && (
+                <div style={errorStyle}>Enter a funding amount.</div>
+              )}
             </div>
 
             <div>
@@ -339,6 +309,11 @@ export function Step1_KYC() {
                   </option>
                 ))}
               </Select>
+              {showErrors && fieldErrors.businessLocation && (
+                <div style={errorStyle}>
+                  Please choose Canada or the United States.
+                </div>
+              )}
             </div>
 
             <div>
@@ -356,6 +331,9 @@ export function Step1_KYC() {
                   </option>
                 ))}
               </Select>
+              {showErrors && fieldErrors.industry && (
+                <div style={errorStyle}>Select your industry.</div>
+              )}
             </div>
 
             <div>
@@ -373,6 +351,9 @@ export function Step1_KYC() {
                   </option>
                 ))}
               </Select>
+              {showErrors && fieldErrors.purposeOfFunds && (
+                <div style={errorStyle}>Select a purpose of funds.</div>
+              )}
             </div>
 
             <div>
@@ -392,6 +373,9 @@ export function Step1_KYC() {
                   </option>
                 ))}
               </Select>
+              {showErrors && fieldErrors.salesHistory && (
+                <div style={errorStyle}>Select sales history.</div>
+              )}
             </div>
 
             <div>
@@ -413,6 +397,9 @@ export function Step1_KYC() {
                   </option>
                 ))}
               </Select>
+              {showErrors && fieldErrors.revenueLast12Months && (
+                <div style={errorStyle}>Select a revenue range.</div>
+              )}
             </div>
 
             <div>
@@ -432,6 +419,9 @@ export function Step1_KYC() {
                   </option>
                 ))}
               </Select>
+              {showErrors && fieldErrors.monthlyRevenue && (
+                <div style={errorStyle}>Select monthly revenue.</div>
+              )}
             </div>
 
             <div>
@@ -453,6 +443,9 @@ export function Step1_KYC() {
                   </option>
                 ))}
               </Select>
+              {showErrors && fieldErrors.accountsReceivable && (
+                <div style={errorStyle}>Select an AR balance.</div>
+              )}
             </div>
 
             <div>
@@ -472,6 +465,9 @@ export function Step1_KYC() {
                   </option>
                 ))}
               </Select>
+              {showErrors && fieldErrors.fixedAssets && (
+                <div style={errorStyle}>Select a fixed asset value.</div>
+              )}
             </div>
           </div>
         </Card>
@@ -483,7 +479,6 @@ export function Step1_KYC() {
           <Button
             style={{ width: "100%", maxWidth: "220px" }}
             onClick={next}
-            disabled={!isValid}
           >
             Continue →
           </Button>
