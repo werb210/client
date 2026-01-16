@@ -14,7 +14,7 @@ export default function AppRouter() {
         <Route path="/" element={<Home />} />
 
         <Route path="/apply">
-          <Route index element={<Navigate to="step-1" replace />} />
+          <Route index element={<Home />} />
           <Route path="step-1" element={<Step1 />} />
           <Route path="step-2" element={<Step2 />} />
           <Route path="step-3" element={<Step3 />} />

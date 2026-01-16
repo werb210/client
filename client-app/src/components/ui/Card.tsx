@@ -9,7 +9,7 @@ export function Card({ children, className = "", style = {} }: any) {
         borderRadius: theme.layout.radius,
         border: `1px solid ${theme.colors.border}`,
         padding: theme.spacing.lg,
-        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)",
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.08)",
         ...style,
       }}
     >

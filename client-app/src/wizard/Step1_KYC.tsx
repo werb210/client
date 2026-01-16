@@ -35,7 +35,7 @@ const MatchBaselines: Record<string, number> = {
 const LookingForOptions = [
   { value: "capital", label: "Capital" },
   { value: "equipment", label: "Equipment Financing" },
-  { value: "both", label: "Both Capital & Equipment" },
+  { value: "both", label: "Capital & Equipment" },
 ];
 
 const BusinessLocationOptions = ["Canada", "United States", "Other"];
@@ -110,6 +110,19 @@ function parseCurrency(value: string) {
   return Number.parseFloat(cleaned);
 }
 
+function normalizeLookingFor(value?: string) {
+  if (!value) return "";
+  if (value === "capital" || value === "equipment" || value === "both") {
+    return value;
+  }
+  const trimmed = value.trim();
+  if (trimmed === "Capital") return "capital";
+  if (trimmed === "Equipment Financing") return "equipment";
+  if (trimmed === "Capital & Equipment") return "both";
+  if (trimmed === "Both Capital & Equipment") return "both";
+  return "";
+}
+
 function buildMatchPercentages(amount: number): Record<string, number> {
   const amountBoost =
     amount >= 500000 ? 10 : amount >= 250000 ? 7 : amount >= 100000 ? 4 : 0;
@@ -135,6 +148,13 @@ export function Step1_KYC() {
       update({ currentStep: 1 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    const normalized = normalizeLookingFor(app.kyc.lookingFor);
+    if (normalized && normalized !== app.kyc.lookingFor) {
+      update({ kyc: { ...app.kyc, lookingFor: normalized } });
+    }
+  }, [app.kyc, update]);
 
   useEffect(() => {
     if (!app.kyc.fundingAmount) return;
@@ -259,9 +279,14 @@ export function Step1_KYC() {
             <div>
               <label style={labelStyle}>What are you looking for?</label>
               <Select
-                value={app.kyc.lookingFor || ""}
+                value={normalizeLookingFor(app.kyc.lookingFor) || ""}
                 onChange={(e: any) =>
-                  update({ kyc: { ...app.kyc, lookingFor: e.target.value } })
+                  update({
+                    kyc: {
+                      ...app.kyc,
+                      lookingFor: normalizeLookingFor(e.target.value),
+                    },
+                  })
                 }
               >
                 <option value="">Select…</option>
@@ -472,7 +497,7 @@ export function Step1_KYC() {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0, 0, 0, 0.6)",
+            background: "rgba(15, 23, 42, 0.12)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

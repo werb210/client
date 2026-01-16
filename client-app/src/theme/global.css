@@ -5,18 +5,17 @@
 @tailwind utilities;
 
 :root {
-  --boreal-blue: #0a3a60;
-  --boreal-blue-dark: #072c49;
-  --boreal-blue-light: #d9ecff;
-  --boreal-accent: #6fb8f5;
+  --boreal-blue: #2563eb;
+  --boreal-blue-light: #dbeafe;
+  --boreal-accent: #1d4ed8;
   --boreal-gold: #f3c969;
   --boreal-gold-soft: #fff4d4;
   --boreal-green: #1bbe7a;
-  --boreal-gray: #f5f7fa;
+  --boreal-gray: #f8fafc;
   --boreal-gray-border: #e2e8f0;
-  --boreal-text: #062238;
-  --boreal-text-muted: #5b6b7a;
-  --boreal-radius-card: 18px;
+  --boreal-text: #0f172a;
+  --boreal-text-muted: #475569;
+  --boreal-radius-card: 12px;
   --boreal-radius-input: 12px;
   --boreal-radius-pill: 999px;
   --boreal-font: "Inter", "SF Pro Text", system-ui, sans-serif;
@@ -42,7 +41,7 @@ select option:checked {
   border-radius: var(--boreal-radius-card);
   border: 1px solid var(--boreal-gray-border);
   background: white;
-  box-shadow: 0 1px 6px rgba(6, 34, 56, 0.08);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
 }
 
 .boreal-input {
@@ -75,13 +74,13 @@ select option:checked {
 }
 
 .boreal-button-primary:hover {
-  background: var(--boreal-blue-dark);
+  background: var(--boreal-accent);
 }
 
 .boreal-button-secondary {
   background: white;
   color: var(--boreal-blue);
-  border: 1px solid var(--boreal-blue);
+  border: 1px solid var(--boreal-gray-border);
 }
 
 .boreal-badge-selected {

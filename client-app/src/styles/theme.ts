@@ -1,12 +1,12 @@
 export const theme = {
   colors: {
-    background: "#0B1220",
-    surface: "#111827",
+    background: "#F8FAFC",
+    surface: "#FFFFFF",
     primary: "#2563EB",
     primaryHover: "#1D4ED8",
-    textPrimary: "#FFFFFF",
-    textSecondary: "#9CA3AF",
-    border: "#1F2937",
+    textPrimary: "#0F172A",
+    textSecondary: "#475569",
+    border: "#E2E8F0",
     danger: "#DC2626",
   },
   typography: {
@@ -36,8 +36,8 @@ export const theme = {
     height: "48px",
     padding: "0 16px",
     borderRadius: "12px",
-    border: "1px solid #1F2937",
-    background: "#0F172A",
+    border: "1px solid #E2E8F0",
+    background: "#FFFFFF",
     focusBorderColor: "#2563EB",
     focusShadow: "0 0 0 2px rgba(37, 99, 235, 0.35)",
   },
@@ -52,10 +52,10 @@ export const theme = {
       border: "1px solid #2563EB",
     },
     secondary: {
-      background: "transparent",
-      color: "#FFFFFF",
-      hover: "#1F2937",
-      border: "1px solid #1F2937",
+      background: "#FFFFFF",
+      color: "#2563EB",
+      hover: "#EFF6FF",
+      border: "1px solid #E2E8F0",
     },
   },
   spacing: {
@@ -67,8 +67,7 @@ export const theme = {
   },
   layout: {
     maxWidth: "1100px",
-    pagePadding: "32px",
-    surfacePadding: "32px",
     radius: "12px",
+    padding: "32px",
   },
 };
