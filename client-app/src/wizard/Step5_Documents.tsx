@@ -161,7 +161,6 @@ export function Step5_Documents() {
         ))}
 
         <div className="border border-amber-200 bg-amber-50 rounded-xl p-4 text-sm text-amber-900">
-          <p className="font-semibold mb-1">Upload later</p>
           <p>
             Your application will not be accepted until you supply the required
             documents. We will send you a link to upload all documents.
