@@ -1,51 +1,104 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const provinces = [
+  "Alberta",
+  "British Columbia",
+  "Manitoba",
+  "New Brunswick",
+  "Newfoundland and Labrador",
+  "Northwest Territories",
+  "Nova Scotia",
+  "Nunavut",
+  "Ontario",
+  "Prince Edward Island",
+  "Quebec",
+  "Saskatchewan",
+  "Yukon",
+];
+
 export default function ApplyStep1() {
   const navigate = useNavigate();
-  const [legalName, setLegalName] = useState("");
-  const [country] = useState("CA");
+  const [legalBusinessName, setLegalBusinessName] = useState("");
+  const [operatingProvince, setOperatingProvince] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function submit() {
-    const res = await fetch("/api/applications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Idempotency-Key": crypto.randomUUID(),
-      },
-      body: JSON.stringify({
-        source: "client",
-        country,
-        productCategory: "term_loan",
-        business: { legalName },
-        applicant: {
-          firstName: "Pending",
-          lastName: "Pending",
-          email: "pending@pending.com",
-        },
-        financialProfile: {},
-        match: {},
-      }),
-    });
+    setError(null);
+    setIsSubmitting(true);
 
-    const data = await res.json();
-    localStorage.setItem("applicationId", data.id);
-    navigate("/apply/step-2");
+    try {
+      const res = await fetch("/api/applications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": crypto.randomUUID(),
+        },
+        body: JSON.stringify({
+          source: "client",
+          country: "CA",
+          business: {
+            legalName: legalBusinessName,
+            operatingProvince,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Unable to start application");
+      }
+
+      const data = await res.json();
+      localStorage.setItem("applicationId", data.id);
+      navigate("/apply/step-2");
+    } catch (err) {
+      setError("We couldn't start your application. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <div className="page">
       <div className="card">
-        <h2>Business Information</h2>
+        <div className="step">Step 1 of 4</div>
+        <h2>Business identity</h2>
+        <p>Tell us how your business is registered.</p>
 
+        <label className="label" htmlFor="legalBusinessName">
+          Legal business name
+        </label>
         <input
-          placeholder="Legal Business Name"
-          value={legalName}
-          onChange={(e) => setLegalName(e.target.value)}
+          id="legalBusinessName"
+          placeholder="Boreal Coffee Company"
+          value={legalBusinessName}
+          onChange={(e) => setLegalBusinessName(e.target.value)}
         />
 
-        <button disabled={!legalName} onClick={submit}>
-          Continue
+        <label className="label" htmlFor="operatingProvince">
+          Operating province
+        </label>
+        <select
+          id="operatingProvince"
+          value={operatingProvince}
+          onChange={(e) => setOperatingProvince(e.target.value)}
+        >
+          <option value="">Select a province</option>
+          {provinces.map((province) => (
+            <option key={province} value={province}>
+              {province}
+            </option>
+          ))}
+        </select>
+
+        {error && <div className="error">{error}</div>}
+
+        <button
+          disabled={!legalBusinessName || !operatingProvince || isSubmitting}
+          onClick={submit}
+        >
+          {isSubmitting ? "Saving..." : "Continue"}
         </button>
       </div>
     </div>
