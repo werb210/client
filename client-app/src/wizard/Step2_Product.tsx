@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
@@ -27,6 +27,12 @@ const EmptyMatchLabelClass =
 export function Step2_Product() {
   const { app, update } = useApplicationStore();
   const categories = ProductCategories;
+
+  useEffect(() => {
+    if (app.currentStep !== 2) {
+      update({ currentStep: 2 });
+    }
+  }, [app.currentStep, update]);
 
   const matchByCategory = useMemo(() => {
     return categories.reduce(
@@ -69,47 +75,54 @@ export function Step2_Product() {
     <div className="max-w-3xl mx-auto px-6 py-10">
       <StepHeader step={2} title="Choose Product Category" />
 
-      {categories.map((cat) => {
-        const matchInfo =
-          matchByCategory[cat] ?? ({ value: null, label: "—" } as const);
-        const isSelected = app.productCategory === cat;
-        return (
-          <Card
-            key={cat}
-            className={`mb-4 transition ${
-              isSelected ? "ring-2 ring-borealAccent" : ""
-            }`}
-          >
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="text-lg font-semibold text-borealBlue">
-                    {CategoryLabels[cat] || cat}
+      <div className="grid md:grid-cols-2 gap-4">
+        {categories.map((cat) => {
+          const matchInfo =
+            matchByCategory[cat] ?? ({ value: null, label: "—" } as const);
+          const isSelected = app.productCategory === cat;
+          return (
+            <Card
+              key={cat}
+              className={`transition ${
+                isSelected ? "ring-2 ring-borealAccent" : ""
+              }`}
+            >
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="text-lg font-semibold text-borealBlue">
+                      {CategoryLabels[cat] || cat}
+                    </div>
+                    {isSelected && (
+                      <span className="boreal-badge-selected text-xs font-semibold px-2.5 py-1 rounded-full">
+                        Selected
+                      </span>
+                    )}
                   </div>
-                  {isSelected && (
-                    <span className="boreal-badge-selected text-xs font-semibold px-2.5 py-1 rounded-full">
-                      Selected
-                    </span>
-                  )}
+                  <p className="text-sm text-slate-600">
+                    Match score based on your financial profile.
+                  </p>
                 </div>
-                <p className="text-sm text-slate-600">
-                  Match score based on your financial profile.
-                </p>
+                <div className="flex items-center gap-3">
+                  {matchInfo.value === null ? (
+                    <span className={EmptyMatchLabelClass}>
+                      {matchInfo.label}
+                    </span>
+                  ) : (
+                    <ProgressPill value={matchInfo.value} />
+                  )}
+                  <Button
+                    className="w-full md:w-auto"
+                    onClick={() => select(cat)}
+                  >
+                    Select
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                {matchInfo.value === null ? (
-                  <span className={EmptyMatchLabelClass}>{matchInfo.label}</span>
-                ) : (
-                  <ProgressPill value={matchInfo.value} />
-                )}
-                <Button className="w-full md:w-auto" onClick={() => select(cat)}>
-                  Select
-                </Button>
-              </div>
-            </div>
-          </Card>
-        );
-      })}
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }

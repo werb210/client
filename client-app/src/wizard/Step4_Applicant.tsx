@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from "react";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { ClientAppAPI } from "../api/clientApp";
 import { StepHeader } from "../components/StepHeader";
@@ -5,13 +6,33 @@ import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { Validate } from "../utils/validate";
+import {
+  formatIdentityNumber,
+  formatPostalCode,
+  getCountryCode,
+  getIdentityLabel,
+  getPostalLabel,
+  getRegionLabel,
+} from "../utils/location";
 
 export function Step4_Applicant() {
   const { app, update } = useApplicationStore();
 
   const values = { ...app.applicant };
   const partner = values.partner || {};
-  const identityLabel = app.kyc.businessLocation === "Canada" ? "SIN" : "SSN";
+  const countryCode = useMemo(
+    () => getCountryCode(app.kyc.businessLocation),
+    [app.kyc.businessLocation]
+  );
+  const identityLabel = getIdentityLabel(countryCode);
+  const regionLabel = getRegionLabel(countryCode);
+  const postalLabel = getPostalLabel(countryCode);
+
+  useEffect(() => {
+    if (app.currentStep !== 4) {
+      update({ currentStep: 4 });
+    }
+  }, [app.currentStep, update]);
 
   function setField(key: string, value: any) {
     update({ applicant: { ...values, [key]: value } });
@@ -46,6 +67,20 @@ export function Step4_Applicant() {
     window.location.href = "/apply/step-5";
   }
 
+  const isValid = [
+    "firstName",
+    "lastName",
+    "email",
+    "phone",
+    "street",
+    "city",
+    "state",
+    "zip",
+    "dob",
+    "ssn",
+    "ownership",
+  ].every((field) => Validate.required(values[field]));
+
   return (
     <div className="max-w-3xl mx-auto px-6 py-10">
       <StepHeader step={4} title="Applicant Information" />
@@ -70,34 +105,32 @@ export function Step4_Applicant() {
               onChange={(e: any) => setField("lastName", e.target.value)}
             />
           </div>
-        </div>
 
-        <div>
-          <label className="block mb-2 font-medium">Email Address</label>
-          <Input
-            type="email"
-            value={values.email || ""}
-            onChange={(e: any) => setField("email", e.target.value)}
-          />
-        </div>
+          <div>
+            <label className="block mb-2 font-medium">Email Address</label>
+            <Input
+              type="email"
+              value={values.email || ""}
+              onChange={(e: any) => setField("email", e.target.value)}
+            />
+          </div>
 
-        <div>
-          <label className="block mb-2 font-medium">Phone Number</label>
-          <Input
-            value={values.phone || ""}
-            onChange={(e: any) => setField("phone", e.target.value)}
-          />
-        </div>
+          <div>
+            <label className="block mb-2 font-medium">Phone Number</label>
+            <Input
+              value={values.phone || ""}
+              onChange={(e: any) => setField("phone", e.target.value)}
+            />
+          </div>
 
-        <div>
-          <label className="block mb-2 font-medium">Street Address</label>
-          <Input
-            value={values.street || ""}
-            onChange={(e: any) => setField("street", e.target.value)}
-          />
-        </div>
+          <div>
+            <label className="block mb-2 font-medium">Street Address</label>
+            <Input
+              value={values.street || ""}
+              onChange={(e: any) => setField("street", e.target.value)}
+            />
+          </div>
 
-        <div className="grid md:grid-cols-3 gap-4">
           <div>
             <label className="block mb-2 font-medium">City</label>
             <Input
@@ -106,22 +139,22 @@ export function Step4_Applicant() {
             />
           </div>
           <div>
-            <label className="block mb-2 font-medium">State</label>
+            <label className="block mb-2 font-medium">{regionLabel}</label>
             <Input
               value={values.state || ""}
               onChange={(e: any) => setField("state", e.target.value)}
             />
           </div>
           <div>
-            <label className="block mb-2 font-medium">ZIP Code</label>
+            <label className="block mb-2 font-medium">{postalLabel}</label>
             <Input
-              value={values.zip || ""}
-              onChange={(e: any) => setField("zip", e.target.value)}
+              value={formatPostalCode(values.zip || "", countryCode)}
+              onChange={(e: any) =>
+                setField("zip", formatPostalCode(e.target.value, countryCode))
+              }
             />
           </div>
-        </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block mb-2 font-medium">Date of Birth</label>
             <Input
@@ -133,22 +166,27 @@ export function Step4_Applicant() {
           <div>
             <label className="block mb-2 font-medium">{identityLabel}</label>
             <Input
-              type="password"
+              type="text"
               inputMode="numeric"
               autoComplete="off"
-              value={values.ssn || ""}
-              onChange={(e: any) => setField("ssn", e.target.value)}
+              value={formatIdentityNumber(values.ssn || "", countryCode)}
+              onChange={(e: any) =>
+                setField(
+                  "ssn",
+                  formatIdentityNumber(e.target.value, countryCode)
+                )
+              }
             />
           </div>
-        </div>
 
-        <div>
-          <label className="block mb-2 font-medium">Ownership Percentage</label>
-          <Input
-            value={values.ownership || ""}
-            onChange={(e: any) => setField("ownership", e.target.value)}
-            placeholder="%"
-          />
+          <div>
+            <label className="block mb-2 font-medium">Ownership Percentage</label>
+            <Input
+              value={values.ownership || ""}
+              onChange={(e: any) => setField("ownership", e.target.value)}
+              placeholder="%"
+            />
+          </div>
         </div>
 
         <label className="flex items-center gap-2 text-sm font-medium text-borealBlue">
@@ -188,99 +226,117 @@ export function Step4_Applicant() {
               </div>
             </div>
 
-            <div>
-              <label className="block mb-2 font-medium">Email Address</label>
-              <Input
-                type="email"
-                value={partner.email || ""}
-                onChange={(e: any) =>
-                  setPartnerField("email", e.target.value)
-                }
-              />
-            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-2 font-medium">Email Address</label>
+                <Input
+                  type="email"
+                  value={partner.email || ""}
+                  onChange={(e: any) =>
+                    setPartnerField("email", e.target.value)
+                  }
+                />
+              </div>
 
-            <div>
-              <label className="block mb-2 font-medium">Phone Number</label>
-              <Input
-                value={partner.phone || ""}
-                onChange={(e: any) =>
-                  setPartnerField("phone", e.target.value)
-                }
-              />
-            </div>
+              <div>
+                <label className="block mb-2 font-medium">Phone Number</label>
+                <Input
+                  value={partner.phone || ""}
+                  onChange={(e: any) =>
+                    setPartnerField("phone", e.target.value)
+                  }
+                />
+              </div>
 
-            <div>
-              <label className="block mb-2 font-medium">Street Address</label>
-              <Input
-                value={partner.street || ""}
-                onChange={(e: any) =>
-                  setPartnerField("street", e.target.value)
-                }
-              />
-            </div>
+              <div>
+                <label className="block mb-2 font-medium">Street Address</label>
+                <Input
+                  value={partner.street || ""}
+                  onChange={(e: any) =>
+                    setPartnerField("street", e.target.value)
+                  }
+                />
+              </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <label className="block mb-2 font-medium">City</label>
                 <Input
                   value={partner.city || ""}
-                  onChange={(e: any) => setPartnerField("city", e.target.value)}
+                  onChange={(e: any) =>
+                    setPartnerField("city", e.target.value)
+                  }
                 />
               </div>
               <div>
-                <label className="block mb-2 font-medium">State</label>
+                <label className="block mb-2 font-medium">{regionLabel}</label>
                 <Input
                   value={partner.state || ""}
-                  onChange={(e: any) => setPartnerField("state", e.target.value)}
+                  onChange={(e: any) =>
+                    setPartnerField("state", e.target.value)
+                  }
                 />
               </div>
               <div>
-                <label className="block mb-2 font-medium">ZIP Code</label>
+                <label className="block mb-2 font-medium">{postalLabel}</label>
                 <Input
-                  value={partner.zip || ""}
-                  onChange={(e: any) => setPartnerField("zip", e.target.value)}
+                  value={formatPostalCode(partner.zip || "", countryCode)}
+                  onChange={(e: any) =>
+                    setPartnerField(
+                      "zip",
+                      formatPostalCode(e.target.value, countryCode)
+                    )
+                  }
                 />
               </div>
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block mb-2 font-medium">Date of Birth</label>
                 <Input
                   type="date"
                   value={partner.dob || ""}
-                  onChange={(e: any) => setPartnerField("dob", e.target.value)}
+                  onChange={(e: any) =>
+                    setPartnerField("dob", e.target.value)
+                  }
                 />
               </div>
               <div>
                 <label className="block mb-2 font-medium">{identityLabel}</label>
                 <Input
-                  type="password"
+                  type="text"
                   inputMode="numeric"
                   autoComplete="off"
-                  value={partner.ssn || ""}
-                  onChange={(e: any) => setPartnerField("ssn", e.target.value)}
+                  value={formatIdentityNumber(partner.ssn || "", countryCode)}
+                  onChange={(e: any) =>
+                    setPartnerField(
+                      "ssn",
+                      formatIdentityNumber(e.target.value, countryCode)
+                    )
+                  }
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block mb-2 font-medium">
-                Ownership Percentage
-              </label>
-              <Input
-                value={partner.ownership || ""}
-                onChange={(e: any) =>
-                  setPartnerField("ownership", e.target.value)
-                }
-                placeholder="%"
-              />
+              <div>
+                <label className="block mb-2 font-medium">
+                  Ownership Percentage
+                </label>
+                <Input
+                  value={partner.ownership || ""}
+                  onChange={(e: any) =>
+                    setPartnerField("ownership", e.target.value)
+                  }
+                  placeholder="%"
+                />
+              </div>
             </div>
           </div>
         )}
       </Card>
 
-      <Button className="mt-6 w-full md:w-auto" onClick={next}>
+      <Button
+        className="mt-6 w-full md:w-auto"
+        onClick={next}
+        disabled={!isValid}
+      >
         Continue to Documents →
       </Button>
     </div>

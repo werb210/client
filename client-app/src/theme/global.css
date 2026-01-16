@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -50,11 +52,21 @@ select option:checked {
   font-size: 15px;
 }
 
+.boreal-input:focus {
+  border-color: var(--boreal-accent);
+  box-shadow: 0 0 0 2px var(--boreal-blue-light);
+}
+
 .boreal-button {
   border-radius: var(--boreal-radius-input);
   font-weight: 600;
   transition: all 0.2s ease;
   height: 48px;
+}
+
+.boreal-button:focus-visible {
+  outline: 2px solid var(--boreal-accent);
+  outline-offset: 2px;
 }
 
 .boreal-button-primary {
