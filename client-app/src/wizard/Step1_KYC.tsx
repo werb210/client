@@ -14,6 +14,7 @@ import {
   formatCurrencyValue,
   getCountryCode,
 } from "../utils/location";
+import { theme } from "../styles/theme";
 
 const MatchCategories = [
   "line_of_credit",
@@ -32,9 +33,9 @@ const MatchBaselines: Record<string, number> = {
 };
 
 const LookingForOptions = [
-  "Capital",
-  "Equipment Financing",
-  "Both Capital & Equipment",
+  { value: "capital", label: "Capital" },
+  { value: "equipment", label: "Equipment Financing" },
+  { value: "both", label: "Both Capital & Equipment" },
 ];
 
 const BusinessLocationOptions = ["Canada", "United States", "Other"];
@@ -156,6 +157,14 @@ export function Step1_KYC() {
     Validate.required(app.kyc.accountsReceivable) &&
     Validate.required(app.kyc.fixedAssets);
 
+  const labelStyle = {
+    display: "block",
+    marginBottom: theme.spacing.xs,
+    fontSize: theme.typography.label.fontSize,
+    fontWeight: theme.typography.label.fontWeight,
+    color: theme.colors.textSecondary,
+  };
+
   async function next() {
     const payload = app.kyc;
 
@@ -248,9 +257,7 @@ export function Step1_KYC() {
         <Card className="space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block mb-2 font-medium">
-                What are you looking for?
-              </label>
+              <label style={labelStyle}>What are you looking for?</label>
               <Select
                 value={app.kyc.lookingFor || ""}
                 onChange={(e: any) =>
@@ -259,16 +266,14 @@ export function Step1_KYC() {
               >
                 <option value="">Select…</option>
                 {LookingForOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </Select>
             </div>
             <div>
-              <label className="block mb-2 font-medium">
-                How much funding are you seeking?
-              </label>
+              <label style={labelStyle}>How much funding are you seeking?</label>
               <Input
                 value={formatCurrencyValue(
                   app.kyc.fundingAmount || "",
@@ -290,7 +295,7 @@ export function Step1_KYC() {
             </div>
 
             <div>
-              <label className="block mb-2 font-medium">Business Location</label>
+              <label style={labelStyle}>Business Location</label>
               <Select
                 value={app.kyc.businessLocation || ""}
                 onChange={(e: any) => {
@@ -313,7 +318,7 @@ export function Step1_KYC() {
             </div>
 
             <div>
-              <label className="block mb-2 font-medium">Industry</label>
+              <label style={labelStyle}>Industry</label>
               <Select
                 value={app.kyc.industry || ""}
                 onChange={(e: any) =>
@@ -330,7 +335,7 @@ export function Step1_KYC() {
             </div>
 
             <div>
-              <label className="block mb-2 font-medium">Purpose of funds</label>
+              <label style={labelStyle}>Purpose of funds</label>
               <Select
                 value={app.kyc.purposeOfFunds || ""}
                 onChange={(e: any) =>
@@ -347,7 +352,7 @@ export function Step1_KYC() {
             </div>
 
             <div>
-              <label className="block mb-2 font-medium">
+              <label style={labelStyle}>
                 How many years of sales history does the business have?
               </label>
               <Select
@@ -366,7 +371,7 @@ export function Step1_KYC() {
             </div>
 
             <div>
-              <label className="block mb-2 font-medium">
+              <label style={labelStyle}>
                 What was your business revenue in the last 12 months?
               </label>
               <Select
@@ -387,7 +392,7 @@ export function Step1_KYC() {
             </div>
 
             <div>
-              <label className="block mb-2 font-medium">
+              <label style={labelStyle}>
                 Average monthly revenue (last 3 months)
               </label>
               <Select
@@ -406,7 +411,7 @@ export function Step1_KYC() {
             </div>
 
             <div>
-              <label className="block mb-2 font-medium">
+              <label style={labelStyle}>
                 Current Account Receivable balance
               </label>
               <Select
@@ -427,7 +432,7 @@ export function Step1_KYC() {
             </div>
 
             <div>
-              <label className="block mb-2 font-medium">
+              <label style={labelStyle}>
                 Fixed assets value for loan security
               </label>
               <Select
@@ -447,9 +452,12 @@ export function Step1_KYC() {
           </div>
         </Card>
 
-        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+        <div
+          className="flex flex-col sm:flex-row gap-3"
+          style={{ marginTop: theme.spacing.lg }}
+        >
           <Button
-            className="w-full sm:w-auto"
+            style={{ width: "100%", maxWidth: "220px" }}
             onClick={next}
             disabled={!isValid}
           >
@@ -460,17 +468,46 @@ export function Step1_KYC() {
       </WizardLayout>
 
       {showLocationModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50">
-          <div className="boreal-card p-6 max-w-md w-full space-y-3">
-            <h2 className="text-lg font-semibold text-borealBlue">
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: theme.spacing.md,
+            zIndex: 50,
+          }}
+        >
+          <div
+            style={{
+              background: theme.colors.surface,
+              borderRadius: theme.layout.radius,
+              border: `1px solid ${theme.colors.border}`,
+              padding: theme.spacing.lg,
+              maxWidth: "420px",
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: theme.spacing.sm,
+            }}
+          >
+            <h2
+              style={{
+                fontSize: theme.typography.h2.fontSize,
+                fontWeight: theme.typography.h2.fontWeight,
+                color: theme.colors.textPrimary,
+              }}
+            >
               Funding availability
             </h2>
-            <p className="text-sm text-slate-600">
+            <p style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
               Boreal funding is currently limited to businesses located in
               Canada or the United States.
             </p>
             <Button
-              className="w-full"
+              style={{ width: "100%" }}
               onClick={() => setShowLocationModal(false)}
             >
               OK

@@ -8,6 +8,7 @@ import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { WizardLayout } from "../components/WizardLayout";
+import { theme } from "../styles/theme";
 
 export function Step5_Documents() {
   const { app, update } = useApplicationStore();
@@ -127,13 +128,13 @@ export function Step5_Documents() {
 
       <Card className="space-y-4">
         {loading && (
-          <div className="text-sm text-slate-500">
+          <div style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
             Loading required documents…
           </div>
         )}
 
         {!loading && docsRequired.length === 0 && (
-          <div className="text-sm text-slate-500">
+          <div style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
             Your required document list is loading. Please refresh if this
             persists.
           </div>
@@ -141,8 +142,22 @@ export function Step5_Documents() {
 
         <div className="grid md:grid-cols-2 gap-4">
           {docsRequired.map((doc) => (
-            <div key={doc} className="border border-slate-200 rounded-xl p-4">
-              <div className="font-semibold mb-2">
+            <div
+              key={doc}
+              style={{
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.layout.radius,
+                padding: theme.spacing.md,
+                background: theme.colors.background,
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: 600,
+                  marginBottom: theme.spacing.xs,
+                  color: theme.colors.textPrimary,
+                }}
+              >
                 {DefaultDocLabels[doc] || doc}
               </div>
 
@@ -154,7 +169,13 @@ export function Step5_Documents() {
               />
 
               {app.documents[doc] && (
-                <div className="text-borealBlue text-sm mt-2">
+                <div
+                  style={{
+                    color: theme.colors.textSecondary,
+                    fontSize: "12px",
+                    marginTop: theme.spacing.xs,
+                  }}
+                >
                   Uploaded: {app.documents[doc].name}
                 </div>
               )}
@@ -162,19 +183,29 @@ export function Step5_Documents() {
           ))}
         </div>
 
-        <div className="border border-amber-200 bg-amber-50 rounded-xl p-4 text-sm text-amber-900">
+        <div
+          style={{
+            border: `1px solid ${theme.colors.border}`,
+            background: "rgba(220, 38, 38, 0.08)",
+            borderRadius: theme.layout.radius,
+            padding: theme.spacing.md,
+            fontSize: "14px",
+            color: theme.colors.textPrimary,
+          }}
+        >
           <p>
             Your application will not be accepted until you supply the required
             documents. We will send you a link to upload all documents.
           </p>
-          <button
-            className="boreal-button boreal-button-secondary mt-3 px-5 h-12"
+          <Button
+            variant="secondary"
+            style={{ marginTop: theme.spacing.sm, width: "100%" }}
             onClick={handleUploadLater}
           >
             Upload documents later
-          </button>
+          </Button>
           {app.documentsDeferred && (
-            <p className="mt-3 text-xs text-amber-900">
+            <p style={{ marginTop: theme.spacing.sm, fontSize: "12px" }}>
               Warning: your application will stay in pending status until the
               required documents are received.
             </p>
@@ -184,9 +215,11 @@ export function Step5_Documents() {
       </Card>
 
       <Button
-        className={`mt-6 w-full md:w-auto ${
-          allDocsPresent() ? "" : "bg-gray-400 cursor-not-allowed"
-        }`}
+        style={{
+          width: "100%",
+          maxWidth: "200px",
+          marginTop: theme.spacing.lg,
+        }}
         onClick={next}
         disabled={!allDocsPresent()}
       >

@@ -1,20 +1,34 @@
+import { theme } from "@/styles/theme";
+
 type ProgressPillProps = {
   value: number;
 };
 
 export function ProgressPill({ value }: ProgressPillProps) {
   const clamped = Math.max(0, Math.min(100, Math.round(value)));
-  let color = "bg-borealLightBlue text-borealBlue";
+  let background = "rgba(37, 99, 235, 0.15)";
+  let textColor = theme.colors.textPrimary;
 
   if (clamped < 50) {
-    color = "bg-slate-100 text-slate-600";
+    background = "rgba(156, 163, 175, 0.15)";
+    textColor = theme.colors.textSecondary;
   } else if (clamped < 75) {
-    color = "bg-borealLightBlue text-borealBlue";
+    background = "rgba(37, 99, 235, 0.2)";
+    textColor = theme.colors.textPrimary;
   }
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${color}`}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: "999px",
+        padding: "6px 12px",
+        fontSize: "12px",
+        fontWeight: 600,
+        background,
+        color: textColor,
+      }}
     >
       {clamped}% match
     </span>

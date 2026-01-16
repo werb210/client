@@ -11,12 +11,14 @@ import { WizardLayout } from "../components/WizardLayout";
 import { RegionSelect } from "../components/RegionSelect";
 import {
   formatIdentityNumber,
+  formatPhoneNumber,
   formatPostalCode,
   getCountryCode,
   getIdentityLabel,
   getPostalLabel,
   getRegionLabel,
 } from "../utils/location";
+import { theme } from "../styles/theme";
 
 export function Step4_Applicant() {
   const { app, update } = useApplicationStore();
@@ -95,25 +97,57 @@ export function Step4_Applicant() {
     "ownership",
   ].every((field) => Validate.required(values[field]));
 
+  const checkIcon =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 10.5l3 3 7-7' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")";
+  const labelStyle = {
+    display: "block",
+    marginBottom: theme.spacing.xs,
+    fontSize: theme.typography.label.fontSize,
+    fontWeight: theme.typography.label.fontWeight,
+    color: theme.colors.textSecondary,
+  };
+
+  const checkboxStyle = {
+    width: "18px",
+    height: "18px",
+    borderRadius: "4px",
+    border: `1px solid ${theme.colors.border}`,
+    background: values.hasMultipleOwners ? theme.colors.primary : theme.colors.surface,
+    display: "inline-grid",
+    placeContent: "center",
+    appearance: "none" as const,
+    backgroundImage: values.hasMultipleOwners ? checkIcon : "none",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center",
+    backgroundSize: "12px",
+  };
+
   return (
     <WizardLayout>
       <StepHeader step={4} title="Applicant Information" />
 
       <Card className="space-y-5">
-        <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
+        <div
+          style={{
+            fontSize: "12px",
+            textTransform: "uppercase",
+            letterSpacing: "0.2em",
+            color: theme.colors.textSecondary,
+          }}
+        >
           Primary applicant
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block mb-2 font-medium">First Name</label>
+            <label style={labelStyle}>First Name</label>
             <Input
               value={values.firstName || ""}
               onChange={(e: any) => setField("firstName", e.target.value)}
             />
           </div>
           <div>
-            <label className="block mb-2 font-medium">Last Name</label>
+            <label style={labelStyle}>Last Name</label>
             <Input
               value={values.lastName || ""}
               onChange={(e: any) => setField("lastName", e.target.value)}
@@ -121,7 +155,7 @@ export function Step4_Applicant() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Email Address</label>
+            <label style={labelStyle}>Email Address</label>
             <Input
               type="email"
               value={values.email || ""}
@@ -130,15 +164,18 @@ export function Step4_Applicant() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Phone Number</label>
+            <label style={labelStyle}>Phone Number</label>
             <Input
-              value={values.phone || ""}
-              onChange={(e: any) => setField("phone", e.target.value)}
+              value={formatPhoneNumber(values.phone || "", countryCode)}
+              onChange={(e: any) =>
+                setField("phone", formatPhoneNumber(e.target.value, countryCode))
+              }
+              inputMode="tel"
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Street Address</label>
+            <label style={labelStyle}>Street Address</label>
             <Input
               value={values.street || ""}
               onChange={(e: any) => setField("street", e.target.value)}
@@ -146,14 +183,14 @@ export function Step4_Applicant() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">City</label>
+            <label style={labelStyle}>City</label>
             <Input
               value={values.city || ""}
               onChange={(e: any) => setField("city", e.target.value)}
             />
           </div>
           <div>
-            <label className="block mb-2 font-medium">{regionLabel}</label>
+            <label style={labelStyle}>{regionLabel}</label>
             <RegionSelect
               country={regionCountry}
               value={values.state || ""}
@@ -161,7 +198,7 @@ export function Step4_Applicant() {
             />
           </div>
           <div>
-            <label className="block mb-2 font-medium">{postalLabel}</label>
+            <label style={labelStyle}>{postalLabel}</label>
             <Input
               value={formatPostalCode(values.zip || "", countryCode)}
               onChange={(e: any) =>
@@ -171,7 +208,7 @@ export function Step4_Applicant() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Date of Birth</label>
+            <label style={labelStyle}>Date of Birth</label>
             <Input
               type="date"
               value={values.dob || ""}
@@ -179,7 +216,7 @@ export function Step4_Applicant() {
             />
           </div>
           <div>
-            <label className="block mb-2 font-medium">{identityLabel}</label>
+            <label style={labelStyle}>{identityLabel}</label>
             <Input
               type="text"
               inputMode="numeric"
@@ -195,7 +232,7 @@ export function Step4_Applicant() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Ownership Percentage</label>
+            <label style={labelStyle}>Ownership Percentage</label>
             <Input
               value={values.ownership || ""}
               onChange={(e: any) => setField("ownership", e.target.value)}
@@ -204,25 +241,49 @@ export function Step4_Applicant() {
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-sm font-medium text-borealBlue">
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: theme.spacing.xs,
+            fontSize: theme.typography.label.fontSize,
+            fontWeight: theme.typography.label.fontWeight,
+            color: theme.colors.textPrimary,
+          }}
+        >
           <input
             type="checkbox"
             checked={values.hasMultipleOwners || false}
             onChange={(e) =>
               setField("hasMultipleOwners", e.target.checked)
             }
+            style={checkboxStyle}
           />
           This business has multiple owners/partners
         </label>
 
         {values.hasMultipleOwners && (
-          <div className="space-y-4 border-t border-slate-200 pt-4">
-            <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
+          <div
+            style={{
+              marginTop: theme.spacing.md,
+              paddingTop: theme.spacing.md,
+              borderTop: `1px solid ${theme.colors.border}`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: "12px",
+                textTransform: "uppercase",
+                letterSpacing: "0.2em",
+                color: theme.colors.textSecondary,
+                marginBottom: theme.spacing.sm,
+              }}
+            >
               Partner Information
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block mb-2 font-medium">First Name</label>
+                <label style={labelStyle}>First Name</label>
                 <Input
                   value={partner.firstName || ""}
                   onChange={(e: any) =>
@@ -231,7 +292,7 @@ export function Step4_Applicant() {
                 />
               </div>
               <div>
-                <label className="block mb-2 font-medium">Last Name</label>
+                <label style={labelStyle}>Last Name</label>
                 <Input
                   value={partner.lastName || ""}
                   onChange={(e: any) =>
@@ -243,7 +304,7 @@ export function Step4_Applicant() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block mb-2 font-medium">Email Address</label>
+                <label style={labelStyle}>Email Address</label>
                 <Input
                   type="email"
                   value={partner.email || ""}
@@ -254,17 +315,21 @@ export function Step4_Applicant() {
               </div>
 
               <div>
-                <label className="block mb-2 font-medium">Phone Number</label>
+                <label style={labelStyle}>Phone Number</label>
                 <Input
-                  value={partner.phone || ""}
+                  value={formatPhoneNumber(partner.phone || "", countryCode)}
                   onChange={(e: any) =>
-                    setPartnerField("phone", e.target.value)
+                    setPartnerField(
+                      "phone",
+                      formatPhoneNumber(e.target.value, countryCode)
+                    )
                   }
+                  inputMode="tel"
                 />
               </div>
 
               <div>
-                <label className="block mb-2 font-medium">Street Address</label>
+                <label style={labelStyle}>Street Address</label>
                 <Input
                   value={partner.street || ""}
                   onChange={(e: any) =>
@@ -274,7 +339,7 @@ export function Step4_Applicant() {
               </div>
 
               <div>
-                <label className="block mb-2 font-medium">City</label>
+                <label style={labelStyle}>City</label>
                 <Input
                   value={partner.city || ""}
                   onChange={(e: any) =>
@@ -283,7 +348,7 @@ export function Step4_Applicant() {
                 />
               </div>
               <div>
-                <label className="block mb-2 font-medium">{regionLabel}</label>
+                <label style={labelStyle}>{regionLabel}</label>
                 <RegionSelect
                   country={regionCountry}
                   value={partner.state || ""}
@@ -291,7 +356,7 @@ export function Step4_Applicant() {
                 />
               </div>
               <div>
-                <label className="block mb-2 font-medium">{postalLabel}</label>
+                <label style={labelStyle}>{postalLabel}</label>
                 <Input
                   value={formatPostalCode(partner.zip || "", countryCode)}
                   onChange={(e: any) =>
@@ -304,7 +369,7 @@ export function Step4_Applicant() {
               </div>
 
               <div>
-                <label className="block mb-2 font-medium">Date of Birth</label>
+                <label style={labelStyle}>Date of Birth</label>
                 <Input
                   type="date"
                   value={partner.dob || ""}
@@ -314,7 +379,7 @@ export function Step4_Applicant() {
                 />
               </div>
               <div>
-                <label className="block mb-2 font-medium">{identityLabel}</label>
+                <label style={labelStyle}>{identityLabel}</label>
                 <Input
                   type="text"
                   inputMode="numeric"
@@ -330,9 +395,7 @@ export function Step4_Applicant() {
               </div>
 
               <div>
-                <label className="block mb-2 font-medium">
-                  Ownership Percentage
-                </label>
+                <label style={labelStyle}>Ownership Percentage</label>
                 <Input
                   value={partner.ownership || ""}
                   onChange={(e: any) =>
@@ -347,7 +410,11 @@ export function Step4_Applicant() {
       </Card>
 
       <Button
-        className="mt-6 w-full md:w-auto"
+        style={{
+          width: "100%",
+          maxWidth: "260px",
+          marginTop: theme.spacing.lg,
+        }}
         onClick={next}
         disabled={!isValid}
       >
