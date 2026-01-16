@@ -35,9 +35,9 @@ export function Step1_KYC() {
     }
 
     const res = await ClientAppAPI.start(payload);
-    const token = res.data.token;
+    const { token, matchPercentages } = res.data;
 
-    update({ applicationToken: token });
+    update({ applicationToken: token, matchPercentages });
 
     window.location.href = "/apply/step-2";
   }

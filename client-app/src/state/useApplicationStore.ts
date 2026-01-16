@@ -5,6 +5,7 @@ import { ApplicationData } from "../types/application";
 const emptyApp: ApplicationData = {
   kyc: {},
   productCategory: null,
+  matchPercentages: {},
   business: {},
   applicant: {},
   documents: {},
