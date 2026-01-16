@@ -13,8 +13,9 @@ import { theme } from "../styles/theme";
 export function Step5_Documents() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
-  const [docsRequired, setDocsRequired] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [docsRequired, setDocsRequired] = useState<string[]>([
+    "bank_statements_6m",
+  ]);
 
   useEffect(() => {
     if (app.currentStep !== 5) {
@@ -34,22 +35,22 @@ export function Step5_Documents() {
           data.documentsRequired ||
           data.documents ||
           [];
+        const normalized = Array.isArray(required) ? required : [];
+        const merged = Array.from(
+          new Set(["bank_statements_6m", ...normalized])
+        );
         if (active) {
-          setDocsRequired(Array.isArray(required) ? required : []);
+          setDocsRequired(merged);
         }
       } catch {
         if (active) {
-          setDocsRequired([]);
+          setDocsRequired(["bank_statements_6m"]);
         }
-      } finally {
-        if (active) setLoading(false);
       }
     }
 
     if (app.applicationToken) {
       loadDocs();
-    } else {
-      setLoading(false);
     }
 
     return () => {
@@ -131,19 +132,6 @@ export function Step5_Documents() {
       <StepHeader step={5} title="Required Documents" />
 
       <Card className="space-y-4">
-        {loading && (
-          <div style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
-            Loading required documents…
-          </div>
-        )}
-
-        {!loading && docsRequired.length === 0 && (
-          <div style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
-            Your required document list is loading. Please refresh if this
-            persists.
-          </div>
-        )}
-
         <div className="grid md:grid-cols-2 gap-4">
           {docsRequired.map((doc) => (
             <div

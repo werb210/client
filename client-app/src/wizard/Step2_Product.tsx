@@ -8,16 +8,29 @@ import { ProgressPill } from "../components/ui/ProgressPill";
 import { WizardLayout } from "../components/WizardLayout";
 import { theme } from "../styles/theme";
 
-const capitalProducts = [
-  "Term Loan",
-  "Line of Credit",
-  "Factoring",
-  "Purchase Order Financing",
-];
+const PRODUCT_VISIBILITY_MAP = {
+  Capital: [
+    "Term Loan",
+    "Line of Credit",
+    "Factoring",
+    "Purchase Order Financing",
+  ],
+  "Equipment Financing": ["Equipment Financing"],
+  "Capital & Equipment": [
+    "Term Loan",
+    "Line of Credit",
+    "Factoring",
+    "Purchase Order Financing",
+    "Equipment Financing",
+  ],
+} as const;
 
-const equipmentProducts = ["Equipment Financing"];
-
-const allProducts = [...capitalProducts, ...equipmentProducts];
+const lookingForLabelMap: Record<string, keyof typeof PRODUCT_VISIBILITY_MAP> =
+  {
+    capital: "Capital",
+    equipment: "Equipment Financing",
+    both: "Capital & Equipment",
+  };
 
 const productMatchKeys: Record<string, string> = {
   "Term Loan": "term_loan",
@@ -30,27 +43,16 @@ const productMatchKeys: Record<string, string> = {
 export function Step2_Product() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
-  function allowedProducts(step1Choice: "capital" | "equipment" | "both") {
-    switch (step1Choice) {
-      case "capital":
-        return capitalProducts;
-      case "equipment":
-        return equipmentProducts;
-      case "both":
-        return allProducts;
-      default:
-        return allProducts;
-    }
-  }
 
   const categories = useMemo(() => {
-    const lookingFor = app.kyc.lookingFor as
-      | "capital"
-      | "equipment"
-      | "both"
-      | "";
-    const filtered = lookingFor ? allowedProducts(lookingFor) : allProducts;
-    return filtered.length > 0 ? filtered : allProducts;
+    const rawSelection = app.kyc.lookingFor as string | undefined;
+    const mappedSelection =
+      (rawSelection && lookingForLabelMap[rawSelection]) ||
+      (rawSelection &&
+      Object.prototype.hasOwnProperty.call(PRODUCT_VISIBILITY_MAP, rawSelection)
+        ? (rawSelection as keyof typeof PRODUCT_VISIBILITY_MAP)
+        : undefined);
+    return mappedSelection ? [...PRODUCT_VISIBILITY_MAP[mappedSelection]] : [];
   }, [app.kyc.lookingFor]);
 
   useEffect(() => {
