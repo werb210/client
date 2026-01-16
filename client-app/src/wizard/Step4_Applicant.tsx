@@ -342,3 +342,5 @@ export function Step4_Applicant() {
     </div>
   );
 }
+
+export default Step4_Applicant;

@@ -126,3 +126,5 @@ export function Step2_Product() {
     </div>
   );
 }
+
+export default Step2_Product;

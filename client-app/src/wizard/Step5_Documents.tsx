@@ -203,3 +203,5 @@ export function Step5_Documents() {
     </div>
   );
 }
+
+export default Step5_Documents;
