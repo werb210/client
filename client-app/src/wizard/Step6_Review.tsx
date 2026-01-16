@@ -129,3 +129,5 @@ export function Step6_Review() {
     </div>
   );
 }
+
+export default Step6_Review;

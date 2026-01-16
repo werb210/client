@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { ClientAppAPI } from "../api/clientApp";
 import { StepHeader } from "../components/StepHeader";
@@ -121,6 +122,7 @@ function buildMatchPercentages(amount: number): Record<string, number> {
 export function Step1_KYC() {
   const { app, update } = useApplicationStore();
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const navigate = useNavigate();
   const countryCode = useMemo(
     () => getCountryCode(app.kyc.businessLocation),
     [app.kyc.businessLocation]
@@ -234,7 +236,7 @@ export function Step1_KYC() {
 
     update({ applicationToken: token, matchPercentages });
 
-    window.location.href = "/apply/step-2";
+    navigate("/apply/step-2");
   }
 
   return (
@@ -476,3 +478,5 @@ export function Step1_KYC() {
     </div>
   );
 }
+
+export default Step1_KYC;

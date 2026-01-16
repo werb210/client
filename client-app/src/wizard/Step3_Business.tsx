@@ -239,3 +239,5 @@ export function Step3_Business() {
     </div>
   );
 }
+
+export default Step3_Business;
