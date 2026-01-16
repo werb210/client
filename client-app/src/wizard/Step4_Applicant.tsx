@@ -8,6 +8,7 @@ import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { Validate } from "../utils/validate";
 import { WizardLayout } from "../components/WizardLayout";
+import { RegionSelect } from "../components/RegionSelect";
 import {
   formatIdentityNumber,
   formatPostalCode,
@@ -30,6 +31,10 @@ export function Step4_Applicant() {
   const identityLabel = getIdentityLabel(countryCode);
   const regionLabel = getRegionLabel(countryCode);
   const postalLabel = getPostalLabel(countryCode);
+  const regionCountry = useMemo<"CA" | "US">(
+    () => (countryCode === "CA" ? "CA" : "US"),
+    [countryCode]
+  );
 
   useEffect(() => {
     if (app.currentStep !== 4) {
@@ -149,9 +154,10 @@ export function Step4_Applicant() {
           </div>
           <div>
             <label className="block mb-2 font-medium">{regionLabel}</label>
-            <Input
+            <RegionSelect
+              country={regionCountry}
               value={values.state || ""}
-              onChange={(e: any) => setField("state", e.target.value)}
+              onChange={(value) => setField("state", value)}
             />
           </div>
           <div>
@@ -278,11 +284,10 @@ export function Step4_Applicant() {
               </div>
               <div>
                 <label className="block mb-2 font-medium">{regionLabel}</label>
-                <Input
+                <RegionSelect
+                  country={regionCountry}
                   value={partner.state || ""}
-                  onChange={(e: any) =>
-                    setPartnerField("state", e.target.value)
-                  }
+                  onChange={(value) => setPartnerField("state", value)}
                 />
               </div>
               <div>

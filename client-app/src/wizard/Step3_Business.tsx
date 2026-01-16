@@ -7,6 +7,7 @@ import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { Select } from "../components/ui/Select";
+import { RegionSelect } from "../components/RegionSelect";
 import { Validate } from "../utils/validate";
 import {
   formatCurrencyValue,
@@ -17,76 +18,6 @@ import {
   getRegionLabel,
 } from "../utils/location";
 import { WizardLayout } from "../components/WizardLayout";
-
-const ProvinceOptions = [
-  "Alberta",
-  "British Columbia",
-  "Manitoba",
-  "New Brunswick",
-  "Newfoundland and Labrador",
-  "Nova Scotia",
-  "Northwest Territories",
-  "Nunavut",
-  "Ontario",
-  "Prince Edward Island",
-  "Quebec",
-  "Saskatchewan",
-  "Yukon",
-];
-
-const StateOptions = [
-  "Alabama",
-  "Alaska",
-  "Arizona",
-  "Arkansas",
-  "California",
-  "Colorado",
-  "Connecticut",
-  "Delaware",
-  "Florida",
-  "Georgia",
-  "Hawaii",
-  "Idaho",
-  "Illinois",
-  "Indiana",
-  "Iowa",
-  "Kansas",
-  "Kentucky",
-  "Louisiana",
-  "Maine",
-  "Maryland",
-  "Massachusetts",
-  "Michigan",
-  "Minnesota",
-  "Mississippi",
-  "Missouri",
-  "Montana",
-  "Nebraska",
-  "Nevada",
-  "New Hampshire",
-  "New Jersey",
-  "New Mexico",
-  "New York",
-  "North Carolina",
-  "North Dakota",
-  "Ohio",
-  "Oklahoma",
-  "Oregon",
-  "Pennsylvania",
-  "Rhode Island",
-  "South Carolina",
-  "South Dakota",
-  "Tennessee",
-  "Texas",
-  "Utah",
-  "Vermont",
-  "Virginia",
-  "Washington",
-  "West Virginia",
-  "Wisconsin",
-  "Wyoming",
-  "District of Columbia",
-];
 
 export function Step3_Business() {
   const { app, update } = useApplicationStore();
@@ -99,8 +30,8 @@ export function Step3_Business() {
   );
   const regionLabel = getRegionLabel(countryCode);
   const postalLabel = getPostalLabel(countryCode);
-  const regionOptions = useMemo(
-    () => (countryCode === "CA" ? ProvinceOptions : StateOptions),
+  const regionCountry = useMemo<"CA" | "US">(
+    () => (countryCode === "CA" ? "CA" : "US"),
     [countryCode]
   );
 
@@ -218,17 +149,11 @@ export function Step3_Business() {
           </div>
           <div>
             <label className="block mb-2 font-medium">{regionLabel}</label>
-            <Select
+            <RegionSelect
+              country={regionCountry}
               value={values.state || ""}
-              onChange={(e: any) => setField("state", e.target.value)}
-            >
-              <option value="">Select…</option>
-              {regionOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
+              onChange={(value) => setField("state", value)}
+            />
           </div>
           <div>
             <label className="block mb-2 font-medium">{postalLabel}</label>

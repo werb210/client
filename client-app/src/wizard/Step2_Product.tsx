@@ -8,27 +8,12 @@ import { ProgressPill } from "../components/ui/ProgressPill";
 import { WizardLayout } from "../components/WizardLayout";
 
 const CategoryLabels: Record<string, string> = {
-  working_capital: "Working Capital",
-  line_of_credit: "Line of Credit",
-  equipment_financing: "Equipment Financing",
-  purchase_order_financing: "Purchase Order Financing",
   term_loan: "Term Loan",
+  line_of_credit: "Line of Credit",
+  factoring: "Factoring",
+  po_financing: "Purchase Order Financing",
+  equipment_financing: "Equipment Financing",
 };
-
-const ProductCategories = [
-  "working_capital",
-  "line_of_credit",
-  "equipment_financing",
-  "purchase_order_financing",
-  "term_loan",
-];
-
-const CapitalCategories = [
-  "working_capital",
-  "line_of_credit",
-  "purchase_order_financing",
-  "term_loan",
-];
 
 const EmptyMatchLabelClass =
   "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-slate-100 text-slate-500";
@@ -36,21 +21,37 @@ const EmptyMatchLabelClass =
 export function Step2_Product() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
+  function allowedProducts(step1Choice: "capital" | "equipment" | "both") {
+    switch (step1Choice) {
+      case "capital":
+        return ["term_loan", "line_of_credit", "factoring", "po_financing"];
+      case "equipment":
+        return ["equipment_financing"];
+      case "both":
+        return [
+          "term_loan",
+          "line_of_credit",
+          "factoring",
+          "po_financing",
+          "equipment_financing",
+        ];
+      default:
+        return [];
+    }
+  }
+
   const categories = useMemo(() => {
     const lookingFor = app.kyc.lookingFor || "";
-    if (lookingFor === "Capital") {
-      return CapitalCategories;
-    }
-    if (lookingFor === "Equipment Financing") {
-      return ["equipment_financing"];
-    }
-    if (
-      lookingFor === "Both Capital & Equipment" ||
-      lookingFor === "Both Capital and Equipment"
-    ) {
-      return ProductCategories;
-    }
-    return CapitalCategories;
+    const step1Choice =
+      lookingFor === "Capital"
+        ? "capital"
+        : lookingFor === "Equipment Financing"
+          ? "equipment"
+          : lookingFor === "Both Capital & Equipment" ||
+              lookingFor === "Both Capital and Equipment"
+            ? "both"
+            : null;
+    return step1Choice ? allowedProducts(step1Choice) : [];
   }, [app.kyc.lookingFor]);
 
   useEffect(() => {
