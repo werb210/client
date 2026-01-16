@@ -9,51 +9,105 @@ import { Validate } from "../utils/validate";
 import { ResetApplication } from "../components/ResetApplication";
 
 const MatchCategories = [
-  "term_loan",
+  "working_capital",
   "line_of_credit",
-  "factoring",
   "equipment_financing",
+  "purchase_order_financing",
+  "term_loan",
 ];
 
-const MatchBaselines: Record<string, Record<string, number>> = {
-  invoices: {
-    term_loan: 58,
-    line_of_credit: 70,
-    factoring: 88,
-    equipment_financing: 52,
-  },
-  asset_based: {
-    term_loan: 62,
-    line_of_credit: 86,
-    factoring: 55,
-    equipment_financing: 68,
-  },
-  fixed_payment: {
-    term_loan: 88,
-    line_of_credit: 60,
-    factoring: 48,
-    equipment_financing: 72,
-  },
-  default: {
-    term_loan: 60,
-    line_of_credit: 60,
-    factoring: 60,
-    equipment_financing: 60,
-  },
+const MatchBaselines: Record<string, number> = {
+  working_capital: 74,
+  line_of_credit: 68,
+  equipment_financing: 70,
+  purchase_order_financing: 62,
+  term_loan: 65,
 };
 
-function buildMatchPercentages(kyc: any): Record<string, number> {
-  const revenueType =
-    kyc && typeof kyc.revenueType === "string" ? kyc.revenueType : "default";
-  const baselines = MatchBaselines[revenueType] || MatchBaselines.default;
-  const amount = kyc && typeof kyc.amount === "number" ? kyc.amount : 0;
-  const countryBoost = kyc && kyc.country === "canada" ? 3 : 0;
-  const amountBoost =
-    amount >= 250000 ? 8 : amount >= 150000 ? 5 : amount >= 75000 ? 3 : 0;
+const LookingForOptions = [
+  "Capital",
+  "Equipment Financing",
+  "Both Capital & Equipment",
+];
 
+const BusinessLocationOptions = ["United States", "Canada", "Other"];
+
+const IndustryOptions = [
+  "Construction",
+  "Manufacturing",
+  "Retail",
+  "Restaurant/Food Service",
+  "Technology",
+  "Healthcare",
+  "Transportation",
+  "Professional Services",
+  "Real Estate",
+  "Agriculture",
+  "Energy",
+  "Other",
+];
+
+const PurposeOptions = [
+  "Equipment Purchase",
+  "Inventory Purchase",
+  "Business Expansion",
+  "Working Capital",
+];
+
+const SalesHistoryOptions = [
+  "Less than 1 year",
+  "1 to 3 years",
+  "Over 3 years",
+];
+
+const RevenueOptions = [
+  "Under $100,000",
+  "$100,000 to $250,000",
+  "$250,000 to $500,000",
+  "$500,000 to $1,000,000",
+  "$1,000,000 to $5,000,000",
+  "Over $5,000,000",
+];
+
+const MonthlyRevenueOptions = [
+  "$10,000 to $25,000",
+  "$25,000 to $50,000",
+  "$50,000 to $100,000",
+  "$100,000 to $250,000",
+  "Over $250,000",
+];
+
+const AccountsReceivableOptions = [
+  "No Account Receivables",
+  "Zero to $100,000",
+  "$100,000 to $250,000",
+  "$250,000 to $500,000",
+  "$500,000 to $1,000,000",
+  "$1,000,000 to $3,000,000",
+  "Over $3,000,000",
+];
+
+const FixedAssetsOptions = [
+  "No fixed assets",
+  "Zero to $25,000",
+  "$25,000 to $100,000",
+  "$100,000 to $250,000",
+  "$250,000 to $500,000",
+  "$500,000 to $1,000,000",
+  "Over $1,000,000",
+];
+
+function parseCurrency(value: string) {
+  const cleaned = value.replace(/[^0-9.]/g, "");
+  return Number.parseFloat(cleaned);
+}
+
+function buildMatchPercentages(amount: number): Record<string, number> {
+  const amountBoost =
+    amount >= 500000 ? 10 : amount >= 250000 ? 7 : amount >= 100000 ? 4 : 0;
   return MatchCategories.reduce((acc, category) => {
-    const base = baselines[category] ?? MatchBaselines.default[category];
-    const clamped = Math.max(0, Math.min(100, base + amountBoost + countryBoost));
+    const base = MatchBaselines[category] ?? 60;
+    const clamped = Math.max(0, Math.min(100, base + amountBoost));
     acc[category] = clamped;
     return acc;
   }, {} as Record<string, number>);
@@ -65,31 +119,66 @@ export function Step1_KYC() {
   async function next() {
     const payload = app.kyc;
 
-    if (!Validate.required(payload.country)) {
-      alert("Please select your business country.");
+    if (!Validate.required(payload.lookingFor)) {
+      alert("Please select what you are looking for.");
       return;
     }
 
-    if (!Validate.required(payload.amount) || !Validate.number(payload.amount)) {
-      alert("Please enter a funding amount.");
+    if (!Validate.required(payload.fundingAmount)) {
+      alert("Please enter how much funding you are seeking.");
       return;
     }
 
-    if (!Validate.positive(payload.amount)) {
-      alert("Funding amount must be greater than zero.");
+    if (!Validate.required(payload.businessLocation)) {
+      alert("Please select your business location.");
       return;
     }
 
-    if (!Validate.required(payload.revenueType)) {
-      alert("Please select your revenue type.");
+    if (!Validate.required(payload.industry)) {
+      alert("Please select your industry.");
       return;
     }
 
-    const matchPercentages = buildMatchPercentages(payload);
+    if (!Validate.required(payload.purposeOfFunds)) {
+      alert("Please select the purpose of funds.");
+      return;
+    }
+
+    if (!Validate.required(payload.salesHistory)) {
+      alert("Please select your sales history.");
+      return;
+    }
+
+    if (!Validate.required(payload.revenueLast12Months)) {
+      alert("Please select your last 12 months revenue.");
+      return;
+    }
+
+    if (!Validate.required(payload.monthlyRevenue)) {
+      alert("Please select your average monthly revenue.");
+      return;
+    }
+
+    if (!Validate.required(payload.accountsReceivable)) {
+      alert("Please select your current account receivable balance.");
+      return;
+    }
+
+    if (!Validate.required(payload.fixedAssets)) {
+      alert("Please select your fixed assets value.");
+      return;
+    }
+
+    const amount = parseCurrency(payload.fundingAmount);
+    const matchPercentages = buildMatchPercentages(
+      Number.isNaN(amount) ? 0 : amount
+    );
     let token = app.applicationToken;
 
     try {
-      const res = await ClientAppAPI.start(payload);
+      const res = await ClientAppAPI.start({
+        financialProfile: payload,
+      });
       if (res && res.data && res.data.token) {
         token = res.data.token;
       }
@@ -107,56 +196,197 @@ export function Step1_KYC() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <StepHeader step={1} title="Know Your Business" />
+    <div className="max-w-3xl mx-auto px-6 py-10">
+      <StepHeader step={1} title="Financial Profile" />
 
-      <Card className="space-y-4">
+      <Card className="space-y-5">
         <div>
-          <label className="block mb-1 font-medium">Business Country</label>
+          <label className="block mb-2 font-medium">
+            What are you looking for?
+          </label>
           <Select
-            value={app.kyc.country || ""}
+            value={app.kyc.lookingFor || ""}
             onChange={(e: any) =>
-              update({ kyc: { ...app.kyc, country: e.target.value } })
+              update({ kyc: { ...app.kyc, lookingFor: e.target.value } })
             }
           >
             <option value="">Select…</option>
-            <option value="canada">Canada</option>
-            <option value="usa">USA</option>
+            {LookingForOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
           </Select>
         </div>
 
         <div>
-          <label className="block mb-1 font-medium">Funding Amount Needed</label>
+          <label className="block mb-2 font-medium">
+            How much funding are you seeking?
+          </label>
           <Input
-            type="number"
-            value={app.kyc.amount || ""}
+            value={app.kyc.fundingAmount || ""}
             onChange={(e: any) =>
-              update({ kyc: { ...app.kyc, amount: Number(e.target.value) } })
+              update({ kyc: { ...app.kyc, fundingAmount: e.target.value } })
             }
+            placeholder="$"
           />
         </div>
 
         <div>
-          <label className="block mb-1 font-medium">Revenue Type</label>
+          <label className="block mb-2 font-medium">Business Location</label>
           <Select
-            value={app.kyc.revenueType || ""}
+            value={app.kyc.businessLocation || ""}
             onChange={(e: any) =>
-              update({ kyc: { ...app.kyc, revenueType: e.target.value } })
+              update({ kyc: { ...app.kyc, businessLocation: e.target.value } })
             }
           >
             <option value="">Select…</option>
-            <option value="invoices">I invoice customers (Factoring)</option>
-            <option value="asset_based">Asset Based / LOC</option>
-            <option value="fixed_payment">Fixed Payment Loans</option>
+            {BusinessLocationOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">Industry</label>
+          <Select
+            value={app.kyc.industry || ""}
+            onChange={(e: any) =>
+              update({ kyc: { ...app.kyc, industry: e.target.value } })
+            }
+          >
+            <option value="">Select…</option>
+            {IndustryOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">Purpose of funds</label>
+          <Select
+            value={app.kyc.purposeOfFunds || ""}
+            onChange={(e: any) =>
+              update({ kyc: { ...app.kyc, purposeOfFunds: e.target.value } })
+            }
+          >
+            <option value="">Select…</option>
+            {PurposeOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">
+            How many years of sales history does the business have?
+          </label>
+          <Select
+            value={app.kyc.salesHistory || ""}
+            onChange={(e: any) =>
+              update({ kyc: { ...app.kyc, salesHistory: e.target.value } })
+            }
+          >
+            <option value="">Select…</option>
+            {SalesHistoryOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">
+            What was your business revenue in the last 12 months?
+          </label>
+          <Select
+            value={app.kyc.revenueLast12Months || ""}
+            onChange={(e: any) =>
+              update({
+                kyc: { ...app.kyc, revenueLast12Months: e.target.value },
+              })
+            }
+          >
+            <option value="">Select…</option>
+            {RevenueOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">
+            Average monthly revenue (last 3 months)
+          </label>
+          <Select
+            value={app.kyc.monthlyRevenue || ""}
+            onChange={(e: any) =>
+              update({ kyc: { ...app.kyc, monthlyRevenue: e.target.value } })
+            }
+          >
+            <option value="">Select…</option>
+            {MonthlyRevenueOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">
+            Current Account Receivable balance
+          </label>
+          <Select
+            value={app.kyc.accountsReceivable || ""}
+            onChange={(e: any) =>
+              update({
+                kyc: { ...app.kyc, accountsReceivable: e.target.value },
+              })
+            }
+          >
+            <option value="">Select…</option>
+            {AccountsReceivableOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">
+            Fixed assets value for loan security
+          </label>
+          <Select
+            value={app.kyc.fixedAssets || ""}
+            onChange={(e: any) =>
+              update({ kyc: { ...app.kyc, fixedAssets: e.target.value } })
+            }
+          >
+            <option value="">Select…</option>
+            {FixedAssetsOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
           </Select>
         </div>
       </Card>
 
-      <Button className="mt-4 w-full md:w-auto" onClick={next}>
-        Continue
-      </Button>
-
-      <div className="mt-2">
+      <div className="mt-6 flex flex-col sm:flex-row gap-3">
+        <Button className="w-full sm:w-auto" onClick={next}>
+          Continue →
+        </Button>
         <ResetApplication />
       </div>
     </div>

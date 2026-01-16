@@ -8,4 +8,5 @@ export interface ApplicationData {
   termsAccepted: boolean;
   typedSignature?: string;
   applicationToken?: string;
+  applicationId?: string;
 }

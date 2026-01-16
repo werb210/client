@@ -1,4 +1,4 @@
-import { AppRouter } from "../router/AppRouter";
+import AppRouter from "../router/AppRouter";
 import { Header } from "../components/Header";
 import { ChatWidget } from "../components/ChatWidget";
 import { OfflineBanner } from "../components/OfflineBanner";

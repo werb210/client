@@ -32,6 +32,11 @@ export const ClientAppAPI = {
       })
     );
   },
+  deferDocuments(token: string) {
+    return withRetry(() =>
+      api.post(`/api/client/app/defer-documents/${token}`)
+    );
+  },
   submit(token: string) {
     return withRetry(() => api.post(`/api/client/app/submit/${token}`));
   },

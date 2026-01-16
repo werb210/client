@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import HomePage from "../pages/HomePage";
-import ApplyStep1 from "../pages/apply/ApplyStep1";
-import ApplyStep2 from "../pages/apply/ApplyStep2";
-import ApplyStep3 from "../pages/apply/ApplyStep3";
-import UploadDocuments from "../pages/apply/UploadDocuments";
 import { loadSessionFromUrl } from "../services/session";
+import { OfflineStore } from "../state/offline";
+import { Step1_KYC } from "../wizard/Step1_KYC";
+import { Step2_Product } from "../wizard/Step2_Product";
+import { Step3_Business } from "../wizard/Step3_Business";
+import { Step4_Applicant } from "../wizard/Step4_Applicant";
+import { Step5_Documents } from "../wizard/Step5_Documents";
+import { Step6_Review } from "../wizard/Step6_Review";
+import { StatusPage } from "../pages/StatusPage";
 
 function ResumeRoute() {
   const navigate = useNavigate();
@@ -22,7 +26,17 @@ function ResumeRoute() {
           return;
         }
 
-        localStorage.setItem("applicationId", session.applicationId);
+        OfflineStore.save({
+          kyc: {},
+          matchPercentages: {},
+          business: {},
+          applicant: {},
+          documents: {},
+          termsAccepted: false,
+          ...session.application,
+          applicationToken: session.token,
+          applicationId: session.applicationId,
+        });
         navigate(`/apply/step-${session.step}`, { replace: true });
       })
       .catch(() => {
@@ -62,14 +76,13 @@ export default function AppRouter() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/resume" element={<ResumeRoute />} />
-      <Route path="/apply/step-1" element={<ApplyStep1 />} />
-      <Route path="/apply/step-2" element={<ApplyStep2 />} />
-      <Route path="/apply/step-3" element={<ApplyStep3 />} />
-      <Route path="/apply/step-4" element={<UploadDocuments />} />
-      <Route
-        path="/apply/documents"
-        element={<Navigate to="/apply/step-4" replace />}
-      />
+      <Route path="/apply/step-1" element={<Step1_KYC />} />
+      <Route path="/apply/step-2" element={<Step2_Product />} />
+      <Route path="/apply/step-3" element={<Step3_Business />} />
+      <Route path="/apply/step-4" element={<Step4_Applicant />} />
+      <Route path="/apply/step-5" element={<Step5_Documents />} />
+      <Route path="/apply/step-6" element={<Step6_Review />} />
+      <Route path="/status" element={<StatusPage />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
