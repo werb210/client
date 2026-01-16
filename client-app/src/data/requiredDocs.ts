@@ -8,7 +8,7 @@ export const RequiredDocsByDefaultCategory = {
 };
 
 export const DefaultDocLabels = {
-  bank_statements_6m: "Last 6 Months Bank Statements",
+  bank_statements_6m: "6 months business bank statements",
   invoices: "Recent Invoices",
   purchase_orders: "Purchase Orders",
   equipment_quote: "Equipment Quote",
