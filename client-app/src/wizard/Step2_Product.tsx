@@ -50,8 +50,20 @@ export function Step2_Product() {
     window.location.href = "/apply/step-3";
   }
 
-  if (categories.length === 0)
-    return <div>No eligible products found. Adjust your inputs.</div>;
+  if (categories.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <Card>
+          <h2 className="text-lg font-semibold text-borealBlue">
+            No eligible products found
+          </h2>
+          <p className="text-sm text-slate-500 mt-2">
+            Adjust your inputs and try again.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">

@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Step1_KYC } from "../wizard/Step1_KYC";
 import { Step2_Product } from "../wizard/Step2_Product";
 import { Step3_Business } from "../wizard/Step3_Business";
@@ -11,11 +12,33 @@ import { useTokenGuard } from "../hooks/useTokenGuard";
 export function ApplyPage() {
   const { initialized, init } = useApplicationStore();
   const token = useTokenGuard();
+  const needsRestart = !token && window.location.pathname !== "/apply/step-1";
 
   if (!initialized) init(); // builds empty application session
 
-  if (!token && window.location.pathname !== "/apply/step-1") {
-    return <div>Missing application token. Restarting…</div>;
+  useEffect(() => {
+    if (needsRestart) {
+      const id = setTimeout(() => {
+        window.location.href = "/apply/step-1";
+      }, 1200);
+      return () => clearTimeout(id);
+    }
+  }, [needsRestart]);
+
+  if (needsRestart) {
+    return (
+      <div className="p-6">
+        <div className="max-w-2xl mx-auto bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+          <h1 className="text-lg font-semibold text-borealBlue">
+            Let’s restart your application
+          </h1>
+          <p className="text-sm text-slate-500 mt-2">
+            We couldn’t find an active application token. You’ll be redirected
+            to start again.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

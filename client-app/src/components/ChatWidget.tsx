@@ -48,46 +48,70 @@ export function ChatWidget() {
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end w-full md:w-auto">
       <button
-        className="bg-borealBlue text-white px-4 py-2 rounded-md shadow-sm mobile-full"
+        className="bg-borealBlue text-white px-5 py-3 rounded-full shadow-sm mobile-full"
         onClick={() => setOpen(!open)}
       >
-        {open ? "Close" : "Chat"}
+        {open ? "Close chat" : "Chat"}
       </button>
 
       {open && (
-        <div className="bg-white border shadow-xl rounded-lg p-4 w-full mobile-full md:w-80 h-[500px] flex flex-col mt-3">
-          <div className="flex justify-between items-center mb-3">
-            <strong>Support</strong>
+        <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-4 w-full mobile-full md:w-80 h-[520px] flex flex-col mt-3">
+          <div className="flex flex-col gap-2 mb-4">
+            <div className="flex items-center justify-between">
+              <strong className="text-borealBlue">Boreal Assist</strong>
+              <span className="text-xs text-slate-500">24/7 chat support</span>
+            </div>
 
-            <div className="flex gap-2 text-sm">
+            <div className="flex flex-wrap gap-2 text-xs">
               <button
-                className={mode === "ai" ? "font-bold" : ""}
-                onClick={() => setMode("ai")}
+                className={`px-3 py-1 rounded-full border ${
+                  mode === "ai" && !issueMode
+                    ? "bg-borealLightBlue text-borealBlue border-borealLightBlue"
+                    : "border-slate-200 text-slate-500"
+                }`}
+                onClick={() => {
+                  setMode("ai");
+                  setIssueMode(false);
+                }}
               >
-                AI
+                AI chat
               </button>
               <button
-                className={mode === "human" ? "font-bold" : ""}
-                onClick={() => setMode("human")}
+                className={`px-3 py-1 rounded-full border ${
+                  mode === "human"
+                    ? "bg-borealLightBlue text-borealBlue border-borealLightBlue"
+                    : "border-slate-200 text-slate-500"
+                }`}
+                onClick={() => {
+                  setMode("human");
+                  setIssueMode(false);
+                }}
               >
-                Human
+                Talk to a human
               </button>
               <button
-                className={issueMode ? "font-bold text-red-600" : ""}
+                className={`px-3 py-1 rounded-full border ${
+                  issueMode
+                    ? "bg-borealLightBlue text-borealBlue border-borealLightBlue"
+                    : "border-slate-200 text-slate-500"
+                }`}
                 onClick={() => {
                   setIssueMode(true);
                   setMode("ai");
                 }}
               >
-                Issue
+                Report an issue
               </button>
             </div>
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-3 pr-1">
             {messages.map((m, i) => (
-              <div key={i} className="p-2 rounded-md bg-gray-100 text-[14px] leading-tight">
-                <div className="text-[12px] text-gray-600 mb-1">{m.from}</div>
+              <div
+                key={i}
+                className="p-3 rounded-xl bg-borealGray text-[14px] leading-tight"
+              >
+                <div className="text-[12px] text-slate-500 mb-1">{m.from}</div>
                 <div>{m.text}</div>
               </div>
             ))}
@@ -101,7 +125,7 @@ export function ChatWidget() {
           />
 
           <button
-            className="bg-borealBlue text-white p-2 rounded-md w-full"
+            className="bg-borealBlue text-white p-2.5 rounded-full w-full"
             onClick={sendMessage}
           >
             Send

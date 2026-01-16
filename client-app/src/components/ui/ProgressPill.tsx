@@ -4,12 +4,12 @@ type ProgressPillProps = {
 
 export function ProgressPill({ value }: ProgressPillProps) {
   const clamped = Math.max(0, Math.min(100, Math.round(value)));
-  let color = "bg-emerald-100 text-emerald-700";
+  let color = "bg-borealLightBlue text-borealBlue";
 
   if (clamped < 50) {
-    color = "bg-amber-100 text-amber-700";
+    color = "bg-slate-100 text-slate-600";
   } else if (clamped < 75) {
-    color = "bg-sky-100 text-sky-700";
+    color = "bg-borealLightBlue text-borealBlue";
   }
 
   return (

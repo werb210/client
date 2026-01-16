@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useResumeApplication } from "../hooks/useResumeApplication";
+import { Card } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
 
 export function ResumePage() {
   const { resume } = useResumeApplication();
@@ -9,18 +11,60 @@ export function ResumePage() {
     resume().then(setInfo);
   }, []);
 
-  if (!info) return <div>No saved applications found.</div>;
+  if (!info) {
+    return (
+      <div className="p-6">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <h1 className="text-xl font-semibold text-borealBlue">
+              No saved applications found
+            </h1>
+            <p className="text-sm text-slate-500 mt-2">
+              Start a new application to begin.
+            </p>
+            <Button
+              className="mt-4 w-full md:w-auto"
+              onClick={() => (window.location.href = "/apply/step-1")}
+            >
+              Start new application
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1 className="text-xl font-bold mb-4">Resume Application</h1>
-      <pre className="bg-gray-100 p-3">{JSON.stringify(info, null, 2)}</pre>
-      <button
-        className="bg-borealBlue text-white p-2"
-        onClick={() => (window.location.href = "/apply/step-1")}
-      >
-        Continue
-      </button>
+    <div className="p-6">
+      <div className="max-w-2xl mx-auto space-y-4">
+        <Card>
+          <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
+            Resume
+          </div>
+          <h1 className="text-2xl font-semibold text-borealBlue mt-2">
+            Continue your application
+          </h1>
+          <p className="text-sm text-slate-500 mt-2">
+            We saved your progress. Continue where you left off.
+          </p>
+          <div className="mt-4 flex flex-col md:flex-row gap-3">
+            <Button
+              className="w-full md:w-auto"
+              onClick={() => (window.location.href = "/apply/step-1")}
+            >
+              Continue application
+            </Button>
+            <Button
+              className="w-full md:w-auto bg-white text-borealBlue border border-borealLightBlue"
+              onClick={() =>
+                (window.location.href = `/status?token=${info.token}`)
+              }
+            >
+              View client portal
+            </Button>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

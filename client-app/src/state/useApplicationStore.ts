@@ -10,6 +10,7 @@ const emptyApp: ApplicationData = {
   applicant: {},
   documents: {},
   termsAccepted: false,
+  typedSignature: "",
   applicationToken: undefined,
 };
 

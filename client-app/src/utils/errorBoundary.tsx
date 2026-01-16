@@ -21,15 +21,18 @@ export class ErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div className="p-6 text-center">
-          <div className="text-lg font-semibold text-slate-900">
-            Something went wrong
+          <div className="text-lg font-semibold text-borealBlue">
+            We’re refreshing your session
           </div>
+          <p className="mt-2 text-sm text-slate-500">
+            Please reload to continue your application.
+          </p>
           <button
-            className="mt-3 inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+            className="mt-4 inline-flex items-center justify-center rounded-full bg-borealBlue px-5 py-2 text-sm font-semibold text-white"
             onClick={() => window.location.reload()}
             type="button"
           >
-            Reload application
+            Reload
           </button>
         </div>
       );

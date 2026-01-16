@@ -5,7 +5,13 @@
 body {
   background: #f5f7fa;
   color: #062238;
-  font-family: system-ui, sans-serif;
+  font-family: "Inter", "SF Pro Text", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
 }
 
 @media (max-width: 480px) {
