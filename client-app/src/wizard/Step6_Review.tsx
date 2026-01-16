@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { TERMS_TEXT } from "../data/terms";
 import { ClientAppAPI } from "../api/clientApp";
@@ -10,6 +10,19 @@ import { Input } from "../components/ui/Input";
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
   const [submitted, setSubmitted] = useState(false);
+  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+
+  useEffect(() => {
+    if (app.currentStep !== 6) {
+      update({ currentStep: 6 });
+    }
+  }, [app.currentStep, update]);
+
+  useEffect(() => {
+    if (!app.signatureDate) {
+      update({ signatureDate: today });
+    }
+  }, [app.signatureDate, today, update]);
 
   function toggleTerms() {
     update({ termsAccepted: !app.termsAccepted });
@@ -29,6 +42,7 @@ export function Step6_Review() {
     await ClientAppAPI.update(app.applicationToken!, {
       typedSignature: app.typedSignature,
       termsAccepted: app.termsAccepted,
+      signatureDate: app.signatureDate || today,
     });
     await ClientAppAPI.submit(app.applicationToken!);
     setSubmitted(true);
@@ -64,34 +78,41 @@ export function Step6_Review() {
       <StepHeader step={6} title="Terms & Signature" />
 
       <Card className="space-y-4">
-        <div>
-          <h2 className="font-semibold mb-2">Terms & Conditions</h2>
-          <div className="bg-white p-4 border border-slate-200 rounded-xl text-sm whitespace-pre-line">
-            {TERMS_TEXT}
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <h2 className="font-semibold mb-2">Terms & Conditions</h2>
+            <div className="bg-white p-4 border border-slate-200 rounded-xl text-sm whitespace-pre-line">
+              {TERMS_TEXT}
+            </div>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium">Typed signature</label>
-          <Input
-            placeholder="Type your full legal name"
-            value={app.typedSignature || ""}
-            onChange={(e: any) => update({ typedSignature: e.target.value })}
-          />
-          <p className="text-xs text-slate-500">
-            By typing your name, you are providing a legally binding signature.
-          </p>
-        </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Typed signature</label>
+            <Input
+              placeholder="Type your full legal name"
+              value={app.typedSignature || ""}
+              onChange={(e: any) => update({ typedSignature: e.target.value })}
+            />
+            <p className="text-xs text-slate-500">
+              By typing your name, you are providing a legally binding signature.
+            </p>
+          </div>
 
-        <label className="flex items-start gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={app.termsAccepted}
-            onChange={toggleTerms}
-            className="mt-1"
-          />
-          <span>I agree to the Terms & Conditions</span>
-        </label>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Date</label>
+            <Input value={app.signatureDate || today} readOnly />
+          </div>
+
+          <label className="flex items-start gap-2 text-sm md:col-span-2">
+            <input
+              type="checkbox"
+              checked={app.termsAccepted}
+              onChange={toggleTerms}
+              className="mt-1"
+            />
+            <span>I agree to the Terms & Conditions</span>
+          </label>
+        </div>
 
         <Button
           className={`w-full md:w-auto ${

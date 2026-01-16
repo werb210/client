@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { OfflineStore } from "./offline";
 import { ApplicationData } from "../types/application";
+import { ClientAppAPI } from "../api/clientApp";
 
 const emptyApp: ApplicationData = {
   kyc: {},
@@ -9,10 +10,13 @@ const emptyApp: ApplicationData = {
   business: {},
   applicant: {},
   documents: {},
+  documentsDeferred: false,
   termsAccepted: false,
   typedSignature: "",
+  signatureDate: "",
   applicationToken: undefined,
   applicationId: undefined,
+  currentStep: 1,
 };
 
 function hydrateApplication(saved: ApplicationData | null): ApplicationData {
@@ -43,6 +47,7 @@ export function useApplicationStore() {
     hydrateApplication(OfflineStore.load())
   );
   const [initialized, setInitialized] = useState(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function init() {
     if (initialized) return;
@@ -55,17 +60,45 @@ export function useApplicationStore() {
   }
 
   function update(part: Partial<ApplicationData>) {
-    setApp((prev) => {
-      const next = { ...prev, ...part };
-      OfflineStore.save(next);
-      return next;
-    });
+    setApp((prev) => ({ ...prev, ...part }));
   }
 
   function reset() {
     setApp(emptyApp);
     OfflineStore.clear();
   }
+
+  useEffect(() => {
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+    }
+
+    saveTimer.current = setTimeout(() => {
+      OfflineStore.save(app);
+
+      if (app.applicationToken) {
+        void ClientAppAPI.update(app.applicationToken, {
+          kyc: app.kyc,
+          productCategory: app.productCategory,
+          matchPercentages: app.matchPercentages,
+          business: app.business,
+          applicant: app.applicant,
+          documents: app.documents,
+          documentsDeferred: app.documentsDeferred,
+          termsAccepted: app.termsAccepted,
+          typedSignature: app.typedSignature,
+          signatureDate: app.signatureDate,
+          currentStep: app.currentStep,
+        });
+      }
+    }, 500);
+
+    return () => {
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+      }
+    };
+  }, [app]);
 
   return {
     app,

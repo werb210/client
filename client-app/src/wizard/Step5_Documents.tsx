@@ -14,6 +14,12 @@ export function Step5_Documents() {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (app.currentStep !== 5) {
+      update({ currentStep: 5 });
+    }
+  }, [app.currentStep, update]);
+
+  useEffect(() => {
     let active = true;
     async function loadDocs() {
       try {
@@ -116,6 +122,7 @@ export function Step5_Documents() {
       setMessage(
         "We saved your application and sent a secure upload link by SMS."
       );
+      update({ documentsDeferred: true });
     } catch {
       setMessage("Unable to defer documents. Please try again.");
     }
@@ -139,26 +146,28 @@ export function Step5_Documents() {
           </div>
         )}
 
-        {docsRequired.map((doc) => (
-          <div key={doc} className="border border-slate-200 rounded-xl p-4">
-            <div className="font-semibold mb-2">
-              {DefaultDocLabels[doc] || doc}
-            </div>
-
-            <Input
-              type="file"
-              onChange={(e: any) =>
-                handleFile(doc, e.target.files?.[0] || null)
-              }
-            />
-
-            {app.documents[doc] && (
-              <div className="text-borealBlue text-sm mt-2">
-                Uploaded: {app.documents[doc].name}
+        <div className="grid md:grid-cols-2 gap-4">
+          {docsRequired.map((doc) => (
+            <div key={doc} className="border border-slate-200 rounded-xl p-4">
+              <div className="font-semibold mb-2">
+                {DefaultDocLabels[doc] || doc}
               </div>
-            )}
-          </div>
-        ))}
+
+              <Input
+                type="file"
+                onChange={(e: any) =>
+                  handleFile(doc, e.target.files?.[0] || null)
+                }
+              />
+
+              {app.documents[doc] && (
+                <div className="text-borealBlue text-sm mt-2">
+                  Uploaded: {app.documents[doc].name}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
 
         <div className="border border-amber-200 bg-amber-50 rounded-xl p-4 text-sm text-amber-900">
           <p>
@@ -169,8 +178,14 @@ export function Step5_Documents() {
             className="boreal-button boreal-button-secondary mt-3 px-5 h-12"
             onClick={defer}
           >
-            Click here to upload your documents later
+            Upload documents later
           </button>
+          {app.documentsDeferred && (
+            <p className="mt-3 text-xs text-amber-900">
+              Warning: your application will stay in pending status until the
+              required documents are received.
+            </p>
+          )}
         </div>
 
         {message && <div className="text-sm text-borealBlue">{message}</div>}

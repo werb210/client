@@ -32,8 +32,10 @@ function ResumeRoute() {
           business: {},
           applicant: {},
           documents: {},
+          documentsDeferred: false,
           termsAccepted: false,
           ...session.application,
+          currentStep: session.step,
           applicationToken: session.token,
           applicationId: session.applicationId,
         });
