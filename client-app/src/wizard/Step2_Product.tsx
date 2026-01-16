@@ -4,46 +4,148 @@ import { useApplicationStore } from "../state/useApplicationStore";
 import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
-import { ProgressPill } from "../components/ui/ProgressPill";
 import { WizardLayout } from "../components/WizardLayout";
 import { theme } from "../styles/theme";
 
-const PRODUCT_VISIBILITY_MAP = {
-  capital: [
-    "Term Loan",
-    "Line of Credit",
-    "Factoring",
-    "Purchase Order Financing",
-  ],
-  equipment: ["Equipment Financing"],
-  both: [
-    "Term Loan",
-    "Line of Credit",
-    "Factoring",
-    "Purchase Order Financing",
-    "Equipment Financing",
-  ],
-} as const;
-
-const productMatchKeys: Record<string, string> = {
-  "Term Loan": "term_loan",
-  "Line of Credit": "line_of_credit",
-  Factoring: "factoring",
-  "Purchase Order Financing": "po_financing",
-  "Equipment Financing": "equipment_financing",
+const PRODUCT_COUNTS: Record<string, number> = {
+  "Working Capital": 1,
+  "Equipment Financing": 6,
+  "Line of Credit": 19,
+  "Purchase Order Financing": 2,
+  "Term Loan": 8,
 };
+
+const MATCH_BASELINES: Record<string, number> = {
+  "Working Capital": 50,
+  "Equipment Financing": 48,
+  "Line of Credit": 44,
+  "Purchase Order Financing": 40,
+  "Term Loan": 40,
+};
+
+const TERM_LOAN_MIN_REVENUE = 250000;
+
+function toLower(value?: string) {
+  return (value || "").toLowerCase();
+}
+
+function parseYearsInBusiness(value?: string) {
+  const normalized = toLower(value);
+  if (!normalized) return 0;
+  if (normalized.includes("less than")) return 0.5;
+  if (normalized.includes("1 to 3")) return 2;
+  if (normalized.includes("over 3")) return 3;
+  const numbers = normalized.match(/\d+/g);
+  if (!numbers?.length) return 0;
+  return Number(numbers[numbers.length - 1]);
+}
+
+function parseRevenueMinimum(value?: string) {
+  const normalized = toLower(value).replace(/,/g, "");
+  if (!normalized) return 0;
+  if (normalized.includes("under")) return 0;
+  const numbers = normalized.match(/\d+/g);
+  if (!numbers?.length) return 0;
+  if (normalized.includes("over")) {
+    return Number(numbers[0]);
+  }
+  if (normalized.includes("to")) {
+    return Number(numbers[0]);
+  }
+  return Number(numbers[0]);
+}
+
+function hasPositiveBalance(value?: string) {
+  const normalized = toLower(value);
+  if (!normalized) return false;
+  if (normalized.includes("no")) return false;
+  return true;
+}
+
+function clampMatch(value: number) {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
 
 export function Step2_Product() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
 
   const categories = useMemo(() => {
-    const selection = app.kyc.lookingFor as keyof typeof PRODUCT_VISIBILITY_MAP;
-    if (!selection || !PRODUCT_VISIBILITY_MAP[selection]) {
-      return [];
-    }
-    return [...PRODUCT_VISIBILITY_MAP[selection]];
-  }, [app.kyc.lookingFor]);
+    const purpose = toLower(app.kyc.purposeOfFunds);
+    const hasWorkingCapitalPurpose =
+      purpose.includes("working capital") || purpose.includes("cash flow");
+    const hasEquipmentPurpose = purpose.includes("equipment");
+    const hasInventoryPurpose =
+      purpose.includes("inventory") || purpose.includes("purchase order");
+
+    const hasAccountsReceivable = hasPositiveBalance(
+      app.kyc.accountsReceivable
+    );
+    const hasFixedAssets = hasPositiveBalance(app.kyc.fixedAssets);
+    const hasMonthlyRevenue = Boolean(app.kyc.monthlyRevenue);
+    const hasRevenueHistory = Boolean(app.kyc.revenueLast12Months);
+    const yearsInBusiness = parseYearsInBusiness(app.kyc.salesHistory);
+    const revenueMinimum = parseRevenueMinimum(app.kyc.revenueLast12Months);
+
+    const workingCapitalAvailable =
+      hasWorkingCapitalPurpose || hasAccountsReceivable || hasMonthlyRevenue;
+    const equipmentAvailable = hasEquipmentPurpose || hasFixedAssets;
+    const revenueStable = hasMonthlyRevenue && hasRevenueHistory;
+    const lineOfCreditAvailable = yearsInBusiness >= 2 && revenueStable;
+    const purchaseOrderAvailable =
+      hasInventoryPurpose || hasAccountsReceivable;
+    const termLoanAvailable =
+      yearsInBusiness >= 1 && revenueMinimum >= TERM_LOAN_MIN_REVENUE;
+
+    const categoryDefinitions = [
+      {
+        name: "Working Capital",
+        available: workingCapitalAvailable,
+        criteria: [
+          hasWorkingCapitalPurpose,
+          hasAccountsReceivable,
+          hasMonthlyRevenue,
+        ],
+      },
+      {
+        name: "Equipment Financing",
+        available: equipmentAvailable,
+        criteria: [hasEquipmentPurpose, hasFixedAssets],
+      },
+      {
+        name: "Line of Credit",
+        available: lineOfCreditAvailable,
+        criteria: [yearsInBusiness >= 2, revenueStable],
+      },
+      {
+        name: "Purchase Order Financing",
+        available: purchaseOrderAvailable,
+        criteria: [hasInventoryPurpose, hasAccountsReceivable],
+      },
+      {
+        name: "Term Loan",
+        available: termLoanAvailable,
+        criteria: [yearsInBusiness >= 1, revenueMinimum >= TERM_LOAN_MIN_REVENUE],
+      },
+    ];
+
+    return categoryDefinitions
+      .filter((category) => category.available)
+      .map((category) => {
+        const matches = category.criteria.filter(Boolean).length;
+        const baseline = MATCH_BASELINES[category.name] ?? 40;
+        const boost =
+          category.criteria.length > 0
+            ? (matches / category.criteria.length) * 12
+            : 0;
+        const matchScore = clampMatch(baseline + boost);
+        return {
+          name: category.name,
+          matchScore,
+          productsCount: PRODUCT_COUNTS[category.name] ?? 0,
+        };
+      });
+  }, [app.kyc]);
 
   useEffect(() => {
     if (app.currentStep !== 2) {
@@ -51,32 +153,32 @@ export function Step2_Product() {
     }
   }, [app.currentStep, update]);
 
-  useEffect(() => {
-    if (app.productCategory && !categories.includes(app.productCategory)) {
-      update({ productCategory: null });
-    }
-  }, [app.productCategory, categories, update]);
-
-  const matchByCategory = useMemo(() => {
+  const topMatch = useMemo(() => {
     return categories.reduce(
-      (acc, category) => {
-        const matchKey = productMatchKeys[category];
-        const rawValue = matchKey ? app.matchPercentages[matchKey] : undefined;
-        if (typeof rawValue !== "number" || Number.isNaN(rawValue)) {
-          acc[category] = { value: null, label: "—" };
-          return acc;
-        }
-
-        const clamped = Math.max(0, Math.min(100, Math.round(rawValue)));
-        acc[category] = { value: clamped, label: `${clamped}% match` };
-        return acc;
-      },
-      {} as Record<string, { value: number | null; label: string }>
+      (best, category) =>
+        !best || category.matchScore > best.matchScore ? category : best,
+      undefined as undefined | (typeof categories)[number]
     );
-  }, [app.matchPercentages, categories]);
+  }, [categories]);
 
-  function select(cat: string) {
-    update({ productCategory: cat });
+  useEffect(() => {
+    if (!categories.length) {
+      if (app.productCategory) {
+        update({ productCategory: null });
+      }
+      return;
+    }
+
+    const current = categories.find(
+      (category) => category.name === app.productCategory
+    );
+    if (!current && topMatch) {
+      update({ productCategory: topMatch.name });
+    }
+  }, [app.productCategory, categories, topMatch, update]);
+
+  function select(name: string) {
+    update({ productCategory: name });
   }
 
   function goBack() {
@@ -94,22 +196,21 @@ export function Step2_Product() {
 
       <Card className="space-y-4">
         <div className="space-y-4">
-          {categories.map((cat) => {
-            const matchInfo =
-              matchByCategory[cat] ?? ({ value: null, label: "—" } as const);
-            const isSelected = app.productCategory === cat;
+          {categories.map((category) => {
+            const isSelected = app.productCategory === category.name;
             return (
               <Card
-                key={cat}
-                onClick={() => select(cat)}
+                key={category.name}
+                onClick={() => select(category.name)}
                 style={{
                   borderColor: isSelected
-                    ? theme.colors.primary
+                    ? "#22c55e"
                     : theme.colors.border,
                   boxShadow: isSelected
-                    ? "0 0 0 2px rgba(37, 99, 235, 0.35)"
+                    ? "0 0 0 2px rgba(34, 197, 94, 0.24)"
                     : "0 4px 16px rgba(15, 23, 42, 0.08)",
                   cursor: "pointer",
+                  background: isSelected ? "rgba(34, 197, 94, 0.08)" : "white",
                 }}
               >
                 <div className="flex flex-col gap-3">
@@ -122,7 +223,7 @@ export function Step2_Product() {
                           color: theme.colors.textPrimary,
                         }}
                       >
-                        {cat}
+                        {category.name}
                       </div>
                       {isSelected && (
                         <span
@@ -131,9 +232,9 @@ export function Step2_Product() {
                             borderRadius: "999px",
                             fontSize: "12px",
                             fontWeight: 600,
-                            background: "rgba(37, 99, 235, 0.12)",
-                            color: theme.colors.textPrimary,
-                            border: `1px solid ${theme.colors.primary}`,
+                            background: "rgba(34, 197, 94, 0.12)",
+                            color: "#15803d",
+                            border: "1px solid rgba(34, 197, 94, 0.35)",
                           }}
                         >
                           Selected
@@ -146,28 +247,25 @@ export function Step2_Product() {
                         color: theme.colors.textSecondary,
                       }}
                     >
-                      Match score based on your financial profile.
+                      {category.productsCount} products available (Match score{" "}
+                      {category.matchScore}%)
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {matchInfo.value === null ? (
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          borderRadius: "999px",
-                          padding: "6px 12px",
-                          fontSize: "12px",
-                          fontWeight: 600,
-                          background: "rgba(148, 163, 184, 0.2)",
-                          color: theme.colors.textSecondary,
-                        }}
-                      >
-                        {matchInfo.label}
-                      </span>
-                    ) : (
-                      <ProgressPill value={matchInfo.value} />
-                    )}
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        borderRadius: "999px",
+                        padding: "6px 12px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        background: "rgba(15, 23, 42, 0.06)",
+                        color: theme.colors.textSecondary,
+                      }}
+                    >
+                      {category.matchScore}% Match
+                    </span>
                   </div>
                 </div>
               </Card>
