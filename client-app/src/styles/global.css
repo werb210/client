@@ -1,0 +1,35 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f5f7fa;
+}
+
+.header {
+  background: #0f2a44;
+  color: white;
+  padding: 16px;
+}
+
+.page {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.card {
+  background: white;
+  padding: 32px;
+  border-radius: 12px;
+  width: 420px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+button {
+  margin-top: 20px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #0f2a44;
+  color: white;
+  cursor: pointer;
+}
