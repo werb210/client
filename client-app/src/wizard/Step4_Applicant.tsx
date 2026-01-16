@@ -11,6 +11,7 @@ export function Step4_Applicant() {
 
   const values = { ...app.applicant };
   const partner = values.partner || {};
+  const identityLabel = app.kyc.businessLocation === "Canada" ? "SIN" : "SSN";
 
   function setField(key: string, value: any) {
     update({ applicant: { ...values, [key]: value } });
@@ -130,8 +131,11 @@ export function Step4_Applicant() {
             />
           </div>
           <div>
-            <label className="block mb-2 font-medium">SSN</label>
+            <label className="block mb-2 font-medium">{identityLabel}</label>
             <Input
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
               value={values.ssn || ""}
               onChange={(e: any) => setField("ssn", e.target.value)}
             />
@@ -249,8 +253,11 @@ export function Step4_Applicant() {
                 />
               </div>
               <div>
-                <label className="block mb-2 font-medium">SSN</label>
+                <label className="block mb-2 font-medium">{identityLabel}</label>
                 <Input
+                  type="password"
+                  inputMode="numeric"
+                  autoComplete="off"
                   value={partner.ssn || ""}
                   onChange={(e: any) => setPartnerField("ssn", e.target.value)}
                 />
