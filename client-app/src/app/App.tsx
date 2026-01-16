@@ -2,6 +2,7 @@ import { AppRouter } from "../router/AppRouter";
 import { Header } from "../components/Header";
 import { ChatWidget } from "../components/ChatWidget";
 import { OfflineBanner } from "../components/OfflineBanner";
+import { ErrorBoundary } from "../utils/errorBoundary";
 
 export default function App() {
   return (
@@ -9,7 +10,9 @@ export default function App() {
       <Header />
       <OfflineBanner />
       <main className="flex-1">
-        <AppRouter />
+        <ErrorBoundary>
+          <AppRouter />
+        </ErrorBoundary>
       </main>
       <ChatWidget />
     </div>

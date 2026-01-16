@@ -13,15 +13,37 @@ const emptyApp: ApplicationData = {
   applicationToken: undefined,
 };
 
+function hydrateApplication(saved: ApplicationData | null): ApplicationData {
+  if (!saved) return emptyApp;
+
+  const savedKyc = saved.kyc || {};
+  const savedMatchPercentages = saved.matchPercentages || {};
+  const savedBusiness = saved.business || {};
+  const savedApplicant = saved.applicant || {};
+  const savedDocuments = saved.documents || {};
+
+  return {
+    ...emptyApp,
+    ...saved,
+    kyc: { ...emptyApp.kyc, ...savedKyc },
+    matchPercentages: {
+      ...emptyApp.matchPercentages,
+      ...savedMatchPercentages,
+    },
+    business: { ...emptyApp.business, ...savedBusiness },
+    applicant: { ...emptyApp.applicant, ...savedApplicant },
+    documents: { ...emptyApp.documents, ...savedDocuments },
+  };
+}
+
 export function useApplicationStore() {
-  const [app, setApp] = useState<ApplicationData>(emptyApp);
+  const [app, setApp] = useState<ApplicationData>(() =>
+    hydrateApplication(OfflineStore.load())
+  );
   const [initialized, setInitialized] = useState(false);
 
   function init() {
     if (initialized) return;
-
-    const saved = OfflineStore.load();
-    if (saved) setApp(saved);
 
     // Load lender products into offline cache
     const { ProductSync } = require("../lender/productSync");
