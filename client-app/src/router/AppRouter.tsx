@@ -43,6 +43,7 @@ function ResumeRoute() {
       })
       .catch(() => {
         if (!active) return;
+        console.error("Failed to resume application session.");
         setError("We couldn't resume your application. Please start again.");
       });
 
