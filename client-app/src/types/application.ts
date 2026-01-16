@@ -6,5 +6,6 @@ export interface ApplicationData {
   applicant: any;
   documents: Record<string, { name: string; base64?: string; uploaded?: boolean }>;
   termsAccepted: boolean;
+  typedSignature?: string;
   applicationToken?: string;
 }

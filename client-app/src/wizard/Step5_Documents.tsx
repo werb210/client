@@ -89,7 +89,7 @@ export function Step5_Documents() {
           />
 
           {app.documents[doc] && (
-            <div className="text-green-600 text-sm mt-1">
+            <div className="text-borealBlue text-sm mt-1">
               Uploaded: {app.documents[doc].name}
             </div>
           )}

@@ -7,8 +7,11 @@ export function ResetApplication() {
   }
 
   return (
-    <button onClick={reset} className="text-sm text-red-600 underline">
-      Reset Application
+    <button
+      onClick={reset}
+      className="text-sm text-borealBlue underline underline-offset-2"
+    >
+      Start over
     </button>
   );
 }

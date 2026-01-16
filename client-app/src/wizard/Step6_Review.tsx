@@ -4,6 +4,7 @@ import { ClientAppAPI } from "../api/clientApp";
 import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -13,20 +14,22 @@ export function Step6_Review() {
   }
 
   async function submit() {
+    if (!app.typedSignature?.trim()) {
+      alert("Please type your full name to sign.");
+      return;
+    }
+
     if (!app.termsAccepted) {
       alert("You must accept the Terms & Conditions.");
       return;
     }
 
+    await ClientAppAPI.update(app.applicationToken!, {
+      typedSignature: app.typedSignature,
+      termsAccepted: app.termsAccepted,
+    });
     await ClientAppAPI.submit(app.applicationToken!);
-
-    try {
-      const sn = await ClientAppAPI.getSignNowUrl(app.applicationToken!);
-      if (!sn.data?.signUrl) throw new Error("Missing signing URL");
-      window.location.href = sn.data.signUrl;
-    } catch (e) {
-      alert("Unable to start signing. Support will contact you.");
-    }
+    window.location.href = `/status?token=${app.applicationToken}`;
   }
 
   return (
@@ -35,35 +38,43 @@ export function Step6_Review() {
 
       <Card className="space-y-4">
         <div>
-          <h2 className="font-semibold mb-2">Your Application</h2>
-          <pre className="bg-gray-100 p-3 text-sm rounded">
-            {JSON.stringify(app, null, 2)}
-          </pre>
-        </div>
-
-        <div>
           <h2 className="font-semibold mb-2">Terms & Conditions</h2>
-          <div className="bg-white p-3 border rounded text-sm whitespace-pre-line">
+          <div className="bg-white p-4 border border-slate-200 rounded-xl text-sm whitespace-pre-line">
             {TERMS_TEXT}
           </div>
         </div>
 
-        <label className="flex items-center gap-2">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium">Typed signature</label>
+          <Input
+            placeholder="Type your full legal name"
+            value={app.typedSignature || ""}
+            onChange={(e: any) => update({ typedSignature: e.target.value })}
+          />
+          <p className="text-xs text-slate-500">
+            By typing your name, you are providing a legally binding signature.
+          </p>
+        </div>
+
+        <label className="flex items-start gap-2 text-sm">
           <input
             type="checkbox"
             checked={app.termsAccepted}
             onChange={toggleTerms}
+            className="mt-1"
           />
           <span>I agree to the Terms & Conditions</span>
         </label>
 
         <Button
           className={`w-full md:w-auto ${
-            app.termsAccepted ? "" : "bg-gray-400 cursor-not-allowed"
+            app.termsAccepted && app.typedSignature?.trim()
+              ? ""
+              : "bg-gray-400 cursor-not-allowed"
           }`}
           onClick={submit}
         >
-          Submit Application
+          Submit application
         </Button>
       </Card>
     </div>
