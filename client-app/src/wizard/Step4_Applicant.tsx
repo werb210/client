@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { ClientAppAPI } from "../api/clientApp";
 import { StepHeader } from "../components/StepHeader";
@@ -6,6 +7,7 @@ import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { Validate } from "../utils/validate";
+import { WizardLayout } from "../components/WizardLayout";
 import {
   formatIdentityNumber,
   formatPostalCode,
@@ -17,6 +19,7 @@ import {
 
 export function Step4_Applicant() {
   const { app, update } = useApplicationStore();
+  const navigate = useNavigate();
 
   const values = { ...app.applicant };
   const partner = values.partner || {};
@@ -63,8 +66,14 @@ export function Step4_Applicant() {
       return;
     }
 
-    await ClientAppAPI.update(app.applicationToken!, { applicant: values });
-    window.location.href = "/apply/step-5";
+    if (app.applicationToken) {
+      try {
+        await ClientAppAPI.update(app.applicationToken, { applicant: values });
+      } catch {
+        // Allow navigation even if the update fails.
+      }
+    }
+    navigate("/apply/step-5");
   }
 
   const isValid = [
@@ -82,7 +91,7 @@ export function Step4_Applicant() {
   ].every((field) => Validate.required(values[field]));
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
+    <WizardLayout>
       <StepHeader step={4} title="Applicant Information" />
 
       <Card className="space-y-5">
@@ -339,7 +348,7 @@ export function Step4_Applicant() {
       >
         Continue to Documents →
       </Button>
-    </div>
+    </WizardLayout>
   );
 }
 

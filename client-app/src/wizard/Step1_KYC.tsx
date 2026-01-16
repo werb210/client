@@ -9,6 +9,7 @@ import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { Validate } from "../utils/validate";
 import { ResetApplication } from "../components/ResetApplication";
+import { WizardLayout } from "../components/WizardLayout";
 import {
   formatCurrencyValue,
   getCountryCode,
@@ -240,221 +241,223 @@ export function Step1_KYC() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
-      <StepHeader step={1} title="Financial Profile" />
+    <>
+      <WizardLayout>
+        <StepHeader step={1} title="Financial Profile" />
 
-      <Card className="space-y-6">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <label className="block mb-2 font-medium">
-              What are you looking for?
-            </label>
-            <Select
-              value={app.kyc.lookingFor || ""}
-              onChange={(e: any) =>
-                update({ kyc: { ...app.kyc, lookingFor: e.target.value } })
-              }
-            >
-              <option value="">Select…</option>
-              {LookingForOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <label className="block mb-2 font-medium">
-              How much funding are you seeking?
-            </label>
-            <Input
-              value={formatCurrencyValue(
-                app.kyc.fundingAmount || "",
-                countryCode
-              )}
-              onChange={(e: any) =>
-                update({
-                  kyc: {
-                    ...app.kyc,
-                    fundingAmount: formatCurrencyValue(
-                      e.target.value,
-                      countryCode
-                    ),
-                  },
-                })
-              }
-              placeholder={countryCode === "CA" ? "CA$" : "$"}
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 font-medium">Business Location</label>
-            <Select
-              value={app.kyc.businessLocation || ""}
-              onChange={(e: any) => {
-                const value = e.target.value;
-                update({
-                  kyc: { ...app.kyc, businessLocation: value },
-                });
-                if (value === "Other") {
-                  setShowLocationModal(true);
+        <Card className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-2 font-medium">
+                What are you looking for?
+              </label>
+              <Select
+                value={app.kyc.lookingFor || ""}
+                onChange={(e: any) =>
+                  update({ kyc: { ...app.kyc, lookingFor: e.target.value } })
                 }
-              }}
-            >
-              <option value="">Select…</option>
-              {BusinessLocationOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
-          </div>
+              >
+                <option value="">Select…</option>
+                {LookingForOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label className="block mb-2 font-medium">
+                How much funding are you seeking?
+              </label>
+              <Input
+                value={formatCurrencyValue(
+                  app.kyc.fundingAmount || "",
+                  countryCode
+                )}
+                onChange={(e: any) =>
+                  update({
+                    kyc: {
+                      ...app.kyc,
+                      fundingAmount: formatCurrencyValue(
+                        e.target.value,
+                        countryCode
+                      ),
+                    },
+                  })
+                }
+                placeholder={countryCode === "CA" ? "CA$" : "$"}
+              />
+            </div>
 
-          <div>
-            <label className="block mb-2 font-medium">Industry</label>
-            <Select
-              value={app.kyc.industry || ""}
-              onChange={(e: any) =>
-                update({ kyc: { ...app.kyc, industry: e.target.value } })
-              }
-            >
-              <option value="">Select…</option>
-              {IndustryOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
-          </div>
+            <div>
+              <label className="block mb-2 font-medium">Business Location</label>
+              <Select
+                value={app.kyc.businessLocation || ""}
+                onChange={(e: any) => {
+                  const value = e.target.value;
+                  update({
+                    kyc: { ...app.kyc, businessLocation: value },
+                  });
+                  if (value === "Other") {
+                    setShowLocationModal(true);
+                  }
+                }}
+              >
+                <option value="">Select…</option>
+                {BusinessLocationOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
-          <div>
-            <label className="block mb-2 font-medium">Purpose of funds</label>
-            <Select
-              value={app.kyc.purposeOfFunds || ""}
-              onChange={(e: any) =>
-                update({ kyc: { ...app.kyc, purposeOfFunds: e.target.value } })
-              }
-            >
-              <option value="">Select…</option>
-              {PurposeOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
-          </div>
+            <div>
+              <label className="block mb-2 font-medium">Industry</label>
+              <Select
+                value={app.kyc.industry || ""}
+                onChange={(e: any) =>
+                  update({ kyc: { ...app.kyc, industry: e.target.value } })
+                }
+              >
+                <option value="">Select…</option>
+                {IndustryOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
-          <div>
-            <label className="block mb-2 font-medium">
-              How many years of sales history does the business have?
-            </label>
-            <Select
-              value={app.kyc.salesHistory || ""}
-              onChange={(e: any) =>
-                update({ kyc: { ...app.kyc, salesHistory: e.target.value } })
-              }
-            >
-              <option value="">Select…</option>
-              {SalesHistoryOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
-          </div>
+            <div>
+              <label className="block mb-2 font-medium">Purpose of funds</label>
+              <Select
+                value={app.kyc.purposeOfFunds || ""}
+                onChange={(e: any) =>
+                  update({ kyc: { ...app.kyc, purposeOfFunds: e.target.value } })
+                }
+              >
+                <option value="">Select…</option>
+                {PurposeOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
-          <div>
-            <label className="block mb-2 font-medium">
-              What was your business revenue in the last 12 months?
-            </label>
-            <Select
-              value={app.kyc.revenueLast12Months || ""}
-              onChange={(e: any) =>
-                update({
-                  kyc: { ...app.kyc, revenueLast12Months: e.target.value },
-                })
-              }
-            >
-              <option value="">Select…</option>
-              {RevenueOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
-          </div>
+            <div>
+              <label className="block mb-2 font-medium">
+                How many years of sales history does the business have?
+              </label>
+              <Select
+                value={app.kyc.salesHistory || ""}
+                onChange={(e: any) =>
+                  update({ kyc: { ...app.kyc, salesHistory: e.target.value } })
+                }
+              >
+                <option value="">Select…</option>
+                {SalesHistoryOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
-          <div>
-            <label className="block mb-2 font-medium">
-              Average monthly revenue (last 3 months)
-            </label>
-            <Select
-              value={app.kyc.monthlyRevenue || ""}
-              onChange={(e: any) =>
-                update({ kyc: { ...app.kyc, monthlyRevenue: e.target.value } })
-              }
-            >
-              <option value="">Select…</option>
-              {MonthlyRevenueOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
-          </div>
+            <div>
+              <label className="block mb-2 font-medium">
+                What was your business revenue in the last 12 months?
+              </label>
+              <Select
+                value={app.kyc.revenueLast12Months || ""}
+                onChange={(e: any) =>
+                  update({
+                    kyc: { ...app.kyc, revenueLast12Months: e.target.value },
+                  })
+                }
+              >
+                <option value="">Select…</option>
+                {RevenueOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
-          <div>
-            <label className="block mb-2 font-medium">
-              Current Account Receivable balance
-            </label>
-            <Select
-              value={app.kyc.accountsReceivable || ""}
-              onChange={(e: any) =>
-                update({
-                  kyc: { ...app.kyc, accountsReceivable: e.target.value },
-                })
-              }
-            >
-              <option value="">Select…</option>
-              {AccountsReceivableOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
-          </div>
+            <div>
+              <label className="block mb-2 font-medium">
+                Average monthly revenue (last 3 months)
+              </label>
+              <Select
+                value={app.kyc.monthlyRevenue || ""}
+                onChange={(e: any) =>
+                  update({ kyc: { ...app.kyc, monthlyRevenue: e.target.value } })
+                }
+              >
+                <option value="">Select…</option>
+                {MonthlyRevenueOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
-          <div>
-            <label className="block mb-2 font-medium">
-              Fixed assets value for loan security
-            </label>
-            <Select
-              value={app.kyc.fixedAssets || ""}
-              onChange={(e: any) =>
-                update({ kyc: { ...app.kyc, fixedAssets: e.target.value } })
-              }
-            >
-              <option value="">Select…</option>
-              {FixedAssetsOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Select>
+            <div>
+              <label className="block mb-2 font-medium">
+                Current Account Receivable balance
+              </label>
+              <Select
+                value={app.kyc.accountsReceivable || ""}
+                onChange={(e: any) =>
+                  update({
+                    kyc: { ...app.kyc, accountsReceivable: e.target.value },
+                  })
+                }
+              >
+                <option value="">Select…</option>
+                {AccountsReceivableOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div>
+              <label className="block mb-2 font-medium">
+                Fixed assets value for loan security
+              </label>
+              <Select
+                value={app.kyc.fixedAssets || ""}
+                onChange={(e: any) =>
+                  update({ kyc: { ...app.kyc, fixedAssets: e.target.value } })
+                }
+              >
+                <option value="">Select…</option>
+                {FixedAssetsOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </Select>
+            </div>
           </div>
+        </Card>
+
+        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          <Button
+            className="w-full sm:w-auto"
+            onClick={next}
+            disabled={!isValid}
+          >
+            Continue →
+          </Button>
+          <ResetApplication />
         </div>
-      </Card>
-
-      <div className="mt-6 flex flex-col sm:flex-row gap-3">
-        <Button
-          className="w-full sm:w-auto"
-          onClick={next}
-          disabled={!isValid}
-        >
-          Continue →
-        </Button>
-        <ResetApplication />
-      </div>
+      </WizardLayout>
 
       {showLocationModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center px-4 z-50">
@@ -475,7 +478,7 @@ export function Step1_KYC() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
