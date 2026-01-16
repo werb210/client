@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { OfflineStore } from "../state/offline";
 import { ClientAppAPI } from "../api/clientApp";
 import { Card } from "../components/ui/Card";
@@ -7,6 +8,7 @@ import { Button } from "../components/ui/Button";
 export function HomePage() {
   const [status, setStatus] = useState<any>(null);
   const cached = OfflineStore.load();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!cached?.applicationToken) return;
@@ -25,8 +27,7 @@ export function HomePage() {
             Welcome to Boreal Financial
           </h1>
           <p className="mt-2 text-slate-600">
-            Use your SMS magic link to securely access your application. No
-            passwords required.
+            Start a new application or resume one using your SMS magic link.
           </p>
         </div>
 
@@ -40,14 +41,15 @@ export function HomePage() {
                 SMS Magic Link
               </h2>
               <p className="text-sm text-slate-500 mt-2">
-                Open the secure link we sent to your phone to begin or resume
-                your application.
+                If you already started an application, use the secure link we
+                sent to your phone to resume. Otherwise, you can start a new
+                application now.
               </p>
             </div>
             <div className="flex flex-col md:flex-row gap-3">
               <Button
                 className="w-full md:w-auto"
-                onClick={() => (window.location.href = "/apply/step-1")}
+                onClick={() => navigate("/apply/step-1")}
               >
                 Start new application
               </Button>
