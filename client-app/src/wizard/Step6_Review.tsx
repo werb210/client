@@ -46,6 +46,7 @@ export function Step6_Review() {
     await ClientAppAPI.update(app.applicationToken!, {
       kyc: app.kyc,
       productCategory: app.productCategory,
+      requires_closing_cost_funding: app.requires_closing_cost_funding,
       matchPercentages: app.matchPercentages,
       business: app.business,
       applicant: app.applicant,
