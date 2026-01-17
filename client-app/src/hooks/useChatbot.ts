@@ -1,12 +1,11 @@
 import { useMemo } from "react";
 import { OfflineStore } from "../state/offline";
 import {
-  FUNDING_INTENT_CATEGORY_MAP,
   FUNDING_INTENT_LABELS,
-  getAllowedCategories,
   normalizeFundingIntent,
 } from "../constants/wizard";
 import { DefaultDocLabels } from "../data/requiredDocs";
+import { getEligibilityResult } from "../lender/eligibility";
 
 export function useChatbot() {
   const staticSteps = useMemo(
@@ -31,12 +30,6 @@ export function useChatbot() {
     return FUNDING_INTENT_LABELS[normalized];
   }
 
-  function describeCategories(intent?: string) {
-    const normalized = normalizeFundingIntent(intent);
-    if (!normalized) return [];
-    return FUNDING_INTENT_CATEGORY_MAP[normalized];
-  }
-
   function describeDocuments(state: any) {
     const uploaded = Object.keys(state.documents || {}).map(
       (doc) => DefaultDocLabels[doc] || doc
@@ -54,12 +47,12 @@ export function useChatbot() {
     if (!message.includes("step")) return "";
     if (message.includes("step 2") || message.includes("step two")) {
       const intentLabel = describeIntent(state.kyc?.lookingFor);
-      const allowed = getAllowedCategories(state.kyc?.lookingFor);
+      const eligibility = getEligibilitySnapshot(state);
       const visible =
-        allowed.length > 0
-          ? allowed.join(", ")
-          : "no categories yet (select a funding intent in Step 1)";
-      return `Step 2 is where you choose a product category. Based on ${intentLabel}, you should see: ${visible}.`;
+        eligibility.categories.length > 0
+          ? eligibility.categories.map((category) => category.name).join(", ")
+          : "no categories yet (update your Step 1 details)";
+      return `Step 2 is where you choose a product category. Based on ${intentLabel} and your eligibility, you have ${eligibility.eligibleProducts.length} eligible products across: ${visible}.`;
     }
     const currentStep =
       typeof state.currentStep === "number"
@@ -73,13 +66,62 @@ export function useChatbot() {
 
   function handleCategoryQuestion(state: any) {
     const intentLabel = describeIntent(state.kyc?.lookingFor);
-    const allowed = describeCategories(state.kyc?.lookingFor);
-    if (!allowed.length) {
-      return "You haven't selected a funding intent in Step 1 yet, so no product categories are available.";
+    const eligibility = getEligibilitySnapshot(state);
+    if (!eligibility.categories.length) {
+      const reasons = formatReasonSummary(eligibility.reasons);
+      return `No product categories are available yet based on ${intentLabel} and your Step 1 details. ${reasons}`;
     }
-    return `You selected ${intentLabel} in Step 1, so Step 2 shows only: ${allowed.join(
-      ", "
-    )}.`;
+    const categories = eligibility.categories
+      .map((category) => `${category.name} (${category.productCount})`)
+      .join(", ");
+    const reasons = formatReasonSummary(eligibility.reasons);
+    return `Based on ${intentLabel} and your eligibility, Step 2 shows: ${categories}. ${reasons}`;
+  }
+
+  function getEligibilitySnapshot(state: any) {
+    const storedProducts = Array.isArray(state.eligibleProducts)
+      ? state.eligibleProducts
+      : [];
+    const storedCategories = Array.isArray(state.eligibleCategories)
+      ? state.eligibleCategories
+      : [];
+    const storedReasons = Array.isArray(state.eligibilityReasons)
+      ? state.eligibilityReasons
+      : [];
+
+    if (
+      storedProducts.length > 0 ||
+      storedCategories.length > 0 ||
+      storedReasons.length > 0
+    ) {
+      return {
+        eligibleProducts: storedProducts,
+        categories: storedCategories,
+        reasons: storedReasons,
+      };
+    }
+
+    const products = state.lenderProducts || [];
+    return getEligibilityResult(
+      products,
+      {
+        fundingIntent: state.kyc?.lookingFor,
+        amountRequested: state.kyc?.fundingAmount,
+        businessLocation: state.kyc?.businessLocation,
+        accountsReceivableBalance: state.kyc?.accountsReceivable,
+      },
+      state.matchPercentages || {}
+    );
+  }
+
+  function formatReasonSummary(reasons: Array<{ reason: string; count: number }>) {
+    if (!reasons.length) {
+      return "No eligibility filters are excluding products right now.";
+    }
+    const summary = reasons
+      .map((reason) => `${reason.reason} (${reason.count})`)
+      .join(", ");
+    return `Filters applied: ${summary}.`;
   }
 
   async function send(text: string) {

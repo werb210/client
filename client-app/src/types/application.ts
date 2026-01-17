@@ -1,7 +1,16 @@
+import type {
+  EligibilityCategorySummary,
+  EligibilityReasonSummary,
+  NormalizedLenderProduct,
+} from "../lender/eligibility";
+
 export interface ApplicationData {
   kyc: any;
   productCategory: string | null;
   matchPercentages: Record<string, number>;
+  eligibleProducts: NormalizedLenderProduct[];
+  eligibleCategories: EligibilityCategorySummary[];
+  eligibilityReasons: EligibilityReasonSummary[];
   business: any;
   applicant: any;
   documents: Record<string, { name: string; base64?: string; uploaded?: boolean }>;

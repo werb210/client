@@ -25,16 +25,6 @@ export const FUNDING_INTENT_OPTIONS = [
   },
 ];
 
-export const FUNDING_INTENT_CATEGORY_MAP: Record<FundingIntent, string[]> = {
-  [FundingIntent.WORKING_CAPITAL]: ["Working Capital", "Line of Credit"],
-  [FundingIntent.EQUIPMENT]: ["Equipment Financing"],
-  [FundingIntent.BOTH]: [
-    "Working Capital",
-    "Line of Credit",
-    "Equipment Financing",
-  ],
-};
-
 export function normalizeFundingIntent(value?: string): FundingIntent | "" {
   if (!value) return "";
   const trimmed = value.trim();
@@ -56,10 +46,4 @@ export function getFundingIntentLabel(value?: string) {
   const intent = normalizeFundingIntent(value);
   if (!intent) return "";
   return FUNDING_INTENT_LABELS[intent];
-}
-
-export function getAllowedCategories(value?: string) {
-  const intent = normalizeFundingIntent(value);
-  if (!intent) return [];
-  return FUNDING_INTENT_CATEGORY_MAP[intent];
 }

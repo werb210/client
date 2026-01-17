@@ -20,19 +20,19 @@ import {
 } from "../constants/wizard";
 
 const MatchCategories = [
-  "line_of_credit",
-  "factoring",
-  "po_financing",
-  "term_loan",
-  "equipment_financing",
+  "Line of Credit",
+  "Factoring",
+  "Purchase Order Financing",
+  "Term Loan",
+  "Equipment Financing",
 ];
 
 const MatchBaselines: Record<string, number> = {
-  line_of_credit: 68,
-  factoring: 74,
-  po_financing: 62,
-  term_loan: 65,
-  equipment_financing: 70,
+  "Line of Credit": 68,
+  Factoring: 74,
+  "Purchase Order Financing": 62,
+  "Term Loan": 65,
+  "Equipment Financing": 70,
 };
 
 const BusinessLocationOptions = ["Canada", "United States", "Other"];
@@ -236,6 +236,9 @@ export function Step1_KYC() {
                       lookingFor: nextIntent,
                     },
                     productCategory: null,
+                    eligibleProducts: [],
+                    eligibleCategories: [],
+                    eligibilityReasons: [],
                   });
                 }}
               >
@@ -266,6 +269,10 @@ export function Step1_KYC() {
                         countryCode
                       ),
                     },
+                    productCategory: null,
+                    eligibleProducts: [],
+                    eligibleCategories: [],
+                    eligibilityReasons: [],
                   })
                 }
                 placeholder={countryCode === "CA" ? "CA$" : "$"}
@@ -283,6 +290,10 @@ export function Step1_KYC() {
                   const value = e.target.value;
                   update({
                     kyc: { ...app.kyc, businessLocation: value },
+                    productCategory: null,
+                    eligibleProducts: [],
+                    eligibleCategories: [],
+                    eligibilityReasons: [],
                   });
                   if (value === "Other") {
                     setShowLocationModal(true);
@@ -420,6 +431,10 @@ export function Step1_KYC() {
                 onChange={(e: any) =>
                   update({
                     kyc: { ...app.kyc, accountsReceivable: e.target.value },
+                    productCategory: null,
+                    eligibleProducts: [],
+                    eligibleCategories: [],
+                    eligibilityReasons: [],
                   })
                 }
               >

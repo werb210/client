@@ -7,6 +7,9 @@ const emptyApp: ApplicationData = {
   kyc: {},
   productCategory: null,
   matchPercentages: {},
+  eligibleProducts: [],
+  eligibleCategories: [],
+  eligibilityReasons: [],
   business: {},
   applicant: {},
   documents: {},
@@ -24,6 +27,9 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
 
   const savedKyc = saved.kyc || {};
   const savedMatchPercentages = saved.matchPercentages || {};
+  const savedEligibleProducts = saved.eligibleProducts || [];
+  const savedEligibleCategories = saved.eligibleCategories || [];
+  const savedEligibilityReasons = saved.eligibilityReasons || [];
   const savedBusiness = saved.business || {};
   const savedApplicant = saved.applicant || {};
   const savedDocuments = saved.documents || {};
@@ -36,6 +42,9 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
       ...emptyApp.matchPercentages,
       ...savedMatchPercentages,
     },
+    eligibleProducts: savedEligibleProducts,
+    eligibleCategories: savedEligibleCategories,
+    eligibilityReasons: savedEligibilityReasons,
     business: { ...emptyApp.business, ...savedBusiness },
     applicant: { ...emptyApp.applicant, ...savedApplicant },
     documents: { ...emptyApp.documents, ...savedDocuments },
