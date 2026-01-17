@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { StepHeader } from "../components/StepHeader";
@@ -9,10 +9,13 @@ import { theme } from "../styles/theme";
 import { getEligibilityResult } from "../lender/eligibility";
 import { ProductSync } from "../lender/productSync";
 
+const EQUIPMENT_FINANCING_CATEGORY = "Equipment Financing";
+
 export function Step2_Product() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
   const products = useMemo(() => ProductSync.load(), []);
+  const [showClosingCostModal, setShowClosingCostModal] = useState(false);
 
   const eligibility = useMemo(
     () =>
@@ -97,8 +100,8 @@ export function Step2_Product() {
         previousInputs.current[key as keyof typeof currentInputs]
     );
 
-    if (changed && app.productCategory) {
-      update({ productCategory: null });
+    if (changed && (app.productCategory || app.requires_closing_cost_funding)) {
+      update({ productCategory: null, requires_closing_cost_funding: false });
     }
 
     previousInputs.current = currentInputs;
@@ -108,6 +111,7 @@ export function Step2_Product() {
     app.kyc.fundingAmount,
     app.kyc.lookingFor,
     app.productCategory,
+    app.requires_closing_cost_funding,
     update,
   ]);
 
@@ -116,20 +120,39 @@ export function Step2_Product() {
       (category) => category.name === app.productCategory
     );
     if (app.productCategory && !current) {
-      update({ productCategory: null });
+      update({ productCategory: null, requires_closing_cost_funding: false });
       return;
     }
 
     if (categories.length === 1) {
       const onlyOption = categories[0].name;
-      if (app.productCategory !== onlyOption) {
-        update({ productCategory: onlyOption });
+      if (
+        onlyOption !== EQUIPMENT_FINANCING_CATEGORY &&
+        app.productCategory !== onlyOption
+      ) {
+        update({
+          productCategory: onlyOption,
+          requires_closing_cost_funding: false,
+        });
       }
     }
   }, [app.productCategory, categories, update]);
 
   function select(name: string) {
-    update({ productCategory: name });
+    if (name === EQUIPMENT_FINANCING_CATEGORY) {
+      setShowClosingCostModal(true);
+      return;
+    }
+
+    update({ productCategory: name, requires_closing_cost_funding: false });
+  }
+
+  function handleClosingCostResponse(needsFunding: boolean) {
+    update({
+      productCategory: EQUIPMENT_FINANCING_CATEGORY,
+      requires_closing_cost_funding: needsFunding,
+    });
+    setShowClosingCostModal(false);
   }
 
   function goBack() {
@@ -142,109 +165,171 @@ export function Step2_Product() {
   }
 
   return (
-    <WizardLayout>
-      <StepHeader step={2} title="Choose Product Category" />
+    <>
+      <WizardLayout>
+        <StepHeader step={2} title="Choose Product Category" />
 
-      <Card className="space-y-4">
-        <div className="space-y-4">
-          {categories.map((category) => {
-            const isSelected = app.productCategory === category.name;
-            return (
-              <Card
-                key={category.name}
-                onClick={() => select(category.name)}
-                style={{
-                  borderColor: isSelected
-                    ? "#22c55e"
-                    : theme.colors.border,
-                  boxShadow: isSelected
-                    ? "0 0 0 2px rgba(34, 197, 94, 0.24)"
-                    : "0 4px 16px rgba(15, 23, 42, 0.08)",
-                  cursor: "pointer",
-                  background: isSelected ? "rgba(34, 197, 94, 0.08)" : "white",
-                }}
-              >
-                <div className="flex flex-col gap-3">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <div
-                        style={{
-                          fontSize: theme.typography.h2.fontSize,
-                          fontWeight: theme.typography.h2.fontWeight,
-                          color: theme.colors.textPrimary,
-                        }}
-                      >
-                        {category.name}
-                      </div>
-                      {isSelected && (
-                        <span
+        <Card className="space-y-4">
+          <div className="space-y-4">
+            {categories.map((category) => {
+              const isSelected = app.productCategory === category.name;
+              return (
+                <Card
+                  key={category.name}
+                  onClick={() => select(category.name)}
+                  style={{
+                    borderColor: isSelected
+                      ? "#22c55e"
+                      : theme.colors.border,
+                    boxShadow: isSelected
+                      ? "0 0 0 2px rgba(34, 197, 94, 0.24)"
+                      : "0 4px 16px rgba(15, 23, 42, 0.08)",
+                    cursor: "pointer",
+                    background: isSelected
+                      ? "rgba(34, 197, 94, 0.08)"
+                      : "white",
+                  }}
+                >
+                  <div className="flex flex-col gap-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <div
                           style={{
-                            padding: "6px 12px",
-                            borderRadius: "999px",
-                            fontSize: "12px",
-                            fontWeight: 600,
-                            background: "rgba(34, 197, 94, 0.12)",
-                            color: "#15803d",
-                            border: "1px solid rgba(34, 197, 94, 0.35)",
+                            fontSize: theme.typography.h2.fontSize,
+                            fontWeight: theme.typography.h2.fontWeight,
+                            color: theme.colors.textPrimary,
                           }}
                         >
-                          Selected
-                        </span>
-                      )}
+                          {category.name}
+                        </div>
+                        {isSelected && (
+                          <span
+                            style={{
+                              padding: "6px 12px",
+                              borderRadius: "999px",
+                              fontSize: "12px",
+                              fontWeight: 600,
+                              background: "rgba(34, 197, 94, 0.12)",
+                              color: "#15803d",
+                              border: "1px solid rgba(34, 197, 94, 0.35)",
+                            }}
+                          >
+                            Selected
+                          </span>
+                        )}
+                      </div>
+                      <p
+                        style={{
+                          fontSize: "14px",
+                          color: theme.colors.textSecondary,
+                        }}
+                      >
+                        {category.productCount} products available (Match score{" "}
+                        {category.matchScore}%)
+                      </p>
                     </div>
-                    <p
-                      style={{
-                        fontSize: "14px",
-                        color: theme.colors.textSecondary,
-                      }}
-                    >
-                      {category.productCount} products available (Match score{" "}
-                      {category.matchScore}%)
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          borderRadius: "999px",
+                          padding: "6px 12px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          background: "rgba(15, 23, 42, 0.06)",
+                          color: theme.colors.textSecondary,
+                        }}
+                      >
+                        {category.matchScore}% Match
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        borderRadius: "999px",
-                        padding: "6px 12px",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        background: "rgba(15, 23, 42, 0.06)",
-                        color: theme.colors.textSecondary,
-                      }}
-                    >
-                      {category.matchScore}% Match
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      </Card>
+                </Card>
+              );
+            })}
+          </div>
+        </Card>
 
-      <div
-        className="flex flex-col sm:flex-row gap-3"
-        style={{ marginTop: theme.spacing.lg }}
-      >
-        <Button
-          variant="secondary"
-          style={{ width: "100%", maxWidth: "160px" }}
-          onClick={goBack}
+        <div
+          className="flex flex-col sm:flex-row gap-3"
+          style={{ marginTop: theme.spacing.lg }}
         >
-          ← Back
-        </Button>
-        <Button
-          style={{ width: "100%", maxWidth: "200px" }}
-          onClick={goNext}
-          disabled={!app.productCategory}
+          <Button
+            variant="secondary"
+            style={{ width: "100%", maxWidth: "160px" }}
+            onClick={goBack}
+          >
+            ← Back
+          </Button>
+          <Button
+            style={{ width: "100%", maxWidth: "200px" }}
+            onClick={goNext}
+            disabled={!app.productCategory}
+          >
+            Continue →
+          </Button>
+        </div>
+      </WizardLayout>
+
+      {showClosingCostModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.12)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: theme.spacing.md,
+            zIndex: 50,
+          }}
         >
-          Continue →
-        </Button>
-      </div>
-    </WizardLayout>
+          <div
+            style={{
+              background: theme.colors.surface,
+              borderRadius: theme.layout.radius,
+              border: `1px solid ${theme.colors.border}`,
+              padding: theme.spacing.lg,
+              maxWidth: "460px",
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: theme.spacing.sm,
+            }}
+          >
+            <h2
+              style={{
+                fontSize: theme.typography.h2.fontSize,
+                fontWeight: theme.typography.h2.fontWeight,
+                color: theme.colors.textPrimary,
+              }}
+            >
+              Equipment financing deposit
+            </h2>
+            <p style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
+              Will you require funding for closing costs or a deposit for an
+              equipment purchase?
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                style={{ width: "100%" }}
+                onClick={() => handleClosingCostResponse(true)}
+              >
+                Yes, I need funding
+              </Button>
+              <Button
+                variant="secondary"
+                style={{ width: "100%" }}
+                onClick={() => handleClosingCostResponse(false)}
+              >
+                No, I do not
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

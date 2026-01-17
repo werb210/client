@@ -14,6 +14,7 @@ const emptyApp: ApplicationData = {
   applicant: {},
   documents: {},
   documentsDeferred: false,
+  requires_closing_cost_funding: false,
   termsAccepted: false,
   typedSignature: "",
   signatureDate: "",
@@ -33,10 +34,15 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
   const savedBusiness = saved.business || {};
   const savedApplicant = saved.applicant || {};
   const savedDocuments = saved.documents || {};
+  const savedClosingCostFunding =
+    typeof saved.requires_closing_cost_funding === "boolean"
+      ? saved.requires_closing_cost_funding
+      : emptyApp.requires_closing_cost_funding;
 
   return {
     ...emptyApp,
     ...saved,
+    requires_closing_cost_funding: savedClosingCostFunding,
     kyc: { ...emptyApp.kyc, ...savedKyc },
     matchPercentages: {
       ...emptyApp.matchPercentages,
@@ -102,6 +108,7 @@ export function useApplicationStore() {
         void ClientAppAPI.update(app.applicationToken, {
           kyc: app.kyc,
           productCategory: app.productCategory,
+          requires_closing_cost_funding: app.requires_closing_cost_funding,
           matchPercentages: app.matchPercentages,
           business: app.business,
           applicant: app.applicant,
