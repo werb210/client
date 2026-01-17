@@ -27,9 +27,12 @@ export function filterProductsForCategory(all: LenderProduct[], category: string
 
 export function filterProductsForEligibility(all: LenderProduct[], kyc: any) {
   return all.filter((p) => {
-    if (!p.allowedCountries.includes(kyc.country)) return false;
+    if (!p.supportedCountries.includes(kyc.country)) return false;
     if (kyc.amount < p.minAmount) return false;
     if (kyc.amount > p.maxAmount) return false;
+    if (p.category === "Factoring" && !(kyc.accountsReceivableBalance > 0)) {
+      return false;
+    }
     return true;
   });
 }

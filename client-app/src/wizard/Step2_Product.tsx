@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { StepHeader } from "../components/StepHeader";
@@ -6,122 +6,53 @@ import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { WizardLayout } from "../components/WizardLayout";
 import { theme } from "../styles/theme";
-import {
-  FundingIntent,
-  getAllowedCategories,
-  normalizeFundingIntent,
-} from "../constants/wizard";
-
-const PRODUCT_COUNTS: Record<string, number> = {
-  "Working Capital": 1,
-  "Equipment Financing": 6,
-  "Line of Credit": 19,
-};
-
-const MATCH_BASELINES: Record<string, number> = {
-  "Working Capital": 50,
-  "Equipment Financing": 48,
-  "Line of Credit": 44,
-};
-
-function toLower(value?: string) {
-  return (value || "").toLowerCase();
-}
-
-function parseYearsInBusiness(value?: string) {
-  const normalized = toLower(value);
-  if (!normalized) return 0;
-  if (normalized.includes("less than")) return 0.5;
-  if (normalized.includes("1 to 3")) return 2;
-  if (normalized.includes("over 3")) return 3;
-  const numbers = normalized.match(/\d+/g);
-  if (!numbers?.length) return 0;
-  return Number(numbers[numbers.length - 1]);
-}
-
-function hasPositiveBalance(value?: string) {
-  const normalized = toLower(value);
-  if (!normalized) return false;
-  if (normalized.includes("no")) return false;
-  return true;
-}
-
-function clampMatch(value: number) {
-  return Math.max(0, Math.min(100, Math.round(value)));
-}
+import { getEligibilityResult } from "../lender/eligibility";
+import { ProductSync } from "../lender/productSync";
 
 export function Step2_Product() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
+  const products = useMemo(() => ProductSync.load(), []);
 
-  const allowedCategoryNames = useMemo(
-    () => getAllowedCategories(app.kyc.lookingFor),
-    [app.kyc.lookingFor]
+  const eligibility = useMemo(
+    () =>
+      getEligibilityResult(
+        products,
+        {
+          fundingIntent: app.kyc.lookingFor,
+          amountRequested: app.kyc.fundingAmount,
+          businessLocation: app.kyc.businessLocation,
+          accountsReceivableBalance: app.kyc.accountsReceivable,
+        },
+        app.matchPercentages
+      ),
+    [
+      app.kyc.accountsReceivable,
+      app.kyc.businessLocation,
+      app.kyc.fundingAmount,
+      app.kyc.lookingFor,
+      app.matchPercentages,
+      products,
+    ]
   );
 
-  const categories = useMemo(() => {
-    const purpose = toLower(app.kyc.purposeOfFunds);
-    const hasWorkingCapitalPurpose =
-      purpose.includes("working capital") || purpose.includes("cash flow");
-    const hasEquipmentPurpose = purpose.includes("equipment");
+  const categories = eligibility.categories;
+  const eligibilitySnapshot = useMemo(
+    () =>
+      JSON.stringify({
+        eligibleProducts: eligibility.eligibleProducts,
+        eligibleCategories: eligibility.categories,
+        eligibilityReasons: eligibility.reasons,
+      }),
+    [eligibility]
+  );
 
-    const hasAccountsReceivable = hasPositiveBalance(
-      app.kyc.accountsReceivable
-    );
-    const hasFixedAssets = hasPositiveBalance(app.kyc.fixedAssets);
-    const hasMonthlyRevenue = Boolean(app.kyc.monthlyRevenue);
-    const yearsInBusiness = parseYearsInBusiness(app.kyc.salesHistory);
-
-    const workingCapitalAvailable =
-      hasWorkingCapitalPurpose || hasAccountsReceivable || hasMonthlyRevenue;
-    const equipmentAvailable = hasEquipmentPurpose || hasFixedAssets;
-    const lineOfCreditAvailable = yearsInBusiness >= 2 && hasMonthlyRevenue;
-
-    const categoryDefinitions = [
-      {
-        name: "Working Capital",
-        intent: FundingIntent.WORKING_CAPITAL,
-        available: workingCapitalAvailable,
-        criteria: [
-          hasWorkingCapitalPurpose,
-          hasAccountsReceivable,
-          hasMonthlyRevenue,
-        ],
-      },
-      {
-        name: "Equipment Financing",
-        intent: FundingIntent.EQUIPMENT,
-        available: equipmentAvailable,
-        criteria: [hasEquipmentPurpose, hasFixedAssets],
-      },
-      {
-        name: "Line of Credit",
-        intent: FundingIntent.WORKING_CAPITAL,
-        available: lineOfCreditAvailable,
-        criteria: [yearsInBusiness >= 2, hasMonthlyRevenue],
-      },
-    ];
-
-    return categoryDefinitions
-      .filter(
-        (category) =>
-          category.available && allowedCategoryNames.includes(category.name)
-      )
-      .map((category) => {
-        const matches = category.criteria.filter(Boolean).length;
-        const baseline = MATCH_BASELINES[category.name] ?? 40;
-        const boost =
-          category.criteria.length > 0
-            ? (matches / category.criteria.length) * 12
-            : 0;
-        const matchScore = clampMatch(baseline + boost);
-        return {
-          name: category.name,
-          matchScore,
-          productsCount: PRODUCT_COUNTS[category.name] ?? 0,
-        };
-      });
-  }, [allowedCategoryNames, app.kyc]);
+  const previousInputs = useRef({
+    lookingFor: app.kyc.lookingFor,
+    fundingAmount: app.kyc.fundingAmount,
+    businessLocation: app.kyc.businessLocation,
+    accountsReceivable: app.kyc.accountsReceivable,
+  });
 
   useEffect(() => {
     if (app.currentStep !== 2) {
@@ -130,12 +61,57 @@ export function Step2_Product() {
   }, [app.currentStep, update]);
 
   useEffect(() => {
-    const normalizedIntent = normalizeFundingIntent(app.kyc.lookingFor);
-    if (!normalizedIntent && app.productCategory) {
+    if (eligibilitySnapshot) {
+      const currentSnapshot = JSON.stringify({
+        eligibleProducts: app.eligibleProducts,
+        eligibleCategories: app.eligibleCategories,
+        eligibilityReasons: app.eligibilityReasons,
+      });
+      if (currentSnapshot !== eligibilitySnapshot) {
+        update({
+          eligibleProducts: eligibility.eligibleProducts,
+          eligibleCategories: eligibility.categories,
+          eligibilityReasons: eligibility.reasons,
+        });
+      }
+    }
+  }, [
+    app.eligibleCategories,
+    app.eligibleProducts,
+    app.eligibilityReasons,
+    eligibility,
+    eligibilitySnapshot,
+    update,
+  ]);
+
+  useEffect(() => {
+    const currentInputs = {
+      lookingFor: app.kyc.lookingFor,
+      fundingAmount: app.kyc.fundingAmount,
+      businessLocation: app.kyc.businessLocation,
+      accountsReceivable: app.kyc.accountsReceivable,
+    };
+    const changed = Object.keys(currentInputs).some(
+      (key) =>
+        currentInputs[key as keyof typeof currentInputs] !==
+        previousInputs.current[key as keyof typeof currentInputs]
+    );
+
+    if (changed && app.productCategory) {
       update({ productCategory: null });
-      return;
     }
 
+    previousInputs.current = currentInputs;
+  }, [
+    app.kyc.accountsReceivable,
+    app.kyc.businessLocation,
+    app.kyc.fundingAmount,
+    app.kyc.lookingFor,
+    app.productCategory,
+    update,
+  ]);
+
+  useEffect(() => {
     const current = categories.find(
       (category) => category.name === app.productCategory
     );
@@ -150,7 +126,7 @@ export function Step2_Product() {
         update({ productCategory: onlyOption });
       }
     }
-  }, [app.kyc.lookingFor, app.productCategory, categories, update]);
+  }, [app.productCategory, categories, update]);
 
   function select(name: string) {
     update({ productCategory: name });
@@ -222,7 +198,7 @@ export function Step2_Product() {
                         color: theme.colors.textSecondary,
                       }}
                     >
-                      {category.productsCount} products available (Match score{" "}
+                      {category.productCount} products available (Match score{" "}
                       {category.matchScore}%)
                     </p>
                   </div>
