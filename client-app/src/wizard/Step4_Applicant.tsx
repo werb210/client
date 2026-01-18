@@ -76,8 +76,10 @@ export function Step4_Applicant() {
     if (app.applicationToken) {
       try {
         await ClientAppAPI.update(app.applicationToken, { applicant: values });
-      } catch {
-        // Allow navigation even if the update fails.
+      } catch (error) {
+        console.error("Failed to save applicant details:", error);
+        alert("We couldn't save your applicant details. Please try again.");
+        return;
       }
     }
     navigate("/apply/step-5");

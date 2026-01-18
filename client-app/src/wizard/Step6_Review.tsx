@@ -13,6 +13,7 @@ import { theme } from "../styles/theme";
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
   const navigate = useNavigate();
 
@@ -33,6 +34,23 @@ export function Step6_Review() {
   }
 
   async function submit() {
+    setSubmitError(null);
+
+    if (!app.applicationToken) {
+      setSubmitError("Missing application token. Please restart your application.");
+      return;
+    }
+
+    if (!app.productCategory) {
+      setSubmitError("Missing product category. Please return to Step 2.");
+      return;
+    }
+
+    if (!app.documentsDeferred && Object.keys(app.documents || {}).length === 0) {
+      setSubmitError("Please upload required documents or choose to upload later.");
+      return;
+    }
+
     if (!app.typedSignature?.trim()) {
       alert("Please type your full name to sign.");
       return;
@@ -43,22 +61,69 @@ export function Step6_Review() {
       return;
     }
 
-    await ClientAppAPI.update(app.applicationToken!, {
-      kyc: app.kyc,
-      productCategory: app.productCategory,
-      requires_closing_cost_funding: app.requires_closing_cost_funding,
-      matchPercentages: app.matchPercentages,
-      business: app.business,
-      applicant: app.applicant,
-      documents: app.documents,
-      documentsDeferred: app.documentsDeferred,
-      termsAccepted: app.termsAccepted,
-      typedSignature: app.typedSignature,
-      signatureDate: app.signatureDate || today,
-      currentStep: app.currentStep,
-    });
-    await ClientAppAPI.submit(app.applicationToken!);
-    setSubmitted(true);
+    try {
+      await ClientAppAPI.update(app.applicationToken, {
+        financialProfile: app.kyc,
+        productCategory: app.productCategory,
+        requires_closing_cost_funding: app.requires_closing_cost_funding,
+        business: app.business,
+        applicant: app.applicant,
+        documents: app.documents,
+        documentsDeferred: app.documentsDeferred,
+        termsAccepted: app.termsAccepted,
+        typedSignature: app.typedSignature,
+        signatureDate: app.signatureDate || today,
+        currentStep: app.currentStep,
+      });
+      await ClientAppAPI.submit(app.applicationToken);
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Submission failed:", error);
+      setSubmitError(
+        "We couldn't submit your application. Please try again or contact support."
+      );
+    }
+  }
+
+  if (submitError) {
+    return (
+      <WizardLayout>
+        <Card
+          className="space-y-3"
+          style={{ textAlign: "center", padding: theme.spacing.xl }}
+        >
+          <div
+            style={{
+              fontSize: "12px",
+              textTransform: "uppercase",
+              letterSpacing: "0.2em",
+              color: theme.colors.textSecondary,
+            }}
+          >
+            Submission error
+          </div>
+          <h1
+            style={{
+              fontSize: theme.typography.h1.fontSize,
+              fontWeight: theme.typography.h1.fontWeight,
+              color: theme.colors.textPrimary,
+              margin: 0,
+            }}
+          >
+            We couldn’t submit your application
+          </h1>
+          <p style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
+            {submitError}
+          </p>
+          <Button
+            style={{ marginTop: theme.spacing.sm, width: "100%", maxWidth: "260px" }}
+            onClick={() => setSubmitError(null)}
+          >
+            Return to review
+          </Button>
+        </Card>
+      </WizardLayout>
+    );
   }
 
   if (submitted) {

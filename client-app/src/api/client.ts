@@ -1,8 +1,10 @@
 import axios from "axios";
 
+export const API_BASE_URL = "https://api.staff.boreal.financial";
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "",
-  timeout: 10000
+  baseURL: API_BASE_URL,
+  timeout: 10000,
 });
 
 export function attachToken(token: string | null) {
