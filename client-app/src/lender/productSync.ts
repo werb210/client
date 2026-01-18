@@ -1,7 +1,5 @@
+import { api } from "../api/client";
 import { OfflineStore } from "../state/offline";
-import { MockLenderProducts } from "./mockProducts";
-
-const KEY = "boreal_lender_products";
 
 export const ProductSync = {
   load(): any[] {
@@ -18,9 +16,22 @@ export const ProductSync = {
     });
   },
 
+  invalidateCache() {
+    const existing = OfflineStore.load() || {};
+    if (existing.lenderProducts) {
+      const { lenderProducts, ...rest } = existing;
+      OfflineStore.save(rest);
+    }
+  },
+
   async sync() {
-    // Phase 6 will replace this with a real API call
-    ProductSync.save(MockLenderProducts);
-    return MockLenderProducts;
-  }
+    ProductSync.invalidateCache();
+    const res = await api.get("/api/lender-products/public");
+    const products = Array.isArray(res.data) ? res.data : [];
+    if (!products.length) {
+      throw new Error("No lender products returned from server.");
+    }
+    ProductSync.save(products);
+    return products;
+  },
 };

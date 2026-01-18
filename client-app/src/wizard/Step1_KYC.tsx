@@ -195,26 +195,22 @@ export function Step1_KYC() {
     const matchPercentages = buildMatchPercentages(
       Number.isNaN(amount) ? 0 : amount
     );
-    let token = app.applicationToken;
-
     try {
       const res = await ClientAppAPI.start({
         financialProfile: payload,
       });
-      if (res && res.data && res.data.token) {
-        token = res.data.token;
+      const token = res?.data?.token;
+      if (!token) {
+        alert("We couldn't start your application. Please try again.");
+        return;
       }
-    } catch {
-      // Stay in client-only mode when backend is unavailable.
+      update({ applicationToken: token, matchPercentages });
+      navigate("/apply/step-2");
+    } catch (error) {
+      console.error("Failed to start application:", error);
+      alert("We couldn't start your application. Please try again.");
+      return;
     }
-
-    if (!token) {
-      token = `local-${Date.now()}`;
-    }
-
-    update({ applicationToken: token, matchPercentages });
-
-    navigate("/apply/step-2");
   }
 
   return (

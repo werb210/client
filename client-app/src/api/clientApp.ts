@@ -20,36 +20,36 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
 
 export const ClientAppAPI = {
   start(payload: any) {
-    return withRetry(() => api.post("/api/client/app/start", payload));
+    return withRetry(() => api.post("/api/applications", payload));
   },
   update(token: string, payload: any) {
-    return withRetry(() => api.post(`/api/client/app/update/${token}`, payload));
+    return withRetry(() => api.patch(`/api/applications/${token}`, payload));
   },
-  uploadDoc(token: string, formData: FormData) {
+  uploadDoc(token: string, payload: { documents: Record<string, { name: string; base64: string }> }) {
     return withRetry(() =>
-      api.post(`/api/client/app/upload-document/${token}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
+      api.patch(`/api/applications/${token}`, payload)
     );
   },
   deferDocuments(token: string) {
     return withRetry(() =>
-      api.post(`/api/client/app/defer-documents/${token}`)
+      api.patch(`/api/applications/${token}`, { documentsDeferred: true })
     );
   },
   submit(token: string) {
-    return withRetry(() => api.post(`/api/client/app/submit/${token}`));
+    return withRetry(() => api.post(`/api/applications/${token}/submit`));
   },
   status(token: string) {
-    return withRetry(() => api.get(`/api/client/app/status/${token}`));
+    return withRetry(() => api.get(`/api/applications/${token}`));
   },
   getMessages(token: string) {
-    return withRetry(() => api.get(`/api/client/app/messages/${token}`));
+    return withRetry(() => api.get(`/api/applications/${token}/messages`));
   },
   sendMessage(token: string, text: string) {
-    return withRetry(() => api.post(`/api/client/app/messages/${token}`, { text }));
+    return withRetry(() =>
+      api.post(`/api/applications/${token}/messages`, { text })
+    );
   },
   getSignNowUrl(token: string) {
-    return withRetry(() => api.get(`/api/client/app/signnow/${token}`));
-  }
+    return withRetry(() => api.get(`/api/applications/${token}/signnow`));
+  },
 };

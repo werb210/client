@@ -13,7 +13,14 @@ export interface ApplicationData {
   eligibilityReasons: EligibilityReasonSummary[];
   business: any;
   applicant: any;
-  documents: Record<string, { name: string; base64?: string; uploaded?: boolean }>;
+  documents: Record<
+    string,
+    {
+      name: string;
+      base64: string;
+      category: string;
+    }
+  >;
   documentsDeferred?: boolean;
 
   /**

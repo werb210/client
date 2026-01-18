@@ -34,6 +34,19 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
   const savedBusiness = saved.business || {};
   const savedApplicant = saved.applicant || {};
   const savedDocuments = saved.documents || {};
+  const normalizedDocuments = Object.fromEntries(
+    Object.entries(savedDocuments).map(([key, value]) => {
+      const entry = value as { name?: string; base64?: string; category?: string };
+      return [
+        key,
+        {
+          name: entry.name || key,
+          base64: entry.base64 || "",
+          category: entry.category || key,
+        },
+      ];
+    })
+  );
   const savedClosingCostFunding =
     typeof saved.requires_closing_cost_funding === "boolean"
       ? saved.requires_closing_cost_funding
@@ -53,7 +66,7 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
     eligibilityReasons: savedEligibilityReasons,
     business: { ...emptyApp.business, ...savedBusiness },
     applicant: { ...emptyApp.applicant, ...savedApplicant },
-    documents: { ...emptyApp.documents, ...savedDocuments },
+    documents: { ...emptyApp.documents, ...normalizedDocuments },
   };
 }
 
@@ -62,6 +75,7 @@ export function useApplicationStore() {
     hydrateApplication(OfflineStore.load())
   );
   const [initialized, setInitialized] = useState(false);
+  const autosaveErrorShown = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canAutosave = app.currentStep > 1;
@@ -71,11 +85,10 @@ export function useApplicationStore() {
 
     // Load lender products into offline cache
     const { ProductSync } = require("../lender/productSync");
-    try {
-      ProductSync.sync();
-    } catch (error) {
+    ProductSync.invalidateCache();
+    void ProductSync.sync().catch((error: unknown) => {
       console.error("Product sync failed:", error);
-    }
+    });
 
     setInitialized(true);
   }
@@ -88,6 +101,12 @@ export function useApplicationStore() {
     setApp(emptyApp);
     OfflineStore.clear();
   }
+
+  useEffect(() => {
+    if (!initialized) {
+      init();
+    }
+  }, [initialized]);
 
   useEffect(() => {
     if (!canAutosave) {
@@ -106,21 +125,25 @@ export function useApplicationStore() {
 
       if (app.applicationToken) {
         void ClientAppAPI.update(app.applicationToken, {
-          kyc: app.kyc,
+          financialProfile: app.kyc,
           productCategory: app.productCategory,
           requires_closing_cost_funding: app.requires_closing_cost_funding,
-          matchPercentages: app.matchPercentages,
           business: app.business,
           applicant: app.applicant,
           documents: app.documents,
           documentsDeferred: app.documentsDeferred,
-          termsAccepted: app.termsAccepted,
-          typedSignature: app.typedSignature,
-          signatureDate: app.signatureDate,
           currentStep: app.currentStep,
-        }).catch((error) => {
-          console.error("Autosave failed:", error);
-        });
+        })
+          .then(() => {
+            autosaveErrorShown.current = false;
+          })
+          .catch((error) => {
+            console.error("Autosave failed:", error);
+            if (!autosaveErrorShown.current) {
+              autosaveErrorShown.current = true;
+              alert("Autosave failed. Please check your connection.");
+            }
+          });
       }
     }, 500);
 

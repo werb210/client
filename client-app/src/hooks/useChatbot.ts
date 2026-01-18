@@ -34,13 +34,19 @@ export function useChatbot() {
     const uploaded = Object.keys(state.documents || {}).map(
       (doc) => DefaultDocLabels[doc] || doc
     );
+    const required = getRequiredDocs(state).map(
+      (doc) => DefaultDocLabels[doc] || doc
+    );
     if (state.documentsDeferred) {
       return "You chose to upload documents later. You can return to Step 5 to upload required files.";
     }
     if (uploaded.length) {
-      return `Uploaded so far: ${uploaded.join(", ")}. The required documents list appears in Step 5 (bank statements are always required).`;
+      return `Uploaded so far: ${uploaded.join(", ")}. Required documents are based on your selected product category and appear in Step 5.`;
     }
-    return "Required documents are listed in Step 5. Bank statements for the last 6 months are always required.";
+    if (required.length) {
+      return `Required documents for your selected product include: ${required.join(", ")}.`;
+    }
+    return "Required documents are listed in Step 5 and depend on the lender product you selected.";
   }
 
   function handleStepQuestion(state: any, message: string) {
@@ -112,6 +118,20 @@ export function useChatbot() {
       },
       state.matchPercentages || {}
     );
+  }
+
+  function getRequiredDocs(state: any) {
+    const selectedCategory = state.productCategory;
+    const products = Array.isArray(state.eligibleProducts)
+      ? state.eligibleProducts
+      : Array.isArray(state.lenderProducts)
+        ? state.lenderProducts
+        : [];
+    if (!selectedCategory || !products.length) return [];
+    const docs = products
+      .filter((product: any) => product.category === selectedCategory)
+      .flatMap((product: any) => product.requiredDocs || []);
+    return Array.from(new Set(docs));
   }
 
   function formatReasonSummary(reasons: Array<{ reason: string; count: number }>) {

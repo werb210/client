@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../api/client";
 
 export default function UploadDocuments() {
   const navigate = useNavigate();
-  const applicationId = localStorage.getItem("applicationId");
+  const applicationToken = localStorage.getItem("applicationToken");
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">(
     "idle"
   );
@@ -11,9 +12,9 @@ export default function UploadDocuments() {
   const [progress, setProgress] = useState(0);
 
   async function upload(file: File) {
-    if (!applicationId) {
+    if (!applicationToken) {
       setStatus("error");
-      setMessage("Missing application ID. Please restart your application.");
+      setMessage("Missing application token. Please restart your application.");
       return;
     }
 
@@ -21,16 +22,36 @@ export default function UploadDocuments() {
     setMessage("Uploading your document...");
     setProgress(35);
 
-    const form = new FormData();
-    form.append("applicationId", applicationId);
-    form.append("category", "bank_statement");
-    form.append("file", file);
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Failed to read file."));
+      reader.onload = () => {
+        const result = String(reader.result || "");
+        const encoded = result.includes(",") ? result.split(",")[1] : result;
+        resolve(encoded);
+      };
+      reader.readAsDataURL(file);
+    });
 
     try {
-      const response = await fetch("/api/documents", {
-        method: "POST",
-        headers: { "X-Request-Id": crypto.randomUUID() },
-        body: form,
+      const response = await fetch(
+        `${API_BASE_URL}/api/applications/${applicationToken}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Request-Id": crypto.randomUUID(),
+          },
+          body: JSON.stringify({
+            documents: {
+              bank_statement: {
+                name: file.name,
+                base64,
+              },
+            },
+          }),
+        }
+      );
       });
 
       if (!response.ok) {
@@ -46,7 +67,7 @@ export default function UploadDocuments() {
     }
   }
 
-  const isBlocked = !applicationId;
+  const isBlocked = !applicationToken;
 
   return (
     <div className="page">

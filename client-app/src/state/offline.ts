@@ -4,7 +4,9 @@ export const OfflineStore = {
   save(data: any) {
     try {
       localStorage.setItem(KEY, JSON.stringify(data));
-    } catch {}
+    } catch (error) {
+      console.warn("Failed to save offline cache:", error);
+    }
   },
   load() {
     try {
@@ -12,7 +14,8 @@ export const OfflineStore = {
       const parsed = raw ? JSON.parse(raw) : null;
       if (parsed && typeof parsed === "object") return parsed;
       return null;
-    } catch {
+    } catch (error) {
+      console.warn("Failed to load offline cache:", error);
       localStorage.removeItem(KEY);
       return null;
     }
@@ -20,6 +23,8 @@ export const OfflineStore = {
   clear() {
     try {
       localStorage.removeItem(KEY);
-    } catch {}
+    } catch (error) {
+      console.warn("Failed to clear offline cache:", error);
+    }
   },
 };

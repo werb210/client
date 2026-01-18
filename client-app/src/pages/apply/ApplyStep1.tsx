@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../api/client";
 
 const provinces = [
   "Alberta",
@@ -29,7 +30,7 @@ export default function ApplyStep1() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch("/api/applications", {
+      const res = await fetch(`${API_BASE_URL}/api/applications`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,7 +51,10 @@ export default function ApplyStep1() {
       }
 
       const data = await res.json();
-      localStorage.setItem("applicationId", data.id);
+      if (!data?.token) {
+        throw new Error("Missing application token");
+      }
+      localStorage.setItem("applicationToken", data.token);
       navigate("/apply/step-2");
     } catch (err) {
       setError("We couldn't start your application. Please try again.");

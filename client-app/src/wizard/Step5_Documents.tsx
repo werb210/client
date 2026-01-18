@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { DefaultDocLabels } from "../data/requiredDocs";
@@ -9,13 +9,23 @@ import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { WizardLayout } from "../components/WizardLayout";
 import { theme } from "../styles/theme";
+import { ProductSync } from "../lender/productSync";
 
 export function Step5_Documents() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
-  const [docsRequired, setDocsRequired] = useState<string[]>([
-    "bank_statements_6m",
-  ]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const docsRequired = useMemo(() => {
+    if (!app.productCategory) return [];
+    const source =
+      app.eligibleProducts.length > 0 ? app.eligibleProducts : products;
+    const docs = source
+      .filter((product) => product.category === app.productCategory)
+      .flatMap((product) => product.requiredDocs || []);
+    return Array.from(new Set(docs));
+  }, [app.eligibleProducts, app.productCategory, products]);
+  const [docError, setDocError] = useState<string | null>(null);
 
   useEffect(() => {
     if (app.currentStep !== 5) {
@@ -25,38 +35,59 @@ export function Step5_Documents() {
 
   useEffect(() => {
     let active = true;
-    async function loadDocs() {
+    async function loadProducts() {
+      setIsLoading(true);
       try {
-        const res = await ClientAppAPI.status(app.applicationToken!);
-        const data = res?.data || {};
-        const required =
-          data.requiredDocuments ||
-          data.required_docs ||
-          data.documentsRequired ||
-          data.documents ||
-          [];
-        const normalized = Array.isArray(required) ? required : [];
-        const merged = Array.from(
-          new Set(["bank_statements_6m", ...normalized])
-        );
+        const synced = await ProductSync.sync();
         if (active) {
-          setDocsRequired(merged);
+          setProducts(synced);
         }
-      } catch {
+      } catch (error) {
+        console.error("Failed to sync lender products:", error);
+      } finally {
         if (active) {
-          setDocsRequired(["bank_statements_6m"]);
+          setIsLoading(false);
         }
       }
     }
 
-    if (app.applicationToken) {
-      loadDocs();
-    }
+    loadProducts();
 
     return () => {
       active = false;
     };
-  }, [app.applicationToken]);
+  }, []);
+
+  useEffect(() => {
+    if (!app.applicationToken) {
+      setDocError("Missing application token. Please restart your application.");
+      return;
+    }
+    if (!app.productCategory) {
+      setDocError("Missing product category selection. Please return to Step 2.");
+      return;
+    }
+    if (!isLoading && docsRequired.length === 0) {
+      setDocError(
+        "No document requirements were provided for the selected product."
+      );
+      return;
+    }
+    setDocError(null);
+  }, [app.applicationToken, app.productCategory, docsRequired.length, isLoading]);
+
+  function readFileAsBase64(file: File) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Failed to read file."));
+      reader.onload = () => {
+        const result = String(reader.result || "");
+        const base64 = result.includes(",") ? result.split(",")[1] : result;
+        resolve(base64);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
 
   async function handleFile(docType: string, file: File | null) {
     if (!file) return;
@@ -87,18 +118,30 @@ export function Step5_Documents() {
       return;
     }
 
-    const form = new FormData();
-    form.append("document", file);
-    form.append("type", docType);
+    try {
+      const base64 = await readFileAsBase64(file);
+      const payload = {
+        documents: {
+          [docType]: {
+            name: file.name,
+            base64,
+          },
+        },
+      };
 
-    await ClientAppAPI.uploadDoc(app.applicationToken!, form);
+      await ClientAppAPI.uploadDoc(app.applicationToken!, payload);
 
-    update({
-      documents: {
-        ...app.documents,
-        [docType]: { name: file.name, uploaded: true }
-      }
-    });
+      update({
+        documentsDeferred: false,
+        documents: {
+          ...app.documents,
+          [docType]: { name: file.name, base64, category: docType },
+        },
+      });
+    } catch (error) {
+      console.error("Document upload failed:", error);
+      alert("Document upload failed. Please try again.");
+    }
   }
 
   function allDocsPresent() {
@@ -126,6 +169,20 @@ export function Step5_Documents() {
       <StepHeader step={5} title="Required Documents" />
 
       <Card className="space-y-4">
+        {docError && (
+          <div
+            style={{
+              border: `1px solid ${theme.colors.border}`,
+              background: "rgba(220, 38, 38, 0.08)",
+              borderRadius: theme.layout.radius,
+              padding: theme.spacing.md,
+              fontSize: "14px",
+              color: theme.colors.textPrimary,
+            }}
+          >
+            {docError}
+          </div>
+        )}
         <div
           style={{
             border: `1px solid ${theme.colors.border}`,
@@ -205,7 +262,7 @@ export function Step5_Documents() {
           marginTop: theme.spacing.lg,
         }}
         onClick={next}
-        disabled={!allDocsPresent() && !app.documentsDeferred}
+        disabled={Boolean(docError) || (!allDocsPresent() && !app.documentsDeferred)}
       >
         Continue
       </Button>

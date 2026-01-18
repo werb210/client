@@ -14,7 +14,9 @@ const EQUIPMENT_FINANCING_CATEGORY = "Equipment Financing";
 export function Step2_Product() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
-  const products = useMemo(() => ProductSync.load(), []);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [showClosingCostModal, setShowClosingCostModal] = useState(false);
 
   const eligibility = useMemo(
@@ -62,6 +64,37 @@ export function Step2_Product() {
       update({ currentStep: 2 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    let active = true;
+    async function loadProducts() {
+      setIsLoading(true);
+      setLoadError(null);
+      try {
+        const synced = await ProductSync.sync();
+        if (active) {
+          setProducts(synced);
+        }
+      } catch (error) {
+        console.error("Failed to load lender products:", error);
+        if (active) {
+          setLoadError(
+            "Unable to load lender products. Please refresh or try again later."
+          );
+        }
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadProducts();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (eligibilitySnapshot) {
@@ -171,6 +204,35 @@ export function Step2_Product() {
 
         <Card className="space-y-4">
           <div className="space-y-4">
+            {loadError && (
+              <div
+                style={{
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: theme.layout.radius,
+                  padding: theme.spacing.md,
+                  background: "rgba(220, 38, 38, 0.08)",
+                  color: theme.colors.textPrimary,
+                  fontSize: "14px",
+                }}
+              >
+                {loadError}
+              </div>
+            )}
+            {!loadError && !isLoading && categories.length === 0 && (
+              <div
+                style={{
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: theme.layout.radius,
+                  padding: theme.spacing.md,
+                  background: "rgba(220, 38, 38, 0.08)",
+                  color: theme.colors.textPrimary,
+                  fontSize: "14px",
+                }}
+              >
+                No lender products are available for your profile. Please update
+                your Step 1 details or try again later.
+              </div>
+            )}
             {categories.map((category) => {
               const isSelected = app.productCategory === category.name;
               return (
@@ -265,7 +327,7 @@ export function Step2_Product() {
           <Button
             style={{ width: "100%", maxWidth: "200px" }}
             onClick={goNext}
-            disabled={!app.productCategory}
+            disabled={!app.productCategory || Boolean(loadError)}
           >
             Continue →
           </Button>

@@ -92,8 +92,10 @@ export function Step3_Business() {
     if (app.applicationToken) {
       try {
         await ClientAppAPI.update(app.applicationToken, { business: values });
-      } catch {
-        // Allow navigation even if the update fails.
+      } catch (error) {
+        console.error("Failed to save business details:", error);
+        alert("We couldn't save your business details. Please try again.");
+        return;
       }
     }
     navigate("/apply/step-4");

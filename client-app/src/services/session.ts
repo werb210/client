@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "../api/client";
+
 export type ClientSession = {
   applicationId: string;
   step: number;
@@ -12,7 +14,7 @@ export async function loadSessionFromUrl(): Promise<ClientSession | null> {
   if (!token) return null;
 
   const response = await fetch(
-    `/api/client/session?token=${encodeURIComponent(token)}`
+    `${API_BASE_URL}/api/client/session?token=${encodeURIComponent(token)}`
   );
 
   if (!response.ok) {

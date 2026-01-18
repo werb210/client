@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../api/client";
 
 export default function ApplyStep3() {
   const navigate = useNavigate();
-  const applicationId = localStorage.getItem("applicationId");
+  const applicationToken = localStorage.getItem("applicationToken");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -12,7 +13,7 @@ export default function ApplyStep3() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function submit() {
-    if (!applicationId) {
+    if (!applicationToken) {
       setError("We couldn't find your application. Please start again.");
       return;
     }
@@ -21,20 +22,23 @@ export default function ApplyStep3() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`/api/applications/${applicationId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          applicant: {
-            firstName,
-            lastName,
-            email,
-            phone,
+      const res = await fetch(
+        `${API_BASE_URL}/api/applications/${applicationToken}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
           },
-        }),
-      });
+          body: JSON.stringify({
+            applicant: {
+              firstName,
+              lastName,
+              email,
+              phone,
+            },
+          }),
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Unable to save applicant details");
