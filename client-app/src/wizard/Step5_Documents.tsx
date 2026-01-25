@@ -8,9 +8,7 @@ import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { WizardLayout } from "../components/WizardLayout";
 import { theme } from "../styles/theme";
-import {
-  getClientLenderProductRequirements,
-} from "../api/lenders";
+import { ProductSync } from "../lender/productSync";
 import {
   filterRequirementsByAmount,
   formatDocumentLabel,
@@ -90,46 +88,38 @@ export function Step5_Documents() {
         setIsLoading(false);
         return;
       }
-      const cached =
-        app.productRequirements?.[app.selectedProductId] || [];
-      if (cached.length > 0) {
-        setRequirementsRaw(cached);
-      }
-      setIsLoading(true);
-      setDocError(null);
-      try {
-        const response = await getClientLenderProductRequirements(
-          app.selectedProductId
-        );
-        if (active) {
-          const normalized = normalizeRequirementList(response);
-          if (normalized.length === 0) {
-            setDocError(
-              "No document requirements were provided for the selected product."
-            );
-            setRequirementsRaw([]);
-            return;
-          }
-          setRequirementsRaw(normalized);
-          update({
-            productRequirements: {
-              ...(app.productRequirements || {}),
-              [app.selectedProductId]: normalized,
-            },
-            documentsDeferred: false,
-          });
-        }
-      } catch (error: any) {
-        console.error("Failed to load product requirements:", error);
-        if (active) {
+      const cached = app.productRequirements?.[app.selectedProductId] || [];
+      const cachedNormalized = normalizeRequirementList(cached);
+      const cachedAvailable = cachedNormalized.length > 0;
+      const fallbackProducts = ProductSync.load();
+      const fallbackProduct = fallbackProducts.find(
+        (product: any) => product?.id === app.selectedProductId
+      );
+      const fallbackNormalized = normalizeRequirementList(
+        fallbackProduct?.required_documents ?? []
+      );
+      const normalized = cachedAvailable ? cachedNormalized : fallbackNormalized;
+
+      if (active) {
+        setIsLoading(true);
+        setDocError(null);
+        if (normalized.length === 0) {
           setDocError(
-            "Unable to load document requirements for this product."
+            "No document requirements were provided for the selected product."
           );
-        }
-      } finally {
-        if (active) {
+          setRequirementsRaw([]);
           setIsLoading(false);
+          return;
         }
+        setRequirementsRaw(normalized);
+        update({
+          productRequirements: {
+            ...(app.productRequirements || {}),
+            [app.selectedProductId]: normalized,
+          },
+          documentsDeferred: false,
+        });
+        setIsLoading(false);
       }
     }
 
