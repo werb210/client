@@ -14,6 +14,7 @@ const emptyApp: ApplicationData = {
   applicant: {},
   documents: {},
   documentsDeferred: false,
+  selectedProduct: undefined,
   requires_closing_cost_funding: false,
   termsAccepted: false,
   typedSignature: "",
