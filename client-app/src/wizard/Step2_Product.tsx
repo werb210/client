@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getClientLenderProducts,
+  getClientLenderProductRequirements,
   type ClientLenderProduct,
+  type LenderProductRequirement,
 } from "../api/lenders";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { StepHeader } from "../components/StepHeader";
@@ -17,6 +19,11 @@ import {
   type ActiveProduct,
 } from "./productSelection";
 import { formatCurrencyValue, getCountryCode } from "../utils/location";
+import {
+  filterRequirementsByAmount,
+  formatDocumentLabel,
+  normalizeRequirementList,
+} from "./requirements";
 
 const emptyStateStyles = {
   border: `1px solid ${theme.colors.border}`,
@@ -38,6 +45,9 @@ export function Step2_Product() {
   const [products, setProducts] = useState<ActiveProduct[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [requirementsState, setRequirementsState] = useState<
+    Record<string, { loading: boolean; error: string | null }>
+  >({});
   const countryCode = useMemo(
     () => getCountryCode(app.kyc.businessLocation),
     [app.kyc.businessLocation]
@@ -69,6 +79,20 @@ export function Step2_Product() {
     ? formatCurrencyValue(String(amountValue), countryCode) ||
       app.kyc.fundingAmount
     : "Not provided";
+  const selectedRequirements = useMemo(() => {
+    if (!app.selectedProductId) return [];
+    const cached = app.productRequirements?.[app.selectedProductId] || [];
+    return filterRequirementsByAmount(cached, app.kyc.fundingAmount);
+  }, [app.kyc.fundingAmount, app.productRequirements, app.selectedProductId]);
+  const selectedRequirementStatus = app.selectedProductId
+    ? requirementsState[app.selectedProductId]
+    : undefined;
+  const requirementsLoading = selectedRequirementStatus?.loading ?? false;
+  const requirementsError = selectedRequirementStatus?.error ?? null;
+  const requiredDocuments = useMemo(
+    () => selectedRequirements.filter((entry) => entry.required),
+    [selectedRequirements]
+  );
 
   useEffect(() => {
     if (app.currentStep !== 2) {
@@ -122,6 +146,65 @@ export function Step2_Product() {
     };
   }, [app.selectedProductId, update]);
 
+  useEffect(() => {
+    if (!app.selectedProductId) return;
+    let active = true;
+
+    async function loadRequirements(productId: string) {
+      setRequirementsState((prev) => ({
+        ...prev,
+        [productId]: { loading: true, error: null },
+      }));
+      try {
+        const response = await getClientLenderProductRequirements(productId);
+        const normalized = normalizeRequirementList(response);
+        if (normalized.length === 0) {
+          if (active) {
+            setRequirementsState((prev) => ({
+              ...prev,
+              [productId]: {
+                loading: false,
+                error:
+                  "No document requirements were provided for the selected product.",
+              },
+            }));
+          }
+          return;
+        }
+        if (active) {
+          update({
+            productRequirements: {
+              ...(app.productRequirements || {}),
+              [productId]: normalized,
+            },
+          });
+          setRequirementsState((prev) => ({
+            ...prev,
+            [productId]: { loading: false, error: null },
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to load product requirements:", error);
+        if (active) {
+          setRequirementsState((prev) => ({
+            ...prev,
+            [productId]: {
+              loading: false,
+              error:
+                "Unable to load document requirements. Please try again or select another product.",
+            },
+          }));
+        }
+      }
+    }
+
+    void loadRequirements(app.selectedProductId);
+
+    return () => {
+      active = false;
+    };
+  }, [app.selectedProductId, update]);
+
   function select(product: ClientLenderProduct) {
     update({
       productCategory: null,
@@ -143,7 +226,15 @@ export function Step2_Product() {
   }
 
   function goNext() {
-    if (!selectedProduct || !amountValid || loadError) return;
+    if (
+      !selectedProduct ||
+      !amountValid ||
+      loadError ||
+      requirementsLoading ||
+      Boolean(requirementsError)
+    ) {
+      return;
+    }
     navigate("/apply/step-3");
   }
 
@@ -155,6 +246,9 @@ export function Step2_Product() {
 
       <Card className="space-y-4">
         {loadError && <div style={emptyStateStyles}>{loadError}</div>}
+        {!loadError && requirementsError && (
+          <div style={emptyStateStyles}>{requirementsError}</div>
+        )}
         {!loadError && noProducts && (
           <div style={emptyStateStyles}>No products available.</div>
         )}
@@ -183,6 +277,13 @@ export function Step2_Product() {
             <div className="grid gap-4">
               {products.map((product) => {
                 const isSelected = product.id === app.selectedProductId;
+                const previewRequirements =
+                  app.productRequirements?.[product.id] || [];
+                const previewRequired = filterRequirementsByAmount(
+                  previewRequirements as LenderProductRequirement[],
+                  app.kyc.fundingAmount
+                ).filter((entry) => entry.required);
+                const showPreview = isSelected && previewRequired.length > 0;
                 return (
                   <Card
                     key={product.id}
@@ -220,6 +321,49 @@ export function Step2_Product() {
                             Max: {formatAmount(product.max_amount, countryCode)}
                           </span>
                         </div>
+                        {isSelected && (
+                          <div className="space-y-2 text-sm text-slate-600">
+                            <div className="flex items-center gap-2">
+                              <span style={{ fontWeight: 600 }}>
+                                Documents Required
+                              </span>
+                              <span
+                                style={{
+                                  padding: "2px 8px",
+                                  borderRadius: "999px",
+                                  fontSize: "12px",
+                                  fontWeight: 600,
+                                  background: "rgba(59, 130, 246, 0.12)",
+                                  color: "#1d4ed8",
+                                  border: "1px solid rgba(59, 130, 246, 0.3)",
+                                }}
+                              >
+                                {requiredDocuments.length}
+                              </span>
+                              {requirementsLoading && (
+                                <span style={{ fontSize: "12px" }}>
+                                  Loading…
+                                </span>
+                              )}
+                            </div>
+                            {showPreview && (
+                              <ul className="list-disc pl-5 space-y-1">
+                                {previewRequired.map((entry) => (
+                                  <li key={entry.id}>
+                                    {formatDocumentLabel(entry.document_type)}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                            {isSelected &&
+                              !requirementsLoading &&
+                              previewRequired.length === 0 && (
+                                <div style={{ fontSize: "12px" }}>
+                                  No required documents loaded yet.
+                                </div>
+                              )}
+                          </div>
+                        )}
                       </div>
                       <div
                         style={{
@@ -277,6 +421,8 @@ export function Step2_Product() {
             !selectedProduct ||
             !amountValid ||
             Boolean(loadError) ||
+            Boolean(requirementsError) ||
+            requirementsLoading ||
             noProducts
           }
         >

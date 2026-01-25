@@ -4,8 +4,11 @@ import {
   FUNDING_INTENT_LABELS,
   normalizeFundingIntent,
 } from "../constants/wizard";
-import { DefaultDocLabels } from "../data/requiredDocs";
 import { getEligibilityResult } from "../lender/eligibility";
+import {
+  filterRequirementsByAmount,
+  formatDocumentLabel,
+} from "../wizard/requirements";
 
 export function useChatbot() {
   const staticSteps = useMemo(
@@ -32,10 +35,10 @@ export function useChatbot() {
 
   function describeDocuments(state: any) {
     const uploaded = Object.keys(state.documents || {}).map(
-      (doc) => DefaultDocLabels[doc] || doc
+      (doc) => formatDocumentLabel(doc)
     );
     const required = getRequiredDocs(state).map(
-      (doc) => DefaultDocLabels[doc] || doc
+      (doc) => formatDocumentLabel(doc)
     );
     if (state.documentsDeferred) {
       return "You chose to upload documents later. You can return to Step 5 to upload required files.";
@@ -121,17 +124,17 @@ export function useChatbot() {
   }
 
   function getRequiredDocs(state: any) {
-    const selectedCategory = state.productCategory;
-    const products = Array.isArray(state.eligibleProducts)
-      ? state.eligibleProducts
-      : Array.isArray(state.lenderProducts)
-        ? state.lenderProducts
-        : [];
-    if (!selectedCategory || !products.length) return [];
-    const docs = products
-      .filter((product: any) => product.category === selectedCategory)
-      .flatMap((product: any) => product.requiredDocs || []);
-    return Array.from(new Set(docs));
+    const selectedProductId = state.selectedProductId;
+    if (!selectedProductId) return [];
+    const requirements =
+      state.productRequirements?.[selectedProductId] || [];
+    const applicable = filterRequirementsByAmount(
+      requirements,
+      state.kyc?.fundingAmount
+    );
+    return applicable
+      .filter((entry: any) => entry.required)
+      .map((entry: any) => entry.document_type);
   }
 
   function formatReasonSummary(reasons: Array<{ reason: string; count: number }>) {

@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
-import {
-  DefaultDocLabels,
-  RequiredDocsByDefaultCategory,
-} from "../data/requiredDocs";
 import { ClientAppAPI } from "../api/clientApp";
 import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
@@ -16,41 +12,63 @@ import {
   getClientLenderProductRequirements,
 } from "../api/lenders";
 import {
-  getRequiredDocuments,
-  normalizeRequirements,
+  filterRequirementsByAmount,
+  formatDocumentLabel,
+  normalizeRequirementList,
+  sortRequirements,
+  type LenderProductRequirement,
 } from "./requirements";
 
-function normalizeProductType(value?: string | null) {
-  if (!value) return "";
-  return value.toLowerCase().replace(/\s+/g, "_");
-}
+type DocStatus = "missing" | "uploaded" | "accepted" | "rejected";
 
 export function Step5_Documents() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
-  const [requirementsRaw, setRequirementsRaw] = useState<any>(null);
+  const [requirementsRaw, setRequirementsRaw] = useState<
+    LenderProductRequirement[]
+  >([]);
   const [docError, setDocError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [docErrors, setDocErrors] = useState<Record<string, string>>({});
+  const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>({});
 
   const requirements = useMemo(
-    () =>
-      normalizeRequirements(requirementsRaw, {
-        amountRequested: app.kyc.fundingAmount,
-        productType: app.selectedProductType,
-      }),
-    [app.kyc.fundingAmount, app.selectedProductType, requirementsRaw]
+    () => filterRequirementsByAmount(requirementsRaw, app.kyc.fundingAmount),
+    [app.kyc.fundingAmount, requirementsRaw]
   );
 
-  const requiredDocs = useMemo(
-    () => getRequiredDocuments(requirements),
+  const orderedRequirements = useMemo(
+    () => sortRequirements(requirements),
     [requirements]
   );
-  const optionalDocs = requirements.optional;
-  const conditionalDocs = requirements.conditional.filter((entry) => entry.applies);
+  const requiredDocs = useMemo(
+    () => orderedRequirements.filter((entry) => entry.required),
+    [orderedRequirements]
+  );
+  const optionalDocs = useMemo(
+    () => orderedRequirements.filter((entry) => !entry.required),
+    [orderedRequirements]
+  );
 
   const missingRequiredDocs = useMemo(
-    () => requiredDocs.filter((doc) => !app.documents[doc]),
+    () =>
+      requiredDocs
+        .map((entry) => entry.document_type)
+        .filter((docType) => !app.documents[docType]),
     [app.documents, requiredDocs]
+  );
+
+  const hasBlockingUploadErrors = useMemo(() => {
+    return requiredDocs.some((entry) => {
+      const docType = entry.document_type;
+      const entryStatus = app.documents[docType]?.status;
+      return Boolean(docErrors[docType]) || entryStatus === "rejected";
+    });
+  }, [app.documents, docErrors, requiredDocs]);
+
+  const hasUploadsInFlight = useMemo(
+    () => requiredDocs.some((entry) => uploadingDocs[entry.document_type]),
+    [requiredDocs, uploadingDocs]
   );
 
   useEffect(() => {
@@ -62,10 +80,20 @@ export function Step5_Documents() {
   useEffect(() => {
     let active = true;
     async function loadRequirements() {
+      if (!app.applicationToken) {
+        setDocError("Missing application token. Please restart your application.");
+        setIsLoading(false);
+        return;
+      }
       if (!app.selectedProductId) {
         setDocError("Missing product selection. Please return to Step 2.");
         setIsLoading(false);
         return;
+      }
+      const cached =
+        app.productRequirements?.[app.selectedProductId] || [];
+      if (cached.length > 0) {
+        setRequirementsRaw(cached);
       }
       setIsLoading(true);
       setDocError(null);
@@ -74,29 +102,33 @@ export function Step5_Documents() {
           app.selectedProductId
         );
         if (active) {
-          setRequirementsRaw(response);
+          const normalized = normalizeRequirementList(response);
+          if (normalized.length === 0) {
+            setDocError(
+              "No document requirements were provided for the selected product."
+            );
+            setRequirementsRaw([]);
+            return;
+          }
+          setRequirementsRaw(normalized);
+          update({
+            productRequirements: {
+              ...(app.productRequirements || {}),
+              [app.selectedProductId]: normalized,
+            },
+            documentsDeferred: false,
+          });
         }
       } catch (error: any) {
         console.error("Failed to load product requirements:", error);
-        const fallbackKey = normalizeProductType(app.selectedProductType);
-        const fallbackDocs = fallbackKey
-          ? RequiredDocsByDefaultCategory[
-              fallbackKey as keyof typeof RequiredDocsByDefaultCategory
-            ]
-          : undefined;
         if (active) {
-          if (fallbackDocs && fallbackDocs.length > 0) {
-            setRequirementsRaw({ required: fallbackDocs });
-          } else {
-            setDocError(
-              "Unable to load document requirements for this product."
-            );
-          }
+          setDocError(
+            "Unable to load document requirements for this product."
+          );
         }
       } finally {
         if (active) {
           setIsLoading(false);
-          update({ documentsDeferred: false });
         }
       }
     }
@@ -106,7 +138,7 @@ export function Step5_Documents() {
     return () => {
       active = false;
     };
-  }, [app.selectedProductId, app.selectedProductType, update]);
+  }, [app.selectedProductId, update]);
 
   useEffect(() => {
     if (!app.applicationToken) {
@@ -117,20 +149,7 @@ export function Step5_Documents() {
       setDocError("Missing product selection. Please return to Step 2.");
       return;
     }
-    if (!isLoading && requiredDocs.length === 0 && optionalDocs.length === 0) {
-      setDocError(
-        "No document requirements were provided for the selected product."
-      );
-      return;
-    }
-    setDocError(null);
-  }, [
-    app.applicationToken,
-    app.selectedProductId,
-    isLoading,
-    optionalDocs.length,
-    requiredDocs.length,
-  ]);
+  }, [app.applicationToken, app.selectedProductId]);
 
   function readFileAsBase64(file: File) {
     return new Promise<string>((resolve, reject) => {
@@ -148,8 +167,13 @@ export function Step5_Documents() {
   async function handleFile(docType: string, file: File | null) {
     if (!file || !app.applicationToken || !app.selectedProductId) return;
 
+    setDocErrors((prev) => ({ ...prev, [docType]: "" }));
+
     if (file.size > 15 * 1024 * 1024) {
-      alert("File too large. Max 15 MB.");
+      setDocErrors((prev) => ({
+        ...prev,
+        [docType]: "File too large. Max 15 MB.",
+      }));
       return;
     }
 
@@ -170,11 +194,15 @@ export function Step5_Documents() {
       allowedExtensions.some((ext) => extension.endsWith(ext));
 
     if (!validType) {
-      alert("Unsupported file type. Allowed: PDF, PNG, JPEG, DOCX, XLSX.");
+      setDocErrors((prev) => ({
+        ...prev,
+        [docType]: "Unsupported file type. Allowed: PDF, PNG, JPEG, DOCX, XLSX.",
+      }));
       return;
     }
 
     try {
+      setUploadingDocs((prev) => ({ ...prev, [docType]: true }));
       const base64 = await readFileAsBase64(file);
       const payload = {
         documents: {
@@ -198,25 +226,44 @@ export function Step5_Documents() {
             base64,
             category: docType,
             productId: app.selectedProductId,
+            status: "uploaded",
           },
         },
       });
+      setDocErrors((prev) => ({ ...prev, [docType]: "" }));
     } catch (error) {
       console.error("Document upload failed:", error);
-      alert("Document upload failed. Please try again.");
+      setDocErrors((prev) => ({
+        ...prev,
+        [docType]: "Document upload failed. Please try again.",
+      }));
+    } finally {
+      setUploadingDocs((prev) => ({ ...prev, [docType]: false }));
     }
   }
 
   function next() {
-    if (missingRequiredDocs.length > 0) {
-      alert("Please upload all required documents.");
+    if (missingRequiredDocs.length > 0 || hasBlockingUploadErrors) {
+      setDocError("Please upload all required documents.");
       return;
     }
     navigate("/apply/step-6");
   }
 
   const canContinue =
-    !docError && !isLoading && missingRequiredDocs.length === 0;
+    !docError &&
+    !isLoading &&
+    missingRequiredDocs.length === 0 &&
+    !hasBlockingUploadErrors &&
+    !hasUploadsInFlight;
+
+  function getDocStatus(docType: string): DocStatus {
+    const entry = app.documents[docType];
+    if (!entry) return "missing";
+    if (entry.status === "accepted") return "accepted";
+    if (entry.status === "rejected") return "rejected";
+    return "uploaded";
+  }
 
   return (
     <WizardLayout>
@@ -253,15 +300,20 @@ export function Step5_Documents() {
             </p>
             <ul className="list-disc pl-5 space-y-1">
               {missingRequiredDocs.map((doc) => (
-                <li key={doc}>{DefaultDocLabels[doc] || doc}</li>
+                <li key={doc}>{formatDocumentLabel(doc)}</li>
               ))}
             </ul>
           </div>
         )}
         <div className="grid md:grid-cols-2 gap-4">
-          {requiredDocs.map((doc) => (
+          {requiredDocs.map((entry) => {
+            const docType = entry.document_type;
+            const docStatus = getDocStatus(docType);
+            const docError = docErrors[docType];
+            const isUploading = uploadingDocs[docType];
+            return (
             <div
-              key={doc}
+              key={entry.id}
               style={{
                 border: `1px solid ${theme.colors.border}`,
                 borderRadius: theme.layout.radius,
@@ -269,36 +321,92 @@ export function Step5_Documents() {
                 background: theme.colors.background,
               }}
             >
-              <div
-                style={{
-                  fontWeight: 600,
-                  marginBottom: theme.spacing.xs,
-                  color: theme.colors.textPrimary,
-                }}
-              >
-                {DefaultDocLabels[doc] || doc}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      color: theme.colors.textPrimary,
+                    }}
+                  >
+                    {formatDocumentLabel(docType)}
+                  </div>
+                  <span
+                    style={{
+                      padding: "4px 10px",
+                      borderRadius: "999px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      background: "rgba(59, 130, 246, 0.12)",
+                      color: "#1d4ed8",
+                      border: "1px solid rgba(59, 130, 246, 0.3)",
+                    }}
+                  >
+                    Required
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: theme.colors.textSecondary,
+                  }}
+                >
+                  Status:{" "}
+                  <span style={{ fontWeight: 600 }}>
+                    {isUploading ? "Uploading" : docStatus}
+                  </span>
+                </div>
               </div>
 
               <Input
+                id={`doc-${entry.id}`}
                 type="file"
+                style={{ display: "none" }}
                 onChange={(e: any) =>
-                  handleFile(doc, e.target.files?.[0] || null)
+                  handleFile(docType, e.target.files?.[0] || null)
                 }
               />
-
-              {app.documents[doc] && (
-                <div
-                  style={{
-                    color: theme.colors.textSecondary,
-                    fontSize: "12px",
-                    marginTop: theme.spacing.xs,
-                  }}
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={isUploading}
+                  onClick={() =>
+                    document.getElementById(`doc-${entry.id}`)?.click()
+                  }
+                  style={{ width: "100%" }}
                 >
-                  Uploaded: {app.documents[doc].name}
-                </div>
-              )}
+                  {isUploading ? "Uploading..." : "Upload"}
+                </Button>
+                {app.documents[docType] && (
+                  <div
+                    style={{
+                      color: theme.colors.textSecondary,
+                      fontSize: "12px",
+                    }}
+                  >
+                    Uploaded: {app.documents[docType].name}
+                  </div>
+                )}
+                {docError && (
+                  <div style={{ color: "#dc2626", fontSize: "12px" }}>
+                    {docError}
+                  </div>
+                )}
+                {!docError && docStatus === "missing" && (
+                  <div style={{ color: "#dc2626", fontSize: "12px" }}>
+                    This document is required.
+                  </div>
+                )}
+                {docStatus === "rejected" && (
+                  <div style={{ color: "#dc2626", fontSize: "12px" }}>
+                    Document rejected. Please upload a new file.
+                  </div>
+                )}
+              </div>
             </div>
-          ))}
+          );
+          })}
         </div>
 
         {optionalDocs.length > 0 && (
@@ -312,35 +420,104 @@ export function Step5_Documents() {
             >
               Optional documents
             </h3>
-            <ul className="list-disc pl-5 text-sm text-slate-600 space-y-1">
-              {optionalDocs.map((doc) => (
-                <li key={doc}>{DefaultDocLabels[doc] || doc}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+            <div className="grid md:grid-cols-2 gap-4">
+              {optionalDocs.map((entry) => {
+                const docType = entry.document_type;
+                const docStatus = getDocStatus(docType);
+                const docError = docErrors[docType];
+                const isUploading = uploadingDocs[docType];
+                return (
+                  <div
+                    key={entry.id}
+                    style={{
+                      border: `1px solid ${theme.colors.border}`,
+                      borderRadius: theme.layout.radius,
+                      padding: theme.spacing.md,
+                      background: theme.colors.background,
+                    }}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            color: theme.colors.textPrimary,
+                          }}
+                        >
+                          {formatDocumentLabel(docType)}
+                        </div>
+                        <span
+                          style={{
+                            padding: "4px 10px",
+                            borderRadius: "999px",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            background: "rgba(148, 163, 184, 0.2)",
+                            color: "#475569",
+                            border: "1px solid rgba(148, 163, 184, 0.4)",
+                          }}
+                        >
+                          Optional
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: theme.colors.textSecondary,
+                        }}
+                      >
+                        Status:{" "}
+                        <span style={{ fontWeight: 600 }}>
+                          {isUploading ? "Uploading" : docStatus}
+                        </span>
+                      </div>
+                    </div>
 
-        {conditionalDocs.length > 0 && (
-          <div className="space-y-3">
-            <h3
-              style={{
-                fontSize: theme.typography.h3.fontSize,
-                fontWeight: theme.typography.h3.fontWeight,
-                color: theme.colors.textPrimary,
-              }}
-            >
-              Conditional documents
-            </h3>
-            {conditionalDocs.map((entry, index) => (
-              <div key={`${entry.label}-${index}`} className="space-y-1">
-                <div style={{ fontWeight: 600 }}>{entry.label}</div>
-                <ul className="list-disc pl-5 text-sm text-slate-600 space-y-1">
-                  {entry.documents.map((doc) => (
-                    <li key={doc}>{DefaultDocLabels[doc] || doc}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+                    <Input
+                      id={`doc-${entry.id}`}
+                      type="file"
+                      style={{ display: "none" }}
+                      onChange={(e: any) =>
+                        handleFile(docType, e.target.files?.[0] || null)
+                      }
+                    />
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={isUploading}
+                        onClick={() =>
+                          document.getElementById(`doc-${entry.id}`)?.click()
+                        }
+                        style={{ width: "100%" }}
+                      >
+                        {isUploading ? "Uploading..." : "Upload"}
+                      </Button>
+                      {app.documents[docType] && (
+                        <div
+                          style={{
+                            color: theme.colors.textSecondary,
+                            fontSize: "12px",
+                          }}
+                        >
+                          Uploaded: {app.documents[docType].name}
+                        </div>
+                      )}
+                      {docError && (
+                        <div style={{ color: "#dc2626", fontSize: "12px" }}>
+                          {docError}
+                        </div>
+                      )}
+                      {docStatus === "rejected" && (
+                        <div style={{ color: "#dc2626", fontSize: "12px" }}>
+                          Document rejected. Please upload a new file.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </Card>

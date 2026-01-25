@@ -12,6 +12,14 @@ export type ClientLenderProduct = {
   status?: string;
 };
 
+export type LenderProductRequirement = {
+  id: string;
+  document_type: string;
+  required: boolean;
+  min_amount?: number | null;
+  max_amount?: number | null;
+};
+
 export async function getClientLenders(): Promise<ClientLender[]> {
   const res = await api.get("/api/client/lenders");
   return res.data.data;
@@ -22,7 +30,9 @@ export async function getClientLenderProducts(): Promise<ClientLenderProduct[]> 
   return res.data.data;
 }
 
-export async function getClientLenderProductRequirements(productId: string) {
+export async function getClientLenderProductRequirements(
+  productId: string
+): Promise<LenderProductRequirement[]> {
   const res = await api.get(`/api/client/lender-products/${productId}/requirements`);
   return res.data.data ?? res.data;
 }
