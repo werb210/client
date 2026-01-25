@@ -27,7 +27,18 @@ export interface ApplicationData {
       base64: string;
       category: string;
       productId?: string;
+      status?: "uploaded" | "accepted" | "rejected";
     }
+  >;
+  productRequirements?: Record<
+    string,
+    {
+      id: string;
+      document_type: string;
+      required: boolean;
+      min_amount?: number | null;
+      max_amount?: number | null;
+    }[]
   >;
   documentsDeferred?: boolean;
   selectedProduct?: SelectedProduct;

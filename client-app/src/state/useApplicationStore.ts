@@ -13,6 +13,7 @@ const emptyApp: ApplicationData = {
   business: {},
   applicant: {},
   documents: {},
+  productRequirements: {},
   documentsDeferred: false,
   selectedProduct: undefined,
   selectedProductId: undefined,
@@ -37,25 +38,28 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
   const savedBusiness = saved.business || {};
   const savedApplicant = saved.applicant || {};
   const savedDocuments = saved.documents || {};
-    const normalizedDocuments = Object.fromEntries(
-      Object.entries(savedDocuments).map(([key, value]) => {
-        const entry = value as {
-          name?: string;
-          base64?: string;
-          category?: string;
-          productId?: string;
-        };
-        return [
-          key,
-          {
-            name: entry.name || key,
-            base64: entry.base64 || "",
-            category: entry.category || key,
-            productId: entry.productId,
-          },
-        ];
-      })
-    );
+  const savedProductRequirements = saved.productRequirements || {};
+  const normalizedDocuments = Object.fromEntries(
+    Object.entries(savedDocuments).map(([key, value]) => {
+      const entry = value as {
+        name?: string;
+        base64?: string;
+        category?: string;
+        productId?: string;
+        status?: "uploaded" | "accepted" | "rejected";
+      };
+      return [
+        key,
+        {
+          name: entry.name || key,
+          base64: entry.base64 || "",
+          category: entry.category || key,
+          productId: entry.productId,
+          status: entry.status,
+        },
+      ];
+    })
+  );
   const savedClosingCostFunding =
     typeof saved.requires_closing_cost_funding === "boolean"
       ? saved.requires_closing_cost_funding
@@ -76,6 +80,10 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
     business: { ...emptyApp.business, ...savedBusiness },
     applicant: { ...emptyApp.applicant, ...savedApplicant },
     documents: { ...emptyApp.documents, ...normalizedDocuments },
+    productRequirements: {
+      ...emptyApp.productRequirements,
+      ...savedProductRequirements,
+    },
   };
 }
 
