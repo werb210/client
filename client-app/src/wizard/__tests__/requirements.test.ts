@@ -13,6 +13,7 @@ describe("requirements normalization", () => {
         document_type: "bank_statements",
         required: true,
       },
+      "tax_returns",
       {
         id: "req-2",
         document_type: "financials",
@@ -30,9 +31,10 @@ describe("requirements normalization", () => {
     const normalized = normalizeRequirementList(raw);
     const filtered = filterRequirementsByAmount(normalized, 60000);
 
-    expect(normalized).toHaveLength(3);
+    expect(normalized).toHaveLength(4);
     expect(filtered.map((entry) => entry.document_type)).toEqual([
       "bank_statements",
+      "tax_returns",
       "financials",
     ]);
   });

@@ -9,6 +9,11 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { WizardLayout } from "../components/WizardLayout";
 import { theme } from "../styles/theme";
+import { submitApplication } from "../api/applications";
+import {
+  buildSubmissionPayload,
+  getMissingRequiredDocs,
+} from "./submission";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -46,8 +51,9 @@ export function Step6_Review() {
       return;
     }
 
-    if (!app.documentsDeferred && Object.keys(app.documents || {}).length === 0) {
-      setSubmitError("Please upload required documents or choose to upload later.");
+    const missingRequiredDocs = getMissingRequiredDocs(app);
+    if (!app.documentsDeferred && missingRequiredDocs.length > 0) {
+      setSubmitError("Please upload all required documents before submitting.");
       return;
     }
 
@@ -77,7 +83,8 @@ export function Step6_Review() {
         signatureDate: app.signatureDate || today,
         currentStep: app.currentStep,
       });
-      await ClientAppAPI.submit(app.applicationToken);
+      const payload = buildSubmissionPayload(app);
+      await submitApplication(payload);
       setSubmitted(true);
     } catch (error) {
       console.error("Submission failed:", error);

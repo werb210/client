@@ -15,14 +15,26 @@ export function normalizeRequirementList(
 
   return raw
     .map((entry: any) => {
-      const documentType = typeof entry?.document_type === "string"
-        ? entry.document_type.trim()
-        : "";
+      if (typeof entry === "string") {
+        const trimmed = entry.trim();
+        if (!trimmed) return null;
+        return {
+          id: trimmed,
+          document_type: trimmed,
+          required: true,
+          min_amount: null,
+          max_amount: null,
+        } as LenderProductRequirement;
+      }
+      const documentType =
+        typeof entry?.document_type === "string"
+          ? entry.document_type.trim()
+          : "";
       if (!documentType) return null;
       return {
         id: String(entry?.id ?? documentType),
         document_type: documentType,
-        required: Boolean(entry?.required),
+        required: Boolean(entry?.required ?? true),
         min_amount:
           typeof entry?.min_amount === "number" ? entry.min_amount : null,
         max_amount:

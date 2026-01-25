@@ -4,11 +4,15 @@ export type ClientLender = { id: string; name: string };
 export type ClientLenderProduct = {
   id: string;
   name: string;
-  product_type: string;
-  min_amount: number | null;
-  max_amount: number | null;
+  product_type?: string;
+  country: string;
+  amount_min: number | null;
+  amount_max: number | null;
+  term?: string | number | null;
+  rate?: number | string | null;
+  required_documents?: unknown[];
   lender_id: string;
-  lender_name: string;
+  lender_name?: string;
   status?: string;
 };
 
@@ -26,13 +30,9 @@ export async function getClientLenders(): Promise<ClientLender[]> {
 }
 
 export async function getClientLenderProducts(): Promise<ClientLenderProduct[]> {
-  const res = await api.get("/api/client/lender-products");
-  return res.data.data;
-}
-
-export async function getClientLenderProductRequirements(
-  productId: string
-): Promise<LenderProductRequirement[]> {
-  const res = await api.get(`/api/client/lender-products/${productId}/requirements`);
-  return res.data.data ?? res.data;
+  const res = await api.get("/api/lender-products");
+  if (Array.isArray(res.data?.data)) {
+    return res.data.data;
+  }
+  return Array.isArray(res.data) ? res.data : [];
 }
