@@ -4,6 +4,13 @@ import type {
   NormalizedLenderProduct,
 } from "../lender/eligibility";
 
+export type SelectedProduct = {
+  id: string;
+  name: string;
+  product_type: string;
+  lender_id: string;
+};
+
 export interface ApplicationData {
   kyc: any;
   productCategory: string | null;
@@ -22,6 +29,7 @@ export interface ApplicationData {
     }
   >;
   documentsDeferred?: boolean;
+  selectedProduct?: SelectedProduct;
 
   /**
    * Indicates whether the applicant requires additional funding to cover
