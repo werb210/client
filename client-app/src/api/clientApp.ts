@@ -25,7 +25,15 @@ export const ClientAppAPI = {
   update(token: string, payload: any) {
     return withRetry(() => api.patch(`/api/applications/${token}`, payload));
   },
-  uploadDoc(token: string, payload: { documents: Record<string, { name: string; base64: string }> }) {
+  uploadDoc(
+    token: string,
+    payload: {
+      documents: Record<
+        string,
+        { name: string; base64: string; productId?: string; documentCategory?: string }
+      >;
+    }
+  ) {
     return withRetry(() =>
       api.patch(`/api/applications/${token}`, payload)
     );

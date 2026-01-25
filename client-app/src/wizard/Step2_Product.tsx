@@ -1,63 +1,74 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  getClientLenderProducts,
+  type ClientLenderProduct,
+} from "../api/lenders";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { WizardLayout } from "../components/WizardLayout";
 import { theme } from "../styles/theme";
-import { getEligibilityResult } from "../lender/eligibility";
-import { ProductSync } from "../lender/productSync";
+import {
+  filterActiveProducts,
+  isAmountWithinRange,
+  parseCurrencyAmount,
+  type ActiveProduct,
+} from "./productSelection";
+import { formatCurrencyValue, getCountryCode } from "../utils/location";
 
-const EQUIPMENT_FINANCING_CATEGORY = "Equipment Financing";
+const emptyStateStyles = {
+  border: `1px solid ${theme.colors.border}`,
+  borderRadius: theme.layout.radius,
+  padding: theme.spacing.md,
+  background: "rgba(220, 38, 38, 0.08)",
+  color: theme.colors.textPrimary,
+  fontSize: "14px",
+};
+
+function formatAmount(amount: number | null | undefined, countryCode: string) {
+  if (typeof amount !== "number") return "N/A";
+  return formatCurrencyValue(String(amount), countryCode) || amount.toString();
+}
 
 export function Step2_Product() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<ActiveProduct[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showClosingCostModal, setShowClosingCostModal] = useState(false);
-
-  const eligibility = useMemo(
-    () =>
-      getEligibilityResult(
-        products,
-        {
-          fundingIntent: app.kyc.lookingFor,
-          amountRequested: app.kyc.fundingAmount,
-          businessLocation: app.kyc.businessLocation,
-          accountsReceivableBalance: app.kyc.accountsReceivable,
-        },
-        app.matchPercentages
-      ),
-    [
-      app.kyc.accountsReceivable,
-      app.kyc.businessLocation,
-      app.kyc.fundingAmount,
-      app.kyc.lookingFor,
-      app.matchPercentages,
-      products,
-    ]
+  const countryCode = useMemo(
+    () => getCountryCode(app.kyc.businessLocation),
+    [app.kyc.businessLocation]
   );
 
-  const categories = eligibility.categories;
-  const eligibilitySnapshot = useMemo(
-    () =>
-      JSON.stringify({
-        eligibleProducts: eligibility.eligibleProducts,
-        eligibleCategories: eligibility.categories,
-        eligibilityReasons: eligibility.reasons,
-      }),
-    [eligibility]
+  const selectedProduct = useMemo(
+    () => products.find((product) => product.id === app.selectedProductId),
+    [app.selectedProductId, products]
   );
-
-  const previousInputs = useRef({
-    lookingFor: app.kyc.lookingFor,
-    fundingAmount: app.kyc.fundingAmount,
-    businessLocation: app.kyc.businessLocation,
-    accountsReceivable: app.kyc.accountsReceivable,
-  });
+  const amountValue = useMemo(
+    () => parseCurrencyAmount(app.kyc.fundingAmount),
+    [app.kyc.fundingAmount]
+  );
+  const amountValid = selectedProduct
+    ? isAmountWithinRange(
+        amountValue,
+        selectedProduct.min_amount,
+        selectedProduct.max_amount
+      )
+    : false;
+  const amountError =
+    selectedProduct && !amountValid
+      ? `Requested amount must be between ${formatAmount(
+          selectedProduct.min_amount,
+          countryCode
+        )} and ${formatAmount(selectedProduct.max_amount, countryCode)}.`
+      : null;
+  const amountDisplay = app.kyc.fundingAmount
+    ? formatCurrencyValue(String(amountValue), countryCode) ||
+      app.kyc.fundingAmount
+    : "Not provided";
 
   useEffect(() => {
     if (app.currentStep !== 2) {
@@ -71,9 +82,24 @@ export function Step2_Product() {
       setIsLoading(true);
       setLoadError(null);
       try {
-        const synced = await ProductSync.sync();
+        const rows = await getClientLenderProducts();
+        const activeProducts = filterActiveProducts(
+          rows as ActiveProduct[]
+        ).sort((a, b) => a.name.localeCompare(b.name));
         if (active) {
-          setProducts(synced);
+          setProducts(activeProducts);
+          if (
+            app.selectedProductId &&
+            !activeProducts.some((product) => product.id === app.selectedProductId)
+          ) {
+            update({
+              selectedProduct: undefined,
+              selectedProductId: undefined,
+              selectedProductType: undefined,
+              documents: {},
+              documentsDeferred: false,
+            });
+          }
         }
       } catch (error) {
         console.error("Failed to load lender products:", error);
@@ -94,98 +120,22 @@ export function Step2_Product() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [app.selectedProductId, update]);
 
-  useEffect(() => {
-    if (eligibilitySnapshot) {
-      const currentSnapshot = JSON.stringify({
-        eligibleProducts: app.eligibleProducts,
-        eligibleCategories: app.eligibleCategories,
-        eligibilityReasons: app.eligibilityReasons,
-      });
-      if (currentSnapshot !== eligibilitySnapshot) {
-        update({
-          eligibleProducts: eligibility.eligibleProducts,
-          eligibleCategories: eligibility.categories,
-          eligibilityReasons: eligibility.reasons,
-        });
-      }
-    }
-  }, [
-    app.eligibleCategories,
-    app.eligibleProducts,
-    app.eligibilityReasons,
-    eligibility,
-    eligibilitySnapshot,
-    update,
-  ]);
-
-  useEffect(() => {
-    const currentInputs = {
-      lookingFor: app.kyc.lookingFor,
-      fundingAmount: app.kyc.fundingAmount,
-      businessLocation: app.kyc.businessLocation,
-      accountsReceivable: app.kyc.accountsReceivable,
-    };
-    const changed = Object.keys(currentInputs).some(
-      (key) =>
-        currentInputs[key as keyof typeof currentInputs] !==
-        previousInputs.current[key as keyof typeof currentInputs]
-    );
-
-    if (changed && (app.productCategory || app.requires_closing_cost_funding)) {
-      update({ productCategory: null, requires_closing_cost_funding: false });
-    }
-
-    previousInputs.current = currentInputs;
-  }, [
-    app.kyc.accountsReceivable,
-    app.kyc.businessLocation,
-    app.kyc.fundingAmount,
-    app.kyc.lookingFor,
-    app.productCategory,
-    app.requires_closing_cost_funding,
-    update,
-  ]);
-
-  useEffect(() => {
-    const current = categories.find(
-      (category) => category.name === app.productCategory
-    );
-    if (app.productCategory && !current) {
-      update({ productCategory: null, requires_closing_cost_funding: false });
-      return;
-    }
-
-    if (categories.length === 1) {
-      const onlyOption = categories[0].name;
-      if (
-        onlyOption !== EQUIPMENT_FINANCING_CATEGORY &&
-        app.productCategory !== onlyOption
-      ) {
-        update({
-          productCategory: onlyOption,
-          requires_closing_cost_funding: false,
-        });
-      }
-    }
-  }, [app.productCategory, categories, update]);
-
-  function select(name: string) {
-    if (name === EQUIPMENT_FINANCING_CATEGORY) {
-      setShowClosingCostModal(true);
-      return;
-    }
-
-    update({ productCategory: name, requires_closing_cost_funding: false });
-  }
-
-  function handleClosingCostResponse(needsFunding: boolean) {
+  function select(product: ClientLenderProduct) {
     update({
-      productCategory: EQUIPMENT_FINANCING_CATEGORY,
-      requires_closing_cost_funding: needsFunding,
+      productCategory: null,
+      selectedProduct: {
+        id: product.id,
+        name: product.name,
+        product_type: product.product_type,
+        lender_id: product.lender_id,
+      },
+      selectedProductId: product.id,
+      selectedProductType: product.product_type,
+      documents: {},
+      documentsDeferred: false,
     });
-    setShowClosingCostModal(false);
   }
 
   function goBack() {
@@ -193,68 +143,63 @@ export function Step2_Product() {
   }
 
   function goNext() {
-    if (!app.productCategory) return;
+    if (!selectedProduct || !amountValid || loadError) return;
     navigate("/apply/step-3");
   }
 
-  return (
-    <>
-      <WizardLayout>
-        <StepHeader step={2} title="Choose Product Category" />
+  const noProducts = !isLoading && products.length === 0 && !loadError;
 
-        <Card className="space-y-4">
+  return (
+    <WizardLayout>
+      <StepHeader step={2} title="Choose a Product" />
+
+      <Card className="space-y-4">
+        {loadError && <div style={emptyStateStyles}>{loadError}</div>}
+        {!loadError && noProducts && (
+          <div style={emptyStateStyles}>No products available.</div>
+        )}
+        {!loadError && !noProducts && (
           <div className="space-y-4">
-            {loadError && (
-              <div
-                style={{
-                  border: `1px solid ${theme.colors.border}`,
-                  borderRadius: theme.layout.radius,
-                  padding: theme.spacing.md,
-                  background: "rgba(220, 38, 38, 0.08)",
-                  color: theme.colors.textPrimary,
-                  fontSize: "14px",
-                }}
-              >
-                {loadError}
-              </div>
-            )}
-            {!loadError && !isLoading && categories.length === 0 && (
-              <div
-                style={{
-                  border: `1px solid ${theme.colors.border}`,
-                  borderRadius: theme.layout.radius,
-                  padding: theme.spacing.md,
-                  background: "rgba(220, 38, 38, 0.08)",
-                  color: theme.colors.textPrimary,
-                  fontSize: "14px",
-                }}
-              >
-                No lender products are available for your profile. Please update
-                your Step 1 details or try again later.
-              </div>
-            )}
-            {categories.map((category) => {
-              const isSelected = app.productCategory === category.name;
-              return (
-                <Card
-                  key={category.name}
-                  onClick={() => select(category.name)}
-                  style={{
-                    borderColor: isSelected
-                      ? "#22c55e"
-                      : theme.colors.border,
-                    boxShadow: isSelected
-                      ? "0 0 0 2px rgba(34, 197, 94, 0.24)"
-                      : "0 4px 16px rgba(15, 23, 42, 0.08)",
-                    cursor: "pointer",
-                    background: isSelected
-                      ? "rgba(34, 197, 94, 0.08)"
-                      : "white",
-                  }}
-                >
-                  <div className="flex flex-col gap-3">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
+            <div
+              style={{
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: theme.layout.radius,
+                padding: theme.spacing.md,
+                background: theme.colors.background,
+                fontSize: "14px",
+                color: theme.colors.textSecondary,
+              }}
+            >
+              Requested amount:{" "}
+              <span style={{ color: theme.colors.textPrimary, fontWeight: 600 }}>
+                {amountDisplay}
+              </span>
+              {amountError && (
+                <div style={{ color: "#dc2626", marginTop: theme.spacing.xs }}>
+                  {amountError}
+                </div>
+              )}
+            </div>
+            <div className="grid gap-4">
+              {products.map((product) => {
+                const isSelected = product.id === app.selectedProductId;
+                return (
+                  <Card
+                    key={product.id}
+                    onClick={() => select(product)}
+                    style={{
+                      borderColor: isSelected ? "#22c55e" : theme.colors.border,
+                      boxShadow: isSelected
+                        ? "0 0 0 2px rgba(34, 197, 94, 0.24)"
+                        : "0 4px 16px rgba(15, 23, 42, 0.08)",
+                      cursor: "pointer",
+                      background: isSelected
+                        ? "rgba(34, 197, 94, 0.08)"
+                        : "white",
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-2">
                         <div
                           style={{
                             fontSize: theme.typography.h2.fontSize,
@@ -262,8 +207,33 @@ export function Step2_Product() {
                             color: theme.colors.textPrimary,
                           }}
                         >
-                          {category.name}
+                          {product.name}
                         </div>
+                        <div style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
+                          Type: {product.product_type}
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-sm text-slate-600">
+                          <span>
+                            Min: {formatAmount(product.min_amount, countryCode)}
+                          </span>
+                          <span>
+                            Max: {formatAmount(product.max_amount, countryCode)}
+                          </span>
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: theme.spacing.xs,
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          checked={isSelected}
+                          onChange={() => select(product)}
+                          aria-label={`Select ${product.name}`}
+                        />
                         {isSelected && (
                           <span
                             style={{
@@ -280,118 +250,40 @@ export function Step2_Product() {
                           </span>
                         )}
                       </div>
-                      <p
-                        style={{
-                          fontSize: "14px",
-                          color: theme.colors.textSecondary,
-                        }}
-                      >
-                        {category.productCount} products available (Match score{" "}
-                        {category.matchScore}%)
-                      </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          borderRadius: "999px",
-                          padding: "6px 12px",
-                          fontSize: "12px",
-                          fontWeight: 600,
-                          background: "rgba(15, 23, 42, 0.06)",
-                          color: theme.colors.textSecondary,
-                        }}
-                      >
-                        {category.matchScore}% Match
-                      </span>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        </Card>
-
-        <div
-          className="flex flex-col sm:flex-row gap-3"
-          style={{ marginTop: theme.spacing.lg }}
-        >
-          <Button
-            variant="secondary"
-            style={{ width: "100%", maxWidth: "160px" }}
-            onClick={goBack}
-          >
-            ← Back
-          </Button>
-          <Button
-            style={{ width: "100%", maxWidth: "200px" }}
-            onClick={goNext}
-            disabled={!app.productCategory || Boolean(loadError)}
-          >
-            Continue →
-          </Button>
-        </div>
-      </WizardLayout>
-
-      {showClosingCostModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.12)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: theme.spacing.md,
-            zIndex: 50,
-          }}
-        >
-          <div
-            style={{
-              background: theme.colors.surface,
-              borderRadius: theme.layout.radius,
-              border: `1px solid ${theme.colors.border}`,
-              padding: theme.spacing.lg,
-              maxWidth: "460px",
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              gap: theme.spacing.sm,
-            }}
-          >
-            <h2
-              style={{
-                fontSize: theme.typography.h2.fontSize,
-                fontWeight: theme.typography.h2.fontWeight,
-                color: theme.colors.textPrimary,
-              }}
-            >
-              Equipment financing deposit
-            </h2>
-            <p style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
-              Will you require funding for closing costs or a deposit for an
-              equipment purchase?
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                style={{ width: "100%" }}
-                onClick={() => handleClosingCostResponse(true)}
-              >
-                Yes, I need funding
-              </Button>
-              <Button
-                variant="secondary"
-                style={{ width: "100%" }}
-                onClick={() => handleClosingCostResponse(false)}
-              >
-                No, I do not
-              </Button>
+                  </Card>
+                );
+              })}
             </div>
           </div>
-        </div>
-      )}
-    </>
+        )}
+      </Card>
+
+      <div
+        className="flex flex-col sm:flex-row gap-3"
+        style={{ marginTop: theme.spacing.lg }}
+      >
+        <Button
+          variant="secondary"
+          style={{ width: "100%", maxWidth: "160px" }}
+          onClick={goBack}
+        >
+          ← Back
+        </Button>
+        <Button
+          style={{ width: "100%", maxWidth: "200px" }}
+          onClick={goNext}
+          disabled={
+            !selectedProduct ||
+            !amountValid ||
+            Boolean(loadError) ||
+            noProducts
+          }
+        >
+          Continue →
+        </Button>
+      </div>
+    </WizardLayout>
   );
 }
 

@@ -26,10 +26,13 @@ export interface ApplicationData {
       name: string;
       base64: string;
       category: string;
+      productId?: string;
     }
   >;
   documentsDeferred?: boolean;
   selectedProduct?: SelectedProduct;
+  selectedProductId?: string;
+  selectedProductType?: string;
 
   /**
    * Indicates whether the applicant requires additional funding to cover
