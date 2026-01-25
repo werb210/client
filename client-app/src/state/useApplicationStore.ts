@@ -15,6 +15,8 @@ const emptyApp: ApplicationData = {
   documents: {},
   documentsDeferred: false,
   selectedProduct: undefined,
+  selectedProductId: undefined,
+  selectedProductType: undefined,
   requires_closing_cost_funding: false,
   termsAccepted: false,
   typedSignature: "",
@@ -35,19 +37,25 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
   const savedBusiness = saved.business || {};
   const savedApplicant = saved.applicant || {};
   const savedDocuments = saved.documents || {};
-  const normalizedDocuments = Object.fromEntries(
-    Object.entries(savedDocuments).map(([key, value]) => {
-      const entry = value as { name?: string; base64?: string; category?: string };
-      return [
-        key,
-        {
-          name: entry.name || key,
-          base64: entry.base64 || "",
-          category: entry.category || key,
-        },
-      ];
-    })
-  );
+    const normalizedDocuments = Object.fromEntries(
+      Object.entries(savedDocuments).map(([key, value]) => {
+        const entry = value as {
+          name?: string;
+          base64?: string;
+          category?: string;
+          productId?: string;
+        };
+        return [
+          key,
+          {
+            name: entry.name || key,
+            base64: entry.base64 || "",
+            category: entry.category || key,
+            productId: entry.productId,
+          },
+        ];
+      })
+    );
   const savedClosingCostFunding =
     typeof saved.requires_closing_cost_funding === "boolean"
       ? saved.requires_closing_cost_funding
@@ -128,6 +136,9 @@ export function useApplicationStore() {
         void ClientAppAPI.update(app.applicationToken, {
           financialProfile: app.kyc,
           productCategory: app.productCategory,
+          selectedProduct: app.selectedProduct,
+          selectedProductId: app.selectedProductId,
+          selectedProductType: app.selectedProductType,
           requires_closing_cost_funding: app.requires_closing_cost_funding,
           business: app.business,
           applicant: app.applicant,

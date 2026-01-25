@@ -41,8 +41,8 @@ export function Step6_Review() {
       return;
     }
 
-    if (!app.productCategory) {
-      setSubmitError("Missing product category. Please return to Step 2.");
+    if (!app.selectedProductId) {
+      setSubmitError("Missing product selection. Please return to Step 2.");
       return;
     }
 
@@ -64,7 +64,9 @@ export function Step6_Review() {
     try {
       await ClientAppAPI.update(app.applicationToken, {
         financialProfile: app.kyc,
-        productCategory: app.productCategory,
+        selectedProduct: app.selectedProduct,
+        selectedProductId: app.selectedProductId,
+        selectedProductType: app.selectedProductType,
         requires_closing_cost_funding: app.requires_closing_cost_funding,
         business: app.business,
         applicant: app.applicant,
