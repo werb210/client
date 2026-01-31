@@ -13,12 +13,12 @@ import {
 export function useChatbot() {
   const staticSteps = useMemo(
     () => [
-      { step: 1, title: "Financial Profile" },
-      { step: 2, title: "Choose Product Category" },
-      { step: 3, title: "Business Details" },
-      { step: 4, title: "Applicant Details" },
+      { step: 1, title: "Know Your Client" },
+      { step: 2, title: "Product Category Selection" },
+      { step: 3, title: "Business Information" },
+      { step: 4, title: "Applicant Information" },
       { step: 5, title: "Required Documents" },
-      { step: 6, title: "Terms & Signature" },
+      { step: 6, title: "Terms & Typed Signature" },
     ],
     []
   );

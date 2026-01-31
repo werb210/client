@@ -16,6 +16,7 @@ import {
   filterProductsForApplicant,
   groupProductsByLender,
   isAmountWithinRange,
+  matchesCountry,
   parseCurrencyAmount,
   type ActiveProduct,
 } from "./productSelection";
@@ -25,6 +26,8 @@ import {
   formatDocumentLabel,
   normalizeRequirementList,
 } from "./requirements";
+import { getEligibilityResult } from "../lender/eligibility";
+import type { NormalizedLenderProduct } from "../lender/eligibility";
 
 const emptyStateStyles = {
   border: `1px solid ${theme.colors.border}`,
@@ -86,12 +89,100 @@ export function Step2_Product() {
     () => selectedRequirements.filter((entry) => entry.required),
     [selectedRequirements]
   );
+  const isEquipmentIntent = useMemo(() => {
+    const intent = (app.kyc.lookingFor || "").toLowerCase();
+    return (
+      intent.includes("equipment") ||
+      (selectedProduct?.product_type || "").toLowerCase().includes("equipment")
+    );
+  }, [app.kyc.lookingFor, selectedProduct?.product_type]);
+
+  const normalizedProducts = useMemo(() => {
+    return products.map((product) => ({
+      productId: product.id,
+      category: product.product_type ?? product.name,
+      minAmount: product.amount_min ?? 0,
+      maxAmount: product.amount_max ?? 0,
+      supportedCountries: product.country ? [product.country] : [],
+      requiredDocs: normalizeRequirementList(
+        product.required_documents ?? []
+      ).map((entry) => entry.document_type),
+    })) as NormalizedLenderProduct[];
+  }, [products]);
+
+  const eligibility = useMemo(() => {
+    return getEligibilityResult(
+      normalizedProducts,
+      {
+        fundingIntent: app.kyc.lookingFor,
+        amountRequested: app.kyc.fundingAmount,
+        businessLocation: app.kyc.businessLocation,
+        accountsReceivableBalance: app.kyc.accountsReceivable,
+      },
+      app.matchPercentages
+    );
+  }, [
+    app.kyc.accountsReceivable,
+    app.kyc.businessLocation,
+    app.kyc.fundingAmount,
+    app.kyc.lookingFor,
+    app.matchPercentages,
+    normalizedProducts,
+  ]);
+
+  const categorySummaries = useMemo(() => {
+    const relevant = products.filter((product) =>
+      matchesCountry(product.country, countryCode)
+    );
+    const grouped = new Map<string, ActiveProduct[]>();
+    relevant.forEach((product) => {
+      const key = product.product_type ?? product.name;
+      const list = grouped.get(key) || [];
+      list.push(product);
+      grouped.set(key, list);
+    });
+    return Array.from(grouped.entries())
+      .map(([category, list]) => {
+        const amounts = list
+          .map((product) => ({
+            min: product.amount_min ?? 0,
+            max: product.amount_max ?? 0,
+          }))
+          .filter((range) => range.min || range.max);
+        const min = Math.min(...amounts.map((range) => range.min || 0));
+        const max = Math.max(...amounts.map((range) => range.max || 0));
+        const matchingCount = list.filter((product) =>
+          isAmountWithinRange(
+            amountValue,
+            product.amount_min,
+            product.amount_max
+          )
+        ).length;
+        return {
+          category,
+          totalCount: list.length,
+          matchingCount,
+          minAmount: Number.isFinite(min) ? min : 0,
+          maxAmount: Number.isFinite(max) ? max : 0,
+        };
+      })
+      .sort((a, b) => a.category.localeCompare(b.category));
+  }, [amountValue, countryCode, products]);
 
   useEffect(() => {
     if (app.currentStep !== 2) {
       update({ currentStep: 2 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    if (!normalizedProducts.length) return;
+    update({
+      eligibleProducts: eligibility.eligibleProducts,
+      eligibleCategories: eligibility.categories,
+      eligibilityReasons: eligibility.reasons,
+    });
+  }, [eligibility, normalizedProducts.length, update]);
 
   useEffect(() => {
     let active = true;
@@ -211,13 +302,67 @@ export function Step2_Product() {
 
   return (
     <WizardLayout>
-      <StepHeader step={2} title="Choose a Product" />
+      <StepHeader step={2} title="Product Category Selection" />
 
       <Card className="space-y-4">
+        {categorySummaries.length > 0 && (
+          <div
+            style={{
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: theme.layout.radius,
+              padding: theme.spacing.md,
+              background: "rgba(59, 130, 246, 0.08)",
+            }}
+          >
+            <div className="text-sm uppercase tracking-[0.18em] text-slate-400">
+              Product categories
+            </div>
+            <div className="grid md:grid-cols-2 gap-3 mt-3">
+              {categorySummaries.map((summary) => {
+                const amountTooLow =
+                  amountValue > 0 && summary.matchingCount === 0 &&
+                  amountValue < summary.minAmount;
+                const amountTooHigh =
+                  amountValue > 0 && summary.matchingCount === 0 &&
+                  amountValue > summary.maxAmount;
+                return (
+                  <div
+                    key={summary.category}
+                    className="rounded-xl border border-slate-200 bg-white p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-semibold text-borealBlue">
+                        {summary.category}
+                      </div>
+                      <span className="text-xs font-semibold text-slate-500">
+                        {summary.matchingCount} match{summary.matchingCount === 1 ? "" : "es"}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500 mt-2">
+                      Range: {formatAmount(summary.minAmount, countryCode)} to{" "}
+                      {formatAmount(summary.maxAmount, countryCode)} · {summary.totalCount} total
+                    </div>
+                    {(amountTooLow || amountTooHigh) && (
+                      <div className="text-xs text-amber-700 mt-2">
+                        {amountTooLow && "Requested amount is below the minimum for this category."}
+                        {amountTooHigh && "Requested amount is above the maximum for this category."}
+                        <div>
+                          Try between {formatAmount(summary.minAmount, countryCode)} and{" "}
+                          {formatAmount(summary.maxAmount, countryCode)}.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {loadError && <div style={emptyStateStyles}>{loadError}</div>}
         {!loadError && noProducts && (
           <div style={emptyStateStyles}>
-            No products match your location and requested amount.
+            No products match your location and requested amount. Review the
+            category ranges above for alternatives.
           </div>
         )}
         {!loadError && !noProducts && (
@@ -395,6 +540,28 @@ export function Step2_Product() {
           </div>
         )}
       </Card>
+
+      {isEquipmentIntent && (
+        <Card className="mt-4">
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={Boolean(app.requires_closing_cost_funding)}
+              onChange={(event) =>
+                update({ requires_closing_cost_funding: event.target.checked })
+              }
+            />
+            <div className="space-y-1 text-sm text-slate-600">
+              <div className="font-semibold text-borealBlue">
+                Need closing cost or deposit funding?
+              </div>
+              <div>
+                Select this if you want a linked application for closing costs.
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div
         className="flex flex-col sm:flex-row gap-3"

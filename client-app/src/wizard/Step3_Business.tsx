@@ -103,7 +103,7 @@ export function Step3_Business() {
 
   return (
     <WizardLayout>
-      <StepHeader step={3} title="Business Details" />
+      <StepHeader step={3} title="Business Information" />
 
       <Card className="space-y-5">
         <div className="grid md:grid-cols-2 gap-4">

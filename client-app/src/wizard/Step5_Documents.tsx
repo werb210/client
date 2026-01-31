@@ -4,18 +4,18 @@ import { useApplicationStore } from "../state/useApplicationStore";
 import { ClientAppAPI } from "../api/clientApp";
 import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
-import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { WizardLayout } from "../components/WizardLayout";
 import { theme } from "../styles/theme";
 import { ProductSync } from "../lender/productSync";
 import {
-  filterRequirementsByAmount,
   formatDocumentLabel,
   normalizeRequirementList,
   sortRequirements,
   type LenderProductRequirement,
 } from "./requirements";
+import { filterProductsForApplicant, parseCurrencyAmount } from "./productSelection";
+import { getCountryCode } from "../utils/location";
 
 type DocStatus = "missing" | "uploaded" | "accepted" | "rejected";
 
@@ -29,22 +29,13 @@ export function Step5_Documents() {
   const [isLoading, setIsLoading] = useState(true);
   const [docErrors, setDocErrors] = useState<Record<string, string>>({});
   const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>({});
+  const ALWAYS_REQUIRED_DOCS = ["bank_statements"];
 
-  const requirements = useMemo(
-    () => filterRequirementsByAmount(requirementsRaw, app.kyc.fundingAmount),
-    [app.kyc.fundingAmount, requirementsRaw]
-  );
-
-  const orderedRequirements = useMemo(
-    () => sortRequirements(requirements),
-    [requirements]
-  );
+  const orderedRequirements = useMemo(() => {
+    return sortRequirements(requirementsRaw);
+  }, [requirementsRaw]);
   const requiredDocs = useMemo(
     () => orderedRequirements.filter((entry) => entry.required),
-    [orderedRequirements]
-  );
-  const optionalDocs = useMemo(
-    () => orderedRequirements.filter((entry) => !entry.required),
     [orderedRequirements]
   );
 
@@ -83,29 +74,44 @@ export function Step5_Documents() {
         setIsLoading(false);
         return;
       }
-      if (!app.selectedProductId) {
-        setDocError("Missing product selection. Please return to Step 2.");
-        setIsLoading(false);
-        return;
+      const docSet = new Set<string>();
+      const eligibleProducts = Array.isArray(app.eligibleProducts)
+        ? app.eligibleProducts
+        : [];
+      if (eligibleProducts.length > 0) {
+        eligibleProducts.forEach((product: any) => {
+          (product.requiredDocs || []).forEach((doc: string) => docSet.add(doc));
+        });
+      } else {
+        const fallbackProducts = ProductSync.load();
+        const matchingProducts = filterProductsForApplicant(
+          fallbackProducts,
+          getCountryCode(app.kyc.businessLocation),
+          parseCurrencyAmount(app.kyc.fundingAmount)
+        );
+        matchingProducts.forEach((product: any) => {
+          normalizeRequirementList(product.required_documents ?? []).forEach(
+            (entry) => docSet.add(entry.document_type)
+          );
+        });
       }
-      const cached = app.productRequirements?.[app.selectedProductId] || [];
-      const cachedNormalized = normalizeRequirementList(cached);
-      const cachedAvailable = cachedNormalized.length > 0;
-      const fallbackProducts = ProductSync.load();
-      const fallbackProduct = fallbackProducts.find(
-        (product: any) => product?.id === app.selectedProductId
-      );
-      const fallbackNormalized = normalizeRequirementList(
-        fallbackProduct?.required_documents ?? []
-      );
-      const normalized = cachedAvailable ? cachedNormalized : fallbackNormalized;
+
+      ALWAYS_REQUIRED_DOCS.forEach((doc) => docSet.add(doc));
+
+      const normalized = Array.from(docSet).map((docType) => ({
+        id: docType,
+        document_type: docType,
+        required: true,
+        min_amount: null,
+        max_amount: null,
+      }));
 
       if (active) {
         setIsLoading(true);
         setDocError(null);
         if (normalized.length === 0) {
           setDocError(
-            "No document requirements were provided for the selected product."
+            "No document requirements were provided for the selected products."
           );
           setRequirementsRaw([]);
           setIsLoading(false);
@@ -115,7 +121,7 @@ export function Step5_Documents() {
         update({
           productRequirements: {
             ...(app.productRequirements || {}),
-            [app.selectedProductId]: normalized,
+            [app.selectedProductId || "aggregated"]: normalized,
           },
           documentsDeferred: false,
         });
@@ -133,10 +139,6 @@ export function Step5_Documents() {
   useEffect(() => {
     if (!app.applicationToken) {
       setDocError("Missing application token. Please restart your application.");
-      return;
-    }
-    if (!app.selectedProductId) {
-      setDocError("Missing product selection. Please return to Step 2.");
       return;
     }
   }, [app.applicationToken, app.selectedProductId]);
@@ -240,6 +242,21 @@ export function Step5_Documents() {
     navigate("/apply/step-6");
   }
 
+  async function uploadLater() {
+    if (!app.applicationToken) {
+      setDocError("Missing application token. Please restart your application.");
+      return;
+    }
+    try {
+      await ClientAppAPI.deferDocuments(app.applicationToken);
+      update({ documentsDeferred: true });
+      navigate("/apply/step-6");
+    } catch (error) {
+      console.error("Failed to defer documents:", error);
+      setDocError("Couldn't defer documents. Please try again.");
+    }
+  }
+
   const canContinue =
     !docError &&
     !isLoading &&
@@ -295,234 +312,97 @@ export function Step5_Documents() {
             </ul>
           </div>
         )}
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-3">
           {requiredDocs.map((entry) => {
             const docType = entry.document_type;
             const docStatus = getDocStatus(docType);
             const docError = docErrors[docType];
             const isUploading = uploadingDocs[docType];
             return (
-            <div
-              key={entry.id}
-              style={{
-                border: `1px solid ${theme.colors.border}`,
-                borderRadius: theme.layout.radius,
-                padding: theme.spacing.md,
-                background: theme.colors.background,
-              }}
-            >
-              <div className="space-y-2">
+              <div
+                key={entry.id}
+                className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4"
+              >
                 <div className="flex items-center justify-between">
-                  <div
-                    style={{
-                      fontWeight: 600,
-                      color: theme.colors.textPrimary,
-                    }}
-                  >
-                    {formatDocumentLabel(docType)}
-                  </div>
-                  <span
-                    style={{
-                      padding: "4px 10px",
-                      borderRadius: "999px",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      background: "rgba(59, 130, 246, 0.12)",
-                      color: "#1d4ed8",
-                      border: "1px solid rgba(59, 130, 246, 0.3)",
-                    }}
-                  >
-                    Required
-                  </span>
-                </div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: theme.colors.textSecondary,
-                  }}
-                >
-                  Status:{" "}
-                  <span style={{ fontWeight: 600 }}>
+                  <label className="flex items-center gap-3 text-sm text-slate-600">
+                    <input
+                      type="checkbox"
+                      checked={docStatus !== "missing"}
+                      readOnly
+                    />
+                    <span className="font-semibold text-borealBlue">
+                      {formatDocumentLabel(docType)}
+                    </span>
+                  </label>
+                  <span className="text-xs font-semibold text-slate-500">
                     {isUploading ? "Uploading" : docStatus}
                   </span>
                 </div>
-              </div>
-
-              <Input
-                id={`doc-${entry.id}`}
-                type="file"
-                style={{ display: "none" }}
-                onChange={(e: any) =>
-                  handleFile(docType, e.target.files?.[0] || null)
-                }
-              />
-              <div className="flex flex-col gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={isUploading}
-                  onClick={() =>
-                    document.getElementById(`doc-${entry.id}`)?.click()
+                <input
+                  id={`doc-${entry.id}`}
+                  type="file"
+                  className="hidden"
+                  onChange={(e: any) =>
+                    handleFile(docType, e.target.files?.[0] || null)
                   }
-                  style={{ width: "100%" }}
-                >
-                  {isUploading ? "Uploading..." : "Upload"}
-                </Button>
-                {app.documents[docType] && (
-                  <div
-                    style={{
-                      color: theme.colors.textSecondary,
-                      fontSize: "12px",
-                    }}
+                />
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={isUploading}
+                    onClick={() =>
+                      document.getElementById(`doc-${entry.id}`)?.click()
+                    }
+                    style={{ width: "100%" }}
                   >
-                    Uploaded: {app.documents[docType].name}
-                  </div>
-                )}
-                {docError && (
-                  <div style={{ color: "#dc2626", fontSize: "12px" }}>
-                    {docError}
-                  </div>
-                )}
-                {!docError && docStatus === "missing" && (
-                  <div style={{ color: "#dc2626", fontSize: "12px" }}>
-                    This document is required.
-                  </div>
-                )}
-                {docStatus === "rejected" && (
-                  <div style={{ color: "#dc2626", fontSize: "12px" }}>
-                    Document rejected. Please upload a new file.
-                  </div>
-                )}
+                    {isUploading ? "Uploading..." : "Upload file"}
+                  </Button>
+                  {app.documents[docType] && (
+                    <div className="text-xs text-slate-500">
+                      Uploaded: {app.documents[docType].name}
+                    </div>
+                  )}
+                  {docError && (
+                    <div className="text-xs text-red-600">{docError}</div>
+                  )}
+                  {!docError && docStatus === "missing" && (
+                    <div className="text-xs text-red-600">
+                      This document is required.
+                    </div>
+                  )}
+                  {docStatus === "rejected" && (
+                    <div className="text-xs text-red-600">
+                      Document rejected. Please upload a new file.
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          );
+            );
           })}
         </div>
-
-        {optionalDocs.length > 0 && (
-          <div className="space-y-2">
-            <h3
-              style={{
-                fontSize: theme.typography.h3.fontSize,
-                fontWeight: theme.typography.h3.fontWeight,
-                color: theme.colors.textPrimary,
-              }}
-            >
-              Optional documents
-            </h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              {optionalDocs.map((entry) => {
-                const docType = entry.document_type;
-                const docStatus = getDocStatus(docType);
-                const docError = docErrors[docType];
-                const isUploading = uploadingDocs[docType];
-                return (
-                  <div
-                    key={entry.id}
-                    style={{
-                      border: `1px solid ${theme.colors.border}`,
-                      borderRadius: theme.layout.radius,
-                      padding: theme.spacing.md,
-                      background: theme.colors.background,
-                    }}
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div
-                          style={{
-                            fontWeight: 600,
-                            color: theme.colors.textPrimary,
-                          }}
-                        >
-                          {formatDocumentLabel(docType)}
-                        </div>
-                        <span
-                          style={{
-                            padding: "4px 10px",
-                            borderRadius: "999px",
-                            fontSize: "12px",
-                            fontWeight: 600,
-                            background: "rgba(148, 163, 184, 0.2)",
-                            color: "#475569",
-                            border: "1px solid rgba(148, 163, 184, 0.4)",
-                          }}
-                        >
-                          Optional
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: theme.colors.textSecondary,
-                        }}
-                      >
-                        Status:{" "}
-                        <span style={{ fontWeight: 600 }}>
-                          {isUploading ? "Uploading" : docStatus}
-                        </span>
-                      </div>
-                    </div>
-
-                    <Input
-                      id={`doc-${entry.id}`}
-                      type="file"
-                      style={{ display: "none" }}
-                      onChange={(e: any) =>
-                        handleFile(docType, e.target.files?.[0] || null)
-                      }
-                    />
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        disabled={isUploading}
-                        onClick={() =>
-                          document.getElementById(`doc-${entry.id}`)?.click()
-                        }
-                        style={{ width: "100%" }}
-                      >
-                        {isUploading ? "Uploading..." : "Upload"}
-                      </Button>
-                      {app.documents[docType] && (
-                        <div
-                          style={{
-                            color: theme.colors.textSecondary,
-                            fontSize: "12px",
-                          }}
-                        >
-                          Uploaded: {app.documents[docType].name}
-                        </div>
-                      )}
-                      {docError && (
-                        <div style={{ color: "#dc2626", fontSize: "12px" }}>
-                          {docError}
-                        </div>
-                      )}
-                      {docStatus === "rejected" && (
-                        <div style={{ color: "#dc2626", fontSize: "12px" }}>
-                          Document rejected. Please upload a new file.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </Card>
 
-      <Button
-        style={{
-          width: "100%",
-          maxWidth: "200px",
-          marginTop: theme.spacing.lg,
-        }}
-        onClick={next}
-        disabled={!canContinue}
+      <div
+        className="flex flex-col sm:flex-row gap-3"
+        style={{ marginTop: theme.spacing.lg }}
       >
-        Continue
-      </Button>
+        <Button
+          style={{ width: "100%", maxWidth: "220px" }}
+          onClick={next}
+          disabled={!canContinue}
+        >
+          Continue
+        </Button>
+        <Button
+          variant="secondary"
+          style={{ width: "100%", maxWidth: "220px" }}
+          onClick={uploadLater}
+          disabled={isLoading || hasUploadsInFlight}
+        >
+          Upload later
+        </Button>
+      </div>
     </WizardLayout>
   );
 }

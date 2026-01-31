@@ -76,6 +76,10 @@ export function sortRequirements(requirements: LenderProductRequirement[]) {
 }
 
 export function formatDocumentLabel(value: string) {
+  const overrides: Record<string, string> = {
+    bank_statements: "6 months bank statements",
+  };
+  if (overrides[value]) return overrides[value];
   const withSpaces = value.replace(/[_-]+/g, " ").trim();
   if (!withSpaces) return value;
   return withSpaces.replace(/\b\w/g, (char) => char.toUpperCase());

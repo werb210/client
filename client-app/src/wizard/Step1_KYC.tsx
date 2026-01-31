@@ -12,12 +12,15 @@ import { WizardLayout } from "../components/WizardLayout";
 import {
   formatCurrencyValue,
   getCountryCode,
+  formatPhoneNumber,
 } from "../utils/location";
 import { theme } from "../styles/theme";
 import {
   FUNDING_INTENT_OPTIONS,
   normalizeFundingIntent,
 } from "../constants/wizard";
+import { OtpInput } from "../components/OtpInput";
+import { ClientProfileStore } from "../state/clientProfiles";
 
 const MatchCategories = [
   "Line of Credit",
@@ -122,6 +125,9 @@ export function Step1_KYC() {
   const { app, update } = useApplicationStore();
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
+  const [otpRequested, setOtpRequested] = useState(false);
+  const [otpHint, setOtpHint] = useState("");
+  const [otpError, setOtpError] = useState("");
   const navigate = useNavigate();
   const countryCode = useMemo(
     () => getCountryCode(app.kyc.businessLocation),
@@ -149,6 +155,14 @@ export function Step1_KYC() {
     }
   }, [app.kyc, countryCode, update]);
 
+  useEffect(() => {
+    if (app.kyc.phone) return;
+    const lastPhone = ClientProfileStore.getLastUsedPhone();
+    if (lastPhone) {
+      update({ kyc: { ...app.kyc, phone: lastPhone } });
+    }
+  }, [app.kyc, update]);
+
   const fieldErrors = {
     lookingFor: !Validate.required(app.kyc.lookingFor),
     fundingAmount: !Validate.required(app.kyc.fundingAmount),
@@ -162,6 +176,7 @@ export function Step1_KYC() {
     monthlyRevenue: !Validate.required(app.kyc.monthlyRevenue),
     accountsReceivable: !Validate.required(app.kyc.accountsReceivable),
     fixedAssets: !Validate.required(app.kyc.fixedAssets),
+    phone: !Validate.required(app.kyc.phone) || !Validate.phone(app.kyc.phone),
   };
   const isValid = Object.values(fieldErrors).every((error) => !error);
 
@@ -180,16 +195,8 @@ export function Step1_KYC() {
     fontWeight: 500,
   };
 
-  async function next() {
+  async function startApplication() {
     const payload = app.kyc;
-    setShowErrors(true);
-
-    if (!isValid) {
-      if (payload.businessLocation === "Other") {
-        setShowLocationModal(true);
-      }
-      return;
-    }
 
     const amount = parseCurrency(payload.fundingAmount);
     const matchPercentages = buildMatchPercentages(
@@ -204,6 +211,8 @@ export function Step1_KYC() {
         alert("We couldn't start your application. Please try again.");
         return;
       }
+      ClientProfileStore.upsertProfile(payload.phone || "", token);
+      ClientProfileStore.markPortalVerified(token);
       update({ applicationToken: token, matchPercentages });
       navigate("/apply/step-2");
     } catch (error) {
@@ -213,13 +222,63 @@ export function Step1_KYC() {
     }
   }
 
+  function requestOtp() {
+    setShowErrors(true);
+    setOtpError("");
+
+    if (!isValid) {
+      if (app.kyc.businessLocation === "Other") {
+        setShowLocationModal(true);
+      }
+      return;
+    }
+
+    const code = ClientProfileStore.requestOtp(app.kyc.phone || "");
+    setOtpHint(code);
+    setOtpRequested(true);
+  }
+
+  async function verifyOtp(code: string) {
+    setOtpError("");
+    if (!ClientProfileStore.verifyOtp(app.kyc.phone || "", code)) {
+      setOtpError("Incorrect code. Please try again.");
+      return;
+    }
+    await startApplication();
+  }
+
   return (
     <>
       <WizardLayout>
-        <StepHeader step={1} title="Financial Profile" />
+        <StepHeader step={1} title="Know Your Client" />
 
         <Card className="space-y-6">
           <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label style={labelStyle}>Mobile phone</label>
+              <Input
+                value={formatPhoneNumber(app.kyc.phone || "", countryCode)}
+                onChange={(e: any) =>
+                  update({
+                    kyc: {
+                      ...app.kyc,
+                      phone: formatPhoneNumber(e.target.value, countryCode),
+                    },
+                  })
+                }
+                placeholder="(555) 555-5555"
+                onKeyDown={(e: any) => {
+                  if (e.key === "Enter") {
+                    requestOtp();
+                  }
+                }}
+              />
+              {showErrors && fieldErrors.phone && (
+                <div style={errorStyle}>
+                  Enter a valid phone number.
+                </div>
+              )}
+            </div>
             <div>
               <label style={labelStyle}>What are you looking for?</label>
               <Select
@@ -488,11 +547,28 @@ export function Step1_KYC() {
         >
           <Button
             style={{ width: "100%", maxWidth: "220px" }}
-            onClick={next}
+            onClick={requestOtp}
           >
             Continue →
           </Button>
         </div>
+
+        {otpRequested && (
+          <Card className="mt-6 space-y-3">
+            <div className="text-sm text-slate-500">
+              Enter the 6-digit passcode sent to your phone to continue.
+            </div>
+            <OtpInput onComplete={verifyOtp} />
+            {otpHint && (
+              <div className="text-xs text-slate-400">
+                Demo OTP: {otpHint}
+              </div>
+            )}
+            {otpError && (
+              <div className="text-sm text-red-600">{otpError}</div>
+            )}
+          </Card>
+        )}
       </WizardLayout>
 
       {showLocationModal && (

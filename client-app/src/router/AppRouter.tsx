@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Home from "../pages/Home";
+import { EntryPage } from "../pages/EntryPage";
+import { PortalEntry } from "../pages/PortalEntry";
+import { StatusPage } from "../pages/StatusPage";
+import { ResumePage } from "../pages/ResumePage";
 import Step1 from "../wizard/Step1_KYC";
 import Step2 from "../wizard/Step2_Product";
 import Step3 from "../wizard/Step3_Business";
@@ -11,10 +14,13 @@ export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<EntryPage />} />
+        <Route path="/portal" element={<PortalEntry />} />
+        <Route path="/status" element={<StatusPage />} />
+        <Route path="/resume" element={<ResumePage />} />
 
         <Route path="/apply">
-          <Route index element={<Home />} />
+          <Route index element={<EntryPage />} />
           <Route path="step-1" element={<Step1 />} />
           <Route path="step-2" element={<Step2 />} />
           <Route path="step-3" element={<Step3 />} />
