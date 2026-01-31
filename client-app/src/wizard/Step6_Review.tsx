@@ -181,7 +181,7 @@ export function Step6_Review() {
 
   return (
     <WizardLayout>
-      <StepHeader step={6} title="Terms & Signature" />
+      <StepHeader step={6} title="Terms & Typed Signature" />
 
       <Card className="space-y-4">
         <div className="grid md:grid-cols-2 gap-4">

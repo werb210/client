@@ -1,10 +1,12 @@
 import { ClientAppAPI } from "../api/clientApp";
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { OfflineStore } from "../state/offline";
 import { useChatbot } from "../hooks/useChatbot";
+import { ClientProfileStore } from "../state/clientProfiles";
 
 export function StatusPage() {
   const token = new URLSearchParams(window.location.search).get("token");
@@ -14,11 +16,16 @@ export function StatusPage() {
   const [mode, setMode] = useState<"ai" | "human">("ai");
   const [issueMode, setIssueMode] = useState(false);
   const { send: sendAI } = useChatbot();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!token) return;
+    if (!ClientProfileStore.hasPortalSession(token)) {
+      navigate("/portal", { replace: true });
+      return;
+    }
     ClientAppAPI.status(token).then((res) => setStatus(res.data));
-  }, [token]);
+  }, [navigate, token]);
 
   async function refreshMessages() {
     if (!token) return;
@@ -29,6 +36,21 @@ export function StatusPage() {
   useEffect(() => {
     refreshMessages();
     const id = setInterval(refreshMessages, 5000);
+    return () => clearInterval(id);
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    const poll = async () => {
+      try {
+        const res = await ClientAppAPI.status(token);
+        setStatus(res.data);
+      } catch (error) {
+        console.error("Status refresh failed:", error);
+      }
+    };
+    poll();
+    const id = setInterval(poll, 5000);
     return () => clearInterval(id);
   }, [token]);
 
@@ -98,6 +120,10 @@ export function StatusPage() {
     );
   }
 
+  if (token && !ClientProfileStore.hasPortalSession(token)) {
+    return null;
+  }
+
   if (!status) {
     return (
       <div className="p-6">
@@ -160,6 +186,22 @@ export function StatusPage() {
               </Button>
               <Button
                 className="w-full bg-white text-borealBlue border border-borealLightBlue"
+                onClick={() => (window.location.href = "/resume")}
+              >
+                View application
+              </Button>
+              <Button
+                className="w-full bg-white text-borealBlue border border-borealLightBlue"
+                onClick={() =>
+                  document
+                    .getElementById("portal-messages")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
+              >
+                Messages
+              </Button>
+              <Button
+                className="w-full bg-white text-borealBlue border border-borealLightBlue"
                 onClick={() => {
                   OfflineStore.clear();
                   window.location.href = "/apply/step-1";
@@ -174,7 +216,7 @@ export function StatusPage() {
             </div>
           </Card>
 
-          <Card className="flex flex-col min-h-[520px]">
+          <Card id="portal-messages" className="flex flex-col min-h-[520px]">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
