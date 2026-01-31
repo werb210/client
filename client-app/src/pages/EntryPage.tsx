@@ -6,7 +6,7 @@ export function EntryPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (ClientProfileStore.hasAnyProfile()) {
+    if (ClientProfileStore.hasSubmittedProfile()) {
       navigate("/portal", { replace: true });
     } else {
       navigate("/apply/step-1", { replace: true });

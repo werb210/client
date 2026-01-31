@@ -212,7 +212,6 @@ export function Step1_KYC() {
         return;
       }
       ClientProfileStore.upsertProfile(payload.phone || "", token);
-      ClientProfileStore.markPortalVerified(token);
       update({ applicationToken: token, matchPercentages });
       navigate("/apply/step-2");
     } catch (error) {

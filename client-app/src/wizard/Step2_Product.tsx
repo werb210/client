@@ -245,16 +245,17 @@ export function Step2_Product() {
   }, [app.selectedProductId, update]);
 
   function select(product: ClientLenderProduct) {
+    const category = product.product_type ?? product.name;
     update({
-      productCategory: null,
+      productCategory: category,
       selectedProduct: {
         id: product.id,
         name: product.name,
-        product_type: product.product_type ?? product.name,
+        product_type: category,
         lender_id: product.lender_id,
       },
       selectedProductId: product.id,
-      selectedProductType: product.product_type ?? product.name,
+      selectedProductType: category,
       documents: {},
       documentsDeferred: false,
     });

@@ -21,6 +21,7 @@ const emptyApp: ApplicationData = {
   requires_closing_cost_funding: false,
   termsAccepted: false,
   typedSignature: "",
+  coApplicantSignature: "",
   signatureDate: "",
   applicationToken: undefined,
   applicationId: undefined,
@@ -152,6 +153,10 @@ export function useApplicationStore() {
           applicant: app.applicant,
           documents: app.documents,
           documentsDeferred: app.documentsDeferred,
+          termsAccepted: app.termsAccepted,
+          typedSignature: app.typedSignature,
+          coApplicantSignature: app.coApplicantSignature,
+          signatureDate: app.signatureDate,
           currentStep: app.currentStep,
         })
           .then(() => {

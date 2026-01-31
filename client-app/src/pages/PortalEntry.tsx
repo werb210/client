@@ -43,7 +43,9 @@ export function PortalEntry() {
       return;
     }
     ClientProfileStore.setLastUsedPhone(phone);
-    const token = ClientProfileStore.getLatestToken(phone);
+    const token =
+      ClientProfileStore.getLatestSubmittedToken(phone) ||
+      ClientProfileStore.getLatestToken(phone);
     if (!token) {
       setOtpError("We couldn't find an application for this number.");
       return;

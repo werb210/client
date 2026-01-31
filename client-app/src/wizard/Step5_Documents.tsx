@@ -30,6 +30,12 @@ export function Step5_Documents() {
   const [docErrors, setDocErrors] = useState<Record<string, string>>({});
   const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>({});
   const ALWAYS_REQUIRED_DOCS = ["bank_statements"];
+  const selectedCategory =
+    app.productCategory ||
+    app.selectedProductType ||
+    app.selectedProduct?.product_type ||
+    app.selectedProduct?.name ||
+    "";
 
   const orderedRequirements = useMemo(() => {
     return sortRequirements(requirementsRaw);
@@ -78,8 +84,14 @@ export function Step5_Documents() {
       const eligibleProducts = Array.isArray(app.eligibleProducts)
         ? app.eligibleProducts
         : [];
-      if (eligibleProducts.length > 0) {
-        eligibleProducts.forEach((product: any) => {
+      const categoryFiltered =
+        selectedCategory
+          ? eligibleProducts.filter(
+              (product: any) => product.category === selectedCategory
+            )
+          : eligibleProducts;
+      if (categoryFiltered.length > 0) {
+        categoryFiltered.forEach((product: any) => {
           (product.requiredDocs || []).forEach((doc: string) => docSet.add(doc));
         });
       } else {
@@ -88,6 +100,10 @@ export function Step5_Documents() {
           fallbackProducts,
           getCountryCode(app.kyc.businessLocation),
           parseCurrencyAmount(app.kyc.fundingAmount)
+        ).filter((product: any) =>
+          selectedCategory
+            ? (product.product_type ?? product.name) === selectedCategory
+            : true
         );
         matchingProducts.forEach((product: any) => {
           normalizeRequirementList(product.required_documents ?? []).forEach(
@@ -121,7 +137,7 @@ export function Step5_Documents() {
         update({
           productRequirements: {
             ...(app.productRequirements || {}),
-            [app.selectedProductId || "aggregated"]: normalized,
+            aggregated: normalized,
           },
           documentsDeferred: false,
         });
@@ -134,7 +150,7 @@ export function Step5_Documents() {
     return () => {
       active = false;
     };
-  }, [app.selectedProductId, update]);
+  }, [app.selectedProductId, selectedCategory, update]);
 
   useEffect(() => {
     if (!app.applicationToken) {

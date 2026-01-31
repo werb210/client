@@ -124,10 +124,12 @@ export function useChatbot() {
   }
 
   function getRequiredDocs(state: any) {
-    const selectedProductId = state.selectedProductId;
-    if (!selectedProductId) return [];
+    const requirementsKey = state.productRequirements?.aggregated
+      ? "aggregated"
+      : state.selectedProductId;
+    if (!requirementsKey) return [];
     const requirements =
-      state.productRequirements?.[selectedProductId] || [];
+      state.productRequirements?.[requirementsKey] || [];
     const applicable = filterRequirementsByAmount(
       requirements,
       state.kyc?.fundingAmount
