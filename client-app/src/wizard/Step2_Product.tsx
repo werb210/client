@@ -12,6 +12,11 @@ import { Button } from "../components/ui/Button";
 import { WizardLayout } from "../components/WizardLayout";
 import { theme } from "../styles/theme";
 import {
+  createLinkedApplication,
+  LinkedApplicationStore,
+} from "../applications/linkedApplications";
+import { ClientProfileStore } from "../state/clientProfiles";
+import {
   filterActiveProducts,
   filterProductsForApplicant,
   groupProductsByLender,
@@ -49,6 +54,9 @@ export function Step2_Product() {
   const [products, setProducts] = useState<ActiveProduct[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showClosingModal, setShowClosingModal] = useState(false);
+  const [closingError, setClosingError] = useState<string | null>(null);
+  const [closingBusy, setClosingBusy] = useState(false);
   const countryCode = useMemo(
     () => getCountryCode(app.kyc.businessLocation),
     [app.kyc.businessLocation]
@@ -273,7 +281,49 @@ export function Step2_Product() {
     ) {
       return;
     }
+    if (
+      isEquipmentIntent &&
+      app.requires_closing_cost_funding &&
+      app.applicationToken &&
+      !LinkedApplicationStore.has(app.applicationToken)
+    ) {
+      setClosingError(null);
+      setShowClosingModal(true);
+      return;
+    }
     navigate("/apply/step-3");
+  }
+
+  async function confirmClosingCosts() {
+    if (!app.applicationToken) {
+      setClosingError("Missing application token. Please restart your application.");
+      return;
+    }
+    setClosingBusy(true);
+    setClosingError(null);
+    try {
+      const token = await createLinkedApplication(
+        app.applicationToken,
+        app.kyc,
+        "closing_costs"
+      );
+      update({
+        linkedApplicationTokens: [
+          token,
+          ...(app.linkedApplicationTokens || []),
+        ],
+      });
+      if (app.kyc?.phone) {
+        ClientProfileStore.upsertProfile(app.kyc.phone, token);
+      }
+      setShowClosingModal(false);
+      navigate("/apply/step-3");
+    } catch (error) {
+      console.error("Failed to create linked application:", error);
+      setClosingError("Unable to create the linked application. Try again.");
+    } finally {
+      setClosingBusy(false);
+    }
   }
 
   const filteredProducts = useMemo(
@@ -588,6 +638,70 @@ export function Step2_Product() {
           Continue →
         </Button>
       </div>
+
+      {showClosingModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.2)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: theme.spacing.md,
+            zIndex: 50,
+          }}
+        >
+          <div
+            style={{
+              background: theme.colors.surface,
+              borderRadius: theme.layout.radius,
+              border: `1px solid ${theme.colors.border}`,
+              padding: theme.spacing.lg,
+              maxWidth: "520px",
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: theme.spacing.sm,
+            }}
+          >
+            <h2
+              style={{
+                fontSize: theme.typography.h2.fontSize,
+                fontWeight: theme.typography.h2.fontWeight,
+                color: theme.colors.textPrimary,
+              }}
+            >
+              Create a linked closing cost application?
+            </h2>
+            <p style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
+              We will create a second application tied to this one for closing
+              costs or equipment deposits. It stays linked in your client portal
+              so the team can review both together.
+            </p>
+            {closingError && (
+              <div className="text-sm text-red-600">{closingError}</div>
+            )}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                variant="secondary"
+                style={{ width: "100%" }}
+                onClick={() => setShowClosingModal(false)}
+                disabled={closingBusy}
+              >
+                Not now
+              </Button>
+              <Button
+                style={{ width: "100%" }}
+                onClick={confirmClosingCosts}
+                disabled={closingBusy}
+              >
+                {closingBusy ? "Creating..." : "Create linked application"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </WizardLayout>
   );
 }

@@ -10,12 +10,12 @@ import { theme } from "../styles/theme";
 import { ProductSync } from "../lender/productSync";
 import {
   formatDocumentLabel,
-  normalizeRequirementList,
   sortRequirements,
   type LenderProductRequirement,
 } from "./requirements";
 import { filterProductsForApplicant, parseCurrencyAmount } from "./productSelection";
 import { getCountryCode } from "../utils/location";
+import { aggregateRequiredDocuments } from "../documents/requiredDocuments";
 
 type DocStatus = "missing" | "uploaded" | "accepted" | "rejected";
 
@@ -84,33 +84,22 @@ export function Step5_Documents() {
       const eligibleProducts = Array.isArray(app.eligibleProducts)
         ? app.eligibleProducts
         : [];
-      const categoryFiltered =
-        selectedCategory
-          ? eligibleProducts.filter(
-              (product: any) => product.category === selectedCategory
-            )
-          : eligibleProducts;
-      if (categoryFiltered.length > 0) {
-        categoryFiltered.forEach((product: any) => {
-          (product.requiredDocs || []).forEach((doc: string) => docSet.add(doc));
-        });
-      } else {
-        const fallbackProducts = ProductSync.load();
-        const matchingProducts = filterProductsForApplicant(
-          fallbackProducts,
-          getCountryCode(app.kyc.businessLocation),
-          parseCurrencyAmount(app.kyc.fundingAmount)
-        ).filter((product: any) =>
-          selectedCategory
-            ? (product.product_type ?? product.name) === selectedCategory
-            : true
-        );
-        matchingProducts.forEach((product: any) => {
-          normalizeRequirementList(product.required_documents ?? []).forEach(
-            (entry) => docSet.add(entry.document_type)
-          );
-        });
-      }
+      const amountValue = parseCurrencyAmount(app.kyc.fundingAmount);
+      const countryCode = getCountryCode(app.kyc.businessLocation);
+      const fallbackProducts = ProductSync.load();
+      const matchingFallback = filterProductsForApplicant(
+        fallbackProducts,
+        countryCode,
+        amountValue
+      );
+      const matchingProducts =
+        eligibleProducts.length > 0 ? eligibleProducts : matchingFallback;
+      const aggregated = aggregateRequiredDocuments(
+        matchingProducts,
+        selectedCategory,
+        amountValue
+      );
+      aggregated.forEach((entry) => docSet.add(entry.document_type));
 
       ALWAYS_REQUIRED_DOCS.forEach((doc) => docSet.add(doc));
 
@@ -150,7 +139,14 @@ export function Step5_Documents() {
     return () => {
       active = false;
     };
-  }, [app.selectedProductId, selectedCategory, update]);
+  }, [
+    app.eligibleProducts,
+    app.kyc.businessLocation,
+    app.kyc.fundingAmount,
+    app.selectedProductId,
+    selectedCategory,
+    update,
+  ]);
 
   useEffect(() => {
     if (!app.applicationToken) {

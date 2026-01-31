@@ -21,6 +21,11 @@ import {
 } from "../constants/wizard";
 import { OtpInput } from "../components/OtpInput";
 import { ClientProfileStore } from "../state/clientProfiles";
+import { resolveOtpNextStep } from "../auth/otp";
+import {
+  extractApplicationFromStatus,
+  getResumeRoute,
+} from "../applications/resume";
 
 const MatchCategories = [
   "Line of Credit",
@@ -243,6 +248,37 @@ export function Step1_KYC() {
       setOtpError("Incorrect code. Please try again.");
       return;
     }
+    const profile = ClientProfileStore.getProfile(app.kyc.phone || "");
+    const nextStep = resolveOtpNextStep(profile);
+    if (nextStep.action === "portal") {
+      ClientProfileStore.markPortalVerified(nextStep.token);
+      navigate(`/status?token=${nextStep.token}`);
+      return;
+    }
+    if (nextStep.action === "resume") {
+      try {
+        const res = await ClientAppAPI.status(nextStep.token);
+        const hydrated = extractApplicationFromStatus(
+          res?.data || {},
+          nextStep.token
+        );
+        update({
+          ...hydrated,
+          applicationToken: nextStep.token,
+          currentStep: hydrated.currentStep || app.currentStep || 1,
+        });
+        ClientProfileStore.upsertProfile(
+          app.kyc.phone || "",
+          nextStep.token
+        );
+        navigate(getResumeRoute(hydrated));
+      } catch (error) {
+        console.error("Failed to resume application:", error);
+        await startApplication();
+      }
+      return;
+    }
+
     await startApplication();
   }
 

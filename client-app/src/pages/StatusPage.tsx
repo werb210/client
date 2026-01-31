@@ -7,6 +7,13 @@ import { Input } from "../components/ui/Input";
 import { OfflineStore } from "../state/offline";
 import { useChatbot } from "../hooks/useChatbot";
 import { ClientProfileStore } from "../state/clientProfiles";
+import {
+  createPipelinePoller,
+  getPipelineStage,
+} from "../realtime/pipeline";
+import { useDocumentRejectionNotifications } from "../portal/useDocumentRejectionNotifications";
+import { formatDocumentLabel } from "../wizard/requirements";
+import { LinkedApplicationStore } from "../applications/linkedApplications";
 
 export function StatusPage() {
   const token = new URLSearchParams(window.location.search).get("token");
@@ -15,6 +22,9 @@ export function StatusPage() {
   const [text, setText] = useState("");
   const [mode, setMode] = useState<"ai" | "human">("ai");
   const [issueMode, setIssueMode] = useState(false);
+  const [rejectionNotice, setRejectionNotice] = useState<{
+    documents: string[];
+  } | null>(null);
   const { send: sendAI } = useChatbot();
   const navigate = useNavigate();
 
@@ -41,17 +51,18 @@ export function StatusPage() {
 
   useEffect(() => {
     if (!token) return;
-    const poll = async () => {
-      try {
-        const res = await ClientAppAPI.status(token);
-        setStatus(res.data);
-      } catch (error) {
+    const stop = createPipelinePoller({
+      token,
+      fetchStatus: async (activeToken) => {
+        const res = await ClientAppAPI.status(activeToken);
+        return res.data;
+      },
+      onUpdate: (next) => setStatus(next),
+      onError: (error) => {
         console.error("Status refresh failed:", error);
-      }
-    };
-    poll();
-    const id = setInterval(poll, 5000);
-    return () => clearInterval(id);
+      },
+    });
+    return () => stop();
   }, [token]);
 
   const stages = [
@@ -63,21 +74,26 @@ export function StatusPage() {
     "Offer",
   ];
 
-  const activeStage = useMemo(() => {
-    const raw =
-      status?.status ||
-      status?.stage ||
-      status?.pipelineStatus ||
-      status?.state ||
-      "";
-    const normalized = String(raw).toLowerCase();
-    if (normalized.includes("offer")) return "Offer";
-    if (normalized.includes("lender")) return "Off to Lender";
-    if (normalized.includes("additional")) return "Additional Steps Required";
-    if (normalized.includes("document")) return "Documents Required";
-    if (normalized.includes("review")) return "In Review";
-    return "Received";
-  }, [status]);
+  const activeStage = useMemo(() => getPipelineStage(status), [status]);
+
+  useEffect(() => {
+    if (!token || !status) return;
+    const linkedTokens =
+      status?.linkedApplicationTokens ||
+      status?.linked_application_tokens ||
+      [];
+    if (Array.isArray(linkedTokens) && linkedTokens.length > 0) {
+      LinkedApplicationStore.sync(token, linkedTokens);
+    }
+  }, [status, token]);
+
+  useDocumentRejectionNotifications({
+    token,
+    documents: status?.documents,
+    onNotify: (notification) => {
+      setRejectionNotice({ documents: notification.documents });
+    },
+  });
 
   async function sendMessage() {
     if (!text.trim() || !token) return;
@@ -171,6 +187,32 @@ export function StatusPage() {
             </div>
           </div>
         </Card>
+
+        {rejectionNotice && (
+          <Card className="border border-amber-200 bg-amber-50">
+            <div className="flex flex-col gap-2 text-sm text-slate-600">
+              <div className="font-semibold text-amber-700">
+                Action needed: documents rejected
+              </div>
+              <div>
+                We sent a single SMS and email summary covering the rejected
+                files below. Please re-upload them to keep your application
+                moving.
+              </div>
+              <ul className="list-disc pl-5 text-amber-700">
+                {rejectionNotice.documents.map((doc) => (
+                  <li key={doc}>{formatDocumentLabel(doc)}</li>
+                ))}
+              </ul>
+              <Button
+                className="w-full md:w-auto"
+                onClick={() => (window.location.href = "/apply/step-5")}
+              >
+                Re-upload documents
+              </Button>
+            </div>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
           <Card className="h-fit">
