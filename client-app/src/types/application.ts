@@ -54,6 +54,7 @@ export interface ApplicationData {
 
   termsAccepted: boolean;
   typedSignature?: string;
+  coApplicantSignature?: string;
   signatureDate?: string;
   applicationToken?: string;
   applicationId?: string;

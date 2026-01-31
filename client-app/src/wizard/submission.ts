@@ -28,9 +28,13 @@ export type SubmissionPayload = {
 };
 
 export function getMissingRequiredDocs(app: ApplicationData) {
-  if (!app.selectedProductId) return [];
+  const requirementsKey =
+    app.productRequirements?.aggregated
+      ? "aggregated"
+      : app.selectedProductId;
+  if (!requirementsKey) return [];
   const requirements =
-    (app.productRequirements?.[app.selectedProductId] || []) as LenderProductRequirement[];
+    (app.productRequirements?.[requirementsKey] || []) as LenderProductRequirement[];
   const filtered = filterRequirementsByAmount(requirements, app.kyc?.fundingAmount);
   return filtered
     .filter((entry) => entry.required)
@@ -62,6 +66,7 @@ export function buildSubmissionPayload(app: ApplicationData): SubmissionPayload 
       requires_closing_cost_funding: app.requires_closing_cost_funding,
       terms_accepted: app.termsAccepted,
       typed_signature: app.typedSignature,
+      co_applicant_signature: app.coApplicantSignature,
       signature_date: app.signatureDate,
       application_token: app.applicationToken,
     },

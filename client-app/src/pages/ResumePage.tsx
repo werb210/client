@@ -56,9 +56,7 @@ export function ResumePage() {
             </Button>
             <Button
               className="w-full md:w-auto bg-white text-borealBlue border border-borealLightBlue"
-              onClick={() =>
-                (window.location.href = `/status?token=${info.token}`)
-              }
+              onClick={() => (window.location.href = "/portal")}
             >
               View client portal
             </Button>

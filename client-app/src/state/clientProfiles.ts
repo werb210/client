@@ -8,6 +8,8 @@ export type ClientProfile = {
   phone: string;
   applicationTokens: string[];
   lastActiveToken?: string;
+  submittedTokens?: string[];
+  lastSubmittedToken?: string;
   updatedAt: number;
 };
 
@@ -68,17 +70,50 @@ export const ClientProfileStore = {
     const profiles = loadProfiles();
     return Object.keys(profiles).length > 0;
   },
+  hasSubmittedProfile() {
+    const profiles = loadProfiles();
+    return Object.values(profiles).some(
+      (profile) => (profile.submittedTokens || []).length > 0
+    );
+  },
   upsertProfile(phone: string, token: string) {
     const key = normalizePhone(phone);
     if (!key) return null;
     const profiles = loadProfiles();
     const existing = profiles[key];
     const tokens = existing?.applicationTokens || [];
+    const submittedTokens = existing?.submittedTokens || [];
     const nextTokens = tokens.includes(token) ? tokens : [token, ...tokens];
     const profile: ClientProfile = {
       phone,
       applicationTokens: nextTokens,
       lastActiveToken: token,
+      submittedTokens,
+      lastSubmittedToken: existing?.lastSubmittedToken,
+      updatedAt: Date.now(),
+    };
+    profiles[key] = profile;
+    saveProfiles(profiles);
+    this.setLastUsedPhone(phone);
+    return profile;
+  },
+  markSubmitted(phone: string, token: string) {
+    const key = normalizePhone(phone);
+    if (!key || !token) return null;
+    const profiles = loadProfiles();
+    const existing = profiles[key];
+    const tokens = existing?.applicationTokens || [];
+    const submittedTokens = existing?.submittedTokens || [];
+    const nextTokens = tokens.includes(token) ? tokens : [token, ...tokens];
+    const nextSubmitted = submittedTokens.includes(token)
+      ? submittedTokens
+      : [token, ...submittedTokens];
+    const profile: ClientProfile = {
+      phone,
+      applicationTokens: nextTokens,
+      lastActiveToken: token,
+      submittedTokens: nextSubmitted,
+      lastSubmittedToken: token,
       updatedAt: Date.now(),
     };
     profiles[key] = profile;
@@ -90,6 +125,15 @@ export const ClientProfileStore = {
     const profile = this.getProfile(phone);
     if (!profile) return "";
     return profile.lastActiveToken || profile.applicationTokens[0] || "";
+  },
+  getLatestSubmittedToken(phone: string) {
+    const profile = this.getProfile(phone);
+    if (!profile) return "";
+    return (
+      profile.lastSubmittedToken ||
+      profile.submittedTokens?.[0] ||
+      ""
+    );
   },
   listTokens(phone: string) {
     const profile = this.getProfile(phone);
@@ -164,6 +208,13 @@ export const ClientProfileStore = {
     } catch (error) {
       console.warn("Failed to read portal session:", error);
       return false;
+    }
+  },
+  clearPortalSessions() {
+    try {
+      sessionStorage.removeItem(PORTAL_SESSION_KEY);
+    } catch (error) {
+      console.warn("Failed to clear portal session:", error);
     }
   },
 };
