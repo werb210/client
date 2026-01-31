@@ -26,6 +26,9 @@ const emptyApp: ApplicationData = {
   applicationToken: undefined,
   applicationId: undefined,
   currentStep: 1,
+  linkedApplicationTokens: [],
+  ocrComplete: undefined,
+  creditSummaryComplete: undefined,
 };
 
 function hydrateApplication(saved: ApplicationData | null): ApplicationData {
@@ -85,6 +88,10 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
       ...emptyApp.productRequirements,
       ...savedProductRequirements,
     },
+    linkedApplicationTokens:
+      saved.linkedApplicationTokens || emptyApp.linkedApplicationTokens,
+    ocrComplete: saved.ocrComplete,
+    creditSummaryComplete: saved.creditSummaryComplete,
   };
 }
 

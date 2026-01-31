@@ -59,4 +59,7 @@ export interface ApplicationData {
   applicationToken?: string;
   applicationId?: string;
   currentStep?: number;
+  linkedApplicationTokens?: string[];
+  ocrComplete?: boolean;
+  creditSummaryComplete?: boolean;
 }

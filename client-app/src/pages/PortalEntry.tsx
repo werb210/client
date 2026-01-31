@@ -7,6 +7,7 @@ import { OtpInput } from "../components/OtpInput";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { formatPhoneNumber, getCountryCode } from "../utils/location";
 import { theme } from "../styles/theme";
+import { resolveOtpNextStep } from "../auth/otp";
 
 export function PortalEntry() {
   const navigate = useNavigate();
@@ -43,9 +44,11 @@ export function PortalEntry() {
       return;
     }
     ClientProfileStore.setLastUsedPhone(phone);
+    const nextStep = resolveOtpNextStep(ClientProfileStore.getProfile(phone));
     const token =
-      ClientProfileStore.getLatestSubmittedToken(phone) ||
-      ClientProfileStore.getLatestToken(phone);
+      nextStep.action === "portal" || nextStep.action === "resume"
+        ? nextStep.token
+        : "";
     if (!token) {
       setOtpError("We couldn't find an application for this number.");
       return;
