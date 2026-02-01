@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { theme } from "@/styles/theme";
+import { layout, components } from "@/styles";
 
 type WizardLayoutProps = {
   children: ReactNode;
@@ -7,35 +7,14 @@ type WizardLayoutProps = {
 
 export function WizardLayout({ children }: WizardLayoutProps) {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: theme.colors.background,
-        color: theme.colors.textPrimary,
-        fontFamily: theme.typography.fontFamily,
-        display: "flex",
-        justifyContent: "center",
-        padding: theme.layout.padding,
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: theme.layout.maxWidth,
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.lg,
-        }}
-      >
+    <div style={{ ...layout.page, display: "flex", justifyContent: "center" }}>
+      <div style={layout.centerColumn}>
         <div
           style={{
-            background: theme.colors.surface,
-            borderRadius: theme.layout.radius,
-            border: `1px solid ${theme.colors.border}`,
-            padding: theme.layout.padding,
+            ...components.card.base,
             display: "flex",
             flexDirection: "column",
-            gap: theme.spacing.lg,
+            gap: "24px",
           }}
         >
           {children}

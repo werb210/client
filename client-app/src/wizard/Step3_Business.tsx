@@ -18,7 +18,8 @@ import {
   getRegionLabel,
 } from "../utils/location";
 import { WizardLayout } from "../components/WizardLayout";
-import { theme } from "../styles/theme";
+import { PhoneInput } from "../components/ui/PhoneInput";
+import { components, layout, tokens } from "@/styles";
 
 export function Step3_Business() {
   const { app, update } = useApplicationStore();
@@ -59,14 +60,6 @@ export function Step3_Business() {
     "estimatedRevenue",
   ].every((field) => Validate.required(values[field]));
 
-  const labelStyle = {
-    display: "block",
-    marginBottom: theme.spacing.xs,
-    fontSize: theme.typography.label.fontSize,
-    fontWeight: theme.typography.label.fontWeight,
-    color: theme.colors.textSecondary,
-  };
-
   async function next() {
     const requiredFields = [
       "businessName",
@@ -105,10 +98,16 @@ export function Step3_Business() {
     <WizardLayout>
       <StepHeader step={3} title="Business Information" />
 
-      <Card className="space-y-5">
-        <div className="grid md:grid-cols-2 gap-4">
+      <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: tokens.spacing.md,
+          }}
+        >
           <div>
-            <label style={labelStyle}>Business Name (DBA)</label>
+            <label style={components.form.label}>Business Name (DBA)</label>
             <Input
               value={values.businessName || ""}
               onChange={(e: any) => setField("businessName", e.target.value)}
@@ -116,7 +115,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label style={labelStyle}>Business Legal Name</label>
+            <label style={components.form.label}>Business Legal Name</label>
             <Input
               value={values.legalName || ""}
               onChange={(e: any) => setField("legalName", e.target.value)}
@@ -124,7 +123,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label style={labelStyle}>Business Structure</label>
+            <label style={components.form.label}>Business Structure</label>
             <Select
               value={values.businessStructure || ""}
               onChange={(e: any) =>
@@ -142,7 +141,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label style={labelStyle}>Business Address</label>
+            <label style={components.form.label}>Business Address</label>
             <Input
               value={values.address || ""}
               onChange={(e: any) => setField("address", e.target.value)}
@@ -150,14 +149,14 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label style={labelStyle}>City</label>
+            <label style={components.form.label}>City</label>
             <Input
               value={values.city || ""}
               onChange={(e: any) => setField("city", e.target.value)}
             />
           </div>
           <div>
-            <label style={labelStyle}>{regionLabel}</label>
+            <label style={components.form.label}>{regionLabel}</label>
             <RegionSelect
               country={regionCountry}
               value={values.state || ""}
@@ -165,7 +164,7 @@ export function Step3_Business() {
             />
           </div>
           <div>
-            <label style={labelStyle}>{postalLabel}</label>
+            <label style={components.form.label}>{postalLabel}</label>
             <Input
               value={formatPostalCode(values.zip || "", countryCode)}
               onChange={(e: any) =>
@@ -175,8 +174,8 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label style={labelStyle}>Business Phone</label>
-            <Input
+            <label style={components.form.label}>Business Phone</label>
+            <PhoneInput
               value={formatPhoneNumber(values.phone || "", countryCode)}
               onChange={(e: any) =>
                 setField(
@@ -184,13 +183,12 @@ export function Step3_Business() {
                   formatPhoneNumber(e.target.value, countryCode)
                 )
               }
-              inputMode="tel"
-              placeholder={countryCode === "CA" ? "(555) 555-5555" : "(555) 555-5555"}
+              placeholder="(555) 555-5555"
             />
           </div>
 
           <div>
-            <label style={labelStyle}>Business Website (optional)</label>
+            <label style={components.form.label}>Business Website (optional)</label>
             <Input
               type="url"
               value={values.website || ""}
@@ -200,7 +198,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label style={labelStyle}>Business Start Date</label>
+            <label style={components.form.label}>Business Start Date</label>
             <Input
               type="date"
               value={values.startDate || ""}
@@ -209,16 +207,16 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label style={labelStyle}>Number of Employees</label>
-            <div className="flex items-center gap-3">
+            <label style={components.form.label}>Number of Employees</label>
+            <div style={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}>
               <button
                 style={{
                   height: "40px",
                   width: "40px",
-                  borderRadius: "999px",
-                  border: `1px solid ${theme.colors.border}`,
-                  background: theme.colors.surface,
-                  color: theme.colors.textPrimary,
+                  borderRadius: tokens.radii.pill,
+                  border: `1px solid ${tokens.colors.border}`,
+                  background: tokens.colors.surface,
+                  color: tokens.colors.textPrimary,
                   fontSize: "18px",
                   outline: "none",
                   cursor: "pointer",
@@ -244,10 +242,10 @@ export function Step3_Business() {
                 style={{
                   height: "40px",
                   width: "40px",
-                  borderRadius: "999px",
-                  border: `1px solid ${theme.colors.border}`,
-                  background: theme.colors.surface,
-                  color: theme.colors.textPrimary,
+                  borderRadius: tokens.radii.pill,
+                  border: `1px solid ${tokens.colors.border}`,
+                  background: tokens.colors.surface,
+                  color: tokens.colors.textPrimary,
                   fontSize: "18px",
                   outline: "none",
                   cursor: "pointer",
@@ -263,7 +261,7 @@ export function Step3_Business() {
           </div>
 
           <div>
-            <label style={labelStyle}>Estimated Yearly Revenue</label>
+            <label style={components.form.label}>Estimated Yearly Revenue</label>
             <Input
               value={formatCurrencyValue(
                 values.estimatedRevenue || "",
@@ -281,17 +279,15 @@ export function Step3_Business() {
         </div>
       </Card>
 
-      <Button
-        style={{
-          width: "100%",
-          maxWidth: "220px",
-          marginTop: theme.spacing.lg,
-        }}
-        onClick={next}
-        disabled={!isValid}
-      >
-        Continue
-      </Button>
+      <div style={{ ...layout.stickyCta, marginTop: tokens.spacing.lg }}>
+        <Button
+          style={{ width: "100%", maxWidth: "220px" }}
+          onClick={next}
+          disabled={!isValid}
+        >
+          Continue
+        </Button>
+      </div>
     </WizardLayout>
   );
 }

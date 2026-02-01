@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/Card";
-import { Input } from "../components/ui/Input";
-import { Button } from "../components/ui/Button";
+import { PhoneInput } from "../components/ui/PhoneInput";
+import { PrimaryButton } from "../components/ui/Button";
 import { OtpInput } from "../components/OtpInput";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { formatPhoneNumber, getCountryCode } from "../utils/location";
-import { theme } from "../styles/theme";
 import { resolveOtpNextStep } from "../auth/otp";
+import { components, layout, scrollToFirstError, tokens } from "@/styles";
 
 export function PortalEntry() {
   const navigate = useNavigate();
@@ -24,6 +24,12 @@ export function PortalEntry() {
       setPhone(lastPhone);
     }
   }, []);
+
+  useEffect(() => {
+    if (phoneError || otpError) {
+      scrollToFirstError();
+    }
+  }, [otpError, phoneError]);
 
   function handleSendOtp() {
     const normalized = phone.trim();
@@ -58,39 +64,29 @@ export function PortalEntry() {
   }
 
   return (
-    <div className="p-6">
-      <div className="max-w-xl mx-auto space-y-4">
-        <Card className="space-y-4">
-          <div>
-            <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
-              Client portal
-            </div>
-            <h1 className="text-2xl font-semibold text-borealBlue mt-2">
-              Verify your phone
-            </h1>
-            <p className="text-sm text-slate-500 mt-2">
+    <div style={layout.page}>
+      <div style={layout.centerColumn}>
+        <Card>
+          <div style={layout.stackTight}>
+            <div style={components.form.eyebrow}>Client portal</div>
+            <h1 style={components.form.title}>Verify your phone</h1>
+            <p style={components.form.subtitle}>
               We send a new one-time passcode every time you visit your portal.
             </p>
           </div>
 
-          <div className="space-y-3">
-            <label
-              htmlFor="portal-phone"
-              style={{
-                fontSize: theme.typography.label.fontSize,
-                fontWeight: theme.typography.label.fontWeight,
-                color: theme.colors.textSecondary,
-              }}
-            >
+          <div style={layout.stackTight} data-error={Boolean(phoneError)}>
+            <label htmlFor="portal-phone" style={components.form.label}>
               Phone number
             </label>
-            <Input
+            <PhoneInput
               id="portal-phone"
               value={formatPhoneNumber(phone, countryCode)}
               onChange={(event: any) =>
                 setPhone(formatPhoneNumber(event.target.value, countryCode))
               }
               placeholder="(555) 555-5555"
+              hasError={Boolean(phoneError)}
               onKeyDown={(event: any) => {
                 if (event.key === "Enter") {
                   handleSendOtp();
@@ -98,29 +94,33 @@ export function PortalEntry() {
               }}
             />
             {phoneError && (
-              <div className="text-sm text-red-600">{phoneError}</div>
+              <div style={components.form.errorText} data-error={true}>
+                {phoneError}
+              </div>
             )}
           </div>
 
           {!showOtp && (
-            <Button className="w-full" onClick={handleSendOtp}>
+            <PrimaryButton style={{ width: "100%" }} onClick={handleSendOtp}>
               Send code
-            </Button>
+            </PrimaryButton>
           )}
 
           {showOtp && (
-            <div className="space-y-3">
-              <div className="text-sm text-slate-500">
+            <div style={layout.stackTight}>
+              <div style={components.form.helperText}>
                 Enter the 6-digit code sent to your phone.
               </div>
               <OtpInput onComplete={handleVerify} />
               {otpHint && (
-                <div className="text-xs text-slate-400">
+                <div style={{ ...components.form.helperText, color: tokens.colors.textSecondary }}>
                   Demo OTP: {otpHint}
                 </div>
               )}
               {otpError && (
-                <div className="text-sm text-red-600">{otpError}</div>
+                <div style={components.form.errorText} data-error={true}>
+                  {otpError}
+                </div>
               )}
             </div>
           )}

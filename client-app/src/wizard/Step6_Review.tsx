@@ -8,13 +8,12 @@ import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { WizardLayout } from "../components/WizardLayout";
-import { theme } from "../styles/theme";
 import { submitApplication } from "../api/applications";
-import {
-  buildSubmissionPayload,
-  getMissingRequiredDocs,
-} from "./submission";
+import { buildSubmissionPayload, getMissingRequiredDocs } from "./submission";
 import { ClientProfileStore } from "../state/clientProfiles";
+import { FileUploadCard } from "../components/FileUploadCard";
+import { Checkbox } from "../components/ui/Checkbox";
+import { components, layout, tokens } from "@/styles";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -141,34 +140,19 @@ export function Step6_Review() {
     return (
       <WizardLayout>
         <Card
-          className="space-y-3"
-          style={{ textAlign: "center", padding: theme.spacing.xl }}
+          style={{
+            textAlign: "center",
+            padding: tokens.spacing.xl,
+            display: "flex",
+            flexDirection: "column",
+            gap: tokens.spacing.sm,
+          }}
         >
-          <div
-            style={{
-              fontSize: "12px",
-              textTransform: "uppercase",
-              letterSpacing: "0.2em",
-              color: theme.colors.textSecondary,
-            }}
-          >
-            Submission error
-          </div>
-          <h1
-            style={{
-              fontSize: theme.typography.h1.fontSize,
-              fontWeight: theme.typography.h1.fontWeight,
-              color: theme.colors.textPrimary,
-              margin: 0,
-            }}
-          >
-            We couldn’t submit your application
-          </h1>
-          <p style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
-            {submitError}
-          </p>
+          <div style={components.form.eyebrow}>Submission error</div>
+          <h1 style={components.form.title}>We couldn’t submit your application</h1>
+          <p style={components.form.subtitle}>{submitError}</p>
           <Button
-            style={{ marginTop: theme.spacing.sm, width: "100%", maxWidth: "260px" }}
+            style={{ marginTop: tokens.spacing.sm, width: "100%", maxWidth: "260px" }}
             onClick={() => setSubmitError(null)}
           >
             Return to review
@@ -182,38 +166,23 @@ export function Step6_Review() {
     return (
       <WizardLayout>
         <Card
-          className="space-y-3"
-          style={{ textAlign: "center", padding: theme.spacing.xl }}
+          style={{
+            textAlign: "center",
+            padding: tokens.spacing.xl,
+            display: "flex",
+            flexDirection: "column",
+            gap: tokens.spacing.sm,
+          }}
         >
-          <div
-            style={{
-              fontSize: "12px",
-              textTransform: "uppercase",
-              letterSpacing: "0.2em",
-              color: theme.colors.textSecondary,
-            }}
-          >
-            Application submitted
-          </div>
-          <h1
-            style={{
-              fontSize: theme.typography.h1.fontSize,
-              fontWeight: theme.typography.h1.fontWeight,
-              color: theme.colors.textPrimary,
-              margin: 0,
-            }}
-          >
-            Thank you for your submission.
-          </h1>
-          <p style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
+          <div style={components.form.eyebrow}>Application submitted</div>
+          <h1 style={components.form.title}>Thank you for your submission.</h1>
+          <p style={components.form.subtitle}>
             We’ve received your application and will notify you about next
             steps. You can also review updates in your client portal.
           </p>
           <Button
-            style={{ marginTop: theme.spacing.sm, width: "100%", maxWidth: "260px" }}
-            onClick={() =>
-              (window.location.href = "/portal")
-            }
+            style={{ marginTop: tokens.spacing.sm, width: "100%", maxWidth: "260px" }}
+            onClick={() => (window.location.href = "/portal")}
           >
             View application status
           </Button>
@@ -306,19 +275,10 @@ export function Step6_Review() {
     <WizardLayout>
       <StepHeader step={6} title="Terms & Typed Signature" />
 
-      <Card className="space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="md:col-span-2 space-y-3">
-            <h2
-              style={{
-                fontSize: theme.typography.h2.fontSize,
-                fontWeight: theme.typography.h2.fontWeight,
-                marginBottom: theme.spacing.xs,
-                color: theme.colors.textPrimary,
-              }}
-            >
-              Applicant IDs
-            </h2>
+      <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
+        <div>
+          <h2 style={components.form.sectionTitle}>Applicant IDs</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
             {idRequirements
               .filter((entry) => entry.required)
               .map((entry) => {
@@ -326,22 +286,21 @@ export function Step6_Review() {
                 const isUploading = uploadingDocs[entry.key];
                 const docStatus = app.documents[entry.key]?.status;
                 return (
-                  <div
+                  <FileUploadCard
                     key={entry.key}
-                    className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4"
+                    title={entry.label}
+                    status={isUploading ? "Uploading" : docStatus || "missing"}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      const file = event.dataTransfer.files?.[0] || null;
+                      handleIdUpload(entry.key, file);
+                    }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="font-semibold text-borealBlue">
-                        {entry.label}
-                      </div>
-                      <span className="text-xs font-semibold text-slate-500">
-                        {isUploading ? "Uploading" : docStatus || "missing"}
-                      </span>
-                    </div>
                     <input
                       id={`id-doc-${entry.key}`}
                       type="file"
-                      className="hidden"
+                      style={{ display: "none" }}
                       onChange={(e: any) =>
                         handleIdUpload(entry.key, e.target.files?.[0] || null)
                       }
@@ -350,95 +309,78 @@ export function Step6_Review() {
                       type="button"
                       variant="secondary"
                       disabled={isUploading}
+                      loading={isUploading}
                       onClick={() =>
                         document.getElementById(`id-doc-${entry.key}`)?.click()
                       }
                       style={{ width: "100%" }}
                     >
-                      {isUploading ? "Uploading..." : "Upload ID"}
+                      Upload ID
                     </Button>
                     {app.documents[entry.key] && (
-                      <div className="text-xs text-slate-500">
+                      <div style={components.form.helperText}>
                         Uploaded: {app.documents[entry.key].name}
                       </div>
                     )}
                     {docError && (
-                      <div className="text-xs text-red-600">{docError}</div>
+                      <div style={components.form.errorText}>{docError}</div>
                     )}
                     {!docError && !app.documents[entry.key] && (
-                      <div className="text-xs text-red-600">
+                      <div style={components.form.errorText}>
                         This ID is required.
                       </div>
                     )}
                     {docStatus === "rejected" && (
-                      <div className="text-xs text-red-600">
+                      <div style={components.form.errorText}>
                         ID rejected. Please upload a new file.
                       </div>
                     )}
-                  </div>
+                  </FileUploadCard>
                 );
               })}
           </div>
+        </div>
 
-          <div className="md:col-span-2">
-            <h2
-              style={{
-                fontSize: theme.typography.h2.fontSize,
-                fontWeight: theme.typography.h2.fontWeight,
-                marginBottom: theme.spacing.xs,
-                color: theme.colors.textPrimary,
-              }}
-            >
-              Terms & Conditions
-            </h2>
-            <div
-              style={{
-                background: theme.colors.background,
-                padding: theme.spacing.md,
-                border: `1px solid ${theme.colors.border}`,
-                borderRadius: theme.layout.radius,
-                fontSize: "14px",
-                color: theme.colors.textSecondary,
-                whiteSpace: "pre-line",
-              }}
-            >
-              {TERMS_TEXT}
-            </div>
+        <div>
+          <h2 style={components.form.sectionTitle}>Terms & Conditions</h2>
+          <div
+            style={{
+              background: tokens.colors.background,
+              padding: tokens.spacing.md,
+              border: `1px solid ${tokens.colors.border}`,
+              borderRadius: tokens.radii.lg,
+              fontSize: tokens.typography.body.fontSize,
+              color: tokens.colors.textSecondary,
+              whiteSpace: "pre-line",
+              marginTop: tokens.spacing.xs,
+            }}
+          >
+            {TERMS_TEXT}
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <label
-              style={{
-                display: "block",
-                fontSize: theme.typography.label.fontSize,
-                fontWeight: theme.typography.label.fontWeight,
-                color: theme.colors.textSecondary,
-              }}
-            >
-              Typed signature
-            </label>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: tokens.spacing.md,
+          }}
+        >
+          <div style={layout.stackTight}>
+            <label style={components.form.label}>Typed signature</label>
             <Input
               placeholder="Type your full legal name"
               value={app.typedSignature || ""}
               onChange={(e: any) => update({ typedSignature: e.target.value })}
             />
-            <p style={{ fontSize: "12px", color: theme.colors.textSecondary }}>
+            <p style={components.form.helperText}>
               By typing your name, you are providing a legally binding signature.
             </p>
           </div>
 
           {hasPartner && (
-            <div className="space-y-2">
-              <label
-                style={{
-                  display: "block",
-                  fontSize: theme.typography.label.fontSize,
-                  fontWeight: theme.typography.label.fontWeight,
-                  color: theme.colors.textSecondary,
-                }}
-              >
-                Business partner signature
-              </label>
+            <div style={layout.stackTight}>
+              <label style={components.form.label}>Business partner signature</label>
               <Input
                 placeholder="Type full legal name"
                 value={app.coApplicantSignature || ""}
@@ -446,86 +388,54 @@ export function Step6_Review() {
                   update({ coApplicantSignature: e.target.value })
                 }
               />
-              <p style={{ fontSize: "12px", color: theme.colors.textSecondary }}>
+              <p style={components.form.helperText}>
                 All applicants listed in the application must sign.
               </p>
             </div>
           )}
 
-          <div className="space-y-2">
-            <label
-              style={{
-                display: "block",
-                fontSize: theme.typography.label.fontSize,
-                fontWeight: theme.typography.label.fontWeight,
-                color: theme.colors.textSecondary,
-              }}
-            >
-              Date
-            </label>
+          <div style={layout.stackTight}>
+            <label style={components.form.label}>Date</label>
             <Input value={app.signatureDate || today} readOnly />
           </div>
-
-          <label
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: theme.spacing.xs,
-              fontSize: theme.typography.label.fontSize,
-              fontWeight: theme.typography.label.fontWeight,
-              color: theme.colors.textPrimary,
-            }}
-            className="md:col-span-2"
-          >
-            <input
-              type="checkbox"
-              checked={app.termsAccepted}
-              onChange={toggleTerms}
-              style={{
-                width: "18px",
-                height: "18px",
-                borderRadius: "4px",
-                border: `1px solid ${theme.colors.border}`,
-                background: app.termsAccepted ? theme.colors.primary : theme.colors.surface,
-                display: "inline-grid",
-                placeContent: "center",
-                appearance: "none",
-                marginTop: "2px",
-                backgroundImage: app.termsAccepted
-                  ? "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 10.5l3 3 7-7' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")"
-                  : "none",
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "center",
-                backgroundSize: "12px",
-              }}
-            />
-            <span>I agree to the Terms & Conditions</span>
-          </label>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            variant="secondary"
-            style={{ width: "100%", maxWidth: "160px" }}
-            onClick={() => navigate("/apply/step-5")}
-          >
-            ← Back
-          </Button>
-          <Button
-            style={{
-              width: "100%",
-              maxWidth: "240px",
-            }}
-            onClick={submit}
-            disabled={
-              !app.termsAccepted ||
-              !app.typedSignature?.trim() ||
-              (hasPartner && !app.coApplicantSignature?.trim()) ||
-              missingIdDocs.length > 0
-            }
-          >
-            Submit application
-          </Button>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: tokens.spacing.xs,
+            fontSize: tokens.typography.label.fontSize,
+            fontWeight: tokens.typography.label.fontWeight,
+            color: tokens.colors.textPrimary,
+          }}
+        >
+          <Checkbox checked={app.termsAccepted} onChange={toggleTerms} />
+          <span>I agree to the Terms & Conditions</span>
+        </label>
+
+        <div style={layout.stickyCta}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: tokens.spacing.sm }}>
+            <Button
+              variant="secondary"
+              style={{ width: "100%", maxWidth: "160px" }}
+              onClick={() => navigate("/apply/step-5")}
+            >
+              ← Back
+            </Button>
+            <Button
+              style={{ width: "100%", maxWidth: "240px" }}
+              onClick={submit}
+              disabled={
+                !app.termsAccepted ||
+                !app.typedSignature?.trim() ||
+                (hasPartner && !app.coApplicantSignature?.trim()) ||
+                missingIdDocs.length > 0
+              }
+            >
+              Submit application
+            </Button>
+          </div>
         </div>
       </Card>
     </WizardLayout>

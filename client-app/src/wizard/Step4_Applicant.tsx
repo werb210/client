@@ -18,7 +18,9 @@ import {
   getPostalLabel,
   getRegionLabel,
 } from "../utils/location";
-import { theme } from "../styles/theme";
+import { PhoneInput } from "../components/ui/PhoneInput";
+import { Checkbox } from "../components/ui/Checkbox";
+import { components, layout, tokens } from "@/styles";
 
 export function Step4_Applicant() {
   const { app, update } = useApplicationStore();
@@ -67,7 +69,9 @@ export function Step4_Applicant() {
       "ownership",
     ];
 
-    const missing = requiredFields.find((field) => !Validate.required(values[field]));
+    const missing = requiredFields.find(
+      (field) => !Validate.required(values[field])
+    );
     if (missing) {
       alert("Please complete all required applicant details.");
       return;
@@ -99,57 +103,29 @@ export function Step4_Applicant() {
     "ownership",
   ].every((field) => Validate.required(values[field]));
 
-  const checkIcon =
-    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 10.5l3 3 7-7' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")";
-  const labelStyle = {
-    display: "block",
-    marginBottom: theme.spacing.xs,
-    fontSize: theme.typography.label.fontSize,
-    fontWeight: theme.typography.label.fontWeight,
-    color: theme.colors.textSecondary,
-  };
-
-  const checkboxStyle = {
-    width: "18px",
-    height: "18px",
-    borderRadius: "4px",
-    border: `1px solid ${theme.colors.border}`,
-    background: values.hasMultipleOwners ? theme.colors.primary : theme.colors.surface,
-    display: "inline-grid",
-    placeContent: "center",
-    appearance: "none" as const,
-    backgroundImage: values.hasMultipleOwners ? checkIcon : "none",
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "center",
-    backgroundSize: "12px",
-  };
-
   return (
     <WizardLayout>
       <StepHeader step={4} title="Applicant Information" />
 
-      <Card className="space-y-5">
+      <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
+        <div style={components.form.eyebrow}>Primary applicant</div>
+
         <div
           style={{
-            fontSize: "12px",
-            textTransform: "uppercase",
-            letterSpacing: "0.2em",
-            color: theme.colors.textSecondary,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: tokens.spacing.md,
           }}
         >
-          Primary applicant
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label style={labelStyle}>First Name</label>
+            <label style={components.form.label}>First Name</label>
             <Input
               value={values.firstName || ""}
               onChange={(e: any) => setField("firstName", e.target.value)}
             />
           </div>
           <div>
-            <label style={labelStyle}>Last Name</label>
+            <label style={components.form.label}>Last Name</label>
             <Input
               value={values.lastName || ""}
               onChange={(e: any) => setField("lastName", e.target.value)}
@@ -157,7 +133,7 @@ export function Step4_Applicant() {
           </div>
 
           <div>
-            <label style={labelStyle}>Email Address</label>
+            <label style={components.form.label}>Email Address</label>
             <Input
               type="email"
               value={values.email || ""}
@@ -166,18 +142,17 @@ export function Step4_Applicant() {
           </div>
 
           <div>
-            <label style={labelStyle}>Phone Number</label>
-            <Input
+            <label style={components.form.label}>Phone Number</label>
+            <PhoneInput
               value={formatPhoneNumber(values.phone || "", countryCode)}
               onChange={(e: any) =>
                 setField("phone", formatPhoneNumber(e.target.value, countryCode))
               }
-              inputMode="tel"
             />
           </div>
 
           <div>
-            <label style={labelStyle}>Street Address</label>
+            <label style={components.form.label}>Street Address</label>
             <Input
               value={values.street || ""}
               onChange={(e: any) => setField("street", e.target.value)}
@@ -185,14 +160,14 @@ export function Step4_Applicant() {
           </div>
 
           <div>
-            <label style={labelStyle}>City</label>
+            <label style={components.form.label}>City</label>
             <Input
               value={values.city || ""}
               onChange={(e: any) => setField("city", e.target.value)}
             />
           </div>
           <div>
-            <label style={labelStyle}>{regionLabel}</label>
+            <label style={components.form.label}>{regionLabel}</label>
             <RegionSelect
               country={regionCountry}
               value={values.state || ""}
@@ -200,7 +175,7 @@ export function Step4_Applicant() {
             />
           </div>
           <div>
-            <label style={labelStyle}>{postalLabel}</label>
+            <label style={components.form.label}>{postalLabel}</label>
             <Input
               value={formatPostalCode(values.zip || "", countryCode)}
               onChange={(e: any) =>
@@ -210,7 +185,7 @@ export function Step4_Applicant() {
           </div>
 
           <div>
-            <label style={labelStyle}>Date of Birth</label>
+            <label style={components.form.label}>Date of Birth</label>
             <Input
               type="date"
               value={values.dob || ""}
@@ -218,7 +193,7 @@ export function Step4_Applicant() {
             />
           </div>
           <div>
-            <label style={labelStyle}>{identityLabel}</label>
+            <label style={components.form.label}>{identityLabel}</label>
             <Input
               type="text"
               inputMode="numeric"
@@ -234,7 +209,7 @@ export function Step4_Applicant() {
           </div>
 
           <div>
-            <label style={labelStyle}>Ownership Percentage</label>
+            <label style={components.form.label}>Ownership Percentage</label>
             <Input
               value={values.ownership || ""}
               onChange={(e: any) => setField("ownership", e.target.value)}
@@ -247,19 +222,17 @@ export function Step4_Applicant() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: theme.spacing.xs,
-            fontSize: theme.typography.label.fontSize,
-            fontWeight: theme.typography.label.fontWeight,
-            color: theme.colors.textPrimary,
+            gap: tokens.spacing.xs,
+            fontSize: tokens.typography.label.fontSize,
+            fontWeight: tokens.typography.label.fontWeight,
+            color: tokens.colors.textPrimary,
           }}
         >
-          <input
-            type="checkbox"
+          <Checkbox
             checked={values.hasMultipleOwners || false}
             onChange={(e) =>
-              setField("hasMultipleOwners", e.target.checked)
+              setField("hasMultipleOwners", (e.target as HTMLInputElement).checked)
             }
-            style={checkboxStyle}
           />
           This business has multiple owners/partners
         </label>
@@ -267,9 +240,9 @@ export function Step4_Applicant() {
         {values.hasMultipleOwners && (
           <div
             style={{
-              marginTop: theme.spacing.md,
-              paddingTop: theme.spacing.md,
-              borderTop: `1px solid ${theme.colors.border}`,
+              marginTop: tokens.spacing.md,
+              paddingTop: tokens.spacing.md,
+              borderTop: `1px solid ${tokens.colors.border}`,
             }}
           >
             <div
@@ -277,15 +250,21 @@ export function Step4_Applicant() {
                 fontSize: "12px",
                 textTransform: "uppercase",
                 letterSpacing: "0.2em",
-                color: theme.colors.textSecondary,
-                marginBottom: theme.spacing.sm,
+                color: tokens.colors.textSecondary,
+                marginBottom: tokens.spacing.sm,
               }}
             >
               Partner Information
             </div>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: tokens.spacing.md,
+              }}
+            >
               <div>
-                <label style={labelStyle}>First Name</label>
+                <label style={components.form.label}>First Name</label>
                 <Input
                   value={partner.firstName || ""}
                   onChange={(e: any) =>
@@ -294,7 +273,7 @@ export function Step4_Applicant() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Last Name</label>
+                <label style={components.form.label}>Last Name</label>
                 <Input
                   value={partner.lastName || ""}
                   onChange={(e: any) =>
@@ -302,11 +281,9 @@ export function Step4_Applicant() {
                   }
                 />
               </div>
-            </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label style={labelStyle}>Email Address</label>
+                <label style={components.form.label}>Email Address</label>
                 <Input
                   type="email"
                   value={partner.email || ""}
@@ -317,8 +294,8 @@ export function Step4_Applicant() {
               </div>
 
               <div>
-                <label style={labelStyle}>Phone Number</label>
-                <Input
+                <label style={components.form.label}>Phone Number</label>
+                <PhoneInput
                   value={formatPhoneNumber(partner.phone || "", countryCode)}
                   onChange={(e: any) =>
                     setPartnerField(
@@ -326,12 +303,11 @@ export function Step4_Applicant() {
                       formatPhoneNumber(e.target.value, countryCode)
                     )
                   }
-                  inputMode="tel"
                 />
               </div>
 
               <div>
-                <label style={labelStyle}>Street Address</label>
+                <label style={components.form.label}>Street Address</label>
                 <Input
                   value={partner.street || ""}
                   onChange={(e: any) =>
@@ -341,7 +317,7 @@ export function Step4_Applicant() {
               </div>
 
               <div>
-                <label style={labelStyle}>City</label>
+                <label style={components.form.label}>City</label>
                 <Input
                   value={partner.city || ""}
                   onChange={(e: any) =>
@@ -350,7 +326,7 @@ export function Step4_Applicant() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>{regionLabel}</label>
+                <label style={components.form.label}>{regionLabel}</label>
                 <RegionSelect
                   country={regionCountry}
                   value={partner.state || ""}
@@ -358,7 +334,7 @@ export function Step4_Applicant() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>{postalLabel}</label>
+                <label style={components.form.label}>{postalLabel}</label>
                 <Input
                   value={formatPostalCode(partner.zip || "", countryCode)}
                   onChange={(e: any) =>
@@ -371,7 +347,7 @@ export function Step4_Applicant() {
               </div>
 
               <div>
-                <label style={labelStyle}>Date of Birth</label>
+                <label style={components.form.label}>Date of Birth</label>
                 <Input
                   type="date"
                   value={partner.dob || ""}
@@ -381,7 +357,7 @@ export function Step4_Applicant() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>{identityLabel}</label>
+                <label style={components.form.label}>{identityLabel}</label>
                 <Input
                   type="text"
                   inputMode="numeric"
@@ -397,7 +373,7 @@ export function Step4_Applicant() {
               </div>
 
               <div>
-                <label style={labelStyle}>Ownership Percentage</label>
+                <label style={components.form.label}>Ownership Percentage</label>
                 <Input
                   value={partner.ownership || ""}
                   onChange={(e: any) =>
@@ -411,17 +387,15 @@ export function Step4_Applicant() {
         )}
       </Card>
 
-      <Button
-        style={{
-          width: "100%",
-          maxWidth: "260px",
-          marginTop: theme.spacing.lg,
-        }}
-        onClick={next}
-        disabled={!isValid}
-      >
-        Continue to Documents →
-      </Button>
+      <div style={{ ...layout.stickyCta, marginTop: tokens.spacing.lg }}>
+        <Button
+          style={{ width: "100%", maxWidth: "260px" }}
+          onClick={next}
+          disabled={!isValid}
+        >
+          Continue to Documents →
+        </Button>
+      </div>
     </WizardLayout>
   );
 }

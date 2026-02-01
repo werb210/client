@@ -1,4 +1,6 @@
 import { Component, ReactNode } from "react";
+import { Button } from "../components/ui/Button";
+import { components, layout, tokens } from "@/styles";
 
 export class ErrorBoundary extends Component<
   { children: ReactNode },
@@ -20,20 +22,20 @@ export class ErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-6 text-center">
-          <div className="text-lg font-semibold text-borealBlue">
-            We’re refreshing your session
+        <div style={{ ...layout.page, textAlign: "center" }}>
+          <div style={{ maxWidth: "420px", margin: "0 auto" }}>
+            <div style={{ fontSize: tokens.typography.h2.fontSize, fontWeight: 600, color: tokens.colors.primary }}>
+              We’re refreshing your session
+            </div>
+            <p style={{ ...components.form.subtitle, marginTop: tokens.spacing.xs }}>
+              Please reload to continue your application.
+            </p>
+            <div style={{ marginTop: tokens.spacing.md, display: "flex", justifyContent: "center" }}>
+              <Button onClick={() => window.location.reload()} type="button">
+                Reload
+              </Button>
+            </div>
           </div>
-          <p className="mt-2 text-sm text-slate-500">
-            Please reload to continue your application.
-          </p>
-          <button
-            className="mt-4 inline-flex items-center justify-center rounded-full bg-borealBlue px-5 py-2 text-sm font-semibold text-white"
-            onClick={() => window.location.reload()}
-            type="button"
-          >
-            Reload
-          </button>
         </div>
       );
     }

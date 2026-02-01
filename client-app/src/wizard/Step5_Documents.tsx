@@ -6,7 +6,6 @@ import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { WizardLayout } from "../components/WizardLayout";
-import { theme } from "../styles/theme";
 import { ProductSync } from "../lender/productSync";
 import {
   formatDocumentLabel,
@@ -16,6 +15,11 @@ import {
 import { filterProductsForApplicant, parseCurrencyAmount } from "./productSelection";
 import { getCountryCode } from "../utils/location";
 import { aggregateRequiredDocuments } from "../documents/requiredDocuments";
+import { FileUploadCard } from "../components/FileUploadCard";
+import { Checkbox } from "../components/ui/Checkbox";
+import { DocumentUploadList } from "../components/DocumentUploadList";
+import { Spinner } from "../components/ui/Spinner";
+import { components, layout, scrollToFirstError, tokens } from "@/styles";
 
 type DocStatus = "missing" | "uploaded" | "accepted" | "rejected";
 
@@ -71,6 +75,12 @@ export function Step5_Documents() {
       update({ currentStep: 5 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    if (docError || missingRequiredDocs.length > 0 || hasBlockingUploadErrors) {
+      scrollToFirstError();
+    }
+  }, [docError, hasBlockingUploadErrors, missingRequiredDocs.length]);
 
   useEffect(() => {
     let active = true;
@@ -288,132 +298,123 @@ export function Step5_Documents() {
     <WizardLayout>
       <StepHeader step={5} title="Required Documents" />
 
-      <Card className="space-y-4">
-        {docError && (
-          <div
-            style={{
-              border: `1px solid ${theme.colors.border}`,
-              background: "rgba(220, 38, 38, 0.08)",
-              borderRadius: theme.layout.radius,
-              padding: theme.spacing.md,
-              fontSize: "14px",
-              color: theme.colors.textPrimary,
-            }}
-          >
-            {docError}
+      <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
+        {isLoading && (
+          <div style={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}>
+            <Spinner />
+            <span style={components.form.helperText}>Loading document requirements…</span>
           </div>
+        )}
+        {docError && (
+          <Card variant="muted" data-error={true}>
+            <div style={components.form.errorText}>{docError}</div>
+          </Card>
         )}
         {missingRequiredDocs.length > 0 && (
-          <div
-            style={{
-              border: `1px solid ${theme.colors.border}`,
-              background: "rgba(234, 179, 8, 0.12)",
-              borderRadius: theme.layout.radius,
-              padding: theme.spacing.md,
-              fontSize: "14px",
-              color: theme.colors.textPrimary,
-            }}
+          <Card
+            variant="muted"
+            data-error={true}
+            style={{ background: "rgba(245, 158, 11, 0.12)" }}
           >
-            <p style={{ fontWeight: 600, marginBottom: theme.spacing.xs }}>
+            <div style={{ fontWeight: 600, marginBottom: tokens.spacing.xs }}>
               Missing required documents:
-            </p>
-            <ul className="list-disc pl-5 space-y-1">
-              {missingRequiredDocs.map((doc) => (
-                <li key={doc}>{formatDocumentLabel(doc)}</li>
-              ))}
-            </ul>
-          </div>
+            </div>
+            <DocumentUploadList
+              documents={missingRequiredDocs.map(formatDocumentLabel)}
+            />
+          </Card>
         )}
-        <div className="space-y-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
           {requiredDocs.map((entry) => {
             const docType = entry.document_type;
             const docStatus = getDocStatus(docType);
             const docError = docErrors[docType];
             const isUploading = uploadingDocs[docType];
             return (
-              <div
+              <FileUploadCard
                 key={entry.id}
-                className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4"
+                title={formatDocumentLabel(docType)}
+                status={isUploading ? "Uploading" : docStatus}
+                data-error={Boolean(docError) || docStatus === "missing" || docStatus === "rejected"}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const file = event.dataTransfer.files?.[0] || null;
+                  handleFile(docType, file);
+                }}
               >
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-3 text-sm text-slate-600">
-                    <input
-                      type="checkbox"
-                      checked={docStatus !== "missing"}
-                      readOnly
-                    />
-                    <span className="font-semibold text-borealBlue">
-                      {formatDocumentLabel(docType)}
-                    </span>
-                  </label>
-                  <span className="text-xs font-semibold text-slate-500">
-                    {isUploading ? "Uploading" : docStatus}
-                  </span>
-                </div>
                 <input
                   id={`doc-${entry.id}`}
                   type="file"
-                  className="hidden"
+                  style={{ display: "none" }}
                   onChange={(e: any) =>
                     handleFile(docType, e.target.files?.[0] || null)
                   }
                 />
-                <div className="flex flex-col gap-2">
+                <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.xs }}>
+                  <label
+                    style={{ display: "flex", alignItems: "center", gap: tokens.spacing.xs }}
+                  >
+                    <Checkbox checked={docStatus !== "missing"} readOnly />
+                    <span style={{ fontWeight: 600, color: tokens.colors.primary }}>
+                      {formatDocumentLabel(docType)}
+                    </span>
+                  </label>
                   <Button
                     type="button"
                     variant="secondary"
                     disabled={isUploading}
+                    loading={isUploading}
                     onClick={() =>
                       document.getElementById(`doc-${entry.id}`)?.click()
                     }
                     style={{ width: "100%" }}
                   >
-                    {isUploading ? "Uploading..." : "Upload file"}
+                    Upload file
                   </Button>
                   {app.documents[docType] && (
-                    <div className="text-xs text-slate-500">
+                    <div style={components.form.helperText}>
                       Uploaded: {app.documents[docType].name}
                     </div>
                   )}
                   {docError && (
-                    <div className="text-xs text-red-600">{docError}</div>
+                    <div style={components.form.errorText}>{docError}</div>
                   )}
                   {!docError && docStatus === "missing" && (
-                    <div className="text-xs text-red-600">
+                    <div style={components.form.errorText}>
                       This document is required.
                     </div>
                   )}
                   {docStatus === "rejected" && (
-                    <div className="text-xs text-red-600">
+                    <div style={components.form.errorText}>
                       Document rejected. Please upload a new file.
                     </div>
                   )}
                 </div>
-              </div>
+              </FileUploadCard>
             );
           })}
         </div>
       </Card>
 
-      <div
-        className="flex flex-col sm:flex-row gap-3"
-        style={{ marginTop: theme.spacing.lg }}
-      >
-        <Button
-          style={{ width: "100%", maxWidth: "220px" }}
-          onClick={next}
-          disabled={!canContinue}
-        >
-          Continue
-        </Button>
-        <Button
-          variant="secondary"
-          style={{ width: "100%", maxWidth: "220px" }}
-          onClick={uploadLater}
-          disabled={isLoading || hasUploadsInFlight}
-        >
-          Upload later
-        </Button>
+      <div style={{ ...layout.stickyCta, marginTop: tokens.spacing.lg }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: tokens.spacing.sm }}>
+          <Button
+            style={{ width: "100%", maxWidth: "220px" }}
+            onClick={next}
+            disabled={!canContinue}
+          >
+            Continue
+          </Button>
+          <Button
+            variant="ghost"
+            style={{ width: "100%", maxWidth: "220px" }}
+            onClick={uploadLater}
+            disabled={isLoading || hasUploadsInFlight}
+          >
+            Skip documents
+          </Button>
+        </div>
       </div>
     </WizardLayout>
   );

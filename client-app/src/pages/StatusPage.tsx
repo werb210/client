@@ -2,7 +2,7 @@ import { ClientAppAPI } from "../api/clientApp";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
+import { Button, PrimaryButton, SecondaryButton } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { OfflineStore } from "../state/offline";
 import { useChatbot } from "../hooks/useChatbot";
@@ -14,6 +14,11 @@ import {
 import { useDocumentRejectionNotifications } from "../portal/useDocumentRejectionNotifications";
 import { formatDocumentLabel } from "../wizard/requirements";
 import { LinkedApplicationStore } from "../applications/linkedApplications";
+import { DocumentUploadList } from "../components/DocumentUploadList";
+import { StatusTimeline } from "../components/StatusTimeline";
+import { EmptyState } from "../components/ui/EmptyState";
+import { Spinner } from "../components/ui/Spinner";
+import { components, layout, tokens } from "@/styles";
 
 export function StatusPage() {
   const token = new URLSearchParams(window.location.search).get("token");
@@ -114,22 +119,22 @@ export function StatusPage() {
 
   if (!token) {
     return (
-      <div className="p-6">
-        <div className="max-w-2xl mx-auto">
+      <div style={layout.page}>
+        <div style={layout.centerColumn}>
           <Card>
-            <h1 className="text-xl font-semibold text-borealBlue">
-              Client portal unavailable
-            </h1>
-            <p className="text-sm text-slate-500 mt-2">
-              We couldn’t find your application token. Use your magic link or
-              start a new application.
-            </p>
-            <Button
-              className="mt-4 w-full md:w-auto"
-              onClick={() => (window.location.href = "/apply/step-1")}
-            >
-              Start new application
-            </Button>
+            <div style={layout.stackTight}>
+              <h1 style={components.form.sectionTitle}>Client portal unavailable</h1>
+              <p style={components.form.subtitle}>
+                We couldn’t find your application token. Use your magic link or
+                start a new application.
+              </p>
+              <PrimaryButton
+                onClick={() => (window.location.href = "/apply/step-1")}
+                style={{ width: "100%" }}
+              >
+                Start new application
+              </PrimaryButton>
+            </div>
           </Card>
         </div>
       </div>
@@ -142,10 +147,15 @@ export function StatusPage() {
 
   if (!status) {
     return (
-      <div className="p-6">
-        <div className="max-w-2xl mx-auto">
+      <div style={layout.page}>
+        <div style={layout.centerColumn}>
           <Card>
-            <div className="text-sm text-slate-500">Loading your status…</div>
+            <EmptyState>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: tokens.spacing.sm }}>
+                <Spinner />
+                <span>Loading your status…</span>
+              </div>
+            </EmptyState>
           </Card>
         </div>
       </div>
@@ -153,194 +163,165 @@ export function StatusPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div style={layout.page}>
+      <div style={layout.portalColumn}>
         <Card>
-          <div className="flex flex-col gap-4">
-            <div>
-              <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
-                Application status
-              </div>
-              <h1 className="text-2xl font-semibold text-borealBlue mt-2">
-                {activeStage}
-              </h1>
+          <div style={layout.stackTight}>
+            <div style={layout.stackTight}>
+              <div style={components.form.eyebrow}>Application status</div>
+              <h1 style={components.form.title}>{activeStage}</h1>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-              {stages.map((stage) => {
-                const activeIndex = stages.indexOf(activeStage);
-                const stageIndex = stages.indexOf(stage);
-                const isActive = stageIndex <= activeIndex;
-                return (
-                  <div
-                    key={stage}
-                    className={`rounded-full px-4 py-2 text-xs font-semibold text-center ${
-                      isActive
-                        ? "bg-borealBlue text-white"
-                        : "bg-borealLightBlue/50 text-borealBlue"
-                    }`}
-                  >
-                    {stage}
-                  </div>
-                );
-              })}
-            </div>
+            <StatusTimeline stages={stages} activeStage={activeStage} />
           </div>
         </Card>
 
         {rejectionNotice && (
-          <Card className="border border-amber-200 bg-amber-50">
-            <div className="flex flex-col gap-2 text-sm text-slate-600">
-              <div className="font-semibold text-amber-700">
+          <Card
+            style={{
+              border: `1px solid rgba(245, 158, 11, 0.35)`,
+              background: "rgba(245, 158, 11, 0.1)",
+            }}
+          >
+            <div style={layout.stackTight}>
+              <div style={{ fontWeight: 600, color: tokens.colors.warning }}>
                 Action needed: documents rejected
               </div>
-              <div>
+              <div style={components.form.subtitle}>
                 We sent a single SMS and email summary covering the rejected
                 files below. Please re-upload them to keep your application
                 moving.
               </div>
-              <ul className="list-disc pl-5 text-amber-700">
-                {rejectionNotice.documents.map((doc) => (
-                  <li key={doc}>{formatDocumentLabel(doc)}</li>
-                ))}
-              </ul>
-              <Button
-                className="w-full md:w-auto"
+              <DocumentUploadList
+                documents={rejectionNotice.documents.map(formatDocumentLabel)}
+              />
+              <PrimaryButton
+                style={{ width: "100%" }}
                 onClick={() => (window.location.href = "/apply/step-5")}
               >
                 Re-upload documents
-              </Button>
+              </PrimaryButton>
             </div>
           </Card>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-          <Card className="h-fit">
-            <div className="flex flex-col gap-3">
-              <h2 className="text-lg font-semibold text-borealBlue">
-                Actions
-              </h2>
-              <Button
-                className="w-full"
-                onClick={() => (window.location.href = "/apply/step-5")}
-              >
-                Upload required documents
-              </Button>
-              <Button
-                className="w-full bg-white text-borealBlue border border-borealLightBlue"
-                onClick={() => (window.location.href = "/resume")}
-              >
-                View application
-              </Button>
-              <Button
-                className="w-full bg-white text-borealBlue border border-borealLightBlue"
-                onClick={() =>
-                  document
-                    .getElementById("portal-messages")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-              >
-                Messages
-              </Button>
-              <Button
-                className="w-full bg-white text-borealBlue border border-borealLightBlue"
-                onClick={() => {
-                  OfflineStore.clear();
-                  window.location.href = "/apply/step-1";
-                }}
-              >
-                New application
-              </Button>
-              <div className="text-xs text-slate-500">
-                Personal net worth and collateral forms will appear here when
-                available.
-              </div>
-            </div>
-          </Card>
-
-          <Card id="portal-messages" className="flex flex-col min-h-[520px]">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-sm uppercase tracking-[0.2em] text-slate-400">
-                  Messages
-                </div>
-                <h2 className="text-lg font-semibold text-borealBlue mt-1">
-                  Conversation
-                </h2>
-              </div>
-              <span className="text-xs text-slate-500">AI + staff support</span>
-            </div>
-
-            <div className="flex flex-wrap gap-2 text-xs mb-4">
-              <button
-                className={`px-3 py-1 rounded-full border ${
-                  mode === "ai" && !issueMode
-                    ? "bg-borealLightBlue text-borealBlue border-borealLightBlue"
-                    : "border-slate-200 text-slate-500"
-                }`}
-                onClick={() => {
-                  setMode("ai");
-                  setIssueMode(false);
-                }}
-              >
-                AI chat
-              </button>
-              <button
-                className={`px-3 py-1 rounded-full border ${
-                  mode === "human"
-                    ? "bg-borealLightBlue text-borealBlue border-borealLightBlue"
-                    : "border-slate-200 text-slate-500"
-                }`}
-                onClick={() => {
-                  setMode("human");
-                  setIssueMode(false);
-                }}
-              >
-                Talk to a human
-              </button>
-              <button
-                className={`px-3 py-1 rounded-full border ${
-                  issueMode
-                    ? "bg-borealLightBlue text-borealBlue border-borealLightBlue"
-                    : "border-slate-200 text-slate-500"
-                }`}
-                onClick={() => {
-                  setIssueMode(true);
-                  setMode("ai");
-                }}
-              >
-                Report an issue
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-              {messages.length === 0 && (
-                <div className="text-sm text-slate-500">
-                  No messages yet. Start the conversation any time.
-                </div>
-              )}
-              {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className="p-3 rounded-xl bg-borealGray text-[14px] leading-tight"
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr)",
+            gap: tokens.spacing.lg,
+          }}
+        >
+          <div style={{ display: "grid", gap: tokens.spacing.lg }}>
+            <Card style={{ height: "fit-content" }}>
+              <div style={layout.stackTight}>
+                <h2 style={components.form.sectionTitle}>Actions</h2>
+                <PrimaryButton
+                  style={{ width: "100%" }}
+                  onClick={() => (window.location.href = "/apply/step-5")}
                 >
-                  <div className="text-[12px] text-slate-500 mb-1">{m.from}</div>
-                  <div>{m.text}</div>
+                  Upload required documents
+                </PrimaryButton>
+                <SecondaryButton
+                  style={{ width: "100%" }}
+                  onClick={() => (window.location.href = "/resume")}
+                >
+                  View application
+                </SecondaryButton>
+                <SecondaryButton
+                  style={{ width: "100%" }}
+                  onClick={() =>
+                    document
+                      .getElementById("portal-messages")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
+                  Messages
+                </SecondaryButton>
+                <SecondaryButton
+                  style={{ width: "100%" }}
+                  onClick={() => {
+                    OfflineStore.clear();
+                    window.location.href = "/apply/step-1";
+                  }}
+                >
+                  New application
+                </SecondaryButton>
+                <div style={components.form.helperText}>
+                  Personal net worth and collateral forms will appear here when
+                  available.
                 </div>
-              ))}
-            </div>
+              </div>
+            </Card>
+          </div>
 
-            <div className="mt-4 space-y-3">
-              <Input
-                placeholder="Type a message…"
-                value={text}
-                onChange={(e: any) => setText(e.target.value)}
-              />
-              <Button className="w-full" onClick={sendMessage}>
-                Send message
-              </Button>
-            </div>
-          </Card>
+          <div style={{ display: "grid", gap: tokens.spacing.lg }}>
+            <Card>
+              <div style={layout.stackTight}>
+                <h2 style={components.form.sectionTitle}>Messages</h2>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: tokens.spacing.sm,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Button
+                    variant={mode === "ai" && !issueMode ? "primary" : "secondary"}
+                    onClick={() => {
+                      setMode("ai");
+                      setIssueMode(false);
+                    }}
+                  >
+                    AI chat
+                  </Button>
+                  <Button
+                    variant={mode === "human" ? "primary" : "secondary"}
+                    onClick={() => {
+                      setMode("human");
+                      setIssueMode(false);
+                    }}
+                  >
+                    Talk to a human
+                  </Button>
+                  <Button
+                    variant={issueMode ? "primary" : "secondary"}
+                    onClick={() => {
+                      setIssueMode(true);
+                      setMode("ai");
+                    }}
+                  >
+                    Report an issue
+                  </Button>
+                </div>
+
+                <div
+                  id="portal-messages"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: tokens.spacing.sm,
+                    maxHeight: "360px",
+                    overflowY: "auto",
+                  }}
+                >
+                  {messages.map((m, i) => (
+                    <div key={i} style={components.chat.bubble}>
+                      <div style={components.chat.bubbleMeta}>{m.from}</div>
+                      <div>{m.text}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <Input
+                  placeholder="Type a message…"
+                  value={text}
+                  onChange={(e: any) => setText(e.target.value)}
+                />
+                <PrimaryButton onClick={sendMessage}>Send</PrimaryButton>
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { Card } from "../components/ui/Card";
 import { Select } from "../components/ui/Select";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
+import { PhoneInput } from "../components/ui/PhoneInput";
 import { Validate } from "../utils/validate";
 import { WizardLayout } from "../components/WizardLayout";
 import {
@@ -14,7 +15,6 @@ import {
   getCountryCode,
   formatPhoneNumber,
 } from "../utils/location";
-import { theme } from "../styles/theme";
 import {
   FUNDING_INTENT_OPTIONS,
   normalizeFundingIntent,
@@ -26,6 +26,7 @@ import {
   extractApplicationFromStatus,
   getResumeRoute,
 } from "../applications/resume";
+import { components, layout, scrollToFirstError, tokens } from "@/styles";
 
 const MatchCategories = [
   "Line of Credit",
@@ -168,6 +169,12 @@ export function Step1_KYC() {
     }
   }, [app.kyc, update]);
 
+  useEffect(() => {
+    if (showErrors) {
+      scrollToFirstError();
+    }
+  }, [showErrors]);
+
   const fieldErrors = {
     lookingFor: !Validate.required(app.kyc.lookingFor),
     fundingAmount: !Validate.required(app.kyc.fundingAmount),
@@ -184,21 +191,6 @@ export function Step1_KYC() {
     phone: !Validate.required(app.kyc.phone) || !Validate.phone(app.kyc.phone),
   };
   const isValid = Object.values(fieldErrors).every((error) => !error);
-
-  const labelStyle = {
-    display: "block",
-    marginBottom: theme.spacing.xs,
-    fontSize: theme.typography.label.fontSize,
-    fontWeight: theme.typography.label.fontWeight,
-    color: theme.colors.textSecondary,
-  };
-
-  const errorStyle = {
-    marginTop: theme.spacing.xs,
-    fontSize: "12px",
-    color: "#dc2626",
-    fontWeight: 500,
-  };
 
   async function startApplication() {
     const payload = app.kyc;
@@ -222,21 +214,14 @@ export function Step1_KYC() {
     } catch (error) {
       console.error("Failed to start application:", error);
       alert("We couldn't start your application. Please try again.");
-      return;
     }
   }
 
-  function requestOtp() {
+  async function requestOtp() {
     setShowErrors(true);
+    if (!isValid) return;
+    setShowErrors(false);
     setOtpError("");
-
-    if (!isValid) {
-      if (app.kyc.businessLocation === "Other") {
-        setShowLocationModal(true);
-      }
-      return;
-    }
-
     const code = ClientProfileStore.requestOtp(app.kyc.phone || "");
     setOtpHint(code);
     setOtpRequested(true);
@@ -282,16 +267,22 @@ export function Step1_KYC() {
     await startApplication();
   }
 
+  const fieldGridStyle = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: tokens.spacing.md,
+  };
+
   return (
     <>
       <WizardLayout>
         <StepHeader step={1} title="Know Your Client" />
 
-        <Card className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label style={labelStyle}>Mobile phone</label>
-              <Input
+        <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
+          <div style={fieldGridStyle}>
+            <div data-error={showErrors && fieldErrors.phone}>
+              <label style={components.form.label}>Mobile phone</label>
+              <PhoneInput
                 value={formatPhoneNumber(app.kyc.phone || "", countryCode)}
                 onChange={(e: any) =>
                   update({
@@ -302,6 +293,7 @@ export function Step1_KYC() {
                   })
                 }
                 placeholder="(555) 555-5555"
+                hasError={showErrors && fieldErrors.phone}
                 onKeyDown={(e: any) => {
                   if (e.key === "Enter") {
                     requestOtp();
@@ -309,13 +301,13 @@ export function Step1_KYC() {
                 }}
               />
               {showErrors && fieldErrors.phone && (
-                <div style={errorStyle}>
+                <div style={components.form.errorText}>
                   Enter a valid phone number.
                 </div>
               )}
             </div>
-            <div>
-              <label style={labelStyle}>What are you looking for?</label>
+            <div data-error={showErrors && fieldErrors.lookingFor}>
+              <label style={components.form.label}>What are you looking for?</label>
               <Select
                 value={normalizeFundingIntent(app.kyc.lookingFor) || ""}
                 onChange={(e: any) => {
@@ -334,6 +326,7 @@ export function Step1_KYC() {
                     eligibilityReasons: [],
                   });
                 }}
+                hasError={showErrors && fieldErrors.lookingFor}
               >
                 <option value="">Select…</option>
                 {FUNDING_INTENT_OPTIONS.map((option) => (
@@ -343,11 +336,11 @@ export function Step1_KYC() {
                 ))}
               </Select>
               {showErrors && fieldErrors.lookingFor && (
-                <div style={errorStyle}>Please select a funding intent.</div>
+                <div style={components.form.errorText}>Please select a funding intent.</div>
               )}
             </div>
-            <div>
-              <label style={labelStyle}>How much funding are you seeking?</label>
+            <div data-error={showErrors && fieldErrors.fundingAmount}>
+              <label style={components.form.label}>How much funding are you seeking?</label>
               <Input
                 value={formatCurrencyValue(
                   app.kyc.fundingAmount || "",
@@ -372,14 +365,15 @@ export function Step1_KYC() {
                   })
                 }
                 placeholder={countryCode === "CA" ? "CA$" : "$"}
+                hasError={showErrors && fieldErrors.fundingAmount}
               />
               {showErrors && fieldErrors.fundingAmount && (
-                <div style={errorStyle}>Enter a funding amount.</div>
+                <div style={components.form.errorText}>Enter a funding amount.</div>
               )}
             </div>
 
-            <div>
-              <label style={labelStyle}>Business Location</label>
+            <div data-error={showErrors && fieldErrors.businessLocation}>
+              <label style={components.form.label}>Business Location</label>
               <Select
                 value={app.kyc.businessLocation || ""}
                 onChange={(e: any) => {
@@ -398,6 +392,7 @@ export function Step1_KYC() {
                     setShowLocationModal(true);
                   }
                 }}
+                hasError={showErrors && fieldErrors.businessLocation}
               >
                 <option value="">Select…</option>
                 {BusinessLocationOptions.map((option) => (
@@ -407,19 +402,20 @@ export function Step1_KYC() {
                 ))}
               </Select>
               {showErrors && fieldErrors.businessLocation && (
-                <div style={errorStyle}>
+                <div style={components.form.errorText}>
                   Please choose Canada or the United States.
                 </div>
               )}
             </div>
 
-            <div>
-              <label style={labelStyle}>Industry</label>
+            <div data-error={showErrors && fieldErrors.industry}>
+              <label style={components.form.label}>Industry</label>
               <Select
                 value={app.kyc.industry || ""}
                 onChange={(e: any) =>
                   update({ kyc: { ...app.kyc, industry: e.target.value } })
                 }
+                hasError={showErrors && fieldErrors.industry}
               >
                 <option value="">Select…</option>
                 {IndustryOptions.map((option) => (
@@ -429,17 +425,18 @@ export function Step1_KYC() {
                 ))}
               </Select>
               {showErrors && fieldErrors.industry && (
-                <div style={errorStyle}>Select your industry.</div>
+                <div style={components.form.errorText}>Select your industry.</div>
               )}
             </div>
 
-            <div>
-              <label style={labelStyle}>Purpose of funds</label>
+            <div data-error={showErrors && fieldErrors.purposeOfFunds}>
+              <label style={components.form.label}>Purpose of funds</label>
               <Select
                 value={app.kyc.purposeOfFunds || ""}
                 onChange={(e: any) =>
                   update({ kyc: { ...app.kyc, purposeOfFunds: e.target.value } })
                 }
+                hasError={showErrors && fieldErrors.purposeOfFunds}
               >
                 <option value="">Select…</option>
                 {PurposeOptions.map((option) => (
@@ -449,12 +446,12 @@ export function Step1_KYC() {
                 ))}
               </Select>
               {showErrors && fieldErrors.purposeOfFunds && (
-                <div style={errorStyle}>Select a purpose of funds.</div>
+                <div style={components.form.errorText}>Select a purpose of funds.</div>
               )}
             </div>
 
-            <div>
-              <label style={labelStyle}>
+            <div data-error={showErrors && fieldErrors.salesHistory}>
+              <label style={components.form.label}>
                 How many years of sales history does the business have?
               </label>
               <Select
@@ -462,6 +459,7 @@ export function Step1_KYC() {
                 onChange={(e: any) =>
                   update({ kyc: { ...app.kyc, salesHistory: e.target.value } })
                 }
+                hasError={showErrors && fieldErrors.salesHistory}
               >
                 <option value="">Select…</option>
                 {SalesHistoryOptions.map((option) => (
@@ -471,12 +469,12 @@ export function Step1_KYC() {
                 ))}
               </Select>
               {showErrors && fieldErrors.salesHistory && (
-                <div style={errorStyle}>Select sales history.</div>
+                <div style={components.form.errorText}>Select sales history.</div>
               )}
             </div>
 
-            <div>
-              <label style={labelStyle}>
+            <div data-error={showErrors && fieldErrors.revenueLast12Months}>
+              <label style={components.form.label}>
                 What was your business revenue in the last 12 months?
               </label>
               <Select
@@ -486,6 +484,7 @@ export function Step1_KYC() {
                     kyc: { ...app.kyc, revenueLast12Months: e.target.value },
                   })
                 }
+                hasError={showErrors && fieldErrors.revenueLast12Months}
               >
                 <option value="">Select…</option>
                 {RevenueOptions.map((option) => (
@@ -495,12 +494,12 @@ export function Step1_KYC() {
                 ))}
               </Select>
               {showErrors && fieldErrors.revenueLast12Months && (
-                <div style={errorStyle}>Select a revenue range.</div>
+                <div style={components.form.errorText}>Select a revenue range.</div>
               )}
             </div>
 
-            <div>
-              <label style={labelStyle}>
+            <div data-error={showErrors && fieldErrors.monthlyRevenue}>
+              <label style={components.form.label}>
                 Average monthly revenue (last 3 months)
               </label>
               <Select
@@ -508,6 +507,7 @@ export function Step1_KYC() {
                 onChange={(e: any) =>
                   update({ kyc: { ...app.kyc, monthlyRevenue: e.target.value } })
                 }
+                hasError={showErrors && fieldErrors.monthlyRevenue}
               >
                 <option value="">Select…</option>
                 {MonthlyRevenueOptions.map((option) => (
@@ -517,12 +517,12 @@ export function Step1_KYC() {
                 ))}
               </Select>
               {showErrors && fieldErrors.monthlyRevenue && (
-                <div style={errorStyle}>Select monthly revenue.</div>
+                <div style={components.form.errorText}>Select monthly revenue.</div>
               )}
             </div>
 
-            <div>
-              <label style={labelStyle}>
+            <div data-error={showErrors && fieldErrors.accountsReceivable}>
+              <label style={components.form.label}>
                 Current Account Receivable balance
               </label>
               <Select
@@ -539,6 +539,7 @@ export function Step1_KYC() {
                     eligibilityReasons: [],
                   })
                 }
+                hasError={showErrors && fieldErrors.accountsReceivable}
               >
                 <option value="">Select…</option>
                 {AccountsReceivableOptions.map((option) => (
@@ -548,12 +549,12 @@ export function Step1_KYC() {
                 ))}
               </Select>
               {showErrors && fieldErrors.accountsReceivable && (
-                <div style={errorStyle}>Select an AR balance.</div>
+                <div style={components.form.errorText}>Select an AR balance.</div>
               )}
             </div>
 
-            <div>
-              <label style={labelStyle}>
+            <div data-error={showErrors && fieldErrors.fixedAssets}>
+              <label style={components.form.label}>
                 Fixed assets value for loan security
               </label>
               <Select
@@ -561,6 +562,7 @@ export function Step1_KYC() {
                 onChange={(e: any) =>
                   update({ kyc: { ...app.kyc, fixedAssets: e.target.value } })
                 }
+                hasError={showErrors && fieldErrors.fixedAssets}
               >
                 <option value="">Select…</option>
                 {FixedAssetsOptions.map((option) => (
@@ -570,37 +572,29 @@ export function Step1_KYC() {
                 ))}
               </Select>
               {showErrors && fieldErrors.fixedAssets && (
-                <div style={errorStyle}>Select a fixed asset value.</div>
+                <div style={components.form.errorText}>Select a fixed asset value.</div>
               )}
             </div>
           </div>
         </Card>
 
-        <div
-          className="flex flex-col sm:flex-row gap-3"
-          style={{ marginTop: theme.spacing.lg }}
-        >
-          <Button
-            style={{ width: "100%", maxWidth: "220px" }}
-            onClick={requestOtp}
-          >
+        <div style={{ ...layout.stickyCta, marginTop: tokens.spacing.lg }}>
+          <Button style={{ width: "100%", maxWidth: "220px" }} onClick={requestOtp}>
             Continue →
           </Button>
         </div>
 
         {otpRequested && (
-          <Card className="mt-6 space-y-3">
-            <div className="text-sm text-slate-500">
+          <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
+            <div style={components.form.helperText}>
               Enter the 6-digit passcode sent to your phone to continue.
             </div>
             <OtpInput onComplete={verifyOtp} />
             {otpHint && (
-              <div className="text-xs text-slate-400">
-                Demo OTP: {otpHint}
-              </div>
+              <div style={components.form.helperText}>Demo OTP: {otpHint}</div>
             )}
             {otpError && (
-              <div className="text-sm text-red-600">{otpError}</div>
+              <div style={components.form.errorText}>{otpError}</div>
             )}
           </Card>
         )}
@@ -615,40 +609,26 @@ export function Step1_KYC() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: theme.spacing.md,
+            padding: tokens.spacing.md,
             zIndex: 50,
           }}
         >
           <div
             style={{
-              background: theme.colors.surface,
-              borderRadius: theme.layout.radius,
-              border: `1px solid ${theme.colors.border}`,
-              padding: theme.spacing.lg,
+              ...components.card.base,
               maxWidth: "420px",
               width: "100%",
               display: "flex",
               flexDirection: "column",
-              gap: theme.spacing.sm,
+              gap: tokens.spacing.sm,
             }}
           >
-            <h2
-              style={{
-                fontSize: theme.typography.h2.fontSize,
-                fontWeight: theme.typography.h2.fontWeight,
-                color: theme.colors.textPrimary,
-              }}
-            >
-              Funding availability
-            </h2>
-            <p style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
+            <h2 style={components.form.sectionTitle}>Funding availability</h2>
+            <p style={components.form.subtitle}>
               Boreal funding is currently limited to businesses located in
               Canada or the United States.
             </p>
-            <Button
-              style={{ width: "100%" }}
-              onClick={() => setShowLocationModal(false)}
-            >
+            <Button style={{ width: "100%" }} onClick={() => setShowLocationModal(false)}>
               OK
             </Button>
           </div>

@@ -1,51 +1,42 @@
-import { theme } from "@/styles/theme";
+import { components, tokens } from "@/styles";
 
-export function StepHeader({ step, title }: { step: number; title: string }) {
-  const progress = Math.min(100, Math.max(0, Math.round((step / 6) * 100)));
+type StepHeaderProps = {
+  step: number;
+  title: string;
+};
+
+export function StepHeader({ step, title }: StepHeaderProps) {
   return (
-    <div style={{ marginBottom: theme.spacing.lg }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          fontSize: theme.typography.label.fontSize,
-          color: theme.colors.textSecondary,
-          marginBottom: theme.spacing.sm,
-        }}
-      >
-        <span>Step {step} of 6</span>
-        <span>{progress}% complete</span>
+    <div style={{ marginBottom: tokens.spacing.lg }}>
+      <div style={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}>
+        <div
+          style={{
+            ...components.form.eyebrow,
+            marginBottom: tokens.spacing.sm,
+          }}
+        >
+          Step {step}
+        </div>
       </div>
       <div
         style={{
-          height: "10px",
-          width: "100%",
-          borderRadius: "999px",
-          background: theme.colors.border,
-          marginBottom: theme.spacing.sm,
+          height: "4px",
+          width: "60px",
+          borderRadius: tokens.radii.pill,
+          background: tokens.colors.border,
+          marginBottom: tokens.spacing.sm,
         }}
       >
         <div
           style={{
-            height: "10px",
-            borderRadius: "999px",
-            background: theme.colors.primary,
-            width: `${progress}%`,
+            height: "100%",
+            width: "100%",
+            borderRadius: tokens.radii.pill,
+            background: tokens.colors.primary,
           }}
         />
       </div>
-      <h1
-        style={{
-          margin: 0,
-          fontSize: theme.typography.h1.fontSize,
-          fontWeight: theme.typography.h1.fontWeight,
-          lineHeight: theme.typography.h1.lineHeight,
-          color: theme.colors.textPrimary,
-        }}
-      >
-        {title}
-      </h1>
+      <h1 style={components.form.title}>{title}</h1>
     </div>
   );
 }

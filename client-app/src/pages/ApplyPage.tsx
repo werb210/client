@@ -6,6 +6,7 @@ import { Step4_Applicant } from "../wizard/Step4_Applicant";
 import { Step5_Documents } from "../wizard/Step5_Documents";
 import { Step6_Review } from "../wizard/Step6_Review";
 import { useApplicationStore } from "../state/useApplicationStore";
+import { layout } from "@/styles";
 
 export function ApplyPage() {
   const { initialized, init } = useApplicationStore();
@@ -13,7 +14,7 @@ export function ApplyPage() {
   if (!initialized) init(); // builds empty application session
 
   return (
-    <div className="p-4">
+    <div style={{ background: layout.page.background, minHeight: layout.page.minHeight }}>
       <Routes>
         <Route path="/" element={<Navigate to="step-1" replace />} />
         <Route path="step-1" element={<Step1_KYC />} />

@@ -1,4 +1,4 @@
-import { theme } from "@/styles/theme";
+import { components, tokens } from "@/styles";
 
 type ProgressPillProps = {
   value: number;
@@ -6,26 +6,20 @@ type ProgressPillProps = {
 
 export function ProgressPill({ value }: ProgressPillProps) {
   const clamped = Math.max(0, Math.min(100, Math.round(value)));
-  let background = "rgba(37, 99, 235, 0.15)";
-  let textColor = theme.colors.textPrimary;
+  let background = "rgba(11, 42, 74, 0.12)";
+  let textColor = tokens.colors.textPrimary;
 
   if (clamped < 50) {
-    background = "rgba(156, 163, 175, 0.15)";
-    textColor = theme.colors.textSecondary;
+    background = "rgba(71, 85, 105, 0.12)";
+    textColor = tokens.colors.textSecondary;
   } else if (clamped < 75) {
-    background = "rgba(37, 99, 235, 0.2)";
-    textColor = theme.colors.textPrimary;
+    background = "rgba(11, 42, 74, 0.2)";
   }
 
   return (
     <span
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        borderRadius: "999px",
-        padding: "6px 12px",
-        fontSize: "12px",
-        fontWeight: 600,
+        ...components.timeline.pill,
         background,
         color: textColor,
       }}

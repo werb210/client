@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { tokens } from "@/styles";
 
 export function OfflineBanner() {
   const [offline, setOffline] = useState(!navigator.onLine);
@@ -21,7 +22,15 @@ export function OfflineBanner() {
   if (!offline) return null;
 
   return (
-    <div className="bg-yellow-300 text-black p-2 text-center">
+    <div
+      style={{
+        background: "rgba(245, 158, 11, 0.35)",
+        color: tokens.colors.textPrimary,
+        padding: "8px 16px",
+        textAlign: "center",
+        fontWeight: 600,
+      }}
+    >
       You are offline — changes will sync when connection is restored.
     </div>
   );

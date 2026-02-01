@@ -1,0 +1,70 @@
+export const tokens = {
+  colors: {
+    primary: "#0B2A4A",
+    primaryDark: "#0A2643",
+    primaryLight: "#233F5C",
+    success: "#16A34A",
+    warning: "#F59E0B",
+    error: "#DC2626",
+    background: "#F7F9FC",
+    surface: "#FFFFFF",
+    border: "#E5E7EB",
+    textPrimary: "#0F172A",
+    textSecondary: "#475569",
+    disabled: "#CBD5E1",
+  },
+  typography: {
+    fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+    h1: {
+      fontSize: "28px",
+      fontWeight: 600,
+      lineHeight: "1.2",
+    },
+    h2: {
+      fontSize: "20px",
+      fontWeight: 600,
+      lineHeight: "1.3",
+    },
+    body: {
+      fontSize: "16px",
+      fontWeight: 400,
+      lineHeight: "1.5",
+    },
+    label: {
+      fontSize: "14px",
+      fontWeight: 500,
+      lineHeight: "1.4",
+    },
+    helper: {
+      fontSize: "12px",
+      fontWeight: 400,
+      lineHeight: "1.4",
+    },
+    error: {
+      fontSize: "12px",
+      fontWeight: 600,
+      lineHeight: "1.4",
+    },
+  },
+  spacing: {
+    base: 8,
+    xs: "8px",
+    sm: "12px",
+    md: "16px",
+    lg: "24px",
+    xl: "32px",
+    xxl: "40px",
+  },
+  radii: {
+    sm: "8px",
+    md: "12px",
+    lg: "16px",
+    xl: "20px",
+    pill: "999px",
+  },
+  shadows: {
+    focus: "0 0 0 3px rgba(11, 42, 74, 0.2)",
+    errorFocus: "0 0 0 3px rgba(220, 38, 38, 0.2)",
+    card: "0 8px 24px rgba(15, 23, 42, 0.08)",
+  },
+};

@@ -4,11 +4,12 @@ import {
   type ReactNode,
   type ButtonHTMLAttributes,
 } from "react";
-import { theme } from "@/styles/theme";
+import { components, tokens } from "@/styles";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "ghost";
+  loading?: boolean;
   style?: CSSProperties;
 };
 
@@ -18,36 +19,41 @@ export function Button({
   style,
   className = "",
   disabled,
+  loading,
   ...rest
 }: ButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
-  const variantStyles = variant === "secondary" ? theme.buttons.secondary : theme.buttons.primary;
+  const isDisabled = disabled || loading;
+
+  const variantStyles = {
+    primary: components.buttons.primary,
+    secondary: components.buttons.secondary,
+    ghost: components.buttons.ghost,
+  }[variant];
+
   const backgroundColor =
-    hovered && !disabled ? variantStyles.hover : variantStyles.background;
+    hovered && !isDisabled && variant === "primary"
+      ? tokens.colors.primaryDark
+      : hovered && !isDisabled && variant === "secondary"
+      ? tokens.colors.primaryLight
+      : hovered && !isDisabled && variant === "ghost"
+      ? "rgba(11, 42, 74, 0.08)"
+      : variantStyles.background;
 
   const baseStyle: CSSProperties = {
-    height: theme.buttons.height,
-    padding: theme.buttons.padding,
-    borderRadius: theme.buttons.borderRadius,
-    border: variantStyles.border,
+    ...components.buttons.base,
+    ...variantStyles,
     background: backgroundColor,
-    color: variantStyles.color,
-    fontFamily: theme.typography.fontFamily,
-    fontSize: theme.typography.body.fontSize,
-    fontWeight: 600,
-    lineHeight: theme.typography.body.lineHeight,
-    outline: "none",
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.6 : 1,
-    transition: "background 0.2s ease, border-color 0.2s ease",
-    boxShadow: focused ? theme.inputs.focusShadow : "none",
+    opacity: isDisabled ? 0.7 : 1,
+    ...(isDisabled ? components.buttons.disabled : null),
+    ...(focused ? components.buttons.focus : null),
   };
 
   return (
     <button
       {...rest}
-      disabled={disabled}
+      disabled={isDisabled}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocus={(event) => {
@@ -61,7 +67,28 @@ export function Button({
       className={className}
       style={{ ...baseStyle, ...style }}
     >
-      {children}
+      {loading ? (
+        <span
+          style={
+            variant === "secondary" || variant === "ghost"
+              ? components.buttons.spinnerDark
+              : components.buttons.spinner
+          }
+        />
+      ) : null}
+      <span style={{ opacity: loading ? 0.75 : 1 }}>{children}</span>
     </button>
   );
+}
+
+export function PrimaryButton(props: ButtonProps) {
+  return <Button {...props} variant="primary" />;
+}
+
+export function SecondaryButton(props: ButtonProps) {
+  return <Button {...props} variant="secondary" />;
+}
+
+export function GhostButton(props: ButtonProps) {
+  return <Button {...props} variant="ghost" />;
 }
