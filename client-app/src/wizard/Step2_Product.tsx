@@ -169,6 +169,15 @@ export function Step2_Product() {
       })
       .sort((a, b) => a.category.localeCompare(b.category));
   }, [amountValue, countryCode, products]);
+  const visibleCategorySummaries = useMemo(() => {
+    if (!amountValue) return categorySummaries;
+    const filtered = categorySummaries.filter((summary) => {
+      const amountTooLow =
+        summary.matchingCount === 0 && amountValue < summary.minAmount;
+      return !amountTooLow;
+    });
+    return filtered.length ? filtered : categorySummaries;
+  }, [amountValue, categorySummaries]);
 
   useEffect(() => {
     if (app.currentStep !== 2) {
@@ -353,7 +362,7 @@ export function Step2_Product() {
             <span style={components.form.helperText}>Loading product options…</span>
           </div>
         )}
-        {categorySummaries.length > 0 && (
+        {visibleCategorySummaries.length > 0 && (
           <div
             style={{
               border: `1px solid ${tokens.colors.border}`,
@@ -367,11 +376,11 @@ export function Step2_Product() {
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: tokens.spacing.sm,
-                marginTop: tokens.spacing.sm,
-              }}
-            >
-              {categorySummaries.map((summary) => {
+              gap: tokens.spacing.sm,
+              marginTop: tokens.spacing.sm,
+            }}
+          >
+              {visibleCategorySummaries.map((summary) => {
                 const amountTooLow =
                   amountValue > 0 && summary.matchingCount === 0 &&
                   amountValue < summary.minAmount;

@@ -16,6 +16,7 @@ import { formatDocumentLabel } from "../wizard/requirements";
 import { LinkedApplicationStore } from "../applications/linkedApplications";
 import { DocumentUploadList } from "../components/DocumentUploadList";
 import { StatusTimeline } from "../components/StatusTimeline";
+import { PIPELINE_STAGE_LABELS } from "../portal/timeline";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Spinner } from "../components/ui/Spinner";
 import { components, layout, tokens } from "@/styles";
@@ -41,18 +42,6 @@ export function StatusPage() {
     }
     ClientAppAPI.status(token).then((res) => setStatus(res.data));
   }, [navigate, token]);
-
-  useEffect(() => {
-    if (!token) return;
-    const handleUnload = () => {
-      ClientProfileStore.clearPortalSessions();
-    };
-    window.addEventListener("beforeunload", handleUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleUnload);
-      ClientProfileStore.clearPortalSessions();
-    };
-  }, [token]);
 
   async function refreshMessages() {
     if (!token) return;
@@ -82,27 +71,39 @@ export function StatusPage() {
     return () => stop();
   }, [token]);
 
-  const stages = [
-    "Received",
-    "In Review",
-    "Documents Required",
-    "Additional Steps Required",
-    "Off to Lender",
-    "Offer",
-  ];
+  const stages = PIPELINE_STAGE_LABELS;
 
   const activeStage = useMemo(() => getPipelineStage(status), [status]);
+  const phone = useMemo(() => {
+    return (
+      status?.application?.financialProfile?.phone ||
+      status?.financialProfile?.phone ||
+      ClientProfileStore.getLastUsedPhone()
+    );
+  }, [status]);
+  const linkedTokens = useMemo(() => {
+    if (!phone) return [];
+    return ClientProfileStore.listTokens(phone);
+  }, [phone]);
 
   useEffect(() => {
     if (!token || !status) return;
+    if (phone) {
+      ClientProfileStore.upsertProfile(phone, token);
+    }
     const linkedTokens =
       status?.linkedApplicationTokens ||
       status?.linked_application_tokens ||
       [];
     if (Array.isArray(linkedTokens) && linkedTokens.length > 0) {
       LinkedApplicationStore.sync(token, linkedTokens);
+      if (phone) {
+        linkedTokens.forEach((linkedToken: string) => {
+          ClientProfileStore.upsertProfile(phone, linkedToken);
+        });
+      }
     }
-  }, [status, token]);
+  }, [phone, status, token]);
 
   useDocumentRejectionNotifications({
     token,
@@ -154,7 +155,26 @@ export function StatusPage() {
   }
 
   if (token && !ClientProfileStore.hasPortalSession(token)) {
-    return null;
+    return (
+      <div style={layout.page}>
+        <div style={layout.centerColumn}>
+          <Card>
+            <div style={layout.stackTight}>
+              <h1 style={components.form.sectionTitle}>Session expired</h1>
+              <p style={components.form.subtitle}>
+                Please verify your phone number again to access the portal.
+              </p>
+              <PrimaryButton
+                style={{ width: "100%" }}
+                onClick={() => navigate("/portal", { replace: true })}
+              >
+                Verify phone
+              </PrimaryButton>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   if (!status) {
@@ -220,7 +240,7 @@ export function StatusPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr)",
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
             gap: tokens.spacing.lg,
           }}
         >
@@ -254,11 +274,35 @@ export function StatusPage() {
                   style={{ width: "100%" }}
                   onClick={() => {
                     OfflineStore.clear();
+                    ClientProfileStore.clearPortalSessions();
                     window.location.href = "/apply/step-1";
                   }}
                 >
                   New application
                 </SecondaryButton>
+                {linkedTokens.length > 0 && (
+                  <div style={layout.stackTight}>
+                    <div style={components.form.eyebrow}>Your applications</div>
+                    {linkedTokens.map((linkedToken, index) => {
+                      const isCurrent = linkedToken === token;
+                      return (
+                        <Button
+                          key={linkedToken}
+                          variant={isCurrent ? "primary" : "secondary"}
+                          style={{ width: "100%" }}
+                          onClick={() => {
+                            ClientProfileStore.markPortalVerified(linkedToken);
+                            window.location.href = `/status?token=${linkedToken}`;
+                          }}
+                        >
+                          {isCurrent
+                            ? `Application ${index + 1} (Current)`
+                            : `Application ${index + 1}`}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                )}
                 <div style={components.form.helperText}>
                   Personal net worth and collateral forms will appear here when
                   available.
