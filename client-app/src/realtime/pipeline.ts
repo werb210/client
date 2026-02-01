@@ -36,6 +36,13 @@ export function createPipelinePoller<T>({
 }
 
 export function getPipelineStage(status: any) {
+  const documents = status?.documents || status?.application?.documents;
+  const hasRejectedDocuments =
+    Array.isArray(documents)
+      ? documents.some((doc) => doc?.status === "rejected")
+      : documents &&
+        Object.values(documents).some((doc: any) => doc?.status === "rejected");
+  if (hasRejectedDocuments) return "Documents Required";
   const raw =
     status?.status ||
     status?.stage ||
@@ -43,8 +50,15 @@ export function getPipelineStage(status: any) {
     status?.state ||
     "";
   const normalized = String(raw).toLowerCase();
+  if (normalized.includes("declined") || normalized.includes("rejected")) {
+    return "Declined";
+  }
+  if (normalized.includes("accept") || normalized.includes("approved")) {
+    return "Accepted";
+  }
   if (normalized.includes("offer")) return "Offer";
   if (normalized.includes("lender")) return "Off to Lender";
+  if (normalized.includes("startup")) return "Startup";
   if (normalized.includes("additional")) return "Additional Steps Required";
   if (normalized.includes("document")) return "Documents Required";
   if (normalized.includes("review")) return "In Review";

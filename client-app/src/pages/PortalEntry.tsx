@@ -51,14 +51,20 @@ export function PortalEntry() {
     }
     ClientProfileStore.setLastUsedPhone(phone);
     const nextStep = resolveOtpNextStep(ClientProfileStore.getProfile(phone));
-    const token =
-      nextStep.action === "portal" || nextStep.action === "resume"
-        ? nextStep.token
-        : "";
-    if (!token) {
+    if (nextStep.action === "start") {
       setOtpError("We couldn't find an application for this number.");
       return;
     }
+    if (nextStep.action === "resume") {
+      setOtpError(
+        "This number has an in-progress application. Please continue your application before accessing the portal."
+      );
+      return;
+    }
+    const token = nextStep.token;
+    const profile = ClientProfileStore.getProfile(phone);
+    const tokens = profile?.applicationTokens || [];
+    tokens.forEach((entry) => ClientProfileStore.markPortalVerified(entry));
     ClientProfileStore.markPortalVerified(token);
     navigate(`/status?token=${token}`);
   }

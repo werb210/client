@@ -19,6 +19,12 @@ type StoredOtp = {
   createdAt: number;
 };
 
+type PortalSession = {
+  token: string;
+  verifiedAt: number;
+  expiresAt: number;
+};
+
 function normalizePhone(phone: string) {
   return phone.replace(/\D/g, "");
 }
@@ -186,15 +192,19 @@ export const ClientProfileStore = {
   markPortalVerified(token: string) {
     if (!token) return;
     try {
-      const raw = sessionStorage.getItem(PORTAL_SESSION_KEY);
+      const raw = localStorage.getItem(PORTAL_SESSION_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
       const list = Array.isArray(parsed) ? parsed : [];
-      if (!list.includes(token)) {
-        sessionStorage.setItem(
-          PORTAL_SESSION_KEY,
-          JSON.stringify([token, ...list])
-        );
-      }
+      const now = Date.now();
+      const next = list
+        .filter((entry: PortalSession) => entry?.expiresAt > now)
+        .filter((entry: PortalSession) => entry?.token !== token);
+      next.unshift({
+        token,
+        verifiedAt: now,
+        expiresAt: now + OTP_TTL_MS,
+      });
+      localStorage.setItem(PORTAL_SESSION_KEY, JSON.stringify(next));
     } catch (error) {
       console.warn("Failed to store portal session:", error);
     }
@@ -202,9 +212,17 @@ export const ClientProfileStore = {
   hasPortalSession(token: string) {
     if (!token) return false;
     try {
-      const raw = sessionStorage.getItem(PORTAL_SESSION_KEY);
+      const raw = localStorage.getItem(PORTAL_SESSION_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) && parsed.includes(token);
+      if (!Array.isArray(parsed)) return false;
+      const now = Date.now();
+      const next = parsed.filter(
+        (entry: PortalSession) => entry?.token && entry?.expiresAt > now
+      );
+      if (next.length !== parsed.length) {
+        localStorage.setItem(PORTAL_SESSION_KEY, JSON.stringify(next));
+      }
+      return next.some((entry: PortalSession) => entry.token === token);
     } catch (error) {
       console.warn("Failed to read portal session:", error);
       return false;
@@ -212,7 +230,7 @@ export const ClientProfileStore = {
   },
   clearPortalSessions() {
     try {
-      sessionStorage.removeItem(PORTAL_SESSION_KEY);
+      localStorage.removeItem(PORTAL_SESSION_KEY);
     } catch (error) {
       console.warn("Failed to clear portal session:", error);
     }
