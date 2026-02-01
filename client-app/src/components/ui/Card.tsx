@@ -1,18 +1,25 @@
-import { theme } from "@/styles/theme";
+import type { CSSProperties, ReactNode, HTMLAttributes } from "react";
+import { components } from "@/styles";
 
-export function Card({ children, className = "", style = {} }: any) {
+type CardProps = HTMLAttributes<HTMLDivElement> & {
+  children: ReactNode;
+  style?: CSSProperties;
+  className?: string;
+  variant?: "default" | "muted";
+};
+
+export function Card({
+  children,
+  style,
+  className = "",
+  variant = "default",
+  ...rest
+}: CardProps) {
+  const baseStyle =
+    variant === "muted" ? components.card.muted : components.card.base;
+
   return (
-    <div
-      className={className}
-      style={{
-        background: theme.colors.surface,
-        borderRadius: theme.layout.radius,
-        border: `1px solid ${theme.colors.border}`,
-        padding: theme.spacing.lg,
-        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.08)",
-        ...style,
-      }}
-    >
+    <div className={className} style={{ ...baseStyle, ...style }} {...rest}>
       {children}
     </div>
   );

@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api/client";
+import { Card } from "../../components/ui/Card";
+import { Input } from "../../components/ui/Input";
+import { Button } from "../../components/ui/Button";
+import { components, layout, scrollToFirstError, tokens } from "@/styles";
 
 export default function ApplyStep2() {
   const navigate = useNavigate();
@@ -10,6 +14,12 @@ export default function ApplyStep2() {
   const [annualRevenue, setAnnualRevenue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      scrollToFirstError();
+    }
+  }, [error]);
 
   async function submit() {
     if (!applicationToken) {
@@ -51,56 +61,72 @@ export default function ApplyStep2() {
   }
 
   return (
-    <div className="page">
-      <div className="card">
-        <div className="step">Step 2 of 4</div>
-        <h2>Funding details</h2>
-        <p>Share the funding amount and how you'll use it.</p>
+    <div style={layout.page}>
+      <div style={layout.centerColumn}>
+        <Card>
+          <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
+            <div style={components.form.eyebrow}>Step 2 of 4</div>
+            <h2 style={components.form.sectionTitle}>Funding details</h2>
+            <p style={components.form.subtitle}>
+              Share the funding amount and how you'll use it.
+            </p>
 
-        <label className="label" htmlFor="requestedAmount">
-          Requested amount (CAD)
-        </label>
-        <input
-          id="requestedAmount"
-          type="number"
-          min="0"
-          placeholder="50000"
-          value={requestedAmount}
-          onChange={(e) => setRequestedAmount(e.target.value)}
-        />
+            <label style={components.form.label} htmlFor="requestedAmount">
+              Requested amount (CAD)
+            </label>
+            <Input
+              id="requestedAmount"
+              type="number"
+              min="0"
+              placeholder="50000"
+              value={requestedAmount}
+              onChange={(e) => setRequestedAmount(e.target.value)}
+            />
 
-        <label className="label" htmlFor="useOfFunds">
-          Use of funds
-        </label>
-        <textarea
-          id="useOfFunds"
-          placeholder="Payroll, inventory, equipment"
-          value={useOfFunds}
-          onChange={(e) => setUseOfFunds(e.target.value)}
-        />
+            <label style={components.form.label} htmlFor="useOfFunds">
+              Use of funds
+            </label>
+            <textarea
+              id="useOfFunds"
+              placeholder="Payroll, inventory, equipment"
+              value={useOfFunds}
+              onChange={(e) => setUseOfFunds(e.target.value)}
+              style={{
+                ...components.inputs.base,
+                height: "auto",
+                minHeight: "90px",
+                paddingTop: tokens.spacing.sm,
+                paddingBottom: tokens.spacing.sm,
+              }}
+            />
 
-        <label className="label" htmlFor="annualRevenue">
-          Annual revenue (CAD)
-        </label>
-        <input
-          id="annualRevenue"
-          type="number"
-          min="0"
-          placeholder="250000"
-          value={annualRevenue}
-          onChange={(e) => setAnnualRevenue(e.target.value)}
-        />
+            <label style={components.form.label} htmlFor="annualRevenue">
+              Annual revenue (CAD)
+            </label>
+            <Input
+              id="annualRevenue"
+              type="number"
+              min="0"
+              placeholder="250000"
+              value={annualRevenue}
+              onChange={(e) => setAnnualRevenue(e.target.value)}
+            />
 
-        {error && <div className="error">{error}</div>}
+            {error && (
+              <div style={components.form.errorText} data-error={true}>
+                {error}
+              </div>
+            )}
 
-        <button
-          disabled={
-            !requestedAmount || !useOfFunds || !annualRevenue || isSubmitting
-          }
-          onClick={submit}
-        >
-          {isSubmitting ? "Saving..." : "Continue"}
-        </button>
+            <Button
+              disabled={!requestedAmount || !useOfFunds || !annualRevenue || isSubmitting}
+              onClick={submit}
+              loading={isSubmitting}
+            >
+              Continue
+            </Button>
+          </div>
+        </Card>
       </div>
     </div>
   );

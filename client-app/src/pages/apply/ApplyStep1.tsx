@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api/client";
+import { Card } from "../../components/ui/Card";
+import { Input } from "../../components/ui/Input";
+import { Select } from "../../components/ui/Select";
+import { Button } from "../../components/ui/Button";
+import { components, layout, scrollToFirstError, tokens } from "@/styles";
 
 const provinces = [
   "Alberta",
@@ -24,6 +29,12 @@ export default function ApplyStep1() {
   const [operatingProvince, setOperatingProvince] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      scrollToFirstError();
+    }
+  }, [error]);
 
   async function submit() {
     setError(null);
@@ -64,46 +75,57 @@ export default function ApplyStep1() {
   }
 
   return (
-    <div className="page">
-      <div className="card">
-        <div className="step">Step 1 of 4</div>
-        <h2>Business identity</h2>
-        <p>Tell us how your business is registered.</p>
+    <div style={layout.page}>
+      <div style={layout.centerColumn}>
+        <Card>
+          <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
+            <div style={components.form.eyebrow}>Step 1 of 4</div>
+            <h2 style={components.form.sectionTitle}>Business identity</h2>
+            <p style={components.form.subtitle}>
+              Tell us how your business is registered.
+            </p>
 
-        <label className="label" htmlFor="legalBusinessName">
-          Legal business name
-        </label>
-        <input
-          id="legalBusinessName"
-          placeholder="Boreal Coffee Company"
-          value={legalBusinessName}
-          onChange={(e) => setLegalBusinessName(e.target.value)}
-        />
+            <label style={components.form.label} htmlFor="legalBusinessName">
+              Legal business name
+            </label>
+            <Input
+              id="legalBusinessName"
+              placeholder="Boreal Coffee Company"
+              value={legalBusinessName}
+              onChange={(e) => setLegalBusinessName(e.target.value)}
+            />
 
-        <label className="label" htmlFor="operatingProvince">
-          Operating province
-        </label>
-        <select
-          id="operatingProvince"
-          value={operatingProvince}
-          onChange={(e) => setOperatingProvince(e.target.value)}
-        >
-          <option value="">Select a province</option>
-          {provinces.map((province) => (
-            <option key={province} value={province}>
-              {province}
-            </option>
-          ))}
-        </select>
+            <label style={components.form.label} htmlFor="operatingProvince">
+              Operating province
+            </label>
+            <Select
+              id="operatingProvince"
+              value={operatingProvince}
+              onChange={(e) => setOperatingProvince(e.target.value)}
+            >
+              <option value="">Select a province</option>
+              {provinces.map((province) => (
+                <option key={province} value={province}>
+                  {province}
+                </option>
+              ))}
+            </Select>
 
-        {error && <div className="error">{error}</div>}
+            {error && (
+              <div style={components.form.errorText} data-error={true}>
+                {error}
+              </div>
+            )}
 
-        <button
-          disabled={!legalBusinessName || !operatingProvince || isSubmitting}
-          onClick={submit}
-        >
-          {isSubmitting ? "Saving..." : "Continue"}
-        </button>
+            <Button
+              disabled={!legalBusinessName || !operatingProvince || isSubmitting}
+              onClick={submit}
+              loading={isSubmitting}
+            >
+              Continue
+            </Button>
+          </div>
+        </Card>
       </div>
     </div>
   );

@@ -1,15 +1,47 @@
+import { tokens } from "@/styles";
+
 export function Header() {
   return (
-    <header className="bg-borealBlue text-white px-6 h-16 flex items-center justify-between shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-full bg-white/15 flex items-center justify-center text-sm font-semibold">
+    <header
+      style={{
+        background: tokens.colors.primary,
+        color: tokens.colors.surface,
+        padding: `0 var(--page-padding)`,
+        height: "64px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        boxShadow: tokens.shadows.card,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}>
+        <div
+          style={{
+            height: "36px",
+            width: "36px",
+            borderRadius: tokens.radii.pill,
+            background: "rgba(255, 255, 255, 0.16)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "12px",
+            fontWeight: 600,
+          }}
+        >
           BF
         </div>
-        <div className="leading-tight">
-          <div className="text-sm uppercase tracking-[0.2em] text-white/70">
+        <div style={{ lineHeight: 1.1 }}>
+          <div
+            style={{
+              fontSize: "11px",
+              textTransform: "uppercase",
+              letterSpacing: "0.2em",
+              color: "rgba(255, 255, 255, 0.7)",
+            }}
+          >
             Boreal
           </div>
-          <div className="text-lg font-semibold">Financial</div>
+          <div style={{ fontSize: "18px", fontWeight: 600 }}>Financial</div>
         </div>
       </div>
     </header>

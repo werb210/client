@@ -3,6 +3,8 @@ import { useChatbot } from "../hooks/useChatbot";
 import { ClientAppAPI } from "../api/clientApp";
 import { OfflineStore } from "../state/offline";
 import { Input } from "./ui/Input";
+import { Button } from "./ui/Button";
+import { components, tokens } from "@/styles";
 
 export function ChatWidget() {
   const [open, setOpen] = useState(false);
@@ -10,6 +12,7 @@ export function ChatWidget() {
   const [text, setText] = useState("");
   const [mode, setMode] = useState<"ai" | "human">("ai");
   const [issueMode, setIssueMode] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const { send: sendAI } = useChatbot();
 
@@ -25,6 +28,14 @@ export function ChatWidget() {
       console.error("Chat refresh failed:", error);
     }
   }
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 768px)");
+    const handleChange = () => setIsMobile(media.matches);
+    handleChange();
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
 
   useEffect(() => {
     refreshMessages();
@@ -53,91 +64,100 @@ export function ChatWidget() {
     }
   }
 
+  const containerStyle = {
+    position: "fixed" as const,
+    bottom: tokens.spacing.lg,
+    right: tokens.spacing.lg,
+    zIndex: 50,
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "flex-end" as const,
+    gap: tokens.spacing.sm,
+    width: isMobile ? "100%" : "auto",
+  };
+
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end w-full md:w-auto">
+    <div style={containerStyle}>
       <button
-        className="bg-borealBlue text-white px-5 py-3 rounded-full shadow-sm mobile-full"
+        style={{
+          ...components.chat.launcher,
+          width: isMobile ? "48px" : "auto",
+          height: isMobile ? "48px" : "auto",
+          borderRadius: isMobile ? tokens.radii.pill : tokens.radii.pill,
+          padding: isMobile ? 0 : "12px 20px",
+        }}
         onClick={() => setOpen(!open)}
+        aria-label="Toggle chat"
       >
-        {open ? "Close chat" : "Chat"}
+        {isMobile ? "💬" : open ? "Close chat" : "Chat"}
       </button>
 
       {open && (
-        <div className="bg-white border border-slate-200 shadow-xl rounded-2xl p-4 w-full mobile-full md:w-80 h-[520px] flex flex-col mt-3">
-          <div className="flex flex-col gap-2 mb-4">
-            <div className="flex items-center justify-between">
-              <strong className="text-borealBlue">Boreal Assist</strong>
-              <span className="text-xs text-slate-500">24/7 chat support</span>
+        <div
+          style={{
+            ...components.chat.panel,
+            width: isMobile ? "100%" : components.chat.panel.width,
+            height: isMobile ? "70vh" : components.chat.panel.height,
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.xs }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <strong style={{ color: tokens.colors.primary }}>Boreal Assist</strong>
+              <span style={components.form.helperText}>24/7 chat support</span>
             </div>
 
-            <div className="flex flex-wrap gap-2 text-xs">
-              <button
-                className={`px-3 py-1 rounded-full border ${
-                  mode === "ai" && !issueMode
-                    ? "bg-borealLightBlue text-borealBlue border-borealLightBlue"
-                    : "border-slate-200 text-slate-500"
-                }`}
-                onClick={() => {
-                  setMode("ai");
-                  setIssueMode(false);
-                }}
-              >
-                AI chat
-              </button>
-              <button
-                className={`px-3 py-1 rounded-full border ${
-                  mode === "human"
-                    ? "bg-borealLightBlue text-borealBlue border-borealLightBlue"
-                    : "border-slate-200 text-slate-500"
-                }`}
-                onClick={() => {
-                  setMode("human");
-                  setIssueMode(false);
-                }}
-              >
-                Talk to a human
-              </button>
-              <button
-                className={`px-3 py-1 rounded-full border ${
-                  issueMode
-                    ? "bg-borealLightBlue text-borealBlue border-borealLightBlue"
-                    : "border-slate-200 text-slate-500"
-                }`}
-                onClick={() => {
-                  setIssueMode(true);
-                  setMode("ai");
-                }}
-              >
-                Report an issue
-              </button>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: tokens.spacing.xs }}>
+              {[
+                { key: "ai", label: "AI chat", active: mode === "ai" && !issueMode },
+                { key: "human", label: "Talk to a human", active: mode === "human" },
+                { key: "issue", label: "Report an issue", active: issueMode },
+              ].map((tag) => (
+                <button
+                  key={tag.key}
+                  style={{
+                    ...components.chat.tag,
+                    ...(tag.active ? components.chat.tagActive : null),
+                  }}
+                  onClick={() => {
+                    if (tag.key === "issue") {
+                      setIssueMode(true);
+                      setMode("ai");
+                    } else {
+                      setMode(tag.key as "ai" | "human");
+                      setIssueMode(false);
+                    }
+                  }}
+                >
+                  {tag.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className="p-3 rounded-xl bg-borealGray text-[14px] leading-tight"
-              >
-                <div className="text-[12px] text-slate-500 mb-1">{m.from}</div>
-                <div>{m.text}</div>
-              </div>
-            ))}
+          <div style={{ flex: 1, overflowY: "auto", paddingRight: "4px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
+              {messages.map((m, i) => (
+                <div key={i} style={components.chat.bubble}>
+                  <div style={components.chat.bubbleMeta}>{m.from}</div>
+                  <div>{m.text}</div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <Input
-            className="mb-2"
             placeholder="Type a message…"
             value={text}
             onChange={(e: any) => setText(e.target.value)}
           />
 
-          <button
-            className="bg-borealBlue text-white p-2.5 rounded-full w-full"
-            onClick={sendMessage}
-          >
-            Send
-          </button>
+          <Button onClick={sendMessage}>Send</Button>
         </div>
       )}
     </div>

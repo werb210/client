@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { components, tokens, behaviors } from "@/styles";
 
 type OtpInputProps = {
   length?: number;
@@ -6,10 +7,15 @@ type OtpInputProps = {
   autoFocus?: boolean;
 };
 
-export function OtpInput({ length = 6, onComplete, autoFocus = true }: OtpInputProps) {
+export function OtpInput({
+  length = behaviors.otp.length,
+  onComplete,
+  autoFocus = behaviors.otp.autoFocus,
+}: OtpInputProps) {
   const [values, setValues] = useState<string[]>(() =>
     Array.from({ length }, () => "")
   );
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const inputsRef = useRef<Array<HTMLInputElement | null>>([]);
 
   const code = useMemo(() => values.join(""), [values]);
@@ -38,7 +44,10 @@ export function OtpInput({ length = 6, onComplete, autoFocus = true }: OtpInputP
     }
   }
 
-  function handleKeyDown(index: number, event: React.KeyboardEvent<HTMLInputElement>) {
+  function handleKeyDown(
+    index: number,
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) {
     if (event.key === "Backspace" && !values[index] && index > 0) {
       inputsRef.current[index - 1]?.focus();
       return;
@@ -66,8 +75,19 @@ export function OtpInput({ length = 6, onComplete, autoFocus = true }: OtpInputP
     inputsRef.current[nextIndex]?.focus();
   }
 
+  const inputStyle = {
+    ...components.inputs.base,
+    width: "48px",
+    height: "48px",
+    padding: 0,
+    textAlign: "center" as const,
+    fontSize: "18px",
+    fontWeight: 600,
+    color: tokens.colors.primary,
+  };
+
   return (
-    <div className="flex items-center gap-2">
+    <div style={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}>
       {Array.from({ length }).map((_, index) => (
         <input
           key={index}
@@ -77,11 +97,16 @@ export function OtpInput({ length = 6, onComplete, autoFocus = true }: OtpInputP
           inputMode="numeric"
           pattern="[0-9]*"
           maxLength={1}
-          className="h-12 w-12 rounded-xl border border-slate-200 text-center text-lg font-semibold text-borealBlue focus:border-borealBlue focus:outline-none"
           value={values[index]}
           onChange={(event) => handleChange(index, event.target.value)}
           onKeyDown={(event) => handleKeyDown(index, event)}
           onPaste={handlePaste}
+          onFocus={() => setFocusedIndex(index)}
+          onBlur={() => setFocusedIndex(null)}
+          style={{
+            ...inputStyle,
+            ...(focusedIndex === index ? components.inputs.focused : null),
+          }}
         />
       ))}
     </div>

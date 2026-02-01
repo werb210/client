@@ -10,7 +10,6 @@ import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { WizardLayout } from "../components/WizardLayout";
-import { theme } from "../styles/theme";
 import {
   createLinkedApplication,
   LinkedApplicationStore,
@@ -33,15 +32,10 @@ import {
 } from "./requirements";
 import { getEligibilityResult } from "../lender/eligibility";
 import type { NormalizedLenderProduct } from "../lender/eligibility";
-
-const emptyStateStyles = {
-  border: `1px solid ${theme.colors.border}`,
-  borderRadius: theme.layout.radius,
-  padding: theme.spacing.md,
-  background: "rgba(220, 38, 38, 0.08)",
-  color: theme.colors.textPrimary,
-  fontSize: "14px",
-};
+import { Checkbox } from "../components/ui/Checkbox";
+import { EmptyState } from "../components/ui/EmptyState";
+import { Spinner } from "../components/ui/Spinner";
+import { components, layout, tokens } from "@/styles";
 
 function formatAmount(amount: number | null | undefined, countryCode: string) {
   if (typeof amount !== "number") return "N/A";
@@ -71,7 +65,7 @@ export function Step2_Product() {
     [app.kyc.fundingAmount]
   );
   const amountValid = selectedProduct
-      ? isAmountWithinRange(
+    ? isAmountWithinRange(
         amountValue,
         selectedProduct.amount_min,
         selectedProduct.amount_max
@@ -220,7 +214,9 @@ export function Step2_Product() {
           }
           if (
             app.selectedProductId &&
-            !activeProducts.some((product) => product.id === app.selectedProductId)
+            !activeProducts.some(
+              (product) => product.id === app.selectedProductId
+            )
           ) {
             update({
               selectedProduct: undefined,
@@ -274,11 +270,7 @@ export function Step2_Product() {
   }
 
   function goNext() {
-    if (
-      !selectedProduct ||
-      !amountValid ||
-      loadError
-    ) {
+    if (!selectedProduct || !amountValid || loadError) {
       return;
     }
     if (
@@ -355,20 +347,31 @@ export function Step2_Product() {
     <WizardLayout>
       <StepHeader step={2} title="Product Category Selection" />
 
-      <Card className="space-y-4">
+      <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
+        {isLoading && (
+          <div style={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}>
+            <Spinner />
+            <span style={components.form.helperText}>Loading product options…</span>
+          </div>
+        )}
         {categorySummaries.length > 0 && (
           <div
             style={{
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: theme.layout.radius,
-              padding: theme.spacing.md,
-              background: "rgba(59, 130, 246, 0.08)",
+              border: `1px solid ${tokens.colors.border}`,
+              borderRadius: tokens.radii.lg,
+              padding: tokens.spacing.md,
+              background: "rgba(11, 42, 74, 0.06)",
             }}
           >
-            <div className="text-sm uppercase tracking-[0.18em] text-slate-400">
-              Product categories
-            </div>
-            <div className="grid md:grid-cols-2 gap-3 mt-3">
+            <div style={components.form.eyebrow}>Product categories</div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: tokens.spacing.sm,
+                marginTop: tokens.spacing.sm,
+              }}
+            >
               {categorySummaries.map((summary) => {
                 const amountTooLow =
                   amountValue > 0 && summary.matchingCount === 0 &&
@@ -379,22 +382,30 @@ export function Step2_Product() {
                 return (
                   <div
                     key={summary.category}
-                    className="rounded-xl border border-slate-200 bg-white p-3"
+                    style={{
+                      borderRadius: tokens.radii.md,
+                      border: `1px solid ${tokens.colors.border}`,
+                      background: tokens.colors.surface,
+                      padding: tokens.spacing.sm,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: tokens.spacing.xs,
+                    }}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="font-semibold text-borealBlue">
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <div style={{ fontWeight: 600, color: tokens.colors.primary }}>
                         {summary.category}
                       </div>
-                      <span className="text-xs font-semibold text-slate-500">
+                      <span style={components.form.helperText}>
                         {summary.matchingCount} match{summary.matchingCount === 1 ? "" : "es"}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-500 mt-2">
+                    <div style={components.form.helperText}>
                       Range: {formatAmount(summary.minAmount, countryCode)} to{" "}
                       {formatAmount(summary.maxAmount, countryCode)} · {summary.totalCount} total
                     </div>
                     {(amountTooLow || amountTooHigh) && (
-                      <div className="text-xs text-amber-700 mt-2">
+                      <div style={{ ...components.form.helperText, color: tokens.colors.warning }}>
                         {amountTooLow && "Requested amount is below the minimum for this category."}
                         {amountTooHigh && "Requested amount is above the maximum for this category."}
                         <div>
@@ -409,50 +420,54 @@ export function Step2_Product() {
             </div>
           </div>
         )}
-        {loadError && <div style={emptyStateStyles}>{loadError}</div>}
+        {loadError && (
+          <Card variant="muted">
+            <EmptyState>{loadError}</EmptyState>
+          </Card>
+        )}
         {!loadError && noProducts && (
-          <div style={emptyStateStyles}>
-            No products match your location and requested amount. Review the
-            category ranges above for alternatives.
-          </div>
+          <Card variant="muted">
+            <EmptyState>
+              No products match your location and requested amount. Review the
+              category ranges above for alternatives.
+            </EmptyState>
+          </Card>
         )}
         {!loadError && !noProducts && (
-          <div className="space-y-4">
+          <div style={layout.stack}>
             <div
               style={{
-                border: `1px solid ${theme.colors.border}`,
-                borderRadius: theme.layout.radius,
-                padding: theme.spacing.md,
-                background: theme.colors.background,
-                fontSize: "14px",
-                color: theme.colors.textSecondary,
+                border: `1px solid ${tokens.colors.border}`,
+                borderRadius: tokens.radii.md,
+                padding: tokens.spacing.md,
+                background: tokens.colors.background,
+                fontSize: tokens.typography.body.fontSize,
+                color: tokens.colors.textSecondary,
               }}
             >
               Requested amount:{" "}
-              <span style={{ color: theme.colors.textPrimary, fontWeight: 600 }}>
+              <span style={{ color: tokens.colors.textPrimary, fontWeight: 600 }}>
                 {amountDisplay}
               </span>
               {amountError && (
-                <div style={{ color: "#dc2626", marginTop: theme.spacing.xs }}>
-                  {amountError}
-                </div>
+                <div style={components.form.errorText}>{amountError}</div>
               )}
             </div>
-            <div className="space-y-6">
+            <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
               {groupedProducts.map((group) => (
-                <div key={group.lenderId} className="space-y-3">
+                <div key={group.lenderId} style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
                   <div
                     style={{
                       fontSize: "13px",
                       letterSpacing: "0.08em",
                       textTransform: "uppercase",
-                      color: theme.colors.textSecondary,
+                      color: tokens.colors.textSecondary,
                       fontWeight: 600,
                     }}
                   >
                     {group.lenderName}
                   </div>
-                  <div className="grid gap-4">
+                  <div style={{ display: "grid", gap: tokens.spacing.md }}>
                     {group.products.map((product) => {
                       const isSelected = product.id === app.selectedProductId;
                       const previewRequirements =
@@ -468,42 +483,50 @@ export function Step2_Product() {
                           onClick={() => select(product)}
                           style={{
                             borderColor: isSelected
-                              ? "#22c55e"
-                              : theme.colors.border,
+                              ? tokens.colors.success
+                              : tokens.colors.border,
                             boxShadow: isSelected
-                              ? "0 0 0 2px rgba(34, 197, 94, 0.24)"
-                              : "0 4px 16px rgba(15, 23, 42, 0.08)",
+                              ? "0 0 0 2px rgba(22, 163, 74, 0.24)"
+                              : tokens.shadows.card,
                             cursor: "pointer",
                             background: isSelected
-                              ? "rgba(34, 197, 94, 0.08)"
-                              : "white",
+                              ? "rgba(22, 163, 74, 0.08)"
+                              : tokens.colors.surface,
                           }}
                         >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="space-y-2">
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "flex-start",
+                              justifyContent: "space-between",
+                              gap: tokens.spacing.md,
+                            }}
+                          >
+                            <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.xs }}>
                               <div
                                 style={{
-                                  fontSize: theme.typography.h2.fontSize,
-                                  fontWeight: theme.typography.h2.fontWeight,
-                                  color: theme.colors.textPrimary,
+                                  fontSize: tokens.typography.h2.fontSize,
+                                  fontWeight: tokens.typography.h2.fontWeight,
+                                  color: tokens.colors.textPrimary,
                                 }}
                               >
                                 {product.name}
                               </div>
                               {product.product_type && (
-                                <div
-                                  style={{
-                                    fontSize: "14px",
-                                    color: theme.colors.textSecondary,
-                                  }}
-                                >
+                                <div style={components.form.helperText}>
                                   Type: {product.product_type}
                                 </div>
                               )}
-                              <div className="flex flex-wrap gap-3 text-sm text-slate-600">
-                                <span>
-                                  Country: {product.country}
-                                </span>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexWrap: "wrap",
+                                  gap: tokens.spacing.sm,
+                                  fontSize: tokens.typography.helper.fontSize,
+                                  color: tokens.colors.textSecondary,
+                                }}
+                              >
+                                <span>Country: {product.country}</span>
                                 <span>
                                   Min: {formatAmount(product.amount_min, countryCode)}
                                 </span>
@@ -514,28 +537,27 @@ export function Step2_Product() {
                                 {product.rate && <span>Rate: {product.rate}</span>}
                               </div>
                               {isSelected && (
-                                <div className="space-y-2 text-sm text-slate-600">
-                                  <div className="flex items-center gap-2">
+                                <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.xs }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: tokens.spacing.xs }}>
                                     <span style={{ fontWeight: 600 }}>
                                       Documents Required
                                     </span>
                                     <span
                                       style={{
                                         padding: "2px 8px",
-                                        borderRadius: "999px",
+                                        borderRadius: tokens.radii.pill,
                                         fontSize: "12px",
                                         fontWeight: 600,
-                                        background: "rgba(59, 130, 246, 0.12)",
-                                        color: "#1d4ed8",
-                                        border:
-                                          "1px solid rgba(59, 130, 246, 0.3)",
+                                        background: "rgba(11, 42, 74, 0.12)",
+                                        color: tokens.colors.primary,
+                                        border: "1px solid rgba(11, 42, 74, 0.3)",
                                       }}
                                     >
                                       {requiredDocuments.length}
                                     </span>
                                   </div>
                                   {showPreview && (
-                                    <ul className="list-disc pl-5 space-y-1">
+                                    <ul style={{ margin: 0, paddingLeft: "20px" }}>
                                       {previewRequired.map((entry) => (
                                         <li key={entry.id}>
                                           {formatDocumentLabel(entry.document_type)}
@@ -544,7 +566,7 @@ export function Step2_Product() {
                                     </ul>
                                   )}
                                   {isSelected && previewRequired.length === 0 && (
-                                    <div style={{ fontSize: "12px" }}>
+                                    <div style={components.form.helperText}>
                                       No required documents listed for this product.
                                     </div>
                                   )}
@@ -555,7 +577,7 @@ export function Step2_Product() {
                               style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: theme.spacing.xs,
+                                gap: tokens.spacing.xs,
                               }}
                             >
                               <input
@@ -568,12 +590,12 @@ export function Step2_Product() {
                                 <span
                                   style={{
                                     padding: "6px 12px",
-                                    borderRadius: "999px",
+                                    borderRadius: tokens.radii.pill,
                                     fontSize: "12px",
                                     fontWeight: 600,
-                                    background: "rgba(34, 197, 94, 0.12)",
+                                    background: "rgba(22, 163, 74, 0.12)",
                                     color: "#15803d",
-                                    border: "1px solid rgba(34, 197, 94, 0.35)",
+                                    border: "1px solid rgba(22, 163, 74, 0.35)",
                                   }}
                                 >
                                   Selected
@@ -593,20 +615,19 @@ export function Step2_Product() {
       </Card>
 
       {isEquipmentIntent && (
-        <Card className="mt-4">
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
+        <Card>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: tokens.spacing.sm }}>
+            <Checkbox
               checked={Boolean(app.requires_closing_cost_funding)}
               onChange={(event) =>
                 update({ requires_closing_cost_funding: event.target.checked })
               }
             />
-            <div className="space-y-1 text-sm text-slate-600">
-              <div className="font-semibold text-borealBlue">
+            <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.xs }}>
+              <div style={{ fontWeight: 600, color: tokens.colors.primary }}>
                 Need closing cost or deposit funding?
               </div>
-              <div>
+              <div style={components.form.helperText}>
                 Select this if you want a linked application for closing costs.
               </div>
             </div>
@@ -614,29 +635,28 @@ export function Step2_Product() {
         </Card>
       )}
 
-      <div
-        className="flex flex-col sm:flex-row gap-3"
-        style={{ marginTop: theme.spacing.lg }}
-      >
-        <Button
-          variant="secondary"
-          style={{ width: "100%", maxWidth: "160px" }}
-          onClick={goBack}
-        >
-          ← Back
-        </Button>
-        <Button
-          style={{ width: "100%", maxWidth: "200px" }}
-          onClick={goNext}
-          disabled={
-            !selectedProduct ||
-            !amountValid ||
-            Boolean(loadError) ||
-            noProducts
-          }
-        >
-          Continue →
-        </Button>
+      <div style={{ ...layout.stickyCta, marginTop: tokens.spacing.lg }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: tokens.spacing.sm }}>
+          <Button
+            variant="secondary"
+            style={{ width: "100%", maxWidth: "160px" }}
+            onClick={goBack}
+          >
+            ← Back
+          </Button>
+          <Button
+            style={{ width: "100%", maxWidth: "200px" }}
+            onClick={goNext}
+            disabled={
+              !selectedProduct ||
+              !amountValid ||
+              Boolean(loadError) ||
+              noProducts
+            }
+          >
+            Continue →
+          </Button>
+        </div>
       </div>
 
       {showClosingModal && (
@@ -648,41 +668,32 @@ export function Step2_Product() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: theme.spacing.md,
+            padding: tokens.spacing.md,
             zIndex: 50,
           }}
         >
           <div
             style={{
-              background: theme.colors.surface,
-              borderRadius: theme.layout.radius,
-              border: `1px solid ${theme.colors.border}`,
-              padding: theme.spacing.lg,
+              ...components.card.base,
               maxWidth: "520px",
               width: "100%",
               display: "flex",
               flexDirection: "column",
-              gap: theme.spacing.sm,
+              gap: tokens.spacing.sm,
             }}
           >
-            <h2
-              style={{
-                fontSize: theme.typography.h2.fontSize,
-                fontWeight: theme.typography.h2.fontWeight,
-                color: theme.colors.textPrimary,
-              }}
-            >
+            <h2 style={components.form.sectionTitle}>
               Create a linked closing cost application?
             </h2>
-            <p style={{ fontSize: "14px", color: theme.colors.textSecondary }}>
+            <p style={components.form.subtitle}>
               We will create a second application tied to this one for closing
               costs or equipment deposits. It stays linked in your client portal
               so the team can review both together.
             </p>
             {closingError && (
-              <div className="text-sm text-red-600">{closingError}</div>
+              <div style={components.form.errorText}>{closingError}</div>
             )}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: tokens.spacing.sm }}>
               <Button
                 variant="secondary"
                 style={{ width: "100%" }}
@@ -695,8 +706,9 @@ export function Step2_Product() {
                 style={{ width: "100%" }}
                 onClick={confirmClosingCosts}
                 disabled={closingBusy}
+                loading={closingBusy}
               >
-                {closingBusy ? "Creating..." : "Create linked application"}
+                Create linked application
               </Button>
             </div>
           </div>
