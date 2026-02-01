@@ -13,6 +13,8 @@ import { buildSubmissionPayload, getMissingRequiredDocs } from "./submission";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { FileUploadCard } from "../components/FileUploadCard";
 import { Checkbox } from "../components/ui/Checkbox";
+import { extractApplicationFromStatus } from "../applications/resume";
+import { filterRequirementsByAmount, type LenderProductRequirement } from "./requirements";
 import { components, layout, tokens } from "@/styles";
 
 export function Step6_Review() {
@@ -26,6 +28,30 @@ export function Step6_Review() {
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
   const navigate = useNavigate();
   const hasPartner = Boolean(app.applicant?.hasMultipleOwners);
+  const requirementsKey = useMemo(
+    () => (app.productRequirements?.aggregated ? "aggregated" : app.selectedProductId),
+    [app.productRequirements, app.selectedProductId]
+  );
+  const requiredDocTypes = useMemo(() => {
+    if (!requirementsKey) return [];
+    const requirements =
+      (app.productRequirements?.[requirementsKey] || []) as LenderProductRequirement[];
+    return filterRequirementsByAmount(requirements, app.kyc?.fundingAmount)
+      .filter((entry) => entry.required)
+      .map((entry) => entry.document_type);
+  }, [app.kyc?.fundingAmount, app.productRequirements, requirementsKey]);
+  const missingRequiredDocs = useMemo(() => getMissingRequiredDocs(app), [app]);
+  const docsAccepted = useMemo(() => {
+    if (app.documentsDeferred) return true;
+    if (requiredDocTypes.length === 0) return true;
+    return requiredDocTypes.every(
+      (docType) => app.documents[docType]?.status === "accepted"
+    );
+  }, [app.documents, app.documentsDeferred, requiredDocTypes]);
+  const processingComplete = useMemo(() => {
+    if (app.documentsDeferred) return true;
+    return Boolean(app.ocrComplete && app.creditSummaryComplete);
+  }, [app.creditSummaryComplete, app.documentsDeferred, app.ocrComplete]);
   const idRequirements = useMemo(
     () => [
       {
@@ -45,7 +71,11 @@ export function Step6_Review() {
     () =>
       idRequirements
         .filter((entry) => entry.required)
-        .filter((entry) => !app.documents[entry.key])
+        .filter((entry) => {
+          const doc = app.documents[entry.key];
+          if (!doc) return true;
+          return doc.status === "rejected";
+        })
         .map((entry) => entry.key),
     [app.documents, idRequirements]
   );
@@ -61,6 +91,30 @@ export function Step6_Review() {
       update({ signatureDate: today });
     }
   }, [app.signatureDate, today, update]);
+
+  useEffect(() => {
+    if (!app.applicationToken) return;
+    ClientAppAPI.status(app.applicationToken)
+      .then((res) => {
+        const refreshed = extractApplicationFromStatus(
+          res?.data || {},
+          app.applicationToken
+        );
+        update({
+          documents: refreshed.documents || app.documents,
+          documentsDeferred:
+            typeof refreshed.documentsDeferred === "boolean"
+              ? refreshed.documentsDeferred
+              : app.documentsDeferred,
+          ocrComplete: refreshed.ocrComplete ?? app.ocrComplete,
+          creditSummaryComplete:
+            refreshed.creditSummaryComplete ?? app.creditSummaryComplete,
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to refresh application status:", error);
+      });
+  }, [app.applicationToken, update]);
 
   function toggleTerms() {
     update({ termsAccepted: !app.termsAccepted });
@@ -79,9 +133,22 @@ export function Step6_Review() {
       return;
     }
 
-    const missingRequiredDocs = getMissingRequiredDocs(app);
     if (!app.documentsDeferred && missingRequiredDocs.length > 0) {
       setSubmitError("Please upload all required documents before submitting.");
+      return;
+    }
+
+    if (!docsAccepted) {
+      setSubmitError(
+        "Your required documents must be accepted before you can sign."
+      );
+      return;
+    }
+
+    if (!processingComplete) {
+      setSubmitError(
+        "We’re still completing document and credit checks. Please check back shortly."
+      );
       return;
     }
 
@@ -341,6 +408,27 @@ export function Step6_Review() {
           </div>
         </div>
 
+        {(!docsAccepted || !processingComplete) && (
+          <Card
+            variant="muted"
+            data-error={true}
+            style={{ background: "rgba(245, 158, 11, 0.12)" }}
+          >
+            <div style={layout.stackTight}>
+              {!docsAccepted && (
+                <div style={components.form.errorText}>
+                  Required documents must be accepted before you can sign.
+                </div>
+              )}
+              {!processingComplete && (
+                <div style={components.form.errorText}>
+                  OCR and credit summary checks are still running.
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
+
         <div>
           <h2 style={components.form.sectionTitle}>Terms & Conditions</h2>
           <div
@@ -430,7 +518,10 @@ export function Step6_Review() {
                 !app.termsAccepted ||
                 !app.typedSignature?.trim() ||
                 (hasPartner && !app.coApplicantSignature?.trim()) ||
-                missingIdDocs.length > 0
+                missingIdDocs.length > 0 ||
+                (!app.documentsDeferred && missingRequiredDocs.length > 0) ||
+                !docsAccepted ||
+                !processingComplete
               }
             >
               Submit application

@@ -90,36 +90,40 @@ export function Step5_Documents() {
         setIsLoading(false);
         return;
       }
-      const docSet = new Set<string>();
-      const eligibleProducts = Array.isArray(app.eligibleProducts)
-        ? app.eligibleProducts
-        : [];
       const amountValue = parseCurrencyAmount(app.kyc.fundingAmount);
       const countryCode = getCountryCode(app.kyc.businessLocation);
-      const fallbackProducts = ProductSync.load();
-      const matchingFallback = filterProductsForApplicant(
-        fallbackProducts,
+      let lenderProducts = ProductSync.load();
+      if (!lenderProducts.length) {
+        try {
+          lenderProducts = await ProductSync.sync();
+        } catch (error) {
+          console.error("Failed to refresh lender products:", error);
+        }
+      }
+      const matchingProducts = filterProductsForApplicant(
+        lenderProducts,
         countryCode,
         amountValue
       );
-      const matchingProducts =
-        eligibleProducts.length > 0 ? eligibleProducts : matchingFallback;
       const aggregated = aggregateRequiredDocuments(
         matchingProducts,
         selectedCategory,
         amountValue
       );
-      aggregated.forEach((entry) => docSet.add(entry.document_type));
-
-      ALWAYS_REQUIRED_DOCS.forEach((doc) => docSet.add(doc));
-
-      const normalized = Array.from(docSet).map((docType) => ({
-        id: docType,
-        document_type: docType,
-        required: true,
-        min_amount: null,
-        max_amount: null,
-      }));
+      const docMap = new Map(
+        aggregated.map((entry) => [entry.document_type, entry])
+      );
+      ALWAYS_REQUIRED_DOCS.forEach((docType) => {
+        const existing = docMap.get(docType);
+        docMap.set(docType, {
+          id: existing?.id ?? docType,
+          document_type: docType,
+          required: true,
+          min_amount: existing?.min_amount ?? null,
+          max_amount: existing?.max_amount ?? null,
+        });
+      });
+      const normalized = Array.from(docMap.values());
 
       if (active) {
         setIsLoading(true);
@@ -150,7 +154,6 @@ export function Step5_Documents() {
       active = false;
     };
   }, [
-    app.eligibleProducts,
     app.kyc.businessLocation,
     app.kyc.fundingAmount,
     app.selectedProductId,
