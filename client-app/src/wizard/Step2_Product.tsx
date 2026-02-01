@@ -17,7 +17,6 @@ import {
 import { ClientProfileStore } from "../state/clientProfiles";
 import {
   filterActiveProducts,
-  filterProductsForApplicant,
   groupProductsByLender,
   isAmountWithinRange,
   matchesCountry,
@@ -270,7 +269,7 @@ export function Step2_Product() {
   }
 
   function goNext() {
-    if (!selectedProduct || !amountValid || loadError) {
+    if (!selectedProduct || loadError) {
       return;
     }
     if (
@@ -319,8 +318,8 @@ export function Step2_Product() {
   }
 
   const filteredProducts = useMemo(
-    () => filterProductsForApplicant(products, countryCode, amountValue),
-    [amountValue, countryCode, products]
+    () => products.filter((product) => matchesCountry(product.country, countryCode)),
+    [countryCode, products]
   );
   const groupedProducts = useMemo(
     () => groupProductsByLender(filteredProducts),
@@ -428,8 +427,8 @@ export function Step2_Product() {
         {!loadError && noProducts && (
           <Card variant="muted">
             <EmptyState>
-              No products match your location and requested amount. Review the
-              category ranges above for alternatives.
+              No products match your location. Review the category ranges above
+              for alternatives.
             </EmptyState>
           </Card>
         )}
@@ -649,7 +648,6 @@ export function Step2_Product() {
             onClick={goNext}
             disabled={
               !selectedProduct ||
-              !amountValid ||
               Boolean(loadError) ||
               noProducts
             }

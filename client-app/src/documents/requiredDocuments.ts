@@ -42,9 +42,11 @@ export function aggregateRequiredDocuments(
       amountRequested ?? 0
     );
     applicable.forEach((entry) => {
+      const existing = docMap.get(entry.document_type);
       docMap.set(entry.document_type, {
+        ...existing,
         ...entry,
-        required: true,
+        required: Boolean(existing?.required || entry.required),
       });
     });
   });

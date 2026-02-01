@@ -42,6 +42,18 @@ export function StatusPage() {
     ClientAppAPI.status(token).then((res) => setStatus(res.data));
   }, [navigate, token]);
 
+  useEffect(() => {
+    if (!token) return;
+    const handleUnload = () => {
+      ClientProfileStore.clearPortalSessions();
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      ClientProfileStore.clearPortalSessions();
+    };
+  }, [token]);
+
   async function refreshMessages() {
     if (!token) return;
     const res = await ClientAppAPI.getMessages(token);
