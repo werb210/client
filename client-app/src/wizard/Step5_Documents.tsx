@@ -15,6 +15,7 @@ import {
 import { filterProductsForApplicant, parseCurrencyAmount } from "./productSelection";
 import { getCountryCode } from "../utils/location";
 import { aggregateRequiredDocuments } from "../documents/requiredDocuments";
+import { extractApplicationFromStatus } from "../applications/resume";
 import { FileUploadCard } from "../components/FileUploadCard";
 import { Checkbox } from "../components/ui/Checkbox";
 import { DocumentUploadList } from "../components/DocumentUploadList";
@@ -168,6 +169,30 @@ export function Step5_Documents() {
     }
   }, [app.applicationToken, app.selectedProductId]);
 
+  useEffect(() => {
+    if (!app.applicationToken) return;
+    ClientAppAPI.status(app.applicationToken)
+      .then((res) => {
+        const refreshed = extractApplicationFromStatus(
+          res?.data || {},
+          app.applicationToken
+        );
+        update({
+          documents: refreshed.documents || app.documents,
+          documentsDeferred:
+            typeof refreshed.documentsDeferred === "boolean"
+              ? refreshed.documentsDeferred
+              : app.documentsDeferred,
+          ocrComplete: refreshed.ocrComplete ?? app.ocrComplete,
+          creditSummaryComplete:
+            refreshed.creditSummaryComplete ?? app.creditSummaryComplete,
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to refresh document status:", error);
+      });
+  }, [app.applicationToken, update]);
+
   function readFileAsBase64(file: File) {
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -233,19 +258,18 @@ export function Step5_Documents() {
       };
 
       await ClientAppAPI.uploadDoc(app.applicationToken, payload);
+      const refreshed = await ClientAppAPI.status(app.applicationToken);
+      const hydrated = extractApplicationFromStatus(
+        refreshed?.data || {},
+        app.applicationToken
+      );
 
       update({
         documentsDeferred: false,
-        documents: {
-          ...app.documents,
-          [docType]: {
-            name: file.name,
-            base64,
-            category: docType,
-            productId: app.selectedProductId,
-            status: "uploaded",
-          },
-        },
+        documents: hydrated.documents || app.documents,
+        ocrComplete: hydrated.ocrComplete ?? app.ocrComplete,
+        creditSummaryComplete:
+          hydrated.creditSummaryComplete ?? app.creditSummaryComplete,
       });
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
     } catch (error) {

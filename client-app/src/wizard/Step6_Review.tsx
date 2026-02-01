@@ -191,6 +191,21 @@ export function Step6_Review() {
       });
       const payload = buildSubmissionPayload(app);
       await submitApplication(payload);
+      const refreshed = await ClientAppAPI.status(app.applicationToken);
+      const hydrated = extractApplicationFromStatus(
+        refreshed?.data || {},
+        app.applicationToken
+      );
+      update({
+        documents: hydrated.documents || app.documents,
+        documentsDeferred:
+          typeof hydrated.documentsDeferred === "boolean"
+            ? hydrated.documentsDeferred
+            : app.documentsDeferred,
+        ocrComplete: hydrated.ocrComplete ?? app.ocrComplete,
+        creditSummaryComplete:
+          hydrated.creditSummaryComplete ?? app.creditSummaryComplete,
+      });
       if (app.kyc?.phone && app.applicationToken) {
         ClientProfileStore.markSubmitted(app.kyc.phone, app.applicationToken);
       }
@@ -314,17 +329,16 @@ export function Step6_Review() {
           },
         },
       });
+      const refreshed = await ClientAppAPI.status(app.applicationToken);
+      const hydrated = extractApplicationFromStatus(
+        refreshed?.data || {},
+        app.applicationToken
+      );
       update({
-        documents: {
-          ...app.documents,
-          [docType]: {
-            name: file.name,
-            base64,
-            category: docType,
-            productId: app.selectedProductId,
-            status: "uploaded",
-          },
-        },
+        documents: hydrated.documents || app.documents,
+        ocrComplete: hydrated.ocrComplete ?? app.ocrComplete,
+        creditSummaryComplete:
+          hydrated.creditSummaryComplete ?? app.creditSummaryComplete,
       });
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
     } catch (error) {

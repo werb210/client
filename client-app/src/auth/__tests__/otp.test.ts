@@ -28,4 +28,8 @@ describe("resolveOtpNextStep", () => {
       token: "token-submitted",
     });
   });
+
+  it("starts a new application when no profile exists", () => {
+    expect(resolveOtpNextStep(null)).toEqual({ action: "start" });
+  });
 });
