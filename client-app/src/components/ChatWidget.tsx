@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useChatbot } from "../hooks/useChatbot";
+import { useForegroundRefresh } from "../hooks/useForegroundRefresh";
 import { ClientAppAPI } from "../api/clientApp";
 import { OfflineStore } from "../state/offline";
 import { Input } from "./ui/Input";
@@ -19,7 +20,7 @@ export function ChatWidget() {
   const cached = OfflineStore.load();
   const token = cached?.applicationToken;
 
-  async function refreshMessages() {
+  const refreshMessages = useCallback(async () => {
     if (!token) return;
     try {
       const res = await ClientAppAPI.getMessages(token);
@@ -27,7 +28,7 @@ export function ChatWidget() {
     } catch (error) {
       console.error("Chat refresh failed:", error);
     }
-  }
+  }, [token]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 768px)");
@@ -41,7 +42,11 @@ export function ChatWidget() {
     refreshMessages();
     const id = setInterval(refreshMessages, 5000);
     return () => clearInterval(id);
-  }, [token]);
+  }, [refreshMessages]);
+
+  useForegroundRefresh(() => {
+    refreshMessages();
+  }, [refreshMessages]);
 
   async function sendMessage() {
     if (!text.trim()) return;

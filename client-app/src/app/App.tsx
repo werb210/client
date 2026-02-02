@@ -2,6 +2,7 @@ import AppRouter from "../router/AppRouter";
 import { Header } from "../components/Header";
 import { ChatWidget } from "../components/ChatWidget";
 import { OfflineBanner } from "../components/OfflineBanner";
+import { InstallPromptBanner } from "../components/InstallPromptBanner";
 import { ErrorBoundary } from "../utils/errorBoundary";
 
 export default function App() {
@@ -9,6 +10,7 @@ export default function App() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <OfflineBanner />
+      <InstallPromptBanner />
       <main className="flex-1">
         <ErrorBoundary>
           <AppRouter />

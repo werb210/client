@@ -1,5 +1,5 @@
 import { ClientAppAPI } from "../api/clientApp";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { Button, PrimaryButton, SecondaryButton } from "../components/ui/Button";
@@ -19,6 +19,8 @@ import { StatusTimeline } from "../components/StatusTimeline";
 import { PIPELINE_STAGE_LABELS } from "../portal/timeline";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Spinner } from "../components/ui/Spinner";
+import { useForegroundRefresh } from "../hooks/useForegroundRefresh";
+import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { components, layout, tokens } from "@/styles";
 
 export function StatusPage() {
@@ -34,26 +36,40 @@ export function StatusPage() {
   const { send: sendAI } = useChatbot();
   const navigate = useNavigate();
 
+  const refreshStatus = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await ClientAppAPI.status(token);
+      setStatus(res.data);
+    } catch (error) {
+      console.error("Status refresh failed:", error);
+    }
+  }, [token]);
+
   useEffect(() => {
     if (!token) return;
     if (!ClientProfileStore.hasPortalSession(token)) {
       navigate("/portal", { replace: true });
       return;
     }
-    ClientAppAPI.status(token).then((res) => setStatus(res.data));
-  }, [navigate, token]);
+    refreshStatus();
+  }, [navigate, refreshStatus, token]);
 
-  async function refreshMessages() {
+  const refreshMessages = useCallback(async () => {
     if (!token) return;
-    const res = await ClientAppAPI.getMessages(token);
-    setMessages(res.data);
-  }
+    try {
+      const res = await ClientAppAPI.getMessages(token);
+      setMessages(res.data);
+    } catch (error) {
+      console.error("Message refresh failed:", error);
+    }
+  }, [token]);
 
   useEffect(() => {
     refreshMessages();
     const id = setInterval(refreshMessages, 5000);
     return () => clearInterval(id);
-  }, [token]);
+  }, [refreshMessages]);
 
   useEffect(() => {
     if (!token) return;
@@ -70,6 +86,11 @@ export function StatusPage() {
     });
     return () => stop();
   }, [token]);
+
+  useForegroundRefresh(() => {
+    refreshMessages();
+    refreshStatus();
+  }, [refreshMessages, refreshStatus]);
 
   const stages = PIPELINE_STAGE_LABELS;
 
@@ -142,7 +163,7 @@ export function StatusPage() {
                 start a new application.
               </p>
               <PrimaryButton
-                onClick={() => (window.location.href = "/apply/step-1")}
+                onClick={() => navigate("/apply/step-1")}
                 style={{ width: "100%" }}
               >
                 Start new application
@@ -229,7 +250,7 @@ export function StatusPage() {
               />
               <PrimaryButton
                 style={{ width: "100%" }}
-                onClick={() => (window.location.href = "/apply/step-5")}
+                onClick={() => navigate("/apply/step-5")}
               >
                 Re-upload documents
               </PrimaryButton>
@@ -250,13 +271,13 @@ export function StatusPage() {
                 <h2 style={components.form.sectionTitle}>Actions</h2>
                 <PrimaryButton
                   style={{ width: "100%" }}
-                  onClick={() => (window.location.href = "/apply/step-5")}
+                  onClick={() => navigate("/apply/step-5")}
                 >
                   Upload required documents
                 </PrimaryButton>
                 <SecondaryButton
                   style={{ width: "100%" }}
-                  onClick={() => (window.location.href = "/resume")}
+                  onClick={() => navigate("/resume")}
                 >
                   View application
                 </SecondaryButton>
@@ -272,10 +293,11 @@ export function StatusPage() {
                 </SecondaryButton>
                 <SecondaryButton
                   style={{ width: "100%" }}
-                  onClick={() => {
+                  onClick={async () => {
                     OfflineStore.clear();
                     ClientProfileStore.clearPortalSessions();
-                    window.location.href = "/apply/step-1";
+                    await clearServiceWorkerCaches("logout");
+                    navigate("/apply/step-1");
                   }}
                 >
                   New application
@@ -292,7 +314,7 @@ export function StatusPage() {
                           style={{ width: "100%" }}
                           onClick={() => {
                             ClientProfileStore.markPortalVerified(linkedToken);
-                            window.location.href = `/status?token=${linkedToken}`;
+                            navigate(`/status?token=${linkedToken}`);
                           }}
                         >
                           {isCurrent
