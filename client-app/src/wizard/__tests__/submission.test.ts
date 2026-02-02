@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildSubmissionPayload, getMissingRequiredDocs } from "../submission";
+import {
+  buildSubmissionPayload,
+  getMissingRequiredDocs,
+  shouldBlockForMissingDocuments,
+} from "../submission";
 import type { ApplicationData } from "../../types/application";
 
 describe("submission payload", () => {
@@ -67,5 +71,14 @@ describe("submission payload", () => {
     expect(missing.map((entry) => entry.document_type)).toEqual([
       "bank_statements",
     ]);
+  });
+
+  it("allows skipping documents when deferred", () => {
+    const shouldBlock = shouldBlockForMissingDocuments({
+      ...baseApp,
+      documents: {},
+      documentsDeferred: true,
+    });
+    expect(shouldBlock).toBe(false);
   });
 });

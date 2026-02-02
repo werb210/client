@@ -56,10 +56,8 @@ export function getPipelineStage(status: any) {
   if (normalized.includes("accept") || normalized.includes("approved")) {
     return "Accepted";
   }
-  if (normalized.includes("offer")) return "Offer";
   if (normalized.includes("lender")) return "Off to Lender";
   if (normalized.includes("startup")) return "Startup";
-  if (normalized.includes("additional")) return "Additional Steps Required";
   if (normalized.includes("document")) return "Documents Required";
   if (normalized.includes("review")) return "In Review";
   return "Received";

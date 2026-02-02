@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildCategorySummaries,
   filterProductsForApplicant,
+  getMatchingProducts,
   groupProductsByLender,
   type ActiveProduct,
 } from "../productSelection";
@@ -56,5 +58,13 @@ describe("product selection filters", () => {
     expect(grouped).toHaveLength(1);
     expect(grouped[0].lenderName).toBe("Atlas Capital");
     expect(grouped[0].products.map((product) => product.id)).toEqual(["prod-3"]);
+  });
+
+  it("counts matching products by category", () => {
+    const summaries = buildCategorySummaries(products, "US", 3500);
+    const entry = summaries.find((summary) => summary.category === "Starter Loan");
+    expect(entry?.matchingCount).toBe(1);
+    const matching = getMatchingProducts(products, "US", 3500, "Starter Loan");
+    expect(matching.map((product) => product.id)).toEqual(["prod-1"]);
   });
 });

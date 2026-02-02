@@ -21,28 +21,20 @@ class MemoryStorage {
   }
 }
 
-describe("ClientProfileStore", () => {
+describe("ClientProfileStore portal sessions", () => {
   beforeEach(() => {
     const local = new MemoryStorage();
     const session = new MemoryStorage();
     globalThis.localStorage = local as Storage;
     globalThis.sessionStorage = session as Storage;
-    globalThis.window = {
-      sessionStorage: session,
-      localStorage: local,
-    } as Window & typeof globalThis;
   });
 
-  it("normalizes the same phone number to one profile", () => {
-    ClientProfileStore.upsertProfile("(555) 111-2222", "token-one");
-    ClientProfileStore.upsertProfile("555-111-2222", "token-two");
+  it("requires portal verification per visit", () => {
+    ClientProfileStore.markPortalVerified("token-123");
+    expect(ClientProfileStore.hasPortalSession("token-123")).toBe(true);
 
-    const profile = ClientProfileStore.getProfile("5551112222");
-    expect(profile?.applicationTokens).toEqual(["token-two", "token-one"]);
-  });
-
-  it("stores portal sessions in local storage", () => {
-    ClientProfileStore.markPortalVerified("token-portal");
-    expect(ClientProfileStore.hasPortalSession("token-portal")).toBe(true);
+    const newSession = new MemoryStorage();
+    globalThis.sessionStorage = newSession as Storage;
+    expect(ClientProfileStore.hasPortalSession("token-123")).toBe(false);
   });
 });

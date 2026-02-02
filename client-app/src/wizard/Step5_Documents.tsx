@@ -35,6 +35,50 @@ import {
   type DocumentStatus,
 } from "../documents/documentStatus";
 
+const DOCUMENT_CATEGORIES = [
+  { label: "Bank Statements", match: (doc: string) => doc.includes("bank") },
+  {
+    label: "Tax & Financials",
+    match: (doc: string) =>
+      doc.includes("tax") ||
+      doc.includes("financial") ||
+      doc.includes("balance") ||
+      doc.includes("profit") ||
+      doc.includes("loss") ||
+      doc.includes("cash_flow"),
+  },
+  {
+    label: "Business Documents",
+    match: (doc: string) =>
+      doc.includes("license") ||
+      doc.includes("incorporation") ||
+      doc.includes("ownership") ||
+      doc.includes("business"),
+  },
+  {
+    label: "Transaction Documents",
+    match: (doc: string) =>
+      doc.includes("invoice") ||
+      doc.includes("purchase_order") ||
+      doc.includes("contract") ||
+      doc.includes("equipment") ||
+      doc.includes("lease"),
+  },
+  {
+    label: "Applicant Identification",
+    match: (doc: string) =>
+      doc.includes("id") ||
+      doc.includes("license") ||
+      doc.includes("passport"),
+  },
+];
+
+function resolveDocumentCategory(docType: string) {
+  const normalized = docType.toLowerCase();
+  const match = DOCUMENT_CATEGORIES.find((entry) => entry.match(normalized));
+  return match?.label || "Additional Requirements";
+}
+
 export function Step5_Documents() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
@@ -59,6 +103,16 @@ export function Step5_Documents() {
     () => orderedRequirements.filter((entry) => entry.required),
     [orderedRequirements]
   );
+  const groupedRequirements = useMemo(() => {
+    const groups = new Map<string, LenderProductRequirement[]>();
+    requiredDocs.forEach((entry) => {
+      const category = resolveDocumentCategory(entry.document_type);
+      const list = groups.get(category) || [];
+      list.push(entry);
+      groups.set(category, list);
+    });
+    return Array.from(groups.entries());
+  }, [requiredDocs]);
 
   const missingRequiredDocs = useMemo(
     () =>
@@ -385,76 +439,99 @@ export function Step5_Documents() {
             />
           </Card>
         )}
-        <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
-          {requiredDocs.map((entry) => {
-            const docType = entry.document_type;
-            const docStatus = getDocStatus(docType);
-            const docError = docErrors[docType];
-            const isUploading = uploadingDocs[docType];
-            return (
-              <FileUploadCard
-                key={entry.id}
-                title={formatDocumentLabel(docType)}
-                status={isUploading ? "Uploading" : docStatus}
-                data-error={Boolean(docError) || docStatus === "missing" || docStatus === "rejected"}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  const file = event.dataTransfer.files?.[0] || null;
-                  handleFile(docType, file);
-                }}
-              >
-                <input
-                  id={`doc-${entry.id}`}
-                  type="file"
-                  style={{ display: "none" }}
-                  onChange={(e: any) =>
-                    handleFile(docType, e.target.files?.[0] || null)
-                  }
-                />
-                <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.xs }}>
-                  <label
-                    style={{ display: "flex", alignItems: "center", gap: tokens.spacing.xs }}
-                  >
-                    <Checkbox checked={docStatus !== "missing"} readOnly />
-                    <span style={{ fontWeight: 600, color: tokens.colors.primary }}>
-                      {formatDocumentLabel(docType)}
-                    </span>
-                  </label>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={isUploading}
-                    loading={isUploading}
-                    onClick={() =>
-                      document.getElementById(`doc-${entry.id}`)?.click()
+        <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
+          {groupedRequirements.map(([category, entries]) => (
+            <div key={category} style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
+              <div style={{ fontWeight: 600, color: tokens.colors.textSecondary }}>
+                {category}
+              </div>
+              {entries.map((entry) => {
+                const docType = entry.document_type;
+                const docStatus = getDocStatus(docType);
+                const docError = docErrors[docType];
+                const isUploading = uploadingDocs[docType];
+                return (
+                  <FileUploadCard
+                    key={entry.id}
+                    title={formatDocumentLabel(docType)}
+                    status={isUploading ? "Uploading" : docStatus}
+                    data-error={
+                      Boolean(docError) ||
+                      docStatus === "missing" ||
+                      docStatus === "rejected"
                     }
-                    style={{ width: "100%" }}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      const file = event.dataTransfer.files?.[0] || null;
+                      handleFile(docType, file);
+                    }}
                   >
-                    Upload file
-                  </Button>
-                  {app.documents[docType] && (
-                    <div style={components.form.helperText}>
-                      Uploaded: {app.documents[docType].name}
+                    <input
+                      id={`doc-${entry.id}`}
+                      type="file"
+                      style={{ display: "none" }}
+                      onChange={(e: any) =>
+                        handleFile(docType, e.target.files?.[0] || null)
+                      }
+                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: tokens.spacing.xs,
+                      }}
+                    >
+                      <label
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: tokens.spacing.xs,
+                        }}
+                      >
+                        <Checkbox checked={docStatus !== "missing"} readOnly />
+                        <span
+                          style={{ fontWeight: 600, color: tokens.colors.primary }}
+                        >
+                          {formatDocumentLabel(docType)}
+                        </span>
+                      </label>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={isUploading}
+                        loading={isUploading}
+                        onClick={() =>
+                          document.getElementById(`doc-${entry.id}`)?.click()
+                        }
+                        style={{ width: "100%" }}
+                      >
+                        Upload file
+                      </Button>
+                      {app.documents[docType] && (
+                        <div style={components.form.helperText}>
+                          Uploaded: {app.documents[docType].name}
+                        </div>
+                      )}
+                      {docError && (
+                        <div style={components.form.errorText}>{docError}</div>
+                      )}
+                      {!docError && docStatus === "missing" && (
+                        <div style={components.form.errorText}>
+                          This document is required.
+                        </div>
+                      )}
+                      {docStatus === "rejected" && (
+                        <div style={components.form.errorText}>
+                          {getRejectionMessage(app.documents[docType])}
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {docError && (
-                    <div style={components.form.errorText}>{docError}</div>
-                  )}
-                  {!docError && docStatus === "missing" && (
-                    <div style={components.form.errorText}>
-                      This document is required.
-                    </div>
-                  )}
-                  {docStatus === "rejected" && (
-                    <div style={components.form.errorText}>
-                      {getRejectionMessage(app.documents[docType])}
-                    </div>
-                  )}
-                </div>
-              </FileUploadCard>
-            );
-          })}
+                  </FileUploadCard>
+                );
+              })}
+            </div>
+          ))}
         </div>
       </Card>
 

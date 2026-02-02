@@ -7,6 +7,7 @@ import {
 const PROFILE_KEY = "boreal_client_profiles";
 const LAST_PHONE_KEY = "boreal_client_last_phone";
 const OTP_KEY = "boreal_client_pending_otp";
+const PORTAL_SESSION_KEY = "boreal_portal_session_token";
 const OTP_TTL_MS = 5 * 60 * 1000;
 
 export type ClientProfile = {
@@ -46,6 +47,52 @@ function saveProfiles(profiles: Record<string, ClientProfile>) {
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profiles));
   } catch (error) {
     console.warn("Failed to save client profiles:", error);
+  }
+}
+
+function getSessionStorage() {
+  try {
+    if (typeof window !== "undefined" && window.sessionStorage) {
+      return window.sessionStorage;
+    }
+    if (typeof globalThis !== "undefined" && "sessionStorage" in globalThis) {
+      return globalThis.sessionStorage as Storage;
+    }
+    return null;
+  } catch (error) {
+    console.warn("Failed to access session storage:", error);
+    return null;
+  }
+}
+
+function setPortalSessionToken(token: string) {
+  const storage = getSessionStorage();
+  if (!storage) return;
+  try {
+    storage.setItem(PORTAL_SESSION_KEY, token);
+  } catch (error) {
+    console.warn("Failed to store portal session token:", error);
+  }
+}
+
+function getPortalSessionToken() {
+  const storage = getSessionStorage();
+  if (!storage) return "";
+  try {
+    return storage.getItem(PORTAL_SESSION_KEY) || "";
+  } catch (error) {
+    console.warn("Failed to read portal session token:", error);
+    return "";
+  }
+}
+
+function clearPortalSessionToken() {
+  const storage = getSessionStorage();
+  if (!storage) return;
+  try {
+    storage.removeItem(PORTAL_SESSION_KEY);
+  } catch (error) {
+    console.warn("Failed to clear portal session token:", error);
   }
 }
 
@@ -201,9 +248,14 @@ export const ClientProfileStore = {
       expiresAt: now + OTP_TTL_MS,
     });
     savePortalSessions(next);
+    setPortalSessionToken(token);
   },
   hasPortalSession(token: string) {
     if (!token) return false;
+    const sessionToken = getPortalSessionToken();
+    if (!sessionToken || sessionToken !== token) {
+      return false;
+    }
     const parsed = loadPortalSessions();
     const now = Date.now();
     const next = parsed.filter(
@@ -216,6 +268,7 @@ export const ClientProfileStore = {
   },
   clearPortalSessions() {
     void clearPortalSessionsStorage();
+    clearPortalSessionToken();
   },
   clearAll() {
     try {

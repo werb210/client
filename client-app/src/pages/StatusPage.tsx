@@ -12,7 +12,10 @@ import {
 } from "../realtime/pipeline";
 import { useDocumentRejectionNotifications } from "../portal/useDocumentRejectionNotifications";
 import { formatDocumentLabel } from "../wizard/requirements";
-import { LinkedApplicationStore } from "../applications/linkedApplications";
+import {
+  LinkedApplicationStore,
+  createLinkedApplication,
+} from "../applications/linkedApplications";
 import { DocumentUploadList } from "../components/DocumentUploadList";
 import { StatusTimeline } from "../components/StatusTimeline";
 import { PIPELINE_STAGE_LABELS } from "../portal/timeline";
@@ -22,6 +25,8 @@ import { useForegroundRefresh } from "../hooks/useForegroundRefresh";
 import { logout } from "../auth/logout";
 import { loadChatHistory, saveChatHistory } from "../state/chatHistory";
 import { syncRequiredDocumentsFromStatus } from "../documents/requiredDocumentsCache";
+import { OfflineStore } from "../state/offline";
+import { extractApplicationFromStatus } from "../applications/resume";
 import { components, layout, tokens } from "@/styles";
 
 export function StatusPage() {
@@ -36,6 +41,8 @@ export function StatusPage() {
   const [rejectionNotice, setRejectionNotice] = useState<{
     documents: string[];
   } | null>(null);
+  const [linkedAppError, setLinkedAppError] = useState<string | null>(null);
+  const [linkedAppBusy, setLinkedAppBusy] = useState(false);
   const { send: sendAI } = useChatbot();
   const navigate = useNavigate();
 
@@ -144,6 +151,41 @@ export function StatusPage() {
       setRejectionNotice({ documents: notification.documents });
     },
   });
+
+  async function startLinkedApplication() {
+    if (!token) return;
+    const financialProfile =
+      status?.application?.financialProfile || status?.financialProfile;
+    if (!financialProfile) {
+      setLinkedAppError("We couldn't find your financial profile to start a linked application.");
+      return;
+    }
+    setLinkedAppBusy(true);
+    setLinkedAppError(null);
+    try {
+      const newToken = await createLinkedApplication(
+        token,
+        financialProfile,
+        "client_initiated"
+      );
+      if (phone) {
+        ClientProfileStore.upsertProfile(phone, newToken);
+      }
+      const res = await ClientAppAPI.status(newToken);
+      const hydrated = extractApplicationFromStatus(res?.data || {}, newToken);
+      OfflineStore.save({
+        ...hydrated,
+        applicationToken: newToken,
+        currentStep: 2,
+      });
+      navigate("/apply/step-2");
+    } catch (error) {
+      console.error("Failed to create linked application:", error);
+      setLinkedAppError("Unable to start a linked application. Please try again.");
+    } finally {
+      setLinkedAppBusy(false);
+    }
+  }
 
   async function sendMessage() {
     if (!text.trim() || !token) return;
@@ -294,10 +336,15 @@ export function StatusPage() {
                 </SecondaryButton>
                 <SecondaryButton
                   style={{ width: "100%" }}
-                  onClick={() => navigate("/apply/step-1")}
+                  onClick={startLinkedApplication}
+                  disabled={linkedAppBusy}
+                  loading={linkedAppBusy}
                 >
                   Start new linked application
                 </SecondaryButton>
+                {linkedAppError && (
+                  <div style={components.form.errorText}>{linkedAppError}</div>
+                )}
                 <SecondaryButton
                   style={{ width: "100%" }}
                   onClick={() =>

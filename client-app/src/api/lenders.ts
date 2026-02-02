@@ -30,7 +30,7 @@ export async function getClientLenders(): Promise<ClientLender[]> {
 }
 
 export async function getClientLenderProducts(): Promise<ClientLenderProduct[]> {
-  const res = await api.get("/api/lender-products");
+  const res = await api.get("/api/client/lender-products");
   if (Array.isArray(res.data?.data)) {
     return res.data.data;
   }

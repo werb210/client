@@ -18,7 +18,7 @@ const emptyApp: ApplicationData = {
   selectedProduct: undefined,
   selectedProductId: undefined,
   selectedProductType: undefined,
-  requires_closing_cost_funding: false,
+  requires_closing_cost_funding: undefined,
   termsAccepted: false,
   typedSignature: "",
   coApplicantSignature: "",
@@ -67,7 +67,7 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
   const savedClosingCostFunding =
     typeof saved.requires_closing_cost_funding === "boolean"
       ? saved.requires_closing_cost_funding
-      : emptyApp.requires_closing_cost_funding;
+      : undefined;
 
   return {
     ...emptyApp,

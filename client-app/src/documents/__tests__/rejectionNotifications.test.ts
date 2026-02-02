@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   consumeDueNotification,
   createEmptyRejectionState,
+  getRejectedDocuments,
   upsertRejectionState,
 } from "../rejectionNotifications";
 
@@ -31,5 +32,13 @@ describe("rejection notifications", () => {
     expect(notification?.documents.sort()).toEqual(
       ["bank_statements", "ownership_info"].sort()
     );
+  });
+
+  it("extracts rejected documents for re-upload", () => {
+    const rejected = getRejectedDocuments({
+      bank_statements: { status: "rejected" },
+      ownership_info: { status: "accepted" },
+    });
+    expect(rejected).toEqual(["bank_statements"]);
   });
 });

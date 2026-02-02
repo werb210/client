@@ -6,7 +6,7 @@ const LINKED_KEY = "boreal_linked_applications";
 export type LinkedApplicationRecord = {
   parentToken: string;
   token: string;
-  reason: "closing_costs" | "staff_triggered";
+  reason: "closing_costs" | "staff_triggered" | "client_initiated";
   createdAt: number;
 };
 

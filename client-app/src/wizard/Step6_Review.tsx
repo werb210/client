@@ -9,7 +9,11 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { WizardLayout } from "../components/WizardLayout";
 import { submitApplication } from "../api/applications";
-import { buildSubmissionPayload, getMissingRequiredDocs } from "./submission";
+import {
+  buildSubmissionPayload,
+  getMissingRequiredDocs,
+  shouldBlockForMissingDocuments,
+} from "./submission";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { FileUploadCard } from "../components/FileUploadCard";
 import { Checkbox } from "../components/ui/Checkbox";
@@ -149,7 +153,7 @@ export function Step6_Review() {
       return;
     }
 
-    if (!app.documentsDeferred && missingRequiredDocs.length > 0) {
+    if (shouldBlockForMissingDocuments(app)) {
       setSubmitError("Please upload all required documents before submitting.");
       return;
     }
