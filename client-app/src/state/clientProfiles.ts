@@ -1,7 +1,12 @@
+import {
+  loadPortalSessions,
+  savePortalSessions,
+  clearPortalSessions as clearPortalSessionsStorage,
+  type PortalSession,
+} from "./portalSessions";
 const PROFILE_KEY = "boreal_client_profiles";
 const LAST_PHONE_KEY = "boreal_client_last_phone";
 const OTP_KEY = "boreal_client_pending_otp";
-const PORTAL_SESSION_KEY = "boreal_portal_session_tokens";
 const OTP_TTL_MS = 5 * 60 * 1000;
 
 export type ClientProfile = {
@@ -19,24 +24,8 @@ type StoredOtp = {
   createdAt: number;
 };
 
-type PortalSession = {
-  token: string;
-  verifiedAt: number;
-  expiresAt: number;
-};
-
 function normalizePhone(phone: string) {
   return phone.replace(/\D/g, "");
-}
-
-function getPortalStorage(): Storage | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.sessionStorage;
-  } catch (error) {
-    console.warn("Failed to access session storage:", error);
-    return null;
-  }
 }
 
 function loadProfiles(): Record<string, ClientProfile> {
@@ -201,55 +190,32 @@ export const ClientProfileStore = {
   },
   markPortalVerified(token: string) {
     if (!token) return;
-    try {
-      const storage = getPortalStorage();
-      if (!storage) return;
-      const raw = storage.getItem(PORTAL_SESSION_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      const list = Array.isArray(parsed) ? parsed : [];
-      const now = Date.now();
-      const next = list
-        .filter((entry: PortalSession) => entry?.expiresAt > now)
-        .filter((entry: PortalSession) => entry?.token !== token);
-      next.unshift({
-        token,
-        verifiedAt: now,
-        expiresAt: now + OTP_TTL_MS,
-      });
-      storage.setItem(PORTAL_SESSION_KEY, JSON.stringify(next));
-    } catch (error) {
-      console.warn("Failed to store portal session:", error);
-    }
+    const list = loadPortalSessions();
+    const now = Date.now();
+    const next = list
+      .filter((entry: PortalSession) => entry?.expiresAt > now)
+      .filter((entry: PortalSession) => entry?.token !== token);
+    next.unshift({
+      token,
+      verifiedAt: now,
+      expiresAt: now + OTP_TTL_MS,
+    });
+    savePortalSessions(next);
   },
   hasPortalSession(token: string) {
     if (!token) return false;
-    try {
-      const storage = getPortalStorage();
-      if (!storage) return false;
-      const raw = storage.getItem(PORTAL_SESSION_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      if (!Array.isArray(parsed)) return false;
-      const now = Date.now();
-      const next = parsed.filter(
-        (entry: PortalSession) => entry?.token && entry?.expiresAt > now
-      );
-      if (next.length !== parsed.length) {
-        storage.setItem(PORTAL_SESSION_KEY, JSON.stringify(next));
-      }
-      return next.some((entry: PortalSession) => entry.token === token);
-    } catch (error) {
-      console.warn("Failed to read portal session:", error);
-      return false;
+    const parsed = loadPortalSessions();
+    const now = Date.now();
+    const next = parsed.filter(
+      (entry: PortalSession) => entry?.token && entry?.expiresAt > now
+    );
+    if (next.length !== parsed.length) {
+      savePortalSessions(next);
     }
+    return next.some((entry: PortalSession) => entry.token === token);
   },
   clearPortalSessions() {
-    try {
-      const storage = getPortalStorage();
-      if (!storage) return;
-      storage.removeItem(PORTAL_SESSION_KEY);
-    } catch (error) {
-      console.warn("Failed to clear portal session:", error);
-    }
+    void clearPortalSessionsStorage();
   },
   clearAll() {
     try {

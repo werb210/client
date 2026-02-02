@@ -41,7 +41,7 @@ describe("ClientProfileStore", () => {
     expect(profile?.applicationTokens).toEqual(["token-two", "token-one"]);
   });
 
-  it("stores portal sessions in session storage", () => {
+  it("stores portal sessions in local storage", () => {
     ClientProfileStore.markPortalVerified("token-portal");
     expect(ClientProfileStore.hasPortalSession("token-portal")).toBe(true);
   });

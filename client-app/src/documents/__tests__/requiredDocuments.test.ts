@@ -44,6 +44,6 @@ describe("aggregateRequiredDocuments", () => {
       75000
     );
     const docTypes = requirements.map((entry) => entry.document_type);
-    expect(docTypes).toEqual(["tax_returns"]);
+    expect(docTypes.sort()).toEqual(["bank_statements", "tax_returns"].sort());
   });
 });

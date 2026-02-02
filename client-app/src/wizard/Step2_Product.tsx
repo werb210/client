@@ -35,6 +35,7 @@ import { Checkbox } from "../components/ui/Checkbox";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Spinner } from "../components/ui/Spinner";
 import { components, layout, tokens } from "@/styles";
+import { resolveStepGuard } from "./stepGuard";
 
 function formatAmount(amount: number | null | undefined, countryCode: string) {
   if (typeof amount !== "number") return "N/A";
@@ -184,6 +185,13 @@ export function Step2_Product() {
       update({ currentStep: 2 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    const guard = resolveStepGuard(app.currentStep, 2);
+    if (!guard.allowed) {
+      navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
+    }
+  }, [app.currentStep, navigate]);
 
   useEffect(() => {
     if (!normalizedProducts.length) return;
