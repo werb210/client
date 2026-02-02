@@ -7,6 +7,13 @@ export type LenderGroup = {
   lenderName: string;
   products: ActiveProduct[];
 };
+export type CategorySummary = {
+  category: string;
+  totalCount: number;
+  matchingCount: number;
+  minAmount: number;
+  maxAmount: number;
+};
 
 export function filterActiveProducts(products: ActiveProduct[]) {
   return products.filter(
@@ -64,6 +71,71 @@ export function filterProductsForApplicant(
     );
     return matchesLocation && matchesAmount;
   });
+}
+
+export function getMatchingProducts(
+  products: ActiveProduct[],
+  applicantCountry: string,
+  amountRequested: number,
+  category?: string | null
+) {
+  const filtered = products.filter((product) =>
+    matchesCountry(product.country, applicantCountry)
+  );
+  return filtered.filter((product) => {
+    const matchesAmount = isAmountWithinRange(
+      amountRequested,
+      product.amount_min,
+      product.amount_max
+    );
+    if (!matchesAmount) return false;
+    if (!category) return true;
+    const productCategory = product.product_type ?? product.name;
+    return productCategory === category;
+  });
+}
+
+export function buildCategorySummaries(
+  products: ActiveProduct[],
+  applicantCountry: string,
+  amountRequested: number
+): CategorySummary[] {
+  const relevant = products.filter((product) =>
+    matchesCountry(product.country, applicantCountry)
+  );
+  const grouped = new Map<string, ActiveProduct[]>();
+  relevant.forEach((product) => {
+    const key = product.product_type ?? product.name;
+    const list = grouped.get(key) || [];
+    list.push(product);
+    grouped.set(key, list);
+  });
+  return Array.from(grouped.entries())
+    .map(([category, list]) => {
+      const amounts = list
+        .map((product) => ({
+          min: product.amount_min ?? 0,
+          max: product.amount_max ?? 0,
+        }))
+        .filter((range) => range.min || range.max);
+      const min = Math.min(...amounts.map((range) => range.min || 0));
+      const max = Math.max(...amounts.map((range) => range.max || 0));
+      const matchingCount = list.filter((product) =>
+        isAmountWithinRange(
+          amountRequested,
+          product.amount_min,
+          product.amount_max
+        )
+      ).length;
+      return {
+        category,
+        totalCount: list.length,
+        matchingCount,
+        minAmount: Number.isFinite(min) ? min : 0,
+        maxAmount: Number.isFinite(max) ? max : 0,
+      };
+    })
+    .sort((a, b) => a.category.localeCompare(b.category));
 }
 
 export function groupProductsByLender(products: ActiveProduct[]): LenderGroup[] {

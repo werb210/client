@@ -17,7 +17,9 @@ import {
 import { ClientProfileStore } from "../state/clientProfiles";
 import {
   filterActiveProducts,
+  buildCategorySummaries,
   groupProductsByLender,
+  getMatchingProducts,
   isAmountWithinRange,
   matchesCountry,
   parseCurrencyAmount,
@@ -31,7 +33,6 @@ import {
 } from "./requirements";
 import { getEligibilityResult } from "../lender/eligibility";
 import type { NormalizedLenderProduct } from "../lender/eligibility";
-import { Checkbox } from "../components/ui/Checkbox";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Spinner } from "../components/ui/Spinner";
 import { components, layout, tokens } from "@/styles";
@@ -60,6 +61,12 @@ export function Step2_Product() {
     () => products.find((product) => product.id === app.selectedProductId),
     [app.selectedProductId, products]
   );
+  const selectedCategory =
+    app.productCategory ||
+    app.selectedProductType ||
+    app.selectedProduct?.product_type ||
+    app.selectedProduct?.name ||
+    "";
   const amountValue = useMemo(
     () => parseCurrencyAmount(app.kyc.fundingAmount),
     [app.kyc.fundingAmount]
@@ -133,42 +140,7 @@ export function Step2_Product() {
   ]);
 
   const categorySummaries = useMemo(() => {
-    const relevant = products.filter((product) =>
-      matchesCountry(product.country, countryCode)
-    );
-    const grouped = new Map<string, ActiveProduct[]>();
-    relevant.forEach((product) => {
-      const key = product.product_type ?? product.name;
-      const list = grouped.get(key) || [];
-      list.push(product);
-      grouped.set(key, list);
-    });
-    return Array.from(grouped.entries())
-      .map(([category, list]) => {
-        const amounts = list
-          .map((product) => ({
-            min: product.amount_min ?? 0,
-            max: product.amount_max ?? 0,
-          }))
-          .filter((range) => range.min || range.max);
-        const min = Math.min(...amounts.map((range) => range.min || 0));
-        const max = Math.max(...amounts.map((range) => range.max || 0));
-        const matchingCount = list.filter((product) =>
-          isAmountWithinRange(
-            amountValue,
-            product.amount_min,
-            product.amount_max
-          )
-        ).length;
-        return {
-          category,
-          totalCount: list.length,
-          matchingCount,
-          minAmount: Number.isFinite(min) ? min : 0,
-          maxAmount: Number.isFinite(max) ? max : 0,
-        };
-      })
-      .sort((a, b) => a.category.localeCompare(b.category));
+    return buildCategorySummaries(products, countryCode, amountValue);
   }, [amountValue, countryCode, products]);
   const visibleCategorySummaries = useMemo(() => {
     if (!amountValue) return categorySummaries;
@@ -276,6 +248,7 @@ export function Step2_Product() {
       },
       selectedProductId: product.id,
       selectedProductType: category,
+      requires_closing_cost_funding: undefined,
       documents: {},
       documentsDeferred: false,
     });
@@ -287,6 +260,16 @@ export function Step2_Product() {
 
   function goNext() {
     if (!selectedProduct || loadError) {
+      return;
+    }
+    if (
+      isEquipmentIntent &&
+      app.requires_closing_cost_funding === undefined &&
+      app.applicationToken &&
+      !LinkedApplicationStore.has(app.applicationToken)
+    ) {
+      setClosingError(null);
+      setShowClosingModal(true);
       return;
     }
     if (
@@ -307,6 +290,7 @@ export function Step2_Product() {
       setClosingError("Missing application token. Please restart your application.");
       return;
     }
+    update({ requires_closing_cost_funding: true });
     setClosingBusy(true);
     setClosingError(null);
     try {
@@ -334,10 +318,44 @@ export function Step2_Product() {
     }
   }
 
+  function declineClosingCosts() {
+    update({ requires_closing_cost_funding: false });
+    setShowClosingModal(false);
+    navigate("/apply/step-3");
+  }
+
   const filteredProducts = useMemo(
     () => products.filter((product) => matchesCountry(product.country, countryCode)),
     [countryCode, products]
   );
+  const matchingProducts = useMemo(() => {
+    return getMatchingProducts(
+      products,
+      countryCode,
+      amountValue,
+      selectedCategory || null
+    );
+  }, [amountValue, countryCode, products, selectedCategory]);
+  const matchingLenderCount = useMemo(() => {
+    return new Set(matchingProducts.map((product) => product.lender_id)).size;
+  }, [matchingProducts]);
+  const selectedSummary = useMemo(() => {
+    if (!selectedCategory) return null;
+    return (
+      categorySummaries.find((summary) => summary.category === selectedCategory) ||
+      null
+    );
+  }, [categorySummaries, selectedCategory]);
+  const alternateCategory = useMemo(() => {
+    if (!selectedSummary || amountValue <= 0) return null;
+    if (selectedSummary.matchingCount > 0) return null;
+    if (amountValue >= selectedSummary.minAmount) return null;
+    const eligible = categorySummaries.filter((summary) => summary.matchingCount > 0);
+    if (eligible.length > 0) {
+      return eligible.sort((a, b) => a.minAmount - b.minAmount)[0];
+    }
+    return categorySummaries.sort((a, b) => a.minAmount - b.minAmount)[0] || null;
+  }, [amountValue, categorySummaries, selectedSummary]);
   const groupedProducts = useMemo(
     () => groupProductsByLender(filteredProducts),
     [filteredProducts]
@@ -465,8 +483,22 @@ export function Step2_Product() {
               <span style={{ color: tokens.colors.textPrimary, fontWeight: 600 }}>
                 {amountDisplay}
               </span>
+              {selectedCategory && (
+                <div style={{ marginTop: tokens.spacing.xs }}>
+                  <span style={{ fontWeight: 600 }}>Matching products:</span>{" "}
+                  {matchingProducts.length} across {matchingLenderCount} lender
+                  {matchingLenderCount === 1 ? "" : "s"} for {selectedCategory}.
+                </div>
+              )}
               {amountError && (
                 <div style={components.form.errorText}>{amountError}</div>
+              )}
+              {alternateCategory && (
+                <div style={{ ...components.form.helperText, color: tokens.colors.warning }}>
+                  Requested amount is below the minimum for {selectedCategory}.{" "}
+                  Consider {alternateCategory.category} starting at{" "}
+                  {formatAmount(alternateCategory.minAmount, countryCode)}.
+                </div>
               )}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
@@ -630,27 +662,6 @@ export function Step2_Product() {
         )}
       </Card>
 
-      {isEquipmentIntent && (
-        <Card>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: tokens.spacing.sm }}>
-            <Checkbox
-              checked={Boolean(app.requires_closing_cost_funding)}
-              onChange={(event) =>
-                update({ requires_closing_cost_funding: event.target.checked })
-              }
-            />
-            <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.xs }}>
-              <div style={{ fontWeight: 600, color: tokens.colors.primary }}>
-                Need closing cost or deposit funding?
-              </div>
-              <div style={components.form.helperText}>
-                Select this if you want a linked application for closing costs.
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-
       <div style={{ ...layout.stickyCta, marginTop: tokens.spacing.lg }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: tokens.spacing.sm }}>
           <Button
@@ -697,13 +708,11 @@ export function Step2_Product() {
               gap: tokens.spacing.sm,
             }}
           >
-            <h2 style={components.form.sectionTitle}>
-              Create a linked closing cost application?
-            </h2>
+            <h2 style={components.form.sectionTitle}>Include closing costs?</h2>
             <p style={components.form.subtitle}>
-              We will create a second application tied to this one for closing
-              costs or equipment deposits. It stays linked in your client portal
-              so the team can review both together.
+              Choose yes to add a linked application for closing costs or
+              equipment deposits. Both applications stay connected in your
+              client portal.
             </p>
             {closingError && (
               <div style={components.form.errorText}>{closingError}</div>
@@ -712,10 +721,10 @@ export function Step2_Product() {
               <Button
                 variant="secondary"
                 style={{ width: "100%" }}
-                onClick={() => setShowClosingModal(false)}
+                onClick={declineClosingCosts}
                 disabled={closingBusy}
               >
-                Not now
+                No, continue
               </Button>
               <Button
                 style={{ width: "100%" }}
@@ -723,7 +732,7 @@ export function Step2_Product() {
                 disabled={closingBusy}
                 loading={closingBusy}
               >
-                Create linked application
+                Yes, include closing costs
               </Button>
             </div>
           </div>

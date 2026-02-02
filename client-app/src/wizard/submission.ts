@@ -41,6 +41,11 @@ export function getMissingRequiredDocs(app: ApplicationData) {
     .filter((entry) => !app.documents[entry.document_type]);
 }
 
+export function shouldBlockForMissingDocuments(app: ApplicationData) {
+  if (app.documentsDeferred) return false;
+  return getMissingRequiredDocs(app).length > 0;
+}
+
 export function buildSubmissionPayload(app: ApplicationData): SubmissionPayload {
   if (!app.selectedProductId) {
     throw new Error("Missing lender product selection.");
