@@ -9,6 +9,29 @@ import Step3 from "../wizard/Step3_Business";
 import Step4 from "../wizard/Step4_Applicant";
 import Step5 from "../wizard/Step5_Documents";
 import Step6 from "../wizard/Step6_Review";
+import { OfflineStore } from "../state/offline";
+import { ClientProfileStore } from "../state/clientProfiles";
+
+type GuardProps = {
+  children: JSX.Element;
+};
+
+function RequireApplicationToken({ children }: GuardProps) {
+  const cached = OfflineStore.load();
+  if (!cached?.applicationToken) {
+    return <Navigate to="/apply/step-1" replace />;
+  }
+  return children;
+}
+
+function RequirePortalSession({ children }: GuardProps) {
+  if (typeof window === "undefined") return children;
+  const token = new URLSearchParams(window.location.search).get("token") || "";
+  if (!token || !ClientProfileStore.hasPortalSession(token)) {
+    return <Navigate to="/portal" replace />;
+  }
+  return children;
+}
 
 export default function AppRouter() {
   return (
@@ -16,17 +39,59 @@ export default function AppRouter() {
       <Routes>
         <Route path="/" element={<EntryPage />} />
         <Route path="/portal" element={<PortalEntry />} />
-        <Route path="/status" element={<StatusPage />} />
+        <Route
+          path="/status"
+          element={
+            <RequirePortalSession>
+              <StatusPage />
+            </RequirePortalSession>
+          }
+        />
         <Route path="/resume" element={<ResumePage />} />
 
         <Route path="/apply">
           <Route index element={<EntryPage />} />
           <Route path="step-1" element={<Step1 />} />
-          <Route path="step-2" element={<Step2 />} />
-          <Route path="step-3" element={<Step3 />} />
-          <Route path="step-4" element={<Step4 />} />
-          <Route path="step-5" element={<Step5 />} />
-          <Route path="step-6" element={<Step6 />} />
+          <Route
+            path="step-2"
+            element={
+              <RequireApplicationToken>
+                <Step2 />
+              </RequireApplicationToken>
+            }
+          />
+          <Route
+            path="step-3"
+            element={
+              <RequireApplicationToken>
+                <Step3 />
+              </RequireApplicationToken>
+            }
+          />
+          <Route
+            path="step-4"
+            element={
+              <RequireApplicationToken>
+                <Step4 />
+              </RequireApplicationToken>
+            }
+          />
+          <Route
+            path="step-5"
+            element={
+              <RequireApplicationToken>
+                <Step5 />
+              </RequireApplicationToken>
+            }
+          />
+          <Route
+            path="step-6"
+            element={
+              <RequireApplicationToken>
+                <Step6 />
+              </RequireApplicationToken>
+            }
+          />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

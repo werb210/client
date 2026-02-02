@@ -295,7 +295,7 @@ export function StatusPage() {
                   style={{ width: "100%" }}
                   onClick={async () => {
                     OfflineStore.clear();
-                    ClientProfileStore.clearPortalSessions();
+                    ClientProfileStore.clearAll();
                     await clearServiceWorkerCaches("logout");
                     navigate("/apply/step-1");
                   }}

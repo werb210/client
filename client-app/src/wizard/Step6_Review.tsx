@@ -27,6 +27,7 @@ export function Step6_Review() {
   );
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
   const navigate = useNavigate();
+  const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
   const hasPartner = Boolean(app.applicant?.hasMultipleOwners);
   const requirementsKey = useMemo(
     () => (app.productRequirements?.aggregated ? "aggregated" : app.selectedProductId),
@@ -122,6 +123,13 @@ export function Step6_Review() {
 
   async function submit() {
     setSubmitError(null);
+
+    if (!isOnline) {
+      setSubmitError(
+        "You're offline. Please reconnect to submit your application."
+      );
+      return;
+    }
 
     if (!app.applicationToken) {
       setSubmitError("Missing application token. Please restart your application.");
@@ -529,6 +537,7 @@ export function Step6_Review() {
               style={{ width: "100%", maxWidth: "240px" }}
               onClick={submit}
               disabled={
+                !isOnline ||
                 !app.termsAccepted ||
                 !app.typedSignature?.trim() ||
                 (hasPartner && !app.coApplicantSignature?.trim()) ||

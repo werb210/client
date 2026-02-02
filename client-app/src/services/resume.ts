@@ -5,6 +5,7 @@ export type ResumeSnapshot = {
   status: any | null;
   cached: any;
   offline: boolean;
+  submitted: boolean;
 };
 
 type ResumeOptions = {
@@ -12,6 +13,18 @@ type ResumeOptions = {
   cached?: any;
   isOnline?: boolean;
 };
+
+export function isApplicationSubmitted(status: any) {
+  if (!status) return false;
+  return Boolean(
+    status.submitted ||
+      status.submittedAt ||
+      status.submitted_at ||
+      status.application?.submitted ||
+      status.application?.submittedAt ||
+      status.application?.submitted_at
+  );
+}
 
 export async function resumeApplication({
   fetchStatus,
@@ -25,16 +38,19 @@ export async function resumeApplication({
       status: null,
       cached,
       offline: true,
+      submitted: false,
     };
   }
 
   try {
     const res = await fetchStatus(cached.applicationToken);
+    const submitted = isApplicationSubmitted(res.data);
     return {
       token: cached.applicationToken,
       status: res.data,
       cached,
       offline: false,
+      submitted,
     };
   } catch (error) {
     console.warn("Resume fetch failed:", error);
@@ -43,6 +59,7 @@ export async function resumeApplication({
       status: null,
       cached,
       offline: true,
+      submitted: false,
     };
   }
 }

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { handleAuthError } from "../auth/sessionHandler";
 
 export const API_BASE_URL = "https://api.staff.boreal.financial";
 
@@ -15,8 +16,12 @@ export function attachToken(token: string | null) {
 
 api.interceptors.response.use(
   (res) => res,
-  (err) => {
-    console.error("API ERROR:", err);
-    return Promise.reject(err);
+  async (err) => {
+    try {
+      return await handleAuthError(err, (config) => api(config));
+    } catch (error) {
+      console.error("API ERROR:", error);
+      return Promise.reject(error);
+    }
   }
 );
