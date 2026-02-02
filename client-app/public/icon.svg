@@ -1,0 +1,7 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Boreal">
+  <rect width="512" height="512" rx="120" fill="#1D4ED8" />
+  <path
+    d="M148 356V156h134c48 0 82 27 82 70 0 25-12 47-31 58 28 11 44 34 44 63 0 47-36 79-90 79H148Zm64-146h66c17 0 28-11 28-26 0-15-11-25-28-25h-66v51Zm0 101h74c20 0 32-12 32-29 0-17-12-28-32-28h-74v57Z"
+    fill="#F8FAFC"
+  />
+</svg>

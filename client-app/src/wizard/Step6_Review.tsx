@@ -264,7 +264,7 @@ export function Step6_Review() {
           </p>
           <Button
             style={{ marginTop: tokens.spacing.sm, width: "100%", maxWidth: "260px" }}
-            onClick={() => (window.location.href = "/portal")}
+            onClick={() => navigate("/portal")}
           >
             View application status
           </Button>

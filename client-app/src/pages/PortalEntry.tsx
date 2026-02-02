@@ -7,6 +7,7 @@ import { OtpInput } from "../components/OtpInput";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { formatPhoneNumber, getCountryCode } from "../utils/location";
 import { resolveOtpNextStep } from "../auth/otp";
+import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
 
 export function PortalEntry() {
@@ -66,7 +67,9 @@ export function PortalEntry() {
     const tokens = profile?.applicationTokens || [];
     tokens.forEach((entry) => ClientProfileStore.markPortalVerified(entry));
     ClientProfileStore.markPortalVerified(token);
-    navigate(`/status?token=${token}`);
+    clearServiceWorkerCaches("otp").finally(() => {
+      navigate(`/status?token=${token}`);
+    });
   }
 
   return (

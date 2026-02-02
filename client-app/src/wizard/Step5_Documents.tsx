@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { ClientAppAPI } from "../api/clientApp";
@@ -20,6 +20,7 @@ import { FileUploadCard } from "../components/FileUploadCard";
 import { Checkbox } from "../components/ui/Checkbox";
 import { DocumentUploadList } from "../components/DocumentUploadList";
 import { Spinner } from "../components/ui/Spinner";
+import { useForegroundRefresh } from "../hooks/useForegroundRefresh";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
 
 type DocStatus = "missing" | "uploaded" | "accepted" | "rejected";
@@ -169,7 +170,7 @@ export function Step5_Documents() {
     }
   }, [app.applicationToken, app.selectedProductId]);
 
-  useEffect(() => {
+  const refreshDocumentStatus = useCallback(() => {
     if (!app.applicationToken) return;
     ClientAppAPI.status(app.applicationToken)
       .then((res) => {
@@ -191,7 +192,22 @@ export function Step5_Documents() {
       .catch((error) => {
         console.error("Failed to refresh document status:", error);
       });
-  }, [app.applicationToken, update]);
+  }, [
+    app.applicationToken,
+    app.documents,
+    app.documentsDeferred,
+    app.ocrComplete,
+    app.creditSummaryComplete,
+    update,
+  ]);
+
+  useEffect(() => {
+    refreshDocumentStatus();
+  }, [refreshDocumentStatus]);
+
+  useForegroundRefresh(() => {
+    refreshDocumentStatus();
+  }, [refreshDocumentStatus]);
 
   function readFileAsBase64(file: File) {
     return new Promise<string>((resolve, reject) => {

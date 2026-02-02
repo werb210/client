@@ -1,0 +1,16 @@
+{
+  "name": "Boreal Financial",
+  "short_name": "Boreal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
