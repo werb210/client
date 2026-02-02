@@ -20,6 +20,7 @@ import {
 import { WizardLayout } from "../components/WizardLayout";
 import { PhoneInput } from "../components/ui/PhoneInput";
 import { components, layout, tokens } from "@/styles";
+import { resolveStepGuard } from "./stepGuard";
 
 export function Step3_Business() {
   const { app, update } = useApplicationStore();
@@ -42,6 +43,13 @@ export function Step3_Business() {
       update({ currentStep: 3 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    const guard = resolveStepGuard(app.currentStep, 3);
+    if (!guard.allowed) {
+      navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
+    }
+  }, [app.currentStep, navigate]);
 
   function setField(key: string, value: any) {
     update({ business: { ...values, [key]: value } });

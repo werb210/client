@@ -16,6 +16,7 @@ import { Checkbox } from "../components/ui/Checkbox";
 import { extractApplicationFromStatus } from "../applications/resume";
 import { filterRequirementsByAmount, type LenderProductRequirement } from "./requirements";
 import { components, layout, tokens } from "@/styles";
+import { resolveStepGuard } from "./stepGuard";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -86,6 +87,13 @@ export function Step6_Review() {
       update({ currentStep: 6 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    const guard = resolveStepGuard(app.currentStep, 6);
+    if (!guard.allowed) {
+      navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
+    }
+  }, [app.currentStep, navigate]);
 
   useEffect(() => {
     if (!app.signatureDate) {

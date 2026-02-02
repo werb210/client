@@ -14,7 +14,11 @@ import {
 } from "./requirements";
 import { filterProductsForApplicant, parseCurrencyAmount } from "./productSelection";
 import { getCountryCode } from "../utils/location";
-import { aggregateRequiredDocuments } from "../documents/requiredDocuments";
+import {
+  aggregateRequiredDocuments,
+  ensureAlwaysRequiredDocuments,
+  mergeRequirementLists,
+} from "../documents/requiredDocuments";
 import { extractApplicationFromStatus } from "../applications/resume";
 import { FileUploadCard } from "../components/FileUploadCard";
 import { Checkbox } from "../components/ui/Checkbox";
@@ -22,8 +26,14 @@ import { DocumentUploadList } from "../components/DocumentUploadList";
 import { Spinner } from "../components/ui/Spinner";
 import { useForegroundRefresh } from "../hooks/useForegroundRefresh";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
-
-type DocStatus = "missing" | "uploaded" | "accepted" | "rejected";
+import { resolveStepGuard } from "./stepGuard";
+import { extractRequiredDocumentsFromStatus } from "../documents/requiredDocumentsFromStatus";
+import { syncRequiredDocumentsFromStatus } from "../documents/requiredDocumentsCache";
+import {
+  getRejectionMessage,
+  resolveDocumentStatus,
+  type DocumentStatus,
+} from "../documents/documentStatus";
 
 export function Step5_Documents() {
   const { app, update } = useApplicationStore();
@@ -35,7 +45,6 @@ export function Step5_Documents() {
   const [isLoading, setIsLoading] = useState(true);
   const [docErrors, setDocErrors] = useState<Record<string, string>>({});
   const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>({});
-  const ALWAYS_REQUIRED_DOCS = ["bank_statements"];
   const selectedCategory =
     app.productCategory ||
     app.selectedProductType ||
@@ -79,6 +88,13 @@ export function Step5_Documents() {
   }, [app.currentStep, update]);
 
   useEffect(() => {
+    const guard = resolveStepGuard(app.currentStep, 5);
+    if (!guard.allowed) {
+      navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
+    }
+  }, [app.currentStep, navigate]);
+
+  useEffect(() => {
     if (docError || missingRequiredDocs.length > 0 || hasBlockingUploadErrors) {
       scrollToFirstError();
     }
@@ -112,20 +128,7 @@ export function Step5_Documents() {
         selectedCategory,
         amountValue
       );
-      const docMap = new Map(
-        aggregated.map((entry) => [entry.document_type, entry])
-      );
-      ALWAYS_REQUIRED_DOCS.forEach((docType) => {
-        const existing = docMap.get(docType);
-        docMap.set(docType, {
-          id: existing?.id ?? docType,
-          document_type: docType,
-          required: true,
-          min_amount: existing?.min_amount ?? null,
-          max_amount: existing?.max_amount ?? null,
-        });
-      });
-      const normalized = Array.from(docMap.values());
+      const normalized = ensureAlwaysRequiredDocuments(aggregated);
 
       if (active) {
         setIsLoading(true);
@@ -138,11 +141,23 @@ export function Step5_Documents() {
           setIsLoading(false);
           return;
         }
-        setRequirementsRaw(normalized);
+        let cachedFromStatus = null;
+        try {
+          const status = await ClientAppAPI.status(app.applicationToken);
+          cachedFromStatus = extractRequiredDocumentsFromStatus(status.data);
+        } catch (error) {
+          console.error("Failed to load required documents:", error);
+        }
+        const merged = cachedFromStatus
+          ? ensureAlwaysRequiredDocuments(
+              mergeRequirementLists(normalized, cachedFromStatus)
+            )
+          : normalized;
+        setRequirementsRaw(merged);
         update({
           productRequirements: {
             ...(app.productRequirements || {}),
-            aggregated: normalized,
+            aggregated: merged,
           },
           documentsDeferred: false,
         });
@@ -178,6 +193,7 @@ export function Step5_Documents() {
           res?.data || {},
           app.applicationToken
         );
+        const cachedRequirements = syncRequiredDocumentsFromStatus(res?.data);
         update({
           documents: refreshed.documents || app.documents,
           documentsDeferred:
@@ -187,6 +203,12 @@ export function Step5_Documents() {
           ocrComplete: refreshed.ocrComplete ?? app.ocrComplete,
           creditSummaryComplete:
             refreshed.creditSummaryComplete ?? app.creditSummaryComplete,
+          productRequirements: cachedRequirements
+            ? {
+                ...(app.productRequirements || {}),
+                aggregated: cachedRequirements,
+              }
+            : app.productRequirements,
         });
       })
       .catch((error) => {
@@ -329,12 +351,8 @@ export function Step5_Documents() {
     !hasBlockingUploadErrors &&
     !hasUploadsInFlight;
 
-  function getDocStatus(docType: string): DocStatus {
-    const entry = app.documents[docType];
-    if (!entry) return "missing";
-    if (entry.status === "accepted") return "accepted";
-    if (entry.status === "rejected") return "rejected";
-    return "uploaded";
+  function getDocStatus(docType: string): DocumentStatus {
+    return resolveDocumentStatus(app.documents[docType]);
   }
 
   return (
@@ -430,7 +448,7 @@ export function Step5_Documents() {
                   )}
                   {docStatus === "rejected" && (
                     <div style={components.form.errorText}>
-                      Document rejected. Please upload a new file.
+                      {getRejectionMessage(app.documents[docType])}
                     </div>
                   )}
                 </div>

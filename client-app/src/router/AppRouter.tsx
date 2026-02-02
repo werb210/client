@@ -3,6 +3,7 @@ import { EntryPage } from "../pages/EntryPage";
 import { PortalEntry } from "../pages/PortalEntry";
 import { StatusPage } from "../pages/StatusPage";
 import { ResumePage } from "../pages/ResumePage";
+import { OfflineFallback } from "../pages/OfflineFallback";
 import Step1 from "../wizard/Step1_KYC";
 import Step2 from "../wizard/Step2_Product";
 import Step3 from "../wizard/Step3_Business";
@@ -12,6 +13,7 @@ import Step6 from "../wizard/Step6_Review";
 import { OfflineStore } from "../state/offline";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { SessionGuard } from "../auth/sessionGuard";
+import { useNetworkStatus } from "../hooks/useNetworkStatus";
 
 type GuardProps = {
   children: JSX.Element;
@@ -35,6 +37,18 @@ function RequirePortalSession({ children }: GuardProps) {
 }
 
 export default function AppRouter() {
+  const { isOffline } = useNetworkStatus();
+
+  if (isOffline) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="*" element={<OfflineFallback />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
+
   return (
     <BrowserRouter>
       <SessionGuard />

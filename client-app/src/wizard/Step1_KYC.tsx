@@ -26,6 +26,7 @@ import {
   extractApplicationFromStatus,
   getResumeRoute,
 } from "../applications/resume";
+import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
 
 const MatchCategories = [
@@ -233,6 +234,7 @@ export function Step1_KYC() {
       setOtpError("Incorrect code. Please try again.");
       return;
     }
+    void clearServiceWorkerCaches("otp");
     const profile = ClientProfileStore.getProfile(app.kyc.phone || "");
     const nextStep = resolveOtpNextStep(profile);
     if (nextStep.action === "portal") {

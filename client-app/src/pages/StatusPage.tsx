@@ -20,12 +20,16 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { Spinner } from "../components/ui/Spinner";
 import { useForegroundRefresh } from "../hooks/useForegroundRefresh";
 import { logout } from "../auth/logout";
+import { loadChatHistory, saveChatHistory } from "../state/chatHistory";
+import { syncRequiredDocumentsFromStatus } from "../documents/requiredDocumentsCache";
 import { components, layout, tokens } from "@/styles";
 
 export function StatusPage() {
   const token = new URLSearchParams(window.location.search).get("token");
   const [status, setStatus] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>(() =>
+    loadChatHistory(new URLSearchParams(window.location.search).get("token"))
+  );
   const [text, setText] = useState("");
   const [mode, setMode] = useState<"ai" | "human">("ai");
   const [issueMode, setIssueMode] = useState(false);
@@ -59,9 +63,14 @@ export function StatusPage() {
     try {
       const res = await ClientAppAPI.getMessages(token);
       setMessages(res.data);
+      saveChatHistory(token, res.data);
     } catch (error) {
       console.error("Message refresh failed:", error);
     }
+  }, [token]);
+
+  useEffect(() => {
+    setMessages(loadChatHistory(token));
   }, [token]);
 
   useEffect(() => {
@@ -78,7 +87,9 @@ export function StatusPage() {
         const res = await ClientAppAPI.status(activeToken);
         return res.data;
       },
-      onUpdate: (next) => setStatus(next),
+      onUpdate: (next) => {
+        setStatus(next);
+      },
       onError: (error) => {
         console.error("Status refresh failed:", error);
       },
@@ -108,6 +119,7 @@ export function StatusPage() {
 
   useEffect(() => {
     if (!token || !status) return;
+    syncRequiredDocumentsFromStatus(status);
     if (phone) {
       ClientProfileStore.upsertProfile(phone, token);
     }
@@ -279,6 +291,12 @@ export function StatusPage() {
                   onClick={() => navigate("/resume")}
                 >
                   View application
+                </SecondaryButton>
+                <SecondaryButton
+                  style={{ width: "100%" }}
+                  onClick={() => navigate("/apply/step-1")}
+                >
+                  Start new linked application
                 </SecondaryButton>
                 <SecondaryButton
                   style={{ width: "100%" }}

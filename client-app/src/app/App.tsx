@@ -8,6 +8,7 @@ import { ErrorBoundary } from "../utils/errorBoundary";
 import { SessionRefreshOverlay } from "../components/SessionRefreshOverlay";
 import { useSessionRefreshing } from "../hooks/useSessionRefreshing";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
+import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
 
 export default function App() {
   const refreshing = useSessionRefreshing();
@@ -18,6 +19,10 @@ export default function App() {
       console.info("A new version is available.");
     }
   }, [updateAvailable]);
+
+  useEffect(() => {
+    void hydratePortalSessionsFromIndexedDb();
+  }, []);
 
   if (refreshing) {
     return <SessionRefreshOverlay />;

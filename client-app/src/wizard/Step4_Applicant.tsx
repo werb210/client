@@ -21,6 +21,7 @@ import {
 import { PhoneInput } from "../components/ui/PhoneInput";
 import { Checkbox } from "../components/ui/Checkbox";
 import { components, layout, tokens } from "@/styles";
+import { resolveStepGuard } from "./stepGuard";
 
 export function Step4_Applicant() {
   const { app, update } = useApplicationStore();
@@ -45,6 +46,13 @@ export function Step4_Applicant() {
       update({ currentStep: 4 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    const guard = resolveStepGuard(app.currentStep, 4);
+    if (!guard.allowed) {
+      navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
+    }
+  }, [app.currentStep, navigate]);
 
   function setField(key: string, value: any) {
     update({ applicant: { ...values, [key]: value } });
