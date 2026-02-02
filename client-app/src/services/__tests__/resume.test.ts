@@ -14,6 +14,7 @@ describe("resumeApplication", () => {
       status: null,
       cached: { applicationToken: "token-123", data: "cached" },
       offline: true,
+      submitted: false,
     });
   });
 
@@ -27,6 +28,7 @@ describe("resumeApplication", () => {
 
     expect(snapshot?.offline).toBe(true);
     expect(fetchStatus).toHaveBeenCalledWith("token-456");
+    expect(snapshot?.submitted).toBe(false);
   });
 
   it("returns status when online", async () => {
@@ -42,6 +44,20 @@ describe("resumeApplication", () => {
       status: { status: "ok" },
       cached: { applicationToken: "token-789", data: "cached" },
       offline: false,
+      submitted: false,
     });
+  });
+
+  it("marks submissions as submitted when status says so", async () => {
+    const fetchStatus = vi.fn().mockResolvedValue({
+      data: { submittedAt: "2024-01-01T00:00:00Z" },
+    });
+    const snapshot = await resumeApplication({
+      fetchStatus,
+      cached: { applicationToken: "token-100" },
+      isOnline: true,
+    });
+
+    expect(snapshot?.submitted).toBe(true);
   });
 });

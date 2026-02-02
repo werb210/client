@@ -1,33 +1,51 @@
-const CACHE_VERSION = "v1";
-const STATIC_CACHE = `boreal-static-${CACHE_VERSION}`;
-const RUNTIME_CACHE = `boreal-runtime-${CACHE_VERSION}`;
+const CACHE_VERSION = "v2";
+const CACHE_PREFIX = "boreal-";
+const STATIC_CACHE = `${CACHE_PREFIX}static-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
 
 const CORE_ASSETS = ["/", "/index.html", OFFLINE_URL, "/manifest.webmanifest"];
+const AUTH_ROUTES = [
+  "/api/client/session",
+  "/api/client/session/refresh",
+  "/api/client/portal",
+  "/api/auth",
+];
 
 async function clearAllCaches() {
   const keys = await caches.keys();
   await Promise.all(keys.map((key) => caches.delete(key)));
 }
 
+async function clearOutdatedCaches() {
+  const keys = await caches.keys();
+  const valid = new Set([STATIC_CACHE, RUNTIME_CACHE]);
+  await Promise.all(
+    keys
+      .filter((key) => key.startsWith(CACHE_PREFIX) && !valid.has(key))
+      .map((key) => caches.delete(key))
+  );
+}
+
+async function clearRuntimeCaches() {
+  const keys = await caches.keys();
+  await Promise.all(
+    keys
+      .filter((key) => key.startsWith(CACHE_PREFIX) && key !== STATIC_CACHE)
+      .map((key) => caches.delete(key))
+  );
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(STATIC_CACHE)
-      .then((cache) => cache.addAll(CORE_ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(CORE_ASSETS))
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      const keys = await caches.keys();
-      await Promise.all(
-        keys
-          .filter((key) => ![STATIC_CACHE, RUNTIME_CACHE].includes(key))
-          .map((key) => caches.delete(key))
-      );
+      await clearOutdatedCaches();
       await self.clients.claim();
     })()
   );
@@ -35,8 +53,13 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
   const message = event.data || {};
+  if (message.type === "SKIP_WAITING") {
+    event.waitUntil(self.skipWaiting());
+    return;
+  }
   if (message.type === "CLEAR_CACHES" || message.type === "AUTH_REFRESH") {
-    event.waitUntil(clearAllCaches());
+    const clear = message.type === "CLEAR_CACHES" ? clearAllCaches : clearRuntimeCaches;
+    event.waitUntil(clear().then(clearOutdatedCaches));
   }
 });
 
@@ -46,6 +69,11 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   if (url.origin !== self.location.origin) return;
+
+  if (AUTH_ROUTES.some((route) => url.pathname.startsWith(route))) {
+    event.respondWith(fetch(request).catch(() => fetch(request)));
+    return;
+  }
 
   if (request.mode === "navigate") {
     event.respondWith(

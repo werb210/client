@@ -1,0 +1,97 @@
+import { describe, expect, it, vi, beforeEach } from "vitest";
+
+describe("service worker updates", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    const listeners: Record<string, Array<(event: Event) => void>> = {};
+    Object.defineProperty(globalThis, "CustomEvent", {
+      value: class CustomEvent {
+        type: string;
+        constructor(type: string) {
+          this.type = type;
+        }
+      },
+      configurable: true,
+    });
+    Object.defineProperty(globalThis, "window", {
+      value: {
+        location: { reload: vi.fn() },
+        sessionStorage: {
+          getItem: vi.fn().mockReturnValue(null),
+          setItem: vi.fn(),
+          removeItem: vi.fn(),
+        },
+        addEventListener: (event: string, cb: (event: Event) => void) => {
+          listeners[event] = listeners[event] || [];
+          listeners[event].push(cb);
+        },
+        dispatchEvent: (event: Event) => {
+          listeners[event.type]?.forEach((cb) => cb(event));
+          return true;
+        },
+      },
+      configurable: true,
+    });
+    Object.defineProperty(globalThis, "navigator", {
+      value: {},
+      configurable: true,
+    });
+  });
+
+  it("surfaces update availability when a new worker installs", async () => {
+    const updateListeners: Record<string, () => void> = {};
+    const workerListeners: Record<string, () => void> = {};
+    const worker = {
+      state: "installed",
+      addEventListener: (event: string, cb: () => void) => {
+        workerListeners[event] = cb;
+      },
+    };
+    const registration = {
+      waiting: {},
+      installing: worker,
+      addEventListener: (event: string, cb: () => void) => {
+        updateListeners[event] = cb;
+      },
+    };
+
+    const controllerChangeListeners: Record<string, () => void> = {};
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      value: {
+        register: vi.fn().mockResolvedValue(registration),
+        addEventListener: (event: string, cb: () => void) => {
+          controllerChangeListeners[event] = cb;
+        },
+        controller: {},
+      },
+      configurable: true,
+    });
+
+    const module = await import("../serviceWorker");
+    const { registerServiceWorker, getServiceWorkerUpdateAvailable } = module;
+
+    registerServiceWorker();
+    window.dispatchEvent(new Event("load"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(getServiceWorkerUpdateAvailable()).toBe(true);
+  });
+
+  it("requests skip waiting when applying updates", async () => {
+    const waitingWorker = { postMessage: vi.fn() };
+    Object.defineProperty(navigator, "serviceWorker", {
+      value: {
+        ready: Promise.resolve({ waiting: waitingWorker }),
+      },
+      configurable: true,
+    });
+
+    const module = await import("../serviceWorker");
+    const { applyServiceWorkerUpdate } = module;
+
+    await applyServiceWorkerUpdate();
+
+    expect(waitingWorker.postMessage).toHaveBeenCalledWith({ type: "SKIP_WAITING" });
+  });
+});

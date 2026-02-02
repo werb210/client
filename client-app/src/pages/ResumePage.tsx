@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useResumeApplication } from "../hooks/useResumeApplication";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
+import { Spinner } from "../components/ui/Spinner";
 import { components, layout, tokens } from "@/styles";
 
 export function ResumePage() {
@@ -13,6 +14,12 @@ export function ResumePage() {
   useEffect(() => {
     resume().then(setInfo);
   }, [resume]);
+
+  useEffect(() => {
+    if (info?.submitted) {
+      navigate("/portal", { replace: true });
+    }
+  }, [info, navigate]);
 
   if (!info) {
     return (
@@ -28,6 +35,23 @@ export function ResumePage() {
               >
                 Start new application
               </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (info.submitted) {
+    return (
+      <div style={layout.page}>
+        <div style={layout.centerColumn}>
+          <Card>
+            <div style={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}>
+              <Spinner />
+              <div style={components.form.helperText}>
+                Redirecting to your portal…
+              </div>
             </div>
           </Card>
         </div>

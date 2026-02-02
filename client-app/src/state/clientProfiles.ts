@@ -251,4 +251,14 @@ export const ClientProfileStore = {
       console.warn("Failed to clear portal session:", error);
     }
   },
+  clearAll() {
+    try {
+      localStorage.removeItem(PROFILE_KEY);
+      localStorage.removeItem(LAST_PHONE_KEY);
+      localStorage.removeItem(OTP_KEY);
+    } catch (error) {
+      console.warn("Failed to clear client profile data:", error);
+    }
+    this.clearPortalSessions();
+  },
 };
