@@ -11,6 +11,7 @@ import Step5 from "../wizard/Step5_Documents";
 import Step6 from "../wizard/Step6_Review";
 import { OfflineStore } from "../state/offline";
 import { ClientProfileStore } from "../state/clientProfiles";
+import { SessionGuard } from "../auth/sessionGuard";
 
 type GuardProps = {
   children: JSX.Element;
@@ -36,6 +37,7 @@ function RequirePortalSession({ children }: GuardProps) {
 export default function AppRouter() {
   return (
     <BrowserRouter>
+      <SessionGuard />
       <Routes>
         <Route path="/" element={<EntryPage />} />
         <Route path="/portal" element={<PortalEntry />} />
