@@ -1,25 +1,10 @@
-import { useEffect, useState } from "react";
 import { tokens } from "@/styles";
+import { useNetworkStatus } from "../hooks/useNetworkStatus";
 
 export function OfflineBanner() {
-  const [offline, setOffline] = useState(!navigator.onLine);
+  const { isOffline } = useNetworkStatus();
 
-  useEffect(() => {
-    function onDown() {
-      setOffline(true);
-    }
-    function onUp() {
-      setOffline(false);
-    }
-    window.addEventListener("offline", onDown);
-    window.addEventListener("online", onUp);
-    return () => {
-      window.removeEventListener("offline", onDown);
-      window.removeEventListener("online", onUp);
-    };
-  }, []);
-
-  if (!offline) return null;
+  if (!isOffline) return null;
 
   return (
     <div

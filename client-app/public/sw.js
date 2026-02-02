@@ -1,7 +1,7 @@
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const CACHE_PREFIX = "boreal-";
+const APP_SHELL_CACHE = `${CACHE_PREFIX}app-shell-${CACHE_VERSION}`;
 const STATIC_CACHE = `${CACHE_PREFIX}static-${CACHE_VERSION}`;
-const RUNTIME_CACHE = `${CACHE_PREFIX}runtime-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
 
 const CORE_ASSETS = ["/", "/index.html", OFFLINE_URL, "/manifest.webmanifest"];
@@ -19,7 +19,7 @@ async function clearAllCaches() {
 
 async function clearOutdatedCaches() {
   const keys = await caches.keys();
-  const valid = new Set([STATIC_CACHE, RUNTIME_CACHE]);
+  const valid = new Set([APP_SHELL_CACHE, STATIC_CACHE]);
   await Promise.all(
     keys
       .filter((key) => key.startsWith(CACHE_PREFIX) && !valid.has(key))
@@ -27,25 +27,30 @@ async function clearOutdatedCaches() {
   );
 }
 
-async function clearRuntimeCaches() {
-  const keys = await caches.keys();
-  await Promise.all(
-    keys
-      .filter((key) => key.startsWith(CACHE_PREFIX) && key !== STATIC_CACHE)
-      .map((key) => caches.delete(key))
-  );
-}
-
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(CORE_ASSETS))
+    Promise.all([
+      caches
+        .open(APP_SHELL_CACHE)
+        .then((cache) => cache.addAll(CORE_ASSETS))
+        .catch((error) => {
+          console.warn("Failed to precache app shell:", error);
+        }),
+      self.skipWaiting().catch((error) => {
+        console.warn("Failed to skip waiting:", error);
+      }),
+    ])
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      await clearOutdatedCaches();
+      try {
+        await clearOutdatedCaches();
+      } catch (error) {
+        console.warn("Failed to clear outdated caches:", error);
+      }
       await self.clients.claim();
     })()
   );
@@ -54,12 +59,19 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("message", (event) => {
   const message = event.data || {};
   if (message.type === "SKIP_WAITING") {
-    event.waitUntil(self.skipWaiting());
+    event.waitUntil(
+      self.skipWaiting().catch((error) => {
+        console.warn("Failed to skip waiting:", error);
+      })
+    );
     return;
   }
   if (message.type === "CLEAR_CACHES" || message.type === "AUTH_REFRESH") {
-    const clear = message.type === "CLEAR_CACHES" ? clearAllCaches : clearRuntimeCaches;
-    event.waitUntil(clear().then(clearOutdatedCaches));
+    event.waitUntil(
+      clearAllCaches().catch((error) => {
+        console.warn("Failed to clear caches:", error);
+      })
+    );
   }
 });
 
@@ -70,22 +82,19 @@ self.addEventListener("fetch", (event) => {
 
   if (url.origin !== self.location.origin) return;
 
-  if (AUTH_ROUTES.some((route) => url.pathname.startsWith(route))) {
-    event.respondWith(fetch(request).catch(() => fetch(request)));
+  if (
+    url.pathname.startsWith("/api/") ||
+    AUTH_ROUTES.some((route) => url.pathname.startsWith(route))
+  ) {
     return;
   }
 
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
-          return response;
-        })
         .catch(async () => {
-          const cached = await caches.match(request);
-          if (cached) return cached;
+          const cachedShell = await caches.match("/index.html");
+          if (cachedShell) return cachedShell;
           return caches.match(OFFLINE_URL);
         })
     );
@@ -94,24 +103,23 @@ self.addEventListener("fetch", (event) => {
 
   const destination = request.destination;
   const shouldCache =
-    destination === "style" ||
-    destination === "script" ||
-    destination === "image" ||
-    destination === "font" ||
-    url.pathname.startsWith("/assets/");
+    destination === "style" || destination === "script";
 
   if (!shouldCache) return;
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
-          return response;
-        })
-        .catch(() => cached);
-    })
+    caches
+      .match(request)
+      .then((cached) => {
+        if (cached) return cached;
+        return fetch(request)
+          .then((response) => {
+            const copy = response.clone();
+            caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy));
+            return response;
+          })
+          .catch(() => cached);
+      })
+      .catch(() => fetch(request))
   );
 });

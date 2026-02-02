@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { Button, PrimaryButton, SecondaryButton } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
-import { OfflineStore } from "../state/offline";
 import { useChatbot } from "../hooks/useChatbot";
 import { ClientProfileStore } from "../state/clientProfiles";
 import {
@@ -20,7 +19,7 @@ import { PIPELINE_STAGE_LABELS } from "../portal/timeline";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Spinner } from "../components/ui/Spinner";
 import { useForegroundRefresh } from "../hooks/useForegroundRefresh";
-import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
+import { logout } from "../auth/logout";
 import { components, layout, tokens } from "@/styles";
 
 export function StatusPage() {
@@ -294,10 +293,7 @@ export function StatusPage() {
                 <SecondaryButton
                   style={{ width: "100%" }}
                   onClick={async () => {
-                    OfflineStore.clear();
-                    ClientProfileStore.clearAll();
-                    await clearServiceWorkerCaches("logout");
-                    navigate("/apply/step-1");
+                    await logout({ redirectTo: "/apply/step-1" });
                   }}
                 >
                   New application

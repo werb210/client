@@ -1,4 +1,4 @@
-import { useInstallPrompt } from "../hooks/useInstallPrompt";
+import { useInstallPrompt } from "../pwa/useInstallPrompt";
 import { Button } from "./ui/Button";
 import { tokens } from "@/styles";
 
