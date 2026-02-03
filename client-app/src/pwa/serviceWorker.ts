@@ -87,7 +87,11 @@ export function registerServiceWorker() {
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (!pendingReload) return;
-    if (!shouldReloadForUpdate()) return;
+    if (!shouldReloadForUpdate()) {
+      pendingReload = false;
+      return;
+    }
+    pendingReload = false;
     markReloaded();
     window.location.reload();
   });

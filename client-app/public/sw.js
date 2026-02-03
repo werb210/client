@@ -29,17 +29,12 @@ async function clearOutdatedCaches() {
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    Promise.all([
-      caches
-        .open(APP_SHELL_CACHE)
-        .then((cache) => cache.addAll(CORE_ASSETS))
-        .catch((error) => {
-          console.warn("Failed to precache app shell:", error);
-        }),
-      self.skipWaiting().catch((error) => {
-        console.warn("Failed to skip waiting:", error);
-      }),
-    ])
+    caches
+      .open(APP_SHELL_CACHE)
+      .then((cache) => cache.addAll(CORE_ASSETS))
+      .catch((error) => {
+        console.warn("Failed to precache app shell:", error);
+      })
   );
 });
 
@@ -60,9 +55,11 @@ self.addEventListener("message", (event) => {
   const message = event.data || {};
   if (message.type === "SKIP_WAITING") {
     event.waitUntil(
-      self.skipWaiting().catch((error) => {
-        console.warn("Failed to skip waiting:", error);
-      })
+      self.skipWaiting()
+        .then(() => self.clients.claim())
+        .catch((error) => {
+          console.warn("Failed to skip waiting:", error);
+        })
     );
     return;
   }

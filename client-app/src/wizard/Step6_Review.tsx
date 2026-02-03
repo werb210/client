@@ -11,6 +11,7 @@ import { WizardLayout } from "../components/WizardLayout";
 import { submitApplication } from "../api/applications";
 import {
   buildSubmissionPayload,
+  getPostSubmitRedirect,
   getMissingRequiredDocs,
   shouldBlockForMissingDocuments,
 } from "./submission";
@@ -26,6 +27,7 @@ export function Step6_Review() {
   const { app, update } = useApplicationStore();
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
   const [docErrors, setDocErrors] = useState<Record<string, string>>({});
   const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>(
     {}
@@ -129,6 +131,16 @@ export function Step6_Review() {
       });
   }, [app.applicationToken, update]);
 
+  useEffect(() => {
+    if (!submitted || !redirectPath) return;
+    const timeout = window.setTimeout(() => {
+      navigate(redirectPath, { replace: true });
+    }, 1500);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [navigate, redirectPath, submitted]);
+
   function toggleTerms() {
     update({ termsAccepted: !app.termsAccepted });
   }
@@ -229,6 +241,7 @@ export function Step6_Review() {
       if (app.kyc?.phone && app.applicationToken) {
         ClientProfileStore.markSubmitted(app.kyc.phone, app.applicationToken);
       }
+      setRedirectPath(getPostSubmitRedirect(app.applicationToken));
       setSubmitted(true);
     } catch (error) {
       console.error("Submission failed:", error);
@@ -284,7 +297,7 @@ export function Step6_Review() {
           </p>
           <Button
             style={{ marginTop: tokens.spacing.sm, width: "100%", maxWidth: "260px" }}
-            onClick={() => navigate("/portal")}
+            onClick={() => navigate(redirectPath || "/portal")}
           >
             View application status
           </Button>

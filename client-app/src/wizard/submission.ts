@@ -1,5 +1,6 @@
 import { filterRequirementsByAmount, type LenderProductRequirement } from "./requirements";
 import type { ApplicationData } from "../types/application";
+import { ClientProfileStore } from "../state/clientProfiles";
 
 export type SubmissionDocument = {
   document_type: string;
@@ -78,4 +79,11 @@ export function buildSubmissionPayload(app: ApplicationData): SubmissionPayload 
     lender_product_id: app.selectedProductId,
     documents,
   };
+}
+
+export function getPostSubmitRedirect(token?: string) {
+  if (token && ClientProfileStore.hasPortalSession(token)) {
+    return `/status?token=${token}`;
+  }
+  return "/portal";
 }
