@@ -1,10 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { ClientProfileStore } from "../../state/clientProfiles";
 import {
   buildSubmissionPayload,
+  getPostSubmitRedirect,
   getMissingRequiredDocs,
   shouldBlockForMissingDocuments,
 } from "../submission";
 import type { ApplicationData } from "../../types/application";
+
+vi.mock("../../state/clientProfiles", () => ({
+  ClientProfileStore: {
+    hasPortalSession: vi.fn(),
+  },
+}));
 
 describe("submission payload", () => {
   const baseApp: ApplicationData = {
@@ -80,5 +88,10 @@ describe("submission payload", () => {
       documentsDeferred: true,
     });
     expect(shouldBlock).toBe(false);
+  });
+
+  it("redirects submitted applicants to the portal by default", () => {
+    vi.mocked(ClientProfileStore.hasPortalSession).mockReturnValue(false);
+    expect(getPostSubmitRedirect("token-123")).toBe("/portal");
   });
 });

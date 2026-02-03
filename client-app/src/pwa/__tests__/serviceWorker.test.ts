@@ -94,4 +94,33 @@ describe("service worker updates", () => {
 
     expect(waitingWorker.postMessage).toHaveBeenCalledWith({ type: "SKIP_WAITING" });
   });
+
+  it("reloads once when the controller changes after an update", async () => {
+    const waitingWorker = { postMessage: vi.fn() };
+    const controllerChangeListeners: Record<string, () => void> = {};
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      value: {
+        ready: Promise.resolve({ waiting: waitingWorker }),
+        addEventListener: (event: string, cb: () => void) => {
+          controllerChangeListeners[event] = cb;
+        },
+      },
+      configurable: true,
+    });
+
+    const module = await import("../serviceWorker");
+    const { registerServiceWorker, applyServiceWorkerUpdate } = module;
+
+    registerServiceWorker();
+    await applyServiceWorkerUpdate();
+
+    controllerChangeListeners["controllerchange"]?.();
+
+    expect(window.location.reload).toHaveBeenCalledTimes(1);
+    expect(window.sessionStorage.setItem).toHaveBeenCalledWith(
+      "boreal_sw_update_reloaded",
+      "true"
+    );
+  });
 });

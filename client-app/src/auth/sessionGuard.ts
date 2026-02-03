@@ -1,9 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { OfflineStore } from "../state/offline";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { clearClientStorage } from "./logout";
+import { refreshSessionOnce } from "./sessionRefresh";
 
 const SESSION_GUARD_KEY = "boreal_session_guard_reloaded";
 
@@ -99,6 +100,7 @@ export function useSessionGuard() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isOffline } = useNetworkStatus();
+  const lastRefreshAt = useRef(0);
 
   const guard = useMemo(
     () => getSessionRequirement(location.pathname, location.search),
@@ -123,6 +125,32 @@ export function useSessionGuard() {
       navigate(guard.redirectTo, { replace: true });
     }
   }, [guard.hasAuth, guard.redirectTo, isOffline, navigate]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isOffline) return;
+    if (!guard.hasAuth) return;
+
+    const minIntervalMs = 30_000;
+    const revalidate = () => {
+      if (typeof document !== "undefined") {
+        if (document.visibilityState && document.visibilityState !== "visible") {
+          return;
+        }
+      }
+      const now = Date.now();
+      if (now - lastRefreshAt.current < minIntervalMs) return;
+      lastRefreshAt.current = now;
+      void refreshSessionOnce();
+    };
+
+    window.addEventListener("focus", revalidate);
+    document.addEventListener("visibilitychange", revalidate);
+    return () => {
+      window.removeEventListener("focus", revalidate);
+      document.removeEventListener("visibilitychange", revalidate);
+    };
+  }, [guard.hasAuth, isOffline]);
 }
 
 export function SessionGuard() {

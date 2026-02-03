@@ -40,4 +40,15 @@ describe("refreshSessionOnce", () => {
 
     assignSpy.mockRestore();
   });
+
+  it("blocks repeated refresh attempts after a failure", async () => {
+    vi.mocked(fetch).mockResolvedValue({ ok: false } as Response);
+    await refreshSessionOnce();
+
+    vi.mocked(fetch).mockResolvedValue({ ok: true } as Response);
+    const result = await refreshSessionOnce();
+
+    expect(result).toBe(false);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
 });
