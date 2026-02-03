@@ -1,3 +1,6 @@
+import { isApplicationSubmitted } from "../services/resume";
+import { normalizeSubmissionStatus } from "../services/applicationStatus";
+
 export type PipelinePollerOptions<T> = {
   token: string;
   fetchStatus: (token: string) => Promise<T>;
@@ -35,14 +38,30 @@ export function createPipelinePoller<T>({
   };
 }
 
-export function getPipelineStage(status: any) {
+type SubmissionStatusLike = {
+  status?: string | null;
+};
+
+export function getPipelineStage(
+  status: any,
+  submission?: SubmissionStatusLike | null
+) {
   const documents = status?.documents || status?.application?.documents;
   const hasRejectedDocuments =
     Array.isArray(documents)
       ? documents.some((doc) => doc?.status === "rejected")
       : documents &&
         Object.values(documents).some((doc: any) => doc?.status === "rejected");
-  if (hasRejectedDocuments) return "Documents Required";
+  if (hasRejectedDocuments) return "Requires Documents";
+
+  const rawSubmissionStatus =
+    submission?.status ??
+    status?.submission_status ??
+    status?.submissionStatus ??
+    status?.submission?.status ??
+    "";
+  const submissionStatus = normalizeSubmissionStatus(rawSubmissionStatus);
+
   const raw =
     status?.status ||
     status?.stage ||
@@ -50,15 +69,22 @@ export function getPipelineStage(status: any) {
     status?.state ||
     "";
   const normalized = String(raw).toLowerCase();
+
   if (normalized.includes("declined") || normalized.includes("rejected")) {
-    return "Declined";
+    return "Accepted / Declined";
   }
   if (normalized.includes("accept") || normalized.includes("approved")) {
-    return "Accepted";
+    return "Accepted / Declined";
   }
-  if (normalized.includes("lender")) return "Off to Lender";
-  if (normalized.includes("startup")) return "Startup";
-  if (normalized.includes("document")) return "Documents Required";
-  if (normalized.includes("review")) return "In Review";
-  return "Received";
+  if (submissionStatus === "submitted" || normalized.includes("lender")) {
+    return "Sent to Lender";
+  }
+  if (normalized.includes("credit")) return "Credit Summary Created";
+  if (normalized.includes("review") || normalized.includes("document")) {
+    return "Documents Under Review";
+  }
+  if (isApplicationSubmitted(status)) {
+    return "Application Submitted";
+  }
+  return "Application Submitted";
 }

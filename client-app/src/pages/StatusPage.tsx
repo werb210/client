@@ -27,6 +27,16 @@ import { loadChatHistory, saveChatHistory } from "../state/chatHistory";
 import { syncRequiredDocumentsFromStatus } from "../documents/requiredDocumentsCache";
 import { OfflineStore } from "../state/offline";
 import { extractApplicationFromStatus } from "../applications/resume";
+import {
+  createSubmissionStatusPoller,
+  loadSubmissionStatusCache,
+  saveSubmissionStatusCache,
+  type SubmissionStatusSnapshot,
+} from "../services/applicationStatus";
+import {
+  getSubmissionFailureBanner,
+  getSubmissionStageBanner,
+} from "../portal/submissionMessaging";
 import { components, layout, tokens } from "@/styles";
 
 export function StatusPage() {
@@ -43,6 +53,9 @@ export function StatusPage() {
   } | null>(null);
   const [linkedAppError, setLinkedAppError] = useState<string | null>(null);
   const [linkedAppBusy, setLinkedAppBusy] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<
+    SubmissionStatusSnapshot | null
+  >(() => (token ? loadSubmissionStatusCache(token) : null));
   const { send: sendAI } = useChatbot();
   const navigate = useNavigate();
 
@@ -64,6 +77,11 @@ export function StatusPage() {
     }
     refreshStatus();
   }, [navigate, refreshStatus, token]);
+
+  useEffect(() => {
+    if (!token) return;
+    setSubmissionStatus(loadSubmissionStatusCache(token));
+  }, [token]);
 
   const refreshMessages = useCallback(async () => {
     if (!token) return;
@@ -109,9 +127,52 @@ export function StatusPage() {
     refreshStatus();
   }, [refreshMessages, refreshStatus]);
 
+  const applicationId = useMemo(() => {
+    return (
+      status?.applicationId ||
+      status?.application?.applicationId ||
+      status?.application?.id ||
+      status?.id ||
+      null
+    );
+  }, [status]);
+
+  useEffect(() => {
+    if (!token || !applicationId) return;
+    const stop = createSubmissionStatusPoller({
+      applicationId,
+      onUpdate: (snapshot) => {
+        setSubmissionStatus(snapshot);
+        saveSubmissionStatusCache(token, snapshot);
+      },
+      onError: (error) => {
+        console.error("Submission status refresh failed:", error);
+      },
+    });
+    return () => stop();
+  }, [applicationId, token]);
+
   const stages = PIPELINE_STAGE_LABELS;
 
-  const activeStage = useMemo(() => getPipelineStage(status), [status]);
+  const activeStage = useMemo(
+    () => getPipelineStage(status, submissionStatus),
+    [status, submissionStatus]
+  );
+  const submissionUpdatedLabel = useMemo(() => {
+    if (!submissionStatus?.updatedAt) return null;
+    const parsed = new Date(submissionStatus.updatedAt);
+    if (Number.isNaN(parsed.getTime())) return submissionStatus.updatedAt;
+    return parsed.toLocaleString();
+  }, [submissionStatus]);
+  const statusBanner = useMemo(
+    () => getSubmissionStageBanner(activeStage),
+    [activeStage]
+  );
+  const failureBanner = useMemo(() => {
+    if (submissionStatus?.status !== "failed") return null;
+    return getSubmissionFailureBanner(submissionStatus.rawStatus || undefined);
+  }, [submissionStatus]);
+
   const phone = useMemo(() => {
     return (
       status?.application?.financialProfile?.phone ||
@@ -157,7 +218,9 @@ export function StatusPage() {
     const financialProfile =
       status?.application?.financialProfile || status?.financialProfile;
     if (!financialProfile) {
-      setLinkedAppError("We couldn't find your financial profile to start a linked application.");
+      setLinkedAppError(
+        "We couldn't find your financial profile to start a linked application."
+      );
       return;
     }
     setLinkedAppBusy(true);
@@ -185,6 +248,12 @@ export function StatusPage() {
     } finally {
       setLinkedAppBusy(false);
     }
+  }
+
+  function scrollToMessages() {
+    document
+      .getElementById("portal-messages")
+      ?.scrollIntoView({ behavior: "smooth" });
   }
 
   async function sendMessage() {
@@ -257,7 +326,14 @@ export function StatusPage() {
         <div style={layout.centerColumn}>
           <Card>
             <EmptyState>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: tokens.spacing.sm }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: tokens.spacing.sm,
+                }}
+              >
                 <Spinner />
                 <span>Loading your status…</span>
               </div>
@@ -276,11 +352,59 @@ export function StatusPage() {
             <div style={layout.stackTight}>
               <div style={components.form.eyebrow}>Application status</div>
               <h1 style={components.form.title}>{activeStage}</h1>
+              {submissionUpdatedLabel && (
+                <div
+                  style={components.form.helperText}
+                  title={`Updated ${submissionUpdatedLabel}`}
+                >
+                  Updated {submissionUpdatedLabel}
+                </div>
+              )}
             </div>
 
             <StatusTimeline stages={stages} activeStage={activeStage} />
           </div>
         </Card>
+
+        {failureBanner && (
+          <Card
+            style={{
+              border: `1px solid rgba(245, 158, 11, 0.35)`,
+              background: "rgba(245, 158, 11, 0.1)",
+            }}
+          >
+            <div style={layout.stackTight}>
+              <div style={{ fontWeight: 600, color: tokens.colors.warning }}>
+                {failureBanner.title}
+              </div>
+              <div style={components.form.subtitle}>{failureBanner.message}</div>
+              <PrimaryButton
+                style={{ width: "100%" }}
+                onClick={() => {
+                  setMode("human");
+                  setIssueMode(false);
+                  scrollToMessages();
+                }}
+              >
+                {failureBanner.cta}
+              </PrimaryButton>
+            </div>
+          </Card>
+        )}
+
+        {statusBanner && !failureBanner && (
+          <Card
+            style={{
+              border: `1px solid rgba(59, 130, 246, 0.2)`,
+              background: "rgba(59, 130, 246, 0.08)",
+            }}
+          >
+            <div style={layout.stackTight}>
+              <div style={{ fontWeight: 600 }}>{statusBanner.title}</div>
+              <div style={components.form.subtitle}>{statusBanner.message}</div>
+            </div>
+          </Card>
+        )}
 
         {rejectionNotice && (
           <Card
@@ -345,14 +469,7 @@ export function StatusPage() {
                 {linkedAppError && (
                   <div style={components.form.errorText}>{linkedAppError}</div>
                 )}
-                <SecondaryButton
-                  style={{ width: "100%" }}
-                  onClick={() =>
-                    document
-                      .getElementById("portal-messages")
-                      ?.scrollIntoView({ behavior: "smooth" })
-                  }
-                >
+                <SecondaryButton style={{ width: "100%" }} onClick={scrollToMessages}>
                   Messages
                 </SecondaryButton>
                 <SecondaryButton
