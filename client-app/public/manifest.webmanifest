@@ -1,16 +1,18 @@
 {
   "name": "Boreal Financial",
   "short_name": "Boreal",
+  "description": "Business funding application",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#1d4ed8",
+  "background_color": "#0B0F1A",
+  "theme_color": "#0B0F1A",
   "icons": [
     {
       "src": "/icon.svg",
-      "sizes": "512x512",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
