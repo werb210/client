@@ -36,6 +36,13 @@ describe("service worker updates", () => {
       value: {},
       configurable: true,
     });
+    Object.defineProperty(globalThis, "document", {
+      value: {
+        readyState: "loading",
+        visibilityState: "visible",
+      },
+      configurable: true,
+    });
   });
 
   it("surfaces update availability when a new worker installs", async () => {
