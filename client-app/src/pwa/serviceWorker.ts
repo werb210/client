@@ -8,6 +8,8 @@ type UpdateListener = (available: boolean) => void;
 const UPDATE_RELOAD_KEY = "boreal_sw_update_reloaded";
 let updateAvailable = false;
 let pendingReload = false;
+let registrationPromise: Promise<ServiceWorkerRegistration | null> | null =
+  null;
 const updateListeners = new Set<UpdateListener>();
 
 function notifyUpdateAvailable(next: boolean) {
@@ -56,18 +58,18 @@ export function getServiceWorkerUpdateAvailable() {
 export function registerServiceWorker() {
   if (typeof window === "undefined") return;
   if (!("serviceWorker" in navigator)) return;
+  if (registrationPromise) return;
 
   clearReloadMarker();
 
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .then((registration) => {
-        if (!registration) return;
-        if (registration.waiting) {
+  registrationPromise = new Promise((resolve) => {
+    const register = async () => {
+      try {
+        const registration = await navigator.serviceWorker.register("/sw.js");
+        if (registration?.waiting) {
           notifyUpdateAvailable(true);
         }
-        registration.addEventListener("updatefound", () => {
+        registration?.addEventListener("updatefound", () => {
           const worker = registration.installing;
           if (!worker) return;
           worker.addEventListener("statechange", () => {
@@ -79,14 +81,33 @@ export function registerServiceWorker() {
             }
           });
         });
-      })
-      .catch((error) => {
+        resolve(registration ?? null);
+      } catch (error) {
         console.warn("Service worker registration failed:", error);
-      });
+        resolve(null);
+      }
+    };
+
+    if (document.readyState === "complete") {
+      void register();
+    } else {
+      window.addEventListener(
+        "load",
+        () => {
+          void register();
+        },
+        { once: true }
+      );
+    }
   });
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (!pendingReload) return;
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIos && document.visibilityState !== "visible") {
+      pendingReload = false;
+      return;
+    }
     if (!shouldReloadForUpdate()) {
       pendingReload = false;
       return;
