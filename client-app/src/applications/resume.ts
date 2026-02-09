@@ -32,9 +32,16 @@ export function extractApplicationFromStatus(
     currentStep: source.currentStep || source.current_step || 1,
     linkedApplicationTokens:
       source.linkedApplicationTokens || source.linked_application_tokens,
-    ocrComplete: source.ocrComplete ?? source.ocr_complete,
-    creditSummaryComplete:
-      source.creditSummaryComplete ?? source.credit_summary_complete,
+    documentReviewComplete:
+      source.documentReviewComplete ??
+      source.document_review_complete ??
+      source.ocrComplete ??
+      source.ocr_complete,
+    financialReviewComplete:
+      source.financialReviewComplete ??
+      source.financial_review_complete ??
+      source.creditSummaryComplete ??
+      source.credit_summary_complete,
   };
 }
 

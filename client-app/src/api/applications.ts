@@ -5,8 +5,15 @@ export async function submitApplication(payload: unknown) {
   return res.data;
 }
 
-export async function createPublicApplication(payload: unknown) {
-  const res = await api.post("/api/applications", payload);
+export async function createPublicApplication(
+  payload: unknown,
+  options?: { idempotencyKey?: string }
+) {
+  const res = await api.post("/api/applications", payload, {
+    headers: options?.idempotencyKey
+      ? { "Idempotency-Key": options.idempotencyKey }
+      : undefined,
+  });
   return res.data;
 }
 

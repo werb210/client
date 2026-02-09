@@ -5,7 +5,10 @@ import { useProcessingStatusPoller } from "./useProcessingStatusPoller";
 
 export function isProcessingComplete(status: ProcessingStatus | null): boolean {
   if (!status) return false;
-  return status.ocr.status === "completed" && status.banking.status === "completed";
+  return (
+    status.documentReview.status === "completed" &&
+    status.financialReview.status === "completed"
+  );
 }
 
 export function useProcessingStatus(applicationId: string | null) {

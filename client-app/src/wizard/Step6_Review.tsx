@@ -58,8 +58,8 @@ export function Step6_Review() {
   }, [app.documents, app.documentsDeferred, requiredDocTypes]);
   const processingComplete = useMemo(() => {
     if (app.documentsDeferred) return true;
-    return Boolean(app.ocrComplete && app.creditSummaryComplete);
-  }, [app.creditSummaryComplete, app.documentsDeferred, app.ocrComplete]);
+    return Boolean(app.documentReviewComplete && app.financialReviewComplete);
+  }, [app.documentReviewComplete, app.documentsDeferred, app.financialReviewComplete]);
   const idRequirements = useMemo(
     () => [
       {
@@ -121,9 +121,10 @@ export function Step6_Review() {
             typeof refreshed.documentsDeferred === "boolean"
               ? refreshed.documentsDeferred
               : app.documentsDeferred,
-          ocrComplete: refreshed.ocrComplete ?? app.ocrComplete,
-          creditSummaryComplete:
-            refreshed.creditSummaryComplete ?? app.creditSummaryComplete,
+          documentReviewComplete:
+            refreshed.documentReviewComplete ?? app.documentReviewComplete,
+          financialReviewComplete:
+            refreshed.financialReviewComplete ?? app.financialReviewComplete,
         });
       })
       .catch((error) => {
@@ -179,7 +180,7 @@ export function Step6_Review() {
 
     if (!processingComplete) {
       setSubmitError(
-        "We’re still completing document and credit checks. Please check back shortly."
+        "We’re still completing application checks. Please check back shortly."
       );
       return;
     }
@@ -234,9 +235,10 @@ export function Step6_Review() {
           typeof hydrated.documentsDeferred === "boolean"
             ? hydrated.documentsDeferred
             : app.documentsDeferred,
-        ocrComplete: hydrated.ocrComplete ?? app.ocrComplete,
-        creditSummaryComplete:
-          hydrated.creditSummaryComplete ?? app.creditSummaryComplete,
+        documentReviewComplete:
+          hydrated.documentReviewComplete ?? app.documentReviewComplete,
+        financialReviewComplete:
+          hydrated.financialReviewComplete ?? app.financialReviewComplete,
       });
       if (app.kyc?.phone && app.applicationToken) {
         ClientProfileStore.markSubmitted(app.kyc.phone, app.applicationToken);
@@ -369,9 +371,10 @@ export function Step6_Review() {
       );
       update({
         documents: hydrated.documents || app.documents,
-        ocrComplete: hydrated.ocrComplete ?? app.ocrComplete,
-        creditSummaryComplete:
-          hydrated.creditSummaryComplete ?? app.creditSummaryComplete,
+        documentReviewComplete:
+          hydrated.documentReviewComplete ?? app.documentReviewComplete,
+        financialReviewComplete:
+          hydrated.financialReviewComplete ?? app.financialReviewComplete,
       });
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
     } catch (error) {
@@ -469,7 +472,7 @@ export function Step6_Review() {
               )}
               {!processingComplete && (
                 <div style={components.form.errorText}>
-                  OCR and credit summary checks are still running.
+                  Your application checks are still running.
                 </div>
               )}
             </div>

@@ -1,0 +1,45 @@
+[
+  {
+    "surface": "Status Portal",
+    "route": "/status",
+    "file": "src/pages/StatusPage.tsx",
+    "fields": [
+      "status.applicationId",
+      "status.stage",
+      "submissionStatus.status",
+      "submissionStatus.updatedAt",
+      "documents",
+      "messages",
+      "linkedApplications"
+    ]
+  },
+  {
+    "surface": "Application Portal",
+    "route": "/application/:id",
+    "file": "src/pages/ApplicationPortalPage.tsx",
+    "fields": [
+      "businessName",
+      "stage",
+      "statusMessage",
+      "helperText",
+      "documents.category",
+      "documents.required",
+      "documents.status",
+      "documents.rejectionReason"
+    ]
+  },
+  {
+    "surface": "Offers",
+    "route": "/application/:id/offers",
+    "file": "src/pages/ApplicationOffersPage.tsx",
+    "fields": [
+      "offers.id",
+      "offers.lender_name",
+      "offers.product_name",
+      "offers.terms",
+      "offers.expires_at",
+      "offers.status",
+      "offers.document_url"
+    ]
+  }
+]

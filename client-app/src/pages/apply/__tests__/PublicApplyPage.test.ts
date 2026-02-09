@@ -2,11 +2,30 @@ import { describe, expect, it, vi } from "vitest";
 import {
   applicationFields,
   buildPublicApplicationPayload,
+  createIdempotencyKey,
+  getOrCreateIdempotencyKey,
   handlePublicApplicationSubmit,
   initialValues,
   isSubmissionReady,
+  loadPublicSubmissionState,
   validateApplication,
 } from "../PublicApplyPage";
+
+function createStorage(initial: Record<string, string> = {}) {
+  let store = { ...initial };
+  return {
+    getItem: (key: string) => (key in store ? store[key] : null),
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+}
 
 const requiredFieldNames = [
   "business_legal_name",
@@ -125,6 +144,7 @@ describe("PublicApplyPage form schema", () => {
     const submitApplication = vi.fn().mockResolvedValue({});
     const onSuccess = vi.fn();
     const onError = vi.fn();
+    const storage = createStorage();
 
     await handlePublicApplicationSubmit({
       values: baseValues,
@@ -134,12 +154,80 @@ describe("PublicApplyPage form schema", () => {
       submitApplication,
       onSuccess,
       onError,
+      storage,
     });
 
     expect(submitApplication).toHaveBeenCalledWith(
-      expect.objectContaining({ business_legal_name: "Boreal LLC" })
+      expect.objectContaining({ business_legal_name: "Boreal LLC" }),
+      expect.objectContaining({ idempotencyKey: expect.any(String) })
     );
     expect(onSuccess).toHaveBeenCalledTimes(1);
     expect(onError).not.toHaveBeenCalled();
+  });
+
+  it("blocks duplicate submissions within a session (including refresh)", async () => {
+    const submitApplication = vi.fn().mockResolvedValue({});
+    const onSuccess = vi.fn();
+    const onError = vi.fn();
+    const storage = createStorage();
+
+    await handlePublicApplicationSubmit({
+      values: baseValues,
+      clientIp: "203.0.113.10",
+      termsAcceptedAt: "2024-01-01T00:00:00.000Z",
+      communicationsAcceptedAt: "2024-01-01T00:00:00.000Z",
+      submitApplication,
+      onSuccess,
+      onError,
+      storage,
+    });
+
+    await handlePublicApplicationSubmit({
+      values: baseValues,
+      clientIp: "203.0.113.10",
+      termsAcceptedAt: "2024-01-01T00:00:00.000Z",
+      communicationsAcceptedAt: "2024-01-01T00:00:00.000Z",
+      submitApplication,
+      onSuccess,
+      onError,
+      storage,
+    });
+
+    expect(submitApplication).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        form: "This application has already been submitted in this session.",
+      })
+    );
+  });
+
+  it("does not submit when required fields are missing", async () => {
+    const submitApplication = vi.fn().mockResolvedValue({});
+    const onSuccess = vi.fn();
+    const onError = vi.fn();
+    const storage = createStorage();
+
+    await handlePublicApplicationSubmit({
+      values: initialValues,
+      clientIp: "",
+      termsAcceptedAt: null,
+      communicationsAcceptedAt: null,
+      submitApplication,
+      onSuccess,
+      onError,
+      storage,
+    });
+
+    expect(submitApplication).not.toHaveBeenCalled();
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalled();
+  });
+
+  it("stores a consistent idempotency key for the session", () => {
+    const storage = createStorage();
+    const key = getOrCreateIdempotencyKey(storage as any);
+    expect(loadPublicSubmissionState(storage as any)).toBeNull();
+    expect(getOrCreateIdempotencyKey(storage as any)).toBe(key);
+    expect(createIdempotencyKey()).toBeTruthy();
   });
 });

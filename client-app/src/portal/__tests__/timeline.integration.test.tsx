@@ -28,7 +28,7 @@ describe("timeline integration", () => {
     const text = flattenText(element as ReactElement);
     expect(text).toContain("Application Submitted");
     expect(text).toContain("Documents Under Review");
-    expect(text).toContain("Credit Summary Created");
+    expect(text).toContain("In Review");
     expect(text).toContain("Sent to Lender");
     expect(text).toContain("Accepted / Declined");
     expect(text).toContain("Requires Documents");

@@ -51,6 +51,28 @@ export function ApplicationOffersPage() {
         <div style={layout.portalColumn}>
           <div style={components.form.sectionTitle}>Offers unavailable</div>
           <p style={components.form.helperText}>{error}</p>
+          <button
+            type="button"
+            style={{
+              marginTop: "12px",
+              ...components.buttons.base,
+              ...components.buttons.secondary,
+              width: "fit-content",
+            }}
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              fetchApplicationOffers(id as string)
+                .then((response) => setOffers(response?.offers ?? []))
+                .catch((err) => {
+                  console.error("Failed to load offers:", err);
+                  setError("We couldn't load your offers yet. Please try again.");
+                })
+                .finally(() => setLoading(false));
+            }}
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

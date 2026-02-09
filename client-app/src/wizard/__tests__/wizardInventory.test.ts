@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import inventory from "../../_artifacts/wizard-field-inventory.json";
 
 describe("wizard-field-inventory", () => {
@@ -18,8 +20,8 @@ describe("wizard-field-inventory", () => {
       "currentStep",
       "documents",
       "documentsDeferred",
-      "ocrComplete",
-      "creditSummaryComplete",
+      "documentReviewComplete",
+      "financialReviewComplete",
       "productCategory",
       "selectedProduct",
       "selectedProductId",
@@ -44,5 +46,12 @@ describe("wizard-field-inventory", () => {
     );
 
     expect(unexpectedDuplicates).toEqual([]);
+  });
+
+  it("references files that exist in the repository", () => {
+    inventory.forEach((entry) => {
+      const resolved = resolve(process.cwd(), entry.file);
+      expect(existsSync(resolved)).toBe(true);
+    });
   });
 });

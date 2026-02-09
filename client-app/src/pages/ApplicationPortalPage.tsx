@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ApplicationPortalView,
   getStageHelperText,
@@ -24,9 +24,13 @@ export function ApplicationPortalPage() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [readOnly, setReadOnly] = useState(false);
+  const [readOnlyMessage, setReadOnlyMessage] = useState<string | null>(null);
   const [uploadState, setUploadState] = useState<
     Record<string, { uploading: boolean; progress: number }>
   >({});
+  const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
+  const navigate = useNavigate();
 
   const refreshDocuments = useCallback(async () => {
     if (!id) return;
@@ -34,34 +38,67 @@ export function ApplicationPortalPage() {
     setDocuments(normalizeDocumentsResponse(response));
   }, [id]);
 
+  const loadPortal = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const [applicationRes, documentsRes] = await Promise.all([
+        fetchApplication(id),
+        fetchApplicationDocuments(id),
+      ]);
+      const nextApplication = applicationRes?.application ?? applicationRes;
+      setApplication(nextApplication);
+      setDocuments(normalizeDocumentsResponse(documentsRes));
+      const stageValue =
+        nextApplication?.stage ||
+        nextApplication?.status ||
+        nextApplication?.pipeline_stage ||
+        "";
+      const normalized = String(stageValue).toLowerCase();
+      const isExpired =
+        normalized.includes("expired") ||
+        Boolean(nextApplication?.expired_at || nextApplication?.expiredAt);
+      const isTerminal = ["approved", "declined", "rejected", "withdrawn", "funded", "closed"].some(
+        (term) => normalized.includes(term)
+      );
+      setReadOnly(isExpired || isTerminal);
+      setReadOnlyMessage(
+        isExpired
+          ? "This application has expired. Documents are view-only."
+          : isTerminal
+            ? "This application is in a final stage. Documents are view-only."
+            : null
+      );
+    } catch (err: any) {
+      console.error("Failed to load application portal:", err);
+      const status = err?.response?.status;
+      if (status === 401 || status === 403) {
+        navigate("/portal", { replace: true });
+        return;
+      }
+      if (status === 404) {
+        setError("We couldn’t find that application. Please check your link.");
+      } else if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        setError("Network connection lost. Reconnect and try again.");
+      } else {
+        setError("We couldn't load your application details.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [id, navigate]);
+
   useEffect(() => {
     let active = true;
-    async function load() {
-      if (!id) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const [applicationRes, documentsRes] = await Promise.all([
-          fetchApplication(id),
-          fetchApplicationDocuments(id),
-        ]);
-        if (!active) return;
-        setApplication(applicationRes?.application ?? applicationRes);
-        setDocuments(normalizeDocumentsResponse(documentsRes));
-      } catch (err: any) {
-        if (!active) return;
-        console.error("Failed to load application portal:", err);
-        setError("We couldn't load your application details.");
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-
-    void load();
+    void (async () => {
+      if (!active) return;
+      await loadPortal();
+    })();
     return () => {
       active = false;
     };
-  }, [id]);
+  }, [loadPortal]);
 
   useEffect(() => {
     if (!location.pathname.endsWith("/documents")) return;
@@ -95,10 +132,20 @@ export function ApplicationPortalPage() {
     return getStatusBannerMessage({
       stage,
       documents,
-      ocrCompletedAt: application?.ocr_completed_at ?? null,
-      bankingCompletedAt: application?.banking_completed_at ?? null,
+      documentReviewCompletedAt:
+        application?.document_review_completed_at ??
+        application?.documentReviewCompletedAt ??
+        application?.documents_completed_at ??
+        application?.ocr_completed_at ??
+        null,
+      financialReviewCompletedAt:
+        application?.financial_review_completed_at ??
+        application?.financialReviewCompletedAt ??
+        application?.financials_completed_at ??
+        application?.banking_completed_at ??
+        null,
     });
-  }, [application?.banking_completed_at, application?.ocr_completed_at, stage, documents]);
+  }, [application, stage, documents]);
 
   const historyEvents = useMemo(
     () =>
@@ -112,10 +159,36 @@ export function ApplicationPortalPage() {
   const handleUpload = useCallback(
     async (category: string, file: File) => {
       if (!id) return;
+      if (readOnly) {
+        setUploadErrors((prev) => ({
+          ...prev,
+          [category]: "Uploads are disabled for this application.",
+        }));
+        return;
+      }
+      const allowedTypes = [
+        "application/pdf",
+        "image/png",
+        "image/jpeg",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
+      const allowedExtensions = [".pdf", ".png", ".jpg", ".jpeg", ".docx"];
+      const extension = file.name.toLowerCase();
+      const validType =
+        allowedTypes.includes(file.type) ||
+        allowedExtensions.some((ext) => extension.endsWith(ext));
+      if (!validType) {
+        setUploadErrors((prev) => ({
+          ...prev,
+          [category]: "Unsupported file type. Allowed: PDF, PNG, JPEG, DOCX.",
+        }));
+        return;
+      }
       setUploadState((prev) => ({
         ...prev,
         [category]: { uploading: true, progress: 0 },
       }));
+      setUploadErrors((prev) => ({ ...prev, [category]: "" }));
       try {
         await uploadApplicationDocument(id, {
           documentCategory: category,
@@ -131,9 +204,15 @@ export function ApplicationPortalPage() {
     } catch (err) {
       console.error("Upload failed:", err);
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
-        setError("Network connection lost. Reconnect and try again.");
+        setUploadErrors((prev) => ({
+          ...prev,
+          [category]: "Network connection lost. Reconnect and try again.",
+        }));
       } else {
-        setError("Upload failed. Please try again.");
+        setUploadErrors((prev) => ({
+          ...prev,
+          [category]: "Upload failed. Please try again.",
+        }));
       }
     } finally {
         setUploadState((prev) => ({
@@ -161,6 +240,18 @@ export function ApplicationPortalPage() {
         <div style={layout.portalColumn}>
           <div style={components.form.sectionTitle}>Client portal unavailable</div>
           <p style={components.form.helperText}>{error}</p>
+          <button
+            type="button"
+            style={{
+              marginTop: tokens.spacing.sm,
+              ...components.buttons.base,
+              ...components.buttons.secondary,
+              width: "fit-content",
+            }}
+            onClick={() => loadPortal()}
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -176,6 +267,9 @@ export function ApplicationPortalPage() {
         documents={documents}
         onUpload={handleUpload}
         uploadState={uploadState}
+        uploadErrors={uploadErrors}
+        readOnly={readOnly}
+        readOnlyMessage={readOnlyMessage}
         historyEvents={historyEvents}
       />
       <div style={{ height: tokens.spacing.xl }} />

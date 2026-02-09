@@ -15,12 +15,14 @@ describe("StatusSummary", () => {
   it("shows pending placeholders when status is pending", () => {
     mockedUseProcessingStatus.mockReturnValue({
       status: {
-        ocr: { status: "pending", completedAt: null },
-        banking: {
+        documentReview: { status: "pending", completedAt: null },
+        financialReview: {
           status: "pending",
           completedAt: null,
-          statementCount: 0,
-          requiredStatements: 6,
+          details: {
+            receivedCount: 0,
+            requiredCount: 6,
+          },
         },
       },
       pollState: "polling",
@@ -31,16 +33,18 @@ describe("StatusSummary", () => {
     expect(markup).toContain("Statements received 0/6");
   });
 
-  it("shows completed timestamp when OCR is complete", () => {
+  it("shows completed timestamp when a review is complete", () => {
     const completedAt = "2024-01-01T00:00:00Z";
     mockedUseProcessingStatus.mockReturnValue({
       status: {
-        ocr: { status: "completed", completedAt },
-        banking: {
+        documentReview: { status: "completed", completedAt },
+        financialReview: {
           status: "processing",
           completedAt: null,
-          statementCount: 3,
-          requiredStatements: 6,
+          details: {
+            receivedCount: 3,
+            requiredCount: 6,
+          },
         },
       },
       pollState: "polling",
@@ -53,12 +57,14 @@ describe("StatusSummary", () => {
   it("shows contact support when a stage fails", () => {
     mockedUseProcessingStatus.mockReturnValue({
       status: {
-        ocr: { status: "failed", completedAt: null },
-        banking: {
+        documentReview: { status: "failed", completedAt: null },
+        financialReview: {
           status: "pending",
           completedAt: null,
-          statementCount: 0,
-          requiredStatements: 6,
+          details: {
+            receivedCount: 0,
+            requiredCount: 6,
+          },
         },
       },
       pollState: "paused",
