@@ -1,0 +1,167 @@
+[
+  {
+    "step": 1,
+    "title": "Know Your Client",
+    "file": "src/wizard/Step1_KYC.tsx",
+    "fields": [
+      "currentStep",
+      "kyc.phone",
+      "kyc.lookingFor",
+      "kyc.fundingAmount",
+      "kyc.businessLocation",
+      "kyc.industry",
+      "kyc.purposeOfFunds",
+      "kyc.salesHistory",
+      "kyc.revenueLast12Months",
+      "kyc.monthlyRevenue",
+      "kyc.accountsReceivable",
+      "kyc.fixedAssets",
+      "productCategory",
+      "selectedProduct",
+      "selectedProductId",
+      "selectedProductType",
+      "requires_closing_cost_funding",
+      "eligibleProducts",
+      "eligibleCategories",
+      "eligibilityReasons",
+      "applicationToken",
+      "matchPercentages"
+    ],
+    "guards": [
+      "Requires all KYC fields to be present before OTP request (lookingFor, fundingAmount, businessLocation not Other, industry, purposeOfFunds, salesHistory, revenueLast12Months, monthlyRevenue, accountsReceivable, fixedAssets).",
+      "Phone must be present and pass Validate.phone before OTP request.",
+      "Business location must be Canada or United States (Other fails validation and triggers the modal).",
+      "OTP verification must succeed before proceeding; invalid code blocks progression."
+    ]
+  },
+  {
+    "step": 2,
+    "title": "Product Category Selection",
+    "file": "src/wizard/Step2_Product.tsx",
+    "fields": [
+      "currentStep",
+      "eligibleProducts",
+      "eligibleCategories",
+      "eligibilityReasons",
+      "productRequirements.byProductId",
+      "productCategory",
+      "selectedProduct",
+      "selectedProductId",
+      "selectedProductType",
+      "requires_closing_cost_funding",
+      "documents",
+      "documentsDeferred",
+      "linkedApplicationTokens"
+    ],
+    "guards": [
+      "Step access enforced via resolveStepGuard redirect.",
+      "Continue is disabled and goNext exits when no selectedProduct, loadError, or noProducts.",
+      "Closing-cost flow blocks navigation when equipment intent requires decision and no linked application exists."
+    ]
+  },
+  {
+    "step": 3,
+    "title": "Business Information",
+    "file": "src/wizard/Step3_Business.tsx",
+    "fields": [
+      "currentStep",
+      "business.businessName",
+      "business.legalName",
+      "business.businessStructure",
+      "business.address",
+      "business.city",
+      "business.state",
+      "business.zip",
+      "business.phone",
+      "business.website",
+      "business.startDate",
+      "business.employees",
+      "business.estimatedRevenue"
+    ],
+    "guards": [
+      "Step access enforced via resolveStepGuard redirect.",
+      "Continue requires required business fields (businessName, legalName, businessStructure, address, city, state, zip, startDate, employees, estimatedRevenue).",
+      "Button disabled when required business fields are missing."
+    ]
+  },
+  {
+    "step": 4,
+    "title": "Applicant Information",
+    "file": "src/wizard/Step4_Applicant.tsx",
+    "fields": [
+      "currentStep",
+      "applicant.firstName",
+      "applicant.lastName",
+      "applicant.email",
+      "applicant.phone",
+      "applicant.street",
+      "applicant.city",
+      "applicant.state",
+      "applicant.zip",
+      "applicant.dob",
+      "applicant.ssn",
+      "applicant.ownership",
+      "applicant.hasMultipleOwners",
+      "applicant.partner.firstName",
+      "applicant.partner.lastName",
+      "applicant.partner.email",
+      "applicant.partner.phone",
+      "applicant.partner.street",
+      "applicant.partner.city",
+      "applicant.partner.state",
+      "applicant.partner.zip",
+      "applicant.partner.dob",
+      "applicant.partner.ssn",
+      "applicant.partner.ownership"
+    ],
+    "guards": [
+      "Step access enforced via resolveStepGuard redirect.",
+      "Continue requires required applicant fields (firstName, lastName, email, phone, street, city, state, zip, dob, ssn, ownership).",
+      "Partner fields are shown/collected only when hasMultipleOwners is true.",
+      "Button disabled when required applicant fields are missing."
+    ]
+  },
+  {
+    "step": 5,
+    "title": "Required Documents",
+    "file": "src/wizard/Step5_Documents.tsx",
+    "fields": [
+      "currentStep",
+      "productRequirements.aggregated",
+      "documents",
+      "documentsDeferred",
+      "ocrComplete",
+      "creditSummaryComplete"
+    ],
+    "guards": [
+      "Step access enforced via resolveStepGuard redirect.",
+      "Requires applicationToken to load requirements and proceed.",
+      "Continue blocked when required documents are missing or uploads are rejected.",
+      "Uploads reject files over 15 MB or unsupported types (PDF, PNG, JPEG, DOCX, XLSX).",
+      "Skip documents disabled while uploads are in flight."
+    ]
+  },
+  {
+    "step": 6,
+    "title": "Terms & Typed Signature",
+    "file": "src/wizard/Step6_Review.tsx",
+    "fields": [
+      "currentStep",
+      "signatureDate",
+      "documents",
+      "documentsDeferred",
+      "ocrComplete",
+      "creditSummaryComplete",
+      "termsAccepted",
+      "typedSignature",
+      "coApplicantSignature"
+    ],
+    "guards": [
+      "Step access enforced via resolveStepGuard redirect.",
+      "Signature date is auto-populated when missing.",
+      "Submit requires online status, applicationToken, selectedProductId, no missing required docs, accepted documents, and completed processing.",
+      "Submit requires typedSignature and coApplicantSignature when a partner exists.",
+      "Submit requires required applicant ID uploads and terms acceptance."
+    ]
+  }
+]
