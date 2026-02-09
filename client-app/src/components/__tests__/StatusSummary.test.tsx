@@ -1,50 +1,66 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { StatusSummary } from "../StatusSummary";
+import { useProcessingStatus } from "../../hooks/useProcessingStatus";
 
-function renderSummary(status: any) {
-  return renderToStaticMarkup(<StatusSummary status={status} />);
+vi.mock("../../hooks/useProcessingStatus");
+
+const mockedUseProcessingStatus = vi.mocked(useProcessingStatus);
+
+function renderSummary() {
+  return renderToStaticMarkup(<StatusSummary applicationId="app_123" />);
 }
 
 describe("StatusSummary", () => {
-  it("shows documents processing when OCR is pending", () => {
-    const markup = renderSummary({
-      application: { ocr_completed_at: null, banking_completed_at: null },
-      documents: { bank_statements: { count: 2 } },
+  it("shows pending placeholders when status is pending", () => {
+    mockedUseProcessingStatus.mockReturnValue({
+      status: {
+        ocr: { status: "pending", completedAt: null },
+        banking: {
+          status: "pending",
+          completedAt: null,
+          statementCount: 0,
+          requiredStatements: 6,
+        },
+      },
     });
+    const markup = renderSummary();
     expect(markup).toContain("Documents received");
-    expect(markup).toContain("Documents processing");
+    expect(markup).toContain("Pending");
+    expect(markup).toContain("Statements received 0/6");
   });
 
-  it("shows documents processed when OCR is complete", () => {
-    const markup = renderSummary({
-      application: { ocr_completed_at: "2024-01-01T00:00:00Z" },
-      documents: { bank_statements: { count: 2 } },
+  it("shows completed timestamp when OCR is complete", () => {
+    const completedAt = "2024-01-01T00:00:00Z";
+    mockedUseProcessingStatus.mockReturnValue({
+      status: {
+        ocr: { status: "completed", completedAt },
+        banking: {
+          status: "processing",
+          completedAt: null,
+          statementCount: 3,
+          requiredStatements: 6,
+        },
+      },
     });
-    expect(markup).toContain("Documents processed");
+    const markup = renderSummary();
+    expect(markup).toContain("Completed");
+    expect(markup).toContain(new Date(completedAt).toLocaleString());
   });
 
-  it("shows waiting for statements when fewer than six are received", () => {
-    const markup = renderSummary({
-      application: { ocr_completed_at: null, banking_completed_at: null },
-      documents: { bank_statements: { count: 5 } },
+  it("shows contact support when a stage fails", () => {
+    mockedUseProcessingStatus.mockReturnValue({
+      status: {
+        ocr: { status: "failed", completedAt: null },
+        banking: {
+          status: "pending",
+          completedAt: null,
+          statementCount: 0,
+          requiredStatements: 6,
+        },
+      },
     });
-    expect(markup).toContain("Waiting for statements");
-  });
-
-  it("shows banking analysis in progress when enough statements are received", () => {
-    const markup = renderSummary({
-      application: { ocr_completed_at: null, banking_completed_at: null },
-      documents: { bank_statements: { count: 6 } },
-    });
-    expect(markup).toContain("Banking analysis in progress");
-  });
-
-  it("shows banking analysis completed when banking is complete", () => {
-    const markup = renderSummary({
-      application: { banking_completed_at: "2024-01-01T00:00:00Z" },
-      documents: { bank_statements: { count: 2 } },
-    });
-    expect(markup).toContain("Banking analysis completed");
+    const markup = renderSummary();
+    expect(markup).toContain("Contact support");
   });
 });

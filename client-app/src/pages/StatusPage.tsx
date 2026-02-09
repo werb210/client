@@ -448,7 +448,7 @@ export function StatusPage() {
           </Card>
         )}
 
-        <StatusSummary status={status} />
+        <StatusSummary applicationId={applicationId} />
 
         <div
           style={{
