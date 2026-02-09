@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node -e \"const v=Number(process.versions.node.split('.')[0]); if (v < 22) { console.error('Node 22+ required.'); process.exit(1); }\" && vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.56.20",

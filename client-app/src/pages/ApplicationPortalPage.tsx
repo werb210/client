@@ -3,6 +3,7 @@ import { useLocation, useParams } from "react-router-dom";
 import {
   ApplicationPortalView,
   getStageHelperText,
+  getStatusBannerMessage,
   normalizeDocumentsResponse,
 } from "@/portal/ApplicationPortalView";
 import {
@@ -88,6 +89,14 @@ export function ApplicationPortalPage() {
   }, [application]);
 
   const helperText = useMemo(() => getStageHelperText(stage), [stage]);
+  const statusMessage = useMemo(() => {
+    return getStatusBannerMessage({
+      stage,
+      documents,
+      ocrCompletedAt: application?.ocr_completed_at ?? null,
+      bankingCompletedAt: application?.banking_completed_at ?? null,
+    });
+  }, [application?.banking_completed_at, application?.ocr_completed_at, stage, documents]);
 
   const handleUpload = useCallback(
     async (category: string, file: File) => {
@@ -147,6 +156,7 @@ export function ApplicationPortalPage() {
       <ApplicationPortalView
         businessName={businessName}
         stage={stage}
+        statusMessage={statusMessage}
         helperText={helperText}
         documents={documents}
         onUpload={handleUpload}
