@@ -23,6 +23,7 @@ describe("StatusSummary", () => {
           requiredStatements: 6,
         },
       },
+      pollState: "polling",
     });
     const markup = renderSummary();
     expect(markup).toContain("Documents received");
@@ -42,6 +43,7 @@ describe("StatusSummary", () => {
           requiredStatements: 6,
         },
       },
+      pollState: "polling",
     });
     const markup = renderSummary();
     expect(markup).toContain("Completed");
@@ -59,6 +61,7 @@ describe("StatusSummary", () => {
           requiredStatements: 6,
         },
       },
+      pollState: "paused",
     });
     const markup = renderSummary();
     expect(markup).toContain("Contact support");

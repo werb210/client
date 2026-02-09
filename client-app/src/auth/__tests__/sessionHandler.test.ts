@@ -1,25 +1,49 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { handleAuthError } from "../sessionHandler";
-import { refreshSessionOnce } from "../sessionRefresh";
+import {
+  ensureClientSession,
+  getClientSessionByToken,
+  getClientSessionState,
+  setActiveClientSessionToken,
+} from "../../state/clientSession";
 
-vi.mock("../sessionRefresh", () => ({
-  refreshSessionOnce: vi.fn(),
-}));
+class MemoryStorage {
+  private store = new Map<string, string>();
+
+  getItem(key: string) {
+    return this.store.get(key) ?? null;
+  }
+
+  setItem(key: string, value: string) {
+    this.store.set(key, value);
+  }
+
+  removeItem(key: string) {
+    this.store.delete(key);
+  }
+}
 
 describe("handleAuthError", () => {
-  it("refreshes the session and retries once on token expiry", async () => {
-    const retry = vi.fn().mockResolvedValue({ data: "ok" });
-    vi.mocked(refreshSessionOnce).mockResolvedValue(true);
+  beforeEach(() => {
+    globalThis.localStorage = new MemoryStorage() as Storage;
+    globalThis.sessionStorage = new MemoryStorage() as Storage;
+  });
+
+  it("marks the active session as revoked on auth failures", async () => {
+    const accessToken = "token-123";
+    ensureClientSession({ submissionId: "sub-1", accessToken });
+    setActiveClientSessionToken(accessToken);
 
     const error = {
       response: { status: 401 },
       config: {},
     };
 
-    const result = await handleAuthError(error, retry);
+    await expect(handleAuthError(error)).rejects.toBe(error);
 
-    expect(refreshSessionOnce).toHaveBeenCalledTimes(1);
-    expect(retry).toHaveBeenCalledTimes(1);
-    expect(result).toEqual({ data: "ok" });
+    const session = getClientSessionByToken(accessToken);
+    expect(session).not.toBeNull();
+    expect(getClientSessionState(session!)).toBe("revoked");
   });
 });
+

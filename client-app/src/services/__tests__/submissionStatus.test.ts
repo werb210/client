@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  createSubmissionStatusPoller,
-  mapSubmissionStatus,
-} from "../applicationStatus";
+import { mapSubmissionStatus } from "../applicationStatus";
+import { createProcessingStatusPoller } from "../../hooks/useProcessingStatusPoller";
 
 class MemoryStorage {
   private store = new Map<string, string>();
@@ -55,11 +53,16 @@ describe("submission status", () => {
         rawStatus: "submitted",
       });
 
-    createSubmissionStatusPoller({
-      applicationId: "app-123",
+    createProcessingStatusPoller({
       fetchStatus,
-      intervalMs: 15000,
       onUpdate: (snapshot) => updates.push(snapshot.status),
+      isTerminal: (snapshot) => snapshot.status !== "pending",
+      getVisibility: () => true,
+      getOnline: () => true,
+      subscribeVisibility: () => () => undefined,
+      subscribeOnline: () => () => undefined,
+      initialDelayMs: 15000,
+      maxDelayMs: 15000,
     });
 
     await Promise.resolve();

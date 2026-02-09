@@ -48,7 +48,7 @@ function renderBankingStatusLine(status: ProcessingStatus["banking"]) {
 }
 
 export function StatusSummary({ applicationId }: StatusSummaryProps) {
-  const { status } = useProcessingStatus(applicationId);
+  const { status, pollState } = useProcessingStatus(applicationId);
   const statementCount =
     status?.banking.statementCount ?? null;
   const requiredStatements =
@@ -58,6 +58,16 @@ export function StatusSummary({ applicationId }: StatusSummaryProps) {
     <Card>
       <div style={layout.stackTight}>
         <h2 style={components.form.sectionTitle}>Processing status</h2>
+        <div style={{ color: tokens.colors.textSecondary, fontSize: "13px" }}>
+          Refresh:{" "}
+          {pollState === "terminal"
+            ? "Locked"
+            : pollState === "paused"
+              ? "Paused"
+              : pollState === "reconnecting"
+                ? "Reconnecting"
+                : "Polling"}
+        </div>
         <div style={layout.stackTight}>
           <div style={components.form.eyebrow}>Documents</div>
           <ul

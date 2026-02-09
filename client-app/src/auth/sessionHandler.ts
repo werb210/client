@@ -1,28 +1,25 @@
-import { refreshSessionOnce } from "./sessionRefresh";
-
-type RetryRequest = (config: any) => Promise<any>;
+import {
+  getActiveClientSessionToken,
+  markClientSessionExpired,
+  markClientSessionRevoked,
+} from "../state/clientSession";
 
 function isAuthError(status?: number) {
   return status === 401 || status === 403 || status === 419;
 }
 
-export async function handleAuthError(error: any, retryRequest: RetryRequest) {
+export async function handleAuthError(error: any) {
   const status = error?.response?.status;
-  const config = error?.config;
-
-  if (!config || config.__retryAuth) {
+  if (!isAuthError(status)) {
     return Promise.reject(error);
   }
-
-  if (!isAuthError(status) || config.__skipAuthRefresh) {
-    return Promise.reject(error);
+  const activeToken = getActiveClientSessionToken();
+  if (activeToken) {
+    if (status === 419) {
+      markClientSessionExpired(activeToken);
+    } else {
+      markClientSessionRevoked(activeToken);
+    }
   }
-
-  const refreshed = await refreshSessionOnce();
-  if (!refreshed) {
-    return Promise.reject(error);
-  }
-
-  config.__retryAuth = true;
-  return retryRequest(config);
+  return Promise.reject(error);
 }

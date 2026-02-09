@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api/client";
+import { getClientSessionAuthHeader } from "../../state/clientSession";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Select } from "../../components/ui/Select";
@@ -46,6 +47,7 @@ export default function ApplyStep1() {
         headers: {
           "Content-Type": "application/json",
           "Idempotency-Key": crypto.randomUUID(),
+          ...getClientSessionAuthHeader(),
         },
         body: JSON.stringify({
           source: "client",

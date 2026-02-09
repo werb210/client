@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api/client";
+import { getClientSessionAuthHeader } from "../../state/clientSession";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { PhoneInput } from "../../components/ui/PhoneInput";
@@ -39,6 +40,7 @@ export default function ApplyStep3() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            ...getClientSessionAuthHeader(),
           },
           body: JSON.stringify({
             applicant: {
