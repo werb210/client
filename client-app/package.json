@@ -11,7 +11,7 @@
     "lint": "tsc --noEmit"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22 <23"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.56.20",
