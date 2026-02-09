@@ -1,4 +1,8 @@
 import { api } from "../api/client";
+import {
+  PortalSubmissionStatusResponseSchema,
+  parseApiResponse,
+} from "@/contracts/clientApiSchemas";
 
 export type SubmissionStatus = "pending" | "submitted" | "failed" | "unknown";
 
@@ -62,7 +66,12 @@ export function saveSubmissionStatusCache(
 
 export async function fetchSubmissionStatus(applicationId: string) {
   const res = await api.get(`/api/portal/applications/${applicationId}`);
+  const parsed = parseApiResponse(
+    PortalSubmissionStatusResponseSchema,
+    res.data,
+    "GET /api/portal/applications/{id}"
+  );
   const submission =
-    res?.data?.submission ?? res?.data?.data?.submission ?? res?.data?.data ?? {};
+    (parsed as any)?.submission ?? (parsed as any)?.data?.submission ?? (parsed as any)?.data ?? {};
   return mapSubmissionStatus(submission);
 }

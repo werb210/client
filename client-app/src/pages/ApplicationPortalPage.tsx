@@ -8,6 +8,11 @@ import {
   formatStageLabel,
 } from "@/portal/ApplicationPortalView";
 import {
+  loadUploadState,
+  saveUploadState,
+  type UploadStateEntry,
+} from "@/portal/uploadState";
+import {
   fetchApplication,
   fetchApplicationDocuments,
   uploadApplicationDocument,
@@ -27,10 +32,32 @@ export function ApplicationPortalPage() {
   const [readOnly, setReadOnly] = useState(false);
   const [readOnlyMessage, setReadOnlyMessage] = useState<string | null>(null);
   const [uploadState, setUploadState] = useState<
-    Record<string, { uploading: boolean; progress: number }>
+    Record<string, UploadStateEntry>
   >({});
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
+
+  const uploadStorage = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      return window.sessionStorage ?? null;
+    } catch (error) {
+      console.warn("Failed to access session storage:", error);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!id) return;
+    const restored = loadUploadState(id, uploadStorage);
+    setUploadState(restored.state);
+    setUploadErrors(restored.errors);
+  }, [id, uploadStorage]);
+
+  useEffect(() => {
+    if (!id) return;
+    saveUploadState(id, uploadState, uploadErrors, uploadStorage);
+  }, [id, uploadErrors, uploadState, uploadStorage]);
 
   const refreshDocuments = useCallback(async () => {
     if (!id) return;
@@ -201,27 +228,27 @@ export function ApplicationPortalPage() {
           },
         });
         await refreshDocuments();
-    } catch (err) {
-      console.error("Upload failed:", err);
-      if (typeof navigator !== "undefined" && navigator.onLine === false) {
-        setUploadErrors((prev) => ({
-          ...prev,
-          [category]: "Network connection lost. Reconnect and try again.",
-        }));
-      } else {
-        setUploadErrors((prev) => ({
-          ...prev,
-          [category]: "Upload failed. Please try again.",
-        }));
-      }
-    } finally {
+      } catch (err) {
+        console.error("Upload failed:", err);
+        if (typeof navigator !== "undefined" && navigator.onLine === false) {
+          setUploadErrors((prev) => ({
+            ...prev,
+            [category]: "Network connection lost. Reconnect and try again.",
+          }));
+        } else {
+          setUploadErrors((prev) => ({
+            ...prev,
+            [category]: "Upload failed. Please try again.",
+          }));
+        }
+      } finally {
         setUploadState((prev) => ({
           ...prev,
           [category]: { uploading: false, progress: 0 },
         }));
       }
     },
-    [id, refreshDocuments]
+    [id, readOnly, refreshDocuments]
   );
 
   if (loading) {
