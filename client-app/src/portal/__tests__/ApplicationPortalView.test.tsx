@@ -46,7 +46,7 @@ describe("ApplicationPortalView", () => {
     ]);
     expect(markup).toContain("Upload");
     expect(markup).toContain(
-      "accept=\"application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg\""
+      "accept=\"application/pdf,image/png,image/jpeg,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,.png,.jpg,.jpeg,.docx\""
     );
     expect(markup).not.toContain("disabled");
   });
@@ -86,6 +86,20 @@ describe("ApplicationPortalView", () => {
     expect(markup).not.toContain(">Accept<");
     expect(markup).not.toContain(">Reject<");
   });
+
+  it("shows a read-only banner and disables uploads when locked", () => {
+    const markup = renderToStaticMarkup(
+      <ApplicationPortalView
+        {...baseProps}
+        documents={[{ category: "tax_returns", required: true, status: "missing" }]}
+        readOnly
+        readOnlyMessage="Uploads disabled"
+      />
+    );
+    expect(markup).toContain("Read-only access");
+    expect(markup).toContain("Uploads disabled");
+    expect(markup).toContain("disabled");
+  });
 });
 
 describe("getStatusBannerMessage", () => {
@@ -119,41 +133,41 @@ describe("getStatusBannerMessage", () => {
     const message = getStatusBannerMessage({
       stage: "DOCUMENTS_REQUIRED",
       documents: requiredDocs,
-      ocrCompletedAt: "2024-01-01T00:00:00Z",
-      bankingCompletedAt: "2024-01-01T00:00:00Z",
+      documentReviewCompletedAt: "2024-01-01T00:00:00Z",
+      financialReviewCompletedAt: "2024-01-01T00:00:00Z",
     });
     expect(message).toBe(
       "Additional documents are required to continue processing your application."
     );
   });
 
-  it("shows review messaging when OCR or banking is incomplete", () => {
+  it("shows review messaging when processing is incomplete", () => {
     const message = getStatusBannerMessage({
       stage: "IN_REVIEW",
       documents: requiredDocs,
-      ocrCompletedAt: null,
-      bankingCompletedAt: "2024-01-01T00:00:00Z",
+      documentReviewCompletedAt: null,
+      financialReviewCompletedAt: "2024-01-01T00:00:00Z",
     });
     expect(message).toBe("Your documents have been received and are being reviewed.");
   });
 
-  it("shows banking analysis messaging when bank statements uploaded", () => {
+  it("shows financial review messaging when bank statements uploaded", () => {
     const message = getStatusBannerMessage({
       stage: "IN_REVIEW",
       documents: [
         { category: "bank_statements", required: true, status: "uploaded" },
       ] as ApplicationDocumentCategory[],
-      bankingCompletedAt: null,
+      financialReviewCompletedAt: null,
     });
-    expect(message).toBe("Your banking information is being analyzed.");
+    expect(message).toBe("Your financial statements are being reviewed.");
   });
 
   it("shows prepared messaging when processing is complete", () => {
     const message = getStatusBannerMessage({
       stage: "IN_REVIEW",
       documents: requiredDocs,
-      ocrCompletedAt: "2024-01-01T00:00:00Z",
-      bankingCompletedAt: "2024-01-01T00:00:00Z",
+      documentReviewCompletedAt: "2024-01-01T00:00:00Z",
+      financialReviewCompletedAt: "2024-01-01T00:00:00Z",
     });
     expect(message).toBe("Your application is being prepared for the next step.");
   });

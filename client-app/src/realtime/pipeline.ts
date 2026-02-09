@@ -45,9 +45,15 @@ export function getPipelineStage(
   if (submissionStatus === "submitted" || normalized.includes("lender")) {
     return "Sent to Lender";
   }
-  if (normalized.includes("credit")) return "Credit Summary Created";
   if (normalized.includes("review") || normalized.includes("document")) {
     return "Documents Under Review";
+  }
+  if (
+    normalized.includes("processing") ||
+    normalized.includes("analysis") ||
+    normalized.includes("summary")
+  ) {
+    return "In Review";
   }
   if (isApplicationSubmitted(status)) {
     return "Application Submitted";

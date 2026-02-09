@@ -130,8 +130,8 @@
       "productRequirements.aggregated",
       "documents",
       "documentsDeferred",
-      "ocrComplete",
-      "creditSummaryComplete"
+      "documentReviewComplete",
+      "financialReviewComplete"
     ],
     "guards": [
       "Step access enforced via resolveStepGuard redirect.",
@@ -150,8 +150,8 @@
       "signatureDate",
       "documents",
       "documentsDeferred",
-      "ocrComplete",
-      "creditSummaryComplete",
+      "documentReviewComplete",
+      "financialReviewComplete",
       "termsAccepted",
       "typedSignature",
       "coApplicantSignature"

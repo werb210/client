@@ -1,7 +1,7 @@
 export const PIPELINE_STAGE_LABELS = [
   "Application Submitted",
   "Documents Under Review",
-  "Credit Summary Created",
+  "In Review",
   "Sent to Lender",
   "Offer Available",
   "Accepted / Declined",

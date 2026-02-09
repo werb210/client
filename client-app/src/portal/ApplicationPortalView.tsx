@@ -25,11 +25,14 @@ export type ApplicationPortalViewProps = {
   documents: ApplicationDocumentCategory[];
   onUpload: (category: string, file: File) => Promise<void> | void;
   uploadState: Record<string, { uploading: boolean; progress: number }>;
+  uploadErrors?: Record<string, string | null | undefined>;
+  readOnly?: boolean;
+  readOnlyMessage?: string | null;
   historyEvents?: ClientHistoryEvent[];
 };
 
 const ACCEPTED_FILE_TYPES =
-  "application/pdf,image/png,image/jpeg,.pdf,.png,.jpg,.jpeg";
+  "application/pdf,image/png,image/jpeg,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,.png,.jpg,.jpeg,.docx";
 
 export function normalizeDocumentsResponse(
   data: unknown
@@ -126,8 +129,8 @@ export function getStageHelperText(stage: string) {
 export function getStatusBannerMessage(params: {
   stage: string;
   documents: ApplicationDocumentCategory[];
-  ocrCompletedAt?: string | null;
-  bankingCompletedAt?: string | null;
+  documentReviewCompletedAt?: string | null;
+  financialReviewCompletedAt?: string | null;
 }) {
   const normalizedStage = String(params.stage || "").toUpperCase();
   if (normalizedStage === "DOCUMENTS_REQUIRED") {
@@ -157,18 +160,18 @@ export function getStatusBannerMessage(params: {
     const isBankingDoc = doc.category.toLowerCase().includes("bank");
     return isBankingDoc && ["uploaded", "accepted"].includes(doc.status);
   });
-  const ocrComplete = Boolean(params.ocrCompletedAt);
-  const bankingComplete = Boolean(params.bankingCompletedAt);
+  const documentReviewComplete = Boolean(params.documentReviewCompletedAt);
+  const financialReviewComplete = Boolean(params.financialReviewCompletedAt);
 
-  if (hasBankStatementsUploaded && !bankingComplete) {
-    return "Your banking information is being analyzed.";
+  if (hasBankStatementsUploaded && !financialReviewComplete) {
+    return "Your financial statements are being reviewed.";
   }
 
-  if (requiredDocsUploaded && (!ocrComplete || !bankingComplete)) {
+  if (requiredDocsUploaded && (!documentReviewComplete || !financialReviewComplete)) {
     return "Your documents have been received and are being reviewed.";
   }
 
-  if (requiredDocsUploaded && ocrComplete && bankingComplete) {
+  if (requiredDocsUploaded && documentReviewComplete && financialReviewComplete) {
     return "Your application is being prepared for the next step.";
   }
 
@@ -206,6 +209,9 @@ export function ApplicationPortalView({
   documents,
   onUpload,
   uploadState,
+  uploadErrors = {},
+  readOnly = false,
+  readOnlyMessage,
   historyEvents = [],
 }: ApplicationPortalViewProps) {
   const stageLabel = useMemo(() => formatStageLabel(stage), [stage]);
@@ -213,6 +219,23 @@ export function ApplicationPortalView({
   return (
     <div style={layout.page}>
       <div style={layout.portalColumn}>
+        {readOnly ? (
+          <div
+            style={{
+              marginBottom: tokens.spacing.md,
+              padding: tokens.spacing.md,
+              borderRadius: tokens.radii.md,
+              border: `1px solid ${tokens.colors.border}`,
+              background: "rgba(59, 130, 246, 0.08)",
+            }}
+          >
+            <div style={components.form.sectionTitle}>Read-only access</div>
+            <p style={components.form.helperText}>
+              {readOnlyMessage ||
+                "This application is now read-only. Uploads and edits are disabled."}
+            </p>
+          </div>
+        ) : null}
         <div
           style={{
             background: tokens.colors.surface,
@@ -293,6 +316,8 @@ export function ApplicationPortalView({
                 document={document}
                 onUpload={onUpload}
                 uploadState={uploadState[document.category]}
+                uploadError={uploadErrors[document.category] || undefined}
+                readOnly={readOnly}
               />
             ))}
             {documents.length === 0 ? (
@@ -311,18 +336,22 @@ type ApplicationDocumentRowProps = {
   document: ApplicationDocumentCategory;
   onUpload: (category: string, file: File) => Promise<void> | void;
   uploadState?: { uploading: boolean; progress: number };
+  uploadError?: string;
+  readOnly?: boolean;
 };
 
 function ApplicationDocumentRow({
   document,
   onUpload,
   uploadState,
+  uploadError,
+  readOnly = false,
 }: ApplicationDocumentRowProps) {
   const statusLabel = getDocumentStatusLabel(document.status);
   const showUpload = shouldShowUploadControl(document);
   const isUploading = uploadState?.uploading ?? false;
   const progress = uploadState?.progress ?? 0;
-  const isDisabled = document.status === "accepted" || isUploading;
+  const isDisabled = document.status === "accepted" || isUploading || readOnly;
 
   return (
     <div
@@ -368,6 +397,9 @@ function ApplicationDocumentRow({
           uploading={isUploading}
           progress={progress}
         />
+      ) : null}
+      {uploadError ? (
+        <div style={components.form.errorText}>{uploadError}</div>
       ) : null}
     </div>
   );

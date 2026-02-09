@@ -60,6 +60,6 @@ export interface ApplicationData {
   applicationId?: string;
   currentStep?: number;
   linkedApplicationTokens?: string[];
-  ocrComplete?: boolean;
-  creditSummaryComplete?: boolean;
+  documentReviewComplete?: boolean;
+  financialReviewComplete?: boolean;
 }

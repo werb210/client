@@ -59,6 +59,14 @@ export type PublicApplicationPayload = {
   client_ip: string;
 };
 
+type PublicSubmissionState = {
+  idempotencyKey: string;
+  submittedAt: string;
+};
+
+const PUBLIC_SUBMISSION_KEY = "boreal_public_application_submission";
+const PUBLIC_IDEMPOTENCY_KEY = "boreal_public_application_idempotency_key";
+
 const productCategories = [
   "Working Capital",
   "Equipment Financing",
@@ -196,6 +204,70 @@ export const initialValues: ApplicationFormValues = {
   website_url: "",
 };
 
+function getSessionStorage() {
+  if (typeof window === "undefined") return null;
+  return window.sessionStorage ?? null;
+}
+
+export function createIdempotencyKey() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `idem_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+}
+
+export function loadPublicSubmissionState(
+  storage: Storage | null
+): PublicSubmissionState | null {
+  if (!storage) return null;
+  try {
+    const raw = storage.getItem(PUBLIC_SUBMISSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PublicSubmissionState;
+    if (!parsed?.idempotencyKey || !parsed?.submittedAt) return null;
+    return parsed;
+  } catch (error) {
+    console.warn("Failed to load public submission state:", error);
+    return null;
+  }
+}
+
+function savePublicSubmissionState(
+  storage: Storage | null,
+  state: PublicSubmissionState
+) {
+  if (!storage) return;
+  try {
+    storage.setItem(PUBLIC_SUBMISSION_KEY, JSON.stringify(state));
+  } catch (error) {
+    console.warn("Failed to save public submission state:", error);
+  }
+}
+
+export function loadIdempotencyKey(storage: Storage | null) {
+  if (!storage) return null;
+  try {
+    return storage.getItem(PUBLIC_IDEMPOTENCY_KEY);
+  } catch (error) {
+    console.warn("Failed to load idempotency key:", error);
+    return null;
+  }
+}
+
+export function getOrCreateIdempotencyKey(storage: Storage | null) {
+  const existing = loadIdempotencyKey(storage);
+  if (existing) return existing;
+  const next = createIdempotencyKey();
+  if (storage) {
+    try {
+      storage.setItem(PUBLIC_IDEMPOTENCY_KEY, next);
+    } catch (error) {
+      console.warn("Failed to store idempotency key:", error);
+    }
+  }
+  return next;
+}
+
 export function validateApplication(values: ApplicationFormValues) {
   const errors: Record<string, string> = {};
 
@@ -300,14 +372,19 @@ export async function handlePublicApplicationSubmit({
   submitApplication,
   onSuccess,
   onError,
+  storage,
 }: {
   values: ApplicationFormValues;
   clientIp: string;
   termsAcceptedAt: string | null;
   communicationsAcceptedAt: string | null;
-  submitApplication: (payload: PublicApplicationPayload) => Promise<unknown>;
+  submitApplication: (
+    payload: PublicApplicationPayload,
+    options: { idempotencyKey: string }
+  ) => Promise<unknown>;
   onSuccess: () => void;
   onError: (errors: Record<string, string>) => void;
+  storage?: Storage | null;
 }) {
   const errors = validateApplication(values);
   if (!termsAcceptedAt) {
@@ -330,21 +407,47 @@ export async function handlePublicApplicationSubmit({
     return;
   }
 
+  const submissionState = loadPublicSubmissionState(storage ?? null);
+  if (submissionState) {
+    onError({
+      form: "This application has already been submitted in this session.",
+    });
+    return;
+  }
+
   const payload = buildPublicApplicationPayload(values, {
     clientIp,
     termsAcceptedAt,
     communicationsAcceptedAt,
   });
 
-  await submitApplication(payload);
-  onSuccess();
-}
+  const idempotencyKey = getOrCreateIdempotencyKey(storage ?? null);
 
-const documentStubEntries = [
-  "Business bank statements",
-  "Government-issued ID",
-  "Articles of incorporation",
-];
+  try {
+    await submitApplication(payload, { idempotencyKey });
+    savePublicSubmissionState(storage ?? null, {
+      idempotencyKey,
+      submittedAt: new Date().toISOString(),
+    });
+    onSuccess();
+  } catch (error: any) {
+    const responseData = error?.response?.data;
+    const serverErrors =
+      responseData?.errors ||
+      responseData?.error ||
+      responseData?.message ||
+      null;
+    if (serverErrors && typeof serverErrors === "object") {
+      onError(serverErrors);
+    } else if (typeof serverErrors === "string") {
+      onError({ form: serverErrors });
+    } else {
+      onError({
+        form: "We couldn't submit your application. Please try again.",
+      });
+    }
+  }
+}
 
 export default function PublicApplyPage() {
   const [values, setValues] = useState<ApplicationFormValues>(initialValues);
@@ -353,6 +456,9 @@ export default function PublicApplyPage() {
   const [termsAcceptedAt, setTermsAcceptedAt] = useState<string | null>(null);
   const [communicationsAcceptedAt, setCommunicationsAcceptedAt] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionState, setSubmissionState] = useState<PublicSubmissionState | null>(
+    () => loadPublicSubmissionState(getSessionStorage())
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -385,7 +491,14 @@ export default function PublicApplyPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submissionState) {
+      setErrors({
+        form: "This application has already been submitted in this session.",
+      });
+      return;
+    }
     setIsSubmitting(true);
+    setErrors({});
     try {
       await handlePublicApplicationSubmit({
         values,
@@ -395,11 +508,16 @@ export default function PublicApplyPage() {
         submitApplication: createPublicApplication,
         onSuccess: () => navigate("/apply/success"),
         onError: (nextErrors) => setErrors(nextErrors),
+        storage: getSessionStorage(),
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    setSubmissionState(loadPublicSubmissionState(getSessionStorage()));
+  }, [isSubmitting]);
 
   return (
     <main style={{ padding: "32px", maxWidth: 880, margin: "0 auto" }}>
@@ -410,7 +528,74 @@ export default function PublicApplyPage() {
         Complete the form below to submit your application. All required fields must be filled in.
       </p>
 
+      {submissionState ? (
+        <section
+          style={{
+            padding: 16,
+            borderRadius: 12,
+            border: "1px solid #e5e7eb",
+            background: "#f9fafb",
+            display: "grid",
+            gap: 12,
+            marginBottom: 24,
+          }}
+        >
+          <h2 style={{ fontSize: 18, fontWeight: 600 }}>Application submitted</h2>
+          <p style={{ color: "#4b5563" }}>
+            This application was already submitted in this browser session. You can
+            continue to the confirmation page or start a new application.
+          </p>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => navigate("/apply/success")}
+              style={{
+                padding: "10px 16px",
+                borderRadius: 8,
+                border: "none",
+                background: "#111827",
+                color: "white",
+                fontWeight: 600,
+              }}
+            >
+              View confirmation
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                getSessionStorage()?.removeItem(PUBLIC_SUBMISSION_KEY);
+                setSubmissionState(null);
+              }}
+              style={{
+                padding: "10px 16px",
+                borderRadius: 8,
+                border: "1px solid #d1d5db",
+                background: "white",
+                color: "#111827",
+                fontWeight: 600,
+              }}
+            >
+              Start a new application
+            </button>
+          </div>
+        </section>
+      ) : null}
+
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 20 }}>
+        {errors.form ? (
+          <div
+            style={{
+              padding: 12,
+              borderRadius: 8,
+              border: "1px solid #fecaca",
+              background: "#fef2f2",
+              color: "#b91c1c",
+              fontWeight: 600,
+            }}
+          >
+            {errors.form}
+          </div>
+        ) : null}
         {applicationFields.map((field) => {
           const value = values[field.name];
           const error = errors[field.name];
@@ -466,24 +651,11 @@ export default function PublicApplyPage() {
             gap: 12,
           }}
         >
-          <h2 style={{ fontSize: 18, fontWeight: 600 }}>Document uploads (coming soon)</h2>
-          {documentStubEntries.map((entry) => (
-            <button
-              key={entry}
-              type="button"
-              disabled
-              style={{
-                padding: "10px 12px",
-                borderRadius: 8,
-                border: "1px dashed #cbd5f5",
-                background: "#eef2ff",
-                textAlign: "left",
-                color: "#6b7280",
-              }}
-            >
-              {entry}
-            </button>
-          ))}
+          <h2 style={{ fontSize: 18, fontWeight: 600 }}>Document uploads</h2>
+          <p style={{ color: "#4b5563" }}>
+            After submitting, we’ll request any documents needed to complete your
+            review. You’ll be notified when uploads are ready.
+          </p>
         </section>
 
         <section style={{ display: "grid", gap: 12 }}>
@@ -522,12 +694,12 @@ export default function PublicApplyPage() {
 
         <button
           type="submit"
-          disabled={!canSubmit}
+          disabled={!canSubmit || Boolean(submissionState)}
           style={{
             padding: "12px 20px",
             borderRadius: 8,
             border: "none",
-            background: canSubmit ? "#111827" : "#9ca3af",
+            background: canSubmit && !submissionState ? "#111827" : "#9ca3af",
             color: "white",
             fontWeight: 600,
             cursor: canSubmit ? "pointer" : "not-allowed",

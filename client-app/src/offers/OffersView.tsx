@@ -138,7 +138,11 @@ function OfferCard({ offer, archived }: { offer: OfferTermSheet; archived: boole
   const rateValue = formatRate(getRateValue(offer));
   const expiresLabel = formatDate(offer.expires_at ?? undefined);
   const daysUntil = getDaysUntil(offer.expires_at ?? undefined);
-  const isNearExpiry = daysUntil !== null && daysUntil <= NEAR_EXPIRY_DAYS;
+  const isExpired =
+    getOfferStatus(offer) === "expired" ||
+    (daysUntil !== null && daysUntil < 0);
+  const isNearExpiry =
+    !isExpired && daysUntil !== null && daysUntil <= NEAR_EXPIRY_DAYS;
 
   return (
     <Card>
@@ -199,13 +203,19 @@ function OfferCard({ offer, archived }: { offer: OfferTermSheet; archived: boole
             <div style={components.form.eyebrow}>Expires</div>
             <div
               style={{
-                fontWeight: 600,
-                color: isNearExpiry ? tokens.colors.warning : "inherit",
-              }}
-            >
-              {expiresLabel}
-            </div>
-            {isNearExpiry && daysUntil !== null ? (
+              fontWeight: 600,
+              color: isExpired
+                ? tokens.colors.error
+                : isNearExpiry
+                  ? tokens.colors.warning
+                  : "inherit",
+            }}
+          >
+            {expiresLabel}
+          </div>
+            {isExpired ? (
+              <div style={components.form.errorText}>Expired</div>
+            ) : isNearExpiry && daysUntil !== null ? (
               <div style={components.form.helperText}>
                 {daysUntil <= 0
                   ? "Expires today"

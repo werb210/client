@@ -254,9 +254,10 @@ export function Step5_Documents() {
             typeof refreshed.documentsDeferred === "boolean"
               ? refreshed.documentsDeferred
               : app.documentsDeferred,
-          ocrComplete: refreshed.ocrComplete ?? app.ocrComplete,
-          creditSummaryComplete:
-            refreshed.creditSummaryComplete ?? app.creditSummaryComplete,
+          documentReviewComplete:
+            refreshed.documentReviewComplete ?? app.documentReviewComplete,
+          financialReviewComplete:
+            refreshed.financialReviewComplete ?? app.financialReviewComplete,
           productRequirements: cachedRequirements
             ? {
                 ...(app.productRequirements || {}),
@@ -272,8 +273,8 @@ export function Step5_Documents() {
     app.applicationToken,
     app.documents,
     app.documentsDeferred,
-    app.ocrComplete,
-    app.creditSummaryComplete,
+    app.documentReviewComplete,
+    app.financialReviewComplete,
     update,
   ]);
 
@@ -359,9 +360,10 @@ export function Step5_Documents() {
       update({
         documentsDeferred: false,
         documents: hydrated.documents || app.documents,
-        ocrComplete: hydrated.ocrComplete ?? app.ocrComplete,
-        creditSummaryComplete:
-          hydrated.creditSummaryComplete ?? app.creditSummaryComplete,
+        documentReviewComplete:
+          hydrated.documentReviewComplete ?? app.documentReviewComplete,
+        financialReviewComplete:
+          hydrated.financialReviewComplete ?? app.financialReviewComplete,
       });
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
     } catch (error) {

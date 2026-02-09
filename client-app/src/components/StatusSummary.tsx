@@ -2,7 +2,7 @@ import { Card } from "./ui/Card";
 import { Spinner } from "./ui/Spinner";
 import { components, layout, tokens } from "@/styles";
 import { useProcessingStatus } from "@/hooks/useProcessingStatus";
-import type { ProcessingStatus } from "@/types/processing";
+import type { ProcessingCheckpoint, ProcessingStatus } from "@/types/processing";
 
 type StatusSummaryProps = {
   applicationId: string | null;
@@ -15,7 +15,7 @@ function formatTimestamp(value: string | null) {
   return parsed.toLocaleString();
 }
 
-function renderStatusLine(status: ProcessingStatus["ocr"]) {
+function renderStatusLine(status: ProcessingCheckpoint) {
   if (status.status === "processing") {
     return (
       <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
@@ -40,19 +40,10 @@ function renderStatusLine(status: ProcessingStatus["ocr"]) {
   return <span>Pending</span>;
 }
 
-function renderBankingStatusLine(status: ProcessingStatus["banking"]) {
-  return renderStatusLine({
-    status: status.status,
-    completedAt: status.completedAt,
-  });
-}
-
 export function StatusSummary({ applicationId }: StatusSummaryProps) {
   const { status, pollState } = useProcessingStatus(applicationId);
-  const statementCount =
-    status?.banking.statementCount ?? null;
-  const requiredStatements =
-    status?.banking.requiredStatements ?? 6;
+  const statementCount = status?.financialReview.details?.receivedCount ?? null;
+  const requiredStatements = status?.financialReview.details?.requiredCount ?? null;
 
   return (
     <Card>
@@ -69,7 +60,7 @@ export function StatusSummary({ applicationId }: StatusSummaryProps) {
                 : "Polling"}
         </div>
         <div style={layout.stackTight}>
-          <div style={components.form.eyebrow}>Documents</div>
+          <div style={components.form.eyebrow}>Document review</div>
           <ul
             style={{
               margin: 0,
@@ -80,11 +71,11 @@ export function StatusSummary({ applicationId }: StatusSummaryProps) {
             }}
           >
             <li>Documents received</li>
-            <li>{status ? renderStatusLine(status.ocr) : "Pending"}</li>
+            <li>{status ? renderStatusLine(status.documentReview) : "Pending"}</li>
           </ul>
         </div>
         <div style={layout.stackTight}>
-          <div style={components.form.eyebrow}>Banking Analysis</div>
+          <div style={components.form.eyebrow}>Financial review</div>
           <ul
             style={{
               margin: 0,
@@ -95,12 +86,14 @@ export function StatusSummary({ applicationId }: StatusSummaryProps) {
             }}
           >
             <li>
-              {status ? renderBankingStatusLine(status.banking) : "Pending"}
+              {status ? renderStatusLine(status.financialReview) : "Pending"}
             </li>
-            <li>
-              Statements received{" "}
-              {statementCount !== null ? statementCount : "—"}/{requiredStatements}
-            </li>
+            {requiredStatements !== null ? (
+              <li>
+                Statements received{" "}
+                {statementCount !== null ? statementCount : "—"}/{requiredStatements}
+              </li>
+            ) : null}
           </ul>
         </div>
       </div>
