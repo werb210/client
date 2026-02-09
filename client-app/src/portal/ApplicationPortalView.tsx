@@ -18,6 +18,7 @@ export type ApplicationDocumentCategory = {
 export type ApplicationPortalViewProps = {
   businessName: string;
   stage: string;
+  statusMessage: string;
   helperText: string;
   documents: ApplicationDocumentCategory[];
   onUpload: (category: string, file: File) => Promise<void> | void;
@@ -119,6 +120,62 @@ export function getStageHelperText(stage: string) {
   return "Your application is being reviewed.";
 }
 
+export function getStatusBannerMessage(params: {
+  stage: string;
+  documents: ApplicationDocumentCategory[];
+  ocrCompletedAt?: string | null;
+  bankingCompletedAt?: string | null;
+}) {
+  const normalizedStage = String(params.stage || "").toUpperCase();
+  if (normalizedStage === "DOCUMENTS_REQUIRED") {
+    return "Additional documents are required to continue processing your application.";
+  }
+  if (normalizedStage === "OFF_TO_LENDER") {
+    return "Your application has been submitted to lenders.";
+  }
+  if (normalizedStage === "OFFER") {
+    return "An offer is available for your review.";
+  }
+  if (normalizedStage === "ACCEPTED") {
+    return "Your application has been approved.";
+  }
+  if (normalizedStage === "REJECTED") {
+    return "Your application was not approved.";
+  }
+
+  const requiredDocuments = params.documents.filter((doc) => doc.required);
+  const hasRequiredDocuments = requiredDocuments.length > 0;
+  const requiredDocsUploaded =
+    hasRequiredDocuments &&
+    requiredDocuments.every((doc) =>
+      ["uploaded", "accepted"].includes(doc.status)
+    );
+  const hasBankStatementsUploaded = params.documents.some((doc) => {
+    const isBankingDoc = doc.category.toLowerCase().includes("bank");
+    return isBankingDoc && ["uploaded", "accepted"].includes(doc.status);
+  });
+  const ocrComplete = Boolean(params.ocrCompletedAt);
+  const bankingComplete = Boolean(params.bankingCompletedAt);
+
+  if (hasBankStatementsUploaded && !bankingComplete) {
+    return "Your banking information is being analyzed.";
+  }
+
+  if (requiredDocsUploaded && (!ocrComplete || !bankingComplete)) {
+    return "Your documents have been received and are being reviewed.";
+  }
+
+  if (requiredDocsUploaded && ocrComplete && bankingComplete) {
+    return "Your application is being prepared for the next step.";
+  }
+
+  if (["RECEIVED", "IN_REVIEW"].includes(normalizedStage)) {
+    return "Your application is under review.";
+  }
+
+  return "Your application is under review.";
+}
+
 export function getDocumentStatusLabel(status: ApplicationDocumentStatus) {
   switch (status) {
     case "uploaded":
@@ -141,6 +198,7 @@ export function shouldShowUploadControl(
 export function ApplicationPortalView({
   businessName,
   stage,
+  statusMessage,
   helperText,
   documents,
   onUpload,
@@ -151,6 +209,22 @@ export function ApplicationPortalView({
   return (
     <div style={layout.page}>
       <div style={layout.portalColumn}>
+        <div
+          style={{
+            background: tokens.colors.surface,
+            border: `1px solid ${tokens.colors.border}`,
+            borderRadius: tokens.radii.md,
+            padding: tokens.spacing.md,
+            boxShadow: tokens.shadows.card,
+            color: tokens.colors.textPrimary,
+            marginBottom: tokens.spacing.lg,
+          }}
+        >
+          <div style={components.form.eyebrow}>Status update</div>
+          <div style={{ ...components.form.helperText, fontSize: "14px" }}>
+            {statusMessage}
+          </div>
+        </div>
         <div style={components.form.sectionHeader}>
           <div style={components.form.eyebrow}>Client portal</div>
           <h1 style={components.form.title}>{businessName}</h1>
