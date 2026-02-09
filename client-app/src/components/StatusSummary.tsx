@@ -1,59 +1,58 @@
 import { Card } from "./ui/Card";
+import { Spinner } from "./ui/Spinner";
 import { components, layout, tokens } from "@/styles";
+import { useProcessingStatus } from "@/hooks/useProcessingStatus";
+import type { ProcessingStatus } from "@/types/processing";
 
 type StatusSummaryProps = {
-  status: any;
+  applicationId: string | null;
 };
 
-function readNumeric(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-  return null;
+function formatTimestamp(value: string | null) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString();
 }
 
-function getBankStatementCount(status: any): number | null {
-  const application = status?.application ?? status;
-  const candidates = [
-    application?.bank_statement_count,
-    application?.bank_statements_count,
-    application?.bankStatementsCount,
-    application?.bank_statements?.length,
-    application?.bankStatements?.length,
-    status?.bank_statement_count,
-    status?.bank_statements_count,
-    status?.bankStatementsCount,
-    status?.documents?.bank_statements?.count,
-    status?.documents?.bank_statements?.file_count,
-    status?.documents?.bank_statements?.files?.length,
-    status?.documents?.bank_statements?.documents?.length,
-    status?.documents?.bank_statements?.length,
-  ];
-
-  for (const candidate of candidates) {
-    const numeric = readNumeric(candidate);
-    if (numeric !== null) return numeric;
+function renderStatusLine(status: ProcessingStatus["ocr"]) {
+  if (status.status === "processing") {
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+        <Spinner />
+        Processing
+      </span>
+    );
   }
-  return null;
+  if (status.status === "completed") {
+    const timestamp = formatTimestamp(status.completedAt);
+    return (
+      <span style={{ color: tokens.colors.success }}>
+        ✓ Completed{timestamp ? ` ${timestamp}` : ""}
+      </span>
+    );
+  }
+  if (status.status === "failed") {
+    return (
+      <span style={{ color: tokens.colors.warning }}>⚠ Contact support</span>
+    );
+  }
+  return <span>Pending</span>;
 }
 
-export function StatusSummary({ status }: StatusSummaryProps) {
-  const application = status?.application ?? status;
-  const ocrCompletedAt = application?.ocr_completed_at ?? null;
-  const bankingCompletedAt = application?.banking_completed_at ?? null;
-  const bankStatementCount = getBankStatementCount(status);
-  const bankingReady = typeof bankStatementCount === "number" && bankStatementCount >= 6;
+function renderBankingStatusLine(status: ProcessingStatus["banking"]) {
+  return renderStatusLine({
+    status: status.status,
+    completedAt: status.completedAt,
+  });
+}
 
-  const documentStatus = ocrCompletedAt
-    ? "Documents processed"
-    : "Documents processing";
-  const bankingStatus = bankingCompletedAt
-    ? "Banking analysis completed"
-    : bankingReady
-      ? "Banking analysis in progress"
-      : "Waiting for statements";
+export function StatusSummary({ applicationId }: StatusSummaryProps) {
+  const { status } = useProcessingStatus(applicationId);
+  const statementCount =
+    status?.banking.statementCount ?? null;
+  const requiredStatements =
+    status?.banking.requiredStatements ?? 6;
 
   return (
     <Card>
@@ -71,7 +70,7 @@ export function StatusSummary({ status }: StatusSummaryProps) {
             }}
           >
             <li>Documents received</li>
-            <li>{documentStatus}</li>
+            <li>{status ? renderStatusLine(status.ocr) : "Pending"}</li>
           </ul>
         </div>
         <div style={layout.stackTight}>
@@ -85,7 +84,13 @@ export function StatusSummary({ status }: StatusSummaryProps) {
               gap: tokens.spacing.xs,
             }}
           >
-            <li>{bankingStatus}</li>
+            <li>
+              {status ? renderBankingStatusLine(status.banking) : "Pending"}
+            </li>
+            <li>
+              Statements received{" "}
+              {statementCount !== null ? statementCount : "—"}/{requiredStatements}
+            </li>
           </ul>
         </div>
       </div>
