@@ -20,6 +20,11 @@ export async function fetchApplicationDocuments(id: string) {
   return res.data;
 }
 
+export async function fetchApplicationOffers(id: string) {
+  const res = await api.get(`/api/applications/${id}/offers`);
+  return res.data;
+}
+
 export async function uploadApplicationDocument(
   id: string,
   payload: {

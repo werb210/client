@@ -2,6 +2,7 @@ export type SubmissionBanner = {
   title: string;
   message: string;
   cta?: string;
+  ctaLink?: string;
 };
 
 export const SUBMISSION_SENT_BANNER: SubmissionBanner = {
@@ -14,6 +15,12 @@ export const SUBMISSION_REQUIRES_DOCS_BANNER: SubmissionBanner = {
   message: "We need additional documents to continue. Check your SMS and email for details.",
 };
 
+export const SUBMISSION_OFFER_BANNER: SubmissionBanner = {
+  title: "Offer available",
+  message: "Review your available term sheet and offer details.",
+  cta: "View offers",
+};
+
 export const SUBMISSION_FAILURE_BANNER: SubmissionBanner = {
   title: "Application delayed",
   message:
@@ -24,6 +31,7 @@ export const SUBMISSION_FAILURE_BANNER: SubmissionBanner = {
 export function getSubmissionStageBanner(stage: string) {
   if (stage === "Sent to Lender") return SUBMISSION_SENT_BANNER;
   if (stage === "Requires Documents") return SUBMISSION_REQUIRES_DOCS_BANNER;
+  if (stage === "Offer Available") return SUBMISSION_OFFER_BANNER;
   return null;
 }
 

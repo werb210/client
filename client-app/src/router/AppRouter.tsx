@@ -3,6 +3,7 @@ import { EntryPage } from "../pages/EntryPage";
 import { PortalEntry } from "../pages/PortalEntry";
 import { StatusPage } from "../pages/StatusPage";
 import { ApplicationPortalPage } from "../pages/ApplicationPortalPage";
+import { ApplicationOffersPage } from "../pages/ApplicationOffersPage";
 import { ResumePage } from "../pages/ResumePage";
 import { OfflineFallback } from "../pages/OfflineFallback";
 import PublicApplyPage from "../pages/apply/PublicApplyPage";
@@ -67,6 +68,7 @@ export default function AppRouter() {
           }
         />
         <Route path="/application/:id" element={<ApplicationPortalPage />} />
+        <Route path="/application/:id/offers" element={<ApplicationOffersPage />} />
         <Route
           path="/application/:id/documents"
           element={<ApplicationPortalPage />}
