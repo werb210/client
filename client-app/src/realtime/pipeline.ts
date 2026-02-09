@@ -73,6 +73,9 @@ export function getPipelineStage(
   if (normalized.includes("declined") || normalized.includes("rejected")) {
     return "Accepted / Declined";
   }
+  if (normalized.includes("offer")) {
+    return "Offer Available";
+  }
   if (normalized.includes("accept") || normalized.includes("approved")) {
     return "Accepted / Declined";
   }

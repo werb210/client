@@ -168,6 +168,10 @@ export function StatusPage() {
     () => getSubmissionStageBanner(activeStage),
     [activeStage]
   );
+  const statusBannerLink = useMemo(() => {
+    if (activeStage !== "Offer Available" || !applicationId) return null;
+    return `/application/${applicationId}/offers`;
+  }, [activeStage, applicationId]);
   const failureBanner = useMemo(() => {
     if (submissionStatus?.status !== "failed") return null;
     return getSubmissionFailureBanner(submissionStatus.rawStatus || undefined);
@@ -402,6 +406,14 @@ export function StatusPage() {
             <div style={layout.stackTight}>
               <div style={{ fontWeight: 600 }}>{statusBanner.title}</div>
               <div style={components.form.subtitle}>{statusBanner.message}</div>
+              {statusBanner.cta && statusBannerLink ? (
+                <PrimaryButton
+                  style={{ width: "100%" }}
+                  onClick={() => navigate(statusBannerLink)}
+                >
+                  {statusBanner.cta}
+                </PrimaryButton>
+              ) : null}
             </div>
           </Card>
         )}
