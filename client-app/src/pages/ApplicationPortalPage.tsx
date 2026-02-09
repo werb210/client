@@ -5,12 +5,14 @@ import {
   getStageHelperText,
   getStatusBannerMessage,
   normalizeDocumentsResponse,
+  formatStageLabel,
 } from "@/portal/ApplicationPortalView";
 import {
   fetchApplication,
   fetchApplicationDocuments,
   uploadApplicationDocument,
 } from "@/api/applications";
+import { buildClientHistoryEvents } from "@/portal/clientHistory";
 import { components, layout, tokens } from "@/styles";
 
 export function ApplicationPortalPage() {
@@ -98,6 +100,15 @@ export function ApplicationPortalPage() {
     });
   }, [application?.banking_completed_at, application?.ocr_completed_at, stage, documents]);
 
+  const historyEvents = useMemo(
+    () =>
+      buildClientHistoryEvents({
+        status: { ...application, documents },
+        stageLabel: formatStageLabel(stage),
+      }),
+    [application, documents, stage]
+  );
+
   const handleUpload = useCallback(
     async (category: string, file: File) => {
       if (!id) return;
@@ -117,10 +128,14 @@ export function ApplicationPortalPage() {
           },
         });
         await refreshDocuments();
-      } catch (err) {
-        console.error("Upload failed:", err);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        setError("Network connection lost. Reconnect and try again.");
+      } else {
         setError("Upload failed. Please try again.");
-      } finally {
+      }
+    } finally {
         setUploadState((prev) => ({
           ...prev,
           [category]: { uploading: false, progress: 0 },
@@ -161,6 +176,7 @@ export function ApplicationPortalPage() {
         documents={documents}
         onUpload={handleUpload}
         uploadState={uploadState}
+        historyEvents={historyEvents}
       />
       <div style={{ height: tokens.spacing.xl }} />
     </div>

@@ -8,14 +8,6 @@ export type SubmissionStatusSnapshot = {
   rawStatus: string | null;
 };
 
-export type SubmissionStatusPollerOptions = {
-  applicationId: string;
-  onUpdate: (snapshot: SubmissionStatusSnapshot) => void;
-  onError?: (error: unknown) => void;
-  intervalMs?: number;
-  fetchStatus?: (applicationId: string) => Promise<SubmissionStatusSnapshot>;
-};
-
 const SUBMISSION_CACHE_PREFIX = "boreal_submission_status";
 
 function getCacheKey(key: string) {
@@ -73,49 +65,4 @@ export async function fetchSubmissionStatus(applicationId: string) {
   const submission =
     res?.data?.submission ?? res?.data?.data?.submission ?? res?.data?.data ?? {};
   return mapSubmissionStatus(submission);
-}
-
-export function createSubmissionStatusPoller({
-  applicationId,
-  onUpdate,
-  onError,
-  intervalMs = 15000,
-  fetchStatus = fetchSubmissionStatus,
-}: SubmissionStatusPollerOptions) {
-  let active = true;
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-
-  const stop = () => {
-    active = false;
-    if (timeout) {
-      clearTimeout(timeout);
-      timeout = null;
-    }
-  };
-
-  const schedule = () => {
-    if (!active) return;
-    timeout = setTimeout(poll, intervalMs);
-  };
-
-  const poll = async () => {
-    if (!active) return;
-    try {
-      const snapshot = await fetchStatus(applicationId);
-      if (!active) return;
-      onUpdate(snapshot);
-      if (snapshot.status === "pending") {
-        schedule();
-      } else {
-        stop();
-      }
-    } catch (error) {
-      if (!active) return;
-      onError?.(error);
-      schedule();
-    }
-  };
-
-  void poll();
-  return stop;
 }

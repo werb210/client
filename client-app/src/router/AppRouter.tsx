@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { EntryPage } from "../pages/EntryPage";
 import { PortalEntry } from "../pages/PortalEntry";
 import { StatusPage } from "../pages/StatusPage";
@@ -6,6 +12,8 @@ import { ApplicationPortalPage } from "../pages/ApplicationPortalPage";
 import { ApplicationOffersPage } from "../pages/ApplicationOffersPage";
 import { ResumePage } from "../pages/ResumePage";
 import { OfflineFallback } from "../pages/OfflineFallback";
+import { SessionExpiredPage } from "../pages/SessionExpiredPage";
+import { SessionRevokedPage } from "../pages/SessionRevokedPage";
 import PublicApplyPage from "../pages/apply/PublicApplyPage";
 import PublicApplySuccessPage from "../pages/apply/PublicApplySuccessPage";
 import Step1 from "../wizard/Step1_KYC";
@@ -18,6 +26,7 @@ import { OfflineStore } from "../state/offline";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { SessionGuard } from "../auth/sessionGuard";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
+import { useClientSession } from "../hooks/useClientSession";
 
 type GuardProps = {
   children: JSX.Element;
@@ -32,11 +41,26 @@ function RequireApplicationToken({ children }: GuardProps) {
 }
 
 function RequirePortalSession({ children }: GuardProps) {
-  if (typeof window === "undefined") return children;
-  const token = new URLSearchParams(window.location.search).get("token") || "";
-  if (!token || !ClientProfileStore.hasPortalSession(token)) {
+  const location = useLocation();
+  const token = new URLSearchParams(location.search).get("token") || "";
+  const { state } = useClientSession(token);
+
+  if (!token || state === "missing") {
     return <Navigate to="/portal" replace />;
   }
+
+  if (state === "expired") {
+    return <Navigate to="/expired" replace />;
+  }
+
+  if (state === "revoked") {
+    return <Navigate to="/revoked" replace />;
+  }
+
+  if (!ClientProfileStore.hasPortalSession(token)) {
+    return <Navigate to="/portal" replace />;
+  }
+
   return children;
 }
 
@@ -59,6 +83,8 @@ export default function AppRouter() {
       <Routes>
         <Route path="/" element={<EntryPage />} />
         <Route path="/portal" element={<PortalEntry />} />
+        <Route path="/expired" element={<SessionExpiredPage />} />
+        <Route path="/revoked" element={<SessionRevokedPage />} />
         <Route
           path="/status"
           element={

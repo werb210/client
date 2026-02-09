@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "../api/client";
+import { getClientSessionAuthHeader } from "../state/clientSession";
 
 export type ClientSession = {
   applicationId: string;
@@ -14,7 +15,12 @@ export async function loadSessionFromUrl(): Promise<ClientSession | null> {
   if (!token) return null;
 
   const response = await fetch(
-    `${API_BASE_URL}/api/client/session?token=${encodeURIComponent(token)}`
+    `${API_BASE_URL}/api/client/session?token=${encodeURIComponent(token)}`,
+    {
+      headers: {
+        ...getClientSessionAuthHeader(),
+      },
+    }
   );
 
   if (!response.ok) {

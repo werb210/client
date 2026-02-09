@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api/client";
+import { getClientSessionAuthHeader } from "../../state/clientSession";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
@@ -50,6 +51,7 @@ export default function UploadDocuments() {
           headers: {
             "Content-Type": "application/json",
             "X-Request-Id": crypto.randomUUID(),
+            ...getClientSessionAuthHeader(),
           },
           body: JSON.stringify({
             documents: {
@@ -71,7 +73,11 @@ export default function UploadDocuments() {
       setMessage("Upload received. We'll review it shortly.");
     } catch (err) {
       setStatus("error");
-      setMessage("Upload failed. Please try again.");
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        setMessage("Network connection lost. Reconnect and try again.");
+      } else {
+        setMessage("Upload failed. Please try again.");
+      }
     }
   }
 

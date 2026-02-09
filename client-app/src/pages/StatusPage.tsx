@@ -1,15 +1,12 @@
 import { ClientAppAPI } from "../api/clientApp";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { Button, PrimaryButton, SecondaryButton } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { useChatbot } from "../hooks/useChatbot";
 import { ClientProfileStore } from "../state/clientProfiles";
-import {
-  createPipelinePoller,
-  getPipelineStage,
-} from "../realtime/pipeline";
+import { getPipelineStage } from "../realtime/pipeline";
 import { useDocumentRejectionNotifications } from "../portal/useDocumentRejectionNotifications";
 import { formatDocumentLabel } from "../wizard/requirements";
 import {
@@ -29,19 +26,25 @@ import { syncRequiredDocumentsFromStatus } from "../documents/requiredDocumentsC
 import { OfflineStore } from "../state/offline";
 import { extractApplicationFromStatus } from "../applications/resume";
 import {
-  createSubmissionStatusPoller,
   loadSubmissionStatusCache,
   saveSubmissionStatusCache,
   type SubmissionStatusSnapshot,
+  fetchSubmissionStatus,
 } from "../services/applicationStatus";
 import {
   getSubmissionFailureBanner,
   getSubmissionStageBanner,
 } from "../portal/submissionMessaging";
+import { useClientSession } from "../hooks/useClientSession";
+import { useProcessingStatusPoller } from "../hooks/useProcessingStatusPoller";
+import { ClientHistoryTimeline } from "../components/ClientHistoryTimeline";
+import { buildClientHistoryEvents } from "../portal/clientHistory";
+import { updateClientSession } from "../state/clientSession";
 import { components, layout, tokens } from "@/styles";
 
 export function StatusPage() {
   const token = new URLSearchParams(window.location.search).get("token");
+  const { state: sessionState } = useClientSession(token);
   const [status, setStatus] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>(() =>
     loadChatHistory(new URLSearchParams(window.location.search).get("token"))
@@ -59,6 +62,7 @@ export function StatusPage() {
   >(() => (token ? loadSubmissionStatusCache(token) : null));
   const { send: sendAI } = useChatbot();
   const navigate = useNavigate();
+  const statusRef = useRef<any>(null);
 
   const refreshStatus = useCallback(async () => {
     if (!token) return;
@@ -69,6 +73,10 @@ export function StatusPage() {
       console.error("Status refresh failed:", error);
     }
   }, [token]);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   useEffect(() => {
     if (!token) return;
@@ -99,29 +107,43 @@ export function StatusPage() {
     setMessages(loadChatHistory(token));
   }, [token]);
 
-  useEffect(() => {
-    refreshMessages();
-    const id = setInterval(refreshMessages, 5000);
-    return () => clearInterval(id);
-  }, [refreshMessages]);
+  const pollingEnabled = Boolean(token) && sessionState === "valid";
 
-  useEffect(() => {
-    if (!token) return;
-    const stop = createPipelinePoller({
-      token,
-      fetchStatus: async (activeToken) => {
-        const res = await ClientAppAPI.status(activeToken);
-        return res.data;
-      },
-      onUpdate: (next) => {
-        setStatus(next);
-      },
-      onError: (error) => {
-        console.error("Status refresh failed:", error);
-      },
-    });
-    return () => stop();
+  const isTerminalStatus = useCallback((payload: any) => {
+    const raw =
+      payload?.status ||
+      payload?.stage ||
+      payload?.pipelineStatus ||
+      payload?.state ||
+      "";
+    const normalized = String(raw).toLowerCase();
+    return ["completed", "declined", "withdrawn"].some((terminal) =>
+      normalized.includes(terminal)
+    );
+  }, []);
+
+  const fetchStatus = useCallback(async () => {
+    const res = await ClientAppAPI.status(token as string);
+    return res.data;
   }, [token]);
+
+  const handleStatusUpdate = useCallback((next: any) => {
+    setStatus(next);
+  }, []);
+
+  const handleStatusError = useCallback((error: unknown) => {
+    console.error("Status refresh failed:", error);
+  }, []);
+
+  const { state: statusPollingState } = useProcessingStatusPoller({
+    enabled: pollingEnabled,
+    fetchStatus,
+    onUpdate: handleStatusUpdate,
+    onError: handleStatusError,
+    isTerminal: isTerminalStatus,
+    initialDelayMs: 5000,
+    maxDelayMs: 45000,
+  });
 
   useForegroundRefresh(() => {
     refreshMessages();
@@ -138,20 +160,78 @@ export function StatusPage() {
     );
   }, [status]);
 
+  const submissionId = useMemo(() => {
+    return (
+      status?.submissionId ||
+      status?.submission_id ||
+      status?.submission?.id ||
+      applicationId ||
+      token ||
+      null
+    );
+  }, [applicationId, status, token]);
+
   useEffect(() => {
-    if (!token || !applicationId) return;
-    const stop = createSubmissionStatusPoller({
-      applicationId,
-      onUpdate: (snapshot) => {
-        setSubmissionStatus(snapshot);
+    if (!token || !submissionId) return;
+    updateClientSession(token, { submissionId });
+  }, [submissionId, token]);
+
+  const fetchSubmissionSnapshot = useCallback(async () => {
+    return fetchSubmissionStatus(applicationId as string);
+  }, [applicationId]);
+
+  const handleSubmissionUpdate = useCallback(
+    (snapshot: SubmissionStatusSnapshot) => {
+      setSubmissionStatus(snapshot);
+      if (token) {
         saveSubmissionStatusCache(token, snapshot);
-      },
-      onError: (error) => {
-        console.error("Submission status refresh failed:", error);
-      },
-    });
-    return () => stop();
-  }, [applicationId, token]);
+      }
+    },
+    [token]
+  );
+
+  const handleSubmissionError = useCallback((error: unknown) => {
+    console.error("Submission status refresh failed:", error);
+  }, []);
+
+  useProcessingStatusPoller({
+    enabled: Boolean(applicationId) && pollingEnabled,
+    fetchStatus: fetchSubmissionSnapshot,
+    onUpdate: handleSubmissionUpdate,
+    onError: handleSubmissionError,
+    isTerminal: (snapshot) => snapshot.status !== "pending",
+    initialDelayMs: 10000,
+    maxDelayMs: 60000,
+  });
+
+  const fetchMessages = useCallback(async () => {
+    const res = await ClientAppAPI.getMessages(token as string);
+    return res.data;
+  }, [token]);
+
+  const handleMessagesUpdate = useCallback(
+    (nextMessages: any[]) => {
+      setMessages(nextMessages);
+      if (token) {
+        saveChatHistory(token, nextMessages);
+      }
+    },
+    [token]
+  );
+
+  const handleMessagesError = useCallback((error: unknown) => {
+    console.error("Message refresh failed:", error);
+  }, []);
+
+  useProcessingStatusPoller({
+    enabled: pollingEnabled,
+    fetchStatus: fetchMessages,
+    onUpdate: handleMessagesUpdate,
+    onError: handleMessagesError,
+    isTerminal: () => isTerminalStatus(statusRef.current),
+    initialDelayMs: 5000,
+    maxDelayMs: 30000,
+  });
 
   const stages = PIPELINE_STAGE_LABELS;
 
@@ -177,6 +257,16 @@ export function StatusPage() {
     if (submissionStatus?.status !== "failed") return null;
     return getSubmissionFailureBanner(submissionStatus.rawStatus || undefined);
   }, [submissionStatus]);
+
+  const historyEvents = useMemo(
+    () =>
+      buildClientHistoryEvents({
+        status,
+        submissionStatus,
+        stageLabel: activeStage,
+      }),
+    [activeStage, status, submissionStatus]
+  );
 
   const phone = useMemo(() => {
     return (
@@ -365,11 +455,30 @@ export function StatusPage() {
                   Updated {submissionUpdatedLabel}
                 </div>
               )}
+              <div style={components.form.helperText}>
+                Status refresh:{" "}
+                {statusPollingState === "terminal"
+                  ? "Locked"
+                  : statusPollingState === "paused"
+                    ? "Paused"
+                    : statusPollingState === "reconnecting"
+                      ? "Reconnecting"
+                      : "Polling"}
+              </div>
             </div>
 
             <StatusTimeline stages={stages} activeStage={activeStage} />
           </div>
         </Card>
+
+        {historyEvents.length > 0 && (
+          <Card>
+            <div style={layout.stackTight}>
+              <h2 style={components.form.sectionTitle}>Application history</h2>
+              <ClientHistoryTimeline events={historyEvents} />
+            </div>
+          </Card>
+        )}
 
         {failureBanner && (
           <Card

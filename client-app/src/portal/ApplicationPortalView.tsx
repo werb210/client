@@ -1,6 +1,8 @@
 import { useId, useMemo, useRef } from "react";
 import { components, layout, tokens } from "@/styles";
 import { formatDocumentLabel } from "@/wizard/requirements";
+import { ClientHistoryTimeline } from "@/components/ClientHistoryTimeline";
+import type { ClientHistoryEvent } from "./clientHistory";
 
 export type ApplicationDocumentStatus =
   | "missing"
@@ -23,6 +25,7 @@ export type ApplicationPortalViewProps = {
   documents: ApplicationDocumentCategory[];
   onUpload: (category: string, file: File) => Promise<void> | void;
   uploadState: Record<string, { uploading: boolean; progress: number }>;
+  historyEvents?: ClientHistoryEvent[];
 };
 
 const ACCEPTED_FILE_TYPES =
@@ -203,6 +206,7 @@ export function ApplicationPortalView({
   documents,
   onUpload,
   uploadState,
+  historyEvents = [],
 }: ApplicationPortalViewProps) {
   const stageLabel = useMemo(() => formatStageLabel(stage), [stage]);
 
@@ -254,6 +258,23 @@ export function ApplicationPortalView({
             <span style={components.form.helperText}>{helperText}</span>
           </div>
         </div>
+
+        {historyEvents.length > 0 && (
+          <section
+            style={{
+              marginTop: tokens.spacing.lg,
+              background: tokens.colors.surface,
+              border: `1px solid ${tokens.colors.border}`,
+              borderRadius: tokens.radii.md,
+              padding: tokens.spacing.md,
+              boxShadow: tokens.shadows.card,
+              color: tokens.colors.textPrimary,
+            }}
+          >
+            <h2 style={components.form.sectionTitle}>Application history</h2>
+            <ClientHistoryTimeline events={historyEvents} />
+          </section>
+        )}
 
         <section
           id="application-documents"
