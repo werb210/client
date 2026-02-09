@@ -4,6 +4,8 @@ import { PortalEntry } from "../pages/PortalEntry";
 import { StatusPage } from "../pages/StatusPage";
 import { ResumePage } from "../pages/ResumePage";
 import { OfflineFallback } from "../pages/OfflineFallback";
+import PublicApplyPage from "../pages/apply/PublicApplyPage";
+import PublicApplySuccessPage from "../pages/apply/PublicApplySuccessPage";
 import Step1 from "../wizard/Step1_KYC";
 import Step2 from "../wizard/Step2_Product";
 import Step3 from "../wizard/Step3_Business";
@@ -64,9 +66,10 @@ export default function AppRouter() {
           }
         />
         <Route path="/resume" element={<ResumePage />} />
+        <Route path="/apply/success" element={<PublicApplySuccessPage />} />
 
         <Route path="/apply">
-          <Route index element={<EntryPage />} />
+          <Route index element={<PublicApplyPage />} />
           <Route path="step-1" element={<Step1 />} />
           <Route
             path="step-2"
