@@ -1,4 +1,10 @@
 import { api } from "./client";
+import {
+  ClientAppMessagesResponseSchema,
+  ClientAppStartResponseSchema,
+  ClientAppStatusResponseSchema,
+  parseApiResponse,
+} from "@/contracts/clientApiSchemas";
 
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastError: any;
@@ -20,7 +26,15 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
 
 export const ClientAppAPI = {
   start(payload: any) {
-    return withRetry(() => api.post("/api/applications", payload));
+    return withRetry(async () => {
+      const res = await api.post("/api/applications", payload);
+      parseApiResponse(
+        ClientAppStartResponseSchema,
+        res.data,
+        "POST /api/applications"
+      );
+      return res;
+    });
   },
   update(token: string, payload: any) {
     return withRetry(() => api.patch(`/api/applications/${token}`, payload));
@@ -47,10 +61,26 @@ export const ClientAppAPI = {
     return withRetry(() => api.post(`/api/applications/${token}/submit`));
   },
   status(token: string) {
-    return withRetry(() => api.get(`/api/applications/${token}`));
+    return withRetry(async () => {
+      const res = await api.get(`/api/applications/${token}`);
+      parseApiResponse(
+        ClientAppStatusResponseSchema,
+        res.data,
+        "GET /api/applications/{token}"
+      );
+      return res;
+    });
   },
   getMessages(token: string) {
-    return withRetry(() => api.get(`/api/applications/${token}/messages`));
+    return withRetry(async () => {
+      const res = await api.get(`/api/applications/${token}/messages`);
+      parseApiResponse(
+        ClientAppMessagesResponseSchema,
+        res.data,
+        "GET /api/applications/{token}/messages"
+      );
+      return res;
+    });
   },
   sendMessage(token: string, text: string) {
     return withRetry(() =>

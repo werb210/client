@@ -1,5 +1,9 @@
 import { api } from "./client";
 import type { ProcessingStatus } from "@/types/processing";
+import {
+  ProcessingStatusResponseSchema,
+  parseApiResponse,
+} from "@/contracts/clientApiSchemas";
 
 type RawProcessingCheckpoint = {
   status?: string | null;
@@ -62,7 +66,11 @@ export async function fetchProcessingStatus(
   const response = await api.get(
     `/api/applications/${applicationId}/processing/status`
   );
-  const raw = response.data as any;
+  const raw = parseApiResponse(
+    ProcessingStatusResponseSchema,
+    response.data,
+    "GET /api/applications/{id}/processing/status"
+  ) as any;
 
   const documentSource =
     raw?.documentReview ||

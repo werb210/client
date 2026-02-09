@@ -1,4 +1,11 @@
 import { api } from "./client";
+import {
+  ApplicationDocumentsResponseSchema,
+  ApplicationOffersResponseSchema,
+  FetchApplicationResponseSchema,
+  PublicApplicationResponseSchema,
+  parseApiResponse,
+} from "@/contracts/clientApiSchemas";
 
 export async function submitApplication(payload: unknown) {
   const res = await api.post("/api/client/submissions", payload);
@@ -14,22 +21,38 @@ export async function createPublicApplication(
       ? { "Idempotency-Key": options.idempotencyKey }
       : undefined,
   });
-  return res.data;
+  return parseApiResponse(
+    PublicApplicationResponseSchema,
+    res.data,
+    "POST /api/applications"
+  );
 }
 
 export async function fetchApplication(id: string) {
   const res = await api.get(`/api/applications/${id}`);
-  return res.data;
+  return parseApiResponse(
+    FetchApplicationResponseSchema,
+    res.data,
+    "GET /api/applications/{id}"
+  );
 }
 
 export async function fetchApplicationDocuments(id: string) {
   const res = await api.get(`/api/applications/${id}/documents`);
-  return res.data;
+  return parseApiResponse(
+    ApplicationDocumentsResponseSchema,
+    res.data,
+    "GET /api/applications/{id}/documents"
+  );
 }
 
 export async function fetchApplicationOffers(id: string) {
   const res = await api.get(`/api/applications/${id}/offers`);
-  return res.data;
+  return parseApiResponse(
+    ApplicationOffersResponseSchema,
+    res.data,
+    "GET /api/applications/{id}/offers"
+  );
 }
 
 export async function uploadApplicationDocument(

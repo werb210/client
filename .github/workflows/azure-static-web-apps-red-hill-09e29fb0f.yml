@@ -28,6 +28,8 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: client-app/package-lock.json
+      - name: Verify Node.js version
+        run: node -e "const major = Number(process.versions.node.split('.')[0]); if (major < 22 || major >= 23) { console.error('Node 22.x is required.'); process.exit(1); }"
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
       - name: Get Id Token
