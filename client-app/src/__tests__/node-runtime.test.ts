@@ -4,7 +4,7 @@ import nvmrcContent from "../../../.nvmrc?raw";
 
 describe("Node runtime configuration", () => {
   it("declares Node 22+ in package.json engines", () => {
-    expect(packageJson.engines?.node).toBe(">=22.0.0");
+    expect(packageJson.engines?.node).toBe(">=22 <23");
   });
 
   it("pins Node 22 in the repo .nvmrc", () => {
