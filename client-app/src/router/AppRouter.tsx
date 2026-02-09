@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { EntryPage } from "../pages/EntryPage";
 import { PortalEntry } from "../pages/PortalEntry";
 import { StatusPage } from "../pages/StatusPage";
+import { ApplicationPortalPage } from "../pages/ApplicationPortalPage";
 import { ResumePage } from "../pages/ResumePage";
 import { OfflineFallback } from "../pages/OfflineFallback";
 import PublicApplyPage from "../pages/apply/PublicApplyPage";
@@ -64,6 +65,11 @@ export default function AppRouter() {
               <StatusPage />
             </RequirePortalSession>
           }
+        />
+        <Route path="/application/:id" element={<ApplicationPortalPage />} />
+        <Route
+          path="/application/:id/documents"
+          element={<ApplicationPortalPage />}
         />
         <Route path="/resume" element={<ResumePage />} />
         <Route path="/apply/success" element={<PublicApplySuccessPage />} />
