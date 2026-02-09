@@ -18,6 +18,7 @@ import {
 } from "../applications/linkedApplications";
 import { DocumentUploadList } from "../components/DocumentUploadList";
 import { StatusTimeline } from "../components/StatusTimeline";
+import { StatusSummary } from "../components/StatusSummary";
 import { PIPELINE_STAGE_LABELS } from "../portal/timeline";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Spinner } from "../components/ui/Spinner";
@@ -446,6 +447,8 @@ export function StatusPage() {
             </div>
           </Card>
         )}
+
+        <StatusSummary status={status} />
 
         <div
           style={{
