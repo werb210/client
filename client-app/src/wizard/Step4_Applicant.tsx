@@ -29,6 +29,8 @@ import {
   getNextFieldKey,
   getWizardFieldId,
 } from "./wizardSchema";
+import { enforceV1StepSchema } from "../schemas/v1WizardSchema";
+import { shouldAutoAdvance } from "../utils/autoadvance";
 
 export function Step4_Applicant() {
   const { app, update, autosaveError } = useApplicationStore();
@@ -83,6 +85,7 @@ export function Step4_Applicant() {
 
   async function next() {
     saveStepData(4, values);
+    enforceV1StepSchema("step4", values);
     const requiredFields = [
       "firstName",
       "lastName",
@@ -369,7 +372,9 @@ export function Step4_Applicant() {
                   ),
                 };
                 update({ applicant: nextValues });
-                handleAutoAdvance("street", nextValues, true);
+                if (shouldAutoAdvance("street", nextValues.street)) {
+                  handleAutoAdvance("street", nextValues, true);
+                }
               }}
               onKeyDown={(e: any) => {
                 if (e.key === "Enter") {
@@ -627,7 +632,9 @@ export function Step4_Applicant() {
                       },
                     };
                     update({ applicant: nextValues });
-                    handleAutoAdvance("partner.street", nextValues, true);
+                    if (shouldAutoAdvance("street", nextValues.partner?.street)) {
+                      handleAutoAdvance("partner.street", nextValues, true);
+                    }
                   }}
                   onKeyDown={(e: any) => {
                     if (e.key === "Enter") {

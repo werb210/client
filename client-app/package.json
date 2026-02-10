@@ -8,7 +8,8 @@
     "build": "node -e \"const v=Number(process.versions.node.split('.')[0]); if (v < 22) { console.error('Node 22+ required.'); process.exit(1); }\" && vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": ">=22 <23"

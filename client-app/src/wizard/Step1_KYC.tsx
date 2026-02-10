@@ -25,6 +25,7 @@ import {
   getStepFieldKeys,
   getWizardFieldId,
 } from "./wizardSchema";
+import { enforceV1StepSchema } from "../schemas/v1WizardSchema";
 
 const MatchCategories = [
   "Line of Credit",
@@ -199,6 +200,7 @@ export function Step1_KYC() {
 
   async function startApplication() {
     saveStepData(1, app.kyc);
+    enforceV1StepSchema("step1", app.kyc);
     const payload = app.kyc;
 
     const amount = parseCurrency(payload.fundingAmount);

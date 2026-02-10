@@ -1,0 +1,12 @@
+{
+  "fundingType": "Working Capital",
+  "requestedAmount": 125000,
+  "businessLocation": "Canada",
+  "industry": "Retail",
+  "purposeOfFunds": "Inventory Purchase",
+  "salesHistoryYears": "1 to 3 years",
+  "annualRevenueRange": "$500,000 to $1,000,000",
+  "avgMonthlyRevenueRange": "$25,000 to $50,000",
+  "accountsReceivableRange": "$100,000 to $250,000",
+  "fixedAssetsValueRange": "$25,000 to $100,000"
+}
