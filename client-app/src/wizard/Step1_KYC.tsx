@@ -7,28 +7,24 @@ import { Card } from "../components/ui/Card";
 import { Select } from "../components/ui/Select";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
-import { PhoneInput } from "../components/ui/PhoneInput";
 import { Validate } from "../utils/validate";
 import { WizardLayout } from "../components/WizardLayout";
 import {
   formatCurrencyValue,
   getCountryCode,
-  formatPhoneNumber,
+  sanitizeCurrencyInput,
 } from "../utils/location";
 import {
   FUNDING_INTENT_OPTIONS,
   normalizeFundingIntent,
 } from "../constants/wizard";
-import { OtpInput } from "../components/OtpInput";
-import { ClientProfileStore } from "../state/clientProfiles";
-import { resolveOtpNextStep } from "../auth/otp";
-import {
-  extractApplicationFromStatus,
-  getResumeRoute,
-} from "../applications/resume";
-import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
 import { loadStepData, mergeDraft, saveStepData } from "../client/autosave";
+import {
+  getNextFieldKey,
+  getStepFieldKeys,
+  getWizardFieldId,
+} from "./wizardSchema";
 
 const MatchCategories = [
   "Line of Credit",
@@ -133,9 +129,6 @@ export function Step1_KYC() {
   const { app, update, autosaveError } = useApplicationStore();
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
-  const [otpRequested, setOtpRequested] = useState(false);
-  const [otpHint, setOtpHint] = useState("");
-  const [otpError, setOtpError] = useState("");
   const navigate = useNavigate();
   const countryCode = useMemo(
     () => getCountryCode(app.kyc.businessLocation),
@@ -168,42 +161,40 @@ export function Step1_KYC() {
   }, [app.kyc, update]);
 
   useEffect(() => {
-    if (!app.kyc.fundingAmount) return;
-    const formatted = formatCurrencyValue(app.kyc.fundingAmount, countryCode);
-    if (formatted && formatted !== app.kyc.fundingAmount) {
-      update({ kyc: { ...app.kyc, fundingAmount: formatted } });
-    }
-  }, [app.kyc, countryCode, update]);
-
-  useEffect(() => {
-    if (app.kyc.phone) return;
-    const lastPhone = ClientProfileStore.getLastUsedPhone();
-    if (lastPhone) {
-      update({ kyc: { ...app.kyc, phone: lastPhone } });
-    }
-  }, [app.kyc, update]);
-
-  useEffect(() => {
     if (showErrors) {
       scrollToFirstError();
     }
   }, [showErrors]);
 
-  const fieldErrors = {
-    lookingFor: !Validate.required(app.kyc.lookingFor),
-    fundingAmount: !Validate.required(app.kyc.fundingAmount),
-    businessLocation:
-      !Validate.required(app.kyc.businessLocation) ||
-      app.kyc.businessLocation === "Other",
-    industry: !Validate.required(app.kyc.industry),
-    purposeOfFunds: !Validate.required(app.kyc.purposeOfFunds),
-    salesHistory: !Validate.required(app.kyc.salesHistory),
-    revenueLast12Months: !Validate.required(app.kyc.revenueLast12Months),
-    monthlyRevenue: !Validate.required(app.kyc.monthlyRevenue),
-    accountsReceivable: !Validate.required(app.kyc.accountsReceivable),
-    fixedAssets: !Validate.required(app.kyc.fixedAssets),
-    phone: !Validate.required(app.kyc.phone) || !Validate.phone(app.kyc.phone),
-  };
+  const stepFields = useMemo(
+    () => getStepFieldKeys("step1", { kyc: app.kyc }),
+    [app.kyc]
+  );
+  const shouldShowAccountsReceivable =
+    stepFields.includes("accountsReceivable");
+  const shouldShowFixedAssets = stepFields.includes("fixedAssets");
+
+  function getStepErrors(values: Record<string, any>) {
+    return {
+      lookingFor: !Validate.required(values.lookingFor),
+      fundingAmount: !Validate.required(values.fundingAmount),
+      businessLocation:
+        !Validate.required(values.businessLocation) ||
+        values.businessLocation === "Other",
+      industry: !Validate.required(values.industry),
+      purposeOfFunds: !Validate.required(values.purposeOfFunds),
+      salesHistory: !Validate.required(values.salesHistory),
+      revenueLast12Months: !Validate.required(values.revenueLast12Months),
+      monthlyRevenue: !Validate.required(values.monthlyRevenue),
+      accountsReceivable:
+        shouldShowAccountsReceivable &&
+        !Validate.required(values.accountsReceivable),
+      fixedAssets:
+        shouldShowFixedAssets && !Validate.required(values.fixedAssets),
+    };
+  }
+
+  const fieldErrors = getStepErrors(app.kyc);
   const isValid = Object.values(fieldErrors).every((error) => !error);
 
   async function startApplication() {
@@ -223,7 +214,6 @@ export function Step1_KYC() {
         alert("We couldn't start your application. Please try again.");
         return;
       }
-      ClientProfileStore.upsertProfile(payload.phone || "", token);
       update({ applicationToken: token, matchPercentages });
       navigate("/apply/step-2");
     } catch (error) {
@@ -232,61 +222,33 @@ export function Step1_KYC() {
     }
   }
 
-  async function requestOtp() {
-    setShowErrors(true);
-    if (!isValid) return;
-    setShowErrors(false);
-    setOtpError("");
-    const code = ClientProfileStore.requestOtp(app.kyc.phone || "");
-    setOtpHint(code);
-    setOtpRequested(true);
-  }
-
-  async function verifyOtp(code: string) {
-    setOtpError("");
-    if (!ClientProfileStore.verifyOtp(app.kyc.phone || "", code)) {
-      setOtpError("Incorrect code. Please try again.");
-      return;
-    }
-    void clearServiceWorkerCaches("otp");
-    const profile = ClientProfileStore.getProfile(app.kyc.phone || "");
-    const nextStep = resolveOtpNextStep(profile);
-    if (nextStep.action === "portal") {
-      ClientProfileStore.markPortalVerified(nextStep.token);
-      navigate(`/status?token=${nextStep.token}`);
-      return;
-    }
-    if (nextStep.action === "resume") {
-      try {
-        const res = await ClientAppAPI.status(nextStep.token);
-        const hydrated = extractApplicationFromStatus(
-          res?.data || {},
-          nextStep.token
-        );
-        update({
-          ...hydrated,
-          applicationToken: nextStep.token,
-          currentStep: hydrated.currentStep || app.currentStep || 1,
-        });
-        ClientProfileStore.upsertProfile(
-          app.kyc.phone || "",
-          nextStep.token
-        );
-        navigate(getResumeRoute(hydrated));
-      } catch (error) {
-        console.error("Failed to resume application:", error);
-        await startApplication();
-      }
-      return;
-    }
-
-    await startApplication();
-  }
-
   const fieldGridStyle = {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
     gap: tokens.spacing.md,
+  };
+
+  const focusField = (fieldKey: string) => {
+    const id = getWizardFieldId("step1", fieldKey);
+    const element = document.getElementById(id) as HTMLElement | null;
+    element?.focus();
+  };
+
+  const handleAutoAdvance = (
+    currentKey: string,
+    nextValues: Record<string, any>
+  ) => {
+    const context = { kyc: nextValues };
+    const nextKey = getNextFieldKey("step1", currentKey, context);
+    if (nextKey) {
+      requestAnimationFrame(() => focusField(nextKey));
+      return;
+    }
+    const nextErrors = getStepErrors(nextValues);
+    const nextIsValid = Object.values(nextErrors).every((error) => !error);
+    if (nextIsValid) {
+      void startApplication();
+    }
   };
 
   return (
@@ -304,49 +266,23 @@ export function Step1_KYC() {
             {autosaveError}
           </Card>
         )}
+        <StepHeader step={1} title="Financial Profile" />
 
         <Card
           style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}
           onBlurCapture={() => saveStepData(1, app.kyc)}
         >
           <div style={fieldGridStyle}>
-            <div data-error={showErrors && fieldErrors.phone}>
-              <label style={components.form.label}>Mobile phone</label>
-              <PhoneInput
-                value={formatPhoneNumber(app.kyc.phone || "", countryCode)}
-                onChange={(e: any) =>
-                  update({
-                    kyc: {
-                      ...app.kyc,
-                      phone: formatPhoneNumber(e.target.value, countryCode),
-                    },
-                  })
-                }
-                placeholder="(555) 555-5555"
-                hasError={showErrors && fieldErrors.phone}
-                onKeyDown={(e: any) => {
-                  if (e.key === "Enter") {
-                    requestOtp();
-                  }
-                }}
-              />
-              {showErrors && fieldErrors.phone && (
-                <div style={components.form.errorText}>
-                  Enter a valid phone number.
-                </div>
-              )}
-            </div>
             <div data-error={showErrors && fieldErrors.lookingFor}>
               <label style={components.form.label}>What are you looking for?</label>
               <Select
+                id={getWizardFieldId("step1", "lookingFor")}
                 value={normalizeFundingIntent(app.kyc.lookingFor) || ""}
                 onChange={(e: any) => {
                   const nextIntent = normalizeFundingIntent(e.target.value);
+                  const nextKyc = { ...app.kyc, lookingFor: nextIntent };
                   update({
-                    kyc: {
-                      ...app.kyc,
-                      lookingFor: nextIntent,
-                    },
+                    kyc: nextKyc,
                     productCategory: null,
                     selectedProduct: undefined,
                     selectedProductId: undefined,
@@ -356,6 +292,7 @@ export function Step1_KYC() {
                     eligibleCategories: [],
                     eligibilityReasons: [],
                   });
+                  handleAutoAdvance("lookingFor", nextKyc);
                 }}
                 hasError={showErrors && fieldErrors.lookingFor}
               >
@@ -373,19 +310,16 @@ export function Step1_KYC() {
             <div data-error={showErrors && fieldErrors.fundingAmount}>
               <label style={components.form.label}>How much funding are you seeking?</label>
               <Input
-                value={formatCurrencyValue(
-                  app.kyc.fundingAmount || "",
-                  countryCode
-                )}
-                onChange={(e: any) =>
+                id={getWizardFieldId("step1", "fundingAmount")}
+                inputMode="decimal"
+                value={app.kyc.fundingAmount || ""}
+                onChange={(e: any) => {
+                  const nextKyc = {
+                    ...app.kyc,
+                    fundingAmount: sanitizeCurrencyInput(e.target.value),
+                  };
                   update({
-                    kyc: {
-                      ...app.kyc,
-                      fundingAmount: formatCurrencyValue(
-                        e.target.value,
-                        countryCode
-                      ),
-                    },
+                    kyc: nextKyc,
                     productCategory: null,
                     selectedProduct: undefined,
                     selectedProductId: undefined,
@@ -394,8 +328,31 @@ export function Step1_KYC() {
                     eligibleProducts: [],
                     eligibleCategories: [],
                     eligibilityReasons: [],
-                  })
-                }
+                  });
+                }}
+                onBlur={() => {
+                  if (!app.kyc.fundingAmount) return;
+                  const formatted = formatCurrencyValue(
+                    app.kyc.fundingAmount,
+                    countryCode
+                  );
+                  const nextKyc = { ...app.kyc, fundingAmount: formatted };
+                  update({ kyc: nextKyc });
+                  handleAutoAdvance("fundingAmount", nextKyc);
+                }}
+                onKeyDown={(e: any) => {
+                  if (e.key === "Enter") {
+                    const nextKyc = {
+                      ...app.kyc,
+                      fundingAmount: formatCurrencyValue(
+                        app.kyc.fundingAmount || "",
+                        countryCode
+                      ),
+                    };
+                    update({ kyc: nextKyc });
+                    handleAutoAdvance("fundingAmount", nextKyc);
+                  }
+                }}
                 placeholder={countryCode === "CA" ? "CA$" : "$"}
                 hasError={showErrors && fieldErrors.fundingAmount}
               />
@@ -407,11 +364,13 @@ export function Step1_KYC() {
             <div data-error={showErrors && fieldErrors.businessLocation}>
               <label style={components.form.label}>Business Location</label>
               <Select
+                id={getWizardFieldId("step1", "businessLocation")}
                 value={app.kyc.businessLocation || ""}
                 onChange={(e: any) => {
                   const value = e.target.value;
+                  const nextKyc = { ...app.kyc, businessLocation: value };
                   update({
-                    kyc: { ...app.kyc, businessLocation: value },
+                    kyc: nextKyc,
                     productCategory: null,
                     selectedProduct: undefined,
                     selectedProductId: undefined,
@@ -424,6 +383,7 @@ export function Step1_KYC() {
                   if (value === "Other") {
                     setShowLocationModal(true);
                   }
+                  handleAutoAdvance("businessLocation", nextKyc);
                 }}
                 hasError={showErrors && fieldErrors.businessLocation}
               >
@@ -444,10 +404,13 @@ export function Step1_KYC() {
             <div data-error={showErrors && fieldErrors.industry}>
               <label style={components.form.label}>Industry</label>
               <Select
+                id={getWizardFieldId("step1", "industry")}
                 value={app.kyc.industry || ""}
-                onChange={(e: any) =>
-                  update({ kyc: { ...app.kyc, industry: e.target.value } })
-                }
+                onChange={(e: any) => {
+                  const nextKyc = { ...app.kyc, industry: e.target.value };
+                  update({ kyc: nextKyc });
+                  handleAutoAdvance("industry", nextKyc);
+                }}
                 hasError={showErrors && fieldErrors.industry}
               >
                 <option value="">Select…</option>
@@ -465,10 +428,13 @@ export function Step1_KYC() {
             <div data-error={showErrors && fieldErrors.purposeOfFunds}>
               <label style={components.form.label}>Purpose of funds</label>
               <Select
+                id={getWizardFieldId("step1", "purposeOfFunds")}
                 value={app.kyc.purposeOfFunds || ""}
-                onChange={(e: any) =>
-                  update({ kyc: { ...app.kyc, purposeOfFunds: e.target.value } })
-                }
+                onChange={(e: any) => {
+                  const nextKyc = { ...app.kyc, purposeOfFunds: e.target.value };
+                  update({ kyc: nextKyc });
+                  handleAutoAdvance("purposeOfFunds", nextKyc);
+                }}
                 hasError={showErrors && fieldErrors.purposeOfFunds}
               >
                 <option value="">Select…</option>
@@ -484,14 +450,15 @@ export function Step1_KYC() {
             </div>
 
             <div data-error={showErrors && fieldErrors.salesHistory}>
-              <label style={components.form.label}>
-                How many years of sales history does the business have?
-              </label>
+              <label style={components.form.label}>Years of sales history</label>
               <Select
+                id={getWizardFieldId("step1", "salesHistory")}
                 value={app.kyc.salesHistory || ""}
-                onChange={(e: any) =>
-                  update({ kyc: { ...app.kyc, salesHistory: e.target.value } })
-                }
+                onChange={(e: any) => {
+                  const nextKyc = { ...app.kyc, salesHistory: e.target.value };
+                  update({ kyc: nextKyc });
+                  handleAutoAdvance("salesHistory", nextKyc);
+                }}
                 hasError={showErrors && fieldErrors.salesHistory}
               >
                 <option value="">Select…</option>
@@ -507,16 +474,18 @@ export function Step1_KYC() {
             </div>
 
             <div data-error={showErrors && fieldErrors.revenueLast12Months}>
-              <label style={components.form.label}>
-                What was your business revenue in the last 12 months?
-              </label>
+              <label style={components.form.label}>Revenue last 12 months</label>
               <Select
+                id={getWizardFieldId("step1", "revenueLast12Months")}
                 value={app.kyc.revenueLast12Months || ""}
-                onChange={(e: any) =>
-                  update({
-                    kyc: { ...app.kyc, revenueLast12Months: e.target.value },
-                  })
-                }
+                onChange={(e: any) => {
+                  const nextKyc = {
+                    ...app.kyc,
+                    revenueLast12Months: e.target.value,
+                  };
+                  update({ kyc: nextKyc });
+                  handleAutoAdvance("revenueLast12Months", nextKyc);
+                }}
                 hasError={showErrors && fieldErrors.revenueLast12Months}
               >
                 <option value="">Select…</option>
@@ -533,13 +502,16 @@ export function Step1_KYC() {
 
             <div data-error={showErrors && fieldErrors.monthlyRevenue}>
               <label style={components.form.label}>
-                Average monthly revenue (last 3 months)
+                Avg monthly revenue (last 3 months)
               </label>
               <Select
+                id={getWizardFieldId("step1", "monthlyRevenue")}
                 value={app.kyc.monthlyRevenue || ""}
-                onChange={(e: any) =>
-                  update({ kyc: { ...app.kyc, monthlyRevenue: e.target.value } })
-                }
+                onChange={(e: any) => {
+                  const nextKyc = { ...app.kyc, monthlyRevenue: e.target.value };
+                  update({ kyc: nextKyc });
+                  handleAutoAdvance("monthlyRevenue", nextKyc);
+                }}
                 hasError={showErrors && fieldErrors.monthlyRevenue}
               >
                 <option value="">Select…</option>
@@ -554,83 +526,90 @@ export function Step1_KYC() {
               )}
             </div>
 
-            <div data-error={showErrors && fieldErrors.accountsReceivable}>
-              <label style={components.form.label}>
-                Current Account Receivable balance
-              </label>
-              <Select
-                value={app.kyc.accountsReceivable || ""}
-                onChange={(e: any) =>
-                  update({
-                    kyc: { ...app.kyc, accountsReceivable: e.target.value },
-                    productCategory: null,
-                    selectedProduct: undefined,
-                    selectedProductId: undefined,
-                    selectedProductType: undefined,
-                    eligibleProducts: [],
-                    eligibleCategories: [],
-                    eligibilityReasons: [],
-                  })
-                }
-                hasError={showErrors && fieldErrors.accountsReceivable}
-              >
-                <option value="">Select…</option>
-                {AccountsReceivableOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </Select>
-              {showErrors && fieldErrors.accountsReceivable && (
-                <div style={components.form.errorText}>Select an AR balance.</div>
-              )}
-            </div>
+            {shouldShowAccountsReceivable && (
+              <div data-error={showErrors && fieldErrors.accountsReceivable}>
+                <label style={components.form.label}>Current AR balance</label>
+                <Select
+                  id={getWizardFieldId("step1", "accountsReceivable")}
+                  value={app.kyc.accountsReceivable || ""}
+                  onChange={(e: any) => {
+                    const nextKyc = {
+                      ...app.kyc,
+                      accountsReceivable: e.target.value,
+                    };
+                    update({
+                      kyc: nextKyc,
+                      productCategory: null,
+                      selectedProduct: undefined,
+                      selectedProductId: undefined,
+                      selectedProductType: undefined,
+                      eligibleProducts: [],
+                      eligibleCategories: [],
+                      eligibilityReasons: [],
+                    });
+                    handleAutoAdvance("accountsReceivable", nextKyc);
+                  }}
+                  hasError={showErrors && fieldErrors.accountsReceivable}
+                >
+                  <option value="">Select…</option>
+                  {AccountsReceivableOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </Select>
+                {showErrors && fieldErrors.accountsReceivable && (
+                  <div style={components.form.errorText}>
+                    Select an AR balance.
+                  </div>
+                )}
+              </div>
+            )}
 
-            <div data-error={showErrors && fieldErrors.fixedAssets}>
-              <label style={components.form.label}>
-                Fixed assets value for loan security
-              </label>
-              <Select
-                value={app.kyc.fixedAssets || ""}
-                onChange={(e: any) =>
-                  update({ kyc: { ...app.kyc, fixedAssets: e.target.value } })
-                }
-                hasError={showErrors && fieldErrors.fixedAssets}
-              >
-                <option value="">Select…</option>
-                {FixedAssetsOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </Select>
-              {showErrors && fieldErrors.fixedAssets && (
-                <div style={components.form.errorText}>Select a fixed asset value.</div>
-              )}
-            </div>
+            {shouldShowFixedAssets && (
+              <div data-error={showErrors && fieldErrors.fixedAssets}>
+                <label style={components.form.label}>Fixed assets value</label>
+                <Select
+                  id={getWizardFieldId("step1", "fixedAssets")}
+                  value={app.kyc.fixedAssets || ""}
+                  onChange={(e: any) => {
+                    const nextKyc = { ...app.kyc, fixedAssets: e.target.value };
+                    update({ kyc: nextKyc });
+                    handleAutoAdvance("fixedAssets", nextKyc);
+                  }}
+                  hasError={showErrors && fieldErrors.fixedAssets}
+                >
+                  <option value="">Select…</option>
+                  {FixedAssetsOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </Select>
+                {showErrors && fieldErrors.fixedAssets && (
+                  <div style={components.form.errorText}>
+                    Select a fixed asset value.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </Card>
 
         <div style={{ ...layout.stickyCta, marginTop: tokens.spacing.lg }}>
-          <Button style={{ width: "100%", maxWidth: "220px" }} onClick={requestOtp}>
+          <Button
+            style={{ width: "100%", maxWidth: "220px" }}
+            onClick={() => {
+              setShowErrors(true);
+              if (!isValid) return;
+              setShowErrors(false);
+              void startApplication();
+            }}
+            disabled={!isValid}
+          >
             Continue →
           </Button>
         </div>
-
-        {otpRequested && (
-          <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
-            <div style={components.form.helperText}>
-              Enter the 6-digit passcode sent to your phone to continue.
-            </div>
-            <OtpInput onComplete={verifyOtp} />
-            {otpHint && (
-              <div style={components.form.helperText}>Demo OTP: {otpHint}</div>
-            )}
-            {otpError && (
-              <div style={components.form.errorText}>{otpError}</div>
-            )}
-          </Card>
-        )}
       </WizardLayout>
 
       {showLocationModal && (

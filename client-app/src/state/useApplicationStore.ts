@@ -108,7 +108,7 @@ export function useApplicationStore() {
   const pendingSync = useRef<ApplicationData | null>(null);
   const { isOffline } = useNetworkStatus();
 
-  const canAutosave = app.currentStep > 1;
+  const canAutosave = app.currentStep >= 1;
 
   function init() {
     if (initialized) return;

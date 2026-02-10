@@ -1,4 +1,5 @@
 import {
+  forwardRef,
   useState,
   type CSSProperties,
   type InputHTMLAttributes,
@@ -10,13 +11,10 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   hasError?: boolean;
 };
 
-export function Input({
-  style,
-  className = "",
-  disabled,
-  hasError,
-  ...props
-}: InputProps) {
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  { style, className = "", disabled, hasError, ...props },
+  ref
+) {
   const [focused, setFocused] = useState(false);
 
   const baseStyle: CSSProperties = {
@@ -29,6 +27,7 @@ export function Input({
   return (
     <input
       {...props}
+      ref={ref}
       disabled={disabled}
       aria-invalid={hasError || undefined}
       onFocus={(event) => {
@@ -43,4 +42,4 @@ export function Input({
       style={{ ...baseStyle, ...style }}
     />
   );
-}
+});
