@@ -7,8 +7,15 @@ import {
   parseApiResponse,
 } from "@/contracts/clientApiSchemas";
 
-export async function submitApplication(payload: unknown) {
-  const res = await api.post("/api/client/submissions", payload);
+export async function submitApplication(
+  payload: unknown,
+  options?: { idempotencyKey?: string }
+) {
+  const res = await api.post("/api/client/submissions", payload, {
+    headers: options?.idempotencyKey
+      ? { "Idempotency-Key": options.idempotencyKey }
+      : undefined,
+  });
   return res.data;
 }
 

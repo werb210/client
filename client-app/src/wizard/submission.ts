@@ -81,9 +81,54 @@ export function buildSubmissionPayload(app: ApplicationData): SubmissionPayload 
   };
 }
 
-export function getPostSubmitRedirect(token?: string) {
+export function getPostSubmitRedirect({
+  token,
+  applicationId,
+}: {
+  token?: string;
+  applicationId?: string | null;
+}) {
+  if (applicationId) {
+    return `/application/${applicationId}`;
+  }
   if (token && ClientProfileStore.hasPortalSession(token)) {
     return `/status?token=${token}`;
   }
   return "/portal";
+}
+
+export function canSubmitApplication({
+  isOnline,
+  hasIdempotencyKey,
+  termsAccepted,
+  typedSignature,
+  partnerSignature,
+  missingIdDocs,
+  missingRequiredDocs,
+  docsAccepted,
+  processingComplete,
+  documentsDeferred,
+}: {
+  isOnline: boolean;
+  hasIdempotencyKey: boolean;
+  termsAccepted: boolean;
+  typedSignature: boolean;
+  partnerSignature: boolean;
+  missingIdDocs: number;
+  missingRequiredDocs: number;
+  docsAccepted: boolean;
+  processingComplete: boolean;
+  documentsDeferred: boolean;
+}) {
+  return (
+    isOnline &&
+    hasIdempotencyKey &&
+    termsAccepted &&
+    typedSignature &&
+    partnerSignature &&
+    missingIdDocs === 0 &&
+    (documentsDeferred || missingRequiredDocs === 0) &&
+    docsAccepted &&
+    processingComplete
+  );
 }

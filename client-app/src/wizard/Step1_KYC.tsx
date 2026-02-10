@@ -19,6 +19,7 @@ import {
   normalizeFundingIntent,
 } from "../constants/wizard";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
+import { loadStepData, mergeDraft, saveStepData } from "../client/autosave";
 import {
   getNextFieldKey,
   getStepFieldKeys,
@@ -125,7 +126,7 @@ function buildMatchPercentages(amount: number): Record<string, number> {
 }
 
 export function Step1_KYC() {
-  const { app, update } = useApplicationStore();
+  const { app, update, autosaveError } = useApplicationStore();
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const navigate = useNavigate();
@@ -139,6 +140,18 @@ export function Step1_KYC() {
       update({ currentStep: 1 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    const draft = loadStepData(1);
+    if (!draft) return;
+    const merged = mergeDraft(app.kyc, draft);
+    const changed = Object.keys(merged).some(
+      (key) => merged[key] !== app.kyc[key]
+    );
+    if (changed) {
+      update({ kyc: merged });
+    }
+  }, [app.kyc, update]);
 
   useEffect(() => {
     const normalized = normalizeFundingIntent(app.kyc.lookingFor);
@@ -185,6 +198,7 @@ export function Step1_KYC() {
   const isValid = Object.values(fieldErrors).every((error) => !error);
 
   async function startApplication() {
+    saveStepData(1, app.kyc);
     const payload = app.kyc;
 
     const amount = parseCurrency(payload.fundingAmount);
@@ -240,9 +254,24 @@ export function Step1_KYC() {
   return (
     <>
       <WizardLayout>
+        <StepHeader step={1} title="Know Your Client" />
+        {autosaveError && (
+          <Card
+            variant="muted"
+            style={{
+              background: "rgba(245, 158, 11, 0.12)",
+              color: tokens.colors.textPrimary,
+            }}
+          >
+            {autosaveError}
+          </Card>
+        )}
         <StepHeader step={1} title="Financial Profile" />
 
-        <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
+        <Card
+          style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}
+          onBlurCapture={() => saveStepData(1, app.kyc)}
+        >
           <div style={fieldGridStyle}>
             <div data-error={showErrors && fieldErrors.lookingFor}>
               <label style={components.form.label}>What are you looking for?</label>
