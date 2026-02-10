@@ -16,11 +16,18 @@ import {
   getCountryCode,
   getPostalLabel,
   getRegionLabel,
+  sanitizeCurrencyInput,
 } from "../utils/location";
 import { WizardLayout } from "../components/WizardLayout";
 import { PhoneInput } from "../components/ui/PhoneInput";
 import { components, layout, tokens } from "@/styles";
 import { resolveStepGuard } from "./stepGuard";
+import { AddressAutocompleteInput } from "../components/ui/AddressAutocompleteInput";
+import {
+  getNextEmptyFieldKey,
+  getNextFieldKey,
+  getWizardFieldId,
+} from "./wizardSchema";
 
 export function Step3_Business() {
   const { app, update } = useApplicationStore();
@@ -63,6 +70,7 @@ export function Step3_Business() {
     "city",
     "state",
     "zip",
+    "phone",
     "startDate",
     "employees",
     "estimatedRevenue",
@@ -77,6 +85,7 @@ export function Step3_Business() {
       "city",
       "state",
       "zip",
+      "phone",
       "startDate",
       "employees",
       "estimatedRevenue",
@@ -102,9 +111,66 @@ export function Step3_Business() {
     navigate("/apply/step-4");
   }
 
+  const fieldValues = {
+    businessName: values.businessName,
+    legalName: values.legalName,
+    businessStructure: values.businessStructure,
+    address: values.address,
+    city: values.city,
+    state: values.state,
+    zip: values.zip,
+    phone: values.phone,
+    website: values.website,
+    startDate: values.startDate,
+    employees: values.employees,
+    estimatedRevenue: values.estimatedRevenue,
+  };
+
+  const focusField = (fieldKey: string) => {
+    const id = getWizardFieldId("step3", fieldKey);
+    const element = document.getElementById(id) as HTMLElement | null;
+    element?.focus();
+  };
+
+  const isStepValid = (nextValues: typeof values) =>
+    [
+      "businessName",
+      "legalName",
+      "businessStructure",
+      "address",
+      "city",
+      "state",
+      "zip",
+      "phone",
+      "startDate",
+      "employees",
+      "estimatedRevenue",
+    ].every((field) => Validate.required(nextValues[field]));
+
+  const handleAutoAdvance = (
+    currentKey: string,
+    nextValues: typeof values,
+    preferEmpty = false
+  ) => {
+    const context = { business: nextValues };
+    const nextKey = preferEmpty
+      ? getNextEmptyFieldKey("step3", currentKey, context, {
+          ...fieldValues,
+          ...nextValues,
+        })
+      : getNextFieldKey("step3", currentKey, context);
+    if (nextKey) {
+      requestAnimationFrame(() => focusField(nextKey));
+      return;
+    }
+    if (isStepValid(nextValues)) {
+      void next();
+    }
+  };
+
   return (
     <WizardLayout>
-      <StepHeader step={3} title="Business Information" />
+      <StepHeader step={3} title="Business Details" />
 
       <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
         <div
@@ -117,26 +183,44 @@ export function Step3_Business() {
           <div>
             <label style={components.form.label}>Business Name (DBA)</label>
             <Input
+              id={getWizardFieldId("step3", "businessName")}
               value={values.businessName || ""}
               onChange={(e: any) => setField("businessName", e.target.value)}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("businessName", values);
+                }
+              }}
             />
           </div>
 
           <div>
             <label style={components.form.label}>Business Legal Name</label>
             <Input
+              id={getWizardFieldId("step3", "legalName")}
               value={values.legalName || ""}
               onChange={(e: any) => setField("legalName", e.target.value)}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("legalName", values);
+                }
+              }}
             />
           </div>
 
           <div>
             <label style={components.form.label}>Business Structure</label>
             <Select
+              id={getWizardFieldId("step3", "businessStructure")}
               value={values.businessStructure || ""}
-              onChange={(e: any) =>
-                setField("businessStructure", e.target.value)
-              }
+              onChange={(e: any) => {
+                const nextValues = {
+                  ...values,
+                  businessStructure: e.target.value,
+                };
+                update({ business: nextValues });
+                handleAutoAdvance("businessStructure", nextValues);
+              }}
             >
               <option value="">Select…</option>
               <option value="Sole Proprietorship">Sole Proprietorship</option>
@@ -150,17 +234,44 @@ export function Step3_Business() {
 
           <div>
             <label style={components.form.label}>Business Address</label>
-            <Input
+            <AddressAutocompleteInput
+              id={getWizardFieldId("step3", "address")}
+              country={regionCountry}
               value={values.address || ""}
               onChange={(e: any) => setField("address", e.target.value)}
+              onSelect={(selection) => {
+                const nextValues = {
+                  ...values,
+                  address: selection.street || values.address,
+                  city: selection.city || values.city,
+                  state: selection.state || values.state,
+                  zip: formatPostalCode(
+                    selection.postalCode || values.zip || "",
+                    countryCode
+                  ),
+                };
+                update({ business: nextValues });
+                handleAutoAdvance("address", nextValues, true);
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("address", values);
+                }
+              }}
             />
           </div>
 
           <div>
             <label style={components.form.label}>City</label>
             <Input
+              id={getWizardFieldId("step3", "city")}
               value={values.city || ""}
               onChange={(e: any) => setField("city", e.target.value)}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("city", values);
+                }
+              }}
             />
           </div>
           <div>
@@ -168,39 +279,68 @@ export function Step3_Business() {
             <RegionSelect
               country={regionCountry}
               value={values.state || ""}
-              onChange={(value) => setField("state", value)}
+              id={getWizardFieldId("step3", "state")}
+              onChange={(value) => {
+                const nextValues = { ...values, state: value };
+                update({ business: nextValues });
+                handleAutoAdvance("state", nextValues);
+              }}
             />
           </div>
           <div>
             <label style={components.form.label}>{postalLabel}</label>
             <Input
+              id={getWizardFieldId("step3", "zip")}
               value={formatPostalCode(values.zip || "", countryCode)}
-              onChange={(e: any) =>
-                setField("zip", formatPostalCode(e.target.value, countryCode))
-              }
+              onChange={(e: any) => {
+                const nextValues = {
+                  ...values,
+                  zip: formatPostalCode(e.target.value, countryCode),
+                };
+                update({ business: nextValues });
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("zip", values);
+                }
+              }}
             />
           </div>
 
           <div>
             <label style={components.form.label}>Business Phone</label>
             <PhoneInput
+              id={getWizardFieldId("step3", "phone")}
               value={formatPhoneNumber(values.phone || "", countryCode)}
-              onChange={(e: any) =>
-                setField(
-                  "phone",
-                  formatPhoneNumber(e.target.value, countryCode)
-                )
-              }
+              onChange={(e: any) => {
+                const nextValues = {
+                  ...values,
+                  phone: formatPhoneNumber(e.target.value, countryCode),
+                };
+                update({ business: nextValues });
+              }}
+              onBlur={() => handleAutoAdvance("phone", values)}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("phone", values);
+                }
+              }}
               placeholder="(555) 555-5555"
             />
           </div>
 
           <div>
-            <label style={components.form.label}>Business Website (optional)</label>
+            <label style={components.form.label}>Business Website</label>
             <Input
+              id={getWizardFieldId("step3", "website")}
               type="url"
               value={values.website || ""}
               onChange={(e: any) => setField("website", e.target.value)}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("website", values);
+                }
+              }}
               placeholder="https://"
             />
           </div>
@@ -208,9 +348,15 @@ export function Step3_Business() {
           <div>
             <label style={components.form.label}>Business Start Date</label>
             <Input
+              id={getWizardFieldId("step3", "startDate")}
               type="date"
               value={values.startDate || ""}
               onChange={(e: any) => setField("startDate", e.target.value)}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("startDate", values);
+                }
+              }}
             />
           </div>
 
@@ -240,11 +386,17 @@ export function Step3_Business() {
                 −
               </button>
               <Input
+                id={getWizardFieldId("step3", "employees")}
                 type="number"
                 min="0"
                 style={{ textAlign: "center" }}
                 value={values.employees ?? ""}
                 onChange={(e: any) => setField("employees", e.target.value)}
+                onKeyDown={(e: any) => {
+                  if (e.key === "Enter") {
+                    handleAutoAdvance("employees", values);
+                  }
+                }}
               />
               <button
                 style={{
@@ -271,16 +423,41 @@ export function Step3_Business() {
           <div>
             <label style={components.form.label}>Estimated Yearly Revenue</label>
             <Input
-              value={formatCurrencyValue(
-                values.estimatedRevenue || "",
-                countryCode
-              )}
-              onChange={(e: any) =>
-                setField(
-                  "estimatedRevenue",
-                  formatCurrencyValue(e.target.value, countryCode)
-                )
-              }
+              id={getWizardFieldId("step3", "estimatedRevenue")}
+              inputMode="decimal"
+              value={values.estimatedRevenue || ""}
+              onChange={(e: any) => {
+                const nextValues = {
+                  ...values,
+                  estimatedRevenue: sanitizeCurrencyInput(e.target.value),
+                };
+                update({ business: nextValues });
+              }}
+              onBlur={() => {
+                if (!values.estimatedRevenue) return;
+                const nextValues = {
+                  ...values,
+                  estimatedRevenue: formatCurrencyValue(
+                    values.estimatedRevenue,
+                    countryCode
+                  ),
+                };
+                update({ business: nextValues });
+                handleAutoAdvance("estimatedRevenue", nextValues);
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  const nextValues = {
+                    ...values,
+                    estimatedRevenue: formatCurrencyValue(
+                      values.estimatedRevenue || "",
+                      countryCode
+                    ),
+                  };
+                  update({ business: nextValues });
+                  handleAutoAdvance("estimatedRevenue", nextValues);
+                }
+              }}
               placeholder={countryCode === "CA" ? "CA$" : "$"}
             />
           </div>

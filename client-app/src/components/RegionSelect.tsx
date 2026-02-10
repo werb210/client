@@ -4,10 +4,12 @@ export function RegionSelect({
   country,
   value,
   onChange,
+  id,
 }: {
   country: "CA" | "US";
   value: string;
   onChange: (v: string) => void;
+  id?: string;
 }) {
   const options =
     country === "CA"
@@ -80,7 +82,11 @@ export function RegionSelect({
         ];
 
   return (
-    <Select value={value} onChange={(e: any) => onChange(e.target.value)}>
+    <Select
+      id={id}
+      value={value}
+      onChange={(e: any) => onChange(e.target.value)}
+    >
       <option value="">Select</option>
       {options.map((option) => (
         <option key={option} value={option}>

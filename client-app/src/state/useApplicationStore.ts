@@ -103,7 +103,7 @@ export function useApplicationStore() {
   const autosaveErrorShown = useRef(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const canAutosave = app.currentStep > 1;
+  const canAutosave = app.currentStep >= 1;
 
   function init() {
     if (initialized) return;
