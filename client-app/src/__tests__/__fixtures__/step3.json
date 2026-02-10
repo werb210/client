@@ -1,0 +1,14 @@
+{
+  "dba": "Northwind Traders",
+  "legalName": "Northwind Traders Inc.",
+  "structure": "Corporation",
+  "address": "123 King St W",
+  "city": "Toronto",
+  "state": "ON",
+  "postalCode": "M5V 2T6",
+  "phone": "(416) 555-0123",
+  "website": "https://northwind.example.com",
+  "startDate": "2019-05-02",
+  "employeeCount": 14,
+  "estimatedRevenue": 1200000
+}

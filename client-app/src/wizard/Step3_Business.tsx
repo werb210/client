@@ -29,6 +29,8 @@ import {
   getNextFieldKey,
   getWizardFieldId,
 } from "./wizardSchema";
+import { enforceV1StepSchema } from "../schemas/v1WizardSchema";
+import { shouldAutoAdvance } from "../utils/autoadvance";
 
 export function Step3_Business() {
   const { app, update, autosaveError } = useApplicationStore();
@@ -91,6 +93,7 @@ export function Step3_Business() {
 
   async function next() {
     saveStepData(3, values);
+    enforceV1StepSchema("step3", values);
     const requiredFields = [
       "businessName",
       "legalName",
@@ -280,7 +283,9 @@ export function Step3_Business() {
                   ),
                 };
                 update({ business: nextValues });
-                handleAutoAdvance("address", nextValues, true);
+                if (shouldAutoAdvance("address", nextValues.address)) {
+                  handleAutoAdvance("address", nextValues, true);
+                }
               }}
               onKeyDown={(e: any) => {
                 if (e.key === "Enter") {
