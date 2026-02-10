@@ -22,6 +22,12 @@ import { PhoneInput } from "../components/ui/PhoneInput";
 import { Checkbox } from "../components/ui/Checkbox";
 import { components, layout, tokens } from "@/styles";
 import { resolveStepGuard } from "./stepGuard";
+import { AddressAutocompleteInput } from "../components/ui/AddressAutocompleteInput";
+import {
+  getNextEmptyFieldKey,
+  getNextFieldKey,
+  getWizardFieldId,
+} from "./wizardSchema";
 
 export function Step4_Applicant() {
   const { app, update } = useApplicationStore();
@@ -85,6 +91,22 @@ export function Step4_Applicant() {
       return;
     }
 
+    if (values.hasMultipleOwners) {
+      const partnerMissing = partnerRequiredFields.find(
+        (field) => !Validate.required(partner[field])
+      );
+      if (partnerMissing) {
+        alert("Please complete all required partner details.");
+        return;
+      }
+    }
+
+    const { ownershipValid } = getOwnershipValidity(values);
+    if (!ownershipValid) {
+      alert("Ownership percentages must total 100.");
+      return;
+    }
+
     if (app.applicationToken) {
       try {
         await ClientAppAPI.update(app.applicationToken, { applicant: values });
@@ -97,7 +119,7 @@ export function Step4_Applicant() {
     navigate("/apply/step-5");
   }
 
-  const isValid = [
+  const baseRequiredFields = [
     "firstName",
     "lastName",
     "email",
@@ -109,7 +131,110 @@ export function Step4_Applicant() {
     "dob",
     "ssn",
     "ownership",
-  ].every((field) => Validate.required(values[field]));
+  ];
+
+  const partnerRequiredFields = [
+    "firstName",
+    "lastName",
+    "email",
+    "phone",
+    "street",
+    "city",
+    "state",
+    "zip",
+    "dob",
+    "ssn",
+    "ownership",
+  ];
+
+  const getOwnershipValidity = (nextValues: typeof values) => {
+    const nextPartner = nextValues.partner || {};
+    const primaryOwnership = Number(nextValues.ownership || 0);
+    const partnerOwnership = Number(nextPartner.ownership || 0);
+    const ownershipRangeValid =
+      primaryOwnership >= 1 &&
+      primaryOwnership <= 100 &&
+      (!nextValues.hasMultipleOwners ||
+        (partnerOwnership >= 1 && partnerOwnership <= 100));
+    const ownershipTotalValid = nextValues.hasMultipleOwners
+      ? primaryOwnership + partnerOwnership === 100
+      : primaryOwnership === 100;
+    return {
+      ownershipRangeValid,
+      ownershipTotalValid,
+      ownershipValid: ownershipRangeValid && ownershipTotalValid,
+    };
+  };
+
+  const isStepValid = (nextValues: typeof values) => {
+    const { ownershipValid } = getOwnershipValidity(nextValues);
+    return (
+      baseRequiredFields.every((field) =>
+        Validate.required(nextValues[field])
+      ) &&
+      (!nextValues.hasMultipleOwners ||
+        partnerRequiredFields.every((field) =>
+          Validate.required((nextValues.partner || {})[field])
+        )) &&
+      ownershipValid
+    );
+  };
+
+  const isValid = isStepValid(values);
+
+  const buildValueMap = (nextValues: typeof values) => {
+    const nextPartner = nextValues.partner || {};
+    return {
+      firstName: nextValues.firstName,
+      lastName: nextValues.lastName,
+      email: nextValues.email,
+      phone: nextValues.phone,
+      street: nextValues.street,
+      city: nextValues.city,
+      state: nextValues.state,
+      zip: nextValues.zip,
+      dob: nextValues.dob,
+      ssn: nextValues.ssn,
+      ownership: nextValues.ownership,
+      hasMultipleOwners: nextValues.hasMultipleOwners,
+      "partner.firstName": nextPartner.firstName,
+      "partner.lastName": nextPartner.lastName,
+      "partner.email": nextPartner.email,
+      "partner.phone": nextPartner.phone,
+      "partner.street": nextPartner.street,
+      "partner.city": nextPartner.city,
+      "partner.state": nextPartner.state,
+      "partner.zip": nextPartner.zip,
+      "partner.dob": nextPartner.dob,
+      "partner.ssn": nextPartner.ssn,
+      "partner.ownership": nextPartner.ownership,
+    };
+  };
+
+  const focusField = (fieldKey: string) => {
+    const id = getWizardFieldId("step4", fieldKey);
+    const element = document.getElementById(id) as HTMLElement | null;
+    element?.focus();
+  };
+
+  const handleAutoAdvance = (
+    currentKey: string,
+    nextValues: typeof values,
+    preferEmpty = false
+  ) => {
+    const context = { applicant: nextValues };
+    const valueMap = buildValueMap(nextValues);
+    const nextKey = preferEmpty
+      ? getNextEmptyFieldKey("step4", currentKey, context, valueMap)
+      : getNextFieldKey("step4", currentKey, context);
+    if (nextKey) {
+      requestAnimationFrame(() => focusField(nextKey));
+      return;
+    }
+    if (isStepValid(nextValues)) {
+      void next();
+    }
+  };
 
   return (
     <WizardLayout>
@@ -128,50 +253,118 @@ export function Step4_Applicant() {
           <div>
             <label style={components.form.label}>First Name</label>
             <Input
+              id={getWizardFieldId("step4", "firstName")}
               value={values.firstName || ""}
-              onChange={(e: any) => setField("firstName", e.target.value)}
+              onChange={(e: any) => {
+                const nextValues = { ...values, firstName: e.target.value };
+                update({ applicant: nextValues });
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("firstName", values);
+                }
+              }}
             />
           </div>
           <div>
             <label style={components.form.label}>Last Name</label>
             <Input
+              id={getWizardFieldId("step4", "lastName")}
               value={values.lastName || ""}
-              onChange={(e: any) => setField("lastName", e.target.value)}
+              onChange={(e: any) => {
+                const nextValues = { ...values, lastName: e.target.value };
+                update({ applicant: nextValues });
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("lastName", values);
+                }
+              }}
             />
           </div>
 
           <div>
-            <label style={components.form.label}>Email Address</label>
+            <label style={components.form.label}>Email</label>
             <Input
               type="email"
+              id={getWizardFieldId("step4", "email")}
               value={values.email || ""}
-              onChange={(e: any) => setField("email", e.target.value)}
+              onChange={(e: any) => {
+                const nextValues = { ...values, email: e.target.value };
+                update({ applicant: nextValues });
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("email", values);
+                }
+              }}
             />
           </div>
 
           <div>
-            <label style={components.form.label}>Phone Number</label>
+            <label style={components.form.label}>Phone</label>
             <PhoneInput
+              id={getWizardFieldId("step4", "phone")}
               value={formatPhoneNumber(values.phone || "", countryCode)}
-              onChange={(e: any) =>
-                setField("phone", formatPhoneNumber(e.target.value, countryCode))
-              }
+              onChange={(e: any) => {
+                const nextValues = {
+                  ...values,
+                  phone: formatPhoneNumber(e.target.value, countryCode),
+                };
+                update({ applicant: nextValues });
+              }}
+              onBlur={() => handleAutoAdvance("phone", values)}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("phone", values);
+                }
+              }}
             />
           </div>
 
           <div>
             <label style={components.form.label}>Street Address</label>
-            <Input
+            <AddressAutocompleteInput
+              id={getWizardFieldId("step4", "street")}
+              country={regionCountry}
               value={values.street || ""}
               onChange={(e: any) => setField("street", e.target.value)}
+              onSelect={(selection) => {
+                const nextValues = {
+                  ...values,
+                  street: selection.street || values.street,
+                  city: selection.city || values.city,
+                  state: selection.state || values.state,
+                  zip: formatPostalCode(
+                    selection.postalCode || values.zip || "",
+                    countryCode
+                  ),
+                };
+                update({ applicant: nextValues });
+                handleAutoAdvance("street", nextValues, true);
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("street", values);
+                }
+              }}
             />
           </div>
 
           <div>
             <label style={components.form.label}>City</label>
             <Input
+              id={getWizardFieldId("step4", "city")}
               value={values.city || ""}
-              onChange={(e: any) => setField("city", e.target.value)}
+              onChange={(e: any) => {
+                const nextValues = { ...values, city: e.target.value };
+                update({ applicant: nextValues });
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("city", values);
+                }
+              }}
             />
           </div>
           <div>
@@ -179,16 +372,31 @@ export function Step4_Applicant() {
             <RegionSelect
               country={regionCountry}
               value={values.state || ""}
-              onChange={(value) => setField("state", value)}
+              id={getWizardFieldId("step4", "state")}
+              onChange={(value) => {
+                const nextValues = { ...values, state: value };
+                update({ applicant: nextValues });
+                handleAutoAdvance("state", nextValues);
+              }}
             />
           </div>
           <div>
             <label style={components.form.label}>{postalLabel}</label>
             <Input
+              id={getWizardFieldId("step4", "zip")}
               value={formatPostalCode(values.zip || "", countryCode)}
-              onChange={(e: any) =>
-                setField("zip", formatPostalCode(e.target.value, countryCode))
-              }
+              onChange={(e: any) => {
+                const nextValues = {
+                  ...values,
+                  zip: formatPostalCode(e.target.value, countryCode),
+                };
+                update({ applicant: nextValues });
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("zip", values);
+                }
+              }}
             />
           </div>
 
@@ -196,8 +404,17 @@ export function Step4_Applicant() {
             <label style={components.form.label}>Date of Birth</label>
             <Input
               type="date"
+              id={getWizardFieldId("step4", "dob")}
               value={values.dob || ""}
-              onChange={(e: any) => setField("dob", e.target.value)}
+              onChange={(e: any) => {
+                const nextValues = { ...values, dob: e.target.value };
+                update({ applicant: nextValues });
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("dob", values);
+                }
+              }}
             />
           </div>
           <div>
@@ -206,21 +423,40 @@ export function Step4_Applicant() {
               type="text"
               inputMode="numeric"
               autoComplete="off"
+              id={getWizardFieldId("step4", "ssn")}
               value={formatIdentityNumber(values.ssn || "", countryCode)}
-              onChange={(e: any) =>
-                setField(
-                  "ssn",
-                  formatIdentityNumber(e.target.value, countryCode)
-                )
-              }
+              onChange={(e: any) => {
+                const nextValues = {
+                  ...values,
+                  ssn: formatIdentityNumber(e.target.value, countryCode),
+                };
+                update({ applicant: nextValues });
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("ssn", values);
+                }
+              }}
             />
           </div>
 
           <div>
-            <label style={components.form.label}>Ownership Percentage</label>
+            <label style={components.form.label}>Ownership %</label>
             <Input
+              id={getWizardFieldId("step4", "ownership")}
+              type="number"
+              min="1"
+              max="100"
               value={values.ownership || ""}
-              onChange={(e: any) => setField("ownership", e.target.value)}
+              onChange={(e: any) => {
+                const nextValues = { ...values, ownership: e.target.value };
+                update({ applicant: nextValues });
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("ownership", values);
+                }
+              }}
               placeholder="%"
             />
           </div>
@@ -272,38 +508,57 @@ export function Step4_Applicant() {
               }}
             >
               <div>
-                <label style={components.form.label}>First Name</label>
+                <label style={components.form.label}>Partner First Name</label>
                 <Input
+                  id={getWizardFieldId("step4", "partner.firstName")}
                   value={partner.firstName || ""}
                   onChange={(e: any) =>
                     setPartnerField("firstName", e.target.value)
                   }
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter") {
+                      handleAutoAdvance("partner.firstName", values);
+                    }
+                  }}
                 />
               </div>
               <div>
-                <label style={components.form.label}>Last Name</label>
+                <label style={components.form.label}>Partner Last Name</label>
                 <Input
+                  id={getWizardFieldId("step4", "partner.lastName")}
                   value={partner.lastName || ""}
                   onChange={(e: any) =>
                     setPartnerField("lastName", e.target.value)
                   }
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter") {
+                      handleAutoAdvance("partner.lastName", values);
+                    }
+                  }}
                 />
               </div>
 
               <div>
-                <label style={components.form.label}>Email Address</label>
+                <label style={components.form.label}>Partner Email</label>
                 <Input
                   type="email"
+                  id={getWizardFieldId("step4", "partner.email")}
                   value={partner.email || ""}
                   onChange={(e: any) =>
                     setPartnerField("email", e.target.value)
                   }
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter") {
+                      handleAutoAdvance("partner.email", values);
+                    }
+                  }}
                 />
               </div>
 
               <div>
-                <label style={components.form.label}>Phone Number</label>
+                <label style={components.form.label}>Partner Phone</label>
                 <PhoneInput
+                  id={getWizardFieldId("step4", "partner.phone")}
                   value={formatPhoneNumber(partner.phone || "", countryCode)}
                   onChange={(e: any) =>
                     setPartnerField(
@@ -311,39 +566,84 @@ export function Step4_Applicant() {
                       formatPhoneNumber(e.target.value, countryCode)
                     )
                   }
+                  onBlur={() => handleAutoAdvance("partner.phone", values)}
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter") {
+                      handleAutoAdvance("partner.phone", values);
+                    }
+                  }}
                 />
               </div>
 
               <div>
-                <label style={components.form.label}>Street Address</label>
-                <Input
+                <label style={components.form.label}>Partner Address</label>
+                <AddressAutocompleteInput
+                  id={getWizardFieldId("step4", "partner.street")}
+                  country={regionCountry}
                   value={partner.street || ""}
                   onChange={(e: any) =>
                     setPartnerField("street", e.target.value)
                   }
+                  onSelect={(selection) => {
+                    const nextValues = {
+                      ...values,
+                      partner: {
+                        ...partner,
+                        street: selection.street || partner.street,
+                        city: selection.city || partner.city,
+                        state: selection.state || partner.state,
+                        zip: formatPostalCode(
+                          selection.postalCode || partner.zip || "",
+                          countryCode
+                        ),
+                      },
+                    };
+                    update({ applicant: nextValues });
+                    handleAutoAdvance("partner.street", nextValues, true);
+                  }}
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter") {
+                      handleAutoAdvance("partner.street", values);
+                    }
+                  }}
                 />
               </div>
 
               <div>
-                <label style={components.form.label}>City</label>
+                <label style={components.form.label}>Partner City</label>
                 <Input
+                  id={getWizardFieldId("step4", "partner.city")}
                   value={partner.city || ""}
                   onChange={(e: any) =>
                     setPartnerField("city", e.target.value)
                   }
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter") {
+                      handleAutoAdvance("partner.city", values);
+                    }
+                  }}
                 />
               </div>
               <div>
-                <label style={components.form.label}>{regionLabel}</label>
+                <label style={components.form.label}>Partner {regionLabel}</label>
                 <RegionSelect
                   country={regionCountry}
                   value={partner.state || ""}
-                  onChange={(value) => setPartnerField("state", value)}
+                  id={getWizardFieldId("step4", "partner.state")}
+                  onChange={(value) => {
+                    const nextValues = {
+                      ...values,
+                      partner: { ...partner, state: value },
+                    };
+                    update({ applicant: nextValues });
+                    handleAutoAdvance("partner.state", nextValues);
+                  }}
                 />
               </div>
               <div>
-                <label style={components.form.label}>{postalLabel}</label>
+                <label style={components.form.label}>Partner {postalLabel}</label>
                 <Input
+                  id={getWizardFieldId("step4", "partner.zip")}
                   value={formatPostalCode(partner.zip || "", countryCode)}
                   onChange={(e: any) =>
                     setPartnerField(
@@ -351,25 +651,37 @@ export function Step4_Applicant() {
                       formatPostalCode(e.target.value, countryCode)
                     )
                   }
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter") {
+                      handleAutoAdvance("partner.zip", values);
+                    }
+                  }}
                 />
               </div>
 
               <div>
-                <label style={components.form.label}>Date of Birth</label>
+                <label style={components.form.label}>Partner DOB</label>
                 <Input
                   type="date"
+                  id={getWizardFieldId("step4", "partner.dob")}
                   value={partner.dob || ""}
                   onChange={(e: any) =>
                     setPartnerField("dob", e.target.value)
                   }
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter") {
+                      handleAutoAdvance("partner.dob", values);
+                    }
+                  }}
                 />
               </div>
               <div>
-                <label style={components.form.label}>{identityLabel}</label>
+                <label style={components.form.label}>Partner {identityLabel}</label>
                 <Input
                   type="text"
                   inputMode="numeric"
                   autoComplete="off"
+                  id={getWizardFieldId("step4", "partner.ssn")}
                   value={formatIdentityNumber(partner.ssn || "", countryCode)}
                   onChange={(e: any) =>
                     setPartnerField(
@@ -377,16 +689,30 @@ export function Step4_Applicant() {
                       formatIdentityNumber(e.target.value, countryCode)
                     )
                   }
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter") {
+                      handleAutoAdvance("partner.ssn", values);
+                    }
+                  }}
                 />
               </div>
 
               <div>
-                <label style={components.form.label}>Ownership Percentage</label>
+                <label style={components.form.label}>Partner Ownership %</label>
                 <Input
+                  id={getWizardFieldId("step4", "partner.ownership")}
+                  type="number"
+                  min="1"
+                  max="100"
                   value={partner.ownership || ""}
                   onChange={(e: any) =>
                     setPartnerField("ownership", e.target.value)
                   }
+                  onKeyDown={(e: any) => {
+                    if (e.key === "Enter") {
+                      handleAutoAdvance("partner.ownership", values);
+                    }
+                  }}
                   placeholder="%"
                 />
               </div>

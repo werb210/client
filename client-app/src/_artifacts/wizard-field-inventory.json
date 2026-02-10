@@ -5,7 +5,6 @@
     "file": "src/wizard/Step1_KYC.tsx",
     "fields": [
       "currentStep",
-      "kyc.phone",
       "kyc.lookingFor",
       "kyc.fundingAmount",
       "kyc.businessLocation",
@@ -28,10 +27,8 @@
       "matchPercentages"
     ],
     "guards": [
-      "Requires all KYC fields to be present before OTP request (lookingFor, fundingAmount, businessLocation not Other, industry, purposeOfFunds, salesHistory, revenueLast12Months, monthlyRevenue, accountsReceivable, fixedAssets).",
-      "Phone must be present and pass Validate.phone before OTP request.",
-      "Business location must be Canada or United States (Other fails validation and triggers the modal).",
-      "OTP verification must succeed before proceeding; invalid code blocks progression."
+      "Requires all financial profile fields to be present before proceeding (lookingFor, fundingAmount, businessLocation not Other, industry, purposeOfFunds, salesHistory, revenueLast12Months, monthlyRevenue, accountsReceivable when applicable, fixedAssets when applicable).",
+      "Business location must be Canada or United States (Other fails validation and triggers the modal)."
     ]
   },
   {
@@ -80,7 +77,7 @@
     ],
     "guards": [
       "Step access enforced via resolveStepGuard redirect.",
-      "Continue requires required business fields (businessName, legalName, businessStructure, address, city, state, zip, startDate, employees, estimatedRevenue).",
+      "Continue requires required business fields (businessName, legalName, businessStructure, address, city, state, zip, phone, startDate, employees, estimatedRevenue).",
       "Button disabled when required business fields are missing."
     ]
   },
@@ -117,7 +114,8 @@
     "guards": [
       "Step access enforced via resolveStepGuard redirect.",
       "Continue requires required applicant fields (firstName, lastName, email, phone, street, city, state, zip, dob, ssn, ownership).",
-      "Partner fields are shown/collected only when hasMultipleOwners is true.",
+      "Partner fields are shown/required only when hasMultipleOwners is true.",
+      "Ownership percentages must total 100.",
       "Button disabled when required applicant fields are missing."
     ]
   },
