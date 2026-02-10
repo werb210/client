@@ -11,6 +11,7 @@ import { WizardLayout } from "../components/WizardLayout";
 import { submitApplication } from "../api/applications";
 import {
   buildSubmissionPayload,
+  canSubmitApplication,
   getPostSubmitRedirect,
   getMissingRequiredDocs,
   shouldBlockForMissingDocuments,
@@ -22,19 +23,25 @@ import { extractApplicationFromStatus } from "../applications/resume";
 import { filterRequirementsByAmount, type LenderProductRequirement } from "./requirements";
 import { components, layout, tokens } from "@/styles";
 import { resolveStepGuard } from "./stepGuard";
+import { clearDraft } from "../client/autosave";
+import {
+  clearSubmissionIdempotencyKey,
+  getOrCreateSubmissionIdempotencyKey,
+} from "../client/submissionIdempotency";
+import { useNetworkStatus } from "../hooks/useNetworkStatus";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
-  const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [redirectPath, setRedirectPath] = useState<string | null>(null);
   const [docErrors, setDocErrors] = useState<Record<string, string>>({});
   const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>(
     {}
   );
   const today = useMemo(() => new Date().toISOString().split("T")[0], []);
   const navigate = useNavigate();
-  const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+  const { isOffline } = useNetworkStatus();
+  const isOnline = !isOffline;
+  const [idempotencyKey] = useState(() => getOrCreateSubmissionIdempotencyKey());
   const hasPartner = Boolean(app.applicant?.hasMultipleOwners);
   const requirementsKey = useMemo(
     () => (app.productRequirements?.aggregated ? "aggregated" : app.selectedProductId),
@@ -132,18 +139,20 @@ export function Step6_Review() {
       });
   }, [app.applicationToken, update]);
 
-  useEffect(() => {
-    if (!submitted || !redirectPath) return;
-    const timeout = window.setTimeout(() => {
-      navigate(redirectPath, { replace: true });
-    }, 1500);
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, [navigate, redirectPath, submitted]);
-
   function toggleTerms() {
     update({ termsAccepted: !app.termsAccepted });
+  }
+
+  function resolveSubmissionId(data: any) {
+    return (
+      data?.submissionId ||
+      data?.submission?.id ||
+      data?.submission?.submissionId ||
+      data?.applicationId ||
+      data?.application?.id ||
+      data?.id ||
+      null
+    );
   }
 
   async function submit() {
@@ -152,6 +161,13 @@ export function Step6_Review() {
     if (!isOnline) {
       setSubmitError(
         "You're offline. Please reconnect to submit your application."
+      );
+      return;
+    }
+
+    if (!idempotencyKey) {
+      setSubmitError(
+        "We couldn't prepare your submission. Please refresh and try again."
       );
       return;
     }
@@ -223,12 +239,20 @@ export function Step6_Review() {
         currentStep: app.currentStep,
       });
       const payload = buildSubmissionPayload(app);
-      await submitApplication(payload);
+      const submissionResponse = await submitApplication(payload, {
+        idempotencyKey,
+      });
       const refreshed = await ClientAppAPI.status(app.applicationToken);
       const hydrated = extractApplicationFromStatus(
         refreshed?.data || {},
         app.applicationToken
       );
+      const portalId =
+        resolveSubmissionId(submissionResponse) ||
+        resolveSubmissionId(refreshed?.data) ||
+        hydrated.applicationId ||
+        app.applicationId ||
+        null;
       update({
         documents: hydrated.documents || app.documents,
         documentsDeferred:
@@ -243,12 +267,38 @@ export function Step6_Review() {
       if (app.kyc?.phone && app.applicationToken) {
         ClientProfileStore.markSubmitted(app.kyc.phone, app.applicationToken);
       }
-      setRedirectPath(getPostSubmitRedirect(app.applicationToken));
-      setSubmitted(true);
+      clearDraft();
+      clearSubmissionIdempotencyKey();
+      navigate(getPostSubmitRedirect({ token: app.applicationToken, applicationId: portalId }), {
+        replace: true,
+        state: { submitted: true },
+      });
     } catch (error) {
       console.error("Submission failed:", error);
+      const status = (error as any)?.response?.status;
+      const data = (error as any)?.response?.data;
+      const duplicateId = status === 409 ? resolveSubmissionId(data) : null;
+      if (duplicateId) {
+        clearDraft();
+        clearSubmissionIdempotencyKey();
+        navigate(
+          getPostSubmitRedirect({
+            token: app.applicationToken,
+            applicationId: duplicateId,
+          }),
+          { replace: true, state: { submitted: true, duplicate: true } }
+        );
+        return;
+      }
+      const message =
+        data?.message ||
+        data?.error ||
+        data?.errors ||
+        "We couldn't submit your application. Please try again or contact support.";
       setSubmitError(
-        "We couldn't submit your application. Please try again or contact support."
+        typeof message === "string"
+          ? message
+          : "We couldn't submit your application. Please try again or contact support."
       );
     }
   }
@@ -273,35 +323,6 @@ export function Step6_Review() {
             onClick={() => setSubmitError(null)}
           >
             Return to review
-          </Button>
-        </Card>
-      </WizardLayout>
-    );
-  }
-
-  if (submitted) {
-    return (
-      <WizardLayout>
-        <Card
-          style={{
-            textAlign: "center",
-            padding: tokens.spacing.xl,
-            display: "flex",
-            flexDirection: "column",
-            gap: tokens.spacing.sm,
-          }}
-        >
-          <div style={components.form.eyebrow}>Application submitted</div>
-          <h1 style={components.form.title}>Thank you for your submission.</h1>
-          <p style={components.form.subtitle}>
-            We’ve received your application and will notify you about next
-            steps. You can also review updates in your client portal.
-          </p>
-          <Button
-            style={{ marginTop: tokens.spacing.sm, width: "100%", maxWidth: "260px" }}
-            onClick={() => navigate(redirectPath || "/portal")}
-          >
-            View application status
           </Button>
         </Card>
       </WizardLayout>
@@ -565,14 +586,18 @@ export function Step6_Review() {
               style={{ width: "100%", maxWidth: "240px" }}
               onClick={submit}
               disabled={
-                !isOnline ||
-                !app.termsAccepted ||
-                !app.typedSignature?.trim() ||
-                (hasPartner && !app.coApplicantSignature?.trim()) ||
-                missingIdDocs.length > 0 ||
-                (!app.documentsDeferred && missingRequiredDocs.length > 0) ||
-                !docsAccepted ||
-                !processingComplete
+                !canSubmitApplication({
+                  isOnline,
+                  hasIdempotencyKey: Boolean(idempotencyKey),
+                  termsAccepted: app.termsAccepted,
+                  typedSignature: Boolean(app.typedSignature?.trim()),
+                  partnerSignature: hasPartner ? Boolean(app.coApplicantSignature?.trim()) : true,
+                  missingIdDocs: missingIdDocs.length,
+                  missingRequiredDocs: missingRequiredDocs.length,
+                  docsAccepted,
+                  processingComplete,
+                  documentsDeferred: app.documentsDeferred,
+                })
               }
             >
               Submit application

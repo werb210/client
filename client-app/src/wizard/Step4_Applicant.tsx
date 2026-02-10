@@ -22,9 +22,10 @@ import { PhoneInput } from "../components/ui/PhoneInput";
 import { Checkbox } from "../components/ui/Checkbox";
 import { components, layout, tokens } from "@/styles";
 import { resolveStepGuard } from "./stepGuard";
+import { loadStepData, mergeDraft, saveStepData } from "../client/autosave";
 
 export function Step4_Applicant() {
-  const { app, update } = useApplicationStore();
+  const { app, update, autosaveError } = useApplicationStore();
   const navigate = useNavigate();
 
   const values = { ...app.applicant };
@@ -54,6 +55,18 @@ export function Step4_Applicant() {
     }
   }, [app.currentStep, navigate]);
 
+  useEffect(() => {
+    const draft = loadStepData(4);
+    if (!draft) return;
+    const merged = mergeDraft(values, draft);
+    const changed = Object.keys(merged).some(
+      (key) => merged[key] !== values[key]
+    );
+    if (changed) {
+      update({ applicant: merged });
+    }
+  }, [update, values]);
+
   function setField(key: string, value: any) {
     update({ applicant: { ...values, [key]: value } });
   }
@@ -63,6 +76,7 @@ export function Step4_Applicant() {
   }
 
   async function next() {
+    saveStepData(4, values);
     const requiredFields = [
       "firstName",
       "lastName",
@@ -114,8 +128,22 @@ export function Step4_Applicant() {
   return (
     <WizardLayout>
       <StepHeader step={4} title="Applicant Information" />
+      {autosaveError && (
+        <Card
+          variant="muted"
+          style={{
+            background: "rgba(245, 158, 11, 0.12)",
+            color: tokens.colors.textPrimary,
+          }}
+        >
+          {autosaveError}
+        </Card>
+      )}
 
-      <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
+      <Card
+        style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}
+        onBlurCapture={() => saveStepData(4, values)}
+      >
         <div style={components.form.eyebrow}>Primary applicant</div>
 
         <div

@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { OfflineStore } from "./offline";
 import { ApplicationData } from "../types/application";
 import { ClientAppAPI } from "../api/clientApp";
+import { clearDraft } from "../client/autosave";
+import { clearSubmissionIdempotencyKey } from "../client/submissionIdempotency";
+import { useNetworkStatus } from "../hooks/useNetworkStatus";
 
 const emptyApp: ApplicationData = {
   kyc: {},
@@ -100,8 +103,10 @@ export function useApplicationStore() {
     hydrateApplication(OfflineStore.load())
   );
   const [initialized, setInitialized] = useState(false);
-  const autosaveErrorShown = useRef(false);
+  const [autosaveError, setAutosaveError] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSync = useRef<ApplicationData | null>(null);
+  const { isOffline } = useNetworkStatus();
 
   const canAutosave = app.currentStep > 1;
 
@@ -125,6 +130,8 @@ export function useApplicationStore() {
   function reset() {
     setApp(emptyApp);
     OfflineStore.clear();
+    clearDraft();
+    clearSubmissionIdempotencyKey();
   }
 
   useEffect(() => {
@@ -148,35 +155,40 @@ export function useApplicationStore() {
     saveTimer.current = setTimeout(() => {
       OfflineStore.save(app);
 
-      if (app.applicationToken) {
-        void ClientAppAPI.update(app.applicationToken, {
-          financialProfile: app.kyc,
-          productCategory: app.productCategory,
-          selectedProduct: app.selectedProduct,
-          selectedProductId: app.selectedProductId,
-          selectedProductType: app.selectedProductType,
-          requires_closing_cost_funding: app.requires_closing_cost_funding,
-          business: app.business,
-          applicant: app.applicant,
-          documents: app.documents,
-          documentsDeferred: app.documentsDeferred,
-          termsAccepted: app.termsAccepted,
-          typedSignature: app.typedSignature,
-          coApplicantSignature: app.coApplicantSignature,
-          signatureDate: app.signatureDate,
-          currentStep: app.currentStep,
-        })
-          .then(() => {
-            autosaveErrorShown.current = false;
-          })
-          .catch((error) => {
-            console.error("Autosave failed:", error);
-            if (!autosaveErrorShown.current) {
-              autosaveErrorShown.current = true;
-              alert("Autosave failed. Please check your connection.");
-            }
-          });
+      if (!app.applicationToken) return;
+
+      if (isOffline) {
+        pendingSync.current = app;
+        setAutosaveError("You're offline. Changes will sync when you reconnect.");
+        return;
       }
+
+      void ClientAppAPI.update(app.applicationToken, {
+        financialProfile: app.kyc,
+        productCategory: app.productCategory,
+        selectedProduct: app.selectedProduct,
+        selectedProductId: app.selectedProductId,
+        selectedProductType: app.selectedProductType,
+        requires_closing_cost_funding: app.requires_closing_cost_funding,
+        business: app.business,
+        applicant: app.applicant,
+        documents: app.documents,
+        documentsDeferred: app.documentsDeferred,
+        termsAccepted: app.termsAccepted,
+        typedSignature: app.typedSignature,
+        coApplicantSignature: app.coApplicantSignature,
+        signatureDate: app.signatureDate,
+        currentStep: app.currentStep,
+      })
+        .then(() => {
+          pendingSync.current = null;
+          setAutosaveError(null);
+        })
+        .catch((error) => {
+          console.error("Autosave failed:", error);
+          pendingSync.current = app;
+          setAutosaveError("Autosave failed. We'll retry when you're back online.");
+        });
     }, 500);
 
     return () => {
@@ -184,7 +196,38 @@ export function useApplicationStore() {
         clearTimeout(saveTimer.current);
       }
     };
-  }, [app, canAutosave]);
+  }, [app, canAutosave, isOffline]);
+
+  useEffect(() => {
+    if (isOffline || !pendingSync.current || !app.applicationToken) return;
+    const pending = pendingSync.current;
+    pendingSync.current = null;
+    void ClientAppAPI.update(app.applicationToken, {
+      financialProfile: pending.kyc,
+      productCategory: pending.productCategory,
+      selectedProduct: pending.selectedProduct,
+      selectedProductId: pending.selectedProductId,
+      selectedProductType: pending.selectedProductType,
+      requires_closing_cost_funding: pending.requires_closing_cost_funding,
+      business: pending.business,
+      applicant: pending.applicant,
+      documents: pending.documents,
+      documentsDeferred: pending.documentsDeferred,
+      termsAccepted: pending.termsAccepted,
+      typedSignature: pending.typedSignature,
+      coApplicantSignature: pending.coApplicantSignature,
+      signatureDate: pending.signatureDate,
+      currentStep: pending.currentStep,
+    })
+      .then(() => {
+        setAutosaveError(null);
+      })
+      .catch((error) => {
+        console.error("Autosave failed:", error);
+        pendingSync.current = pending;
+        setAutosaveError("Autosave failed. We'll retry when you're back online.");
+      });
+  }, [app.applicationToken, isOffline]);
 
   return {
     app,
@@ -192,6 +235,7 @@ export function useApplicationStore() {
     init,
     update,
     reset,
+    autosaveError,
     applicationToken: app.applicationToken,
     setToken(token: string) {
       const next = { ...app, applicationToken: token };

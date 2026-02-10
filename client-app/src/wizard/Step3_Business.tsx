@@ -21,9 +21,10 @@ import { WizardLayout } from "../components/WizardLayout";
 import { PhoneInput } from "../components/ui/PhoneInput";
 import { components, layout, tokens } from "@/styles";
 import { resolveStepGuard } from "./stepGuard";
+import { loadStepData, mergeDraft, saveStepData } from "../client/autosave";
 
 export function Step3_Business() {
-  const { app, update } = useApplicationStore();
+  const { app, update, autosaveError } = useApplicationStore();
   const navigate = useNavigate();
 
   const values = { ...app.business };
@@ -51,6 +52,18 @@ export function Step3_Business() {
     }
   }, [app.currentStep, navigate]);
 
+  useEffect(() => {
+    const draft = loadStepData(3);
+    if (!draft) return;
+    const merged = mergeDraft(values, draft);
+    const changed = Object.keys(merged).some(
+      (key) => merged[key] !== values[key]
+    );
+    if (changed) {
+      update({ business: merged });
+    }
+  }, [update, values]);
+
   function setField(key: string, value: any) {
     update({ business: { ...values, [key]: value } });
   }
@@ -69,6 +82,7 @@ export function Step3_Business() {
   ].every((field) => Validate.required(values[field]));
 
   async function next() {
+    saveStepData(3, values);
     const requiredFields = [
       "businessName",
       "legalName",
@@ -105,8 +119,22 @@ export function Step3_Business() {
   return (
     <WizardLayout>
       <StepHeader step={3} title="Business Information" />
+      {autosaveError && (
+        <Card
+          variant="muted"
+          style={{
+            background: "rgba(245, 158, 11, 0.12)",
+            color: tokens.colors.textPrimary,
+          }}
+        >
+          {autosaveError}
+        </Card>
+      )}
 
-      <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
+      <Card
+        style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}
+        onBlurCapture={() => saveStepData(3, values)}
+      >
         <div
           style={{
             display: "grid",

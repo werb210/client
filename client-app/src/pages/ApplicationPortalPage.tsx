@@ -23,6 +23,9 @@ import { components, layout, tokens } from "@/styles";
 export function ApplicationPortalPage() {
   const { id } = useParams();
   const location = useLocation();
+  const submissionState = location.state as
+    | { submitted?: boolean; duplicate?: boolean }
+    | null;
   const [application, setApplication] = useState<any>(null);
   const [documents, setDocuments] = useState(
     [] as ReturnType<typeof normalizeDocumentsResponse>
@@ -183,6 +186,25 @@ export function ApplicationPortalPage() {
     [application, documents, stage]
   );
 
+  const submittedBanner = submissionState?.submitted ? (
+    <div
+      style={{
+        ...components.card.base,
+        marginBottom: tokens.spacing.lg,
+        background: "rgba(59, 130, 246, 0.08)",
+        borderColor: "rgba(59, 130, 246, 0.3)",
+      }}
+    >
+      <div style={components.form.eyebrow}>Submitted</div>
+      <div style={components.form.sectionTitle}>Next steps</div>
+      <p style={components.form.helperText}>
+        {submissionState?.duplicate
+          ? "We located your existing submission. Your portal is ready below."
+          : "We’ve received your application. Track progress and upload documents here."}
+      </p>
+    </div>
+  ) : null;
+
   const handleUpload = useCallback(
     async (category: string, file: File) => {
       if (!id) return;
@@ -286,6 +308,7 @@ export function ApplicationPortalPage() {
 
   return (
     <div style={layout.page}>
+      <div style={layout.portalColumn}>{submittedBanner}</div>
       <ApplicationPortalView
         businessName={businessName}
         stage={stage}

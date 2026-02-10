@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ClientProfileStore } from "../../state/clientProfiles";
 import {
   buildSubmissionPayload,
+  canSubmitApplication,
   getPostSubmitRedirect,
   getMissingRequiredDocs,
   shouldBlockForMissingDocuments,
@@ -92,6 +93,44 @@ describe("submission payload", () => {
 
   it("redirects submitted applicants to the portal by default", () => {
     vi.mocked(ClientProfileStore.hasPortalSession).mockReturnValue(false);
-    expect(getPostSubmitRedirect("token-123")).toBe("/portal");
+    expect(getPostSubmitRedirect({ token: "token-123" })).toBe("/portal");
+  });
+
+  it("prefers the application portal when available", () => {
+    expect(
+      getPostSubmitRedirect({ token: "token-123", applicationId: "app-123" })
+    ).toBe("/application/app-123");
+  });
+
+  it("disables submission when offline or missing idempotency", () => {
+    expect(
+      canSubmitApplication({
+        isOnline: false,
+        hasIdempotencyKey: true,
+        termsAccepted: true,
+        typedSignature: true,
+        partnerSignature: true,
+        missingIdDocs: 0,
+        missingRequiredDocs: 0,
+        docsAccepted: true,
+        processingComplete: true,
+        documentsDeferred: false,
+      })
+    ).toBe(false);
+
+    expect(
+      canSubmitApplication({
+        isOnline: true,
+        hasIdempotencyKey: false,
+        termsAccepted: true,
+        typedSignature: true,
+        partnerSignature: true,
+        missingIdDocs: 0,
+        missingRequiredDocs: 0,
+        docsAccepted: true,
+        processingComplete: true,
+        documentsDeferred: false,
+      })
+    ).toBe(false);
   });
 });
