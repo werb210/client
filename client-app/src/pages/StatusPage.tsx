@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { Button, PrimaryButton, SecondaryButton } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
-import { useChatbot } from "../hooks/useChatbot";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { getPipelineStage } from "../realtime/pipeline";
 import { useDocumentRejectionNotifications } from "../portal/useDocumentRejectionNotifications";
@@ -50,8 +49,6 @@ export function StatusPage() {
     loadChatHistory(new URLSearchParams(window.location.search).get("token"))
   );
   const [text, setText] = useState("");
-  const [mode, setMode] = useState<"ai" | "human">("ai");
-  const [issueMode, setIssueMode] = useState(false);
   const [rejectionNotice, setRejectionNotice] = useState<{
     documents: string[];
   } | null>(null);
@@ -60,7 +57,6 @@ export function StatusPage() {
   const [submissionStatus, setSubmissionStatus] = useState<
     SubmissionStatusSnapshot | null
   >(() => (token ? loadSubmissionStatusCache(token) : null));
-  const { send: sendAI } = useChatbot();
   const navigate = useNavigate();
   const statusRef = useRef<any>(null);
 
@@ -354,16 +350,7 @@ export function StatusPage() {
   async function sendMessage() {
     if (!text.trim() || !token) return;
 
-    if (issueMode) {
-      await ClientAppAPI.sendMessage(token, "[ISSUE REPORTED] " + text);
-      setIssueMode(false);
-    } else if (mode === "human") {
-      await ClientAppAPI.sendMessage(token, text);
-    } else {
-      const aiReply = await sendAI(text);
-      await ClientAppAPI.sendMessage(token, aiReply);
-    }
-
+    await ClientAppAPI.sendMessage(token, text);
     setText("");
     refreshMessages();
   }
@@ -494,11 +481,7 @@ export function StatusPage() {
               <div style={components.form.subtitle}>{failureBanner.message}</div>
               <PrimaryButton
                 style={{ width: "100%" }}
-                onClick={() => {
-                  setMode("human");
-                  setIssueMode(false);
-                  scrollToMessages();
-                }}
+                onClick={scrollToMessages}
               >
                 {failureBanner.cta}
               </PrimaryButton>
@@ -639,40 +622,8 @@ export function StatusPage() {
             <Card>
               <div style={layout.stackTight}>
                 <h2 style={components.form.sectionTitle}>Messages</h2>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: tokens.spacing.sm,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <Button
-                    variant={mode === "ai" && !issueMode ? "primary" : "secondary"}
-                    onClick={() => {
-                      setMode("ai");
-                      setIssueMode(false);
-                    }}
-                  >
-                    AI chat
-                  </Button>
-                  <Button
-                    variant={mode === "human" ? "primary" : "secondary"}
-                    onClick={() => {
-                      setMode("human");
-                      setIssueMode(false);
-                    }}
-                  >
-                    Talk to a human
-                  </Button>
-                  <Button
-                    variant={issueMode ? "primary" : "secondary"}
-                    onClick={() => {
-                      setIssueMode(true);
-                      setMode("ai");
-                    }}
-                  >
-                    Report an issue
-                  </Button>
+                <div style={components.form.helperText}>
+                  Continue your secure conversation with our support team here.
                 </div>
 
                 <div
