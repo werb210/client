@@ -1,7 +1,6 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import AppRouter from "../router/AppRouter";
 import { Header } from "../components/Header";
-import { ChatWidget } from "../components/ChatWidget";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { InstallPromptBanner } from "../components/InstallPromptBanner";
 import { UpdateAvailableBanner } from "../components/UpdateAvailableBanner";
@@ -12,9 +11,14 @@ import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
 
+const AiChatWidget = lazy(() =>
+  import("../components/ai/AiChatWidget").then((module) => ({ default: module.AiChatWidget }))
+);
+
 export default function App() {
   const refreshing = useSessionRefreshing();
   const updateAvailable = useServiceWorkerUpdate();
+  const [showChatWidget, setShowChatWidget] = useState(false);
   const debugUpdateAvailable =
     typeof window !== "undefined" &&
     import.meta.env.DEV &&
@@ -28,6 +32,20 @@ export default function App() {
 
   useEffect(() => {
     void hydratePortalSessionsFromIndexedDb();
+  }, []);
+
+  useEffect(() => {
+    const schedule =
+      window.requestIdleCallback ||
+      ((callback: IdleRequestCallback) => window.setTimeout(() => callback({} as IdleDeadline), 200));
+
+    const cancel =
+      window.cancelIdleCallback ||
+      ((id: number) => window.clearTimeout(id));
+
+    const callbackId = schedule(() => setShowChatWidget(true));
+
+    return () => cancel(callbackId);
   }, []);
 
   if (refreshing) {
@@ -48,7 +66,11 @@ export default function App() {
           <AppRouter />
         </ErrorBoundary>
       </main>
-      <ChatWidget />
+      {showChatWidget ? (
+        <Suspense fallback={null}>
+          <AiChatWidget />
+        </Suspense>
+      ) : null}
     </div>
   );
 }
