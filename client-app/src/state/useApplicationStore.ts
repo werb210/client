@@ -5,6 +5,7 @@ import { ClientAppAPI } from "../api/clientApp";
 import { clearDraft } from "../client/autosave";
 import { clearSubmissionIdempotencyKey } from "../client/submissionIdempotency";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
+import { trackEvent } from "../utils/analytics";
 
 const emptyApp: ApplicationData = {
   kyc: {},
@@ -32,7 +33,20 @@ const emptyApp: ApplicationData = {
   linkedApplicationTokens: [],
   documentReviewComplete: undefined,
   financialReviewComplete: undefined,
+  readinessScore: undefined,
 };
+
+const CLIENT_DRAFT_KEY = "boreal_client_draft";
+
+function loadClientDraft(): ApplicationData | null {
+  try {
+    const raw = localStorage.getItem(CLIENT_DRAFT_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as ApplicationData;
+  } catch (_error) {
+    return null;
+  }
+}
 
 function hydrateApplication(saved: ApplicationData | null): ApplicationData {
   if (!saved) return emptyApp;
@@ -95,18 +109,21 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
       saved.linkedApplicationTokens || emptyApp.linkedApplicationTokens,
     documentReviewComplete: saved.documentReviewComplete,
     financialReviewComplete: saved.financialReviewComplete,
+    readinessScore:
+      typeof saved.readinessScore === "number" ? saved.readinessScore : undefined,
   };
 }
 
 export function useApplicationStore() {
   const [app, setApp] = useState<ApplicationData>(() =>
-    hydrateApplication(OfflineStore.load())
+    hydrateApplication(loadClientDraft() || OfflineStore.load())
   );
   const [initialized, setInitialized] = useState(false);
   const [autosaveError, setAutosaveError] = useState<string | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSync = useRef<ApplicationData | null>(null);
   const { isOffline } = useNetworkStatus();
+  const trackedStep = useRef<number | undefined>(undefined);
 
   const canAutosave = app.currentStep >= 1;
 
@@ -130,6 +147,7 @@ export function useApplicationStore() {
   function reset() {
     setApp(emptyApp);
     OfflineStore.clear();
+    localStorage.removeItem(CLIENT_DRAFT_KEY);
     clearDraft();
     clearSubmissionIdempotencyKey();
   }
@@ -139,6 +157,20 @@ export function useApplicationStore() {
       init();
     }
   }, [initialized]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem(CLIENT_DRAFT_KEY, JSON.stringify(app));
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [app]);
+
+  useEffect(() => {
+    if (!app.currentStep || trackedStep.current === app.currentStep) return;
+    trackedStep.current = app.currentStep;
+    trackEvent("client_step_progressed", { step: app.currentStep });
+  }, [app.currentStep]);
 
   useEffect(() => {
     if (!canAutosave) {
