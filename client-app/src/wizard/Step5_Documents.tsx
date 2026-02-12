@@ -163,7 +163,7 @@ export function Step5_Documents() {
   useEffect(() => {
     let active = true;
     async function loadRequirements() {
-      if (!app.applicationToken) {
+      if (!app.applicationToken!) {
         setDocError("Missing application token. Please restart your application.");
         setIsLoading(false);
         return;
@@ -203,7 +203,7 @@ export function Step5_Documents() {
         }
         let cachedFromStatus = null;
         try {
-          const status = await ClientAppAPI.status(app.applicationToken);
+          const status = await ClientAppAPI.status(app.applicationToken!);
           cachedFromStatus = extractRequiredDocumentsFromStatus(status.data);
         } catch (error) {
           console.error("Failed to load required documents:", error);
@@ -239,19 +239,19 @@ export function Step5_Documents() {
   ]);
 
   useEffect(() => {
-    if (!app.applicationToken) {
+    if (!app.applicationToken!) {
       setDocError("Missing application token. Please restart your application.");
       return;
     }
-  }, [app.applicationToken, app.selectedProductId]);
+  }, [app.applicationToken!, app.selectedProductId]);
 
   const refreshDocumentStatus = useCallback(() => {
-    if (!app.applicationToken) return;
-    ClientAppAPI.status(app.applicationToken)
+    if (!app.applicationToken!) return;
+    ClientAppAPI.status(app.applicationToken!)
       .then((res) => {
         const refreshed = extractApplicationFromStatus(
           res?.data || {},
-          app.applicationToken
+          app.applicationToken!
         );
         const cachedRequirements = syncRequiredDocumentsFromStatus(res?.data);
         update({
@@ -276,7 +276,7 @@ export function Step5_Documents() {
         console.error("Failed to refresh document status:", error);
       });
   }, [
-    app.applicationToken,
+    app.applicationToken!,
     app.documents,
     app.documentsDeferred,
     app.documentReviewComplete,
@@ -306,7 +306,7 @@ export function Step5_Documents() {
   }
 
   async function handleFile(docType: string, file: File | null) {
-    if (!file || !app.applicationToken || !app.selectedProductId) return;
+    if (!file || !app.applicationToken! || !app.selectedProductId) return;
 
     setDocErrors((prev) => ({ ...prev, [docType]: "" }));
 
@@ -356,11 +356,11 @@ export function Step5_Documents() {
         },
       };
 
-      await ClientAppAPI.uploadDoc(app.applicationToken, payload);
-      const refreshed = await ClientAppAPI.status(app.applicationToken);
+      await ClientAppAPI.uploadDoc(app.applicationToken!, payload);
+      const refreshed = await ClientAppAPI.status(app.applicationToken!);
       const hydrated = extractApplicationFromStatus(
         refreshed?.data || {},
-        app.applicationToken
+        app.applicationToken!
       );
 
       update({
@@ -395,12 +395,12 @@ export function Step5_Documents() {
   }
 
   async function uploadLater() {
-    if (!app.applicationToken) {
+    if (!app.applicationToken!) {
       setDocError("Missing application token. Please restart your application.");
       return;
     }
     try {
-      await ClientAppAPI.deferDocuments(app.applicationToken);
+      await ClientAppAPI.deferDocuments(app.applicationToken!);
       update({ documentsDeferred: true });
       track("step_completed", { step: 5, deferred: true });
       navigate("/apply/step-6");

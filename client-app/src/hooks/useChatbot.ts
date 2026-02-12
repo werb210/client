@@ -59,7 +59,7 @@ export function useChatbot() {
       const eligibility = getEligibilitySnapshot(state);
       const visible =
         eligibility.categories.length > 0
-          ? eligibility.categories.map((category) => category.name).join(", ")
+          ? eligibility.categories.map((category: { name: string; productCount?: number }) => category.name).join(", ")
           : "no categories yet (update your Step 1 details)";
       return `Step 2 is where you choose a product category. Based on ${intentLabel} and your eligibility, you have ${eligibility.eligibleProducts.length} eligible products across: ${visible}.`;
     }
@@ -81,7 +81,7 @@ export function useChatbot() {
       return `No product categories are available yet based on ${intentLabel} and your Step 1 details. ${reasons}`;
     }
     const categories = eligibility.categories
-      .map((category) => `${category.name} (${category.productCount})`)
+      .map((category: { name: string; productCount?: number }) => `${category.name} (${category.productCount})`)
       .join(", ");
     const reasons = formatReasonSummary(eligibility.reasons);
     return `Based on ${intentLabel} and your eligibility, Step 2 shows: ${categories}. ${reasons}`;

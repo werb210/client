@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getClientSessionAuthHeader } from "../../state/clientSession";
+import { getActiveClientSessionToken } from "../../state/clientSession";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
@@ -9,6 +9,7 @@ import { apiRequest } from "../../lib/api";
 export default function UploadDocuments() {
   const navigate = useNavigate();
   const applicationToken = localStorage.getItem("applicationToken");
+  const token = getActiveClientSessionToken();
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">(
     "idle"
   );
@@ -51,7 +52,7 @@ export default function UploadDocuments() {
           headers: {
             "Content-Type": "application/json",
             "X-Request-Id": crypto.randomUUID(),
-            ...getClientSessionAuthHeader(),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({
             documents: {

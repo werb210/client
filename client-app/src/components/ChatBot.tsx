@@ -31,7 +31,7 @@ export default function ChatBot() {
         body: JSON.stringify({ message: userInput, sessionId }),
       });
 
-      setMessages((prev) => [...prev, { role: "assistant", content: res.reply }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: (res as { reply: string }).reply }]);
     } catch (_err) {
       setMessages((prev) => [...prev, { role: "assistant", content: "There was an error." }]);
     }

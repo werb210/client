@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getClientSessionAuthHeader } from "../../state/clientSession";
+import { getActiveClientSessionToken } from "../../state/clientSession";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { PhoneInput } from "../../components/ui/PhoneInput";
@@ -11,6 +11,7 @@ import { apiRequest } from "../../lib/api";
 export default function ApplyStep3() {
   const navigate = useNavigate();
   const applicationToken = localStorage.getItem("applicationToken");
+  const token = getActiveClientSessionToken();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -38,7 +39,7 @@ export default function ApplyStep3() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            ...getClientSessionAuthHeader(),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({
             applicant: {

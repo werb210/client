@@ -156,7 +156,7 @@ export function useApplicationStore() {
   const { isOffline } = useNetworkStatus();
   const trackedStep = useRef<number | undefined>(undefined);
 
-  const canAutosave = app.currentStep >= 1;
+  const canAutosave = (app.currentStep ?? 0) >= 1;
 
   useLocalBackup(app);
 
@@ -264,6 +264,7 @@ export function useApplicationStore() {
 
   useEffect(() => {
     if (isOffline || !app.applicationToken || !canAutosave) return;
+    if (!app) return;
 
     void saveToServer(app)
       .then(() => setAutosaveError(null))

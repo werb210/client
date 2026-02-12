@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosHeaders } from "axios";
 import { API_BASE_URL } from "@/config/env";
 import { handleAuthError } from "../auth/sessionHandler";
 import {
@@ -36,14 +36,11 @@ api.interceptors.request.use((config) => {
     }
     return Promise.reject(new Error("Client session is no longer valid."));
   }
-  const headers: Record<string, string> = {};
-  if (session.accessToken) {
-    headers.Authorization = `Bearer ${session.accessToken}`;
-  }
-  config.headers = {
+  const token = session.accessToken;
+  config.headers = AxiosHeaders.from({
     ...(config.headers || {}),
-    ...headers,
-  };
+    Authorization: token ? `Bearer ${token}` : undefined,
+  });
   return config;
 });
 

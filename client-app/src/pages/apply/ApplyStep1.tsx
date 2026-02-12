@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getClientSessionAuthHeader } from "../../state/clientSession";
+import { getActiveClientSessionToken } from "../../state/clientSession";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Select } from "../../components/ui/Select";
@@ -26,6 +26,7 @@ const provinces = [
 
 export default function ApplyStep1() {
   const navigate = useNavigate();
+  const token = getActiveClientSessionToken();
   const [legalBusinessName, setLegalBusinessName] = useState("");
   const [operatingProvince, setOperatingProvince] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +48,7 @@ export default function ApplyStep1() {
         headers: {
           "Content-Type": "application/json",
           "Idempotency-Key": crypto.randomUUID(),
-          ...getClientSessionAuthHeader(),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           source: "client",

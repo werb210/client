@@ -1,7 +1,7 @@
 import { ClientProfileStore } from "../state/clientProfiles";
 import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { setSessionRefreshing } from "../state/sessionRefresh";
-import { getClientSessionAuthHeader } from "../state/clientSession";
+import { getActiveClientSessionToken } from "../state/clientSession";
 import { apiRequest } from "../lib/api";
 
 let refreshPromise: Promise<boolean> | null = null;
@@ -16,12 +16,13 @@ export async function refreshSessionOnce() {
   if (refreshFailed) return false;
   if (refreshPromise) return refreshPromise;
 
+  const token = getActiveClientSessionToken();
   setSessionRefreshing(true);
   refreshPromise = apiRequest<unknown>("/api/client/session/refresh", {
     method: "POST",
-    headers: {
-      ...getClientSessionAuthHeader(),
-    },
+    headers: token
+      ? { Authorization: `Bearer ${token}` }
+      : undefined,
   })
     .then(() => true)
     .catch(() => false)
