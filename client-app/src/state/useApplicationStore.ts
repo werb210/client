@@ -7,6 +7,7 @@ import { clearSubmissionIdempotencyKey } from "../client/submissionIdempotency";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { trackEvent } from "../utils/analytics";
 import { loadLocalBackup, useLocalBackup } from "../system/useLocalBackup";
+import { buildApiUrl } from "../lib/api";
 
 const emptyApp: ApplicationData = {
   kyc: {},
@@ -41,6 +42,7 @@ const emptyApp: ApplicationData = {
 
 const CLIENT_DRAFT_KEY = "boreal_client_draft";
 const BOREAL_DRAFT_KEY = "boreal_draft";
+const APPLICATION_STATE_KEY = "application_state";
 
 function loadClientDraft(): ApplicationData | null {
   try {
@@ -52,6 +54,17 @@ function loadClientDraft(): ApplicationData | null {
   }
 }
 
+
+
+function loadApplicationStateDraft(): ApplicationData | null {
+  try {
+    const raw = localStorage.getItem(APPLICATION_STATE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as ApplicationData;
+  } catch (_error) {
+    return null;
+  }
+}
 
 function loadBorealDraft(): ApplicationData | null {
   try {
@@ -136,7 +149,7 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
 
 export function useApplicationStore() {
   const [app, setApp] = useState<ApplicationData>(() =>
-    hydrateApplication(loadBorealDraft() || loadClientDraft() || OfflineStore.load())
+    hydrateApplication(loadApplicationStateDraft() || loadBorealDraft() || loadClientDraft() || OfflineStore.load())
   );
   const [initialized, setInitialized] = useState(false);
   const [autosaveError, setAutosaveError] = useState<string | null>(null);
@@ -148,7 +161,9 @@ export function useApplicationStore() {
   useLocalBackup(app);
 
   useEffect(() => {
-    localStorage.setItem(BOREAL_DRAFT_KEY, JSON.stringify(app));
+    const serialized = JSON.stringify(app);
+    localStorage.setItem(BOREAL_DRAFT_KEY, serialized);
+    localStorage.setItem(APPLICATION_STATE_KEY, serialized);
   }, [app]);
 
   const saveToServer = useMemo(
@@ -156,7 +171,7 @@ export function useApplicationStore() {
       debounce(async (state: ApplicationData) => {
         if (!state.applicationToken) return;
 
-        await fetch("/api/application/update", {
+        await fetch(buildApiUrl("/api/application/update"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(state),
@@ -209,6 +224,7 @@ export function useApplicationStore() {
     OfflineStore.clear();
     localStorage.removeItem(CLIENT_DRAFT_KEY);
     localStorage.removeItem(BOREAL_DRAFT_KEY);
+    localStorage.removeItem(APPLICATION_STATE_KEY);
     clearDraft();
     clearSubmissionIdempotencyKey();
   }
@@ -245,6 +261,30 @@ export function useApplicationStore() {
       setAutosaveError(null);
     }
   }, [isOffline]);
+
+  useEffect(() => {
+    if (isOffline || !app.applicationToken || !canAutosave) return;
+
+    void saveToServer(app)
+      .then(() => setAutosaveError(null))
+      .catch(() => {
+        setAutosaveError("Autosave failed. We'll retry when you're back online.");
+      });
+  }, [app, canAutosave, isOffline, saveToServer]);
+
+  useEffect(() => {
+    const persist = () => {
+      localStorage.setItem(APPLICATION_STATE_KEY, JSON.stringify(app));
+    };
+
+    window.addEventListener("blur", persist);
+    window.addEventListener("beforeunload", persist);
+
+    return () => {
+      window.removeEventListener("blur", persist);
+      window.removeEventListener("beforeunload", persist);
+    };
+  }, [app]);
 
   useEffect(() => {
     return () => {
