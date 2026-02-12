@@ -27,15 +27,17 @@ import { ClientProfileStore } from "../state/clientProfiles";
 import { SessionGuard } from "../auth/sessionGuard";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { useClientSession } from "../hooks/useClientSession";
+import { useApplicationStore } from "../state/useApplicationStore";
 
 type GuardProps = {
   children: JSX.Element;
 };
 
 function RequireApplicationToken({ children }: GuardProps) {
+  const { app } = useApplicationStore();
   const cached = OfflineStore.load();
-  if (!cached?.applicationToken) {
-    return <Navigate to="/apply/step-1" replace />;
+  if (!app.applicationToken && !cached?.applicationToken) {
+    return <Navigate to="/apply" replace />;
   }
   return children;
 }

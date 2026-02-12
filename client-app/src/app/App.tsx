@@ -53,7 +53,7 @@ export default function App() {
           <ProductComparisonPopup />
         </div>
       </footer>
-      <AIChatWidget />
+      <AIChatWidget context="client" />
     </div>
   );
 }

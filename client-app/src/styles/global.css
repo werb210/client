@@ -30,6 +30,27 @@ body {
   color: var(--color-text-primary);
 }
 
+img {
+  max-width: 100%;
+  object-fit: cover;
+}
+
+.responsive-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  button {
+    width: 100%;
+  }
+
+  .chat-actions button {
+    width: 100%;
+  }
+}
+
 h1,
 h2,
 h3,

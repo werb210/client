@@ -34,6 +34,7 @@ import { trackEvent } from "../utils/analytics";
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [docErrors, setDocErrors] = useState<Record<string, string>>({});
   const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>(
     {}
@@ -172,6 +173,8 @@ export function Step6_Review() {
   }
 
   async function submit() {
+    if (submitting) return;
+    setSubmitting(true);
     setSubmitError(null);
 
     if (!isOnline) {
@@ -317,6 +320,8 @@ export function Step6_Review() {
           ? message
           : "We couldn't submit your application. Please try again or contact support."
       );
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -613,6 +618,7 @@ export function Step6_Review() {
               style={{ width: "100%", maxWidth: "240px" }}
               onClick={submit}
               disabled={
+                submitting ||
                 !canSubmitApplication({
                   isOnline,
                   hasIdempotencyKey: Boolean(idempotencyKey),
@@ -627,7 +633,7 @@ export function Step6_Review() {
                 })
               }
             >
-              Submit application
+              {submitting ? "Submitting..." : "Submit application"}
             </Button>
           </div>
         </div>
