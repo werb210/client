@@ -105,6 +105,10 @@ export function Step6_Review() {
   }, [app.currentStep, update]);
 
   useEffect(() => {
+    trackEvent("client_step_viewed", { step: 6 });
+  }, []);
+
+  useEffect(() => {
     const guard = resolveStepGuard(app.currentStep, 6);
     if (!guard.allowed) {
       navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
@@ -258,6 +262,7 @@ export function Step6_Review() {
         currentStep: app.currentStep,
       });
       const payload = buildSubmissionPayload(app);
+      trackEvent("client_submission_started");
       trackEvent("client_application_submitted", { step: 6 });
       track("submit", { step: 6 });
       const submissionResponse = await submitApplication(payload, {
@@ -269,6 +274,7 @@ export function Step6_Review() {
         app.applicationToken
       );
       void submissionResponse;
+      trackEvent("client_submission_completed");
       update({
         documents: hydrated.documents || app.documents,
         documentsDeferred:

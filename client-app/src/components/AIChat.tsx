@@ -1,89 +1,51 @@
 import { useState } from "react";
-import html2canvas from "html2canvas";
-import { track } from "../utils/track";
 
 export default function AIChat() {
-  const [message, setMessage] = useState("");
-  const [response, setResponse] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [input, setInput] = useState("");
 
-  async function sendMessage() {
-    if (!message.trim()) return;
+  async function send() {
+    if (!input) return;
 
-    setLoading(true);
+    const newMessage = { role: "user", content: input };
+    setMessages((prev) => [...prev, newMessage]);
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, source: "client_app" }),
-      });
-
-      const data = await res.json();
-      setResponse(data.response || "No response.");
-      track("ai_chat_message_sent", { hasResponse: Boolean(data.response) });
-    } catch (err) {
-      console.error(err);
-      setResponse("AI is temporarily unavailable.");
-      track("ai_chat_message_failed");
-    }
-
-    setLoading(false);
-  }
-
-  async function escalate() {
-    await fetch("/api/support/live", {
+    const res = await fetch("/api/ai/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        source: "client_app",
-        sessionId: Date.now().toString(),
-      }),
+      body: JSON.stringify({ message: input }),
     });
 
-    track("ai_chat_escalated");
-    alert("A staff member has been notified.");
-  }
+    const data = await res.json();
 
-  async function reportIssue() {
-    const description = prompt("What were you doing and what went wrong?");
-    if (!description) return;
-
-    const canvas = await html2canvas(document.body);
-    const screenshot = canvas.toDataURL("image/png");
-
-    await fetch("/api/support/report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        source: "client_app",
-        description,
-        screenshot,
-      }),
-    });
-
-    track("ai_chat_issue_reported");
-    alert("Issue reported successfully.");
+    setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+    setInput("");
   }
 
   return (
-    <div className="ai-chat">
-      <textarea
-        placeholder="Ask about products, eligibility, or your application..."
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-      />
-
-      <button onClick={sendMessage} disabled={loading}>
-        {loading ? "Thinking..." : "Ask AI"}
-      </button>
-
-      <div style={{ marginTop: 10 }}>{response}</div>
-
-      <div style={{ marginTop: 20 }}>
-        <button onClick={escalate}>Talk to a Human</button>
-        <button onClick={reportIssue}>Report an Issue</button>
+    <div className="chat-widget">
+      <div className="chat-messages">
+        {messages.map((m, i) => (
+          <div key={i} className={m.role}>
+            {m.content}
+          </div>
+        ))}
       </div>
+
+      <div className="chat-actions">
+        <button onClick={() => (window.location.href = "/contact")}>
+          Talk to a Human
+        </button>
+
+        <button onClick={() => (window.location.href = "/report")}>Report an Issue</button>
+      </div>
+
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Ask a question..."
+      />
+      <button onClick={send}>Send</button>
     </div>
   );
 }

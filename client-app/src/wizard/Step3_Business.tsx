@@ -23,6 +23,7 @@ import { PhoneInput } from "../components/ui/PhoneInput";
 import { components, layout, tokens } from "@/styles";
 import { resolveStepGuard } from "./stepGuard";
 import { track } from "../utils/track";
+import { trackEvent } from "../utils/analytics";
 import { loadStepData, mergeDraft, saveStepData } from "../client/autosave";
 import { AddressAutocompleteInput } from "../components/ui/AddressAutocompleteInput";
 import {
@@ -54,6 +55,10 @@ export function Step3_Business() {
       update({ currentStep: 3 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    trackEvent("client_step_viewed", { step: 3 });
+  }, []);
 
   useEffect(() => {
     const guard = resolveStepGuard(app.currentStep, 3);

@@ -164,6 +164,10 @@ export function Step2_Product() {
   }, [app.currentStep, update]);
 
   useEffect(() => {
+    trackEvent("client_step_viewed", { step: 2 });
+  }, []);
+
+  useEffect(() => {
     const guard = resolveStepGuard(app.currentStep, 2);
     if (!guard.allowed) {
       navigate(`/apply/step-${guard.redirectStep}`, { replace: true });

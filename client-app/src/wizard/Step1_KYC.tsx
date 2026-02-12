@@ -27,6 +27,7 @@ import {
 } from "./wizardSchema";
 import { enforceV1StepSchema } from "../schemas/v1WizardSchema";
 import { track } from "../utils/track";
+import { trackEvent } from "../utils/analytics";
 
 const MatchCategories = [
   "Line of Credit",
@@ -142,6 +143,10 @@ export function Step1_KYC() {
       update({ currentStep: 1 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    trackEvent("client_step_viewed", { step: 1 });
+  }, []);
 
   useEffect(() => {
     const draft = loadStepData(1);

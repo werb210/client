@@ -144,6 +144,10 @@ export function Step5_Documents() {
   }, [app.currentStep, update]);
 
   useEffect(() => {
+    trackEvent("client_step_viewed", { step: 5 });
+  }, []);
+
+  useEffect(() => {
     const guard = resolveStepGuard(app.currentStep, 5);
     if (!guard.allowed) {
       navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
