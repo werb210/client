@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./app/App";
 import "./styles/global.css";
 import "./styles/pwa.css";
-import { ErrorBoundary } from "./components/ErrorBoundary";
+import ErrorBoundary from "./system/ErrorBoundary";
 import { checkEnv } from "./lib/envCheck";
 import { registerServiceWorker } from "./pwa/serviceWorker";
 

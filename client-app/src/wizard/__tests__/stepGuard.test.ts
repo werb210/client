@@ -5,6 +5,7 @@ describe("resolveStepGuard", () => {
   it("allows moving to the next step", () => {
     const guard = resolveStepGuard(1, 2);
     expect(guard.allowed).toBe(true);
+    expect(guard.redirectStep).toBe(2);
   });
 
   it("blocks skipping multiple steps ahead", () => {
@@ -16,5 +17,6 @@ describe("resolveStepGuard", () => {
   it("permits returning to completed steps", () => {
     const guard = resolveStepGuard(4, 2);
     expect(guard.allowed).toBe(true);
+    expect(guard.redirectStep).toBe(2);
   });
 });

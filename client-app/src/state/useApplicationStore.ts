@@ -6,6 +6,7 @@ import { clearDraft } from "../client/autosave";
 import { clearSubmissionIdempotencyKey } from "../client/submissionIdempotency";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { trackEvent } from "../utils/analytics";
+import { loadLocalBackup, useLocalBackup } from "../system/useLocalBackup";
 
 const emptyApp: ApplicationData = {
   kyc: {},
@@ -127,6 +128,8 @@ export function useApplicationStore() {
 
   const canAutosave = app.currentStep >= 1;
 
+  useLocalBackup(app);
+
   function init() {
     if (initialized) return;
 
@@ -157,6 +160,13 @@ export function useApplicationStore() {
       init();
     }
   }, [initialized]);
+
+  useEffect(() => {
+    if (app.applicationToken) return;
+    const backup = loadLocalBackup<ApplicationData>();
+    if (!backup) return;
+    setApp((prev) => ({ ...prev, ...backup }));
+  }, [app.applicationToken]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
