@@ -41,7 +41,7 @@ export function mergeDraft<T extends Record<string, any>>(current: T, draft: Ste
   const next = { ...current };
   Object.entries(draft).forEach(([key, value]) => {
     if (next[key] === undefined || next[key] === null || next[key] === "") {
-      next[key] = value;
+      (next as Record<string, unknown>)[key as string] = value;
     }
   });
   return next;

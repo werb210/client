@@ -20,7 +20,7 @@ class MemoryStorage {
 
 describe("submission status", () => {
   beforeEach(() => {
-    globalThis.localStorage = new MemoryStorage() as Storage;
+    globalThis.localStorage = new MemoryStorage() as unknown as Storage;
   });
 
   it("treats Google Sheet submissions the same as API submissions", () => {

@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { describe, expect, it } from "vitest";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -35,7 +37,7 @@ describe("WIZARD_FIELD_INVENTORY", () => {
   });
 
   it("references files that exist", () => {
-    const root = path.resolve(__dirname, "..", "..");
+    const root = path.resolve(import.meta.dirname || process.cwd(), "..", "..");
     steps.forEach((step) => {
       step.fields.forEach((field) => {
         const filePath = path.join(root, "wizard", field.file);

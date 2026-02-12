@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 export type ClientSession = {
   submissionId: string;
   accessToken: string;

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ENV } from "@/config/env";
+import { API_BASE_URL } from "@/config/env";
 import { handleAuthError } from "../auth/sessionHandler";
 import {
   ensureClientSession,
@@ -9,8 +9,6 @@ import {
   markClientSessionExpired,
   markClientSessionRevoked,
 } from "../state/clientSession";
-
-export const API_BASE_URL = ENV.API_BASE_URL;
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -38,10 +36,9 @@ api.interceptors.request.use((config) => {
     }
     return Promise.reject(new Error("Client session is no longer valid."));
   }
-  config.headers = {
-    ...config.headers,
-    Authorization: `Bearer ${session.accessToken}`,
-  };
+  if (session.accessToken) {
+    (config.headers as any).Authorization = `Bearer ${session.accessToken}`;
+  }
   return config;
 });
 

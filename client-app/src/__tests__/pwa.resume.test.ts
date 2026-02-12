@@ -71,7 +71,7 @@ function createIndexedDbMock(initial: any) {
 
 describe("PWA session resume", () => {
   beforeEach(() => {
-    globalThis.localStorage = new MemoryStorage() as Storage;
+    globalThis.localStorage = new MemoryStorage() as unknown as Storage;
     globalThis.indexedDB = createIndexedDbMock([
       { token: "token-abc", verifiedAt: 1, expiresAt: Date.now() + 10000 },
     ]) as unknown as IDBFactory;

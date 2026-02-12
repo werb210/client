@@ -22,7 +22,7 @@ class MemoryStorage {
 
 describe("resume flow", () => {
   beforeEach(() => {
-    globalThis.localStorage = new MemoryStorage() as Storage;
+    globalThis.localStorage = new MemoryStorage() as unknown as Storage;
   });
 
   it("restores the last known submission state after reload", () => {

@@ -279,6 +279,7 @@ export function Step3_Business() {
               value={values.address || ""}
               onChange={(e: any) => setField("address", e.target.value)}
               onSelect={(selection) => {
+                if (!("street" in selection)) return;
                 const nextValues = {
                   ...values,
                   address: selection.street || values.address,
