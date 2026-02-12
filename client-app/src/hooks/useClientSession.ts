@@ -57,13 +57,17 @@ export function useClientSession(tokenOverride?: string | null): UseClientSessio
   }, [token]);
 
   useEffect(() => {
-    return subscribeClientSessions(() => {
+    const unsubscribe = subscribeClientSessions(() => {
       if (!token) return;
       const next = getClientSessionByToken(token);
       if (!next) return;
       setSession(next);
       setState(getClientSessionState(next));
     });
+
+    return () => {
+      unsubscribe();
+    };
   }, [token]);
 
   useEffect(() => {
