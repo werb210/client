@@ -1,16 +1,17 @@
-import { Suspense, lazy, useEffect } from "react";
+import { useEffect } from "react";
 import AppRouter from "../router/AppRouter";
 import { Header } from "../components/Header";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { InstallPromptBanner } from "../components/InstallPromptBanner";
 import { UpdateAvailableBanner } from "../components/UpdateAvailableBanner";
 import { SessionRefreshOverlay } from "../components/SessionRefreshOverlay";
+import AIChatWidget from "../components/AIChatWidget";
+import CapitalReadinessPopup from "../components/CapitalReadinessPopup";
+import ProductComparisonPopup from "../components/ProductComparisonPopup";
 import { useSessionRefreshing } from "../hooks/useSessionRefreshing";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
-
-const ChatBot = lazy(() => import("../components/ChatBot"));
 
 export default function App() {
   const refreshing = useSessionRefreshing();
@@ -46,9 +47,13 @@ export default function App() {
       <main className="flex-1">
         <AppRouter />
       </main>
-      <Suspense fallback={null}>
-        <ChatBot />
-      </Suspense>
+      <footer className="border-t py-4">
+        <div className="flex gap-4 justify-center">
+          <CapitalReadinessPopup />
+          <ProductComparisonPopup />
+        </div>
+      </footer>
+      <AIChatWidget />
     </div>
   );
 }
