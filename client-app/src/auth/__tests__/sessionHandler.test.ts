@@ -25,8 +25,8 @@ class MemoryStorage {
 
 describe("handleAuthError", () => {
   beforeEach(() => {
-    globalThis.localStorage = new MemoryStorage() as Storage;
-    globalThis.sessionStorage = new MemoryStorage() as Storage;
+    globalThis.localStorage = new MemoryStorage() as unknown as Storage;
+    globalThis.sessionStorage = new MemoryStorage() as unknown as Storage;
   });
 
   it("marks the active session as revoked on auth failures", async () => {

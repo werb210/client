@@ -368,6 +368,7 @@ export function Step4_Applicant() {
               value={values.street || ""}
               onChange={(e: any) => setField("street", e.target.value)}
               onSelect={(selection) => {
+                if (!("street" in selection)) return;
                 const nextValues = {
                   ...values,
                   street: selection.street || values.street,
@@ -625,6 +626,7 @@ export function Step4_Applicant() {
                     setPartnerField("street", e.target.value)
                   }
                   onSelect={(selection) => {
+                    if (!("street" in selection)) return;
                     const nextValues = {
                       ...values,
                       partner: {

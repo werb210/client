@@ -25,8 +25,8 @@ class MemoryStorage {
 
 describe("client sessions", () => {
   beforeEach(() => {
-    globalThis.localStorage = new MemoryStorage() as Storage;
-    globalThis.sessionStorage = new MemoryStorage() as Storage;
+    globalThis.localStorage = new MemoryStorage() as unknown as Storage;
+    globalThis.sessionStorage = new MemoryStorage() as unknown as Storage;
   });
 
   it("treats a future-expiring session as valid", () => {

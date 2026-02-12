@@ -154,5 +154,5 @@ export function buildClientHistoryEvents({
     return timeA - timeB;
   });
 
-  return Object.freeze(ordered);
+  return [...ordered];
 }

@@ -19,7 +19,7 @@ class MemoryStorage {
 
 describe("upload state persistence", () => {
   it("restores interrupted uploads with retry messaging", () => {
-    const storage = new MemoryStorage() as Storage;
+    const storage = new MemoryStorage() as unknown as Storage;
     saveUploadState(
       "app-123",
       { bank_statements: { uploading: true, progress: 42 } },
@@ -36,7 +36,7 @@ describe("upload state persistence", () => {
   });
 
   it("persists upload errors alongside state", () => {
-    const storage = new MemoryStorage() as Storage;
+    const storage = new MemoryStorage() as unknown as Storage;
     saveUploadState(
       "app-456",
       { tax_returns: { uploading: false, progress: 100 } },

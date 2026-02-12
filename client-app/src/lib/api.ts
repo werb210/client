@@ -1,6 +1,6 @@
-import { ENV } from "@/config/env";
+import { API_BASE_URL } from "@/config/env";
 
-const API = ENV.API_BASE_URL;
+const API = API_BASE_URL;
 
 export class ApiError extends Error {
   constructor(
