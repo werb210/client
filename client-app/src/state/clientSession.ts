@@ -1,5 +1,3 @@
-import { Buffer } from "buffer";
-
 export type ClientSession = {
   submissionId: string;
   accessToken: string;
@@ -27,10 +25,15 @@ function decodeBase64Url(input: string) {
     normalized.length + ((4 - (normalized.length % 4)) % 4),
     "="
   );
-  if (typeof window !== "undefined" && typeof window.atob === "function") {
-    return window.atob(padded);
+
+  const atobFn = globalThis.atob;
+  if (typeof atobFn !== "function") {
+    throw new Error("Base64 decoding is not available in this runtime");
   }
-  return Buffer.from(padded, "base64").toString("utf-8");
+
+  const binary = atobFn(padded);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
 
 function parseJwtExpiry(token: string): number | null {
