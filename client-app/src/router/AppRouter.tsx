@@ -5,7 +5,6 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import { EntryPage } from "../pages/EntryPage";
 import { PortalEntry } from "../pages/PortalEntry";
 import { StatusPage } from "../pages/StatusPage";
 import { ApplicationPortalPage } from "../pages/ApplicationPortalPage";
@@ -83,7 +82,7 @@ export default function AppRouter() {
     <BrowserRouter>
       <SessionGuard />
       <Routes>
-        <Route path="/" element={<EntryPage />} />
+        <Route path="/" element={<Navigate to="/apply/step-1" replace />} />
         <Route path="/portal" element={<PortalEntry />} />
         <Route path="/expired" element={<SessionExpiredPage />} />
         <Route path="/revoked" element={<SessionRevokedPage />} />
@@ -149,7 +148,7 @@ export default function AppRouter() {
           />
         </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/apply/step-1" replace />} />
       </Routes>
     </BrowserRouter>
   );

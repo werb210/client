@@ -18,10 +18,6 @@ import { useExitIntent } from "../hooks/useExitIntent";
 import { trackEvent } from "../utils/analytics";
 
 export default function App() {
-  if (!import.meta.env.VITE_API_URL) {
-    console.warn("API URL not configured");
-  }
-
   const refreshing = useSessionRefreshing();
   const updateAvailable = useServiceWorkerUpdate();
   useExitIntent(() => {

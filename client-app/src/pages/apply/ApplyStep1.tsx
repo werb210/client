@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../../api/client";
 import { getClientSessionAuthHeader } from "../../state/clientSession";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Select } from "../../components/ui/Select";
 import { Button } from "../../components/ui/Button";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
+import { apiRequest } from "../../lib/api";
 
 const provinces = [
   "Alberta",
@@ -42,7 +42,7 @@ export default function ApplyStep1() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/applications`, {
+      const data = await apiRequest<{ token?: string }>("/api/applications", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,11 +59,6 @@ export default function ApplyStep1() {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Unable to start application");
-      }
-
-      const data = await res.json();
       if (!data?.token) {
         throw new Error("Missing application token");
       }

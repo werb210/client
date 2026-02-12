@@ -1,4 +1,5 @@
 import axios from "axios";
+import { ENV } from "@/config/env";
 import { handleAuthError } from "../auth/sessionHandler";
 import {
   ensureClientSession,
@@ -9,12 +10,13 @@ import {
   markClientSessionRevoked,
 } from "../state/clientSession";
 
-export const API_BASE_URL = "https://api.staff.boreal.financial";
+export const API_BASE_URL = ENV.API_BASE_URL;
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
+  timeout: 15000,
 });
 
 export function attachToken(token: string | null) {

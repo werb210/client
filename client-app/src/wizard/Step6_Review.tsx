@@ -30,6 +30,7 @@ import {
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { trackEvent } from "../utils/analytics";
 import { track } from "../utils/track";
+import { apiRequest } from "../lib/api";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -70,6 +71,10 @@ export function Step6_Review() {
     if (app.documentsDeferred) return true;
     return Boolean(app.documentReviewComplete && app.financialReviewComplete);
   }, [app.documentReviewComplete, app.documentsDeferred, app.financialReviewComplete]);
+  const ocrComplete = app.documentsDeferred ? true : Boolean(app.ocrComplete ?? app.documentReviewComplete);
+  const creditSummaryComplete = app.documentsDeferred
+    ? true
+    : Boolean(app.creditSummaryComplete ?? app.financialReviewComplete);
   const idRequirements = useMemo(
     () => [
       {
@@ -126,8 +131,7 @@ export function Step6_Review() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/public/lender-count")
-      .then((res) => (res.ok ? res.json() : null))
+    apiRequest<{ count?: number }>("/api/public/lender-count")
       .then((data) => {
         const count = Number(data?.count || 0);
         if (count > 0) setLenderCount(count);
@@ -181,46 +185,53 @@ export function Step6_Review() {
     setSubmitting(true);
     setSubmitError(null);
 
+    const blockSubmit = (message: string) => {
+      setSubmitError(message);
+      setSubmitting(false);
+    };
+
     if (!isOnline) {
-      setSubmitError(
-        "You're offline. Please reconnect to submit your application."
-      );
+      blockSubmit("You're offline. Please reconnect to submit your application.");
+      return;
+    }
+
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      blockSubmit("You're offline. Please reconnect to submit your application.");
       return;
     }
 
     if (!idempotencyKey) {
-      setSubmitError(
-        "We couldn't prepare your submission. Please refresh and try again."
-      );
+      blockSubmit("We couldn't prepare your submission. Please refresh and try again.");
       return;
     }
 
     if (!app.applicationToken) {
-      setSubmitError("Missing application token. Please restart your application.");
+      blockSubmit("Missing application token. Please restart your application.");
       return;
     }
 
     if (!app.selectedProductId) {
-      setSubmitError("Missing product selection. Please return to Step 2.");
+      blockSubmit("Missing product selection. Please return to Step 2.");
       return;
     }
 
     if (shouldBlockForMissingDocuments(app)) {
-      setSubmitError("Please upload all required documents before submitting.");
+      blockSubmit("Please upload all required documents before submitting.");
       return;
     }
 
     if (!docsAccepted) {
-      setSubmitError(
-        "Your required documents must be accepted before you can sign."
-      );
+      blockSubmit("Your required documents must be accepted before you can sign.");
       return;
     }
 
     if (!processingComplete) {
-      setSubmitError(
-        "We’re still completing application checks. Please check back shortly."
-      );
+      blockSubmit("We’re still completing application checks. Please check back shortly.");
+      return;
+    }
+
+    if (!ocrComplete || !creditSummaryComplete) {
+      blockSubmit("We’re still completing application checks. Please check back shortly.");
       return;
     }
 
@@ -235,7 +246,7 @@ export function Step6_Review() {
     }
 
     if (missingIdDocs.length > 0) {
-      setSubmitError("Please upload all required applicant IDs before submitting.");
+      blockSubmit("Please upload all required applicant IDs before submitting.");
       return;
     }
 
@@ -619,13 +630,16 @@ export function Step6_Review() {
                 !canSubmitApplication({
                   isOnline,
                   hasIdempotencyKey: Boolean(idempotencyKey),
+                  hasApplicationToken: Boolean(app.applicationToken),
+                  hasSelectedProductId: Boolean(app.selectedProductId),
                   termsAccepted: app.termsAccepted,
                   typedSignature: Boolean(app.typedSignature?.trim()),
                   partnerSignature: hasPartner ? Boolean(app.coApplicantSignature?.trim()) : true,
                   missingIdDocs: missingIdDocs.length,
                   missingRequiredDocs: missingRequiredDocs.length,
                   docsAccepted,
-                  processingComplete,
+                  ocrComplete,
+                  creditSummaryComplete,
                   documentsDeferred: app.documentsDeferred,
                 })
               }

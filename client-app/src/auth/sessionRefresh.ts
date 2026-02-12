@@ -1,10 +1,8 @@
-import { API_BASE_URL } from "../api/client";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { setSessionRefreshing } from "../state/sessionRefresh";
 import { getClientSessionAuthHeader } from "../state/clientSession";
-
-const REFRESH_ENDPOINT = `${API_BASE_URL}/api/client/session/refresh`;
+import { apiRequest } from "../lib/api";
 
 let refreshPromise: Promise<boolean> | null = null;
 let refreshFailed = false;
@@ -19,15 +17,13 @@ export async function refreshSessionOnce() {
   if (refreshPromise) return refreshPromise;
 
   setSessionRefreshing(true);
-  refreshPromise = fetch(REFRESH_ENDPOINT, {
+  refreshPromise = apiRequest<unknown>("/api/client/session/refresh", {
     method: "POST",
-    credentials: "include",
     headers: {
-      "Content-Type": "application/json",
       ...getClientSessionAuthHeader(),
     },
   })
-    .then((res) => res.ok)
+    .then(() => true)
     .catch(() => false)
     .finally(() => {
       setSessionRefreshing(false);

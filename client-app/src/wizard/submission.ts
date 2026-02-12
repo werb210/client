@@ -21,6 +21,7 @@ export type SubmissionPayload = {
     requires_closing_cost_funding?: ApplicationData["requires_closing_cost_funding"];
     terms_accepted: ApplicationData["termsAccepted"];
     typed_signature?: ApplicationData["typedSignature"];
+    co_applicant_signature?: ApplicationData["coApplicantSignature"];
     signature_date?: ApplicationData["signatureDate"];
     application_token?: ApplicationData["applicationToken"];
   };
@@ -100,35 +101,44 @@ export function getPostSubmitRedirect({
 export function canSubmitApplication({
   isOnline,
   hasIdempotencyKey,
+  hasApplicationToken,
+  hasSelectedProductId,
   termsAccepted,
   typedSignature,
   partnerSignature,
   missingIdDocs,
   missingRequiredDocs,
   docsAccepted,
-  processingComplete,
+  ocrComplete,
+  creditSummaryComplete,
   documentsDeferred,
 }: {
   isOnline: boolean;
   hasIdempotencyKey: boolean;
+  hasApplicationToken: boolean;
+  hasSelectedProductId: boolean;
   termsAccepted: boolean;
   typedSignature: boolean;
   partnerSignature: boolean;
   missingIdDocs: number;
   missingRequiredDocs: number;
   docsAccepted: boolean;
-  processingComplete: boolean;
+  ocrComplete: boolean;
+  creditSummaryComplete: boolean;
   documentsDeferred: boolean;
 }) {
   return (
     isOnline &&
     hasIdempotencyKey &&
+    hasApplicationToken &&
+    hasSelectedProductId &&
     termsAccepted &&
     typedSignature &&
     partnerSignature &&
     missingIdDocs === 0 &&
     (documentsDeferred || missingRequiredDocs === 0) &&
     docsAccepted &&
-    processingComplete
+    ocrComplete &&
+    creditSummaryComplete
   );
 }

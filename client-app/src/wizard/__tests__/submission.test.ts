@@ -107,13 +107,16 @@ describe("submission payload", () => {
       canSubmitApplication({
         isOnline: false,
         hasIdempotencyKey: true,
+        hasApplicationToken: true,
+        hasSelectedProductId: true,
         termsAccepted: true,
         typedSignature: true,
         partnerSignature: true,
         missingIdDocs: 0,
         missingRequiredDocs: 0,
         docsAccepted: true,
-        processingComplete: true,
+        ocrComplete: true,
+        creditSummaryComplete: true,
         documentsDeferred: false,
       })
     ).toBe(false);
@@ -122,13 +125,16 @@ describe("submission payload", () => {
       canSubmitApplication({
         isOnline: true,
         hasIdempotencyKey: false,
+        hasApplicationToken: true,
+        hasSelectedProductId: true,
         termsAccepted: true,
         typedSignature: true,
         partnerSignature: true,
         missingIdDocs: 0,
         missingRequiredDocs: 0,
         docsAccepted: true,
-        processingComplete: true,
+        ocrComplete: true,
+        creditSummaryComplete: true,
         documentsDeferred: false,
       })
     ).toBe(false);

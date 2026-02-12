@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { resolveStepGuard } from "../stepGuard";
 
 describe("resolveStepGuard", () => {
-  it("allows moving to the next step", () => {
+  it("blocks moving to incomplete future steps", () => {
     const guard = resolveStepGuard(1, 2);
-    expect(guard.allowed).toBe(true);
-    expect(guard.redirectStep).toBe(2);
+    expect(guard.allowed).toBe(false);
+    expect(guard.redirectStep).toBe(1);
   });
 
   it("blocks skipping multiple steps ahead", () => {
