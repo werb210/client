@@ -26,6 +26,7 @@ import { DocumentUploadList } from "../components/DocumentUploadList";
 import { Spinner } from "../components/ui/Spinner";
 import { useForegroundRefresh } from "../hooks/useForegroundRefresh";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
+import { trackEvent } from "../utils/analytics";
 import { resolveStepGuard } from "./stepGuard";
 import { extractRequiredDocumentsFromStatus } from "../documents/requiredDocumentsFromStatus";
 import { syncRequiredDocumentsFromStatus } from "../documents/requiredDocumentsCache";
@@ -366,6 +367,7 @@ export function Step5_Documents() {
           hydrated.financialReviewComplete ?? app.financialReviewComplete,
       });
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
+      trackEvent("client_document_uploaded", { documentType: docType });
     } catch (error) {
       console.error("Document upload failed:", error);
       setDocErrors((prev) => ({

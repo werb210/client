@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import AppRouter from "../router/AppRouter";
 import { Header } from "../components/Header";
 import { OfflineBanner } from "../components/OfflineBanner";
@@ -9,7 +9,8 @@ import { useSessionRefreshing } from "../hooks/useSessionRefreshing";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
-import AIChatbot from "../components/AIChatbot";
+
+const ChatBot = lazy(() => import("../components/ChatBot"));
 
 export default function App() {
   const refreshing = useSessionRefreshing();
@@ -45,7 +46,9 @@ export default function App() {
       <main className="flex-1">
         <AppRouter />
       </main>
-      <AIChatbot />
+      <Suspense fallback={null}>
+        <ChatBot />
+      </Suspense>
     </div>
   );
 }

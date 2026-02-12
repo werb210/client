@@ -62,4 +62,5 @@ export interface ApplicationData {
   linkedApplicationTokens?: string[];
   documentReviewComplete?: boolean;
   financialReviewComplete?: boolean;
+  readinessScore?: number;
 }

@@ -29,6 +29,7 @@ import {
   getOrCreateSubmissionIdempotencyKey,
 } from "../client/submissionIdempotency";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
+import { trackEvent } from "../utils/analytics";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -42,6 +43,7 @@ export function Step6_Review() {
   const { isOffline } = useNetworkStatus();
   const isOnline = !isOffline;
   const [idempotencyKey] = useState(() => getOrCreateSubmissionIdempotencyKey());
+  const [lenderCount, setLenderCount] = useState<number | null>(null);
   const hasPartner = Boolean(app.applicant?.hasMultipleOwners);
   const requirementsKey = useMemo(
     () => (app.productRequirements?.aggregated ? "aggregated" : app.selectedProductId),
@@ -113,6 +115,20 @@ export function Step6_Review() {
       update({ signatureDate: today });
     }
   }, [app.signatureDate, today, update]);
+
+  useEffect(() => {
+    trackEvent("client_step_progressed", { step: 6 });
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/public/lender-count")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const count = Number(data?.count || 0);
+        if (count > 0) setLenderCount(count);
+      })
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!app.applicationToken) return;
@@ -239,6 +255,7 @@ export function Step6_Review() {
         currentStep: app.currentStep,
       });
       const payload = buildSubmissionPayload(app);
+      trackEvent("client_application_submitted", { step: 6 });
       const submissionResponse = await submitApplication(payload, {
         idempotencyKey,
       });
@@ -572,6 +589,16 @@ export function Step6_Review() {
           <Checkbox checked={app.termsAccepted} onChange={toggleTerms} />
           <span>I agree to the Terms & Conditions</span>
         </label>
+
+        {typeof app.readinessScore === "number" && (
+          <div style={components.form.helperText}>
+            Your capital readiness score: {app.readinessScore} / 100
+          </div>
+        )}
+
+        <div style={components.form.helperText}>
+          Submitted to our network of {lenderCount ? `${lenderCount}+` : "40+"} lenders
+        </div>
 
         <div style={layout.stickyCta}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: tokens.spacing.sm }}>
