@@ -206,14 +206,16 @@ export function useApplicationStore() {
         return updated;
       }
 
-      void saveToServer(updated)
-        .then(() => {
-          setAutosaveError(null);
-        })
-        .catch((error: unknown) => {
-          console.error("Autosave failed:", error);
-          setAutosaveError("Autosave failed. We'll retry when you're back online.");
-        });
+      if (updated) {
+        void saveToServer(updated)
+          .then(() => {
+            setAutosaveError(null);
+          })
+          .catch((error: unknown) => {
+            console.error("Autosave failed:", error);
+            setAutosaveError("Autosave failed. We'll retry when you're back online.");
+          });
+      }
 
       return updated;
     });
@@ -266,11 +268,13 @@ export function useApplicationStore() {
     if (isOffline || !app.applicationToken || !canAutosave) return;
     if (!app) return;
 
-    void saveToServer(app)
-      .then(() => setAutosaveError(null))
-      .catch(() => {
-        setAutosaveError("Autosave failed. We'll retry when you're back online.");
-      });
+    if (app) {
+      void saveToServer(app)
+        .then(() => setAutosaveError(null))
+        .catch(() => {
+          setAutosaveError("Autosave failed. We'll retry when you're back online.");
+        });
+    }
   }, [app, canAutosave, isOffline, saveToServer]);
 
   useEffect(() => {

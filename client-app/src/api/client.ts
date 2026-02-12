@@ -37,10 +37,13 @@ api.interceptors.request.use((config) => {
     return Promise.reject(new Error("Client session is no longer valid."));
   }
   const token = session.accessToken;
-  config.headers = AxiosHeaders.from({
-    ...(config.headers || {}),
-    Authorization: token ? `Bearer ${token}` : undefined,
-  });
+  const headers = new AxiosHeaders(config.headers);
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  } else {
+    headers.delete("Authorization");
+  }
+  config.headers = headers;
   return config;
 });
 

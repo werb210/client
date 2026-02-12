@@ -64,6 +64,13 @@ type PublicSubmissionState = {
   submittedAt: string;
 };
 
+export type MinimalStorage = {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+  clear(): void;
+};
+
 const PUBLIC_SUBMISSION_KEY = "boreal_public_application_submission";
 const PUBLIC_IDEMPOTENCY_KEY = "boreal_public_application_idempotency_key";
 
@@ -217,7 +224,7 @@ export function createIdempotencyKey() {
 }
 
 export function loadPublicSubmissionState(
-  storage: Storage | null
+  storage: MinimalStorage | null
 ): PublicSubmissionState | null {
   if (!storage) return null;
   try {
@@ -233,7 +240,7 @@ export function loadPublicSubmissionState(
 }
 
 function savePublicSubmissionState(
-  storage: Storage | null,
+  storage: MinimalStorage | null,
   state: PublicSubmissionState
 ) {
   if (!storage) return;
@@ -244,7 +251,7 @@ function savePublicSubmissionState(
   }
 }
 
-export function loadIdempotencyKey(storage: Storage | null) {
+export function loadIdempotencyKey(storage: MinimalStorage | null) {
   if (!storage) return null;
   try {
     return storage.getItem(PUBLIC_IDEMPOTENCY_KEY);
@@ -254,7 +261,7 @@ export function loadIdempotencyKey(storage: Storage | null) {
   }
 }
 
-export function getOrCreateIdempotencyKey(storage: Storage | null) {
+export function getOrCreateIdempotencyKey(storage: MinimalStorage | null) {
   const existing = loadIdempotencyKey(storage);
   if (existing) return existing;
   const next = createIdempotencyKey();
@@ -384,7 +391,7 @@ export async function handlePublicApplicationSubmit({
   ) => Promise<unknown>;
   onSuccess: () => void;
   onError: (errors: Record<string, string>) => void;
-  storage?: Storage | null;
+  storage?: MinimalStorage | null;
 }) {
   const errors = validateApplication(values);
   if (!termsAcceptedAt) {
