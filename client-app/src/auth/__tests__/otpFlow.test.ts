@@ -25,7 +25,7 @@ class MemoryStorage {
 describe("OTP flow", () => {
   beforeEach(() => {
     const local = new MemoryStorage();
-    globalThis.localStorage = local as Storage;
+    globalThis.localStorage = local as unknown as Storage;
   });
 
   it("verifies OTP for a fresh applicant", () => {

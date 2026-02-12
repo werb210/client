@@ -24,7 +24,7 @@ class MemoryStorage {
 describe("syncRequiredDocumentsFromStatus", () => {
   beforeEach(() => {
     const storage = new MemoryStorage();
-    globalThis.localStorage = storage as Storage;
+    globalThis.localStorage = storage as unknown as Storage;
   });
 
   it("merges required documents from status and ensures bank statements", () => {

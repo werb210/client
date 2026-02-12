@@ -25,8 +25,8 @@ describe("ClientProfileStore portal sessions", () => {
   beforeEach(() => {
     const local = new MemoryStorage();
     const session = new MemoryStorage();
-    globalThis.localStorage = local as Storage;
-    globalThis.sessionStorage = session as Storage;
+    globalThis.localStorage = local as unknown as Storage;
+    globalThis.sessionStorage = session as unknown as Storage;
   });
 
   it("requires portal verification per visit", () => {
@@ -34,7 +34,7 @@ describe("ClientProfileStore portal sessions", () => {
     expect(ClientProfileStore.hasPortalSession("token-123")).toBe(true);
 
     const newSession = new MemoryStorage();
-    globalThis.sessionStorage = newSession as Storage;
+    globalThis.sessionStorage = newSession as unknown as Storage;
     expect(ClientProfileStore.hasPortalSession("token-123")).toBe(false);
   });
 });

@@ -15,6 +15,8 @@ export default function UploadDocuments() {
   const [message, setMessage] = useState("");
   const [progress, setProgress] = useState(0);
 
+  const isBlocked = !applicationToken;
+
   useEffect(() => {
     if (status === "error" || isBlocked) {
       scrollToFirstError();
@@ -75,7 +77,6 @@ export default function UploadDocuments() {
     }
   }
 
-  const isBlocked = !applicationToken;
 
   return (
     <div style={layout.page}>

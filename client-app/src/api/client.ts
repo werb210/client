@@ -36,9 +36,14 @@ api.interceptors.request.use((config) => {
     }
     return Promise.reject(new Error("Client session is no longer valid."));
   }
+  const headers: Record<string, string> = {};
   if (session.accessToken) {
-    (config.headers as any).Authorization = `Bearer ${session.accessToken}`;
+    headers.Authorization = `Bearer ${session.accessToken}`;
   }
+  config.headers = {
+    ...(config.headers || {}),
+    ...headers,
+  };
   return config;
 });
 

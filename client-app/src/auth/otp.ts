@@ -11,7 +11,7 @@ export function resolveOtpNextStep(profile: ClientProfile | null): OtpNextStep {
   }
 
   const submittedToken =
-    profile.lastSubmittedToken || profile.submittedTokens?.[0] || "";
+    profile.lastSubmittedToken ?? profile.submittedTokens?.[0] ?? "";
   if (submittedToken) {
     return { action: "portal", token: submittedToken };
   }

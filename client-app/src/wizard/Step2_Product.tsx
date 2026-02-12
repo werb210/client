@@ -106,7 +106,7 @@ export function Step2_Product() {
     const intent = (app.kyc.lookingFor || "").toLowerCase();
     return (
       intent.includes("equipment") ||
-      (selectedProduct?.product_type || "").toLowerCase().includes("equipment")
+      (selectedProduct?.product_type ?? "").toLowerCase().includes("equipment")
     );
   }, [app.kyc.lookingFor, selectedProduct?.product_type]);
 
