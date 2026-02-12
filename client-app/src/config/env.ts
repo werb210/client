@@ -1,9 +1,15 @@
-type RequiredEnv = {
-  VITE_API_BASE_URL: string;
-  VITE_APP_ENV: string;
-};
+const REQUIRED = ["VITE_API_BASE_URL"] as const;
 
-function requireEnv(key: keyof RequiredEnv): string {
+export function validateEnv() {
+  const missing = REQUIRED.filter((key) => !import.meta.env[key]);
+  if (missing.length) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(", ")}`
+    );
+  }
+}
+
+function requireEnv(key: (typeof REQUIRED)[number]): string {
   const value = import.meta.env[key];
   if (!value || typeof value !== "string") {
     throw new Error(`Missing required environment variable: ${key}`);
@@ -13,6 +19,5 @@ function requireEnv(key: keyof RequiredEnv): string {
 
 export const ENV = {
   API_BASE_URL: requireEnv("VITE_API_BASE_URL"),
-  APP_ENV: requireEnv("VITE_APP_ENV"),
-  IS_PROD: requireEnv("VITE_APP_ENV") === "production",
+  IS_PROD: import.meta.env.PROD,
 };

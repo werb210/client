@@ -50,8 +50,21 @@ api.interceptors.response.use(
   async (err) => {
     try {
       return await handleAuthError(err);
-    } catch (error) {
-      console.error("API ERROR:", error);
+    } catch (error: any) {
+      const status = error?.response?.status;
+
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        return Promise.reject(new Error("You're offline. Please reconnect."));
+      }
+
+      if (status === 401 && typeof window !== "undefined") {
+        window.location.assign("/apply/step-1");
+      }
+
+      if (status >= 500) {
+        return Promise.reject(new Error("Server error. Please try again shortly."));
+      }
+
       return Promise.reject(error);
     }
   }
