@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import debounce from "lodash.debounce";
 import { OfflineStore } from "./offline";
 import { ApplicationData } from "../types/application";
-import { ClientAppAPI } from "../api/clientApp";
 import { clearDraft } from "../client/autosave";
 import { clearSubmissionIdempotencyKey } from "../client/submissionIdempotency";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
@@ -121,8 +121,6 @@ export function useApplicationStore() {
   );
   const [initialized, setInitialized] = useState(false);
   const [autosaveError, setAutosaveError] = useState<string | null>(null);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingSync = useRef<ApplicationData | null>(null);
   const { isOffline } = useNetworkStatus();
   const trackedStep = useRef<number | undefined>(undefined);
 
@@ -130,10 +128,23 @@ export function useApplicationStore() {
 
   useLocalBackup(app);
 
+  const saveToServer = useMemo(
+    () =>
+      debounce(async (state: ApplicationData) => {
+        if (!state.applicationToken) return;
+
+        await fetch("/api/application/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(state),
+        });
+      }, 1500),
+    []
+  );
+
   function init() {
     if (initialized) return;
 
-    // Load lender products into offline cache
     const { ProductSync } = require("../lender/productSync");
     ProductSync.invalidateCache();
     void ProductSync.sync().catch((error: unknown) => {
@@ -144,7 +155,30 @@ export function useApplicationStore() {
   }
 
   function update(part: Partial<ApplicationData>) {
-    setApp((prev) => ({ ...prev, ...part }));
+    setApp((state) => {
+      const updated = { ...state, ...part };
+      OfflineStore.save(updated);
+
+      if (!canAutosave) {
+        return updated;
+      }
+
+      if (isOffline) {
+        setAutosaveError("You're offline. Changes will sync when you reconnect.");
+        return updated;
+      }
+
+      void saveToServer(updated)
+        .then(() => {
+          setAutosaveError(null);
+        })
+        .catch((error: unknown) => {
+          console.error("Autosave failed:", error);
+          setAutosaveError("Autosave failed. We'll retry when you're back online.");
+        });
+
+      return updated;
+    });
   }
 
   function reset() {
@@ -183,93 +217,16 @@ export function useApplicationStore() {
   }, [app.currentStep]);
 
   useEffect(() => {
-    if (!canAutosave) {
-      if (saveTimer.current) {
-        clearTimeout(saveTimer.current);
-      }
-      return;
+    if (!isOffline) {
+      setAutosaveError(null);
     }
-
-    if (saveTimer.current) {
-      clearTimeout(saveTimer.current);
-    }
-
-    saveTimer.current = setTimeout(() => {
-      OfflineStore.save(app);
-
-      if (!app.applicationToken) return;
-
-      if (isOffline) {
-        pendingSync.current = app;
-        setAutosaveError("You're offline. Changes will sync when you reconnect.");
-        return;
-      }
-
-      void ClientAppAPI.update(app.applicationToken, {
-        financialProfile: app.kyc,
-        productCategory: app.productCategory,
-        selectedProduct: app.selectedProduct,
-        selectedProductId: app.selectedProductId,
-        selectedProductType: app.selectedProductType,
-        requires_closing_cost_funding: app.requires_closing_cost_funding,
-        business: app.business,
-        applicant: app.applicant,
-        documents: app.documents,
-        documentsDeferred: app.documentsDeferred,
-        termsAccepted: app.termsAccepted,
-        typedSignature: app.typedSignature,
-        coApplicantSignature: app.coApplicantSignature,
-        signatureDate: app.signatureDate,
-        currentStep: app.currentStep,
-      })
-        .then(() => {
-          pendingSync.current = null;
-          setAutosaveError(null);
-        })
-        .catch((error) => {
-          console.error("Autosave failed:", error);
-          pendingSync.current = app;
-          setAutosaveError("Autosave failed. We'll retry when you're back online.");
-        });
-    }, 500);
-
-    return () => {
-      if (saveTimer.current) {
-        clearTimeout(saveTimer.current);
-      }
-    };
-  }, [app, canAutosave, isOffline]);
+  }, [isOffline]);
 
   useEffect(() => {
-    if (isOffline || !pendingSync.current || !app.applicationToken) return;
-    const pending = pendingSync.current;
-    pendingSync.current = null;
-    void ClientAppAPI.update(app.applicationToken, {
-      financialProfile: pending.kyc,
-      productCategory: pending.productCategory,
-      selectedProduct: pending.selectedProduct,
-      selectedProductId: pending.selectedProductId,
-      selectedProductType: pending.selectedProductType,
-      requires_closing_cost_funding: pending.requires_closing_cost_funding,
-      business: pending.business,
-      applicant: pending.applicant,
-      documents: pending.documents,
-      documentsDeferred: pending.documentsDeferred,
-      termsAccepted: pending.termsAccepted,
-      typedSignature: pending.typedSignature,
-      coApplicantSignature: pending.coApplicantSignature,
-      signatureDate: pending.signatureDate,
-      currentStep: pending.currentStep,
-    })
-      .then(() => {
-        setAutosaveError(null);
-      })
-      .catch((error) => {
-        console.error("Autosave failed:", error);
-        pendingSync.current = pending;
-        setAutosaveError("Autosave failed. We'll retry when you're back online.");
-      });
-  }, [app.applicationToken, isOffline]);
+    return () => {
+      saveToServer.cancel();
+    };
+  }, [saveToServer]);
 
   return {
     app,
@@ -282,6 +239,6 @@ export function useApplicationStore() {
     setToken(token: string) {
       const next = { ...app, applicationToken: token };
       update(next);
-    }
+    },
   };
 }

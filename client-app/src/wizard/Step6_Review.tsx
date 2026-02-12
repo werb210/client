@@ -29,6 +29,7 @@ import {
 } from "../client/submissionIdempotency";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { trackEvent } from "../utils/analytics";
+import { track } from "../utils/track";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -258,6 +259,7 @@ export function Step6_Review() {
       });
       const payload = buildSubmissionPayload(app);
       trackEvent("client_application_submitted", { step: 6 });
+      track("submit", { step: 6 });
       const submissionResponse = await submitApplication(payload, {
         idempotencyKey,
       });
@@ -283,10 +285,9 @@ export function Step6_Review() {
       }
       clearDraft();
       clearSubmissionIdempotencyKey();
-      navigate(`/portal/${app.applicationToken}`, {
-        replace: true,
-        state: { submitted: true },
-      });
+      setTimeout(() => {
+        navigate("/portal", { replace: true });
+      }, 1200);
     } catch (error) {
       console.error("Submission failed:", error);
       const status = (error as any)?.response?.status;
@@ -294,10 +295,9 @@ export function Step6_Review() {
       if (status === 409 && resolveSubmissionId(data)) {
         clearDraft();
         clearSubmissionIdempotencyKey();
-        navigate(`/portal/${app.applicationToken}`, {
-          replace: true,
-          state: { submitted: true, duplicate: true },
-        });
+        setTimeout(() => {
+          navigate("/portal", { replace: true });
+        }, 1200);
         return;
       }
       const message =
@@ -410,6 +410,7 @@ export function Step6_Review() {
           hydrated.financialReviewComplete ?? app.financialReviewComplete,
       });
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
+      track("document_uploaded", { documentType: docType, step: 6 });
     } catch (error) {
       console.error("ID upload failed:", error);
       setDocErrors((prev) => ({

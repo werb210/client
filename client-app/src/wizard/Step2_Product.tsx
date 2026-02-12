@@ -39,6 +39,7 @@ import CapitalReadinessModal from "../components/CapitalReadinessModal";
 import { trackEvent } from "../utils/analytics";
 import { components, layout, tokens } from "@/styles";
 import { resolveStepGuard } from "./stepGuard";
+import { track } from "../utils/track";
 
 function formatAmount(amount: number | null | undefined, countryCode: string) {
   if (typeof amount !== "number") return "N/A";
@@ -287,6 +288,7 @@ export function Step2_Product() {
       setShowClosingModal(true);
       return;
     }
+    track("step_completed", { step: 2 });
     navigate("/apply/step-3");
   }
 
@@ -314,7 +316,8 @@ export function Step2_Product() {
         ClientProfileStore.upsertProfile(app.kyc.phone, token);
       }
       setShowClosingModal(false);
-      navigate("/apply/step-3");
+      track("step_completed", { step: 2 });
+    navigate("/apply/step-3");
     } catch (error) {
       console.error("Failed to create linked application:", error);
       setClosingError("Unable to create the linked application. Try again.");
@@ -326,6 +329,7 @@ export function Step2_Product() {
   function declineClosingCosts() {
     update({ requires_closing_cost_funding: false });
     setShowClosingModal(false);
+    track("step_completed", { step: 2 });
     navigate("/apply/step-3");
   }
 
