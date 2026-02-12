@@ -12,7 +12,6 @@ import { submitApplication } from "../api/applications";
 import {
   buildSubmissionPayload,
   canSubmitApplication,
-  getPostSubmitRedirect,
   getMissingRequiredDocs,
   shouldBlockForMissingDocuments,
 } from "./submission";
@@ -267,12 +266,7 @@ export function Step6_Review() {
         refreshed?.data || {},
         app.applicationToken
       );
-      const portalId =
-        resolveSubmissionId(submissionResponse) ||
-        resolveSubmissionId(refreshed?.data) ||
-        hydrated.applicationId ||
-        app.applicationId ||
-        null;
+      void submissionResponse;
       update({
         documents: hydrated.documents || app.documents,
         documentsDeferred:
@@ -289,7 +283,7 @@ export function Step6_Review() {
       }
       clearDraft();
       clearSubmissionIdempotencyKey();
-      navigate(getPostSubmitRedirect({ token: app.applicationToken, applicationId: portalId }), {
+      navigate(`/portal/${app.applicationToken}`, {
         replace: true,
         state: { submitted: true },
       });
@@ -297,17 +291,13 @@ export function Step6_Review() {
       console.error("Submission failed:", error);
       const status = (error as any)?.response?.status;
       const data = (error as any)?.response?.data;
-      const duplicateId = status === 409 ? resolveSubmissionId(data) : null;
-      if (duplicateId) {
+      if (status === 409 && resolveSubmissionId(data)) {
         clearDraft();
         clearSubmissionIdempotencyKey();
-        navigate(
-          getPostSubmitRedirect({
-            token: app.applicationToken,
-            applicationId: duplicateId,
-          }),
-          { replace: true, state: { submitted: true, duplicate: true } }
-        );
+        navigate(`/portal/${app.applicationToken}`, {
+          replace: true,
+          state: { submitted: true, duplicate: true },
+        });
         return;
       }
       const message =

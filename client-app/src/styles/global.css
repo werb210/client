@@ -79,3 +79,60 @@ textarea {
     transform: rotate(360deg);
   }
 }
+
+.chatbot {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 360px;
+  background: white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  max-width: calc(100vw - 24px);
+}
+
+.chat-messages {
+  max-height: 320px;
+  overflow: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chatbot input {
+  margin: 0 8px 8px;
+  padding: 8px;
+}
+
+.chatbot > button {
+  margin: 0 8px;
+}
+
+.chat-actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+}
+
+.human-btn {
+  background: #0b3d91;
+  color: white;
+}
+
+.report-btn {
+  background: #e53935;
+  color: white;
+}
+
+@media (max-width: 640px) {
+  .chatbot {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: 12px;
+  }
+}
