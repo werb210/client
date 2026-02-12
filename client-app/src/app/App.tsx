@@ -5,7 +5,7 @@ import { OfflineBanner } from "../components/OfflineBanner";
 import { InstallPromptBanner } from "../components/InstallPromptBanner";
 import { UpdateAvailableBanner } from "../components/UpdateAvailableBanner";
 import { SessionRefreshOverlay } from "../components/SessionRefreshOverlay";
-import AIChatWidget from "../components/AIChatWidget";
+import { AIChatBot } from "../components/AIChatBot";
 import CapitalReadinessPopup from "../components/CapitalReadinessPopup";
 import ProductComparisonPopup from "../components/ProductComparisonPopup";
 import { useSessionRefreshing } from "../hooks/useSessionRefreshing";
@@ -31,6 +31,14 @@ export default function App() {
     void hydratePortalSessionsFromIndexedDb();
   }, []);
 
+  useEffect(() => {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "page_view",
+      page_path: window.location.pathname,
+    });
+  }, []);
+
   if (refreshing) {
     return <SessionRefreshOverlay />;
   }
@@ -53,7 +61,7 @@ export default function App() {
           <ProductComparisonPopup />
         </div>
       </footer>
-      <AIChatWidget context="client" />
+      <AIChatBot />
     </div>
   );
 }
