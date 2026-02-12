@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 
@@ -14,6 +14,12 @@ export default defineConfig(() => {
       target: "es2022",
       sourcemap: false,
       minify: "esbuild" as const,
+    },
+    test: {
+      env: {
+        NODE_ENV: "test",
+        VITE_API_BASE_URL: "http://localhost:3000",
+      },
     },
   };
 
