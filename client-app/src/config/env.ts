@@ -1,14 +1,12 @@
 import.meta.env = import.meta.env || {};
 
-function requireEnv(key: string): string {
-  const value =
-    (import.meta as any)?.env?.[key] ??
-    (process.env?.[key] as string | undefined);
+export function requireEnv(key: string): string {
+  const value = (import.meta as any)?.env?.[key];
 
-  if (!value) {
-    // Allow tests to run without crashing
+  // Allow tests without crash
+  if (!value || typeof value !== "string") {
     if (process.env.NODE_ENV === "test") {
-      return "http://localhost:3000";
+      return "";
     }
     throw new Error(`Missing required environment variable: ${key}`);
   }
