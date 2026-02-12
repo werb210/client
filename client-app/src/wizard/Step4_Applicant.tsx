@@ -23,6 +23,7 @@ import { Checkbox } from "../components/ui/Checkbox";
 import { components, layout, tokens } from "@/styles";
 import { resolveStepGuard } from "./stepGuard";
 import { track } from "../utils/track";
+import { trackEvent } from "../utils/analytics";
 import { loadStepData, mergeDraft, saveStepData } from "../client/autosave";
 import { AddressAutocompleteInput } from "../components/ui/AddressAutocompleteInput";
 import {
@@ -56,6 +57,10 @@ export function Step4_Applicant() {
       update({ currentStep: 4 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    trackEvent("client_step_viewed", { step: 4 });
+  }, []);
 
   useEffect(() => {
     const guard = resolveStepGuard(app.currentStep, 4);

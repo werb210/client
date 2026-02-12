@@ -38,10 +38,22 @@ const emptyApp: ApplicationData = {
 };
 
 const CLIENT_DRAFT_KEY = "boreal_client_draft";
+const BOREAL_DRAFT_KEY = "boreal_draft";
 
 function loadClientDraft(): ApplicationData | null {
   try {
     const raw = localStorage.getItem(CLIENT_DRAFT_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as ApplicationData;
+  } catch (_error) {
+    return null;
+  }
+}
+
+
+function loadBorealDraft(): ApplicationData | null {
+  try {
+    const raw = localStorage.getItem(BOREAL_DRAFT_KEY);
     if (!raw) return null;
     return JSON.parse(raw) as ApplicationData;
   } catch (_error) {
@@ -117,7 +129,7 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
 
 export function useApplicationStore() {
   const [app, setApp] = useState<ApplicationData>(() =>
-    hydrateApplication(loadClientDraft() || OfflineStore.load())
+    hydrateApplication(loadBorealDraft() || loadClientDraft() || OfflineStore.load())
   );
   const [initialized, setInitialized] = useState(false);
   const [autosaveError, setAutosaveError] = useState<string | null>(null);
@@ -127,6 +139,10 @@ export function useApplicationStore() {
   const canAutosave = app.currentStep >= 1;
 
   useLocalBackup(app);
+
+  useEffect(() => {
+    localStorage.setItem(BOREAL_DRAFT_KEY, JSON.stringify(app));
+  }, [app]);
 
   const saveToServer = useMemo(
     () =>
@@ -185,6 +201,7 @@ export function useApplicationStore() {
     setApp(emptyApp);
     OfflineStore.clear();
     localStorage.removeItem(CLIENT_DRAFT_KEY);
+    localStorage.removeItem(BOREAL_DRAFT_KEY);
     clearDraft();
     clearSubmissionIdempotencyKey();
   }

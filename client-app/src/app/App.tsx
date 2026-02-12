@@ -5,17 +5,29 @@ import { OfflineBanner } from "../components/OfflineBanner";
 import { InstallPromptBanner } from "../components/InstallPromptBanner";
 import { UpdateAvailableBanner } from "../components/UpdateAvailableBanner";
 import { SessionRefreshOverlay } from "../components/SessionRefreshOverlay";
-import { AIChatBot } from "../components/AIChatBot";
+import AIChat from "../components/AIChat";
 import CapitalReadinessPopup from "../components/CapitalReadinessPopup";
+import CapitalScorePreview from "../components/CapitalScorePreview";
 import ProductComparisonPopup from "../components/ProductComparisonPopup";
+import QuickContact from "../components/QuickContact";
 import { useSessionRefreshing } from "../hooks/useSessionRefreshing";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
+import { useExitIntent } from "../hooks/useExitIntent";
+import { trackEvent } from "../utils/analytics";
 
 export default function App() {
+  if (!import.meta.env.VITE_API_URL) {
+    console.warn("API URL not configured");
+  }
+
   const refreshing = useSessionRefreshing();
   const updateAvailable = useServiceWorkerUpdate();
+  useExitIntent(() => {
+    trackEvent("client_exit_intent_detected");
+  });
+
   const debugUpdateAvailable =
     typeof window !== "undefined" &&
     import.meta.env.DEV &&
@@ -59,9 +71,11 @@ export default function App() {
         <div className="flex gap-4 justify-center">
           <CapitalReadinessPopup />
           <ProductComparisonPopup />
+          <CapitalScorePreview />
         </div>
       </footer>
-      <AIChatBot />
+      <AIChat />
+      <QuickContact />
     </div>
   );
 }
