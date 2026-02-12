@@ -207,14 +207,9 @@ export function useApplicationStore() {
       }
 
       if (updated) {
-        void saveToServer(updated)
-          .then(() => {
-            setAutosaveError(null);
-          })
-          .catch((error: unknown) => {
-            console.error("Autosave failed:", error);
-            setAutosaveError("Autosave failed. We'll retry when you're back online.");
-          });
+        if (typeof saveToServer === "function") {
+          void saveToServer(updated);
+        }
       }
 
       return updated;
@@ -269,11 +264,9 @@ export function useApplicationStore() {
     if (!app) return;
 
     if (app) {
-      void saveToServer(app)
-        .then(() => setAutosaveError(null))
-        .catch(() => {
-          setAutosaveError("Autosave failed. We'll retry when you're back online.");
-        });
+      if (typeof saveToServer === "function") {
+        void saveToServer(app);
+      }
     }
   }, [app, canAutosave, isOffline, saveToServer]);
 
