@@ -140,12 +140,12 @@ export function Step6_Review() {
   }, []);
 
   useEffect(() => {
-    if (!app.applicationToken) return;
-    ClientAppAPI.status(app.applicationToken)
+    if (!app.applicationToken!) return;
+    ClientAppAPI.status(app.applicationToken!)
       .then((res) => {
         const refreshed = extractApplicationFromStatus(
           res?.data || {},
-          app.applicationToken
+          app.applicationToken!
         );
         update({
           documents: refreshed.documents || app.documents,
@@ -162,7 +162,7 @@ export function Step6_Review() {
       .catch((error) => {
         console.error("Failed to refresh application status:", error);
       });
-  }, [app.applicationToken, update]);
+  }, [app.applicationToken!, update]);
 
   function toggleTerms() {
     update({ termsAccepted: !app.termsAccepted });
@@ -205,7 +205,7 @@ export function Step6_Review() {
       return;
     }
 
-    if (!app.applicationToken) {
+    if (!app.applicationToken!) {
       blockSubmit("Missing application token. Please restart your application.");
       return;
     }
@@ -256,7 +256,7 @@ export function Step6_Review() {
     }
 
     try {
-      await ClientAppAPI.update(app.applicationToken, {
+      await ClientAppAPI.update(app.applicationToken!, {
         financialProfile: app.kyc,
         selectedProduct: app.selectedProduct,
         selectedProductId: app.selectedProductId,
@@ -265,7 +265,7 @@ export function Step6_Review() {
         business: app.business,
         applicant: app.applicant,
         documents: app.documents,
-        documentsDeferred: app.documentsDeferred,
+        documentsDeferred: Boolean(app.documentsDeferred),
         termsAccepted: app.termsAccepted,
         typedSignature: app.typedSignature,
         coApplicantSignature: app.coApplicantSignature,
@@ -279,10 +279,10 @@ export function Step6_Review() {
       const submissionResponse = await submitApplication(payload, {
         idempotencyKey,
       });
-      const refreshed = await ClientAppAPI.status(app.applicationToken);
+      const refreshed = await ClientAppAPI.status(app.applicationToken!);
       const hydrated = extractApplicationFromStatus(
         refreshed?.data || {},
-        app.applicationToken
+        app.applicationToken!
       );
       void submissionResponse;
       trackEvent("client_submission_completed");
@@ -297,8 +297,8 @@ export function Step6_Review() {
         financialReviewComplete:
           hydrated.financialReviewComplete ?? app.financialReviewComplete,
       });
-      if (app.kyc?.phone && app.applicationToken) {
-        ClientProfileStore.markSubmitted(app.kyc.phone, app.applicationToken);
+      if (app.kyc?.phone && app.applicationToken!) {
+        ClientProfileStore.markSubmitted(app.kyc.phone, app.applicationToken!);
       }
       clearDraft();
       clearSubmissionIdempotencyKey();
@@ -359,7 +359,7 @@ export function Step6_Review() {
   }
 
   async function handleIdUpload(docType: string, file: File | null) {
-    if (!file || !app.applicationToken) return;
+    if (!file || !app.applicationToken!) return;
 
     setDocErrors((prev) => ({ ...prev, [docType]: "" }));
 
@@ -404,7 +404,7 @@ export function Step6_Review() {
         };
         reader.readAsDataURL(file);
       });
-      await ClientAppAPI.uploadDoc(app.applicationToken, {
+      await ClientAppAPI.uploadDoc(app.applicationToken!, {
         documents: {
           [docType]: {
             name: file.name,
@@ -414,10 +414,10 @@ export function Step6_Review() {
           },
         },
       });
-      const refreshed = await ClientAppAPI.status(app.applicationToken);
+      const refreshed = await ClientAppAPI.status(app.applicationToken!);
       const hydrated = extractApplicationFromStatus(
         refreshed?.data || {},
-        app.applicationToken
+        app.applicationToken!
       );
       update({
         documents: hydrated.documents || app.documents,
@@ -630,7 +630,7 @@ export function Step6_Review() {
                 !canSubmitApplication({
                   isOnline,
                   hasIdempotencyKey: Boolean(idempotencyKey),
-                  hasApplicationToken: Boolean(app.applicationToken),
+                  hasApplicationToken: Boolean(app.applicationToken!),
                   hasSelectedProductId: Boolean(app.selectedProductId),
                   termsAccepted: app.termsAccepted,
                   typedSignature: Boolean(app.typedSignature?.trim()),
@@ -640,7 +640,7 @@ export function Step6_Review() {
                   docsAccepted,
                   ocrComplete,
                   creditSummaryComplete,
-                  documentsDeferred: app.documentsDeferred,
+                  documentsDeferred: Boolean(app.documentsDeferred),
                 })
               }
             >

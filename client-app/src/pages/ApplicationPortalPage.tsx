@@ -77,7 +77,7 @@ export function ApplicationPortalPage() {
         fetchApplication(id),
         fetchApplicationDocuments(id),
       ]);
-      const nextApplication = applicationRes?.application ?? applicationRes;
+      const nextApplication = applicationRes as any;
       setApplication(nextApplication);
       setDocuments(normalizeDocumentsResponse(documentsRes));
       const stageValue =

@@ -1,4 +1,4 @@
-import { getClientSessionAuthHeader } from "../state/clientSession";
+import { getActiveClientSessionToken } from "../state/clientSession";
 import { apiRequest } from "../lib/api";
 
 export type ClientSession = {
@@ -20,15 +20,16 @@ type SessionResponse = {
 export async function loadSessionFromUrl(): Promise<ClientSession | null> {
   const params = new URLSearchParams(window.location.search);
   const token = params.get("token");
+  const authToken = getActiveClientSessionToken();
 
   if (!token) return null;
 
   const data = await apiRequest<SessionResponse>(
     `/api/client/session?token=${encodeURIComponent(token)}`,
     {
-      headers: {
-        ...getClientSessionAuthHeader(),
-      },
+      headers: authToken
+        ? { Authorization: `Bearer ${authToken}` }
+        : undefined,
     }
   );
 

@@ -55,8 +55,8 @@ describe("submission status", () => {
 
     createProcessingStatusPoller({
       fetchStatus,
-      onUpdate: (snapshot) => updates.push(snapshot.status),
-      isTerminal: (snapshot) => snapshot.status !== "pending",
+      onUpdate: (snapshot) => updates.push((snapshot as { status: string }).status),
+      isTerminal: (snapshot) => (snapshot as { status: string }).status !== "pending",
       getVisibility: () => true,
       getOnline: () => true,
       subscribeVisibility: () => () => undefined,

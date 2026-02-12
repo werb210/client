@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getClientSessionAuthHeader } from "../../state/clientSession";
+import { getActiveClientSessionToken } from "../../state/clientSession";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
@@ -10,6 +10,7 @@ import { apiRequest } from "../../lib/api";
 export default function ApplyStep2() {
   const navigate = useNavigate();
   const applicationToken = localStorage.getItem("applicationToken");
+  const token = getActiveClientSessionToken();
   const [requestedAmount, setRequestedAmount] = useState("");
   const [useOfFunds, setUseOfFunds] = useState("");
   const [annualRevenue, setAnnualRevenue] = useState("");
@@ -36,7 +37,7 @@ export default function ApplyStep2() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            ...getClientSessionAuthHeader(),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({
             financialProfile: {

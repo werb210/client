@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from "react";
+import type { CSSProperties, InputHTMLAttributes } from "react";
 import { components } from "@/styles";
 
 type CheckboxProps = InputHTMLAttributes<HTMLInputElement> & {
@@ -14,7 +14,7 @@ export function Checkbox({ checked, style, ...props }: CheckboxProps) {
         ...components.checkbox.base,
         ...(checked ? components.checkbox.checked : null),
         ...style,
-      }}
+      } as CSSProperties}
       {...props}
     />
   );

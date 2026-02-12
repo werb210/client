@@ -225,9 +225,9 @@ describe("PublicApplyPage form schema", () => {
 
   it("stores a consistent idempotency key for the session", () => {
     const storage = createStorage();
-    const key = getOrCreateIdempotencyKey(storage as any);
-    expect(loadPublicSubmissionState(storage as any)).toBeNull();
-    expect(getOrCreateIdempotencyKey(storage as any)).toBe(key);
+    const key = getOrCreateIdempotencyKey(storage as unknown as Storage);
+    expect(loadPublicSubmissionState(storage as unknown as Storage)).toBeNull();
+    expect(getOrCreateIdempotencyKey(storage as unknown as Storage)).toBe(key);
     expect(createIdempotencyKey()).toBeTruthy();
   });
 });
