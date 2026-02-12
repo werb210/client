@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../../api/client";
 import { getClientSessionAuthHeader } from "../../state/clientSession";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { PhoneInput } from "../../components/ui/PhoneInput";
 import { Button } from "../../components/ui/Button";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
+import { apiRequest } from "../../lib/api";
 
 export default function ApplyStep3() {
   const navigate = useNavigate();
@@ -34,9 +34,7 @@ export default function ApplyStep3() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/api/applications/${applicationToken}`,
-        {
+      await apiRequest(`/api/applications/${applicationToken}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -52,10 +50,6 @@ export default function ApplyStep3() {
           }),
         }
       );
-
-      if (!res.ok) {
-        throw new Error("Unable to save applicant details");
-      }
 
       navigate("/apply/step-4");
     } catch (err) {

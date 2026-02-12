@@ -35,6 +35,8 @@ const emptyApp: ApplicationData = {
   documentReviewComplete: undefined,
   financialReviewComplete: undefined,
   readinessScore: undefined,
+  ocrComplete: undefined,
+  creditSummaryComplete: undefined,
 };
 
 const CLIENT_DRAFT_KEY = "boreal_client_draft";
@@ -124,6 +126,11 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
     financialReviewComplete: saved.financialReviewComplete,
     readinessScore:
       typeof saved.readinessScore === "number" ? saved.readinessScore : undefined,
+    ocrComplete: typeof saved.ocrComplete === "boolean" ? saved.ocrComplete : undefined,
+    creditSummaryComplete:
+      typeof saved.creditSummaryComplete === "boolean"
+        ? saved.creditSummaryComplete
+        : undefined,
   };
 }
 

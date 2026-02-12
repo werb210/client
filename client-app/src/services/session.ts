@@ -1,11 +1,20 @@
-import { API_BASE_URL } from "../api/client";
 import { getClientSessionAuthHeader } from "../state/clientSession";
+import { apiRequest } from "../lib/api";
 
 export type ClientSession = {
   applicationId: string;
   step: number;
   token: string;
-  application?: any;
+  application?: unknown;
+};
+
+type SessionResponse = {
+  applicationId: string;
+  application?: unknown;
+  nextIncompleteStep?: number;
+  nextStep?: number;
+  step?: number;
+  lastCompletedStep?: number;
 };
 
 export async function loadSessionFromUrl(): Promise<ClientSession | null> {
@@ -14,8 +23,8 @@ export async function loadSessionFromUrl(): Promise<ClientSession | null> {
 
   if (!token) return null;
 
-  const response = await fetch(
-    `${API_BASE_URL}/api/client/session?token=${encodeURIComponent(token)}`,
+  const data = await apiRequest<SessionResponse>(
+    `/api/client/session?token=${encodeURIComponent(token)}`,
     {
       headers: {
         ...getClientSessionAuthHeader(),
@@ -23,11 +32,6 @@ export async function loadSessionFromUrl(): Promise<ClientSession | null> {
     }
   );
 
-  if (!response.ok) {
-    throw new Error("Unable to resume session");
-  }
-
-  const data = await response.json();
   const serverStep =
     Number(data.nextIncompleteStep ?? data.nextStep ?? data.step) || null;
   const lastCompletedStep = Number(data.lastCompletedStep ?? 0);

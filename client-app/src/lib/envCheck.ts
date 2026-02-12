@@ -1,10 +1,6 @@
-export function checkEnv() {
-  const required = ["VITE_API_BASE_URL"];
-  const missing = required.filter(
-    (key) => !(import.meta.env as Record<string, string | undefined>)[key]
-  );
+import { ENV } from "@/config/env";
 
-  if (missing.length) {
-    console.error("Missing ENV:", missing);
-  }
+export function checkEnv() {
+  void ENV.API_BASE_URL;
+  void ENV.APP_ENV;
 }

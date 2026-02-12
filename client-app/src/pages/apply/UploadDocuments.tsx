@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../../api/client";
 import { getClientSessionAuthHeader } from "../../state/clientSession";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
+import { apiRequest } from "../../lib/api";
 
 export default function UploadDocuments() {
   const navigate = useNavigate();
@@ -44,9 +44,7 @@ export default function UploadDocuments() {
     });
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/applications/${applicationToken}`,
-        {
+      await apiRequest(`/api/applications/${applicationToken}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -63,10 +61,6 @@ export default function UploadDocuments() {
           }),
         }
       );
-
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
 
       setProgress(100);
       setStatus("success");
