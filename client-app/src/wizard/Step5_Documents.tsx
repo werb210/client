@@ -28,6 +28,7 @@ import { useForegroundRefresh } from "../hooks/useForegroundRefresh";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
 import { trackEvent } from "../utils/analytics";
 import { resolveStepGuard } from "./stepGuard";
+import { track } from "../utils/track";
 import { extractRequiredDocumentsFromStatus } from "../documents/requiredDocumentsFromStatus";
 import { syncRequiredDocumentsFromStatus } from "../documents/requiredDocumentsCache";
 import {
@@ -368,6 +369,7 @@ export function Step5_Documents() {
       });
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
       trackEvent("client_document_uploaded", { documentType: docType });
+      track("document_uploaded", { documentType: docType });
     } catch (error) {
       console.error("Document upload failed:", error);
       setDocErrors((prev) => ({
@@ -384,6 +386,7 @@ export function Step5_Documents() {
       setDocError("Please upload all required documents.");
       return;
     }
+    track("step_completed", { step: 5 });
     navigate("/apply/step-6");
   }
 
@@ -395,6 +398,7 @@ export function Step5_Documents() {
     try {
       await ClientAppAPI.deferDocuments(app.applicationToken);
       update({ documentsDeferred: true });
+      track("step_completed", { step: 5, deferred: true });
       navigate("/apply/step-6");
     } catch (error) {
       console.error("Failed to defer documents:", error);

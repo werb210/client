@@ -22,6 +22,7 @@ import { WizardLayout } from "../components/WizardLayout";
 import { PhoneInput } from "../components/ui/PhoneInput";
 import { components, layout, tokens } from "@/styles";
 import { resolveStepGuard } from "./stepGuard";
+import { track } from "../utils/track";
 import { loadStepData, mergeDraft, saveStepData } from "../client/autosave";
 import { AddressAutocompleteInput } from "../components/ui/AddressAutocompleteInput";
 import {
@@ -125,6 +126,7 @@ export function Step3_Business() {
         return;
       }
     }
+    track("step_completed", { step: 3 });
     navigate("/apply/step-4");
   }
 

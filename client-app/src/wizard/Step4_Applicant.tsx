@@ -22,6 +22,7 @@ import { PhoneInput } from "../components/ui/PhoneInput";
 import { Checkbox } from "../components/ui/Checkbox";
 import { components, layout, tokens } from "@/styles";
 import { resolveStepGuard } from "./stepGuard";
+import { track } from "../utils/track";
 import { loadStepData, mergeDraft, saveStepData } from "../client/autosave";
 import { AddressAutocompleteInput } from "../components/ui/AddressAutocompleteInput";
 import {
@@ -133,6 +134,7 @@ export function Step4_Applicant() {
         return;
       }
     }
+    track("step_completed", { step: 4 });
     navigate("/apply/step-5");
   }
 

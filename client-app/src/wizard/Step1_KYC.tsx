@@ -26,6 +26,7 @@ import {
   getWizardFieldId,
 } from "./wizardSchema";
 import { enforceV1StepSchema } from "../schemas/v1WizardSchema";
+import { track } from "../utils/track";
 
 const MatchCategories = [
   "Line of Credit",
@@ -217,6 +218,8 @@ export function Step1_KYC() {
         return;
       }
       update({ applicationToken: token, matchPercentages });
+      track("apply_started", { step: 1 });
+      track("step_completed", { step: 1 });
       navigate("/apply/step-2");
     } catch (error) {
       console.error("Failed to start application:", error);
