@@ -4,13 +4,12 @@ import { Header } from "../components/Header";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { InstallPromptBanner } from "../components/InstallPromptBanner";
 import { UpdateAvailableBanner } from "../components/UpdateAvailableBanner";
-import { ErrorBoundary } from "../utils/errorBoundary";
 import { SessionRefreshOverlay } from "../components/SessionRefreshOverlay";
 import { useSessionRefreshing } from "../hooks/useSessionRefreshing";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
-import ChatWidget from "../components/ChatWidget";
+import AIChatbot from "../components/AIChatbot";
 
 export default function App() {
   const refreshing = useSessionRefreshing();
@@ -44,11 +43,9 @@ export default function App() {
         onApplyUpdate={() => void applyServiceWorkerUpdate()}
       />
       <main className="flex-1">
-        <ErrorBoundary>
-          <AppRouter />
-        </ErrorBoundary>
+        <AppRouter />
       </main>
-      <ChatWidget />
+      <AIChatbot />
     </div>
   );
 }
