@@ -37,7 +37,7 @@ describe("WIZARD_FIELD_INVENTORY", () => {
   });
 
   it("references files that exist", () => {
-    const root = path.resolve(import.meta.dirname || process.cwd(), "..", "..");
+    const root = path.resolve(process.cwd(), "..", "..");
     steps.forEach((step) => {
       step.fields.forEach((field) => {
         const filePath = path.join(root, "wizard", field.file);
