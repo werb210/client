@@ -690,8 +690,7 @@ export default function PublicApplyPage() {
               }
             />
             <span>
-              I consent to receive communications via phone, SMS, email, chat, and AI-assisted
-              messaging.
+              I consent to receive communications via phone, SMS, and email messaging.
             </span>
           </label>
           {errors.communications ? (

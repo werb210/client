@@ -1,17 +1,17 @@
 :root {
   color: #0f172a;
-  background-color: #f7f9fc;
+  background-color: #f8fafc;
   font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-  --color-primary: #0b2a4a;
-  --color-primary-light: #233f5c;
-  --color-background: #f7f9fc;
+  --color-primary: #1e3a8a;
+  --color-primary-light: #dbeafe;
+  --color-background: #f8fafc;
   --color-surface: #ffffff;
   --color-border: #e5e7eb;
   --color-text-primary: #0f172a;
   --color-text-secondary: #475569;
   --page-padding: 16px;
-  --form-max-width: 960px;
-  --portal-max-width: 1200px;
+  --form-max-width: 1120px;
+  --portal-max-width: 1120px;
 }
 
 @media (min-width: 768px) {
@@ -46,9 +46,6 @@ img {
     width: 100%;
   }
 
-  .chat-actions button {
-    width: 100%;
-  }
 }
 
 h1,
@@ -80,72 +77,25 @@ textarea {
   }
 }
 
-.chatbot {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 360px;
-  background: white;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  z-index: 50;
-  max-width: calc(100vw - 24px);
+
+
+
+
+
+
+
+
+
+.section-spacing {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 }
 
-.chat-messages {
-  max-height: 320px;
-  overflow: auto;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.surface-shadow {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
 }
 
-.chatbot input {
-  margin: 0 8px 8px;
-  padding: 8px;
-}
-
-.chatbot > button {
-  margin: 0 8px;
-}
-
-.chat-actions {
-  display: flex;
-  gap: 8px;
-  padding: 8px;
-}
-
-.human-btn {
-  background: #0b3d91;
-  color: white;
-}
-
-.report-btn {
-  background: #e53935;
-  color: white;
-}
-
-@media (max-width: 640px) {
-  .chatbot {
-    left: 12px;
-    right: 12px;
-    width: auto;
-    bottom: 12px;
-  }
-}
-
-
-.ai-chat {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 320px;
-  background: white;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+.industry-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16) !important;
 }
