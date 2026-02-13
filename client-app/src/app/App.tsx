@@ -15,6 +15,7 @@ import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
 import { useExitIntent } from "../hooks/useExitIntent";
 import { trackEvent } from "../utils/analytics";
+import AiChatShell from "../modules/ai/AiChatShell";
 
 export default function App() {
   const refreshing = useSessionRefreshing();
@@ -70,6 +71,7 @@ export default function App() {
         </div>
       </footer>
       <QuickContact />
+      <AiChatShell />
     </div>
   );
 }
