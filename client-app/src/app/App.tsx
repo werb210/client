@@ -5,7 +5,6 @@ import { OfflineBanner } from "../components/OfflineBanner";
 import { InstallPromptBanner } from "../components/InstallPromptBanner";
 import { UpdateAvailableBanner } from "../components/UpdateAvailableBanner";
 import { SessionRefreshOverlay } from "../components/SessionRefreshOverlay";
-import AIChat from "../components/AIChat";
 import CapitalReadinessPopup from "../components/CapitalReadinessPopup";
 import CapitalScorePreview from "../components/CapitalScorePreview";
 import ProductComparisonPopup from "../components/ProductComparisonPopup";
@@ -70,7 +69,6 @@ export default function App() {
           <CapitalScorePreview />
         </div>
       </footer>
-      <AIChat />
       <QuickContact />
     </div>
   );

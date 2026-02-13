@@ -47,20 +47,22 @@ const MatchBaselines: Record<string, number> = {
 
 const BusinessLocationOptions = ["Canada", "United States", "Other"];
 
-const IndustryOptions = [
-  "Construction",
-  "Manufacturing",
-  "Retail",
-  "Restaurant/Food Service",
-  "Technology",
-  "Healthcare",
-  "Transportation",
-  "Professional Services",
-  "Real Estate",
-  "Agriculture",
-  "Energy",
-  "Other",
+const IndustryCards = [
+  { title: "Construction", subtext: "General contractors and specialty trades", image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80" },
+  { title: "Manufacturing", subtext: "Production and industrial operations", image: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=900&q=80" },
+  { title: "Retail", subtext: "In-store and online product sales", image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=900&q=80" },
+  { title: "Restaurant/Food Service", subtext: "Restaurants, catering, and food operations", image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80" },
+  { title: "Technology", subtext: "Software, IT, and digital services", image: "https://images.unsplash.com/photo-1518773553398-650c184e0bb3?auto=format&fit=crop&w=900&q=80" },
+  { title: "Healthcare", subtext: "Medical, wellness, and care providers", image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=900&q=80" },
+  { title: "Transportation", subtext: "Freight, logistics, and delivery", image: "https://images.unsplash.com/photo-1494412651409-8963ce7935a7?auto=format&fit=crop&w=900&q=80" },
+  { title: "Professional Services", subtext: "Consulting, legal, and business services", image: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80" },
+  { title: "Real Estate", subtext: "Property management and development", image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=80" },
+  { title: "Agriculture", subtext: "Farming and agri-business operations", image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=900&q=80" },
+  { title: "Energy", subtext: "Utilities, oil, gas, and renewables", image: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=900&q=80" },
+  { title: "Other", subtext: "Additional business industries", image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=900&q=80" },
 ];
+
+const IndustryOptions = IndustryCards.map((industry) => industry.title);
 
 const PurposeOptions = [
   "Equipment Purchase",
@@ -413,23 +415,47 @@ export function Step1_KYC() {
 
             <div data-error={showErrors && fieldErrors.industry}>
               <label style={components.form.label}>Industry</label>
-              <Select
-                id={getWizardFieldId("step1", "industry")}
-                value={app.kyc.industry || ""}
-                onChange={(e: any) => {
-                  const nextKyc = { ...app.kyc, industry: e.target.value };
-                  update({ kyc: nextKyc });
-                  handleAutoAdvance("industry", nextKyc);
+              <input id={getWizardFieldId("step1", "industry")} value={app.kyc.industry || ""} readOnly hidden />
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: tokens.spacing.sm,
                 }}
-                hasError={showErrors && fieldErrors.industry}
               >
-                <option value="">Select…</option>
-                {IndustryOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </Select>
+                {IndustryCards.map((industry) => {
+                  const selected = app.kyc.industry === industry.title;
+                  return (
+                    <button
+                      key={industry.title}
+                      className="industry-card"
+                      type="button"
+                      onClick={() => {
+                        const nextKyc = { ...app.kyc, industry: industry.title };
+                        update({ kyc: nextKyc });
+                        handleAutoAdvance("industry", nextKyc);
+                      }}
+                      style={{
+                        borderRadius: tokens.radii.md,
+                        border: `2px solid ${selected ? tokens.colors.primary : tokens.colors.border}`,
+                        background: tokens.colors.surface,
+                        textAlign: "left",
+                        overflow: "hidden",
+                        padding: 0,
+                        cursor: "pointer",
+                        boxShadow: selected ? tokens.shadows.focus : "0 6px 16px rgba(15, 23, 42, 0.08)",
+                        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                      }}
+                    >
+                      <img src={industry.image} alt={industry.title} style={{ width: "100%", height: "108px" }} />
+                      <div style={{ padding: tokens.spacing.sm, display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ fontSize: "15px", fontWeight: 600, color: tokens.colors.textPrimary }}>{industry.title}</div>
+                        <div style={{ fontSize: "13px", color: tokens.colors.textSecondary }}>{industry.subtext}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
               {showErrors && fieldErrors.industry && (
                 <div style={components.form.errorText}>Select your industry.</div>
               )}

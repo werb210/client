@@ -1,27 +1,27 @@
 export const tokens = {
   colors: {
-    primary: "#0B2A4A",
-    primaryDark: "#0A2643",
-    primaryLight: "#233F5C",
+    primary: "#1E3A8A",
+    primaryDark: "#1D4ED8",
+    primaryLight: "#DBEAFE",
     success: "#16A34A",
     warning: "#F59E0B",
     error: "#DC2626",
-    background: "#F7F9FC",
+    background: "#F8FAFC",
     surface: "#FFFFFF",
     border: "#E5E7EB",
     textPrimary: "#0F172A",
-    textSecondary: "#475569",
+    textSecondary: "#4B5563",
     disabled: "#CBD5E1",
   },
   typography: {
     fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
     h1: {
-      fontSize: "28px",
-      fontWeight: 600,
+      fontSize: "36px",
+      fontWeight: 700,
       lineHeight: "1.2",
     },
     h2: {
-      fontSize: "20px",
+      fontSize: "24px",
       fontWeight: 600,
       lineHeight: "1.3",
     },
@@ -65,6 +65,6 @@ export const tokens = {
   shadows: {
     focus: "0 0 0 3px rgba(11, 42, 74, 0.2)",
     errorFocus: "0 0 0 3px rgba(220, 38, 38, 0.2)",
-    card: "0 8px 24px rgba(15, 23, 42, 0.08)",
+    card: "0 10px 30px rgba(15, 23, 42, 0.10)",
   },
 };

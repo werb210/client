@@ -20,7 +20,6 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { Spinner } from "../components/ui/Spinner";
 import { useForegroundRefresh } from "../hooks/useForegroundRefresh";
 import { logout } from "../auth/logout";
-import { loadChatHistory, saveChatHistory } from "../state/chatHistory";
 import { syncRequiredDocumentsFromStatus } from "../documents/requiredDocumentsCache";
 import { OfflineStore } from "../state/offline";
 import { extractApplicationFromStatus } from "../applications/resume";
@@ -41,12 +40,40 @@ import { buildClientHistoryEvents } from "../portal/clientHistory";
 import { updateClientSession } from "../state/clientSession";
 import { components, layout, tokens } from "@/styles";
 
+
+function getMessageHistoryKey(token: string | null) {
+  return token ? `boreal_portal_message_history:${token}` : null;
+}
+
+function loadMessageHistory(token: string | null) {
+  try {
+    const key = getMessageHistoryKey(token);
+    if (!key) return [];
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMessageHistory(token: string | null, messages: any[]) {
+  try {
+    const key = getMessageHistoryKey(token);
+    if (!key) return;
+    localStorage.setItem(key, JSON.stringify(messages));
+  } catch {
+    // no-op
+  }
+}
+
 export function StatusPage() {
   const token = new URLSearchParams(window.location.search).get("token");
   const { state: sessionState } = useClientSession(token);
   const [status, setStatus] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>(() =>
-    loadChatHistory(new URLSearchParams(window.location.search).get("token"))
+    loadMessageHistory(new URLSearchParams(window.location.search).get("token"))
   );
   const [text, setText] = useState("");
   const [rejectionNotice, setRejectionNotice] = useState<{
@@ -93,14 +120,14 @@ export function StatusPage() {
     try {
       const res = await ClientAppAPI.getMessages(token);
       setMessages(res.data);
-      saveChatHistory(token, res.data);
+      saveMessageHistory(token, res.data);
     } catch (error) {
       console.error("Message refresh failed:", error);
     }
   }, [token]);
 
   useEffect(() => {
-    setMessages(loadChatHistory(token));
+    setMessages(loadMessageHistory(token));
   }, [token]);
 
   const pollingEnabled = Boolean(token) && sessionState === "valid";
@@ -209,7 +236,7 @@ export function StatusPage() {
     (nextMessages: any[]) => {
       setMessages(nextMessages);
       if (token) {
-        saveChatHistory(token, nextMessages);
+        saveMessageHistory(token, nextMessages);
       }
     },
     [token]

@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { layout, components } from "@/styles";
 import { OfflineBanner } from "./OfflineBanner";
-import AIChat from "./AIChat";
 
 type WizardLayoutProps = {
   children: ReactNode;
@@ -23,7 +22,6 @@ export function WizardLayout({ children }: WizardLayoutProps) {
           {children}
         </div>
       </div>
-      <AIChat />
     </div>
   );
 }
