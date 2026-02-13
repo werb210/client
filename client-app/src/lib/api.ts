@@ -80,3 +80,19 @@ export async function apiRequest<T>(url: string, options: RequestInit = {}): Pro
     clearTimeout(timeout);
   }
 }
+
+export const createLead = async (payload: any) => {
+  const res = await fetch("/api/crm/lead", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to submit lead");
+  }
+
+  return res.json();
+};
