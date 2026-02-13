@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AppRouter from "../router/AppRouter";
 import { Header } from "../components/Header";
 import { OfflineBanner } from "../components/OfflineBanner";
@@ -15,10 +15,12 @@ import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
 import { useExitIntent } from "../hooks/useExitIntent";
 import { trackEvent } from "../utils/analytics";
-import AiChatShell from "../modules/ai/AiChatShell";
+import { FloatingChatButton } from "../modules/chat/components/FloatingChatButton";
+import { ChatDrawer } from "../modules/chat/components/ChatDrawer";
 
 export default function App() {
   const refreshing = useSessionRefreshing();
+  const [chatOpen, setChatOpen] = useState(false);
   const updateAvailable = useServiceWorkerUpdate();
   useExitIntent(() => {
     trackEvent("client_exit_intent_detected");
@@ -71,7 +73,8 @@ export default function App() {
         </div>
       </footer>
       <QuickContact />
-      <AiChatShell />
+      <FloatingChatButton onClick={() => setChatOpen(true)} />
+      <ChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
     </div>
   );
 }
