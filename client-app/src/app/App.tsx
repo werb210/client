@@ -15,7 +15,7 @@ import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
 import { useExitIntent } from "../hooks/useExitIntent";
 import { trackEvent } from "../utils/analytics";
-import MayaWidget from "../components/MayaWidget";
+import AIChatWidget from "../components/AIChatWidget";
 
 export default function App() {
   const refreshing = useSessionRefreshing();
@@ -71,7 +71,7 @@ export default function App() {
         </div>
       </footer>
       <QuickContact />
-      <MayaWidget />
+      <AIChatWidget />
     </div>
   );
 }
