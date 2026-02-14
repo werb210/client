@@ -32,6 +32,7 @@ import { useClientSession } from "../hooks/useClientSession";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { clearReadiness, setReadiness } from "../state/readinessStore";
 import { fetchReadinessContext, getLeadIdFromSearch } from "../services/readiness";
+import { getContinuationSession } from "../api/continuation";
 
 type GuardProps = {
   children: JSX.Element;
@@ -74,14 +75,44 @@ function ReadinessLoader() {
   const location = useLocation();
 
   useEffect(() => {
-    const leadId = getLeadIdFromSearch(location.search);
-    if (!leadId) {
-      clearReadiness();
-      return;
-    }
-
     let active = true;
+
+    const resolveLeadId = async () => {
+      const searchLeadId = getLeadIdFromSearch(location.search);
+      if (searchLeadId) {
+        return searchLeadId;
+      }
+
+      const storedLeadId =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("leadId")
+          : null;
+      if (storedLeadId) {
+        return storedLeadId;
+      }
+
+      try {
+        const continuationSession = await getContinuationSession();
+        const sessionLeadId =
+          continuationSession?.leadId || continuationSession?.readinessLeadId;
+        if (typeof sessionLeadId === "string" && sessionLeadId.trim()) {
+          return sessionLeadId;
+        }
+      } catch {
+        // no active continuation session
+      }
+
+      return null;
+    };
+
     const loadReadiness = async () => {
+      const leadId = await resolveLeadId();
+      if (!active) return;
+      if (!leadId) {
+        clearReadiness();
+        return;
+      }
+
       const readiness = await fetchReadinessContext(leadId);
       if (!active) return;
       if (!readiness) {
