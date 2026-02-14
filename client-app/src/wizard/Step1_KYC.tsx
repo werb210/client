@@ -327,8 +327,7 @@ export function Step1_KYC() {
       track("apply_started", { step: 1 });
       track("step_completed", { step: 1 });
       navigate("/apply/step-2");
-    } catch (error) {
-      console.error("Failed to start application:", error);
+    } catch {
       setSubmitError("We couldn't start your application. Please try again.");
     }
   }

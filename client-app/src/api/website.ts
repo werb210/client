@@ -18,6 +18,7 @@ const CONTACT_DEDUP_KEY = "boreal_contact_submission_cache";
 const READINESS_DEDUP_KEY = "boreal_readiness_submission_cache";
 const READINESS_TOKEN_KEY = "boreal_readiness_token";
 const READINESS_SESSION_ID_KEY = "boreal_readiness_session_id";
+const SESSION_ID_QUERY_PARAM = "sessionId";
 
 function normalize(value: string | undefined) {
   return (value || "").trim().toLowerCase();
@@ -134,6 +135,28 @@ export function getStoredReadinessSessionId() {
   } catch {
     return null;
   }
+}
+
+export function getReadinessSessionIdFromUrl(search: string) {
+  const queryValue = new URLSearchParams(search).get(SESSION_ID_QUERY_PARAM);
+  if (!queryValue) return null;
+  const normalized = queryValue.trim();
+  return normalized || null;
+}
+
+export function resolveReadinessSessionId(search?: string) {
+  const querySessionId =
+    typeof search === "string" ? getReadinessSessionIdFromUrl(search) : null;
+  if (querySessionId) {
+    try {
+      localStorage.setItem(READINESS_SESSION_ID_KEY, querySessionId);
+    } catch {
+      // ignore storage failures
+    }
+    return querySessionId;
+  }
+
+  return getStoredReadinessSessionId();
 }
 
 function persistReadinessSession(payload: Record<string, unknown> | null | undefined) {

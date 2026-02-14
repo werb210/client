@@ -26,11 +26,21 @@ export default function ChatSupportWidget() {
     [app.applicationId, app.applicationToken, app.readinessLeadId]
   );
   const readinessToken = useMemo(() => getStoredReadinessToken(), []);
+  const userMetadata = useMemo(
+    () => ({
+      contactEmail: app.applicant.email || null,
+      contactPhone: app.applicant.phone || null,
+      contactName: [app.applicant.firstName, app.applicant.lastName].filter(Boolean).join(" ") || null,
+      companyName: app.kyc.companyName || null,
+    }),
+    [app.applicant.email, app.applicant.firstName, app.applicant.lastName, app.applicant.phone, app.kyc.companyName]
+  );
 
   const { status, send } = useChatSocket({
     enabled: open,
     sessionId,
     readinessToken,
+    userMetadata,
     onHumanActive: () => {
       setHumanActive(true);
       setMessages((prev) => {

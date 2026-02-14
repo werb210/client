@@ -33,12 +33,6 @@ export default function App() {
     new URLSearchParams(window.location.search).has("debugUpdateBanner");
 
   useEffect(() => {
-    if (updateAvailable) {
-      console.info("A new version is available.");
-    }
-  }, [updateAvailable]);
-
-  useEffect(() => {
     void hydratePortalSessionsFromIndexedDb();
   }, []);
 

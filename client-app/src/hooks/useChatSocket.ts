@@ -6,6 +6,7 @@ interface UseChatSocketOptions {
   enabled: boolean;
   sessionId: string | null;
   readinessToken?: string | null;
+  userMetadata?: Record<string, string | null | undefined>;
   onHumanActive?: () => void;
   onMessage?: (message: string) => void;
 }
@@ -25,6 +26,7 @@ export function useChatSocket({
   readinessToken,
   onHumanActive,
   onMessage,
+  userMetadata,
 }: UseChatSocketOptions) {
   const socketRef = useRef<WebSocket | null>(null);
   const retryTimerRef = useRef<number | null>(null);
@@ -93,7 +95,14 @@ export function useChatSocket({
       socket.onopen = () => {
         retryCountRef.current = 0;
         setSafeStatus("connected");
-        socket.send(JSON.stringify({ type: "join", sessionId, readinessToken: readinessToken || undefined }));
+        socket.send(
+          JSON.stringify({
+            type: "join",
+            sessionId,
+            readinessToken: readinessToken || undefined,
+            userMetadata: userMetadata || undefined,
+          })
+        );
       };
 
       socket.onmessage = (event) => {
@@ -105,7 +114,11 @@ export function useChatSocket({
             content?: string;
           };
 
-          if (payload.type === "HUMAN_ACTIVE" || payload.mode === "HUMAN_ACTIVE") {
+          if (
+            payload.type === "HUMAN_ACTIVE" ||
+            payload.mode === "HUMAN_ACTIVE" ||
+            payload.type === "staff_joined"
+          ) {
             onHumanActiveRef.current?.();
             return;
           }
@@ -147,7 +160,7 @@ export function useChatSocket({
     } catch {
       setSafeStatus("reconnecting");
     }
-  }, [clearRetryTimer, readinessToken, sessionId, setSafeStatus]);
+  }, [clearRetryTimer, readinessToken, sessionId, setSafeStatus, userMetadata]);
 
   useEffect(() => {
     if (!enabled || !sessionId) {
@@ -165,9 +178,17 @@ export function useChatSocket({
   const send = useCallback((message: string) => {
     const socket = socketRef.current;
     if (!socket || socket.readyState !== WebSocket.OPEN || !sessionId) return false;
-    socket.send(JSON.stringify({ type: "message", sessionId, readinessToken: readinessToken || undefined, message }));
+    socket.send(
+      JSON.stringify({
+        type: "message",
+        sessionId,
+        readinessToken: readinessToken || undefined,
+        userMetadata: userMetadata || undefined,
+        message,
+      })
+    );
     return true;
-  }, [readinessToken, sessionId]);
+  }, [readinessToken, sessionId, userMetadata]);
 
   return useMemo(() => ({ status, send, disconnect }), [disconnect, send, status]);
 }
