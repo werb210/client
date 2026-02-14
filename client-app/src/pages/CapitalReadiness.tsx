@@ -1,11 +1,18 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { submitCreditReadiness, getStoredReadinessSessionId } from "@/api/website";
+import {
+  getStoredReadinessSessionId,
+  getStoredReadinessToken,
+  submitCreditReadiness,
+} from "@/api/website";
 import { createLead } from "@/services/lead";
 
 function resolveContinueUrl(payload: Record<string, any>, fallbackLeadId: string) {
   const token =
+    payload?.readinessToken ||
+    payload?.token ||
     payload?.readinessSessionId ||
     payload?.sessionId ||
+    getStoredReadinessToken() ||
     getStoredReadinessSessionId();
   if (typeof payload?.continueUrl === "string" && payload.continueUrl.trim()) {
     return payload.continueUrl;
@@ -26,9 +33,13 @@ export default function CapitalReadiness() {
     yearsInBusiness: "",
     annualRevenue: "",
     monthlyRevenue: "",
+    arOutstanding: "",
+    existingDebt: "",
     requestedAmount: "",
     creditScoreRange: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -36,6 +47,7 @@ export default function CapitalReadiness() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     const contactData = {
       companyName: form.companyName,
@@ -45,6 +57,8 @@ export default function CapitalReadiness() {
       industry: form.industry,
     };
 
+    setIsSubmitting(true);
+    setError(null);
     try {
       const { leadId, pendingApplicationId } = await createLead(contactData);
       localStorage.setItem("leadId", leadId);
@@ -56,12 +70,16 @@ export default function CapitalReadiness() {
         yearsInBusiness: form.yearsInBusiness,
         annualRevenue: form.annualRevenue,
         monthlyRevenue: form.monthlyRevenue,
+        arOutstanding: form.arOutstanding,
+        existingDebt: form.existingDebt,
       });
 
       const continueUrl = resolveContinueUrl(readinessSession || {}, leadId);
       window.location.href = continueUrl;
     } catch {
-      alert("Unable to submit readiness right now. Please try again.");
+      setError("Unable to submit readiness right now. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -81,11 +99,14 @@ export default function CapitalReadiness() {
           />
         ))}
 
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+
         <button
           type="submit"
-          className="w-full bg-black text-white p-3 rounded"
+          className="w-full bg-black text-white p-3 rounded disabled:opacity-60"
+          disabled={isSubmitting}
         >
-          Check Capital Readiness
+          {isSubmitting ? "Submitting..." : "Check Capital Readiness"}
         </button>
       </form>
     </div>

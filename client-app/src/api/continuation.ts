@@ -1,6 +1,8 @@
 import api from "./api";
 
 export interface ContinuationPayload {
+  leadId?: string;
+  readinessToken?: string;
   companyName: string;
   fullName: string;
   email: string;
@@ -14,12 +16,20 @@ export interface ContinuationPayload {
 }
 
 export async function fetchContinuation(token: string): Promise<ContinuationPayload | null> {
-  const res = await fetch(`/api/application/continuation/${token}`);
-  if (!res.ok) return null;
-  return (await res.json()) as ContinuationPayload;
+  try {
+    const res = await fetch(`/api/readiness/${encodeURIComponent(token)}`);
+    if (!res.ok) return null;
+    return (await res.json()) as ContinuationPayload;
+  } catch {
+    return null;
+  }
 }
 
 export async function getContinuationSession() {
-  const res = await api.get("/continuation/session");
-  return res.data;
+  try {
+    const res = await api.get("/continuation/session");
+    return res.data;
+  } catch {
+    return null;
+  }
 }

@@ -37,7 +37,7 @@ describe("website API dedupe", () => {
 
     expect(postMock).toHaveBeenCalledTimes(1);
     expect(postMock).toHaveBeenCalledWith(
-      "/website/credit-readiness",
+      "/api/readiness",
       payload,
       expect.objectContaining({
         headers: expect.objectContaining({

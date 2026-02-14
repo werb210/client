@@ -16,6 +16,7 @@ export interface CreditReadinessPayload {
 
 const CONTACT_DEDUP_KEY = "boreal_contact_submission_cache";
 const READINESS_DEDUP_KEY = "boreal_readiness_submission_cache";
+const READINESS_TOKEN_KEY = "boreal_readiness_token";
 const READINESS_SESSION_ID_KEY = "boreal_readiness_session_id";
 
 function normalize(value: string | undefined) {
@@ -50,7 +51,9 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
   if (key !== "::") {
     const cache = loadCache(READINESS_DEDUP_KEY);
     if (cache[key]) {
-      return cache[key];
+      const cached = cache[key] as Record<string, unknown>;
+      persistReadinessSession(cached);
+      return cached;
     }
   }
 
@@ -66,7 +69,7 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
   }
 
   try {
-    const res = await api.post("/website/credit-readiness", payload, {
+    const res = await api.post("/api/readiness", payload, {
       headers: {
         "X-Idempotency-Key": key !== "::" ? `readiness:${key}` : crypto.randomUUID(),
       },
@@ -100,7 +103,7 @@ export async function submitContactForm(payload: {
   }
 
   try {
-    const res = await api.post("/website/contact", payload, {
+    const res = await api.post("/api/contact", payload, {
       headers: {
         "X-Idempotency-Key": key !== "::" ? `contact:${key}` : crypto.randomUUID(),
       },
@@ -117,6 +120,14 @@ export async function submitContactForm(payload: {
   }
 }
 
+export function getStoredReadinessToken() {
+  try {
+    return localStorage.getItem(READINESS_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export function getStoredReadinessSessionId() {
   try {
     return localStorage.getItem(READINESS_SESSION_ID_KEY);
@@ -130,9 +141,18 @@ function persistReadinessSession(payload: Record<string, unknown> | null | undef
     (typeof payload?.readinessSessionId === "string" && payload.readinessSessionId) ||
     (typeof payload?.sessionId === "string" && payload.sessionId) ||
     null;
-  if (!sessionId) return;
+  const readinessToken =
+    (typeof payload?.readinessToken === "string" && payload.readinessToken) ||
+    (typeof payload?.token === "string" && payload.token) ||
+    null;
+
   try {
-    localStorage.setItem(READINESS_SESSION_ID_KEY, sessionId);
+    if (sessionId) {
+      localStorage.setItem(READINESS_SESSION_ID_KEY, sessionId);
+    }
+    if (readinessToken) {
+      localStorage.setItem(READINESS_TOKEN_KEY, readinessToken);
+    }
   } catch {
     // ignore storage failures
   }
