@@ -37,7 +37,7 @@ describe("website API dedupe", () => {
 
     expect(postMock).toHaveBeenCalledTimes(1);
     expect(postMock).toHaveBeenCalledWith(
-      "/api/readiness",
+      "/api/readiness/submit",
       payload,
       expect.objectContaining({
         headers: expect.objectContaining({
@@ -97,6 +97,25 @@ describe("website API dedupe", () => {
       expect.objectContaining({ readinessSessionId: "ready-123" })
     );
     expect(getStoredReadinessSessionId()).toBe("ready-123");
+  });
+
+  it("retries readiness submission once on server errors", async () => {
+    const { submitCreditReadiness } = await import("../website");
+    postMock
+      .mockRejectedValueOnce({ response: { status: 503 } })
+      .mockResolvedValueOnce({ data: { sessionId: "session-2", leadId: "lead-2" } });
+
+    const payload = {
+      companyName: "ACME",
+      fullName: "Taylor",
+      email: "retry@example.com",
+      phone: "+15555555556",
+    };
+
+    const response = await submitCreditReadiness(payload);
+
+    expect(postMock).toHaveBeenCalledTimes(2);
+    expect(response).toEqual({ sessionId: "session-2", leadId: "lead-2" });
   });
   it("clears readiness session and token after completion", async () => {
     const { clearStoredReadinessSession } = await import("../website");
@@ -166,7 +185,7 @@ describe("website API dedupe", () => {
 
     expect(postMock).toHaveBeenCalledTimes(1);
     expect(postMock).toHaveBeenCalledWith(
-      "/api/contact",
+      "/api/contact/submit",
       payload,
       expect.objectContaining({
         headers: expect.objectContaining({

@@ -1,6 +1,7 @@
 import api from "./api";
 
 import type { ReadinessContext } from "@/state/readinessStore";
+import { fetchWithRetry } from "@/utils/fetchWithRetry";
 
 export interface ContinuationPayload {
   leadId?: string;
@@ -60,7 +61,7 @@ export function mapContinuationToReadinessContext(
 
 export async function fetchContinuation(token: string): Promise<ContinuationPayload | null> {
   try {
-    const res = await fetch(`/api/readiness/${encodeURIComponent(token)}`);
+    const res = await fetchWithRetry(`/api/readiness/${encodeURIComponent(token)}`);
     if (!res.ok) return null;
     return (await res.json()) as ContinuationPayload;
   } catch {
@@ -70,7 +71,7 @@ export async function fetchContinuation(token: string): Promise<ContinuationPayl
 
 export async function fetchReadinessSession(sessionId: string): Promise<ContinuationPayload | null> {
   try {
-    const res = await fetch(`/api/readiness/session/${encodeURIComponent(sessionId)}`);
+    const res = await fetchWithRetry(`/api/readiness/session/${encodeURIComponent(sessionId)}`);
     if (!res.ok) return null;
     return (await res.json()) as ContinuationPayload;
   } catch {
