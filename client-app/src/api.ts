@@ -1,6 +1,13 @@
 import { apiRequest } from "./lib/api";
 
 const api = {
+  get: async <T>(url: string): Promise<{ data: T }> => {
+    const data = await apiRequest(url, {
+      method: "GET",
+    });
+
+    return { data: data as T };
+  },
   post: async <T>(url: string, body?: unknown): Promise<{ data: T }> => {
     const data = await apiRequest(url, {
       method: "POST",

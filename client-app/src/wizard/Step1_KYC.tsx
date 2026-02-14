@@ -151,6 +151,30 @@ export function Step1_KYC() {
     }
   }, [app.currentStep, update]);
 
+  useEffect(() => {
+    async function loadPrefill() {
+      try {
+        const res = await fetch("/api/continuation/session");
+        if (!res.ok) {
+          return;
+        }
+        const data = await res.json();
+        if (data?.prefill) {
+          update({
+            kyc: {
+              ...app.kyc,
+              ...data.prefill,
+            },
+          });
+        }
+      } catch {
+        // no-op when continuation prefill is unavailable
+      }
+    }
+
+    void loadPrefill();
+  }, [update]);
+
 
   useEffect(() => {
     const savedToken =

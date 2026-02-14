@@ -1,3 +1,5 @@
+import api from "./api";
+
 export interface ContinuationPayload {
   companyName: string;
   fullName: string;
@@ -15,4 +17,9 @@ export async function fetchContinuation(token: string): Promise<ContinuationPayl
   const res = await fetch(`/api/application/continuation/${token}`);
   if (!res.ok) return null;
   return (await res.json()) as ContinuationPayload;
+}
+
+export async function getContinuationSession() {
+  const res = await api.get("/continuation/session");
+  return res.data;
 }
