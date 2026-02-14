@@ -33,7 +33,7 @@ export function Header() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: tokens.spacing.md }}>
           <img
-            src="/icons/icon-192x192.png"
+            src="/images/Header.png"
             alt="Boreal Financial"
             className="h-10 w-auto object-contain"
           />
