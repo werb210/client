@@ -60,10 +60,7 @@ export default function CapitalReadiness() {
     setIsSubmitting(true);
     setError(null);
     try {
-      const { leadId, pendingApplicationId } = await createLead(contactData);
-      localStorage.setItem("leadId", leadId);
-      localStorage.setItem("pendingApplicationId", pendingApplicationId);
-      localStorage.setItem("leadEmail", form.email);
+      const existingReadinessSessionId = getStoredReadinessSessionId();
 
       const readinessSession = await submitCreditReadiness({
         ...contactData,
@@ -74,7 +71,24 @@ export default function CapitalReadiness() {
         existingDebt: form.existingDebt,
       });
 
-      const continueUrl = resolveContinueUrl(readinessSession || {}, leadId);
+      const readinessLeadId =
+        typeof readinessSession?.leadId === "string" ? readinessSession.leadId : null;
+      const cachedLeadId = localStorage.getItem("leadId");
+
+      let leadId = readinessLeadId || cachedLeadId || "";
+
+      if (!existingReadinessSessionId && !leadId) {
+        const lead = await createLead(contactData);
+        leadId = lead.leadId;
+        localStorage.setItem("pendingApplicationId", lead.pendingApplicationId);
+      }
+
+      if (leadId) {
+        localStorage.setItem("leadId", leadId);
+      }
+      localStorage.setItem("leadEmail", form.email);
+
+      const continueUrl = resolveContinueUrl(readinessSession || {}, leadId || "readiness");
       window.location.href = continueUrl;
     } catch {
       setError("Unable to submit readiness right now. Please try again.");

@@ -111,6 +111,24 @@ describe("useChatSocket", () => {
     });
     expect(MockSocket.instances).toHaveLength(3);
 
+    act(() => {
+      MockSocket.instances[2].onclose?.();
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000);
+    });
+    expect(MockSocket.instances).toHaveLength(4);
+
+    act(() => {
+      MockSocket.instances[3].onclose?.();
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000);
+    });
+    expect(MockSocket.instances).toHaveLength(5);
+
     root.unmount();
   });
 });
