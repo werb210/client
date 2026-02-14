@@ -1,22 +1,32 @@
-import api from "./client";
+import axios from "axios";
 
-export async function createAiSession(source: "client") {
-  const res = await api.post("/api/ai/session", { source });
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || "",
+});
+
+export async function createAiSession(context: "client") {
+  const res = await api.post("/api/ai/session", { context });
   return res.data;
 }
 
 export async function sendAiMessage(sessionId: string, message: string) {
-  const res = await api.post(`/api/ai/session/${sessionId}/message`, { message });
+  const res = await api.post("/api/ai/message", {
+    sessionId,
+    message,
+  });
   return res.data;
 }
 
-export async function escalateToHuman(sessionId: string) {
-  return api.post(`/api/ai/session/${sessionId}/escalate`);
+export async function escalateAi(sessionId: string) {
+  const res = await api.post("/api/ai/escalate", { sessionId });
+  return res.data;
 }
 
 export async function reportIssue(sessionId: string, description: string, screenshot: string) {
-  return api.post(`/api/ai/session/${sessionId}/report`, {
+  const res = await api.post("/api/ai/report", {
+    sessionId,
     description,
     screenshot,
   });
+  return res.data;
 }
