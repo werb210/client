@@ -471,6 +471,13 @@ export default function PublicApplyPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const draftId = localStorage.getItem("boreal_draft_application_id");
+    if (draftId) {
+      window.location.href = `/apply/${draftId}`;
+    }
+  }, []);
+
+  useEffect(() => {
     const email = localStorage.getItem("boreal_email");
 
     if (!email) return;
