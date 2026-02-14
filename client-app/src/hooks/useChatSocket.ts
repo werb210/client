@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-type ChatSocketStatus = "idle" | "connecting" | "connected" | "reconnecting" | "disconnected";
+type ChatSocketStatus =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "failed"
+  | "disconnected";
 
 interface UseChatSocketOptions {
   enabled: boolean;
@@ -13,6 +19,7 @@ interface UseChatSocketOptions {
 
 const MAX_RETRY_DELAY_MS = 30000;
 const RETRY_DELAYS_MS = [1000, 2000, 5000, 10000, 30000];
+const MAX_RETRY_ATTEMPTS = 5;
 
 function getSocketUrl() {
   if (typeof window === "undefined") return "";
@@ -144,6 +151,11 @@ export function useChatSocket({
         }
 
         retryCountRef.current += 1;
+        if (retryCountRef.current > MAX_RETRY_ATTEMPTS) {
+          clearRetryTimer();
+          setSafeStatus("failed");
+          return;
+        }
         const delay =
           RETRY_DELAYS_MS[Math.min(retryCountRef.current - 1, RETRY_DELAYS_MS.length - 1)] ??
           MAX_RETRY_DELAY_MS;

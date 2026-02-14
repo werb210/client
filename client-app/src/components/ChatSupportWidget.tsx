@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useApplicationStore } from "@/state/useApplicationStore";
 import { useChatSocket } from "@/hooks/useChatSocket";
-import { getStoredReadinessToken } from "@/api/website";
+import { getStoredReadinessSessionId, getStoredReadinessToken } from "@/api/website";
 
 type ChatItem = { id: string; role: "user" | "ai" | "system"; message: string };
 
@@ -15,12 +15,15 @@ export default function ChatSupportWidget() {
   const [open, setOpen] = useState(false);
   const [humanActive, setHumanActive] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<ChatItem[]>([]);
+  const [messages, setMessages] = useState<ChatItem[]>([
+    { id: crypto.randomUUID(), role: "ai", message: "Hi! I'm Boreal Assistant. How can I help today?" },
+  ]);
 
   const sessionId = useMemo(
     () =>
       getSessionId(app.applicationId) ||
       getSessionId(app.applicationToken) ||
+      getSessionId(getStoredReadinessSessionId() || undefined) ||
       getSessionId(app.readinessLeadId) ||
       getSessionId(localStorage.getItem("leadId") || undefined),
     [app.applicationId, app.applicationToken, app.readinessLeadId]
@@ -97,7 +100,9 @@ export default function ChatSupportWidget() {
                   ? "Connected"
                   : status === "reconnecting"
                     ? "Reconnecting…"
-                    : "Connecting…"}
+                    : status === "failed"
+                      ? "Chat unavailable right now. Please try again shortly."
+                      : "Connecting…"}
             </p>
             <div className="flex gap-2">
               <input

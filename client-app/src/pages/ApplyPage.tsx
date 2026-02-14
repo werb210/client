@@ -193,25 +193,6 @@ export function ApplyPage() {
   }, [applicationId, app.applicationToken, app.currentStep, navigate, update]);
 
 
-  const readinessComplete = Boolean(
-    readiness?.companyName &&
-      readiness?.fullName &&
-      readiness?.phone &&
-      readiness?.email &&
-      readiness?.industry &&
-      typeof readiness?.yearsInBusiness === "number" &&
-      typeof readiness?.monthlyRevenue === "number" &&
-      typeof readiness?.annualRevenue === "number" &&
-      typeof readiness?.arOutstanding === "number" &&
-      typeof readiness?.existingDebt === "boolean"
-  );
-
-  useEffect(() => {
-    if (!readinessComplete) return;
-    if (app.currentStep !== 1) return;
-    update({ currentStep: 2 });
-  }, [app.currentStep, readinessComplete, update]);
-
   if (isHydratingContinuation) {
     return (
       <div className="w-full py-8 flex justify-center">
