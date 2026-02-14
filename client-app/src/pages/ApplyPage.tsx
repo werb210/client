@@ -38,6 +38,9 @@ export function ApplyPage() {
     const nextKyc = {
       ...app.kyc,
       companyName: readiness.companyName || app.kyc.companyName || "",
+      fullName: readiness.fullName || app.kyc.fullName || "",
+      email: readiness.email || app.kyc.email || "",
+      phone: readiness.phone || app.kyc.phone || "",
       industry: readiness.industry || app.kyc.industry || "",
       salesHistory:
         readiness.yearsInBusiness !== undefined && readiness.yearsInBusiness !== null
@@ -112,6 +115,10 @@ export function ApplyPage() {
           continuationToken,
           kyc: {
             ...app.kyc,
+            companyName: data.companyName || app.kyc.companyName || "",
+            fullName: data.fullName || app.kyc.fullName || "",
+            email: data.email || app.kyc.email || "",
+            phone: data.phone || app.kyc.phone || "",
             industry: data.industry || app.kyc.industry || "",
             salesHistory:
               data.yearsInBusiness !== undefined && data.yearsInBusiness !== null

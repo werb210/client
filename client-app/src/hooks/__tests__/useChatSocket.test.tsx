@@ -156,4 +156,38 @@ describe("useChatSocket", () => {
 
     root.unmount();
   });
+
+  it("stops reconnecting after retry cap", async () => {
+    const onHumanActive = vi.fn();
+    const onMessage = vi.fn();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<Harness onHumanActive={onHumanActive} onMessage={onMessage} />);
+      await vi.runAllTicks();
+    });
+
+    for (const delay of [1000, 2000, 5000, 10000, 30000]) {
+      act(() => {
+        MockSocket.instances[MockSocket.instances.length - 1].onclose?.();
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(delay + 3000);
+      });
+    }
+
+    const before = MockSocket.instances.length;
+    act(() => {
+      MockSocket.instances[MockSocket.instances.length - 1].onclose?.();
+    });
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60000);
+    });
+
+    expect(MockSocket.instances.length).toBe(before);
+
+    root.unmount();
+  });
 });
