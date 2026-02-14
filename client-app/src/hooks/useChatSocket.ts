@@ -20,6 +20,8 @@ interface UseChatSocketOptions {
 const MAX_RETRY_DELAY_MS = 30000;
 const RETRY_DELAYS_MS = [1000, 2000, 5000, 10000, 30000];
 const MAX_RETRY_ATTEMPTS = 5;
+const HEARTBEAT_INTERVAL_MS = 25000;
+const RETRY_JITTER_RATIO = 0.2;
 
 function getSocketUrl() {
   if (typeof window === "undefined") return "";
@@ -38,6 +40,7 @@ export function useChatSocket({
   const socketRef = useRef<WebSocket | null>(null);
   const retryTimerRef = useRef<number | null>(null);
   const retryCountRef = useRef(0);
+  const heartbeatTimerRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
   const enabledRef = useRef(enabled);
   const onMessageRef = useRef(onMessage);
@@ -70,6 +73,13 @@ export function useChatSocket({
     }
   }, []);
 
+  const clearHeartbeatTimer = useCallback(() => {
+    if (heartbeatTimerRef.current !== null) {
+      window.clearInterval(heartbeatTimerRef.current);
+      heartbeatTimerRef.current = null;
+    }
+  }, []);
+
   const setSafeStatus = useCallback((next: ChatSocketStatus) => {
     if (mountedRef.current) {
       setStatus(next);
@@ -78,13 +88,14 @@ export function useChatSocket({
 
   const disconnect = useCallback(() => {
     clearRetryTimer();
+    clearHeartbeatTimer();
     retryCountRef.current = 0;
     if (socketRef.current) {
       socketRef.current.close();
       socketRef.current = null;
     }
     setSafeStatus("disconnected");
-  }, [clearRetryTimer, setSafeStatus]);
+  }, [clearHeartbeatTimer, clearRetryTimer, setSafeStatus]);
 
   const connect = useCallback(() => {
     if (!enabledRef.current || !sessionId || typeof window === "undefined") return;
@@ -102,6 +113,12 @@ export function useChatSocket({
       socket.onopen = () => {
         retryCountRef.current = 0;
         setSafeStatus("connected");
+        clearHeartbeatTimer();
+        heartbeatTimerRef.current = window.setInterval(() => {
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: "ping", sessionId }));
+          }
+        }, HEARTBEAT_INTERVAL_MS);
         socket.send(
           JSON.stringify({
             type: "join",
@@ -144,6 +161,7 @@ export function useChatSocket({
       };
 
       socket.onclose = () => {
+        clearHeartbeatTimer();
         socketRef.current = null;
         if (!enabledRef.current) {
           setSafeStatus("disconnected");
@@ -156,9 +174,11 @@ export function useChatSocket({
           setSafeStatus("failed");
           return;
         }
-        const delay =
+        const baseDelay =
           RETRY_DELAYS_MS[Math.min(retryCountRef.current - 1, RETRY_DELAYS_MS.length - 1)] ??
           MAX_RETRY_DELAY_MS;
+        const jitter = baseDelay * RETRY_JITTER_RATIO * Math.random();
+        const delay = Math.min(MAX_RETRY_DELAY_MS, Math.round(baseDelay + jitter));
         setSafeStatus("reconnecting");
         retryTimerRef.current = window.setTimeout(connect, delay);
       };
@@ -169,7 +189,7 @@ export function useChatSocket({
     } catch {
       setSafeStatus("reconnecting");
     }
-  }, [clearRetryTimer, readinessToken, sessionId, setSafeStatus, userMetadata]);
+  }, [clearHeartbeatTimer, clearRetryTimer, readinessToken, sessionId, setSafeStatus, userMetadata]);
 
   useEffect(() => {
     if (!enabled || !sessionId) {

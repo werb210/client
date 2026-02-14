@@ -10,6 +10,20 @@ function getSessionId(candidate: string | undefined): string | null {
   return candidate.trim() || null;
 }
 
+const ANON_CHAT_SESSION_KEY = "boreal_anon_chat_session_id";
+
+function getAnonymousChatSessionId() {
+  try {
+    const existing = localStorage.getItem(ANON_CHAT_SESSION_KEY);
+    if (existing) return existing;
+    const created = `anon-${crypto.randomUUID()}`;
+    localStorage.setItem(ANON_CHAT_SESSION_KEY, created);
+    return created;
+  } catch {
+    return `anon-${crypto.randomUUID()}`;
+  }
+}
+
 export default function ChatSupportWidget() {
   const { app } = useApplicationStore();
   const [open, setOpen] = useState(false);
@@ -25,7 +39,8 @@ export default function ChatSupportWidget() {
       getSessionId(app.applicationToken) ||
       getSessionId(getStoredReadinessSessionId() || undefined) ||
       getSessionId(app.readinessLeadId) ||
-      getSessionId(localStorage.getItem("leadId") || undefined),
+      getSessionId(localStorage.getItem("leadId") || undefined) ||
+      getAnonymousChatSessionId(),
     [app.applicationId, app.applicationToken, app.readinessLeadId]
   );
   const readinessToken = useMemo(() => getStoredReadinessToken(), []);
@@ -61,7 +76,7 @@ export default function ChatSupportWidget() {
 
   const handleSend = () => {
     const value = input.trim();
-    if (!value || !sessionId || humanActive) return;
+    if (!value || humanActive) return;
 
     const sent = send(value);
     if (!sent) return;
@@ -109,14 +124,14 @@ export default function ChatSupportWidget() {
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 className="flex-1 rounded border p-2 text-sm"
-                placeholder={sessionId ? "Type your message" : "Session required to chat"}
-                disabled={!sessionId || humanActive}
+                placeholder="Type your message"
+                disabled={humanActive}
               />
               <button
                 type="button"
                 className="rounded bg-[#0a2540] px-3 text-sm text-white disabled:opacity-50"
                 onClick={handleSend}
-                disabled={!sessionId || humanActive || status !== "connected"}
+                disabled={humanActive || status !== "connected"}
               >
                 Send
               </button>

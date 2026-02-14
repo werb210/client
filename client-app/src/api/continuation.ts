@@ -1,5 +1,7 @@
 import api from "./api";
 
+import type { ReadinessContext } from "@/state/readinessStore";
+
 export interface ContinuationPayload {
   leadId?: string;
   readinessToken?: string;
@@ -13,6 +15,47 @@ export interface ContinuationPayload {
   annualRevenue?: number;
   arOutstanding?: number;
   existingDebt?: boolean;
+  years_in_business?: number;
+  monthly_revenue?: number;
+  annual_revenue?: number;
+  ar_outstanding?: number;
+  existing_debt?: boolean;
+}
+
+
+function pickNumber(...values: Array<unknown>): number | undefined {
+  for (const value of values) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+  }
+  return undefined;
+}
+
+function pickBoolean(...values: Array<unknown>): boolean | undefined {
+  for (const value of values) {
+    if (typeof value === "boolean") return value;
+  }
+  return undefined;
+}
+
+export function mapContinuationToReadinessContext(
+  payload: ContinuationPayload,
+  fallbackLeadId: string
+): ReadinessContext {
+  return {
+    leadId:
+      (typeof payload.leadId === "string" && payload.leadId) ||
+      fallbackLeadId,
+    companyName: payload.companyName,
+    fullName: payload.fullName,
+    phone: payload.phone,
+    email: payload.email,
+    industry: payload.industry,
+    yearsInBusiness: pickNumber(payload.yearsInBusiness, payload.years_in_business),
+    monthlyRevenue: pickNumber(payload.monthlyRevenue, payload.monthly_revenue),
+    annualRevenue: pickNumber(payload.annualRevenue, payload.annual_revenue),
+    arOutstanding: pickNumber(payload.arOutstanding, payload.ar_outstanding),
+    existingDebt: pickBoolean(payload.existingDebt, payload.existing_debt),
+  };
 }
 
 export async function fetchContinuation(token: string): Promise<ContinuationPayload | null> {

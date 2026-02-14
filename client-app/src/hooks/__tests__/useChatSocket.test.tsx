@@ -80,6 +80,31 @@ describe("useChatSocket", () => {
     root.unmount();
   });
 
+
+  it("sends join payload with session id on connect", async () => {
+    const onHumanActive = vi.fn();
+    const onMessage = vi.fn();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<Harness onHumanActive={onHumanActive} onMessage={onMessage} />);
+      await vi.runAllTicks();
+    });
+
+    const socket = MockSocket.instances[0];
+    expect(socket.sent).toHaveLength(1);
+    expect(JSON.parse(socket.sent[0])).toEqual(
+      expect.objectContaining({
+        type: "join",
+        sessionId: "session-1",
+        readinessToken: "ready-1",
+      })
+    );
+
+    root.unmount();
+  });
+
   it("reconnects with exponential backoff after close", async () => {
     const onHumanActive = vi.fn();
     const onMessage = vi.fn();

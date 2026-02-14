@@ -416,8 +416,8 @@ export function Step1_KYC() {
               marginBottom: tokens.spacing.md,
             }}
           >
-            <strong>You previously completed a Capital Readiness Check.</strong>
-            <div>Your application has been pre-filled.</div>
+            <strong>Continuing your application</strong>
+            <div>We've loaded the details from your readiness session.</div>
           </Card>
         )}
 

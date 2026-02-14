@@ -31,8 +31,20 @@ export default function QuickContact() {
   return (
     <div>
       {success ? (
-        <div role="status" aria-live="polite">
-          A Boreal Intake Specialist will contact you shortly.
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4" role="status" aria-live="polite">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 text-gray-900 shadow-xl">
+            <p className="mb-4 text-base font-semibold">A Boreal Intake Specialist will contact you shortly</p>
+            <button
+              type="button"
+              className="rounded bg-[#0a2540] px-6 py-3 text-white"
+              onClick={() => {
+                setSuccess(false);
+                window.location.href = "/";
+              }}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       ) : null}
       {error ? (

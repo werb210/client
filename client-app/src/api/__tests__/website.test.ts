@@ -91,4 +91,40 @@ describe("website API dedupe", () => {
     expect(localStorage.getItem("boreal_readiness_session_id")).toBe("session-xyz");
   });
 
+  it("supports token query param for readiness continuation", async () => {
+    const { resolveReadinessSessionId } = await import("../website");
+
+    const sessionId = resolveReadinessSessionId("?token=token-xyz");
+
+    expect(sessionId).toBe("token-xyz");
+    expect(localStorage.getItem("boreal_readiness_session_id")).toBe("token-xyz");
+  });
+
+  it("dedupes contact submissions by email/phone", async () => {
+    const { submitContactForm } = await import("../website");
+    postMock.mockResolvedValue({ data: { leadId: "lead-1" } });
+
+    const payload = {
+      companyName: "ACME",
+      fullName: "Taylor",
+      email: "taylor@example.com",
+      phone: "+15555555555",
+      message: "Need help",
+    };
+
+    await submitContactForm(payload);
+    await submitContactForm(payload);
+
+    expect(postMock).toHaveBeenCalledTimes(1);
+    expect(postMock).toHaveBeenCalledWith(
+      "/api/contact",
+      payload,
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "X-Idempotency-Key": "contact:taylor@example.com::+15555555555",
+        }),
+      })
+    );
+  });
+
 });
