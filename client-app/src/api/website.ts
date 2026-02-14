@@ -20,6 +20,8 @@ const READINESS_TOKEN_KEY = "boreal_readiness_token";
 export const READINESS_SESSION_ID_KEY = "boreal_readiness_session_id";
 const SESSION_ID_QUERY_PARAM = "sessionId";
 const TOKEN_QUERY_PARAM = "token";
+let readinessInFlight: Promise<unknown> | null = null;
+let contactInFlight: Promise<unknown> | null = null;
 
 function normalize(value: string | undefined) {
   return (value || "").trim().toLowerCase();
@@ -49,6 +51,10 @@ function saveCache(storageKey: string, cache: Record<string, unknown>) {
 }
 
 export async function submitCreditReadiness(payload: CreditReadinessPayload) {
+  if (readinessInFlight) {
+    return readinessInFlight;
+  }
+
   const key = dedupKey(payload);
   if (key !== "::") {
     const cache = loadCache(READINESS_DEDUP_KEY);
@@ -70,23 +76,29 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
     return existingSession;
   }
 
-  try {
-    const res = await api.post("/api/readiness", payload, {
-      headers: {
-        "X-Idempotency-Key": key !== "::" ? `readiness:${key}` : crypto.randomUUID(),
-      },
-    });
-    const responseData = res.data;
-    persistReadinessSession(responseData);
-    if (key !== "::") {
-      const cache = loadCache(READINESS_DEDUP_KEY);
-      cache[key] = responseData;
-      saveCache(READINESS_DEDUP_KEY, cache);
+  readinessInFlight = (async () => {
+    try {
+      const res = await api.post("/api/readiness", payload, {
+        headers: {
+          "X-Idempotency-Key": key !== "::" ? `readiness:${key}` : crypto.randomUUID(),
+        },
+      });
+      const responseData = res.data;
+      persistReadinessSession(responseData);
+      if (key !== "::") {
+        const cache = loadCache(READINESS_DEDUP_KEY);
+        cache[key] = responseData;
+        saveCache(READINESS_DEDUP_KEY, cache);
+      }
+      return responseData;
+    } catch {
+      throw new Error("Unable to submit credit readiness. Please try again.");
+    } finally {
+      readinessInFlight = null;
     }
-    return responseData;
-  } catch {
-    throw new Error("Unable to submit credit readiness. Please try again.");
-  }
+  })();
+
+  return readinessInFlight;
 }
 
 export async function submitContactForm(payload: {
@@ -96,6 +108,10 @@ export async function submitContactForm(payload: {
   email: string;
   message?: string;
 }) {
+  if (contactInFlight) {
+    return contactInFlight;
+  }
+
   const key = dedupKey(payload);
   if (key !== "::") {
     const cache = loadCache(CONTACT_DEDUP_KEY);
@@ -104,22 +120,29 @@ export async function submitContactForm(payload: {
     }
   }
 
-  try {
-    const res = await api.post("/api/contact", payload, {
-      headers: {
-        "X-Idempotency-Key": key !== "::" ? `contact:${key}` : crypto.randomUUID(),
-      },
-    });
-    const responseData = res.data;
-    if (key !== "::") {
-      const cache = loadCache(CONTACT_DEDUP_KEY);
-      cache[key] = responseData;
-      saveCache(CONTACT_DEDUP_KEY, cache);
+  contactInFlight = (async () => {
+    try {
+      const res = await api.post("/api/contact", payload, {
+        headers: {
+          "X-Idempotency-Key": key !== "::" ? `contact:${key}` : crypto.randomUUID(),
+        },
+      });
+      const responseData = res.data;
+      persistReadinessSession(responseData);
+      if (key !== "::") {
+        const cache = loadCache(CONTACT_DEDUP_KEY);
+        cache[key] = responseData;
+        saveCache(CONTACT_DEDUP_KEY, cache);
+      }
+      return responseData;
+    } catch {
+      throw new Error("Unable to submit contact form. Please try again.");
+    } finally {
+      contactInFlight = null;
     }
-    return responseData;
-  } catch {
-    throw new Error("Unable to submit contact form. Please try again.");
-  }
+  })();
+
+  return contactInFlight;
 }
 
 export function getStoredReadinessToken() {
