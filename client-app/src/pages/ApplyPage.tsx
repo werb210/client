@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Step1_KYC } from "../wizard/Step1_KYC";
 import { Step2_Product } from "../wizard/Step2_Product";
@@ -24,6 +24,7 @@ export function ApplyPage() {
     () => new URLSearchParams(window.location.search).get("continue"),
     []
   );
+  const [isHydratingContinuation, setIsHydratingContinuation] = useState(Boolean(continuationToken));
 
   if (!initialized) init();
 
@@ -92,9 +93,13 @@ export function ApplyPage() {
   }, [app.applicant, app.business, app.kyc, app.readinessLeadId, readiness, update]);
 
   useEffect(() => {
-    if (!continuationToken) return;
+    if (!continuationToken) {
+      setIsHydratingContinuation(false);
+      return;
+    }
 
     let active = true;
+    setIsHydratingContinuation(true);
 
     void fetchContinuation(continuationToken)
       .then((data) => {
@@ -146,6 +151,11 @@ export function ApplyPage() {
       })
       .catch(() => {
         // continuation payload unavailable
+      })
+      .finally(() => {
+        if (active) {
+          setIsHydratingContinuation(false);
+        }
       });
 
     return () => {
@@ -181,6 +191,34 @@ export function ApplyPage() {
 
     void loadDraft();
   }, [applicationId, app.applicationToken, app.currentStep, navigate, update]);
+
+
+  const readinessComplete = Boolean(
+    readiness?.companyName &&
+      readiness?.fullName &&
+      readiness?.phone &&
+      readiness?.email &&
+      readiness?.industry &&
+      typeof readiness?.yearsInBusiness === "number" &&
+      typeof readiness?.monthlyRevenue === "number" &&
+      typeof readiness?.annualRevenue === "number" &&
+      typeof readiness?.arOutstanding === "number" &&
+      typeof readiness?.existingDebt === "boolean"
+  );
+
+  useEffect(() => {
+    if (!readinessComplete) return;
+    if (app.currentStep !== 1) return;
+    update({ currentStep: 2 });
+  }, [app.currentStep, readinessComplete, update]);
+
+  if (isHydratingContinuation) {
+    return (
+      <div className="w-full py-8 flex justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: layout.page.background, minHeight: layout.page.minHeight }}>

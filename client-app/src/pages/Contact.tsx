@@ -1,5 +1,4 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { createLead } from "@/services/lead";
 import { submitContactForm } from "@/api/website";
 
 export default function Contact() {
@@ -9,6 +8,9 @@ export default function Contact() {
     email: "",
     phone: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -16,26 +18,25 @@ export default function Contact() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setError(null);
+    setSuccess(false);
 
     try {
-      const { leadId, pendingApplicationId } = await createLead(form);
-      localStorage.setItem("leadId", leadId);
-      localStorage.setItem("pendingApplicationId", pendingApplicationId);
-      localStorage.setItem("leadEmail", form.email);
-
       await submitContactForm(form);
-      alert("A Boreal Intake Specialist will contact you shortly.");
-      window.location.href = "/";
+      setSuccess(true);
     } catch {
-      alert("Unable to submit contact form right now. Please try again.");
+      setError("Unable to submit contact form right now. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="container py-20">
-      <h1 className="text-4xl font-bold mb-6 text-white">
-        Contact Boreal
-      </h1>
+      <h1 className="text-4xl font-bold mb-6 text-white">Contact Boreal</h1>
 
       <p className="text-white text-xl mb-8">
         Tell us about your business and an advisor will follow up.
@@ -53,8 +54,18 @@ export default function Contact() {
           />
         ))}
 
-        <button className="bg-blue-600 px-6 py-3 rounded text-white">
-          Submit
+        {success && (
+          <p className="text-emerald-300 text-sm">
+            A Boreal Intake Specialist will contact you shortly.
+          </p>
+        )}
+        {error && <p className="text-red-300 text-sm">{error}</p>}
+
+        <button
+          className="bg-blue-600 px-6 py-3 rounded text-white disabled:opacity-60"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Submitting..." : "Submit"}
         </button>
       </form>
     </div>

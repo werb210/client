@@ -2,7 +2,8 @@ import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPublicApplication } from "../../api/applications";
-import { getContinuationSession } from "@/api/continuation";
+import { getStoredReadinessSessionId, getStoredReadinessToken } from "@/api/website";
+import { getContinuationSession, fetchContinuation } from "@/api/continuation";
 import { loadContinuation } from "../../services/continuation";
 
 type FieldType =
@@ -389,11 +390,13 @@ export async function handlePublicApplicationSubmit({
   communicationsAcceptedAt: string | null;
   submitApplication: (
     payload: PublicApplicationPayload,
-    options: { idempotencyKey: string }
+    options: { idempotencyKey: string; readinessToken?: string | null; sessionId?: string | null }
   ) => Promise<unknown>;
   onSuccess: () => void;
   onError: (errors: Record<string, string>) => void;
   storage?: MinimalStorage | null;
+  readinessToken?: string | null;
+  sessionId?: string | null;
 }) {
   const errors = validateApplication(values);
   if (!termsAcceptedAt) {
@@ -433,7 +436,7 @@ export async function handlePublicApplicationSubmit({
   const idempotencyKey = getOrCreateIdempotencyKey(storage ?? null);
 
   try {
-    await submitApplication(payload, { idempotencyKey });
+    await submitApplication(payload, { idempotencyKey, readinessToken, sessionId });
     savePublicSubmissionState(storage ?? null, {
       idempotencyKey,
       submittedAt: new Date().toISOString(),
@@ -465,10 +468,67 @@ export default function PublicApplyPage() {
   const [termsAcceptedAt, setTermsAcceptedAt] = useState<string | null>(null);
   const [communicationsAcceptedAt, setCommunicationsAcceptedAt] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isHydratingContinuation, setIsHydratingContinuation] = useState(false);
+  const [continuing, setContinuing] = useState(false);
+  const [lockedFields, setLockedFields] = useState<Set<keyof ApplicationFormValues>>(new Set());
   const [submissionState, setSubmissionState] = useState<PublicSubmissionState | null>(
     () => loadPublicSubmissionState(getSessionStorage())
   );
   const navigate = useNavigate();
+  const readinessToken = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const fromQuery = new URLSearchParams(window.location.search).get("continue");
+    return fromQuery || getStoredReadinessToken();
+  }, []);
+  const readinessSessionId = useMemo(() => getStoredReadinessSessionId(), []);
+
+
+  useEffect(() => {
+    if (!readinessToken) return;
+
+    let active = true;
+    setIsHydratingContinuation(true);
+
+    void fetchContinuation(readinessToken)
+      .then((data) => {
+        if (!active || !data) return;
+        setContinuing(true);
+        setValues((prev) => ({
+          ...prev,
+          business_legal_name: data.companyName || prev.business_legal_name,
+          operating_name: data.companyName || prev.operating_name,
+          industry: data.industry || prev.industry,
+          contact_name: data.fullName || prev.contact_name,
+          contact_email: data.email || prev.contact_email,
+          contact_phone: data.phone || prev.contact_phone,
+          years_in_business:
+            typeof data.yearsInBusiness === "number"
+              ? String(data.yearsInBusiness)
+              : prev.years_in_business,
+        }));
+        setLockedFields(
+          new Set([
+            ...(data.companyName ? (["business_legal_name", "operating_name"] as (keyof ApplicationFormValues)[]) : []),
+            ...(data.industry ? (["industry"] as (keyof ApplicationFormValues)[]) : []),
+            ...(data.fullName ? (["contact_name"] as (keyof ApplicationFormValues)[]) : []),
+            ...(data.email ? (["contact_email"] as (keyof ApplicationFormValues)[]) : []),
+            ...(data.phone ? (["contact_phone"] as (keyof ApplicationFormValues)[]) : []),
+            ...(typeof data.yearsInBusiness === "number"
+              ? (["years_in_business"] as (keyof ApplicationFormValues)[])
+              : []),
+          ])
+        );
+      })
+      .finally(() => {
+        if (active) {
+          setIsHydratingContinuation(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [readinessToken]);
 
   useEffect(() => {
     const draftId = localStorage.getItem("boreal_draft_application_id");
@@ -524,8 +584,8 @@ export default function PublicApplyPage() {
   }, []);
 
   const canSubmit = useMemo(
-    () => isSubmissionReady(values, termsAcceptedAt, communicationsAcceptedAt) && !isSubmitting,
-    [values, termsAcceptedAt, communicationsAcceptedAt, isSubmitting]
+    () => isSubmissionReady(values, termsAcceptedAt, communicationsAcceptedAt) && !isSubmitting && !isHydratingContinuation,
+    [values, termsAcceptedAt, communicationsAcceptedAt, isSubmitting, isHydratingContinuation]
   );
 
   const handleChange = (name: keyof ApplicationFormValues, value: string) => {
@@ -552,6 +612,8 @@ export default function PublicApplyPage() {
         onSuccess: () => navigate("/apply/success"),
         onError: (nextErrors) => setErrors(nextErrors),
         storage: getSessionStorage(),
+        readinessToken,
+        sessionId: readinessSessionId,
       });
     } finally {
       setIsSubmitting(false);
@@ -570,6 +632,8 @@ export default function PublicApplyPage() {
       <p style={{ marginBottom: 24, color: "#4b5563" }}>
         Complete the form below to submit your application. All required fields must be filled in.
       </p>
+
+      {isHydratingContinuation ? <p style={{ marginBottom: 16, color: "#4b5563" }}>Loading your saved readiness details...</p> : null}
 
       {submissionState ? (
         <section
@@ -624,7 +688,24 @@ export default function PublicApplyPage() {
         </section>
       ) : null}
 
+      {continuing ? (
+        <div
+          style={{
+            marginBottom: 16,
+            padding: 12,
+            borderRadius: 8,
+            border: "1px solid #dbeafe",
+            background: "#eff6ff",
+            color: "#1d4ed8",
+            fontWeight: 600,
+          }}
+        >
+          Continuing your application
+        </div>
+      ) : null}
+
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 20 }}>
+
         {errors.form ? (
           <div
             style={{
@@ -640,6 +721,7 @@ export default function PublicApplyPage() {
           </div>
         ) : null}
         {applicationFields.map((field) => {
+          if (lockedFields.has(field.name)) return null;
           const value = values[field.name];
           const error = errors[field.name];
 

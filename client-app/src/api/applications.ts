@@ -26,12 +26,23 @@ export async function submitApplication(
 
 export async function createPublicApplication(
   payload: unknown,
-  options?: { idempotencyKey?: string }
+  options?: { idempotencyKey?: string; readinessToken?: string; sessionId?: string }
 ) {
-  const res = await api.post("/api/applications", payload, {
-    headers: options?.idempotencyKey
-      ? { "Idempotency-Key": options.idempotencyKey }
-      : undefined,
+  const submissionPayload =
+    payload && typeof payload === "object" && !Array.isArray(payload)
+      ? {
+          ...(payload as Record<string, unknown>),
+          readinessToken: options?.readinessToken,
+          sessionId: options?.sessionId,
+        }
+      : payload;
+
+  const res = await api.post("/api/applications", submissionPayload, {
+    headers: {
+      ...(options?.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey } : {}),
+      ...(options?.readinessToken ? { "X-Readiness-Token": options.readinessToken } : {}),
+      ...(options?.sessionId ? { "X-Session-Id": options.sessionId } : {}),
+    },
   });
   return parseApiResponse(
     PublicApplicationResponseSchema,

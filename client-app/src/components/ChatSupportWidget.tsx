@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useApplicationStore } from "@/state/useApplicationStore";
 import { useChatSocket } from "@/hooks/useChatSocket";
+import { getStoredReadinessToken } from "@/api/website";
 
 type ChatItem = { id: string; role: "user" | "ai" | "system"; message: string };
 
@@ -12,7 +13,7 @@ function getSessionId(candidate: string | undefined): string | null {
 export default function ChatSupportWidget() {
   const { app } = useApplicationStore();
   const [open, setOpen] = useState(false);
-  const [staffJoined, setStaffJoined] = useState(false);
+  const [humanActive, setHumanActive] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatItem[]>([]);
 
@@ -24,26 +25,30 @@ export default function ChatSupportWidget() {
       getSessionId(localStorage.getItem("leadId") || undefined),
     [app.applicationId, app.applicationToken, app.readinessLeadId]
   );
+  const readinessToken = useMemo(() => getStoredReadinessToken(), []);
 
   const { status, send } = useChatSocket({
     enabled: open,
     sessionId,
-    onStaffJoined: () => {
-      setStaffJoined(true);
-      setMessages((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), role: "system", message: "Transferring you…" },
-      ]);
+    readinessToken,
+    onHumanActive: () => {
+      setHumanActive(true);
+      setMessages((prev) => {
+        if (prev.some((item) => item.message === "Transferring you…")) {
+          return prev;
+        }
+        return [...prev, { id: crypto.randomUUID(), role: "system", message: "Transferring you…" }];
+      });
     },
     onMessage: (message) => {
-      if (staffJoined) return;
+      if (humanActive) return;
       setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "ai", message }]);
     },
   });
 
   const handleSend = () => {
     const value = input.trim();
-    if (!value || !sessionId || staffJoined) return;
+    if (!value || !sessionId || humanActive) return;
 
     const sent = send(value);
     if (!sent) return;
@@ -76,7 +81,7 @@ export default function ChatSupportWidget() {
           </div>
           <div className="border-t p-3">
             <p className="mb-2 text-xs text-slate-500">
-              {staffJoined
+              {humanActive
                 ? "A specialist has joined this chat."
                 : status === "connected"
                   ? "Connected"
@@ -90,13 +95,13 @@ export default function ChatSupportWidget() {
                 onChange={(event) => setInput(event.target.value)}
                 className="flex-1 rounded border p-2 text-sm"
                 placeholder={sessionId ? "Type your message" : "Session required to chat"}
-                disabled={!sessionId || staffJoined}
+                disabled={!sessionId || humanActive}
               />
               <button
                 type="button"
                 className="rounded bg-[#0a2540] px-3 text-sm text-white disabled:opacity-50"
                 onClick={handleSend}
-                disabled={!sessionId || staffJoined || status !== "connected"}
+                disabled={!sessionId || humanActive || status !== "connected"}
               >
                 Send
               </button>

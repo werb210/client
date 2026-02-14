@@ -5,7 +5,8 @@ type ChatSocketStatus = "idle" | "connecting" | "connected" | "reconnecting" | "
 interface UseChatSocketOptions {
   enabled: boolean;
   sessionId: string | null;
-  onStaffJoined?: () => void;
+  readinessToken?: string | null;
+  onHumanActive?: () => void;
   onMessage?: (message: string) => void;
 }
 
@@ -18,14 +19,20 @@ function getSocketUrl() {
   return `${protocol}://${window.location.host}/ws/chat`;
 }
 
-export function useChatSocket({ enabled, sessionId, onStaffJoined, onMessage }: UseChatSocketOptions) {
+export function useChatSocket({
+  enabled,
+  sessionId,
+  readinessToken,
+  onHumanActive,
+  onMessage,
+}: UseChatSocketOptions) {
   const socketRef = useRef<WebSocket | null>(null);
   const retryTimerRef = useRef<number | null>(null);
   const retryCountRef = useRef(0);
   const mountedRef = useRef(true);
   const enabledRef = useRef(enabled);
   const onMessageRef = useRef(onMessage);
-  const onStaffJoinedRef = useRef(onStaffJoined);
+  const onHumanActiveRef = useRef(onHumanActive);
   const [status, setStatus] = useState<ChatSocketStatus>("idle");
 
   useEffect(() => {
@@ -44,8 +51,8 @@ export function useChatSocket({ enabled, sessionId, onStaffJoined, onMessage }: 
   }, [onMessage]);
 
   useEffect(() => {
-    onStaffJoinedRef.current = onStaffJoined;
-  }, [onStaffJoined]);
+    onHumanActiveRef.current = onHumanActive;
+  }, [onHumanActive]);
 
   const clearRetryTimer = useCallback(() => {
     if (retryTimerRef.current !== null) {
@@ -86,19 +93,24 @@ export function useChatSocket({ enabled, sessionId, onStaffJoined, onMessage }: 
       socket.onopen = () => {
         retryCountRef.current = 0;
         setSafeStatus("connected");
-        socket.send(JSON.stringify({ type: "join", sessionId }));
+        socket.send(JSON.stringify({ type: "join", sessionId, readinessToken: readinessToken || undefined }));
       };
 
       socket.onmessage = (event) => {
         try {
           const payload = JSON.parse(event.data as string) as {
             type?: string;
+            mode?: string;
             message?: string;
             content?: string;
           };
 
-          if (payload.type === "staff_joined") {
-            onStaffJoinedRef.current?.();
+          if (payload.type === "HUMAN_ACTIVE" || payload.mode === "HUMAN_ACTIVE") {
+            onHumanActiveRef.current?.();
+            return;
+          }
+
+          if (payload.type === "AI_ACTIVE" || payload.mode === "AI_ACTIVE") {
             return;
           }
 
@@ -135,7 +147,7 @@ export function useChatSocket({ enabled, sessionId, onStaffJoined, onMessage }: 
     } catch {
       setSafeStatus("reconnecting");
     }
-  }, [clearRetryTimer, sessionId, setSafeStatus]);
+  }, [clearRetryTimer, readinessToken, sessionId, setSafeStatus]);
 
   useEffect(() => {
     if (!enabled || !sessionId) {
@@ -153,12 +165,9 @@ export function useChatSocket({ enabled, sessionId, onStaffJoined, onMessage }: 
   const send = useCallback((message: string) => {
     const socket = socketRef.current;
     if (!socket || socket.readyState !== WebSocket.OPEN || !sessionId) return false;
-    socket.send(JSON.stringify({ type: "message", sessionId, message }));
+    socket.send(JSON.stringify({ type: "message", sessionId, readinessToken: readinessToken || undefined, message }));
     return true;
-  }, [sessionId]);
+  }, [readinessToken, sessionId]);
 
-  return useMemo(
-    () => ({ status, send, disconnect }),
-    [disconnect, send, status]
-  );
+  return useMemo(() => ({ status, send, disconnect }), [disconnect, send, status]);
 }
