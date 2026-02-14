@@ -32,38 +32,11 @@ export function Header() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: tokens.spacing.md }}>
-          <div
-            style={{
-              height: "48px",
-              width: "48px",
-              borderRadius: tokens.radii.pill,
-              background: tokens.colors.primary,
-              color: tokens.colors.surface,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "14px",
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-            }}
-          >
-            BF
-          </div>
-          <div style={{ lineHeight: 1.1 }}>
-            <div
-              style={{
-                fontSize: "12px",
-                textTransform: "uppercase",
-                letterSpacing: "0.2em",
-                color: tokens.colors.textSecondary,
-              }}
-            >
-              Boreal
-            </div>
-            <div style={{ fontSize: "24px", fontWeight: 700, color: tokens.colors.textPrimary }}>
-              Financial
-            </div>
-          </div>
+          <img
+            src="/images/Header.png"
+            alt="Boreal Financial"
+            className="h-10 w-auto object-contain"
+          />
         </div>
 
         {!inApplicationFlow && (
