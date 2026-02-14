@@ -19,6 +19,7 @@ const READINESS_DEDUP_KEY = "boreal_readiness_submission_cache";
 const READINESS_TOKEN_KEY = "boreal_readiness_token";
 export const READINESS_SESSION_ID_KEY = "boreal_readiness_session_id";
 const SESSION_ID_QUERY_PARAM = "sessionId";
+const TOKEN_QUERY_PARAM = "token";
 
 function normalize(value: string | undefined) {
   return (value || "").trim().toLowerCase();
@@ -147,7 +148,8 @@ export function clearStoredReadinessSession() {
 }
 
 export function getReadinessSessionIdFromUrl(search: string) {
-  const queryValue = new URLSearchParams(search).get(SESSION_ID_QUERY_PARAM);
+  const params = new URLSearchParams(search);
+  const queryValue = params.get(SESSION_ID_QUERY_PARAM) || params.get(TOKEN_QUERY_PARAM);
   if (!queryValue) return null;
   const normalized = queryValue.trim();
   return normalized || null;

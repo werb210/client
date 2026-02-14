@@ -32,7 +32,7 @@ import { useClientSession } from "../hooks/useClientSession";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { clearReadiness, setReadiness } from "../state/readinessStore";
 import { fetchReadinessContext, getLeadIdFromSearch } from "../services/readiness";
-import { fetchContinuation, fetchReadinessSession, getContinuationSession } from "../api/continuation";
+import { fetchContinuation, fetchReadinessSession, getContinuationSession, mapContinuationToReadinessContext } from "../api/continuation";
 import { resolveReadinessSessionId } from "@/api/website";
 
 type GuardProps = {
@@ -112,72 +112,14 @@ function ReadinessLoader() {
         const sessionPayload = await fetchReadinessSession(readinessSessionId);
         if (!active) return;
         if (sessionPayload) {
-          setReadiness({
-            leadId:
-              (typeof sessionPayload.leadId === "string" && sessionPayload.leadId) ||
-              readinessSessionId,
-            companyName: sessionPayload.companyName,
-            fullName: sessionPayload.fullName,
-            phone: sessionPayload.phone,
-            email: sessionPayload.email,
-            industry: sessionPayload.industry,
-            yearsInBusiness:
-              typeof sessionPayload.yearsInBusiness === "number"
-                ? sessionPayload.yearsInBusiness
-                : undefined,
-            monthlyRevenue:
-              typeof sessionPayload.monthlyRevenue === "number"
-                ? sessionPayload.monthlyRevenue
-                : undefined,
-            annualRevenue:
-              typeof sessionPayload.annualRevenue === "number"
-                ? sessionPayload.annualRevenue
-                : undefined,
-            arOutstanding:
-              typeof sessionPayload.arOutstanding === "number"
-                ? sessionPayload.arOutstanding
-                : undefined,
-            existingDebt:
-              typeof sessionPayload.existingDebt === "boolean"
-                ? sessionPayload.existingDebt
-                : undefined,
-          });
+          setReadiness(mapContinuationToReadinessContext(sessionPayload, readinessSessionId));
           return;
         }
 
         const continuation = await fetchContinuation(readinessSessionId);
         if (!active) return;
         if (continuation) {
-          setReadiness({
-            leadId:
-              (typeof continuation.leadId === "string" && continuation.leadId) ||
-              readinessSessionId,
-            companyName: continuation.companyName,
-            fullName: continuation.fullName,
-            phone: continuation.phone,
-            email: continuation.email,
-            industry: continuation.industry,
-            yearsInBusiness:
-              typeof continuation.yearsInBusiness === "number"
-                ? continuation.yearsInBusiness
-                : undefined,
-            monthlyRevenue:
-              typeof continuation.monthlyRevenue === "number"
-                ? continuation.monthlyRevenue
-                : undefined,
-            annualRevenue:
-              typeof continuation.annualRevenue === "number"
-                ? continuation.annualRevenue
-                : undefined,
-            arOutstanding:
-              typeof continuation.arOutstanding === "number"
-                ? continuation.arOutstanding
-                : undefined,
-            existingDebt:
-              typeof continuation.existingDebt === "boolean"
-                ? continuation.existingDebt
-                : undefined,
-          });
+          setReadiness(mapContinuationToReadinessContext(continuation, readinessSessionId));
           return;
         }
       }

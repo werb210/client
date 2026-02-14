@@ -725,6 +725,30 @@ export default function PublicApplyPage() {
         </div>
       ) : null}
 
+
+      {continuing && lockedFields.size > 0 ? (
+        <section
+          style={{
+            marginBottom: 16,
+            padding: 12,
+            borderRadius: 8,
+            border: "1px solid #e5e7eb",
+            background: "#f9fafb",
+            display: "grid",
+            gap: 8,
+          }}
+        >
+          <strong>Confirmed details</strong>
+          {applicationFields
+            .filter((field) => lockedFields.has(field.name))
+            .map((field) => (
+              <div key={field.name} style={{ color: "#374151" }}>
+                {field.label}: {values[field.name]}
+              </div>
+            ))}
+        </section>
+      ) : null}
+
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 20 }}>
 
         {errors.form ? (

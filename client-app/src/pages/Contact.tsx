@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { submitContactForm } from "@/api/website";
 
 export default function Contact() {
@@ -11,6 +12,7 @@ export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -55,9 +57,18 @@ export default function Contact() {
         ))}
 
         {success && (
-          <p className="text-emerald-300 text-sm">
-            A Boreal Intake Specialist will contact you shortly.
-          </p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+            <div className="w-full max-w-md rounded-lg bg-white p-6 text-gray-900 shadow-xl">
+              <p className="mb-4 text-base font-semibold">A Boreal Intake Specialist will contact you shortly</p>
+              <button
+                type="button"
+                className="rounded bg-blue-600 px-6 py-3 text-white"
+                onClick={() => navigate("/")}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
         )}
         {error && <p className="text-red-300 text-sm">{error}</p>}
 
