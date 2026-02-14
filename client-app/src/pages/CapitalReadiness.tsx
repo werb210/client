@@ -1,6 +1,20 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { submitCreditReadiness } from "@/api/website";
+import { submitCreditReadiness, getStoredReadinessSessionId } from "@/api/website";
 import { createLead } from "@/services/lead";
+
+function resolveContinueUrl(payload: Record<string, any>, fallbackLeadId: string) {
+  const token =
+    payload?.readinessSessionId ||
+    payload?.sessionId ||
+    getStoredReadinessSessionId();
+  if (typeof payload?.continueUrl === "string" && payload.continueUrl.trim()) {
+    return payload.continueUrl;
+  }
+  if (typeof token === "string" && token.trim()) {
+    return `/apply?continue=${encodeURIComponent(token)}`;
+  }
+  return `/apply?lead=${encodeURIComponent(fallbackLeadId)}`;
+}
 
 export default function CapitalReadiness() {
   const [form, setForm] = useState({
@@ -44,7 +58,7 @@ export default function CapitalReadiness() {
         monthlyRevenue: form.monthlyRevenue,
       });
 
-      const continueUrl = readinessSession?.continueUrl || `/apply?lead=${leadId}`;
+      const continueUrl = resolveContinueUrl(readinessSession || {}, leadId);
       window.location.href = continueUrl;
     } catch {
       alert("Unable to submit readiness right now. Please try again.");
