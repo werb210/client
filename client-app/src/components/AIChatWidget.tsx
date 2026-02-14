@@ -1,45 +1,44 @@
-import { useEffect, useRef, useState } from "react";
-import { escalateToHuman, sendAiMessage } from "@/api/aiClient";
+import { useEffect, useState } from "react";
+import html2canvas from "html2canvas";
+import {
+  escalateToHuman,
+  reportIssue,
+  sendAiMessage,
+  startAiSession,
+} from "@/services/aiService";
 
-type Message = {
+type ChatMessage = {
   role: "user" | "assistant";
   content: string;
 };
 
 export default function AIChatWidget() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [context] = useState<"client" | "website">("client");
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, loading]);
+    if (!open || sessionId) return;
+
+    void startAiSession({ context: "client" }).then((res) => {
+      setSessionId(res.sessionId);
+    });
+  }, [open, sessionId]);
 
   async function send() {
-    if (!input.trim()) return;
+    if (!input || !sessionId) return;
 
-    const content = input.trim();
-    setMessages((prev) => [...prev, { role: "user", content }]);
-    setInput("");
+    setMessages((prev) => [...prev, { role: "user", content: input }]);
     setLoading(true);
 
-    try {
-      const res = await sendAiMessage(sessionId, content, context);
-      setSessionId(res.sessionId);
-      setMessages((prev) => [...prev, { role: "assistant", content: res.reply }]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "There was an issue. Please try again." },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    const res = await sendAiMessage(sessionId, input);
+
+    setMessages((prev) => [...prev, { role: "assistant", content: res.reply }]);
+
+    setInput("");
+    setLoading(false);
   }
 
   async function talkToHuman() {
@@ -48,29 +47,38 @@ export default function AIChatWidget() {
     alert("Transferring you to a Boreal specialist.");
   }
 
+  async function captureScreenshot() {
+    const canvas = await html2canvas(document.body);
+    return canvas.toDataURL("image/png");
+  }
+
+  async function handleReport() {
+    if (!sessionId) return;
+    const screenshot = await captureScreenshot();
+    await reportIssue(sessionId, input || "Issue reported", screenshot);
+    alert("Issue submitted.");
+  }
+
   return (
     <>
       <button
-        onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-6 right-6 z-50 rounded-full bg-black px-5 py-3 text-white shadow-lg"
+        onClick={() => setOpen(!open)}
+        className="fixed bottom-6 right-6 rounded-full bg-black px-4 py-3 text-white shadow-lg"
       >
-        Maya
+        AI
       </button>
 
       {open && (
-        <div className="fixed bottom-20 right-6 z-50 flex w-96 max-w-[95vw] flex-col rounded-lg bg-white shadow-2xl">
-          <div className="flex justify-between border-b p-3 font-semibold">
-            Maya — Boreal AI
-            <button onClick={() => setOpen(false)}>✕</button>
-          </div>
+        <div className="fixed bottom-20 right-6 z-50 flex w-96 flex-col rounded border bg-white shadow-xl">
+          <div className="border-b p-3 font-semibold">Maya — Boreal AI</div>
 
-          <div ref={scrollRef} className="flex-1 space-y-2 overflow-auto p-3 text-sm">
+          <div className="flex-1 space-y-2 overflow-auto p-3 text-sm">
             {messages.map((m, i) => (
               <div key={i} className={m.role === "user" ? "text-right" : ""}>
                 {m.content}
               </div>
             ))}
-            {loading && <div>Typing…</div>}
+            {loading && <div>Typing...</div>}
           </div>
 
           <div className="space-y-2 border-t p-3">
@@ -88,9 +96,16 @@ export default function AIChatWidget() {
             <div className="flex gap-2">
               <button
                 onClick={talkToHuman}
-                className="flex-1 rounded bg-gray-800 py-2 text-xs text-white"
+                className="flex-1 rounded bg-green-600 py-2 text-xs text-white"
               >
                 Talk to a Human
+              </button>
+
+              <button
+                onClick={handleReport}
+                className="flex-1 rounded bg-red-600 py-2 text-xs text-white"
+              >
+                Report Issue
               </button>
             </div>
           </div>
