@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { ClientAppAPI } from "../api/clientApp";
 import { StepHeader } from "../components/StepHeader";
@@ -135,6 +135,7 @@ export function Step1_KYC() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const navigate = useNavigate();
+  const { applicationId } = useParams();
   const countryCode = useMemo(
     () => getCountryCode(app.kyc.businessLocation),
     [app.kyc.businessLocation]
@@ -216,15 +217,27 @@ export function Step1_KYC() {
       Number.isNaN(amount) ? 0 : amount
     );
     try {
-      const res = await ClientAppAPI.start({
+      const payloadBody = {
         financialProfile: payload,
-      });
-      const token = res?.data?.token;
-      if (!token) {
-        alert("We couldn't start your application. Please try again.");
-        return;
+      };
+      const existingApplicationId = applicationId || app.applicationId || app.applicationToken;
+
+      if (existingApplicationId) {
+        await ClientAppAPI.updateApplication(existingApplicationId, payloadBody);
+        update({
+          applicationToken: app.applicationToken || existingApplicationId,
+          applicationId: app.applicationId || existingApplicationId,
+          matchPercentages,
+        });
+      } else {
+        const res = await ClientAppAPI.start(payloadBody);
+        const token = res?.data?.token;
+        if (!token) {
+          alert("We couldn't start your application. Please try again.");
+          return;
+        }
+        update({ applicationToken: token, matchPercentages });
       }
-      update({ applicationToken: token, matchPercentages });
       track("apply_started", { step: 1 });
       track("step_completed", { step: 1 });
       navigate("/apply/step-2");

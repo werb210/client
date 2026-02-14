@@ -284,9 +284,21 @@ export function Step6_Review() {
         refreshed?.data || {},
         app.applicationToken!
       );
+      const nextApplicationId =
+        hydrated.applicationId ||
+        app.applicationId ||
+        refreshed?.data?.applicationId ||
+        refreshed?.data?.application?.applicationId ||
+        null;
+      if (nextApplicationId) {
+        await ClientAppAPI.updateApplication(nextApplicationId, {
+          status: "requires_docs",
+        });
+      }
       void submissionResponse;
       trackEvent("client_submission_completed");
       update({
+        applicationId: hydrated.applicationId || app.applicationId,
         documents: hydrated.documents || app.documents,
         documentsDeferred:
           typeof hydrated.documentsDeferred === "boolean"
@@ -420,6 +432,7 @@ export function Step6_Review() {
         app.applicationToken!
       );
       update({
+        applicationId: hydrated.applicationId || app.applicationId,
         documents: hydrated.documents || app.documents,
         documentReviewComplete:
           hydrated.documentReviewComplete ?? app.documentReviewComplete,

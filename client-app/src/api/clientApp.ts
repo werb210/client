@@ -71,6 +71,20 @@ export const ClientAppAPI = {
       return res;
     });
   },
+  getApplication(applicationId: string) {
+    return withRetry(async () => {
+      const res = await api.get(`/api/applications/${applicationId}`);
+      parseApiResponse(
+        ClientAppStatusResponseSchema,
+        res.data,
+        "GET /api/applications/{applicationId}"
+      );
+      return res;
+    });
+  },
+  updateApplication(applicationId: string, payload: any) {
+    return withRetry(() => api.patch(`/api/applications/${applicationId}`, payload));
+  },
   getMessages(token: string) {
     return withRetry(async () => {
       const res = await api.get(`/api/applications/${token}/messages`);
