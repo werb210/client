@@ -153,25 +153,54 @@ export function Step1_KYC() {
 
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("boreal_application_token");
+    const savedToken =
+      localStorage.getItem("applicationToken") ||
+      localStorage.getItem("boreal_application_token");
     if (!savedToken) return;
 
     fetch(`/api/applications/${savedToken}`)
       .then((res) => res.json())
       .then((data) => {
         const payload = data?.application ?? data;
-        const hydratedKyc = payload?.financialProfile ?? payload?.kyc;
+        if (!payload || typeof payload !== "object") return;
 
+        const hydratedKyc = payload?.financialProfile ?? payload?.kyc ?? payload;
         if (!hydratedKyc || typeof hydratedKyc !== "object") return;
 
         update({
           applicationToken: app.applicationToken || savedToken,
-          kyc: { ...app.kyc, ...hydratedKyc },
+          applicationId: app.applicationId || savedToken,
+          kyc: {
+            ...app.kyc,
+            ...hydratedKyc,
+            companyName: hydratedKyc.companyName ?? payload.companyName ?? app.kyc.companyName,
+            fullName: hydratedKyc.fullName ?? payload.fullName ?? app.kyc.fullName,
+            email: hydratedKyc.email ?? payload.email ?? app.kyc.email,
+            phone: hydratedKyc.phone ?? payload.phone ?? app.kyc.phone,
+            industry: hydratedKyc.industry ?? payload.industry ?? app.kyc.industry,
+            salesHistory:
+              hydratedKyc.salesHistory ??
+              hydratedKyc.yearsInBusiness ??
+              payload.yearsInBusiness ??
+              app.kyc.salesHistory,
+            monthlyRevenue:
+              hydratedKyc.monthlyRevenue ?? payload.monthlyRevenue ?? app.kyc.monthlyRevenue,
+            revenueLast12Months:
+              hydratedKyc.revenueLast12Months ??
+              hydratedKyc.annualRevenue ??
+              payload.annualRevenue ??
+              app.kyc.revenueLast12Months,
+            accountsReceivable:
+              hydratedKyc.accountsReceivable ??
+              hydratedKyc.arOutstanding ??
+              payload.arOutstanding ??
+              app.kyc.accountsReceivable,
+            existingDebt:
+              hydratedKyc.existingDebt ?? payload.existingDebt ?? app.kyc.existingDebt,
+          },
         });
       })
-      .catch((error) => {
-        console.warn("Unable to resume saved application token", error);
-      });
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -312,6 +341,19 @@ export function Step1_KYC() {
     }
   }
 
+
+
+  useEffect(() => {
+    if (
+      app.kyc.companyName &&
+      app.kyc.fullName &&
+      app.kyc.email &&
+      app.kyc.phone
+    ) {
+      navigate("/apply/step-2");
+    }
+  }, [app.kyc.companyName, app.kyc.email, app.kyc.fullName, app.kyc.phone, navigate]);
+
   const fieldGridStyle = {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
@@ -358,6 +400,47 @@ export function Step1_KYC() {
         )}
         <StepHeader step={1} title="Financial Profile" />
 
+
+        <Card
+          variant="muted"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: tokens.spacing.xs,
+            marginBottom: tokens.spacing.md,
+          }}
+        >
+          {app.kyc.companyName && (
+            <div className="text-sm text-neutral-400">Company: {app.kyc.companyName}</div>
+          )}
+          {app.kyc.fullName && (
+            <div className="text-sm text-neutral-400">Full name: {app.kyc.fullName}</div>
+          )}
+          {app.kyc.email && (
+            <div className="text-sm text-neutral-400">Email: {app.kyc.email}</div>
+          )}
+          {app.kyc.phone && (
+            <div className="text-sm text-neutral-400">Phone: {app.kyc.phone}</div>
+          )}
+          {app.kyc.industry && (
+            <div className="text-sm text-neutral-400">Industry: {app.kyc.industry}</div>
+          )}
+          {app.kyc.salesHistory && (
+            <div className="text-sm text-neutral-400">Years in business: {app.kyc.salesHistory}</div>
+          )}
+          {app.kyc.monthlyRevenue && (
+            <div className="text-sm text-neutral-400">Monthly revenue: {app.kyc.monthlyRevenue}</div>
+          )}
+          {app.kyc.revenueLast12Months && (
+            <div className="text-sm text-neutral-400">Annual revenue: {app.kyc.revenueLast12Months}</div>
+          )}
+          {app.kyc.accountsReceivable && (
+            <div className="text-sm text-neutral-400">AR outstanding: {app.kyc.accountsReceivable}</div>
+          )}
+          {app.kyc.existingDebt !== undefined && app.kyc.existingDebt !== null && (
+            <div className="text-sm text-neutral-400">Existing debt: {String(app.kyc.existingDebt)}</div>
+          )}
+        </Card>
         <Card
           style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}
           onBlurCapture={() => saveStepData(1, app.kyc)}

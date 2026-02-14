@@ -16,6 +16,7 @@ import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
 import { useExitIntent } from "../hooks/useExitIntent";
 import { trackEvent } from "../utils/analytics";
 import AIAssistant from "@/components/AIAssistant";
+import { fetchContinuation } from "../services/continuation";
 
 export default function App() {
   const refreshing = useSessionRefreshing();
@@ -52,6 +53,29 @@ export default function App() {
     if (email) {
       localStorage.setItem("preapp_email", email);
     }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const continuation = params.get("continuation");
+
+    if (continuation) {
+      localStorage.setItem("boreal_continuation_token", continuation);
+    }
+  }, []);
+
+  useEffect(() => {
+    const continuationToken = localStorage.getItem("boreal_continuation_token");
+    if (!continuationToken) return;
+
+    void fetchContinuation(continuationToken)
+      .then((data) => {
+        if (data?.applicationId) {
+          localStorage.setItem("applicationToken", data.applicationId);
+          localStorage.setItem("boreal_application_token", data.applicationId);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   if (refreshing) {
