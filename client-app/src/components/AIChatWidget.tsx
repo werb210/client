@@ -1,62 +1,109 @@
 import { useEffect, useState } from "react";
 import html2canvas from "html2canvas";
 import {
-  escalateToHuman,
-  reportIssue,
+  createAiSession,
   sendAiMessage,
-  startAiSession,
-} from "@/services/aiService";
-
-type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
+  escalateAi,
+  reportIssue,
+} from "@/api/ai";
+import type { AiMessage, AiSession } from "@/types/ai";
 
 export default function AIChatWidget() {
   const [open, setOpen] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [session, setSession] = useState<AiSession | null>(null);
+  const [messages, setMessages] = useState<AiMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!open || sessionId) return;
+    if (session) return;
 
-    void startAiSession({ context: "client" }).then((res) => {
-      setSessionId(res.sessionId);
+    void createAiSession("client").then((data) => {
+      setSession({
+        sessionId: data.sessionId,
+        escalated: Boolean(data.escalated),
+        takeover: Boolean(data.takeover),
+      });
     });
-  }, [open, sessionId]);
+  }, [session]);
+
+  useEffect(() => {
+    if (!session?.takeover) return;
+
+    setMessages((prev) => {
+      const alreadyNotified = prev.some(
+        (message) =>
+          message.role === "staff" &&
+          message.content === "A Boreal specialist has joined the conversation.",
+      );
+
+      if (alreadyNotified) return prev;
+
+      return [
+        ...prev,
+        {
+          role: "staff",
+          content: "A Boreal specialist has joined the conversation.",
+        },
+      ];
+    });
+  }, [session?.takeover]);
 
   async function send() {
-    if (!input || !sessionId) return;
+    if (!input.trim() || !session?.sessionId || session.takeover) return;
 
-    setMessages((prev) => [...prev, { role: "user", content: input }]);
+    const userMessage: AiMessage = {
+      role: "user",
+      content: input,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
     setLoading(true);
 
-    const res = await sendAiMessage(sessionId, input);
+    try {
+      const res = await sendAiMessage(session.sessionId, userMessage.content);
 
-    setMessages((prev) => [...prev, { role: "assistant", content: res.reply }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: res.reply,
+        },
+      ]);
 
-    setInput("");
-    setLoading(false);
+      if (res.takeover) {
+        setSession((prev) => (prev ? { ...prev, takeover: true } : prev));
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
-  async function talkToHuman() {
-    if (!sessionId) return;
-    await escalateToHuman(sessionId);
-    alert("Transferring you to a Boreal specialist.");
-  }
+  async function handleEscalate() {
+    if (!session?.sessionId || session.escalated) return;
 
-  async function captureScreenshot() {
-    const canvas = await html2canvas(document.body);
-    return canvas.toDataURL("image/png");
+    await escalateAi(session.sessionId);
+
+    setSession((prev) => (prev ? { ...prev, escalated: true } : prev));
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: "Transferring you to a Boreal specialist..." },
+    ]);
   }
 
   async function handleReport() {
-    if (!sessionId) return;
-    const screenshot = await captureScreenshot();
-    await reportIssue(sessionId, input || "Issue reported", screenshot);
-    alert("Issue submitted.");
+    if (!session?.sessionId) return;
+
+    const canvas = await html2canvas(document.body);
+    const screenshot = canvas.toDataURL("image/png");
+
+    await reportIssue(session.sessionId, input || "Issue reported", screenshot);
+
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: "Issue submitted successfully." },
+    ]);
   }
 
   return (
@@ -74,8 +121,8 @@ export default function AIChatWidget() {
 
           <div className="flex-1 space-y-2 overflow-auto p-3 text-sm">
             {messages.map((m, i) => (
-              <div key={i} className={m.role === "user" ? "text-right" : ""}>
-                {m.content}
+              <div key={i}>
+                <strong>{m.role}:</strong> {m.content}
               </div>
             ))}
             {loading && <div>Typing...</div>}
@@ -87,16 +134,18 @@ export default function AIChatWidget() {
               onChange={(e) => setInput(e.target.value)}
               className="w-full border p-2"
               placeholder="Ask about financing..."
+              disabled={session?.takeover}
             />
 
-            <button onClick={send} className="w-full rounded bg-black py-2 text-white">
+            <button onClick={send} className="w-full rounded bg-black py-2 text-white" disabled={session?.takeover}>
               Ask Maya
             </button>
 
             <div className="flex gap-2">
               <button
-                onClick={talkToHuman}
+                onClick={handleEscalate}
                 className="flex-1 rounded bg-green-600 py-2 text-xs text-white"
+                disabled={session?.escalated}
               >
                 Talk to a Human
               </button>
