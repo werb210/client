@@ -278,6 +278,7 @@ export function Step6_Review() {
       track("submit", { step: 6 });
       const submissionResponse = await submitApplication(payload, {
         idempotencyKey,
+        continuationToken: app.continuationToken,
       });
       const refreshed = await ClientAppAPI.status(app.applicationToken!);
       const hydrated = extractApplicationFromStatus(

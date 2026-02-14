@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useMemo } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Step1_KYC } from "../wizard/Step1_KYC";
 import { Step2_Product } from "../wizard/Step2_Product";
@@ -9,6 +9,7 @@ import { components, layout, tokens } from "@/styles";
 import { Spinner } from "../components/ui/Spinner";
 import { ClientAppAPI } from "../api/clientApp";
 import { extractApplicationFromStatus } from "../applications/resume";
+import { fetchContinuation } from "@/api/continuation";
 
 const Step5 = lazy(() => import("../wizard/Step5_Documents"));
 const Step6 = lazy(() => import("../wizard/Step6_Review"));
@@ -17,8 +18,74 @@ export function ApplyPage() {
   const { initialized, init, app, update } = useApplicationStore();
   const { applicationId } = useParams();
   const navigate = useNavigate();
+  const continuationToken = useMemo(
+    () => new URLSearchParams(window.location.search).get("continue"),
+    []
+  );
 
   if (!initialized) init();
+
+  useEffect(() => {
+    if (!continuationToken) return;
+
+    let active = true;
+
+    void fetchContinuation(continuationToken)
+      .then((data) => {
+        if (!active || !data) return;
+
+        const [firstName = "", ...lastNameParts] = (data.fullName || "").trim().split(/\s+/);
+        const lastName = lastNameParts.join(" ");
+
+        update({
+          continuationToken,
+          kyc: {
+            ...app.kyc,
+            industry: data.industry || app.kyc.industry || "",
+            salesHistory:
+              data.yearsInBusiness !== undefined && data.yearsInBusiness !== null
+                ? String(data.yearsInBusiness)
+                : app.kyc.salesHistory,
+            monthlyRevenue:
+              data.monthlyRevenue !== undefined && data.monthlyRevenue !== null
+                ? String(data.monthlyRevenue)
+                : app.kyc.monthlyRevenue,
+            revenueLast12Months:
+              data.annualRevenue !== undefined && data.annualRevenue !== null
+                ? String(data.annualRevenue)
+                : app.kyc.revenueLast12Months,
+            accountsReceivable:
+              data.arOutstanding !== undefined && data.arOutstanding !== null
+                ? String(data.arOutstanding)
+                : app.kyc.accountsReceivable,
+            existingDebt:
+              typeof data.existingDebt === "boolean"
+                ? data.existingDebt
+                : app.kyc.existingDebt,
+          },
+          business: {
+            ...app.business,
+            legalName: data.companyName || app.business.legalName || "",
+            businessName: data.companyName || app.business.businessName || "",
+            phone: data.phone || app.business.phone || "",
+          },
+          applicant: {
+            ...app.applicant,
+            firstName: firstName || app.applicant.firstName || "",
+            lastName: lastName || app.applicant.lastName || "",
+            email: data.email || app.applicant.email || "",
+            phone: data.phone || app.applicant.phone || "",
+          },
+        });
+      })
+      .catch((error) => {
+        console.warn("Failed to load continuation payload", error);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [continuationToken, update]);
 
   useEffect(() => {
     if (!applicationId) return;

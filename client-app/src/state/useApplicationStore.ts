@@ -30,6 +30,7 @@ const emptyApp: ApplicationData = {
   coApplicantSignature: "",
   signatureDate: "",
   applicationToken: undefined,
+  continuationToken: undefined,
   applicationId: undefined,
   currentStep: 1,
   linkedApplicationTokens: [],

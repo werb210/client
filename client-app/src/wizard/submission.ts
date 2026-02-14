@@ -24,6 +24,7 @@ export type SubmissionPayload = {
     co_applicant_signature?: ApplicationData["coApplicantSignature"];
     signature_date?: ApplicationData["signatureDate"];
     application_token?: ApplicationData["applicationToken"];
+    continuation_token?: ApplicationData["continuationToken"];
   };
   lender_product_id: string;
   documents: SubmissionDocument[];
@@ -76,6 +77,7 @@ export function buildSubmissionPayload(app: ApplicationData): SubmissionPayload 
       co_applicant_signature: app.coApplicantSignature,
       signature_date: app.signatureDate,
       application_token: app.applicationToken,
+      continuation_token: app.continuationToken,
     },
     lender_product_id: app.selectedProductId,
     documents,
