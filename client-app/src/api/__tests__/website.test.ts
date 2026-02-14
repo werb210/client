@@ -70,6 +70,18 @@ describe("website API dedupe", () => {
     );
     expect(getStoredReadinessSessionId()).toBe("ready-123");
   });
+  it("clears readiness session and token after completion", async () => {
+    const { clearStoredReadinessSession } = await import("../website");
+
+    localStorage.setItem("boreal_readiness_session_id", "session-xyz");
+    localStorage.setItem("boreal_readiness_token", "token-xyz");
+
+    clearStoredReadinessSession();
+
+    expect(localStorage.getItem("boreal_readiness_session_id")).toBeNull();
+    expect(localStorage.getItem("boreal_readiness_token")).toBeNull();
+  });
+
   it("resolves session id from query string and persists it", async () => {
     const { resolveReadinessSessionId } = await import("../website");
 

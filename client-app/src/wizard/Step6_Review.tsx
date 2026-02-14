@@ -31,6 +31,7 @@ import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { trackEvent } from "../utils/analytics";
 import { track } from "../utils/track";
 import { apiRequest } from "../lib/api";
+import { clearStoredReadinessSession } from "@/api/website";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -168,14 +169,25 @@ export function Step6_Review() {
     update({ termsAccepted: !app.termsAccepted });
   }
 
-  function resolveSubmissionId(data: any) {
+  function resolveSubmissionId(data: unknown) {
+    if (!data || typeof data !== "object") return null;
+    const root = data as Record<string, unknown>;
+    const submission =
+      root.submission && typeof root.submission === "object"
+        ? (root.submission as Record<string, unknown>)
+        : null;
+    const application =
+      root.application && typeof root.application === "object"
+        ? (root.application as Record<string, unknown>)
+        : null;
+
     return (
-      data?.submissionId ||
-      data?.submission?.id ||
-      data?.submission?.submissionId ||
-      data?.applicationId ||
-      data?.application?.id ||
-      data?.id ||
+      (typeof root.submissionId === "string" && root.submissionId) ||
+      (typeof submission?.id === "string" && submission.id) ||
+      (typeof submission?.submissionId === "string" && submission.submissionId) ||
+      (typeof root.applicationId === "string" && root.applicationId) ||
+      (typeof application?.id === "string" && application.id) ||
+      (typeof root.id === "string" && root.id) ||
       null
     );
   }
@@ -315,16 +327,21 @@ export function Step6_Review() {
       }
       clearDraft();
       clearSubmissionIdempotencyKey();
+      clearStoredReadinessSession();
       setTimeout(() => {
         navigate("/portal", { replace: true });
       }, 1200);
     } catch (error) {
-      console.error("Submission failed:", error);
-      const status = (error as any)?.response?.status;
-      const data = (error as any)?.response?.data;
+      const response =
+        typeof error === "object" && error !== null && "response" in error
+          ? (error as { response?: { status?: number; data?: Record<string, unknown> } }).response
+          : undefined;
+      const status = response?.status;
+      const data = response?.data;
       if (status === 409 && resolveSubmissionId(data)) {
         clearDraft();
         clearSubmissionIdempotencyKey();
+        clearStoredReadinessSession();
         setTimeout(() => {
           navigate("/portal", { replace: true });
         }, 1200);

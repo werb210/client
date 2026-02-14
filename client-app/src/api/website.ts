@@ -17,7 +17,7 @@ export interface CreditReadinessPayload {
 const CONTACT_DEDUP_KEY = "boreal_contact_submission_cache";
 const READINESS_DEDUP_KEY = "boreal_readiness_submission_cache";
 const READINESS_TOKEN_KEY = "boreal_readiness_token";
-const READINESS_SESSION_ID_KEY = "boreal_readiness_session_id";
+export const READINESS_SESSION_ID_KEY = "boreal_readiness_session_id";
 const SESSION_ID_QUERY_PARAM = "sessionId";
 
 function normalize(value: string | undefined) {
@@ -134,6 +134,15 @@ export function getStoredReadinessSessionId() {
     return localStorage.getItem(READINESS_SESSION_ID_KEY);
   } catch {
     return null;
+  }
+}
+
+export function clearStoredReadinessSession() {
+  try {
+    localStorage.removeItem(READINESS_SESSION_ID_KEY);
+    localStorage.removeItem(READINESS_TOKEN_KEY);
+  } catch {
+    // ignore storage failures
   }
 }
 
