@@ -7,7 +7,7 @@ import {
   getStoredReadinessToken,
   resolveReadinessSessionId,
 } from "@/api/website";
-import { getContinuationSession, fetchContinuation } from "@/api/continuation";
+import { getContinuationSession, fetchContinuation, fetchReadinessSession } from "@/api/continuation";
 import { loadContinuation } from "../../services/continuation";
 
 type FieldType =
@@ -503,7 +503,11 @@ export default function PublicApplyPage() {
     let active = true;
     setIsHydratingContinuation(true);
 
-    void fetchContinuation(continuationId)
+    const loadContinuationData = readinessSessionId
+      ? fetchReadinessSession(readinessSessionId)
+      : fetchContinuation(continuationId);
+
+    void loadContinuationData
       .then((data) => {
         if (!active || !data) return;
         setContinuing(true);

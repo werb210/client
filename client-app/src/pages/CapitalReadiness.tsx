@@ -4,9 +4,8 @@ import {
   getStoredReadinessToken,
   submitCreditReadiness,
 } from "@/api/website";
-import { createLead } from "@/services/lead";
 
-function resolveContinueUrl(payload: Record<string, any>, fallbackLeadId: string) {
+function resolveContinueUrl(payload: Record<string, any>) {
   const token =
     payload?.readinessToken ||
     payload?.token ||
@@ -17,10 +16,16 @@ function resolveContinueUrl(payload: Record<string, any>, fallbackLeadId: string
   if (typeof payload?.continueUrl === "string" && payload.continueUrl.trim()) {
     return payload.continueUrl;
   }
+  if (typeof payload?.readinessSessionId === "string" && payload.readinessSessionId.trim()) {
+    return `/apply?sessionId=${encodeURIComponent(payload.readinessSessionId)}`;
+  }
+  if (typeof payload?.sessionId === "string" && payload.sessionId.trim()) {
+    return `/apply?sessionId=${encodeURIComponent(payload.sessionId)}`;
+  }
   if (typeof token === "string" && token.trim()) {
     return `/apply?continue=${encodeURIComponent(token)}`;
   }
-  return `/apply?lead=${encodeURIComponent(fallbackLeadId)}`;
+  return "/apply";
 }
 
 export default function CapitalReadiness() {
@@ -60,7 +65,6 @@ export default function CapitalReadiness() {
     setIsSubmitting(true);
     setError(null);
     try {
-      const existingReadinessSessionId = getStoredReadinessSessionId();
 
       const readinessSession = await submitCreditReadiness({
         ...contactData,
@@ -73,22 +77,12 @@ export default function CapitalReadiness() {
 
       const readinessLeadId =
         typeof readinessSession?.leadId === "string" ? readinessSession.leadId : null;
-      const cachedLeadId = localStorage.getItem("leadId");
 
-      let leadId = readinessLeadId || cachedLeadId || "";
-
-      if (!existingReadinessSessionId && !leadId) {
-        const lead = await createLead(contactData);
-        leadId = lead.leadId;
-        localStorage.setItem("pendingApplicationId", lead.pendingApplicationId);
+      if (readinessLeadId) {
+        localStorage.setItem("leadId", readinessLeadId);
       }
 
-      if (leadId) {
-        localStorage.setItem("leadId", leadId);
-      }
-      localStorage.setItem("leadEmail", form.email);
-
-      const continueUrl = resolveContinueUrl(readinessSession || {}, leadId || "readiness");
+      const continueUrl = resolveContinueUrl(readinessSession || {});
       window.location.href = continueUrl;
     } catch {
       setError("Unable to submit readiness right now. Please try again.");
