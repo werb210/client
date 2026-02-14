@@ -16,6 +16,7 @@ import { SessionRevokedPage } from "../pages/SessionRevokedPage";
 import PublicApplyPage from "../pages/apply/PublicApplyPage";
 import PublicApplySuccessPage from "../pages/apply/PublicApplySuccessPage";
 import { ApplyPage } from "../pages/ApplyPage";
+import ContinueApplication from "../pages/ContinueApplication";
 import Step1 from "../wizard/Step1_KYC";
 import Step2 from "../wizard/Step2_Product";
 import Step3 from "../wizard/Step3_Business";
@@ -102,6 +103,7 @@ export default function AppRouter() {
           element={<ApplicationPortalPage />}
         />
         <Route path="/resume" element={<ResumePage />} />
+        <Route path="/continue/:token" element={<ContinueApplication />} />
         <Route path="/apply/success" element={<PublicApplySuccessPage />} />
 
         <Route path="/apply">

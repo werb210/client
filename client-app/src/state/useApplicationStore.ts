@@ -216,6 +216,15 @@ export function useApplicationStore() {
     });
   }
 
+
+  function loadFromServer(state: Partial<ApplicationData>) {
+    setApp((prev) => {
+      const next = hydrateApplication({ ...prev, ...state } as ApplicationData);
+      OfflineStore.save(next);
+      return next;
+    });
+  }
+
   function reset() {
     setApp(emptyApp);
     OfflineStore.clear();
@@ -296,6 +305,7 @@ export function useApplicationStore() {
     init,
     update,
     reset,
+    loadFromServer,
     autosaveError,
     applicationToken: app.applicationToken,
     setToken(token: string) {
