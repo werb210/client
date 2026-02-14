@@ -70,4 +70,13 @@ describe("website API dedupe", () => {
     );
     expect(getStoredReadinessSessionId()).toBe("ready-123");
   });
+  it("resolves session id from query string and persists it", async () => {
+    const { resolveReadinessSessionId } = await import("../website");
+
+    const sessionId = resolveReadinessSessionId("?sessionId=session-xyz");
+
+    expect(sessionId).toBe("session-xyz");
+    expect(localStorage.getItem("boreal_readiness_session_id")).toBe("session-xyz");
+  });
+
 });

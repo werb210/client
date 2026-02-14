@@ -140,6 +140,31 @@ describe("PublicApplyPage form schema", () => {
     expect(payload.startup_flag).toBe(true);
   });
 
+  it("forwards readiness token and session id when present", async () => {
+    const submitApplication = vi.fn().mockResolvedValue({});
+
+    await handlePublicApplicationSubmit({
+      values: baseValues,
+      clientIp: "203.0.113.10",
+      termsAcceptedAt: "2024-01-01T00:00:00.000Z",
+      communicationsAcceptedAt: "2024-01-01T00:00:00.000Z",
+      submitApplication,
+      onSuccess: vi.fn(),
+      onError: vi.fn(),
+      storage: createStorage(),
+      readinessToken: "readiness-token-1",
+      sessionId: "session-1",
+    });
+
+    expect(submitApplication).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        readinessToken: "readiness-token-1",
+        sessionId: "session-1",
+      })
+    );
+  });
+
   it("calls submitter and success handler on valid submission", async () => {
     const submitApplication = vi.fn().mockResolvedValue({});
     const onSuccess = vi.fn();

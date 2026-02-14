@@ -2,7 +2,7 @@ import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPublicApplication } from "../../api/applications";
-import { getStoredReadinessSessionId, getStoredReadinessToken } from "@/api/website";
+import { getStoredReadinessToken, resolveReadinessSessionId } from "@/api/website";
 import { getContinuationSession, fetchContinuation } from "@/api/continuation";
 import { loadContinuation } from "../../services/continuation";
 
@@ -236,8 +236,7 @@ export function loadPublicSubmissionState(
     const parsed = JSON.parse(raw) as PublicSubmissionState;
     if (!parsed?.idempotencyKey || !parsed?.submittedAt) return null;
     return parsed;
-  } catch (error) {
-    console.warn("Failed to load public submission state:", error);
+  } catch {
     return null;
   }
 }
@@ -249,8 +248,8 @@ function savePublicSubmissionState(
   if (!storage) return;
   try {
     storage.setItem(PUBLIC_SUBMISSION_KEY, JSON.stringify(state));
-  } catch (error) {
-    console.warn("Failed to save public submission state:", error);
+  } catch {
+    // ignore storage failures
   }
 }
 
@@ -258,8 +257,7 @@ export function loadIdempotencyKey(storage: MinimalStorage | null) {
   if (!storage) return null;
   try {
     return storage.getItem(PUBLIC_IDEMPOTENCY_KEY);
-  } catch (error) {
-    console.warn("Failed to load idempotency key:", error);
+  } catch {
     return null;
   }
 }
@@ -271,8 +269,8 @@ export function getOrCreateIdempotencyKey(storage: MinimalStorage | null) {
   if (storage) {
     try {
       storage.setItem(PUBLIC_IDEMPOTENCY_KEY, next);
-    } catch (error) {
-      console.warn("Failed to store idempotency key:", error);
+    } catch {
+      // ignore storage failures
     }
   }
   return next;
@@ -383,6 +381,8 @@ export async function handlePublicApplicationSubmit({
   onSuccess,
   onError,
   storage,
+  readinessToken,
+  sessionId,
 }: {
   values: ApplicationFormValues;
   clientIp: string;
@@ -398,6 +398,8 @@ export async function handlePublicApplicationSubmit({
   readinessToken?: string | null;
   sessionId?: string | null;
 }) {
+  const resolvedReadinessToken = readinessToken || null;
+  const resolvedSessionId = sessionId || null;
   const errors = validateApplication(values);
   if (!termsAcceptedAt) {
     errors.terms = "Acceptance required";
@@ -436,7 +438,11 @@ export async function handlePublicApplicationSubmit({
   const idempotencyKey = getOrCreateIdempotencyKey(storage ?? null);
 
   try {
-    await submitApplication(payload, { idempotencyKey, readinessToken, sessionId });
+    await submitApplication(payload, {
+      idempotencyKey,
+      readinessToken: resolvedReadinessToken,
+      sessionId: resolvedSessionId,
+    });
     savePublicSubmissionState(storage ?? null, {
       idempotencyKey,
       submittedAt: new Date().toISOString(),
@@ -480,16 +486,20 @@ export default function PublicApplyPage() {
     const fromQuery = new URLSearchParams(window.location.search).get("continue");
     return fromQuery || getStoredReadinessToken();
   }, []);
-  const readinessSessionId = useMemo(() => getStoredReadinessSessionId(), []);
+  const readinessSessionId = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    return resolveReadinessSessionId(window.location.search);
+  }, []);
 
 
   useEffect(() => {
-    if (!readinessToken) return;
+    const continuationId = readinessSessionId || readinessToken;
+    if (!continuationId) return;
 
     let active = true;
     setIsHydratingContinuation(true);
 
-    void fetchContinuation(readinessToken)
+    void fetchContinuation(continuationId)
       .then((data) => {
         if (!active || !data) return;
         setContinuing(true);
@@ -528,7 +538,7 @@ export default function PublicApplyPage() {
     return () => {
       active = false;
     };
-  }, [readinessToken]);
+  }, [readinessSessionId, readinessToken]);
 
   useEffect(() => {
     const draftId = localStorage.getItem("boreal_draft_application_id");
@@ -633,7 +643,7 @@ export default function PublicApplyPage() {
         Complete the form below to submit your application. All required fields must be filled in.
       </p>
 
-      {isHydratingContinuation ? <p style={{ marginBottom: 16, color: "#4b5563" }}>Loading your saved readiness details...</p> : null}
+      {isHydratingContinuation ? <p style={{ marginBottom: 16, color: "#4b5563" }}>Loading your application context...</p> : null}
 
       {submissionState ? (
         <section
@@ -829,7 +839,7 @@ export default function PublicApplyPage() {
             cursor: canSubmit ? "pointer" : "not-allowed",
           }}
         >
-          Submit application
+          {isSubmitting ? "Submitting..." : "Submit application"}
         </button>
         <p style={{ color: "#6b7280", fontSize: 12 }}>
           Client IP captured: {clientIp || "Unavailable"}
