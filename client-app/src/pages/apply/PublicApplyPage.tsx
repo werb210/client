@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPublicApplication } from "../../api/applications";
 import { getContinuationSession } from "@/api/continuation";
+import { loadContinuation } from "../../services/continuation";
 
 type FieldType =
   | "text"
@@ -468,6 +469,18 @@ export default function PublicApplyPage() {
     () => loadPublicSubmissionState(getSessionStorage())
   );
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const email = localStorage.getItem("boreal_email");
+
+    if (!email) return;
+
+    void loadContinuation(email).then((data) => {
+      if (!data) return;
+
+      navigate(`/apply?resume=${data.id}`);
+    });
+  }, [navigate]);
 
   useEffect(() => {
     async function checkContinuation() {
