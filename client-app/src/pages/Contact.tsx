@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createLead } from "@/lib/api";
+import { createLead } from "@/api/crm";
 
 export default function Contact() {
   const [form, setForm] = useState({
@@ -18,10 +18,11 @@ export default function Contact() {
 
     await createLead({
       ...form,
-      source: "contact",
+      source: "website_contact",
     });
 
-    alert("Submitted.");
+    alert("A Boreal Intake Specialist will contact you shortly.");
+    window.location.href = "/";
   };
 
   return (
