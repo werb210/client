@@ -19,7 +19,6 @@ interface UseChatSocketOptions {
 
 const MAX_RETRY_DELAY_MS = 30000;
 const RETRY_DELAYS_MS = [1000, 2000, 5000, 10000, 30000];
-const MAX_RETRY_ATTEMPTS = 5;
 const HEARTBEAT_INTERVAL_MS = 25000;
 const RETRY_JITTER_RATIO = 0.2;
 
@@ -40,6 +39,7 @@ export function useChatSocket({
   const socketRef = useRef<WebSocket | null>(null);
   const retryTimerRef = useRef<number | null>(null);
   const retryCountRef = useRef(0);
+  const intentionalCloseRef = useRef(false);
   const heartbeatTimerRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
   const enabledRef = useRef(enabled);
@@ -87,6 +87,7 @@ export function useChatSocket({
   }, []);
 
   const disconnect = useCallback(() => {
+    intentionalCloseRef.current = true;
     clearRetryTimer();
     clearHeartbeatTimer();
     retryCountRef.current = 0;
@@ -106,6 +107,7 @@ export function useChatSocket({
     clearRetryTimer();
 
     try {
+      intentionalCloseRef.current = false;
       setSafeStatus(retryCountRef.current > 0 ? "reconnecting" : "connecting");
       const socket = new WebSocket(socketUrl);
       socketRef.current = socket;
@@ -163,17 +165,12 @@ export function useChatSocket({
       socket.onclose = () => {
         clearHeartbeatTimer();
         socketRef.current = null;
-        if (!enabledRef.current) {
+        if (!enabledRef.current || intentionalCloseRef.current) {
           setSafeStatus("disconnected");
           return;
         }
 
         retryCountRef.current += 1;
-        if (retryCountRef.current > MAX_RETRY_ATTEMPTS) {
-          clearRetryTimer();
-          setSafeStatus("failed");
-          return;
-        }
         const baseDelay =
           RETRY_DELAYS_MS[Math.min(retryCountRef.current - 1, RETRY_DELAYS_MS.length - 1)] ??
           MAX_RETRY_DELAY_MS;
