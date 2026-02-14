@@ -32,7 +32,8 @@ import { useClientSession } from "../hooks/useClientSession";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { clearReadiness, setReadiness } from "../state/readinessStore";
 import { fetchReadinessContext, getLeadIdFromSearch } from "../services/readiness";
-import { getContinuationSession } from "../api/continuation";
+import { fetchContinuation, getContinuationSession } from "../api/continuation";
+import { resolveReadinessSessionId } from "@/api/website";
 
 type GuardProps = {
   children: JSX.Element;
@@ -106,6 +107,45 @@ function ReadinessLoader() {
     };
 
     const loadReadiness = async () => {
+      const readinessSessionId = resolveReadinessSessionId(location.search);
+      if (readinessSessionId) {
+        const continuation = await fetchContinuation(readinessSessionId);
+        if (!active) return;
+        if (continuation) {
+          setReadiness({
+            leadId:
+              (typeof continuation.leadId === "string" && continuation.leadId) ||
+              readinessSessionId,
+            companyName: continuation.companyName,
+            fullName: continuation.fullName,
+            phone: continuation.phone,
+            email: continuation.email,
+            industry: continuation.industry,
+            yearsInBusiness:
+              typeof continuation.yearsInBusiness === "number"
+                ? continuation.yearsInBusiness
+                : undefined,
+            monthlyRevenue:
+              typeof continuation.monthlyRevenue === "number"
+                ? continuation.monthlyRevenue
+                : undefined,
+            annualRevenue:
+              typeof continuation.annualRevenue === "number"
+                ? continuation.annualRevenue
+                : undefined,
+            arOutstanding:
+              typeof continuation.arOutstanding === "number"
+                ? continuation.arOutstanding
+                : undefined,
+            existingDebt:
+              typeof continuation.existingDebt === "boolean"
+                ? continuation.existingDebt
+                : undefined,
+          });
+          return;
+        }
+      }
+
       const leadId = await resolveLeadId();
       if (!active) return;
       if (!leadId) {

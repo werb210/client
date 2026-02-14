@@ -2,7 +2,11 @@ import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPublicApplication } from "../../api/applications";
-import { getStoredReadinessToken, resolveReadinessSessionId } from "@/api/website";
+import {
+  clearStoredReadinessSession,
+  getStoredReadinessToken,
+  resolveReadinessSessionId,
+} from "@/api/website";
 import { getContinuationSession, fetchContinuation } from "@/api/continuation";
 import { loadContinuation } from "../../services/continuation";
 
@@ -619,7 +623,10 @@ export default function PublicApplyPage() {
         termsAcceptedAt,
         communicationsAcceptedAt,
         submitApplication: createPublicApplication,
-        onSuccess: () => navigate("/apply/success"),
+        onSuccess: () => {
+          clearStoredReadinessSession();
+          navigate("/apply/success");
+        },
         onError: (nextErrors) => setErrors(nextErrors),
         storage: getSessionStorage(),
         readinessToken,
