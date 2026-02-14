@@ -147,6 +147,29 @@ export function Step1_KYC() {
     }
   }, [app.currentStep, update]);
 
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("boreal_application_token");
+    if (!savedToken) return;
+
+    fetch(`/api/applications/${savedToken}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const payload = data?.application ?? data;
+        const hydratedKyc = payload?.financialProfile ?? payload?.kyc;
+
+        if (!hydratedKyc || typeof hydratedKyc !== "object") return;
+
+        update({
+          applicationToken: app.applicationToken || savedToken,
+          kyc: { ...app.kyc, ...hydratedKyc },
+        });
+      })
+      .catch((error) => {
+        console.warn("Unable to resume saved application token", error);
+      });
+  }, []);
+
   useEffect(() => {
     trackEvent("client_step_viewed", { step: 1 });
   }, []);
@@ -224,6 +247,10 @@ export function Step1_KYC() {
 
       if (existingApplicationId) {
         await ClientAppAPI.updateApplication(existingApplicationId, payloadBody);
+        localStorage.setItem(
+          "boreal_application_token",
+          app.applicationToken || existingApplicationId
+        );
         update({
           applicationToken: app.applicationToken || existingApplicationId,
           applicationId: app.applicationId || existingApplicationId,
@@ -236,6 +263,7 @@ export function Step1_KYC() {
           alert("We couldn't start your application. Please try again.");
           return;
         }
+        localStorage.setItem("boreal_application_token", token);
         update({ applicationToken: token, matchPercentages });
       }
       track("apply_started", { step: 1 });
