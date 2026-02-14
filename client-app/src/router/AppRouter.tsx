@@ -15,6 +15,7 @@ import { SessionExpiredPage } from "../pages/SessionExpiredPage";
 import { SessionRevokedPage } from "../pages/SessionRevokedPage";
 import PublicApplyPage from "../pages/apply/PublicApplyPage";
 import PublicApplySuccessPage from "../pages/apply/PublicApplySuccessPage";
+import { ApplyPage } from "../pages/ApplyPage";
 import Step1 from "../wizard/Step1_KYC";
 import Step2 from "../wizard/Step2_Product";
 import Step3 from "../wizard/Step3_Business";
@@ -147,6 +148,7 @@ export default function AppRouter() {
             }
           />
         </Route>
+        <Route path="/apply/:applicationId/*" element={<ApplyPage />} />
 
         <Route path="*" element={<Navigate to="/apply/step-1" replace />} />
       </Routes>
