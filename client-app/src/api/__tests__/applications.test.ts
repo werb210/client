@@ -18,4 +18,17 @@ describe("submitApplication", () => {
       { headers: { "Idempotency-Key": "idem-123" } }
     );
   });
+
+  it("includes continuation token when provided", async () => {
+    const { submitApplication } = await import("../applications");
+    await submitApplication(
+      { hello: "world" },
+      { idempotencyKey: "idem-123", continuationToken: "cont-456" }
+    );
+    expect(postMock).toHaveBeenCalledWith(
+      "/api/client/submissions",
+      { hello: "world", continuationToken: "cont-456" },
+      { headers: { "Idempotency-Key": "idem-123" } }
+    );
+  });
 });

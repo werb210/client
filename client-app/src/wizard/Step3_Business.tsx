@@ -83,6 +83,10 @@ export function Step3_Business() {
     update({ business: { ...values, [key]: value } });
   }
 
+  const isBusinessNameLocked = Boolean(app.continuationToken && values.businessName);
+  const isLegalNameLocked = Boolean(app.continuationToken && values.legalName);
+  const isBusinessPhoneLocked = Boolean(app.continuationToken && values.phone);
+
   const isValid = [
     "businessName",
     "legalName",
@@ -225,6 +229,7 @@ export function Step3_Business() {
               id={getWizardFieldId("step3", "businessName")}
               value={values.businessName || ""}
               onChange={(e: any) => setField("businessName", e.target.value)}
+              disabled={isBusinessNameLocked}
               onKeyDown={(e: any) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("businessName", values);
@@ -239,6 +244,7 @@ export function Step3_Business() {
               id={getWizardFieldId("step3", "legalName")}
               value={values.legalName || ""}
               onChange={(e: any) => setField("legalName", e.target.value)}
+              disabled={isLegalNameLocked}
               onKeyDown={(e: any) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("legalName", values);
@@ -361,6 +367,7 @@ export function Step3_Business() {
                 };
                 update({ business: nextValues });
               }}
+              disabled={isBusinessPhoneLocked}
               onBlur={() => handleAutoAdvance("phone", values)}
               onKeyDown={(e: any) => {
                 if (e.key === "Enter") {

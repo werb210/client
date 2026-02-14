@@ -9,9 +9,14 @@ import {
 
 export async function submitApplication(
   payload: unknown,
-  options?: { idempotencyKey?: string }
+  options?: { idempotencyKey?: string; continuationToken?: string }
 ) {
-  const res = await api.post("/api/client/submissions", payload, {
+  const submissionPayload =
+    options?.continuationToken && payload && typeof payload === "object" && !Array.isArray(payload)
+      ? { ...(payload as Record<string, unknown>), continuationToken: options.continuationToken }
+      : payload;
+
+  const res = await api.post("/api/client/submissions", submissionPayload, {
     headers: options?.idempotencyKey
       ? { "Idempotency-Key": options.idempotencyKey }
       : undefined,

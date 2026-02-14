@@ -57,6 +57,7 @@ export interface ApplicationData {
   coApplicantSignature?: string;
   signatureDate?: string;
   applicationToken?: string;
+  continuationToken?: string;
   applicationId?: string;
   currentStep?: number;
   linkedApplicationTokens?: string[];
