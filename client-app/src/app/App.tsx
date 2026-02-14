@@ -47,6 +47,13 @@ export default function App() {
     });
   }, []);
 
+  useEffect(() => {
+    const email = new URLSearchParams(window.location.search).get("email");
+    if (email) {
+      localStorage.setItem("preapp_email", email);
+    }
+  }, []);
+
   if (refreshing) {
     return <SessionRefreshOverlay />;
   }
