@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AppRouter from "../router/AppRouter";
 import { Header } from "../components/Header";
 import { OfflineBanner } from "../components/OfflineBanner";
@@ -17,11 +17,13 @@ import { useExitIntent } from "../hooks/useExitIntent";
 import { trackEvent } from "../utils/analytics";
 import AIChatWidget from "@/components/AIChatWidget";
 import FloatingChatButton from "@/components/FloatingChatButton";
-import { fetchContinuation } from "../services/continuation";
+import { useApplicationStore } from "../state/useApplicationStore";
 
 export default function App() {
+  const { loadFromServer, update } = useApplicationStore();
   const refreshing = useSessionRefreshing();
   const updateAvailable = useServiceWorkerUpdate();
+  const [continuationError, setContinuationError] = useState<string | null>(null);
   useExitIntent(() => {
     trackEvent("client_exit_intent_detected");
   });
@@ -50,33 +52,26 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const email = new URLSearchParams(window.location.search).get("email");
-    if (email) {
-      localStorage.setItem("preapp_email", email);
-    }
-  }, []);
+    const continuation = window.__APP_CONTINUATION__;
+    if (!continuation?.applicationId) return;
+
+    loadFromServer({
+      applicationId: continuation.applicationId,
+      applicationToken: continuation.applicationId,
+      currentStep: continuation.step,
+      ...(continuation.data || {}),
+    });
+    update({
+      applicationId: continuation.applicationId,
+      applicationToken: continuation.applicationId,
+      currentStep: continuation.step,
+    });
+  }, [loadFromServer, update]);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const continuation = params.get("continuation");
-
-    if (continuation) {
-      localStorage.setItem("boreal_continuation_token", continuation);
+    if (window.__APP_CONTINUATION_ERROR__) {
+      setContinuationError(window.__APP_CONTINUATION_ERROR__);
     }
-  }, []);
-
-  useEffect(() => {
-    const continuationToken = localStorage.getItem("boreal_continuation_token");
-    if (!continuationToken) return;
-
-    void fetchContinuation(continuationToken)
-      .then((data) => {
-        if (data?.applicationId) {
-          localStorage.setItem("applicationToken", data.applicationId);
-          localStorage.setItem("boreal_application_token", data.applicationId);
-        }
-      })
-      .catch(() => {});
   }, []);
 
   if (refreshing) {
@@ -87,6 +82,11 @@ export default function App() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <OfflineBanner />
+      {continuationError && (
+        <div className="mx-auto mt-4 w-full max-w-[var(--portal-max-width)] rounded border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          {continuationError}
+        </div>
+      )}
       <InstallPromptBanner />
       <UpdateAvailableBanner
         updateAvailable={updateAvailable || debugUpdateAvailable}

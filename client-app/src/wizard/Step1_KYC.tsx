@@ -28,11 +28,8 @@ import {
 import { enforceV1StepSchema } from "../schemas/v1WizardSchema";
 import { track } from "../utils/track";
 import { trackEvent } from "../utils/analytics";
-import {
-  consumePreApplication,
-  lookupPreApplication,
-} from "../api/preApplication";
 import { useReadiness } from "../state/readinessStore";
+import { persistApplicationStep } from "./saveStepProgress";
 
 const MatchCategories = [
   "Line of Credit",
@@ -166,6 +163,7 @@ export function Step1_KYC() {
   const readiness = useReadiness();
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { applicationId } = useParams();
   const countryCode = useMemo(
@@ -222,115 +220,6 @@ export function Step1_KYC() {
     readiness,
     update,
   ]);
-
-  useEffect(() => {
-    async function loadPrefill() {
-      try {
-        const res = await fetch("/api/continuation/session");
-        if (!res.ok) {
-          return;
-        }
-        const data = await res.json();
-        if (data?.prefill) {
-          update({
-            kyc: {
-              ...app.kyc,
-              ...data.prefill,
-            },
-          });
-        }
-      } catch {
-        // no-op when continuation prefill is unavailable
-      }
-    }
-
-    void loadPrefill();
-  }, [update]);
-
-
-  useEffect(() => {
-    const savedToken =
-      localStorage.getItem("applicationToken") ||
-      localStorage.getItem("boreal_application_token");
-    if (!savedToken) return;
-
-    fetch(`/api/applications/${savedToken}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const payload = data?.application ?? data;
-        if (!payload || typeof payload !== "object") return;
-
-        const hydratedKyc = payload?.financialProfile ?? payload?.kyc ?? payload;
-        if (!hydratedKyc || typeof hydratedKyc !== "object") return;
-
-        update({
-          applicationToken: app.applicationToken || savedToken,
-          applicationId: app.applicationId || savedToken,
-          kyc: {
-            ...app.kyc,
-            ...hydratedKyc,
-            companyName: hydratedKyc.companyName ?? payload.companyName ?? app.kyc.companyName,
-            fullName: hydratedKyc.fullName ?? payload.fullName ?? app.kyc.fullName,
-            email: hydratedKyc.email ?? payload.email ?? app.kyc.email,
-            phone: hydratedKyc.phone ?? payload.phone ?? app.kyc.phone,
-            industry: hydratedKyc.industry ?? payload.industry ?? app.kyc.industry,
-            salesHistory:
-              hydratedKyc.salesHistory ??
-              hydratedKyc.yearsInBusiness ??
-              payload.yearsInBusiness ??
-              app.kyc.salesHistory,
-            monthlyRevenue:
-              hydratedKyc.monthlyRevenue ?? payload.monthlyRevenue ?? app.kyc.monthlyRevenue,
-            revenueLast12Months:
-              hydratedKyc.revenueLast12Months ??
-              hydratedKyc.annualRevenue ??
-              payload.annualRevenue ??
-              app.kyc.revenueLast12Months,
-            accountsReceivable:
-              hydratedKyc.accountsReceivable ??
-              hydratedKyc.arOutstanding ??
-              payload.arOutstanding ??
-              app.kyc.accountsReceivable,
-            existingDebt:
-              hydratedKyc.existingDebt ?? payload.existingDebt ?? app.kyc.existingDebt,
-          },
-        });
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    const email = localStorage.getItem("preapp_email");
-    if (!email) return;
-
-    void lookupPreApplication(email)
-      .then(async (data) => {
-        if (!data) return;
-
-        update({
-          kyc: {
-            ...app.kyc,
-            companyName: data.companyName || app.kyc.companyName,
-            fullName: data.fullName || app.kyc.fullName,
-            email: data.email || app.kyc.email,
-            phone: data.phone || app.kyc.phone,
-            revenueLast12Months:
-              data.annualRevenue || app.kyc.revenueLast12Months,
-            fundingAmount:
-              data.requestedAmount !== undefined && data.requestedAmount !== null
-                ? String(data.requestedAmount)
-                : app.kyc.fundingAmount,
-            salesHistory: data.yearsInBusiness || app.kyc.salesHistory,
-          },
-        });
-
-        await consumePreApplication(data.token);
-        localStorage.removeItem("preapp_email");
-      })
-      .catch((error) => {
-        console.warn("Unable to continue pre-application", error);
-      });
-  }, []);
 
   useEffect(() => {
     trackEvent("client_step_viewed", { step: 1 });
@@ -411,49 +300,40 @@ export function Step1_KYC() {
         financialProfile: payload,
       };
       const existingApplicationId = applicationId || app.applicationId || app.applicationToken;
+      setSubmitError(null);
 
       if (existingApplicationId) {
         await ClientAppAPI.updateApplication(existingApplicationId, payloadBody);
-        localStorage.setItem(
-          "boreal_application_token",
-          app.applicationToken || existingApplicationId
-        );
         update({
           applicationToken: app.applicationToken || existingApplicationId,
           applicationId: app.applicationId || existingApplicationId,
           matchPercentages,
         });
+        await persistApplicationStep(
+          { ...app, applicationId: app.applicationId || existingApplicationId, applicationToken: app.applicationToken || existingApplicationId },
+          1,
+          payloadBody
+        );
       } else {
         const res = await ClientAppAPI.start(payloadBody);
         const token = res?.data?.token;
         if (!token) {
-          alert("We couldn't start your application. Please try again.");
+          setSubmitError("We couldn't start your application. Please try again.");
           return;
         }
-        localStorage.setItem("boreal_application_token", token);
-        update({ applicationToken: token, matchPercentages });
+        update({ applicationToken: token, applicationId: token, matchPercentages });
+        await persistApplicationStep({ ...app, applicationId: token, applicationToken: token }, 1, payloadBody);
       }
       track("apply_started", { step: 1 });
       track("step_completed", { step: 1 });
       navigate("/apply/step-2");
     } catch (error) {
       console.error("Failed to start application:", error);
-      alert("We couldn't start your application. Please try again.");
+      setSubmitError("We couldn't start your application. Please try again.");
     }
   }
 
 
-
-  useEffect(() => {
-    if (
-      app.kyc.companyName &&
-      app.kyc.fullName &&
-      app.kyc.email &&
-      app.kyc.phone
-    ) {
-      navigate("/apply/step-2");
-    }
-  }, [app.kyc.companyName, app.kyc.email, app.kyc.fullName, app.kyc.phone, navigate]);
 
   const fieldGridStyle = {
     display: "grid",
@@ -488,6 +368,11 @@ export function Step1_KYC() {
     <>
       <WizardLayout>
         <StepHeader step={1} title="Know Your Client" />
+        {submitError && (
+          <Card variant="muted" data-error={true}>
+            <div style={components.form.errorText}>{submitError}</div>
+          </Card>
+        )}
         {autosaveError && (
           <Card
             variant="muted"
