@@ -47,6 +47,34 @@ describe("website API dedupe", () => {
     );
   });
 
+
+  it("reuses an in-flight readiness request to prevent duplicate submissions", async () => {
+    const { submitCreditReadiness } = await import("../website");
+
+    let resolvePost: ((value: unknown) => void) | null = null;
+    postMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolvePost = resolve;
+      })
+    );
+
+    const payload = {
+      companyName: "ACME",
+      fullName: "Taylor",
+      email: "taylor@example.com",
+      phone: "+15555555555",
+    };
+
+    const first = submitCreditReadiness(payload);
+    const second = submitCreditReadiness(payload);
+
+    expect(postMock).toHaveBeenCalledTimes(1);
+    resolvePost?.({ data: { sessionId: "session-1", leadId: "lead-1" } });
+
+    await expect(first).resolves.toEqual({ sessionId: "session-1", leadId: "lead-1" });
+    await expect(second).resolves.toEqual({ sessionId: "session-1", leadId: "lead-1" });
+  });
+
   it("uses existing continuation session instead of creating duplicates", async () => {
     const { submitCreditReadiness, getStoredReadinessSessionId } = await import("../website");
     continuationSessionMock.mockResolvedValue({
@@ -98,6 +126,27 @@ describe("website API dedupe", () => {
 
     expect(sessionId).toBe("token-xyz");
     expect(localStorage.getItem("boreal_readiness_session_id")).toBe("token-xyz");
+  });
+
+
+  it("stores returned session token from contact submissions", async () => {
+    const { submitContactForm, getStoredReadinessSessionId } = await import("../website");
+    postMock.mockResolvedValue({
+      data: { readinessSessionId: "contact-ready-1", readinessToken: "contact-token-1" },
+    });
+
+    const payload = {
+      companyName: "ACME",
+      fullName: "Taylor",
+      email: "taylor@example.com",
+      phone: "+15555555555",
+      message: "Need help",
+    };
+
+    await submitContactForm(payload);
+
+    expect(getStoredReadinessSessionId()).toBe("contact-ready-1");
+    expect(localStorage.getItem("boreal_readiness_token")).toBe("contact-token-1");
   });
 
   it("dedupes contact submissions by email/phone", async () => {

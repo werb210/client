@@ -220,10 +220,6 @@ export function Step4_Applicant() {
     };
   };
 
-  const isFirstNameLocked = Boolean(readiness?.fullName && values.firstName);
-  const isLastNameLocked = Boolean(readiness?.fullName && values.lastName);
-  const isEmailLocked = Boolean(readiness?.email && values.email);
-  const isPhoneLocked = Boolean(readiness?.phone && values.phone);
 
   const isStepValid = (nextValues: typeof values) => {
     const { ownershipValid } = getOwnershipValidity(nextValues);
@@ -333,7 +329,6 @@ export function Step4_Applicant() {
             <Input
               id={getWizardFieldId("step4", "firstName")}
               value={values.firstName || ""}
-              disabled={isFirstNameLocked}
               onChange={(e: any) => {
                 const nextValues = { ...values, firstName: e.target.value };
                 update({ applicant: nextValues });
@@ -350,7 +345,6 @@ export function Step4_Applicant() {
             <Input
               id={getWizardFieldId("step4", "lastName")}
               value={values.lastName || ""}
-              disabled={isLastNameLocked}
               onChange={(e: any) => {
                 const nextValues = { ...values, lastName: e.target.value };
                 update({ applicant: nextValues });
@@ -369,7 +363,6 @@ export function Step4_Applicant() {
               type="email"
               id={getWizardFieldId("step4", "email")}
               value={values.email || ""}
-              disabled={isEmailLocked}
               onChange={(e: any) => {
                 const nextValues = { ...values, email: e.target.value };
                 update({ applicant: nextValues });
@@ -387,7 +380,6 @@ export function Step4_Applicant() {
             <PhoneInput
               id={getWizardFieldId("step4", "phone")}
               value={formatPhoneNumber(values.phone || "", countryCode)}
-              disabled={isPhoneLocked}
               onChange={(e: any) => {
                 const nextValues = {
                   ...values,
