@@ -9,14 +9,20 @@ export default function QuickContact() {
     email: "",
     message: "",
   });
+  const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit() {
+    if (submitting) return;
+
+    setSubmitting(true);
     try {
       await submitContactForm(form);
       alert("A Boreal Intake Specialist will contact you shortly.");
       window.location.href = "/";
     } catch {
       alert("Submission failed. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -42,7 +48,9 @@ export default function QuickContact() {
         placeholder="Message"
         onChange={(e) => setForm({ ...form, message: e.target.value })}
       />
-      <button onClick={() => void handleSubmit()}>Submit</button>
+      <button onClick={() => void handleSubmit()} disabled={submitting}>
+        {submitting ? "Submitting..." : "Submit"}
+      </button>
     </div>
   );
 }

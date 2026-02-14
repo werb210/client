@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { createLead } from "@/services/lead";
+import { submitContactForm } from "@/api/website";
 
 export default function Contact() {
   const [form, setForm] = useState({
@@ -9,20 +10,25 @@ export default function Contact() {
     phone: "",
   });
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { leadId, pendingApplicationId } = await createLead(form);
-    localStorage.setItem("leadId", leadId);
-    localStorage.setItem("pendingApplicationId", pendingApplicationId);
-    localStorage.setItem("leadEmail", form.email);
+    try {
+      const { leadId, pendingApplicationId } = await createLead(form);
+      localStorage.setItem("leadId", leadId);
+      localStorage.setItem("pendingApplicationId", pendingApplicationId);
+      localStorage.setItem("leadEmail", form.email);
 
-    alert("A Boreal Intake Specialist will contact you shortly.");
-    window.location.href = "/";
+      await submitContactForm(form);
+      alert("A Boreal Intake Specialist will contact you shortly.");
+      window.location.href = "/";
+    } catch {
+      alert("Unable to submit contact form right now. Please try again.");
+    }
   };
 
   return (
@@ -41,7 +47,7 @@ export default function Contact() {
             key={field}
             name={field}
             placeholder={field.replace(/([A-Z])/g, " $1")}
-            value={(form as any)[field]}
+            value={(form as Record<string, string>)[field]}
             onChange={handleChange}
             className="w-full p-4 rounded bg-gray-200 text-black"
           />

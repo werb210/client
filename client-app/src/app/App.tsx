@@ -15,8 +15,7 @@ import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
 import { useExitIntent } from "../hooks/useExitIntent";
 import { trackEvent } from "../utils/analytics";
-import AIChatWidget from "@/components/AIChatWidget";
-import FloatingChatButton from "@/components/FloatingChatButton";
+import ChatSupportWidget from "@/components/ChatSupportWidget";
 import { useApplicationStore } from "../state/useApplicationStore";
 
 export default function App() {
@@ -103,8 +102,7 @@ export default function App() {
         </div>
       </footer>
       <QuickContact />
-      <AIChatWidget />
-      <FloatingChatButton />
+      <ChatSupportWidget />
     </div>
   );
 }

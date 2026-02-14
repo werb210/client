@@ -10,6 +10,7 @@ import { Spinner } from "../components/ui/Spinner";
 import { ClientAppAPI } from "../api/clientApp";
 import { extractApplicationFromStatus } from "../applications/resume";
 import { fetchContinuation } from "@/api/continuation";
+import { useReadiness } from "@/state/readinessStore";
 
 const Step5 = lazy(() => import("../wizard/Step5_Documents"));
 const Step6 = lazy(() => import("../wizard/Step6_Review"));
@@ -18,12 +19,77 @@ export function ApplyPage() {
   const { initialized, init, app, update } = useApplicationStore();
   const { applicationId } = useParams();
   const navigate = useNavigate();
+  const readiness = useReadiness();
   const continuationToken = useMemo(
     () => new URLSearchParams(window.location.search).get("continue"),
     []
   );
 
   if (!initialized) init();
+
+
+  useEffect(() => {
+    if (!readiness) return;
+
+    const [firstName = "", ...lastNameParts] = (readiness.fullName || "").trim().split(/\s+/);
+    const lastName = lastNameParts.join(" ");
+
+    const nextKyc = {
+      ...app.kyc,
+      companyName: readiness.companyName || app.kyc.companyName || "",
+      industry: readiness.industry || app.kyc.industry || "",
+      salesHistory:
+        readiness.yearsInBusiness !== undefined && readiness.yearsInBusiness !== null
+          ? String(readiness.yearsInBusiness)
+          : app.kyc.salesHistory,
+      monthlyRevenue:
+        readiness.monthlyRevenue !== undefined && readiness.monthlyRevenue !== null
+          ? String(readiness.monthlyRevenue)
+          : app.kyc.monthlyRevenue,
+      revenueLast12Months:
+        readiness.annualRevenue !== undefined && readiness.annualRevenue !== null
+          ? String(readiness.annualRevenue)
+          : app.kyc.revenueLast12Months,
+      accountsReceivable:
+        readiness.arOutstanding !== undefined && readiness.arOutstanding !== null
+          ? String(readiness.arOutstanding)
+          : app.kyc.accountsReceivable,
+      existingDebt:
+        typeof readiness.existingDebt === "boolean"
+          ? readiness.existingDebt
+          : app.kyc.existingDebt,
+    };
+
+    const nextBusiness = {
+      ...app.business,
+      legalName: readiness.companyName || app.business.legalName || "",
+      businessName: readiness.companyName || app.business.businessName || "",
+      phone: readiness.phone || app.business.phone || "",
+    };
+
+    const nextApplicant = {
+      ...app.applicant,
+      firstName: firstName || app.applicant.firstName || "",
+      lastName: lastName || app.applicant.lastName || "",
+      email: readiness.email || app.applicant.email || "",
+      phone: readiness.phone || app.applicant.phone || "",
+    };
+
+    const unchanged =
+      app.readinessLeadId === readiness.leadId &&
+      JSON.stringify(nextKyc) === JSON.stringify(app.kyc) &&
+      JSON.stringify(nextBusiness) === JSON.stringify(app.business) &&
+      JSON.stringify(nextApplicant) === JSON.stringify(app.applicant);
+
+    if (unchanged) return;
+
+    update({
+      readinessLeadId: readiness.leadId,
+      kyc: nextKyc,
+      business: nextBusiness,
+      applicant: nextApplicant,
+    });
+  }, [app.applicant, app.business, app.kyc, app.readinessLeadId, readiness, update]);
 
   useEffect(() => {
     if (!continuationToken) return;
@@ -144,6 +210,21 @@ export function ApplyPage() {
           <p style={{ ...components.form.subtitle, fontSize: "16px", color: "#4B5563" }}>
             Complete this secure application to receive tailored funding options.
           </p>
+          {(continuationToken || readiness) && (
+          <div
+            style={{
+              borderRadius: tokens.radii.md,
+              border: `1px solid ${tokens.colors.border}`,
+              padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
+              color: tokens.colors.textSecondary,
+              background: tokens.colors.backgroundAlt,
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            Continuing your application
+          </div>
+          )}
         </div>
       </section>
       <Suspense
