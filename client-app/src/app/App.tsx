@@ -16,6 +16,7 @@ import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
 import { useExitIntent } from "../hooks/useExitIntent";
 import { trackEvent } from "../utils/analytics";
 import AIAssistant from "@/components/AIAssistant";
+import FloatingChatButton from "@/components/FloatingChatButton";
 import { fetchContinuation } from "../services/continuation";
 
 export default function App() {
@@ -103,6 +104,7 @@ export default function App() {
       </footer>
       <QuickContact />
       <AIAssistant />
+      <FloatingChatButton />
     </div>
   );
 }

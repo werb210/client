@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPublicApplication } from "../../api/applications";
+import { getContinuationSession } from "@/api/continuation";
 
 type FieldType =
   | "text"
@@ -467,6 +468,21 @@ export default function PublicApplyPage() {
     () => loadPublicSubmissionState(getSessionStorage())
   );
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function checkContinuation() {
+      try {
+        const session = await getContinuationSession();
+        if (session?.applicationId) {
+          navigate(`/apply/${session.applicationId}`);
+        }
+      } catch {
+        // no-op when continuation session is unavailable
+      }
+    }
+
+    void checkContinuation();
+  }, [navigate]);
 
   useEffect(() => {
     let isMounted = true;
