@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "@/api";
+import { createLead } from "@/services/lead";
 
 export default function CapitalReadiness() {
   const [form, setForm] = useState({
@@ -26,7 +27,13 @@ export default function CapitalReadiness() {
       fullName: form.fullName,
       phone: form.phone,
       email: form.email,
+      industry: form.industry,
     };
+
+    const { leadId, pendingApplicationId } = await createLead(contactData);
+    localStorage.setItem("leadId", leadId);
+    localStorage.setItem("pendingApplicationId", pendingApplicationId);
+    localStorage.setItem("leadEmail", form.email);
 
     const res = await api.post("/ai/continue-application", {
       contactData,

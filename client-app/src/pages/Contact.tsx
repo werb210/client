@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createLead } from "@/api/crm";
+import { createLead } from "@/services/lead";
 
 export default function Contact() {
   const [form, setForm] = useState({
@@ -16,10 +16,10 @@ export default function Contact() {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    await createLead({
-      ...form,
-      source: "website_contact",
-    });
+    const { leadId, pendingApplicationId } = await createLead(form);
+    localStorage.setItem("leadId", leadId);
+    localStorage.setItem("pendingApplicationId", pendingApplicationId);
+    localStorage.setItem("leadEmail", form.email);
 
     alert("A Boreal Intake Specialist will contact you shortly.");
     window.location.href = "/";

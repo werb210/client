@@ -7,6 +7,8 @@ import { Select } from "../../components/ui/Select";
 import { Button } from "../../components/ui/Button";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
 import { apiRequest } from "../../lib/api";
+import { createLead } from "@/services/lead";
+import { checkContinuation } from "@/services/continuation";
 
 const provinces = [
   "Alberta",
@@ -65,6 +67,21 @@ export default function ApplyStep1() {
       scrollToFirstError();
     }
   }, [error]);
+
+  useEffect(() => {
+    const email = localStorage.getItem("leadEmail");
+    if (!email) return;
+
+    void checkContinuation(email)
+      .then((data) => {
+        if (data.pendingApplicationId) {
+          localStorage.setItem("pendingApplicationId", data.pendingApplicationId);
+        }
+      })
+      .catch(() => {
+        // no-op when continuation lookup fails
+      });
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -132,24 +149,49 @@ export default function ApplyStep1() {
         },
       };
 
+      const bootstrap = await createLead({
+        companyName: formValues.companyName,
+        fullName: formValues.fullName,
+        email: formValues.email,
+        phone: formValues.phone,
+        industry: formValues.industry,
+      });
+      localStorage.setItem("leadId", bootstrap.leadId);
+      localStorage.setItem("pendingApplicationId", bootstrap.pendingApplicationId);
+      localStorage.setItem("leadEmail", formValues.email);
+
       if (resumeId) {
         payload.continuationId = resumeId;
       }
 
-      const data = await apiRequest<{ token?: string }>("/api/applications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Idempotency-Key": crypto.randomUUID(),
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
-      });
+      const existing = localStorage.getItem("pendingApplicationId");
+      if (existing) {
+        await apiRequest(`/api/applications/${existing}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Idempotency-Key": crypto.randomUUID(),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(payload),
+        });
+        localStorage.setItem("applicationToken", existing);
+      } else {
+        const data = await apiRequest<{ token?: string }>("/api/applications", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Idempotency-Key": crypto.randomUUID(),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(payload),
+        });
 
-      if (!data?.token) {
-        throw new Error("Missing application token");
+        if (!data?.token) {
+          throw new Error("Missing application token");
+        }
+        localStorage.setItem("applicationToken", data.token);
       }
-      localStorage.setItem("applicationToken", data.token);
       localStorage.setItem("boreal_email", formValues.email);
       navigate("/apply/step-2");
     } catch (err) {
