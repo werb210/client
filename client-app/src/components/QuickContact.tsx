@@ -10,17 +10,19 @@ export default function QuickContact() {
     message: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit() {
     if (submitting) return;
 
     setSubmitting(true);
+    setError(null);
     try {
       await submitContactForm(form);
-      alert("A Boreal Intake Specialist will contact you shortly.");
-      window.location.href = "/";
-    } catch {
-      alert("Submission failed. Please try again.");
+      setSuccess(true);
+    } catch (submitError: any) {
+      setError(submitError?.message || "Submission failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -28,6 +30,16 @@ export default function QuickContact() {
 
   return (
     <div>
+      {success ? (
+        <div role="status" aria-live="polite">
+          A Boreal Intake Specialist will contact you shortly.
+        </div>
+      ) : null}
+      {error ? (
+        <div role="alert" aria-live="assertive">
+          {error}
+        </div>
+      ) : null}
       <input
         placeholder="Company"
         onChange={(e) => setForm({ ...form, companyName: e.target.value })}

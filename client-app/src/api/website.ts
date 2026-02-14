@@ -1,4 +1,5 @@
 import api from "@/api";
+import { getContinuationSession } from "@/api/continuation";
 
 export interface CreditReadinessPayload {
   companyName: string;
@@ -15,6 +16,7 @@ export interface CreditReadinessPayload {
 
 const CONTACT_DEDUP_KEY = "boreal_contact_submission_cache";
 const READINESS_DEDUP_KEY = "boreal_readiness_submission_cache";
+const READINESS_SESSION_ID_KEY = "boreal_readiness_session_id";
 
 function normalize(value: string | undefined) {
   return (value || "").trim().toLowerCase();
@@ -52,9 +54,25 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
     }
   }
 
+  const existingSession = await findExistingReadinessSession(payload);
+  if (existingSession) {
+    persistReadinessSession(existingSession);
+    if (key !== "::") {
+      const cache = loadCache(READINESS_DEDUP_KEY);
+      cache[key] = existingSession;
+      saveCache(READINESS_DEDUP_KEY, cache);
+    }
+    return existingSession;
+  }
+
   try {
-    const res = await api.post("/website/credit-readiness", payload);
+    const res = await api.post("/website/credit-readiness", payload, {
+      headers: {
+        "X-Idempotency-Key": key !== "::" ? `readiness:${key}` : crypto.randomUUID(),
+      },
+    });
     const responseData = res.data;
+    persistReadinessSession(responseData);
     if (key !== "::") {
       const cache = loadCache(READINESS_DEDUP_KEY);
       cache[key] = responseData;
@@ -82,7 +100,11 @@ export async function submitContactForm(payload: {
   }
 
   try {
-    const res = await api.post("/website/contact", payload);
+    const res = await api.post("/website/contact", payload, {
+      headers: {
+        "X-Idempotency-Key": key !== "::" ? `contact:${key}` : crypto.randomUUID(),
+      },
+    });
     const responseData = res.data;
     if (key !== "::") {
       const cache = loadCache(CONTACT_DEDUP_KEY);
@@ -92,5 +114,44 @@ export async function submitContactForm(payload: {
     return responseData;
   } catch {
     throw new Error("Unable to submit contact form. Please try again.");
+  }
+}
+
+export function getStoredReadinessSessionId() {
+  try {
+    return localStorage.getItem(READINESS_SESSION_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function persistReadinessSession(payload: Record<string, unknown> | null | undefined) {
+  const sessionId =
+    (typeof payload?.readinessSessionId === "string" && payload.readinessSessionId) ||
+    (typeof payload?.sessionId === "string" && payload.sessionId) ||
+    null;
+  if (!sessionId) return;
+  try {
+    localStorage.setItem(READINESS_SESSION_ID_KEY, sessionId);
+  } catch {
+    // ignore storage failures
+  }
+}
+
+async function findExistingReadinessSession(payload: CreditReadinessPayload) {
+  try {
+    const session = await getContinuationSession();
+    if (!session || typeof session !== "object") return null;
+    const sessionEmail = normalize(session.email as string | undefined);
+    const sessionPhone = normalize(session.phone as string | undefined);
+    const payloadEmail = normalize(payload.email);
+    const payloadPhone = normalize(payload.phone);
+    if (!sessionEmail && !sessionPhone) return null;
+    const matchesEmail = payloadEmail && payloadEmail === sessionEmail;
+    const matchesPhone = payloadPhone && payloadPhone === sessionPhone;
+    if (!matchesEmail && !matchesPhone) return null;
+    return session as Record<string, unknown>;
+  } catch {
+    return null;
   }
 }

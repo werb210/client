@@ -10,6 +10,7 @@ interface UseChatSocketOptions {
 }
 
 const MAX_RETRY_DELAY_MS = 30000;
+const MAX_RETRY_ATTEMPTS = 8;
 
 function getSocketUrl() {
   if (typeof window === "undefined") return "";
@@ -21,7 +22,30 @@ export function useChatSocket({ enabled, sessionId, onStaffJoined, onMessage }: 
   const socketRef = useRef<WebSocket | null>(null);
   const retryTimerRef = useRef<number | null>(null);
   const retryCountRef = useRef(0);
+  const mountedRef = useRef(true);
+  const enabledRef = useRef(enabled);
+  const onMessageRef = useRef(onMessage);
+  const onStaffJoinedRef = useRef(onStaffJoined);
   const [status, setStatus] = useState<ChatSocketStatus>("idle");
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
+
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
+
+  useEffect(() => {
+    onStaffJoinedRef.current = onStaffJoined;
+  }, [onStaffJoined]);
 
   const clearRetryTimer = useCallback(() => {
     if (retryTimerRef.current !== null) {
@@ -30,17 +54,24 @@ export function useChatSocket({ enabled, sessionId, onStaffJoined, onMessage }: 
     }
   }, []);
 
+  const setSafeStatus = useCallback((next: ChatSocketStatus) => {
+    if (mountedRef.current) {
+      setStatus(next);
+    }
+  }, []);
+
   const disconnect = useCallback(() => {
     clearRetryTimer();
+    retryCountRef.current = 0;
     if (socketRef.current) {
       socketRef.current.close();
       socketRef.current = null;
     }
-    setStatus("disconnected");
-  }, [clearRetryTimer]);
+    setSafeStatus("disconnected");
+  }, [clearRetryTimer, setSafeStatus]);
 
   const connect = useCallback(() => {
-    if (!enabled || !sessionId || typeof window === "undefined") return;
+    if (!enabledRef.current || !sessionId || typeof window === "undefined") return;
 
     const socketUrl = getSocketUrl();
     if (!socketUrl) return;
@@ -48,13 +79,13 @@ export function useChatSocket({ enabled, sessionId, onStaffJoined, onMessage }: 
     clearRetryTimer();
 
     try {
-      setStatus(retryCountRef.current > 0 ? "reconnecting" : "connecting");
+      setSafeStatus(retryCountRef.current > 0 ? "reconnecting" : "connecting");
       const socket = new WebSocket(socketUrl);
       socketRef.current = socket;
 
       socket.onopen = () => {
         retryCountRef.current = 0;
-        setStatus("connected");
+        setSafeStatus("connected");
         socket.send(JSON.stringify({ type: "join", sessionId }));
       };
 
@@ -67,13 +98,13 @@ export function useChatSocket({ enabled, sessionId, onStaffJoined, onMessage }: 
           };
 
           if (payload.type === "staff_joined") {
-            onStaffJoined?.();
+            onStaffJoinedRef.current?.();
             return;
           }
 
           const nextMessage = payload.message || payload.content;
           if (nextMessage) {
-            onMessage?.(nextMessage);
+            onMessageRef.current?.(nextMessage);
           }
         } catch {
           // ignore malformed payloads
@@ -82,24 +113,29 @@ export function useChatSocket({ enabled, sessionId, onStaffJoined, onMessage }: 
 
       socket.onclose = () => {
         socketRef.current = null;
-        if (!enabled) {
-          setStatus("disconnected");
+        if (!enabledRef.current) {
+          setSafeStatus("disconnected");
           return;
         }
 
         retryCountRef.current += 1;
+        if (retryCountRef.current > MAX_RETRY_ATTEMPTS) {
+          setSafeStatus("disconnected");
+          return;
+        }
+
         const delay = Math.min(1000 * 2 ** (retryCountRef.current - 1), MAX_RETRY_DELAY_MS);
-        setStatus("reconnecting");
+        setSafeStatus("reconnecting");
         retryTimerRef.current = window.setTimeout(connect, delay);
       };
 
       socket.onerror = () => {
-        setStatus("reconnecting");
+        setSafeStatus("reconnecting");
       };
     } catch {
-      setStatus("reconnecting");
+      setSafeStatus("reconnecting");
     }
-  }, [clearRetryTimer, enabled, onMessage, onStaffJoined, sessionId]);
+  }, [clearRetryTimer, sessionId, setSafeStatus]);
 
   useEffect(() => {
     if (!enabled || !sessionId) {

@@ -144,8 +144,8 @@ export function ApplyPage() {
           },
         });
       })
-      .catch((error) => {
-        console.warn("Failed to load continuation payload", error);
+      .catch(() => {
+        // continuation payload unavailable
       });
 
     return () => {
@@ -174,8 +174,8 @@ export function ApplyPage() {
             currentStep: hydrated.currentStep || app.currentStep || 1,
           });
         }
-      } catch (err) {
-        console.error("Failed to load draft", err);
+      } catch {
+        navigate("/", { replace: true });
       }
     }
 
