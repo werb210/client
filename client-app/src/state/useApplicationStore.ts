@@ -37,6 +37,7 @@ const emptyApp: ApplicationData = {
   documentReviewComplete: undefined,
   financialReviewComplete: undefined,
   readinessScore: undefined,
+  readinessLeadId: undefined,
   ocrComplete: undefined,
   creditSummaryComplete: undefined,
 };
@@ -140,6 +141,8 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
     financialReviewComplete: saved.financialReviewComplete,
     readinessScore:
       typeof saved.readinessScore === "number" ? saved.readinessScore : undefined,
+    readinessLeadId:
+      typeof saved.readinessLeadId === "string" ? saved.readinessLeadId : undefined,
     ocrComplete: typeof saved.ocrComplete === "boolean" ? saved.ocrComplete : undefined,
     creditSummaryComplete:
       typeof saved.creditSummaryComplete === "boolean"

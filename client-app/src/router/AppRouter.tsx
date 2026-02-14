@@ -5,6 +5,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+import { useEffect } from "react";
 import { PortalEntry } from "../pages/PortalEntry";
 import { StatusPage } from "../pages/StatusPage";
 import { ApplicationPortalPage } from "../pages/ApplicationPortalPage";
@@ -29,6 +30,8 @@ import { SessionGuard } from "../auth/sessionGuard";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { useClientSession } from "../hooks/useClientSession";
 import { useApplicationStore } from "../state/useApplicationStore";
+import { clearReadiness, setReadiness } from "../state/readinessStore";
+import { fetchReadinessContext, getLeadIdFromSearch } from "../services/readiness";
 
 type GuardProps = {
   children: JSX.Element;
@@ -67,6 +70,36 @@ function RequirePortalSession({ children }: GuardProps) {
   return children;
 }
 
+function ReadinessLoader() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const leadId = getLeadIdFromSearch(location.search);
+    if (!leadId) {
+      clearReadiness();
+      return;
+    }
+
+    let active = true;
+    const loadReadiness = async () => {
+      const readiness = await fetchReadinessContext(leadId);
+      if (!active) return;
+      if (!readiness) {
+        clearReadiness();
+        return;
+      }
+      setReadiness(readiness);
+    };
+
+    void loadReadiness();
+    return () => {
+      active = false;
+    };
+  }, [location.search]);
+
+  return null;
+}
+
 export default function AppRouter() {
   const { isOffline } = useNetworkStatus();
 
@@ -83,6 +116,7 @@ export default function AppRouter() {
   return (
     <BrowserRouter>
       <SessionGuard />
+      <ReadinessLoader />
       <Routes>
         <Route path="/" element={<Navigate to="/apply/step-1" replace />} />
         <Route path="/portal" element={<PortalEntry />} />

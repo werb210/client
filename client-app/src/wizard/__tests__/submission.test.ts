@@ -55,6 +55,7 @@ describe("submission payload", () => {
     applicationToken: "token-123",
     applicationId: "app-123",
     currentStep: 6,
+    readinessLeadId: "lead-123",
   };
 
   it("includes lender product id, application data, and document metadata", () => {
@@ -70,6 +71,11 @@ describe("submission payload", () => {
         status: "uploaded",
       },
     ]);
+  });
+
+  it("includes readinessLeadId in submission payload", () => {
+    const payload = buildSubmissionPayload(baseApp);
+    expect(payload.application.readiness_lead_id).toBe("lead-123");
   });
 
   it("detects missing required documents", () => {

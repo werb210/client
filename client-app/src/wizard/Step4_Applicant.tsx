@@ -33,9 +33,11 @@ import {
 } from "./wizardSchema";
 import { enforceV1StepSchema } from "../schemas/v1WizardSchema";
 import { shouldAutoAdvance } from "../utils/autoadvance";
+import { useReadiness } from "../state/readinessStore";
 
 export function Step4_Applicant() {
   const { app, update, autosaveError } = useApplicationStore();
+  const readiness = useReadiness();
   const navigate = useNavigate();
 
   const values = { ...app.applicant };
@@ -80,6 +82,30 @@ export function Step4_Applicant() {
       update({ applicant: merged });
     }
   }, [update, values]);
+
+  useEffect(() => {
+    if (!readiness) return;
+
+    const [firstName = "", ...rest] = (readiness.fullName || "").trim().split(" ");
+    const lastName = rest.join(" ");
+    const nextApplicant = {
+      ...values,
+      firstName: firstName || values.firstName,
+      lastName: lastName || values.lastName,
+      email: readiness.email || values.email,
+      phone: readiness.phone || values.phone,
+    };
+
+    const unchanged =
+      nextApplicant.firstName === values.firstName &&
+      nextApplicant.lastName === values.lastName &&
+      nextApplicant.email === values.email &&
+      nextApplicant.phone === values.phone;
+
+    if (unchanged) return;
+
+    update({ applicant: nextApplicant, readinessLeadId: readiness.leadId });
+  }, [readiness, update, values]);
 
   function setField(key: string, value: any) {
     update({ applicant: { ...values, [key]: value } });
@@ -190,10 +216,10 @@ export function Step4_Applicant() {
     };
   };
 
-  const isFirstNameLocked = Boolean(app.continuationToken && values.firstName);
-  const isLastNameLocked = Boolean(app.continuationToken && values.lastName);
-  const isEmailLocked = Boolean(app.continuationToken && values.email);
-  const isPhoneLocked = Boolean(app.continuationToken && values.phone);
+  const isFirstNameLocked = Boolean(readiness?.fullName && values.firstName);
+  const isLastNameLocked = Boolean(readiness?.fullName && values.lastName);
+  const isEmailLocked = Boolean(readiness?.email && values.email);
+  const isPhoneLocked = Boolean(readiness?.phone && values.phone);
 
   const isStepValid = (nextValues: typeof values) => {
     const { ownershipValid } = getOwnershipValidity(nextValues);

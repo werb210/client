@@ -64,6 +64,7 @@ export interface ApplicationData {
   documentReviewComplete?: boolean;
   financialReviewComplete?: boolean;
   readinessScore?: number;
+  readinessLeadId?: string;
   ocrComplete?: boolean;
   creditSummaryComplete?: boolean;
 }

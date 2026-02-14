@@ -32,6 +32,7 @@ import {
   consumePreApplication,
   lookupPreApplication,
 } from "../api/preApplication";
+import { useReadiness } from "../state/readinessStore";
 
 const MatchCategories = [
   "Line of Credit",
@@ -123,6 +124,32 @@ function parseCurrency(value: string) {
   return Number.parseFloat(cleaned);
 }
 
+function mapYearsInBusiness(years?: number) {
+  if (typeof years !== "number") return undefined;
+  if (years < 1) return "Less than 1 year";
+  if (years <= 3) return "1 to 3 years";
+  return "Over 3 years";
+}
+
+function mapAnnualRevenue(amount?: number) {
+  if (typeof amount !== "number") return undefined;
+  if (amount < 100000) return "Under $100,000";
+  if (amount < 250000) return "$100,000 to $250,000";
+  if (amount < 500000) return "$250,000 to $500,000";
+  if (amount < 1000000) return "$500,000 to $1,000,000";
+  if (amount < 5000000) return "$1,000,000 to $5,000,000";
+  return "Over $5,000,000";
+}
+
+function mapMonthlyRevenue(amount?: number) {
+  if (typeof amount !== "number") return undefined;
+  if (amount < 25000) return "$10,000 to $25,000";
+  if (amount < 50000) return "$25,000 to $50,000";
+  if (amount < 100000) return "$50,000 to $100,000";
+  if (amount < 250000) return "$100,000 to $250,000";
+  return "Over $250,000";
+}
+
 function buildMatchPercentages(amount: number): Record<string, number> {
   const amountBoost =
     amount >= 500000 ? 10 : amount >= 250000 ? 7 : amount >= 100000 ? 4 : 0;
@@ -136,6 +163,7 @@ function buildMatchPercentages(amount: number): Record<string, number> {
 
 export function Step1_KYC() {
   const { app, update, autosaveError } = useApplicationStore();
+  const readiness = useReadiness();
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const navigate = useNavigate();
@@ -144,12 +172,56 @@ export function Step1_KYC() {
     () => getCountryCode(app.kyc.businessLocation),
     [app.kyc.businessLocation]
   );
+  const readinessEnabled = Boolean(readiness);
+  const readinessFieldState = {
+    companyName: Boolean(readiness?.companyName),
+    industry: Boolean(readiness?.industry),
+    salesHistory: typeof readiness?.yearsInBusiness === "number",
+    monthlyRevenue: typeof readiness?.monthlyRevenue === "number",
+    revenueLast12Months: typeof readiness?.annualRevenue === "number",
+  };
 
   useEffect(() => {
     if (app.currentStep !== 1) {
       update({ currentStep: 1 });
     }
   }, [app.currentStep, update]);
+
+  useEffect(() => {
+    if (!readiness) return;
+
+    const nextKyc = {
+      ...app.kyc,
+      companyName: readiness.companyName ?? app.kyc.companyName,
+      industry: readiness.industry ?? app.kyc.industry,
+      salesHistory:
+        mapYearsInBusiness(readiness.yearsInBusiness) ?? app.kyc.salesHistory,
+      monthlyRevenue:
+        mapMonthlyRevenue(readiness.monthlyRevenue) ?? app.kyc.monthlyRevenue,
+      revenueLast12Months:
+        mapAnnualRevenue(readiness.annualRevenue) ?? app.kyc.revenueLast12Months,
+    };
+
+    const unchanged =
+      app.readinessLeadId === readiness.leadId &&
+      nextKyc.companyName === app.kyc.companyName &&
+      nextKyc.industry === app.kyc.industry &&
+      nextKyc.salesHistory === app.kyc.salesHistory &&
+      nextKyc.monthlyRevenue === app.kyc.monthlyRevenue &&
+      nextKyc.revenueLast12Months === app.kyc.revenueLast12Months;
+
+    if (unchanged) return;
+
+    update({
+      readinessLeadId: readiness.leadId,
+      kyc: nextKyc,
+    });
+  }, [
+    app.kyc,
+    app.readinessLeadId,
+    readiness,
+    update,
+  ]);
 
   useEffect(() => {
     async function loadPrefill() {
@@ -304,11 +376,16 @@ export function Step1_KYC() {
       businessLocation:
         !Validate.required(values.businessLocation) ||
         values.businessLocation === "Other",
-      industry: !Validate.required(values.industry),
+      industry:
+        !readinessFieldState.industry && !Validate.required(values.industry),
       purposeOfFunds: !Validate.required(values.purposeOfFunds),
-      salesHistory: !Validate.required(values.salesHistory),
-      revenueLast12Months: !Validate.required(values.revenueLast12Months),
-      monthlyRevenue: !Validate.required(values.monthlyRevenue),
+      salesHistory:
+        !readinessFieldState.salesHistory && !Validate.required(values.salesHistory),
+      revenueLast12Months:
+        !readinessFieldState.revenueLast12Months &&
+        !Validate.required(values.revenueLast12Months),
+      monthlyRevenue:
+        !readinessFieldState.monthlyRevenue && !Validate.required(values.monthlyRevenue),
       accountsReceivable:
         shouldShowAccountsReceivable &&
         !Validate.required(values.accountsReceivable),
@@ -424,6 +501,19 @@ export function Step1_KYC() {
         )}
         <StepHeader step={1} title="Financial Profile" />
 
+        {readinessEnabled && (
+          <Card
+            variant="muted"
+            style={{
+              border: `1px solid ${tokens.colors.primary}`,
+              background: "rgba(14, 165, 233, 0.1)",
+              marginBottom: tokens.spacing.md,
+            }}
+          >
+            <strong>You previously completed a Capital Readiness Check.</strong>
+            <div>Your application has been pre-filled.</div>
+          </Card>
+        )}
 
         <Card
           variant="muted"
@@ -434,8 +524,28 @@ export function Step1_KYC() {
             marginBottom: tokens.spacing.md,
           }}
         >
+          {readinessEnabled && (
+            <div
+              style={{
+                display: "inline-flex",
+                width: "fit-content",
+                padding: "4px 10px",
+                borderRadius: tokens.radii.pill,
+                background: "rgba(14, 165, 233, 0.14)",
+                color: tokens.colors.primary,
+                fontWeight: 600,
+                fontSize: "12px",
+              }}
+            >
+              Pre-qualified via Capital Readiness
+            </div>
+          )}
           {app.kyc.companyName && (
-            <div className="text-sm text-neutral-400">Company: {app.kyc.companyName}</div>
+            <div className="text-sm text-neutral-400">
+              {readinessFieldState.companyName
+                ? "✔ Confirmed via Capital Readiness"
+                : `Company: ${app.kyc.companyName}`}
+            </div>
           )}
           {app.kyc.fullName && (
             <div className="text-sm text-neutral-400">Full name: {app.kyc.fullName}</div>
@@ -598,6 +708,9 @@ export function Step1_KYC() {
               )}
             </div>
 
+{readinessFieldState.industry ? (
+              <div>✔ Confirmed via Capital Readiness</div>
+            ) : (
             <div data-error={showErrors && fieldErrors.industry}>
               <label style={components.form.label}>Industry</label>
               <input id={getWizardFieldId("step1", "industry")} value={app.kyc.industry || ""} readOnly hidden />
@@ -645,6 +758,7 @@ export function Step1_KYC() {
                 <div style={components.form.errorText}>Select your industry.</div>
               )}
             </div>
+            )}
 
             <div data-error={showErrors && fieldErrors.purposeOfFunds}>
               <label style={components.form.label}>Purpose of funds</label>
@@ -670,6 +784,9 @@ export function Step1_KYC() {
               )}
             </div>
 
+{readinessFieldState.salesHistory ? (
+              <div>✔ Confirmed via Capital Readiness</div>
+            ) : (
             <div data-error={showErrors && fieldErrors.salesHistory}>
               <label style={components.form.label}>Years of sales history</label>
               <Select
@@ -693,7 +810,11 @@ export function Step1_KYC() {
                 <div style={components.form.errorText}>Select sales history.</div>
               )}
             </div>
+            )}
 
+            {readinessFieldState.revenueLast12Months ? (
+              <div>✔ Confirmed via Capital Readiness</div>
+            ) : (
             <div data-error={showErrors && fieldErrors.revenueLast12Months}>
               <label style={components.form.label}>Revenue last 12 months</label>
               <Select
@@ -720,7 +841,11 @@ export function Step1_KYC() {
                 <div style={components.form.errorText}>Select a revenue range.</div>
               )}
             </div>
+            )}
 
+            {readinessFieldState.monthlyRevenue ? (
+              <div>✔ Confirmed via Capital Readiness</div>
+            ) : (
             <div data-error={showErrors && fieldErrors.monthlyRevenue}>
               <label style={components.form.label}>
                 Avg monthly revenue (last 3 months)
@@ -746,6 +871,7 @@ export function Step1_KYC() {
                 <div style={components.form.errorText}>Select monthly revenue.</div>
               )}
             </div>
+            )}
 
             {shouldShowAccountsReceivable && (
               <div data-error={showErrors && fieldErrors.accountsReceivable}>
