@@ -1,5 +1,5 @@
-import { useState } from "react";
-import api from "@/api";
+import { useState, type ChangeEvent, type FormEvent } from "react";
+import { submitCreditReadiness } from "@/api/website";
 import { createLead } from "@/services/lead";
 
 export default function CapitalReadiness() {
@@ -8,6 +8,7 @@ export default function CapitalReadiness() {
     fullName: "",
     phone: "",
     email: "",
+    industry: "",
     yearsInBusiness: "",
     annualRevenue: "",
     monthlyRevenue: "",
@@ -15,11 +16,11 @@ export default function CapitalReadiness() {
     creditScoreRange: "",
   });
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const contactData = {
@@ -30,16 +31,24 @@ export default function CapitalReadiness() {
       industry: form.industry,
     };
 
-    const { leadId, pendingApplicationId } = await createLead(contactData);
-    localStorage.setItem("leadId", leadId);
-    localStorage.setItem("pendingApplicationId", pendingApplicationId);
-    localStorage.setItem("leadEmail", form.email);
+    try {
+      const { leadId, pendingApplicationId } = await createLead(contactData);
+      localStorage.setItem("leadId", leadId);
+      localStorage.setItem("pendingApplicationId", pendingApplicationId);
+      localStorage.setItem("leadEmail", form.email);
 
-    const res = await api.post("/ai/continue-application", {
-      contactData,
-    });
+      const readinessSession = await submitCreditReadiness({
+        ...contactData,
+        yearsInBusiness: form.yearsInBusiness,
+        annualRevenue: form.annualRevenue,
+        monthlyRevenue: form.monthlyRevenue,
+      });
 
-    window.location.href = res.data.continueUrl;
+      const continueUrl = readinessSession?.continueUrl || `/apply?lead=${leadId}`;
+      window.location.href = continueUrl;
+    } catch {
+      alert("Unable to submit readiness right now. Please try again.");
+    }
   };
 
   return (
@@ -52,7 +61,7 @@ export default function CapitalReadiness() {
             key={field}
             name={field}
             placeholder={field.replace(/([A-Z])/g, " $1")}
-            value={(form as any)[field]}
+            value={(form as Record<string, string>)[field]}
             onChange={handleChange}
             className="w-full p-3 rounded bg-gray-200 text-black"
           />
