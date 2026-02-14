@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createLead } from "@/lib/api";
+import { createLead } from "@/api/crm";
 
 export default function CapitalReadiness() {
   const [form, setForm] = useState({
@@ -23,7 +23,7 @@ export default function CapitalReadiness() {
 
     await createLead({
       ...form,
-      source: "capital-readiness",
+      source: "capital_readiness",
     });
 
     alert("Submitted successfully.");

@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { createLead } from "@/lib/api";
+import { createLead } from "@/api/crm";
 import { products } from "@/data/products";
 
 export default function ProductDetail() {
@@ -14,7 +14,7 @@ export default function ProductDetail() {
       email: "",
       phone: "",
       productInterest: product.name,
-      source: "product-page",
+      source: "product_page",
     });
 
     alert("Interest recorded.");

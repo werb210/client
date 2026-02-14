@@ -68,7 +68,7 @@ export function Header() {
 
         {!inApplicationFlow && (
           <Button style={{ padding: "0 28px" }} onClick={() => navigate("/apply/step-1")}>
-            Apply Now
+            Learn More
           </Button>
         )}
       </div>
