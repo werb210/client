@@ -16,6 +16,14 @@ const api = {
 
     return { data: data as T };
   },
+  patch: async <T>(url: string, body?: unknown): Promise<{ data: T }> => {
+    const data = await apiRequest(url, {
+      method: "PATCH",
+      body: JSON.stringify(body ?? {}),
+    });
+
+    return { data: data as T };
+  },
 };
 
 export default api;

@@ -8,6 +8,8 @@ import {
   submitQualification,
   submitStartupInterest,
 } from "../api";
+import { openChatSession, escalateToHuman as escalateSessionToHuman } from "@/services/chat";
+import { tagLead } from "@/services/lead";
 import type {
   ChatMessage,
   ChatSession,
@@ -131,6 +133,7 @@ export function useChat(isOpen: boolean) {
 
   const escalate = useCallback(async () => {
     if (!session) return;
+    await escalateSessionToHuman(session.id);
     const response = await escalateToHuman(session.id);
     setSession((prev) => (prev ? { ...prev, status: "human" } : prev));
     if (response?.message) {
@@ -143,7 +146,13 @@ export function useChat(isOpen: boolean) {
   const saveLead = useCallback(
     async (lead: LeadCaptureInput) => {
       if (!session) return;
-      await submitLeadCapture(session.id, lead);
+      const response = await submitLeadCapture(session.id, lead);
+      const leadId = response?.leadId ?? response?.lead?.id ?? window.localStorage.getItem("leadId");
+      if (leadId) {
+        window.localStorage.setItem("leadId", String(leadId));
+        await openChatSession(String(leadId));
+      }
+      window.localStorage.setItem("leadEmail", lead.email);
       setLeadCaptured(true);
       window.localStorage.setItem(LEAD_CAPTURED_KEY, "1");
       setMessages((prev) => [...prev, createLocalMessage("Thanks, you're all set. How can I help today?")]);
@@ -167,6 +176,10 @@ export function useChat(isOpen: boolean) {
     async (payload: LeadCaptureInput) => {
       if (!session) return;
       await submitStartupInterest(session.id, payload);
+      const leadId = window.localStorage.getItem("leadId");
+      if (leadId) {
+        await tagLead(leadId, "startup_interest");
+      }
       setMessages((prev) => [
         ...prev,
         createLocalMessage("Startup funding is coming soon. We'll follow up with updates."),
