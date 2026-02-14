@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createLead } from "@/api/crm";
+import api from "@/api";
 
 export default function CapitalReadiness() {
   const [form, setForm] = useState({
@@ -21,12 +21,18 @@ export default function CapitalReadiness() {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    await createLead({
-      ...form,
-      source: "capital_readiness",
+    const contactData = {
+      companyName: form.companyName,
+      fullName: form.fullName,
+      phone: form.phone,
+      email: form.email,
+    };
+
+    const res = await api.post("/ai/continue-application", {
+      contactData,
     });
 
-    alert("Submitted successfully.");
+    window.location.href = res.data.continueUrl;
   };
 
   return (
