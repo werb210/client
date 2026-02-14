@@ -147,6 +147,17 @@ function mapMonthlyRevenue(amount?: number) {
   return "Over $250,000";
 }
 
+function mapArOutstanding(amount?: number) {
+  if (typeof amount !== "number") return undefined;
+  if (amount <= 0) return "No Account Receivables";
+  if (amount < 100000) return "Zero to $100,000";
+  if (amount < 250000) return "$100,000 to $250,000";
+  if (amount < 500000) return "$250,000 to $500,000";
+  if (amount < 1000000) return "$500,000 to $1,000,000";
+  if (amount < 3000000) return "$1,000,000 to $3,000,000";
+  return "Over $3,000,000";
+}
+
 function buildMatchPercentages(amount: number): Record<string, number> {
   const amountBoost =
     amount >= 500000 ? 10 : amount >= 250000 ? 7 : amount >= 100000 ? 4 : 0;
@@ -177,6 +188,8 @@ export function Step1_KYC() {
     salesHistory: typeof readiness?.yearsInBusiness === "number",
     monthlyRevenue: typeof readiness?.monthlyRevenue === "number",
     revenueLast12Months: typeof readiness?.annualRevenue === "number",
+    accountsReceivable: typeof readiness?.arOutstanding === "number",
+    existingDebt: typeof readiness?.existingDebt === "boolean",
   };
 
   useEffect(() => {
@@ -198,6 +211,12 @@ export function Step1_KYC() {
         mapMonthlyRevenue(readiness.monthlyRevenue) ?? app.kyc.monthlyRevenue,
       revenueLast12Months:
         mapAnnualRevenue(readiness.annualRevenue) ?? app.kyc.revenueLast12Months,
+      accountsReceivable:
+        mapArOutstanding(readiness.arOutstanding) ?? app.kyc.accountsReceivable,
+      existingDebt:
+        typeof readiness.existingDebt === "boolean"
+          ? readiness.existingDebt
+          : app.kyc.existingDebt,
     };
 
     const unchanged =
@@ -206,7 +225,9 @@ export function Step1_KYC() {
       nextKyc.industry === app.kyc.industry &&
       nextKyc.salesHistory === app.kyc.salesHistory &&
       nextKyc.monthlyRevenue === app.kyc.monthlyRevenue &&
-      nextKyc.revenueLast12Months === app.kyc.revenueLast12Months;
+      nextKyc.revenueLast12Months === app.kyc.revenueLast12Months &&
+      nextKyc.accountsReceivable === app.kyc.accountsReceivable &&
+      nextKyc.existingDebt === app.kyc.existingDebt;
 
     if (unchanged) return;
 
@@ -277,6 +298,7 @@ export function Step1_KYC() {
         !readinessFieldState.monthlyRevenue && !Validate.required(values.monthlyRevenue),
       accountsReceivable:
         shouldShowAccountsReceivable &&
+        !readinessFieldState.accountsReceivable &&
         !Validate.required(values.accountsReceivable),
       fixedAssets:
         shouldShowFixedAssets && !Validate.required(values.fixedAssets),
@@ -757,7 +779,11 @@ export function Step1_KYC() {
             </div>
             )}
 
-            {shouldShowAccountsReceivable && (
+            {shouldShowAccountsReceivable && readinessFieldState.accountsReceivable ? (
+              <div>✔ Confirmed via Capital Readiness</div>
+            ) : null}
+
+            {shouldShowAccountsReceivable && !readinessFieldState.accountsReceivable && (
               <div data-error={showErrors && fieldErrors.accountsReceivable}>
                 <label style={components.form.label}>Current AR balance</label>
                 <Select

@@ -25,6 +25,16 @@ export async function fetchContinuation(token: string): Promise<ContinuationPayl
   }
 }
 
+export async function fetchReadinessSession(sessionId: string): Promise<ContinuationPayload | null> {
+  try {
+    const res = await fetch(`/api/readiness/session/${encodeURIComponent(sessionId)}`);
+    if (!res.ok) return null;
+    return (await res.json()) as ContinuationPayload;
+  } catch {
+    return null;
+  }
+}
+
 export async function getContinuationSession() {
   try {
     const res = await api.get("/continuation/session");

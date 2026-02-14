@@ -32,7 +32,7 @@ import { useClientSession } from "../hooks/useClientSession";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { clearReadiness, setReadiness } from "../state/readinessStore";
 import { fetchReadinessContext, getLeadIdFromSearch } from "../services/readiness";
-import { fetchContinuation, getContinuationSession } from "../api/continuation";
+import { fetchContinuation, fetchReadinessSession, getContinuationSession } from "../api/continuation";
 import { resolveReadinessSessionId } from "@/api/website";
 
 type GuardProps = {
@@ -109,6 +109,42 @@ function ReadinessLoader() {
     const loadReadiness = async () => {
       const readinessSessionId = resolveReadinessSessionId(location.search);
       if (readinessSessionId) {
+        const sessionPayload = await fetchReadinessSession(readinessSessionId);
+        if (!active) return;
+        if (sessionPayload) {
+          setReadiness({
+            leadId:
+              (typeof sessionPayload.leadId === "string" && sessionPayload.leadId) ||
+              readinessSessionId,
+            companyName: sessionPayload.companyName,
+            fullName: sessionPayload.fullName,
+            phone: sessionPayload.phone,
+            email: sessionPayload.email,
+            industry: sessionPayload.industry,
+            yearsInBusiness:
+              typeof sessionPayload.yearsInBusiness === "number"
+                ? sessionPayload.yearsInBusiness
+                : undefined,
+            monthlyRevenue:
+              typeof sessionPayload.monthlyRevenue === "number"
+                ? sessionPayload.monthlyRevenue
+                : undefined,
+            annualRevenue:
+              typeof sessionPayload.annualRevenue === "number"
+                ? sessionPayload.annualRevenue
+                : undefined,
+            arOutstanding:
+              typeof sessionPayload.arOutstanding === "number"
+                ? sessionPayload.arOutstanding
+                : undefined,
+            existingDebt:
+              typeof sessionPayload.existingDebt === "boolean"
+                ? sessionPayload.existingDebt
+                : undefined,
+          });
+          return;
+        }
+
         const continuation = await fetchContinuation(readinessSessionId);
         if (!active) return;
         if (continuation) {
