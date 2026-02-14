@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useApplicationStore } from "@/state/useApplicationStore";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { getStoredReadinessSessionId, getStoredReadinessToken } from "@/api/website";
@@ -29,6 +29,7 @@ export default function ChatSupportWidget() {
   const [open, setOpen] = useState(false);
   const [humanActive, setHumanActive] = useState(false);
   const [input, setInput] = useState("");
+  const humanActiveRef = useRef(false);
   const [messages, setMessages] = useState<ChatItem[]>([
     { id: crypto.randomUUID(), role: "ai", message: "Hi! I'm Boreal Assistant. How can I help today?" },
   ]);
@@ -54,6 +55,11 @@ export default function ChatSupportWidget() {
     [app.applicant.email, app.applicant.firstName, app.applicant.lastName, app.applicant.phone, app.kyc.companyName]
   );
 
+
+  useEffect(() => {
+    humanActiveRef.current = humanActive;
+  }, [humanActive]);
+
   const { status, send } = useChatSocket({
     enabled: open,
     sessionId,
@@ -69,7 +75,7 @@ export default function ChatSupportWidget() {
       });
     },
     onMessage: (message) => {
-      if (humanActive) return;
+      if (humanActiveRef.current) return;
       setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "ai", message }]);
     },
   });

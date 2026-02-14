@@ -23,6 +23,50 @@ const TOKEN_QUERY_PARAM = "token";
 let readinessInFlight: Promise<unknown> | null = null;
 let contactInFlight: Promise<unknown> | null = null;
 
+const MAX_REQUEST_ATTEMPTS = 2;
+
+function shouldRetryRequest(error: unknown, attempt: number) {
+  if (attempt >= MAX_REQUEST_ATTEMPTS) {
+    return false;
+  }
+
+  const maybeError = error as {
+    code?: string;
+    response?: {
+      status?: number;
+    };
+  };
+
+  const status = maybeError?.response?.status;
+  if (typeof status === "number") {
+    return status >= 500;
+  }
+
+  return maybeError?.code === "ECONNABORTED" || maybeError?.code === "ERR_NETWORK";
+}
+
+async function postWithRetry<TPayload>(
+  path: string,
+  payload: TPayload,
+  idempotencyKey: string
+) {
+  let attempt = 0;
+  while (true) {
+    try {
+      return await api.post(path, payload, {
+        headers: {
+          "X-Idempotency-Key": idempotencyKey,
+        },
+      });
+    } catch (error) {
+      attempt += 1;
+      if (!shouldRetryRequest(error, attempt)) {
+        throw error;
+      }
+    }
+  }
+}
+
 function normalize(value: string | undefined) {
   return (value || "").trim().toLowerCase();
 }
@@ -78,11 +122,11 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
 
   readinessInFlight = (async () => {
     try {
-      const res = await api.post("/api/readiness", payload, {
-        headers: {
-          "X-Idempotency-Key": key !== "::" ? `readiness:${key}` : crypto.randomUUID(),
-        },
-      });
+      const res = await postWithRetry(
+        "/api/readiness/submit",
+        payload,
+        key !== "::" ? `readiness:${key}` : crypto.randomUUID()
+      );
       const responseData = res.data;
       persistReadinessSession(responseData);
       if (key !== "::") {
@@ -122,11 +166,11 @@ export async function submitContactForm(payload: {
 
   contactInFlight = (async () => {
     try {
-      const res = await api.post("/api/contact", payload, {
-        headers: {
-          "X-Idempotency-Key": key !== "::" ? `contact:${key}` : crypto.randomUUID(),
-        },
-      });
+      const res = await postWithRetry(
+        "/api/contact/submit",
+        payload,
+        key !== "::" ? `contact:${key}` : crypto.randomUUID()
+      );
       const responseData = res.data;
       persistReadinessSession(responseData);
       if (key !== "::") {
