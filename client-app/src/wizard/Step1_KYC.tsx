@@ -28,6 +28,10 @@ import {
 import { enforceV1StepSchema } from "../schemas/v1WizardSchema";
 import { track } from "../utils/track";
 import { trackEvent } from "../utils/analytics";
+import {
+  consumePreApplication,
+  lookupPreApplication,
+} from "../api/preApplication";
 
 const MatchCategories = [
   "Line of Credit",
@@ -167,6 +171,39 @@ export function Step1_KYC() {
       })
       .catch((error) => {
         console.warn("Unable to resume saved application token", error);
+      });
+  }, []);
+
+  useEffect(() => {
+    const email = localStorage.getItem("preapp_email");
+    if (!email) return;
+
+    void lookupPreApplication(email)
+      .then(async (data) => {
+        if (!data) return;
+
+        update({
+          kyc: {
+            ...app.kyc,
+            companyName: data.companyName || app.kyc.companyName,
+            fullName: data.fullName || app.kyc.fullName,
+            email: data.email || app.kyc.email,
+            phone: data.phone || app.kyc.phone,
+            revenueLast12Months:
+              data.annualRevenue || app.kyc.revenueLast12Months,
+            fundingAmount:
+              data.requestedAmount !== undefined && data.requestedAmount !== null
+                ? String(data.requestedAmount)
+                : app.kyc.fundingAmount,
+            salesHistory: data.yearsInBusiness || app.kyc.salesHistory,
+          },
+        });
+
+        await consumePreApplication(data.token);
+        localStorage.removeItem("preapp_email");
+      })
+      .catch((error) => {
+        console.warn("Unable to continue pre-application", error);
       });
   }, []);
 
