@@ -33,7 +33,7 @@ import { useApplicationStore } from "../state/useApplicationStore";
 import { clearReadiness, setReadiness } from "../state/readinessStore";
 import { fetchReadinessContext, getLeadIdFromSearch } from "../services/readiness";
 import { fetchContinuation, fetchReadinessSession, getContinuationSession, mapContinuationToReadinessContext } from "../api/continuation";
-import { resolveReadinessSessionId } from "@/api/website";
+import { clearStoredReadinessSession, resolveReadinessSessionId } from "@/api/website";
 
 type GuardProps = {
   children: JSX.Element;
@@ -122,6 +122,8 @@ function ReadinessLoader() {
           setReadiness(mapContinuationToReadinessContext(continuation, readinessSessionId));
           return;
         }
+
+        clearStoredReadinessSession();
       }
 
       const leadId = await resolveLeadId();
