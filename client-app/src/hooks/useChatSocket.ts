@@ -19,6 +19,7 @@ interface UseChatSocketOptions {
 
 const MAX_RETRY_DELAY_MS = 30000;
 const RETRY_DELAYS_MS = [1000, 2000, 5000, 10000, 30000];
+const MAX_RETRY_ATTEMPTS = RETRY_DELAYS_MS.length;
 const HEARTBEAT_INTERVAL_MS = 25000;
 const RETRY_JITTER_RATIO = 0.2;
 
@@ -171,6 +172,11 @@ export function useChatSocket({
         }
 
         retryCountRef.current += 1;
+        if (retryCountRef.current > MAX_RETRY_ATTEMPTS) {
+          clearRetryTimer();
+          setSafeStatus("failed");
+          return;
+        }
         const baseDelay =
           RETRY_DELAYS_MS[Math.min(retryCountRef.current - 1, RETRY_DELAYS_MS.length - 1)] ??
           MAX_RETRY_DELAY_MS;
