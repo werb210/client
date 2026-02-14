@@ -118,7 +118,7 @@ export default function AppRouter() {
       <SessionGuard />
       <ReadinessLoader />
       <Routes>
-        <Route path="/" element={<Navigate to="/apply/step-1" replace />} />
+        <Route path="/" element={<Navigate to="/apply" replace />} />
         <Route path="/portal" element={<PortalEntry />} />
         <Route path="/expired" element={<SessionExpiredPage />} />
         <Route path="/revoked" element={<SessionRevokedPage />} />
@@ -185,6 +185,48 @@ export default function AppRouter() {
           />
         </Route>
         <Route path="/apply/:applicationId/*" element={<ApplyPage />} />
+
+        <Route path="/application/step-1" element={<Step1 />} />
+        <Route
+          path="/application/step-2"
+          element={
+            <RequireApplicationToken>
+              <Step2 />
+            </RequireApplicationToken>
+          }
+        />
+        <Route
+          path="/application/step-3"
+          element={
+            <RequireApplicationToken>
+              <Step3 />
+            </RequireApplicationToken>
+          }
+        />
+        <Route
+          path="/application/step-4"
+          element={
+            <RequireApplicationToken>
+              <Step4 />
+            </RequireApplicationToken>
+          }
+        />
+        <Route
+          path="/application/step-5"
+          element={
+            <RequireApplicationToken>
+              <Step5 />
+            </RequireApplicationToken>
+          }
+        />
+        <Route
+          path="/application/step-6"
+          element={
+            <RequireApplicationToken>
+              <Step6 />
+            </RequireApplicationToken>
+          }
+        />
 
         <Route path="*" element={<Navigate to="/apply/step-1" replace />} />
       </Routes>

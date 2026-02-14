@@ -16,4 +16,10 @@ interface ImportMeta {
 
 interface Window {
   dataLayer?: Array<Record<string, unknown>>;
+  __APP_CONTINUATION__?: {
+    applicationId: string;
+    step: number;
+    data: Record<string, unknown>;
+  };
+  __APP_CONTINUATION_ERROR__?: string;
 }

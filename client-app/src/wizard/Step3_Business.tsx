@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { ClientAppAPI } from "../api/clientApp";
@@ -33,10 +33,12 @@ import {
 } from "./wizardSchema";
 import { enforceV1StepSchema } from "../schemas/v1WizardSchema";
 import { shouldAutoAdvance } from "../utils/autoadvance";
+import { persistApplicationStep } from "./saveStepProgress";
 
 export function Step3_Business() {
   const { app, update, autosaveError } = useApplicationStore();
   const navigate = useNavigate();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const values = { ...app.business };
   const countryCode = useMemo(
@@ -122,18 +124,20 @@ export function Step3_Business() {
       (field) => !Validate.required(values[field])
     );
     if (missing) {
-      alert("Please complete all required business details.");
+      setSaveError("Please complete all required business details.");
       return;
     }
 
-    if (app.applicationToken) {
-      try {
+    try {
+      if (app.applicationToken) {
         await ClientAppAPI.update(app.applicationToken, { business: values });
-      } catch (error) {
-        console.error("Failed to save business details:", error);
-        alert("We couldn't save your business details. Please try again.");
-        return;
       }
+      await persistApplicationStep(app, 3, { business: values });
+      setSaveError(null);
+    } catch (error) {
+      console.error("Failed to save business details:", error);
+      setSaveError("We couldn't save your business details. Please try again.");
+      return;
     }
     track("step_completed", { step: 3 });
     navigate("/apply/step-4");
@@ -199,6 +203,11 @@ export function Step3_Business() {
   return (
     <WizardLayout>
       <StepHeader step={3} title="Business Information" />
+      {saveError && (
+        <Card variant="muted" data-error={true}>
+          <div style={components.form.errorText}>{saveError}</div>
+        </Card>
+      )}
       {autosaveError && (
         <Card
           variant="muted"

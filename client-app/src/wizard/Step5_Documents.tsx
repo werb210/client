@@ -29,6 +29,7 @@ import { components, layout, scrollToFirstError, tokens } from "@/styles";
 import { trackEvent } from "../utils/analytics";
 import { resolveStepGuard } from "./stepGuard";
 import { track } from "../utils/track";
+import { persistApplicationStep } from "./saveStepProgress";
 import { extractRequiredDocumentsFromStatus } from "../documents/requiredDocumentsFromStatus";
 import { syncRequiredDocumentsFromStatus } from "../documents/requiredDocumentsCache";
 import {
@@ -390,8 +391,18 @@ export function Step5_Documents() {
       setDocError("Please upload all required documents.");
       return;
     }
-    track("step_completed", { step: 5 });
-    navigate("/apply/step-6");
+    void persistApplicationStep(app, 5, {
+      documents: app.documents,
+      documentsDeferred: Boolean(app.documentsDeferred),
+    })
+      .then(() => {
+        setDocError(null);
+        track("step_completed", { step: 5 });
+        navigate("/apply/step-6");
+      })
+      .catch(() => {
+        setDocError("We couldn't save this step. Please try again.");
+      });
   }
 
   async function uploadLater() {
@@ -402,6 +413,10 @@ export function Step5_Documents() {
     try {
       await ClientAppAPI.deferDocuments(app.applicationToken!);
       update({ documentsDeferred: true });
+      await persistApplicationStep(app, 5, {
+        documents: app.documents,
+        documentsDeferred: true,
+      });
       track("step_completed", { step: 5, deferred: true });
       navigate("/apply/step-6");
     } catch (error) {

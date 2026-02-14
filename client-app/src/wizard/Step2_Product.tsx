@@ -40,6 +40,7 @@ import { trackEvent } from "../utils/analytics";
 import { components, layout, tokens } from "@/styles";
 import { resolveStepGuard } from "./stepGuard";
 import { track } from "../utils/track";
+import { persistApplicationStep } from "./saveStepProgress";
 
 function formatAmount(amount: number | null | undefined, countryCode: string) {
   if (typeof amount !== "number") return "N/A";
@@ -56,6 +57,7 @@ export function Step2_Product() {
   const [showReadinessModal, setShowReadinessModal] = useState(false);
   const [closingError, setClosingError] = useState<string | null>(null);
   const [closingBusy, setClosingBusy] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const countryCode = useMemo(
     () => getCountryCode(app.kyc.businessLocation),
     [app.kyc.businessLocation]
@@ -292,8 +294,21 @@ export function Step2_Product() {
       setShowClosingModal(true);
       return;
     }
-    track("step_completed", { step: 2 });
-    navigate("/apply/step-3");
+    void persistApplicationStep(app, 2, {
+      selectedProduct: app.selectedProduct || null,
+      selectedProductId: app.selectedProductId || null,
+      selectedProductType: app.selectedProductType || null,
+      productCategory: app.productCategory || null,
+      requires_closing_cost_funding: app.requires_closing_cost_funding,
+    })
+      .then(() => {
+        setSaveError(null);
+        track("step_completed", { step: 2 });
+        navigate("/apply/step-3");
+      })
+      .catch(() => {
+        setSaveError("We couldn't save this step. Please try again.");
+      });
   }
 
   async function confirmClosingCosts() {
@@ -319,9 +334,17 @@ export function Step2_Product() {
       if (app.kyc?.phone) {
         ClientProfileStore.upsertProfile(app.kyc.phone, token);
       }
+      await persistApplicationStep(app, 2, {
+        selectedProduct: app.selectedProduct || null,
+        selectedProductId: app.selectedProductId || null,
+        selectedProductType: app.selectedProductType || null,
+        productCategory: app.productCategory || null,
+        requires_closing_cost_funding: true,
+      });
       setShowClosingModal(false);
+      setSaveError(null);
       track("step_completed", { step: 2 });
-    navigate("/apply/step-3");
+      navigate("/apply/step-3");
     } catch (error) {
       console.error("Failed to create linked application:", error);
       setClosingError("Unable to create the linked application. Try again.");
@@ -332,9 +355,22 @@ export function Step2_Product() {
 
   function declineClosingCosts() {
     update({ requires_closing_cost_funding: false });
-    setShowClosingModal(false);
-    track("step_completed", { step: 2 });
-    navigate("/apply/step-3");
+    void persistApplicationStep(app, 2, {
+      selectedProduct: app.selectedProduct || null,
+      selectedProductId: app.selectedProductId || null,
+      selectedProductType: app.selectedProductType || null,
+      productCategory: app.productCategory || null,
+      requires_closing_cost_funding: false,
+    })
+      .then(() => {
+        setSaveError(null);
+        setShowClosingModal(false);
+        track("step_completed", { step: 2 });
+        navigate("/apply/step-3");
+      })
+      .catch(() => {
+        setSaveError("We couldn't save this step. Please try again.");
+      });
   }
 
   const filteredProducts = useMemo(
@@ -393,6 +429,11 @@ export function Step2_Product() {
   return (
     <WizardLayout>
       <StepHeader step={2} title="Product Category Selection" />
+      {saveError && (
+        <Card variant="muted" data-error={true}>
+          <div style={components.form.errorText}>{saveError}</div>
+        </Card>
+      )}
       <div style={{ marginBottom: tokens.spacing.sm }}>
         <Button type="button" variant="secondary" onClick={() => setShowReadinessModal(true)}>
           Check capital readiness

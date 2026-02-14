@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { ClientAppAPI } from "../api/clientApp";
@@ -33,12 +33,14 @@ import {
 } from "./wizardSchema";
 import { enforceV1StepSchema } from "../schemas/v1WizardSchema";
 import { shouldAutoAdvance } from "../utils/autoadvance";
+import { persistApplicationStep } from "./saveStepProgress";
 import { useReadiness } from "../state/readinessStore";
 
 export function Step4_Applicant() {
   const { app, update, autosaveError } = useApplicationStore();
   const readiness = useReadiness();
   const navigate = useNavigate();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const values = { ...app.applicant };
   const partner = values.partner || {};
@@ -136,7 +138,7 @@ export function Step4_Applicant() {
       (field) => !Validate.required(values[field])
     );
     if (missing) {
-      alert("Please complete all required applicant details.");
+      setSaveError("Please complete all required applicant details.");
       return;
     }
 
@@ -145,25 +147,27 @@ export function Step4_Applicant() {
         (field) => !Validate.required(partner[field])
       );
       if (partnerMissing) {
-        alert("Please complete all required partner details.");
+        setSaveError("Please complete all required partner details.");
         return;
       }
     }
 
     const { ownershipValid } = getOwnershipValidity(values);
     if (!ownershipValid) {
-      alert("Ownership percentages must total 100.");
+      setSaveError("Ownership percentages must total 100.");
       return;
     }
 
-    if (app.applicationToken) {
-      try {
+    try {
+      if (app.applicationToken) {
         await ClientAppAPI.update(app.applicationToken, { applicant: values });
-      } catch (error) {
-        console.error("Failed to save applicant details:", error);
-        alert("We couldn't save your applicant details. Please try again.");
-        return;
       }
+      await persistApplicationStep(app, 4, { applicant: values });
+      setSaveError(null);
+    } catch (error) {
+      console.error("Failed to save applicant details:", error);
+      setSaveError("We couldn't save your applicant details. Please try again.");
+      return;
     }
     track("step_completed", { step: 4 });
     navigate("/apply/step-5");
@@ -294,6 +298,11 @@ export function Step4_Applicant() {
   return (
     <WizardLayout>
       <StepHeader step={4} title="Applicant Information" />
+      {saveError && (
+        <Card variant="muted" data-error={true}>
+          <div style={components.form.errorText}>{saveError}</div>
+        </Card>
+      )}
       {autosaveError && (
         <Card
           variant="muted"
