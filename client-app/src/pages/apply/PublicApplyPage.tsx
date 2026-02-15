@@ -5,6 +5,7 @@ import { createPublicApplication } from "../../api/applications";
 import {
   clearStoredReadinessSession,
   getStoredReadinessToken,
+  getReadinessTokenFromUrl,
   resolveReadinessSessionId,
 } from "@/api/website";
 import { getContinuationSession, fetchContinuation, fetchReadinessSession } from "@/api/continuation";
@@ -487,8 +488,7 @@ export default function PublicApplyPage() {
   const navigate = useNavigate();
   const readinessToken = useMemo(() => {
     if (typeof window === "undefined") return null;
-    const fromQuery = new URLSearchParams(window.location.search).get("continue");
-    return fromQuery || getStoredReadinessToken();
+    return getReadinessTokenFromUrl(window.location.search) || getStoredReadinessToken();
   }, []);
   const readinessSessionId = useMemo(() => {
     if (typeof window === "undefined") return null;

@@ -216,7 +216,15 @@ export function clearStoredReadinessSession() {
 
 export function getReadinessSessionIdFromUrl(search: string) {
   const params = new URLSearchParams(search);
-  const queryValue = params.get(SESSION_ID_QUERY_PARAM) || params.get(TOKEN_QUERY_PARAM);
+  const queryValue = params.get(SESSION_ID_QUERY_PARAM);
+  if (!queryValue) return null;
+  const normalized = queryValue.trim();
+  return normalized || null;
+}
+
+export function getReadinessTokenFromUrl(search: string) {
+  const params = new URLSearchParams(search);
+  const queryValue = params.get(TOKEN_QUERY_PARAM) || params.get("continue");
   if (!queryValue) return null;
   const normalized = queryValue.trim();
   return normalized || null;

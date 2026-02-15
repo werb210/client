@@ -138,13 +138,12 @@ describe("website API dedupe", () => {
     expect(localStorage.getItem("boreal_readiness_session_id")).toBe("session-xyz");
   });
 
-  it("supports token query param for readiness continuation", async () => {
-    const { resolveReadinessSessionId } = await import("../website");
+  it("supports token query param for readiness continuation token", async () => {
+    const { getReadinessTokenFromUrl } = await import("../website");
 
-    const sessionId = resolveReadinessSessionId("?token=token-xyz");
+    const token = getReadinessTokenFromUrl("?token=token-xyz");
 
-    expect(sessionId).toBe("token-xyz");
-    expect(localStorage.getItem("boreal_readiness_session_id")).toBe("token-xyz");
+    expect(token).toBe("token-xyz");
   });
 
 
