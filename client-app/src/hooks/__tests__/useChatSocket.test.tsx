@@ -168,12 +168,12 @@ describe("useChatSocket", () => {
       await vi.runAllTicks();
     });
 
-    for (const delay of [1000, 2000, 5000, 10000, 30000]) {
+    for (const delay of [1000, 2000, 5000, 10000]) {
       act(() => {
         MockSocket.instances[MockSocket.instances.length - 1].onclose?.();
       });
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(delay + 3000);
+        await vi.advanceTimersByTimeAsync(delay + 2500);
       });
     }
 
@@ -183,7 +183,7 @@ describe("useChatSocket", () => {
     });
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(60000);
+      await vi.advanceTimersByTimeAsync(20000);
     });
 
     expect(MockSocket.instances.length).toBe(before);

@@ -107,39 +107,45 @@ function ReadinessLoader() {
     };
 
     const loadReadiness = async () => {
-      const readinessSessionId = resolveReadinessSessionId(location.search);
-      if (readinessSessionId) {
-        const sessionPayload = await fetchReadinessSession(readinessSessionId);
+      try {
+        const readinessSessionId = resolveReadinessSessionId(location.search);
+        if (readinessSessionId) {
+          const sessionPayload = await fetchReadinessSession(readinessSessionId);
+          if (!active) return;
+          if (sessionPayload) {
+            setReadiness(mapContinuationToReadinessContext(sessionPayload, readinessSessionId));
+            return;
+          }
+
+          const continuation = await fetchContinuation(readinessSessionId);
+          if (!active) return;
+          if (continuation) {
+            setReadiness(mapContinuationToReadinessContext(continuation, readinessSessionId));
+            return;
+          }
+
+          clearStoredReadinessSession();
+        }
+
+        const leadId = await resolveLeadId();
         if (!active) return;
-        if (sessionPayload) {
-          setReadiness(mapContinuationToReadinessContext(sessionPayload, readinessSessionId));
+        if (!leadId) {
+          clearReadiness();
           return;
         }
 
-        const continuation = await fetchContinuation(readinessSessionId);
+        const readiness = await fetchReadinessContext(leadId);
         if (!active) return;
-        if (continuation) {
-          setReadiness(mapContinuationToReadinessContext(continuation, readinessSessionId));
+        if (!readiness) {
+          clearReadiness();
           return;
         }
-
-        clearStoredReadinessSession();
+        setReadiness(readiness);
+      } catch {
+        if (active) {
+          clearReadiness();
+        }
       }
-
-      const leadId = await resolveLeadId();
-      if (!active) return;
-      if (!leadId) {
-        clearReadiness();
-        return;
-      }
-
-      const readiness = await fetchReadinessContext(leadId);
-      if (!active) return;
-      if (!readiness) {
-        clearReadiness();
-        return;
-      }
-      setReadiness(readiness);
     };
 
     void loadReadiness();

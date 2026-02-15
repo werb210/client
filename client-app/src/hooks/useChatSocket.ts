@@ -17,8 +17,8 @@ interface UseChatSocketOptions {
   onMessage?: (message: string) => void;
 }
 
-const MAX_RETRY_DELAY_MS = 30000;
-const RETRY_DELAYS_MS = [1000, 2000, 5000, 10000, 30000];
+const MAX_RETRY_DELAY_MS = 10000;
+const RETRY_DELAYS_MS = [1000, 2000, 5000, 10000];
 const MAX_RETRY_ATTEMPTS = RETRY_DELAYS_MS.length;
 const HEARTBEAT_INTERVAL_MS = 25000;
 const RETRY_JITTER_RATIO = 0.2;
