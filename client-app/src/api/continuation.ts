@@ -71,9 +71,19 @@ export async function fetchContinuation(token: string): Promise<ContinuationPayl
 
 export async function fetchReadinessSession(sessionId: string): Promise<ContinuationPayload | null> {
   try {
-    const res = await fetchWithRetry(`/api/readiness/session/${encodeURIComponent(sessionId)}`);
-    if (!res.ok) return null;
-    return (await res.json()) as ContinuationPayload;
+    const encodedSessionId = encodeURIComponent(sessionId);
+    const primary = await fetchWithRetry(`/api/readiness/${encodedSessionId}`);
+    if (primary.ok) {
+      return (await primary.json()) as ContinuationPayload;
+    }
+
+    if (primary.status >= 500) {
+      return null;
+    }
+
+    const fallback = await fetchWithRetry(`/api/readiness/session/${encodedSessionId}`);
+    if (!fallback.ok) return null;
+    return (await fallback.json()) as ContinuationPayload;
   } catch {
     return null;
   }
