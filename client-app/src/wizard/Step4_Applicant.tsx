@@ -158,19 +158,40 @@ export function Step4_Applicant() {
       return;
     }
 
+    let submissionToken = app.applicationToken || null;
     try {
+      const submissionPayload = {
+        financialProfile: app.kyc,
+        business: app.business,
+        applicant: values,
+        product_category: app.productCategory,
+        selected_product: app.selectedProduct,
+        selected_product_type: app.selectedProductType,
+        readiness_lead_id: app.readinessLeadId,
+      };
+
       if (app.applicationToken) {
-        await ClientAppAPI.update(app.applicationToken, { applicant: values });
+        await ClientAppAPI.update(app.applicationToken, submissionPayload);
+      } else {
+        const res = await ClientAppAPI.start(submissionPayload);
+        const token = res?.data?.token;
+        if (!token) {
+          setSaveError("We couldn't submit your application. Please try again.");
+          return;
+        }
+        submissionToken = token;
+        update({ applicationToken: token, applicationId: token });
       }
+
       await persistApplicationStep(app, 4, { applicant: values });
       setSaveError(null);
     } catch (error) {
-      console.error("Failed to save applicant details:", error);
-      setSaveError("We couldn't save your applicant details. Please try again.");
+      console.error("Failed to submit applicant details:", error);
+      setSaveError("We couldn't submit your application. Please try again.");
       return;
     }
     track("step_completed", { step: 4 });
-    navigate("/apply/step-5");
+    navigate(submissionToken ? `/status?token=${encodeURIComponent(submissionToken)}` : "/status");
   }
 
   const baseRequiredFields = [

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
-import { ClientAppAPI } from "../api/clientApp";
 import { StepHeader } from "../components/StepHeader";
 import { Card } from "../components/ui/Card";
 import { Select } from "../components/ui/Select";
@@ -183,7 +182,6 @@ export function Step1_KYC() {
   );
   const readinessEnabled = Boolean(readiness);
   const readinessFieldState = {
-    companyName: Boolean(readiness?.companyName),
     industry: Boolean(readiness?.industry),
     salesHistory: typeof readiness?.yearsInBusiness === "number",
     monthlyRevenue: typeof readiness?.monthlyRevenue === "number",
@@ -321,36 +319,17 @@ export function Step1_KYC() {
       const payloadBody = {
         financialProfile: payload,
       };
-      const existingApplicationId = applicationId || app.applicationId || app.applicationToken;
       setSubmitError(null);
-
-      if (existingApplicationId) {
-        await ClientAppAPI.updateApplication(existingApplicationId, payloadBody);
-        update({
-          applicationToken: app.applicationToken || existingApplicationId,
-          applicationId: app.applicationId || existingApplicationId,
-          matchPercentages,
-        });
-        await persistApplicationStep(
-          { ...app, applicationId: app.applicationId || existingApplicationId, applicationToken: app.applicationToken || existingApplicationId },
-          1,
-          payloadBody
-        );
-      } else {
-        const res = await ClientAppAPI.start(payloadBody);
-        const token = res?.data?.token;
-        if (!token) {
-          setSubmitError("We couldn't start your application. Please try again.");
-          return;
-        }
-        update({ applicationToken: token, applicationId: token, matchPercentages });
-        await persistApplicationStep({ ...app, applicationId: token, applicationToken: token }, 1, payloadBody);
-      }
-      track("apply_started", { step: 1 });
+      update({
+        applicationToken: app.applicationToken || applicationId || app.applicationId || null,
+        applicationId: app.applicationId || applicationId || null,
+        matchPercentages,
+      });
+      await persistApplicationStep(app, 1, payloadBody);
       track("step_completed", { step: 1 });
       navigate("/apply/step-2");
     } catch {
-      setSubmitError("We couldn't start your application. Please try again.");
+      setSubmitError("We couldn't save this step. Please try again.");
     }
   }
 
@@ -445,22 +424,6 @@ export function Step1_KYC() {
             >
               Pre-qualified via Capital Readiness
             </div>
-          )}
-          {app.kyc.companyName && (
-            <div className="text-sm text-neutral-400">
-              {readinessFieldState.companyName
-                ? "✔ Confirmed via Capital Readiness"
-                : `Company: ${app.kyc.companyName}`}
-            </div>
-          )}
-          {app.kyc.fullName && (
-            <div className="text-sm text-neutral-400">Full name: {app.kyc.fullName}</div>
-          )}
-          {app.kyc.email && (
-            <div className="text-sm text-neutral-400">Email: {app.kyc.email}</div>
-          )}
-          {app.kyc.phone && (
-            <div className="text-sm text-neutral-400">Phone: {app.kyc.phone}</div>
           )}
           {app.kyc.industry && (
             <div className="text-sm text-neutral-400">Industry: {app.kyc.industry}</div>

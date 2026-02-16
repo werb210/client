@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { Step1_KYC } from "../wizard/Step1_KYC";
 import { Step2_Product } from "../wizard/Step2_Product";
@@ -11,9 +11,6 @@ import { ClientAppAPI } from "../api/clientApp";
 import { extractApplicationFromStatus } from "../applications/resume";
 import { fetchContinuation } from "@/api/continuation";
 import { useReadiness } from "@/state/readinessStore";
-
-const Step5 = lazy(() => import("../wizard/Step5_Documents"));
-const Step6 = lazy(() => import("../wizard/Step6_Review"));
 
 export function ApplyPage() {
   const { initialized, init, app, update } = useApplicationStore();
@@ -94,6 +91,14 @@ export function ApplyPage() {
       applicant: nextApplicant,
     });
   }, [app.applicant, app.business, app.kyc, app.readinessLeadId, readiness, update]);
+
+  useEffect(() => {
+    if (!readiness) return;
+    if ((app.currentStep || 1) < 2) {
+      update({ currentStep: 2 });
+      navigate("/apply/step-2", { replace: true });
+    }
+  }, [app.currentStep, navigate, readiness, update]);
 
   useEffect(() => {
     if (!continuationToken) {
@@ -261,13 +266,11 @@ export function ApplyPage() {
         }
       >
         <Routes>
-          <Route path="/" element={<Navigate to={`step-${Math.max(1, Math.min(6, Number(app.currentStep || 1)))}`} replace />} />
+          <Route path="/" element={<Navigate to={`step-${Math.max(1, Math.min(4, Number(app.currentStep || (readiness ? 2 : 1))))}`} replace />} />
           <Route path="step-1" element={<Step1_KYC />} />
           <Route path="step-2" element={<Step2_Product />} />
           <Route path="step-3" element={<Step3_Business />} />
           <Route path="step-4" element={<Step4_Applicant />} />
-          <Route path="step-5" element={<Step5 />} />
-          <Route path="step-6" element={<Step6 />} />
         </Routes>
       </Suspense>
     </div>
