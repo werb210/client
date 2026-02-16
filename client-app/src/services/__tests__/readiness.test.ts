@@ -28,7 +28,7 @@ describe("readiness service", () => {
           monthlyRevenue: 120000,
           annualRevenue: 1400000,
           arOutstanding: 250000,
-          existingDebt: true,
+          collateral: true,
         },
       }),
     });
@@ -45,7 +45,7 @@ describe("readiness service", () => {
       monthlyRevenue: 120000,
       annualRevenue: 1400000,
       arOutstanding: 250000,
-      existingDebt: true,
+      collateral: true,
     });
   });
 

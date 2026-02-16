@@ -15,12 +15,11 @@ export interface ContinuationPayload {
   monthlyRevenue?: number;
   annualRevenue?: number;
   arOutstanding?: number;
-  existingDebt?: boolean;
+  collateral?: boolean;
   years_in_business?: number;
   monthly_revenue?: number;
   annual_revenue?: number;
   ar_outstanding?: number;
-  existing_debt?: boolean;
 }
 
 export interface ReadinessBridgePayload {
@@ -64,7 +63,7 @@ export function mapContinuationToReadinessContext(
     monthlyRevenue: pickNumber(payload.monthlyRevenue, payload.monthly_revenue),
     annualRevenue: pickNumber(payload.annualRevenue, payload.annual_revenue),
     arOutstanding: pickNumber(payload.arOutstanding, payload.ar_outstanding),
-    existingDebt: pickBoolean(payload.existingDebt, payload.existing_debt),
+    collateral: pickBoolean(payload.collateral),
   };
 }
 

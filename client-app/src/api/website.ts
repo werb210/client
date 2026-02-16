@@ -11,7 +11,7 @@ export interface CreditReadinessPayload {
   monthlyRevenue?: string;
   annualRevenue?: string;
   arOutstanding?: string;
-  existingDebt?: string;
+  collateral?: string;
 }
 
 const CONTACT_DEDUP_KEY = "boreal_contact_submission_cache";

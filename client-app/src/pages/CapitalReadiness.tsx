@@ -39,7 +39,7 @@ export default function CapitalReadiness() {
     annualRevenue: "",
     monthlyRevenue: "",
     arOutstanding: "",
-    existingDebt: "",
+    collateral: "",
     requestedAmount: "",
     creditScoreRange: "",
   });
@@ -72,7 +72,7 @@ export default function CapitalReadiness() {
         annualRevenue: form.annualRevenue,
         monthlyRevenue: form.monthlyRevenue,
         arOutstanding: form.arOutstanding,
-        existingDebt: form.existingDebt,
+        collateral: form.collateral,
       });
 
       const readinessLeadId =

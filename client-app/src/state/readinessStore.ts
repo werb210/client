@@ -11,7 +11,7 @@ export type ReadinessContext = {
   monthlyRevenue?: number;
   annualRevenue?: number;
   arOutstanding?: number;
-  existingDebt?: boolean;
+  collateral?: boolean;
 };
 
 type ReadinessState = ReadinessContext | null;

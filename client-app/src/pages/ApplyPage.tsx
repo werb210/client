@@ -111,10 +111,10 @@ export function ApplyPage() {
         readiness.arOutstanding !== undefined && readiness.arOutstanding !== null
           ? String(readiness.arOutstanding)
           : app.kyc.accountsReceivable,
-      existingDebt:
-        typeof readiness.existingDebt === "boolean"
-          ? readiness.existingDebt
-          : app.kyc.existingDebt,
+      collateral:
+        typeof readiness.collateral === "boolean"
+          ? readiness.collateral
+          : app.kyc.collateral,
     };
 
     const nextBusiness = {
@@ -197,10 +197,10 @@ export function ApplyPage() {
               data.arOutstanding !== undefined && data.arOutstanding !== null
                 ? String(data.arOutstanding)
                 : app.kyc.accountsReceivable,
-            existingDebt:
-              typeof data.existingDebt === "boolean"
-                ? data.existingDebt
-                : app.kyc.existingDebt,
+            collateral:
+              typeof data.collateral === "boolean"
+                ? data.collateral
+                : app.kyc.collateral,
           },
           business: {
             ...app.business,
