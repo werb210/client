@@ -99,3 +99,12 @@ textarea {
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16) !important;
 }
+
+.input {
+  background-color: #1c2942;
+  border: 1px solid #2a3a5a;
+  padding: 12px 16px;
+  border-radius: 8px;
+  width: 100%;
+  color: white;
+}
