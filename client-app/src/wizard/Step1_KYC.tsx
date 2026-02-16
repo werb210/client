@@ -534,8 +534,8 @@ fixedAssets:
           {app.kyc.accountsReceivable && (
             <div className="text-sm text-neutral-400">AR outstanding: {app.kyc.accountsReceivable}</div>
           )}
-          {app.kyc.existingDebt !== undefined && app.kyc.existingDebt !== null && (
-            <div className="text-sm text-neutral-400">Existing debt: {String(app.kyc.existingDebt)}</div>
+          {app.kyc.collateral !== undefined && app.kyc.collateral !== null && (
+            <div className="text-sm text-neutral-400">Collateral: {String(app.kyc.collateral)}</div>
           )}
         </Card>
         <Card

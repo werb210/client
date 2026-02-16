@@ -29,7 +29,7 @@ describe("continuation mapping", () => {
         monthly_revenue: 80000,
         annual_revenue: 960000,
         ar_outstanding: 120000,
-        existing_debt: true,
+        collateral: true,
       },
       "fallback-lead"
     );
@@ -45,7 +45,7 @@ describe("continuation mapping", () => {
       monthlyRevenue: 80000,
       annualRevenue: 960000,
       arOutstanding: 120000,
-      existingDebt: true,
+      collateral: true,
     });
   });
 

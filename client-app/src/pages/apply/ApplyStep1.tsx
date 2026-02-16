@@ -1,5 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  ANNUAL_REVENUE,
+  AR_BALANCE,
+  COLLATERAL,
+  MONTHLY_REVENUE,
+  YEARS_IN_BUSINESS,
+} from "@/constants/creditEnums";
 
 export default function Step1() {
   const navigate = useNavigate();
@@ -14,7 +21,7 @@ export default function Step1() {
     annualRevenue: "",
     monthlyRevenue: "",
     arBalance: "",
-    collateralAvailable: "",
+    collateral: "",
   });
 
   const update = (field: string, value: string) => {
@@ -86,10 +93,9 @@ export default function Step1() {
           onChange={(e) => update("yearsInBusiness", e.target.value)}
         >
           <option value="">Years in business</option>
-          <option>Zero</option>
-          <option>Under 1 Year</option>
-          <option>1 to 3 Years</option>
-          <option>Over 3 Years</option>
+          {YEARS_IN_BUSINESS.map((v) => (
+            <option key={v} value={v}>{v}</option>
+          ))}
         </select>
 
         <select
@@ -98,11 +104,9 @@ export default function Step1() {
           onChange={(e) => update("annualRevenue", e.target.value)}
         >
           <option value="">Annual revenue</option>
-          <option>Zero to $150,000</option>
-          <option>$150,001 to $500,000</option>
-          <option>$500,001 to $1,000,000</option>
-          <option>$1,000,001 to $3,000,000</option>
-          <option>Over $3,000,000</option>
+          {ANNUAL_REVENUE.map((v) => (
+            <option key={v} value={v}>{v}</option>
+          ))}
         </select>
 
         <select
@@ -111,10 +115,9 @@ export default function Step1() {
           onChange={(e) => update("monthlyRevenue", e.target.value)}
         >
           <option value="">Average monthly revenue</option>
-          <option>Under $10,000</option>
-          <option>$10,001 to $30,000</option>
-          <option>$30,001 to $100,000</option>
-          <option>Over $100,000</option>
+          {MONTHLY_REVENUE.map((v) => (
+            <option key={v} value={v}>{v}</option>
+          ))}
         </select>
 
         <select
@@ -123,27 +126,20 @@ export default function Step1() {
           onChange={(e) => update("arBalance", e.target.value)}
         >
           <option value="">Account Receivables</option>
-          <option>No Account Receivables</option>
-          <option>Zero to $100,000</option>
-          <option>$100,000 to $250,000</option>
-          <option>$250,000 to $500,000</option>
-          <option>$500,000 to $1,000,000</option>
-          <option>$1,000,000 to $3,000,000</option>
-          <option>Over $3,000,000</option>
+          {AR_BALANCE.map((v) => (
+            <option key={v} value={v}>{v}</option>
+          ))}
         </select>
 
         <select
           className="input"
-          value={form.collateralAvailable}
-          onChange={(e) => update("collateralAvailable", e.target.value)}
+          value={form.collateral}
+          onChange={(e) => update("collateral", e.target.value)}
         >
           <option value="">Is there available collateral for security?</option>
-          <option>No Collateral Available</option>
-          <option>$1 to $100,000</option>
-          <option>$100,001 to $250,000</option>
-          <option>$250,001 to $500,000</option>
-          <option>$500,001 to $1 million</option>
-          <option>Over $1 million</option>
+          {COLLATERAL.map((v) => (
+            <option key={v} value={v}>{v}</option>
+          ))}
         </select>
 
       </div>

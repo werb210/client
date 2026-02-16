@@ -72,9 +72,9 @@ export async function fetchReadinessContext(
         typeof readiness.arOutstanding === "number"
           ? readiness.arOutstanding
           : undefined,
-      existingDebt:
-        typeof readiness.existingDebt === "boolean"
-          ? readiness.existingDebt
+      collateral:
+        typeof readiness.collateral === "boolean"
+          ? readiness.collateral
           : undefined,
     };
   } catch {

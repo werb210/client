@@ -27,6 +27,7 @@ export async function submitApplication(
       ? { "Idempotency-Key": options.idempotencyKey }
       : undefined,
   });
+  localStorage.removeItem("creditSessionToken");
   return res.data;
 }
 
