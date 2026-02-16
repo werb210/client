@@ -67,6 +67,25 @@ export default function App() {
     }
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const session = params.get("session");
+
+    if (!session) return;
+
+    const apiBaseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+    if (!apiBaseUrl) return;
+
+    void fetch(`${apiBaseUrl}/api/credit-readiness/session/${session}`)
+      .then((res) => res.json())
+      .then((data) => {
+        localStorage.setItem("creditPrefill", JSON.stringify(data));
+      })
+      .catch(() => {
+        // ignore prefill fetch failures
+      });
+  }, []);
+
   if (refreshing) {
     return <SessionRefreshOverlay />;
   }

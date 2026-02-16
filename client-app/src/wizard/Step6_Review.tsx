@@ -328,6 +328,7 @@ export function Step6_Review() {
       clearDraft();
       clearSubmissionIdempotencyKey();
       clearStoredReadinessSession();
+      localStorage.removeItem("creditPrefill");
       setTimeout(() => {
         navigate("/portal", { replace: true });
       }, 1200);
@@ -342,6 +343,7 @@ export function Step6_Review() {
         clearDraft();
         clearSubmissionIdempotencyKey();
         clearStoredReadinessSession();
+      localStorage.removeItem("creditPrefill");
         setTimeout(() => {
           navigate("/portal", { replace: true });
         }, 1200);
