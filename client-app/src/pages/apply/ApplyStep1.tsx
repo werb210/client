@@ -1,275 +1,134 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getActiveClientSessionToken } from "../../state/clientSession";
 import { Card } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Select } from "../../components/ui/Select";
 import { Button } from "../../components/ui/Button";
-import { components, layout, scrollToFirstError, tokens } from "@/styles";
-import { apiRequest } from "../../lib/api";
-import { createLead } from "@/services/lead";
-import { checkContinuation } from "@/services/continuation";
-
-const provinces = [
-  "Alberta",
-  "British Columbia",
-  "Manitoba",
-  "New Brunswick",
-  "Newfoundland and Labrador",
-  "Northwest Territories",
-  "Nova Scotia",
-  "Nunavut",
-  "Ontario",
-  "Prince Edward Island",
-  "Quebec",
-  "Saskatchewan",
-  "Yukon",
-];
+import { layout, components, tokens } from "@/styles";
 
 type Step1Values = {
-  companyName: string;
-  fullName: string;
-  email: string;
-  phone: string;
+  fundingType: string;
+  fundingAmount: string;
+  businessLocation: string;
   industry: string;
+  purpose: string;
   yearsInBusiness: string;
-  monthlyRevenue: string;
   annualRevenue: string;
-  arOutstanding: string;
+  monthlyRevenue: string;
+  arBalance: string;
   existingDebt: string;
-  operatingProvince: string;
-};
-
-const initialValues: Step1Values = {
-  companyName: "",
-  fullName: "",
-  email: "",
-  phone: "",
-  industry: "",
-  yearsInBusiness: "",
-  monthlyRevenue: "",
-  annualRevenue: "",
-  arOutstanding: "",
-  existingDebt: "",
-  operatingProvince: "",
 };
 
 export default function ApplyStep1() {
   const navigate = useNavigate();
-  const token = getActiveClientSessionToken();
-  const [formValues, setFormValues] = useState<Step1Values>(initialValues);
-  const [resumeId, setResumeId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (error) {
-      scrollToFirstError();
-    }
-  }, [error]);
+  const [formValues, setFormValues] = useState<Step1Values>({
+    fundingType: "",
+    fundingAmount: "",
+    businessLocation: "",
+    industry: "",
+    purpose: "",
+    yearsInBusiness: "",
+    annualRevenue: "",
+    monthlyRevenue: "",
+    arBalance: "",
+    existingDebt: "",
+  });
 
-  useEffect(() => {
-    const email = localStorage.getItem("leadEmail");
-    if (!email) return;
+  function update(field: keyof Step1Values, value: string) {
+    const updated = { ...formValues, [field]: value };
+    setFormValues(updated);
+    localStorage.setItem("step1", JSON.stringify(updated));
+  }
 
-    void checkContinuation(email)
-      .then((data) => {
-        if (data.pendingApplicationId) {
-          localStorage.setItem("pendingApplicationId", data.pendingApplicationId);
-        }
-      })
-      .catch(() => {
-        // no-op when continuation lookup fails
-      });
-  }, []);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const nextResumeId = params.get("resume");
-
-    if (!nextResumeId) return;
-
-    setResumeId(nextResumeId);
-
-    fetch(`/api/continuation/${nextResumeId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setFormValues((current) => ({
-          ...current,
-          companyName: data.companyName ?? "",
-          fullName: data.fullName ?? "",
-          email: data.email ?? "",
-          phone: data.phone ?? "",
-          industry: data.industry ?? "",
-          yearsInBusiness: data.yearsInBusiness ?? "",
-          monthlyRevenue: data.monthlyRevenue ?? "",
-          annualRevenue: data.annualRevenue ?? "",
-          arOutstanding: data.arOutstanding ?? "",
-          existingDebt: data.existingDebt ?? "",
-        }));
-
-        if (data.email) {
-          localStorage.setItem("boreal_email", data.email);
-        }
-      })
-      .catch(() => {
-        // no-op when continuation fetch fails
-      });
-  }, []);
-
-  const canSubmit = useMemo(
-    () => Boolean(formValues.companyName && formValues.email && formValues.operatingProvince),
-    [formValues.companyName, formValues.email, formValues.operatingProvince]
-  );
-
-  async function submit() {
-    setError(null);
-    setIsSubmitting(true);
-
-    try {
-      const payload: Record<string, unknown> = {
-        source: "client",
-        country: "CA",
-        business: {
-          legalName: formValues.companyName,
-          operatingProvince: formValues.operatingProvince,
-          industry: formValues.industry,
-          yearsInBusiness: formValues.yearsInBusiness,
-        },
-        contact: {
-          name: formValues.fullName,
-          email: formValues.email,
-          phone: formValues.phone,
-        },
-        financialProfile: {
-          monthlyRevenue: Number(formValues.monthlyRevenue || 0),
-          annualRevenue: Number(formValues.annualRevenue || 0),
-          arOutstanding: Number(formValues.arOutstanding || 0),
-          existingDebt: Number(formValues.existingDebt || 0),
-        },
-      };
-
-      const bootstrap = await createLead({
-        companyName: formValues.companyName,
-        fullName: formValues.fullName,
-        email: formValues.email,
-        phone: formValues.phone,
-        industry: formValues.industry,
-      });
-      localStorage.setItem("leadId", bootstrap.leadId);
-      localStorage.setItem("pendingApplicationId", bootstrap.pendingApplicationId);
-      localStorage.setItem("leadEmail", formValues.email);
-
-      if (resumeId) {
-        payload.continuationId = resumeId;
-      }
-
-      const existing = localStorage.getItem("pendingApplicationId");
-      if (existing) {
-        await apiRequest(`/api/applications/${existing}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            "Idempotency-Key": crypto.randomUUID(),
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify(payload),
-        });
-        localStorage.setItem("applicationToken", existing);
-      } else {
-        const data = await apiRequest<{ token?: string }>("/api/applications", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Idempotency-Key": crypto.randomUUID(),
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!data?.token) {
-          throw new Error("Missing application token");
-        }
-        localStorage.setItem("applicationToken", data.token);
-      }
-      localStorage.setItem("boreal_email", formValues.email);
-      navigate("/apply/step-2");
-    } catch (err) {
-      setError("We couldn't start your application. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  function submit() {
+    navigate("/apply/step-2");
   }
 
   return (
     <div style={layout.page}>
       <div style={layout.centerColumn}>
         <Card>
-          <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.sm }}>
-            <div style={components.form.eyebrow}>Step 1 of 4</div>
-            <h2 style={components.form.sectionTitle}>Business identity</h2>
-            <p style={components.form.subtitle}>Tell us how your business is registered.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.md }}>
+            <h2 style={components.form.sectionTitle}>Step 1: Financial Profile</h2>
 
-            {resumeId ? (
-              <div className="bg-blue-50 border border-blue-200 p-3 rounded mb-4">
-                We found an existing readiness profile. Continue your application below.
-              </div>
-            ) : null}
-
-            <label style={components.form.label} htmlFor="companyName">
-              Legal business name
-            </label>
-            <Input
-              id="companyName"
-              placeholder="Boreal Coffee Company"
-              value={formValues.companyName}
-              disabled={Boolean(resumeId)}
-              onChange={(e) => setFormValues((prev) => ({ ...prev, companyName: e.target.value }))}
-            />
-
-            <label style={components.form.label} htmlFor="email">
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@business.com"
-              value={formValues.email}
-              disabled={Boolean(resumeId)}
-              onChange={(e) => {
-                const email = e.target.value;
-                setFormValues((prev) => ({ ...prev, email }));
-                localStorage.setItem("boreal_email", email);
-              }}
-            />
-
-            <label style={components.form.label} htmlFor="operatingProvince">
-              Operating province
-            </label>
-            <Select
-              id="operatingProvince"
-              value={formValues.operatingProvince}
-              onChange={(e) =>
-                setFormValues((prev) => ({ ...prev, operatingProvince: e.target.value }))
-              }
-            >
-              <option value="">Select a province</option>
-              {provinces.map((province) => (
-                <option key={province} value={province}>
-                  {province}
-                </option>
-              ))}
+            <Select onChange={(e) => update("fundingType", e.target.value)}>
+              <option value="">Select funding type</option>
+              <option>Capital</option>
+              <option>Equipment Financing</option>
+              <option>Both Capital and Equipment</option>
             </Select>
 
-            {error && (
-              <div style={components.form.errorText} data-error={true}>
-                {error}
-              </div>
-            )}
+            <Input
+              placeholder="Funding amount"
+              value={formValues.fundingAmount}
+              onChange={(e) => update("fundingAmount", e.target.value)}
+            />
 
-            <Button disabled={!canSubmit || isSubmitting} onClick={submit} loading={isSubmitting}>
-              Continue
-            </Button>
+            <Select onChange={(e) => update("businessLocation", e.target.value)}>
+              <option value="">Business Location</option>
+              <option>Canada</option>
+              <option>United States</option>
+              <option>Neither</option>
+            </Select>
+
+            <Select onChange={(e) => update("purpose", e.target.value)}>
+              <option value="">Purpose of funds</option>
+              <option>Working Capital</option>
+              <option>Expansion</option>
+              <option>Inventory</option>
+              <option>Equipment</option>
+              <option>Marketing</option>
+              <option>Other</option>
+            </Select>
+
+            <Select onChange={(e) => update("yearsInBusiness", e.target.value)}>
+              <option value="">Years in business</option>
+              <option>Zero</option>
+              <option>Under 1 Year</option>
+              <option>1 to 3 Years</option>
+              <option>Over 3 Years</option>
+            </Select>
+
+            <Select onChange={(e) => update("annualRevenue", e.target.value)}>
+              <option value="">Annual revenue</option>
+              <option>Zero to $150,000</option>
+              <option>$150,001 to $500,000</option>
+              <option>$500,001 to $1,000,000</option>
+              <option>$1,000,001 to $3,000,000</option>
+              <option>Over $3,000,000</option>
+            </Select>
+
+            <Select onChange={(e) => update("monthlyRevenue", e.target.value)}>
+              <option value="">Average monthly revenue</option>
+              <option>Under $10,000</option>
+              <option>$10,001 to $30,000</option>
+              <option>$30,001 to $100,000</option>
+              <option>Over $100,000</option>
+            </Select>
+
+            <Select onChange={(e) => update("arBalance", e.target.value)}>
+              <option value="">Account Receivables</option>
+              <option>No Account Receivables</option>
+              <option>Zero to $100,000</option>
+              <option>$100,000 to $250,000</option>
+              <option>$250,000 to $500,000</option>
+              <option>$500,000 to $1,000,000</option>
+              <option>$1,000,000 to $3,000,000</option>
+              <option>Over $3,000,000</option>
+            </Select>
+
+            <Select onChange={(e) => update("existingDebt", e.target.value)}>
+              <option value="">Existing Debt</option>
+              <option>Zero</option>
+              <option>Zero to $100,000</option>
+              <option>$100,001 to $500,000</option>
+              <option>$500,001 to $1,000,000</option>
+              <option>$1,000,001 to $3,000,000</option>
+              <option>Over $3,000,000</option>
+            </Select>
+
+            <Button onClick={submit}>Continue</Button>
           </div>
         </Card>
       </div>
