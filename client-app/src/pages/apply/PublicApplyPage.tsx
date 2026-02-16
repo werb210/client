@@ -481,7 +481,6 @@ export default function PublicApplyPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isHydratingContinuation, setIsHydratingContinuation] = useState(false);
   const [continuing, setContinuing] = useState(false);
-  const [lockedFields, setLockedFields] = useState<Set<keyof ApplicationFormValues>>(new Set());
   const [submissionState, setSubmissionState] = useState<PublicSubmissionState | null>(
     () => loadPublicSubmissionState(getSessionStorage())
   );
@@ -524,18 +523,6 @@ export default function PublicApplyPage() {
               ? String(data.yearsInBusiness)
               : prev.years_in_business,
         }));
-        setLockedFields(
-          new Set([
-            ...(data.companyName ? (["business_legal_name", "operating_name"] as (keyof ApplicationFormValues)[]) : []),
-            ...(data.industry ? (["industry"] as (keyof ApplicationFormValues)[]) : []),
-            ...(data.fullName ? (["contact_name"] as (keyof ApplicationFormValues)[]) : []),
-            ...(data.email ? (["contact_email"] as (keyof ApplicationFormValues)[]) : []),
-            ...(data.phone ? (["contact_phone"] as (keyof ApplicationFormValues)[]) : []),
-            ...(typeof data.yearsInBusiness === "number"
-              ? (["years_in_business"] as (keyof ApplicationFormValues)[])
-              : []),
-          ])
-        );
       })
       .finally(() => {
         if (active) {
@@ -726,29 +713,6 @@ export default function PublicApplyPage() {
       ) : null}
 
 
-      {continuing && lockedFields.size > 0 ? (
-        <section
-          style={{
-            marginBottom: 16,
-            padding: 12,
-            borderRadius: 8,
-            border: "1px solid #e5e7eb",
-            background: "#f9fafb",
-            display: "grid",
-            gap: 8,
-          }}
-        >
-          <strong>Confirmed details</strong>
-          {applicationFields
-            .filter((field) => lockedFields.has(field.name))
-            .map((field) => (
-              <div key={field.name} style={{ color: "#374151" }}>
-                {field.label}: {values[field.name]}
-              </div>
-            ))}
-        </section>
-      ) : null}
-
       <form onSubmit={handleSubmit} style={{ display: "grid", gap: 20 }}>
 
         {errors.form ? (
@@ -766,7 +730,6 @@ export default function PublicApplyPage() {
           </div>
         ) : null}
         {applicationFields.map((field) => {
-          if (lockedFields.has(field.name)) return null;
           const value = values[field.name];
           const error = errors[field.name];
 

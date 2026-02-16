@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AppRouter from "../router/AppRouter";
 import { Header } from "../components/Header";
 import { OfflineBanner } from "../components/OfflineBanner";
@@ -17,15 +17,52 @@ import { useExitIntent } from "../hooks/useExitIntent";
 import { trackEvent } from "../utils/analytics";
 import ChatSupportWidget from "@/components/ChatSupportWidget";
 import { useApplicationStore } from "../state/useApplicationStore";
+import { useReadinessBridge } from "@/hooks/useReadinessBridge";
 
 export default function App() {
-  const { loadFromServer, update } = useApplicationStore();
+  const { app, loadFromServer, update } = useApplicationStore();
+  const appRef = useRef(app);
   const refreshing = useSessionRefreshing();
   const updateAvailable = useServiceWorkerUpdate();
   const [continuationError, setContinuationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    appRef.current = app;
+  }, [app]);
+
   useExitIntent(() => {
     trackEvent("client_exit_intent_detected");
   });
+
+  const setStep1Data = useCallback((step1Data: Record<string, unknown>) => {
+    update({
+      readinessSessionToken: localStorage.getItem("creditSessionToken") || appRef.current.readinessSessionToken,
+      kyc: {
+        ...appRef.current.kyc,
+        ...step1Data,
+      },
+    });
+  }, [update]);
+
+  const setStep3Data = useCallback((step3Data: Record<string, unknown>) => {
+    update({
+      business: {
+        ...appRef.current.business,
+        ...step3Data,
+      },
+    });
+  }, [update]);
+
+  const setStep4Data = useCallback((step4Data: Record<string, unknown>) => {
+    update({
+      applicant: {
+        ...appRef.current.applicant,
+        ...step4Data,
+      },
+    });
+  }, [update]);
+
+  useReadinessBridge(setStep1Data, setStep3Data, setStep4Data);
 
   const debugUpdateAvailable =
     typeof window !== "undefined" &&

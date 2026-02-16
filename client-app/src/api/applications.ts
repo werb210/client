@@ -11,9 +11,15 @@ export async function submitApplication(
   payload: unknown,
   options?: { idempotencyKey?: string; continuationToken?: string }
 ) {
+  const creditSessionToken = localStorage.getItem("creditSessionToken");
+
   const submissionPayload =
-    options?.continuationToken && payload && typeof payload === "object" && !Array.isArray(payload)
-      ? { ...(payload as Record<string, unknown>), continuationToken: options.continuationToken }
+    payload && typeof payload === "object" && !Array.isArray(payload)
+      ? {
+          ...(payload as Record<string, unknown>),
+          ...(options?.continuationToken ? { continuationToken: options.continuationToken } : {}),
+          creditSessionToken,
+        }
       : payload;
 
   const res = await api.post("/api/client/submissions", submissionPayload, {

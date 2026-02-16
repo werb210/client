@@ -292,6 +292,7 @@ export function Step6_Review() {
         idempotencyKey,
         continuationToken: app.continuationToken,
       });
+      localStorage.removeItem("creditSessionToken");
       const refreshed = await ClientAppAPI.status(app.applicationToken!);
       const hydrated = extractApplicationFromStatus(
         refreshed?.data || {},
