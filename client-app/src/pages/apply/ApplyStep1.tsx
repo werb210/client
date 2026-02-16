@@ -1,136 +1,160 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "../../components/ui/Card";
-import { Input } from "../../components/ui/Input";
-import { Select } from "../../components/ui/Select";
-import { Button } from "../../components/ui/Button";
-import { layout, components, tokens } from "@/styles";
 
-type Step1Values = {
-  fundingType: string;
-  fundingAmount: string;
-  businessLocation: string;
-  industry: string;
-  purpose: string;
-  yearsInBusiness: string;
-  annualRevenue: string;
-  monthlyRevenue: string;
-  arBalance: string;
-  existingDebt: string;
-};
-
-export default function ApplyStep1() {
+export default function Step1() {
   const navigate = useNavigate();
 
-  const [formValues, setFormValues] = useState<Step1Values>({
-    fundingType: "",
-    fundingAmount: "",
-    businessLocation: "",
+  const [form, setForm] = useState({
+    companyName: "",
+    fullName: "",
+    phone: "",
+    email: "",
     industry: "",
-    purpose: "",
     yearsInBusiness: "",
     annualRevenue: "",
     monthlyRevenue: "",
     arBalance: "",
-    existingDebt: "",
+    collateralAvailable: "",
   });
 
-  function update(field: keyof Step1Values, value: string) {
-    const updated = { ...formValues, [field]: value };
-    setFormValues(updated);
-    localStorage.setItem("step1", JSON.stringify(updated));
-  }
+  const update = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
 
-  function submit() {
+  const handleNext = () => {
+    sessionStorage.setItem("application_step1", JSON.stringify(form));
     navigate("/apply/step-2");
-  }
+  };
 
   return (
-    <div style={layout.page}>
-      <div style={layout.centerColumn}>
-        <Card>
-          <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.md }}>
-            <h2 style={components.form.sectionTitle}>Step 1: Financial Profile</h2>
+    <div className="min-h-screen bg-[#081225] text-white px-6 py-12">
+      <h1 className="text-3xl font-bold mb-8">Step 1 — Business Overview</h1>
 
-            <Select onChange={(e) => update("fundingType", e.target.value)}>
-              <option value="">Select funding type</option>
-              <option>Capital</option>
-              <option>Equipment Financing</option>
-              <option>Both Capital and Equipment</option>
-            </Select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            <Input
-              placeholder="Funding amount"
-              value={formValues.fundingAmount}
-              onChange={(e) => update("fundingAmount", e.target.value)}
-            />
+        <input
+          autoComplete="organization"
+          placeholder="Company Name"
+          className="input"
+          value={form.companyName}
+          onChange={(e) => update("companyName", e.target.value)}
+        />
 
-            <Select onChange={(e) => update("businessLocation", e.target.value)}>
-              <option value="">Business Location</option>
-              <option>Canada</option>
-              <option>United States</option>
-              <option>Neither</option>
-            </Select>
+        <input
+          autoComplete="name"
+          placeholder="Full Name"
+          className="input"
+          value={form.fullName}
+          onChange={(e) => update("fullName", e.target.value)}
+        />
 
-            <Select onChange={(e) => update("purpose", e.target.value)}>
-              <option value="">Purpose of funds</option>
-              <option>Working Capital</option>
-              <option>Expansion</option>
-              <option>Inventory</option>
-              <option>Equipment</option>
-              <option>Marketing</option>
-              <option>Other</option>
-            </Select>
+        <input
+          autoComplete="tel"
+          placeholder="Phone"
+          className="input"
+          value={form.phone}
+          onChange={(e) => update("phone", e.target.value)}
+        />
 
-            <Select onChange={(e) => update("yearsInBusiness", e.target.value)}>
-              <option value="">Years in business</option>
-              <option>Zero</option>
-              <option>Under 1 Year</option>
-              <option>1 to 3 Years</option>
-              <option>Over 3 Years</option>
-            </Select>
+        <input
+          autoComplete="email"
+          type="email"
+          placeholder="Email"
+          className="input"
+          value={form.email}
+          onChange={(e) => update("email", e.target.value)}
+        />
 
-            <Select onChange={(e) => update("annualRevenue", e.target.value)}>
-              <option value="">Annual revenue</option>
-              <option>Zero to $150,000</option>
-              <option>$150,001 to $500,000</option>
-              <option>$500,001 to $1,000,000</option>
-              <option>$1,000,001 to $3,000,000</option>
-              <option>Over $3,000,000</option>
-            </Select>
+        <select
+          className="input"
+          value={form.industry}
+          onChange={(e) => update("industry", e.target.value)}
+        >
+          <option value="">Industry</option>
+          <option>Construction</option>
+          <option>Manufacturing</option>
+          <option>Transportation</option>
+          <option>Wholesale</option>
+          <option>Retail</option>
+          <option>Professional Services</option>
+          <option>Other</option>
+        </select>
 
-            <Select onChange={(e) => update("monthlyRevenue", e.target.value)}>
-              <option value="">Average monthly revenue</option>
-              <option>Under $10,000</option>
-              <option>$10,001 to $30,000</option>
-              <option>$30,001 to $100,000</option>
-              <option>Over $100,000</option>
-            </Select>
+        <select
+          className="input"
+          value={form.yearsInBusiness}
+          onChange={(e) => update("yearsInBusiness", e.target.value)}
+        >
+          <option value="">Years in business</option>
+          <option>Zero</option>
+          <option>Under 1 Year</option>
+          <option>1 to 3 Years</option>
+          <option>Over 3 Years</option>
+        </select>
 
-            <Select onChange={(e) => update("arBalance", e.target.value)}>
-              <option value="">Account Receivables</option>
-              <option>No Account Receivables</option>
-              <option>Zero to $100,000</option>
-              <option>$100,000 to $250,000</option>
-              <option>$250,000 to $500,000</option>
-              <option>$500,000 to $1,000,000</option>
-              <option>$1,000,000 to $3,000,000</option>
-              <option>Over $3,000,000</option>
-            </Select>
+        <select
+          className="input"
+          value={form.annualRevenue}
+          onChange={(e) => update("annualRevenue", e.target.value)}
+        >
+          <option value="">Annual revenue</option>
+          <option>Zero to $150,000</option>
+          <option>$150,001 to $500,000</option>
+          <option>$500,001 to $1,000,000</option>
+          <option>$1,000,001 to $3,000,000</option>
+          <option>Over $3,000,000</option>
+        </select>
 
-            <Select onChange={(e) => update("existingDebt", e.target.value)}>
-              <option value="">Existing Debt</option>
-              <option>Zero</option>
-              <option>Zero to $100,000</option>
-              <option>$100,001 to $500,000</option>
-              <option>$500,001 to $1,000,000</option>
-              <option>$1,000,001 to $3,000,000</option>
-              <option>Over $3,000,000</option>
-            </Select>
+        <select
+          className="input"
+          value={form.monthlyRevenue}
+          onChange={(e) => update("monthlyRevenue", e.target.value)}
+        >
+          <option value="">Average monthly revenue</option>
+          <option>Under $10,000</option>
+          <option>$10,001 to $30,000</option>
+          <option>$30,001 to $100,000</option>
+          <option>Over $100,000</option>
+        </select>
 
-            <Button onClick={submit}>Continue</Button>
-          </div>
-        </Card>
+        <select
+          className="input"
+          value={form.arBalance}
+          onChange={(e) => update("arBalance", e.target.value)}
+        >
+          <option value="">Account Receivables</option>
+          <option>No Account Receivables</option>
+          <option>Zero to $100,000</option>
+          <option>$100,000 to $250,000</option>
+          <option>$250,000 to $500,000</option>
+          <option>$500,000 to $1,000,000</option>
+          <option>$1,000,000 to $3,000,000</option>
+          <option>Over $3,000,000</option>
+        </select>
+
+        <select
+          className="input"
+          value={form.collateralAvailable}
+          onChange={(e) => update("collateralAvailable", e.target.value)}
+        >
+          <option value="">Is there available collateral for security?</option>
+          <option>No Collateral Available</option>
+          <option>$1 to $100,000</option>
+          <option>$100,001 to $250,000</option>
+          <option>$250,001 to $500,000</option>
+          <option>$500,001 to $1 million</option>
+          <option>Over $1 million</option>
+        </select>
+
+      </div>
+
+      <div className="mt-10">
+        <button
+          onClick={handleNext}
+          className="bg-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-500 transition"
+        >
+          Continue →
+        </button>
       </div>
     </div>
   );
