@@ -1,5 +1,5 @@
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Routes, Route, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Step1_KYC } from "../wizard/Step1_KYC";
 import { Step2_Product } from "../wizard/Step2_Product";
 import { Step3_Business } from "../wizard/Step3_Business";
@@ -10,6 +10,7 @@ import { Spinner } from "../components/ui/Spinner";
 import { ClientAppAPI } from "../api/clientApp";
 import { extractApplicationFromStatus } from "../applications/resume";
 import { fetchContinuation } from "@/api/continuation";
+import { fetchPrefill } from "@/utils/prefill";
 import { useReadiness } from "@/state/readinessStore";
 
 export function ApplyPage() {
@@ -17,13 +18,68 @@ export function ApplyPage() {
   const { applicationId } = useParams();
   const navigate = useNavigate();
   const readiness = useReadiness();
-  const continuationToken = useMemo(
-    () => new URLSearchParams(window.location.search).get("continue"),
-    []
-  );
+  const [searchParams] = useSearchParams();
+  const continuationToken = useMemo(() => searchParams.get("continue"), [searchParams]);
+  const prefillToken = useMemo(() => searchParams.get("prefill"), [searchParams]);
   const [isHydratingContinuation, setIsHydratingContinuation] = useState(Boolean(continuationToken));
+  const appRef = useRef(app);
 
   if (!initialized) init();
+
+  useEffect(() => {
+    appRef.current = app;
+  }, [app]);
+
+  useEffect(() => {
+    if (!prefillToken) return;
+
+    let active = true;
+
+    void fetchPrefill(prefillToken).then((data) => {
+      if (!active || !data) return;
+
+      const currentApp = appRef.current;
+      const fullName = (data.fullName || "").trim();
+      const [firstName = "", ...lastNameParts] = fullName.split(/\s+/);
+      const lastName = lastNameParts.join(" ");
+
+      update({
+        kyc: {
+          ...currentApp.kyc,
+          industry: currentApp.kyc.industry || data.industry,
+          yearsInBusiness: currentApp.kyc.yearsInBusiness || data.yearsInBusiness,
+          annualRevenue: currentApp.kyc.annualRevenue || data.annualRevenue,
+          monthlyRevenue: currentApp.kyc.monthlyRevenue || data.monthlyRevenue,
+          arBalance: currentApp.kyc.arBalance || data.arBalance,
+          availableCollateral:
+            currentApp.kyc.availableCollateral || data.availableCollateral,
+          salesHistory: currentApp.kyc.salesHistory || data.yearsInBusiness,
+          revenueLast12Months:
+            currentApp.kyc.revenueLast12Months || data.annualRevenue,
+          accountsReceivable: currentApp.kyc.accountsReceivable || data.arBalance,
+          fixedAssets: currentApp.kyc.fixedAssets || data.availableCollateral,
+        },
+        business: {
+          ...currentApp.business,
+          companyName: currentApp.business.companyName || data.companyName,
+          businessName: currentApp.business.businessName || data.companyName,
+          legalName: currentApp.business.legalName || data.companyName,
+        },
+        applicant: {
+          ...currentApp.applicant,
+          fullName: currentApp.applicant.fullName || data.fullName,
+          firstName: currentApp.applicant.firstName || firstName,
+          lastName: currentApp.applicant.lastName || lastName,
+          email: currentApp.applicant.email || data.email,
+          phone: currentApp.applicant.phone || data.phone,
+        },
+      });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [prefillToken, update]);
 
 
   useEffect(() => {

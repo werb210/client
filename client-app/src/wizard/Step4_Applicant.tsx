@@ -205,6 +205,7 @@ export function Step4_Applicant() {
         selected_product: app.selectedProduct,
         selected_product_type: app.selectedProductType,
         readiness_lead_id: app.readinessLeadId,
+        source: "credit_readiness_bridge",
       };
 
       if (app.applicationToken) {
