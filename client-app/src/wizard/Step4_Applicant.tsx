@@ -109,6 +109,38 @@ export function Step4_Applicant() {
     update({ applicant: nextApplicant, readinessLeadId: readiness.leadId });
   }, [readiness, update, values]);
 
+
+  useEffect(() => {
+    const stored = localStorage.getItem("creditPrefill");
+    if (!stored) return;
+
+    try {
+      const data = JSON.parse(stored) as Record<string, string>;
+      const contactName = (data.contactName || "").trim();
+      const [prefillFirstName = "", ...prefillRest] = contactName.split(/\s+/);
+      const prefillLastName = prefillRest.join(" ");
+      const nextApplicant = {
+        ...values,
+        firstName: values.firstName || prefillFirstName,
+        lastName: values.lastName || prefillLastName,
+        email: values.email || data.email || "",
+        phone: values.phone || data.phone || "",
+      };
+
+      const changed =
+        nextApplicant.firstName !== values.firstName ||
+        nextApplicant.lastName !== values.lastName ||
+        nextApplicant.email !== values.email ||
+        nextApplicant.phone !== values.phone;
+
+      if (changed) {
+        update({ applicant: nextApplicant });
+      }
+    } catch {
+      // ignore malformed prefill payload
+    }
+  }, [update, values]);
+
   function setField(key: string, value: any) {
     update({ applicant: { ...values, [key]: value } });
   }

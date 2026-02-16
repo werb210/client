@@ -83,6 +83,33 @@ export function Step3_Business() {
     }
   }, [update, values]);
 
+
+  useEffect(() => {
+    const stored = localStorage.getItem("creditPrefill");
+    if (!stored) return;
+
+    try {
+      const data = JSON.parse(stored) as Record<string, string>;
+      const companyName = data.companyName || "";
+      if (!companyName) return;
+
+      const nextBusiness = {
+        ...values,
+        businessName: values.businessName || companyName,
+        legalName: values.legalName || companyName,
+      };
+
+      if (
+        nextBusiness.businessName !== values.businessName ||
+        nextBusiness.legalName !== values.legalName
+      ) {
+        update({ business: nextBusiness });
+      }
+    } catch {
+      // ignore malformed prefill payload
+    }
+  }, [update, values]);
+
   function setField(key: string, value: any) {
     update({ business: { ...values, [key]: value } });
   }

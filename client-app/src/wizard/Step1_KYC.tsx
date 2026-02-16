@@ -73,26 +73,25 @@ const PurposeOptions = [
 ];
 
 const SalesHistoryOptions = [
-  "Less than 1 year",
-  "1 to 3 years",
-  "Over 3 years",
+  "Zero",
+  "Under 1 Year",
+  "1 to 3 Years",
+  "Over 3 Years",
 ];
 
 const RevenueOptions = [
-  "Under $100,000",
-  "$100,000 to $250,000",
-  "$250,000 to $500,000",
-  "$500,000 to $1,000,000",
-  "$1,000,000 to $5,000,000",
-  "Over $5,000,000",
+  "Zero to $150,000",
+  "$150,001 to $500,000",
+  "$500,001 to $1,000,000",
+  "$1,000,001 to $3,000,000",
+  "Over $3,000,000",
 ];
 
 const MonthlyRevenueOptions = [
-  "$10,000 to $25,000",
-  "$25,000 to $50,000",
-  "$50,000 to $100,000",
-  "$100,000 to $250,000",
-  "Over $250,000",
+  "Under $10,000",
+  "$10,001 to $30,000",
+  "$30,001 to $100,000",
+  "Over $100,000",
 ];
 
 const AccountsReceivableOptions = [
@@ -106,13 +105,12 @@ const AccountsReceivableOptions = [
 ];
 
 const FixedAssetsOptions = [
-  "No fixed assets",
-  "Zero to $25,000",
-  "$25,000 to $100,000",
-  "$100,000 to $250,000",
-  "$250,000 to $500,000",
-  "$500,000 to $1,000,000",
-  "Over $1,000,000",
+  "No Collateral Available",
+  "$1 to $100,000",
+  "$100,001 to $250,000",
+  "$250,001 to $500,000",
+  "$500,001 to $1 million",
+  "Over $1 million",
 ];
 
 function parseCurrency(value: string) {
@@ -122,28 +120,27 @@ function parseCurrency(value: string) {
 
 function mapYearsInBusiness(years?: number) {
   if (typeof years !== "number") return undefined;
-  if (years < 1) return "Less than 1 year";
-  if (years <= 3) return "1 to 3 years";
-  return "Over 3 years";
+  if (years <= 0) return "Zero";
+  if (years < 1) return "Under 1 Year";
+  if (years <= 3) return "1 to 3 Years";
+  return "Over 3 Years";
 }
 
 function mapAnnualRevenue(amount?: number) {
   if (typeof amount !== "number") return undefined;
-  if (amount < 100000) return "Under $100,000";
-  if (amount < 250000) return "$100,000 to $250,000";
-  if (amount < 500000) return "$250,000 to $500,000";
-  if (amount < 1000000) return "$500,000 to $1,000,000";
-  if (amount < 5000000) return "$1,000,000 to $5,000,000";
-  return "Over $5,000,000";
+  if (amount <= 150000) return "Zero to $150,000";
+  if (amount <= 500000) return "$150,001 to $500,000";
+  if (amount <= 1000000) return "$500,001 to $1,000,000";
+  if (amount <= 3000000) return "$1,000,001 to $3,000,000";
+  return "Over $3,000,000";
 }
 
 function mapMonthlyRevenue(amount?: number) {
   if (typeof amount !== "number") return undefined;
-  if (amount < 25000) return "$10,000 to $25,000";
-  if (amount < 50000) return "$25,000 to $50,000";
-  if (amount < 100000) return "$50,000 to $100,000";
-  if (amount < 250000) return "$100,000 to $250,000";
-  return "Over $250,000";
+  if (amount <= 10000) return "Under $10,000";
+  if (amount <= 30000) return "$10,001 to $30,000";
+  if (amount <= 100000) return "$30,001 to $100,000";
+  return "Over $100,000";
 }
 
 function mapArOutstanding(amount?: number) {
@@ -187,7 +184,7 @@ export function Step1_KYC() {
     monthlyRevenue: typeof readiness?.monthlyRevenue === "number",
     revenueLast12Months: typeof readiness?.annualRevenue === "number",
     accountsReceivable: typeof readiness?.arOutstanding === "number",
-    existingDebt: typeof readiness?.existingDebt === "boolean",
+    fixedAssets: Boolean(readiness?.collateralAvailable),
   };
 
   useEffect(() => {
@@ -211,10 +208,8 @@ export function Step1_KYC() {
         mapAnnualRevenue(readiness.annualRevenue) ?? app.kyc.revenueLast12Months,
       accountsReceivable:
         mapArOutstanding(readiness.arOutstanding) ?? app.kyc.accountsReceivable,
-      existingDebt:
-        typeof readiness.existingDebt === "boolean"
-          ? readiness.existingDebt
-          : app.kyc.existingDebt,
+fixedAssets:
+        readiness.collateralAvailable ?? app.kyc.fixedAssets,
     };
 
     const unchanged =
@@ -225,7 +220,7 @@ export function Step1_KYC() {
       nextKyc.monthlyRevenue === app.kyc.monthlyRevenue &&
       nextKyc.revenueLast12Months === app.kyc.revenueLast12Months &&
       nextKyc.accountsReceivable === app.kyc.accountsReceivable &&
-      nextKyc.existingDebt === app.kyc.existingDebt;
+      nextKyc.fixedAssets === app.kyc.fixedAssets;
 
     if (unchanged) return;
 
@@ -253,6 +248,39 @@ export function Step1_KYC() {
     );
     if (changed) {
       update({ kyc: merged });
+    }
+  }, [app.kyc, update]);
+
+
+  useEffect(() => {
+    const stored = localStorage.getItem("creditPrefill");
+    if (!stored) return;
+
+    try {
+      const data = JSON.parse(stored) as Record<string, string>;
+      const nextKyc = {
+        ...app.kyc,
+        industry: data.industry || app.kyc.industry || "",
+        salesHistory: data.yearsInBusiness || app.kyc.salesHistory || "",
+        revenueLast12Months: data.annualRevenue || app.kyc.revenueLast12Months || "",
+        monthlyRevenue: data.monthlyRevenue || app.kyc.monthlyRevenue || "",
+        accountsReceivable: data.arBalance || app.kyc.accountsReceivable || "",
+        fixedAssets: data.collateralAvailable || app.kyc.fixedAssets || "",
+      };
+
+      const changed =
+        nextKyc.industry !== app.kyc.industry ||
+        nextKyc.salesHistory !== app.kyc.salesHistory ||
+        nextKyc.revenueLast12Months !== app.kyc.revenueLast12Months ||
+        nextKyc.monthlyRevenue !== app.kyc.monthlyRevenue ||
+        nextKyc.accountsReceivable !== app.kyc.accountsReceivable ||
+        nextKyc.fixedAssets !== app.kyc.fixedAssets;
+
+      if (changed) {
+        update({ kyc: nextKyc });
+      }
+    } catch {
+      // ignore malformed prefill payload
     }
   }, [app.kyc, update]);
 
@@ -284,20 +312,13 @@ export function Step1_KYC() {
       businessLocation:
         !Validate.required(values.businessLocation) ||
         values.businessLocation === "Other",
-      industry:
-        !readinessFieldState.industry && !Validate.required(values.industry),
+      industry: !Validate.required(values.industry),
       purposeOfFunds: !Validate.required(values.purposeOfFunds),
-      salesHistory:
-        !readinessFieldState.salesHistory && !Validate.required(values.salesHistory),
-      revenueLast12Months:
-        !readinessFieldState.revenueLast12Months &&
-        !Validate.required(values.revenueLast12Months),
-      monthlyRevenue:
-        !readinessFieldState.monthlyRevenue && !Validate.required(values.monthlyRevenue),
+      salesHistory: !Validate.required(values.salesHistory),
+      revenueLast12Months: !Validate.required(values.revenueLast12Months),
+      monthlyRevenue: !Validate.required(values.monthlyRevenue),
       accountsReceivable:
-        shouldShowAccountsReceivable &&
-        !readinessFieldState.accountsReceivable &&
-        !Validate.required(values.accountsReceivable),
+        shouldShowAccountsReceivable && !Validate.required(values.accountsReceivable),
       fixedAssets:
         shouldShowFixedAssets && !Validate.required(values.fixedAssets),
     };
@@ -577,10 +598,7 @@ export function Step1_KYC() {
               )}
             </div>
 
-{readinessFieldState.industry ? (
-              <div>✔ Confirmed via Capital Readiness</div>
-            ) : (
-            <div data-error={showErrors && fieldErrors.industry}>
+<div data-error={showErrors && fieldErrors.industry}>
               <label style={components.form.label}>Industry</label>
               <input id={getWizardFieldId("step1", "industry")} value={app.kyc.industry || ""} readOnly hidden />
               <div
@@ -627,7 +645,6 @@ export function Step1_KYC() {
                 <div style={components.form.errorText}>Select your industry.</div>
               )}
             </div>
-            )}
 
             <div data-error={showErrors && fieldErrors.purposeOfFunds}>
               <label style={components.form.label}>Purpose of funds</label>
@@ -653,9 +670,6 @@ export function Step1_KYC() {
               )}
             </div>
 
-{readinessFieldState.salesHistory ? (
-              <div>✔ Confirmed via Capital Readiness</div>
-            ) : (
             <div data-error={showErrors && fieldErrors.salesHistory}>
               <label style={components.form.label}>Years of sales history</label>
               <Select
@@ -679,11 +693,6 @@ export function Step1_KYC() {
                 <div style={components.form.errorText}>Select sales history.</div>
               )}
             </div>
-            )}
-
-            {readinessFieldState.revenueLast12Months ? (
-              <div>✔ Confirmed via Capital Readiness</div>
-            ) : (
             <div data-error={showErrors && fieldErrors.revenueLast12Months}>
               <label style={components.form.label}>Revenue last 12 months</label>
               <Select
@@ -710,11 +719,6 @@ export function Step1_KYC() {
                 <div style={components.form.errorText}>Select a revenue range.</div>
               )}
             </div>
-            )}
-
-            {readinessFieldState.monthlyRevenue ? (
-              <div>✔ Confirmed via Capital Readiness</div>
-            ) : (
             <div data-error={showErrors && fieldErrors.monthlyRevenue}>
               <label style={components.form.label}>
                 Avg monthly revenue (last 3 months)
@@ -740,13 +744,7 @@ export function Step1_KYC() {
                 <div style={components.form.errorText}>Select monthly revenue.</div>
               )}
             </div>
-            )}
-
-            {shouldShowAccountsReceivable && readinessFieldState.accountsReceivable ? (
-              <div>✔ Confirmed via Capital Readiness</div>
-            ) : null}
-
-            {shouldShowAccountsReceivable && !readinessFieldState.accountsReceivable && (
+              {shouldShowAccountsReceivable && (
               <div data-error={showErrors && fieldErrors.accountsReceivable}>
                 <label style={components.form.label}>Current AR balance</label>
                 <Select
@@ -788,7 +786,7 @@ export function Step1_KYC() {
 
             {shouldShowFixedAssets && (
               <div data-error={showErrors && fieldErrors.fixedAssets}>
-                <label style={components.form.label}>Fixed assets value</label>
+                <label style={components.form.label}>Collateral available</label>
                 <Select
                   id={getWizardFieldId("step1", "fixedAssets")}
                   value={app.kyc.fixedAssets || ""}
@@ -808,7 +806,7 @@ export function Step1_KYC() {
                 </Select>
                 {showErrors && fieldErrors.fixedAssets && (
                   <div style={components.form.errorText}>
-                    Select a fixed asset value.
+                    Select a collateral range.
                   </div>
                 )}
               </div>
