@@ -6,6 +6,10 @@ describe("readiness service", () => {
     expect(getLeadIdFromSearch("?lead=abc-123")).toBe("abc-123");
   });
 
+  it("loads credit readiness id from URL", () => {
+    expect(getLeadIdFromSearch("?creditReadinessId=abc-456")).toBe("abc-456");
+  });
+
   it("keeps normal flow unchanged when lead is missing", () => {
     expect(getLeadIdFromSearch("?token=abc")).toBeNull();
   });

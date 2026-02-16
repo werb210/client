@@ -58,6 +58,7 @@ export const wizardSchema: Record<WizardStepKey, { fields: WizardFieldMeta[] }> 
   },
   step3: {
     fields: [
+      { key: "companyName", required: true, autoAdvance: true },
       { key: "businessName", required: true, autoAdvance: true },
       { key: "legalName", required: true, autoAdvance: true },
       { key: "businessStructure", required: true, autoAdvance: true },
@@ -79,6 +80,7 @@ export const wizardSchema: Record<WizardStepKey, { fields: WizardFieldMeta[] }> 
   },
   step4: {
     fields: [
+      { key: "fullName", required: true, autoAdvance: true },
       { key: "firstName", required: true, autoAdvance: true },
       { key: "lastName", required: true, autoAdvance: true },
       { key: "email", required: true, autoAdvance: true },
