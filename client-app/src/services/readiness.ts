@@ -2,7 +2,8 @@ import { buildApiUrl } from "../lib/api";
 import type { ReadinessContext } from "../state/readinessStore";
 
 export function getLeadIdFromSearch(search: string) {
-  return new URLSearchParams(search).get("lead");
+  const params = new URLSearchParams(search);
+  return params.get("lead") || params.get("creditReadinessId");
 }
 
 async function fetchReadinessWithRetry(

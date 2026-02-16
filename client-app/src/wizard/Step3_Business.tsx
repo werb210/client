@@ -95,11 +95,13 @@ export function Step3_Business() {
 
       const nextBusiness = {
         ...values,
+        companyName: values.companyName || companyName,
         businessName: values.businessName || companyName,
         legalName: values.legalName || companyName,
       };
 
       if (
+        nextBusiness.companyName !== values.companyName ||
         nextBusiness.businessName !== values.businessName ||
         nextBusiness.legalName !== values.legalName
       ) {
@@ -116,9 +118,11 @@ export function Step3_Business() {
 
   const isBusinessNameLocked = Boolean((app.continuationToken || readiness?.companyName) && values.businessName);
   const isLegalNameLocked = Boolean((app.continuationToken || readiness?.companyName) && values.legalName);
+  const isCompanyNameLocked = Boolean((app.continuationToken || readiness?.companyName) && values.companyName);
   const isBusinessPhoneLocked = Boolean((app.continuationToken || readiness?.phone) && values.phone);
 
   const isValid = [
+    "companyName",
     "businessName",
     "legalName",
     "businessStructure",
@@ -136,6 +140,7 @@ export function Step3_Business() {
     saveStepData(3, values);
     enforceV1StepSchema("step3", values);
     const requiredFields = [
+      "companyName",
       "businessName",
       "legalName",
       "businessStructure",
@@ -173,6 +178,7 @@ export function Step3_Business() {
   }
 
   const fieldValues = {
+    companyName: values.companyName,
     businessName: values.businessName,
     legalName: values.legalName,
     businessStructure: values.businessStructure,
@@ -195,6 +201,7 @@ export function Step3_Business() {
 
   const isStepValid = (nextValues: typeof values) =>
     [
+      "companyName",
       "businessName",
       "legalName",
       "businessStructure",
@@ -261,6 +268,30 @@ export function Step3_Business() {
             gap: tokens.spacing.md,
           }}
         >
+          <div>
+            <label style={components.form.label}>Company Name</label>
+            <Input
+              id={getWizardFieldId("step3", "companyName")}
+              value={values.companyName || ""}
+              onChange={(e: any) => {
+                const companyName = e.target.value;
+                const nextValues = {
+                  ...values,
+                  companyName,
+                  businessName: values.businessName || companyName,
+                  legalName: values.legalName || companyName,
+                };
+                update({ business: nextValues });
+              }}
+              disabled={isCompanyNameLocked}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("companyName", values);
+                }
+              }}
+            />
+          </div>
+
           <div>
             <label style={components.form.label}>Business Name (DBA)</label>
             <Input

@@ -92,6 +92,7 @@ export function Step4_Applicant() {
     const lastName = rest.join(" ");
     const nextApplicant = {
       ...values,
+      fullName: readiness.fullName || values.fullName,
       firstName: firstName || values.firstName,
       lastName: lastName || values.lastName,
       email: readiness.email || values.email,
@@ -99,6 +100,7 @@ export function Step4_Applicant() {
     };
 
     const unchanged =
+      nextApplicant.fullName === values.fullName &&
       nextApplicant.firstName === values.firstName &&
       nextApplicant.lastName === values.lastName &&
       nextApplicant.email === values.email &&
@@ -116,11 +118,12 @@ export function Step4_Applicant() {
 
     try {
       const data = JSON.parse(stored) as Record<string, string>;
-      const contactName = (data.contactName || "").trim();
+      const contactName = (data.fullName || data.contactName || "").trim();
       const [prefillFirstName = "", ...prefillRest] = contactName.split(/\s+/);
       const prefillLastName = prefillRest.join(" ");
       const nextApplicant = {
         ...values,
+        fullName: values.fullName || contactName,
         firstName: values.firstName || prefillFirstName,
         lastName: values.lastName || prefillLastName,
         email: values.email || data.email || "",
@@ -128,6 +131,7 @@ export function Step4_Applicant() {
       };
 
       const changed =
+        nextApplicant.fullName !== values.fullName ||
         nextApplicant.firstName !== values.firstName ||
         nextApplicant.lastName !== values.lastName ||
         nextApplicant.email !== values.email ||
@@ -153,6 +157,7 @@ export function Step4_Applicant() {
     saveStepData(4, values);
     enforceV1StepSchema("step4", values);
     const requiredFields = [
+      "fullName",
       "firstName",
       "lastName",
       "email",
@@ -227,6 +232,7 @@ export function Step4_Applicant() {
   }
 
   const baseRequiredFields = [
+    "fullName",
     "firstName",
     "lastName",
     "email",
@@ -378,12 +384,42 @@ export function Step4_Applicant() {
           }}
         >
           <div>
+            <label style={components.form.label}>Full Name</label>
+            <Input
+              id={getWizardFieldId("step4", "fullName")}
+              value={values.fullName || ""}
+              onChange={(e: any) => {
+                const fullName = e.target.value;
+                const [firstName = "", ...rest] = fullName.trim().split(/\s+/);
+                const lastName = rest.join(" ");
+                const nextValues = {
+                  ...values,
+                  fullName,
+                  firstName: firstName || values.firstName,
+                  lastName: lastName || values.lastName,
+                };
+                update({ applicant: nextValues });
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === "Enter") {
+                  handleAutoAdvance("fullName", values);
+                }
+              }}
+            />
+          </div>
+
+          <div>
             <label style={components.form.label}>First Name</label>
             <Input
               id={getWizardFieldId("step4", "firstName")}
               value={values.firstName || ""}
               onChange={(e: any) => {
-                const nextValues = { ...values, firstName: e.target.value };
+                const firstName = e.target.value;
+                const nextValues = {
+                  ...values,
+                  firstName,
+                  fullName: `${firstName} ${values.lastName || ""}`.trim(),
+                };
                 update({ applicant: nextValues });
               }}
               onKeyDown={(e: any) => {
@@ -399,7 +435,12 @@ export function Step4_Applicant() {
               id={getWizardFieldId("step4", "lastName")}
               value={values.lastName || ""}
               onChange={(e: any) => {
-                const nextValues = { ...values, lastName: e.target.value };
+                const lastName = e.target.value;
+                const nextValues = {
+                  ...values,
+                  lastName,
+                  fullName: `${values.firstName || ""} ${lastName}`.trim(),
+                };
                 update({ applicant: nextValues });
               }}
               onKeyDown={(e: any) => {

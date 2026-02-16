@@ -29,6 +29,7 @@ import { track } from "../utils/track";
 import { trackEvent } from "../utils/analytics";
 import { useReadiness } from "../state/readinessStore";
 import { persistApplicationStep } from "./saveStepProgress";
+import { fetchCreditPrefill } from "../services/creditPrefill";
 
 const MatchCategories = [
   "Line of Credit",
@@ -253,6 +254,68 @@ fixedAssets:
 
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const prefillId = params.get("creditReadinessId");
+    if (!prefillId) return;
+
+    let active = true;
+    void fetchCreditPrefill(prefillId)
+      .then((data) => {
+        if (!active || !data || typeof data !== "object") return;
+
+        const nextKyc = {
+          ...app.kyc,
+          industry: data.industry ?? app.kyc.industry ?? "",
+          yearsInBusiness: data.yearsInBusiness ?? app.kyc.yearsInBusiness ?? "",
+          annualRevenue: data.annualRevenue ?? app.kyc.annualRevenue ?? "",
+          monthlyRevenue: data.monthlyRevenue ?? app.kyc.monthlyRevenue ?? "",
+          arBalance: data.arBalance ?? app.kyc.arBalance ?? "",
+          availableCollateral:
+            data.availableCollateral ?? app.kyc.availableCollateral ?? "",
+          salesHistory: data.yearsInBusiness ?? app.kyc.salesHistory ?? "",
+          revenueLast12Months:
+            data.annualRevenue ?? app.kyc.revenueLast12Months ?? "",
+          accountsReceivable: data.arBalance ?? app.kyc.accountsReceivable ?? "",
+          fixedAssets:
+            data.availableCollateral ?? app.kyc.fixedAssets ?? "",
+          companyName: data.companyName ?? app.kyc.companyName ?? "",
+          fullName: data.fullName ?? app.kyc.fullName ?? "",
+          email: data.email ?? app.kyc.email ?? "",
+          phone: data.phone ?? app.kyc.phone ?? "",
+        };
+
+        const fullName = (data.fullName || "").trim();
+        const [firstName = "", ...lastNameParts] = fullName.split(/\s+/);
+        const lastName = lastNameParts.join(" ");
+
+        update({
+          kyc: nextKyc,
+          business: {
+            ...app.business,
+            companyName: data.companyName ?? app.business.companyName ?? "",
+            businessName: data.companyName ?? app.business.businessName ?? "",
+            legalName: data.companyName ?? app.business.legalName ?? "",
+          },
+          applicant: {
+            ...app.applicant,
+            fullName: data.fullName ?? app.applicant.fullName ?? "",
+            firstName: firstName || app.applicant.firstName || "",
+            lastName: lastName || app.applicant.lastName || "",
+            email: data.email ?? app.applicant.email ?? "",
+            phone: data.phone ?? app.applicant.phone ?? "",
+          },
+        });
+      })
+      .catch(() => {
+        // ignore prefill errors
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [update]);
+
+  useEffect(() => {
     const stored = localStorage.getItem("creditPrefill");
     if (!stored) return;
 
@@ -261,19 +324,29 @@ fixedAssets:
       const nextKyc = {
         ...app.kyc,
         industry: data.industry || app.kyc.industry || "",
+        yearsInBusiness: data.yearsInBusiness || app.kyc.yearsInBusiness || "",
         salesHistory: data.yearsInBusiness || app.kyc.salesHistory || "",
+        annualRevenue: data.annualRevenue || app.kyc.annualRevenue || "",
         revenueLast12Months: data.annualRevenue || app.kyc.revenueLast12Months || "",
         monthlyRevenue: data.monthlyRevenue || app.kyc.monthlyRevenue || "",
+        arBalance: data.arBalance || app.kyc.arBalance || "",
         accountsReceivable: data.arBalance || app.kyc.accountsReceivable || "",
-        fixedAssets: data.collateralAvailable || app.kyc.fixedAssets || "",
+        availableCollateral:
+          data.availableCollateral || data.collateralAvailable || app.kyc.availableCollateral || "",
+        fixedAssets:
+          data.availableCollateral || data.collateralAvailable || app.kyc.fixedAssets || "",
       };
 
       const changed =
         nextKyc.industry !== app.kyc.industry ||
         nextKyc.salesHistory !== app.kyc.salesHistory ||
+        nextKyc.yearsInBusiness !== app.kyc.yearsInBusiness ||
         nextKyc.revenueLast12Months !== app.kyc.revenueLast12Months ||
+        nextKyc.annualRevenue !== app.kyc.annualRevenue ||
         nextKyc.monthlyRevenue !== app.kyc.monthlyRevenue ||
+        nextKyc.arBalance !== app.kyc.arBalance ||
         nextKyc.accountsReceivable !== app.kyc.accountsReceivable ||
+        nextKyc.availableCollateral !== app.kyc.availableCollateral ||
         nextKyc.fixedAssets !== app.kyc.fixedAssets;
 
       if (changed) {
@@ -674,15 +747,19 @@ fixedAssets:
               <label style={components.form.label}>Years of sales history</label>
               <Select
                 id={getWizardFieldId("step1", "salesHistory")}
-                value={app.kyc.salesHistory || ""}
+                value={app.kyc.yearsInBusiness || app.kyc.salesHistory || ""}
                 onChange={(e: any) => {
-                  const nextKyc = { ...app.kyc, salesHistory: e.target.value };
+                  const nextKyc = {
+                    ...app.kyc,
+                    yearsInBusiness: e.target.value,
+                    salesHistory: e.target.value,
+                  };
                   update({ kyc: nextKyc });
                   handleAutoAdvance("salesHistory", nextKyc);
                 }}
                 hasError={showErrors && fieldErrors.salesHistory}
               >
-                <option value="">Select…</option>
+                <option value="">Years in business</option>
                 {SalesHistoryOptions.map((option) => (
                   <option key={option} value={option}>
                     {option}
@@ -697,10 +774,11 @@ fixedAssets:
               <label style={components.form.label}>Revenue last 12 months</label>
               <Select
                 id={getWizardFieldId("step1", "revenueLast12Months")}
-                value={app.kyc.revenueLast12Months || ""}
+                value={app.kyc.annualRevenue || app.kyc.revenueLast12Months || ""}
                 onChange={(e: any) => {
                   const nextKyc = {
                     ...app.kyc,
+                    annualRevenue: e.target.value,
                     revenueLast12Months: e.target.value,
                   };
                   update({ kyc: nextKyc });
@@ -708,7 +786,7 @@ fixedAssets:
                 }}
                 hasError={showErrors && fieldErrors.revenueLast12Months}
               >
-                <option value="">Select…</option>
+                <option value="">Annual revenue</option>
                 {RevenueOptions.map((option) => (
                   <option key={option} value={option}>
                     {option}
@@ -733,7 +811,7 @@ fixedAssets:
                 }}
                 hasError={showErrors && fieldErrors.monthlyRevenue}
               >
-                <option value="">Select…</option>
+                <option value="">Average monthly revenue</option>
                 {MonthlyRevenueOptions.map((option) => (
                   <option key={option} value={option}>
                     {option}
@@ -749,10 +827,11 @@ fixedAssets:
                 <label style={components.form.label}>Current AR balance</label>
                 <Select
                   id={getWizardFieldId("step1", "accountsReceivable")}
-                  value={app.kyc.accountsReceivable || ""}
+                  value={app.kyc.arBalance || app.kyc.accountsReceivable || ""}
                   onChange={(e: any) => {
                     const nextKyc = {
                       ...app.kyc,
+                      arBalance: e.target.value,
                       accountsReceivable: e.target.value,
                     };
                     update({
@@ -769,7 +848,7 @@ fixedAssets:
                   }}
                   hasError={showErrors && fieldErrors.accountsReceivable}
                 >
-                  <option value="">Select…</option>
+                  <option value="">Account Receivables</option>
                   {AccountsReceivableOptions.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -789,15 +868,19 @@ fixedAssets:
                 <label style={components.form.label}>Collateral available</label>
                 <Select
                   id={getWizardFieldId("step1", "fixedAssets")}
-                  value={app.kyc.fixedAssets || ""}
+                  value={app.kyc.availableCollateral || app.kyc.fixedAssets || ""}
                   onChange={(e: any) => {
-                    const nextKyc = { ...app.kyc, fixedAssets: e.target.value };
+                    const nextKyc = {
+                      ...app.kyc,
+                      availableCollateral: e.target.value,
+                      fixedAssets: e.target.value,
+                    };
                     update({ kyc: nextKyc });
                     handleAutoAdvance("fixedAssets", nextKyc);
                   }}
                   hasError={showErrors && fieldErrors.fixedAssets}
                 >
-                  <option value="">Select…</option>
+                  <option value="">Available collateral</option>
                   {FixedAssetsOptions.map((option) => (
                     <option key={option} value={option}>
                       {option}
