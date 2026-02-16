@@ -9,7 +9,7 @@ import { components, layout, tokens } from "@/styles";
 import { Spinner } from "../components/ui/Spinner";
 import { ClientAppAPI } from "../api/clientApp";
 import { extractApplicationFromStatus } from "../applications/resume";
-import { fetchContinuation } from "@/api/continuation";
+import { fetchContinuation, fetchReadinessBridge } from "@/api/continuation";
 import { fetchPrefill } from "@/utils/prefill";
 import { useReadiness } from "@/state/readinessStore";
 
@@ -20,8 +20,9 @@ export function ApplyPage() {
   const readiness = useReadiness();
   const [searchParams] = useSearchParams();
   const continuationToken = useMemo(() => searchParams.get("continue"), [searchParams]);
+  const readinessToken = useMemo(() => searchParams.get("readiness"), [searchParams]);
   const prefillToken = useMemo(() => searchParams.get("prefill"), [searchParams]);
-  const [isHydratingContinuation, setIsHydratingContinuation] = useState(Boolean(continuationToken));
+  const [isHydratingContinuation, setIsHydratingContinuation] = useState(Boolean(continuationToken || readinessToken));
   const appRef = useRef(app);
 
   if (!initialized) init();
@@ -157,8 +158,60 @@ export function ApplyPage() {
   }, [app.currentStep, navigate, readiness, update]);
 
   useEffect(() => {
+    if (!readinessToken) return;
+
+    let active = true;
+    setIsHydratingContinuation(true);
+
+    void fetchReadinessBridge(readinessToken)
+      .then((data) => {
+        if (!active || !data) return;
+
+        const step1 = data.step1 && typeof data.step1 === "object" ? data.step1 : {};
+        const step3 = data.step3 && typeof data.step3 === "object" ? data.step3 : {};
+        const step4 = data.step4 && typeof data.step4 === "object" ? data.step4 : {};
+
+        const currentApp = appRef.current;
+
+        update({
+          readinessSessionToken: readinessToken,
+          readinessLeadId:
+            (typeof data.leadId === "string" && data.leadId) ||
+            (typeof data.readinessLeadId === "string" && data.readinessLeadId) ||
+            currentApp.readinessLeadId,
+          kyc: {
+            ...currentApp.kyc,
+            ...(step1 as Record<string, unknown>),
+          },
+          business: {
+            ...currentApp.business,
+            ...(step3 as Record<string, unknown>),
+          },
+          applicant: {
+            ...currentApp.applicant,
+            ...(step4 as Record<string, unknown>),
+          },
+        });
+      })
+      .catch(() => {
+        // invalid readiness token should not block normal flow
+      })
+      .finally(() => {
+        if (active) {
+          setIsHydratingContinuation(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [readinessToken, update]);
+
+  useEffect(() => {
     if (!continuationToken) {
-      setIsHydratingContinuation(false);
+      if (!readinessToken) {
+        setIsHydratingContinuation(false);
+      }
       return;
     }
 
@@ -229,7 +282,7 @@ export function ApplyPage() {
     return () => {
       active = false;
     };
-  }, [continuationToken, update]);
+  }, [continuationToken, readinessToken, update]);
 
   useEffect(() => {
     if (!applicationId) return;

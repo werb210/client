@@ -23,6 +23,15 @@ export interface ContinuationPayload {
   existing_debt?: boolean;
 }
 
+export interface ReadinessBridgePayload {
+  sessionToken?: string;
+  leadId?: string;
+  readinessLeadId?: string;
+  step1?: Record<string, unknown>;
+  step3?: Record<string, unknown>;
+  step4?: Record<string, unknown>;
+}
+
 
 function pickNumber(...values: Array<unknown>): number | undefined {
   for (const value of values) {
@@ -84,6 +93,19 @@ export async function fetchReadinessSession(sessionId: string): Promise<Continua
     const fallback = await fetchWithRetry(`/api/readiness/session/${encodedSessionId}`);
     if (!fallback.ok) return null;
     return (await fallback.json()) as ContinuationPayload;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchReadinessBridge(
+  sessionToken: string
+): Promise<ReadinessBridgePayload | null> {
+  try {
+    const encodedSessionToken = encodeURIComponent(sessionToken);
+    const response = await fetchWithRetry(`/api/readiness/bridge/${encodedSessionToken}`);
+    if (!response.ok) return null;
+    return (await response.json()) as ReadinessBridgePayload;
   } catch {
     return null;
   }

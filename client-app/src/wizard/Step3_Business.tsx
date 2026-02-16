@@ -34,11 +34,9 @@ import {
 import { enforceV1StepSchema } from "../schemas/v1WizardSchema";
 import { shouldAutoAdvance } from "../utils/autoadvance";
 import { persistApplicationStep } from "./saveStepProgress";
-import { useReadiness } from "../state/readinessStore";
 
 export function Step3_Business() {
   const { app, update, autosaveError } = useApplicationStore();
-  const readiness = useReadiness();
   const navigate = useNavigate();
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -116,10 +114,10 @@ export function Step3_Business() {
     update({ business: { ...values, [key]: value } });
   }
 
-  const isBusinessNameLocked = Boolean((app.continuationToken || readiness?.companyName) && values.businessName);
-  const isLegalNameLocked = Boolean((app.continuationToken || readiness?.companyName) && values.legalName);
-  const isCompanyNameLocked = Boolean((app.continuationToken || readiness?.companyName) && values.companyName);
-  const isBusinessPhoneLocked = Boolean((app.continuationToken || readiness?.phone) && values.phone);
+  const isBusinessNameLocked = false;
+  const isLegalNameLocked = false;
+  const isCompanyNameLocked = false;
+  const isBusinessPhoneLocked = false;
 
   const isValid = [
     "companyName",

@@ -31,6 +31,7 @@ const emptyApp: ApplicationData = {
   signatureDate: "",
   applicationToken: undefined,
   continuationToken: undefined,
+  readinessSessionToken: undefined,
   applicationId: undefined,
   currentStep: 1,
   linkedApplicationTokens: [],

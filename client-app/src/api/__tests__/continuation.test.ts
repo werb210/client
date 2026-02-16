@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchReadinessSession, mapContinuationToReadinessContext } from "../continuation";
+import {
+  fetchReadinessBridge,
+  fetchReadinessSession,
+  mapContinuationToReadinessContext,
+} from "../continuation";
 
 const fetchWithRetryMock = vi.fn();
 
@@ -58,6 +62,27 @@ describe("continuation mapping", () => {
     expect(response).toEqual({ companyName: "Acme" });
   });
 
+
+
+  it("loads readiness bridge data from /api/readiness/bridge/:sessionToken", async () => {
+    fetchWithRetryMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ step1: { industry: "Construction" } }),
+    });
+
+    const response = await fetchReadinessBridge("bridge-token-1");
+
+    expect(fetchWithRetryMock).toHaveBeenCalledWith("/api/readiness/bridge/bridge-token-1");
+    expect(response).toEqual({ step1: { industry: "Construction" } });
+  });
+
+  it("returns null for invalid readiness bridge token", async () => {
+    fetchWithRetryMock.mockResolvedValue({ ok: false, status: 404 });
+
+    const response = await fetchReadinessBridge("invalid-token");
+
+    expect(response).toBeNull();
+  });
   it("falls back to /api/readiness/session/:sessionId when primary route is not found", async () => {
     fetchWithRetryMock
       .mockResolvedValueOnce({ ok: false, status: 404 })
