@@ -1,4 +1,4 @@
-import { api } from "./client";
+import api from "@/lib/api";
 
 export type ClientLender = { id: string; name: string };
 export type ClientLenderProduct = {

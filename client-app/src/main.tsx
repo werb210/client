@@ -10,7 +10,7 @@ import { clearClientStorage } from "./auth/logout";
 import { fetchApplicationContinuation } from "./api/applicationProgress";
 
 if (!import.meta.env.VITE_API_BASE_URL) {
-  throw new Error("VITE_API_BASE_URL is required");
+  throw new Error("Missing VITE_API_BASE_URL");
 }
 
 if (import.meta.env.PROD) {

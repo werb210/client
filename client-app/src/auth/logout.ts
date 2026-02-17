@@ -3,9 +3,8 @@ import { ClientProfileStore } from "../state/clientProfiles";
 import { OfflineStore } from "../state/offline";
 
 const STORAGE_KEYS_TO_REMOVE = [
-  "clientSessionToken",
-  "readinessSession",
-  "draftApplication",
+  "portal_auth_token",
+  "client_session_token",
 ] as const;
 
 export async function clearBrowserCaches() {
@@ -36,7 +35,6 @@ export function clearClientStorage() {
   try {
     STORAGE_KEYS_TO_REMOVE.forEach((key) => {
       localStorage.removeItem(key);
-      sessionStorage.removeItem(key);
     });
   } catch (error) {
     console.warn("Failed to remove scoped storage keys:", error);
