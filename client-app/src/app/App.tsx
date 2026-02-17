@@ -110,7 +110,7 @@ export default function App() {
 
     if (!session) return;
 
-    const apiBaseUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
     if (!apiBaseUrl) return;
 
     void fetch(`${apiBaseUrl}/api/credit-readiness/session/${session}`)

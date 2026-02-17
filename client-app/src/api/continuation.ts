@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "@/lib/api";
 
 import type { ReadinessContext } from "@/state/readinessStore";
 import { fetchWithRetry } from "@/utils/fetchWithRetry";

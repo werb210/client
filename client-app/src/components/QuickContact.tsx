@@ -52,24 +52,29 @@ export default function QuickContact() {
           {error}
         </div>
       ) : null}
+      <label htmlFor="quick-contact-company">Company</label>
       <input
-        placeholder="Company"
+        id="quick-contact-company"
         onChange={(e) => setForm({ ...form, companyName: e.target.value })}
       />
+      <label htmlFor="quick-contact-full-name">Full Name</label>
       <input
-        placeholder="Full Name"
+        id="quick-contact-full-name"
         onChange={(e) => setForm({ ...form, fullName: e.target.value })}
       />
+      <label htmlFor="quick-contact-email">Email</label>
       <input
-        placeholder="Email"
+        id="quick-contact-email"
         onChange={(e) => setForm({ ...form, email: e.target.value })}
       />
+      <label htmlFor="quick-contact-phone">Phone</label>
       <input
-        placeholder="Phone"
+        id="quick-contact-phone"
         onChange={(e) => setForm({ ...form, phone: e.target.value })}
       />
+      <label htmlFor="quick-contact-message">Message</label>
       <input
-        placeholder="Message"
+        id="quick-contact-message"
         onChange={(e) => setForm({ ...form, message: e.target.value })}
       />
       <button onClick={() => void handleSubmit()} disabled={submitting}>

@@ -1,3 +1,4 @@
+import { Suspense, lazy, useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -5,8 +6,6 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import { useEffect } from "react";
-import { PortalEntry } from "../pages/PortalEntry";
 import { StatusPage } from "../pages/StatusPage";
 import { ApplicationPortalPage } from "../pages/ApplicationPortalPage";
 import { ApplicationOffersPage } from "../pages/ApplicationOffersPage";
@@ -17,13 +16,6 @@ import { SessionRevokedPage } from "../pages/SessionRevokedPage";
 import PublicApplyPage from "../pages/apply/PublicApplyPage";
 import PublicApplySuccessPage from "../pages/apply/PublicApplySuccessPage";
 import { ApplyPage } from "../pages/ApplyPage";
-import ContinueApplication from "../pages/ContinueApplication";
-import Step1 from "../wizard/Step1_KYC";
-import Step2 from "../wizard/Step2_Product";
-import Step3 from "../wizard/Step3_Business";
-import Step4 from "../wizard/Step4_Applicant";
-import Step5 from "../wizard/Step5_Documents";
-import Step6 from "../wizard/Step6_Review";
 import { OfflineStore } from "../state/offline";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { SessionGuard } from "../auth/sessionGuard";
@@ -32,8 +24,26 @@ import { useClientSession } from "../hooks/useClientSession";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { clearReadiness, setReadiness } from "../state/readinessStore";
 import { fetchReadinessContext, getLeadIdFromSearch } from "../services/readiness";
-import { fetchContinuation, fetchReadinessSession, getContinuationSession, mapContinuationToReadinessContext } from "../api/continuation";
-import { clearStoredReadinessSession, resolveReadinessSessionId } from "@/api/website";
+import {
+  fetchContinuation,
+  fetchReadinessSession,
+  getContinuationSession,
+  mapContinuationToReadinessContext,
+} from "../api/continuation";
+import {
+  clearStoredReadinessSession,
+  resolveReadinessSessionId,
+} from "@/api/website";
+
+const PortalEntry = lazy(() => import("../pages/PortalEntry").then((module) => ({ default: module.PortalEntry })));
+const ContinueApplication = lazy(() => import("../pages/ContinueApplication"));
+const ProductDetail = lazy(() => import("../pages/ProductDetail"));
+const Step1 = lazy(() => import("../wizard/Step1_KYC"));
+const Step2 = lazy(() => import("../wizard/Step2_Product"));
+const Step3 = lazy(() => import("../wizard/Step3_Business"));
+const Step4 = lazy(() => import("../wizard/Step4_Applicant"));
+const Step5 = lazy(() => import("../wizard/Step5_Documents"));
+const Step6 = lazy(() => import("../wizard/Step6_Review"));
 
 type GuardProps = {
   children: JSX.Element;
@@ -174,34 +184,80 @@ export default function AppRouter() {
     <BrowserRouter>
       <SessionGuard />
       <ReadinessLoader />
-      <Routes>
-        <Route path="/" element={<Navigate to="/apply" replace />} />
-        <Route path="/portal" element={<PortalEntry />} />
-        <Route path="/expired" element={<SessionExpiredPage />} />
-        <Route path="/revoked" element={<SessionRevokedPage />} />
-        <Route
-          path="/status"
-          element={
-            <RequirePortalSession>
-              <StatusPage />
-            </RequirePortalSession>
-          }
-        />
-        <Route path="/application/:id" element={<ApplicationPortalPage />} />
-        <Route path="/application/:id/offers" element={<ApplicationOffersPage />} />
-        <Route
-          path="/application/:id/documents"
-          element={<ApplicationPortalPage />}
-        />
-        <Route path="/resume" element={<ResumePage />} />
-        <Route path="/continue/:token" element={<ContinueApplication />} />
-        <Route path="/apply/success" element={<PublicApplySuccessPage />} />
-
-        <Route path="/apply">
-          <Route index element={<PublicApplyPage />} />
-          <Route path="step-1" element={<Step1 />} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/apply" replace />} />
+          <Route path="/portal" element={<PortalEntry />} />
+          <Route path="/expired" element={<SessionExpiredPage />} />
+          <Route path="/revoked" element={<SessionRevokedPage />} />
           <Route
-            path="step-2"
+            path="/status"
+            element={
+              <RequirePortalSession>
+                <StatusPage />
+              </RequirePortalSession>
+            }
+          />
+          <Route path="/application/:id" element={<ApplicationPortalPage />} />
+          <Route path="/application/:id/offers" element={<ApplicationOffersPage />} />
+          <Route
+            path="/application/:id/documents"
+            element={<ApplicationPortalPage />}
+          />
+          <Route path="/resume" element={<ResumePage />} />
+          <Route path="/continue/:token" element={<ContinueApplication />} />
+          <Route path="/products/:slug" element={<ProductDetail />} />
+          <Route path="/apply/success" element={<PublicApplySuccessPage />} />
+
+          <Route path="/apply">
+            <Route index element={<PublicApplyPage />} />
+            <Route path="step-1" element={<Step1 />} />
+            <Route
+              path="step-2"
+              element={
+                <RequireApplicationToken>
+                  <Step2 />
+                </RequireApplicationToken>
+              }
+            />
+            <Route
+              path="step-3"
+              element={
+                <RequireApplicationToken>
+                  <Step3 />
+                </RequireApplicationToken>
+              }
+            />
+            <Route
+              path="step-4"
+              element={
+                <RequireApplicationToken>
+                  <Step4 />
+                </RequireApplicationToken>
+              }
+            />
+            <Route
+              path="step-5"
+              element={
+                <RequireApplicationToken>
+                  <Step5 />
+                </RequireApplicationToken>
+              }
+            />
+            <Route
+              path="step-6"
+              element={
+                <RequireApplicationToken>
+                  <Step6 />
+                </RequireApplicationToken>
+              }
+            />
+          </Route>
+          <Route path="/apply/:applicationId/*" element={<ApplyPage />} />
+
+          <Route path="/application/step-1" element={<Step1 />} />
+          <Route
+            path="/application/step-2"
             element={
               <RequireApplicationToken>
                 <Step2 />
@@ -209,7 +265,7 @@ export default function AppRouter() {
             }
           />
           <Route
-            path="step-3"
+            path="/application/step-3"
             element={
               <RequireApplicationToken>
                 <Step3 />
@@ -217,7 +273,7 @@ export default function AppRouter() {
             }
           />
           <Route
-            path="step-4"
+            path="/application/step-4"
             element={
               <RequireApplicationToken>
                 <Step4 />
@@ -225,7 +281,7 @@ export default function AppRouter() {
             }
           />
           <Route
-            path="step-5"
+            path="/application/step-5"
             element={
               <RequireApplicationToken>
                 <Step5 />
@@ -233,60 +289,17 @@ export default function AppRouter() {
             }
           />
           <Route
-            path="step-6"
+            path="/application/step-6"
             element={
               <RequireApplicationToken>
                 <Step6 />
               </RequireApplicationToken>
             }
           />
-        </Route>
-        <Route path="/apply/:applicationId/*" element={<ApplyPage />} />
 
-        <Route path="/application/step-1" element={<Step1 />} />
-        <Route
-          path="/application/step-2"
-          element={
-            <RequireApplicationToken>
-              <Step2 />
-            </RequireApplicationToken>
-          }
-        />
-        <Route
-          path="/application/step-3"
-          element={
-            <RequireApplicationToken>
-              <Step3 />
-            </RequireApplicationToken>
-          }
-        />
-        <Route
-          path="/application/step-4"
-          element={
-            <RequireApplicationToken>
-              <Step4 />
-            </RequireApplicationToken>
-          }
-        />
-        <Route
-          path="/application/step-5"
-          element={
-            <RequireApplicationToken>
-              <Step5 />
-            </RequireApplicationToken>
-          }
-        />
-        <Route
-          path="/application/step-6"
-          element={
-            <RequireApplicationToken>
-              <Step6 />
-            </RequireApplicationToken>
-          }
-        />
-
-        <Route path="*" element={<Navigate to="/apply/step-1" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/apply/step-1" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

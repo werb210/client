@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const postMock = vi.fn();
 
-vi.mock("@/api", () => ({
+vi.mock("@/lib/api", () => ({
   default: {
     post: postMock,
   },

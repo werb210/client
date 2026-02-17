@@ -1,6 +1,8 @@
-import { API_BASE_URL } from "@/config/env";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const API = API_BASE_URL;
+if (!BASE_URL) {
+  throw new Error("VITE_API_BASE_URL is required");
+}
 
 export class ApiError extends Error {
   constructor(
@@ -17,7 +19,7 @@ export function buildApiUrl(path: string) {
     return path;
   }
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${API}${normalizedPath}`;
+  return `${BASE_URL}${normalizedPath}`;
 }
 
 function handleStatus(status: number) {
@@ -81,8 +83,41 @@ export async function apiRequest<T>(url: string, options: RequestInit = {}): Pro
   }
 }
 
-export const createLead = async (payload: any) => {
-  const res = await fetch("/api/crm/lead", {
+type ApiRequestOptions = RequestInit & { timeout?: number };
+
+const api = {
+  get: async <T>(url: string, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
+    const { timeout: _timeout, ...requestOptions } = options;
+    const data = await apiRequest<T>(url, {
+      ...requestOptions,
+      method: "GET",
+    });
+    return { data };
+  },
+  post: async <T>(url: string, body?: unknown, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
+    const { timeout: _timeout, ...requestOptions } = options;
+    const data = await apiRequest<T>(url, {
+      ...requestOptions,
+      method: "POST",
+      body: JSON.stringify(body ?? {}),
+    });
+    return { data };
+  },
+  patch: async <T>(url: string, body?: unknown, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
+    const { timeout: _timeout, ...requestOptions } = options;
+    const data = await apiRequest<T>(url, {
+      ...requestOptions,
+      method: "PATCH",
+      body: JSON.stringify(body ?? {}),
+    });
+    return { data };
+  },
+};
+
+export default api;
+
+export const createLead = async (payload: unknown) => {
+  const res = await fetch(buildApiUrl("/api/crm/lead"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
