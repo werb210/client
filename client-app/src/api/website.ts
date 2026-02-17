@@ -1,4 +1,4 @@
-import api from "@/api";
+import api from "@/lib/api";
 import { getContinuationSession } from "@/api/continuation";
 
 export interface CreditReadinessPayload {
@@ -128,7 +128,9 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
         key !== "::" ? `readiness:${key}` : crypto.randomUUID()
       );
       const responseData = res.data;
-      persistReadinessSession(responseData);
+      if (hasValidReadinessSessionId(responseData as Record<string, unknown>)) {
+        persistReadinessSession(responseData as Record<string, unknown>);
+      }
       if (key !== "::") {
         const cache = loadCache(READINESS_DEDUP_KEY);
         cache[key] = responseData;
@@ -172,7 +174,9 @@ export async function submitContactForm(payload: {
         key !== "::" ? `contact:${key}` : crypto.randomUUID()
       );
       const responseData = res.data;
-      persistReadinessSession(responseData);
+      if (hasValidReadinessSessionId(responseData as Record<string, unknown>)) {
+        persistReadinessSession(responseData as Record<string, unknown>);
+      }
       if (key !== "::") {
         const cache = loadCache(CONTACT_DEDUP_KEY);
         cache[key] = responseData;
@@ -243,6 +247,14 @@ export function resolveReadinessSessionId(search?: string) {
   }
 
   return getStoredReadinessSessionId();
+}
+
+function hasValidReadinessSessionId(payload: Record<string, unknown> | null | undefined) {
+  const readinessSessionId =
+    (typeof payload?.readinessSessionId === "string" && payload.readinessSessionId.trim()) ||
+    (typeof payload?.sessionId === "string" && payload.sessionId.trim()) ||
+    "";
+  return Boolean(readinessSessionId);
 }
 
 function persistReadinessSession(payload: Record<string, unknown> | null | undefined) {

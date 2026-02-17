@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { buildApiUrl } from "@/lib/api";
+
 
 export function useReadinessBridge(
   setStep1: Function,
@@ -12,9 +14,7 @@ export function useReadinessBridge(
     if (!token) return;
 
     async function fetchBridge() {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/readiness/bridge/${token}`
-      );
+      const res = await fetch(buildApiUrl(`/api/readiness/bridge/${token}`));
 
       if (!res.ok) return;
 
@@ -28,5 +28,5 @@ export function useReadinessBridge(
     }
 
     void fetchBridge();
-  }, []);
+  }, [setStep1, setStep3, setStep4]);
 }

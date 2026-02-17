@@ -705,7 +705,7 @@ fixedAssets:
                         transition: "transform 0.2s ease, box-shadow 0.2s ease",
                       }}
                     >
-                      <img src={industry.image} alt={industry.title} style={{ width: "100%", height: "108px" }} />
+                      <img loading="lazy" src={industry.image} alt={industry.title} style={{ width: "100%", height: "108px" }} />
                       <div style={{ padding: tokens.spacing.sm, display: "flex", flexDirection: "column", gap: "4px" }}>
                         <div style={{ fontSize: "15px", fontWeight: 600, color: tokens.colors.textPrimary }}>{industry.title}</div>
                         <div style={{ fontSize: "13px", color: tokens.colors.textSecondary }}>{industry.subtext}</div>

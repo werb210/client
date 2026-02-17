@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import api from "@/lib/api";
 import {
   clearActiveClientSessionToken,
   ensureClientSession,
   getClientSessionByToken,
-  getClientSessionState,
   setActiveClientSessionToken,
-  subscribeClientSessions,
-  updateClientSession,
+  getClientSessionState,
   type ClientSession,
   type ClientSessionState,
 } from "@/state/clientSession";
@@ -29,17 +28,8 @@ export function useClientSession(tokenOverride?: string | null): UseClientSessio
     () => tokenOverride ?? getTokenFromSearch(location.search),
     [location.search, tokenOverride]
   );
-  const [session, setSession] = useState<ClientSession | null>(() => {
-    if (!token) return null;
-    return (
-      getClientSessionByToken(token) ||
-      ensureClientSession({ submissionId: token, accessToken: token })
-    );
-  });
-  const [state, setState] = useState<ClientSessionState | "missing">(() => {
-    if (!token) return "missing";
-    return session ? getClientSessionState(session) : "missing";
-  });
+  const [session, setSession] = useState<ClientSession | null>(null);
+  const [state, setState] = useState<ClientSessionState | "missing">("missing");
 
   useEffect(() => {
     if (!token) {
@@ -48,27 +38,43 @@ export function useClientSession(tokenOverride?: string | null): UseClientSessio
       setState("missing");
       return;
     }
-    setActiveClientSessionToken(token);
-    const next =
-      getClientSessionByToken(token) ||
-      ensureClientSession({ submissionId: token, accessToken: token });
-    setSession(next);
-    setState(getClientSessionState(next));
-  }, [token]);
 
-  useEffect(() => {
-    const unsubscribe = subscribeClientSessions(() => {
-      if (!token) return;
-      const next = getClientSessionByToken(token);
-      if (!next) return;
-      setSession(next);
-      setState(getClientSessionState(next));
-    });
+    let active = true;
+
+    const validateAndPersist = async () => {
+      try {
+        const res = await api.post<{ valid?: boolean }>("/api/session/validate", { token });
+        if (!active) return;
+        if (!res.data?.valid) {
+          clearActiveClientSessionToken();
+          setSession(null);
+          setState("missing");
+          navigate("/", { replace: true });
+          return;
+        }
+
+        setActiveClientSessionToken(token);
+
+        const next =
+          getClientSessionByToken(token) ||
+          ensureClientSession({ submissionId: token, accessToken: token });
+        setSession(next);
+        setState(getClientSessionState(next));
+      } catch {
+        if (!active) return;
+        clearActiveClientSessionToken();
+        setSession(null);
+        setState("missing");
+        navigate("/", { replace: true });
+      }
+    };
+
+    void validateAndPersist();
 
     return () => {
-      unsubscribe();
+      active = false;
     };
-  }, [token]);
+  }, [token, navigate]);
 
   useEffect(() => {
     if (state === "expired") {
@@ -78,17 +84,9 @@ export function useClientSession(tokenOverride?: string | null): UseClientSessio
     }
   }, [navigate, state]);
 
-  useEffect(() => {
-    if (!token || !session) return;
-    if (session.submissionId !== token) {
-      updateClientSession(token, { submissionId: token });
-    }
-  }, [session, token]);
-
   return {
     session,
     state,
     isTerminal: state === "expired" || state === "revoked",
   };
 }
-

@@ -126,7 +126,10 @@ export default function ChatSupportWidget() {
                       : "Connecting…"}
             </p>
             <div className="flex gap-2">
+              <label htmlFor="chat-support-input" className="sr-only">Type your message</label>
               <input
+                id="chat-support-input"
+                aria-label="Type your message"
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 className="flex-1 rounded border p-2 text-sm"

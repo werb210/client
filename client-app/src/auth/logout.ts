@@ -2,6 +2,12 @@ import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { OfflineStore } from "../state/offline";
 
+const STORAGE_KEYS_TO_REMOVE = [
+  "clientSessionToken",
+  "readinessSession",
+  "draftApplication",
+] as const;
+
 export async function clearBrowserCaches() {
   if (!("caches" in globalThis)) return;
   try {
@@ -28,15 +34,12 @@ export function clearClientStorage() {
   ClientProfileStore.clearAll();
 
   try {
-    localStorage.clear();
+    STORAGE_KEYS_TO_REMOVE.forEach((key) => {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    });
   } catch (error) {
-    console.warn("Failed to clear local storage:", error);
-  }
-
-  try {
-    sessionStorage.clear();
-  } catch (error) {
-    console.warn("Failed to clear session storage:", error);
+    console.warn("Failed to remove scoped storage keys:", error);
   }
 }
 
