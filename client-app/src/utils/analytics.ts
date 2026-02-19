@@ -2,6 +2,15 @@ import { getPersistedAttribution } from "./attribution";
 
 // ---- Client Attribution Sync ----
 
+// ---- Consent Sync Layer ----
+
+const CONSENT_KEY = "boreal_cookie_consent";
+
+const hasTrackingConsent = (): boolean => {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(CONSENT_KEY) === "accepted";
+};
+
 export const getClientAttribution = () => {
   return getPersistedAttribution();
 };
@@ -10,7 +19,13 @@ export const trackEvent = (
   eventName: string,
   payload: Record<string, any> = {}
 ) => {
+  if (!hasTrackingConsent()) return;
+
   const attribution = getClientAttribution();
+
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", eventName, payload);
+  }
 
   if (typeof window !== "undefined" && window.dataLayer) {
     window.dataLayer.push({
@@ -20,6 +35,10 @@ export const trackEvent = (
       ...attribution,
       ...payload,
     });
+  }
+
+  if (typeof window !== "undefined" && window.clarity) {
+    window.clarity("set", eventName, payload);
   }
 
   try {
@@ -40,16 +59,12 @@ export const trackEvent = (
 };
 
 export const trackConversion = (
-  type: string,
+  eventName: string,
   payload: Record<string, any> = {}
 ) => {
-  const attribution = getClientAttribution();
+  if (!hasTrackingConsent()) return;
 
-  trackEvent("client_conversion", {
-    conversion_type: type,
-    ...attribution,
-    ...payload,
-  });
+  trackEvent(eventName, payload);
 };
 
 // ---- Client Revenue Modeling ----
