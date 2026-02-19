@@ -33,6 +33,8 @@ import {
   classifyReadiness,
   estimateClientCommission,
   getClientAttribution,
+  getLeadFingerprint,
+  getSessionId,
   incrementUnderwritingScore,
   trackConversion,
   trackEvent,
@@ -302,6 +304,16 @@ export function Step6_Review() {
       trackEvent("client_application_submitted", { step: 6 });
       const requestedAmount = parseCurrencyAmount(app.kyc?.fundingAmount);
       const estimatedCommission = estimateClientCommission(requestedAmount);
+      const revenueTier =
+        estimatedCommission > 15000
+          ? "high"
+          : estimatedCommission > 5000
+            ? "medium"
+            : "low";
+      trackEvent("application_priority", {
+        revenue_tier: revenueTier,
+        session_id: getSessionId(),
+      });
       const revenue = parseCurrencyAmount(
         app.kyc?.annualRevenue || app.kyc?.revenueLast12Months || app.business?.estimatedRevenue
       );
@@ -342,6 +354,7 @@ export function Step6_Review() {
         {
           ...payload,
           attribution,
+          ...getLeadFingerprint(),
         },
         {
           idempotencyKey,
