@@ -82,6 +82,19 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      trackEvent("application_abandoned", {
+        current_step: app.currentStep,
+      });
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [app.currentStep]);
+
+  useEffect(() => {
     const continuation = window.__APP_CONTINUATION__;
     if (!continuation?.applicationId) return;
 

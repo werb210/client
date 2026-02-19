@@ -373,6 +373,7 @@ export function Step5_Documents() {
           hydrated.financialReviewComplete ?? app.financialReviewComplete,
       });
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
+      trackEvent("document_uploaded", { category: docType });
       trackEvent("client_document_uploaded", { documentType: docType });
       track("document_uploaded", { documentType: docType });
     } catch (error) {
