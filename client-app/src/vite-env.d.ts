@@ -16,6 +16,8 @@ interface ImportMeta {
 
 interface Window {
   dataLayer?: Array<Record<string, unknown>>;
+  gtag?: (command: string, eventName: string, payload?: Record<string, unknown>) => void;
+  clarity?: (command: string, key: string, value?: Record<string, unknown>) => void;
   __APP_CONTINUATION__?: {
     applicationId: string;
     step: number;
