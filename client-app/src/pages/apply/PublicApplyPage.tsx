@@ -10,6 +10,7 @@ import {
 } from "@/api/website";
 import { getContinuationSession, fetchContinuation, fetchReadinessSession } from "@/api/continuation";
 import { loadContinuation } from "../../services/continuation";
+import { getSessionId, trackEvent } from "../../utils/analytics";
 
 type FieldType =
   | "text"
@@ -65,6 +66,7 @@ export type PublicApplicationPayload = {
   terms_accepted_at: string;
   communications_consent_at: string;
   client_ip: string;
+  idempotencyToken?: string;
 };
 
 type PublicSubmissionState = {
@@ -80,7 +82,9 @@ export type MinimalStorage = {
 };
 
 const PUBLIC_SUBMISSION_KEY = "boreal_public_application_submission";
-const PUBLIC_IDEMPOTENCY_KEY = "boreal_public_application_idempotency_key";
+const PUBLIC_IDEMPOTENCY_KEY = "boreal_idempotency";
+const DRAFT_KEY = "boreal_application_draft";
+const SUBMIT_LOCK_KEY = "boreal_submit_lock";
 
 const productCategories = [
   "Working Capital",
@@ -224,6 +228,67 @@ function getSessionStorage() {
   return window.sessionStorage ?? null;
 }
 
+function getLocalStorage() {
+  if (typeof window === "undefined") return null;
+  return window.localStorage ?? null;
+}
+
+export function saveDraft(data: ApplicationFormValues, storage: MinimalStorage | null = getLocalStorage()) {
+  if (!storage) return;
+  try {
+    storage.setItem(DRAFT_KEY, JSON.stringify(data));
+  } catch {
+    // ignore storage failures
+  }
+}
+
+export function loadDraft(storage: MinimalStorage | null = getLocalStorage()) {
+  if (!storage) return null;
+  try {
+    const raw = storage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as ApplicationFormValues;
+  } catch {
+    return null;
+  }
+}
+
+export function clearDraft(storage: MinimalStorage | null = getLocalStorage()) {
+  if (!storage) return;
+  try {
+    storage.removeItem(DRAFT_KEY);
+  } catch {
+    // ignore storage failures
+  }
+}
+
+export function isSubmissionLocked(storage: MinimalStorage | null = getLocalStorage()) {
+  if (!storage) return false;
+  try {
+    return storage.getItem(SUBMIT_LOCK_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function lockSubmission(storage: MinimalStorage | null = getLocalStorage()) {
+  if (!storage) return;
+  try {
+    storage.setItem(SUBMIT_LOCK_KEY, "true");
+  } catch {
+    // ignore storage failures
+  }
+}
+
+export function unlockSubmission(storage: MinimalStorage | null = getLocalStorage()) {
+  if (!storage) return;
+  try {
+    storage.removeItem(SUBMIT_LOCK_KEY);
+  } catch {
+    // ignore storage failures
+  }
+}
+
 export function createIdempotencyKey() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
@@ -279,6 +344,14 @@ export function getOrCreateIdempotencyKey(storage: MinimalStorage | null) {
     }
   }
   return next;
+}
+
+function getRevenueTier(requestedAmount: string) {
+  const amount = Number(requestedAmount);
+  if (!Number.isFinite(amount) || amount <= 0) return "low" as const;
+  if (amount >= 150000) return "high" as const;
+  if (amount >= 50000) return "medium" as const;
+  return "low" as const;
 }
 
 export function validateApplication(values: ApplicationFormValues) {
@@ -400,6 +473,7 @@ export async function handlePublicApplicationSubmit({
   onSuccess: () => void;
   onError: (errors: Record<string, string>) => void;
   storage?: MinimalStorage | null;
+  lockStorage?: MinimalStorage | null;
   readinessToken?: string | null;
   sessionId?: string | null;
 }) {
@@ -426,6 +500,7 @@ export async function handlePublicApplicationSubmit({
     return;
   }
 
+  const resolvedLockStorage = lockStorage ?? getLocalStorage();
   const submissionState = loadPublicSubmissionState(storage ?? null);
   if (submissionState) {
     onError({
@@ -434,6 +509,15 @@ export async function handlePublicApplicationSubmit({
     return;
   }
 
+  if (isSubmissionLocked(resolvedLockStorage)) {
+    onError({
+      form: "A submission is already in progress for this browser.",
+    });
+    return;
+  }
+
+  lockSubmission(resolvedLockStorage);
+
   const payload = buildPublicApplicationPayload(values, {
     clientIp,
     termsAcceptedAt,
@@ -441,6 +525,13 @@ export async function handlePublicApplicationSubmit({
   });
 
   const idempotencyKey = getOrCreateIdempotencyKey(storage ?? null);
+  payload.idempotencyToken = idempotencyKey;
+
+  if (getRevenueTier(values.requested_amount) === "high") {
+    trackEvent("high_value_submission_attempt", {
+      session_id: getSessionId(),
+    });
+  }
 
   try {
     await submitApplication(payload, {
@@ -452,8 +543,10 @@ export async function handlePublicApplicationSubmit({
       idempotencyKey,
       submittedAt: new Date().toISOString(),
     });
+    clearDraft();
     onSuccess();
   } catch (error: any) {
+    unlockSubmission(resolvedLockStorage);
     const responseData = error?.response?.data;
     const serverErrors =
       responseData?.errors ||
@@ -494,6 +587,16 @@ export default function PublicApplyPage() {
     return resolveReadinessSessionId(window.location.search);
   }, []);
 
+  useEffect(() => {
+    const draft = loadDraft();
+    if (draft) {
+      setValues((prev) => ({ ...prev, ...draft }));
+    }
+  }, []);
+
+  useEffect(() => {
+    saveDraft(values);
+  }, [values]);
 
   useEffect(() => {
     const continuationId = readinessSessionId || readinessToken;
@@ -620,6 +723,7 @@ export default function PublicApplyPage() {
         },
         onError: (nextErrors) => setErrors(nextErrors),
         storage: getSessionStorage(),
+        lockStorage: getLocalStorage(),
         readinessToken,
         sessionId: readinessSessionId,
       });
@@ -679,6 +783,9 @@ export default function PublicApplyPage() {
               type="button"
               onClick={() => {
                 getSessionStorage()?.removeItem(PUBLIC_SUBMISSION_KEY);
+                getSessionStorage()?.removeItem(PUBLIC_IDEMPOTENCY_KEY);
+                unlockSubmission();
+                clearDraft();
                 setSubmissionState(null);
               }}
               style={{

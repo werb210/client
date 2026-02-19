@@ -6,8 +6,13 @@ import {
   getOrCreateIdempotencyKey,
   handlePublicApplicationSubmit,
   initialValues,
+  isSubmissionLocked,
   isSubmissionReady,
+  loadDraft,
   loadPublicSubmissionState,
+  lockSubmission,
+  saveDraft,
+  unlockSubmission,
   validateApplication,
 } from "../PublicApplyPage";
 
@@ -183,7 +188,10 @@ describe("PublicApplyPage form schema", () => {
     });
 
     expect(submitApplication).toHaveBeenCalledWith(
-      expect.objectContaining({ business_legal_name: "Boreal LLC" }),
+      expect.objectContaining({
+        business_legal_name: "Boreal LLC",
+        idempotencyToken: expect.any(String),
+      }),
       expect.objectContaining({ idempotencyKey: expect.any(String) })
     );
     expect(onSuccess).toHaveBeenCalledTimes(1);
@@ -246,6 +254,66 @@ describe("PublicApplyPage form schema", () => {
     expect(submitApplication).not.toHaveBeenCalled();
     expect(onSuccess).not.toHaveBeenCalled();
     expect(onError).toHaveBeenCalled();
+  });
+
+
+  it("saves and loads drafts", () => {
+    const storage = createStorage();
+    saveDraft(baseValues, storage as unknown as Storage);
+    expect(loadDraft(storage as unknown as Storage)).toEqual(baseValues);
+  });
+
+  it("guards submission when cross-tab lock exists", async () => {
+    const submitApplication = vi.fn().mockResolvedValue({});
+    const onSuccess = vi.fn();
+    const onError = vi.fn();
+    const storage = createStorage();
+
+    lockSubmission(storage as unknown as Storage);
+
+    await handlePublicApplicationSubmit({
+      values: baseValues,
+      clientIp: "203.0.113.10",
+      termsAcceptedAt: "2024-01-01T00:00:00.000Z",
+      communicationsAcceptedAt: "2024-01-01T00:00:00.000Z",
+      submitApplication,
+      onSuccess,
+      onError,
+      storage,
+      lockStorage: storage as unknown as Storage,
+    });
+
+    expect(submitApplication).not.toHaveBeenCalled();
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        form: "A submission is already in progress for this browser.",
+      })
+    );
+  });
+
+  it("unlocks submissions after an error", async () => {
+    const submitApplication = vi.fn().mockRejectedValue(new Error("boom"));
+    const storage = createStorage();
+
+    await handlePublicApplicationSubmit({
+      values: baseValues,
+      clientIp: "203.0.113.10",
+      termsAcceptedAt: "2024-01-01T00:00:00.000Z",
+      communicationsAcceptedAt: "2024-01-01T00:00:00.000Z",
+      submitApplication,
+      onSuccess: vi.fn(),
+      onError: vi.fn(),
+      storage,
+      lockStorage: storage as unknown as Storage,
+    });
+
+    expect(isSubmissionLocked(storage as unknown as Storage)).toBe(false);
+
+    lockSubmission(storage as unknown as Storage);
+    expect(isSubmissionLocked(storage as unknown as Storage)).toBe(true);
+    unlockSubmission(storage as unknown as Storage);
+    expect(isSubmissionLocked(storage as unknown as Storage)).toBe(false);
   });
 
   it("stores a consistent idempotency key for the session", () => {
