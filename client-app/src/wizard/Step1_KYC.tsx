@@ -237,6 +237,7 @@ fixedAssets:
   ]);
 
   useEffect(() => {
+    trackEvent("application_started", { step: 1 });
     trackEvent("client_step_viewed", { step: 1 });
   }, []);
 

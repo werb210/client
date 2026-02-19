@@ -264,6 +264,7 @@ export function useApplicationStore() {
   useEffect(() => {
     if (!app.currentStep || trackedStep.current === app.currentStep) return;
     trackedStep.current = app.currentStep;
+    trackEvent("application_step_view", { step: app.currentStep });
     trackEvent("client_step_progressed", { step: app.currentStep });
   }, [app.currentStep]);
 

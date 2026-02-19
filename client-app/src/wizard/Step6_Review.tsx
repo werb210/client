@@ -28,7 +28,7 @@ import {
   getOrCreateSubmissionIdempotencyKey,
 } from "../client/submissionIdempotency";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
-import { trackEvent } from "../utils/analytics";
+import { trackConversion, trackEvent } from "../utils/analytics";
 import { track } from "../utils/track";
 import { apiRequest } from "../lib/api";
 import { clearStoredReadinessSession } from "@/api/website";
@@ -287,6 +287,11 @@ export function Step6_Review() {
       const payload = buildSubmissionPayload(app);
       trackEvent("client_submission_started");
       trackEvent("client_application_submitted", { step: 6 });
+      trackConversion("application_submitted", {
+        estimated_amount: app.kyc?.fundingAmount,
+        product_type: app.selectedProductType || app.selectedProduct?.product_type,
+        lead_strength: app.readinessScore,
+      });
       track("submit", { step: 6 });
       const submissionResponse = await submitApplication(payload, {
         idempotencyKey,
