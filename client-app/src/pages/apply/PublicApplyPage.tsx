@@ -86,6 +86,13 @@ const PUBLIC_IDEMPOTENCY_KEY = "boreal_idempotency";
 const DRAFT_KEY = "boreal_application_draft";
 const SUBMIT_LOCK_KEY = "boreal_submit_lock";
 
+// ---- Resume Token ----
+const RESUME_TOKEN_KEY = "boreal_resume_token";
+
+type DraftPayload = ApplicationFormValues & {
+  resumeToken?: string;
+};
+
 const productCategories = [
   "Working Capital",
   "Equipment Financing",
@@ -228,12 +235,23 @@ function getSessionStorage() {
   return window.sessionStorage ?? null;
 }
 
+const getResumeToken = () => {
+  if (typeof window === "undefined") return "";
+  const storage = getLocalStorage();
+  let token = storage?.getItem(RESUME_TOKEN_KEY) ?? null;
+  if (!token) {
+    token = crypto.randomUUID();
+    storage?.setItem(RESUME_TOKEN_KEY, token);
+  }
+  return token;
+};
+
 function getLocalStorage() {
   if (typeof window === "undefined") return null;
   return window.localStorage ?? null;
 }
 
-export function saveDraft(data: ApplicationFormValues, storage: MinimalStorage | null = getLocalStorage()) {
+export function saveDraft(data: DraftPayload, storage: MinimalStorage | null = getLocalStorage()) {
   if (!storage) return;
   try {
     storage.setItem(DRAFT_KEY, JSON.stringify(data));
@@ -247,7 +265,7 @@ export function loadDraft(storage: MinimalStorage | null = getLocalStorage()) {
   try {
     const raw = storage.getItem(DRAFT_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as ApplicationFormValues;
+    return JSON.parse(raw) as DraftPayload;
   } catch {
     return null;
   }
@@ -595,8 +613,45 @@ export default function PublicApplyPage() {
   }, []);
 
   useEffect(() => {
-    saveDraft(values);
+    const draftPayload = {
+      ...values,
+      resumeToken: getResumeToken(),
+    };
+
+    saveDraft(draftPayload);
   }, [values]);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const draft = loadDraft();
+      if (!draft) return;
+
+      await fetch("/api/drafts/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(draft),
+      });
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const resumeToken = url.searchParams.get("resume");
+
+    if (!resumeToken) return;
+
+    fetch(`/api/drafts/${resumeToken}`)
+      .then((res) => res.json())
+      .then((data: DraftPayload | null) => {
+        if (data) {
+          setValues((prev) => ({ ...prev, ...data }));
+        }
+      });
+  }, []);
 
   useEffect(() => {
     const continuationId = readinessSessionId || readinessToken;
