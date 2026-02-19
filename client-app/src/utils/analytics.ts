@@ -1,10 +1,9 @@
+import { getPersistedAttribution } from "./attribution";
+
 // ---- Client Attribution Sync ----
 
-const ATTRIBUTION_KEY = "boreal_attribution";
-
 export const getClientAttribution = () => {
-  const stored = localStorage.getItem(ATTRIBUTION_KEY);
-  return stored ? JSON.parse(stored) : {};
+  return getPersistedAttribution();
 };
 
 export const trackEvent = (
