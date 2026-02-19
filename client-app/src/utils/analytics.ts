@@ -1,13 +1,24 @@
-export function trackEvent(
+// ---- Client Attribution Sync ----
+
+const ATTRIBUTION_KEY = "boreal_attribution";
+
+export const getClientAttribution = () => {
+  const stored = localStorage.getItem(ATTRIBUTION_KEY);
+  return stored ? JSON.parse(stored) : {};
+};
+
+export const trackEvent = (
   eventName: string,
-  payload: Record<string, unknown> = {}
-) {
-  if (typeof window !== "undefined") {
-    window.dataLayer = window.dataLayer || [];
+  payload: Record<string, any> = {}
+) => {
+  const attribution = getClientAttribution();
+
+  if (typeof window !== "undefined" && window.dataLayer) {
     window.dataLayer.push({
       event: eventName,
       timestamp: Date.now(),
       app: "client",
+      ...attribution,
       ...payload,
     });
   }
@@ -18,23 +29,29 @@ export function trackEvent(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         event_name: eventName,
-        payload,
+        payload: {
+          ...attribution,
+          ...payload,
+        },
       }),
     });
   } catch (err) {
     console.warn("Analytics error", err);
   }
-}
+};
 
-export function trackConversion(
+export const trackConversion = (
   type: string,
-  payload: Record<string, unknown> = {}
-) {
+  payload: Record<string, any> = {}
+) => {
+  const attribution = getClientAttribution();
+
   trackEvent("client_conversion", {
     conversion_type: type,
+    ...attribution,
     ...payload,
   });
-}
+};
 
 // ---- Client Revenue Modeling ----
 const COMMISSION_RATE = 0.03; // Adjust later if needed
