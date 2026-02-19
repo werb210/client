@@ -85,6 +85,12 @@ export default function App() {
     const handleBeforeUnload = () => {
       trackEvent("application_abandoned", {
         current_step: app.currentStep,
+        risk_level:
+          (app.currentStep || 0) <= 2
+            ? "low_intent"
+            : (app.currentStep || 0) <= 4
+              ? "medium_intent"
+              : "high_intent",
       });
     };
 
