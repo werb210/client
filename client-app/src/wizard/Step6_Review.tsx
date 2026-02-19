@@ -31,6 +31,7 @@ import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import {
   calculateApplicationQuality,
   estimateClientCommission,
+  getClientAttribution,
   trackConversion,
   trackEvent,
 } from "../utils/analytics";
@@ -291,6 +292,7 @@ export function Step6_Review() {
         currentStep: app.currentStep,
       });
       const payload = buildSubmissionPayload(app);
+      const attribution = getClientAttribution();
       trackEvent("client_submission_started");
       trackEvent("client_application_submitted", { step: 6 });
       const requestedAmount = parseCurrencyAmount(app.kyc?.fundingAmount);
@@ -328,10 +330,16 @@ export function Step6_Review() {
         lead_strength: app.readinessScore,
       });
       track("submit", { step: 6 });
-      const submissionResponse = await submitApplication(payload, {
-        idempotencyKey,
-        continuationToken: app.continuationToken,
-      });
+      const submissionResponse = await submitApplication(
+        {
+          ...payload,
+          attribution,
+        },
+        {
+          idempotencyKey,
+          continuationToken: app.continuationToken,
+        }
+      );
       localStorage.removeItem("creditSessionToken");
       const refreshed = await ClientAppAPI.status(app.applicationToken!);
       const hydrated = extractApplicationFromStatus(
