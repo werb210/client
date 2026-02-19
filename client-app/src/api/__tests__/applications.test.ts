@@ -9,6 +9,17 @@ vi.mock("../client", () => ({
 }));
 
 describe("submitApplication", () => {
+  const expectedAttribution = {
+    utm_source: null,
+    utm_medium: null,
+    utm_campaign: null,
+    utm_term: null,
+    utm_content: null,
+    gclid: null,
+    msclkid: null,
+    ga_client_id: null,
+  };
+
   beforeEach(() => {
     postMock.mockClear();
     localStorage.clear();
@@ -19,7 +30,7 @@ describe("submitApplication", () => {
     await submitApplication({ hello: "world" }, { idempotencyKey: "idem-123" });
     expect(postMock).toHaveBeenCalledWith(
       "/api/client/submissions",
-      { hello: "world", creditSessionToken: null },
+      { hello: "world", ...expectedAttribution, creditSessionToken: null },
       { headers: { "Idempotency-Key": "idem-123" } }
     );
   });
@@ -32,7 +43,12 @@ describe("submitApplication", () => {
     );
     expect(postMock).toHaveBeenCalledWith(
       "/api/client/submissions",
-      { hello: "world", continuationToken: "cont-456", creditSessionToken: null },
+      {
+        hello: "world",
+        ...expectedAttribution,
+        continuationToken: "cont-456",
+        creditSessionToken: null,
+      },
       { headers: { "Idempotency-Key": "idem-123" } }
     );
   });
@@ -45,7 +61,11 @@ describe("submitApplication", () => {
 
     expect(postMock).toHaveBeenCalledWith(
       "/api/client/submissions",
-      { hello: "world", creditSessionToken: "bridge-token-123" },
+      {
+        hello: "world",
+        ...expectedAttribution,
+        creditSessionToken: "bridge-token-123",
+      },
       { headers: undefined }
     );
   });

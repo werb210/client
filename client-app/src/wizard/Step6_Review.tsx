@@ -335,6 +335,7 @@ export function Step6_Review() {
         estimated_amount: app.kyc?.fundingAmount,
         product_type: app.selectedProductType || app.selectedProduct?.product_type,
         lead_strength: app.readinessScore,
+        ...attribution,
       });
       track("submit", { step: 6 });
       const submissionResponse = await submitApplication(

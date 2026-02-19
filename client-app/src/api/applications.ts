@@ -6,17 +6,20 @@ import {
   PublicApplicationResponseSchema,
   parseApiResponse,
 } from "@/contracts/clientApiSchemas";
+import { getPersistedAttribution } from "@/utils/attribution";
 
 export async function submitApplication(
   payload: unknown,
   options?: { idempotencyKey?: string; continuationToken?: string }
 ) {
   const creditSessionToken = localStorage.getItem("creditSessionToken");
+  const attribution = getPersistedAttribution();
 
   const submissionPayload =
     payload && typeof payload === "object" && !Array.isArray(payload)
       ? {
           ...(payload as Record<string, unknown>),
+          ...attribution,
           ...(options?.continuationToken ? { continuationToken: options.continuationToken } : {}),
           creditSessionToken,
         }
@@ -35,10 +38,13 @@ export async function createPublicApplication(
   payload: unknown,
   options?: { idempotencyKey?: string; readinessToken?: string; sessionId?: string }
 ) {
+  const attribution = getPersistedAttribution();
+
   const submissionPayload =
     payload && typeof payload === "object" && !Array.isArray(payload)
       ? {
           ...(payload as Record<string, unknown>),
+          ...attribution,
           readinessToken: options?.readinessToken,
           sessionId: options?.sessionId,
         }
