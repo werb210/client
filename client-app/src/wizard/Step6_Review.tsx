@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { TERMS_TEXT } from "../data/terms";
@@ -30,8 +30,10 @@ import {
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import {
   calculateApplicationQuality,
+  classifyReadiness,
   estimateClientCommission,
   getClientAttribution,
+  incrementUnderwritingScore,
   trackConversion,
   trackEvent,
 } from "../utils/analytics";
@@ -54,6 +56,9 @@ export function Step6_Review() {
   const isOnline = !isOffline;
   const [idempotencyKey] = useState(() => getOrCreateSubmissionIdempotencyKey());
   const [lenderCount, setLenderCount] = useState<number | null>(null);
+  const firstDocStartTime = useRef<number>(Date.now());
+  const hasTrackedFirstDocumentUpload = useRef(false);
+  const hasTrackedUnderwritingPackageReady = useRef(false);
   const hasPartner = Boolean(app.applicant?.hasMultipleOwners);
   const requirementsKey = useMemo(
     () => (app.productRequirements?.aggregated ? "aggregated" : app.selectedProductId),
@@ -321,10 +326,12 @@ export function Step6_Review() {
         timeInBusiness,
         creditScore: Number.isNaN(creditScore) ? undefined : creditScore,
       });
+      const readinessLevel = classifyReadiness();
       trackConversion("application_submitted", {
         requested_amount: requestedAmount,
         estimated_commission_value: estimatedCommission,
         quality_tier: qualityTier,
+        underwriting_readiness: readinessLevel,
         estimated_amount: app.kyc?.fundingAmount,
         product_type: app.selectedProductType || app.selectedProduct?.product_type,
         lead_strength: app.readinessScore,
@@ -508,6 +515,35 @@ export function Step6_Review() {
         financialReviewComplete:
           hydrated.financialReviewComplete ?? app.financialReviewComplete,
       });
+      const uploadedDocs = hydrated.documents || app.documents;
+      incrementUnderwritingScore(2);
+
+      if (!hasTrackedFirstDocumentUpload.current) {
+        hasTrackedFirstDocumentUpload.current = true;
+        const timeToFirstDoc = Date.now() - firstDocStartTime.current;
+        trackEvent("time_to_first_document", {
+          ms: timeToFirstDoc,
+        });
+      }
+
+      trackEvent("document_uploaded", {
+        category: docType,
+        readiness_level: classifyReadiness(),
+      });
+
+      const requiredDocsUploaded =
+        app.documentsDeferred ||
+        requiredDocTypes.length === 0 ||
+        requiredDocTypes.every((requiredDocType) => uploadedDocs[requiredDocType]);
+
+      if (requiredDocsUploaded && !hasTrackedUnderwritingPackageReady.current) {
+        hasTrackedUnderwritingPackageReady.current = true;
+        incrementUnderwritingScore(4);
+        trackEvent("underwriting_package_ready", {
+          readiness_level: classifyReadiness(),
+        });
+      }
+
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
       track("document_uploaded", { documentType: docType, step: 6 });
     } catch (error) {

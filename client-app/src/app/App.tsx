@@ -14,7 +14,7 @@ import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
 import { useExitIntent } from "../hooks/useExitIntent";
-import { trackEvent } from "../utils/analytics";
+import { classifyReadiness, estimateClientCommission, trackEvent } from "../utils/analytics";
 import ChatSupportWidget from "@/components/ChatSupportWidget";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { useReadinessBridge } from "@/hooks/useReadinessBridge";
@@ -83,8 +83,14 @@ export default function App() {
 
   useEffect(() => {
     const handleBeforeUnload = () => {
+      const estimatedValue = estimateClientCommission(
+        Number(app.kyc?.fundingAmount || 0)
+      );
+
       trackEvent("application_abandoned", {
         current_step: app.currentStep,
+        estimated_commission_value: estimatedValue,
+        underwriting_readiness: classifyReadiness(),
         risk_level:
           (app.currentStep || 0) <= 2
             ? "low_intent"

@@ -82,3 +82,17 @@ export const calculateApplicationQuality = (data: {
   if (score >= 3) return "medium";
   return "low";
 };
+
+// ---- Underwriting Readiness Engine ----
+
+let underwritingScore = 0;
+
+export const incrementUnderwritingScore = (points: number) => {
+  underwritingScore += points;
+};
+
+export const classifyReadiness = () => {
+  if (underwritingScore >= 8) return "ready";
+  if (underwritingScore >= 4) return "partial";
+  return "low";
+};
