@@ -28,10 +28,16 @@ import {
   getOrCreateSubmissionIdempotencyKey,
 } from "../client/submissionIdempotency";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
-import { trackConversion, trackEvent } from "../utils/analytics";
+import {
+  calculateApplicationQuality,
+  estimateClientCommission,
+  trackConversion,
+  trackEvent,
+} from "../utils/analytics";
 import { track } from "../utils/track";
 import { apiRequest } from "../lib/api";
 import { clearStoredReadinessSession } from "@/api/website";
+import { parseCurrencyAmount } from "./productSelection";
 
 export function Step6_Review() {
   const { app, update } = useApplicationStore();
@@ -287,7 +293,36 @@ export function Step6_Review() {
       const payload = buildSubmissionPayload(app);
       trackEvent("client_submission_started");
       trackEvent("client_application_submitted", { step: 6 });
+      const requestedAmount = parseCurrencyAmount(app.kyc?.fundingAmount);
+      const estimatedCommission = estimateClientCommission(requestedAmount);
+      const revenue = parseCurrencyAmount(
+        app.kyc?.annualRevenue || app.kyc?.revenueLast12Months || app.business?.estimatedRevenue
+      );
+      const timeInBusiness = (() => {
+        const startDate = app.business?.startDate;
+        if (!startDate) return 0;
+        const start = new Date(startDate);
+        if (Number.isNaN(start.getTime())) return 0;
+        const now = new Date();
+        return Math.max(
+          0,
+          (now.getFullYear() - start.getFullYear()) * 12 +
+            (now.getMonth() - start.getMonth())
+        );
+      })();
+      const creditScore = Number.parseInt(
+        String(app.kyc?.creditScore ?? app.applicant?.creditScore ?? ""),
+        10
+      );
+      const qualityTier = calculateApplicationQuality({
+        revenue,
+        timeInBusiness,
+        creditScore: Number.isNaN(creditScore) ? undefined : creditScore,
+      });
       trackConversion("application_submitted", {
+        requested_amount: requestedAmount,
+        estimated_commission_value: estimatedCommission,
+        quality_tier: qualityTier,
         estimated_amount: app.kyc?.fundingAmount,
         product_type: app.selectedProductType || app.selectedProduct?.product_type,
         lead_strength: app.readinessScore,

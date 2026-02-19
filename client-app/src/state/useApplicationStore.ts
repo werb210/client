@@ -160,6 +160,7 @@ export function useApplicationStore() {
   const [autosaveError, setAutosaveError] = useState<string | null>(null);
   const { isOffline } = useNetworkStatus();
   const trackedStep = useRef<number | undefined>(undefined);
+  const stepStartTime = useRef<number>(Date.now());
 
   const canAutosave = (app.currentStep ?? 0) >= 1;
 
@@ -263,7 +264,17 @@ export function useApplicationStore() {
 
   useEffect(() => {
     if (!app.currentStep || trackedStep.current === app.currentStep) return;
+
+    if (trackedStep.current !== undefined) {
+      const duration = Date.now() - stepStartTime.current;
+      trackEvent("application_step_completed", {
+        step: trackedStep.current,
+        time_spent_ms: duration,
+      });
+    }
+
     trackedStep.current = app.currentStep;
+    stepStartTime.current = Date.now();
     trackEvent("application_step_view", { step: app.currentStep });
     trackEvent("client_step_progressed", { step: app.currentStep });
   }, [app.currentStep]);
