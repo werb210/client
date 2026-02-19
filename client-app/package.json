@@ -12,8 +12,8 @@
     "test": "vitest",
     "test:ci": "vitest --run",
     "audit:enterprise": "node scripts/enterprise-audit.js",
-    "prestart": "node ./scripts/verify-node-version.js",
-    "smoke": "node ./scripts/smoke-test.js"
+    "prestart": "node scripts/verify-node.js",
+    "smoke": "npm run build"
   },
   "engines": {
     "node": ">=20.10.0 <21.0.0"
