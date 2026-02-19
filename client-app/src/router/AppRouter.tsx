@@ -13,6 +13,7 @@ import { ResumePage } from "../pages/ResumePage";
 import { OfflineFallback } from "../pages/OfflineFallback";
 import { SessionExpiredPage } from "../pages/SessionExpiredPage";
 import { SessionRevokedPage } from "../pages/SessionRevokedPage";
+import SystemStatus from "../pages/SystemStatus";
 import PublicApplyPage from "../pages/apply/PublicApplyPage";
 import PublicApplySuccessPage from "../pages/apply/PublicApplySuccessPage";
 import { ApplyPage } from "../pages/ApplyPage";
@@ -188,6 +189,7 @@ export default function AppRouter() {
         <Routes>
           <Route path="/" element={<Navigate to="/apply" replace />} />
           <Route path="/portal" element={<PortalEntry />} />
+          <Route path="/system-status" element={<SystemStatus />} />
           <Route path="/expired" element={<SessionExpiredPage />} />
           <Route path="/revoked" element={<SessionRevokedPage />} />
           <Route
