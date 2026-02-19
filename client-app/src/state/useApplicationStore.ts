@@ -5,7 +5,7 @@ import { ApplicationData } from "../types/application";
 import { clearDraft } from "../client/autosave";
 import { clearSubmissionIdempotencyKey } from "../client/submissionIdempotency";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
-import { trackEvent } from "../utils/analytics";
+import { getSessionId, trackEvent } from "../utils/analytics";
 import { loadLocalBackup, useLocalBackup } from "../system/useLocalBackup";
 import { buildApiUrl } from "../lib/api";
 
@@ -270,6 +270,12 @@ export function useApplicationStore() {
       trackEvent("application_step_completed", {
         step: trackedStep.current,
         time_spent_ms: duration,
+        session_id: getSessionId(),
+      });
+      trackEvent("step_completed", {
+        step: trackedStep.current,
+        time_spent_ms: duration,
+        session_id: getSessionId(),
       });
     }
 

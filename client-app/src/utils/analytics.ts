@@ -11,6 +11,48 @@ const hasTrackingConsent = (): boolean => {
   return localStorage.getItem(CONSENT_KEY) === "accepted";
 };
 
+// ---- Session Intelligence ----
+const SESSION_KEY = "boreal_session_id";
+
+const generateSessionId = () => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `session_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+};
+
+export const getSessionId = () => {
+  if (typeof window === "undefined") return "server";
+
+  let id = localStorage.getItem(SESSION_KEY);
+  if (!id) {
+    id = generateSessionId();
+    localStorage.setItem(SESSION_KEY, id);
+  }
+  return id;
+};
+
+export const getLeadFingerprint = () => {
+  if (typeof window === "undefined") {
+    return {
+      session_id: getSessionId(),
+    };
+  }
+
+  return {
+    user_agent: navigator.userAgent,
+    screen_width: window.screen.width,
+    screen_height: window.screen.height,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    language: navigator.language,
+    platform: navigator.platform,
+    browser_online: navigator.onLine,
+    webdriver: Boolean(navigator.webdriver),
+    session_id: getSessionId(),
+  };
+};
+
 export const getClientAttribution = () => {
   return getPersistedAttribution();
 };
@@ -32,6 +74,7 @@ export const trackEvent = (
       event: eventName,
       timestamp: Date.now(),
       app: "client",
+      session_id: getSessionId(),
       ...attribution,
       ...payload,
     });
@@ -48,6 +91,7 @@ export const trackEvent = (
       body: JSON.stringify({
         event_name: eventName,
         payload: {
+          session_id: getSessionId(),
           ...attribution,
           ...payload,
         },

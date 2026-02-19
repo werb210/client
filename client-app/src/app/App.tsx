@@ -14,7 +14,12 @@ import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
 import { useExitIntent } from "../hooks/useExitIntent";
-import { classifyReadiness, estimateClientCommission, trackEvent } from "../utils/analytics";
+import {
+  classifyReadiness,
+  estimateClientCommission,
+  getSessionId,
+  trackEvent,
+} from "../utils/analytics";
 import { persistAttributionFromUrl } from "../utils/attribution";
 import ChatSupportWidget from "@/components/ChatSupportWidget";
 import { useApplicationStore } from "../state/useApplicationStore";
@@ -76,6 +81,14 @@ export default function App() {
 
   useEffect(() => {
     persistAttributionFromUrl();
+  }, []);
+
+  useEffect(() => {
+    const sessionId = getSessionId();
+
+    trackEvent("client_session_started", {
+      session_id: sessionId,
+    });
   }, []);
 
   useEffect(() => {
