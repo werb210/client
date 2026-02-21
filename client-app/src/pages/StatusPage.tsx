@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { Button, PrimaryButton, SecondaryButton } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
+import MayaClientChat from "../components/MayaClientChat";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { getPipelineStage } from "../realtime/pipeline";
 import { useDocumentRejectionNotifications } from "../portal/useDocumentRejectionNotifications";
@@ -41,41 +41,10 @@ import { updateClientSession } from "../state/clientSession";
 import { components, layout, tokens } from "@/styles";
 
 
-function getMessageHistoryKey(token: string | null) {
-  return token ? `boreal_portal_message_history:${token}` : null;
-}
-
-function loadMessageHistory(token: string | null) {
-  try {
-    const key = getMessageHistoryKey(token);
-    if (!key) return [];
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveMessageHistory(token: string | null, messages: any[]) {
-  try {
-    const key = getMessageHistoryKey(token);
-    if (!key) return;
-    localStorage.setItem(key, JSON.stringify(messages));
-  } catch {
-    // no-op
-  }
-}
-
 export function StatusPage() {
   const token = new URLSearchParams(window.location.search).get("token");
   const { state: sessionState } = useClientSession(token);
   const [status, setStatus] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>(() =>
-    loadMessageHistory(new URLSearchParams(window.location.search).get("token"))
-  );
-  const [text, setText] = useState("");
   const [rejectionNotice, setRejectionNotice] = useState<{
     documents: string[];
   } | null>(null);
@@ -113,21 +82,6 @@ export function StatusPage() {
   useEffect(() => {
     if (!token) return;
     setSubmissionStatus(loadSubmissionStatusCache(token));
-  }, [token]);
-
-  const refreshMessages = useCallback(async () => {
-    if (!token) return;
-    try {
-      const res = await ClientAppAPI.getMessages(token);
-      setMessages(res.data);
-      saveMessageHistory(token, res.data);
-    } catch (error) {
-      console.error("Message refresh failed:", error);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    setMessages(loadMessageHistory(token));
   }, [token]);
 
   const pollingEnabled = Boolean(token) && sessionState === "valid";
@@ -169,9 +123,8 @@ export function StatusPage() {
   });
 
   useForegroundRefresh(() => {
-    refreshMessages();
     refreshStatus();
-  }, [refreshMessages, refreshStatus]);
+  }, [refreshStatus]);
 
   const applicationId = useMemo(() => {
     return (
@@ -372,14 +325,6 @@ export function StatusPage() {
     document
       .getElementById("portal-messages")
       ?.scrollIntoView({ behavior: "smooth" });
-  }
-
-  async function sendMessage() {
-    if (!text.trim() || !token) return;
-
-    await ClientAppAPI.sendMessage(token, text);
-    setText("");
-    refreshMessages();
   }
 
   if (!token) {
@@ -650,33 +595,9 @@ export function StatusPage() {
               <div style={layout.stackTight}>
                 <h2 style={components.form.sectionTitle}>Messages</h2>
                 <div style={components.form.helperText}>
-                  Continue your secure conversation with our support team here.
+                  Continue your secure conversation with Maya here.
                 </div>
-
-                <div
-                  id="portal-messages"
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: tokens.spacing.sm,
-                    maxHeight: "360px",
-                    overflowY: "auto",
-                  }}
-                >
-                  {messages.map((m, i) => (
-                    <div key={i} style={components.chat.bubble}>
-                      <div style={components.chat.bubbleMeta}>{m.from}</div>
-                      <div>{m.text}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <Input
-                  placeholder="Type a message…"
-                  value={text}
-                  onChange={(e: any) => setText(e.target.value)}
-                />
-                <PrimaryButton onClick={sendMessage}>Send</PrimaryButton>
+                <MayaClientChat />
               </div>
             </Card>
           </div>
