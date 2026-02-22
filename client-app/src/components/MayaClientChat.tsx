@@ -1,10 +1,16 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { QualificationSummary } from "./QualificationSummary";
+import { StartupWaitlistForm } from "./StartupWaitlistForm";
+import { sendMessageToMaya, escalateMayaChat } from "../services/mayaService";
+import { useMayaSession } from "../store/mayaSession";
 
 type MayaResponse = {
   reply?: string;
   requiresConfirmation?: boolean;
   action?: string;
   escalated?: boolean;
+  qualification?: Partial<Record<"funding_amount" | "annual_revenue" | "time_in_business" | "product_type" | "industry", string | number | null>>;
+  startupUnavailable?: boolean;
 };
 
 type ChatMessage = {
@@ -12,60 +18,46 @@ type ChatMessage = {
   content: string;
 };
 
-const SESSION_STORAGE_KEY = "mayaSession";
-
-function getSessionId() {
-  const existing = localStorage.getItem(SESSION_STORAGE_KEY);
-  if (existing) return existing;
-
-  const nextId =
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
-  localStorage.setItem(SESSION_STORAGE_KEY, nextId);
-  return nextId;
-}
-
 export default function MayaClientChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [requiresConfirmation, setRequiresConfirmation] = useState(false);
   const [escalated, setEscalated] = useState(false);
-  const sessionId = useMemo(() => getSessionId(), []);
+  const [showStartupWaitlist, setShowStartupWaitlist] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const setField = useMayaSession((state) => state.setField);
 
-  async function sendMessage(confirmed = false) {
-    if (!input.trim() && !confirmed) return;
+  async function sendMessage() {
+    if (!input.trim()) return;
 
     const nextMessage = input;
-    if (!confirmed) {
-      const userMsg: ChatMessage = { role: "user", content: nextMessage };
-      setMessages((prev) => [...prev, userMsg]);
-    }
+    const userMsg: ChatMessage = { role: "user", content: nextMessage };
+    setMessages((prev) => [...prev, userMsg]);
 
-    const response = await fetch(`${import.meta.env.VITE_AGENT_URL}/maya`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        mode: "client",
-        sessionId,
-        message: nextMessage,
-        confirmed,
-      }),
-    });
-
-    const data = (await response.json()) as MayaResponse;
+    const { data } = (await sendMessageToMaya(nextMessage)) as { data: MayaResponse };
 
     setMessages((prev) => [
       ...prev,
       { role: "assistant", content: data.reply || "I can help with that." },
     ]);
 
+    if (data.qualification) {
+      for (const [field, value] of Object.entries(data.qualification)) {
+        setField(field, value);
+      }
+    }
+
     setRequiresConfirmation(
       Boolean(data.requiresConfirmation && data.action === "book")
     );
     setEscalated(Boolean(data.escalated));
+    setShowStartupWaitlist(Boolean(data.startupUnavailable));
     setInput("");
+  }
+
+  async function escalateToHuman() {
+    await escalateMayaChat();
+    setEscalated(true);
   }
 
   return (
@@ -78,6 +70,15 @@ export default function MayaClientChat() {
       }}
     >
       <h3>Maya — Funding Assistant</h3>
+
+      <label style={{ display: "inline-flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
+        <input
+          type="checkbox"
+          checked={voiceEnabled}
+          onChange={(event) => setVoiceEnabled(event.target.checked)}
+        />
+        Voice mode ready
+      </label>
 
       <div style={{ maxHeight: "300px", overflowY: "auto" }}>
         {messages.map((message, index) => (
@@ -94,20 +95,28 @@ export default function MayaClientChat() {
         </div>
       )}
 
+      <button onClick={escalateToHuman} style={{ marginTop: "0.75rem" }}>
+        Talk to a Human
+      </button>
+
       <div style={{ marginTop: "1rem" }}>
         <input
           value={input}
           onChange={(event) => setInput(event.target.value)}
           style={{ width: "75%" }}
         />
-        <button onClick={() => sendMessage()}>Send</button>
+        <button onClick={sendMessage}>Send</button>
       </div>
 
       {requiresConfirmation && (
-        <button onClick={() => sendMessage(true)} style={{ marginTop: "0.5rem" }}>
-          Confirm Booking
-        </button>
+        <div style={{ marginTop: "0.5rem", color: "#475569" }}>
+          Please confirm your booking intent with a specialist in chat.
+        </div>
       )}
+
+      <QualificationSummary />
+
+      {showStartupWaitlist && <StartupWaitlistForm />}
     </div>
   );
 }

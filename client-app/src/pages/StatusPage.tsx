@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { Button, PrimaryButton, SecondaryButton } from "../components/ui/Button";
 import MayaClientChat from "../components/MayaClientChat";
+import { ClientErrorBoundary } from "../components/ClientErrorBoundary";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { getPipelineStage } from "../realtime/pipeline";
 import { useDocumentRejectionNotifications } from "../portal/useDocumentRejectionNotifications";
@@ -597,7 +598,9 @@ export function StatusPage() {
                 <div style={components.form.helperText}>
                   Continue your secure conversation with Maya here.
                 </div>
-                <MayaClientChat />
+                <ClientErrorBoundary>
+                  <MayaClientChat />
+                </ClientErrorBoundary>
               </div>
             </Card>
           </div>
