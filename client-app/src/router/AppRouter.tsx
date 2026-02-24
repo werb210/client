@@ -6,17 +6,6 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import { StatusPage } from "../pages/StatusPage";
-import { ApplicationPortalPage } from "../pages/ApplicationPortalPage";
-import { ApplicationOffersPage } from "../pages/ApplicationOffersPage";
-import { ResumePage } from "../pages/ResumePage";
-import { OfflineFallback } from "../pages/OfflineFallback";
-import { SessionExpiredPage } from "../pages/SessionExpiredPage";
-import { SessionRevokedPage } from "../pages/SessionRevokedPage";
-import SystemStatus from "../pages/SystemStatus";
-import PublicApplyPage from "../pages/apply/PublicApplyPage";
-import PublicApplySuccessPage from "../pages/apply/PublicApplySuccessPage";
-import { ApplyPage } from "../pages/ApplyPage";
 import { OfflineStore } from "../state/offline";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { SessionGuard } from "../auth/sessionGuard";
@@ -36,6 +25,17 @@ import {
   resolveReadinessSessionId,
 } from "@/api/website";
 
+const StatusPage = lazy(() => import("../pages/StatusPage").then((module) => ({ default: module.StatusPage })));
+const ApplicationPortalPage = lazy(() => import("../pages/ApplicationPortalPage").then((module) => ({ default: module.ApplicationPortalPage })));
+const ApplicationOffersPage = lazy(() => import("../pages/ApplicationOffersPage").then((module) => ({ default: module.ApplicationOffersPage })));
+const ResumePage = lazy(() => import("../pages/ResumePage").then((module) => ({ default: module.ResumePage })));
+const OfflineFallback = lazy(() => import("../pages/OfflineFallback").then((module) => ({ default: module.OfflineFallback })));
+const SessionExpiredPage = lazy(() => import("../pages/SessionExpiredPage").then((module) => ({ default: module.SessionExpiredPage })));
+const SessionRevokedPage = lazy(() => import("../pages/SessionRevokedPage").then((module) => ({ default: module.SessionRevokedPage })));
+const SystemStatus = lazy(() => import("../pages/SystemStatus"));
+const PublicApplyPage = lazy(() => import("../pages/apply/PublicApplyPage"));
+const PublicApplySuccessPage = lazy(() => import("../pages/apply/PublicApplySuccessPage"));
+const ApplyPage = lazy(() => import("../pages/ApplyPage").then((module) => ({ default: module.ApplyPage })));
 const PortalEntry = lazy(() => import("../pages/PortalEntry").then((module) => ({ default: module.PortalEntry })));
 const ContinueApplication = lazy(() => import("../pages/ContinueApplication"));
 const ProductDetail = lazy(() => import("../pages/ProductDetail"));
@@ -185,7 +185,7 @@ export default function AppRouter() {
     <BrowserRouter>
       <SessionGuard />
       <ReadinessLoader />
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={<div className="py-20 text-center">Loading...</div>}>
         <Routes>
           <Route path="/" element={<Navigate to="/apply" replace />} />
           <Route path="/portal" element={<PortalEntry />} />
@@ -299,7 +299,15 @@ export default function AppRouter() {
             }
           />
 
-          <Route path="*" element={<Navigate to="/apply/step-1" replace />} />
+          <Route
+            path="*"
+            element={
+              <div className="text-center py-20">
+                <h1 className="text-4xl font-semibold mb-4">Page Not Found</h1>
+                <p className="text-white/60">The page does not exist.</p>
+              </div>
+            }
+          />
         </Routes>
       </Suspense>
     </BrowserRouter>

@@ -1,5 +1,9 @@
 import { getPersistedAttribution } from "./attribution";
 
+export function track(event: string) {
+  console.log("Analytics:", event);
+}
+
 // ---- Client Attribution Sync ----
 
 // ---- Consent Sync Layer ----
