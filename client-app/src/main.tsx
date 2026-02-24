@@ -7,6 +7,7 @@ import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import { validateEnv } from "./config/env";
 import { clearClientStorage } from "./auth/logout";
 import { fetchApplicationContinuation } from "./api/applicationProgress";
+import { registerSW } from "virtual:pwa-register";
 
 if (!import.meta.env.VITE_API_BASE_URL) {
   throw new Error("Missing VITE_API_BASE_URL");
@@ -65,4 +66,8 @@ void bootstrapContinuation().finally(() => {
     </React.StrictMode>
   );
 
+});
+
+registerSW({
+  immediate: true
 });
