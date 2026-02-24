@@ -16,7 +16,7 @@ export default async function html2canvas(element: HTMLElement, options: Capture
   }
 
   context.scale(scale, scale);
-  context.fillStyle = "#ffffff";
+  context.fillStyle = "rgb(255 255 255)";
   context.fillRect(0, 0, width, height);
 
   try {

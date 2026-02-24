@@ -6,7 +6,7 @@ export default function PublicApplySuccessPage() {
       <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12 }}>
         Application received
       </h1>
-      <p style={{ color: "#4b5563", marginBottom: 24 }}>
+      <p style={{ color: "rgb(75 85 99)", marginBottom: 24 }}>
         Thanks for submitting your application. We will review it and follow up
         with next steps shortly.
       </p>
@@ -16,7 +16,7 @@ export default function PublicApplySuccessPage() {
           display: "inline-flex",
           padding: "12px 20px",
           borderRadius: 8,
-          background: "#111827",
+          background: "rgb(17 24 39)",
           color: "white",
           fontWeight: 600,
           textDecoration: "none",

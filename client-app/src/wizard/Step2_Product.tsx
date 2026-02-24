@@ -701,7 +701,7 @@ export function Step2_Product() {
                                     fontSize: "12px",
                                     fontWeight: 600,
                                     background: "rgba(22, 163, 74, 0.12)",
-                                    color: "#15803d",
+                                    color: "rgb(21 128 61)",
                                     border: "1px solid rgba(22, 163, 74, 0.35)",
                                   }}
                                 >

@@ -294,7 +294,7 @@ export function ApplyPage() {
           <h1 className="text-4xl md:text-5xl font-bold" style={{ margin: 0, color: tokens.colors.textPrimary }}>
             Start Your Business Financing Application
           </h1>
-          <p style={{ ...components.form.subtitle, fontSize: "16px", color: "#4B5563" }}>
+          <p style={{ ...components.form.subtitle, fontSize: "16px", color: "rgb(75 85 99)" }}>
             Complete this secure application to receive tailored funding options.
           </p>
           {(continuationToken || readiness) && (

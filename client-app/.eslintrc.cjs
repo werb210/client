@@ -1,23 +1,28 @@
+/** @type {import('eslint').Linter.Config} */
 module.exports = {
   root: true,
   parser: "@typescript-eslint/parser",
-  parserOptions: {
-    project: "./tsconfig.json",
-    tsconfigRootDir: __dirname,
-  },
-  plugins: ["@typescript-eslint", "react", "react-hooks", "jsx-a11y"],
+  plugins: ["@typescript-eslint"],
   extends: [
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:react/recommended",
-    "plugin:react-hooks/recommended",
-    "plugin:jsx-a11y/recommended",
-    "prettier"
+    "plugin:@typescript-eslint/recommended"
   ],
-  settings: {
-    react: {
-      version: "detect"
-    }
-  },
-  ignorePatterns: ["dist", "node_modules"]
+  rules: {
+    // 🚫 Block hex colors + blue utilities
+    "no-restricted-syntax": [
+      "error",
+      {
+        selector: "Literal[value=/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/]",
+        message: "Hex colors are forbidden. Use brand tokens."
+      },
+      {
+        selector: "Literal[value=/bg-blue-/]",
+        message: "Do not use Tailwind blue utilities. Use brand tokens."
+      },
+      {
+        selector: "Literal[value=/hover:bg-blue-/]",
+        message: "Do not use Tailwind blue hover utilities. Use brand tokens."
+      }
+    ]
+  }
 };
