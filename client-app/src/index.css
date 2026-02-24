@@ -16,38 +16,24 @@ body,
 
 body {
   margin: 0;
-  @apply bg-brand-bg;
+  background: #020C1C;
   color: rgba(255, 255, 255, 0.92);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Layout container */
+/* Standard container */
 .boreal-container {
-  max-width: 80rem; /* max-w-7xl */
+  max-width: 80rem;
   margin: 0 auto;
-  padding-left: 1.5rem; /* px-6 */
+  padding-left: 1.5rem;
   padding-right: 1.5rem;
 }
 
-/* Card baseline */
+/* Standard card */
 .boreal-card {
-  @apply bg-brand-surface;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0E2239;
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-}
-
-/* Primary Button Utility */
-.btn-primary {
-  @apply bg-brand-accent text-white rounded-full h-11 px-6 font-medium;
-}
-
-.btn-primary:hover {
-  @apply bg-brand-accentHover;
-}
-
-/* Section spacing */
-.section {
-  @apply py-14 md:py-20;
 }
