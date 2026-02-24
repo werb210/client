@@ -28,7 +28,7 @@ export default function ProductComparisonPopup() {
             <div className="overflow-x-auto">
               <table className="w-full border text-sm">
                 <thead>
-                  <tr className="bg-slate-100">
+                  <tr className="bg-brand-bgAlt">
                     <th className="border p-2 text-left">Product</th>
                     <th className="border p-2 text-left">Funding Speed</th>
                     <th className="border p-2 text-left">Typical Amount</th>
