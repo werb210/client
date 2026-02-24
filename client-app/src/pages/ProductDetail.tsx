@@ -25,7 +25,7 @@ export default function ProductDetail() {
       <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
       <p className="mb-8 text-lg">{product.description}</p>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <button
           onClick={() => navigate(`/products/${product.slug}`)}
           className="bg-brand-accent px-6 py-3 rounded text-white"

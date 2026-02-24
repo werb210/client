@@ -188,7 +188,7 @@ export default function App() {
         <AppRouter />
       </main>
       <footer className="bg-brand-bgAlt border-t border-subtle py-8 text-center text-sm text-gray-300">
-        <div className="max-w-7xl mx-auto px-6 flex gap-4 justify-center">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row gap-4 justify-center">
           <CapitalReadinessPopup />
           <ProductComparisonPopup />
           <CapitalScorePreview />
