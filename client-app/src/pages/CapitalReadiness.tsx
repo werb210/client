@@ -4,6 +4,24 @@ import {
   getStoredReadinessToken,
   submitCreditReadiness,
 } from "@/api/website";
+import { useDraft } from "@/hooks/useDraft";
+
+const DRAFT_KEY = "bf-client-application-draft";
+
+const initialFormState = {
+  companyName: "",
+  fullName: "",
+  phone: "",
+  email: "",
+  industry: "",
+  yearsInBusiness: "",
+  annualRevenue: "",
+  monthlyRevenue: "",
+  arOutstanding: "",
+  collateral: "",
+  requestedAmount: "",
+  creditScoreRange: "",
+};
 
 function resolveContinueUrl(payload: Record<string, any>) {
   const token =
@@ -29,22 +47,15 @@ function resolveContinueUrl(payload: Record<string, any>) {
 }
 
 export default function CapitalReadiness() {
-  const [form, setForm] = useState({
-    companyName: "",
-    fullName: "",
-    phone: "",
-    email: "",
-    industry: "",
-    yearsInBusiness: "",
-    annualRevenue: "",
-    monthlyRevenue: "",
-    arOutstanding: "",
-    collateral: "",
-    requestedAmount: "",
-    creditScoreRange: "",
-  });
+  const {
+    state: form,
+    setState: setForm,
+    clearDraft,
+  } = useDraft(DRAFT_KEY, initialFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const hasDraft = Boolean(localStorage.getItem(DRAFT_KEY));
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -82,6 +93,8 @@ export default function CapitalReadiness() {
         localStorage.setItem("leadId", readinessLeadId);
       }
 
+      clearDraft();
+
       const continueUrl = resolveContinueUrl(readinessSession || {});
       window.location.href = continueUrl;
     } catch {
@@ -94,6 +107,12 @@ export default function CapitalReadiness() {
   return (
     <div className="container py-14 md:py-20">
       <h1 className="text-4xl font-bold mb-8">Credit Readiness</h1>
+
+      {hasDraft && (
+        <div className="bg-brand-surface border border-subtle rounded-lg p-4 mb-6 text-sm">
+          Draft restored from previous session.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
         {Object.keys(form).map((field) => (
