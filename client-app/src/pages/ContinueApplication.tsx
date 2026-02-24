@@ -53,7 +53,7 @@ export default function ContinueApplication() {
       </p>
       <button
         type="button"
-        className="rounded bg-[#0a2540] px-4 py-2 text-white"
+        className="rounded bg-brand-bgAlt px-4 py-2 text-white"
         onClick={() => navigate("/apply", { replace: true })}
       >
         Start New Application

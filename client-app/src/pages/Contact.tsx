@@ -37,7 +37,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="container py-20">
+    <div className="container py-14 md:py-20">
       <h1 className="text-4xl font-bold mb-6 text-white">Contact Boreal</h1>
 
       <p className="text-white text-xl mb-8">
@@ -62,7 +62,7 @@ export default function Contact() {
               <p className="mb-4 text-base font-semibold">A Boreal Intake Specialist will contact you shortly</p>
               <button
                 type="button"
-                className="rounded bg-blue-600 px-6 py-3 text-white"
+                className="rounded bg-brand-accent px-6 py-3 text-white"
                 onClick={() => navigate("/")}
               >
                 Continue
@@ -73,7 +73,7 @@ export default function Contact() {
         {error && <p className="text-red-300 text-sm">{error}</p>}
 
         <button
-          className="bg-blue-600 px-6 py-3 rounded text-white disabled:opacity-60"
+          className="bg-brand-accent px-6 py-3 rounded text-white disabled:opacity-60"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Submitting..." : "Submit"}

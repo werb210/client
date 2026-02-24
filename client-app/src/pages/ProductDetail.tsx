@@ -21,21 +21,21 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="container py-20">
+    <div className="container py-14 md:py-20">
       <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
       <p className="mb-8 text-lg">{product.description}</p>
 
       <div className="flex gap-4">
         <button
           onClick={() => navigate(`/products/${product.slug}`)}
-          className="bg-blue-600 px-6 py-3 rounded text-white"
+          className="bg-brand-accent px-6 py-3 rounded text-white"
         >
           Learn More
         </button>
 
         <button
           onClick={() => void handleInterest()}
-          className="bg-blue-600 px-6 py-3 rounded text-white"
+          className="bg-brand-accent px-6 py-3 rounded text-white"
         >
           Speak With Advisor
         </button>
