@@ -109,7 +109,7 @@ export default function MayaClientChat() {
       </div>
 
       {requiresConfirmation && (
-        <div style={{ marginTop: "0.5rem", color: "#475569" }}>
+        <div style={{ marginTop: "0.5rem", color: "rgb(71 85 105)" }}>
           Please confirm your booking intent with a specialist in chat.
         </div>
       )}

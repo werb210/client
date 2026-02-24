@@ -796,11 +796,11 @@ export default function PublicApplyPage() {
       <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>
         Boreal Financial Application
       </h1>
-      <p style={{ marginBottom: 24, color: "#4b5563" }}>
+      <p style={{ marginBottom: 24, color: "rgb(75 85 99)" }}>
         Complete the form below to submit your application. All required fields must be filled in.
       </p>
 
-      {isHydratingContinuation ? <p style={{ marginBottom: 16, color: "#4b5563" }}>Loading your application context...</p> : null}
+      {isHydratingContinuation ? <p style={{ marginBottom: 16, color: "rgb(75 85 99)" }}>Loading your application context...</p> : null}
 
       {submissionState ? (
         <section
@@ -808,14 +808,14 @@ export default function PublicApplyPage() {
             padding: 16,
             borderRadius: 12,
             border: "1px solid #e5e7eb",
-            background: "#f9fafb",
+            background: "rgb(249 250 251)",
             display: "grid",
             gap: 12,
             marginBottom: 24,
           }}
         >
           <h2 style={{ fontSize: 18, fontWeight: 600 }}>Application submitted</h2>
-          <p style={{ color: "#4b5563" }}>
+          <p style={{ color: "rgb(75 85 99)" }}>
             This application was already submitted in this browser session. You can
             continue to the confirmation page or start a new application.
           </p>
@@ -827,7 +827,7 @@ export default function PublicApplyPage() {
                 padding: "10px 16px",
                 borderRadius: 8,
                 border: "none",
-                background: "#111827",
+                background: "rgb(17 24 39)",
                 color: "white",
                 fontWeight: 600,
               }}
@@ -848,7 +848,7 @@ export default function PublicApplyPage() {
                 borderRadius: 8,
                 border: "1px solid #d1d5db",
                 background: "white",
-                color: "#111827",
+                color: "rgb(17 24 39)",
                 fontWeight: 600,
               }}
             >
@@ -865,8 +865,8 @@ export default function PublicApplyPage() {
             padding: 12,
             borderRadius: 8,
             border: "1px solid #dbeafe",
-            background: "#eff6ff",
-            color: "#1d4ed8",
+            background: "rgb(239 246 255)",
+            color: "rgb(29 78 216)",
             fontWeight: 600,
           }}
         >
@@ -883,8 +883,8 @@ export default function PublicApplyPage() {
               padding: 12,
               borderRadius: 8,
               border: "1px solid #fecaca",
-              background: "#fef2f2",
-              color: "#b91c1c",
+              background: "rgb(254 242 242)",
+              color: "rgb(185 28 28)",
               fontWeight: 600,
             }}
           >
@@ -931,7 +931,7 @@ export default function PublicApplyPage() {
                   style={{ padding: "10px", borderRadius: 6, border: "1px solid #d1d5db" }}
                 />
               )}
-              {error ? <span style={{ color: "#b91c1c" }}>{error}</span> : null}
+              {error ? <span style={{ color: "rgb(185 28 28)" }}>{error}</span> : null}
             </label>
           );
         })}
@@ -941,13 +941,13 @@ export default function PublicApplyPage() {
             padding: 16,
             borderRadius: 12,
             border: "1px solid #e5e7eb",
-            background: "#f9fafb",
+            background: "rgb(249 250 251)",
             display: "grid",
             gap: 12,
           }}
         >
           <h2 style={{ fontSize: 18, fontWeight: 600 }}>Document uploads</h2>
-          <p style={{ color: "#4b5563" }}>
+          <p style={{ color: "rgb(75 85 99)" }}>
             After submitting, we’ll request any documents needed to complete your
             review. You’ll be notified when uploads are ready.
           </p>
@@ -967,7 +967,7 @@ export default function PublicApplyPage() {
               Boreal Financial to act on my behalf.
             </span>
           </label>
-          {errors.terms ? <span style={{ color: "#b91c1c" }}>{errors.terms}</span> : null}
+          {errors.terms ? <span style={{ color: "rgb(185 28 28)" }}>{errors.terms}</span> : null}
 
           <label style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
             <input
@@ -982,7 +982,7 @@ export default function PublicApplyPage() {
             </span>
           </label>
           {errors.communications ? (
-            <span style={{ color: "#b91c1c" }}>{errors.communications}</span>
+            <span style={{ color: "rgb(185 28 28)" }}>{errors.communications}</span>
           ) : null}
         </section>
 
@@ -993,7 +993,7 @@ export default function PublicApplyPage() {
             padding: "12px 20px",
             borderRadius: 8,
             border: "none",
-            background: canSubmit && !submissionState ? "#111827" : "#9ca3af",
+            background: canSubmit && !submissionState ? "rgb(17 24 39)" : "rgb(156 163 175)",
             color: "white",
             fontWeight: 600,
             cursor: canSubmit ? "pointer" : "not-allowed",
@@ -1001,7 +1001,7 @@ export default function PublicApplyPage() {
         >
           {isSubmitting ? "Submitting..." : "Submit application"}
         </button>
-        <p style={{ color: "#6b7280", fontSize: 12 }}>
+        <p style={{ color: "rgb(107 114 128)", fontSize: 12 }}>
           Client IP captured: {clientIp || "Unavailable"}
         </p>
       </form>

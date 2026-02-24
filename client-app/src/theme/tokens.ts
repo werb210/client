@@ -1,10 +1,10 @@
 export const Colors = {
-  primary: "#0A3A60",
-  primaryLight: "#0F4B7F",
-  green: "#1BBE7A",
-  grayLight: "#F5F7FA",
-  grayBorder: "#E2E8F0",
-  text: "#062238",
+  primary: "rgb(10 58 96)",
+  primaryLight: "rgb(15 75 127)",
+  green: "rgb(27 190 122)",
+  grayLight: "rgb(245 247 250)",
+  grayBorder: "rgb(226 232 240)",
+  text: "rgb(6 34 56)",
 };
 
 export const Radius = {
