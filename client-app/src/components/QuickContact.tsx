@@ -36,7 +36,7 @@ export default function QuickContact() {
             <p className="mb-4 text-base font-semibold">A Boreal Intake Specialist will contact you shortly</p>
             <button
               type="button"
-              className="rounded bg-[#0a2540] px-6 py-3 text-white"
+              className="rounded bg-brand-bgAlt px-6 py-3 text-white"
               onClick={() => {
                 setSuccess(false);
                 window.location.href = "/";

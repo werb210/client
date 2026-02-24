@@ -92,7 +92,7 @@ export default function CapitalReadiness() {
   };
 
   return (
-    <div className="container py-20">
+    <div className="container py-14 md:py-20">
       <h1 className="text-4xl font-bold mb-8">Credit Readiness</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">

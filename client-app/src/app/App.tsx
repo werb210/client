@@ -171,7 +171,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-brand-bg text-white flex flex-col">
       <Header />
       <OfflineBanner />
       {continuationError && (
@@ -184,11 +184,11 @@ export default function App() {
         updateAvailable={updateAvailable || debugUpdateAvailable}
         onApplyUpdate={() => void applyServiceWorkerUpdate()}
       />
-      <main className="flex-1">
+      <main className="max-w-7xl mx-auto px-6 py-14 md:py-20 w-full flex-1">
         <AppRouter />
       </main>
-      <footer className="border-t py-4">
-        <div className="flex gap-4 justify-center">
+      <footer className="bg-brand-bgAlt border-t border-subtle py-8 text-center text-sm text-gray-300">
+        <div className="max-w-7xl mx-auto px-6 flex gap-4 justify-center">
           <CapitalReadinessPopup />
           <ProductComparisonPopup />
           <CapitalScorePreview />

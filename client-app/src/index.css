@@ -16,7 +16,7 @@ body,
 
 body {
   margin: 0;
-  background: #020C1C;
+  @apply bg-brand-bg;
   color: rgba(255, 255, 255, 0.92);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -32,7 +32,7 @@ body {
 
 /* Card baseline */
 .boreal-card {
-  background: #0E2239;
+  @apply bg-brand-surface;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);

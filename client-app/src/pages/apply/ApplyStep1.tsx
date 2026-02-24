@@ -34,7 +34,7 @@ export default function Step1() {
   };
 
   return (
-    <div className="min-h-screen bg-[#081225] text-white px-6 py-12">
+    <div className="min-h-screen bg-brand-bg text-white px-6 py-14 md:py-20">
       <h1 className="text-3xl font-bold mb-8">Step 1 — Business Overview</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -147,7 +147,7 @@ export default function Step1() {
       <div className="mt-10">
         <button
           onClick={handleNext}
-          className="bg-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-500 transition"
+          className="bg-brand-accent px-8 py-3 rounded-lg font-semibold hover:bg-brand-accentHover transition"
         >
           Continue →
         </button>

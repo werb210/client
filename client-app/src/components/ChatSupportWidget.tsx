@@ -97,7 +97,7 @@ export default function ChatSupportWidget() {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-label="Open chat"
-        className="fixed bottom-6 right-6 z-[70] flex h-14 w-14 items-center justify-center rounded-full bg-[#0a2540] text-white shadow-xl transition hover:opacity-90"
+        className="fixed bottom-6 right-6 z-[70] flex h-14 w-14 items-center justify-center rounded-full bg-brand-bgAlt text-white shadow-xl transition hover:opacity-90"
       >
         <span className="text-2xl">💬</span>
       </button>
@@ -138,7 +138,7 @@ export default function ChatSupportWidget() {
               />
               <button
                 type="button"
-                className="rounded bg-[#0a2540] px-3 text-sm text-white disabled:opacity-50"
+                className="rounded bg-brand-bgAlt px-3 text-sm text-white disabled:opacity-50"
                 onClick={handleSend}
                 disabled={humanActive || status !== "connected"}
               >

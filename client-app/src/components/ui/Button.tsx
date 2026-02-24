@@ -1,94 +1,42 @@
-import {
-  useState,
-  type CSSProperties,
-  type ReactNode,
-  type ButtonHTMLAttributes,
-} from "react";
-import { components, tokens } from "@/styles";
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  children: ReactNode;
-  variant?: "primary" | "secondary" | "ghost";
-  loading?: boolean;
-  style?: CSSProperties;
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "outline" | "ghost" | "primary" | "secondary";
+  size?: "default" | "sm" | "lg";
+}
+
+const baseClasses = "inline-flex items-center justify-center font-medium transition-colors focus:outline-none";
+const variantClasses: Record<string, string> = {
+  default: "bg-brand-accent text-white hover:bg-brand-accentHover rounded-full h-11 px-6",
+  outline: "border border-white/20 text-white hover:bg-white/10 rounded-full h-11 px-6",
+  ghost: "text-white/80 hover:text-white",
+};
+const sizeClasses: Record<string, string> = {
+  default: "",
+  sm: "h-9 px-4 text-sm",
+  lg: "h-12 px-8 text-lg",
 };
 
-export function Button({
-  children,
-  variant = "primary",
-  style,
-  className = "",
-  disabled,
-  loading,
-  ...rest
-}: ButtonProps) {
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const isDisabled = disabled || loading;
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "default", size = "default", ...props }, ref) => {
+    const resolvedVariant =
+      variant === "primary" ? "default" : variant === "secondary" ? "outline" : variant;
 
-  const variantStyles = {
-    primary: components.buttons.primary,
-    secondary: components.buttons.secondary,
-    ghost: components.buttons.ghost,
-  }[variant];
+    return (
+      <button
+        className={cn(baseClasses, variantClasses[resolvedVariant], sizeClasses[size], className)}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
 
-  const backgroundColor =
-    hovered && !isDisabled && variant === "primary"
-      ? tokens.colors.primaryDark
-      : hovered && !isDisabled && variant === "secondary"
-      ? tokens.colors.primaryLight
-      : hovered && !isDisabled && variant === "ghost"
-      ? "rgba(11, 42, 74, 0.08)"
-      : variantStyles.background;
+Button.displayName = "Button";
 
-  const baseStyle: CSSProperties = {
-    ...components.buttons.base,
-    ...variantStyles,
-    background: backgroundColor,
-    opacity: isDisabled ? 0.7 : 1,
-    ...(isDisabled ? components.buttons.disabled : null),
-    ...(focused ? components.buttons.focus : null),
-  };
+const PrimaryButton = (props: ButtonProps) => <Button {...props} variant="default" />;
+const SecondaryButton = (props: ButtonProps) => <Button {...props} variant="outline" />;
+const GhostButton = (props: ButtonProps) => <Button {...props} variant="ghost" />;
 
-  return (
-    <button
-      {...rest}
-      disabled={isDisabled}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={(event) => {
-        setFocused(true);
-        rest.onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        setFocused(false);
-        rest.onBlur?.(event);
-      }}
-      className={className}
-      style={{ ...baseStyle, ...style }}
-    >
-      {loading ? (
-        <span
-          style={
-            variant === "secondary" || variant === "ghost"
-              ? components.buttons.spinnerDark
-              : components.buttons.spinner
-          }
-        />
-      ) : null}
-      <span style={{ opacity: loading ? 0.75 : 1 }}>{children}</span>
-    </button>
-  );
-}
-
-export function PrimaryButton(props: ButtonProps) {
-  return <Button {...props} variant="primary" />;
-}
-
-export function SecondaryButton(props: ButtonProps) {
-  return <Button {...props} variant="secondary" />;
-}
-
-export function GhostButton(props: ButtonProps) {
-  return <Button {...props} variant="ghost" />;
-}
+export { Button, PrimaryButton, SecondaryButton, GhostButton };
