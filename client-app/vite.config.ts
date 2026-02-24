@@ -34,7 +34,13 @@ export default defineConfig({
               networkTimeoutSeconds: 10
             }
           }
-        ]
+        ],
+        backgroundSync: {
+          name: "upload-queue",
+          options: {
+            maxRetentionTime: 24 * 60
+          }
+        }
       }
     })
   ]
