@@ -6,6 +6,7 @@ import {
   PublicApplicationResponseSchema,
   parseApiResponse,
 } from "@/contracts/clientApiSchemas";
+import { enqueueUpload } from "@/lib/uploadQueue";
 import { getPersistedAttribution } from "@/utils/attribution";
 
 export async function submitApplication(
@@ -99,11 +100,20 @@ export async function uploadApplicationDocument(
     onProgress?: (progress: number) => void;
   }
 ) {
+  const uploadUrl = `/api/applications/${id}/documents`;
   const formData = new FormData();
   formData.append("document_category", payload.documentCategory);
   formData.append("file", payload.file);
 
-  const res = await api.post(`/api/applications/${id}/documents`, formData, {
+  if (!navigator.onLine) {
+    await enqueueUpload({
+      url: uploadUrl,
+      formData,
+    });
+    return { queued: true };
+  }
+
+  const res = await api.post(uploadUrl, formData, {
     headers: { "Content-Type": "multipart/form-data" },
     onUploadProgress: (event) => {
       if (!payload.onProgress || !event.total) return;
