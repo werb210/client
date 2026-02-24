@@ -2,38 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Boreal Locked Design System */
-
-:root {
-  color-scheme: dark;
-}
-
-html,
-body,
-#root {
+html, body, #root {
   height: 100%;
 }
 
-body {
-  margin: 0;
-  background: var(--color-brand-bg);
-  color: rgba(255, 255, 255, 0.92);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Standard container */
-.boreal-container {
-  max-width: 80rem;
-  margin: 0 auto;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-}
-
-/* Standard card */
-.boreal-card {
-  background: var(--color-brand-surface);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+section {
+  @apply py-14 md:py-20;
 }

@@ -1,27 +1,33 @@
-import * as React from "react";
+import React from "react";
+import clsx from "clsx";
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "outline";
+type Variant = "primary" | "outline" | "ghost";
+
+interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: Variant;
 }
 
 export default function Button({
-  children,
   variant = "primary",
-  className = "",
+  className,
   ...props
-}: ButtonProps) {
+}: Props) {
   const base =
-    "inline-flex items-center justify-center rounded-full font-medium transition-colors h-11 px-6";
+    "h-11 px-6 rounded-full font-medium transition-colors focus:outline-none";
 
-  const styles =
-    variant === "primary"
-      ? "bg-brand-accent hover:bg-brand-accentHover text-white"
-      : "border border-white/20 text-white hover:bg-white/10";
+  const variants: Record<Variant, string> = {
+    primary:
+      "bg-brand-accent hover:bg-brand-accentHover text-white",
+    outline:
+      "border border-subtle bg-transparent hover:bg-brand-surface text-white",
+    ghost:
+      "bg-transparent hover:bg-brand-surface text-white"
+  };
 
   return (
-    <button className={`${base} ${styles} ${className}`} {...props}>
-      {children}
-    </button>
+    <button
+      className={clsx(base, variants[variant], className)}
+      {...props}
+    />
   );
 }
