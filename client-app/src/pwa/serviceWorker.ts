@@ -65,7 +65,7 @@ export function registerServiceWorker() {
   registrationPromise = new Promise((resolve) => {
     const register = async () => {
       try {
-        const registration = await navigator.serviceWorker.register("/sw.js");
+        const registration = await navigator.serviceWorker.getRegistration();
         if (registration?.waiting) {
           notifyUpdateAvailable(true);
         }
