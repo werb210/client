@@ -1,28 +1,19 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
-const config: Config = {
-  content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx,html}"],
+export default {
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
         brand: {
-          bg: "rgb(2 12 28)",
-          bgAlt: "rgb(7 26 47)",
-          surface: "rgb(14 34 57)",
-          accent: "rgb(242 153 74)",
-          accentHover: "rgb(232 137 47)"
-        }
-      },
-      borderColor: {
-        subtle: "rgba(255,255,255,0.05)",
-        card: "rgba(255,255,255,0.1)"
-      },
-      boxShadow: {
-        soft: "0 10px 30px rgba(0,0,0,0.35)"
+          bg: "#020C1C",
+          surface: "#0E2239",
+          accent: "#1E90FF",
+          accentHover: "#1877CC"
+        },
+        subtle: "rgba(255,255,255,0.08)"
       }
     }
   },
   plugins: []
-}
-
-export default config
+} satisfies Config;

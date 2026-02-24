@@ -3,7 +3,6 @@ import ReactDOM from "react-dom/client";
 import App from "./app/App";
 import "./styles/global.css";
 import "./styles/pwa.css";
-import { registerServiceWorker } from "./pwa/serviceWorker";
 import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
 import { validateEnv } from "./config/env";
 import { clearClientStorage } from "./auth/logout";
@@ -66,11 +65,4 @@ void bootstrapContinuation().finally(() => {
     </React.StrictMode>
   );
 
-  if (typeof window !== "undefined") {
-    window.requestAnimationFrame(() => {
-      window.setTimeout(() => {
-        void registerServiceWorker();
-      }, 0);
-    });
-  }
 });
