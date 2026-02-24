@@ -3,11 +3,10 @@ import ReactDOM from "react-dom/client";
 import App from "./app/App";
 import "./styles/global.css";
 import "./styles/pwa.css";
-import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { validateEnv } from "./config/env";
 import { clearClientStorage } from "./auth/logout";
 import { fetchApplicationContinuation } from "./api/applicationProgress";
-import { registerSW } from "virtual:pwa-register";
 
 if (!import.meta.env.VITE_API_BASE_URL) {
   throw new Error("Missing VITE_API_BASE_URL");
@@ -60,14 +59,11 @@ async function bootstrapContinuation() {
 void bootstrapContinuation().finally(() => {
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
-      <GlobalErrorBoundary>
+      <ErrorBoundary>
         <App />
-      </GlobalErrorBoundary>
+      </ErrorBoundary>
     </React.StrictMode>
   );
 
 });
 
-registerSW({
-  immediate: true
-});

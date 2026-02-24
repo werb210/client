@@ -36,10 +36,10 @@ import {
   getLeadFingerprint,
   getSessionId,
   incrementUnderwritingScore,
+  track,
   trackConversion,
   trackEvent,
 } from "../utils/analytics";
-import { track } from "../utils/track";
 import { apiRequest } from "../lib/api";
 import { clearStoredReadinessSession } from "@/api/website";
 import { parseCurrencyAmount } from "./productSelection";
@@ -302,6 +302,7 @@ export function Step6_Review() {
       const attribution = getClientAttribution();
       trackEvent("client_submission_started");
       trackEvent("client_application_submitted", { step: 6 });
+      track("Application Submitted");
       const requestedAmount = parseCurrencyAmount(app.kyc?.fundingAmount);
       const estimatedCommission = estimateClientCommission(requestedAmount);
       const revenueTier =
