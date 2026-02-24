@@ -3,46 +3,35 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-  build: {
-    sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ["react", "react-dom"]
-        }
-      }
-    }
-  },
   plugins: [
     react(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: "auto",
       manifest: {
-        name: "Boreal Financial Application",
+        name: "Boreal Financial",
         short_name: "Boreal",
-        description: "Commercial financing application portal.",
-        theme_color: "#020C1C",
-        background_color: "#020C1C",
+        description: "Apply for financing with Boreal Financial",
+        theme_color: "#0b1f35",
+        background_color: "#0b1f35",
         display: "standalone",
         start_url: "/",
-        orientation: "portrait",
         icons: [
           {
-            src: "/logo.svg",
+            src: "/icon.svg",
             sizes: "any",
             type: "image/svg+xml"
           }
         ]
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg}"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\./,
             handler: "NetworkFirst",
             options: {
-              cacheName: "bf-api-cache",
-              networkTimeoutSeconds: 5
+              cacheName: "api-cache",
+              networkTimeoutSeconds: 10
             }
           }
         ]
