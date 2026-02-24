@@ -103,7 +103,7 @@ export default function CapitalReadiness() {
             placeholder={field.replace(/([A-Z])/g, " $1")}
             value={(form as Record<string, string>)[field]}
             onChange={handleChange}
-            className="w-full p-3 rounded bg-gray-200 text-black"
+            className="w-full p-3 rounded bg-brand-surface text-white"
           />
         ))}
 

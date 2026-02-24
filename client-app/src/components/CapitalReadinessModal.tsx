@@ -82,14 +82,14 @@ export function CapitalReadinessModal({ isOpen, onClose, onContinueApplication }
           </select>
         </div>
 
-        <button className="w-full bg-slate-900 text-white rounded-md p-3" onClick={calculate}>
+        <button className="w-full bg-brand-surface text-white rounded-md p-3" onClick={calculate}>
           Calculate score
         </button>
 
         {score !== null && (
           <div className="space-y-2">
             <div className="text-sm text-slate-600">Your score: {score} / 100</div>
-            <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden">
+            <div className="w-full h-3 rounded-full bg-brand-bgAlt overflow-hidden">
               <div className="h-full bg-emerald-500 transition-all" style={{ width: gaugeWidth }} />
             </div>
             <button
