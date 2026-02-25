@@ -1,37 +1,34 @@
 import React from "react";
-import clsx from "clsx";
 
-export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary";
-};
+type Variant = "primary" | "secondary" | "ghost";
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: Variant;
+  loading?: boolean;
+  children?: React.ReactNode;
+}
 
 export function Button({
   variant = "primary",
-  className,
-  ...props
+  loading = false,
+  children,
+  disabled,
+  ...rest
 }: ButtonProps) {
-  const base =
-    "px-4 py-2 rounded font-medium transition-colors focus:outline-none";
-
-  const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700",
-    secondary: "bg-gray-200 text-gray-900 hover:bg-gray-300",
-  };
+  const className = `btn btn-${variant}`;
 
   return (
     <button
-      className={clsx(base, variants[variant], className)}
-      {...props}
-    />
+      {...rest}
+      disabled={disabled || loading}
+      className={className}
+    >
+      {loading ? "Loading..." : children}
+    </button>
   );
 }
 
-export const PrimaryButton = (props: ButtonProps) => (
-  <Button variant="primary" {...props} />
-);
-
-export const SecondaryButton = (props: ButtonProps) => (
-  <Button variant="secondary" {...props} />
-);
+export const PrimaryButton = (props: ButtonProps) => <Button variant="primary" {...props} />;
+export const SecondaryButton = (props: ButtonProps) => <Button variant="secondary" {...props} />;
 
 export default Button;

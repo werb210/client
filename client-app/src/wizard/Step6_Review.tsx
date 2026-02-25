@@ -350,7 +350,7 @@ export function Step6_Review() {
         lead_strength: app.readinessScore,
         ...attribution,
       });
-      track("submit", { step: 6 });
+      track("submit");
       const submissionResponse = await submitApplication(
         {
           ...payload,
@@ -560,7 +560,7 @@ export function Step6_Review() {
       }
 
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
-      track("document_uploaded", { documentType: docType, step: 6 });
+      track("document_uploaded");
     } catch (error) {
       console.error("ID upload failed:", error);
       setDocErrors((prev) => ({

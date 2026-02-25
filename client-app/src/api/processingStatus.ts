@@ -13,10 +13,10 @@ type RawProcessingCheckpoint = {
   requiredCount?: number | null;
   statementCount?: number | null;
   requiredStatements?: number | null;
-  [key: string]: unknown;
+  [key: string]: any;
 };
 
-function normalizeStatus(value: unknown): ProcessingStatus["documentReview"]["status"] {
+function normalizeStatus(value: any): ProcessingStatus["documentReview"]["status"] {
   const normalized = String(value || "").toLowerCase();
   if (normalized === "completed" || normalized === "complete") return "completed";
   if (normalized === "processing" || normalized === "in_progress") return "processing";
@@ -43,7 +43,7 @@ function normalizeCheckpoint(raw?: RawProcessingCheckpoint | null) {
   };
 }
 
-function isCheckpointLike(value: unknown): value is RawProcessingCheckpoint {
+function isCheckpointLike(value: any): value is RawProcessingCheckpoint {
   if (!value || typeof value !== "object") return false;
   const status = (value as RawProcessingCheckpoint).status;
   return typeof status === "string";

@@ -280,7 +280,7 @@ describe("PublicApplyPage form schema", () => {
       onSuccess,
       onError,
       storage,
-      lockStorage: storage as unknown as Storage,
+      localStorage: storage as unknown as Storage,
     });
 
     expect(submitApplication).not.toHaveBeenCalled();
@@ -305,7 +305,7 @@ describe("PublicApplyPage form schema", () => {
       onSuccess: vi.fn(),
       onError: vi.fn(),
       storage,
-      lockStorage: storage as unknown as Storage,
+      localStorage: storage as unknown as Storage,
     });
 
     expect(isSubmissionLocked(storage as unknown as Storage)).toBe(false);

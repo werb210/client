@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchApplicationOffers } from "@/api/applications";
-import { OffersView, type OfferTermSheet } from "@/offers/OffersView";
+import { OffersView } from "@/offers/OffersView";
 import { components, layout } from "@/styles";
 
 export function ApplicationOffersPage() {
   const { id } = useParams();
-  const [offers, setOffers] = useState<OfferTermSheet[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,7 +19,7 @@ export function ApplicationOffersPage() {
       try {
         const response = await fetchApplicationOffers(id);
         if (!active) return;
-        setOffers(response?.offers ?? []);
+        setOffers((response as any)?.offers ?? []);
       } catch (err) {
         if (!active) return;
         console.error("Failed to load offers:", err);
@@ -63,7 +63,7 @@ export function ApplicationOffersPage() {
               setLoading(true);
               setError(null);
               fetchApplicationOffers(id as string)
-                .then((response) => setOffers(response?.offers ?? []))
+                .then((response) => setOffers((response as any)?.offers ?? []))
                 .catch((err) => {
                   console.error("Failed to load offers:", err);
                   setError("We couldn't load your offers yet. Please try again.");

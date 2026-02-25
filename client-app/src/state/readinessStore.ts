@@ -12,6 +12,7 @@ export type ReadinessContext = {
   annualRevenue?: number;
   arOutstanding?: number;
   collateral?: boolean;
+  collateralAvailable?: boolean;
 };
 
 type ReadinessState = ReadinessContext | null;
