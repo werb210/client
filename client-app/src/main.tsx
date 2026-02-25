@@ -9,10 +9,6 @@ import { clearClientStorage } from "./auth/logout";
 import { fetchApplicationContinuation } from "./api/applicationProgress";
 import { processQueue } from "./lib/uploadQueue";
 
-if (!import.meta.env.VITE_API_BASE_URL) {
-  throw new Error("Missing VITE_API_BASE_URL");
-}
-
 if (import.meta.env.PROD) {
   validateEnv();
 }
