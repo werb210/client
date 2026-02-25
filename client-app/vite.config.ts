@@ -1,47 +1,16 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { VitePWA } from "vite-plugin-pwa";
+import path from "path";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    VitePWA({
-      registerType: "autoUpdate",
-      injectRegister: "auto",
-      manifest: {
-        name: "Boreal Financial",
-        short_name: "Boreal",
-        description: "Apply for financing with Boreal Financial",
-        theme_color: "#0b1f35",
-        background_color: "#0b1f35",
-        display: "standalone",
-        start_url: "/",
-        icons: [
-          {
-            src: "/icon.svg",
-            sizes: "any",
-            type: "image/svg+xml"
-          }
-        ]
-      },
-      workbox: {
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/api\./,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "api-cache",
-              networkTimeoutSeconds: 10
-            }
-          }
-        ],
-        backgroundSync: {
-          name: "upload-queue",
-          options: {
-            maxRetentionTime: 24 * 60
-          }
-        }
-      }
-    })
-  ]
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
 });
