@@ -10,3 +10,15 @@ export async function checkContinuation(email: string) {
   );
   return res.data;
 }
+
+export async function loadContinuation(token?: string) {
+  if (!token) return null;
+
+  try {
+    const response = await fetch(`/api/application/continuation?token=${token}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
