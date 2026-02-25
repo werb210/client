@@ -6,7 +6,7 @@
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
 
-    /* === STABILIZATION MODE === */
+    /* ==== STABILIZED MODE ==== */
     "strict": false,
     "noImplicitAny": false,
     "strictNullChecks": false,
@@ -17,7 +17,6 @@
     "alwaysStrict": false,
 
     "skipLibCheck": true,
-    "suppressImplicitAnyIndexErrors": true,
     "forceConsistentCasingInFileNames": false,
     "noEmitOnError": false,
 
