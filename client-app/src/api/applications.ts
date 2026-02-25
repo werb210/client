@@ -10,7 +10,7 @@ import { enqueueUpload } from "@/lib/uploadQueue";
 import { getPersistedAttribution } from "@/utils/attribution";
 
 export async function submitApplication(
-  payload: unknown,
+  payload: any,
   options?: { idempotencyKey?: string; continuationToken?: string }
 ) {
   const creditSessionToken = localStorage.getItem("creditSessionToken");
@@ -19,24 +19,24 @@ export async function submitApplication(
   const submissionPayload =
     payload && typeof payload === "object" && !Array.isArray(payload)
       ? {
-          ...(payload as Record<string, unknown>),
+          ...(payload as Record<string, any>),
           ...attribution,
           ...(options?.continuationToken ? { continuationToken: options.continuationToken } : {}),
           creditSessionToken,
         }
       : payload;
 
-  const res = await api.post("/api/client/submissions", submissionPayload, {
+  const res: any = await api.post("/api/client/submissions", submissionPayload, {
     headers: options?.idempotencyKey
       ? { "Idempotency-Key": options.idempotencyKey }
       : undefined,
   });
   localStorage.removeItem("creditSessionToken");
-  return res.data;
+  return res?.data as any;
 }
 
 export async function createPublicApplication(
-  payload: unknown,
+  payload: any,
   options?: { idempotencyKey?: string; readinessToken?: string; sessionId?: string }
 ) {
   const attribution = getPersistedAttribution();
@@ -44,14 +44,14 @@ export async function createPublicApplication(
   const submissionPayload =
     payload && typeof payload === "object" && !Array.isArray(payload)
       ? {
-          ...(payload as Record<string, unknown>),
+          ...(payload as Record<string, any>),
           ...attribution,
           readinessToken: options?.readinessToken,
           sessionId: options?.sessionId,
         }
       : payload;
 
-  const res = await api.post("/api/applications", submissionPayload, {
+  const res: any = await api.post("/api/applications", submissionPayload, {
     headers: {
       ...(options?.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey } : {}),
       ...(options?.readinessToken ? { "X-Readiness-Token": options.readinessToken } : {}),
@@ -66,7 +66,7 @@ export async function createPublicApplication(
 }
 
 export async function fetchApplication(id: string) {
-  const res = await api.get(`/api/applications/${id}`);
+  const res: any = await api.get(`/api/applications/${id}`);
   return parseApiResponse(
     FetchApplicationResponseSchema,
     res.data,
@@ -75,7 +75,7 @@ export async function fetchApplication(id: string) {
 }
 
 export async function fetchApplicationDocuments(id: string) {
-  const res = await api.get(`/api/applications/${id}/documents`);
+  const res: any = await api.get(`/api/applications/${id}/documents`);
   return parseApiResponse(
     ApplicationDocumentsResponseSchema,
     res.data,
@@ -84,7 +84,7 @@ export async function fetchApplicationDocuments(id: string) {
 }
 
 export async function fetchApplicationOffers(id: string) {
-  const res = await api.get(`/api/applications/${id}/offers`);
+  const res: any = await api.get(`/api/applications/${id}/offers`);
   return parseApiResponse(
     ApplicationOffersResponseSchema,
     res.data,
@@ -113,7 +113,7 @@ export async function uploadApplicationDocument(
     return { queued: true };
   }
 
-  const res = await api.post(uploadUrl, formData, {
+  const res: any = await api.post(uploadUrl, formData, {
     headers: { "Content-Type": "multipart/form-data" },
     onUploadProgress: (event) => {
       if (!payload.onProgress || !event.total) return;
@@ -121,5 +121,5 @@ export async function uploadApplicationDocument(
       payload.onProgress(progress);
     },
   });
-  return res.data;
+  return res?.data as any;
 }

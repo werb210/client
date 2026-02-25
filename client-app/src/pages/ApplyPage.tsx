@@ -304,7 +304,7 @@ export function ApplyPage() {
               border: `1px solid ${tokens.colors.border}`,
               padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
               color: tokens.colors.textSecondary,
-              background: tokens.colors.backgroundAlt,
+              background: tokens.colors.background,
               fontSize: 14,
               fontWeight: 600,
             }}

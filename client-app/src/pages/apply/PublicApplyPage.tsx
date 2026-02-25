@@ -477,6 +477,7 @@ export async function handlePublicApplicationSubmit({
   onSuccess,
   onError,
   storage,
+  localStorage,
   readinessToken,
   sessionId,
 }: {
@@ -491,7 +492,7 @@ export async function handlePublicApplicationSubmit({
   onSuccess: () => void;
   onError: (errors: Record<string, string>) => void;
   storage?: MinimalStorage | null;
-  lockStorage?: MinimalStorage | null;
+  localStorage?: MinimalStorage | null;
   readinessToken?: string | null;
   sessionId?: string | null;
 }) {
@@ -518,7 +519,7 @@ export async function handlePublicApplicationSubmit({
     return;
   }
 
-  const resolvedLockStorage = lockStorage ?? getLocalStorage();
+  const resolvedLockStorage = localStorage ?? getLocalStorage();
   const submissionState = loadPublicSubmissionState(storage ?? null);
   if (submissionState) {
     onError({
@@ -778,7 +779,7 @@ export default function PublicApplyPage() {
         },
         onError: (nextErrors) => setErrors(nextErrors),
         storage: getSessionStorage(),
-        lockStorage: getLocalStorage(),
+        localStorage: getLocalStorage(),
         readinessToken,
         sessionId: readinessSessionId,
       });

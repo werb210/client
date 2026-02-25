@@ -7,9 +7,9 @@ export type OfferTermSheet = {
   id: string;
   lender_name: string;
   product_name: string;
-  terms?: Record<string, unknown> | null;
+  terms?: Record<string, any> | null;
   expires_at?: string | null;
-  status?: "active" | "expired" | "archived" | string | null;
+  status?: any;
   document_url?: string | null;
 };
 
@@ -47,7 +47,7 @@ function getDaysUntil(value?: string | null) {
   return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }
 
-function extractNumber(value: unknown): number | null {
+function extractNumber(value: any): number | null {
   if (typeof value === "number") return value;
   if (typeof value === "string") {
     const parsed = Number(value.replace(/[^0-9.-]+/g, ""));
@@ -59,7 +59,7 @@ function extractNumber(value: unknown): number | null {
 function getTermValue(offer: OfferTermSheet, keys: string[]) {
   const terms = offer.terms ?? {};
   for (const key of keys) {
-    const raw = (terms as Record<string, unknown>)[key];
+    const raw = (terms as Record<string, any>)[key];
     if (raw !== undefined && raw !== null && raw !== "") {
       return raw;
     }
@@ -67,7 +67,7 @@ function getTermValue(offer: OfferTermSheet, keys: string[]) {
   return null;
 }
 
-function formatRate(value: unknown) {
+function formatRate(value: any) {
   if (value === null || value === undefined || value === "") return "—";
   if (typeof value === "number") return `${value}%`;
   return String(value);
