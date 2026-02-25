@@ -31,6 +31,14 @@ export interface ReadinessBridgePayload {
   step4?: Record<string, any>;
 }
 
+export interface ContinuationSessionResponse {
+  applicationId?: string;
+  leadId?: string;
+  readinessLeadId?: string;
+  email?: string;
+  phone?: string;
+}
+
 
 function pickNumber(...values: Array<any>): number | undefined {
   for (const value of values) {
@@ -110,9 +118,9 @@ export async function fetchReadinessBridge(
   }
 }
 
-export async function getContinuationSession() {
+export async function getContinuationSession(): Promise<ContinuationSessionResponse | null> {
   try {
-    const res = await api.get("/continuation/session");
+    const res = await api.get<ContinuationSessionResponse>("/continuation/session");
     return res.data;
   } catch {
     return null;
