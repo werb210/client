@@ -1,8 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-if (!BASE_URL) {
-  throw new Error("VITE_API_BASE_URL is required");
-}
+const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export class ApiError extends Error {
   constructor(
@@ -19,7 +15,7 @@ export function buildApiUrl(path: string) {
     return path;
   }
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${BASE_URL}${normalizedPath}`;
+  return `${baseURL}${normalizedPath}`;
 }
 
 function handleStatus(status: number) {
