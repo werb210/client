@@ -20,16 +20,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: https://registry.npmjs.org/
 
-      - name: Clean npm config (prevent registry/auth issues)
-        run: |
-          npm config delete registry || true
-          npm config set registry https://registry.npmjs.org/
-          npm config set always-auth false
+      - name: Force public npm registry
+        run: npm config set registry https://registry.npmjs.org/
 
       - name: Install Dependencies
-        run: npm ci --registry=https://registry.npmjs.org/
+        run: npm ci
 
       - name: Run Lint (if exists)
         run: |
