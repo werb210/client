@@ -27,7 +27,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@twilio/voice-sdk": ["src/shims/twilio-voice-sdk.ts"]
     }
   },
   "include": ["src"],

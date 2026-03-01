@@ -100,6 +100,29 @@ describe("ApplicationPortalView", () => {
     expect(markup).toContain("Uploads disabled");
     expect(markup).toContain("disabled");
   });
+  it("renders a Call Us button when handler is provided", () => {
+    const markup = renderToStaticMarkup(
+      <ApplicationPortalView
+        {...baseProps}
+        documents={[]}
+        onCallUs={() => {}}
+      />
+    );
+    expect(markup).toContain("Call Us");
+  });
+
+  it("shows call connection status", () => {
+    const markup = renderToStaticMarkup(
+      <ApplicationPortalView
+        {...baseProps}
+        documents={[]}
+        onCallUs={() => {}}
+        callStatus="connecting"
+      />
+    );
+    expect(markup).toContain("Connecting…");
+  });
+
 });
 
 describe("getStatusBannerMessage", () => {

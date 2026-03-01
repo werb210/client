@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { callBF, initClientVoice } from "@/services/voiceService";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ApplicationPortalView,
@@ -38,6 +39,7 @@ export function ApplicationPortalPage() {
     Record<string, UploadStateEntry>
   >({});
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
+  const [callStatus, setCallStatus] = useState<"idle" | "connecting" | "connected" | "ended">("idle");
   const navigate = useNavigate();
 
   const uploadStorage = useMemo(() => {
@@ -61,6 +63,11 @@ export function ApplicationPortalPage() {
     if (!id) return;
     saveUploadState(id, uploadState, uploadErrors, uploadStorage);
   }, [id, uploadErrors, uploadState, uploadStorage]);
+
+  useEffect(() => {
+    if (!id) return;
+    void initClientVoice(id);
+  }, [id]);
 
   const refreshDocuments = useCallback(async () => {
     if (!id) return;
@@ -273,6 +280,24 @@ export function ApplicationPortalPage() {
     [id, readOnly, refreshDocuments]
   );
 
+  const handleCallUs = useCallback(async () => {
+    setCallStatus("connecting");
+    try {
+      const call = await callBF();
+      if (!call) {
+        setCallStatus("ended");
+        return;
+      }
+      setCallStatus("connected");
+      call.on("disconnect", () => {
+        setCallStatus("ended");
+      });
+    } catch (error) {
+      console.error("Call failed:", error);
+      setCallStatus("ended");
+    }
+  }, []);
+
   if (loading) {
     return (
       <div style={layout.page}>
@@ -321,6 +346,8 @@ export function ApplicationPortalPage() {
         readOnly={readOnly}
         readOnlyMessage={readOnlyMessage}
         historyEvents={historyEvents}
+        onCallUs={handleCallUs}
+        callStatus={callStatus}
       />
       <div style={{ height: tokens.spacing.xl }} />
     </div>

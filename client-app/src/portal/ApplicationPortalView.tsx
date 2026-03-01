@@ -29,6 +29,8 @@ export type ApplicationPortalViewProps = {
   readOnly?: boolean;
   readOnlyMessage?: string | null;
   historyEvents?: ClientHistoryEvent[];
+  onCallUs?: () => void;
+  callStatus?: "idle" | "connecting" | "connected" | "ended";
 };
 
 const ACCEPTED_FILE_TYPES =
@@ -213,6 +215,8 @@ export function ApplicationPortalView({
   readOnly = false,
   readOnlyMessage,
   historyEvents = [],
+  onCallUs,
+  callStatus = "idle",
 }: ApplicationPortalViewProps) {
   const stageLabel = useMemo(() => formatStageLabel(stage), [stage]);
 
@@ -280,6 +284,25 @@ export function ApplicationPortalView({
             </span>
             <span style={components.form.helperText}>{helperText}</span>
           </div>
+          {onCallUs ? (
+            <div style={{ marginTop: tokens.spacing.md }}>
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+                onClick={onCallUs}
+              >
+                Call Us
+              </button>
+              <div style={{ ...components.form.helperText, marginTop: tokens.spacing.xs }}>
+                {callStatus === "connecting"
+                  ? "Connecting…"
+                  : callStatus === "connected"
+                    ? "Connected"
+                    : callStatus === "ended"
+                      ? "Call Ended"
+                      : null}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {historyEvents.length > 0 && (
