@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  destroyClientVoice,
+  destroyVoice,
   endCall,
   initVoice,
   startCall,
-  subscribeToCallState,
+  subscribe,
   type CallState,
 } from "@/services/voiceService";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -46,7 +46,7 @@ export function ApplicationPortalPage() {
     Record<string, UploadStateEntry>
   >({});
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
-  const [callStatus, setCallStatus] = useState<CallState>("idle");
+  const [callState, setCallState] = useState<CallState>("idle");
   const navigate = useNavigate();
 
   const uploadStorage = useMemo(() => {
@@ -72,46 +72,16 @@ export function ApplicationPortalPage() {
   }, [id, uploadErrors, uploadState, uploadStorage]);
 
   useEffect(() => {
-    const unsubscribe = subscribeToCallState(setCallStatus);
-    let mounted = true;
+    const unsubscribe = subscribe(setCallState);
 
-    async function setup() {
-      if (
-        window.location.protocol !== "https:" &&
-        window.location.hostname !== "localhost"
-      ) {
-        console.error("Voice requires HTTPS");
-        return;
-      }
-
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      const res = await fetch("/api/voice/token", {
-        credentials: "include",
-      });
-
-      if (!res.ok) return;
-
-      const { token } = await res.json();
-      if (mounted) await initVoice(token);
-    }
-
-    void setup().catch((error) => {
+    void initVoice().catch((error) => {
       console.error("Failed to initialize voice", error);
-      setCallStatus("error");
+      setCallState("error");
     });
 
-    const handleBeforeUnload = () => {
-      endCall();
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
     return () => {
-      mounted = false;
-      window.removeEventListener("beforeunload", handleBeforeUnload);
       unsubscribe();
-      destroyClientVoice();
+      destroyVoice();
     };
   }, []);
 
@@ -327,7 +297,7 @@ export function ApplicationPortalPage() {
   );
 
   const handleCallUs = useCallback(async () => {
-    startCall({});
+    void startCall();
   }, []);
 
   if (loading) {
@@ -380,7 +350,7 @@ export function ApplicationPortalPage() {
         historyEvents={historyEvents}
         onCallUs={handleCallUs}
         onEndCall={endCall}
-        callStatus={callStatus}
+        callStatus={callState}
       />
       <div style={{ height: tokens.spacing.xl }} />
     </div>

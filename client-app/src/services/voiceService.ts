@@ -1,130 +1,173 @@
-let device: any = null;
-let currentCall: any = null;
-let tokenRefreshTimer: any = null;
+import { Device, Call } from "@twilio/voice-sdk";
+
+let device: Device | null = null;
+let activeCall: Call | null = null;
+let refreshTimer: number | null = null;
+let initializing = false;
+let onlineListenerAttached = false;
 
 export type CallState = "idle" | "connecting" | "connected" | "ended" | "error";
 
-let currentState: CallState = "idle";
-const listeners = new Set<(state: CallState) => void>();
+let state: CallState = "idle";
+const listeners = new Set<(s: CallState) => void>();
 
-function notify(state: CallState) {
-  currentState = state;
-  listeners.forEach((fn) => fn(state));
+function setState(s: CallState) {
+  state = s;
+  listeners.forEach((fn) => fn(s));
 }
 
-export function subscribeToCallState(fn: (state: CallState) => void) {
+export function subscribe(fn: (s: CallState) => void) {
   listeners.add(fn);
-  fn(currentState);
-  return () => {
-    listeners.delete(fn);
-  };
+  fn(state);
+  return () => listeners.delete(fn);
 }
 
-export async function initVoice(token: string) {
-  if (device) {
-    destroyClientVoice();
-  }
-
-  device = new (window as any).Twilio.Device(token, {
-    logLevel: 1,
-  });
-
-  device.on("error", () => {
-    notify("error");
-  });
-
-  device.on("tokenWillExpire", async () => {
-    await refreshToken();
-  });
-
-  device.on("incoming", (call: any) => {
-    if (currentCall) {
-      call.reject();
-      return;
-    }
-    currentCall = call;
-    notify("connected");
-
-    call.on("disconnect", () => {
-      currentCall = null;
-      notify("ended");
-    });
-
-    call.accept();
-  });
-
-  notify("idle");
-}
-
-async function refreshToken() {
-  if (!device) {
-    return;
-  }
-
+async function fetchToken(): Promise<{ token: string }> {
   const res = await fetch("/api/voice/token", {
+    method: "POST",
     credentials: "include",
   });
 
-  if (!res.ok) return;
-
-  const { token } = await res.json();
-  device.updateToken(token);
+  if (!res.ok) throw new Error("token_failed");
+  return (await res.json()) as { token: string };
 }
 
-export function startCall(params: Record<string, string>) {
-  if (currentCall) {
-    console.warn("Call already active");
+function handleOnline() {
+  if (!device) {
+    void initVoice();
+  }
+}
+
+function ensureOnlineRecoveryListener() {
+  if (onlineListenerAttached || typeof window === "undefined") return;
+
+  window.addEventListener("online", handleOnline);
+  onlineListenerAttached = true;
+}
+
+export async function initVoice() {
+  if (device || initializing) return;
+
+  if (
+    typeof window !== "undefined" &&
+    window.location.protocol !== "https:" &&
+    window.location.hostname !== "localhost"
+  ) {
+    console.error("Voice requires HTTPS");
     return;
   }
 
-  if (!device) return;
+  initializing = true;
 
-  notify("connecting");
-  currentCall = device.connect({ params });
+  try {
+    await navigator.mediaDevices.getUserMedia({ audio: true });
 
-  currentCall.on("accept", () => {
-    notify("connected");
-  });
+    const { token } = await fetchToken();
 
-  currentCall.on("disconnect", () => {
-    currentCall = null;
-    notify("ended");
-  });
+    device = new Device(token, { logLevel: 1 });
 
-  currentCall.on("cancel", () => {
-    currentCall = null;
-    notify("ended");
-  });
+    device.on("registered", () => {
+      initializing = false;
+      setState("idle");
+    });
 
-  currentCall.on("reject", () => {
-    currentCall = null;
-    notify("ended");
-  });
+    device.on("error", () => {
+      initializing = false;
+      setState("error");
+    });
 
-  currentCall.on("error", () => {
-    currentCall = null;
-    notify("error");
-  });
+    device.on("incoming", (call) => {
+      if (activeCall) {
+        call.reject();
+        return;
+      }
+      activeCall = call;
+
+      call.on("accept", () => {
+        setState("connected");
+      });
+
+      call.on("disconnect", () => {
+        activeCall = null;
+        setState("ended");
+      });
+
+      call.on("error", () => {
+        activeCall = null;
+        setState("error");
+      });
+
+      call.accept();
+    });
+
+    await device.register();
+    ensureOnlineRecoveryListener();
+    scheduleRefresh();
+  } catch {
+    setState("error");
+    initializing = false;
+  }
+}
+
+function scheduleRefresh() {
+  if (refreshTimer) clearTimeout(refreshTimer);
+
+  refreshTimer = window.setTimeout(async () => {
+    if (!device) return;
+
+    try {
+      const { token } = await fetchToken();
+      device.updateToken(token);
+      scheduleRefresh();
+    } catch {
+      setState("error");
+    }
+  }, 50 * 60 * 1000);
+}
+
+export async function startCall() {
+  if (!device || activeCall) return;
+
+  setState("connecting");
+
+  try {
+    activeCall = await device.connect({});
+
+    activeCall.on("accept", () => {
+      setState("connected");
+    });
+
+    activeCall.on("disconnect", () => {
+      activeCall = null;
+      setState("ended");
+    });
+
+    activeCall.on("error", () => {
+      activeCall = null;
+      setState("error");
+    });
+  } catch {
+    activeCall = null;
+    setState("error");
+  }
 }
 
 export function endCall() {
-  if (currentCall) {
-    currentCall.disconnect();
-    currentCall = null;
+  if (activeCall) {
+    activeCall.disconnect();
+    activeCall = null;
   }
-
-  notify("ended");
 }
 
-export function destroyClientVoice() {
-  if (tokenRefreshTimer) {
-    clearTimeout(tokenRefreshTimer);
-    tokenRefreshTimer = null;
+export function destroyVoice() {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
   }
 
-  if (currentCall) {
-    currentCall.disconnect();
-    currentCall = null;
+  if (activeCall) {
+    activeCall.disconnect();
+    activeCall = null;
   }
 
   if (device) {
@@ -132,5 +175,11 @@ export function destroyClientVoice() {
     device = null;
   }
 
-  notify("idle");
+  if (onlineListenerAttached && typeof window !== "undefined") {
+    window.removeEventListener("online", handleOnline);
+    onlineListenerAttached = false;
+  }
+
+  initializing = false;
+  setState("idle");
 }
