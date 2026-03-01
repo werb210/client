@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { buildApiUrl } from "@/lib/api";
+import { apiRequest } from "@/services/api";
 
 
 export function useReadinessBridge(
@@ -14,11 +14,8 @@ export function useReadinessBridge(
     if (!token) return;
 
     async function fetchBridge() {
-      const res = await fetch(buildApiUrl(`/api/readiness/bridge/${token}`));
-
-      if (!res.ok) return;
-
-      const data = await res.json();
+      const data = await apiRequest<any>(`/api/readiness/bridge/${token}`).catch(() => null);
+      if (!data) return;
 
       setStep1(data.step1);
       setStep3(data.step3);

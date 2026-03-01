@@ -7,6 +7,7 @@ import {
   parseApiResponse,
 } from "@/contracts/clientApiSchemas";
 import { enqueueUpload } from "@/lib/uploadQueue";
+import { uploadDocument } from "@/services/documentService";
 import { getPersistedAttribution } from "@/utils/attribution";
 
 export async function submitApplication(
@@ -100,6 +101,10 @@ export async function uploadApplicationDocument(
     onProgress?: (progress: number) => void;
   }
 ) {
+  if (payload.file.size > 10 * 1024 * 1024) {
+    throw new Error("file_too_large");
+  }
+
   const uploadUrl = `/api/applications/${id}/documents`;
   const formData = new FormData();
   formData.append("document_category", payload.documentCategory);
@@ -113,13 +118,8 @@ export async function uploadApplicationDocument(
     return { queued: true };
   }
 
-  const res: any = await api.post(uploadUrl, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-    onUploadProgress: (event) => {
-      if (!payload.onProgress || !event.total) return;
-      const progress = Math.round((event.loaded / event.total) * 100);
-      payload.onProgress(progress);
-    },
-  });
-  return res?.data as any;
+  payload.onProgress?.(10);
+  const data = await uploadDocument(payload.file, id);
+  payload.onProgress?.(100);
+  return data as any;
 }

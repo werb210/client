@@ -1,7 +1,10 @@
 import { getPersistedAttribution } from "./attribution";
+import { apiRequest } from "@/services/api";
 
 export function track(event: string) {
-  console.log("Analytics:", event);
+  if (import.meta.env.DEV) {
+    console.info("Analytics:", event);
+  }
 }
 
 // ---- Client Attribution Sync ----
@@ -88,22 +91,21 @@ export const trackEvent = (
     window.clarity("set", eventName, payload);
   }
 
-  try {
-    fetch("/api/analytics", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        event_name: eventName,
-        payload: {
-          session_id: getSessionId(),
-          ...attribution,
-          ...payload,
-        },
-      }),
-    });
-  } catch (err) {
-    console.warn("Analytics error", err);
-  }
+  void apiRequest("/api/analytics", {
+    method: "POST",
+    body: JSON.stringify({
+      event_name: eventName,
+      payload: {
+        session_id: getSessionId(),
+        ...attribution,
+        ...payload,
+      },
+    }),
+  }).catch((err) => {
+    if (import.meta.env.DEV) {
+      console.warn("Analytics error", err);
+    }
+  });
 };
 
 export const trackConversion = (
