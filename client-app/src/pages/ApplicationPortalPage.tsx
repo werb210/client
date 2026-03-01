@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { callBF, initClientVoice } from "@/services/voiceService";
+import {
+  callBF,
+  destroyClientVoice,
+  endCall,
+  initClientVoice,
+  subscribeToCallState,
+  type CallState,
+} from "@/services/voiceService";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ApplicationPortalView,
@@ -39,7 +46,7 @@ export function ApplicationPortalPage() {
     Record<string, UploadStateEntry>
   >({});
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
-  const [callStatus, setCallStatus] = useState<"idle" | "connecting" | "connected" | "ended">("idle");
+  const [callStatus, setCallStatus] = useState<CallState>("idle");
   const navigate = useNavigate();
 
   const uploadStorage = useMemo(() => {
@@ -66,7 +73,21 @@ export function ApplicationPortalPage() {
 
   useEffect(() => {
     if (!id) return;
+
+    const unsubscribe = subscribeToCallState(setCallStatus);
     void initClientVoice(id);
+
+    const handleBeforeUnload = () => {
+      endCall();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      unsubscribe();
+      void destroyClientVoice();
+    };
   }, [id]);
 
   const refreshDocuments = useCallback(async () => {
@@ -281,21 +302,7 @@ export function ApplicationPortalPage() {
   );
 
   const handleCallUs = useCallback(async () => {
-    setCallStatus("connecting");
-    try {
-      const call = await callBF();
-      if (!call) {
-        setCallStatus("ended");
-        return;
-      }
-      setCallStatus("connected");
-      call.on("disconnect", () => {
-        setCallStatus("ended");
-      });
-    } catch (error) {
-      console.error("Call failed:", error);
-      setCallStatus("ended");
-    }
+    await callBF();
   }, []);
 
   if (loading) {
@@ -347,6 +354,7 @@ export function ApplicationPortalPage() {
         readOnlyMessage={readOnlyMessage}
         historyEvents={historyEvents}
         onCallUs={handleCallUs}
+        onEndCall={endCall}
         callStatus={callStatus}
       />
       <div style={{ height: tokens.spacing.xl }} />
