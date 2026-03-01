@@ -1,17 +1,8 @@
-import { Device, Call } from "@twilio/voice-sdk";
+let device: any = null;
+let currentCall: any = null;
+let tokenRefreshTimer: any = null;
 
-let device: Device | null = null;
-let activeCall: Call | null = null;
-let tokenRefreshTimer: ReturnType<typeof setTimeout> | null = null;
-let registerInFlight: Promise<void> | null = null;
-let currentClientId: string | null = null;
-
-export type CallState =
-  | "idle"
-  | "connecting"
-  | "connected"
-  | "ended"
-  | "error";
+export type CallState = "idle" | "connecting" | "connected" | "ended" | "error";
 
 let currentState: CallState = "idle";
 const listeners = new Set<(state: CallState) => void>();
@@ -29,153 +20,117 @@ export function subscribeToCallState(fn: (state: CallState) => void) {
   };
 }
 
-async function fetchToken(clientId: string) {
-  const res = await fetch("/api/voice/token", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ clientId }),
+export async function initVoice(token: string) {
+  if (device) {
+    destroyClientVoice();
+  }
+
+  device = new (window as any).Twilio.Device(token, {
+    logLevel: 1,
   });
 
-  if (!res.ok) {
-    throw new Error("Token fetch failed");
-  }
+  device.on("error", () => {
+    notify("error");
+  });
 
-  return res.json() as Promise<{ token: string }>;
-}
+  device.on("tokenWillExpire", async () => {
+    await refreshToken();
+  });
 
-async function ensureRegistered() {
-  if (!device) return;
-  if (registerInFlight) {
-    await registerInFlight;
-    return;
-  }
+  device.on("incoming", (call: any) => {
+    if (currentCall) {
+      call.reject();
+      return;
+    }
+    currentCall = call;
+    notify("connected");
 
-  registerInFlight = device.register();
-  try {
-    await registerInFlight;
-  } finally {
-    registerInFlight = null;
-  }
+    call.on("disconnect", () => {
+      currentCall = null;
+      notify("ended");
+    });
+
+    call.accept();
+  });
+
+  notify("idle");
 }
 
 async function refreshToken() {
-  if (!currentClientId || !device) return;
-  const { token } = await fetchToken(currentClientId);
-  device.updateToken(token);
-}
-
-function scheduleTokenRefresh() {
-  if (tokenRefreshTimer) {
-    clearTimeout(tokenRefreshTimer);
-  }
-
-  tokenRefreshTimer = setTimeout(async () => {
-    try {
-      await refreshToken();
-      await ensureRegistered();
-      scheduleTokenRefresh();
-    } catch {
-      notify("error");
-    }
-  }, 50 * 60 * 1000);
-}
-
-export async function initClientVoice(clientId: string) {
-  try {
-    currentClientId = clientId;
-    const { token } = await fetchToken(clientId);
-
-    if (device) {
-      await destroyClientVoice();
-    }
-
-    device = new Device(token, { logLevel: 1 });
-
-    device.on("error", () => notify("error"));
-    device.on("disconnect", () => {
-      activeCall = null;
-      notify("ended");
-    });
-    device.on("unregistered", () => {
-      void ensureRegistered().catch(() => notify("error"));
-    });
-    device.on("tokenWillExpire", () => {
-      void refreshToken().catch(() => notify("error"));
-    });
-
-    await ensureRegistered();
-    notify("idle");
-    scheduleTokenRefresh();
-  } catch {
-    notify("error");
-  }
-}
-
-async function ensureAudioPermission() {
-  if (typeof window === "undefined") return;
-  if (!window.isSecureContext) {
-    throw new Error("Voice requires HTTPS.");
-  }
-
-  const mediaDevices = navigator?.mediaDevices;
-  if (!mediaDevices?.getUserMedia) {
+  if (!device) {
     return;
   }
 
-  const stream = await mediaDevices.getUserMedia({ audio: true });
-  stream.getTracks().forEach((track) => track.stop());
+  const res = await fetch("/api/voice/token", {
+    credentials: "include",
+  });
+
+  if (!res.ok) return;
+
+  const { token } = await res.json();
+  device.updateToken(token);
 }
 
-export async function callBF() {
-  if (!device) return null;
-  if (activeCall) return activeCall;
+export function startCall(params: Record<string, string>) {
+  if (currentCall) {
+    console.warn("Call already active");
+    return;
+  }
+
+  if (!device) return;
 
   notify("connecting");
+  currentCall = device.connect({ params });
 
-  try {
-    await ensureRegistered();
-    await ensureAudioPermission();
+  currentCall.on("accept", () => {
+    notify("connected");
+  });
 
-    activeCall = await device.connect({});
+  currentCall.on("disconnect", () => {
+    currentCall = null;
+    notify("ended");
+  });
 
-    activeCall.on("accept", () => notify("connected"));
-    activeCall.on("disconnect", () => {
-      activeCall = null;
-      notify("ended");
-    });
-    activeCall.on("cancel", () => {
-      activeCall = null;
-      notify("ended");
-    });
-    activeCall.on("reject", () => {
-      activeCall = null;
-      notify("ended");
-    });
+  currentCall.on("cancel", () => {
+    currentCall = null;
+    notify("ended");
+  });
 
-    return activeCall;
-  } catch {
-    activeCall = null;
+  currentCall.on("reject", () => {
+    currentCall = null;
+    notify("ended");
+  });
+
+  currentCall.on("error", () => {
+    currentCall = null;
     notify("error");
-    return null;
-  }
+  });
 }
 
 export function endCall() {
-  activeCall?.disconnect();
-  activeCall = null;
+  if (currentCall) {
+    currentCall.disconnect();
+    currentCall = null;
+  }
+
+  notify("ended");
 }
 
-export async function destroyClientVoice() {
+export function destroyClientVoice() {
   if (tokenRefreshTimer) {
     clearTimeout(tokenRefreshTimer);
     tokenRefreshTimer = null;
   }
 
-  endCall();
+  if (currentCall) {
+    currentCall.disconnect();
+    currentCall = null;
+  }
 
-  await device?.destroy();
-  device = null;
-  currentClientId = null;
+  if (device) {
+    device.destroy();
+    device = null;
+  }
+
   notify("idle");
 }

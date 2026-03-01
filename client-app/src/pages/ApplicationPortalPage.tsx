@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  callBF,
   destroyClientVoice,
   endCall,
-  initClientVoice,
+  initVoice,
+  startCall,
   subscribeToCallState,
   type CallState,
 } from "@/services/voiceService";
@@ -72,10 +72,34 @@ export function ApplicationPortalPage() {
   }, [id, uploadErrors, uploadState, uploadStorage]);
 
   useEffect(() => {
-    if (!id) return;
-
     const unsubscribe = subscribeToCallState(setCallStatus);
-    void initClientVoice(id);
+    let mounted = true;
+
+    async function setup() {
+      if (
+        window.location.protocol !== "https:" &&
+        window.location.hostname !== "localhost"
+      ) {
+        console.error("Voice requires HTTPS");
+        return;
+      }
+
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      const res = await fetch("/api/voice/token", {
+        credentials: "include",
+      });
+
+      if (!res.ok) return;
+
+      const { token } = await res.json();
+      if (mounted) await initVoice(token);
+    }
+
+    void setup().catch((error) => {
+      console.error("Failed to initialize voice", error);
+      setCallStatus("error");
+    });
 
     const handleBeforeUnload = () => {
       endCall();
@@ -84,11 +108,12 @@ export function ApplicationPortalPage() {
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
+      mounted = false;
       window.removeEventListener("beforeunload", handleBeforeUnload);
       unsubscribe();
-      void destroyClientVoice();
+      destroyClientVoice();
     };
-  }, [id]);
+  }, []);
 
   const refreshDocuments = useCallback(async () => {
     if (!id) return;
@@ -302,7 +327,7 @@ export function ApplicationPortalPage() {
   );
 
   const handleCallUs = useCallback(async () => {
-    await callBF();
+    startCall({});
   }, []);
 
   if (loading) {
