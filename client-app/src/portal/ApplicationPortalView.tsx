@@ -30,7 +30,8 @@ export type ApplicationPortalViewProps = {
   readOnlyMessage?: string | null;
   historyEvents?: ClientHistoryEvent[];
   onCallUs?: () => void;
-  callStatus?: "idle" | "connecting" | "connected" | "ended";
+  onEndCall?: () => void;
+  callStatus?: "idle" | "connecting" | "connected" | "ended" | "error";
 };
 
 const ACCEPTED_FILE_TYPES =
@@ -286,21 +287,40 @@ export function ApplicationPortalView({
           </div>
           {onCallUs ? (
             <div style={{ marginTop: tokens.spacing.md }}>
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded"
-                onClick={onCallUs}
-              >
-                Call Us
-              </button>
-              <div style={{ ...components.form.helperText, marginTop: tokens.spacing.xs }}>
-                {callStatus === "connecting"
-                  ? "Connecting…"
-                  : callStatus === "connected"
-                    ? "Connected"
-                    : callStatus === "ended"
-                      ? "Call Ended"
-                      : null}
-              </div>
+              {callStatus === "idle" && (
+                <button
+                  className="bg-blue-600 text-white px-4 py-2 rounded"
+                  onClick={onCallUs}
+                >
+                  Call Us
+                </button>
+              )}
+
+              {callStatus === "connecting" && (
+                <div className="text-yellow-600">Connecting...</div>
+              )}
+
+              {callStatus === "connected" && (
+                <div className="space-y-2">
+                  <div className="text-green-600">Connected</div>
+                  {onEndCall ? (
+                    <button
+                      className="bg-red-600 text-white px-4 py-2 rounded"
+                      onClick={onEndCall}
+                    >
+                      End Call
+                    </button>
+                  ) : null}
+                </div>
+              )}
+
+              {callStatus === "ended" && (
+                <div className="text-gray-600">Call ended</div>
+              )}
+
+              {callStatus === "error" && (
+                <div className="text-red-600">Call failed. Please try again.</div>
+              )}
             </div>
           ) : null}
         </div>
