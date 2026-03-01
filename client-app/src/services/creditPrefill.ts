@@ -1,8 +1,5 @@
-export async function fetchCreditPrefill(id: string) {
-  const res = await fetch(`/api/credit-readiness/${id}`);
-  if (!res.ok) {
-    throw new Error("Unable to fetch prefill data");
-  }
-  return res.json();
-}
+import { apiRequest } from "@/services/api";
 
+export async function fetchCreditPrefill(id: string) {
+  return apiRequest(`/api/credit-readiness/${id}`);
+}

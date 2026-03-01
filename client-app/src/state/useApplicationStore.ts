@@ -8,6 +8,7 @@ import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { getSessionId, trackEvent } from "../utils/analytics";
 import { loadLocalBackup, useLocalBackup } from "../system/useLocalBackup";
 import { buildApiUrl } from "../lib/api";
+import { apiRequest } from "@/services/api";
 
 const emptyApp: ApplicationData = {
   kyc: {},
@@ -177,9 +178,8 @@ export function useApplicationStore() {
       debounce(async (state: ApplicationData) => {
         if (!state.applicationToken) return;
 
-        await fetch(buildApiUrl("/api/application/update"), {
+        await apiRequest(buildApiUrl("/api/application/update"), {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(state),
         });
       }, 1500),

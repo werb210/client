@@ -1,3 +1,5 @@
+import { apiRequest } from "@/services/api";
+
 type PreApplicationLookupResponse = {
   token: string;
   companyName?: string;
@@ -12,26 +14,14 @@ type PreApplicationLookupResponse = {
 export async function lookupPreApplication(
   email: string
 ): Promise<PreApplicationLookupResponse | null> {
-  const res = await fetch(
-    `/api/preapp/lookup?email=${encodeURIComponent(email)}`,
-    { credentials: "include" }
-  );
-
-  if (!res.ok) return null;
-  return res.json();
+  return apiRequest<PreApplicationLookupResponse>(
+    `/api/preapp/lookup?email=${encodeURIComponent(email)}`
+  ).catch(() => null);
 }
 
 export async function consumePreApplication(token: string) {
-  const res = await fetch("/api/preapp/consume", {
+  return apiRequest("/api/preapp/consume", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify({ token }),
   });
-
-  if (!res.ok) {
-    throw new Error("Failed to consume pre-application");
-  }
-
-  return res.json();
 }

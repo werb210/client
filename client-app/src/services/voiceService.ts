@@ -1,7 +1,9 @@
 import { Device, Call } from "@twilio/voice-sdk";
+import { apiRequest } from "@/services/api";
 
 let device: Device | null = null;
 let activeCall: Call | null = null;
+let activeConnection: Call | null = null;
 let refreshTimer: number | null = null;
 let initializing = false;
 let onlineListenerAttached = false;
@@ -23,13 +25,9 @@ export function subscribe(fn: (s: CallState) => void) {
 }
 
 async function fetchToken(): Promise<{ token: string }> {
-  const res = await fetch("/api/voice/token", {
+  return apiRequest<{ token: string }>("/api/voice/token", {
     method: "POST",
-    credentials: "include",
   });
-
-  if (!res.ok) throw new Error("token_failed");
-  return (await res.json()) as { token: string };
 }
 
 function handleOnline() {
@@ -53,7 +51,9 @@ export async function initVoice() {
     window.location.protocol !== "https:" &&
     window.location.hostname !== "localhost"
   ) {
-    console.error("Voice requires HTTPS");
+    if (import.meta.env.DEV) {
+      console.warn("Voice requires HTTPS");
+    }
     return;
   }
 
@@ -82,6 +82,7 @@ export async function initVoice() {
         return;
       }
       activeCall = call;
+      activeConnection = call;
 
       call.on("accept", () => {
         setState("connected");
@@ -89,11 +90,13 @@ export async function initVoice() {
 
       call.on("disconnect", () => {
         activeCall = null;
+        activeConnection = null;
         setState("ended");
       });
 
       call.on("error", () => {
         activeCall = null;
+        activeConnection = null;
         setState("error");
       });
 
@@ -126,37 +129,42 @@ function scheduleRefresh() {
 }
 
 export async function startCall() {
-  if (!device || activeCall) return;
+  if (!device || activeConnection) return;
 
   setState("connecting");
 
   try {
-    activeCall = await device.connect({});
+    activeConnection = await device.connect({});
+    activeCall = activeConnection;
 
-    activeCall.on("accept", () => {
+    activeConnection.on("accept", () => {
       setState("connected");
     });
 
-    activeCall.on("disconnect", () => {
+    activeConnection.on("disconnect", () => {
       activeCall = null;
+      activeConnection = null;
       setState("ended");
     });
 
-    activeCall.on("error", () => {
+    activeConnection.on("error", () => {
       activeCall = null;
+      activeConnection = null;
       setState("error");
     });
   } catch {
     activeCall = null;
+    activeConnection = null;
     setState("error");
   }
 }
 
 export function endCall() {
-  if (activeCall) {
-    activeCall.disconnect();
-    activeCall = null;
+  if (activeConnection) {
+    activeConnection.disconnect();
+    activeConnection = null;
   }
+  activeCall = null;
 }
 
 export function destroyVoice() {
@@ -169,6 +177,7 @@ export function destroyVoice() {
     activeCall.disconnect();
     activeCall = null;
   }
+  activeConnection = null;
 
   if (device) {
     device.destroy();

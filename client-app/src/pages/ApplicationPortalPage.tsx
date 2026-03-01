@@ -231,6 +231,7 @@ export function ApplicationPortalPage() {
   const handleUpload = useCallback(
     async (category: string, file: File) => {
       if (!id) return;
+      if (uploadState[category]?.uploading) return;
       if (readOnly) {
         setUploadErrors((prev) => ({
           ...prev,
@@ -293,7 +294,7 @@ export function ApplicationPortalPage() {
         }));
       }
     },
-    [id, readOnly, refreshDocuments]
+    [id, readOnly, refreshDocuments, uploadState]
   );
 
   const handleCallUs = useCallback(async () => {

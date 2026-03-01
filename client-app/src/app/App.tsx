@@ -24,6 +24,8 @@ import { persistAttributionFromUrl } from "../utils/attribution";
 import ChatSupportWidget from "@/components/ChatSupportWidget";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { useReadinessBridge } from "@/hooks/useReadinessBridge";
+import { apiRequest } from "@/services/api";
+import { endCall } from "@/services/voiceService";
 
 export default function App() {
   const { app, loadFromServer, update } = useApplicationStore();
@@ -156,14 +158,19 @@ export default function App() {
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
     if (!apiBaseUrl) return;
 
-    void fetch(`${apiBaseUrl}/api/credit-readiness/session/${session}`)
-      .then((res) => res.json())
+    void apiRequest(`${apiBaseUrl}/api/credit-readiness/session/${session}`)
       .then((data) => {
         localStorage.setItem("creditPrefill", JSON.stringify(data));
       })
       .catch(() => {
         // ignore prefill fetch failures
       });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      endCall();
+    };
   }, []);
 
   if (refreshing) {

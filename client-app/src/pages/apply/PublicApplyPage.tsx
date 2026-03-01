@@ -11,6 +11,7 @@ import {
 import { getContinuationSession, fetchContinuation, fetchReadinessSession } from "@/api/continuation";
 import { loadContinuation } from "../../services/continuation";
 import { getSessionId, trackEvent } from "../../utils/analytics";
+import { apiRequest } from "@/services/api";
 
 type FieldType =
   | "text"
@@ -627,11 +628,8 @@ export default function PublicApplyPage() {
       const draft = loadDraft();
       if (!draft) return;
 
-      await fetch("/api/drafts/save", {
+      await apiRequest("/api/drafts/save", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(draft),
       });
     }, 30000);
@@ -645,8 +643,7 @@ export default function PublicApplyPage() {
 
     if (!resumeToken) return;
 
-    fetch(`/api/drafts/${resumeToken}`)
-      .then((res) => res.json())
+    void apiRequest<DraftPayload | null>(`/api/drafts/${resumeToken}`)
       .then((data: DraftPayload | null) => {
         if (data) {
           setValues((prev) => ({ ...prev, ...data }));
@@ -730,8 +727,7 @@ export default function PublicApplyPage() {
 
   useEffect(() => {
     let isMounted = true;
-    fetch("https://api.ipify.org?format=json")
-      .then((res) => res.json())
+    apiRequest<{ ip?: string }>("https://api.ipify.org?format=json")
       .then((data: { ip?: string }) => {
         if (isMounted && data?.ip) {
           setClientIp(data.ip);
