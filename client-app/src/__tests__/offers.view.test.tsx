@@ -41,8 +41,8 @@ describe("OffersView", () => {
 
   it("links to term sheet in a new tab", () => {
     const html = renderToStaticMarkup(<OffersView offers={[baseOffer]} />);
-    expect(html).toContain(`href=\"${baseOffer.document_url}\"`);
-    expect(html).toContain("target=\"_blank\"");
+    expect(html).toContain(`href="${baseOffer.document_url}"`);
+    expect(html).toContain('target="_blank"');
   });
 
   it("does not render accept or reject actions", () => {
