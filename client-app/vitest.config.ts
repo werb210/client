@@ -4,7 +4,7 @@ import path from "node:path";
 export default defineConfig({
   resolve: {
     alias: {
-      "@/": path.resolve(__dirname, "src") + "/",
+      "@": path.resolve(__dirname, "src"),
     },
   },
   test: {
@@ -14,5 +14,10 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     mockReset: true,
+    environmentOptions: {
+      jsdom: {
+        url: "http://localhost",
+      },
+    },
   },
 });
