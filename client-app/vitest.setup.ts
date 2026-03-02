@@ -7,6 +7,48 @@ const originalXMLHttpRequest = globalThis.XMLHttpRequest;
 const originalWebSocket = globalThis.WebSocket;
 const originalCrypto = globalThis.crypto;
 
+const storageMock = (() => {
+  let store: Record<string, string> = {};
+
+  return {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+
+const sessionStorageMock = (() => {
+  let store: Record<string, string> = {};
+
+  return {
+    getItem: (key: string) => store[key] ?? null,
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+
+Object.defineProperty(globalThis, "localStorage", {
+  value: storageMock,
+});
+
+Object.defineProperty(globalThis, "sessionStorage", {
+  value: sessionStorageMock,
+});
+
 class BlockedXMLHttpRequest {
   open(method: string, url: string | URL) {
     throw new Error(`${BLOCKED_NETWORK_ERROR} [XMLHttpRequest] ${method} ${String(url)}`);
