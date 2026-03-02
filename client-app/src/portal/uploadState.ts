@@ -62,7 +62,6 @@ export function loadUploadState(
 
     return { state: restoredState, errors: restoredErrors };
   } catch (error) {
-    console.warn("Failed to load upload state:", error);
     return { state: {}, errors: {} };
   }
 }
@@ -92,7 +91,6 @@ export function saveUploadState(
     };
     storage.setItem(getStorageKey(applicationId), JSON.stringify(payload));
   } catch (error) {
-    console.warn("Failed to save upload state:", error);
   }
 }
 
@@ -101,6 +99,5 @@ export function clearUploadState(applicationId: string, storage: Storage | null)
   try {
     storage.removeItem(getStorageKey(applicationId));
   } catch (error) {
-    console.warn("Failed to clear upload state:", error);
   }
 }

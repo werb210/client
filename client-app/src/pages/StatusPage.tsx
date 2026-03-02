@@ -41,13 +41,13 @@ import { buildClientHistoryEvents } from "../portal/clientHistory";
 import { updateClientSession } from "../state/clientSession";
 import { components, layout, tokens } from "@/styles";
 
-const setMessages = (..._args: any[]) => {};
-const saveMessageHistory = (..._args: any[]) => {};
+const setMessages = (..._args: unknown[]) => {};
+const saveMessageHistory = (..._args: unknown[]) => {};
 
-export function StatusPage() {
+export function StatusPage(): JSX.Element {
   const token = new URLSearchParams(window.location.search).get("token");
   const { state: sessionState } = useClientSession(token);
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<Record<string, unknown> | null>(null);
   const [rejectionNotice, setRejectionNotice] = useState<{
     documents: string[];
   } | null>(null);
@@ -57,7 +57,7 @@ export function StatusPage() {
     SubmissionStatusSnapshot | null
   >(() => (token ? loadSubmissionStatusCache(token) : null));
   const navigate = useNavigate();
-  const statusRef = useRef<any>(null);
+  const statusRef = useRef<Record<string, unknown> | null>(null);
 
   const refreshStatus = useCallback(async () => {
     if (!token) return;
@@ -65,7 +65,6 @@ export function StatusPage() {
       const res = await ClientAppAPI.status(token);
       setStatus(res.data);
     } catch (error) {
-      console.error("Status refresh failed:", error);
     }
   }, [token]);
 
@@ -89,7 +88,7 @@ export function StatusPage() {
 
   const pollingEnabled = Boolean(token) && sessionState === "valid";
 
-  const isTerminalStatus = useCallback((payload: any) => {
+  const isTerminalStatus = useCallback((payload: Record<string, unknown> | null) => {
     const raw =
       payload?.status ||
       payload?.stage ||
@@ -107,12 +106,11 @@ export function StatusPage() {
     return res.data;
   }, [token]);
 
-  const handleStatusUpdate = useCallback((next: any) => {
+  const handleStatusUpdate = useCallback((next: Record<string, unknown> | null) => {
     setStatus(next);
   }, []);
 
   const handleStatusError = useCallback((error: unknown) => {
-    console.error("Status refresh failed:", error);
   }, []);
 
   const { state: statusPollingState } = useProcessingStatusPoller({
@@ -170,7 +168,6 @@ export function StatusPage() {
   );
 
   const handleSubmissionError = useCallback((error: unknown) => {
-    console.error("Submission status refresh failed:", error);
   }, []);
 
   useProcessingStatusPoller({
@@ -189,7 +186,7 @@ export function StatusPage() {
   }, [token]);
 
   const handleMessagesUpdate = useCallback(
-    (nextMessages: any[]) => {
+    (nextMessages: unknown[]) => {
       setMessages(nextMessages);
       if (token) {
         saveMessageHistory(token, nextMessages);
@@ -199,7 +196,6 @@ export function StatusPage() {
   );
 
   const handleMessagesError = useCallback((error: unknown) => {
-    console.error("Message refresh failed:", error);
   }, []);
 
   useProcessingStatusPoller({
@@ -317,7 +313,6 @@ export function StatusPage() {
       });
       navigate("/apply/step-2");
     } catch (error) {
-      console.error("Failed to create linked application:", error);
       setLinkedAppError("Unable to start a linked application. Please try again.");
     } finally {
       setLinkedAppBusy(false);
