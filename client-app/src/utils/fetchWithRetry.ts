@@ -43,7 +43,7 @@ export async function safeFetch(
     }
 
     return response;
-  } catch (error) {
+  } catch {
     if (error instanceof FetchRequestError) {
       throw error;
     }
@@ -73,7 +73,7 @@ export async function fetchWithRetry(
       if (response.ok || !RETRYABLE_STATUS.has(response.status) || attempt >= maxAttempts) {
         return response;
       }
-    } catch (error) {
+    } catch {
       if (attempt >= maxAttempts) {
         throw error;
       }

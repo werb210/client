@@ -35,6 +35,6 @@ export function getSubmissionStageBanner(stage: string) {
   return null;
 }
 
-export function getSubmissionFailureBanner(_rawStatus?: string) {
+export function getSubmissionFailureBanner() {
   return SUBMISSION_FAILURE_BANNER;
 }

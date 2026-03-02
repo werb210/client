@@ -4,7 +4,7 @@ export const OfflineStore = {
   save(data: unknown) {
     try {
       localStorage.setItem(KEY, JSON.stringify(data));
-    } catch (error) {
+    } catch {
     }
   },
   load() {
@@ -13,7 +13,7 @@ export const OfflineStore = {
       const parsed = raw ? JSON.parse(raw) : null;
       if (parsed && typeof parsed === "object") return parsed;
       return null;
-    } catch (error) {
+    } catch {
       localStorage.removeItem(KEY);
       return null;
     }
@@ -21,7 +21,7 @@ export const OfflineStore = {
   clear() {
     try {
       localStorage.removeItem(KEY);
-    } catch (error) {
+    } catch {
     }
   },
 };

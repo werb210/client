@@ -68,7 +68,7 @@ export default function UploadDocuments() {
       setProgress(100);
       setStatus("success");
       setMessage("Upload received. We'll review it shortly.");
-    } catch (err) {
+    } catch {
       setStatus("error");
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         setMessage("Network connection lost. Reconnect and try again.");

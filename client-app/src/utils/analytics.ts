@@ -3,6 +3,7 @@ import { apiRequest } from "@/services/api";
 
 export function track(event: string) {
   if (import.meta.env.DEV) {
+    void event;
   }
 }
 
@@ -102,6 +103,7 @@ export const trackEvent = (
     }),
   }).catch((err) => {
     if (import.meta.env.DEV) {
+      void err;
     }
   });
 };

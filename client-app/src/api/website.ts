@@ -58,7 +58,7 @@ async function postWithRetry<TPayload>(
           "X-Idempotency-Key": idempotencyKey,
         },
       });
-    } catch (error) {
+    } catch {
       attempt += 1;
       if (!shouldRetryRequest(error, attempt)) {
         throw error;

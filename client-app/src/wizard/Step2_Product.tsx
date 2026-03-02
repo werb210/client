@@ -226,7 +226,7 @@ export function Step2_Product() {
             });
           }
         }
-      } catch (error) {
+      } catch {
         if (active) {
           setLoadError(
             "Unable to load lender products. Please refresh or try again later."
@@ -344,7 +344,7 @@ export function Step2_Product() {
       setSaveError(null);
       track("step_completed", { step: 2 });
       navigate("/apply/step-3");
-    } catch (error) {
+    } catch {
       setClosingError("Unable to create the linked application. Try again.");
     } finally {
       setClosingBusy(false);

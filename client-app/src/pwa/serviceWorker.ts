@@ -24,7 +24,7 @@ function notifyUpdateAvailable(next: boolean) {
 function shouldReloadForUpdate() {
   try {
     return window.sessionStorage.getItem(UPDATE_RELOAD_KEY) !== "true";
-  } catch (error) {
+  } catch {
     return true;
   }
 }
@@ -32,14 +32,14 @@ function shouldReloadForUpdate() {
 function markReloaded() {
   try {
     window.sessionStorage.setItem(UPDATE_RELOAD_KEY, "true");
-  } catch (error) {
+  } catch {
   }
 }
 
 function clearReloadMarker() {
   try {
     window.sessionStorage.removeItem(UPDATE_RELOAD_KEY);
-  } catch (error) {
+  } catch {
   }
 }
 
@@ -79,7 +79,7 @@ export function registerServiceWorker() {
           });
         });
         resolve(registration ?? null);
-      } catch (error) {
+      } catch {
         resolve(null);
       }
     };

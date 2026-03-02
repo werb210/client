@@ -64,7 +64,6 @@ const IndustryCards = [
   { title: "Other", subtext: "Additional business industries", image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=900&q=80" },
 ];
 
-const IndustryOptions = IndustryCards.map((industry) => industry.title);
 
 const PurposeOptions = [
   "Equipment Purchase",
@@ -179,15 +178,6 @@ export function Step1_KYC() {
     [app.kyc.businessLocation]
   );
   const readinessEnabled = Boolean(readiness);
-  const readinessFieldState = {
-    industry: Boolean(readiness?.industry),
-    salesHistory: typeof readiness?.yearsInBusiness === "number",
-    monthlyRevenue: typeof readiness?.monthlyRevenue === "number",
-    revenueLast12Months: typeof readiness?.annualRevenue === "number",
-    accountsReceivable: typeof readiness?.arOutstanding === "number",
-    fixedAssets: Boolean(readiness?.collateralAvailable),
-  };
-
   useEffect(() => {
     if (app.currentStep !== 1) {
       update({ currentStep: 1 });

@@ -53,7 +53,7 @@ function loadClientDraft(): ApplicationData | null {
     const raw = localStorage.getItem(CLIENT_DRAFT_KEY);
     if (!raw) return null;
     return JSON.parse(raw) as ApplicationData;
-  } catch (_error) {
+  } catch {
     return null;
   }
 }
@@ -65,7 +65,7 @@ function loadApplicationStateDraft(): ApplicationData | null {
     const raw = localStorage.getItem(APPLICATION_STATE_KEY);
     if (!raw) return null;
     return JSON.parse(raw) as ApplicationData;
-  } catch (_error) {
+  } catch {
     return null;
   }
 }
@@ -75,7 +75,7 @@ function loadBorealDraft(): ApplicationData | null {
     const raw = localStorage.getItem(BOREAL_DRAFT_KEY);
     if (!raw) return null;
     return JSON.parse(raw) as ApplicationData;
-  } catch (_error) {
+  } catch {
     return null;
   }
 }
@@ -189,9 +189,10 @@ export function useApplicationStore() {
   function init() {
     if (initialized) return;
 
-    const { ProductSync } = require("../lender/productSync");
-    ProductSync.invalidateCache();
-    void ProductSync.sync().catch((error: unknown) => {
+    void import("../lender/productSync").then(({ ProductSync }) => {
+      ProductSync.invalidateCache();
+      void ProductSync.sync().catch(() => {
+      });
     });
 
     setInitialized(true);

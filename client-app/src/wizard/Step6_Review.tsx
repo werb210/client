@@ -174,7 +174,7 @@ export function Step6_Review() {
             refreshed.financialReviewComplete ?? app.financialReviewComplete,
         });
       })
-      .catch((error) => {
+      .catch(() => {
       });
   }, [app.applicationToken!, update]);
 
@@ -402,7 +402,7 @@ export function Step6_Review() {
       setTimeout(() => {
         navigate("/portal", { replace: true });
       }, 1200);
-    } catch (error) {
+    } catch {
       const response =
         typeof error === "object" && error !== null && "response" in error
           ? (error as { response?: { status?: number; data?: Record<string, unknown> } }).response
@@ -560,7 +560,7 @@ export function Step6_Review() {
 
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
       track("document_uploaded");
-    } catch (error) {
+    } catch {
       setDocErrors((prev) => ({
         ...prev,
         [docType]: "ID upload failed. Please try again.",

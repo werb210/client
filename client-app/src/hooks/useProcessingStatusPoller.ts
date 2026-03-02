@@ -110,7 +110,7 @@ export function createProcessingStatusPoller<T>({
       }
       setState(state === "reconnecting" ? "polling" : state);
       schedule();
-    } catch (error) {
+    } catch {
       if (stopped) return;
       onError?.(error);
       if (!shouldPause()) {

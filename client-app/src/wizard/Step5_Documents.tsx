@@ -175,7 +175,7 @@ export function Step5_Documents() {
       if (!lenderProducts.length) {
         try {
           lenderProducts = await ProductSync.sync();
-        } catch (error) {
+        } catch {
         }
       }
       const matchingProducts = filterProductsForApplicant(
@@ -205,7 +205,7 @@ export function Step5_Documents() {
         try {
           const status = await ClientAppAPI.status(app.applicationToken!);
           cachedFromStatus = extractRequiredDocumentsFromStatus(status.data);
-        } catch (error) {
+        } catch {
         }
         const merged = cachedFromStatus
           ? ensureAlwaysRequiredDocuments(
@@ -271,7 +271,7 @@ export function Step5_Documents() {
             : app.productRequirements,
         });
       })
-      .catch((error) => {
+      .catch(() => {
       });
   }, [
     app.applicationToken!,
@@ -373,7 +373,7 @@ export function Step5_Documents() {
       trackEvent("document_uploaded", { category: docType });
       trackEvent("client_document_uploaded", { documentType: docType });
       track("document_uploaded", { documentType: docType });
-    } catch (error) {
+    } catch {
       setDocErrors((prev) => ({
         ...prev,
         [docType]: "Document upload failed. Please try again.",
@@ -416,7 +416,7 @@ export function Step5_Documents() {
       });
       track("step_completed", { step: 5, deferred: true });
       navigate("/apply/step-6");
-    } catch (error) {
+    } catch {
       setDocError("Couldn't defer documents. Please try again.");
     }
   }

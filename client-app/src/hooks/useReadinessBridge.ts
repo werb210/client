@@ -2,10 +2,12 @@ import { useEffect } from "react";
 import { apiRequest } from "@/services/api";
 
 
+type ReadinessSetter = (value: unknown) => void;
+
 export function useReadinessBridge(
-  setStep1: Function,
-  setStep3: Function,
-  setStep4: Function
+  setStep1: ReadinessSetter,
+  setStep3: ReadinessSetter,
+  setStep4: ReadinessSetter
 ) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

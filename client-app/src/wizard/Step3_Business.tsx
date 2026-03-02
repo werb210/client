@@ -166,7 +166,7 @@ export function Step3_Business() {
       }
       await persistApplicationStep(app, 3, { business: values });
       setSaveError(null);
-    } catch (error) {
+    } catch {
       setSaveError("We couldn't save your business details. Please try again.");
       return;
     }

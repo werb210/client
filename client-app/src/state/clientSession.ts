@@ -44,7 +44,7 @@ function parseJwtExpiry(token: string): number | null {
     if (payload && typeof payload.exp === "number") {
       return payload.exp * 1000;
     }
-  } catch (error) {
+  } catch {
   }
   return null;
 }
@@ -81,7 +81,7 @@ function loadSessions(): ClientSession[] {
       .map((entry) => normalizeSession(entry))
       .filter((entry): entry is ClientSession => entry !== null);
     return cachedSessions;
-  } catch (error) {
+  } catch {
     cachedSessions = [];
     return cachedSessions;
   }
@@ -91,7 +91,7 @@ function saveSessions(next: ClientSession[]) {
   cachedSessions = next;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  } catch (error) {
+  } catch {
   }
   notify();
 }
@@ -201,7 +201,7 @@ export function setActiveClientSessionToken(token: string) {
   if (typeof sessionStorage === "undefined") return;
   try {
     sessionStorage.setItem(ACTIVE_SESSION_KEY, token);
-  } catch (error) {
+  } catch {
   }
 }
 
@@ -209,7 +209,7 @@ export function clearActiveClientSessionToken() {
   if (typeof sessionStorage === "undefined") return;
   try {
     sessionStorage.removeItem(ACTIVE_SESSION_KEY);
-  } catch (error) {
+  } catch {
   }
 }
 
@@ -217,7 +217,7 @@ export function getActiveClientSessionToken() {
   if (typeof sessionStorage === "undefined") return "";
   try {
     return sessionStorage.getItem(ACTIVE_SESSION_KEY) || "";
-  } catch (error) {
+  } catch {
     return "";
   }
 }
