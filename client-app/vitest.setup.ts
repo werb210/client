@@ -43,10 +43,14 @@ const sessionStorageMock = (() => {
 
 Object.defineProperty(globalThis, "localStorage", {
   value: storageMock,
+  writable: true,
+  configurable: true,
 });
 
 Object.defineProperty(globalThis, "sessionStorage", {
   value: sessionStorageMock,
+  writable: true,
+  configurable: true,
 });
 
 class BlockedXMLHttpRequest {

@@ -60,7 +60,7 @@ export async function apiRequest<T>(url: string, options: RequestInit = {}): Pro
     } catch {
       throw new ApiError("Invalid JSON response");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (error instanceof ApiError) {
       throw error;
     }

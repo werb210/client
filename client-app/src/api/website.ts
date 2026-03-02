@@ -20,7 +20,7 @@ const READINESS_TOKEN_KEY = "boreal_readiness_token";
 export const READINESS_SESSION_ID_KEY = "boreal_readiness_session_id";
 const SESSION_ID_QUERY_PARAM = "sessionId";
 const TOKEN_QUERY_PARAM = "token";
-const readinessInFlight = new Map<string, Promise<unknown>>();
+let readinessInFlight: Promise<unknown> | null = null;
 let contactInFlight: Promise<unknown> | null = null;
 
 const MAX_REQUEST_ATTEMPTS = 2;
@@ -96,10 +96,8 @@ function saveCache(storageKey: string, cache: Record<string, unknown>) {
 
 export async function submitCreditReadiness(payload: CreditReadinessPayload) {
   const key = dedupKey(payload);
-  const inFlightKey = key === "::" ? "__default__" : key;
-  const existing = readinessInFlight.get(inFlightKey);
-  if (existing) {
-    return existing;
+  if (readinessInFlight) {
+    return readinessInFlight;
   }
 
   if (key !== "::") {
@@ -142,12 +140,12 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
     } catch (error) {
       throw error;
     } finally {
-      readinessInFlight.delete(inFlightKey);
+      readinessInFlight = null;
     }
   })();
 
-  readinessInFlight.set(inFlightKey, request);
-  return request;
+  readinessInFlight = request;
+  return readinessInFlight;
 }
 
 export async function submitContactForm(payload: {
