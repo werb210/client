@@ -1,13 +1,13 @@
 export type DocumentStatus = "missing" | "uploaded" | "accepted" | "rejected";
 
-export function resolveDocumentStatus(entry: any): DocumentStatus {
+export function resolveDocumentStatus(entry: unknown): DocumentStatus {
   if (!entry) return "missing";
   if (entry.status === "accepted") return "accepted";
   if (entry.status === "rejected") return "rejected";
   return "uploaded";
 }
 
-export function getRejectionMessage(entry: any) {
+export function getRejectionMessage(entry: unknown) {
   if (!entry || entry.status !== "rejected") return "";
   const reason =
     entry.rejection_reason || entry.rejectionReason || entry.reason || "";

@@ -14,7 +14,7 @@ export function normalizeRequirementList(
   if (!Array.isArray(raw)) return [];
 
   return raw
-    .map((entry: any) => {
+    .map((entry: unknown) => {
       if (typeof entry === "string") {
         const trimmed = entry.trim();
         if (!trimmed) return null;

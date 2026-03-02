@@ -16,7 +16,7 @@ const baseProps = {
   uploadState: {},
 };
 
-function renderPortal(documents: any[]) {
+function renderPortal(documents: unknown[]) {
   return renderToStaticMarkup(
     <ApplicationPortalView {...baseProps} documents={documents} />
   );

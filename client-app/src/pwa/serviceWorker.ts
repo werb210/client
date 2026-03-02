@@ -25,7 +25,6 @@ function shouldReloadForUpdate() {
   try {
     return window.sessionStorage.getItem(UPDATE_RELOAD_KEY) !== "true";
   } catch (error) {
-    console.warn("Failed to access session storage:", error);
     return true;
   }
 }
@@ -34,7 +33,6 @@ function markReloaded() {
   try {
     window.sessionStorage.setItem(UPDATE_RELOAD_KEY, "true");
   } catch (error) {
-    console.warn("Failed to mark update reload:", error);
   }
 }
 
@@ -42,7 +40,6 @@ function clearReloadMarker() {
   try {
     window.sessionStorage.removeItem(UPDATE_RELOAD_KEY);
   } catch (error) {
-    console.warn("Failed to clear update reload marker:", error);
   }
 }
 
@@ -83,7 +80,6 @@ export function registerServiceWorker() {
         });
         resolve(registration ?? null);
       } catch (error) {
-        console.warn("Service worker registration failed:", error);
         resolve(null);
       }
     };

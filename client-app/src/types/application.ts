@@ -12,14 +12,14 @@ export type SelectedProduct = {
 };
 
 export interface ApplicationData {
-  kyc: any;
+  kyc: unknown;
   productCategory: string | null;
   matchPercentages: Record<string, number>;
   eligibleProducts: NormalizedLenderProduct[];
   eligibleCategories: EligibilityCategorySummary[];
   eligibilityReasons: EligibilityReasonSummary[];
-  business: any;
-  applicant: any;
+  business: unknown;
+  applicant: unknown;
   documents: Record<
     string,
     {

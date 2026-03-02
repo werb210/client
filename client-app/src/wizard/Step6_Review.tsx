@@ -175,7 +175,6 @@ export function Step6_Review() {
         });
       })
       .catch((error) => {
-        console.error("Failed to refresh application status:", error);
       });
   }, [app.applicationToken!, update]);
 
@@ -562,7 +561,6 @@ export function Step6_Review() {
       setDocErrors((prev) => ({ ...prev, [docType]: "" }));
       track("document_uploaded");
     } catch (error) {
-      console.error("ID upload failed:", error);
       setDocErrors((prev) => ({
         ...prev,
         [docType]: "ID upload failed. Please try again.",
@@ -602,7 +600,7 @@ export function Step6_Review() {
                       id={`id-doc-${entry.key}`}
                       type="file"
                       style={{ display: "none" }}
-                      onChange={(e: any) =>
+                      onChange={(e: unknown) =>
                         handleIdUpload(entry.key, e.target.files?.[0] || null)
                       }
                     />
@@ -693,7 +691,7 @@ export function Step6_Review() {
             <Input
               placeholder="Type your full legal name"
               value={app.typedSignature || ""}
-              onChange={(e: any) => update({ typedSignature: e.target.value })}
+              onChange={(e: unknown) => update({ typedSignature: e.target.value })}
             />
             <p style={components.form.helperText}>
               By typing your name, you are providing a legally binding signature.
@@ -706,7 +704,7 @@ export function Step6_Review() {
               <Input
                 placeholder="Type full legal name"
                 value={app.coApplicantSignature || ""}
-                onChange={(e: any) =>
+                onChange={(e: unknown) =>
                   update({ coApplicantSignature: e.target.value })
                 }
               />

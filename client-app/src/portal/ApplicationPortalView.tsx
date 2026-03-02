@@ -43,14 +43,14 @@ export function normalizeDocumentsResponse(
   if (!data) return [];
   const source = Array.isArray(data)
     ? data
-    : Array.isArray((data as any)?.documents)
-      ? (data as any).documents
-      : Array.isArray((data as any)?.document_categories)
-        ? (data as any).document_categories
+    : Array.isArray((data as unknown)?.documents)
+      ? (data as unknown).documents
+      : Array.isArray((data as unknown)?.document_categories)
+        ? (data as unknown).document_categories
         : [];
 
   return source
-    .map((entry: any) => normalizeDocumentEntry(entry))
+    .map((entry: unknown) => normalizeDocumentEntry(entry))
     .filter(
       (
         entry: ApplicationDocumentCategory | null
@@ -59,7 +59,7 @@ export function normalizeDocumentsResponse(
 }
 
 function normalizeDocumentEntry(
-  entry: any
+  entry: unknown
 ): ApplicationDocumentCategory | null {
   if (!entry) return null;
   const rawCategory =

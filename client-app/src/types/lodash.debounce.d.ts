@@ -1,5 +1,5 @@
 declare module "lodash.debounce" {
-  export default function debounce<T extends (...args: any[]) => any>(
+  export default function debounce<T extends (...args: unknown[]) => unknown>(
     func: T,
     wait?: number,
     options?: {

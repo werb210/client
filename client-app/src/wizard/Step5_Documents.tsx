@@ -176,7 +176,6 @@ export function Step5_Documents() {
         try {
           lenderProducts = await ProductSync.sync();
         } catch (error) {
-          console.error("Failed to refresh lender products:", error);
         }
       }
       const matchingProducts = filterProductsForApplicant(
@@ -207,7 +206,6 @@ export function Step5_Documents() {
           const status = await ClientAppAPI.status(app.applicationToken!);
           cachedFromStatus = extractRequiredDocumentsFromStatus(status.data);
         } catch (error) {
-          console.error("Failed to load required documents:", error);
         }
         const merged = cachedFromStatus
           ? ensureAlwaysRequiredDocuments(
@@ -274,7 +272,6 @@ export function Step5_Documents() {
         });
       })
       .catch((error) => {
-        console.error("Failed to refresh document status:", error);
       });
   }, [
     app.applicationToken!,
@@ -377,7 +374,6 @@ export function Step5_Documents() {
       trackEvent("client_document_uploaded", { documentType: docType });
       track("document_uploaded", { documentType: docType });
     } catch (error) {
-      console.error("Document upload failed:", error);
       setDocErrors((prev) => ({
         ...prev,
         [docType]: "Document upload failed. Please try again.",
@@ -421,7 +417,6 @@ export function Step5_Documents() {
       track("step_completed", { step: 5, deferred: true });
       navigate("/apply/step-6");
     } catch (error) {
-      console.error("Failed to defer documents:", error);
       setDocError("Couldn't defer documents. Please try again.");
     }
   }
@@ -499,7 +494,7 @@ export function Step5_Documents() {
                       id={`doc-${entry.id}`}
                       type="file"
                       style={{ display: "none" }}
-                      onChange={(e: any) =>
+                      onChange={(e: unknown) =>
                         handleFile(docType, e.target.files?.[0] || null)
                       }
                     />

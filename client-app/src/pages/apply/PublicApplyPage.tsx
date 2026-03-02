@@ -565,7 +565,7 @@ export async function handlePublicApplicationSubmit({
     });
     clearDraft();
     onSuccess();
-  } catch (error: any) {
+  } catch (error: unknown) {
     unlockSubmission(resolvedLockStorage);
     const responseData = error?.response?.data;
     const serverErrors =
@@ -945,7 +945,7 @@ export default function PublicApplyPage() {
         >
           <h2 style={{ fontSize: 18, fontWeight: 600 }}>Document uploads</h2>
           <p style={{ color: "rgb(75 85 99)" }}>
-            After submitting, we’ll request any documents needed to complete your
+            After submitting, we’ll request unknown documents needed to complete your
             review. You’ll be notified when uploads are ready.
           </p>
         </section>

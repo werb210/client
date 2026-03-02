@@ -19,7 +19,7 @@ export function useDocumentRejectionNotifications({
   delayMs = DEFAULT_NOTIFICATION_DELAY_MS,
 }: {
   token: string | null;
-  documents: any;
+  documents: unknown;
   onNotify: NotificationHandler;
   delayMs?: number;
 }) {

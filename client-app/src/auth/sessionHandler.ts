@@ -8,7 +8,7 @@ function isAuthError(status?: number) {
   return status === 401 || status === 403 || status === 419;
 }
 
-export async function handleAuthError(error: any) {
+export async function handleAuthError(error: unknown) {
   const status = error?.response?.status;
   if (!isAuthError(status)) {
     return Promise.reject(error);

@@ -93,7 +93,7 @@ const api = {
     });
     return { data };
   },
-  post: async <T>(url: string, body?: any, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
+  post: async <T>(url: string, body?: unknown, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
     const { timeout: _timeout, ...requestOptions } = options;
     const data = await apiRequest<T>(url, {
       ...requestOptions,
@@ -102,7 +102,7 @@ const api = {
     });
     return { data };
   },
-  patch: async <T>(url: string, body?: any, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
+  patch: async <T>(url: string, body?: unknown, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
     const { timeout: _timeout, ...requestOptions } = options;
     const data = await apiRequest<T>(url, {
       ...requestOptions,
@@ -115,7 +115,7 @@ const api = {
 
 export default api;
 
-export const createLead = async (payload: any) => {
+export const createLead = async (payload: unknown) => {
   const res = await fetch(buildApiUrl("/api/crm/lead"), {
     method: "POST",
     headers: {

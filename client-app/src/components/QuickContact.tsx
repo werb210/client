@@ -21,7 +21,7 @@ export default function QuickContact() {
     try {
       await submitContactForm(form);
       setSuccess(true);
-    } catch (submitError: any) {
+    } catch (submitError: unknown) {
       setError(submitError?.message || "Submission failed. Please try again.");
     } finally {
       setSubmitting(false);

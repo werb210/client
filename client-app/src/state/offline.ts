@@ -1,11 +1,10 @@
 const KEY = "boreal_app_cache";
 
 export const OfflineStore = {
-  save(data: any) {
+  save(data: unknown) {
     try {
       localStorage.setItem(KEY, JSON.stringify(data));
     } catch (error) {
-      console.warn("Failed to save offline cache:", error);
     }
   },
   load() {
@@ -15,7 +14,6 @@ export const OfflineStore = {
       if (parsed && typeof parsed === "object") return parsed;
       return null;
     } catch (error) {
-      console.warn("Failed to load offline cache:", error);
       localStorage.removeItem(KEY);
       return null;
     }
@@ -24,7 +22,6 @@ export const OfflineStore = {
     try {
       localStorage.removeItem(KEY);
     } catch (error) {
-      console.warn("Failed to clear offline cache:", error);
     }
   },
 };

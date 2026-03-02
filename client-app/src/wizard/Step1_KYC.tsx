@@ -379,7 +379,7 @@ fixedAssets:
     stepFields.includes("accountsReceivable");
   const shouldShowFixedAssets = stepFields.includes("fixedAssets");
 
-  function getStepErrors(values: Record<string, any>) {
+  function getStepErrors(values: Record<string, unknown>) {
     return {
       lookingFor: !Validate.required(values.lookingFor),
       fundingAmount: !Validate.required(values.fundingAmount),
@@ -444,7 +444,7 @@ fixedAssets:
 
   const handleAutoAdvance = (
     currentKey: string,
-    nextValues: Record<string, any>
+    nextValues: Record<string, unknown>
   ) => {
     const context = { kyc: nextValues };
     const nextKey = getNextFieldKey("step1", currentKey, context);
@@ -549,7 +549,7 @@ fixedAssets:
               <Select
                 id={getWizardFieldId("step1", "lookingFor")}
                 value={normalizeFundingIntent(app.kyc.lookingFor) || ""}
-                onChange={(e: any) => {
+                onChange={(e: unknown) => {
                   const nextIntent = normalizeFundingIntent(e.target.value);
                   const nextKyc = { ...app.kyc, lookingFor: nextIntent };
                   update({
@@ -584,7 +584,7 @@ fixedAssets:
                 id={getWizardFieldId("step1", "fundingAmount")}
                 inputMode="decimal"
                 value={app.kyc.fundingAmount || ""}
-                onChange={(e: any) => {
+                onChange={(e: unknown) => {
                   const nextKyc = {
                     ...app.kyc,
                     fundingAmount: sanitizeCurrencyInput(e.target.value),
@@ -611,7 +611,7 @@ fixedAssets:
                   update({ kyc: nextKyc });
                   handleAutoAdvance("fundingAmount", nextKyc);
                 }}
-                onKeyDown={(e: any) => {
+                onKeyDown={(e: unknown) => {
                   if (e.key === "Enter") {
                     const nextKyc = {
                       ...app.kyc,
@@ -637,7 +637,7 @@ fixedAssets:
               <Select
                 id={getWizardFieldId("step1", "businessLocation")}
                 value={app.kyc.businessLocation || ""}
-                onChange={(e: any) => {
+                onChange={(e: unknown) => {
                   const value = e.target.value;
                   const nextKyc = { ...app.kyc, businessLocation: value };
                   update({
@@ -725,7 +725,7 @@ fixedAssets:
               <Select
                 id={getWizardFieldId("step1", "purposeOfFunds")}
                 value={app.kyc.purposeOfFunds || ""}
-                onChange={(e: any) => {
+                onChange={(e: unknown) => {
                   const nextKyc = { ...app.kyc, purposeOfFunds: e.target.value };
                   update({ kyc: nextKyc });
                   handleAutoAdvance("purposeOfFunds", nextKyc);
@@ -749,7 +749,7 @@ fixedAssets:
               <Select
                 id={getWizardFieldId("step1", "salesHistory")}
                 value={app.kyc.yearsInBusiness || app.kyc.salesHistory || ""}
-                onChange={(e: any) => {
+                onChange={(e: unknown) => {
                   const nextKyc = {
                     ...app.kyc,
                     yearsInBusiness: e.target.value,
@@ -776,7 +776,7 @@ fixedAssets:
               <Select
                 id={getWizardFieldId("step1", "revenueLast12Months")}
                 value={app.kyc.annualRevenue || app.kyc.revenueLast12Months || ""}
-                onChange={(e: any) => {
+                onChange={(e: unknown) => {
                   const nextKyc = {
                     ...app.kyc,
                     annualRevenue: e.target.value,
@@ -805,7 +805,7 @@ fixedAssets:
               <Select
                 id={getWizardFieldId("step1", "monthlyRevenue")}
                 value={app.kyc.monthlyRevenue || ""}
-                onChange={(e: any) => {
+                onChange={(e: unknown) => {
                   const nextKyc = { ...app.kyc, monthlyRevenue: e.target.value };
                   update({ kyc: nextKyc });
                   handleAutoAdvance("monthlyRevenue", nextKyc);
@@ -829,7 +829,7 @@ fixedAssets:
                 <Select
                   id={getWizardFieldId("step1", "accountsReceivable")}
                   value={app.kyc.arBalance || app.kyc.accountsReceivable || ""}
-                  onChange={(e: any) => {
+                  onChange={(e: unknown) => {
                     const nextKyc = {
                       ...app.kyc,
                       arBalance: e.target.value,
@@ -870,7 +870,7 @@ fixedAssets:
                 <Select
                   id={getWizardFieldId("step1", "fixedAssets")}
                   value={app.kyc.availableCollateral || app.kyc.fixedAssets || ""}
-                  onChange={(e: any) => {
+                  onChange={(e: unknown) => {
                     const nextKyc = {
                       ...app.kyc,
                       availableCollateral: e.target.value,

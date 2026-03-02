@@ -2,13 +2,13 @@ import { api } from "../api/client";
 import { OfflineStore } from "../state/offline";
 
 export const ProductSync = {
-  load(): any[] {
+  load(): unknown[] {
     const cached = OfflineStore.load();
     if (cached?.lenderProducts) return cached.lenderProducts;
     return [];
   },
 
-  save(products: any[]) {
+  save(products: unknown[]) {
     const existing = OfflineStore.load() || {};
     OfflineStore.save({
       ...existing,

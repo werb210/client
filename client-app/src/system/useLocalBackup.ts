@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 const BACKUP_KEY = "client_backup";
 
-export function useLocalBackup(appState: any) {
+export function useLocalBackup(appState: unknown) {
   useEffect(() => {
     localStorage.setItem(BACKUP_KEY, JSON.stringify(appState));
   }, [appState]);

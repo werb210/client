@@ -2,7 +2,7 @@ import { normalizeRequirementList } from "../wizard/requirements";
 import type { LenderProductRequirement } from "../wizard/requirements";
 
 export function extractRequiredDocumentsFromStatus(
-  status: any
+  status: unknown
 ): LenderProductRequirement[] | null {
   const raw =
     status?.requiredDocuments ||

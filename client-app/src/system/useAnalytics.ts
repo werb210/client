@@ -1,6 +1,6 @@
-export function trackEvent(name: string, data?: any) {
-  if ((window as any).dataLayer) {
-    (window as any).dataLayer.push({
+export function trackEvent(name: string, data?: unknown) {
+  if ((window as unknown).dataLayer) {
+    (window as unknown).dataLayer.push({
       event: name,
       ...data,
     });
@@ -8,8 +8,8 @@ export function trackEvent(name: string, data?: any) {
   }
 
   if (typeof window !== "undefined") {
-    (window as any).dataLayer = [];
-    (window as any).dataLayer.push({
+    (window as unknown).dataLayer = [];
+    (window as unknown).dataLayer.push({
       event: name,
       ...data,
     });

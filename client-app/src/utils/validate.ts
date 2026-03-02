@@ -1,13 +1,13 @@
 export const Validate = {
-  required(value: any) {
+  required(value: unknown) {
     return value !== null && value !== undefined && value !== "";
   },
 
-  number(value: any) {
+  number(value: unknown) {
     return !isNaN(Number(value));
   },
 
-  positive(value: any) {
+  positive(value: unknown) {
     return Number(value) > 0;
   },
 

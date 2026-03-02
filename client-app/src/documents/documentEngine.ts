@@ -1,4 +1,4 @@
-export function buildRequiredDocumentList(matchingProducts: any[]) {
+export function buildRequiredDocumentList(matchingProducts: unknown[]) {
   const docs = new Set<string>();
 
   // Always required

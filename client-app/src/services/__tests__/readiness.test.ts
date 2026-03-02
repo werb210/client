@@ -33,7 +33,7 @@ describe("readiness service", () => {
       }),
     });
 
-    const readiness = await fetchReadinessContext("lead-1", fetchMock as any);
+    const readiness = await fetchReadinessContext("lead-1", fetchMock as unknown);
     expect(readiness).toEqual({
       leadId: "lead-1",
       companyName: "Boreal Inc",
@@ -51,7 +51,7 @@ describe("readiness service", () => {
 
   it("falls back safely when readiness fetch fails", async () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error("network"));
-    const readiness = await fetchReadinessContext("lead-1", fetchMock as any);
+    const readiness = await fetchReadinessContext("lead-1", fetchMock as unknown);
     expect(readiness).toBeNull();
   });
 });

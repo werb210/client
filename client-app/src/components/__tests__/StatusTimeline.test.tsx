@@ -10,7 +10,7 @@ function flattenText(element: ReactElement): string {
     : [element.props.children];
   return children
     .filter(Boolean)
-    .map((child: any) =>
+    .map((child: unknown) =>
       typeof child === "object" ? flattenText(child as ReactElement) : String(child)
     )
     .join(" ");

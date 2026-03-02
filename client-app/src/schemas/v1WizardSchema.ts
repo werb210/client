@@ -193,7 +193,6 @@ export function enforceV1StepSchema(
         : step4Schema.safeParse(toStep4SchemaInput(values));
 
   if (!parsed.success) {
-    console.error("V1 schema violation", step, parsed.error.flatten());
     throw parsed.error;
   }
 

@@ -26,7 +26,7 @@ export function normalizeSubmissionStatus(rawStatus: unknown): SubmissionStatus 
   return "unknown";
 }
 
-export function mapSubmissionStatus(payload: any): SubmissionStatusSnapshot {
+export function mapSubmissionStatus(payload: unknown): SubmissionStatusSnapshot {
   const rawStatus = payload?.status ?? null;
   const updatedAt = payload?.updated_at ?? payload?.updatedAt ?? null;
   return {
@@ -47,7 +47,6 @@ export function loadSubmissionStatusCache(
     if (!parsed || typeof parsed !== "object") return null;
     return parsed;
   } catch (error) {
-    console.warn("Failed to load submission status cache:", error);
     return null;
   }
 }
@@ -60,7 +59,6 @@ export function saveSubmissionStatusCache(
   try {
     localStorage.setItem(getCacheKey(key), JSON.stringify(snapshot));
   } catch (error) {
-    console.warn("Failed to save submission status cache:", error);
   }
 }
 
@@ -72,6 +70,6 @@ export async function fetchSubmissionStatus(applicationId: string) {
     "GET /api/portal/applications/{id}"
   );
   const submission =
-    (parsed as any)?.submission ?? (parsed as any)?.data?.submission ?? (parsed as any)?.data ?? {};
+    (parsed as unknown)?.submission ?? (parsed as unknown)?.data?.submission ?? (parsed as unknown)?.data ?? {};
   return mapSubmissionStatus(submission);
 }

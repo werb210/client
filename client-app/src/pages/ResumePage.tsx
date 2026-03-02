@@ -8,7 +8,7 @@ import { components, layout, tokens } from "@/styles";
 
 export function ResumePage() {
   const { resume } = useResumeApplication();
-  const [info, setInfo] = useState<any>(null);
+  const [info, setInfo] = useState<unknown>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
