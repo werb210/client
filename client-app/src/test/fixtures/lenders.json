@@ -1,0 +1,8 @@
+[
+  {
+    "id": "lender-001",
+    "name": "Deterministic Capital",
+    "aprMin": 0.07,
+    "aprMax": 0.12
+  }
+]
