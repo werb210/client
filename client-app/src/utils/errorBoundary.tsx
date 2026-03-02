@@ -6,7 +6,7 @@ export class ErrorBoundary extends Component<
   { children: ReactNode },
   { hasError: boolean }
 > {
-  constructor(props: any) {
+  constructor(props: unknown) {
     super(props);
     this.state = { hasError: false };
   }
@@ -15,8 +15,7 @@ export class ErrorBoundary extends Component<
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, info: any) {
-    console.error("Application error boundary caught an error.", error, info);
+  componentDidCatch(error: Error, info: unknown) {
   }
 
   render() {

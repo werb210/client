@@ -62,7 +62,7 @@ export function AddressAutocompleteInput({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const google = (window as any)?.google;
+    const google = (window as unknown)?.google;
     if (!google?.maps?.places || !inputRef.current) return;
 
     const autocomplete = new google.maps.places.Autocomplete(inputRef.current, {

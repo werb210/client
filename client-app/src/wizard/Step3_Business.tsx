@@ -110,7 +110,7 @@ export function Step3_Business() {
     }
   }, [update, values]);
 
-  function setField(key: string, value: any) {
+  function setField(key: string, value: unknown) {
     update({ business: { ...values, [key]: value } });
   }
 
@@ -167,7 +167,6 @@ export function Step3_Business() {
       await persistApplicationStep(app, 3, { business: values });
       setSaveError(null);
     } catch (error) {
-      console.error("Failed to save business details:", error);
       setSaveError("We couldn't save your business details. Please try again.");
       return;
     }
@@ -271,7 +270,7 @@ export function Step3_Business() {
             <Input
               id={getWizardFieldId("step3", "companyName")}
               value={values.companyName || ""}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const companyName = e.target.value;
                 const nextValues = {
                   ...values,
@@ -282,7 +281,7 @@ export function Step3_Business() {
                 update({ business: nextValues });
               }}
               disabled={isCompanyNameLocked}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("companyName", values);
                 }
@@ -295,9 +294,9 @@ export function Step3_Business() {
             <Input
               id={getWizardFieldId("step3", "businessName")}
               value={values.businessName || ""}
-              onChange={(e: any) => setField("businessName", e.target.value)}
+              onChange={(e: unknown) => setField("businessName", e.target.value)}
               disabled={isBusinessNameLocked}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("businessName", values);
                 }
@@ -310,9 +309,9 @@ export function Step3_Business() {
             <Input
               id={getWizardFieldId("step3", "legalName")}
               value={values.legalName || ""}
-              onChange={(e: any) => setField("legalName", e.target.value)}
+              onChange={(e: unknown) => setField("legalName", e.target.value)}
               disabled={isLegalNameLocked}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("legalName", values);
                 }
@@ -325,7 +324,7 @@ export function Step3_Business() {
             <Select
               id={getWizardFieldId("step3", "businessStructure")}
               value={values.businessStructure || ""}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const nextValues = {
                   ...values,
                   businessStructure: e.target.value,
@@ -350,7 +349,7 @@ export function Step3_Business() {
               id={getWizardFieldId("step3", "address")}
               country={regionCountry}
               value={values.address || ""}
-              onChange={(e: any) => setField("address", e.target.value)}
+              onChange={(e: unknown) => setField("address", e.target.value)}
               onSelect={(selection) => {
                 if (!("street" in selection)) return;
                 const nextValues = {
@@ -368,7 +367,7 @@ export function Step3_Business() {
                   handleAutoAdvance("address", nextValues, true);
                 }
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("address", values);
                 }
@@ -381,8 +380,8 @@ export function Step3_Business() {
             <Input
               id={getWizardFieldId("step3", "city")}
               value={values.city || ""}
-              onChange={(e: any) => setField("city", e.target.value)}
-              onKeyDown={(e: any) => {
+              onChange={(e: unknown) => setField("city", e.target.value)}
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("city", values);
                 }
@@ -407,14 +406,14 @@ export function Step3_Business() {
             <Input
               id={getWizardFieldId("step3", "zip")}
               value={formatPostalCode(values.zip || "", countryCode)}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const nextValues = {
                   ...values,
                   zip: formatPostalCode(e.target.value, countryCode),
                 };
                 update({ business: nextValues });
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("zip", values);
                 }
@@ -427,7 +426,7 @@ export function Step3_Business() {
             <PhoneInput
               id={getWizardFieldId("step3", "phone")}
               value={formatPhoneNumber(values.phone || "", countryCode)}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const nextValues = {
                   ...values,
                   phone: formatPhoneNumber(e.target.value, countryCode),
@@ -436,7 +435,7 @@ export function Step3_Business() {
               }}
               disabled={isBusinessPhoneLocked}
               onBlur={() => handleAutoAdvance("phone", values)}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("phone", values);
                 }
@@ -451,8 +450,8 @@ export function Step3_Business() {
               id={getWizardFieldId("step3", "website")}
               type="url"
               value={values.website || ""}
-              onChange={(e: any) => setField("website", e.target.value)}
-              onKeyDown={(e: any) => {
+              onChange={(e: unknown) => setField("website", e.target.value)}
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("website", values);
                 }
@@ -467,8 +466,8 @@ export function Step3_Business() {
               id={getWizardFieldId("step3", "startDate")}
               type="date"
               value={values.startDate || ""}
-              onChange={(e: any) => setField("startDate", e.target.value)}
-              onKeyDown={(e: any) => {
+              onChange={(e: unknown) => setField("startDate", e.target.value)}
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("startDate", values);
                 }
@@ -507,8 +506,8 @@ export function Step3_Business() {
                 min="0"
                 style={{ textAlign: "center" }}
                 value={values.employees ?? ""}
-                onChange={(e: any) => setField("employees", e.target.value)}
-                onKeyDown={(e: any) => {
+                onChange={(e: unknown) => setField("employees", e.target.value)}
+                onKeyDown={(e: unknown) => {
                   if (e.key === "Enter") {
                     handleAutoAdvance("employees", values);
                   }
@@ -542,7 +541,7 @@ export function Step3_Business() {
               id={getWizardFieldId("step3", "estimatedRevenue")}
               inputMode="decimal"
               value={values.estimatedRevenue || ""}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const nextValues = {
                   ...values,
                   estimatedRevenue: sanitizeCurrencyInput(e.target.value),
@@ -561,7 +560,7 @@ export function Step3_Business() {
                 update({ business: nextValues });
                 handleAutoAdvance("estimatedRevenue", nextValues);
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   const nextValues = {
                     ...values,

@@ -26,9 +26,9 @@ export interface ReadinessBridgePayload {
   sessionToken?: string;
   leadId?: string;
   readinessLeadId?: string;
-  step1?: Record<string, any>;
-  step3?: Record<string, any>;
-  step4?: Record<string, any>;
+  step1?: Record<string, unknown>;
+  step3?: Record<string, unknown>;
+  step4?: Record<string, unknown>;
 }
 
 export interface ContinuationSessionResponse {
@@ -40,14 +40,14 @@ export interface ContinuationSessionResponse {
 }
 
 
-function pickNumber(...values: Array<any>): number | undefined {
+function pickNumber(...values: Array<unknown>): number | undefined {
   for (const value of values) {
     if (typeof value === "number" && Number.isFinite(value)) return value;
   }
   return undefined;
 }
 
-function pickBoolean(...values: Array<any>): boolean | undefined {
+function pickBoolean(...values: Array<unknown>): boolean | undefined {
   for (const value of values) {
     if (typeof value === "boolean") return value;
   }

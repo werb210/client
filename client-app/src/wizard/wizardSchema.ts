@@ -11,9 +11,9 @@ export type WizardFieldMeta = {
 };
 
 export type WizardSchemaContext = {
-  kyc?: Record<string, any>;
-  business?: Record<string, any>;
-  applicant?: Record<string, any>;
+  kyc?: Record<string, unknown>;
+  business?: Record<string, unknown>;
+  applicant?: Record<string, unknown>;
 };
 
 const isAccountsReceivableIntent = (intent?: string) => {

@@ -3,7 +3,6 @@ import { apiRequest } from "@/services/api";
 
 export function track(event: string) {
   if (import.meta.env.DEV) {
-    console.info("Analytics:", event);
   }
 }
 
@@ -66,7 +65,7 @@ export const getClientAttribution = () => {
 
 export const trackEvent = (
   eventName: string,
-  payload: Record<string, any> = {}
+  payload: Record<string, unknown> = {}
 ) => {
   if (!hasTrackingConsent()) return;
 
@@ -103,14 +102,13 @@ export const trackEvent = (
     }),
   }).catch((err) => {
     if (import.meta.env.DEV) {
-      console.warn("Analytics error", err);
     }
   });
 };
 
 export const trackConversion = (
   eventName: string,
-  payload: Record<string, any> = {}
+  payload: Record<string, unknown> = {}
 ) => {
   if (!hasTrackingConsent()) return;
 

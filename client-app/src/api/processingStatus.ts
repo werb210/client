@@ -13,10 +13,10 @@ type RawProcessingCheckpoint = {
   requiredCount?: number | null;
   statementCount?: number | null;
   requiredStatements?: number | null;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
-function normalizeStatus(value: any): ProcessingStatus["documentReview"]["status"] {
+function normalizeStatus(value: unknown): ProcessingStatus["documentReview"]["status"] {
   const normalized = String(value || "").toLowerCase();
   if (normalized === "completed" || normalized === "complete") return "completed";
   if (normalized === "processing" || normalized === "in_progress") return "processing";
@@ -32,24 +32,24 @@ function normalizeCheckpoint(raw?: RawProcessingCheckpoint | null) {
       receivedCount:
         (raw?.receivedCount ??
           raw?.statementCount ??
-          (raw as any)?.received_count ??
+          (raw as unknown)?.received_count ??
           null) as number | null,
       requiredCount:
         (raw?.requiredCount ??
           raw?.requiredStatements ??
-          (raw as any)?.required_count ??
+          (raw as unknown)?.required_count ??
           null) as number | null,
     },
   };
 }
 
-function isCheckpointLike(value: any): value is RawProcessingCheckpoint {
+function isCheckpointLike(value: unknown): value is RawProcessingCheckpoint {
   if (!value || typeof value !== "object") return false;
   const status = (value as RawProcessingCheckpoint).status;
   return typeof status === "string";
 }
 
-function extractCheckpointCandidates(source: any): RawProcessingCheckpoint[] {
+function extractCheckpointCandidates(source: unknown): RawProcessingCheckpoint[] {
   if (!source || typeof source !== "object") return [];
   if (Array.isArray(source.steps)) {
     return source.steps.filter(isCheckpointLike);
@@ -70,7 +70,7 @@ export async function fetchProcessingStatus(
     ProcessingStatusResponseSchema,
     response.data,
     "GET /api/applications/{id}/processing/status"
-  ) as any;
+  ) as unknown;
 
   const documentSource =
     raw?.documentReview ||

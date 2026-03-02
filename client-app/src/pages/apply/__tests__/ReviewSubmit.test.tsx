@@ -34,7 +34,7 @@ describe("ReviewSubmit", () => {
       },
     };
 
-    const element = ReviewSubmit({ state } as any);
+    const element = ReviewSubmit({ state } as unknown);
     const button = findButton(element as ReactElement);
     expect(button).not.toBeNull();
 

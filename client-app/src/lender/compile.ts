@@ -32,7 +32,7 @@ export function filterProductsForCategory(all: LenderProduct[], category: string
   return all.filter((p) => p.category === category);
 }
 
-export function filterProductsForEligibility(all: LenderProduct[], kyc: any) {
+export function filterProductsForEligibility(all: LenderProduct[], kyc: unknown) {
   return all.filter((p) => {
     if (!p.supportedCountries?.includes(kyc.country)) return false;
     if (kyc.amount < p.minAmount) return false;

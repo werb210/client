@@ -6,7 +6,7 @@ type SubmissionStatusLike = {
 };
 
 export function getPipelineStage(
-  status: any,
+  status: unknown,
   submission?: SubmissionStatusLike | null
 ) {
   const documents = status?.documents || status?.application?.documents;
@@ -14,7 +14,7 @@ export function getPipelineStage(
     Array.isArray(documents)
       ? documents.some((doc) => doc?.status === "rejected")
       : documents &&
-        Object.values(documents).some((doc: any) => doc?.status === "rejected");
+        Object.values(documents).some((doc: unknown) => doc?.status === "rejected");
   if (hasRejectedDocuments) return "Requires Documents";
 
   const rawSubmissionStatus =

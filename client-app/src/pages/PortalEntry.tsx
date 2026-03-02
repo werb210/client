@@ -91,12 +91,12 @@ export function PortalEntry() {
             <PhoneInput
               id="portal-phone"
               value={formatPhoneNumber(phone, countryCode)}
-              onChange={(event: any) =>
+              onChange={(event: unknown) =>
                 setPhone(formatPhoneNumber(event.target.value, countryCode))
               }
               placeholder="(555) 555-5555"
               hasError={Boolean(phoneError)}
-              onKeyDown={(event: any) => {
+              onKeyDown={(event: unknown) => {
                 if (event.key === "Enter") {
                   handleSendOtp();
                 }

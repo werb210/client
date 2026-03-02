@@ -24,8 +24,8 @@ export function aggregateRequiredDocuments(
     ? products.filter((product) => {
         const category =
           (product as NormalizedLenderProduct).category ||
-          (product as any).product_type ||
-          (product as any).name ||
+          (product as unknown).product_type ||
+          (product as unknown).name ||
           "";
         return category === categoryNormalized;
       })
@@ -34,7 +34,7 @@ export function aggregateRequiredDocuments(
   filtered.forEach((product) => {
     const rawDocs =
       (product as NormalizedLenderProduct).requiredDocs ||
-      (product as any).required_documents ||
+      (product as unknown).required_documents ||
       [];
     const normalized = normalizeRequirementList(rawDocs);
     const applicable = filterRequirementsByAmount(

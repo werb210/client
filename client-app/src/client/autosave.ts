@@ -36,7 +36,7 @@ export function loadStepData(
   }
 }
 
-export function mergeDraft<T extends Record<string, any>>(current: T, draft: StepData): T {
+export function mergeDraft<T extends Record<string, unknown>>(current: T, draft: StepData): T {
   const next = { ...current };
   Object.entries(draft).forEach(([key, value]) => {
     if (next[key] === undefined || next[key] === null || next[key] === "") {

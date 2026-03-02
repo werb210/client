@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-export function useForegroundRefresh(onVisible: () => void, deps: any[] = []) {
+export function useForegroundRefresh(onVisible: () => void, deps: unknown[] = []) {
   useEffect(() => {
     if (typeof document === "undefined") return;
 

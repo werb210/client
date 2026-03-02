@@ -7,11 +7,11 @@ import {
 } from "@/contracts/clientApiSchemas";
 
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
-  let lastError: any;
+  let lastError: unknown;
   for (let i = 0; i < attempts; i++) {
     try {
       return await fn();
-    } catch (err: any) {
+    } catch (err: unknown) {
       lastError = err;
       const status = err?.response?.status;
       const retriable = !status || [429, 500, 502, 503, 504].includes(status);
@@ -25,9 +25,9 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
 }
 
 export const ClientAppAPI = {
-  start(payload: any) {
+  start(payload: unknown) {
     return withRetry(async () => {
-      const res: any = await api.post("/api/applications", payload);
+      const res: unknown = await api.post("/api/applications", payload);
       parseApiResponse(
         ClientAppStartResponseSchema,
         res.data,
@@ -36,7 +36,7 @@ export const ClientAppAPI = {
       return res;
     });
   },
-  update(token: string, payload: any) {
+  update(token: string, payload: unknown) {
     return withRetry(() => api.patch(`/api/applications/${token}`, payload));
   },
   uploadDoc(
@@ -62,7 +62,7 @@ export const ClientAppAPI = {
   },
   status(token: string) {
     return withRetry(async () => {
-      const res: any = await api.get(`/api/applications/${token}`);
+      const res: unknown = await api.get(`/api/applications/${token}`);
       parseApiResponse(
         ClientAppStatusResponseSchema,
         res.data,
@@ -73,7 +73,7 @@ export const ClientAppAPI = {
   },
   getApplication(applicationId: string) {
     return withRetry(async () => {
-      const res: any = await api.get(`/api/applications/${applicationId}`);
+      const res: unknown = await api.get(`/api/applications/${applicationId}`);
       parseApiResponse(
         ClientAppStatusResponseSchema,
         res.data,
@@ -82,12 +82,12 @@ export const ClientAppAPI = {
       return res;
     });
   },
-  updateApplication(applicationId: string, payload: any) {
+  updateApplication(applicationId: string, payload: unknown) {
     return withRetry(() => api.patch(`/api/applications/${applicationId}`, payload));
   },
   getMessages(token: string) {
     return withRetry(async () => {
-      const res: any = await api.get(`/api/applications/${token}/messages`);
+      const res: unknown = await api.get(`/api/applications/${token}/messages`);
       parseApiResponse(
         ClientAppMessagesResponseSchema,
         res.data,

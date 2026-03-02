@@ -9,7 +9,7 @@ export type ClientHistoryEvent = {
 };
 
 type HistoryInput = {
-  status?: any;
+  status?: unknown;
   submissionStatus?: { updatedAt?: string | null } | null;
   stageLabel?: string | null;
 };
@@ -33,7 +33,7 @@ function normalizeStageLabel(value: unknown) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function getDocumentList(status?: any) {
+function getDocumentList(status?: unknown) {
   const documents =
     status?.documents ||
     status?.application?.documents ||
@@ -42,7 +42,7 @@ function getDocumentList(status?: any) {
   return Array.isArray(documents) ? documents : Object.values(documents);
 }
 
-function getOfferList(status?: any) {
+function getOfferList(status?: unknown) {
   if (Array.isArray(status?.offers)) return status.offers;
   if (Array.isArray(status?.application?.offers)) return status.application.offers;
   if (status?.offer) return [status.offer];
@@ -58,7 +58,7 @@ export function buildClientHistoryEvents({
 
   const history = status?.history || status?.timeline || status?.stage_history;
   if (Array.isArray(history)) {
-    history.forEach((entry: any, index: number) => {
+    history.forEach((entry: unknown, index: number) => {
       const label =
         entry?.stage ||
         entry?.stageLabel ||
@@ -93,7 +93,7 @@ export function buildClientHistoryEvents({
   }
 
   const documents = getDocumentList(status);
-  documents.forEach((doc: any, index: number) => {
+  documents.forEach((doc: unknown, index: number) => {
     const rawStatus =
       doc?.status ||
       doc?.state ||
@@ -122,7 +122,7 @@ export function buildClientHistoryEvents({
   });
 
   const offers = getOfferList(status);
-  offers.forEach((offer: any, index: number) => {
+  offers.forEach((offer: unknown, index: number) => {
     const availableAt =
       offer?.available_at ||
       offer?.created_at ||

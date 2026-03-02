@@ -43,7 +43,7 @@ async function bootstrapContinuation() {
       window.location.replace(targetPath);
       return;
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     const status = error?.response?.status;
     if (status === 401) {
       clearClientStorage();

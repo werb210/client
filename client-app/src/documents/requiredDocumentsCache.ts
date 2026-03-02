@@ -2,7 +2,7 @@ import { OfflineStore } from "../state/offline";
 import { ensureAlwaysRequiredDocuments, mergeRequirementLists } from "./requiredDocuments";
 import { extractRequiredDocumentsFromStatus } from "./requiredDocumentsFromStatus";
 
-export function syncRequiredDocumentsFromStatus(status: any) {
+export function syncRequiredDocumentsFromStatus(status: unknown) {
   const requiredFromStatus = extractRequiredDocumentsFromStatus(status);
   if (!requiredFromStatus) return null;
 

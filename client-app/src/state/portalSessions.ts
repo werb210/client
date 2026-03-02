@@ -27,7 +27,6 @@ function parseSessions(raw: string | null): PortalSession[] {
     const parsed = JSON.parse(raw);
     return normalizeSessions(parsed);
   } catch (error) {
-    console.warn("Failed to parse portal sessions:", error);
     return [];
   }
 }
@@ -68,7 +67,6 @@ async function readSessionsFromIndexedDb(): Promise<PortalSession[] | null> {
       request.onerror = () => resolve(null);
     });
   } catch (error) {
-    console.warn("Failed to read portal sessions from IndexedDB:", error);
     return null;
   }
 }
@@ -85,7 +83,6 @@ async function writeSessionsToIndexedDb(sessions: PortalSession[]) {
       store.put(sessions, STORE_KEY);
     });
   } catch (error) {
-    console.warn("Failed to persist portal sessions to IndexedDB:", error);
   }
 }
 
@@ -100,7 +97,6 @@ async function clearSessionsFromIndexedDb() {
       tx.objectStore(STORE_NAME).delete(STORE_KEY);
     });
   } catch (error) {
-    console.warn("Failed to clear portal sessions from IndexedDB:", error);
   }
 }
 
@@ -112,7 +108,6 @@ export function loadPortalSessions(): PortalSession[] {
     cachedSessions = sessions;
     return sessions;
   } catch (error) {
-    console.warn("Failed to read portal sessions:", error);
     cachedSessions = [];
     return [];
   }
@@ -123,7 +118,6 @@ export function savePortalSessions(sessions: PortalSession[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
   } catch (error) {
-    console.warn("Failed to store portal sessions:", error);
   }
   void writeSessionsToIndexedDb(sessions);
 }
@@ -139,7 +133,6 @@ export async function clearPortalSessions() {
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
-    console.warn("Failed to clear portal sessions:", error);
   }
   await clearSessionsFromIndexedDb();
 }

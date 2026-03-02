@@ -2,19 +2,19 @@ import { OfflineStore } from "../state/offline";
 
 export type ResumeSnapshot = {
   token: string;
-  status: any | null;
-  cached: any;
+  status: unknown | null;
+  cached: unknown;
   offline: boolean;
   submitted: boolean;
 };
 
 type ResumeOptions = {
-  fetchStatus: (token: string) => Promise<{ data: any }>;
-  cached?: any;
+  fetchStatus: (token: string) => Promise<{ data: unknown }>;
+  cached?: unknown;
   isOnline?: boolean;
 };
 
-export function isApplicationSubmitted(status: any) {
+export function isApplicationSubmitted(status: unknown) {
   if (!status) return false;
   return Boolean(
     status.submitted ||
@@ -53,7 +53,6 @@ export async function resumeApplication({
       submitted,
     };
   } catch (error) {
-    console.warn("Resume fetch failed:", error);
     return {
       token: cached.applicationToken,
       status: null,

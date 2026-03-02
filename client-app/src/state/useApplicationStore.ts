@@ -192,7 +192,6 @@ export function useApplicationStore() {
     const { ProductSync } = require("../lender/productSync");
     ProductSync.invalidateCache();
     void ProductSync.sync().catch((error: unknown) => {
-      console.error("Product sync failed:", error);
     });
 
     setInitialized(true);

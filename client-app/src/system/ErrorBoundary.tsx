@@ -4,8 +4,8 @@ interface State {
   hasError: boolean;
 }
 
-export default class ErrorBoundary extends React.Component<any, State> {
-  constructor(props: any) {
+export default class ErrorBoundary extends React.Component<unknown, State> {
+  constructor(props: unknown) {
     super(props);
     this.state = { hasError: false };
   }
@@ -14,8 +14,7 @@ export default class ErrorBoundary extends React.Component<any, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(error: any, errorInfo: any) {
-    console.error("Client Error:", error, errorInfo);
+  componentDidCatch(error: unknown, errorInfo: unknown) {
   }
 
   render() {

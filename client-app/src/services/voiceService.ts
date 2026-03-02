@@ -52,7 +52,6 @@ export async function initVoice() {
     window.location.hostname !== "localhost"
   ) {
     if (import.meta.env.DEV) {
-      console.warn("Voice requires HTTPS");
     }
     return;
   }

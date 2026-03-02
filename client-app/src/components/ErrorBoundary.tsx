@@ -1,9 +1,9 @@
 import React from "react";
 export default class ErrorBoundary extends React.Component<
-  any,
+  unknown,
   { hasError: boolean }
 > {
-  constructor(props: any) {
+  constructor(props: unknown) {
     super(props);
     this.state = { hasError: false };
   }

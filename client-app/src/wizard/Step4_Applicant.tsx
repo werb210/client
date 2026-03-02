@@ -145,11 +145,11 @@ export function Step4_Applicant() {
     }
   }, [update, values]);
 
-  function setField(key: string, value: any) {
+  function setField(key: string, value: unknown) {
     update({ applicant: { ...values, [key]: value } });
   }
 
-  function setPartnerField(key: string, value: any) {
+  function setPartnerField(key: string, value: unknown) {
     update({ applicant: { ...values, partner: { ...partner, [key]: value } } });
   }
 
@@ -225,7 +225,6 @@ export function Step4_Applicant() {
       await persistApplicationStep(app, 4, { applicant: values });
       setSaveError(null);
     } catch (error) {
-      console.error("Failed to submit applicant details:", error);
       setSaveError("We couldn't submit your application. Please try again.");
       return;
     }
@@ -390,7 +389,7 @@ export function Step4_Applicant() {
             <Input
               id={getWizardFieldId("step4", "fullName")}
               value={values.fullName || ""}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const fullName = e.target.value;
                 const [firstName = "", ...rest] = fullName.trim().split(/\s+/);
                 const lastName = rest.join(" ");
@@ -402,7 +401,7 @@ export function Step4_Applicant() {
                 };
                 update({ applicant: nextValues });
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("fullName", values);
                 }
@@ -415,7 +414,7 @@ export function Step4_Applicant() {
             <Input
               id={getWizardFieldId("step4", "firstName")}
               value={values.firstName || ""}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const firstName = e.target.value;
                 const nextValues = {
                   ...values,
@@ -424,7 +423,7 @@ export function Step4_Applicant() {
                 };
                 update({ applicant: nextValues });
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("firstName", values);
                 }
@@ -436,7 +435,7 @@ export function Step4_Applicant() {
             <Input
               id={getWizardFieldId("step4", "lastName")}
               value={values.lastName || ""}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const lastName = e.target.value;
                 const nextValues = {
                   ...values,
@@ -445,7 +444,7 @@ export function Step4_Applicant() {
                 };
                 update({ applicant: nextValues });
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("lastName", values);
                 }
@@ -459,11 +458,11 @@ export function Step4_Applicant() {
               type="email"
               id={getWizardFieldId("step4", "email")}
               value={values.email || ""}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const nextValues = { ...values, email: e.target.value };
                 update({ applicant: nextValues });
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("email", values);
                 }
@@ -476,7 +475,7 @@ export function Step4_Applicant() {
             <PhoneInput
               id={getWizardFieldId("step4", "phone")}
               value={formatPhoneNumber(values.phone || "", countryCode)}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const nextValues = {
                   ...values,
                   phone: formatPhoneNumber(e.target.value, countryCode),
@@ -484,7 +483,7 @@ export function Step4_Applicant() {
                 update({ applicant: nextValues });
               }}
               onBlur={() => handleAutoAdvance("phone", values)}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("phone", values);
                 }
@@ -498,7 +497,7 @@ export function Step4_Applicant() {
               id={getWizardFieldId("step4", "street")}
               country={regionCountry}
               value={values.street || ""}
-              onChange={(e: any) => setField("street", e.target.value)}
+              onChange={(e: unknown) => setField("street", e.target.value)}
               onSelect={(selection) => {
                 if (!("street" in selection)) return;
                 const nextValues = {
@@ -516,7 +515,7 @@ export function Step4_Applicant() {
                   handleAutoAdvance("street", nextValues, true);
                 }
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("street", values);
                 }
@@ -529,11 +528,11 @@ export function Step4_Applicant() {
             <Input
               id={getWizardFieldId("step4", "city")}
               value={values.city || ""}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const nextValues = { ...values, city: e.target.value };
                 update({ applicant: nextValues });
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("city", values);
                 }
@@ -558,14 +557,14 @@ export function Step4_Applicant() {
             <Input
               id={getWizardFieldId("step4", "zip")}
               value={formatPostalCode(values.zip || "", countryCode)}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const nextValues = {
                   ...values,
                   zip: formatPostalCode(e.target.value, countryCode),
                 };
                 update({ applicant: nextValues });
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("zip", values);
                 }
@@ -579,11 +578,11 @@ export function Step4_Applicant() {
               type="date"
               id={getWizardFieldId("step4", "dob")}
               value={values.dob || ""}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const nextValues = { ...values, dob: e.target.value };
                 update({ applicant: nextValues });
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("dob", values);
                 }
@@ -598,14 +597,14 @@ export function Step4_Applicant() {
               autoComplete="off"
               id={getWizardFieldId("step4", "ssn")}
               value={formatIdentityNumber(values.ssn || "", countryCode)}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const nextValues = {
                   ...values,
                   ssn: formatIdentityNumber(e.target.value, countryCode),
                 };
                 update({ applicant: nextValues });
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("ssn", values);
                 }
@@ -621,11 +620,11 @@ export function Step4_Applicant() {
               min="1"
               max="100"
               value={values.ownership || ""}
-              onChange={(e: any) => {
+              onChange={(e: unknown) => {
                 const nextValues = { ...values, ownership: e.target.value };
                 update({ applicant: nextValues });
               }}
-              onKeyDown={(e: any) => {
+              onKeyDown={(e: unknown) => {
                 if (e.key === "Enter") {
                   handleAutoAdvance("ownership", values);
                 }
@@ -685,10 +684,10 @@ export function Step4_Applicant() {
                 <Input
                   id={getWizardFieldId("step4", "partner.firstName")}
                   value={partner.firstName || ""}
-                  onChange={(e: any) =>
+                  onChange={(e: unknown) =>
                     setPartnerField("firstName", e.target.value)
                   }
-                  onKeyDown={(e: any) => {
+                  onKeyDown={(e: unknown) => {
                     if (e.key === "Enter") {
                       handleAutoAdvance("partner.firstName", values);
                     }
@@ -700,10 +699,10 @@ export function Step4_Applicant() {
                 <Input
                   id={getWizardFieldId("step4", "partner.lastName")}
                   value={partner.lastName || ""}
-                  onChange={(e: any) =>
+                  onChange={(e: unknown) =>
                     setPartnerField("lastName", e.target.value)
                   }
-                  onKeyDown={(e: any) => {
+                  onKeyDown={(e: unknown) => {
                     if (e.key === "Enter") {
                       handleAutoAdvance("partner.lastName", values);
                     }
@@ -717,10 +716,10 @@ export function Step4_Applicant() {
                   type="email"
                   id={getWizardFieldId("step4", "partner.email")}
                   value={partner.email || ""}
-                  onChange={(e: any) =>
+                  onChange={(e: unknown) =>
                     setPartnerField("email", e.target.value)
                   }
-                  onKeyDown={(e: any) => {
+                  onKeyDown={(e: unknown) => {
                     if (e.key === "Enter") {
                       handleAutoAdvance("partner.email", values);
                     }
@@ -733,14 +732,14 @@ export function Step4_Applicant() {
                 <PhoneInput
                   id={getWizardFieldId("step4", "partner.phone")}
                   value={formatPhoneNumber(partner.phone || "", countryCode)}
-                  onChange={(e: any) =>
+                  onChange={(e: unknown) =>
                     setPartnerField(
                       "phone",
                       formatPhoneNumber(e.target.value, countryCode)
                     )
                   }
                   onBlur={() => handleAutoAdvance("partner.phone", values)}
-                  onKeyDown={(e: any) => {
+                  onKeyDown={(e: unknown) => {
                     if (e.key === "Enter") {
                       handleAutoAdvance("partner.phone", values);
                     }
@@ -754,7 +753,7 @@ export function Step4_Applicant() {
                   id={getWizardFieldId("step4", "partner.street")}
                   country={regionCountry}
                   value={partner.street || ""}
-                  onChange={(e: any) =>
+                  onChange={(e: unknown) =>
                     setPartnerField("street", e.target.value)
                   }
                   onSelect={(selection) => {
@@ -777,7 +776,7 @@ export function Step4_Applicant() {
                       handleAutoAdvance("partner.street", nextValues, true);
                     }
                   }}
-                  onKeyDown={(e: any) => {
+                  onKeyDown={(e: unknown) => {
                     if (e.key === "Enter") {
                       handleAutoAdvance("partner.street", values);
                     }
@@ -790,10 +789,10 @@ export function Step4_Applicant() {
                 <Input
                   id={getWizardFieldId("step4", "partner.city")}
                   value={partner.city || ""}
-                  onChange={(e: any) =>
+                  onChange={(e: unknown) =>
                     setPartnerField("city", e.target.value)
                   }
-                  onKeyDown={(e: any) => {
+                  onKeyDown={(e: unknown) => {
                     if (e.key === "Enter") {
                       handleAutoAdvance("partner.city", values);
                     }
@@ -821,13 +820,13 @@ export function Step4_Applicant() {
                 <Input
                   id={getWizardFieldId("step4", "partner.zip")}
                   value={formatPostalCode(partner.zip || "", countryCode)}
-                  onChange={(e: any) =>
+                  onChange={(e: unknown) =>
                     setPartnerField(
                       "zip",
                       formatPostalCode(e.target.value, countryCode)
                     )
                   }
-                  onKeyDown={(e: any) => {
+                  onKeyDown={(e: unknown) => {
                     if (e.key === "Enter") {
                       handleAutoAdvance("partner.zip", values);
                     }
@@ -841,10 +840,10 @@ export function Step4_Applicant() {
                   type="date"
                   id={getWizardFieldId("step4", "partner.dob")}
                   value={partner.dob || ""}
-                  onChange={(e: any) =>
+                  onChange={(e: unknown) =>
                     setPartnerField("dob", e.target.value)
                   }
-                  onKeyDown={(e: any) => {
+                  onKeyDown={(e: unknown) => {
                     if (e.key === "Enter") {
                       handleAutoAdvance("partner.dob", values);
                     }
@@ -859,13 +858,13 @@ export function Step4_Applicant() {
                   autoComplete="off"
                   id={getWizardFieldId("step4", "partner.ssn")}
                   value={formatIdentityNumber(partner.ssn || "", countryCode)}
-                  onChange={(e: any) =>
+                  onChange={(e: unknown) =>
                     setPartnerField(
                       "ssn",
                       formatIdentityNumber(e.target.value, countryCode)
                     )
                   }
-                  onKeyDown={(e: any) => {
+                  onKeyDown={(e: unknown) => {
                     if (e.key === "Enter") {
                       handleAutoAdvance("partner.ssn", values);
                     }
@@ -881,10 +880,10 @@ export function Step4_Applicant() {
                   min="1"
                   max="100"
                   value={partner.ownership || ""}
-                  onChange={(e: any) =>
+                  onChange={(e: unknown) =>
                     setPartnerField("ownership", e.target.value)
                   }
-                  onKeyDown={(e: any) => {
+                  onKeyDown={(e: unknown) => {
                     if (e.key === "Enter") {
                       handleAutoAdvance("partner.ownership", values);
                     }

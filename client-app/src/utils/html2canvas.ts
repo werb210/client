@@ -33,7 +33,6 @@ export default async function html2canvas(element: HTMLElement, options: Capture
 
     context.drawImage(img, 0, 0, width, height);
   } catch (error) {
-    console.error("Falling back to blank screenshot capture", error);
   }
 
   return canvas;

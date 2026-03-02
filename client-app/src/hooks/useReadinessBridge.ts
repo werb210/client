@@ -14,7 +14,7 @@ export function useReadinessBridge(
     if (!token) return;
 
     async function fetchBridge() {
-      const data = await apiRequest<any>(`/api/readiness/bridge/${token}`).catch(() => null);
+      const data = await apiRequest<unknown>(`/api/readiness/bridge/${token}`).catch(() => null);
       if (!data) return;
 
       setStep1(data.step1);

@@ -37,7 +37,6 @@ function loadProfiles(): Record<string, ClientProfile> {
     if (!parsed || typeof parsed !== "object") return {};
     return parsed;
   } catch (error) {
-    console.warn("Failed to load client profiles:", error);
     return {};
   }
 }
@@ -46,7 +45,6 @@ function saveProfiles(profiles: Record<string, ClientProfile>) {
   try {
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profiles));
   } catch (error) {
-    console.warn("Failed to save client profiles:", error);
   }
 }
 
@@ -60,7 +58,6 @@ function getSessionStorage() {
     }
     return null;
   } catch (error) {
-    console.warn("Failed to access session storage:", error);
     return null;
   }
 }
@@ -71,7 +68,6 @@ function setPortalSessionToken(token: string) {
   try {
     storage.setItem(PORTAL_SESSION_KEY, token);
   } catch (error) {
-    console.warn("Failed to store portal session token:", error);
   }
 }
 
@@ -81,7 +77,6 @@ function getPortalSessionToken() {
   try {
     return storage.getItem(PORTAL_SESSION_KEY) || "";
   } catch (error) {
-    console.warn("Failed to read portal session token:", error);
     return "";
   }
 }
@@ -92,7 +87,6 @@ function clearPortalSessionToken() {
   try {
     storage.removeItem(PORTAL_SESSION_KEY);
   } catch (error) {
-    console.warn("Failed to clear portal session token:", error);
   }
 }
 
@@ -102,7 +96,6 @@ export const ClientProfileStore = {
     try {
       return localStorage.getItem(LAST_PHONE_KEY) || "";
     } catch (error) {
-      console.warn("Failed to read last phone:", error);
       return "";
     }
   },
@@ -110,7 +103,6 @@ export const ClientProfileStore = {
     try {
       localStorage.setItem(LAST_PHONE_KEY, phone);
     } catch (error) {
-      console.warn("Failed to save last phone:", error);
     }
   },
   getProfile(phone: string) {
@@ -201,7 +193,6 @@ export const ClientProfileStore = {
     try {
       localStorage.setItem(OTP_KEY, JSON.stringify(payload));
     } catch (error) {
-      console.warn("Failed to store OTP:", error);
     }
     return code;
   },
@@ -218,7 +209,6 @@ export const ClientProfileStore = {
       }
       return parsed;
     } catch (error) {
-      console.warn("Failed to read OTP:", error);
       return null;
     }
   },
@@ -230,7 +220,6 @@ export const ClientProfileStore = {
       try {
         localStorage.removeItem(OTP_KEY);
       } catch (error) {
-        console.warn("Failed to clear OTP:", error);
       }
     }
     return match;
@@ -276,7 +265,6 @@ export const ClientProfileStore = {
       localStorage.removeItem(LAST_PHONE_KEY);
       localStorage.removeItem(OTP_KEY);
     } catch (error) {
-      console.warn("Failed to clear client profile data:", error);
     }
     this.clearPortalSessions();
   },

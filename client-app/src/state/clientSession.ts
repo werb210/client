@@ -45,12 +45,11 @@ function parseJwtExpiry(token: string): number | null {
       return payload.exp * 1000;
     }
   } catch (error) {
-    console.warn("Failed to parse session token expiry:", error);
   }
   return null;
 }
 
-function normalizeSession(entry: any): ClientSession | null {
+function normalizeSession(entry: unknown): ClientSession | null {
   if (!entry || typeof entry !== "object") return null;
   if (typeof entry.submissionId !== "string") return null;
   if (typeof entry.accessToken !== "string") return null;
@@ -83,7 +82,6 @@ function loadSessions(): ClientSession[] {
       .filter((entry): entry is ClientSession => entry !== null);
     return cachedSessions;
   } catch (error) {
-    console.warn("Failed to load client sessions:", error);
     cachedSessions = [];
     return cachedSessions;
   }
@@ -94,7 +92,6 @@ function saveSessions(next: ClientSession[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   } catch (error) {
-    console.warn("Failed to save client sessions:", error);
   }
   notify();
 }
@@ -205,7 +202,6 @@ export function setActiveClientSessionToken(token: string) {
   try {
     sessionStorage.setItem(ACTIVE_SESSION_KEY, token);
   } catch (error) {
-    console.warn("Failed to set active client session:", error);
   }
 }
 
@@ -214,7 +210,6 @@ export function clearActiveClientSessionToken() {
   try {
     sessionStorage.removeItem(ACTIVE_SESSION_KEY);
   } catch (error) {
-    console.warn("Failed to clear active client session:", error);
   }
 }
 
@@ -223,7 +218,6 @@ export function getActiveClientSessionToken() {
   try {
     return sessionStorage.getItem(ACTIVE_SESSION_KEY) || "";
   } catch (error) {
-    console.warn("Failed to read active client session:", error);
     return "";
   }
 }
