@@ -95,57 +95,55 @@ function saveCache(storageKey: string, cache: Record<string, unknown>) {
 }
 
 export async function submitCreditReadiness(payload: CreditReadinessPayload) {
-  const key = dedupKey(payload);
   if (readinessInFlight) {
     return readinessInFlight;
   }
 
-  if (key !== "::") {
-    const cache = loadCache(READINESS_DEDUP_KEY);
-    if (cache[key]) {
-      const cached = cache[key] as Record<string, unknown>;
-      persistReadinessSession(cached);
-      return cached;
-    }
-  }
+  readinessInFlight = (async () => {
+    const key = dedupKey(payload);
 
-  const existingSession = await findExistingReadinessSession(payload);
-  if (existingSession) {
-    persistReadinessSession(existingSession);
     if (key !== "::") {
       const cache = loadCache(READINESS_DEDUP_KEY);
-      cache[key] = existingSession;
-      saveCache(READINESS_DEDUP_KEY, cache);
-    }
-    return existingSession;
-  }
-
-  const request = (async () => {
-    try {
-      const res = await postWithRetry(
-        "/api/readiness/submit",
-        payload,
-        key !== "::" ? `readiness:${key}` : crypto.randomUUID()
-      );
-      const responseData = res.data;
-      if (hasValidReadinessSessionId(responseData as Record<string, unknown>)) {
-        persistReadinessSession(responseData as Record<string, unknown>);
+      if (cache[key]) {
+        const cached = cache[key] as Record<string, unknown>;
+        persistReadinessSession(cached);
+        return cached;
       }
+    }
+
+    const existingSession = await findExistingReadinessSession(payload);
+    if (existingSession) {
+      persistReadinessSession(existingSession);
       if (key !== "::") {
         const cache = loadCache(READINESS_DEDUP_KEY);
-        cache[key] = responseData;
+        cache[key] = existingSession;
         saveCache(READINESS_DEDUP_KEY, cache);
       }
-      return responseData;
-    } catch (error) {
-      throw error;
-    } finally {
-      readinessInFlight = null;
+      return existingSession;
     }
+
+    const res = await postWithRetry(
+      "/api/readiness/submit",
+      payload,
+      key !== "::" ? `readiness:${key}` : crypto.randomUUID()
+    );
+    const responseData = res.data;
+    if (hasValidReadinessSessionId(responseData as Record<string, unknown>)) {
+      persistReadinessSession(responseData as Record<string, unknown>);
+    }
+    if (key !== "::") {
+      const cache = loadCache(READINESS_DEDUP_KEY);
+      cache[key] = responseData;
+      saveCache(READINESS_DEDUP_KEY, cache);
+    }
+    return responseData;
   })();
 
-  readinessInFlight = request;
-  return readinessInFlight;
+  try {
+    return await readinessInFlight;
+  } finally {
+    readinessInFlight = null;
+  }
 }
 
 export async function submitContactForm(payload: {

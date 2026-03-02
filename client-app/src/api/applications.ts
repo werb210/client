@@ -9,6 +9,7 @@ import {
 import { enqueueUpload } from "@/lib/uploadQueue";
 import { uploadDocument } from "@/services/documentService";
 import { getPersistedAttribution } from "@/utils/attribution";
+import type { SubmitApplicationRequest } from "./submissionTypes";
 
 export async function submitApplication(
   payload: unknown,
@@ -17,17 +18,17 @@ export async function submitApplication(
   const creditSessionToken = localStorage.getItem("creditSessionToken");
   const attribution = getPersistedAttribution();
 
-  const submissionPayload =
+  const submissionPayload: SubmitApplicationRequest | unknown =
     payload && typeof payload === "object" && !Array.isArray(payload)
       ? {
-          ...(payload as Record<string, unknown>),
+          ...(payload as SubmitApplicationRequest),
           ...attribution,
           ...(options?.continuationToken ? { continuationToken: options.continuationToken } : {}),
           creditSessionToken,
         }
       : payload;
 
-  const res: unknown = await api.post("/api/client/submissions", submissionPayload, {
+  const res = await api.post<unknown>("/api/client/submissions", submissionPayload, {
     headers: options?.idempotencyKey
       ? { "Idempotency-Key": options.idempotencyKey }
       : undefined,
@@ -42,10 +43,10 @@ export async function createPublicApplication(
 ): Promise<unknown> {
   const attribution = getPersistedAttribution();
 
-  const submissionPayload =
+  const submissionPayload: SubmitApplicationRequest | unknown =
     payload && typeof payload === "object" && !Array.isArray(payload)
       ? {
-          ...(payload as Record<string, unknown>),
+          ...(payload as SubmitApplicationRequest),
           ...attribution,
           readinessToken: options?.readinessToken,
           sessionId: options?.sessionId,

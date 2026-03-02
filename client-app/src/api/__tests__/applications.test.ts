@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const postMock = vi.fn().mockResolvedValue({ data: { ok: true } });
 
-vi.mock("../client", () => ({
-  api: {
+vi.mock("@/lib/api", () => ({
+  default: {
     post: postMock,
   },
 }));
@@ -22,6 +22,10 @@ describe("submitApplication", () => {
 
   beforeEach(() => {
     postMock.mockClear();
+    vi.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true }),
+    } as Response);
     localStorage.clear();
   });
 
