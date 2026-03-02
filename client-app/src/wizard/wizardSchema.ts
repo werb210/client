@@ -58,7 +58,6 @@ export const wizardSchema: Record<WizardStepKey, { fields: WizardFieldMeta[] }> 
   },
   step3: {
     fields: [
-      { key: "companyName", required: true, autoAdvance: true },
       { key: "businessName", required: true, autoAdvance: true },
       { key: "legalName", required: true, autoAdvance: true },
       { key: "businessStructure", required: true, autoAdvance: true },

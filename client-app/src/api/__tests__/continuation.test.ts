@@ -1,15 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/utils/fetchWithRetry", () => ({
+  fetchWithRetry: vi.fn(),
+}));
+
+import { fetchWithRetry } from "@/utils/fetchWithRetry";
 import {
   fetchReadinessBridge,
   fetchReadinessSession,
   mapContinuationToReadinessContext,
 } from "../continuation";
 
-const fetchWithRetryMock = vi.fn();
-
-vi.mock("@/utils/fetchWithRetry", () => ({
-  fetchWithRetry: fetchWithRetryMock,
-}));
+const fetchWithRetryMock = vi.mocked(fetchWithRetry);
 
 describe("continuation mapping", () => {
   beforeEach(() => {
@@ -53,7 +55,7 @@ describe("continuation mapping", () => {
     fetchWithRetryMock.mockResolvedValue({
       ok: true,
       json: async () => ({ companyName: "Acme" }),
-    });
+    } as Response);
 
     const response = await fetchReadinessSession("session-1");
 
@@ -62,13 +64,11 @@ describe("continuation mapping", () => {
     expect(response).toEqual({ companyName: "Acme" });
   });
 
-
-
   it("loads readiness bridge data from /api/readiness/bridge/:sessionToken", async () => {
     fetchWithRetryMock.mockResolvedValue({
       ok: true,
       json: async () => ({ step1: { industry: "Construction" } }),
-    });
+    } as Response);
 
     const response = await fetchReadinessBridge("bridge-token-1");
 
@@ -77,19 +77,20 @@ describe("continuation mapping", () => {
   });
 
   it("returns null for invalid readiness bridge token", async () => {
-    fetchWithRetryMock.mockResolvedValue({ ok: false, status: 404 });
+    fetchWithRetryMock.mockResolvedValue({ ok: false, status: 404 } as Response);
 
     const response = await fetchReadinessBridge("invalid-token");
 
     expect(response).toBeNull();
   });
+
   it("falls back to /api/readiness/session/:sessionId when primary route is not found", async () => {
     fetchWithRetryMock
-      .mockResolvedValueOnce({ ok: false, status: 404 })
+      .mockResolvedValueOnce({ ok: false, status: 404 } as Response)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ companyName: "Fallback" }),
-      });
+      } as Response);
 
     const response = await fetchReadinessSession("session-2");
 

@@ -20,7 +20,7 @@ const READINESS_TOKEN_KEY = "boreal_readiness_token";
 export const READINESS_SESSION_ID_KEY = "boreal_readiness_session_id";
 const SESSION_ID_QUERY_PARAM = "sessionId";
 const TOKEN_QUERY_PARAM = "token";
-let readinessInFlight: Promise<any> | null = null;
+const readinessInFlight = new Map<string, Promise<any>>();
 let contactInFlight: Promise<any> | null = null;
 
 const MAX_REQUEST_ATTEMPTS = 2;
@@ -95,11 +95,13 @@ function saveCache(storageKey: string, cache: Record<string, any>) {
 }
 
 export async function submitCreditReadiness(payload: CreditReadinessPayload) {
-  if (readinessInFlight) {
-    return readinessInFlight;
+  const key = dedupKey(payload);
+  const inFlightKey = key === "::" ? "__default__" : key;
+  const existing = readinessInFlight.get(inFlightKey);
+  if (existing) {
+    return existing;
   }
 
-  const key = dedupKey(payload);
   if (key !== "::") {
     const cache = loadCache(READINESS_DEDUP_KEY);
     if (cache[key]) {
@@ -120,7 +122,7 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
     return existingSession;
   }
 
-  readinessInFlight = (async () => {
+  const request = (async () => {
     try {
       const res = await postWithRetry(
         "/api/readiness/submit",
@@ -140,11 +142,12 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
     } catch {
       throw new Error("Unable to submit credit readiness. Please try again.");
     } finally {
-      readinessInFlight = null;
+      readinessInFlight.delete(inFlightKey);
     }
   })();
 
-  return readinessInFlight;
+  readinessInFlight.set(inFlightKey, request);
+  return request;
 }
 
 export async function submitContactForm(payload: {

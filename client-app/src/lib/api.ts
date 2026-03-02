@@ -40,7 +40,7 @@ export async function apiRequest<T>(url: string, options: RequestInit = {}): Pro
   const timeout = setTimeout(() => controller.abort(), 15000);
 
   try {
-    const response = await fetch(buildApiUrl(url), {
+    const response = await globalThis.fetch(buildApiUrl(url), {
       credentials: "include",
       ...options,
       signal: controller.signal,
