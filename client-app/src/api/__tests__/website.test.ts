@@ -15,6 +15,7 @@ vi.mock("@/api/continuation", () => ({
 
 describe("website API dedupe", () => {
   beforeEach(() => {
+    vi.resetModules();
     postMock.mockReset();
     continuationSessionMock.mockReset();
     continuationSessionMock.mockResolvedValue(null);
@@ -35,7 +36,7 @@ describe("website API dedupe", () => {
     await submitCreditReadiness(payload);
     await submitCreditReadiness(payload);
 
-    expect(postMock).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(postMock).toHaveBeenCalledTimes(1));
     expect(postMock).toHaveBeenCalledWith(
       "/api/readiness/submit",
       payload,
@@ -61,14 +62,14 @@ describe("website API dedupe", () => {
     const payload = {
       companyName: "ACME",
       fullName: "Taylor",
-      email: "taylor@example.com",
-      phone: "+15555555555",
+      email: "inflight@example.com",
+      phone: "+15555550000",
     };
 
     const first = submitCreditReadiness(payload);
     const second = submitCreditReadiness(payload);
 
-    expect(postMock).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(postMock).toHaveBeenCalledTimes(1));
     resolvePost?.({ data: { sessionId: "session-1", leadId: "lead-1" } });
 
     await expect(first).resolves.toEqual({ sessionId: "session-1", leadId: "lead-1" });
