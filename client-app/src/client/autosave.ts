@@ -15,8 +15,8 @@ export function saveStepData(
   if (!storage) return;
   try {
     storage.setItem(getDraftKey(step), JSON.stringify(data));
-  } catch (error) {
-    console.warn("Failed to save step draft:", error);
+  } catch {
+    // ignore storage failures
   }
 }
 
@@ -31,8 +31,7 @@ export function loadStepData(
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return null;
     return parsed as StepData;
-  } catch (error) {
-    console.warn("Failed to load step draft:", error);
+  } catch {
     return null;
   }
 }
@@ -58,7 +57,7 @@ export function clearDraft(
         storage.removeItem(key);
       }
     });
-  } catch (error) {
-    console.warn("Failed to clear step drafts:", error);
+  } catch {
+    // ignore storage failures
   }
 }

@@ -12,8 +12,8 @@ export async function clearBrowserCaches() {
   try {
     const keys = await caches.keys();
     await Promise.all(keys.map((key) => caches.delete(key)));
-  } catch (error) {
-    console.warn("Failed to clear caches:", error);
+  } catch {
+    // ignore cache clear failures
   }
 }
 
@@ -23,8 +23,8 @@ export async function unregisterServiceWorkers() {
   try {
     const registrations = await navigator.serviceWorker.getRegistrations();
     await Promise.all(registrations.map((registration) => registration.unregister()));
-  } catch (error) {
-    console.warn("Failed to unregister service workers:", error);
+  } catch {
+    // ignore cache clear failures
   }
 }
 
@@ -36,16 +36,18 @@ export function clearClientStorage() {
     STORAGE_KEYS_TO_REMOVE.forEach((key) => {
       localStorage.removeItem(key);
     });
-  } catch (error) {
-    console.warn("Failed to remove scoped storage keys:", error);
+    localStorage.clear();
+    sessionStorage.clear();
+  } catch {
+    // ignore cache clear failures
   }
 }
 
-export async function logout(options?: { redirectTo?: string }) {
+export function logout(options?: { redirectTo?: string }): void {
   const redirectTo = options?.redirectTo ?? "/portal";
   clearClientStorage();
 
-  await Promise.all([
+  void Promise.all([
     clearServiceWorkerCaches("logout"),
     clearBrowserCaches(),
     unregisterServiceWorkers(),

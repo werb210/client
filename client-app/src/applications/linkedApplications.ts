@@ -47,8 +47,7 @@ function loadLinkedApplications(): LinkedApplicationMap {
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return {};
     return parsed;
-  } catch (error) {
-    console.warn("Failed to read linked applications:", error);
+  } catch {
     return {};
   }
 }
@@ -56,8 +55,8 @@ function loadLinkedApplications(): LinkedApplicationMap {
 function saveLinkedApplications(map: LinkedApplicationMap) {
   try {
     localStorage.setItem(LINKED_KEY, JSON.stringify(map));
-  } catch (error) {
-    console.warn("Failed to save linked applications:", error);
+  } catch {
+    // ignore storage failures
   }
 }
 

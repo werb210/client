@@ -20,8 +20,7 @@ function getSessionStorage(): StorageLike | null {
   if (typeof window === "undefined") return null;
   try {
     return window.sessionStorage;
-  } catch (error) {
-    console.warn("Failed to access session storage:", error);
+  } catch {
     return null;
   }
 }
@@ -30,8 +29,8 @@ function markReloaded(storage: StorageLike | null) {
   if (!storage) return;
   try {
     storage.setItem(SESSION_GUARD_KEY, "true");
-  } catch (error) {
-    console.warn("Failed to mark session reload:", error);
+  } catch {
+    // ignore storage failures
   }
 }
 
@@ -39,8 +38,8 @@ function clearReloadMarker(storage: StorageLike | null) {
   if (!storage) return;
   try {
     storage.removeItem(SESSION_GUARD_KEY);
-  } catch (error) {
-    console.warn("Failed to clear session reload marker:", error);
+  } catch {
+    // ignore storage failures
   }
 }
 
@@ -153,7 +152,7 @@ export function useSessionGuard() {
   }, [guard.hasAuth, isOffline]);
 }
 
-export function SessionGuard() {
+export function SessionGuard(): JSX.Element {
   useSessionGuard();
-  return null;
+  return <></>;
 }
