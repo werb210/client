@@ -65,7 +65,7 @@ export default function ApplyStep4() {
       });
 
       navigate("/apply/success");
-    } catch (e) {
+    } catch {
       setError("We couldn't submit your application. Please try again.");
     } finally {
       setSubmitting(false);

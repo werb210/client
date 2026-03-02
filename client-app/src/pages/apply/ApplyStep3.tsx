@@ -53,7 +53,7 @@ export default function ApplyStep3() {
       );
 
       navigate("/apply/step-4");
-    } catch (err) {
+    } catch {
       setError("We couldn't save your details. Please try again.");
     } finally {
       setIsSubmitting(false);

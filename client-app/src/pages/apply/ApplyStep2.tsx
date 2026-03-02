@@ -50,7 +50,7 @@ export default function ApplyStep2() {
       );
 
       navigate("/apply/step-3");
-    } catch (err) {
+    } catch {
       setError("We couldn't save your details. Please try again.");
     } finally {
       setIsSubmitting(false);
