@@ -1,6 +1,6 @@
 import { submitApplication } from "../../api/applications";
 import type { ApplicationState } from "../../state/application";
-import { useState } from "react";
+import React, { useState } from "react";
 
 export default function ReviewSubmit({ state }: { state: ApplicationState }) {
   const [submitting, setSubmitting] = useState(false);

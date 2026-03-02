@@ -162,7 +162,7 @@ describe("PublicApplyPage form schema", () => {
     });
 
     expect(submitApplication).toHaveBeenCalledWith(
-      expect.unknown(Object),
+      expect.any(Object),
       expect.objectContaining({
         readinessToken: "readiness-token-1",
         sessionId: "session-1",
@@ -190,9 +190,9 @@ describe("PublicApplyPage form schema", () => {
     expect(submitApplication).toHaveBeenCalledWith(
       expect.objectContaining({
         business_legal_name: "Boreal LLC",
-        idempotencyToken: expect.unknown(String),
+        idempotencyToken: expect.any(String),
       }),
-      expect.objectContaining({ idempotencyKey: expect.unknown(String) })
+      expect.objectContaining({ idempotencyKey: expect.any(String) })
     );
     expect(onSuccess).toHaveBeenCalledTimes(1);
     expect(onError).not.toHaveBeenCalled();

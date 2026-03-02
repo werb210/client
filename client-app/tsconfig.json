@@ -9,6 +9,7 @@
     /* ==== STABILIZED MODE ==== */
     "strict": true,
     "noImplicitAny": true,
+    "types": ["vitest/globals"],
     "strictNullChecks": false,
     "strictFunctionTypes": false,
     "strictBindCallApply": false,

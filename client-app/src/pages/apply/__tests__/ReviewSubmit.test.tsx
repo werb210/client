@@ -1,25 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ReactElement } from "react";
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { act } from "react-dom/test-utils";
 import ReviewSubmit from "../ReviewSubmit";
 import * as api from "../../../api/applications";
-
-function findButton(element: ReactElement): ReactElement | null {
-  if (element.type === "button") {
-    return element;
-  }
-
-  const children = element.props?.children;
-  if (!children) return null;
-
-  const queue = Array.isArray(children) ? children : [children];
-  for (const child of queue) {
-    if (!child || typeof child !== "object") continue;
-    const found = findButton(child as ReactElement);
-    if (found) return found;
-  }
-
-  return null;
-}
 
 describe("ReviewSubmit", () => {
   it("submits application with lender + product", async () => {
@@ -34,13 +18,20 @@ describe("ReviewSubmit", () => {
       },
     };
 
-    const element = ReviewSubmit({ state } as unknown);
-    const button = findButton(element as ReactElement);
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(<ReviewSubmit state={state as never} />);
+    });
+
+    const button = container.querySelector("button");
     expect(button).not.toBeNull();
 
-    if (button) {
-      await button.props.onClick();
-    }
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
 
     expect(api.submitApplication).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -48,5 +39,8 @@ describe("ReviewSubmit", () => {
         product_id: "p1",
       })
     );
+
+    root.unmount();
+    container.remove();
   });
 });
