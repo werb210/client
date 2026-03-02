@@ -9,19 +9,13 @@ export class GlobalErrorBoundary extends React.Component<
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError() {
+  static getDerivedStateFromError(): { hasError: boolean } {
     return { hasError: true };
   }
 
-  componentDidCatch(error: unknown) {
-    if (import.meta.env.PROD) {
-      console.error("Production error captured.");
-    } else {
-      console.error(error);
-    }
-  }
+  componentDidCatch(): void {}
 
-  render() {
+  render(): React.ReactNode {
     if (this.state.hasError) {
       return (
         <div style={{ padding: 40, textAlign: "center" }}>

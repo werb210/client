@@ -231,7 +231,6 @@ export function parseApiResponse<T>(
   if (parsed.success) {
     return parsed.data;
   }
-  console.error(`Contract validation failed for ${context}`, parsed.error);
   throw new Error(`Unexpected response from ${context}.`);
 }
 

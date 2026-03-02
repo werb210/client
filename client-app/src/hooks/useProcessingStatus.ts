@@ -11,7 +11,7 @@ export function isProcessingComplete(status: ProcessingStatus | null): boolean {
   );
 }
 
-export function useProcessingStatus(applicationId: string | null) {
+export function useProcessingStatus(applicationId: string | null): { status: ProcessingStatus | null; pollState: ReturnType<typeof useProcessingStatusPoller>["state"] } {
   const [status, setStatus] = useState<ProcessingStatus | null>(null);
 
   const fetchStatus = useCallback(
@@ -23,9 +23,7 @@ export function useProcessingStatus(applicationId: string | null) {
     enabled: Boolean(applicationId),
     fetchStatus,
     onUpdate: setStatus,
-    onError: (error) => {
-      console.error("Processing status refresh failed:", error);
-    },
+    onError: () => {},
     isTerminal: isProcessingComplete,
   });
 

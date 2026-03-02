@@ -13,7 +13,7 @@ export type RejectionNotificationState = {
 
 const STORAGE_PREFIX = "boreal_doc_rejection_state";
 
-export function getRejectedDocuments(documents: any) {
+export function getRejectedDocuments(documents: unknown): string[] {
   if (!documents) return [];
   if (Array.isArray(documents)) {
     return documents
@@ -22,7 +22,7 @@ export function getRejectedDocuments(documents: any) {
       .filter(Boolean);
   }
   return Object.entries(documents)
-    .filter(([, value]) => (value as any)?.status === "rejected")
+    .filter(([, value]) => (value as { status?: string })?.status === "rejected")
     .map(([key]) => key);
 }
 
@@ -35,7 +35,7 @@ export function upsertRejectionState(
   rejectedDocuments: string[],
   now: number,
   delayMs: number
-) {
+): RejectionNotificationState {
   const newlyRejected = rejectedDocuments.filter(
     (doc) => !state.notifiedDocuments.includes(doc)
   );
@@ -69,7 +69,7 @@ export function upsertRejectionState(
 export function consumeDueNotification(
   state: RejectionNotificationState,
   now: number
-) {
+): { state: RejectionNotificationState; notification: RejectionNotification | null } {
   if (!state.pending || now < state.pending.notifyAt) {
     return { state, notification: null };
   }
@@ -97,8 +97,7 @@ export function loadRejectionState(token: string): RejectionNotificationState {
         : [],
       pending: parsed?.pending || null,
     };
-  } catch (error) {
-    console.warn("Failed to load rejection state:", error);
+  } catch {
     return createEmptyRejectionState();
   }
 }
@@ -113,7 +112,7 @@ export function saveRejectionState(
       `${STORAGE_PREFIX}:${token}`,
       JSON.stringify(state)
     );
-  } catch (error) {
-    console.warn("Failed to save rejection state:", error);
+  } catch {
+    // no-op
   }
 }

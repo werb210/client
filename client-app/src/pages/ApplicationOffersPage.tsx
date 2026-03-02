@@ -3,10 +3,11 @@ import { useParams } from "react-router-dom";
 import { fetchApplicationOffers } from "@/api/applications";
 import { OffersView } from "@/offers/OffersView";
 import { components, layout } from "@/styles";
+import type { OfferTermSheet } from "@/offers/OffersView";
 
-export function ApplicationOffersPage() {
+export function ApplicationOffersPage(): JSX.Element {
   const { id } = useParams();
-  const [offers, setOffers] = useState<any[]>([]);
+  const [offers, setOffers] = useState<OfferTermSheet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,10 +20,9 @@ export function ApplicationOffersPage() {
       try {
         const response = await fetchApplicationOffers(id);
         if (!active) return;
-        setOffers((response as any)?.offers ?? []);
-      } catch (err) {
+        setOffers((response as { offers?: OfferTermSheet[] })?.offers ?? []);
+      } catch {
         if (!active) return;
-        console.error("Failed to load offers:", err);
         setError("We couldn't load your offers yet. Please try again.");
       } finally {
         if (active) setLoading(false);
@@ -63,9 +63,8 @@ export function ApplicationOffersPage() {
               setLoading(true);
               setError(null);
               fetchApplicationOffers(id as string)
-                .then((response) => setOffers((response as any)?.offers ?? []))
-                .catch((err) => {
-                  console.error("Failed to load offers:", err);
+                .then((response) => setOffers((response as { offers?: OfferTermSheet[] })?.offers ?? []))
+                .catch(() => {
                   setError("We couldn't load your offers yet. Please try again.");
                 })
                 .finally(() => setLoading(false));
