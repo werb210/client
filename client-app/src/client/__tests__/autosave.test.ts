@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { clearDraft, loadStepData, mergeDraft, saveStepData } from "../autosave";
 
 function createStorage(initial: Record<string, string> = {}) {
-  let store = { ...initial };
+  const store = { ...initial };
   return {
     getItem: (key: string) => (key in store ? store[key] : null),
     setItem: (key: string, value: string) => {

@@ -2,7 +2,7 @@ import { Card } from "./ui/Card";
 import { Spinner } from "./ui/Spinner";
 import { components, layout, tokens } from "@/styles";
 import { useProcessingStatus } from "@/hooks/useProcessingStatus";
-import type { ProcessingCheckpoint, ProcessingStatus } from "@/types/processing";
+import type { ProcessingCheckpoint } from "@/types/processing";
 
 type StatusSummaryProps = {
   applicationId: string | null;

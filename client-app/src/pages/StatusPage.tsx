@@ -41,8 +41,8 @@ import { buildClientHistoryEvents } from "../portal/clientHistory";
 import { updateClientSession } from "../state/clientSession";
 import { components, layout, tokens } from "@/styles";
 
-const setMessages = (..._args: unknown[]) => {};
-const saveMessageHistory = (..._args: unknown[]) => {};
+const setMessages = () => {};
+const saveMessageHistory = () => {};
 
 export function StatusPage(): JSX.Element {
   const token = new URLSearchParams(window.location.search).get("token");
