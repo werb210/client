@@ -36,7 +36,7 @@ function loadProfiles(): Record<string, ClientProfile> {
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return {};
     return parsed;
-  } catch (error) {
+  } catch {
     return {};
   }
 }
@@ -44,7 +44,7 @@ function loadProfiles(): Record<string, ClientProfile> {
 function saveProfiles(profiles: Record<string, ClientProfile>) {
   try {
     localStorage.setItem(PROFILE_KEY, JSON.stringify(profiles));
-  } catch (error) {
+  } catch {
   }
 }
 
@@ -57,7 +57,7 @@ function getSessionStorage() {
       return globalThis.sessionStorage as Storage;
     }
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -67,7 +67,7 @@ function setPortalSessionToken(token: string) {
   if (!storage) return;
   try {
     storage.setItem(PORTAL_SESSION_KEY, token);
-  } catch (error) {
+  } catch {
   }
 }
 
@@ -76,7 +76,7 @@ function getPortalSessionToken() {
   if (!storage) return "";
   try {
     return storage.getItem(PORTAL_SESSION_KEY) || "";
-  } catch (error) {
+  } catch {
     return "";
   }
 }
@@ -86,7 +86,7 @@ function clearPortalSessionToken() {
   if (!storage) return;
   try {
     storage.removeItem(PORTAL_SESSION_KEY);
-  } catch (error) {
+  } catch {
   }
 }
 
@@ -95,14 +95,14 @@ export const ClientProfileStore = {
   getLastUsedPhone() {
     try {
       return localStorage.getItem(LAST_PHONE_KEY) || "";
-    } catch (error) {
+    } catch {
       return "";
     }
   },
   setLastUsedPhone(phone: string) {
     try {
       localStorage.setItem(LAST_PHONE_KEY, phone);
-    } catch (error) {
+    } catch {
     }
   },
   getProfile(phone: string) {
@@ -192,7 +192,7 @@ export const ClientProfileStore = {
     };
     try {
       localStorage.setItem(OTP_KEY, JSON.stringify(payload));
-    } catch (error) {
+    } catch {
     }
     return code;
   },
@@ -208,7 +208,7 @@ export const ClientProfileStore = {
         return null;
       }
       return parsed;
-    } catch (error) {
+    } catch {
       return null;
     }
   },
@@ -219,7 +219,7 @@ export const ClientProfileStore = {
     if (match) {
       try {
         localStorage.removeItem(OTP_KEY);
-      } catch (error) {
+      } catch {
       }
     }
     return match;
@@ -264,7 +264,7 @@ export const ClientProfileStore = {
       localStorage.removeItem(PROFILE_KEY);
       localStorage.removeItem(LAST_PHONE_KEY);
       localStorage.removeItem(OTP_KEY);
-    } catch (error) {
+    } catch {
     }
     this.clearPortalSessions();
   },

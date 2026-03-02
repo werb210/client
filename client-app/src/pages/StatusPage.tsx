@@ -110,7 +110,7 @@ export function StatusPage(): JSX.Element {
     setStatus(next);
   }, []);
 
-  const handleStatusError = useCallback((error: unknown) => {
+  const handleStatusError = useCallback(() => {
   }, []);
 
   const { state: statusPollingState } = useProcessingStatusPoller({
@@ -167,7 +167,7 @@ export function StatusPage(): JSX.Element {
     [token]
   );
 
-  const handleSubmissionError = useCallback((error: unknown) => {
+  const handleSubmissionError = useCallback(() => {
   }, []);
 
   useProcessingStatusPoller({
@@ -195,7 +195,7 @@ export function StatusPage(): JSX.Element {
     [token]
   );
 
-  const handleMessagesError = useCallback((error: unknown) => {
+  const handleMessagesError = useCallback(() => {
   }, []);
 
   useProcessingStatusPoller({

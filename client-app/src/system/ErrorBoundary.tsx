@@ -15,6 +15,8 @@ export default class ErrorBoundary extends React.Component<unknown, State> {
   }
 
   componentDidCatch(error: unknown, errorInfo: unknown) {
+    void error;
+    void errorInfo;
   }
 
   render() {

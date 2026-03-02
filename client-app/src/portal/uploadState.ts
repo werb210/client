@@ -61,7 +61,7 @@ export function loadUploadState(
     });
 
     return { state: restoredState, errors: restoredErrors };
-  } catch (error) {
+  } catch {
     return { state: {}, errors: {} };
   }
 }
@@ -90,7 +90,7 @@ export function saveUploadState(
       updatedAt: new Date().toISOString(),
     };
     storage.setItem(getStorageKey(applicationId), JSON.stringify(payload));
-  } catch (error) {
+  } catch {
   }
 }
 
@@ -98,6 +98,6 @@ export function clearUploadState(applicationId: string, storage: Storage | null)
   if (!applicationId || !storage) return;
   try {
     storage.removeItem(getStorageKey(applicationId));
-  } catch (error) {
+  } catch {
   }
 }

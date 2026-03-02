@@ -224,7 +224,7 @@ export function Step4_Applicant() {
 
       await persistApplicationStep(app, 4, { applicant: values });
       setSaveError(null);
-    } catch (error) {
+    } catch {
       setSaveError("We couldn't submit your application. Please try again.");
       return;
     }

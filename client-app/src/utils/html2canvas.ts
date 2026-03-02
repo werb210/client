@@ -32,7 +32,7 @@ export default async function html2canvas(element: HTMLElement, options: Capture
     });
 
     context.drawImage(img, 0, 0, width, height);
-  } catch (error) {
+  } catch {
   }
 
   return canvas;

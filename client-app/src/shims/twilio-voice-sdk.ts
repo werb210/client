@@ -38,8 +38,9 @@ export class Device {
     incoming: [],
   };
 
-  constructor(token: string, _options?: { logLevel?: number }) {
+  constructor(token: string, options?: { logLevel?: number }) {
     this.token = token;
+    void options;
   }
 
   on(event: "registered" | "error", handler: () => void): void;
@@ -61,7 +62,8 @@ export class Device {
     this.listeners.registered.forEach((handler) => handler());
   }
 
-  async connect(_options?: { params?: Record<string, string> }) {
+  async connect(options?: { params?: Record<string, string> }) {
+    void options;
     const call = new Call();
     queueMicrotask(() => {
       call.accept();

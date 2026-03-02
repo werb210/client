@@ -26,7 +26,7 @@ function parseSessions(raw: string | null): PortalSession[] {
   try {
     const parsed = JSON.parse(raw);
     return normalizeSessions(parsed);
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -66,7 +66,7 @@ async function readSessionsFromIndexedDb(): Promise<PortalSession[] | null> {
       request.onsuccess = () => resolve(normalizeSessions(request.result));
       request.onerror = () => resolve(null);
     });
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -82,7 +82,7 @@ async function writeSessionsToIndexedDb(sessions: PortalSession[]) {
       const store = tx.objectStore(STORE_NAME);
       store.put(sessions, STORE_KEY);
     });
-  } catch (error) {
+  } catch {
   }
 }
 
@@ -96,7 +96,7 @@ async function clearSessionsFromIndexedDb() {
       tx.onerror = () => reject(tx.error);
       tx.objectStore(STORE_NAME).delete(STORE_KEY);
     });
-  } catch (error) {
+  } catch {
   }
 }
 
@@ -107,7 +107,7 @@ export function loadPortalSessions(): PortalSession[] {
     const sessions = parseSessions(raw);
     cachedSessions = sessions;
     return sessions;
-  } catch (error) {
+  } catch {
     cachedSessions = [];
     return [];
   }
@@ -117,7 +117,7 @@ export function savePortalSessions(sessions: PortalSession[]) {
   cachedSessions = sessions;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-  } catch (error) {
+  } catch {
   }
   void writeSessionsToIndexedDb(sessions);
 }
@@ -132,7 +132,7 @@ export async function clearPortalSessions() {
   cachedSessions = [];
   try {
     localStorage.removeItem(STORAGE_KEY);
-  } catch (error) {
+  } catch {
   }
   await clearSessionsFromIndexedDb();
 }

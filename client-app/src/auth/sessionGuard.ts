@@ -152,7 +152,7 @@ export function useSessionGuard() {
   }, [guard.hasAuth, isOffline]);
 }
 
-export function SessionGuard(): JSX.Element {
+export function SessionGuard(): null {
   useSessionGuard();
-  return <></>;
+  return null;
 }

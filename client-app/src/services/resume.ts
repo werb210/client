@@ -52,7 +52,7 @@ export async function resumeApplication({
       offline: false,
       submitted,
     };
-  } catch (error) {
+  } catch {
     return {
       token: cached.applicationToken,
       status: null,

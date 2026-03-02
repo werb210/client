@@ -19,7 +19,7 @@ async function fetchReadinessWithRetry(
       if (response.ok || response.status < 500 || attempt >= maxAttempts) {
         return response;
       }
-    } catch (error) {
+    } catch {
       if (attempt >= maxAttempts) {
         throw error;
       }

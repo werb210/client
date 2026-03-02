@@ -46,7 +46,7 @@ export function loadSubmissionStatusCache(
     const parsed = JSON.parse(raw) as SubmissionStatusSnapshot;
     if (!parsed || typeof parsed !== "object") return null;
     return parsed;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -58,7 +58,7 @@ export function saveSubmissionStatusCache(
   if (!key) return;
   try {
     localStorage.setItem(getCacheKey(key), JSON.stringify(snapshot));
-  } catch (error) {
+  } catch {
   }
 }
 
