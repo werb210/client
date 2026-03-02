@@ -73,7 +73,7 @@ export function ApplicationPortalPage(): JSX.Element {
   useEffect(() => {
     const unsubscribe = subscribe(setCallState);
 
-    void initVoice().catch((error) => {
+    void initVoice().catch(() => {
       setCallState("error");
     });
 

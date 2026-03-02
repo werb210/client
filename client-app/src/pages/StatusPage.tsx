@@ -64,7 +64,7 @@ export function StatusPage(): JSX.Element {
     try {
       const res = await ClientAppAPI.status(token);
       setStatus(res.data);
-    } catch (error) {
+    } catch {
     }
   }, [token]);
 
@@ -312,7 +312,7 @@ export function StatusPage(): JSX.Element {
         currentStep: 2,
       });
       navigate("/apply/step-2");
-    } catch (error) {
+    } catch {
       setLinkedAppError("Unable to start a linked application. Please try again.");
     } finally {
       setLinkedAppBusy(false);

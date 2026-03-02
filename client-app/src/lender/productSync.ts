@@ -19,7 +19,8 @@ export const ProductSync = {
   invalidateCache() {
     const existing = OfflineStore.load() || {};
     if (existing.lenderProducts) {
-      const { lenderProducts, ...rest } = existing;
+      const rest = { ...existing };
+      delete rest.lenderProducts;
       OfflineStore.save(rest);
     }
   },
