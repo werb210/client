@@ -58,7 +58,7 @@ async function postWithRetry<TPayload>(
           "X-Idempotency-Key": idempotencyKey,
         },
       });
-    } catch {
+    } catch (error) {
       attempt += 1;
       if (!shouldRetryRequest(error, attempt)) {
         throw error;
@@ -139,8 +139,8 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
         saveCache(READINESS_DEDUP_KEY, cache);
       }
       return responseData;
-    } catch {
-      throw new Error("Unable to submit credit readiness. Please try again.");
+    } catch (error) {
+      throw error;
     } finally {
       readinessInFlight.delete(inFlightKey);
     }

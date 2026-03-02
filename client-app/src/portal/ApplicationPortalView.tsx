@@ -297,7 +297,7 @@ export function ApplicationPortalView({
               )}
 
               {callStatus === "connecting" && (
-                <div className="text-yellow-600">Connecting...</div>
+                <div className="text-yellow-600">Connecting…</div>
               )}
 
               {callStatus === "connected" && (
