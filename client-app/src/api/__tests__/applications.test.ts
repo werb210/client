@@ -9,7 +9,7 @@ vi.mock("@/lib/api", () => ({
 }));
 
 describe("submitApplication", () => {
-  const expectedAttribution = {
+  const expectedAttribution: Record<string, string | null> = {
     utm_source: null,
     utm_medium: null,
     utm_campaign: null,
