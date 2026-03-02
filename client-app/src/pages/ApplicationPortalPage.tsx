@@ -28,13 +28,13 @@ import {
 import { buildClientHistoryEvents } from "@/portal/clientHistory";
 import { components, layout, tokens } from "@/styles";
 
-export function ApplicationPortalPage() {
+export function ApplicationPortalPage(): JSX.Element {
   const { id } = useParams();
   const location = useLocation();
   const submissionState = location.state as
     | { submitted?: boolean; duplicate?: boolean }
     | null;
-  const [application, setApplication] = useState<any>(null);
+  const [application, setApplication] = useState<Record<string, unknown> | null>(null);
   const [documents, setDocuments] = useState(
     [] as ReturnType<typeof normalizeDocumentsResponse>
   );
@@ -54,7 +54,6 @@ export function ApplicationPortalPage() {
     try {
       return window.sessionStorage ?? null;
     } catch (error) {
-      console.warn("Failed to access session storage:", error);
       return null;
     }
   }, []);
@@ -75,7 +74,6 @@ export function ApplicationPortalPage() {
     const unsubscribe = subscribe(setCallState);
 
     void initVoice().catch((error) => {
-      console.error("Failed to initialize voice", error);
       setCallState("error");
     });
 
@@ -100,7 +98,7 @@ export function ApplicationPortalPage() {
         fetchApplication(id),
         fetchApplicationDocuments(id),
       ]);
-      const nextApplication = applicationRes as any;
+      const nextApplication = applicationRes as Record<string, unknown>;
       setApplication(nextApplication);
       setDocuments(normalizeDocumentsResponse(documentsRes));
       const stageValue =
@@ -123,9 +121,8 @@ export function ApplicationPortalPage() {
             ? "This application is in a final stage. Documents are view-only."
             : null
       );
-    } catch (err: any) {
-      console.error("Failed to load application portal:", err);
-      const status = err?.response?.status;
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 401 || status === 403) {
         navigate("/portal", { replace: true });
         return;
@@ -275,7 +272,6 @@ export function ApplicationPortalPage() {
         });
         await refreshDocuments();
       } catch (err) {
-        console.error("Upload failed:", err);
         if (typeof navigator !== "undefined" && navigator.onLine === false) {
           setUploadErrors((prev) => ({
             ...prev,

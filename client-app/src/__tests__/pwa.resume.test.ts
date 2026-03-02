@@ -17,7 +17,24 @@ class MemoryStorage {
   }
 }
 
-function createIndexedDbMock(initial: any) {
+type RequestMock<T> = {
+  result: T;
+  onsuccess: null | (() => void);
+  onerror: null | (() => void);
+  onupgradeneeded?: null | (() => void);
+};
+
+type TransactionMock = {
+  oncomplete: null | (() => void);
+  onerror: null | (() => void);
+  objectStore: () => {
+    get: () => RequestMock<unknown>;
+    put: (value: unknown) => void;
+    delete: () => void;
+  };
+};
+
+function createIndexedDbMock(initial: unknown) {
   let storeValue = initial;
   const db = {
     objectStoreNames: {
@@ -25,26 +42,31 @@ function createIndexedDbMock(initial: any) {
     },
     createObjectStore: () => {},
     transaction: () => {
-      const transaction: any = {
+      const transaction: TransactionMock = {
         oncomplete: null,
         onerror: null,
+        objectStore: () => ({
+          get: () => ({ result: null, onsuccess: null, onerror: null }),
+          put: () => {},
+          delete: () => {},
+        }),
       };
       transaction.objectStore = () => ({
         get: () => {
-          const request: any = { result: storeValue, onsuccess: null, onerror: null };
+          const request: RequestMock<unknown> = { result: storeValue, onsuccess: null, onerror: null };
           queueMicrotask(() => request.onsuccess?.());
           return request;
         },
-        put: (value: any) => {
+        put: (value: unknown) => {
           storeValue = value;
           if (transaction.oncomplete) {
-            queueMicrotask(() => transaction.oncomplete());
+            queueMicrotask(() => transaction.oncomplete?.());
           }
         },
         delete: () => {
           storeValue = null;
           if (transaction.oncomplete) {
-            queueMicrotask(() => transaction.oncomplete());
+            queueMicrotask(() => transaction.oncomplete?.());
           }
         },
       });
@@ -54,7 +76,7 @@ function createIndexedDbMock(initial: any) {
 
   return {
     open: () => {
-      const request: any = {
+      const request: RequestMock<typeof db> = {
         result: db,
         onsuccess: null,
         onerror: null,

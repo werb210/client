@@ -11,48 +11,48 @@ import { uploadDocument } from "@/services/documentService";
 import { getPersistedAttribution } from "@/utils/attribution";
 
 export async function submitApplication(
-  payload: any,
+  payload: unknown,
   options?: { idempotencyKey?: string; continuationToken?: string }
-) {
+): Promise<unknown> {
   const creditSessionToken = localStorage.getItem("creditSessionToken");
   const attribution = getPersistedAttribution();
 
   const submissionPayload =
     payload && typeof payload === "object" && !Array.isArray(payload)
       ? {
-          ...(payload as Record<string, any>),
+          ...(payload as Record<string, unknown>),
           ...attribution,
           ...(options?.continuationToken ? { continuationToken: options.continuationToken } : {}),
           creditSessionToken,
         }
       : payload;
 
-  const res: any = await api.post("/api/client/submissions", submissionPayload, {
+  const res: unknown = await api.post("/api/client/submissions", submissionPayload, {
     headers: options?.idempotencyKey
       ? { "Idempotency-Key": options.idempotencyKey }
       : undefined,
   });
   localStorage.removeItem("creditSessionToken");
-  return res?.data as any;
+  return (res as { data?: unknown })?.data;
 }
 
 export async function createPublicApplication(
-  payload: any,
+  payload: unknown,
   options?: { idempotencyKey?: string; readinessToken?: string; sessionId?: string }
-) {
+): Promise<unknown> {
   const attribution = getPersistedAttribution();
 
   const submissionPayload =
     payload && typeof payload === "object" && !Array.isArray(payload)
       ? {
-          ...(payload as Record<string, any>),
+          ...(payload as Record<string, unknown>),
           ...attribution,
           readinessToken: options?.readinessToken,
           sessionId: options?.sessionId,
         }
       : payload;
 
-  const res: any = await api.post("/api/applications", submissionPayload, {
+  const res: unknown = await api.post("/api/applications", submissionPayload, {
     headers: {
       ...(options?.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey } : {}),
       ...(options?.readinessToken ? { "X-Readiness-Token": options.readinessToken } : {}),
@@ -61,34 +61,34 @@ export async function createPublicApplication(
   });
   return parseApiResponse(
     PublicApplicationResponseSchema,
-    res.data,
+    (res as { data: unknown }).data,
     "POST /api/applications"
   );
 }
 
-export async function fetchApplication(id: string) {
-  const res: any = await api.get(`/api/applications/${id}`);
+export async function fetchApplication(id: string): Promise<unknown> {
+  const res: unknown = await api.get(`/api/applications/${id}`);
   return parseApiResponse(
     FetchApplicationResponseSchema,
-    res.data,
+    (res as { data: unknown }).data,
     "GET /api/applications/{id}"
   );
 }
 
-export async function fetchApplicationDocuments(id: string) {
-  const res: any = await api.get(`/api/applications/${id}/documents`);
+export async function fetchApplicationDocuments(id: string): Promise<unknown> {
+  const res: unknown = await api.get(`/api/applications/${id}/documents`);
   return parseApiResponse(
     ApplicationDocumentsResponseSchema,
-    res.data,
+    (res as { data: unknown }).data,
     "GET /api/applications/{id}/documents"
   );
 }
 
-export async function fetchApplicationOffers(id: string) {
-  const res: any = await api.get(`/api/applications/${id}/offers`);
+export async function fetchApplicationOffers(id: string): Promise<unknown> {
+  const res: unknown = await api.get(`/api/applications/${id}/offers`);
   return parseApiResponse(
     ApplicationOffersResponseSchema,
-    res.data,
+    (res as { data: unknown }).data,
     "GET /api/applications/{id}/offers"
   );
 }
@@ -100,7 +100,7 @@ export async function uploadApplicationDocument(
     file: File;
     onProgress?: (progress: number) => void;
   }
-) {
+): Promise<unknown> {
   if (payload.file.size > 10 * 1024 * 1024) {
     throw new Error("file_too_large");
   }
@@ -121,5 +121,5 @@ export async function uploadApplicationDocument(
   payload.onProgress?.(10);
   const data = await uploadDocument(payload.file, id);
   payload.onProgress?.(100);
-  return data as any;
+  return data as unknown;
 }
