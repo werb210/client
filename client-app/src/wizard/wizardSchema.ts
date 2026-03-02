@@ -79,7 +79,6 @@ export const wizardSchema: Record<WizardStepKey, { fields: WizardFieldMeta[] }> 
   },
   step4: {
     fields: [
-      { key: "fullName", required: true, autoAdvance: true },
       { key: "firstName", required: true, autoAdvance: true },
       { key: "lastName", required: true, autoAdvance: true },
       { key: "email", required: true, autoAdvance: true },
