@@ -53,7 +53,7 @@ export function ApplicationPortalPage(): JSX.Element {
     if (typeof window === "undefined") return null;
     try {
       return window.sessionStorage ?? null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }, []);
@@ -271,7 +271,7 @@ export function ApplicationPortalPage(): JSX.Element {
           },
         });
         await refreshDocuments();
-      } catch (err) {
+      } catch {
         if (typeof navigator !== "undefined" && navigator.onLine === false) {
           setUploadErrors((prev) => ({
             ...prev,
