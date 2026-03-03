@@ -113,12 +113,12 @@ const FixedAssetsOptions = [
   "Over $1 million",
 ];
 
-function parseCurrency(value: string) {
+function parseCurrency(value: string): number {
   const cleaned = value.replace(/[^0-9.]/g, "");
   return Number.parseFloat(cleaned);
 }
 
-function mapYearsInBusiness(years?: number) {
+function mapYearsInBusiness(years?: number): string | undefined {
   if (typeof years !== "number") return undefined;
   if (years <= 0) return "Zero";
   if (years < 1) return "Under 1 Year";
@@ -126,7 +126,7 @@ function mapYearsInBusiness(years?: number) {
   return "Over 3 Years";
 }
 
-function mapAnnualRevenue(amount?: number) {
+function mapAnnualRevenue(amount?: number): string | undefined {
   if (typeof amount !== "number") return undefined;
   if (amount <= 150000) return "Zero to $150,000";
   if (amount <= 500000) return "$150,001 to $500,000";
@@ -135,7 +135,7 @@ function mapAnnualRevenue(amount?: number) {
   return "Over $3,000,000";
 }
 
-function mapMonthlyRevenue(amount?: number) {
+function mapMonthlyRevenue(amount?: number): string | undefined {
   if (typeof amount !== "number") return undefined;
   if (amount <= 10000) return "Under $10,000";
   if (amount <= 30000) return "$10,001 to $30,000";
@@ -143,7 +143,7 @@ function mapMonthlyRevenue(amount?: number) {
   return "Over $100,000";
 }
 
-function mapArOutstanding(amount?: number) {
+function mapArOutstanding(amount?: number): string | undefined {
   if (typeof amount !== "number") return undefined;
   if (amount <= 0) return "No Account Receivables";
   if (amount < 100000) return "Zero to $100,000";
@@ -165,7 +165,7 @@ function buildMatchPercentages(amount: number): Record<string, number> {
   }, {} as Record<string, number>);
 }
 
-export function Step1_KYC() {
+export function Step1_KYC(): JSX.Element {
   const { app, update, autosaveError } = useApplicationStore();
   const readiness = useReadiness();
   const [showLocationModal, setShowLocationModal] = useState(false);
