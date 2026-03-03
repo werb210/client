@@ -6,11 +6,12 @@ import {
   ClientAppStatusResponseSchema,
   parseApiResponse,
 } from "@/contracts/clientApiSchemas";
-import type { ApiError, ApiResponse } from "@/types/api";
+import type { ApiError } from "@/types/api";
 
 type ClientAppStartResponse = z.infer<typeof ClientAppStartResponseSchema>;
 type ClientAppStatusResponse = z.infer<typeof ClientAppStatusResponseSchema>;
 type ClientAppMessagesResponse = z.infer<typeof ClientAppMessagesResponseSchema>;
+type GenericObjectResponse = Record<string, unknown>;
 
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastError: unknown;
@@ -34,7 +35,7 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
 export const ClientAppAPI = {
   start(payload: unknown) {
     return withRetry(async () => {
-      const res: ApiResponse<ClientAppStartResponse> = await api.post("/api/applications", payload);
+      const res = await api.post<ClientAppStartResponse>("/api/applications", payload);
       parseApiResponse(
         ClientAppStartResponseSchema,
         res.data,
@@ -44,7 +45,7 @@ export const ClientAppAPI = {
     });
   },
   update(token: string, payload: unknown) {
-    return withRetry(() => api.patch(`/api/applications/${token}`, payload));
+    return withRetry(() => api.patch<ClientAppStatusResponse>(`/api/applications/${token}`, payload));
   },
   uploadDoc(
     token: string,
@@ -56,20 +57,20 @@ export const ClientAppAPI = {
     }
   ) {
     return withRetry(() =>
-      api.patch(`/api/applications/${token}`, payload)
+      api.patch<ClientAppStatusResponse>(`/api/applications/${token}`, payload)
     );
   },
   deferDocuments(token: string) {
     return withRetry(() =>
-      api.patch(`/api/applications/${token}`, { documentsDeferred: true })
+      api.patch<ClientAppStatusResponse>(`/api/applications/${token}`, { documentsDeferred: true })
     );
   },
   submit(token: string) {
-    return withRetry(() => api.post(`/api/applications/${token}/submit`));
+    return withRetry(() => api.post<GenericObjectResponse>(`/api/applications/${token}/submit`));
   },
   status(token: string) {
     return withRetry(async () => {
-      const res: ApiResponse<ClientAppStatusResponse> = await api.get(`/api/applications/${token}`);
+      const res = await api.get<ClientAppStatusResponse>(`/api/applications/${token}`);
       parseApiResponse(
         ClientAppStatusResponseSchema,
         res.data,
@@ -80,7 +81,7 @@ export const ClientAppAPI = {
   },
   getApplication(applicationId: string) {
     return withRetry(async () => {
-      const res: ApiResponse<ClientAppStatusResponse> = await api.get(`/api/applications/${applicationId}`);
+      const res = await api.get<ClientAppStatusResponse>(`/api/applications/${applicationId}`);
       parseApiResponse(
         ClientAppStatusResponseSchema,
         res.data,
@@ -90,11 +91,11 @@ export const ClientAppAPI = {
     });
   },
   updateApplication(applicationId: string, payload: unknown) {
-    return withRetry(() => api.patch(`/api/applications/${applicationId}`, payload));
+    return withRetry(() => api.patch<ClientAppStatusResponse>(`/api/applications/${applicationId}`, payload));
   },
   getMessages(token: string) {
     return withRetry(async () => {
-      const res: ApiResponse<ClientAppMessagesResponse> = await api.get(`/api/applications/${token}/messages`);
+      const res = await api.get<ClientAppMessagesResponse>(`/api/applications/${token}/messages`);
       parseApiResponse(
         ClientAppMessagesResponseSchema,
         res.data,
@@ -105,10 +106,10 @@ export const ClientAppAPI = {
   },
   sendMessage(token: string, text: string) {
     return withRetry(() =>
-      api.post(`/api/applications/${token}/messages`, { text })
+      api.post<GenericObjectResponse>(`/api/applications/${token}/messages`, { text })
     );
   },
   getSignNowUrl(token: string) {
-    return withRetry(() => api.get(`/api/applications/${token}/signnow`));
+    return withRetry(() => api.get<GenericObjectResponse>(`/api/applications/${token}/signnow`));
   },
 };
