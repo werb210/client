@@ -5,6 +5,7 @@ import {
   ClientAppStatusResponseSchema,
   parseApiResponse,
 } from "@/contracts/clientApiSchemas";
+import type { ApiError, ApiResponse } from "@/types/api";
 
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastError: unknown;
@@ -13,7 +14,8 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
       return await fn();
     } catch (err: unknown) {
       lastError = err;
-      const status = err?.response?.status;
+      const apiError = err as ApiError;
+      const status = apiError.response?.status;
       const retriable = !status || [429, 500, 502, 503, 504].includes(status);
       if (!retriable || i === attempts - 1) {
         throw err;
@@ -27,7 +29,7 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
 export const ClientAppAPI = {
   start(payload: unknown) {
     return withRetry(async () => {
-      const res: unknown = await api.post("/api/applications", payload);
+      const res: ApiResponse<unknown> = await api.post("/api/applications", payload);
       parseApiResponse(
         ClientAppStartResponseSchema,
         res.data,
@@ -62,7 +64,7 @@ export const ClientAppAPI = {
   },
   status(token: string) {
     return withRetry(async () => {
-      const res: unknown = await api.get(`/api/applications/${token}`);
+      const res: ApiResponse<unknown> = await api.get(`/api/applications/${token}`);
       parseApiResponse(
         ClientAppStatusResponseSchema,
         res.data,
@@ -73,7 +75,7 @@ export const ClientAppAPI = {
   },
   getApplication(applicationId: string) {
     return withRetry(async () => {
-      const res: unknown = await api.get(`/api/applications/${applicationId}`);
+      const res: ApiResponse<unknown> = await api.get(`/api/applications/${applicationId}`);
       parseApiResponse(
         ClientAppStatusResponseSchema,
         res.data,
@@ -87,7 +89,7 @@ export const ClientAppAPI = {
   },
   getMessages(token: string) {
     return withRetry(async () => {
-      const res: unknown = await api.get(`/api/applications/${token}/messages`);
+      const res: ApiResponse<unknown> = await api.get(`/api/applications/${token}/messages`);
       parseApiResponse(
         ClientAppMessagesResponseSchema,
         res.data,
