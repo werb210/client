@@ -15,7 +15,7 @@ const apiClient: AxiosInstance = axios.create({
 
 export const api = apiClient;
 
-export async function apiGet<T>(
+export async function apiGet<T = any>(
   url: string,
   config?: ApiRequestOptions
 ): Promise<T> {
@@ -23,7 +23,7 @@ export async function apiGet<T>(
   return response.data;
 }
 
-export async function apiPost<T>(
+export async function apiPost<T = any>(
   url: string,
   data?: unknown,
   config?: ApiRequestOptions
