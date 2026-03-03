@@ -25,5 +25,5 @@ export const DefaultApplicantQuestions = {
   ssn: "",
   ownership: "",
   hasPartners: false,
-  partners: [],
+  partners: [] as string[],
 };

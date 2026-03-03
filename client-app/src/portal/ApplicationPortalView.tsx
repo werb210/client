@@ -217,6 +217,7 @@ export function ApplicationPortalView({
   readOnlyMessage,
   historyEvents = [],
   onCallUs,
+  onEndCall,
   callStatus = "idle",
 }: ApplicationPortalViewProps) {
   const stageLabel = useMemo(() => formatStageLabel(stage), [stage]);
