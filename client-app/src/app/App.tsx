@@ -46,7 +46,7 @@ export default function App() {
     update({
       readinessSessionToken: localStorage.getItem("creditSessionToken") || appRef.current.readinessSessionToken,
       kyc: {
-        ...appRef.current.kyc,
+        ...(appRef.current.kyc as Record<string, unknown>),
         ...step1Data,
       },
     });
@@ -55,7 +55,7 @@ export default function App() {
   const setStep3Data = useCallback((step3Data: Record<string, unknown>) => {
     update({
       business: {
-        ...appRef.current.business,
+        ...(appRef.current.business as Record<string, unknown>),
         ...step3Data,
       },
     });
@@ -64,7 +64,7 @@ export default function App() {
   const setStep4Data = useCallback((step4Data: Record<string, unknown>) => {
     update({
       applicant: {
-        ...appRef.current.applicant,
+        ...(appRef.current.applicant as Record<string, unknown>),
         ...step4Data,
       },
     });
@@ -104,7 +104,7 @@ export default function App() {
   useEffect(() => {
     const handleBeforeUnload = () => {
       const estimatedValue = estimateClientCommission(
-        Number(app.kyc?.fundingAmount || 0)
+        Number((app.kyc as Record<string, unknown>)?.fundingAmount || 0)
       );
 
       trackEvent("application_abandoned", {

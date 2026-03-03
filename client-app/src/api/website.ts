@@ -282,15 +282,21 @@ async function findExistingReadinessSession(payload: CreditReadinessPayload) {
   try {
     const session = await getContinuationSession();
     if (!session || typeof session !== "object") return null;
-    const sessionEmail = normalize((session as unknown).email as string | undefined);
-    const sessionPhone = normalize((session as unknown).phone as string | undefined);
+
+    const sessionRecord = session as Record<string, unknown>;
+    const sessionEmail = normalize(
+      typeof sessionRecord.email === "string" ? sessionRecord.email : undefined
+    );
+    const sessionPhone = normalize(
+      typeof sessionRecord.phone === "string" ? sessionRecord.phone : undefined
+    );
     const payloadEmail = normalize(payload.email);
     const payloadPhone = normalize(payload.phone);
     if (!sessionEmail && !sessionPhone) return null;
     const matchesEmail = payloadEmail && payloadEmail === sessionEmail;
     const matchesPhone = payloadPhone && payloadPhone === sessionPhone;
     if (!matchesEmail && !matchesPhone) return null;
-    return session as Record<string, unknown>;
+    return sessionRecord;
   } catch {
     return null;
   }

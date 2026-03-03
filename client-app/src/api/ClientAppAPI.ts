@@ -1,10 +1,8 @@
-// client-app/src/api/ClientAppAPI.ts
+export type ApiResult<T extends Record<string, unknown>> = Promise<T>;
 
-export type ApiResult<T> = Promise<T>;
-
-async function request<T>(
+async function request<T extends Record<string, unknown>>(
   url: string,
-  method: 'GET' | 'POST' | 'PATCH',
+  method: "GET" | "POST" | "PATCH",
   body?: unknown,
   options?: RequestInit
 ): Promise<T> {
@@ -12,31 +10,31 @@ async function request<T>(
     ...options,
     method,
     headers: {
-      'Content-Type': 'application/json',
-      ...(options?.headers ?? {}),
+      "Content-Type": "application/json",
+      ...(options?.headers ?? {})
     },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined
   });
 
   if (!res.ok) {
     throw new Error(`API request failed: ${res.status}`);
   }
 
-  const data = await res.json();
+  const data: unknown = await res.json();
 
   return data as T;
 }
 
 export const api = {
-  get<T>(url: string, options?: RequestInit) {
-    return request<T>(url, 'GET', undefined, options);
+  get<T extends Record<string, unknown>>(url: string, options?: RequestInit) {
+    return request<T>(url, "GET", undefined, options);
   },
 
-  post<T>(url: string, body?: unknown, options?: RequestInit) {
-    return request<T>(url, 'POST', body, options);
+  post<T extends Record<string, unknown>>(url: string, body?: unknown, options?: RequestInit) {
+    return request<T>(url, "POST", body, options);
   },
 
-  patch<T>(url: string, body?: unknown, options?: RequestInit) {
-    return request<T>(url, 'PATCH', body, options);
-  },
+  patch<T extends Record<string, unknown>>(url: string, body?: unknown, options?: RequestInit) {
+    return request<T>(url, "PATCH", body, options);
+  }
 };
