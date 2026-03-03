@@ -1,5 +1,6 @@
 import api from "@/lib/api";
 import type { ProcessingStatus } from "@/types/processing";
+import type { DocumentCounts } from "@/types/api";
 import {
   ProcessingStatusResponseSchema,
   parseApiResponse,
@@ -13,8 +14,23 @@ type RawProcessingCheckpoint = {
   requiredCount?: number | null;
   statementCount?: number | null;
   requiredStatements?: number | null;
-  [key: string]: unknown;
-};
+} & Partial<DocumentCounts>;
+
+type ProcessingStatusPayload = {
+    documentReview?: RawProcessingCheckpoint;
+    document_review?: RawProcessingCheckpoint;
+    documents?: RawProcessingCheckpoint;
+    document_processing?: RawProcessingCheckpoint;
+    document?: RawProcessingCheckpoint;
+    financialReview?: RawProcessingCheckpoint;
+    financial_review?: RawProcessingCheckpoint;
+    financials?: RawProcessingCheckpoint;
+    financial_processing?: RawProcessingCheckpoint;
+    financial?: RawProcessingCheckpoint;
+    steps?: RawProcessingCheckpoint[];
+    stages?: RawProcessingCheckpoint[];
+  } & {
+  };
 
 function normalizeStatus(value: unknown): ProcessingStatus["documentReview"]["status"] {
   const normalized = String(value || "").toLowerCase();
@@ -24,33 +40,24 @@ function normalizeStatus(value: unknown): ProcessingStatus["documentReview"]["st
   return "pending";
 }
 
-function normalizeCheckpoint(raw?: RawProcessingCheckpoint | null) {
+function normalizeCheckpoint(raw?: RawProcessingCheckpoint | null): ProcessingStatus["documentReview"] {
   return {
     status: normalizeStatus(raw?.status),
-    completedAt: (raw?.completedAt || raw?.completed_at || null) as string | null,
+    completedAt: raw?.completedAt || raw?.completed_at || null,
     details: {
-      receivedCount:
-        (raw?.receivedCount ??
-          raw?.statementCount ??
-          (raw as unknown)?.received_count ??
-          null) as number | null,
-      requiredCount:
-        (raw?.requiredCount ??
-          raw?.requiredStatements ??
-          (raw as unknown)?.required_count ??
-          null) as number | null,
+      receivedCount: raw?.receivedCount ?? raw?.statementCount ?? raw?.received_count ?? null,
+      requiredCount: raw?.requiredCount ?? raw?.requiredStatements ?? raw?.required_count ?? null,
     },
   };
 }
 
 function isCheckpointLike(value: unknown): value is RawProcessingCheckpoint {
   if (!value || typeof value !== "object") return false;
-  const status = (value as RawProcessingCheckpoint).status;
-  return typeof status === "string";
+  const candidate = value as RawProcessingCheckpoint;
+  return typeof candidate.status === "string";
 }
 
-function extractCheckpointCandidates(source: unknown): RawProcessingCheckpoint[] {
-  if (!source || typeof source !== "object") return [];
+function extractCheckpointCandidates(source: ProcessingStatusPayload): RawProcessingCheckpoint[] {
   if (Array.isArray(source.steps)) {
     return source.steps.filter(isCheckpointLike);
   }
@@ -70,20 +77,20 @@ export async function fetchProcessingStatus(
     ProcessingStatusResponseSchema,
     response.data,
     "GET /api/applications/{id}/processing/status"
-  ) as unknown;
+  ) as unknown as ProcessingStatusPayload;
 
   const documentSource =
-    raw?.documentReview ||
-    raw?.document_review ||
-    raw?.documents ||
-    raw?.document_processing ||
-    raw?.document;
+    raw.documentReview ||
+    raw.document_review ||
+    raw.documents ||
+    raw.document_processing ||
+    raw.document;
   const financialSource =
-    raw?.financialReview ||
-    raw?.financial_review ||
-    raw?.financials ||
-    raw?.financial_processing ||
-    raw?.financial;
+    raw.financialReview ||
+    raw.financial_review ||
+    raw.financials ||
+    raw.financial_processing ||
+    raw.financial;
 
   let documentCheckpoint = documentSource;
   let financialCheckpoint = financialSource;

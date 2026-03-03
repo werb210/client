@@ -16,10 +16,10 @@ export async function lookupPreApplication(
 ): Promise<PreApplicationLookupResponse | null> {
   return apiRequest<PreApplicationLookupResponse>(
     `/api/preapp/lookup?email=${encodeURIComponent(email)}`
-  ).catch(() => null);
+  ).catch((): null => null);
 }
 
-export async function consumePreApplication(token: string) {
+export async function consumePreApplication(token: string): Promise<unknown> {
   return apiRequest("/api/preapp/consume", {
     method: "POST",
     body: JSON.stringify({ token }),
