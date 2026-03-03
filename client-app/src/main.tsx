@@ -9,6 +9,7 @@ import { validateEnv } from "./config/env";
 import { clearClientStorage } from "./auth/logout";
 import { fetchApplicationContinuation } from "./api/applicationProgress";
 import { processQueue } from "./lib/uploadQueue";
+import { initializeVoice } from "./telephony/services/voiceDevice";
 
 if (import.meta.env.PROD) {
   validateEnv();
@@ -59,6 +60,7 @@ async function bootstrapContinuation() {
 }
 
 void bootstrapContinuation().finally(() => {
+  void initializeVoice("client_user");
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
       <ErrorBoundary>

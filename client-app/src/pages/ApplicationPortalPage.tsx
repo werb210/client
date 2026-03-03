@@ -27,6 +27,7 @@ import {
 } from "@/api/applications";
 import { buildClientHistoryEvents } from "@/portal/clientHistory";
 import { components, layout, tokens } from "@/styles";
+import CallUsButton from "@/telephony/components/CallUsButton";
 
 export function ApplicationPortalPage(): JSX.Element {
   const { id } = useParams();
@@ -73,7 +74,7 @@ export function ApplicationPortalPage(): JSX.Element {
   useEffect(() => {
     const unsubscribe = subscribe(setCallState);
 
-    void initVoice().catch(() => {
+    void initVoice("client_user").catch(() => {
       setCallState("error");
     });
 
@@ -332,7 +333,10 @@ export function ApplicationPortalPage(): JSX.Element {
 
   return (
     <div style={layout.page}>
-      <div style={layout.portalColumn}>{submittedBanner}</div>
+      <div style={layout.portalColumn}>
+        {submittedBanner}
+        <CallUsButton />
+      </div>
       <ApplicationPortalView
         businessName={businessName}
         stage={stage}
