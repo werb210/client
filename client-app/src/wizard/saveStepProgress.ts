@@ -4,7 +4,7 @@ import { ApplicationData } from "../types/application";
 export async function persistApplicationStep(
   app: ApplicationData,
   step: number,
-  data: Record<string, unknown>
+  data: Record<string, any>
 ) {
   const applicationId = app.applicationId || app.applicationToken;
   if (!applicationId) {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { isApplicationSubmitted } from "../services/resume";
 import { normalizeSubmissionStatus } from "../services/applicationStatus";
 

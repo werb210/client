@@ -23,7 +23,7 @@ const initialFormState = {
   creditScoreRange: "",
 };
 
-function resolveContinueUrl(payload: Record<string, unknown>) {
+function resolveContinueUrl(payload: Record<string, any>) {
   const token =
     payload?.readinessToken ||
     payload?.token ||

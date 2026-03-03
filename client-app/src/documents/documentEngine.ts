@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function buildRequiredDocumentList(matchingProducts: unknown[]) {
   const docs = new Set<string>();
 

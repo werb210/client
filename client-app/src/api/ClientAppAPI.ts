@@ -1,6 +1,6 @@
-export type ApiResult<T extends Record<string, unknown>> = Promise<T>;
+export type ApiResult<T extends Record<string, any>> = Promise<T>;
 
-async function request<T extends Record<string, unknown>>(
+async function request<T extends Record<string, any>>(
   url: string,
   method: "GET" | "POST" | "PATCH",
   body?: unknown,
@@ -26,15 +26,15 @@ async function request<T extends Record<string, unknown>>(
 }
 
 export const api = {
-  get<T extends Record<string, unknown>>(url: string, options?: RequestInit) {
+  get<T extends Record<string, any>>(url: string, options?: RequestInit) {
     return request<T>(url, "GET", undefined, options);
   },
 
-  post<T extends Record<string, unknown>>(url: string, body?: unknown, options?: RequestInit) {
+  post<T extends Record<string, any>>(url: string, body?: unknown, options?: RequestInit) {
     return request<T>(url, "POST", body, options);
   },
 
-  patch<T extends Record<string, unknown>>(url: string, body?: unknown, options?: RequestInit) {
+  patch<T extends Record<string, any>>(url: string, body?: unknown, options?: RequestInit) {
     return request<T>(url, "PATCH", body, options);
   }
 };

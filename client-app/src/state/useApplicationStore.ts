@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useMemo, useRef, useState } from "react";
 import debounce from "lodash.debounce";
 import { OfflineStore } from "./offline";

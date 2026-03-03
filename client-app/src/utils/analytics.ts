@@ -66,7 +66,7 @@ export const getClientAttribution = () => {
 
 export const trackEvent = (
   eventName: string,
-  payload: Record<string, unknown> = {}
+  payload: Record<string, any> = {}
 ) => {
   if (!hasTrackingConsent()) return;
 
@@ -110,7 +110,7 @@ export const trackEvent = (
 
 export const trackConversion = (
   eventName: string,
-  payload: Record<string, unknown> = {}
+  payload: Record<string, any> = {}
 ) => {
   if (!hasTrackingConsent()) return;
 

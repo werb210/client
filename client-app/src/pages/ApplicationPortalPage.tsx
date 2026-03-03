@@ -34,7 +34,7 @@ export function ApplicationPortalPage(): JSX.Element {
   const submissionState = location.state as
     | { submitted?: boolean; duplicate?: boolean }
     | null;
-  const [application, setApplication] = useState<Record<string, unknown> | null>(null);
+  const [application, setApplication] = useState<Record<string, any> | null>(null);
   const [documents, setDocuments] = useState(
     [] as ReturnType<typeof normalizeDocumentsResponse>
   );
@@ -98,7 +98,7 @@ export function ApplicationPortalPage(): JSX.Element {
         fetchApplication(id),
         fetchApplicationDocuments(id),
       ]);
-      const nextApplication = applicationRes as Record<string, unknown>;
+      const nextApplication = applicationRes as Record<string, any>;
       setApplication(nextApplication);
       setDocuments(normalizeDocumentsResponse(documentsRes));
       const stageValue =

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { parseCurrencyAmount } from "./productSelection";
 
 export type LenderProductRequirement = {

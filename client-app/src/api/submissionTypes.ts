@@ -9,6 +9,6 @@ export interface MarketingTracking {
   utm_content?: string;
 }
 
-export type BaseSubmissionRequest = Record<string, unknown>;
+export type BaseSubmissionRequest = Record<string, any>;
 
 export type SubmitApplicationRequest = BaseSubmissionRequest & MarketingTracking;

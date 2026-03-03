@@ -11,7 +11,7 @@ import type { ApiError } from "@/types/api";
 type ClientAppStartResponse = z.infer<typeof ClientAppStartResponseSchema>;
 type ClientAppStatusResponse = z.infer<typeof ClientAppStatusResponseSchema>;
 type ClientAppMessagesResponse = z.infer<typeof ClientAppMessagesResponseSchema>;
-type GenericObjectResponse = Record<string, unknown>;
+type GenericObjectResponse = Record<string, any>;
 
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastError: unknown;

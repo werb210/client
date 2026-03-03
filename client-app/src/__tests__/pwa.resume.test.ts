@@ -28,7 +28,7 @@ type TransactionMock = {
   oncomplete: null | (() => void);
   onerror: null | (() => void);
   objectStore: () => {
-    get: () => RequestMock<unknown>;
+    get: () => RequestMock<any>;
     put: (value: unknown) => void;
     delete: () => void;
   };
@@ -53,7 +53,7 @@ function createIndexedDbMock(initial: unknown) {
       };
       transaction.objectStore = () => ({
         get: () => {
-          const request: RequestMock<unknown> = { result: storeValue, onsuccess: null, onerror: null };
+          const request: RequestMock<any> = { result: storeValue, onsuccess: null, onerror: null };
           queueMicrotask(() => request.onsuccess?.());
           return request;
         },

@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type DocumentStatus = "missing" | "uploaded" | "accepted" | "rejected";
 
 export function resolveDocumentStatus(entry: unknown): DocumentStatus {

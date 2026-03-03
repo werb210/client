@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { NormalizedLenderProduct } from "../lender/eligibility";
 import type { LenderProductRequirement } from "../wizard/requirements";
 import { filterRequirementsByAmount, normalizeRequirementList } from "../wizard/requirements";

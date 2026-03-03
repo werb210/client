@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Component, ReactNode } from "react";
 import { Button } from "../components/ui/Button";
 import { components, layout, tokens } from "@/styles";

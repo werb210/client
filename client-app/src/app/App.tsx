@@ -42,29 +42,29 @@ export default function App() {
     trackEvent("client_exit_intent_detected");
   });
 
-  const setStep1Data = useCallback((step1Data: Record<string, unknown>) => {
+  const setStep1Data = useCallback((step1Data: Record<string, any>) => {
     update({
       readinessSessionToken: localStorage.getItem("creditSessionToken") || appRef.current.readinessSessionToken,
       kyc: {
-        ...(appRef.current.kyc as Record<string, unknown>),
+        ...(appRef.current.kyc as Record<string, any>),
         ...step1Data,
       },
     });
   }, [update]);
 
-  const setStep3Data = useCallback((step3Data: Record<string, unknown>) => {
+  const setStep3Data = useCallback((step3Data: Record<string, any>) => {
     update({
       business: {
-        ...(appRef.current.business as Record<string, unknown>),
+        ...(appRef.current.business as Record<string, any>),
         ...step3Data,
       },
     });
   }, [update]);
 
-  const setStep4Data = useCallback((step4Data: Record<string, unknown>) => {
+  const setStep4Data = useCallback((step4Data: Record<string, any>) => {
     update({
       applicant: {
-        ...(appRef.current.applicant as Record<string, unknown>),
+        ...(appRef.current.applicant as Record<string, any>),
         ...step4Data,
       },
     });
@@ -104,7 +104,7 @@ export default function App() {
   useEffect(() => {
     const handleBeforeUnload = () => {
       const estimatedValue = estimateClientCommission(
-        Number((app.kyc as Record<string, unknown>)?.fundingAmount || 0)
+        Number((app.kyc as Record<string, any>)?.fundingAmount || 0)
       );
 
       trackEvent("application_abandoned", {

@@ -116,7 +116,7 @@ const nullableNumber = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-export const toStep1SchemaInput = (kyc: Record<string, unknown>): Step1Data => ({
+export const toStep1SchemaInput = (kyc: Record<string, any>): Step1Data => ({
   fundingType: String(kyc.lookingFor ?? ""),
   requestedAmount: parseCurrencyNumber(kyc.fundingAmount),
   businessLocation: String(kyc.businessLocation ?? ""),
@@ -130,7 +130,7 @@ export const toStep1SchemaInput = (kyc: Record<string, unknown>): Step1Data => (
 });
 
 export const toStep3SchemaInput = (
-  business: Record<string, unknown>
+  business: Record<string, any>
 ): Step3Data => ({
   dba: String(business.businessName ?? ""),
   legalName: String(business.legalName ?? ""),
@@ -147,9 +147,9 @@ export const toStep3SchemaInput = (
 });
 
 export const toStep4SchemaInput = (
-  applicant: Record<string, unknown>
+  applicant: Record<string, any>
 ): Step4Data => {
-  const partner = (applicant.partner as Record<string, unknown> | undefined) ?? {};
+  const partner = (applicant.partner as Record<string, any> | undefined) ?? {};
   return {
     primary: {
       firstName: String(applicant.firstName ?? ""),
@@ -183,7 +183,7 @@ export const toStep4SchemaInput = (
 
 export function enforceV1StepSchema(
   step: "step1" | "step3" | "step4",
-  values: Record<string, unknown>
+  values: Record<string, any>
 ) {
   const parsed =
     step === "step1"

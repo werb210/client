@@ -1,4 +1,4 @@
-export async function apiRequest<T = any>(
+export async function apiRequest<T>(
   url: string,
   options: RequestInit = {}
 ): Promise<T> {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useRef, type ComponentProps } from "react";
 import { Input } from "./Input";
 

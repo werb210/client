@@ -14,7 +14,7 @@ import type { SubmitApplicationRequest } from "./submissionTypes";
 export async function submitApplication(
   payload: unknown,
   options?: { idempotencyKey?: string; continuationToken?: string }
-): Promise<unknown> {
+): Promise<any> {
   const creditSessionToken = localStorage.getItem("creditSessionToken");
   const attribution = getPersistedAttribution();
 
@@ -28,7 +28,7 @@ export async function submitApplication(
         }
       : payload;
 
-  const res = await api.post<unknown>("/api/client/submissions", submissionPayload, {
+  const res = await api.post<any>("/api/client/submissions", submissionPayload, {
     headers: options?.idempotencyKey
       ? { "Idempotency-Key": options.idempotencyKey }
       : undefined,
@@ -40,7 +40,7 @@ export async function submitApplication(
 export async function createPublicApplication(
   payload: unknown,
   options?: { idempotencyKey?: string; readinessToken?: string; sessionId?: string }
-): Promise<unknown> {
+): Promise<any> {
   const attribution = getPersistedAttribution();
 
   const submissionPayload: SubmitApplicationRequest | unknown =
@@ -67,7 +67,7 @@ export async function createPublicApplication(
   );
 }
 
-export async function fetchApplication(id: string): Promise<unknown> {
+export async function fetchApplication(id: string): Promise<any> {
   const res: unknown = await api.get(`/api/applications/${id}`);
   return parseApiResponse(
     FetchApplicationResponseSchema,
@@ -76,7 +76,7 @@ export async function fetchApplication(id: string): Promise<unknown> {
   );
 }
 
-export async function fetchApplicationDocuments(id: string): Promise<unknown> {
+export async function fetchApplicationDocuments(id: string): Promise<any> {
   const res: unknown = await api.get(`/api/applications/${id}/documents`);
   return parseApiResponse(
     ApplicationDocumentsResponseSchema,
@@ -85,7 +85,7 @@ export async function fetchApplicationDocuments(id: string): Promise<unknown> {
   );
 }
 
-export async function fetchApplicationOffers(id: string): Promise<unknown> {
+export async function fetchApplicationOffers(id: string): Promise<any> {
   const res: unknown = await api.get(`/api/applications/${id}/offers`);
   return parseApiResponse(
     ApplicationOffersResponseSchema,
@@ -101,7 +101,7 @@ export async function uploadApplicationDocument(
     file: File;
     onProgress?: (progress: number) => void;
   }
-): Promise<unknown> {
+): Promise<any> {
   if (payload.file.size > 10 * 1024 * 1024) {
     throw new Error("file_too_large");
   }
