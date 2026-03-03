@@ -1,8 +1,16 @@
-import { defineConfig } from '@capacitor/cli';
+import { CapacitorConfig } from '@capacitor/cli';
 
-export default defineConfig({
+const config: CapacitorConfig = {
   appId: 'com.boreal.client',
   appName: 'Boreal Client',
   webDir: 'dist',
   bundledWebRuntime: false,
-});
+  ios: {
+    scheme: "BorealClient"
+  },
+  android: {
+    allowMixedContent: true
+  }
+};
+
+export default config;
