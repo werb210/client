@@ -73,7 +73,7 @@ export function consumeDueNotification(
   if (!state.pending || now < state.pending.notifyAt) {
     return { state, notification: null };
   }
-  const notification = state.pending;
+  const notification: RejectionNotification | null = state.pending;
   return {
     notification,
     state: {

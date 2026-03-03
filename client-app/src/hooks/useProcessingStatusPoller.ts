@@ -26,13 +26,13 @@ export type ProcessingStatusPollerOptions<T> = {
 const DEFAULT_INITIAL_DELAY_MS = 5000;
 const DEFAULT_MAX_DELAY_MS = 60000;
 
-function defaultGetVisibility() {
+function defaultGetVisibility(): boolean {
   if (typeof document === "undefined") return true;
   return document.visibilityState === "visible";
 }
 
-function defaultSubscribeVisibility(handler: () => void) {
-  if (typeof document === "undefined") return () => undefined;
+function defaultSubscribeVisibility(handler: () => void): () => void {
+  if (typeof document === "undefined") return () => {};
   window.addEventListener("visibilitychange", handler);
   window.addEventListener("focus", handler);
   return () => {
@@ -41,13 +41,13 @@ function defaultSubscribeVisibility(handler: () => void) {
   };
 }
 
-function defaultGetOnline() {
+function defaultGetOnline(): boolean {
   if (typeof navigator === "undefined") return true;
   return navigator.onLine !== false;
 }
 
-function defaultSubscribeOnline(handler: () => void) {
-  if (typeof window === "undefined") return () => undefined;
+function defaultSubscribeOnline(handler: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
   window.addEventListener("online", handler);
   window.addEventListener("offline", handler);
   return () => {
@@ -68,7 +68,7 @@ export function createProcessingStatusPoller<T>({
   subscribeOnline = defaultSubscribeOnline,
   initialDelayMs = DEFAULT_INITIAL_DELAY_MS,
   maxDelayMs = DEFAULT_MAX_DELAY_MS,
-}: ProcessingStatusPollerOptions<T>) {
+}: ProcessingStatusPollerOptions<T>): () => void {
   let stopped = false;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let delayMs = initialDelayMs;
@@ -110,7 +110,7 @@ export function createProcessingStatusPoller<T>({
       }
       setState(state === "reconnecting" ? "polling" : state);
       schedule();
-    } catch {
+    } catch (error: unknown) {
       if (stopped) return;
       onError?.(error);
       if (!shouldPause()) {
@@ -162,7 +162,7 @@ export function useProcessingStatusPoller<T>({
   subscribeOnline,
   initialDelayMs,
   maxDelayMs,
-}: ProcessingStatusPollerOptions<T>) {
+}: ProcessingStatusPollerOptions<T>): { state: PollingState } {
   const [state, setState] = useState<PollingState>("polling");
 
   useEffect(() => {

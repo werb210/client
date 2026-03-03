@@ -9,7 +9,18 @@ vi.mock("@/lib/api", () => ({
 }));
 
 describe("submitApplication", () => {
-  const expectedAttribution: Record<string, string | null> = {
+  type TrackingParams = {
+    utm_source: string | null;
+    utm_medium: string | null;
+    utm_campaign: string | null;
+    utm_term: string | null;
+    utm_content: string | null;
+    gclid: string | null;
+    msclkid: string | null;
+    ga_client_id: string | null;
+  };
+
+  const expectedAttribution: TrackingParams = {
     utm_source: null,
     utm_medium: null,
     utm_campaign: null,

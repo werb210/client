@@ -25,7 +25,7 @@ function getSessionStorage(): StorageLike | null {
   }
 }
 
-function markReloaded(storage: StorageLike | null) {
+function markReloaded(storage: StorageLike | null): void {
   if (!storage) return;
   try {
     storage.setItem(SESSION_GUARD_KEY, "true");
@@ -34,7 +34,7 @@ function markReloaded(storage: StorageLike | null) {
   }
 }
 
-function clearReloadMarker(storage: StorageLike | null) {
+function clearReloadMarker(storage: StorageLike | null): void {
   if (!storage) return;
   try {
     storage.removeItem(SESSION_GUARD_KEY);
@@ -72,7 +72,7 @@ export function resolveSessionGuardAction(options: {
   return "redirect";
 }
 
-function getSessionRequirement(pathname: string, search: string) {
+function getSessionRequirement(pathname: string, search: string): { hasAuth: boolean; redirectTo: string } {
   if (pathname.startsWith("/status")) {
     const token = new URLSearchParams(search).get("token") || "";
     return {
@@ -95,7 +95,7 @@ function getSessionRequirement(pathname: string, search: string) {
   return { hasAuth: true, redirectTo: "" };
 }
 
-export function useSessionGuard() {
+export function useSessionGuard(): void {
   const location = useLocation();
   const navigate = useNavigate();
   const { isOffline } = useNetworkStatus();

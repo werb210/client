@@ -29,7 +29,7 @@ class MockSocket {
   }
 }
 
-function Harness({ onHumanActive, onMessage }: { onHumanActive: () => void; onMessage: (message: string) => void }) {
+function Harness({ onHumanActive, onMessage }: { onHumanActive: () => void; onMessage: (message: string) => void }): null {
   useChatSocket({
     enabled: true,
     sessionId: "session-1",

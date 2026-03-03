@@ -44,7 +44,7 @@ import { apiRequest } from "../lib/api";
 import { clearStoredReadinessSession } from "@/api/website";
 import { parseCurrencyAmount } from "./productSelection";
 
-export function Step6_Review() {
+export function Step6_Review(): JSX.Element {
   const { app, update } = useApplicationStore();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -402,7 +402,7 @@ export function Step6_Review() {
       setTimeout(() => {
         navigate("/portal", { replace: true });
       }, 1200);
-    } catch {
+    } catch (error: unknown) {
       const response =
         typeof error === "object" && error !== null && "response" in error
           ? (error as { response?: { status?: number; data?: Record<string, unknown> } }).response

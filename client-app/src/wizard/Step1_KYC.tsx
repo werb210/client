@@ -104,6 +104,20 @@ const AccountsReceivableOptions = [
   "Over $3,000,000",
 ];
 
+
+type Step1KycData = Partial<{
+  industry: string;
+  yearsInBusiness: string;
+  annualRevenue: string;
+  monthlyRevenue: string;
+  arBalance: string;
+  availableCollateral: string;
+  companyName: string;
+  fullName: string;
+  email: string;
+  phone: string;
+}>;
+
 const FixedAssetsOptions = [
   "No Collateral Available",
   "$1 to $100,000",
@@ -253,29 +267,30 @@ fixedAssets:
     void fetchCreditPrefill(prefillId)
       .then((data) => {
         if (!active || !data || typeof data !== "object") return;
+        const prefillData = data as Step1KycData;
 
         const nextKyc = {
           ...app.kyc,
-          industry: data.industry ?? app.kyc.industry ?? "",
-          yearsInBusiness: data.yearsInBusiness ?? app.kyc.yearsInBusiness ?? "",
-          annualRevenue: data.annualRevenue ?? app.kyc.annualRevenue ?? "",
-          monthlyRevenue: data.monthlyRevenue ?? app.kyc.monthlyRevenue ?? "",
-          arBalance: data.arBalance ?? app.kyc.arBalance ?? "",
+          industry: prefillData.industry ?? app.kyc.industry ?? "",
+          yearsInBusiness: prefillData.yearsInBusiness ?? app.kyc.yearsInBusiness ?? "",
+          annualRevenue: prefillData.annualRevenue ?? app.kyc.annualRevenue ?? "",
+          monthlyRevenue: prefillData.monthlyRevenue ?? app.kyc.monthlyRevenue ?? "",
+          arBalance: prefillData.arBalance ?? app.kyc.arBalance ?? "",
           availableCollateral:
-            data.availableCollateral ?? app.kyc.availableCollateral ?? "",
-          salesHistory: data.yearsInBusiness ?? app.kyc.salesHistory ?? "",
+            prefillData.availableCollateral ?? app.kyc.availableCollateral ?? "",
+          salesHistory: prefillData.yearsInBusiness ?? app.kyc.salesHistory ?? "",
           revenueLast12Months:
-            data.annualRevenue ?? app.kyc.revenueLast12Months ?? "",
-          accountsReceivable: data.arBalance ?? app.kyc.accountsReceivable ?? "",
+            prefillData.annualRevenue ?? app.kyc.revenueLast12Months ?? "",
+          accountsReceivable: prefillData.arBalance ?? app.kyc.accountsReceivable ?? "",
           fixedAssets:
-            data.availableCollateral ?? app.kyc.fixedAssets ?? "",
-          companyName: data.companyName ?? app.kyc.companyName ?? "",
-          fullName: data.fullName ?? app.kyc.fullName ?? "",
-          email: data.email ?? app.kyc.email ?? "",
-          phone: data.phone ?? app.kyc.phone ?? "",
+            prefillData.availableCollateral ?? app.kyc.fixedAssets ?? "",
+          companyName: prefillData.companyName ?? app.kyc.companyName ?? "",
+          fullName: prefillData.fullName ?? app.kyc.fullName ?? "",
+          email: prefillData.email ?? app.kyc.email ?? "",
+          phone: prefillData.phone ?? app.kyc.phone ?? "",
         };
 
-        const fullName = (data.fullName || "").trim();
+        const fullName = (prefillData.fullName || "").trim();
         const [firstName = "", ...lastNameParts] = fullName.split(/\s+/);
         const lastName = lastNameParts.join(" ");
 
@@ -283,17 +298,17 @@ fixedAssets:
           kyc: nextKyc,
           business: {
             ...app.business,
-            companyName: data.companyName ?? app.business.companyName ?? "",
-            businessName: data.companyName ?? app.business.businessName ?? "",
-            legalName: data.companyName ?? app.business.legalName ?? "",
+            companyName: prefillData.companyName ?? app.business.companyName ?? "",
+            businessName: prefillData.companyName ?? app.business.businessName ?? "",
+            legalName: prefillData.companyName ?? app.business.legalName ?? "",
           },
           applicant: {
             ...app.applicant,
-            fullName: data.fullName ?? app.applicant.fullName ?? "",
+            fullName: prefillData.fullName ?? app.applicant.fullName ?? "",
             firstName: firstName || app.applicant.firstName || "",
             lastName: lastName || app.applicant.lastName || "",
-            email: data.email ?? app.applicant.email ?? "",
-            phone: data.phone ?? app.applicant.phone ?? "",
+            email: prefillData.email ?? app.applicant.email ?? "",
+            phone: prefillData.phone ?? app.applicant.phone ?? "",
           },
         });
       })
@@ -314,18 +329,18 @@ fixedAssets:
       const data = JSON.parse(stored) as Record<string, string>;
       const nextKyc = {
         ...app.kyc,
-        industry: data.industry || app.kyc.industry || "",
-        yearsInBusiness: data.yearsInBusiness || app.kyc.yearsInBusiness || "",
-        salesHistory: data.yearsInBusiness || app.kyc.salesHistory || "",
-        annualRevenue: data.annualRevenue || app.kyc.annualRevenue || "",
-        revenueLast12Months: data.annualRevenue || app.kyc.revenueLast12Months || "",
-        monthlyRevenue: data.monthlyRevenue || app.kyc.monthlyRevenue || "",
-        arBalance: data.arBalance || app.kyc.arBalance || "",
-        accountsReceivable: data.arBalance || app.kyc.accountsReceivable || "",
+        industry: prefillData.industry || app.kyc.industry || "",
+        yearsInBusiness: prefillData.yearsInBusiness || app.kyc.yearsInBusiness || "",
+        salesHistory: prefillData.yearsInBusiness || app.kyc.salesHistory || "",
+        annualRevenue: prefillData.annualRevenue || app.kyc.annualRevenue || "",
+        revenueLast12Months: prefillData.annualRevenue || app.kyc.revenueLast12Months || "",
+        monthlyRevenue: prefillData.monthlyRevenue || app.kyc.monthlyRevenue || "",
+        arBalance: prefillData.arBalance || app.kyc.arBalance || "",
+        accountsReceivable: prefillData.arBalance || app.kyc.accountsReceivable || "",
         availableCollateral:
-          data.availableCollateral || data.collateralAvailable || app.kyc.availableCollateral || "",
+          prefillData.availableCollateral || data.collateralAvailable || app.kyc.availableCollateral || "",
         fixedAssets:
-          data.availableCollateral || data.collateralAvailable || app.kyc.fixedAssets || "",
+          prefillData.availableCollateral || data.collateralAvailable || app.kyc.fixedAssets || "",
       };
 
       const changed =

@@ -50,7 +50,7 @@ type GuardProps = {
   children: JSX.Element;
 };
 
-function RequireApplicationToken({ children }: GuardProps) {
+function RequireApplicationToken({ children }: GuardProps): JSX.Element {
   const { app } = useApplicationStore();
   const cached = OfflineStore.load();
   if (!app.applicationToken && !cached?.applicationToken) {
@@ -59,7 +59,7 @@ function RequireApplicationToken({ children }: GuardProps) {
   return children;
 }
 
-function RequirePortalSession({ children }: GuardProps) {
+function RequirePortalSession({ children }: GuardProps): JSX.Element {
   const location = useLocation();
   const token = new URLSearchParams(location.search).get("token") || "";
   const { state } = useClientSession(token);
@@ -83,13 +83,13 @@ function RequirePortalSession({ children }: GuardProps) {
   return children;
 }
 
-function ReadinessLoader() {
+function ReadinessLoader(): null {
   const location = useLocation();
 
   useEffect(() => {
     let active = true;
 
-    const resolveLeadId = async () => {
+    const resolveLeadId = async (): Promise<string | null> => {
       const searchLeadId = getLeadIdFromSearch(location.search);
       if (searchLeadId) {
         return searchLeadId;
@@ -117,7 +117,7 @@ function ReadinessLoader() {
       return null;
     };
 
-    const loadReadiness = async () => {
+    const loadReadiness = async (): Promise<void> => {
       try {
         const readinessSessionId = resolveReadinessSessionId(location.search);
         if (readinessSessionId) {
@@ -168,7 +168,7 @@ function ReadinessLoader() {
   return null;
 }
 
-export default function AppRouter() {
+export default function AppRouter(): JSX.Element {
   const { isOffline } = useNetworkStatus();
 
   if (isOffline) {

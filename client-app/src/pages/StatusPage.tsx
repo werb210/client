@@ -560,7 +560,7 @@ export function StatusPage(): JSX.Element {
                 {linkedTokens.length > 0 && (
                   <div style={layout.stackTight}>
                     <div style={components.form.eyebrow}>Your applications</div>
-                    {linkedTokens.map((linkedToken, index) => {
+                    {linkedTokens.map((linkedToken: string, index: number) => {
                       const isCurrent = linkedToken === token;
                       return (
                         <Button

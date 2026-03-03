@@ -9,7 +9,7 @@
     /* ==== STABILIZED MODE ==== */
     "strict": true,
     "noImplicitAny": false,
-    "types": ["vitest/globals"],
+    "types": ["vitest/globals", "vite/client", "react", "react-dom"],
 
     /* Relaxed strict flags */
     "strictNullChecks": false,

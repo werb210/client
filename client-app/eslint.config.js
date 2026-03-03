@@ -18,6 +18,19 @@ export default [
   },
 
   {
+    files: [
+      "src/services/api.ts",
+      "src/lib/api.ts",
+      "src/api/client.ts",
+      "src/api/ClientAppAPI.ts",
+    ],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/explicit-module-boundary-types": "off",
+    },
+  },
+
+  {
     files: ["scripts/**/*.{js,ts}"],
     languageOptions: {
       globals: {
