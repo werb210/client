@@ -3,7 +3,7 @@ import { Call, Device } from "@twilio/voice-sdk";
 let device: Device | null = null;
 let activeCall: Call | null = null;
 
-type CallState = "idle" | "connecting" | "connected" | "ended" | "error";
+export type CallState = "idle" | "connecting" | "connected" | "ended" | "error";
 
 let state: CallState = "idle";
 const listeners = new Set<(nextState: CallState) => void>();
@@ -74,8 +74,8 @@ export async function callNumber(number: string) {
   return call;
 }
 
-export async function startCall() {
-  return callNumber("support");
+export async function startCall(number: string) {
+  return callNumber(number);
 }
 
 export function endCall() {
