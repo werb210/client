@@ -14,7 +14,10 @@
     "audit:enterprise": "node scripts/enterprise-audit.js",
     "prestart": "node scripts/verify-node.js",
     "smoke": "npm run build",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "cap:sync": "cap sync",
+    "cap:open:ios": "cap open ios",
+    "cap:open:android": "cap open android"
   },
   "engines": {
     "node": ">=22 <23"
@@ -60,7 +63,11 @@
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-unused-imports": "^4.1.4",
     "semver": "^7.6.3",
-    "vite-plugin-pwa": "^0.20.0"
+    "vite-plugin-pwa": "^0.20.0",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/ios": "^7.4.3",
+    "@capacitor/android": "^7.4.3"
   },
   "engineStrict": true
 }
