@@ -9,9 +9,10 @@ import {
   resolveReadinessSessionId,
 } from "@/api/website";
 import { getContinuationSession, fetchContinuation, fetchReadinessSession } from "@/api/continuation";
-import { loadContinuation } from "../../services/continuation";
+import { checkContinuation } from "../../services/continuation";
 import { getSessionId, trackEvent } from "../../utils/analytics";
 import { apiRequest } from "@/services/api";
+import type { ApiError } from "@/types/api";
 
 type FieldType =
   | "text"
@@ -567,14 +568,19 @@ export async function handlePublicApplicationSubmit({
     onSuccess();
   } catch (error: unknown) {
     unlockSubmission(resolvedLockStorage);
-    const responseData = error?.response?.data;
+    const apiError = error as ApiError;
+    const responseData = apiError.response?.data;
+    const responsePayload =
+      responseData && typeof responseData === "object"
+        ? (responseData as { errors?: unknown; error?: unknown; message?: unknown })
+        : null;
     const serverErrors =
-      responseData?.errors ||
-      responseData?.error ||
-      responseData?.message ||
+      responsePayload?.errors ||
+      responsePayload?.error ||
+      responsePayload?.message ||
       null;
     if (serverErrors && typeof serverErrors === "object") {
-      onError(serverErrors);
+      onError(serverErrors as Record<string, string>);
     } else if (typeof serverErrors === "string") {
       onError({ form: serverErrors });
     } else {
@@ -703,10 +709,10 @@ export default function PublicApplyPage() {
 
     if (!email) return;
 
-    void loadContinuation(email).then((data) => {
-      if (!data) return;
+    void checkContinuation(email).then((data) => {
+      if (!data?.pendingApplicationId) return;
 
-      navigate(`/apply?resume=${data.id}`);
+      navigate(`/apply/${data.pendingApplicationId}`);
     });
   }, [navigate]);
 
