@@ -185,6 +185,7 @@ describe("PublicApplyPage form schema", () => {
       onSuccess,
       onError,
       storage,
+      localStorage: storage,
     });
 
     expect(submitApplication).toHaveBeenCalledWith(
@@ -213,6 +214,7 @@ describe("PublicApplyPage form schema", () => {
       onSuccess,
       onError,
       storage,
+      localStorage: storage,
     });
 
     await handlePublicApplicationSubmit({
@@ -224,6 +226,7 @@ describe("PublicApplyPage form schema", () => {
       onSuccess,
       onError,
       storage,
+      localStorage: storage,
     });
 
     expect(submitApplication).toHaveBeenCalledTimes(1);
