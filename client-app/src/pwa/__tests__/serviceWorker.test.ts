@@ -49,7 +49,7 @@ describe("service worker updates", () => {
     const updateListeners: Record<string, () => void> = {};
     const workerListeners: Record<string, () => void> = {};
     const worker = {
-      state: "installed",
+      state: "installing",
       addEventListener: (event: string, cb: () => void) => {
         workerListeners[event] = cb;
       },
@@ -66,7 +66,7 @@ describe("service worker updates", () => {
 
     Object.defineProperty(navigator, "serviceWorker", {
       value: {
-        register: vi.fn().mockResolvedValue(registration),
+        getRegistration: vi.fn().mockResolvedValue(registration),
         addEventListener: (event: string, cb: () => void) => {
           controllerChangeListeners[event] = cb;
         },
@@ -81,6 +81,10 @@ describe("service worker updates", () => {
     registerServiceWorker();
     window.dispatchEvent(new Event("load"));
     await new Promise((resolve) => setTimeout(resolve, 0));
+
+    updateListeners.updatefound?.();
+    worker.state = "installed";
+    workerListeners.statechange?.();
 
     expect(getServiceWorkerUpdateAvailable()).toBe(true);
   });

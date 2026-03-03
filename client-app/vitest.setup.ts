@@ -1,4 +1,4 @@
-import { afterEach, vi, expect } from "vitest";
+import { afterEach, vi } from "vitest";
 
 afterEach(() => {
   vi.clearAllMocks();
