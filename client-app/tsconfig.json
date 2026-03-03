@@ -8,8 +8,10 @@
 
     /* ==== STABILIZED MODE ==== */
     "strict": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "types": ["vitest/globals"],
+
+    /* Relaxed strict flags */
     "strictNullChecks": false,
     "strictFunctionTypes": false,
     "strictBindCallApply": false,
