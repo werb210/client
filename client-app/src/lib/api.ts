@@ -31,7 +31,7 @@ function handleStatus(status: number) {
   }
 }
 
-export async function apiRequest<T>(url: string, options: RequestInit = {}): Promise<T> {
+export async function apiRequest<T = any>(url: string, options: RequestInit = {}): Promise<T> {
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     throw new ApiError("You're offline. Please reconnect.", undefined, true);
   }
@@ -84,7 +84,7 @@ type ApiRequestOptions = RequestInit & {
 };
 
 const api = {
-  get: async <T>(url: string, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
+  get: async <T = any>(url: string, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
     const requestOptions = options;
     const data = await apiRequest<T>(url, {
       ...requestOptions,
@@ -92,7 +92,7 @@ const api = {
     });
     return { data };
   },
-  post: async <T>(url: string, body?: unknown, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
+  post: async <T = any>(url: string, body?: unknown, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
     const requestOptions = options;
     const data = await apiRequest<T>(url, {
       ...requestOptions,
@@ -101,7 +101,7 @@ const api = {
     });
     return { data };
   },
-  patch: async <T>(url: string, body?: unknown, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
+  patch: async <T = any>(url: string, body?: unknown, options: ApiRequestOptions = {}): Promise<{ data: T }> => {
     const requestOptions = options;
     const data = await apiRequest<T>(url, {
       ...requestOptions,
