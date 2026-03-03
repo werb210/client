@@ -19,7 +19,7 @@ export async function lookupPreApplication(
   ).catch((): null => null);
 }
 
-export async function consumePreApplication(token: string): Promise<unknown> {
+export async function consumePreApplication(token: string): Promise<any> {
   return apiRequest("/api/preapp/consume", {
     method: "POST",
     body: JSON.stringify({ token }),

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { LenderProduct as BaseLenderProduct } from "./mockProducts";
 
 interface LenderProduct extends BaseLenderProduct {

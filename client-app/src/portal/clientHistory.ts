@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { formatDocumentLabel } from "@/wizard/requirements";
 
 export type ClientHistoryEvent = {

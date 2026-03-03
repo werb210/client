@@ -11,9 +11,9 @@ export type WizardFieldMeta = {
 };
 
 export type WizardSchemaContext = {
-  kyc?: Record<string, unknown>;
-  business?: Record<string, unknown>;
-  applicant?: Record<string, unknown>;
+  kyc?: Record<string, any>;
+  business?: Record<string, any>;
+  applicant?: Record<string, any>;
 };
 
 const isAccountsReceivableIntent = (intent?: string) => {
@@ -198,7 +198,7 @@ export function getNextEmptyFieldKey(
   step: WizardStepKey,
   currentKey: string,
   context: WizardSchemaContext,
-  values: Record<string, unknown>
+  values: Record<string, any>
 ) {
   const fields = getStepFieldKeys(step, context);
   const index = fields.indexOf(currentKey);

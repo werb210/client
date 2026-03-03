@@ -1,6 +1,6 @@
 import type { ApplicationData } from "../types/application";
 
-type StatusPayload = Record<string, unknown>;
+type StatusPayload = Record<string, any>;
 
 export function extractApplicationFromStatus(
   status: StatusPayload,

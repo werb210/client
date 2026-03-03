@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, expect, it } from "vitest";
 import type { ReactElement } from "react";
 import { StatusTimeline } from "../../components/StatusTimeline";

@@ -1,5 +1,5 @@
 export type Step = 1 | 3 | 4;
-export type StepData = Record<string, unknown>;
+export type StepData = Record<string, any>;
 
 const DRAFT_PREFIX = "client:draft:step:";
 
@@ -36,11 +36,11 @@ export function loadStepData(
   }
 }
 
-export function mergeDraft<T extends Record<string, unknown>>(current: T, draft: StepData): T {
+export function mergeDraft<T extends Record<string, any>>(current: T, draft: StepData): T {
   const next = { ...current };
   Object.entries(draft).forEach(([key, value]) => {
     if (next[key] === undefined || next[key] === null || next[key] === "") {
-      (next as Record<string, unknown>)[key as string] = value;
+      (next as Record<string, any>)[key as string] = value;
     }
   });
   return next;

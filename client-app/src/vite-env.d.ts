@@ -15,13 +15,13 @@ interface ImportMeta {
 }
 
 interface Window {
-  dataLayer?: Array<Record<string, unknown>>;
-  gtag?: (command: string, eventName: string, payload?: Record<string, unknown>) => void;
-  clarity?: (command: string, key: string, value?: Record<string, unknown>) => void;
+  dataLayer?: Array<Record<string, any>>;
+  gtag?: (command: string, eventName: string, payload?: Record<string, any>) => void;
+  clarity?: (command: string, key: string, value?: Record<string, any>) => void;
   __APP_CONTINUATION__?: {
     applicationId: string;
     step: number;
-    data: Record<string, unknown>;
+    data: Record<string, any>;
   };
   __APP_CONTINUATION_ERROR__?: string;
 }

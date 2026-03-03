@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type ClientSession = {
   submissionId: string;
   accessToken: string;

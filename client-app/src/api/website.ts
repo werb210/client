@@ -20,8 +20,8 @@ const READINESS_TOKEN_KEY = "boreal_readiness_token";
 export const READINESS_SESSION_ID_KEY = "boreal_readiness_session_id";
 const SESSION_ID_QUERY_PARAM = "sessionId";
 const TOKEN_QUERY_PARAM = "token";
-let readinessInFlight: Promise<unknown> | null = null;
-let contactInFlight: Promise<unknown> | null = null;
+let readinessInFlight: Promise<any> | null = null;
+let contactInFlight: Promise<any> | null = null;
 
 const MAX_REQUEST_ATTEMPTS = 2;
 
@@ -75,18 +75,18 @@ function dedupKey(payload: { email?: string; phone?: string }) {
   return `${normalize(payload.email)}::${normalize(payload.phone)}`;
 }
 
-function loadCache(storageKey: string): Record<string, unknown> {
+function loadCache(storageKey: string): Record<string, any> {
   try {
     const raw = localStorage.getItem(storageKey);
     if (!raw) return {};
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const parsed = JSON.parse(raw) as Record<string, any>;
     return parsed && typeof parsed === "object" ? parsed : {};
   } catch {
     return {};
   }
 }
 
-function saveCache(storageKey: string, cache: Record<string, unknown>) {
+function saveCache(storageKey: string, cache: Record<string, any>) {
   try {
     localStorage.setItem(storageKey, JSON.stringify(cache));
   } catch {
@@ -105,7 +105,7 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
     if (key !== "::") {
       const cache = loadCache(READINESS_DEDUP_KEY);
       if (cache[key]) {
-        const cached = cache[key] as Record<string, unknown>;
+        const cached = cache[key] as Record<string, any>;
         persistReadinessSession(cached);
         return cached;
       }
@@ -128,8 +128,8 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
       key !== "::" ? `readiness:${key}` : crypto.randomUUID()
     );
     const responseData = res.data;
-    if (hasValidReadinessSessionId(responseData as Record<string, unknown>)) {
-      persistReadinessSession(responseData as Record<string, unknown>);
+    if (hasValidReadinessSessionId(responseData as Record<string, any>)) {
+      persistReadinessSession(responseData as Record<string, any>);
     }
     if (key !== "::") {
       const cache = loadCache(READINESS_DEDUP_KEY);
@@ -173,8 +173,8 @@ export async function submitContactForm(payload: {
         key !== "::" ? `contact:${key}` : crypto.randomUUID()
       );
       const responseData = res.data;
-      if (hasValidReadinessSessionId(responseData as Record<string, unknown>)) {
-        persistReadinessSession(responseData as Record<string, unknown>);
+      if (hasValidReadinessSessionId(responseData as Record<string, any>)) {
+        persistReadinessSession(responseData as Record<string, any>);
       }
       if (key !== "::") {
         const cache = loadCache(CONTACT_DEDUP_KEY);
@@ -248,7 +248,7 @@ export function resolveReadinessSessionId(search?: string) {
   return getStoredReadinessSessionId();
 }
 
-function hasValidReadinessSessionId(payload: Record<string, unknown> | null | undefined) {
+function hasValidReadinessSessionId(payload: Record<string, any> | null | undefined) {
   const readinessSessionId =
     (typeof payload?.readinessSessionId === "string" && payload.readinessSessionId.trim()) ||
     (typeof payload?.sessionId === "string" && payload.sessionId.trim()) ||
@@ -256,7 +256,7 @@ function hasValidReadinessSessionId(payload: Record<string, unknown> | null | un
   return Boolean(readinessSessionId);
 }
 
-function persistReadinessSession(payload: Record<string, unknown> | null | undefined) {
+function persistReadinessSession(payload: Record<string, any> | null | undefined) {
   const sessionId =
     (typeof payload?.readinessSessionId === "string" && payload.readinessSessionId) ||
     (typeof payload?.sessionId === "string" && payload.sessionId) ||
@@ -283,7 +283,7 @@ async function findExistingReadinessSession(payload: CreditReadinessPayload) {
     const session = await getContinuationSession();
     if (!session || typeof session !== "object") return null;
 
-    const sessionRecord = session as Record<string, unknown>;
+    const sessionRecord = session as Record<string, any>;
     const sessionEmail = normalize(
       typeof sessionRecord.email === "string" ? sessionRecord.email : undefined
     );

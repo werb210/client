@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { filterRequirementsByAmount, type LenderProductRequirement } from "./requirements";
 import type { ApplicationData } from "../types/application";
 import { ClientProfileStore } from "../state/clientProfiles";

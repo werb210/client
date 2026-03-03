@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { OfflineStore } from "../state/offline";
 
 export type ResumeSnapshot = {

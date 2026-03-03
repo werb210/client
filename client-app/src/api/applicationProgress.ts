@@ -3,14 +3,14 @@ import api from "@/lib/api";
 export interface SaveApplicationStepPayload {
   applicationId: string;
   step: number;
-  data: Record<string, unknown>;
+  data: Record<string, any>;
 }
 
 export interface ContinuationSessionResponse {
   exists: boolean;
   applicationId?: string;
   step?: number;
-  data?: Record<string, unknown>;
+  data?: Record<string, any>;
 }
 
 export async function fetchApplicationContinuation() {

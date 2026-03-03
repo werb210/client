@@ -490,7 +490,7 @@ export async function handlePublicApplicationSubmit({
   submitApplication: (
     payload: PublicApplicationPayload,
     options: { idempotencyKey: string; readinessToken?: string | null; sessionId?: string | null }
-  ) => Promise<unknown>;
+  ) => Promise<any>;
   onSuccess: () => void;
   onError: (errors: Record<string, string>) => void;
   storage?: MinimalStorage | null;

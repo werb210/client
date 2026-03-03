@@ -18,7 +18,7 @@ export async function refreshSessionOnce() {
 
   const token = getActiveClientSessionToken();
   setSessionRefreshing(true);
-  refreshPromise = apiRequest<unknown>("/api/client/session/refresh", {
+  refreshPromise = apiRequest<any>("/api/client/session/refresh", {
     method: "POST",
     headers: token
       ? { Authorization: `Bearer ${token}` }

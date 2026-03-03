@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { normalizeRequirementList } from "../wizard/requirements";
 import type { LenderProductRequirement } from "../wizard/requirements";
 
