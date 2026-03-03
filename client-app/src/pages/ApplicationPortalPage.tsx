@@ -294,7 +294,7 @@ export function ApplicationPortalPage(): JSX.Element {
   );
 
   const handleCallUs = useCallback(async () => {
-    void startCall();
+    void startCall("support");
   }, []);
 
   if (loading) {
