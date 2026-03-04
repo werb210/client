@@ -3,7 +3,7 @@ import { Device, Call } from "@twilio/voice-sdk";
 let device: Device | null = null;
 let activeCall: Call | null = null;
 let initializePromise: Promise<void> | null = null;
-let cleanupActiveCallListeners: (() => void) | null = null;
+let callWithBoundHandlers: Call | null = null;
 
 const listeners = new Set<(call: Call | null) => void>();
 
@@ -12,35 +12,31 @@ function notifyCallState() {
 }
 
 function clearActiveCall() {
-  if (cleanupActiveCallListeners) {
-    cleanupActiveCallListeners();
-    cleanupActiveCallListeners = null;
-  }
-
+  callWithBoundHandlers = null;
   activeCall = null;
   notifyCallState();
 }
 
 function setActiveCall(call: Call) {
-  if (cleanupActiveCallListeners) {
-    cleanupActiveCallListeners();
-  }
-
   activeCall = call;
 
-  const clear = () => {
-    clearActiveCall();
-  };
+  if (callWithBoundHandlers !== call) {
+    const handleDisconnect = () => {
+      clearActiveCall();
+    };
+    const handleCancel = () => {
+      clearActiveCall();
+    };
+    const handleReject = () => {
+      clearActiveCall();
+    };
 
-  call.on("disconnect", clear);
-  call.on("cancel", clear);
-  call.on("reject", clear);
+    call.on("disconnect", handleDisconnect);
+    call.on("cancel", handleCancel);
+    call.on("reject", handleReject);
 
-  cleanupActiveCallListeners = () => {
-    call.off("disconnect", clear);
-    call.off("cancel", clear);
-    call.off("reject", clear);
-  };
+    callWithBoundHandlers = call;
+  }
 
   notifyCallState();
 }
@@ -83,7 +79,7 @@ export async function initializeClientVoice(token: string) {
     });
 
     await device.register();
-  });
+  })();
 
   try {
     await initializePromise;
