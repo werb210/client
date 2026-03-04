@@ -3,9 +3,7 @@ import { Device } from "@twilio/voice-sdk";
 let device: Device | null = null;
 
 export async function initializeClientVoice(token: string) {
-  device = new Device(token, {
-    enableRingingState: true,
-  });
+  device = new Device(token);
 
   await device.register();
 }
