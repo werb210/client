@@ -28,6 +28,7 @@ import { apiRequest } from "@/services/api";
 import { endCall } from "@/services/voiceService";
 import { fetchVoiceToken } from "@/api/voice";
 import { initializeClientVoice } from "@/telephony/services/clientVoice";
+import CallUsButton from "../components/CallUsButton";
 
 export default function App() {
   const { app, loadFromServer, update } = useApplicationStore();
@@ -204,6 +205,9 @@ export default function App() {
         updateAvailable={updateAvailable || debugUpdateAvailable}
         onApplyUpdate={() => void applyServiceWorkerUpdate()}
       />
+      <div className="mx-auto mt-4 w-full max-w-7xl px-6 flex justify-end">
+        <CallUsButton />
+      </div>
       <main className="max-w-7xl mx-auto px-6 py-14 md:py-20 w-full flex-1">
         <AppRouter />
       </main>
