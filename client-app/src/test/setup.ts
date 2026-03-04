@@ -1,65 +1,78 @@
 import { vi } from "vitest";
-import "../../vitest.setup";
 
 /**
- * JSDOM stability/polyfills for client app tests.
+ * Test environment stabilization for JSDOM
  */
 
-function makeStorage() {
-  let store: Record<string, string> = {};
-  return {
-    getItem: (key: string) => (key in store ? store[key] : null),
-    setItem: (key: string, value: string) => {
-      store[key] = String(value);
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-    key: (i: number) => Object.keys(store)[i] ?? null,
-    get length() {
-      return Object.keys(store).length;
-    },
-  };
-}
+/* ------------------------------
+   Fix localStorage readonly error
+------------------------------- */
 
-Object.defineProperty(window, "localStorage", { value: makeStorage(), configurable: true });
-Object.defineProperty(window, "sessionStorage", { value: makeStorage(), configurable: true });
+const storageMock = (() => {
+  let store: Record<string, string> = {};
+
+  return {
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
+  };
+})();
+
+vi.spyOn(Storage.prototype, "getItem").mockImplementation(storageMock.getItem);
+vi.spyOn(Storage.prototype, "setItem").mockImplementation(storageMock.setItem);
+vi.spyOn(Storage.prototype, "removeItem").mockImplementation(storageMock.removeItem);
+vi.spyOn(Storage.prototype, "clear").mockImplementation(storageMock.clear);
+
+/* ------------------------------
+   matchMedia polyfill
+------------------------------- */
 
 if (!window.matchMedia) {
-  // @ts-expect-error polyfill
-  window.matchMedia = (query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }),
   });
 }
 
-if (!(globalThis as any).ResizeObserver) {
-  (globalThis as any).ResizeObserver = class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  };
+/* ------------------------------
+   ResizeObserver polyfill
+------------------------------- */
+
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
 }
 
-if (!window.scrollTo) {
-  window.scrollTo = vi.fn();
-}
+(globalThis as any).ResizeObserver = ResizeObserverMock;
 
-if (!(globalThis as any).TextEncoder) {
-  const { TextEncoder } = require("util");
-  (globalThis as any).TextEncoder = TextEncoder;
-}
+/* ------------------------------
+   scrollTo polyfill
+------------------------------- */
 
-if (!(globalThis as any).TextDecoder) {
-  const { TextDecoder } = require("util");
-  (globalThis as any).TextDecoder = TextDecoder;
-}
+window.scrollTo = vi.fn();
+
+/* ------------------------------
+   TextEncoder / TextDecoder
+------------------------------- */
+
+import { TextEncoder, TextDecoder } from "util";
+
+(globalThis as any).TextEncoder = TextEncoder;
+(globalThis as any).TextDecoder = TextDecoder;
