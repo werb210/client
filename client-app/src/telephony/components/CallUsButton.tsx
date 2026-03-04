@@ -1,31 +1,28 @@
-import { useState } from "react";
-import { initializeClientVoice, startClientCall } from "../services/clientVoice";
-import { fetchVoiceToken } from "../../api/voice";
+import React from "react";
+import { startCall } from "../services/voiceDevice";
 
 export default function CallUsButton() {
-  const [calling, setCalling] = useState(false);
-
-  const handleCall = async () => {
-    if (calling) return;
-
+  const handleClick = async () => {
     try {
-      setCalling(true);
-
-      const token = await fetchVoiceToken("client_user");
-      await initializeClientVoice(token);
-      await startClientCall();
+      await startCall("support");
     } catch {
-      setCalling(false);
+      // intentionally ignore call errors to avoid console usage
     }
   };
 
   return (
     <button
-      onClick={handleCall}
-      disabled={calling}
-      className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+      onClick={handleClick}
+      style={{
+        padding: "12px 20px",
+        background: "#0b6cff",
+        color: "#fff",
+        borderRadius: "6px",
+        border: "none",
+        cursor: "pointer",
+      }}
     >
-      {calling ? "Connecting..." : "Call Us"}
+      Call Us
     </button>
   );
 }
