@@ -6,7 +6,7 @@ export default function CallUsButton() {
     try {
       await startCall("support");
     } catch {
-      // intentionally ignore call errors to avoid console usage
+      /* ignore */
     }
   };
 
