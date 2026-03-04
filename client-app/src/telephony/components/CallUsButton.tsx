@@ -1,28 +1,28 @@
-import React from "react";
-import { startCall } from "../services/voiceDevice";
+import { useState } from "react";
 
 export default function CallUsButton() {
-  const handleClick = async () => {
-    try {
-      await startCall("support");
-    } catch (err) {
-      console.error(err);
+  const [calling, setCalling] = useState(false);
+
+  const handleCall = () => {
+    setCalling(true);
+
+    const phoneNumber = process.env.VITE_BF_PHONE_NUMBER;
+
+    if (!phoneNumber) {
+      setCalling(false);
+      return;
     }
+
+    window.location.href = `tel:${phoneNumber}`;
   };
 
   return (
     <button
-      onClick={handleClick}
-      style={{
-        padding: "12px 20px",
-        background: "#0b6cff",
-        color: "#fff",
-        borderRadius: "6px",
-        border: "none",
-        cursor: "pointer",
-      }}
+      onClick={handleCall}
+      disabled={calling}
+      className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
     >
-      Call Us
+      {calling ? "Calling..." : "Call Us"}
     </button>
   );
 }
