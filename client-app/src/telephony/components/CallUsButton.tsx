@@ -1,19 +1,22 @@
 import { useState } from "react";
+import { initializeClientVoice, startClientCall } from "../services/clientVoice";
+import { fetchVoiceToken } from "../../api/voice";
 
 export default function CallUsButton() {
   const [calling, setCalling] = useState(false);
 
-  const handleCall = () => {
-    setCalling(true);
+  const handleCall = async () => {
+    try {
+      setCalling(true);
 
-    const phoneNumber = process.env.VITE_BF_PHONE_NUMBER;
+      const token = await fetchVoiceToken("client_user");
 
-    if (!phoneNumber) {
+      await initializeClientVoice(token);
+
+      await startClientCall();
+    } catch {
       setCalling(false);
-      return;
     }
-
-    window.location.href = `tel:${phoneNumber}`;
   };
 
   return (
@@ -22,7 +25,7 @@ export default function CallUsButton() {
       disabled={calling}
       className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
     >
-      {calling ? "Calling..." : "Call Us"}
+      {calling ? "Connecting..." : "Call Us"}
     </button>
   );
 }
