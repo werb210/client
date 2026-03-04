@@ -6,13 +6,13 @@ export default function CallUsButton() {
   const [calling, setCalling] = useState(false);
 
   const handleCall = async () => {
+    if (calling) return;
+
     try {
       setCalling(true);
 
       const token = await fetchVoiceToken("client_user");
-
       await initializeClientVoice(token);
-
       await startClientCall();
     } catch {
       setCalling(false);
