@@ -26,6 +26,8 @@ import { useApplicationStore } from "../state/useApplicationStore";
 import { useReadinessBridge } from "@/hooks/useReadinessBridge";
 import { apiRequest } from "@/services/api";
 import { endCall } from "@/services/voiceService";
+import { fetchVoiceToken } from "@/api/voice";
+import { initializeClientVoice } from "@/telephony/services/clientVoice";
 
 export default function App() {
   const { app, loadFromServer, update } = useApplicationStore();
@@ -147,6 +149,17 @@ export default function App() {
     if (window.__APP_CONTINUATION_ERROR__) {
       setContinuationError(window.__APP_CONTINUATION_ERROR__);
     }
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const token = await fetchVoiceToken("client_user");
+        await initializeClientVoice(token);
+      } catch {
+        // ignore voice initialization failures
+      }
+    })();
   }, []);
 
   useEffect(() => {
