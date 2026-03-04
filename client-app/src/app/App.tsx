@@ -36,6 +36,7 @@ export default function App() {
   const refreshing = useSessionRefreshing();
   const updateAvailable = useServiceWorkerUpdate();
   const [continuationError, setContinuationError] = useState<string | null>(null);
+  const hasInitializedClientVoice = useRef(false);
 
   useEffect(() => {
     appRef.current = app;
@@ -153,6 +154,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (hasInitializedClientVoice.current) {
+      return;
+    }
+
+    hasInitializedClientVoice.current = true;
+
     void (async () => {
       try {
         const token = await fetchVoiceToken("client_user");
