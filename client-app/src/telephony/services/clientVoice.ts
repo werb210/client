@@ -7,12 +7,10 @@ export async function initializeClientVoice(token: string) {
   device = new Device(token);
 
   device.on("registered", () => {
-    console.log("Client voice device registered");
+    /* device ready */
   });
 
   device.on("incoming", (call: Call) => {
-    console.log("Incoming call from staff");
-
     activeCall = call;
 
     call.on("disconnect", () => {
@@ -22,8 +20,8 @@ export async function initializeClientVoice(token: string) {
     call.accept();
   });
 
-  device.on("error", (...args: unknown[]) => {
-    console.error("Twilio device error:", args[0]);
+  device.on("error", () => {
+    /* device error handled upstream */
   });
 
   await device.register();
