@@ -1,5 +1,19 @@
 import { Device, Call } from "@twilio/voice-sdk";
 
+type KnownTwilioCallEvent =
+  | "accept"
+  | "disconnect"
+  | "cancel"
+  | "reject"
+  | "error"
+  | "mute"
+  | "unmute";
+
+function onTwilioCallEvent(call: unknown, event: KnownTwilioCallEvent, handler: (...args: any[]) => void) {
+  // Twilio JS SDK supports these at runtime; some versions’ type defs omit cancel/reject.
+  (call as any)?.on?.(event, handler);
+}
+
 let device: Device | null = null;
 let activeCall: Call | null = null;
 let initializePromise: Promise<void> | null = null;
@@ -31,9 +45,9 @@ function setActiveCall(call: Call) {
       clearActiveCall();
     };
 
-    call.on("disconnect", handleDisconnect);
-    call.on("cancel", handleCancel);
-    call.on("reject", handleReject);
+    onTwilioCallEvent(call, "disconnect", handleDisconnect);
+    onTwilioCallEvent(call, "cancel", handleCancel);
+    onTwilioCallEvent(call, "reject", handleReject);
 
     callWithBoundHandlers = call;
   }
