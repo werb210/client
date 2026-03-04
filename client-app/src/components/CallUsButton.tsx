@@ -34,7 +34,7 @@ export default function CallUsButton() {
         } disabled:opacity-70`}
       >
         {isIdle && "Call Us"}
-        {isConnecting && "Calling..."}
+        {isConnecting && "Calling…"}
         {isInCall && "Hang Up"}
       </button>
       {error && <p className="text-xs text-red-300">{error}</p>}
