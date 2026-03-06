@@ -1,6 +1,3 @@
-import fs from "fs"
-import path from "path"
-
 export interface WizardField {
   name: string
   file: string
@@ -12,40 +9,54 @@ export interface WizardStepInventory {
   fields: WizardField[]
 }
 
-const wizardDir = __dirname
+/*
+LOCKED V1 FLOW (DO NOT CHANGE)
 
-function stepFile(name: string) {
-  const filePath = path.join(wizardDir, name)
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`Wizard step file missing: ${name}`)
-  }
-  return name
-}
+1  KYC QUESTIONS
+2  PRODUCT CATEGORY
+3  BUSINESS INFO
+4  APPLICANT INFO
+5  REQUIRED DOCUMENTS
+6  TERMS + SIGNATURE
+*/
 
 export const WIZARD_FIELD_INVENTORY: WizardStepInventory[] = [
+
   {
-    step: "kyc",
-    file: stepFile("Step1_KYC.tsx"),
-    fields: [{ name: "kyc_answers", file: "Step1_KYC.tsx" }]
+    step: "Step1_KYC",
+    file: "Step1_KYC.tsx",
+    fields: [
+      { name: "kyc_answers", file: "Step1_KYC.tsx" }
+    ]
   },
+
   {
-    step: "product_category",
-    file: stepFile("Step2_ProductCategory.tsx"),
-    fields: [{ name: "product_category", file: "Step2_ProductCategory.tsx" }]
+    step: "Step2_ProductCategory",
+    file: "Step2_ProductCategory.tsx",
+    fields: [
+      { name: "product_category", file: "Step2_ProductCategory.tsx" }
+    ]
   },
+
   {
-    step: "business_info",
-    file: stepFile("Step3_BusinessDetails.tsx"),
-    fields: [{ name: "business_info", file: "Step3_BusinessDetails.tsx" }]
+    step: "Step3_BusinessDetails",
+    file: "Step3_BusinessDetails.tsx",
+    fields: [
+      { name: "business_info", file: "Step3_BusinessDetails.tsx" }
+    ]
   },
+
   {
-    step: "applicant_info",
-    file: stepFile("Step4_ApplicantInformation.tsx"),
-    fields: [{ name: "applicant_info", file: "Step4_ApplicantInformation.tsx" }]
+    step: "Step4_ApplicantInformation",
+    file: "Step4_ApplicantInformation.tsx",
+    fields: [
+      { name: "applicant_info", file: "Step4_ApplicantInformation.tsx" }
+    ]
   },
+
   {
-    step: "documents",
-    file: stepFile("Step5_Documents.tsx"),
+    step: "Step5_Documents",
+    file: "Step5_Documents.tsx",
     fields: [
       { name: "bank_statements", file: "Step5_Documents.tsx" },
       { name: "financial_statements", file: "Step5_Documents.tsx" },
@@ -54,9 +65,13 @@ export const WIZARD_FIELD_INVENTORY: WizardStepInventory[] = [
       { name: "invoices", file: "Step5_Documents.tsx" }
     ]
   },
+
   {
-    step: "terms_signature",
-    file: stepFile("Step6_TermsSignature.tsx"),
-    fields: [{ name: "signature", file: "Step6_TermsSignature.tsx" }]
+    step: "Step6_TermsSignature",
+    file: "Step6_TermsSignature.tsx",
+    fields: [
+      { name: "signature", file: "Step6_TermsSignature.tsx" }
+    ]
   }
+
 ]
