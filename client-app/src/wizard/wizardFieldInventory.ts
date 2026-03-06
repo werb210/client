@@ -1,77 +1,58 @@
-export interface WizardField {
-  name: string
-  file: string
-}
+/**
+ * V1 Wizard Field Inventory
+ * Must reference REAL files under src/wizard/
+ */
 
-export interface WizardStepInventory {
-  step: string
-  file: string
-  fields: WizardField[]
-}
-
-/*
-LOCKED V1 FLOW (DO NOT CHANGE)
-
-1  KYC QUESTIONS
-2  PRODUCT CATEGORY
-3  BUSINESS INFO
-4  APPLICANT INFO
-5  REQUIRED DOCUMENTS
-6  TERMS + SIGNATURE
-*/
-
-export const WIZARD_FIELD_INVENTORY: WizardStepInventory[] = [
-
+export const WIZARD_FIELD_INVENTORY = [
   {
     step: "Step1_KYC",
-    file: "Step1_KYC.tsx",
     fields: [
-      { name: "kyc_answers", file: "Step1_KYC.tsx" }
-    ]
+      { name: "legalName", file: "Step1_KYC.tsx" },
+      { name: "businessNumber", file: "Step1_KYC.tsx" },
+      { name: "email", file: "Step1_KYC.tsx" },
+      { name: "phone", file: "Step1_KYC.tsx" },
+    ],
   },
 
   {
     step: "Step2_ProductCategory",
-    file: "Step2_ProductCategory.tsx",
-    fields: [
-      { name: "product_category", file: "Step2_ProductCategory.tsx" }
-    ]
+    fields: [{ name: "productCategory", file: "Step2_ProductCategory.tsx" }],
   },
 
   {
     step: "Step3_BusinessDetails",
-    file: "Step3_BusinessDetails.tsx",
     fields: [
-      { name: "business_info", file: "Step3_BusinessDetails.tsx" }
-    ]
+      { name: "industry", file: "Step3_BusinessDetails.tsx" },
+      { name: "yearsInBusiness", file: "Step3_BusinessDetails.tsx" },
+      { name: "province", file: "Step3_BusinessDetails.tsx" },
+    ],
   },
 
   {
     step: "Step4_ApplicantInformation",
-    file: "Step4_ApplicantInformation.tsx",
     fields: [
-      { name: "applicant_info", file: "Step4_ApplicantInformation.tsx" }
-    ]
+      { name: "ownerName", file: "Step4_ApplicantInformation.tsx" },
+      { name: "ownershipPercent", file: "Step4_ApplicantInformation.tsx" },
+      { name: "creditScore", file: "Step4_ApplicantInformation.tsx" },
+    ],
   },
 
   {
     step: "Step5_Documents",
-    file: "Step5_Documents.tsx",
     fields: [
-      { name: "bank_statements", file: "Step5_Documents.tsx" },
-      { name: "financial_statements", file: "Step5_Documents.tsx" },
-      { name: "tax_returns", file: "Step5_Documents.tsx" },
-      { name: "contracts", file: "Step5_Documents.tsx" },
-      { name: "invoices", file: "Step5_Documents.tsx" }
-    ]
+      { name: "bankStatements", file: "Step5_Documents.tsx" },
+      { name: "financialStatements", file: "Step5_Documents.tsx" },
+      { name: "taxReturns", file: "Step5_Documents.tsx" },
+    ],
   },
 
   {
     step: "Step6_TermsSignature",
-    file: "Step6_TermsSignature.tsx",
     fields: [
-      { name: "signature", file: "Step6_TermsSignature.tsx" }
-    ]
-  }
-
+      { name: "agreeTerms", file: "Step6_TermsSignature.tsx" },
+      { name: "signature", file: "Step6_TermsSignature.tsx" },
+    ],
+  },
 ]
+
+export default WIZARD_FIELD_INVENTORY
