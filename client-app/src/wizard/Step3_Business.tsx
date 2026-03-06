@@ -236,7 +236,7 @@ export function Step3_Business() {
 
   return (
     <WizardLayout>
-      <StepHeader step={3} title="Business Information" />
+      <StepHeader step={3} title="Business Details" />
       {saveError && (
         <Card variant="muted" data-error={true}>
           <div style={components.form.errorText}>{saveError}</div>

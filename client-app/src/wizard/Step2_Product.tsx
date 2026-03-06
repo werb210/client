@@ -427,7 +427,7 @@ export function Step2_Product() {
 
   return (
     <WizardLayout>
-      <StepHeader step={2} title="Product Category Selection" />
+      <StepHeader step={2} title="Choose Product Category" />
       {saveError && (
         <Card variant="muted" data-error={true}>
           <div style={components.form.errorText}>{saveError}</div>
@@ -727,7 +727,7 @@ export function Step2_Product() {
             style={{ width: "100%", maxWidth: "160px" }}
             onClick={goBack}
           >
-            ← Back
+            Back
           </Button>
           <Button
             style={{ width: "100%", maxWidth: "200px" }}
@@ -738,7 +738,7 @@ export function Step2_Product() {
               noProducts
             }
           >
-            Continue →
+            Continue
           </Button>
         </div>
       </div>

@@ -40,12 +40,12 @@ const PortalEntry = lazy(() => import("../pages/PortalEntry").then((module) => (
 const ContinueApplication = lazy(() => import("../pages/ContinueApplication"));
 const ProductDetail = lazy(() => import("../pages/ProductDetail"));
 const ComingSoonPage = lazy(() => import("../pages/ComingSoon").then((module) => ({ default: module.ComingSoon })));
-const Step1 = lazy(() => import("../wizard/Step1_KYC"));
-const Step2 = lazy(() => import("../wizard/Step2_Product"));
-const Step3 = lazy(() => import("../wizard/Step3_Business"));
-const Step4 = lazy(() => import("../wizard/Step4_Applicant"));
+const Step1 = lazy(() => import("../wizard/Step1_FinancialProfile"));
+const Step2 = lazy(() => import("../wizard/Step2_ProductCategory"));
+const Step3 = lazy(() => import("../wizard/Step3_BusinessDetails"));
+const Step4 = lazy(() => import("../wizard/Step4_ApplicantInformation"));
 const Step5 = lazy(() => import("../wizard/Step5_Documents"));
-const Step6 = lazy(() => import("../wizard/Step6_Review"));
+const Step6 = lazy(() => import("../wizard/Step6_TermsSignature"));
 
 type GuardProps = {
   children: JSX.Element;

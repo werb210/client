@@ -468,7 +468,7 @@ fixedAssets:
   return (
     <>
       <WizardLayout>
-        <StepHeader step={1} title="Know Your Client" />
+        <StepHeader step={1} title="Financial Profile" />
         {submitError && (
           <Card variant="muted" data-error={true}>
             <div style={components.form.errorText}>{submitError}</div>
